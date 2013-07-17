@@ -1,0 +1,2 @@
+Author: quhang@stanford.edu (Hang Qu)
+Plan to put the PhysBAM library here. The fluid simulation application will link to the library.

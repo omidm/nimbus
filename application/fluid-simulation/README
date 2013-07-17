@@ -1,0 +1,4 @@
+Author: quhang@stanford.edu (Hang Qu)
+This directory is expected to contain an fluid simulation "application" ran by Nimbus.
+Plan to put the fluid simulation code here, which specifies the content of each job.
+The worker is expected to execute the jobs here. 
