@@ -1,9 +1,9 @@
 # make
 COMPILER = g++
 FLAGS= -Wall -g
-ROOT = ~/nimbus/src/
-LDIR = $(ROOT)Library/
-ADIR = $(ROOT)Apps/1d-stencil/
+ROOT = ~/cloud/src/nimbus/
+LDIR = $(ROOT)lib/
+ADIR = $(ROOT)application/1d-stencil/
 LIBS = -lpthread -lboost_system -lboost_thread
 LINK = -L /home/omidm/Downloads/boost_1_53_0/stage/lib
 INCL = -I /home/omidm/Downloads/boost_1_53_0
