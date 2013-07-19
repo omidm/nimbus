@@ -1,9 +1,12 @@
 # make
+NIMBUS_ROOT = ../..
+include ${NIMBUS_ROOT}/Makeinclude
+
 COMPILER = g++
 FLAGS= -Wall -g
-LDIR = ../../Library/
+LDIR = ../../lib/
 H_FILES = $(wildcard *.h)
-CPP_FILES = $(wildcard *.cpp)
+CPP_FILES = $(wildcard *.cc)
 
 # Add the dependencies here
 DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o
