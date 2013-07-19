@@ -1,7 +1,19 @@
 # Root includes for all Nimbus Makefiles
 
+ifeq ($(findstring darwin, $(OSTYPE)), darwin) 
+  SIM_DARWIN=TRUE
+else
+ifeq ($(findstring Darwin, $(shell uname)), Darwin)
+  SIM_DARWIN=TRUE  
+endif
+endif
+
 CPP = g++
-CPP_FLAGS = -Wall -g -pg #-Wl,-no_implicit_dylibs
+CPP_FLAGS = -Wall -g -pg 
+ifdef SIM_DARWIN
+  CPP_FLAGS += -Wl,-no_implicit_dylibs
+endif
+
 IFLAGS = -I/opt/local/include
 LFLAGS = 
 LDFLAGS = -L/opt/local/lib -L${NIMBUS_ROOT}/lib/
