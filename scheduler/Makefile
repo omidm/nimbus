@@ -12,15 +12,15 @@ LIBS = -lpthread -lboost_system -lboost_thread
 LINK = -L /home/omidm/Downloads/boost_1_53_0/stage/lib
 INCL = -I /home/omidm/Downloads/boost_1_53_0
 H_FILES = $(wildcard *.h)
-CPP_FILES = $(wildcard *.cpp)
+CPP_FILES = $(wildcard *.cc)
 
 # Add the dependencies here
 DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)server.o $(LDIR)client.o $(LDIR)parser.o $(ADIR)app.o
 
-$(LDIR)%.o: $(LDIR)%.cpp $(LDIR)%.h
+$(LDIR)%.o: $(LDIR)%.cc $(LDIR)%.h
 	$(COMPILER) -c -o $@ $< $(FLAGS) $(LIBS) $(LINK) $(INCL)
 
-$(ADIR)%.o: $(ADIR)%.cpp $(ADIR)$(wildcard *.h)
+$(ADIR)%.o: $(ADIR)%.cc $(ADIR)$(wildcard *.h)
 	$(COMPILER) -c -o $@ $< $(FLAGS) -I $(LDIR) $(LIBS) $(LINK) $(INCL)
 
 scheduler: $(CPP_FILES) $(H_FILES) $(DEPS) 
