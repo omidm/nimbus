@@ -8,7 +8,8 @@ ifeq ($(findstring Darwin, $(shell uname)), Darwin)
 endif
 endif
 
-ifeq ($(findstring linux, $(OSSTYPE)), linux)
+ifeq ($(OSTYPE), linux)
+  LDFLAGS += -Wl,-rpath=$(LDIR)
   OS_LINUX=TRUE
 endif
 
@@ -23,7 +24,7 @@ LFLAGS =
 LDFLAGS = -L/opt/local/lib -L${NIMBUS_ROOT}/lib/
 
 ifdef OS_LINUX
-  LD_FLAGS += -Wl,-rpath=$(LDIR)
+  LDFLAGS += -Wl,-rpath=$(LDIR)
 endif
 
 
