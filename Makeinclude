@@ -1,22 +1,32 @@
 # Root includes for all Nimbus Makefiles
 
 ifeq ($(findstring darwin, $(OSTYPE)), darwin) 
-  SIM_DARWIN=TRUE
+  OS_DARWIN=TRUE
 else
 ifeq ($(findstring Darwin, $(shell uname)), Darwin)
-  SIM_DARWIN=TRUE  
+  OS_DARWIN=TRUE  
 endif
+endif
+
+ifeq ($(findstring linux, $(OSSTYPE)), linux)
+  OS_LINUX=TRUE
 endif
 
 CPP = g++
 CPP_FLAGS = -Wall -g -pg 
-ifdef SIM_DARWIN
+ifdef OS_DARWIN
   CPP_FLAGS += -Wl,-no_implicit_dylibs
 endif
 
 IFLAGS = -I/opt/local/include
 LFLAGS = 
 LDFLAGS = -L/opt/local/lib -L${NIMBUS_ROOT}/lib/
+
+ifdef OS_LINUX
+  LD_FLAGS += -Wl,-rpath=$(LDIR)
+endif
+
+
 
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
 NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh
