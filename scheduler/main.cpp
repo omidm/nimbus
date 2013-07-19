@@ -2,7 +2,7 @@
 #include <pthread.h>
 #include "scheduler.h"
 #include "application.h"
-#include "../Apps/1d-stencil/app.h"
+#include "../application/1d-stencil/app.h"
 
 using namespace std;
 
