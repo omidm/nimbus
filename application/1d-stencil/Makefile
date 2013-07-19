@@ -16,8 +16,6 @@ OBJECT_FILES = app.o
 LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
 LDFLAGS += -L.
 
-CPP_FLAGS += -Wl,-rpath=$(LDIR)
- 
 # Add the dependencies here
 %.o: %.cc
 	$(CPP) $(CPP_FLAGS) $(IFLAGS) -c -o $@ $< $(FLAGS)
