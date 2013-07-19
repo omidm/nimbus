@@ -4,6 +4,7 @@ CPP = g++
 CPP_FLAGS = -Wall -g -pg
 IFLAGS = -I/opt/local/include
 LFLAGS = 
+LDFLAGS = -L/opt/local/lib
 
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
 NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh

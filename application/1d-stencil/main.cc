@@ -7,6 +7,7 @@ using namespace std;
 #define ML 4
 #define GL 1
 #define ITNUM 5
+#define PORT 3000
 
 void createArray (int **, int);
 void initArray (int *, int, int);
@@ -21,8 +22,8 @@ void applySten (int *, int *, int);
 int main (int argc, char *argv[]) {
 
   std::cout << "Nimbus is up!" << std::endl;
-  Scheduler s;
-  s.Run();
+  Scheduler s(PORT);
+  s.run();
   
   int sten [] = {-1, +2, -1, 0};
 

@@ -6,18 +6,22 @@ NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
 LDIR = ../../lib/
+IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 
+OBJECT_FILES = app.o
+ 
+LFLAGS += -lboost_thread-mt -lboost_system-mt
 
 # Add the dependencies here
-DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o
+DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)parser.o $(LDIR)server.o
 
-$(LDIR)%.o: $(LDIR)%.cpp $(LDIR)$(wildcard .h)
-	$(CPP) $(CPP_FLAGS) $(LFLAGS) $(IFLAGS) -c -o $@ $< $(FLAGS)
+%.o: %.cc
+	$(CPP) $(CPP_FLAGS) $(IFLAGS) -c -o $@ $< $(FLAGS)
 
-app: $(CPP_FILES) $(H_FILES) $(DEPS) 
-	$(CPP) $(CPP_FLAGS) $(LFLAGS) $(IFLAGS) -o app -I $(LDIR) $(CPP_FILES) $(DEPS)
+app: $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
+	$(CPP) $(CPP_FLAGS) $(LDFLAGS) $(LFLAGS) $(IFLAGS) -o app $(CPP_FILES) $(DEPS)
 
 clean:
 	rm app
