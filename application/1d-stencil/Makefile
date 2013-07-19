@@ -1,4 +1,7 @@
 # make
+
+all: check app
+
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
