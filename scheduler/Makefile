@@ -1,4 +1,8 @@
 # make
+
+NIMBUS_ROOT = ..
+include ../Makeinclude
+
 COMPILER = g++
 FLAGS= -Wall -g
 ROOT = ~/cloud/src/nimbus/
