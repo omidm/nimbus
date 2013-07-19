@@ -1,0 +1,14 @@
+# Root includes for all Nimbus Makefiles
+
+#NIMBUS_ROOT = $(shell pwd)
+NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
+NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh
+
+fcheck:
+	@${NIMBUS_FILENAMES}
+
+lint:
+	@${NIMBUS_CCLINT} *.h *.cc
+
+check: fcheck lint
+
