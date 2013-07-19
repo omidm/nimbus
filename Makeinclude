@@ -1,10 +1,10 @@
 # Root includes for all Nimbus Makefiles
 
 CPP = g++
-CPP_FLAGS = -Wall -g -pg -Wl,-no_implicit_dylibs
+CPP_FLAGS = -Wall -g -pg #-Wl,-no_implicit_dylibs
 IFLAGS = -I/opt/local/include
 LFLAGS = 
-LDFLAGS = -L/opt/local/lib -L${NIMBUS_ROOT}/lib
+LDFLAGS = -L/opt/local/lib -L${NIMBUS_ROOT}/lib/
 
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
 NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh
