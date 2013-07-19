@@ -7,7 +7,7 @@ using namespace std;
 #define ML 4
 #define GL 1
 #define ITNUM 5
-#define PORT 3000
+#define PORT 3003
 
 void createArray (int **, int);
 void initArray (int *, int, int);

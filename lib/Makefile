@@ -4,7 +4,7 @@ all: check lib
 NIMBUS_ROOT = ..
 include ../Makeinclude
 
-TARGET = libnimbus.a
+TARGET = libnimbus.so
 
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
