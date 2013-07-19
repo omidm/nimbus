@@ -1,6 +1,7 @@
 # File for 1-d stencil application
 
-all: check app
+TARGET = app
+all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
@@ -12,23 +13,18 @@ CPP_FILES = $(wildcard *.cc)
 
 OBJECT_FILES = app.o
  
-LFLAGS += -lboost_thread-mt -lboost_system-mt
+LFLAGS += -lboost_thread-mt -lboost_system-mt -lnimbus
 
 # Add the dependencies here
-DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)parser.o $(LDIR)server.o
-
 %.o: %.cc
 	$(CPP) $(CPP_FLAGS) $(IFLAGS) -c -o $@ $< $(FLAGS)
 
-app: $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
-	$(CPP) $(CPP_FLAGS) $(LDFLAGS) $(LFLAGS) $(IFLAGS) -o app $(CPP_FILES) $(DEPS)
+$(TARGET): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
+	$(CPP) $(CPP_FLAGS) $(LDFLAGS) $(LFLAGS) $(IFLAGS) -o $(TARGET) $(CPP_FILES) 
 
-clean:
-	rm app
-  
-clean-all:
-	rm app $(LDIR)*.o        
-  
+clean: clean-files
+	\rm -f $(TARGET)
+
 #mpi: $(CPP_FILES) $(H_FILES) 
 #	mpiCC -o scheduler-mpi $(CPP_FILES) $(INCL)                              
   
