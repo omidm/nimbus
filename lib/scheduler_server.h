@@ -8,27 +8,26 @@
 
 typedef unsigned int ConnectionId;
 class Scheduler;
-class ServerConn;
+class SchedulerServerConnection;
 
 using boost::asio::ip::tcp;
 
-class Server
-{
+class SchedulerServer {
 public:
-    Server(unsigned int _connection_port_no, Scheduler* sch);
-    ~Server();
+    SchedulerServer(unsigned int _connection_port_no, Scheduler* sch);
+    ~SchedulerServer();
 
     Scheduler * scheduler;
     
     void run();
-    void receive_msg(const std::string& msg, ServerConn* conn);
+    void receive_msg(const std::string& msg, SchedulerServerConnection* conn);
 
     
 private:
 
     void listen_for_new_connections();
     
-    typedef std::map<ConnectionId, ServerConn*> ConnectionMap;
+    typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
     typedef ConnectionMap::iterator ConnectionMapIter;
     ConnectionMap connections;
 
@@ -38,21 +37,20 @@ private:
 };
 
 
-class ServerConn
-{
+class SchedulerServerConnection {
 public:
-    ServerConn(Server* s, tcp::socket* sock);
-    ~ServerConn();
+    SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock);
+    ~SchedulerServerConnection();
     void send_msg(const std::string& msg);
     void start_listening();
-    ConnectionId get_id() const
-    {
+    ConnectionId get_id() const {
         return id;
     }
+    
 private:
     void listen_for_msgs();
     ConnectionId id;
-    Server* server;
+    SchedulerServer* server;
     tcp::socket* socket;
     boost::thread* listening_thread;
 };

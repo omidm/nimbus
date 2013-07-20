@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "server.h"
+#include "scheduler_server.h"
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -48,23 +48,23 @@
 
 using boost::asio::ip::tcp;
 
-Server::Server(unsigned int _connection_port_no, Scheduler* sch)
+SchedulerServer::SchedulerServer(unsigned int _connection_port_no, Scheduler* sch)
 : scheduler(sch),
   connection_subscription_thread(NULL),
   connection_port_no(_connection_port_no) {}
 
-Server::~Server() {
+SchedulerServer::~SchedulerServer() {
   boost::mutex::scoped_lock lock(map_mutex);
   for (ConnectionMapIter iter = connections.begin();
        iter != connections.end();
        ++iter)   {
-    ServerConn* scon = iter->second;
+    SchedulerServerConnection* scon = iter->second;
     delete scon;
   }
   connections.clear();
 }
 
-void Server::receive_msg(const std::string& msg, ServerConn* conn) {
+void SchedulerServer::receive_msg(const std::string& msg, SchedulerServerConnection* conn) {
   // FIXME: memory leak for killing and ending thread listening for
   // new connections.
 
@@ -80,7 +80,7 @@ void Server::receive_msg(const std::string& msg, ServerConn* conn) {
   }
 }
 
-void Server::listen_for_new_connections() {
+void SchedulerServer::listen_for_new_connections() {
   boost::asio::io_service io_service;
   tcp::acceptor acceptor(
       io_service, tcp::endpoint(tcp::v4(), connection_port_no));
@@ -91,28 +91,28 @@ void Server::listen_for_new_connections() {
     {
       std::cout << "\nCreating new connection\n";
       boost::mutex::scoped_lock lock(map_mutex);
-      ServerConn* sc = new ServerConn(this, socket);
+      SchedulerServerConnection* sc = new SchedulerServerConnection(this, socket);
       connections[sc->get_id()] = sc;
       sc->start_listening();
     }
   }
 }
 
-void Server::run() {
+void SchedulerServer::run() {
   connection_subscription_thread = new boost::thread(
-      boost::bind(&Server::listen_for_new_connections, this));
+      boost::bind(&SchedulerServer::listen_for_new_connections, this));
 
   connection_subscription_thread->join();
 }
 
 
-ServerConn::ServerConn(Server* s, tcp::socket* sock): server(s), socket(sock) {
+SchedulerServerConnection::SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock): server(s), socket(sock) {
   static ConnectionId id_assigner = 0;
   id = id_assigner++;
 }
 
 
-void ServerConn::listen_for_msgs() {
+void SchedulerServerConnection::listen_for_msgs() {
   while (true)   {
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, ";");
@@ -124,18 +124,18 @@ void ServerConn::listen_for_msgs() {
   }
 }
 
-void ServerConn::start_listening() {
+void SchedulerServerConnection::start_listening() {
   listening_thread = new boost::thread(
-      boost::bind(&ServerConn::listen_for_msgs, this));
+      boost::bind(&SchedulerServerConnection::listen_for_msgs, this));
 }
 
-void ServerConn::send_msg(const std::string& msg) {
+void SchedulerServerConnection::send_msg(const std::string& msg) {
   boost::system::error_code ignored_error;
   boost::asio::write(*socket, boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
 }
 
-ServerConn::~ServerConn() {
+SchedulerServerConnection::~SchedulerServerConnection() {
   // FIXME: not actually cleaning up listening thread.
 }
 
