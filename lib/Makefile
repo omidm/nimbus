@@ -15,10 +15,10 @@ SHARED_FLAGS = -shared -fPIC
 lib: $(TARGET)
 
 $(TARGET): $(OBJFILES) $(HFILES)
-	$(CPP) $(SHARED_FLAGS) $(CPP_FLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) -o $(TARGET) $(OBJFILES) 
+	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(TARGET)
 
 %.o: %.cc
-	$(CPP) $(CPP_FAGS) $(IFLAGS) -c -o $@ $< $(FLAGS)
+	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
 	\rm -f $(TARGET)

@@ -1,5 +1,6 @@
 # Root includes for all Nimbus Makefiles
 
+# Detect if we are running Darwin -- should be replaced by autoconf eventually
 ifeq ($(findstring darwin, $(OSTYPE)), darwin) 
   OS_DARWIN=TRUE
 else
@@ -8,26 +9,45 @@ ifeq ($(findstring Darwin, $(shell uname)), Darwin)
 endif
 endif
 
+# Detect if we are running Linux -- should be replaced by autoconf eventually
 ifeq ($(OSTYPE), linux)
-  LDFLAGS += -Wl,-rpath=$(LDIR)
   OS_LINUX=TRUE
 endif
 
+
 CPP = g++
-CPP_FLAGS = -Wall -g -pg 
+# Flags for all cpp invocations
+CFLAGS = -Wall -g -pg
+
+# For reasons I do not understand need to disable two-level loading namespace
+# optimizations under Darwin -pal
 ifdef OS_DARWIN
-  CPP_FLAGS += -Wl,-no_implicit_dylibs
+  CFLAGS += -Wl,-no_implicit_dylibs
+  LDFLAGS += -W1,-rpath $(LDIR)
 endif
 
-IFLAGS = -I/opt/local/include
-LFLAGS = 
-LDFLAGS = -L/opt/local/lib -L${NIMBUS_ROOT}/lib/
+# -I params for all cpp invocations
+IFLAGS   = -I/opt/local/include # Include MacPorts includes
 
+
+# -l params for linking invocation
+LFLAGS   =                                      
+
+# -L params for linking invocation
+LDFLAGS  = -L/opt/local/lib # Link with MacPorts libraries
+LDFLAGS += -L${NIMBUS_ROOT}/lib/ # Link with Nimbus libraries
+
+# -rpath tells executable where to look for libraries; without it executables
+# do not find Nimbus libraries under Linux -pal
 ifdef OS_LINUX
   LDFLAGS += -Wl,-rpath=$(LDIR)
 endif
 
 
+
+
+
+# Checking rules
 
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
 NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh

@@ -11,17 +11,17 @@ IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 
-OBJECT_FILES = app.o
+OBJECT_FILES = app.o main.o
  
 LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
 LDFLAGS += -L.
 
 # Add the dependencies here
 %.o: %.cc
-	$(CPP) $(CPP_FLAGS) $(IFLAGS) -c -o $@ $< $(FLAGS)
+	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 $(TARGET): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
-	$(CPP) $(CPP_FLAGS) $(LDFLAGS) $(IFLAGS) -o $(TARGET) $(CPP_FILES) $(LFLAGS)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)
