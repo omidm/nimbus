@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus cheduler. 
+  * Nimbus abstraction of computational resources. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
