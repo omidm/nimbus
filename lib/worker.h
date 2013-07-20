@@ -41,7 +41,6 @@
 #ifndef NIMBUS_LIB_WORKER_H
 #define NIMBUS_LIB_WORKER_H
 
-#include <map>
 #include "cluster.h"
 #include "data.h"
 #include "job.h"
@@ -64,7 +63,7 @@ class Worker {
 
     void addJob(Job* job);
     void delJob(Job* job);
-}
+};
 
 
 typedef std::map<int, Worker*> WorkerMap;

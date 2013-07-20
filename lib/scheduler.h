@@ -8,7 +8,7 @@
 #include <vector>
 #include <boost/thread.hpp>
 #include "application.h"
-#include "server.h"
+#include "scheduler_server.h"
 #include "cluster.h"
 #include "worker.h"
 #include "parser.h"
@@ -28,7 +28,7 @@ class Scheduler {
     unsigned int port;
     unsigned int appId;
 
-    Server * server;
+    SchedulerServer * server;
     
     AppMap appMap;
     WorkerMap workerMap;
