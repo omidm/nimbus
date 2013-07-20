@@ -37,7 +37,8 @@
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
-#include "application.h"
+
+#include "lib/application.h"
 
 Application::Application() {}
 

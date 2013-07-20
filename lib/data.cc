@@ -38,6 +38,6 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "data.h"
+#include "lib/data.h"
 
 Data::Data() {}

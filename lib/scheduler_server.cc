@@ -38,17 +38,18 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler_server.h"
+#include "lib/scheduler_server.h"
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <string>
 #include <sstream>
-#include <iostream>
+#include <iostream>  // NOLINT
 
 using boost::asio::ip::tcp;
 
-SchedulerServer::SchedulerServer(unsigned int _connection_port_no, Scheduler* sch)
+SchedulerServer::SchedulerServer(unsigned int _connection_port_no,
+                                 Scheduler* sch)
 : scheduler(sch),
   connection_subscription_thread(NULL),
   connection_port_no(_connection_port_no) {}
@@ -64,7 +65,8 @@ SchedulerServer::~SchedulerServer() {
   connections.clear();
 }
 
-void SchedulerServer::receive_msg(const std::string& msg, SchedulerServerConnection* conn) {
+void SchedulerServer::receive_msg(const std::string& msg,
+                                  SchedulerServerConnection* conn) {
   // FIXME: memory leak for killing and ending thread listening for
   // new connections.
 
@@ -91,7 +93,8 @@ void SchedulerServer::listen_for_new_connections() {
     {
       std::cout << "\nCreating new connection\n";
       boost::mutex::scoped_lock lock(map_mutex);
-      SchedulerServerConnection* sc = new SchedulerServerConnection(this, socket);
+      SchedulerServerConnection* sc =
+        new SchedulerServerConnection(this, socket);
       connections[sc->get_id()] = sc;
       sc->start_listening();
     }
@@ -106,7 +109,9 @@ void SchedulerServer::run() {
 }
 
 
-SchedulerServerConnection::SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock): server(s), socket(sock) {
+SchedulerServerConnection::SchedulerServerConnection(SchedulerServer* s,
+                                                     tcp::socket* sock)
+  :server(s), socket(sock) {
   static ConnectionId id_assigner = 0;
   id = id_assigner++;
 }

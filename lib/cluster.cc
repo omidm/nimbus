@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "cluster.h"
+#include "lib/cluster.h"
 
 Node::Node() {}
 

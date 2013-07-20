@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "worker.h"
+#include "lib/worker.h"
 
 
 Worker::Worker() {}

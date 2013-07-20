@@ -1,7 +1,7 @@
 # Root includes for all Nimbus Makefiles
 
 # Detect if we are running Darwin -- should be replaced by autoconf eventually
-ifeq ($(findstring darwin, $(OSTYPE)), darwin) 
+ifeq ($(findstring darwin, ${OSTYPE}), darwin) 
   OS_DARWIN=TRUE
 else
 ifeq ($(findstring Darwin, $(shell uname)), Darwin)
@@ -10,7 +10,7 @@ endif
 endif
 
 # Detect if we are running Linux -- should be replaced by autoconf eventually
-ifeq ($(OSTYPE), linux)
+ifeq (${OSTYPE}, linux)
   OS_LINUX=TRUE
 endif
 
@@ -23,12 +23,12 @@ CFLAGS = -Wall -g -pg
 # optimizations under Darwin -pal
 ifdef OS_DARWIN
   CFLAGS += -Wl,-no_implicit_dylibs
-  LDFLAGS += -W1,-rpath $(LDIR)
+  LDFLAGS += -W1,-rpath ${LDIR}
 endif
 
 # -I params for all cpp invocations
 IFLAGS   = -I/opt/local/include # Include MacPorts includes
-
+IFLAGS  += -I${NIMBUS_ROOT}
 
 # -l params for linking invocation
 LFLAGS   =                                      
@@ -40,7 +40,7 @@ LDFLAGS += -L${NIMBUS_ROOT}/lib/ # Link with Nimbus libraries
 # -rpath tells executable where to look for libraries; without it executables
 # do not find Nimbus libraries under Linux -pal
 ifdef OS_LINUX
-  LDFLAGS += -Wl,-rpath=$(LDIR)
+  LDFLAGS += -Wl,-rpath=${LDIR}
 endif
 
 

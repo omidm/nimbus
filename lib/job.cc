@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "job.h"
+#include "lib/job.h"
 
 Job::Job(int id, FuncToRun handler) {
   this->id = id;

@@ -38,13 +38,13 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "client.h"
+#include "lib/client.h"
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <string>
 #include <sstream>
-#include <iostream>
+#include <iostream>  // NOLINT
 
 using boost::asio::ip::tcp;
 

@@ -38,8 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-
-#include "scheduler.h"
+#include "lib/scheduler.h"
 
 Scheduler::Scheduler(unsigned int port) {
   appId = 0;
@@ -102,7 +101,7 @@ void Scheduler::loadUserCommands() {
 }
 
 void Scheduler::loadWorkerCommands() {
-  stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");
+  stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
   while (true) {
     string word;
     cms >> word;
