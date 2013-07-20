@@ -33,7 +33,7 @@
  */
 
  /*
-  * A Nimbus worker. 
+  * Server side of the Nimbus scheduler protocol. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
