@@ -2,12 +2,13 @@
 #define _APPLICATION
 
 #include <set>
-#include "job.h"
-#include "data.h"
+#include "lib/job.h"
+#include "lib/data.h"
+#include "lib/client.h"
 
+class Scheduler;
 
-class Application
-{
+class Application {
   public:
 
     int id;
@@ -17,14 +18,10 @@ class Application
 
     Application();
     virtual void loadApp();
-    void Run();
+    virtual void run(Client* scheduler);
 
 };
 
-
 typedef std::map<int, Application*> AppMap;
-
-
-
 
 #endif

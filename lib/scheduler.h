@@ -7,11 +7,11 @@
 #include <string>
 #include <vector>
 #include <boost/thread.hpp>
-#include "application.h"
-#include "scheduler_server.h"
-#include "cluster.h"
-#include "worker.h"
-#include "parser.h"
+#include "lib/scheduler_server.h"
+#include "lib/application.h"
+#include "lib/cluster.h"
+#include "lib/worker.h"
+#include "lib/parser.h"
 
 #define USER_CM_FILE "cmu.txt"
 #define WORKER_CM_FILE "cmw.txt"
@@ -19,6 +19,9 @@
 using namespace std;
 
 typedef set<string> CmSet;
+
+class Worker;
+typedef std::map<int, Worker*> WorkerMap;
 
 class Scheduler {
   public:
@@ -28,20 +31,15 @@ class Scheduler {
     unsigned int port;
     unsigned int appId;
 
-    SchedulerServer * server;
+    SchedulerServer* server;
     
-    AppMap appMap;
+    //AppMap appMap;
     WorkerMap workerMap;
     ClusterMap clusterMap;
     
     void run();
 
     void loadClusterMap(std::string);
-
-    void addApp(Application *);
-    void runApp(Application *);
-    void delApp(Application *);
-    void hualtApp(Application *);
 
     void delWorker(Worker *);
     Worker * addWorker();
@@ -59,17 +57,6 @@ class Scheduler {
     
     CmSet userCmSet;
     CmSet workerCmSet;
-
-
-
-
-
 };
-
-
-
-
-
-
 
 #endif

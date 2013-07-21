@@ -43,12 +43,11 @@
 Application::Application() {}
 
 void Application::loadApp() {
-  std::cout << "Not this one" << std::endl;
+  std::cout << "Loaded Nimbus base application." << std::endl;
 }
 
-void Application::Run() {
-  std::cout << "Start Runing Application " << id << std::endl;
-  loadApp();
+void Application::run(Client* scheduler) {
+  std::cout << "Running Nimbus base application: " << id << std::endl;
 }
 
 

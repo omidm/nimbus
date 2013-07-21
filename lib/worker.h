@@ -41,16 +41,21 @@
 #ifndef NIMBUS_LIB_WORKER_H
 #define NIMBUS_LIB_WORKER_H
 
-#include "cluster.h"
-#include "data.h"
-#include "job.h"
+#include "lib/cluster.h"
+#include "lib/data.h"
+#include "lib/job.h"
+#include "lib/application.h"
+
 
 #define DataSet std::set<Data>
 #define JobSet std::set<Job>
 
+class Application;
+
 class Worker {
   public:
-    Worker();
+  
+    Worker(Application* a);
 
     int id;
     Computer host;
@@ -58,8 +63,9 @@ class Worker {
 
     DataSet dataSet;
     JobSet jobs;
-
-    void run();
+    Application* app;
+    
+    void run(Client* client);
 
     void addJob(Job* job);
     void delJob(Job* job);

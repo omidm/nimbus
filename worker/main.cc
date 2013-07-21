@@ -33,73 +33,29 @@
  */
 
  /*
-  * Nimbus cheduler. 
+  * A Nimbus worker. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <pthread.h>
+#include <iostream>  // NOLINT
+
 #include "lib/scheduler.h"
+#include "lib/worker.h"
+#include "lib/application.h"
+#include "../application/1d-stencil/app.h"
 
-Scheduler::Scheduler(unsigned int port) {
-  appId = 0;
-  this->port = port;
+using ::std::cout;
+using ::std::endl;
+
+int main(int argc, char *argv[]) {
+  std::cout << "Worker is up!" << std::endl;
+  Worker * w = new Worker();
+
+  App * app0 = new App();
+  app0->loadApp();
+
+  w->run();
 }
-
-void Scheduler::run() {
-  cout << "Running the Scheduler" << endl;
-
-  loadUserCommands();
-  loadWorkerCommands();
-
-  user_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupUI, this));
-
-  worker_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupWI, this));
-
-  user_interface_thread->join();
-  worker_interface_thread->join();
-}
-
-void Scheduler::setupWI() {
-  server = new SchedulerServer(port, this);
-  server->run();
-}
-
-void Scheduler::setupUI() {
-  while (true) {
-    cout << "command: ";
-    string token("runapp");
-    string str, cm;
-    vector<int> args;
-    getline(cin, str);
-    parseCommand(str, userCmSet, cm, args);
-    cout << "you typed: " << cm << endl;
-  }
-}
-
-void Scheduler::loadUserCommands() {
-  stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
-  while (true) {
-    string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    userCmSet.insert(word);
-  }
-}
-
-void Scheduler::loadWorkerCommands() {
-  stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    workerCmSet.insert(word);
-  }
-}
-
 

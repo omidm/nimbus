@@ -6,13 +6,12 @@ all: check $(TARGET)
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-LDIR = ../../lib/
 IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 
 OBJECT_FILES = app.o main.o
- 
+
 LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
 LDFLAGS += -L.
 

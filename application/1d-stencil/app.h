@@ -1,9 +1,9 @@
 #ifndef _1DSTENCIL
 #define _1DSTENCIL
 
-#include "application.h"
-#include "job.h"
-#include "data.h"
+#include "lib/application.h"
+#include "lib/job.h"
+#include "lib/data.h"
 
 void init (const dataArray&);
 void print (const dataArray&);

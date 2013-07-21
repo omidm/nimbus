@@ -1,5 +1,5 @@
-#ifndef __SERVER_HPP__
-#define __SERVER_HPP__
+#ifndef __CLIENT_HPP__
+#define __CLIENT_HPP__
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
@@ -9,19 +9,15 @@ typedef uint ConnectionId;
 
 using boost::asio::ip::tcp;
 
-class Client
-{
+class Client {
 public:
     Client(uint _connection_port_no);
     ~Client();
     
     void run();
-    
     void receive_msg();
-
     void send_msg();
 
-    
 private:
     void create_new_connections();
     

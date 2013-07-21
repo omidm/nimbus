@@ -15,6 +15,9 @@ ifeq (${OSTYPE}, linux)
 endif
 
 
+# LDIR is needed for rpath directives for dynamic loading
+LDIR = ${NIMBUS_ROOT}/lib
+
 CPP = g++
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -pg
@@ -22,8 +25,8 @@ CFLAGS = -Wall -g -pg
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal
 ifdef OS_DARWIN
-  CFLAGS += -Wl,-no_implicit_dylibs
-  LDFLAGS += -W1,-rpath ${LDIR}
+  CFLAGS  += -Wl,-no_implicit_dylibs
+  LDFLAGS += -Wl,-rpath /Users/pal/src/cloud/src/nimbus/lib/
 endif
 
 # -I params for all cpp invocations
@@ -34,7 +37,7 @@ IFLAGS  += -I${NIMBUS_ROOT}
 LFLAGS   =                                      
 
 # -L params for linking invocation
-LDFLAGS  = -L/opt/local/lib # Link with MacPorts libraries
+LDFLAGS += -L/opt/local/lib # Link with MacPorts libraries
 LDFLAGS += -L${NIMBUS_ROOT}/lib/ # Link with Nimbus libraries
 
 # -rpath tells executable where to look for libraries; without it executables

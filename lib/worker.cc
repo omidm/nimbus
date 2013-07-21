@@ -41,6 +41,10 @@
 #include "lib/worker.h"
 
 
-Worker::Worker() {}
+Worker::Worker(Application* a) {
+  app = a;
+}
 
-void Worker::run() {}
+void Worker::run(Client* scheduler) {
+  app->run(scheduler);
+}

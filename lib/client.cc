@@ -94,8 +94,8 @@ void Client::run() {
 
   // for now, have no other work to do, so just wait until the listening
   // thread terminates.
-  sending_thread->join();
-  receiving_thread->join();
+  //sending_thread->join();
+  //receiving_thread->join();
 }
 
 

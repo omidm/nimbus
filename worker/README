@@ -1,2 +1,8 @@
 Author: quhang@stanford.edu (Hang Qu)
-This directory is expected to contain the worker code. The worker will interact with the net interface so as to interact with the scheduler and then execute the jobs of the application in application directory.
+This directory is expected to contain the worker code. The worker will interact 
+with the net interface so as to interact with the scheduler and then execute the 
+jobs of the application in application directory.
+
+The worker is a shared library that an application links against. 
+
+
