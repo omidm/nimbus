@@ -39,8 +39,8 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H
-#define NIMBUS_LIB_SCHEDULER_COMMAND_H
+#ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#define NIMBUS_LIB_SCHEDULER_COMMAND_H_
 
 typedef std::string CommandParameter;
 typedef std::vector<CommandParameter> CommandParameterList;
@@ -61,4 +61,4 @@ private:
   CommandParameterList parameters;
 };
 
-#endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H
+#endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_

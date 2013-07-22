@@ -38,8 +38,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_WORKER_H
-#define NIMBUS_LIB_WORKER_H
+#ifndef NIMBUS_LIB_WORKER_H_
+#define NIMBUS_LIB_WORKER_H_
 
 #include "lib/scheduler_client.h"
 #include "lib/cluster.h"
@@ -77,4 +77,4 @@ typedef std::map<int, Worker*> WorkerMap;
 
 
 
-#endif   // NIMBUS_LIB_WORKER_H
+#endif   // NIMBUS_LIB_WORKER_H_
