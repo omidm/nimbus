@@ -56,26 +56,25 @@ SchedulerClient::SchedulerClient(uint _connection_port_no)
 
 SchedulerClient::~SchedulerClient() {}
 
-void SchedulerClient::receive_msg() {
-  while (true) {
-    boost::asio::streambuf response;
-    boost::asio::read_until(*socket, response, ";");
+SchedulerCommand* SchedulerClient::receiveCommand() {
+  boost::asio::streambuf response;
+  boost::asio::read_until(*socket, response, ";");
 
-    std::istream is(&response);
-    std::string msg;
-    std::getline(is, msg);
-    std::cout << "\nReceived msg: " << msg << "\n";
-  }
+  std::istream is(&response);
+  std::string msg;
+  std::getline(is, msg);
+
+  std::cout << "\nReceived msg: " << msg << "\n";
+  SchedulerCommand* com = new SchedulerCommand(msg);
+  return com;
 }
 
-void SchedulerClient::send_msg() {
-  while (true) {
-    std::string msg;
-    std::getline(std::cin, msg);
-    boost::system::error_code ignored_error;
-    boost::asio::write(*socket, boost::asio::buffer(msg),
-        boost::asio::transfer_all(), ignored_error);
-  }
+void SchedulerClient::sendCommand(SchedulerCommand* command) {
+  std::string msg = command->toString();
+  std::getline(std::cin, msg);
+  boost::system::error_code ignored_error;
+  boost::asio::write(*socket, boost::asio::buffer(msg),
+                     boost::asio::transfer_all(), ignored_error);
 }
 
 // Note: run from connection_subscription_thread
@@ -89,13 +88,13 @@ void SchedulerClient::create_new_connections() {
 
 void SchedulerClient::run() {
   create_new_connections();
-  sending_thread = new boost::thread(boost::bind(&SchedulerClient::send_msg, this));
-  receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receive_msg, this));
+  // sending_thread = new boost::thread(boost::bind(&SchedulerClient::sendCommand, this));  // NOLINT
+  // receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receiveCommand, this)); // NOLINT
 
   // for now, have no other work to do, so just wait until the listening
   // thread terminates.
-  //sending_thread->join();
-  //receiving_thread->join();
+  // sending_thread->join();
+  // receiving_thread->join();
 }
 
 

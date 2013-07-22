@@ -1,9 +1,10 @@
-#ifndef __CLIENT_HPP__
-#define __CLIENT_HPP__
+#ifndef __SCHEDULER_CLIENT_HPP__
+#define __SCHEDULER_CLIENT_HPP__
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <map>
+#include "lib/scheduler_command.h"
 
 typedef uint ConnectionId;
 
@@ -15,8 +16,8 @@ public:
     ~SchedulerClient();
     
     void run();
-    void receive_msg();
-    void send_msg();
+    SchedulerCommand* receiveCommand();
+    void sendCommand(SchedulerCommand* c);
 
 private:
     void create_new_connections();
@@ -38,4 +39,4 @@ private:
 
 
 
-#endif
+#endif  // __SCHEDULER_CLIENT_HPP__

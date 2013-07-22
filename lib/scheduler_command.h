@@ -33,61 +33,32 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * Object representation of a scheduler command. Used by workers to
+  * send commands to server and server to send commands down to workers.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#include "lib/parser.h"
+#ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H
+#define NIMBUS_LIB_SCHEDULER_COMMAND_H
 
+typedef std::string CommandParameter;
+typedef std::vector<CommandParameter> CommandParameterList;
 
+class SchedulerCommand {
+public:
+  SchedulerCommand();
+  SchedulerCommand(std::string command);
+  SchedulerCommand(std::string name, CommandParameterList parameters);
+  virtual ~SchedulerCommand();
 
-void parseCommand(const string str, const CmSet& cms,
-                  string& cm, vector<int>& args) {
-  cm.clear();
-  args.clear();
-  set<string>::iterator it;
-  for (it = cms.begin(); it != cms.end(); ++it) {
-    if (str.find(*it) == 0) {
-      cm = *it;
-      int arg;
-      stringstream ss;
-      ss << str.substr(it->length(), string::npos);
-      while (true) {
-        ss >> arg;
-        if (ss.fail()) {
-          break;
-        }
-        args.push_back(arg);
-      }
-      break;
-    }
-  }
-  if (cm == "") {
-    cout << "wrong command! try again." << endl;
-  }
-}
+  virtual std::string toString();
+  virtual std::string getName();
+  virtual CommandParameterList getParameters();
 
+private:
+  std::string name;
+  CommandParameterList parameters;
+};
 
-
-void parseCommandFromString(const std::string input,
-                            std::string& command,
-                            std::vector<std::string>& parameters) {
-  unsigned int pos = 0;
-  unsigned int count = 0;
-  for (;;) {
-    unsigned int next = input.find(' ', pos);
-    if (next == string::npos) {break;}
-    std::string token(input.substr(pos, next + 1));
-    if (count == 0) {
-      command = token;
-    } else {
-      parameters.push_back(token);
-    }
-    pos = next + 1;
-    count++;
-  }
-}
-
-
-
+#endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H

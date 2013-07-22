@@ -33,61 +33,44 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * A Nimbus scheduler command.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#include "lib/parser.h"
+#include "lib/scheduler.h"
 
-
-
-void parseCommand(const string str, const CmSet& cms,
-                  string& cm, vector<int>& args) {
-  cm.clear();
-  args.clear();
-  set<string>::iterator it;
-  for (it = cms.begin(); it != cms.end(); ++it) {
-    if (str.find(*it) == 0) {
-      cm = *it;
-      int arg;
-      stringstream ss;
-      ss << str.substr(it->length(), string::npos);
-      while (true) {
-        ss >> arg;
-        if (ss.fail()) {
-          break;
-        }
-        args.push_back(arg);
-      }
-      break;
-    }
-  }
-  if (cm == "") {
-    cout << "wrong command! try again." << endl;
-  }
+SchedulerCommand::SchedulerCommand() {
+  name = "no-op";
 }
 
-
-
-void parseCommandFromString(const std::string input,
-                            std::string& command,
-                            std::vector<std::string>& parameters) {
-  unsigned int pos = 0;
-  unsigned int count = 0;
-  for (;;) {
-    unsigned int next = input.find(' ', pos);
-    if (next == string::npos) {break;}
-    std::string token(input.substr(pos, next + 1));
-    if (count == 0) {
-      command = token;
-    } else {
-      parameters.push_back(token);
-    }
-    pos = next + 1;
-    count++;
-  }
+SchedulerCommand::SchedulerCommand(std::string n,
+                                   CommandParameterList p) {
+  name = n;
+  parameters = p;
 }
 
+SchedulerCommand::SchedulerCommand(std::string command) {
+  parseCommandFromString(command, name, parameters);
+}
 
+SchedulerCommand::~SchedulerCommand() {}
 
+std::string SchedulerCommand::toString() {
+  std::string rval = name;
+  CommandParameterList::const_iterator iter = parameters.begin();
+  for (; iter != parameters.end(); ++iter) {
+    rval += " ";
+    rval += *iter;
+  }
+
+  return rval;
+}
+
+std::string SchedulerCommand::getName() {
+  return name;
+}
+
+CommandParameterList SchedulerCommand::getParameters() {
+  return parameters;
+}

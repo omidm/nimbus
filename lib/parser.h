@@ -18,7 +18,10 @@ void parseCommand(const string str, const CmSet& cms, string& cm, vector<int>& a
 
 int parseCommandFile(const char * fname, CmSet& cs);
 
-
+void parseCommandFromString(const std::string input,
+			    std::string& command,
+			    std::vector<std::string>& parameters);
+			    
 
 
 
