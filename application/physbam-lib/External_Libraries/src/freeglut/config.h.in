@@ -1,0 +1,15 @@
+#cmakedefine HAVE_GL_GL_H 1
+#cmakedefine HAVE_GL_GLU_H 1
+#cmakedefine HAVE_GL_GLX_H 1
+#cmakedefine HAVE_FCNTL_H 1
+#cmakedefine HAVE_LIMITS_H 1
+#cmakedefine HAVE_SYS_IOCTL_H 1
+#cmakedefine HAVE_SYS_PARAM_H 1
+#cmakedefine HAVE_SYS_TIME_H 1
+#cmakedefine TIME_WITH_SYS_TIME 1
+#cmakedefine X11_EXTENSIONS_XF86VMODE_H 1
+#cmakedefine X11_EXTENSIONS_XI_H 1
+#cmakedefine X11_EXTENSIONS_XINPUT_H 1
+#cmakedefine HAVE_VPRINTF 1
+#cmakedefine HAVE_GETTIMEOFDAY 1
+#cmakedefine HAVE_LIBM 1

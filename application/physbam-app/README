@@ -1,0 +1,18 @@
+Author: Hang Qu <quhang@stanford.edu>
+
+Application "open2d" and "open3d" are for viewing simulation result.
+Application "water" is a water simulation example, without Nimbus.
+
+Instructions for building applications:
+Go into the corresponding directory of the application you want to build, e.g.,
+> cd water.
+Then type:
+> mkdir -p Build/Release
+> cd Build/Release
+> ccmake ../..
+Configure the cmake options.
+Finally, you can run make in the 'Build/Release' folder:
+
+# [TODO:quhang] Fix the cmake script.
+# [TODO:quhang] Make it compile in MacOS.
+

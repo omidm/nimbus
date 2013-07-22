@@ -1,0 +1,85 @@
+$Id: TODO,v 1.1 2006/02/01 19:05:31 irving Exp $
+
+------------------------------------------------------------------------
+
+* Add a special font name ("Data"? Or "RawPS", "RawPDF", "RawTEX"?)
+  and modify the PrintPrimitive routines to just write the string
+  directly to the stream
+
+------------------------------------------------------------------------
+
+* Think about a way to provide a (even rough) progress indicator
+  through a callback...
+
+------------------------------------------------------------------------
+
+* Apple's Preview.app doesn't support '/ShadingType 4'... Should we
+  submit a bug report to Apple?
+
+------------------------------------------------------------------------
+
+* Enhance the polygon/line/point offset stuff
+
+------------------------------------------------------------------------
+
+* SVG output...
+
+From Lassi A. Tuura" <lassi.tuura@cern.ch>:
+
+SVG can also be produced from PS, search google for ps2svg.ps; works
+fine for the files I produced with gl2ps.  SVG is easy to produce in
+itself and similar to postscript; see http://www.w3.org/Graphics/SVG.
+Here's an abbreviated sample from a cube printed with gl2ps and
+coverted with ps2svg (M = moveto, L = lineto):
+<svg width="100%" viewBox="0 0 594 840" stroke="rgb(0,0,0)" fill="none">
+<g stroke-miterlimit="10">
+ <g transform="matrix(1,0,0,-1,0,840)">
+   <path stroke="none" fill="rgb(65,10,10)"
+     d="M256.018,103.084L238.296,230.246L182.367,162.194Z"/>
+   <path stroke="none" fill="rgb(65,10,10)"
+     d="M256.018,103.084L182.367,162.194L187.264,56.048Z"/>
+   <path stroke="none" fill="rgb(10,10,10)"
+     d="M187.264,56.048L182.367,162.194L74.7287,183.309Z"/>
+   [...]
+  </g>
+</g>
+</svg>
+
+------------------------------------------------------------------------
+
+* Escape special characters?
+
+From Jennifer, Jeff, Trevor, and Sophia" <cafun@ameritech.net>:
+
+>> I do have a suggestion though for the  "gl2psText" routine.
+>> I have noted that if your string has a "special" character to 
+>> postscript then the
+>> postscript file becomes corrupted.  This happens when
+>> you try and print a string which has only one "(" in it.
+>> For instance this string will cause a bad eps file "(this is a 
+>> string".  Note that only one bracket is in this string.
+>>
+>> This can be fixed, I believe, by checking for this character and 
+>> placing an escape in front
+>> of it.  I was thinking about making the change for you but I do not 
+>> know much about
+>> PS and I am sure that there are probably other special characters 
+>> which should also be
+>> included in this check.
+>
+>
+> Good idea. Looking at the PostScript reference, we should escape '(', 
+> ')' and '\'.
+>
+> But should we make this escaping optional? Some people might still 
+> want to use the special characters with their original meaning (e.g. 
+> to access special characters using their octal codes '\XXX'). 
+
+Now that you mention it I could see where some may want to do this.
+
+>
+>
+> What should we do for LaTeX output? 
+
+I have not used your LaTeX ouput option so I am not sure how this would 
+effect it.

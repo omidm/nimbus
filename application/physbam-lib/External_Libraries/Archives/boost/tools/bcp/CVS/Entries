@@ -1,0 +1,19 @@
+/Jamfile/1.1/Mon Feb 12 18:26:48 2007//
+/Jamfile.v2/1.1/Mon Feb 12 18:26:48 2007//
+/add_path.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/bcp.hpp/1.1/Mon Feb 12 18:26:48 2007//
+/bcp.html/1.1/Mon Feb 12 18:26:48 2007//
+/bcp_imp.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/bcp_imp.hpp/1.1/Mon Feb 12 18:26:48 2007//
+/copy_path.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/file_types.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/fileview.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/fileview.hpp/1.1/Mon Feb 12 18:26:48 2007//
+/licence_info.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/licence_info.hpp/1.1/Mon Feb 12 18:26:48 2007//
+/main.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/output_licence_info.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/path_operations.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/scan_cvs_path.cpp/1.1/Mon Feb 12 18:26:48 2007//
+/scan_licence.cpp/1.1/Mon Feb 12 18:26:48 2007//
+D

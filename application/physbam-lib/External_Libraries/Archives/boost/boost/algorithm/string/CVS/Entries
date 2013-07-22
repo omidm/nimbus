@@ -1,0 +1,24 @@
+/case_conv.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/classification.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/compare.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/concept.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/config.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/constants.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/erase.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/find.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/find_format.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/find_iterator.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/finder.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/formatter.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/iter_find.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/predicate.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/predicate_facade.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/regex.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/regex_find_format.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/replace.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/sequence_traits.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/split.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/std_containers_traits.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/trim.hpp/1.1/Mon Feb 12 18:25:09 2007//
+/yes_no_type.hpp/1.1/Mon Feb 12 18:25:09 2007//
+D

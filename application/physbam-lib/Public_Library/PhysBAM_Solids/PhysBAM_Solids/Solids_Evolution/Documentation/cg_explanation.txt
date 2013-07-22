@@ -1,0 +1,59 @@
+uStandard un-preconditioned CG for A*x=b is:
+
+r=b-A*x           (initial residual)
+rho=(r,r)         (norm squared of residual, using the (,) inner product)
+s=r               (initial search direction)
+start loop:
+   q=As
+   alpha=rho/(s,q)
+   x+=alpha*s
+   r-=alpha*q
+   stop if converged (check appropriate norm of residual r)
+   rho_new=(r,r)
+   beta=rho_new/rho
+   rho=rho_new
+   s=r+beta*s
+end loop
+
+The critical thing for convergence is that A be symmetric and positive definite with respect to the inner product (,) used.
+That is, for any vectors u and v, (Au,v)=(Av,u) and (Au,u)>0
+(Actually, if the residual b is in the range of A, then positive indefinite matrices can be used, where (Au,u)>=0)
+
+The key to understanding the DEFORMABLE_OBJECT backwards Euler step algorithm is that you don't have to use the standard inner product.
+In this case, an inner product where you multiply by mass is used (and in fact, for the variable mass case the matrix is not symmetric
+by the usual definition!).
+
+The Backward_Euler_Step_Velocity() routine solves the following equation: v(n+1)=v(n)+dt*inv(M)*(F(x)+G(x)*v(n+1))
+with v(n+1) constrained by Set_External_Velocities at time n+1, where v is velocity, M is the mass matrix (diagonal in PhysBAM so far), F(x) is
+the velocity-independent force and G(x)*v is the velocity dependent force. I have written it this way to emphasize that the force must be
+linear in the velocities. In addition, the Jacobian G(x) must be symmetric and negative semi-definite, which should be true of all damping forces
+(even if they're nonlinear in the velocities!). Note that G(x) isn't explicitly formed - instead G(x)*v is computed with the call to
+Add_Velocity_Dependent_Forces() with v stored in DEFORMABLE_OBJECT::particles.V, although we pass extra boolean arguments to this function to direct
+the caching of terms used in computing the force (roughly speaking, G is implicitly calculated and saved).
+
+We take the initial guess of v(n) with external velocity constraints from time n+1 applied. The initial residual r = (b-A*x) is then given by
+   v(n)+r=v(n)+dt*inv(M)*(F+G*(v(n)) => r=dt*inv(M)*(F+G*v(n))
+except we also zero out the constrained velocity components zeroed out with a call to Zero_Out_Enslaved_Velocity_Nodes(). (Remember our initial
+guess already has exactly the right values for them from the call to Set_External_Velocities().) This is what you see in the second code
+block, before the main loop.
+
+There is also an option to use the forward Euler step as an initial guess
+    v(n)+dt*inv(M)*(F+G*(v(n))) 
+with appropriate code to calculate that residual.
+
+The code gets a little complicated in the loop since the velocity argument for Add_Velocity_Dependent_Forces() is not passed as a regular argument but
+is stored in DEFORMABLE_OBJECT::particles.V instead. We will call this on the search direction S, not the current velocity guess, so we store the current
+velocity in V_endtime and alias the search direction S to particles.V with a C++ reference.
+
+The final twist, as mentioned above, is that the system we wrote down isn't symmetric in the usual inner product. So instead we use the mass inner product,
+dot(x,y)=sum x(i)*mass(i)*y(i) for which the matrix is symmetric.
+
+===============================================================================
+
+Variation of the standard un-preconditioned CG for the case of one Newton step toward steady state.
+Set the net force to zero, F(X_new)=0. Can Taylor expand to get F(X_old)+dF/dX(X_old)*(X_new-X_old)=0.
+Solve for dX=X_new-X_old=-dF/dX(X_old)^-1*F(X_old). Or solve A*dX=F(X_old) with A=-dF/dX(X_old).
+When F is linear, dF/dX is a constant independent of X, and F(X_old)+dF/dX*(X_new-X_old)=0 implies F(X_new)=0. 
+
+
+

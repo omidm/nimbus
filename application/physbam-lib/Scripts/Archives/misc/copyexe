@@ -1,0 +1,41 @@
+#!/usr/bin/python
+import sys
+import re
+import os
+import shutil
+
+try:
+    binary=sys.argv[1]
+    destdir=sys.argv[2]
+except:
+    print "Usage: %s <binary> <destdir>"%(sys.argv[0])
+    sys.exit(1)
+
+r=re.compile("^\s*(.+) => (.+) \(0x[0-9a-f]+\)$")
+cmd="ldd %s"%binary
+print cmd
+libraries=os.popen(cmd).readlines()
+print "\n".join(libraries)
+destbinary=os.path.basename(binary)+"_bin"
+files=[(binary,destbinary)]
+for i in libraries:
+    match=r.match(i[:-1]) 
+    if match:
+        lib,path=match.group(1),match.group(2)
+        if lib.startswith("libPhysBAM") or lib.startswith("libgzstream"):
+            files.append((path,os.path.basename(path)))
+    elif i.find("ld-linux"):
+        pass
+    else:
+        print "didn't match %s"%i
+
+for file,destfile in files:
+    print "Copying library %s"%file
+    shutil.copy(file,destdir+"/"+destfile)
+
+print "Writing wrapper script"
+wrapper=open(os.path.join(os.environ["PHYSBAM"],"Scripts","Archives","scons","wrapper_template")).read()%(".",".",destbinary)
+open(os.path.join(destdir,os.path.basename(binary)),"w").write(wrapper)
+os.chmod(os.path.join(destdir,os.path.basename(binary)),0755)
+
+

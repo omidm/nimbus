@@ -1,0 +1,303 @@
+EXPORTS
+    __dynarray_add @1
+    aac_iformat @2 DATA
+    ac3_iformat @3 DATA
+    ac3_oformat @4 DATA
+    asf_init @5
+    asf_oformat @6 DATA
+    asf_stream_oformat @7 DATA
+    au_init @8
+    av_add_index_entry @9
+    av_alloc_format_context @10
+    av_close_input_file @11
+    av_destruct_packet @12
+    av_destruct_packet_nofree @13
+    av_dup_packet @14
+    av_find_default_stream_index @15
+    av_find_input_format @16
+    av_find_stream_info @17
+    av_frac_add @18
+    av_frac_init @19
+    av_frac_set @20
+    av_get_packet @21
+    av_gettime @22
+    av_guess_codec @23
+    av_guess_image2_codec @24
+    av_hex_dump @25
+    av_index_search_timestamp @26
+    av_interleaved_write_frame @27
+    av_new_packet @28
+    av_new_stream @29
+    av_open_input_file @30
+    av_open_input_stream @31
+    av_pkt_dump @32
+    av_probe_image_format @33
+    av_probe_input_format @34
+    av_read_frame @35
+    av_read_image @36
+    av_read_packet @37
+    av_read_pause @38
+    av_read_play @39
+    av_register_all @40
+    av_register_image_format @41
+    av_register_input_format @42
+    av_register_output_format @43
+    av_seek_frame @44
+    av_seek_frame_binary @45
+    av_set_parameters @46
+    av_set_pts_info @47
+    av_write_frame @48
+    av_write_header @49
+    av_write_image @50
+    av_write_trailer @51
+    avidec_init @52
+    avienc_init @53
+    avs_init @54
+    brktimegm @55
+    codec_aiff_tags @56 DATA
+    codec_bmp_tags @57 DATA
+    codec_get_bmp_id @58
+    codec_get_bmp_tag @59
+    codec_get_id @60
+    codec_get_tag @61
+    codec_get_wav_id @62
+    codec_get_wav_tag @63
+    codec_tags @64 DATA
+    codec_wav_tags @65 DATA
+    crc_init @66
+    daud_init @67
+    dts_iformat @68 DATA
+    dump_format @69
+    dv_assemble_frame @70
+    dv_delete_mux @71
+    dv_flush_audio_packets @72
+    dv_get_packet @73
+    dv_init_demux @74
+    dv_init_mux @75
+    dv_produce_packet @76
+    ea_init @77
+    end_tag @78
+    ff_adts_init @79
+    ff_aiff_init @80
+    ff_dv_init @81
+    ff_mmf_init @82
+    ff_mov_iso639_to_lang @83
+    ff_mov_obj_type @84 DATA
+    ff_parse_specific_params @85
+    ff_qt_default_palette_16 @86 DATA
+    ff_qt_default_palette_256 @87 DATA
+    ff_qt_default_palette_4 @88 DATA
+    ff_wav_init @89
+    ffm_init @90
+    ffm_nopts @91 DATA
+    fifo_free @92
+    fifo_init @93
+    fifo_read @94
+    fifo_realloc @95
+    fifo_size @96
+    fifo_write @97
+    file_protocol @98 DATA
+    filename_number_test @99
+    film_init @100
+    find_info_tag @101
+    first_iformat @102 DATA
+    first_image_format @103 DATA
+    first_oformat @104 DATA
+    first_protocol @105 DATA
+    flac_codec @106 DATA
+    flic_init @107
+    flv_iformat @108 DATA
+    flvdec_init @109
+    flvenc_init @110
+    fourxm_init @111
+    frame_hook_add @112
+    frame_hook_process @113
+    frame_hook_release @114
+    get_aiff_header @115
+    get_be16 @116
+    get_be24 @117
+    get_be32 @118
+    get_be64 @119
+    get_buffer @120
+    get_byte @121
+    get_checksum @122
+    get_frame_filename @123
+    get_le16 @124
+    get_le24 @125
+    get_le32 @126
+    get_le64 @127
+    get_partial_buffer @128
+    get_strz @129
+    get_wav_header @130
+    gif_iformat @131 DATA
+    gif_image_format @132 DATA
+    gif_init @133
+    gif_write @134
+    guess_format @135
+    guess_image_format @136
+    guess_stream_format @137
+    h261_iformat @138 DATA
+    h261_oformat @139 DATA
+    h263_iformat @140 DATA
+    h263_oformat @141 DATA
+    h264_iformat @142 DATA
+    h264_oformat @143 DATA
+    idcin_init @144
+    img2_init @145
+    img_init @146
+    ingenient_iformat @147 DATA
+    init_checksum @148
+    init_put_byte @149
+    ipmovie_init @150
+    jpeg_image_format @151 DATA
+    jpeg_init @152
+    localtime_r @153
+    loop_input @154 DATA
+    m4v_iformat @155 DATA
+    m4v_oformat @156 DATA
+    match_ext @157
+    matroska_init @158
+    mjpeg_iformat @159 DATA
+    mjpeg_oformat @160 DATA
+    mktimegm @161
+    mm_init @162
+    mov_init @163
+    mov_write_mdat_tag @164
+    movenc_init @165
+    mp2_oformat @166 DATA
+    mp3_iformat @167 DATA
+    mp3_init @168
+    mpeg1video_oformat @169 DATA
+    mpeg2video_oformat @170 DATA
+    mpegps_demux @171 DATA
+    mpegps_init @172
+    mpegts_close_filter @173
+    mpegts_demux @174 DATA
+    mpegts_init @175
+    mpegts_mux @176 DATA
+    mpegts_open_pes_filter @177
+    mpegts_open_section_filter @178
+    mpegts_parse_close @179
+    mpegts_parse_open @180
+    mpegts_parse_packet @181
+    mpegts_scan_pat @182
+    mpegts_scan_sdt @183
+    mpegts_set_service @184
+    mpegts_write_section @185
+    mpegts_write_section1 @186
+    mpegvideo_iformat @187 DATA
+    nsvdec_init @188
+    null_oformat @189 DATA
+    nut_init @190
+    nuv_init @191
+    ogg_init @192
+    pam_image_format @193 DATA
+    parse_date @194
+    parse_frame_rate @195
+    parse_image_size @196
+    pbm_image_format @197 DATA
+    pcm_alaw_iformat @198 DATA
+    pcm_alaw_oformat @199 DATA
+    pcm_mulaw_iformat @200 DATA
+    pcm_mulaw_oformat @201 DATA
+    pcm_read_seek @202
+    pcm_s16be_iformat @203 DATA
+    pcm_s16be_oformat @204 DATA
+    pcm_s16le_iformat @205 DATA
+    pcm_s16le_oformat @206 DATA
+    pcm_s8_iformat @207 DATA
+    pcm_s8_oformat @208 DATA
+    pcm_u16be_iformat @209 DATA
+    pcm_u16be_oformat @210 DATA
+    pcm_u16le_iformat @211 DATA
+    pcm_u16le_oformat @212 DATA
+    pcm_u8_iformat @213 DATA
+    pcm_u8_oformat @214 DATA
+    pgm_image_format @215 DATA
+    pgmyuv_image_format @216 DATA
+    pipe_protocol @217 DATA
+    pnm_image_format @218 DATA
+    ppm_image_format @219 DATA
+    pstrcat @220
+    pstrcpy @221
+    put_be16 @222
+    put_be24 @223
+    put_be32 @224
+    put_be64 @225
+    put_bmp_header @226
+    put_buffer @227
+    put_byte @228
+    put_fifo @229
+    put_flush_packet @230
+    put_le16 @231
+    put_le24 @232
+    put_le32 @233
+    put_le64 @234
+    put_strz @235
+    put_tag @236
+    put_wav_header @237
+    raw_init @238
+    rawvideo_iformat @239 DATA
+    rawvideo_oformat @240 DATA
+    register_protocol @241
+    rm_init @242
+    roq_init @243
+    set_service_cb @244
+    sgi_image_format @245 DATA
+    shorten_iformat @246 DATA
+    smacker_init @247
+    small_strptime @248
+    sol_init @249
+    start_tag @250
+    str_init @251
+    stristart @252
+    strstart @253
+    swf_init @254
+    theora_codec @255 DATA
+    tta_iformat @256 DATA
+    tta_init @257
+    update_adler32 @258
+    url_close @259
+    url_close_buf @260
+    url_close_dyn_buf @261
+    url_exist @262
+    url_fclose @263
+    url_fdopen @264
+    url_feof @265
+    url_ferror @266
+    url_fget_max_packet_size @267
+    url_fgetc @268
+    url_fgets @269
+    url_fileno @270
+    url_filesize @271
+    url_fopen @272
+    url_fprintf @273
+    url_fseek @274
+    url_fsize @275
+    url_fskip @276
+    url_ftell @277
+    url_get_filename @278
+    url_get_max_packet_size @279
+    url_interrupt_cb @280 DATA
+    url_open @281
+    url_open_buf @282
+    url_open_dyn_buf @283
+    url_open_dyn_packet_buf @284
+    url_read @285
+    url_seek @286
+    url_set_interrupt_cb @287
+    url_setbufsize @288
+    url_split @289
+    url_write @290
+    vmd_init @291
+    voc_get_packet @292
+    voc_init @293
+    vorbis_codec @294 DATA
+    vorbis_comment @295
+    wav_codec_get_id @296
+    wc3_init @297
+    westwood_init @298
+    yuv4mpeg_init @299
+    yuv4mpegpipe_iformat @300 DATA
+    yuv4mpegpipe_oformat @301 DATA
+    yuv_image_format @302 DATA

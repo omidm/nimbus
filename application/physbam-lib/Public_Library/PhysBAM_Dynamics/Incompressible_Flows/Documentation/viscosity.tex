@@ -1,0 +1,115 @@
+\documentclass{article}
+
+\title{Effect of Non-Divergence Free Velocity field For Viscosity}
+
+\renewcommand{\vec}[1]{\hbox{\boldmath $#1$}}
+
+\begin{document}
+\maketitle
+
+
+The viscous stress tensor is given as 
+$$\tau_{i,j}(\vec{u}) = \mu \left(\frac{\partial u_i}{\partial x_j}  + \frac{\partial u_j}{\partial x_i} - \frac{2}{3}\delta_{i,j} \nabla\cdot\vec{u} \right)$$
+And the contribution to the velocity field is $\nabla\cdot\vec{\tau}$ and in vector form
+$$\vec{\tau}(\vec{u}) = \mu \left[ \nabla\vec{u}+(\nabla\vec{u})^T - \frac{2}{3} (\nabla\cdot\vec{u}) \vec{I} \right] $$
+If $\vec{u}$ is not divergence free it is written as
+$$\vec{u}=\nabla\times \vec{A} + \nabla p$$
+where the first term is divergence free and the second purely divergent.
+We can write what divergence and grad of $\vec{u}$ are:
+$$\nabla\cdot\vec{u}=\nabla\cdot(\nabla\times\vec{A})+\nabla\cdot\nabla p = \triangle p$$
+$$\nabla\vec{u}=\nabla(\nabla\times\vec{A}) + \nabla(\nabla p)$$
+We can rewrite $\vec{\tau}$ in terms of a divergence free and a non-divergence free field as 
+\begin{eqnarray}
+\vec{\tau}(\nabla\times \vec{A} + \nabla p) &=& \mu \left( \nabla(\nabla\times\vec{A}) + (\nabla(\nabla\times\vec{A}))^T + \nabla(\nabla p) + (\nabla(\nabla p))^T - \frac{2}{3} \triangle p
+\vec{I} \right) \\
+\vec{\tau}(\nabla\times \vec{A}) &=& \mu \left( \nabla(\nabla\times\vec{A}) + (\nabla(\nabla\times\vec{A}))^T \right) \\
+\end{eqnarray}
+and the difference is just
+$$\vec{\tau}(\nabla p) = \mu \left( \nabla(\nabla p) + (\nabla(\nabla p))^T - \frac{2}{3} \triangle p \vec{I} \right). $$
+Since $p$ is $C^2$ continuous we have
+$$\vec{\tau}(\nabla p) = \mu \left( 2\nabla(\nabla p) - \frac{2}{3} \triangle p \vec{I} \right). $$
+Expanded
+$$ \vec{\tau}(\nabla p) = \mu\left[\begin{array}{ccc}
+2 p_{xx} - \frac{2}{3} \triangle p & 2 p_{xy} & 2 p_{xz} \\ 
+2 p_{yx} & 2 p_{yy}-  \frac{2}{3} \triangle p & 2 p_{yz}\\ 
+2 p_{zx} & 2 p_{zy} & 2 p_{zz} - \frac{2}{3} \triangle p\\
+         \end{array} \right]
+$$
+and
+\begin{eqnarray*} \nabla\cdot \vec{\tau}(\nabla p) &=&  \left[
+\begin{array}{c}
+(2\mu p_{xx})_x + (2\mu p_{xy})_y +(2\mu p_{xz})_z - (\frac{2}{3} \mu \triangle p)_x  \\
+(2\mu p_{yx})_x + (2\mu p_{yy})_y  + (2\mu p_{yz})_z - (\frac{2}{3}\mu \triangle p)_y\\
+(2\mu p_{zx})_x + (2 \mu p_{zy})_y + (2\mu p_{zz})_z - (\frac{2}{3}\mu \triangle p)_z\\
+\end{array}
+\right] \\
+&=& \left[ 
+\begin{array}{c}
+2\mu p_{xxx} + 2\mu p_{xyy} + 2\mu p_{xzz} - \frac{2}{3} \mu (\triangle p)_x  \\
+2\mu p_{yxx} + 2\mu p_{yyy} + 2\mu p_{yzz} - \frac{2}{3}\mu (\triangle p)_y\\
+2\mu p_{zxx} + 2\mu p_{zyy} + 2\mu p_{zzz} - \frac{2}{3}\mu (\triangle p)_z\\
+\end{array}
+\right]
+\\
+&+& \left[ 
+\begin{array}{c}
+2\mu_x p_{xx} + 2\mu_y p_{xy} + 2\mu_z p_{xz} - \frac{2}{3} \mu_x (\triangle p)  \\
+2\mu_x p_{yx} + 2\mu_y p_{yy} + 2\mu_z p_{yz} - \frac{2}{3}\mu_y (\triangle p)\\
+2\mu_x p_{zx} + 2\mu_y p_{zy} + 2\mu_z p_{zz} - \frac{2}{3}\mu_z (\triangle p)\\
+\end{array}
+\right]\\
+&=& 
+\mu\nabla\left(\frac{4}{3}\triangle p \right) +
+\left[ 
+\begin{array}{c}
+2\mu_x p_{xx} + 2\mu_y p_{xy} + 2\mu_z p_{xz}  \\
+2\mu_x p_{yx} + 2\mu_y p_{yy} + 2\mu_z p_{yz}\\
+2\mu_x p_{zx} + 2\mu_y p_{zy} + 2\mu_z p_{zz}\\
+\end{array}
+\right] - \frac{2}{3}(\triangle p)  \nabla\mu \\
+&=& 
+\mu\nabla\left(\frac{4}{3}\triangle p \right) +
+2(\nabla (\nabla p))\nabla \mu
+ - \frac{2}{3}(\triangle p)  \nabla\mu \\
+\end{eqnarray*}
+If $\mu$ is constant then we get $\nabla\mu=0$ so 
+$$\nabla\cdot\vec{\tau}(\nabla p)=\mu \nabla \frac{4}{3}  \triangle p = \nabla \left( \frac{4}{3} \mu  \triangle p \right)  $$
+which is a gradient of a scalar field so it will be projected to zero, so in this case we can use only one projection solve at the end.
+
+In the case where $\mu$ is varying then we must have $\nabla\times\nabla\cdot\vec{\tau}(\nabla p)=0$.
+First consider $\mu\nabla\left(\frac{4}{3}\triangle p \right)$ we have
+$$\nabla\times \mu\nabla\left(\frac{4}{3}\triangle p \right)=
+\frac{4}{3} \mu \nabla\times \nabla\left(\triangle p \right) + \frac{4}{3} \nabla\mu\times\nabla(\triangle p) =  \frac{4}{3} \nabla\mu\times\nabla(\triangle p)=\beta$$
+The remaining term $2(\nabla(\nabla p))\nabla \mu - \frac{2}{3}(\triangle p)\nabla \mu$ can be written verbosely as
+$$\gamma=
+\left[ 
+\begin{array}{c}
+2\mu_x p_{xx} + 2\mu_y p_{xy} + 2\mu_z p_{xz}  - \frac{2}{3}(\triangle p)  \mu_x  \\
+2\mu_x p_{yx} + 2\mu_y p_{yy} + 2\mu_z p_{yz} - \frac{2}{3}(\triangle p)  \mu_y \\
+2\mu_x p_{zx} + 2\mu_y p_{zy} + 2\mu_z p_{zz} - \frac{2}{3}(\triangle p)  \mu_z \\
+\end{array}
+\right] 
+$$
+Computing the x component of $\nabla\times\gamma$ we get
+\begin{eqnarray*}
+\nabla\times\gamma &=& [2\mu_x p_{zx} + 2\mu_y p_{zy} + 2\mu_z p_{zz} - \frac{2}{3}(\triangle p)  \mu_z]_y \\ 
+&-& [2\mu_x p_{yx} + 2\mu_y p_{yy} + 2\mu_z p_{yz} - \frac{2}{3}(\triangle p) \mu_y]_z
+\end{eqnarray*}
+
+where half of the product rule expansions term cancel (the ones applying to the second factor in each of the terms)
+giving
+\begin{eqnarray*}
+\nabla\times\gamma &=& 
+2\mu_{xy} p_{zx} + 2\mu_{yy} p_{zy} + 2\mu_{yz} p_{zz} - \frac{2}{3}(\triangle p)_y \mu_z \\ 
+&-& 2\mu_{xz} p_{yx} - 2\mu_{yz} p_{yy} - 2\mu_{zz} p_{yz} + \frac{2}{3}(\triangle p)_z \mu_y
+\end{eqnarray*}
+We also need the contribution from 
+$$\beta^x  = \frac{4}{3} \mu_y (\triangle p)_z - \frac{4}{3} \mu_z (\triangle p)_y $$
+which gives
+\begin{eqnarray*}
+\nabla\times\gamma &=& 
+2\mu_{xy} p_{zx} + 2\mu_{yy} p_{zy} + 2\mu_{yz} p_{zz} - 2(\triangle p)_y \mu_z \\ 
+&-& 2\mu_{xz} p_{yx} - 2\mu_{yz} p_{yy} - 2\mu_{zz} p_{yz} + 2(\triangle p)_z \mu_y
+\end{eqnarray*}
+which seems unlikely to dissapear. So a projection is required when $\mu$ is varying.
+\end{document}

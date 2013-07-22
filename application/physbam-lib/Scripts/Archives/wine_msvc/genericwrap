@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+import os
+import sys
+import popen2
+import tempfile
+
+WINE_MSVC_ROOT,CMD=os.path.dirname(sys.argv[0]),os.path.basename(sys.argv[0]).replace("wrap","")
+
+if not os.path.exists(os.path.join(WINE_MSVC_ROOT,"wcmd.exe")):
+   print"You need to find a valid windows install and copy cmd.exe to wcmd.exe in ${WINE_MSVC_ROOT}";
+   sys.exit(1)
+
+#print cmd
+#wine $WINE_MSVC_ROOT/wcmd /c $WINE_MSVC_ROOT/clwrap.cmd $CMD $*
+
+def dos_path(x):
+   return "z:\\"+x.replace("/","\\\\")
+
+cmd="wine %s /c %s %s"%(dos_path(os.path.join(WINE_MSVC_ROOT,"wcmd")),dos_path(os.path.join(WINE_MSVC_ROOT,"clwrap.cmd")),CMD)
+
+files=" ".join(sys.argv[1:])
+file=None
+if len(files)>8000:
+   file=tempfile.NamedTemporaryFile(prefix="longcmd")
+   print file.name
+   file.write(files)
+   file.flush()
+   cmd+=" @z:%s"%file.name
+else:
+   cmd+=" "+files
+#print cmd
+
+pipe=popen2.Popen4(cmd)
+input,pid=pipe.fromchild,pipe.pid
+
+while 1:
+    try:
+        line=input.readline()
+    except IOError:
+        continue
+    if line=="": break
+    if not line.startswith("fixme:") and not line.startswith("err:"): print line
+    sys.stdout.flush()
+exit_code=pipe.wait()
+sys.exit(exit_code>>8)
+
+

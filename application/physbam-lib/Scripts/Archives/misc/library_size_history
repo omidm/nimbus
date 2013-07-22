@@ -1,0 +1,15 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $base='2006-12-21';
+my $days=4*365+263;
+my @sizes;
+
+for my $i (0..$days){
+    my $backwards=$days-$i;
+    my $date=`date -d '$base -${backwards}days' +%Y-%m-%d`;chomp $date;
+    system "cvs up -d -D $date";
+    my $lines=`cat */*.{h,cpp} | wc -l`;chomp $lines;
+    push @sizes,$lines;
+    print "\n\nRESULT: $i, $date, $lines\n\n\n";}

@@ -1,0 +1,9 @@
+Do not check in folders with -build or -stamp suffixes!
+
+zlib - v1.2.5 - http://zlib.net - REQUIRES: None
+libpng - v1.5.6 - http://www.libpng.org/pub/png/libpng.html - REQUIRES: zlib
+libjpeg - v8c - http://www.ijg.org - REQUIRES: None
+pthreads-win32 - v2.9.x (CVS Source Checkout 11/22/11) - http://sourceware.org/pthreads-win32/ - REQUIRES: None - Windows-only
+freeglut - v2.6.0 - http://freeglut.sourceforge.net/index.php - REQUIRES: None (CMakeLists.txt from http://trac.dinoprojects.com/dinoprojects/browser/freeglut/trunk)
+FLTK - v1.3.0 - http://www.fltk.org/ - REQUIRES: zlib, libpng, libjpeg, pthreads
+OpenMPI - v1.4.4 - http://www.open-mpi.org/ - REQUIRES: None - Windows-only (Provided as a tar.gz archive to avoid checking in all files)

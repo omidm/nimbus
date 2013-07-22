@@ -1,0 +1,42 @@
+# Inspect Jamfile
+
+project
+    :
+    requirements
+    <link>static
+    <runtime-link>static
+    <threading>single
+    :
+    source-location .. 
+    ;
+
+exe inspect
+    :
+    inspect.cpp license_check.cpp link_check.cpp long_name_check.cpp tab_check.cpp crlf_check.cpp
+    copyright_check.cpp minmax_check.cpp
+    /boost/filesystem//boost_filesystem
+    /boost/regex//boost_regex
+    :
+    :
+    release
+    ;
+
+install dist-bin
+    :
+    inspect
+    :
+    <install-type>EXE
+    <location>../../../dist/bin
+    :
+    release
+    ;
+
+install dist-lib
+    :
+    inspect
+    :
+    <install-type>LIB
+    <location>../../../dist/lib
+    :
+    release
+    ;

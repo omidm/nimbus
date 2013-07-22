@@ -1,0 +1,35 @@
+EXPORTS
+    av_add_i @1
+    av_add_q @2
+    av_cmp_i @3
+    av_crc @4
+    av_crc04C11DB7 @5 DATA
+    av_crc07 @6 DATA
+    av_crc8005 @7 DATA
+    av_crcEDB88320 @8 DATA
+    av_crc_init @9
+    av_d2q @10
+    av_dbl2ext @11
+    av_dbl2int @12
+    av_div_i @13
+    av_div_q @14
+    av_ext2dbl @15
+    av_flt2int @16
+    av_i2int @17
+    av_int2dbl @18
+    av_int2flt @19
+    av_int2i @20
+    av_log2_i @21
+    av_mod_i @22
+    av_mul_i @23
+    av_mul_q @24
+    av_reduce @25
+    av_rescale @26
+    av_rescale_q @27
+    av_rescale_rnd @28
+    av_shr_i @29
+    av_sub_i @30
+    av_sub_q @31
+    ff_gcd @32
+    ff_log2_tab @33 DATA
+    ff_sqrt_tab @34 DATA

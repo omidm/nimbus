@@ -1,0 +1,56 @@
+%% LyX 1.3 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage{pslatex}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,letterpaper,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Bold symbol macro for standard LaTeX users
+\newcommand{\boldsymbol}[1]{\mbox{\boldmath $#1$}}
+
+
+\usepackage{babel}
+\makeatother
+\begin{document}
+
+\title{Rigid Grouping}
+
+\maketitle
+
+Suppose we have a system of particles with masses, positions, and
+velocities $m_{i},\mathbf{x}_{i},\mathbf{v}_{i}$. This system has
+center of mass $\mathbf{x}=\frac{\sum m_{i}\mathbf{x}_{i}}{\sum m_{i}}$,
+and linear and angular momenta:
+
+\begin{itemize}
+\item Linear momentum: $\mathbf{p}=\sum m_{i}\mathbf{v}_{i}$
+\item Angular momentum about $\mathbf{x}$: $\mathbf{L}=\sum\mathbf{r}_{i}\times m_{i}\mathbf{v}_{i}$
+\end{itemize}
+Let $\mathbf{r}_{i}=\mathbf{x}_{i}-\mathbf{x}$. Note that $\sum m_{i}\mathbf{r}_{i}=0$
+(easy to show using definition of $\mathbf{x}$). If these particles
+were moving as a rigid group with linear velocity $\mathbf{v}$ and
+angular velocity $\omega$ then $\mathbf{v}_{i}=\mathbf{v}+\omega\times\mathbf{r}_{i}$
+and we would have
+
+\begin{itemize}
+\item Linear momentum: $\mathbf{p}'=\sum m_{i}\left(\mathbf{v+\omega\times}\mathbf{r}_{i}\right)=\sum m_{i}\mathbf{v}+\underbrace{\omega\times\sum m_{i}\mathbf{r}_{i}}_{=0\, since\,\sum m_{i}\mathbf{r}_{i}=0}=\sum m_{i}\mathbf{v}$
+\item Angular momentum: $\mathbf{L}'=\sum\mathbf{r}_{i}\times m_{i}\left(\mathbf{v}+\omega\times\mathbf{r}_{i}\right)=\underbrace{\sum m_{i}\mathbf{r}_{i}\times\mathbf{v}}_{=0\, since\,\sum m_{i}\mathbf{r}_{i}=0}+\sum m_{i}\mathbf{r}_{i}\times\left(\omega\times\mathbf{r}_{i}\right)$
+
+\begin{itemize}
+\item Note $\mathbf{r}_{i}\times\left(\omega\times\mathbf{r}_{i}\right)=\left(\mathbf{r}_{i}\cdot\mathbf{r}_{i}\right)\omega-\left(\mathbf{r}_{i}\cdot\omega\right)\mathbf{r}_{i}=\left(\mathbf{r}_{i}^{T}\mathbf{r}_{i}-\mathbf{r}_{i}\mathbf{r}_{i}^{T}\right)\omega$
+\item Letting $I=\sum m_{i}\left(\mathbf{r}_{i}^{T}\mathbf{r}_{i}-\mathbf{r}_{i}\mathbf{r}_{i}^{T}\right)$,
+we get $\mathbf{L}'=I\omega$
+\end{itemize}
+\end{itemize}
+We want the rigid group to conserve momentum, hence we can solve for
+$\mathbf{v}$ and $\omega$:
+
+$\mathbf{p}=\mathbf{p}'\Rightarrow\sum m_{i}\mathbf{v}_{i}\mathbf{=\sum}m_{i}\mathbf{v}\Rightarrow\mathbf{v}=\frac{\sum m_{i}\mathbf{v}_{i}}{\sum m_{i}}$
+
+$\mathbf{L=L}'\Rightarrow\sum\mathbf{r}_{i}\times m_{i}\mathbf{v}_{i}=I\omega\Rightarrow\omega=I^{-1}\left(\sum\mathbf{r}_{i}\times m_{i}\mathbf{v}_{i}\right)$
+\end{document}

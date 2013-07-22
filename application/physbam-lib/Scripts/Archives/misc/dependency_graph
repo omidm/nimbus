@@ -1,0 +1,104 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+my $debug=0;
+
+my %dependency_hash;
+
+sub collapse_path
+{
+    my $path=shift;
+    chomp $path;
+    my @paths=split('/',$path);
+
+    my @new_paths;
+    for my $item (@paths){
+        if(@new_paths && $item eq ".."){
+            my $last_item=pop @new_paths;
+            if($last_item eq "."){ 
+                push @new_paths,$item;}}
+        elsif(@new_paths && $item eq "."){} # do nothing
+        else{
+            push @new_paths,$item;}}
+
+    return join('/',@new_paths);
+}
+
+sub split_filename
+{
+    my $path=shift;
+    if($path=~/(.*)\/([^\/]*)\$/){return ($1,$2);}
+    else{return (".",$path);}
+}
+
+sub get_file_dependencies
+{
+    my $path=shift;
+    my ($dir,$file)=split_filename $path;
+    my @included_files;
+
+    if($debug){print "*** Processing '$path' ***************************\n";}
+    else{print "Processing '$path'\n";}
+    open INPUT,"<$path";
+    while(my $line=<INPUT>){
+        next unless $line=~/#include\s*"(.*)"/;
+        my ($thisdir,$thisfile)=split_filename $1;
+        my $fix_dir=collapse_path "$dir/$thisdir";
+        if($debug){print "Got $dir $thisdir $fix_dir\n";}
+        push @included_files,"$fix_dir/$thisfile";}
+
+    return @included_files;
+}
+
+if(!$ARGV[0]){
+    print "Usage: $0 [-hl <highlight_file>] <files> ...\n";
+    exit;}
+
+my %parsed_arguments;
+my $prune="";
+GetOptions(
+    "hl=s"=>\$parsed_arguments{hl},
+    "p=s"=>\$prune);
+
+my @files_to_process=@ARGV;
+while(@files_to_process){
+    my $file=pop @files_to_process;
+    my @new_dependencies=get_file_dependencies $file;
+    my $file_nodir=(split_filename $file)[1];
+    $dependency_hash{$file_nodir}=[];
+    for my $dependency (@new_dependencies){
+        my $dependency_nodir=(split_filename $dependency)[1];
+        if(defined $dependency_hash{$dependency_nodir}){
+            if($debug){print "dependency file $dependency_nodir (from $dependency) already set\n";}}
+        else{
+            if($debug){print "dependency file $dependency_nodir (from $dependency) will be processed\n";}
+            push @files_to_process,$dependency;}
+        push @{$dependency_hash{$file_nodir}},$dependency_nodir;}}
+
+sub basename
+{
+    my $s=shift;
+    $s=~s/^.*\///;
+    $s;
+}
+
+open OUTPUT,">/tmp/dependency_graph.dot";
+print OUTPUT "digraph \"dependency graph\" \{\n";
+print OUTPUT "\trankdir=LR;\n";
+print OUTPUT "\tnodesep=0.1\n";
+if(defined $parsed_arguments{hl}){
+    print OUTPUT "\tnode [shape=triangle, color=red];\n";
+    print OUTPUT "\t\"$parsed_arguments{hl}\"\n";}
+print OUTPUT "\tnode [shape=box, color=blue];\n";
+for my $key (keys %dependency_hash){
+    my $keybase=basename($key);
+    for my $i (@{$dependency_hash{$key}}){
+        my $ibase=basename($i);
+        next if $prune && ($keybase=~/$prune/ || $ibase=~/$prune/);
+        print OUTPUT "\t\"$keybase\" -> \"$ibase\";\n";}}
+print OUTPUT "}\n";
+system("dot -Tps /tmp/dependency_graph.dot > /tmp/dependency_graph.ps") && die "Failed to run dot";
+exec 'evince /tmp/dependency_graph.ps' if -e '/usr/bin/evince';
+system("gv /tmp/dependency_graph.ps");

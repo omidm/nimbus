@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+# usage: prepare_render data_source render_directory
+
+import os
+import re
+import shutil
+import sys
+
+# source of data first argument, render directory second argument
+src,render=sys.argv[1:]
+abs_src=os.path.abspath(src)
+
+os.mkdir(render)
+os.chdir(render)
+os.symlink(abs_src,"Input")
+os.mkdir("Output")
+os.chmod("Output",0775)
+os.mkdir("Common")
+
+framedep=re.compile(r'.+\.-?[0-9]+(\.gz)?')
+map(lambda x: os.symlink("../Input/"+x,"Common/"+x),
+    filter(lambda x:not framedep.match(x),os.listdir("Input")))

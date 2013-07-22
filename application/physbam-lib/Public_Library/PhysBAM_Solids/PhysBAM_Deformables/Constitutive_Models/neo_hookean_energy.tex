@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{amsmath}
+
+\newcommand{\F}{\mathbf{F}}
+\newcommand{\N}{\mathbf{N}}
+\renewcommand{\S}{\mathbf{S}}
+\newcommand{\D}{\mathbf{D}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\f}{\mathbf{f}}
+\renewcommand{\P}{\mathbf{P}}
+\newcommand{\Ds}{\D_s}
+\newcommand{\Dm}{\D_m}
+\renewcommand{\o}{\mathbf{1}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\tr}{\mbox{tr}}
+\newcommand{\m}[1]{\begin{pmatrix}#1\end{pmatrix}}
+\newcommand{\pp}[2]{\frac{\partial #1}{\partial #2}}
+
+\begin{document}
+
+\section{Finite Elements}
+
+\begin{tabular}{|c|c|cc|l|}
+\hline
+Symbol & Definition & Dimensions & Units & Meaning \\
+\hline
+$\o$ & $\o = \m{1 & \cdots & 1}^T$ & $d$ & $1$ & All ones vector \\
+$\S$ & $\S = \m{\I & -\o}$ & $d \times (d+1)$ & $1$ & Scatter matrix \\
+\hline
+$\X_m$ & $\m{X_1 & X_2 & X_3 & X_4}_m$ & $d \times (d+1)$ & $m$ & Material space element node positions \\
+$\X$ & $\m{X_1 & X_2 & X_3 & X_4}$ & $d \times (d+1)$ & $m$ & World space element node positions \\
+$\Dm$ & $\Dm = \X_m \S^T$ & $d \times d$ & $m$ & Material space relative node positions \\
+$\Ds$ & $\Ds = \X \S^T$ & $d \times d$ & $m$ & World space relative node positions \\
+$\F$ & $\F = \Ds \Dm^{-1}$ & $d \times d$ & $1$ & Deformation gradient \\
+\hline
+$J$ & $J = \det(\F)$ & scalar & $1$ & Jacobian \\
+$I_1$ & $I_1 = \tr(\F \F^T)$ & scalar & $1$ & First invariant \\
+\hline
+$V$ & $V = \frac{1}{d!} \det(\Dm)$ & scalar & $m^d$ & Material space element volume \\
+$\N$ & $\N = V \Dm^{-T}$ & $d \times d$ & $m^{d-1}$ & Material space area weighted normals \\
+\hline
+$\psi$ & - & scalar & $kg \, m^{2-d} s^{-1}$ & Energy density \\
+$\phi$ & $\phi = V \psi$ & scalar & $kg \, m^2 s^{-1}$ & Potential energy of element \\
+$\f$ & $\f = -\pp{\phi}{\X}$ & $d \times (d+1)$ & $kg \, m s^{-1}$ & Force on element nodes \\
+$\P$ & $\f = -\P \N \S^T$ & $d \times d$ & $kg \, m^{2-d} s^{-1}$ & First Piola-Kirchoff stress \\
+\hline
+\end{tabular}
+\vspace{.2in}
+
+Consider that a small position change $\delta \X$ is made.  Then
+\begin{eqnarray*}
+0 & = & \f : \delta \X + \delta \phi \\
+& = & \tr(\f \delta \X^T) + \delta \phi \\
+& = & \tr(-\P \N \S^T \delta \X^T) + V \delta \psi \\
+& = & -V \tr(\P \Dm^{-T} \S^T \delta \X^T) + V \delta \psi \\
+\delta \psi & = & \tr(\P \Dm^{-T} \S^T \delta \X^T) \\
+& = & \tr(\P \delta (\Dm^{-T} \S^T \X^T)) \\
+& = & \tr(\P \delta (\Dm^{-T} \Ds^T)) \\
+& = & \tr(\P \delta \F^T) \\
+& = & \P : \delta \F \\
+\P & = & \pp{\psi}{\F}
+\end{eqnarray*}
+
+\section{Potential Energy for Neo Hookean}
+
+Let $\psi = \frac{\mu}{2} (I_1 - d) - \mu \ln J + \frac{\lambda}{2} \ln^2 J$.
+
+\begin{eqnarray*}
+\pp{J}{\F} & = & \pp{}{\F} \det(\F) = \det(\F) \F^{-1} = J \F^{-1} \\
+\pp{I_1}{\F} & = & \pp{}{\F} \tr(\F \F^T) = 2 \F \\
+\pp{}{\F} & = & \pp{}{\F} \ln J = \F^{-1} \\
+\P = \pp{\psi}{\X} & = & \pp{}{\X} \left( \frac{\mu}{2} (I_1 - d) - \mu \ln J + \frac{\lambda}{2} \ln^2 J \right) \\
+& = & \frac{\mu}{2} \pp{I_1}{\X} - \mu \pp{}{\F} \ln J + \lambda \ln J \pp{}{\F} \ln J \\
+& = & \mu (\F - \F^{-1}) + \lambda \ln J \F^{-1}
+\end{eqnarray*}
+
+
+\end{document}

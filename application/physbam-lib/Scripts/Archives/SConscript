@@ -1,0 +1,10 @@
+# SConcript file for Scripts
+
+import os
+
+Import('env')
+
+if env['INSTALL_PATH']:
+    scripts='log/formatlog.py log/log_parse.py misc/rangeutils.py misc/dur misc/lsr misc/obj2off misc/obj2tri misc/pet2tri misc/tri2obj misc/o'.split(' ')
+    node=env.Install(dir=os.path.join(env['INSTALL_PATH'],'bin'),source=scripts)
+    env.Depends('.',node) # make sure install triggers

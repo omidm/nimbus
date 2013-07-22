@@ -1,0 +1,19 @@
+#!/usr/bin/python
+
+import rangeutils
+import sys
+
+use_compute_missing=False
+use_wildcards=False
+basedir="."
+for i in sys.argv[1:]:
+    if i=="-m":
+        use_compute_missing=True
+    elif i=="-w":
+        use_wildcards=True
+    else:
+        basedir=i
+
+ranges=rangeutils.FileRanges(basedir)
+print ranges.format(use_wildcards,use_compute_missing)
+

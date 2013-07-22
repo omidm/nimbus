@@ -1,0 +1,43 @@
+#!/usr/bin/python
+
+import os
+import sys
+import optparse
+from struct import *
+import random
+
+parser = optparse.OptionParser("usage: %prog [options] input.obj")
+(options,args)=parser.parse_args()
+if len(args)!=1: parser.error("")
+
+input=open(args[0],'r')
+vertices=[]
+triangles=[]
+for line in input:
+    words=line.split()
+    if not len(words): continue
+    type=words[0]
+    args=words[1:]
+    if type=='#': pass
+    elif type=='v':
+        assert(len(args)==3)
+        vertices.append(map(float,args))
+    elif type=='nv': pass
+    elif type=='f':
+        v=map(lambda t:int(t.split('/')[0]),args)
+        for i in range(len(v)-2):
+            triangles.append([v[0],v[i+1],v[i+2]])
+    else: pass
+
+# write format
+output=sys.stdout
+output.write('OFF\n')
+output.write('%d %d 0\n\n'%(len(vertices),len(triangles)))
+
+# write vertices
+for p in vertices:
+    output.write("%5g %5g %5g\n"%(p[0],p[1],p[2]))
+
+# write triangles
+for t in triangles:
+    output.write("3 %s %s %s\n"%(t[0]-1,t[1]-1,t[2]-1))

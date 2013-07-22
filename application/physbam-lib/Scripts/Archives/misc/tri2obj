@@ -1,0 +1,60 @@
+#!/usr/bin/python
+
+import os
+import sys
+import optparse
+from struct import *
+
+parser = optparse.OptionParser("usage: %prog [options] input.tri output.obj")
+parser.add_option('-s','--scale',default=1,type='float',help='multiply input positions by scale factor')
+(options,args)=parser.parse_args()
+if len(args)!=2: parser.error("invalid number of arguments")
+scale=options.scale
+
+output=open(args[1],'w')
+if args[0][-3:]=='.gz':
+    input=os.popen('gunzip < '+args[0],'r')
+else:
+    input=open(args[0],'r')
+
+def readunpack(input,format):
+    s=input.read(calcsize(format))
+    return unpack(format,s)
+
+# read triangle mesh
+number_nodes=readunpack(input,'i')[0]
+three,number_triangles=readunpack(input,'ii')
+assert(three==3)
+triangles=[readunpack(input,'iii') for i in range(number_triangles)]
+
+# read particle state
+one,number_vertices1,number_vertices2,blah=readunpack(input,'=biii')
+assert(one==1 and number_vertices1==number_nodes and number_vertices2==number_nodes)
+three_zeros=readunpack(input,'bbb')
+
+# read positions
+number_vertices=readunpack(input,'i')[0]
+assert(number_vertices==number_nodes);
+vertices=[]
+for p in range(number_vertices):
+    p=readunpack(input,'fff')
+    vertices.append((p[0]*scale,p[1]*scale,p[2]*scale))
+
+# write format
+output.write(
+'''# simple obj file format:
+#   # vertex at coordinates (x,y,z)
+#   v x y z
+#   # triangle with vertices a,b,c
+#   f a b c
+#   # vertices are indexed starting from 1
+
+''')
+
+# write vertices
+for p in vertices:
+    output.write("v %5g %5g %5g\n"%p)
+
+# write triangles
+for t in triangles:
+    output.write("f %s %s %s\n"%t)

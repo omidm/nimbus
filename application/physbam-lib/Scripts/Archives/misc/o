@@ -1,0 +1,158 @@
+#!/usr/bin/python
+######################################################################
+# Copyright 2007-2008, Geoffrey Irving.
+# This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
+######################################################################
+
+import os
+import re
+import sys
+import struct
+import tempfile
+
+### usage
+
+def usage():
+    print "usage: %s <sim directory>"%sys.argv[0]
+    print "       %s <files...>"%sys.argv[0]
+    sys.exit(1)
+
+if len(sys.argv)<2: usage()
+arguments=sys.argv[1:]
+
+### detect architecture suffix
+
+arch=''
+if os.environ.has_key('PLATFORM'):
+    if os.environ['PLATFORM'] != '': arch='_'+os.environ['PLATFORM']
+    else: arch='_pentium4'
+
+### miscellaneous utility functions
+
+temporary_files=[]
+
+def temporary_file(prefix,suffix):
+    file=tempfile.NamedTemporaryFile(suffix=suffix,prefix=os.path.basename(prefix))
+    temporary_files.append(file)
+    return file.name
+
+def temporary_dir(prefix):
+    dir=tempfile.mkdtemp(suffix='',prefix=prefix)
+    temporary_files.append(dir)
+    # TODO: remove directory on completion
+    return dir 
+
+escape_pattern=re.compile(r'([^\w\-\./])')
+def escape(s):
+    return escape_pattern.sub(lambda m:'\\'+m.group(1),s)
+
+def run(prog,args):
+    if os.system('which %s > /dev/null 2>&1'%prog): prog+=arch
+    print 'o: %s %s'%(prog,' '.join(map(escape,args)))
+    exit_code=os.spawnvp(os.P_WAIT,prog,[prog]+args)
+    return exit_code>>8
+
+### match simulation directories
+
+def guess_grid_dimension(grid):
+    dimensions=os.popen('gunzip -c '+grid).read(12)
+    (m,n,mn)=struct.unpack('iii',dimensions) 
+    d=1
+    if mn>7 and mn<20000: d=3
+    elif m>7 and m<20000: d=2
+    print "o: guessing %dd based on %s = %d %d %d"%(d,grid,m,n,mn)
+    return d
+
+def view_directory(directory,other_arguments):
+    def run_dir(prog):
+        print 'o: cd',directory
+        os.chdir(directory)
+        sys.exit(run(prog,other_arguments+['.']))
+    files=os.listdir(directory)
+    if not len(files):
+        print>>sys.stderr,'Nothing to view in empty directory %s'%directory
+        sys.exit(1)
+    for f in os.listdir(directory):
+        file=os.path.join(directory,f)
+        if f=='1':
+            directory=os.path.join(directory,'1')
+            print "o: descending to %s"%directory
+            view_directory(directory,other_arguments)
+        if f.startswith('levelset_tesselated*'): run_dir('opengl_3d')
+        if f.startswith('grid'): run_dir('opengl_%dd'%guess_grid_dimension(file))
+        if f.startswith('rle_grid'): run_dir('opengl_%dd'%guess_grid_dimension(file))
+        if f.startswith('eta'): run_dir('deep_water_%dd_opengl'%guess_grid_dimension(os.path.join(directory,'grid.gz')))
+        if f.startswith('deformable_object_structures') or f.startswith('rigid_body_structure_key'):
+            strings=os.popen('gunzip -c %s | strings '%file).read(1000)
+            guess_2='VECTOR<T,2>' in strings; 
+            guess_3='VECTOR<T,3>' in strings; 
+            if guess_2 and guess_3:
+                print>>sys.stderr,"Can't decide between 2d and 3d based on",file
+                print>>sys.stderr,file,"=",strings
+                sys.exit(1)
+            elif guess_2:
+                print "o: guessing 2d based on %s"%file
+                run_dir('opengl_2d')
+            elif guess_3:
+                print "o: guessing 3d based on %s"%file
+                run_dir('opengl_3d')
+    print>>sys.stderr,'No known project found in %s'%directory
+    sys.exit(1)
+
+if os.path.isdir(arguments[0]):
+    view_directory(arguments[0],arguments[1:])
+elif os.path.isdir(arguments[-1]):
+    view_directory(arguments[-1],arguments[0:-1])
+
+### match rle levelsets
+
+if re.match('(.*_)?rle.*\.gz',arguments[0]):
+    view=temporary_dir('link_view')
+    for a in arguments:
+        def link(name):
+            os.symlink(os.path.abspath(a),os.path.join(view,name))
+        if a.find('rle_grid')!=-1: link('rle_grid.0.gz')
+        elif a.find('rle_levelset')!=-1: link('rle_levelset.0.gz')
+        elif a.find('rle_velocities')!=-1: link('rle_velocities.0.gz')
+        elif a.find('rle_face_velocities')!=-1: link('rle_face_velocities.0.gz')
+        else:
+            print>>sys.stderr,'Non rle file',a
+            sys.exit(1)
+    view_directory(view,[])
+
+### match simple files associated to a simple viewer, possibly with conversions
+
+program_extensions={
+    'evince':['.ps','.pdf','.eps'],
+    'xdvi':['.dvi'],
+    'view_geometry':['.tri','.tet','.phi','.obj','.off'],
+    'display':['.png','.jpg','.gif','.bmp'],
+    'ooffice':['.ods','.xls'],
+    'inkscape':['.svg'],
+    'pbp':['.avi','.mov'],
+    'mplayer':['.wmv','.mpg']}
+
+def obj2tri(obj):
+    tri=temporary_file(obj+'-','.tri.gz')
+    run('obj2tri',[obj,tri])
+    return tri
+def off2tri(off):
+    tri=temporary_file(off+'-','.tri.gz')
+    run('off2tri',[off,tri])
+    return tri
+conversions={'.obj':obj2tri,'.off':off2tri}
+
+def extension_without_gz(f):
+    if f.endswith('.gz'): f=f[:-3]
+    return os.path.splitext(f)[1]
+
+extensions=[extension_without_gz(f) for f in arguments]
+for p,el in program_extensions.items():
+    if extensions[0] in el:
+        if p=='view_geometry' and 0 in [e=='' or e in el for e in extensions]: break # postpone to convert_view to handle .obj files, etc.
+        for i in range(0,len(arguments)): 
+            if conversions.has_key(extensions[i]):
+                arguments[i]=conversions[extensions[i]](arguments[i])
+        sys.exit(run(p,arguments))
+
+print>>sys.stderr, "No known viewer for",' '.join(map(escape,arguments))

@@ -1,0 +1,33 @@
+Random Floating-Point Operations.
+
+Note that sqrt() is always implemented in hardware on the Pentium platform.
+The FPU takes around 70 cycles to complete a square root computation.
+However for some reason it is slow in debug mode, perhaps due to error checking.
+It is much faster in release mode.
+
+The second number is seconds required, the first is that rescaled to integer
+         Minimum                 Mean                    Maximum
+float +  166  0.000020750 secs   251  0.000031375 secs   355  0.000044375 secs 
+float -  137  0.000017125 secs   254  0.000031750 secs   373  0.000046625 secs 
+float *  143  0.000017875 secs   195  0.000024375 secs   207  0.000025875 secs 
+float /  683  0.000085375 secs   717  0.000089625 secs   743  0.000092875 secs 
+modf     766  0.000095750 secs   1252 0.000156500 secs   1340 0.000167500 secs 
+fabs     35   0.000004375 secs   35   0.000004375 secs   36   0.000004500 secs 
+ceil     1009 0.000126125 secs   1417 0.000177125 secs   1812 0.000226500 secs 
+floor    1009 0.000126125 secs   1416 0.000177000 secs   1811 0.000226375 secs 
+pow      509  0.000063625 secs   3247 0.000405875 secs   9411 0.001176375 secs 
+sqrt     47   0.000005875 secs   956  0.000119500 secs   1982 0.000247750 secs 
+exp      232  0.000029000 secs   274  0.000034250 secs   4950 0.000618750 secs 
+log      52   0.000006500 secs   1865 0.000233125 secs   3890 0.000486250 secs 
+log10    234  0.000029250 secs   2051 0.000256375 secs   4074 0.000509250 secs 
+sin      555  0.000069375 secs   2949 0.000368625 secs   3378 0.000422250 secs 
+cos      520  0.000065000 secs   2946 0.000368250 secs   3353 0.000419125 secs 
+tan      3947 0.000493375 secs   4054 0.000506750 secs   4248 0.000531000 secs 
+asin     410  0.000051250 secs   6530 0.000816250 secs   7700 0.000962500 secs 
+acos     811  0.000101375 secs   7073 0.000884125 secs   7934 0.000991750 secs 
+atan     1631 0.000203875 secs   3962 0.000495250 secs   4646 0.000580750 secs 
+atan2    1817 0.000227125 secs   4644 0.000580500 secs   5812 0.000726500 secs 
+sinh     2401 .000300125  secs   10161 .001270125 secs   10802 .001350250 secs 
+cosh     2467 .000308375  secs   10156 .001269500 secs   10770 .001346250 secs 
+tanh     9327 .001165875  secs   10276 .001284500 secs   11620 .001452500 secs 
+

@@ -1,0 +1,128 @@
+div.content-box {
+  font: 12pt Arial, sans-serif;
+  color: black;
+  background-color: #eeeeee;
+  border-style: solid;
+  border-width: 3px 3px 3px 3px;
+  border-color: #444444;
+  padding: 4px;
+}
+
+body {
+  color: black;
+  background-color: #eeeeee;
+  font: 9pt Arial, sans-serif;
+  margin-right: 20px;
+  margin-left: 20px;
+  margin-top: 15px;
+  margin-bottom: 40px;
+}
+h1 {
+  font: 24pt Arial, sans-serif;
+  color: #aa4400;
+  font-weight: bold;
+  padding: 4px;
+  border-width: 0px 0px 0px 0px;
+}
+h2 {
+  color: #222222;
+  border-color: black;
+  border-style: solid;
+  border-width: 0px 0px 0px 0px;
+  font-size: 120%;
+}
+h3 {
+  color: black;
+  border-color: black;
+  border-style: solid;
+  padding: 4px;
+  border-width: 0px 0px 0px 0px;
+  font-size: 100%;
+}
+h4 {
+  color: white;
+  background-color: #212232;
+  border-color: #212232;
+  border-style: solid;
+  padding: 2px;
+  border-width: 0px 0px 0px 5px;
+  font-size: 100%;
+}
+p {
+  font-size: 80%
+}
+
+
+a img {
+border: 0px solid #000000;
+}
+a
+{
+  color: #aa4400;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+
+a.foo
+{
+  color: black;
+}
+a.paper
+{
+   font-weight: bold;
+text-decoration: none;
+//  color: #ffffff;
+  color:  #aa4400;
+
+}
+a:hover
+{
+  color: yellow;
+  background-color: darkblue;
+}
+a.publication
+{
+  background-color: white;
+  color: black;
+  font-size: 70%;
+  border: 3px solid #212232;
+  margin-right: 20px;
+  margin-left: 20px;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  width: 95%;
+}
+table
+{
+  border: 1px solid #000000;
+  cell-spacing: 0px;
+  padding: 0px;
+}
+
+td.entry
+{
+  background-color: #0044aa;
+  color: white;
+  font-weight: bold;
+  padding: 4px;
+}
+th
+{
+  text-align: left;
+  background-color: #dddddd;
+  font-weight: bold;
+  font-size: 120%;   
+}
+th.about
+{
+  background-color: white;
+  color: black;
+  font-size: 70%;
+  border: 3px solid #212232;
+  margin-right: 20px;
+  margin-left: 20px;
+  margin-top: 15px;
+  margin-bottom: 40px;
+  width: 95%;
+}

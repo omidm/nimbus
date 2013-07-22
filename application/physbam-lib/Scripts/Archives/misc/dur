@@ -1,0 +1,42 @@
+#!/usr/bin/python
+import os
+import rangeutils
+import sys
+
+
+basedir="."
+human=False
+for i in sys.argv[1:]:
+    if i=="-h":
+        human=True
+    else:
+        basedir=i
+ranges=rangeutils.FileRanges(basedir)
+
+def format_size(bytes):
+    if human:
+        kbytes=bytes>>10
+        mbytes=kbytes>>10
+        gbytes=mbytes>>10
+        #print "bytes %d got %d kbytes %d mbytes %d gbytes"%(bytes,kbytes,mbytes,gbytes)
+        if gbytes>0:
+            return "%s%.1f GB%s"%(rangeutils.RED,gbytes+float(bytes-(gbytes<<30))/float(1<<30),rangeutils.CLEAR)
+        elif mbytes>0:
+            return "%s%.1f MB%s"%(rangeutils.GREEN,mbytes+float(bytes-(mbytes<<20))/float(1<<20),rangeutils.CLEAR)
+        elif kbytes>0:
+            return "%s%.1f KB%s"%(rangeutils.BLUE,kbytes+float(bytes-(kbytes<<10))/float(1<<10),rangeutils.CLEAR)
+        else:
+            return "%s%d  B%s"%(rangeutils.BLUE,bytes,rangeutils.CLEAR)
+    else: return str(bytes)
+        
+for r in ranges.ranges.values():
+    total_size=reduce(lambda x,y:x+y,map(lambda x: os.stat(x).st_size,r.filenames()))
+    print "%30s %-60s"%(format_size(total_size),r.format(False,False))
+
+#print ranges.format(use_wildcards,use_compute_missing)
+
+
+
+
+    
+

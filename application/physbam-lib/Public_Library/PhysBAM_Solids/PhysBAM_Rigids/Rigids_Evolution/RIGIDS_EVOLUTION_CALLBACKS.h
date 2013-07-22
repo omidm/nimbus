@@ -1,0 +1,35 @@
+//#####################################################################
+// Copyright 2009.
+// This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
+//#####################################################################
+// Class RIGIDS_EVOLUTION_CALLBACKS
+//#####################################################################
+#ifndef __RIGIDS_EVOLUTION_CALLBACKS__
+#define __RIGIDS_EVOLUTION_CALLBACKS__
+
+#include <PhysBAM_Tools/Log/DEBUG_UTILITIES.h>
+#include <PhysBAM_Tools/Utilities/PHYSBAM_OVERRIDE.h>
+#include <cfloat>
+namespace PhysBAM{
+
+template<class TV>
+class RIGIDS_EVOLUTION_CALLBACKS
+{
+    typedef typename TV::SCALAR T;
+public:
+    RIGIDS_EVOLUTION_CALLBACKS()
+    {}
+
+    virtual ~RIGIDS_EVOLUTION_CALLBACKS()
+    {}
+
+//#####################################################################
+    virtual void Update_Rigids_Parameters(const T time){PHYSBAM_WARN_IF_NOT_OVERRIDDEN();}
+    virtual void Preprocess_Solids_Substep(const T time,const int substep){PHYSBAM_WARN_IF_NOT_OVERRIDDEN();}
+    virtual void Postprocess_Solids_Substep(const T time,const int substep){PHYSBAM_WARN_IF_NOT_OVERRIDDEN();}
+    virtual void Apply_Constraints(const T dt,const T time){PHYSBAM_WARN_IF_NOT_OVERRIDDEN();}
+    virtual void Limit_Solids_Dt(T& dt,const T time){PHYSBAM_WARN_IF_NOT_OVERRIDDEN();}
+//#####################################################################
+};
+}
+#endif

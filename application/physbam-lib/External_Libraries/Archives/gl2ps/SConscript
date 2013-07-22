@@ -1,0 +1,4 @@
+# SConscript
+
+Import('env Automatic_Library')
+env.StaticLibrary('gl2ps',source='gl2ps.c')

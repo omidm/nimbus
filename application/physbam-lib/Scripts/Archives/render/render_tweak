@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+# Notes:
+#   upper flames: 1500 - 2080
+#   lower flames: 3000
+
+my $scene="armadillo_clothes";
+my @tweak=(
+    {letter=>'w',name=>'White_Point_Temperature',values=>[2000,2250,2500,2750,3000,3250,3500,3750,4000,4250,4500,4750,5000,5250,5500]},
+    {letter=>'e',name=>'Emission_Amplification',values=>[3500,3750,4000,4250,4500]});
+
+my $count;
+my %done;
+while(%done<50){
+    next if $count++>1000;
+    my $job;
+    my $sub;
+    for my $t(@tweak){
+        my $v=$t->{values}->[int(rand @{$t->{values}}];
+        $job="$job_$t->{letter}$v";
+        #$job=$job.'_'.$t->{letter}.$v;
+        $sub="${sub}s/$t->{name}=.*/$t->{name}=$v/;";}
+    my $sub='s/Output\/(\w*)/Output\/tweak'.$job.'_/';
+    next if exists $done{$job};$done{$job}=1;
+    my $cmd="perl -ne \'$sub;print \$_;\' < Common/$scene.scene > Common/$scene$job.scene";
+    print "Preparing $job: $cmd\n";
+    system $cmd;}
+        
+#for my $name (values %actual){
+#    my $frames="48,100,172,350,450,466";
+#    # my $frames="350";
+#    my $cmd="chromium_render_client.py submit burning_paper_$name /u/irving/physbam/Projects/ray_tracing/ray_tracing_pentium3 \"Common/burning_paper_$name.scene <frame>\" $frames form.stanford.edu /u/irving/physbam/Projects/smoke_and_fire_3d/Burning_Paper/render13_tweak";
+#    print "Submitting $name\n";
+#    system "$cmd\n";
+#    }
+
+# ls ../Common/*.scene | perl -ne '/burning_paper_(.*)\.scene/;system "montage -geometry 640x480 frame_$1_*.rgb seq_$1.png";'
+
+# chromium_render_client.py submit burning_paper_test /u/irving/physbam/Projects/ray_tracing/ray_tracing_pentium3 "Common/burning_paper.scene <frame>" 48,100,172,350,450,466 form.stanford.edu /u/irving/physbam/Projects/smoke_and_fire_3d/Burning_Paper/render13

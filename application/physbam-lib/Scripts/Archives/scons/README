@@ -1,0 +1,9 @@
+How to setup scons:
+
+1. Install scons.
+2. Run setup_symlinks to litter SConstruct/SConscript files throughout your tree.
+3. Copy SConstruct.options into the toplevel physbam directory and adjust if desired.
+   Specifically check the value of cache.
+4. Here's my alias to run scons:
+     alias cns='scons -Q --random --implicit-cache -u -j 32'
+

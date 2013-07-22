@@ -1,0 +1,32 @@
+#!/bin/sh
+
+DIR=`dirname $0`
+echo $DIR
+pushd $DIR
+
+if [ ! -h clwrap ]
+then
+   ln -s genericwrap clwrap
+fi
+
+if [ ! -h linkwrap ]
+then
+   ln -s genericwrap linkwrap
+fi
+
+if [ ! -h libwrap ]
+then
+   ln -s genericwrap libwrap
+fi
+
+cp /n/curvature/data/msvc8/wcmd.exe ./
+if [ ! -f /usr/lib/scons-0.96.95/SCons/wine_setup ] 
+then
+   echo Type the root password at the next prompt;
+   su -c "cp win32cross.py /usr/lib/scons-0.96.95/SCons/Platform && cp mslink.py  /usr/lib/scons-0.96.95/SCons/Tool/mslink.py && touch /usr/lib/scons-0.96.95/SCons/wine_setup && chmod a+r /usr/lib/scons-0.96.95/SCons/Platform/*.py && chmod a+r /usr/lib/scons-0.96.95/SCons/Tool/*.py" root;
+   #touch /usr/lib/scons-0.96.95/SCons/wine_setup
+fi
+
+
+
+popd

@@ -1,0 +1,4 @@
+Scripts to automate generating a Makefile.
+Run create_makefile.sh -h for help.
+Note that you may need to manually add USE_* variables at the top of the 
+generated makefile (above the CUT OFF POINT).  (e.g. add USE_OPENGL=yes, etc.)

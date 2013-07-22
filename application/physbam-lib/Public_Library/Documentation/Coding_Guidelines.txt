@@ -1,0 +1,61 @@
+PhysBAM Coding Guidelines
+-------------------------
+
+1.  Try to minimize white space to be kind to laptop users.
+
+2.  Keep the .h files reasonably sized for the sake of (a) documentation, e.g. put constructors 
+    and destructors in the .h along with functions needed to run them, (b) inlining, e.g., 1-2 
+    line functions belong in the .h (c) read and write should go into the .h for documentation 
+    purposes if possible.
+
+3.  Don't make changes or add functions just to feel useful, i.e., no littering please. Keep 
+    changes limited to what you absolutely need for your application.
+
+4.  Stick with the formatting for consistency and readability (or consistent lack thereof) For 
+    example, declare all functions at the bottom of the .h file, and keep the functions in the 
+    .cpp file in the same order as those in the .h file. Most of the code looks the same (for 
+    better or worse), so let's keep it that way.
+
+5.  Use long clear variable names and function names for readability. Carefully choose nouns, 
+    verbs, etc. "CLASSES" are in all capital letters.  "Functions" start with a capital letter, 
+    and "variables" are in lower case. Separate words with an underscore.
+
+6.  Don't clutter the code with your personal I/O. Put it in the driver routines, or your own 
+    personal derived classes.
+
+7.  Add your name to the copywrite if need be.
+
+8.  Keep classes lightweight without heavy members filled with arrays, etc. Specify these 
+    classes elsewhere and use references or pointers to them in your classes. References are 
+    preferred for necessary variables and pointers for optional ones. This allows classes to 
+    work like toolboxes of functions.
+
+9.  Documentation should be kept to a minimum. Use clear variable names and functions to 
+    document your code with code.
+
+10. Speed is more important than memory, at least when the considerations are comparative 
+    in scope. This is research code for doing hard problems.
+
+11. Avoid platform specific code (e.g. Windows or Linux). Keep this code in your private 
+    driver routines.
+
+12. Be careful with change that might be perceived as dramatic by other parts of the code, 
+    e.g., to protect backwards compatibility.
+
+13. Declare all class variables (public, private, and protected) at the top of the .h file.  
+    List all constructors next.
+
+14. Try to stay const correct at all times. Better compilers will be taking advantage of this.
+
+15. Think about scalability at all times. Avoid $O(n^2)$ algorithms when $O(n \log n)$ 
+    algorithms exist. Don't be lazy just to get something done.
+
+16. Try to avoid duplicate code. Less code is better, as long as speed and flexibility can be 
+    preserved.
+
+17. Set your editor to use 4 spaces instead of the tab character.
+
+18. If you think some of these rules are arbitrary, follow them anyways.
+
+19. If you are unable to follow the rules due to flaws or inconsistencies, follow their 
+    intent (and consider changing the rules).

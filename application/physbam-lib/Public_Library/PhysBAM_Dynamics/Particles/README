@@ -1,0 +1,45 @@
+#####################################################################
+Copyright 2009.
+This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file Documentation/PHYSBAM_COPYRIGHT.txt
+#####################################################################
+
+##################################################
+Directory : PhysBAM_Dynamics/Particles
+Synopsis  : Particle system used by PhysBAM.
+##################################################
+
+DESCRIPTION
+-----------
+
+Particle types:
+
+    COMPRESSIBLE_FLUID_PARTICLES.h
+    DEFORMABLE_BODY_PARTICLES.h
+    PARTICLE_LEVELSET_PARTICLES.h
+    PARTICLE_LEVELSET_REMOVED_PARTICLES.h
+    RIGID_BODY_PARTICLES.h
+    SPH_PARTICLES.h
+    VORTICITY_PARTICLES.h
+
+    Provides particle objects for dynamics. COMPRESSIBLE_FLUID_PARTICLES contains rho, E, phi, grad_phi, velocity and position attributes (see PhysBAM_Tools/Particles/README for a description
+    of attributes). DEFORMABLE_BODY_PARTICLES extends DEFORMABLE_GEOMETRY_PARTICLES (see PhysBAM_Geometry/Particles/README) with mass. PARTICLE_LEVELSET_PARTICLES contain
+    quantized_collision_distance, age, radius, and position. PARTICLE_LEVELSET_REMOVED_PARTICLES extends this and adds velocity. RIGID_BODY_PARTICLES extends RIGID_GEOMETRY_PARTICLES to contain
+    mass and angular_momentum. SPH_PARTICLES contains velocity and position. VORTICITY_PARTICLES contains vorticity, radius, and position.
+
+Particle Attributes:
+    
+    GENERAL_PARTICLE_ATTRIBUTE.h
+    PARTICLE_MASS_ATTRIBUTE.h
+    PARTICLE_PHI_GRADIENT_ATTRIBUTE.h
+
+    PARTICLE_MASS_ATTRIBUTE defines mass to be a scalar for each particle. PARTICLE_PHI_GRADIENT_ATTRIBUTE defines the phi gradient to be a vector for each particle.
+    GENERAL_PARTICLE_ATTRIBUTE defines Energy, radius, density, phi, rho, temperature, age, stored_phi, and material volume to be scalars (one for each particle). It also defines vorticity and
+    angular momentum to be vectors and quantized collision distance to be an unsigned short. GENERAL_PARTICLE_ATTRIBUTE.cpp defines the functions to register these attributes in the
+    PARTICLE_ATTRIBUTE_REGISTRY (see PhysBAM_Tools/Particles/README). We also define in this class a function Initialize_General_Particle() that is called once during the initialization of the
+    simulation that calls the register functions described above. 
+
+Extra functionality:
+
+    GENERAL_PARTICLES_FORWARD.h
+
+    Contains useful forward declarations

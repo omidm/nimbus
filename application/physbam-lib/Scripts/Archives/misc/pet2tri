@@ -1,0 +1,59 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Long;
+
+my $scale=1;
+my $permute=1;
+GetOptions(
+    "scale=f" => \$scale,
+    "permute!" => \$permute);
+
+$_=<>;chomp;
+/(Pet)?SimpleMeshv1\.0/ || die "Unknown type $_.";
+$_=<>;/(\d+)\s+(\d+)/ || die "Weird counts $_.";
+my $nv=$1;
+my $nt=$2;
+
+# read vertices
+my @vertices;
+for my $p (1..$nv){
+    $_=<>;/(\S+)\s+(\S+)\s+(\S+)/ || die "Weird vertex $_.";
+    push @vertices,$1*$scale,$2*$scale,$3*$scale;}
+my %id;
+for my $p (0..$nv-1){
+    $_=<>;my $i;
+    if($permute){/^\s*(\d+)\s*$/ || die "Weird point id $_.";$i=$1;}
+    else{$i=$p;}
+    $id{$i}=$p;}
+keys %id == $nv || die "Point ids aren't unique.";
+
+# reorder vertices
+my $count=0;
+my @permutation;
+my @new_vertices;
+for my $i (sort {$a<=>$b} keys %id){
+    my $p=$id{$i};
+    $permutation[$p]=++$count;
+    push @new_vertices,@vertices[3*$p..3*$p+2];}
+
+# read polygons
+my @triangles;
+for my $t (1..$nt){
+    $_=<>;my ($d,@v)=split;
+    die "Bad degree $d." if $d < 3; 
+    for my $i (1..$d-2){
+        push @triangles,$permutation[$v[0]],$permutation[$v[$i]],$permutation[$v[$i+1]];}}
+
+# write triangle mesh
+print pack 'i',$nv;
+print pack 'ii',3,@triangles/3;
+print pack 'i*',@triangles;
+
+# write particle state
+print pack 'ciii',1,$nv,$nv,10;
+print pack 'ccc',0,0,0;
+
+# write positions
+print pack 'i',$nv;
+print pack 'f*',@new_vertices;

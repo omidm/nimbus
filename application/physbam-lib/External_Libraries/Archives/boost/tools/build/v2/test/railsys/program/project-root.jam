@@ -1,0 +1,7 @@
+
+# Tell that QT should be used. QTDIR will give installation
+# prefix. 
+using qt ;
+
+# Not that good, but sufficient for testing
+using stlport : : /path/to/stlport ;

@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my $scene="sca2005";
+my $frames="241";
+my $server="form.stanford.edu";
+my $executable="~/physbam/Projects/ray_tracing/ray_tracing_hack";
+my $directory="/disk2/irving/physbam/Projects/smoke_and_fire_3d/Burning_Paper/render18";
+my $client="~/physbam/Projects/smoke_and_fire_3d/Burning_Paper/spire_render_client.py";
+my $w=640*2;
+my $h=480*2;
+my $d=8;
+
+for(my $i=0;$i<$d;$i++){
+    # next if $i!=9;
+
+    my $imin=1+$i*$w/$d;
+    my $imax=($i+1)*$w/$d;
+    print "Subframe $i: $imin - $imax\n";
+
+    my $sub1='s/Output\/(\w*)/Output\/'.$scene.'_subframe_'.$i.'_/';
+    my $sub2='s/imin=-?\d+/imin='.$imin.'/';
+    my $sub3='s/imax=\d+/imax='.$imax.'/';
+#    if(-e "Output/subframe_$i.png"){
+#        print "Skipping $i (already seems to exist)\n";
+#        next;}
+    my $prepare="perl -ne \'$sub1;$sub2;$sub3;print \$_;\' < Common/$scene.scene > Common/${scene}_subframe_$i.scene";
+    print "Preparing $i: $prepare\n";
+    system $prepare;
+
+    my $submit="$client submit $scene-subframe_$i $executable \"Common/${scene}_subframe_$i.scene <frame>\" $frames $server $directory";
+    print "Submitting $i: $submit\n";
+    #system $submit;
+    }
+
+# montage -tile 400x1 -geometry 40x480 $scene_{?,??,???}_<frame>.rgb $scene_<frame>.png"
+# for i in `seq 1 10`; do montage -tile 400x1 -geometry 40x480 $scene_{?,??,???}_$1.rgb $scene_$1.png"; done
