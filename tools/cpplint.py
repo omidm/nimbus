@@ -1127,6 +1127,11 @@ def GetHeaderGuardCPPVariable(filename):
 
   fileinfo = FileInfo(filename)
   file_path_from_root = fileinfo.RepositoryName()
+  
+  # only a temporary change to discard "src/" at the beginning of the path,
+  # until we have separate repository for nimbus. - omid 
+  file_path_from_root = file_path_from_root[4:]
+  
   if _root:
     file_path_from_root = re.sub('^' + _root + os.sep, '', file_path_from_root)
   return re.sub(r'[-./\s]', '_', file_path_from_root).upper() + '_'
