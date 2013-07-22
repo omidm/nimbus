@@ -12,5 +12,4 @@ Instructions for building the library:
 Configure the CMake options.
 > make
 
-# [TODO:quhang] Fix the CMake compiling to support external compiling in "physbam_app" folder.
 # [TODO:quhang] Make it compile in MacOS.

@@ -13,6 +13,5 @@ Then type:
 Configure the cmake options.
 Finally, you can run make in the 'Build/Release' folder:
 
-# [TODO:quhang] Fix the cmake script.
 # [TODO:quhang] Make it compile in MacOS.
 
