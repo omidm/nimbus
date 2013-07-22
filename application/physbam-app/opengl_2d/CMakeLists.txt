@@ -21,4 +21,4 @@ SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
         
-INCLUDE(${PROJECT_SOURCE_DIR}/../../Scripts/CMake/Project.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/../../physbam-lib/Scripts/CMake/Nimbus_Application.cmake)

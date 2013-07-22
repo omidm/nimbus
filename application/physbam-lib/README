@@ -3,4 +3,14 @@ Author: Hang Qu <quhang@stanford.edu>
 This is the original PhysBAM library. And CMake scripts and external libraries are included here.
 I expect, in the best case, we will not touch any part of it. It is PhysBAM's philosophy that developer can write water simulation application using the API. But I expect that we might override some classes of the PhysBAM library.
 So, the header files in "Public_Library" folder should be visable to users for writing Nimbus embedded water simulation applicaiton.
+
+Instructions for building the library:
+> cd Public_Library
+> mkdir -p Build/Release
+> cd Build/Release
+> ccmake ../..
+Configure the CMake options.
+> make
+
 # [TODO:quhang] Fix the CMake compiling to support external compiling in "physbam_app" folder.
+# [TODO:quhang] Make it compile in MacOS.
