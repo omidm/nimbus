@@ -15,16 +15,16 @@ H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 
 # Add the dependencies here
-DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)server.o $(LDIR)client.o $(LDIR)parser.o $(ADIR)app.o
+DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)scheduler_server.o $(LDIR)scheduler_client.o $(LDIR)scheduler_command.o $(LDIR)parser.o $(ADIR)app.o
 
 $(LDIR)%.o: $(LDIR)%.cc $(LDIR)%.h
-	$(COMPILER) -c -o $@ $< $(FLAGS) $(LIBS) $(LINK) $(INCL)
+	$(COMPILER) -c -o $@ $< $(FLAGS) $(LIBS) $(LINK) $(INCL) -I $(ROOT)
 
 $(ADIR)%.o: $(ADIR)%.cc $(ADIR)$(wildcard *.h)
-	$(COMPILER) -c -o $@ $< $(FLAGS) -I $(LDIR) $(LIBS) $(LINK) $(INCL)
+	$(COMPILER) -c -o $@ $< $(FLAGS) -I $(ROOT) $(LIBS) $(LINK) $(INCL)
 
 scheduler: $(CPP_FILES) $(H_FILES) $(DEPS) 
-	$(COMPILER) -o scheduler -I $(LDIR) $(CPP_FILES) $(DEPS) $(LIBS) $(LINK) $(INCL)
+	$(COMPILER) -o scheduler -I $(ROOT) $(CPP_FILES) $(DEPS) $(LIBS) $(LINK) $(INCL)
 
 clean:
 	rm scheduler         

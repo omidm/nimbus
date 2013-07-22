@@ -1,7 +1,7 @@
 #include <iostream>
 #include <pthread.h>
-#include "scheduler.h"
-#include "application.h"
+#include "lib/scheduler.h"
+#include "lib/application.h"
 #include "../application/1d-stencil/app.h"
 
 using namespace std;
@@ -15,8 +15,9 @@ int main (int argc, char *argv[]) {
   Scheduler * s = new Scheduler(LISTENING_PORT);
   
   App * app0 = new App();
-  s->addApp(app0);
-  s->appMap[0]->loadApp();
+  //s->addApp(app0);
+  //s->appMap[0]->loadApp();
+  app0->loadApp();
   
   s->run();
 }
