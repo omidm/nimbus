@@ -9,10 +9,10 @@ typedef uint ConnectionId;
 
 using boost::asio::ip::tcp;
 
-class Client {
+class SchedulerClient {
 public:
-    Client(uint _connection_port_no);
-    ~Client();
+    SchedulerClient(uint _connection_port_no);
+    ~SchedulerClient();
     
     void run();
     void receive_msg();

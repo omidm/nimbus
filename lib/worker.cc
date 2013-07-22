@@ -45,6 +45,6 @@ Worker::Worker(Application* a) {
   app = a;
 }
 
-void Worker::run(Client* scheduler) {
+void Worker::run(SchedulerClient* scheduler) {
   app->run(scheduler);
 }

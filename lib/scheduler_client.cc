@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/client.h"
+#include "lib/scheduler_client.h"
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -48,15 +48,15 @@
 
 using boost::asio::ip::tcp;
 
-Client::Client(uint _connection_port_no)
+SchedulerClient::SchedulerClient(uint _connection_port_no)
 : connection_port_no(_connection_port_no) {
   io_service = new boost::asio::io_service();
   socket = new tcp::socket(*io_service);
 }
 
-Client::~Client() {}
+SchedulerClient::~SchedulerClient() {}
 
-void Client::receive_msg() {
+void SchedulerClient::receive_msg() {
   while (true) {
     boost::asio::streambuf response;
     boost::asio::read_until(*socket, response, ";");
@@ -68,7 +68,7 @@ void Client::receive_msg() {
   }
 }
 
-void Client::send_msg() {
+void SchedulerClient::send_msg() {
   while (true) {
     std::string msg;
     std::getline(std::cin, msg);
@@ -79,7 +79,7 @@ void Client::send_msg() {
 }
 
 // Note: run from connection_subscription_thread
-void Client::create_new_connections() {
+void SchedulerClient::create_new_connections() {
   tcp::resolver resolver(*io_service);
   tcp::resolver::query query("127.0.0.1", boost::to_string(connection_port_no));
   tcp::resolver::iterator iterator = resolver.resolve(query);
@@ -87,10 +87,10 @@ void Client::create_new_connections() {
   socket->connect(*iterator, error);
 }
 
-void Client::run() {
+void SchedulerClient::run() {
   create_new_connections();
-  sending_thread = new boost::thread(boost::bind(&Client::send_msg, this));
-  receiving_thread = new boost::thread(boost::bind(&Client::receive_msg, this));
+  sending_thread = new boost::thread(boost::bind(&SchedulerClient::send_msg, this));
+  receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receive_msg, this));
 
   // for now, have no other work to do, so just wait until the listening
   // thread terminates.

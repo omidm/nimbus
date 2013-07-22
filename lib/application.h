@@ -4,7 +4,7 @@
 #include <set>
 #include "lib/job.h"
 #include "lib/data.h"
-#include "lib/client.h"
+#include "lib/scheduler_client.h"
 
 class Scheduler;
 
@@ -18,7 +18,7 @@ class Application {
 
     Application();
     virtual void loadApp();
-    virtual void run(Client* scheduler);
+    virtual void run(SchedulerClient* scheduler);
 
 };
 

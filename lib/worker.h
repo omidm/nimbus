@@ -41,6 +41,7 @@
 #ifndef NIMBUS_LIB_WORKER_H
 #define NIMBUS_LIB_WORKER_H
 
+#include "lib/scheduler_client.h"
 #include "lib/cluster.h"
 #include "lib/data.h"
 #include "lib/job.h"
@@ -65,7 +66,7 @@ class Worker {
     JobSet jobs;
     Application* app;
     
-    void run(Client* client);
+    void run(SchedulerClient* client);
 
     void addJob(Job* job);
     void delJob(Job* job);
