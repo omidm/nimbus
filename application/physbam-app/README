@@ -4,6 +4,7 @@ Application "open2d" and "open3d" are for viewing simulation result.
 Application "water" is a water simulation example, without Nimbus.
 
 Instructions for building applications:
+Please first build the PhysBAM library in folder "physbam-lib".
 Go into the corresponding directory of the application you want to build, e.g.,
 > cd water.
 Then type:
