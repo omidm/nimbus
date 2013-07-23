@@ -33,7 +33,17 @@
  */
 
  /*
-  * Client (worker) side interface of the Nimbus scheduler protocol. 
+  * Client (worker) side interface of the Nimbus scheduler protocol.
+  *
+  * This interface is a simple message passing interface to the scheduler.
+  * It's responsible for transforming commands between object and wire
+  * formats. On the reception side, this means instantiating the proper
+  * command subclass using a factory.
+
+  * Calls to the network should be non-blocking. In the case of
+  * sending, this means we need to have error return values for
+  * whether the send was successful. It should also properly handle no
+  * messages to receive through non-blocking read calls.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -48,9 +58,12 @@
 
 using boost::asio::ip::tcp;
 
-SchedulerClient::SchedulerClient(uint _connection_port_no, Worker* w)
-: connection_port_no(_connection_port_no),
-  worker(w) {
+
+// Why does the client need access to a worker? Shouldn't the worker
+// be calling the client?
+
+SchedulerClient::SchedulerClient(uint _connection_port_no)
+  : connection_port_no(_connection_port_no) {
   io_service = new boost::asio::io_service();
   socket = new tcp::socket(*io_service);
 }
@@ -61,41 +74,30 @@ SchedulerClient::~SchedulerClient() {}
  * This function never exits, and keeps listening to scheduler. Upon command
  * reception it will take the appropriate action. 
  */
-void SchedulerClient::receiveCommand() {
-  while (true) {
-    boost::asio::streambuf response;
-    boost::asio::read_until(*socket, response, ";");
+SchedulerCommand* SchedulerClient::receiveCommand() {
+  boost::asio::streambuf response;
+  boost::asio::read_until(*socket, response, ";");
 
-    std::istream is(&response);
-    std::string msg;
-    std::getline(is, msg);
+  std::istream is(&response);
+  std::string msg;
+  std::getline(is, msg);
 
-    std::cout << "\nReceived msg: " << msg << "\n";
-    SchedulerCommand* com = new SchedulerCommand(msg);
-    /*
-     * will add the code to take the appropriate action based on com. - Omid
-     */
-  }
+  std::cout << "\nReceived msg: " << msg << "\n";
+  SchedulerCommand* com = new SchedulerCommand(msg);
+  return com;
 }
 
 /* 
  * This function never exits, and sends the commands loaded in the command
  * transmission buffer to the scheduler.
  */
-void SchedulerClient::sendCommand() {
-  while (true) {
-    /*
-     * will add the code to sleep until the command buffer is loaded, then wake
-     * up and send the commends. Forr now just the cin interface. - Omid
-     */
-    // std::string msg = command->toString();
-
-    std::string msg;
-    std::getline(std::cin, msg);
-    boost::system::error_code ignored_error;
-    boost::asio::write(*socket, boost::asio::buffer(msg),
-        boost::asio::transfer_all(), ignored_error);
-  }
+void SchedulerClient::sendCommand(SchedulerCommand* command) {
+  std::string msg = command->toString();
+  boost::system::error_code ignored_error;
+  boost::asio::write(*socket,
+                     boost::asio::buffer(msg),
+                     boost::asio::transfer_all(),
+                     ignored_error);
 }
 
 void SchedulerClient::create_new_connections() {
@@ -108,13 +110,13 @@ void SchedulerClient::create_new_connections() {
 
 void SchedulerClient::run() {
   create_new_connections();
-  sending_thread = new boost::thread(boost::bind(&SchedulerClient::sendCommand, this));  // NOLINT
-  receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receiveCommand, this)); // NOLINT
+  //  sending_thread = new boost::thread(boost::bind(&SchedulerClient::sendCommand, this));  // NOLINT
+  //  receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receiveCommand, this)); // NOLINT
 
   // for now, have no other work to do, so just wait until the listening
   // thread terminates.
-  sending_thread->join();
-  receiving_thread->join();
+  //  sending_thread->join();
+  //  receiving_thread->join();
 }
 
 
