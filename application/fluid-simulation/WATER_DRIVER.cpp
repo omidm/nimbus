@@ -5,7 +5,7 @@
 #include "myinclude.h"
 #include "WATER_DRIVER.h"
 #include "WATER_EXAMPLE.h"
-#include "advection_velocity.h"
+#include "advection-velocity.h"
 #include <sched.h>
 #include <unistd.h>
 #include <pthread.h>

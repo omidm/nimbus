@@ -13,13 +13,14 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/main.cpp
         ${PROJECT_SOURCE_DIR}/WATER_DRIVER.cpp
         ${PROJECT_SOURCE_DIR}/WATER_EXAMPLE.cpp
-        ${PROJECT_SOURCE_DIR}/advection_velocity.cpp
+        ${PROJECT_SOURCE_DIR}/advection-velocity.cpp
 	)
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/WATER_DRIVER.h
         ${PROJECT_SOURCE_DIR}/WATER_EXAMPLE.h
         ${PROJECT_SOURCE_DIR}/myinclude.h
-        ${PROJECT_SOURCE_DIR}/advection_velocity.h
+        ${PROJECT_SOURCE_DIR}/advection-velocity.h
+        ${PROJECT_SOURCE_DIR}/global-repo.h
 	)
         
 #List the libraries you want to link against - including a higher-level
