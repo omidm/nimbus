@@ -47,19 +47,30 @@
 #include "lib/scheduler_command.h"
 
 typedef uint ConnectionId;
+class Worker;
 
 using boost::asio::ip::tcp;
 
 class SchedulerClient {
   public:
-    explicit SchedulerClient(uint _connection_port_no);
+    explicit SchedulerClient(uint _connection_port_no, Worker * w);
     ~SchedulerClient();
 
+
     void run();
-    SchedulerCommand* receiveCommand();
-    void sendCommand(SchedulerCommand* c);
+
+    // temporary, will change to the commented version.
+    void receiveCommand();
+    void sendCommand();
+    // SchedulerCommand* receiveCommand();
+    // void sendCommand(SchedulerCommand* c);
 
   private:
+    // port number to connect to the server
+    ConnectionId connection_port_no;
+
+    Worker * worker;
+
     void create_new_connections();
 
     boost::asio::io_service* io_service;
@@ -72,9 +83,6 @@ class SchedulerClient {
 
     // thread for sending messages
     boost::thread* sending_thread;
-
-    // port number to connect to the server
-    ConnectionId connection_port_no;
 };
 
 

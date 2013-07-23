@@ -48,36 +48,56 @@
 
 using boost::asio::ip::tcp;
 
-SchedulerClient::SchedulerClient(uint _connection_port_no)
-: connection_port_no(_connection_port_no) {
+SchedulerClient::SchedulerClient(uint _connection_port_no, Worker* w)
+: connection_port_no(_connection_port_no),
+  worker(w) {
   io_service = new boost::asio::io_service();
   socket = new tcp::socket(*io_service);
 }
 
 SchedulerClient::~SchedulerClient() {}
 
-SchedulerCommand* SchedulerClient::receiveCommand() {
-  boost::asio::streambuf response;
-  boost::asio::read_until(*socket, response, ";");
+/* 
+ * This function never exits, and keeps listening to scheduler. Upon command
+ * reception it will take the appropriate action. 
+ */
+void SchedulerClient::receiveCommand() {
+  while (true) {
+    boost::asio::streambuf response;
+    boost::asio::read_until(*socket, response, ";");
 
-  std::istream is(&response);
-  std::string msg;
-  std::getline(is, msg);
+    std::istream is(&response);
+    std::string msg;
+    std::getline(is, msg);
 
-  std::cout << "\nReceived msg: " << msg << "\n";
-  SchedulerCommand* com = new SchedulerCommand(msg);
-  return com;
+    std::cout << "\nReceived msg: " << msg << "\n";
+    SchedulerCommand* com = new SchedulerCommand(msg);
+    /*
+     * will add the code to take the appropriate action based on com. - Omid
+     */
+  }
 }
 
-void SchedulerClient::sendCommand(SchedulerCommand* command) {
-  std::string msg = command->toString();
-  std::getline(std::cin, msg);
-  boost::system::error_code ignored_error;
-  boost::asio::write(*socket, boost::asio::buffer(msg),
-                     boost::asio::transfer_all(), ignored_error);
+/* 
+ * This function never exits, and sends the commands loaded in the command
+ * transmission buffer to the scheduler.
+ */
+void SchedulerClient::sendCommand() {
+  while (true) {
+    /*
+     * will add the code to sleep until the command buffer is loaded, then wake
+     * up and send the commends. Forr now just the cin interface. - Omid
+     */
+    // std::string msg = command->toString();
+
+    std::string msg;
+    std::getline(std::cin, msg);
+    boost::system::error_code ignored_error;
+    boost::asio::write(*socket, boost::asio::buffer(msg),
+        boost::asio::transfer_all(), ignored_error);
+  }
 }
 
-// Note: run from connection_subscription_thread
 void SchedulerClient::create_new_connections() {
   tcp::resolver resolver(*io_service);
   tcp::resolver::query query("127.0.0.1", boost::to_string(connection_port_no));
@@ -88,13 +108,13 @@ void SchedulerClient::create_new_connections() {
 
 void SchedulerClient::run() {
   create_new_connections();
-  // sending_thread = new boost::thread(boost::bind(&SchedulerClient::sendCommand, this));  // NOLINT
-  // receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receiveCommand, this)); // NOLINT
+  sending_thread = new boost::thread(boost::bind(&SchedulerClient::sendCommand, this));  // NOLINT
+  receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receiveCommand, this)); // NOLINT
 
   // for now, have no other work to do, so just wait until the listening
   // thread terminates.
-  // sending_thread->join();
-  // receiving_thread->join();
+  sending_thread->join();
+  receiving_thread->join();
 }
 
 
