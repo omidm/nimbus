@@ -45,6 +45,9 @@
 #include <string>
 #include <vector>
 
+#include <vector>
+#include <string>
+
 typedef std::string CommandParameter;
 typedef std::vector<CommandParameter> CommandParameterList;
 

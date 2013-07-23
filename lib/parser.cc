@@ -79,16 +79,27 @@ void parseCommandFromString(const std::string input,
   unsigned int pos = 0;
   unsigned int count = 0;
   for (;;) {
-    unsigned int next = input.find(' ', pos);
-    if (next == std::string::npos) {break;}
-    std::string token(input.substr(pos, next + 1));
+    unsigned long long end = input.find(' ', pos);
+    unsigned long long next = end;
+    if (end == string::npos) {
+      end = input.length();
+    } else {
+      while (input.find(' ', next) == next + 1) {
+        next = next + 1;
+      }
+    }
+    std::string token(input.substr(pos, end - pos));
     if (count == 0) {
       command = token;
     } else {
       parameters.push_back(token);
     }
+    cout << pos << ":" << end << " -> " << next << std::endl;
     pos = next + 1;
     count++;
+    if (end == input.length()) {
+      break;
+    }
   }
 }
 
