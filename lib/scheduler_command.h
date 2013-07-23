@@ -42,6 +42,9 @@
 #ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H
 #define NIMBUS_LIB_SCHEDULER_COMMAND_H
 
+#include <vector>
+#include <string>
+
 typedef std::string CommandParameter;
 typedef std::vector<CommandParameter> CommandParameterList;
 
