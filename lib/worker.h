@@ -41,17 +41,18 @@
 #ifndef NIMBUS_LIB_WORKER_H_
 #define NIMBUS_LIB_WORKER_H_
 
+#include <boost/thread.hpp>
+#include <string>
 #include <map>
 #include "lib/scheduler_client.h"
 #include "lib/cluster.h"
 #include "lib/data.h"
 #include "lib/job.h"
 #include "lib/application.h"
+#include "lib/parser.h"
 
-
-#define JobSet std::set<Job>
-
-class Application;
+class Worker;
+typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
   public:
@@ -61,18 +62,27 @@ class Worker {
     Computer host;
     unsigned int port;
 
+    SchedulerClient* client;
+    boost::thread* scheduler_interface_thread;
+
     DataSet dataSet;
     JobSet jobs;
     Application* app;
 
     void run();
 
+  private:
+    void setupSI();
+
     void addJob(Job* job);
     void delJob(Job* job);
+
+    void loadSchedulerCommands();
+
+    CmSet schedulerCmSet;
 };
 
 
-typedef std::map<int, Worker*> WorkerMap;
 
 
 

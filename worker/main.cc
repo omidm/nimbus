@@ -48,9 +48,6 @@
 
 #define SCHEDULER_PORT 5983
 
-using ::std::cout;
-using ::std::endl;
-
 int main(int argc, char *argv[]) {
   std::cout << "Worker is up!" << std::endl;
   App * app = new App();

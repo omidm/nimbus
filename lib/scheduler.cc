@@ -40,9 +40,9 @@
 
 #include "lib/scheduler.h"
 
-Scheduler::Scheduler(unsigned int port) {
+Scheduler::Scheduler(unsigned int p)
+: port(p) {
   appId = 0;
-  this->port = port;
 }
 
 void Scheduler::run() {

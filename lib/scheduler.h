@@ -55,14 +55,6 @@
 #include "lib/worker.h"
 #include "lib/parser.h"
 
-#define USER_CM_FILE "cmu.txt"
-#define WORKER_CM_FILE "cmw.txt"
-
-typedef std::set<std::string> CmSet;
-
-class Worker;
-typedef std::map<int, Worker*> WorkerMap;
-
 class Scheduler {
   public:
     explicit Scheduler(uint listening_port);
