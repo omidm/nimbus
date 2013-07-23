@@ -58,8 +58,8 @@ class Application {
     JobMap jobMap;
 
     Application();
-    virtual void loadApp();
-    virtual void run(SchedulerClient* scheduler);
+    virtual void load();
+    virtual void start(SchedulerClient* scheduler);
 };
 
 typedef std::map<int, Application*> AppMap;

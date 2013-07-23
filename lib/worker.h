@@ -56,7 +56,7 @@ typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
   public:
-    explicit Worker(unsigned int port, Application * a);
+    explicit Worker(Application * a);
 
     int id;
     Computer host;
@@ -69,7 +69,7 @@ class Worker {
     JobSet jobs;
     Application* app;
 
-    void run();
+    void run(SchedulerClient* c);
 
   private:
     void setupSI();

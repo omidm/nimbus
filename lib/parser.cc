@@ -40,6 +40,7 @@
 
 #include "lib/parser.h"
 #include <stdint.h>
+#include <boost/tokenizer.hpp>
 
 void parseCommand(const std::string& str, const CmSet& cms,
                   std::string& cm, std::vector<int>& args) {
@@ -72,33 +73,25 @@ int parseCommandFile(const std::string& fname, CmSet& cs) {
   return 0;
 }
 
+using boost::tokenizer;
+using boost::char_separator;
+
+char_separator<char> separator(" \n\t");
+
 void parseCommandFromString(const std::string input,
                             std::string& command,
                             std::vector<std::string>& parameters) {
-  uint64_t pos = 0;
-  uint64_t count = 0;
-  for (;;) {
-    uint64_t end = input.find(' ', pos);
-    uint64_t next = end;
-    if (end == std::string::npos) {
-      end = input.length();
-    } else {
-      while (input.find(' ', next) == next + 1) {
-        next = next + 1;
-      }
-    }
-    std::string token(input.substr(pos, end - pos));
-    if (count == 0) {
-      command = token;
-    } else {
-      parameters.push_back(token);
-    }
-    std::cout << pos << ":" << end << " -> " << next << std::endl;
-    pos = next + 1;
-    count++;
-    if (end == input.length()) {
-      break;
-    }
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  if (iter == tokens.end()) {
+    command = "";
+    return;
+  }
+
+  command = *iter;
+  ++iter;
+  for (; iter != tokens.end(); ++iter) {
+    parameters.push_back(*iter);
   }
 }
 

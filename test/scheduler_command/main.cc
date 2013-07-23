@@ -33,51 +33,47 @@
  */
 
  /*
-  * Client (worker) side interface of the Nimbus scheduler protocol. 
+  * The most trivial test application.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_CLIENT_H_
-#define NIMBUS_LIB_SCHEDULER_CLIENT_H_
+#include <pthread.h>
+#include <iostream>  // NOLINT
 
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <map>
 #include "lib/scheduler_command.h"
 
-typedef uint ConnectionId;
-class Worker;
+using ::std::cout;
+using ::std::endl;
 
-using boost::asio::ip::tcp;
-
-class SchedulerClient {
-  public:
-    explicit SchedulerClient(uint _connection_port_no);
-    ~SchedulerClient();
-
-    void run();
-    SchedulerCommand* receiveCommand();
-    void sendCommand(SchedulerCommand* c);
-
-  private:
-    // port number to connect to the server
-    ConnectionId connection_port_no;
-
-    void create_new_connections();
-
-    boost::asio::io_service* io_service;
-
-    // socket for connection
-    tcp::socket* socket;
-
-    // thread for receiving messages
-    boost::thread* receiving_thread;
-
-    // thread for sending messages
-    boost::thread* sending_thread;
+const char* commands[] = {
+      "no-op",
+      "halt 53",
+      "run job3 job0,job1,job2 job5,job6 data4,data5 data5 blah",
+      "copy   data4          host34   ",
+      "copy       data5 192.244.11.2        ",
+      "",
+      "newline\n\ntest",
+      NULL
 };
 
-
-
-#endif  // NIMBUS_LIB_SCHEDULER_CLIENT_H_
+int main(int argc, char *argv[]) {
+  std::cout << "Testing scheduler command class." << std::endl;
+  int i = 0;
+  while (commands[i] != NULL) {
+    cout << "Testing command \'" << commands[i] << std::endl;
+    SchedulerCommand* c = new SchedulerCommand(commands[i]);
+    cout << "  translated to string \'" << c->toString() << '\'' << std::endl;
+    cout << "  translated to tokens ";
+    cout << c->getName() << ":";
+    CommandParameterList params = c->getParameters();
+    CommandParameterList::const_iterator iter = params.begin();
+    for (; iter != params.end(); ++iter) {
+      std::string param = *iter;
+      cout << param << ";";
+    }
+    cout << std::endl;
+    i++;
+    delete c;
+  }
+}

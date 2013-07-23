@@ -33,15 +33,15 @@
  */
 
  /*
-  * A trivial Nimbus worker.
+  * The most trivial test application.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
-#include "lib/client.h"
+#include "lib/scheduler_client.h"
 #include "lib/scheduler.h"
 #include "lib/worker.h"
 #include "lib/application.h"
@@ -52,22 +52,21 @@ using ::std::endl;
 
 class TestApplication : public Application {
   public:
-  void loadApp() {
-    cout << "Loaded Nimbus test application." << std::endl;
+  void load() {
+    cout << "Loading Nimbus test application." << std::endl;
   }
 
-  void run(Client* scheduler) {
-    cout << "Running Nimbus test application." << std::endl;
+  void start(SchedulerClient* scheduler) {
+    cout << "Starting Nimbus test application." << std::endl;
   }
 };
 
 int main(int argc, char *argv[]) {
   std::cout << "Worker is up!" << std::endl;
 
-  Client* c = new Client(5000UL);
+  SchedulerClient* c = new SchedulerClient(5000);
   TestApplication * app0 = new TestApplication();
-  app0->loadApp();
-
+  app0->load();
 
   Worker * w = new Worker(app0);
   c->run();
