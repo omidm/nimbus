@@ -11,8 +11,10 @@ ADIR = $(ROOT)application/1d-stencil/
 LIBS = -lpthread -lboost_system -lboost_thread
 LINK = -L /home/omidm/Downloads/boost_1_53_0/stage/lib
 INCL = -I /home/omidm/Downloads/boost_1_53_0
-H_FILES = $(wildcard *.h)
-CPP_FILES = $(wildcard *.cc)
+# H_FILES = $(wildcard *.h)
+# CPP_FILES = $(wildcard *.cc)
+H_FILES = $(wildcard *.hh)
+CPP_FILES = main.cc
 
 # Add the dependencies here
 DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)scheduler_server.o $(LDIR)scheduler_client.o $(LDIR)scheduler_command.o $(LDIR)parser.o $(ADIR)app.o
@@ -23,14 +25,14 @@ $(LDIR)%.o: $(LDIR)%.cc $(LDIR)%.h
 $(ADIR)%.o: $(ADIR)%.cc $(ADIR)%.h
 	$(COMPILER) -c -o $@ $< $(FLAGS) -I $(ROOT) $(LIBS) $(LINK) $(INCL)
 
-scheduler: $(CPP_FILES) $(H_FILES) $(DEPS) 
-	$(COMPILER) -o scheduler -I $(ROOT) $(CPP_FILES) $(DEPS) $(LIBS) $(LINK) $(INCL)
+worker: $(CPP_FILES) $(H_FILES) $(DEPS) 
+	$(COMPILER) -o worker -I $(ROOT) $(CPP_FILES) $(DEPS) $(LIBS) $(LINK) $(INCL)
 
 clean:
-	rm scheduler         
+	rm worker
   
 clean-all:
-	rm scheduler $(LDIR)*.o $(ADIR)*.o        
+	rm worker $(LDIR)*.o $(ADIR)*.o        
   
 #mpi: $(CPP_FILES) $(H_FILES) 
 #	mpiCC -o scheduler-mpi $(CPP_FILES) $(INCL)                              

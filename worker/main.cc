@@ -38,18 +38,23 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <pthread.h>
+#include <iostream>  // NOLINT
+
+#include "lib/scheduler.h"
 #include "lib/worker.h"
+#include "lib/application.h"
+#include "../application/1d-stencil/app.h"
 
+#define SCHEDULER_PORT 5983
 
-Worker::Worker(unsigned int p, Application* a)
-: port(p), app(a)
-{}
+using ::std::cout;
+using ::std::endl;
 
-void Worker::run() {
-  app->loadApp();
-  // I think the main run loop, which pulls commands off the queue
-  // and dispatches them, should be here. Spawn a separate thread that
-  // reads commands, or do so whenever a job completes. I suspect
-  // the way to do this might be to have a selective thread join.
-  // I.e., "spawn these three threads, join on any one completing".
+int main(int argc, char *argv[]) {
+  std::cout << "Worker is up!" << std::endl;
+  App * app = new App();
+  Worker * w = new Worker(SCHEDULER_PORT, app);
+  w->run();
 }
+

@@ -50,20 +50,16 @@
 #include <set>
 
 
-using namespace std; // NOLINT
+typedef std::set<std::string> CmSet;
 
-typedef set<string> CmSet;
+void parseCommand(const std::string& str, const CmSet& cms, std::string& cm,
+          std::vector<int>& args);
 
-void parseCommand(const string& str, const CmSet& cms, string& cm,
-          vector<int>& args);
-
-int parseCommandFile(const string& fname, CmSet& cs);
+int parseCommandFile(const std::string& fname, CmSet& cs);
 
 void parseCommandFromString(const std::string input,
     std::string& command,
     std::vector<std::string>& parameters);
-
-
 
 
 #endif  // NIMBUS_LIB_PARSER_H_

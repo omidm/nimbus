@@ -58,9 +58,7 @@
 #define USER_CM_FILE "cmu.txt"
 #define WORKER_CM_FILE "cmw.txt"
 
-using namespace std; // NOLINT
-
-typedef set<string> CmSet;
+typedef std::set<std::string> CmSet;
 
 class Worker;
 typedef std::map<int, Worker*> WorkerMap;

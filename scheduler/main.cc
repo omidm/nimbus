@@ -13,12 +13,6 @@ int main (int argc, char *argv[]) {
 
   std::cout << "Nimbus is up!" << std::endl;
   Scheduler * s = new Scheduler(LISTENING_PORT);
-  
-  App * app0 = new App();
-  //s->addApp(app0);
-  //s->appMap[0]->loadApp();
-  app0->loadApp();
-  
   s->run();
 }
 

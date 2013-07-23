@@ -55,7 +55,7 @@ class Application;
 
 class Worker {
   public:
-    explicit Worker(Application* a);
+    explicit Worker(unsigned int port, Application * a);
 
     int id;
     Computer host;
@@ -65,7 +65,7 @@ class Worker {
     JobSet jobs;
     Application* app;
 
-    void run(SchedulerClient* client);
+    void run();
 
     void addJob(Job* job);
     void delJob(Job* job);

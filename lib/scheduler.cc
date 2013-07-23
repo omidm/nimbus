@@ -46,7 +46,7 @@ Scheduler::Scheduler(unsigned int port) {
 }
 
 void Scheduler::run() {
-  cout << "Running the Scheduler" << endl;
+  std::cout << "Running the Scheduler" << std::endl;
 
   loadUserCommands();
   loadWorkerCommands();
@@ -68,20 +68,20 @@ void Scheduler::setupWI() {
 
 void Scheduler::setupUI() {
   while (true) {
-    cout << "command: ";
-    string token("runapp");
-    string str, cm;
-    vector<int> args;
-    getline(cin, str);
+    std::cout << "command: ";
+    std::string token("runapp");
+    std::string str, cm;
+    std::vector<int> args;
+    getline(std::cin, str);
     parseCommand(str, userCmSet, cm, args);
-    cout << "you typed: " << cm << endl;
+    std::cout << "you typed: " << cm << std::endl;
   }
 }
 
 void Scheduler::loadUserCommands() {
-  stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
+  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
   while (true) {
-    string word;
+    std::string word;
     cms >> word;
     if (cms.fail()) {
       break;
@@ -91,9 +91,9 @@ void Scheduler::loadUserCommands() {
 }
 
 void Scheduler::loadWorkerCommands() {
-  stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
   while (true) {
-    string word;
+    std::string word;
     cms >> word;
     if (cms.fail()) {
       break;
