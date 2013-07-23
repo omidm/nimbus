@@ -39,7 +39,6 @@
   */
 
 #include "lib/parser.h"
-
 #include <stdint.h>
 
 void parseCommand(const std::string& str, const CmSet& cms,
