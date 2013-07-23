@@ -42,7 +42,7 @@
 
 
 
-void parseCommand(const string str, const CmSet& cms,
+void parseCommand(const string& str, const CmSet& cms,
                   string& cm, vector<int>& args) {
   cm.clear();
   args.clear();
@@ -69,6 +69,9 @@ void parseCommand(const string str, const CmSet& cms,
 }
 
 
+int parseCommandFile(const string& fname, CmSet& cs) {
+  return 0;
+}
 
 void parseCommandFromString(const std::string input,
                             std::string& command,

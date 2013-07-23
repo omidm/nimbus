@@ -46,9 +46,11 @@
 #include <string>
 #include <set>
 
+class Computer;
+typedef std::set<Computer*> Hosts;
+
 class Node;
-class Link
-{
+class Link {
   Node * ns;
   Node * ne;
   unsigned int capacity;
@@ -57,17 +59,16 @@ class Link
 #define LinkSet std::set<Link>
 #define LinkSetP std::set<Link*>
 
-enum NodeType{ COMPUTER, SWITCH};
+enum NodeType {COMPUTER, SWITCH};
 
-class Node
-{
+class Node {
   public:
     std::string IP;
     int id;
-    
+
     NodeType type;
     LinkSet linkSetP;
-   
+
     Node();
     ~Node();
     virtual NodeType getType();
@@ -76,23 +77,20 @@ class Node
 #define NodeSet std::set<Node>
 #define NodeSetP std::set<Node *>
 
-class Computer : public Node
-{
+class Computer : public Node {
   public:
     unsigned int memCap;
     unsigned int l1Cap;
     unsigned int l2Cap;
     unsigned int l3Cap;
     unsigned int coreNum;
-    
+
     Computer();
     ~Computer();
     virtual NodeType getType();
-    
 };
 
-class Switch : public Node
-{
+class Switch : public Node {
   public:
     unsigned int portNum;
     unsigned int crossSectBand;
@@ -103,27 +101,21 @@ class Switch : public Node
 };
 
 
-class ClusterMap
-{
+class ClusterMap {
   LinkSet linkSet;
   NodeSet nodeSet;
 
-  void addNode(Node *);
-  void delNode(Node *);
+  void addNode(Node * n);
+  void delNode(Node * n);
 
-  void addLink(Link *);
-  void delLink(Link *);
+  void addLink(Link * l);
+  void delLink(Link * l);
 
-  unsigned int getLatency (Node *, Node *);
-  unsigned int getCapacity (Node *, Node *);
+  unsigned int getLatency(Node * n1, Node * n2);
+  unsigned int getCapacity(Node * n1, Node * n2);
 
-  NodeSetP getRoute(Node *, Node *);
-
+  NodeSetP getRoute(Node * n1, Node * n2);
 };
-
-
-
-
 
 #endif  // NIMBUS_LIB_CLUSTER_H_
 

@@ -43,7 +43,7 @@
 #ifndef NIMBUS_LIB_APPLICATION_H_
 #define NIMBUS_LIB_APPLICATION_H_
 
-#include <set>
+#include <map>
 #include "lib/job.h"
 #include "lib/data.h"
 #include "lib/scheduler_client.h"
@@ -52,7 +52,6 @@ class Scheduler;
 
 class Application {
   public:
-
     int id;
     int priority;
     DataMap dataMap;
@@ -61,7 +60,6 @@ class Application {
     Application();
     virtual void loadApp();
     virtual void run(SchedulerClient* scheduler);
-
 };
 
 typedef std::map<int, Application*> AppMap;

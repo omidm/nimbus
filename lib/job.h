@@ -44,40 +44,33 @@
 #include <vector>
 #include <set>
 #include <map>
-#include "data.h"
+#include "lib/data.h"
 
-#define DataSetP std::set<Data *>
-#define JobSetP std::set<Job *>
+class Job;
+typedef std::map<int, Job*> JobMap;
+typedef std::set<Job *> JobSet;
+
 
 typedef std::vector<Data*> dataArray;
 typedef void (*FuncToRun)(const dataArray&);
 
 
-class Job
-{
+class Job {
   public:
     Job(int, FuncToRun);
     FuncToRun handler;
     int id;
 
-    DataSetP inputData;
-    DataSetP outputData;
+    DataSet inputData;
+    DataSet outputData;
 
-    JobSetP waitFor;
-    JobSetP runBefore;
+    JobSet waitFor;
+    JobSet runBefore;
 
-    void Execute(); 
+    void Execute();
     void Sleep();
     void Kill();
-
 };
-
-
-
-typedef std::map<int, Job*> JobMap;
-
-
-
 
 
 #endif  // NIMBUS_LIB_JOB_H_

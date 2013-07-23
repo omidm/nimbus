@@ -43,24 +43,21 @@
 
 #include <set>
 #include <map>
-#include "cluster.h"
+#include "lib/cluster.h"
 
-#define Hosts std::set<Computer*>
-#define Neighbors std::set<Data*>
+class Data;
+typedef std::set<Data*> Neighbors;
+typedef std::map<int, Data*> DataMap;
+typedef std::set<Data *> DataSet;
 
-//typedef std::vector<void *> argArray;
-//typedef void (*FuncToCreate)(const argArray&);
 
-
-class Data
-{
+class Data {
   public:
     Data();
 
     Hosts hosts;
-    //Neighbors
-    int id; 
-
+    Neighbors neighbors;
+    int id;
 
     void Create();
     void Destroy(Computer);
@@ -74,15 +71,6 @@ class Data
     bool advanceData;
     void (*funcSplit)(Data *, Data *);
     void (*funcMerge)(Data *, Data *);
-
-
 };
-
-
-
-typedef std::map<int, Data*> DataMap;
-
-
-
 
 #endif  // NIMBUS_LIB_DATA_H_

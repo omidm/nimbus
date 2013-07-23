@@ -41,12 +41,14 @@
 #ifndef NIMBUS_LIB_SCHEDULER_H_
 #define NIMBUS_LIB_SCHEDULER_H_
 
+#include <boost/thread.hpp>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
-#include <boost/thread.hpp>
+#include <map>
+#include <set>
 #include "lib/scheduler_server.h"
 #include "lib/application.h"
 #include "lib/cluster.h"
@@ -65,36 +67,36 @@ typedef std::map<int, Worker*> WorkerMap;
 
 class Scheduler {
   public:
-    Scheduler(uint listening_port);
-    
+    explicit Scheduler(uint listening_port);
+
     Computer host;
     unsigned int port;
     unsigned int appId;
 
     SchedulerServer* server;
-    
-    //AppMap appMap;
+
+    // AppMap appMap;
     WorkerMap workerMap;
     ClusterMap clusterMap;
-    
+
     void run();
 
     void loadClusterMap(std::string);
 
-    void delWorker(Worker *);
+    void delWorker(Worker * w);
     Worker * addWorker();
-    Worker * getWorker(int);
+    Worker * getWorker(int id);
 
   private:
     void setupUI();
     void setupWI();
-    
+
     boost::thread* worker_interface_thread;
     boost::thread* user_interface_thread;
 
     void loadUserCommands();
     void loadWorkerCommands();
-    
+
     CmSet userCmSet;
     CmSet workerCmSet;
 };

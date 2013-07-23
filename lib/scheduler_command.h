@@ -42,23 +42,26 @@
 #ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
 #define NIMBUS_LIB_SCHEDULER_COMMAND_H_
 
+#include <string>
+#include <vector>
+
 typedef std::string CommandParameter;
 typedef std::vector<CommandParameter> CommandParameterList;
 
 class SchedulerCommand {
-public:
-  SchedulerCommand();
-  SchedulerCommand(std::string command);
-  SchedulerCommand(std::string name, CommandParameterList parameters);
-  virtual ~SchedulerCommand();
+  public:
+    SchedulerCommand();
+    explicit SchedulerCommand(std::string command);
+    SchedulerCommand(std::string name, CommandParameterList parameters);
+    virtual ~SchedulerCommand();
 
-  virtual std::string toString();
-  virtual std::string getName();
-  virtual CommandParameterList getParameters();
+    virtual std::string toString();
+    virtual std::string getName();
+    virtual CommandParameterList getParameters();
 
-private:
-  std::string name;
-  CommandParameterList parameters;
+  private:
+    std::string name;
+    CommandParameterList parameters;
 };
 
 #endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_

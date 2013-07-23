@@ -41,27 +41,27 @@
 #ifndef NIMBUS_LIB_PARSER_H_
 #define NIMBUS_LIB_PARSER_H_
 
+#include <boost/thread.hpp>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <set>
-#include <boost/thread.hpp>
 
 
 using namespace std;
 
 typedef set<string> CmSet;
 
-void parseCommand(const string str, const CmSet& cms, string& cm, vector<int>& args);
+void parseCommand(const string& str, const CmSet& cms, string& cm,
+          vector<int>& args);
 
-int parseCommandFile(const char * fname, CmSet& cs);
+int parseCommandFile(const string& fname, CmSet& cs);
 
 void parseCommandFromString(const std::string input,
-			    std::string& command,
-			    std::vector<std::string>& parameters);
-			    
+    std::string& command,
+    std::vector<std::string>& parameters);
 
 
 

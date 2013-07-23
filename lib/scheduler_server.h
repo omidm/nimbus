@@ -44,8 +44,9 @@
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
+#include <string>
 #include <map>
-#include "parser.h"
+#include "lib/parser.h"
 
 typedef unsigned int ConnectionId;
 class Scheduler;
@@ -54,20 +55,18 @@ class SchedulerServerConnection;
 using boost::asio::ip::tcp;
 
 class SchedulerServer {
-public:
+  public:
     SchedulerServer(unsigned int _connection_port_no, Scheduler* sch);
     ~SchedulerServer();
 
     Scheduler * scheduler;
-    
+
     void run();
     void receive_msg(const std::string& msg, SchedulerServerConnection* conn);
 
-    
-private:
-
+  private:
     void listen_for_new_connections();
-    
+
     typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
     typedef ConnectionMap::iterator ConnectionMapIter;
     ConnectionMap connections;
@@ -79,7 +78,7 @@ private:
 
 
 class SchedulerServerConnection {
-public:
+  public:
     SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock);
     ~SchedulerServerConnection();
     void send_msg(const std::string& msg);
@@ -87,8 +86,8 @@ public:
     ConnectionId get_id() const {
         return id;
     }
-    
-private:
+
+  private:
     void listen_for_msgs();
     ConnectionId id;
     SchedulerServer* server;
