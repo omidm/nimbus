@@ -40,7 +40,7 @@
 
 #include "lib/parser.h"
 
-
+#include <stdint.h>
 
 void parseCommand(const std::string& str, const CmSet& cms,
                   std::string& cm, std::vector<int>& args) {
@@ -76,12 +76,12 @@ int parseCommandFile(const std::string& fname, CmSet& cs) {
 void parseCommandFromString(const std::string input,
                             std::string& command,
                             std::vector<std::string>& parameters) {
-  unsigned int pos = 0;
-  unsigned int count = 0;
+  uint64_t pos = 0;
+  uint64_t count = 0;
   for (;;) {
-    unsigned long long end = input.find(' ', pos);
-    unsigned long long next = end;
-    if (end == string::npos) {
+    uint64_t end = input.find(' ', pos);
+    uint64_t next = end;
+    if (end == std::string::npos) {
       end = input.length();
     } else {
       while (input.find(' ', next) == next + 1) {
@@ -94,7 +94,7 @@ void parseCommandFromString(const std::string input,
     } else {
       parameters.push_back(token);
     }
-    cout << pos << ":" << end << " -> " << next << std::endl;
+    std::cout << pos << ":" << end << " -> " << next << std::endl;
     pos = next + 1;
     count++;
     if (end == input.length()) {
