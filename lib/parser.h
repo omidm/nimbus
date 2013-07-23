@@ -42,15 +42,15 @@
 #define NIMBUS_LIB_PARSER_H_
 
 #include <boost/thread.hpp>
-#include <iostream>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
 #include <sstream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <set>
 
 
-using namespace std;
+using namespace std; // NOLINT
 
 typedef set<string> CmSet;
 

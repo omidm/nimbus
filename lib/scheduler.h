@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus cheduler. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -42,9 +42,9 @@
 #define NIMBUS_LIB_SCHEDULER_H_
 
 #include <boost/thread.hpp>
-#include <iostream>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
 #include <sstream>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -58,7 +58,7 @@
 #define USER_CM_FILE "cmu.txt"
 #define WORKER_CM_FILE "cmw.txt"
 
-using namespace std;
+using namespace std; // NOLINT
 
 typedef set<string> CmSet;
 

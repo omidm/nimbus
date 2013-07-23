@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus cheduler. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */

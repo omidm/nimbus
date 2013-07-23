@@ -42,7 +42,7 @@
 #ifndef NIMBUS_LIB_CLUSTER_H_
 #define NIMBUS_LIB_CLUSTER_H_
 
-#include <iostream>
+#include <iostream> // NOLINT
 #include <string>
 #include <set>
 
