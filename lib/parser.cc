@@ -42,17 +42,17 @@
 
 
 
-void parseCommand(const string str, const CmSet& cms,
-                  string& cm, vector<int>& args) {
+void parseCommand(const std::string& str, const CmSet& cms,
+                  std::string& cm, std::vector<int>& args) {
   cm.clear();
   args.clear();
-  set<string>::iterator it;
+  std::set<std::string>::iterator it;
   for (it = cms.begin(); it != cms.end(); ++it) {
     if (str.find(*it) == 0) {
       cm = *it;
       int arg;
-      stringstream ss;
-      ss << str.substr(it->length(), string::npos);
+      std::stringstream ss;
+      ss << str.substr(it->length(), std::string::npos);
       while (true) {
         ss >> arg;
         if (ss.fail()) {
@@ -64,11 +64,14 @@ void parseCommand(const string str, const CmSet& cms,
     }
   }
   if (cm == "") {
-    cout << "wrong command! try again." << endl;
+    std::cout << "wrong command! try again." << std::endl;
   }
 }
 
 
+int parseCommandFile(const std::string& fname, CmSet& cs) {
+  return 0;
+}
 
 void parseCommandFromString(const std::string input,
                             std::string& command,

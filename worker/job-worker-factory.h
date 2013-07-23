@@ -33,66 +33,29 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Worker-side job factory maintains a list of all the worker-side jobs.
+  * Worker-side job means a job in the view of the worker.
+  * Application registers their job in the factory.
+  * Scheduler constructs job through the factory.
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
-
-#ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
-#define NIMBUS_LIB_SCHEDULER_SERVER_H_
-
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <string>
-#include <map>
-#include "lib/parser.h"
-
-typedef unsigned int ConnectionId;
-class Scheduler;
-class SchedulerServerConnection;
-
-using boost::asio::ip::tcp;
-
-class SchedulerServer {
-  public:
-    SchedulerServer(unsigned int _connection_port_no, Scheduler* sch);
-    ~SchedulerServer();
-
-    Scheduler * scheduler;
-
-    void run();
-    void receive_msg(const std::string& msg, SchedulerServerConnection* conn);
-
-  private:
-    void listen_for_new_connections();
-
-    typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
-    typedef ConnectionMap::iterator ConnectionMapIter;
-    ConnectionMap connections;
-
-    boost::mutex map_mutex;
-    boost::thread* connection_subscription_thread;
-    unsigned int connection_port_no;
+#ifndef NIMBUS_WORKER_JOB_WORKER_FACTORY_H_
+#define NIMBUS_WORKER_JOB_WORKER_FACTORY_H_
+class JobWorkerInterface;
+class JobWorkerFactory {
+ public:
+  JobWorkerFactory() : list_length(0) {}
+  // Constuct a job given the type of the job, used by scheduler.
+  // [TODO:omid] Does the job id has hierachy?
+  JobWorkerInterface *New(const int job_catogory_id);
+  // Register a job in the factory, used by application.
+  // [TODO] Pointer type parameter seems not perfect.
+  // The interface here should act as if it is a prototype class. Fix later.
+  bool RegisterJob(JobWorkerInterface *job_worker, const int job_catogory_id);
+ private:
+  // [TODO] Use high-level data structure later.
+  int list_length;
+  JobWorkerInterface* job_list[10];
 };
-
-
-class SchedulerServerConnection {
-  public:
-    SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock);
-    ~SchedulerServerConnection();
-    void send_msg(const std::string& msg);
-    void start_listening();
-    ConnectionId get_id() const {
-        return id;
-    }
-
-  private:
-    void listen_for_msgs();
-    ConnectionId id;
-    SchedulerServer* server;
-    tcp::socket* socket;
-    boost::thread* listening_thread;
-};
-
-#endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_
+#endif  // NIMBUS_WORKER_JOB_WORKER_FACTORY_H_

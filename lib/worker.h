@@ -38,9 +38,10 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_WORKER_H
-#define NIMBUS_LIB_WORKER_H
+#ifndef NIMBUS_LIB_WORKER_H_
+#define NIMBUS_LIB_WORKER_H_
 
+#include <map>
 #include "lib/scheduler_client.h"
 #include "lib/cluster.h"
 #include "lib/data.h"
@@ -48,15 +49,13 @@
 #include "lib/application.h"
 
 
-#define DataSet std::set<Data>
 #define JobSet std::set<Job>
 
 class Application;
 
 class Worker {
   public:
-  
-    Worker(Application* a);
+    explicit Worker(unsigned int port, Application * a);
 
     int id;
     Computer host;
@@ -65,8 +64,8 @@ class Worker {
     DataSet dataSet;
     JobSet jobs;
     Application* app;
-    
-    void run(SchedulerClient* client);
+
+    void run();
 
     void addJob(Job* job);
     void delJob(Job* job);
@@ -77,4 +76,4 @@ typedef std::map<int, Worker*> WorkerMap;
 
 
 
-#endif   // NIMBUS_LIB_WORKER_H
+#endif  // NIMBUS_LIB_WORKER_H_

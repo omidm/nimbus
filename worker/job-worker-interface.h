@@ -33,66 +33,20 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol. 
+  * Interface for a worker-side job.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
+#ifndef NIMBUS_WORKER_JOB_WORKER_INTERFACE_H_
+#define NIMBUS_WORKER_JOB_WORKER_INTERFACE_H_
+class JobWorkerFactory;
+class JobWorkerInterface {
+ public:
+  JobWorkerInterface() {}
+  // [TODO] Add read data, write data, before set, after set, parameter blob.
 
-
-#ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
-#define NIMBUS_LIB_SCHEDULER_SERVER_H_
-
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <string>
-#include <map>
-#include "lib/parser.h"
-
-typedef unsigned int ConnectionId;
-class Scheduler;
-class SchedulerServerConnection;
-
-using boost::asio::ip::tcp;
-
-class SchedulerServer {
-  public:
-    SchedulerServer(unsigned int _connection_port_no, Scheduler* sch);
-    ~SchedulerServer();
-
-    Scheduler * scheduler;
-
-    void run();
-    void receive_msg(const std::string& msg, SchedulerServerConnection* conn);
-
-  private:
-    void listen_for_new_connections();
-
-    typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
-    typedef ConnectionMap::iterator ConnectionMapIter;
-    ConnectionMap connections;
-
-    boost::mutex map_mutex;
-    boost::thread* connection_subscription_thread;
-    unsigned int connection_port_no;
+  // Run the job in the worker.
+  // [TODO] Add a callback.
+  virtual void Run() = 0;
 };
-
-
-class SchedulerServerConnection {
-  public:
-    SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock);
-    ~SchedulerServerConnection();
-    void send_msg(const std::string& msg);
-    void start_listening();
-    ConnectionId get_id() const {
-        return id;
-    }
-
-  private:
-    void listen_for_msgs();
-    ConnectionId id;
-    SchedulerServer* server;
-    tcp::socket* socket;
-    boost::thread* listening_thread;
-};
-
-#endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_
+#endif  // NIMBUS_WORKER_JOB_WORKER_INTERFACE_H_

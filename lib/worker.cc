@@ -41,12 +41,12 @@
 #include "lib/worker.h"
 
 
-Worker::Worker(Application* a) {
-  app = a;
-}
+Worker::Worker(unsigned int p, Application* a)
+: port(p), app(a)
+{}
 
-void Worker::run(SchedulerClient* scheduler) {
-  app->run(scheduler);
+void Worker::run() {
+  app->loadApp();
   // I think the main run loop, which pulls commands off the queue
   // and dispatches them, should be here. Spawn a separate thread that
   // reads commands, or do so whenever a job completes. I suspect

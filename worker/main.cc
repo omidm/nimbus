@@ -46,16 +46,15 @@
 #include "lib/application.h"
 #include "../application/1d-stencil/app.h"
 
+#define SCHEDULER_PORT 5983
+
 using ::std::cout;
 using ::std::endl;
 
 int main(int argc, char *argv[]) {
   std::cout << "Worker is up!" << std::endl;
-  Worker * w = new Worker();
-
-  App * app0 = new App();
-  app0->loadApp();
-
+  App * app = new App();
+  Worker * w = new Worker(SCHEDULER_PORT, app);
   w->run();
 }
 

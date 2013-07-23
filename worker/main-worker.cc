@@ -33,66 +33,54 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol. 
+  * A Nimbus worker. 
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <cstdio>
 
-#ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
-#define NIMBUS_LIB_SCHEDULER_SERVER_H_
+#include "application/fluid-simulation/public/fluid-simulation-app.h"
+#include "worker/job-worker-factory.h"
+#include "worker/job-worker-interface.h"
 
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <string>
-#include <map>
-#include "lib/parser.h"
-
-typedef unsigned int ConnectionId;
-class Scheduler;
-class SchedulerServerConnection;
-
-using boost::asio::ip::tcp;
-
-class SchedulerServer {
-  public:
-    SchedulerServer(unsigned int _connection_port_no, Scheduler* sch);
-    ~SchedulerServer();
-
-    Scheduler * scheduler;
-
-    void run();
-    void receive_msg(const std::string& msg, SchedulerServerConnection* conn);
-
-  private:
-    void listen_for_new_connections();
-
-    typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
-    typedef ConnectionMap::iterator ConnectionMapIter;
-    ConnectionMap connections;
-
-    boost::mutex map_mutex;
-    boost::thread* connection_subscription_thread;
-    unsigned int connection_port_no;
+// [TODO] Ugly code... Include class in main file. Reorgnize after discussion.
+class InitJob : public JobWorkerInterface {
+ public:
+  InitJob() : argc_(0), argv_(NULL) {}
+  InitJob(int argc, char **argv) : argc_(argc), argv_(argv) {}
+  virtual void Run() {
+    // [TODO] Run could be a non-blocking function, adding the job to the local
+    // worker manager.
+    main_job(argc_, argv_);
+  }
+ private:
+  int argc_;
+  char **argv_;
+};
+class ExecuteJob : public JobWorkerInterface {
+ public:
+  ExecuteJob() {}
+  virtual void Run() {
+    run_job();
+  }
 };
 
+int main(int argc, char **argv) {
+  JobWorkerFactory job_worker_factory;
+  // [TODO] Parameter should be passed through run function as a parameter blob.
+  InitJob init_job_proto(argc, argv);
+  ExecuteJob execute_job_proto;
+  job_worker_factory.RegisterJob(&init_job_proto, 0);
+  job_worker_factory.RegisterJob(&execute_job_proto, 1);
 
-class SchedulerServerConnection {
-  public:
-    SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock);
-    ~SchedulerServerConnection();
-    void send_msg(const std::string& msg);
-    void start_listening();
-    ConnectionId get_id() const {
-        return id;
-    }
+  // [TODO} Maybe scheduler should give me an initialization interface,
+  // and an execution interface.
 
-  private:
-    void listen_for_msgs();
-    ConnectionId id;
-    SchedulerServer* server;
-    tcp::socket* socket;
-    boost::thread* listening_thread;
-};
-
-#endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_
+  // This is not exactly what we expected finally, job_0 should run job_1.
+  JobWorkerInterface *job_0 = job_worker_factory.New(0);
+  JobWorkerInterface *job_1 = job_worker_factory.New(1);
+  job_0->Run();
+  job_1->Run();
+  return 0;
+}
