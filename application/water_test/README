@@ -1,0 +1,14 @@
+Author:	chinmaye.shah@stanford.edy (Chinmayee Shah),
+		quhang@stanford.edu (Hang Qu)
+
+This directory should contain a water simulation in the job-data form as
+expected by Nimbus scheduler. To get started, we will have 4 kinds of jobs:
+1. a for loop job to generate more jobs (for_job)
+2. all functions before advection (before_adv_job_x)
+3. advection (adv_job_x)
+4. all functions after advection (after_adv_job_x)
+
+Here, x is used to distinguish different jobs that may be operating on
+different data.
+
+TODO: Need to combine Nimbus Makefile and PhysBAM CMake file.
