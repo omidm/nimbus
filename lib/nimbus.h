@@ -34,11 +34,11 @@
 
 /* Header file for application developers. */
 
-#ifndef NIMBUS_LIB_NIMBUS_H
-#define NIMBUS_LIB_NIMBUS_H
+#ifndef NIMBUS_LIB_NIMBUS_H_
+#define NIMBUS_LIB_NIMBUS_H_
 
 #include "lib/application.h"
 #include "lib/data.h"
 #include "lib/job.h"
 
-#endif
+#endif  // NIMBUS_LIB_NIMBUS_H_
