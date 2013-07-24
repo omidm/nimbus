@@ -5,7 +5,7 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 ###########################################################################
 
 #Set a project name
-SET(PROJECT_NAME Water)
+SET(PROJECT_NAME water_test)
 PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root
@@ -19,6 +19,7 @@ SET(${PROJECT_NAME}_cpp
 	)
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/water_app.h
+        ${PROJECT_SOURCE_DIR}/water_data.h
 	)
         
 #List the libraries you want to link against - including a higher-level

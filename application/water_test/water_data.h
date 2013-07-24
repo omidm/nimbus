@@ -32,18 +32,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_H_
+#define NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_H_
 
-#include "lib/nimbus.h"
-#include "./water_data.h"
+/* Include relevant PhysBAM files here.
+ */
+#include <PhysBAM_Tools/Vectors/VECTOR.h>  // NOLINT
+#include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>   // NOLINT
+#include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>    // NOLINT
 
-/* Functions used by the application jobs. */
+using namespace PhysBAM;    // NOLINT
 
-
-/* Application class launched by Nimbus. */
-class WaterApp : public Application {
-    void load();
+/* Data types used by the application jobs and functions.
+ */
+template <class TV>
+class FaceArray : public Data
+{
+    typedef typename TV::SCALAR T;
+    ARRAY<T, FACE_INDEX<TV::dimension> > *facedata;
 };
 
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_H_
