@@ -32,20 +32,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+/* Header file for application developers. */
 
-#include "../../lib/nimbus.h"
+#ifndef NIMBUS_LIB_NIMBUS_H
+#define NIMBUS_LIB_NIMBUS_H
 
-/* Data types used by the application jobs and functions. */
+#include "lib/application.h"
+#include "lib/data.h"
+#include "lib/job.h"
 
-
-/* Functions used by the application jobs. */
-
-
-/* Application class launched by Nimbus. */
-class WaterApp : public Application {
-    void load();
-};
-
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#endif
