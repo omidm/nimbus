@@ -32,18 +32,5 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-
-#include "lib/nimbus.h"
+#include "./water_app.h"
 #include "./water_driver.h"
-
-/* Application class launched by Nimbus. Initialization of jobs, using
- * functions in water_driver, should be done here. Methods to initialize
- * simulation data and build the data map should also be called here.
- */
-class WaterApp : public Application {
-    void load();
-};
-
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

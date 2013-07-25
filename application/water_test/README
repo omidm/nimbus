@@ -1,5 +1,7 @@
+------------------------------------------------------------------------------
 Author:	chinmaye.shah@stanford.edy (Chinmayee Shah),
 		quhang@stanford.edu (Hang Qu)
+------------------------------------------------------------------------------
 
 This directory should contain a water simulation in the job-data form as
 expected by Nimbus scheduler. To get started, we will have 4 kinds of jobs:
@@ -11,4 +13,14 @@ expected by Nimbus scheduler. To get started, we will have 4 kinds of jobs:
 Here, x is used to distinguish different jobs that may be operating on
 different data.
 
-TODO: Need to combine Nimbus Makefile and PhysBAM CMake file.
+------------------------------------------------------------------------------
+NOTES
+------------------------------------------------------------------------------
+
+- TODO: Need to combine Nimbus Makefile and PhysBAM CMake file.
+- Advection of velocity finally needs only grid, face velocity, ghost velocity
+  and dt. Boundary and time are not needed.
+- There is only one mac grid, that does not change over time, and is the same
+  for all processes. It contains the counts and domain of the grid for the
+  simulation program. Each process can locally maintain a copy of this mac
+  grid.

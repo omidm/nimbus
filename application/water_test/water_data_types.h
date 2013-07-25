@@ -32,24 +32,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_H_
+/* 
+ * Data types used by the application jobs and functions.
+ */
+
+#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_
+#define NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_
 
 /* Include relevant PhysBAM files here.
  */
-#include <PhysBAM_Tools/Vectors/VECTOR.h>  // NOLINT
-#include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>   // NOLINT
-#include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>    // NOLINT
+#include "./physbam_include.h"
 
 using namespace PhysBAM;    // NOLINT
 
-/* Data types used by the application jobs and functions.
+/* Face array for storing quantities like face velocities.
  */
 template <class TV>
-class FaceArray : public Data
-{
+class FaceArray : public Data {
     typedef typename TV::SCALAR T;
     ARRAY<T, FACE_INDEX<TV::dimension> > *facedata;
 };
 
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_H_
+/* Ghost face array for storing scalar quantities.
+ */
+template <class TV>
+class FaceArrayGhost : public Data {
+    typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *faceghost;
+};
+
+/* Add all other data used by the water simulation here.  DO NOT add scalar
+ * values. Scalar values can be passed around directly as parameters.
+ */
+template <class TV>
+class NonVelAdvData : public Data {
+};
+
+#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

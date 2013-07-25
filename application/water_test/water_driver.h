@@ -32,18 +32,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-
-#include "lib/nimbus.h"
-#include "./water_driver.h"
-
-/* Application class launched by Nimbus. Initialization of jobs, using
- * functions in water_driver, should be done here. Methods to initialize
- * simulation data and build the data map should also be called here.
+/* 
+ * Include job and function definitions here. Also, any class or struct
+ * definitions to group data used by a water simulation can be included
+ * here.
  */
-class WaterApp : public Application {
-    void load();
+
+#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
+#define NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
+
+/* Include relevant PhysBAM files here.
+ */
+#include "./physbam_include.h"
+#include "./water_data_types.h"
+
+using namespace PhysBAM;    // NOLINT
+
+/* This is more like WATER_EXAMPLE.h than WATER_DRIVER.h from the original
+ * PhysBAM project Water, in the sense that it directly contains all the data
+ * that methods in WATER_DRIVER.cpp are operating on, rather than accessing the
+ * data through driver->example. However, each machine will launch its own copy
+ * of WaterDriver, like in the PhysBAM project. This initialization should
+ * happen in load() in WaterApp, after which the job and data maps should be
+ * built.
+ */
+template <class TV>
+class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
+    public RIGID_GEOMETRY_EXAMPLE_VELOCITIES<TV>
+{
 };
 
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
