@@ -60,6 +60,15 @@ template <class TV>
 class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     public RIGID_GEOMETRY_EXAMPLE_VELOCITIES<TV>
 {
+    typedef typename TV::SCALAR T;
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
+    // water simulation data
+    Grid<TV> mac_grid;
+    MPIGrid<TV> mpi_grid;
+    FaceArray<TV> face_velocities;
+    FaceArrayGhost<TV> face_velocities_ghost;
+    NonAdvData<TV, T> other_data;
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
