@@ -60,6 +60,7 @@ bool JobWorkerFactory::RegisterJob(
     return false;
   } else {
     job_list[list_length++] = job_worker;
+    return true;
   }
 }
 

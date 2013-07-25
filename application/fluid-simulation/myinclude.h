@@ -1,5 +1,7 @@
 #ifndef MYINCLUDE_H
 #define MYINCLUDE_H
+// I cannot figure out what header file the application depends on or not.
+// I just include all of them.
 // main.cpp
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_WORLD.h>
