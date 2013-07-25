@@ -4,8 +4,8 @@
 
 #include "global-repo.h"
 #include "myinclude.h"
-#include "WATER_DRIVER.h"
-#include "WATER_EXAMPLE.h"
+#include "water-driver.h"
+#include "water-example.h"
 
 using namespace PhysBAM;
 

@@ -4,9 +4,9 @@
 //#####################################################################
 
 #include "myinclude.h"
-#include "WATER_DRIVER.h"
+#include "water-driver.h"
 
-#include "WATER_EXAMPLE.h"
+#include "water-example.h"
 #include "advection-velocity.h"
 #include "global-repo.h"
 #include <sched.h>

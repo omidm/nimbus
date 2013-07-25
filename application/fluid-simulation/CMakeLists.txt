@@ -11,13 +11,13 @@ PROJECT(${PROJECT_NAME})
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/main.cpp
-        ${PROJECT_SOURCE_DIR}/WATER_DRIVER.cpp
-        ${PROJECT_SOURCE_DIR}/WATER_EXAMPLE.cpp
+        ${PROJECT_SOURCE_DIR}/water-driver.cpp
+        ${PROJECT_SOURCE_DIR}/water-example.cpp
         ${PROJECT_SOURCE_DIR}/advection-velocity.cpp
 	)
 SET(${PROJECT_NAME}_h
-        ${PROJECT_SOURCE_DIR}/WATER_DRIVER.h
-        ${PROJECT_SOURCE_DIR}/WATER_EXAMPLE.h
+        ${PROJECT_SOURCE_DIR}/water-driver.h
+        ${PROJECT_SOURCE_DIR}/water-example.h
         ${PROJECT_SOURCE_DIR}/myinclude.h
         ${PROJECT_SOURCE_DIR}/advection-velocity.h
         ${PROJECT_SOURCE_DIR}/global-repo.h
