@@ -9,6 +9,7 @@ namespace PhysBAM {
 
 class WATER_EXAMPLE;
 
+// typedef VECTOR<float, 2> template_TV;
 typedef VECTOR<float, 3> template_TV;
 
 class WATER_DRIVER {
@@ -47,43 +48,17 @@ public:
   // Used by Hang Qu.
   friend void* advect_velocity_worker(void* arg);
   friend void* advect_velocity_fetcher(void* arg);
-  friend void* advect_velocity_fetcher_network(void* arg);
 
   struct ADVECT_VELOCITY_WORKER_T {
-    struct ThreadInfo {
-      pthread_t thread_id;
-      int assigned_core_num;
-      WATER_DRIVER *driver;
-    };
-
     typedef AVERAGING_UNIFORM<GRID<TV>, FACE_LOOKUP_UNIFORM<GRID<TV> > > AVERAGING_TYPE;
     typedef LINEAR_INTERPOLATION_UNIFORM<GRID<TV>, float,
         FACE_LOOKUP_UNIFORM<GRID<TV> > > INTERPOLATION_TYPE;
-
-    static const int TASK_LIST_LENGTH = 100;
-    struct TaskList {
-      TV_INT task_content[TASK_LIST_LENGTH];
-      int top;
-    };
-    TaskList *task_exec_buffer;
-    TaskList *task_recv_buffer;
 
     TV_INT range_all, range_re, range_x, range_y, range_z;
     int segment_len;
     T my_dt;
     T_FACE_ARRAYS_SCALAR *my_face_velocities_ghost;
 
-    int worker_num;
-    int ongoing_worker_num;
-    pthread_mutex_t mutex_buffer;
-    pthread_cond_t cond_buffer_any;
-    pthread_cond_t cond_buffer_clear;
-    pthread_cond_t cond_finish;
-    
-    pthread_mutex_t mutex_fetcher;
-    pthread_cond_t cond_fetcher_ready;
-    pthread_cond_t cond_fetcher_go;
-    bool fetcher_refresh;
     bool fetcher_stop;
   } ADVECT_VELOCITY_WORKER;
 //#####################################################################

@@ -23,14 +23,6 @@ using namespace PhysBAM;
 
 namespace ADVECT_VELOCITY_NS {
 
-// Import auxiliary class.
-typedef typename WATER_DRIVER::TV TV;
-typedef typename WATER_DRIVER::TV_INT TV_INT;
-
-// Import function class.
-typedef typename WATER_DRIVER::ADVECT_VELOCITY_WORKER_T::AVERAGING_TYPE AVERAGING_TYPE;
-typedef typename WATER_DRIVER::ADVECT_VELOCITY_WORKER_T::INTERPOLATION_TYPE INTERPOLATION_TYPE;
-
 // Set the core affinity of a thread to core_id.
 void set_core_affinity(int core_id) {
   cpu_set_t temp_set;
@@ -41,7 +33,7 @@ void set_core_affinity(int core_id) {
 
 void run(WATER_DRIVER &driver, WATER_EXAMPLE &example,
     WATER_DRIVER::ADVECT_VELOCITY_WORKER_T &INFO, AVERAGING_TYPE &averaging,
-    INTERPOLATION_TYPE &interpolation, TV_INT &segment_start) {
+    INTERPOLATION_TYPE &interpolation, const TV_INT &segment_start) {
   TV_INT face;
   int axis;
   int x, y, z;
@@ -90,6 +82,7 @@ void run(WATER_DRIVER &driver, WATER_EXAMPLE &example,
               }
 }
 
+/*
 void* advect_velocity_worker(void *arg) {
   // Import water example and water driver.
   typedef typename WATER_DRIVER::ADVECT_VELOCITY_WORKER_T::ThreadInfo ThreadInfo;
@@ -187,4 +180,5 @@ void* advect_velocity_fetcher(void *arg) {
   }
   return NULL;
 }
+*/
 }
