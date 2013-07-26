@@ -4,13 +4,17 @@
 
 #include "global-repo.h"
 #include "myinclude.h"
-#include "WATER_DRIVER.h"
-#include "WATER_EXAMPLE.h"
+#include "water-driver.h"
+#include "water-example.h"
 
 using namespace PhysBAM;
 
+// [TODO] namespace is a mess here.
+namespace PhysBAM {
 struct GlobalRepo *g_global_repo = NULL;
+}  // namespace PhysBAM
 
+namespace {
 // Add the fluid source to the example.
 void Add_Source(WATER_EXAMPLE* example) {
   typedef float T;
@@ -42,10 +46,9 @@ void Add_Source(WATER_EXAMPLE* example) {
       source);
   example->sources.Append(analytic);
 }
+}  // namespace
 
-WATER_DRIVER *g_water_driver = NULL;
-
-int main_job(int argc, char **argv) {
+int InitiateApplication(int argc, char **argv) {
   typedef float T;
   typedef float RW;
   STREAM_TYPE stream_type((RW()));
@@ -60,7 +63,6 @@ int main_job(int argc, char **argv) {
   parse_args.Add_Integer_Argument("-e", 100, "last frame");
   parse_args.Add_Integer_Argument("-refine", 1, "refine levels");
   parse_args.Add_Integer_Argument("-threads", 1, "number of threads");
-  parse_args.Add_Integer_Argument("-worker", 7, "number of workers");
   parse_args.Add_Integer_Argument("-cut", 20, "cut length");
   parse_args.Add_Double_Argument("-cfl", 1, "cfl number");
 
@@ -90,8 +92,6 @@ int main_job(int argc, char **argv) {
   WATER_DRIVER *driver = new WATER_DRIVER(*example);
   driver->ADVECT_VELOCITY_WORKER.segment_len = parse_args.Get_Integer_Value(
       "-cut");
-  driver->ADVECT_VELOCITY_WORKER.worker_num = parse_args.Get_Integer_Value(
-      "-worker");
 
   assert(g_global_repo == NULL);
   g_global_repo = new struct GlobalRepo;
@@ -101,6 +101,6 @@ int main_job(int argc, char **argv) {
   return 0;
 }
 
-void run_job() {
+void RunJob() {
   g_global_repo->water_driver->Execute_Main_Program();
-} 
+}

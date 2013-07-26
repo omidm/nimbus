@@ -5,7 +5,7 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 ###########################################################################
 
 #Set a project name
-SET(PROJECT_NAME Water)
+SET(PROJECT_NAME water_test)
 PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root
@@ -16,9 +16,13 @@ include_directories(${NIMBUS_ROOT})
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/water_app.cc
+        ${PROJECT_SOURCE_DIR}/water_driver.cc
 	)
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/water_app.h
+        ${PROJECT_SOURCE_DIR}/water_data_types.h
+        ${PROJECT_SOURCE_DIR}/water_driver.h
+        ${PROJECT_SOURCE_DIR}/physbam_include.h
 	)
         
 #List the libraries you want to link against - including a higher-level

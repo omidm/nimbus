@@ -52,7 +52,7 @@ class InitJob : public JobWorkerInterface {
   virtual void Run() {
     // [TODO] Run could be a non-blocking function, adding the job to the local
     // worker manager.
-    main_job(argc_, argv_);
+    InitiateApplication(argc_, argv_);
   }
  private:
   int argc_;
@@ -62,7 +62,7 @@ class ExecuteJob : public JobWorkerInterface {
  public:
   ExecuteJob() {}
   virtual void Run() {
-    run_job();
+    RunJob();
   }
 };
 

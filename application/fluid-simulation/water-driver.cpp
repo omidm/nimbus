@@ -2,10 +2,13 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+
 #include "myinclude.h"
-#include "WATER_DRIVER.h"
-#include "WATER_EXAMPLE.h"
+#include "water-driver.h"
+
+#include "water-example.h"
 #include "advection-velocity.h"
+#include "global-repo.h"
 #include <sched.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -17,14 +20,7 @@ using namespace PhysBAM;
 namespace {
 void Write_Substep_Helper(void* writer, const std::string& title, int substep,
     int level) {
-  ((WATER_DRIVER*) writer)->Write_Substep(title, substep, level);
-}
-static void* advect_velocity_worker_wrapper(void *arg) {
-  return ADVECT_VELOCITY_NS::advect_velocity_worker(arg);
-}
-static void* advect_velocity_fetcher_wrapper(void *arg) {
-  //return ADVECT_VELOCITY_NS::advect_velocity_fetcher_network(arg);
-  return ADVECT_VELOCITY_NS::advect_velocity_fetcher(arg);
+  ((::PhysBAM::WATER_DRIVER*) writer)->Write_Substep(title, substep, level);
 }
 }
 
@@ -50,53 +46,6 @@ WATER_DRIVER::~WATER_DRIVER() {
 // Execute Main Program calls Initialize() and Simulate_To_Frame.
 void WATER_DRIVER::Execute_Main_Program() {
   Initialize();
-
-  // Assuming at most 64 cores.
-  typename ADVECT_VELOCITY_WORKER_T::ThreadInfo tinfo[64];
-  typename ADVECT_VELOCITY_WORKER_T::ThreadInfo fetcher_info;
-
-  // Set the affinity of the scheduler to the last core.
-  cpu_set_t temp_set;
-  CPU_ZERO(&temp_set);
-  CPU_SET(ADVECT_VELOCITY_WORKER.worker_num - 1, &temp_set);
-  sched_setaffinity(0, sizeof(temp_set), &temp_set);
-
-  pthread_mutex_init(&ADVECT_VELOCITY_WORKER.mutex_buffer, NULL);
-  pthread_cond_init(&ADVECT_VELOCITY_WORKER.cond_buffer_any, NULL);
-  pthread_cond_init(&ADVECT_VELOCITY_WORKER.cond_buffer_clear, NULL);
-  pthread_cond_init(&ADVECT_VELOCITY_WORKER.cond_finish, NULL);
-  pthread_mutex_init(&ADVECT_VELOCITY_WORKER.mutex_fetcher, NULL);
-  pthread_cond_init(&ADVECT_VELOCITY_WORKER.cond_fetcher_ready, NULL);
-  pthread_cond_init(&ADVECT_VELOCITY_WORKER.cond_fetcher_go, NULL);
-  ADVECT_VELOCITY_WORKER.task_exec_buffer = new ADVECT_VELOCITY_WORKER_T::TaskList;
-  ADVECT_VELOCITY_WORKER.task_exec_buffer->top = 0;
-  ADVECT_VELOCITY_WORKER.task_recv_buffer = new ADVECT_VELOCITY_WORKER_T::TaskList;
-  ADVECT_VELOCITY_WORKER.task_recv_buffer->top = 0;
-  ADVECT_VELOCITY_WORKER.ongoing_worker_num = 0;
-
-  ADVECT_VELOCITY_WORKER.fetcher_refresh = true;
-  ADVECT_VELOCITY_WORKER.fetcher_stop = true;
-  fetcher_info.assigned_core_num = ADVECT_VELOCITY_WORKER.worker_num;
-  fetcher_info.driver = this;
-  int t;
-  t = pthread_create(&fetcher_info.thread_id, NULL,
-      &(advect_velocity_fetcher_wrapper), &fetcher_info);
-  if (t != 0) {
-    printf("Cannot create threads!!!!\n");
-    // [TODO] Handle the error.
-  }
-
-  for (int tnum = 0; tnum < ADVECT_VELOCITY_WORKER.worker_num - 1; tnum++) {
-    tinfo[tnum].assigned_core_num = tnum;
-    tinfo[tnum].driver = this;
-    int s;
-    s = pthread_create(&tinfo[tnum].thread_id, NULL,
-        &(advect_velocity_worker_wrapper), &tinfo[tnum]);
-    if (s != 0) {
-      printf("Cannot create threads!!!!\n");
-      // [TODO] Handle the error.
-    }
-  }
   Simulate_To_Frame(example.last_frame);
 }
 //#####################################################################
@@ -331,7 +280,7 @@ void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
       dt = .5 * (target_time - time);
     }
     // Added by quhang for advection parallel.
-    ADVECT_VELOCITY_WORKER.my_dt = dt;
+    // ADVECT_VELOCITY_WORKER.my_dt = dt;
 
     LOG::Time("Compute Occupied Blocks");
 // What is the interaction? Why cannot delete?
@@ -379,47 +328,36 @@ void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
     DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER, TV>(domain, 0).Run<T, T>(*this,
         &WATER_DRIVER::Run, dt, time);
 
-    pthread_mutex_lock(&ADVECT_VELOCITY_WORKER.mutex_fetcher);
-    ADVECT_VELOCITY_WORKER.fetcher_stop = false;
-    ADVECT_VELOCITY_WORKER.fetcher_refresh = true;
-    pthread_cond_signal(&ADVECT_VELOCITY_WORKER.cond_fetcher_go);
-    pthread_mutex_unlock(&ADVECT_VELOCITY_WORKER.mutex_fetcher);
-    sleep(1);
-    LOG::Time("Advect V by Hang Qu");
+    LOG::Time("Advect V");
 
-    ADVECT_VELOCITY_WORKER.ongoing_worker_num = 0;
-    pthread_mutex_lock(&ADVECT_VELOCITY_WORKER.mutex_buffer);
-    while (true) {
-      while (ADVECT_VELOCITY_WORKER.task_exec_buffer->top > 0) {
-        // Wait for workers to clear the task buffer.
-        pthread_cond_wait(&ADVECT_VELOCITY_WORKER.cond_buffer_clear,
-            &ADVECT_VELOCITY_WORKER.mutex_buffer);
+    typename WATER_DRIVER::ADVECT_VELOCITY_WORKER_T &INFO =
+      g_global_repo->water_driver->ADVECT_VELOCITY_WORKER;
+    ADVECT_VELOCITY_NS::AVERAGING_TYPE averaging;
+    ADVECT_VELOCITY_NS::INTERPOLATION_TYPE interpolation;
+    INFO.range_all = g_global_repo->water_example->mac_grid.counts;
+    INFO.range_x = INFO.range_y = INFO.range_z = INFO.range_re = INFO.range_all;
+    INFO.range_re += TV_INT(2, 2, 2);
+    INFO.range_x += TV_INT(2, 1, 1);
+    INFO.range_y += TV_INT(1, 2, 1);
+    INFO.range_z += TV_INT(1, 1, 2);
+    TV_INT segment_start(1, 1, 1);
+    INFO.fetcher_stop = false;
+    while (!INFO.fetcher_stop) {
+      ADVECT_VELOCITY_NS::run(*(g_global_repo->water_driver), *(g_global_repo->water_example), INFO, averaging, interpolation, segment_start);
+      segment_start(3) += INFO.segment_len;
+      if (segment_start(3) >= INFO.range_re(3)) {
+        segment_start(3) = 1;
+        segment_start(2) += INFO.segment_len;
+        if (segment_start(2) >= INFO.range_re(2)) {
+          segment_start(2) = 1;
+          segment_start(1) += INFO.segment_len;
+          if (segment_start(1) >= INFO.range_re(1)) {
+            segment_start(1) = 1;
+            INFO.fetcher_stop = true;
+          }
+        }
       }
-
-      pthread_mutex_lock(&ADVECT_VELOCITY_WORKER.mutex_fetcher);
-      while (!ADVECT_VELOCITY_WORKER.fetcher_stop
-	      && (ADVECT_VELOCITY_WORKER.task_recv_buffer->top == 0)) {
-        pthread_cond_wait(&ADVECT_VELOCITY_WORKER.cond_fetcher_ready,
-            &ADVECT_VELOCITY_WORKER.mutex_fetcher);
-      }
-      if (ADVECT_VELOCITY_WORKER.fetcher_stop
-	  && ADVECT_VELOCITY_WORKER.task_recv_buffer->top == 0) {
-        pthread_mutex_unlock(&ADVECT_VELOCITY_WORKER.mutex_fetcher);
-	break;
-      }
-      std::swap(ADVECT_VELOCITY_WORKER.task_exec_buffer, ADVECT_VELOCITY_WORKER.task_recv_buffer);
-      pthread_cond_signal(&ADVECT_VELOCITY_WORKER.cond_fetcher_go);
-      pthread_mutex_unlock(&ADVECT_VELOCITY_WORKER.mutex_fetcher);
-
-      pthread_cond_broadcast(&ADVECT_VELOCITY_WORKER.cond_buffer_any);
-    }
-    // Wait for the last worker to finish.
-    while ((ADVECT_VELOCITY_WORKER.ongoing_worker_num != 0)
-        || (ADVECT_VELOCITY_WORKER.task_exec_buffer->top != 0)) {
-      pthread_cond_wait(&ADVECT_VELOCITY_WORKER.cond_finish,
-          &ADVECT_VELOCITY_WORKER.mutex_buffer);
-    }
-    pthread_mutex_unlock(&ADVECT_VELOCITY_WORKER.mutex_buffer);
+    } // End while
 
     //Add Forces 0%
     LOG::Time("Forces");

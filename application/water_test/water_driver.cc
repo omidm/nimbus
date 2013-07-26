@@ -32,13 +32,5 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
-
-#ifndef NIMBUS_LIB_NIMBUS_H_
-#define NIMBUS_LIB_NIMBUS_H_
-
-#include "lib/application.h"
-#include "lib/data.h"
-#include "lib/job.h"
-
-#endif  // NIMBUS_LIB_NIMBUS_H_
+#include "./water_app.h"
+#include "./water_driver.h"

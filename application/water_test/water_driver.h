@@ -32,13 +32,43 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+/* 
+ * Include job and function definitions here. Also, any class or struct
+ * definitions to group data used by a water simulation can be included
+ * here.
+ */
 
-#ifndef NIMBUS_LIB_NIMBUS_H_
-#define NIMBUS_LIB_NIMBUS_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
+#define NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
 
-#include "lib/application.h"
-#include "lib/data.h"
-#include "lib/job.h"
+/* Include relevant PhysBAM files here.
+ */
+#include "./physbam_include.h"
+#include "./water_data_types.h"
 
-#endif  // NIMBUS_LIB_NIMBUS_H_
+using namespace PhysBAM;    // NOLINT
+
+/* This is more like WATER_EXAMPLE.h than WATER_DRIVER.h from the original
+ * PhysBAM project Water, in the sense that it directly contains all the data
+ * that methods in WATER_DRIVER.cpp are operating on, rather than accessing the
+ * data through driver->example. However, each machine will launch its own copy
+ * of WaterDriver, like in the PhysBAM project. This initialization should
+ * happen in load() in WaterApp, after which the job and data maps should be
+ * built.
+ */
+template <class TV>
+class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
+    public RIGID_GEOMETRY_EXAMPLE_VELOCITIES<TV>
+{
+    typedef typename TV::SCALAR T;
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
+    // water simulation data
+    Grid<TV> mac_grid;
+    MPIGrid<TV> mpi_grid;
+    FaceArray<TV> face_velocities;
+    FaceArrayGhost<TV> face_velocities_ghost;
+    NonAdvData<TV, T> other_data;
+};
+
+#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_

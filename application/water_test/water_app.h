@@ -35,15 +35,13 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 
-#include "../../lib/nimbus.h"
+#include "lib/nimbus.h"
+#include "./water_driver.h"
 
-/* Data types used by the application jobs and functions. */
-
-
-/* Functions used by the application jobs. */
-
-
-/* Application class launched by Nimbus. */
+/* Application class launched by Nimbus. Initialization of jobs, using
+ * functions in water_driver, should be done here. Methods to initialize
+ * simulation data and build the data map should also be called here.
+ */
 class WaterApp : public Application {
     void load();
 };
