@@ -43,22 +43,25 @@
 
 #include <set>
 #include <map>
+#include <string>
 #include "lib/cluster.h"
 
 class Data;
 typedef std::set<Data*> Neighbors;
 typedef std::map<int, Data*> DataMap;
-typedef std::set<Data *> DataSet;
+typedef std::map<std::string, Data*> DataTable;
 
 
 class Data {
   public:
+    int id;
+
     Data();
 
     Hosts hosts;
     Neighbors neighbors;
-    int id;
 
+    Data* Clone();
     void Create();
     void Destroy(Computer);
     void Copy(Computer, Computer);
@@ -66,7 +69,7 @@ class Data {
 
     /* 
      * If you would like to help the scheduler,
-     * also provide followinf functions
+     * also provide following functions
      */
     bool advanceData;
     void (*funcSplit)(Data *, Data *);

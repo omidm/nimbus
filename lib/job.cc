@@ -40,7 +40,12 @@
 
 #include "lib/job.h"
 
-Job::Job(int id, FuncToRun handler) {
-  this->id = id;
-  this->handler = handler;
+Job::Job(Application* app, JobType type) {
+  this->app = app;
+  this->type = type;
+}
+
+Job* Job::Clone() {
+  Job* j = new Job(app, type);
+  return j;
 }

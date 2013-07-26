@@ -4,8 +4,6 @@
 #define ML 4
 #define GL 1
 
-using namespace std;
-
 Vec::Vec(int size)
 {
   this->size = size;
@@ -21,24 +19,26 @@ App::App()
 
 };
 
-void App::loadApp()
+void App::load()
 {
 
-  cout << "Start Creating Data and Job Objects" << endl;
+  std::cout << "Start Creating Data and Job Tables" << std::endl;
   
-  Vec * mainLeft = new Vec (ML);
-  Vec * mainRight = new Vec (ML);
-  Vec * ghostLeft = new Vec (GL);
-  Vec * ghostRight = new Vec (GL);
+  registerJob("main", new Main(this, COMP));
+  registerJob("init", new Init(this, COMP));
+  registerJob("forloop", new ForLoop(this, COMP));
+  registerJob("print", new Print(this, COMP));
+  registerJob("applyLeft", new ApplyLeft(this, COMP));
+  registerJob("applyRight", new ApplyRight(this, COMP));
+  registerJob("updateLeft", new UpdateLeft(this, SYNC));
+  registerJob("updateRight", new UpdateRight(this, SYNC));
 
-  Job * initialize = new Job (0, &init);
-  Job * printing = new Job (1, &print);
-  Job * applyLeft = new Job (2, &stenLeft);
-  Job * applyRight = new Job (3, &stenRight);
-  Job * updateLeft = new Job (4, &updateghostLeft);
-  Job * updateRight = new Job (5, &updateghostRight);
+  registerData("mainLeft", new Vec (ML));
+  registerData("mainRight", new Vec (ML));
+  registerData("ghostLeft", new Vec (GL));
+  registerData("ghostRight", new Vec (GL));
 
-  cout << "Finished Creating Data and Job Objects" << endl;
+  std::cout << "Finished Creating Data and Job Tables" << std::endl;
 
   /*
    * Now based on this do the followings
@@ -51,35 +51,45 @@ void App::loadApp()
    *
    */
 
-  initialize->runBefore.insert(applyLeft);
-  initialize->runBefore.insert(applyRight);
+  /*
+  initialize->after.insert(applyLeft);
+  initialize->after.insert(applyRight);
 
-  applyLeft->waitFor.insert(initialize);
-  applyLeft->runBefore.insert(updateLeft);
-  applyLeft->runBefore.insert(updateRight);
-
+  applyLeft->before.insert(initialize);
+  applyLeft->after.insert(updateLeft);
+  applyLeft->after.insert(updateRight);
+  */
   // Continue like this
+};
+
+Main::Main(Application* app, JobType type)
+  : Job(app, type) {
+};
+
+void Main::Execute(std::string params, const dataArray& da) {
+  std::vector<int> jobIDs;
+  std::vector<int> dataIDs;
+  //getNewJobID(5, &jobIDs);
+  //getNewDataID(4, &dataIDs);
+
+  //defineData("mainLeft", dataIDs[0]);
+  //defineData("mainRight", dataIDs[1]);
+  //defineData("ghostLeft", dataIDs[2]);
+  //defineData("ghostRight", dataIDs[3]);
+
+  //spawnJob
 
 
 
-  dataMap[0] = mainLeft;
-  dataMap[1] = mainRight;
-  dataMap[2] = ghostLeft;
-  dataMap[3] = ghostRight;
-
-  jobMap[0] = initialize;
-  jobMap[1] = printing;
-  jobMap[2] = applyLeft;
-  jobMap[3] = applyRight;
-  jobMap[4] = updateLeft;
-  jobMap[5] = updateRight;
 
 
 };
 
+Init::Init(Application* app, JobType type)
+  : Job(app, type) {
+};
 
-
-void init (const dataArray& da)
+void Init::Execute(std::string params, const dataArray& da)
 {
   Vec *d = (Vec*)(da[0]);
   for(int i = 0; i < d->size ; i++)
@@ -87,15 +97,30 @@ void init (const dataArray& da)
 };
 
 
-void print (const dataArray& da)
+ForLoop::ForLoop(Application* app, JobType type)
+  : Job(app, type) {
+};
+
+void ForLoop::Execute(std::string params, const dataArray& da) {
+};
+
+Print::Print(Application* app, JobType type)
+  : Job(app, type) {
+};
+
+void Print::Execute(std::string params, const dataArray& da)
 {
   Vec *d = (Vec*)(da[0]);
   for(int i = 0; i < d->size; i++)
-    cout << d->arr[i] << ", ";
+    std::cout << d->arr[i] << ", ";
 };
 
 
-void stenLeft (const dataArray& da)
+ApplyLeft::ApplyLeft(Application* app, JobType type)
+  : Job(app, type) {
+};
+
+void ApplyLeft::Execute(std::string params, const dataArray& da)
 {
   int sten [] = {-1, +2, -1, 0};
 
@@ -117,12 +142,20 @@ void stenLeft (const dataArray& da)
 
 };
 
-void stenRight (const dataArray& da)
+ApplyRight::ApplyRight(Application* app, JobType type)
+  : Job(app, type) {
+};
+
+void ApplyRight::Execute(std::string params, const dataArray& da)
 {
 
 };
 
-void updateghostLeft (const dataArray& da)
+UpdateLeft::UpdateLeft(Application* app, JobType type)
+  : Job(app, type) {
+};
+
+void UpdateLeft::Execute(std::string params, const dataArray& da)
 {
   Vec *d1 = (Vec*)(da[0]);
   Vec *d2 = (Vec*)(da[1]);
@@ -132,9 +165,12 @@ void updateghostLeft (const dataArray& da)
   ghost[0] = main[0];
 }; 
 
-void updateghostRight (const dataArray& da)
-{
+UpdateRight::UpdateRight(Application* app, JobType type)
+  : Job(app, type) {
+};
 
+void UpdateRight::Execute(std::string params, const dataArray& da)
+{
 };
 
 

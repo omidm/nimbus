@@ -42,36 +42,46 @@
 #define NIMBUS_LIB_JOB_H_
 
 #include <vector>
+#include <string>
 #include <set>
 #include <map>
 #include "lib/data.h"
 
+class Application;
 class Job;
 typedef std::map<int, Job*> JobMap;
-typedef std::set<Job *> JobSet;
+typedef std::map<std::string, Job*> JobTable;
+typedef std::set<int> IDSet;
 
 
 typedef std::vector<Data*> dataArray;
-typedef void (*FuncToRun)(const dataArray&);
+// typedef void (*FuncToRun)(const dataArray&);
 
+enum JobType {COMP, SYNC};
 
 class Job {
   public:
-    Job(int, FuncToRun);
-    FuncToRun handler;
     int id;
+    JobType type;
+    Application * app;
+    // FuncToRun handler;
 
-    DataSet inputData;
-    DataSet outputData;
+    Job(Application* app, JobType type);
 
-    JobSet waitFor;
-    JobSet runBefore;
+    IDSet read;
+    IDSet write;
 
-    void Execute();
+    IDSet before;
+    IDSet after;
+
+    std::string params;
+
+    virtual void Execute(std::string params, const dataArray& da) {};
+
+    Job * Clone();
     void Sleep();
     void Kill();
 };
-
 
 #endif  // NIMBUS_LIB_JOB_H_
 

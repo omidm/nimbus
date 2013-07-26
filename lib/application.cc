@@ -46,8 +46,17 @@ void Application::load() {
   std::cout << "Loaded Nimbus base application." << std::endl;
 }
 
-void Application::start(SchedulerClient* scheduler) {
+void Application::start(SchedulerClient* sc) {
   std::cout << "Running Nimbus base application: " << id << std::endl;
+  scheduler = sc;
+}
+
+void Application::registerJob(std::string name, Job* j) {
+  jobTable[name] = j;
+}
+
+void Application::registerData(std::string name, Data* d) {
+  dataTable[name] = d;
 }
 
 
