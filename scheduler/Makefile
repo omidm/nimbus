@@ -20,7 +20,7 @@ DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(L
 $(LDIR)%.o: $(LDIR)%.cc $(LDIR)%.h
 	$(COMPILER) -c -o $@ $< $(FLAGS) $(LIBS) $(LINK) $(INCL) -I $(ROOT)
 
-$(ADIR)%.o: $(ADIR)%.cc $(ADIR)%.h
+$(ADIR)%.o: $(ADIR)%.cc $(ADIR)%.h $(LDIR)job.o $(LDIR)data.o
 	$(COMPILER) -c -o $@ $< $(FLAGS) -I $(ROOT) $(LIBS) $(LINK) $(INCL)
 
 scheduler: $(CPP_FILES) $(H_FILES) $(DEPS) 

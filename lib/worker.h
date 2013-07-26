@@ -65,8 +65,8 @@ class Worker {
     SchedulerClient* client;
     boost::thread* scheduler_interface_thread;
 
-    DataSet dataSet;
-    JobSet jobs;
+    DataMap dataMap;
+    JobMap jobMap;
     Application* app;
 
     void run(SchedulerClient* c);

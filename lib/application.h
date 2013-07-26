@@ -44,24 +44,41 @@
 #define NIMBUS_LIB_APPLICATION_H_
 
 #include <map>
+#include <string>
+#include <vector>
 #include "lib/job.h"
 #include "lib/data.h"
 #include "lib/scheduler_client.h"
 
-class Scheduler;
+class Application;
+typedef std::map<int, Application*> AppMap;
 
 class Application {
   public:
     int id;
     int priority;
-    DataMap dataMap;
-    JobMap jobMap;
+
+    JobTable jobTable;
+    DataTable dataTable;
+    SchedulerClient* scheduler;
 
     Application();
     virtual void load();
     virtual void start(SchedulerClient* scheduler);
+
+    void registerJob(std::string name, Job* j);
+
+    void registerData(std::string name, Data* d);
+
+    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
+        IDSet read, IDSet write, std::string params);
+
+    void defineData(std::string name, int id);
+
+    void getNewJobID(int req_num, std::vector<int>* result);
+
+    void getNewDataID(int req_num, std::vector<int>* result);
 };
 
-typedef std::map<int, Application*> AppMap;
 
 #endif  // NIMBUS_LIB_APPLICATION_H_

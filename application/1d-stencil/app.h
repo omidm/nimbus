@@ -5,18 +5,55 @@
 #include "lib/job.h"
 #include "lib/data.h"
 
-void init (const dataArray&);
-void print (const dataArray&);
-void stenLeft (const dataArray&);
-void stenRight (const dataArray&);
-void updateghostLeft (const dataArray&); 
-void updateghostRight (const dataArray&); 
+class Main : public Job {
+  public:
+    Main(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
 
-void applySten (int *, int *, int);
+class Init : public Job {
+  public:
+    Init(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
 
+class Print : public Job {
+  public:
+    Print(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
 
-class Vec : public Data 
-{
+class ApplyLeft : public Job {
+  public:
+    ApplyLeft(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
+
+class ApplyRight : public Job {
+  public:
+    ApplyRight(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
+
+class UpdateLeft : public Job {
+  public:
+    UpdateLeft(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
+
+class UpdateRight : public Job {
+  public:
+    UpdateRight(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+}; 
+
+class ForLoop : public Job {
+  public:
+    ForLoop(Application* app, JobType type);
+    virtual void Execute(std::string params, const dataArray& da);
+};
+
+class Vec : public Data {
   public:
     Vec(int);
     int size;
@@ -24,12 +61,10 @@ class Vec : public Data
     void Create();
 };
 
-class App : public Application
-{
+class App : public Application {
   public:
     App();
-    virtual void loadApp();
-
+    virtual void load();
 };
 
 
