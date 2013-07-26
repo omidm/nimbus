@@ -1,4 +1,5 @@
-#include "myinclude.h"
+#include "advection-velocity.h"
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,15 +8,10 @@
 #include <sched.h>
 #include <errno.h>
 #include <string.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <string>
 #include <sstream>
 
-#include <arpa/inet.h>
-#include "advection-velocity.h"
+#include "myinclude.h"
 #include "water-example.h"
 #include "water-driver.h"
 
