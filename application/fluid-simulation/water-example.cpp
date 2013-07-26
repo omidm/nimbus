@@ -3,7 +3,7 @@
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
 #include "myinclude.h"
-#include "WATER_EXAMPLE.h"
+#include "water-example.h"
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE

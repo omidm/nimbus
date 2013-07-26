@@ -4,8 +4,8 @@
 
 #include "global-repo.h"
 #include "myinclude.h"
-#include "WATER_DRIVER.h"
-#include "WATER_EXAMPLE.h"
+#include "water-driver.h"
+#include "water-example.h"
 
 using namespace PhysBAM;
 
@@ -103,4 +103,4 @@ int InitiateApplication(int argc, char **argv) {
 
 void RunJob() {
   g_global_repo->water_driver->Execute_Main_Program();
-} 
+}

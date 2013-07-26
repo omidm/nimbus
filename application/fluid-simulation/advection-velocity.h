@@ -1,6 +1,7 @@
 #ifndef ADVECTION_VELOCITY_H
-#include "WATER_DRIVER.h"
-#include "WATER_EXAMPLE.h"
+// [TODO] Too much dependency here. Avoid including so many header file by refining interface of run.
+#include "water-driver.h"
+#include "water-example.h"
 
 namespace ADVECT_VELOCITY_NS {
 // Import auxiliary class.

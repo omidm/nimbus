@@ -1,4 +1,13 @@
 Author: quhang@stanford.edu (Hang Qu)
-This directory is expected to contain an fluid simulation "application" ran by Nimbus.
-Plan to put the fluid simulation code here, which specifies the content of each job.
-The worker is expected to execute the jobs here. 
+This directory includes a running version of PhysBAM fluid simulation.
+It is compiled to a dynamic library. By callling certain functions declared in "public" directory,
+you can run a fluid simulation.
+Since PhysBAM library is compiled to a static library now, this dynamic library does not depend on
+PhysBAM library at runtime.
+Now, the simulation is only broken up to two parts: do initialization and then run it.
+Better breaking up will come soon.
+A proposal is break the program into four jobs and an application initialization job(or not a job?).
+(1) A job that constructs all the jobs needed in a substep if that substep is needed.
+(2) All the work in a substep happening before advection.
+(3) All the work in a substep happening in advection(maybe many job instances).
+(4) All the work in a substep happening after advection.
