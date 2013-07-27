@@ -6,6 +6,7 @@ include ../Makeinclude
 
 TARGET = libnimbus.so
 
+CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))

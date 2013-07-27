@@ -76,7 +76,7 @@ class Job {
 
     std::string params;
 
-    virtual void Execute(std::string params, const dataArray& da) {};
+    virtual void Execute(std::string params, const dataArray& da) {}
 
     Job * Clone();
     void Sleep();
