@@ -15,14 +15,16 @@ include_directories(${NIMBUS_ROOT})
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
-        ${PROJECT_SOURCE_DIR}/water_app.cc
+        ${PROJECT_SOURCE_DIR}/water_data_types.cc
+        ${PROJECT_SOURCE_DIR}/water_helper.cc
         ${PROJECT_SOURCE_DIR}/water_driver.cc
+        ${PROJECT_SOURCE_DIR}/water_app.cc
 	)
 SET(${PROJECT_NAME}_h
-        ${PROJECT_SOURCE_DIR}/water_app.h
+        ${PROJECT_SOURCE_DIR}/physbam_include.h
         ${PROJECT_SOURCE_DIR}/water_data_types.h
         ${PROJECT_SOURCE_DIR}/water_driver.h
-        ${PROJECT_SOURCE_DIR}/physbam_include.h
+        ${PROJECT_SOURCE_DIR}/water_app.h
 	)
         
 #List the libraries you want to link against - including a higher-level
