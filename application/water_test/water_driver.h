@@ -63,19 +63,40 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     typedef typename TV::SCALAR T;
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
 
+    public:
+
+    WaterDriver();
+    virtual ~WaterDriver();
+
     /* water simulation data
      */
     Grid<TV> mac_grid;
     MPIGrid<TV> mpi_grid;
     FaceArray<TV> face_velocities;
     FaceArrayGhost<TV> face_velocities_ghost;
-    NonAdvData<TV, T> other_data;
+    NonAdvData<TV, T> sim_data;
+
+    /* water simulation parameters
+     */
+    int number_of_ghost_cells;
+    T cfl, initial_time, time, frame_rate;
+    int last_frame, current_frame, output_number;
+    int write_substeps_level;
+    bool write_output_files_flag;
+    std::string frame_title, output_directory;
 
     /* water driver functions, these should be called from the execute
      * functions for the jobs
      */
-    // TODO: add any arguments as needed
+    void initialize();
+    void run_upto_advection();
+    void run_advect();
+    void run_after_advection();
 
+    /* helper functions.
+     */
+    void time_at_frame(const int frame) const;
+    void write_output_files(const int frame);
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
