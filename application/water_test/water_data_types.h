@@ -50,21 +50,24 @@ using namespace PhysBAM;    // NOLINT
 template <class TV>
 class FaceArray : public Data {
     typedef typename TV::SCALAR T;
-    ARRAY<T, FACE_INDEX<TV::dimension> > *facedata;
+    public:
+    ARRAY<T, FACE_INDEX<TV::dimension> > *data;
 };
 
 /* Ghost face array for storing scalar quantities.
  */
 template <class TV>
 class FaceArrayGhost : public Data {
-    typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *faceghost;
+    public:
+    typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
 };
 
 /* Grid class for storing the mac grid information.
  */
 template <class TV>
 class Grid : public Data {
-    GRID<TV> *griddata;
+    public:
+    GRID<TV> *data;
 };
 
 /* MPIGrid class for storing MPI grid information.
@@ -73,7 +76,8 @@ class Grid : public Data {
  */
 template <class TV>
 class MPIGrid : public Data {
-    MPI_UNIFORM_GRID<GRID<TV> > *griddata;
+    public:
+    MPI_UNIFORM_GRID<GRID<TV> > *data;
 };
 
 /* Add all other data used by water simulation here.  DO NOT add scalar
@@ -81,6 +85,8 @@ class MPIGrid : public Data {
  */
 template <class TV, class T>
 class NonAdvData : public Data {
+
+    public:
 
     // boundary information
     BOUNDARY_UNIFORM<GRID<TV>, T>
