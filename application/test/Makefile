@@ -3,7 +3,7 @@
 TARGET = test
 all: check $(TARGET)
 
-NIMBUS_ROOT = ../..
+NIMBUS_ROOT = ..
 include ${NIMBUS_ROOT}/Makeinclude
 
 LDIR = ../../lib/

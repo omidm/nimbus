@@ -47,6 +47,7 @@
 #include <string>
 #include <map>
 #include "lib/parser.h"
+#include "lib/scheduler_command.h"
 
 typedef unsigned int ConnectionId;
 class Scheduler;
@@ -62,7 +63,7 @@ class SchedulerServer {
     Scheduler * scheduler;
 
     void run();
-    void receive_msg(const std::string& msg, SchedulerServerConnection* conn);
+    SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
 
   private:
     void listen_for_new_connections();

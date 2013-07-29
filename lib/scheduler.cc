@@ -57,8 +57,11 @@ void Scheduler::run() {
   worker_interface_thread = new boost::thread(
       boost::bind(&Scheduler::setupWI, this));
 
-  user_interface_thread->join();
-  worker_interface_thread->join();
+  // user_interface_thread->join();
+  // worker_interface_thread->join();
+  while (1) {
+    sleep(1);
+  }
 }
 
 void Scheduler::setupWI() {
