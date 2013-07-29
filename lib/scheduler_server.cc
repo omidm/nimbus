@@ -65,21 +65,28 @@ SchedulerServer::~SchedulerServer() {
   connections.clear();
 }
 
-void SchedulerServer::receive_msg(const std::string& msg,
-                                  SchedulerServerConnection* conn) {
+
+/* I don't understand what this function is doing. It should return
+   SchedulerCommand* values from the socket. I suspect this is going
+   to need to be a select() call so the scheduler can probe many
+   connections in parallel. I have no idea why there's a send_msg call
+   in here. -pal */
+SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* conn) { // NOLINT
   // FIXME: memory leak for killing and ending thread listening for
   // new connections.
 
-  std::cout << "\nReceived msg " << msg << "\n";
+  std::cout << "\nReceived msg " << std::endl;
 
   boost::mutex::scoped_lock lock(map_mutex);
   for (ConnectionMapIter iter = connections.begin();
        iter != connections.end();
        ++iter)   {
     if (iter->first != conn->get_id()) {
-      iter->second->send_msg(msg);
+      // iter->second->send_msg(msg);
     }
   }
+
+  return NULL;
 }
 
 void SchedulerServer::listen_for_new_connections() {
@@ -125,7 +132,7 @@ void SchedulerServerConnection::listen_for_msgs() {
     std::istream is(&response);
     std::string msg;
     std::getline(is, msg);
-    server->receive_msg(msg, this);
+    // server->receiveCommand(msg, this);
   }
 }
 

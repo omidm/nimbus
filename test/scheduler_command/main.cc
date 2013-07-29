@@ -33,7 +33,7 @@
  */
 
  /*
-  * The most trivial test application.
+  * Testing the scheduler command parser.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
@@ -61,18 +61,28 @@ int main(int argc, char *argv[]) {
   std::cout << "Testing scheduler command class." << std::endl;
   int i = 0;
   while (commands[i] != NULL) {
-    cout << "Testing command \'" << commands[i] << std::endl;
+    cout << "Testing command \'" << commands[i] << "\'" << std::endl;
+    std::string input(commands[i]);
     SchedulerCommand* c = new SchedulerCommand(commands[i]);
-    cout << "  translated to string \'" << c->toString() << '\'' << std::endl;
-    cout << "  translated to tokens ";
-    cout << c->getName() << ":";
-    CommandParameterList params = c->getParameters();
-    CommandParameterList::const_iterator iter = params.begin();
-    for (; iter != params.end(); ++iter) {
-      std::string param = *iter;
-      cout << param << ";";
+    std::string output = c->toString();
+
+    if (input == output) {
+      cout << "RESULT: input and output match" << std::endl;
+    } else {
+      cout << "RESULT: input and output do not match" << std::endl;
+      cout << "  input:  " << input << std::endl;
+      cout << "  output: " << output << std::endl;
+      cout << "  translated to string \'" << c->toString() << '\'' << std::endl;
+      cout << "  translated to tokens ";
+      cout << c->getName() << ":";
+      CommandParameterList params = c->getParameters();
+      CommandParameterList::const_iterator iter = params.begin();
+      for (; iter != params.end(); ++iter) {
+        std::string param = *iter;
+        cout << param << ";";
+      }
+      cout << std::endl;
     }
-    cout << std::endl;
     i++;
     delete c;
   }

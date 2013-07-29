@@ -33,76 +33,63 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * A test application that a worker can send and receive commands.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
+#include <pthread.h>
+#include <iostream>  // NOLINT
+
+#include "lib/scheduler_client.h"
 #include "lib/scheduler.h"
+#include "lib/worker.h"
+#include "lib/application.h"
 
-Scheduler::Scheduler(unsigned int p)
-: port(p) {
-  appId = 0;
-}
 
-void Scheduler::run() {
-  std::cout << "Running the Scheduler" << std::endl;
+using ::std::cout;
+using ::std::endl;
 
-  loadUserCommands();
-  loadWorkerCommands();
-
-  user_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupUI, this));
-
-  worker_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupWI, this));
-
-  // user_interface_thread->join();
-  // worker_interface_thread->join();
-  while (1) {
-    sleep(1);
+class TestApplication : public Application {
+  public:
+  void load() {
+    cout << "Loading Nimbus test application." << std::endl;
   }
-}
 
-void Scheduler::setupWI() {
-  server = new SchedulerServer(port, this);
-  server->run();
-}
+  void start(SchedulerClient* scheduler) {
+    const char* commands[] = {
+      "no-op",
+      "halt 53",
+      "run job3 job0,job1,job2 job5,job6 data4,data5 data5 blah",
+      "copy   data4          host34   ",
+      "copy       data5 192.244.11.2        ",
+      "query status job3",
+      "run 34",
+      NULL
+    };
 
-void Scheduler::setupUI() {
-  while (true) {
-    std::cout << "command: ";
-    std::string token("runapp");
-    std::string str, cm;
-    std::vector<int> args;
-    getline(std::cin, str);
-    parseCommand(str, userCmSet, cm, args);
-    std::cout << "you typed: " << cm << std::endl;
-  }
-}
-
-void Scheduler::loadUserCommands() {
-  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
+    for (int i = 0; commands[i] != NULL; i++) {
+      cout << "Sending:  " << commands[i] << std::endl;
+      SchedulerCommand* c = new SchedulerCommand(commands[i]);
+      scheduler->sendCommand(c);
+      delete c;
     }
-    userCmSet.insert(word);
-  }
-}
-
-void Scheduler::loadWorkerCommands() {
-  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
+    while (1) {
+      SchedulerCommand* c = scheduler->receiveCommand();
+      cout << "Recevied: " << c->toString() << std::endl;
     }
-    workerCmSet.insert(word);
+    cout << "Starting Nimbus test application." << std::endl;
   }
+};
+
+int main(int argc, char *argv[]) {
+  std::cout << "Worker is up!" << std::endl;
+
+  SchedulerClient* c = new SchedulerClient(5983);
+  TestApplication * app0 = new TestApplication();
+  app0->load();
+
+  Worker * w = new Worker(app0);
+  c->run();
+  w->run(c);
 }
-
-

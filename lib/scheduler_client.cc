@@ -101,6 +101,7 @@ void SchedulerClient::sendCommand(SchedulerCommand* command) {
 }
 
 void SchedulerClient::create_new_connections() {
+  std::cout << "Opening connections." << std::endl;
   tcp::resolver resolver(*io_service);
   tcp::resolver::query query("127.0.0.1", boost::to_string(connection_port_no));
   tcp::resolver::iterator iterator = resolver.resolve(query);

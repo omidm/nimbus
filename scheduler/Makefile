@@ -1,37 +1,31 @@
-# make
+# File for 1-d stencil application
+
+TARGET = scheduler
+all: check $(TARGET)
 
 NIMBUS_ROOT = ..
-include ../Makeinclude
+include ${NIMBUS_ROOT}/Makeinclude
 
-COMPILER = g++
-FLAGS= -Wall -g
-ROOT = ~/cloud/src/nimbus/
-LDIR = $(ROOT)lib/
-ADIR = $(ROOT)application/1d-stencil/
-LIBS = -lpthread -lboost_system -lboost_thread
-LINK = -L /home/omidm/Downloads/boost_1_53_0/stage/lib
-INCL = -I /home/omidm/Downloads/boost_1_53_0
+LDIR = ../../lib/
+IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 
+OBJECT_FILES = main.o
+ 
+LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
+LDFLAGS += -L.
+
 # Add the dependencies here
-DEPS = $(LDIR)scheduler.o $(LDIR)application.o $(LDIR)job.o $(LDIR)cluster.o $(LDIR)worker.o $(LDIR)data.o $(LDIR)scheduler_server.o $(LDIR)scheduler_client.o $(LDIR)scheduler_command.o $(LDIR)parser.o $(ADIR)app.o
+%.o: %.cc
+	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(LDIR)%.o: $(LDIR)%.cc $(LDIR)%.h
-	$(COMPILER) -c -o $@ $< $(FLAGS) $(LIBS) $(LINK) $(INCL) -I $(ROOT)
+$(TARGET): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
 
-$(ADIR)%.o: $(ADIR)%.cc $(ADIR)%.h $(LDIR)job.o $(LDIR)data.o
-	$(COMPILER) -c -o $@ $< $(FLAGS) -I $(ROOT) $(LIBS) $(LINK) $(INCL)
+clean: clean-files
+	\rm -f $(TARGET)
 
-scheduler: $(CPP_FILES) $(H_FILES) $(DEPS) 
-	$(COMPILER) -o scheduler -I $(ROOT) $(CPP_FILES) $(DEPS) $(LIBS) $(LINK) $(INCL)
-
-clean:
-	rm scheduler         
-  
-clean-all:
-	rm scheduler $(LDIR)*.o $(ADIR)*.o        
-  
 #mpi: $(CPP_FILES) $(H_FILES) 
 #	mpiCC -o scheduler-mpi $(CPP_FILES) $(INCL)                              
   
