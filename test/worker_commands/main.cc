@@ -41,11 +41,7 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
-#include "lib/scheduler_client.h"
-#include "lib/scheduler.h"
-#include "lib/worker.h"
-#include "lib/application.h"
-
+#include "lib/nimbus.h"
 
 using ::std::cout;
 using ::std::endl;
@@ -85,7 +81,7 @@ class TestApplication : public Application {
 int main(int argc, char *argv[]) {
   std::cout << "Worker is up!" << std::endl;
 
-  SchedulerClient* c = new SchedulerClient(5983);
+  SchedulerClient* c = new SchedulerClient(NIMBUS_SCHEDULER_PORT);
   TestApplication * app0 = new TestApplication();
   app0->load();
 
