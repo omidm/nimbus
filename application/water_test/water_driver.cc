@@ -40,7 +40,26 @@ using namespace PhysBAM;    // NOLINT
 template <class TV> WaterDriver<TV> ::
 WaterDriver()
 {
-    /* Initialize the example here */
+    //TODO: Initialize the example here
+    //TODO: initialize all data and corresponding pointers
+
+    stream_type = new STREAM_TYPE(float());
+
+    // setup time
+    initial_time = 0;
+    first_frame = 0;
+    last_frame = 100;
+    frame_rate = 24;
+    current_frame = 0;
+    output_number = 0;
+    time = time_at_frame(current_frame);
+
+    // other parameters
+    write_substeps_level = -1;
+    write_output_files = true;
+    number_of_ghost_cells = 3;
+    cfl = 0.9;
+    mpi_grid.data = NULL;
 }
 
 template <class TV> WaterDriver<TV> ::
@@ -48,17 +67,39 @@ template <class TV> WaterDriver<TV> ::
 {
 }
 
-template <class TV> void WaterDriver<TV>::
-initialize()
+template <class TV> void Write_Substep_Helper(
+        void *writer,
+        const std::string &title,
+        int substep,
+        int level)
 {
-    //TODO: initialize all data and corresponding pointers
+    ((WaterDriver<TV>*)writer)->Write_Substep(title, substep, level);
+}
 
+template <class TV> void WaterDriver<TV>::
+initialize(bool distributed)
+{
+    // initialize mpi grid and file names
+    if (distributed)
+    {
+        mpi_grid.data = new MPI_UNIFORM_GRID<GRID<TV> >(
+                *mac_grid.data, 
+                number_of_ghost_cells);
+    }
+
+    //TODO: eventually change the way output is saved
+    output_directory = "output";
+    DEBUG_SUBSTEPS::Set_Substep_Writer((void*)this, &Write_Substep_Helper<TV>);
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(write_substeps_level);
-
-    // setup time
-    current_frame = 0;
-    output_number = 0;
-    time = time_at_frame(current_frame);
+    if (distributed)
+    {
+        if (mpi_grid->Number_Of_Processors() > 1)
+            output_directory += STRING_UTILITIES::string_sprintf("/%d",
+                    (mpi_grid.data->rank+1));
+    }
+    FILE_UTILITIES::Create_Directory(output_directory + "/common");
+    LOG::Instance()->Copy_Log_To_File(output_directory +
+            "/common/log.txt", false);
 
     // initialize collision objects
     sim_data.kinematic_evolution.Get_Current_Kinematic_Keyframes(
@@ -88,13 +129,13 @@ initialize()
     sim_data.particle_levelset_evolution.Set_Time(time);
     sim_data.particle_levelset_evolution.Set_CFL_Number((T).9);
 
-    if (mpi_grid.data)
+    if (distributed)
         sim_data.mpi_grid->Initialize(sim_data.domain_boundary);
     sim_data.incompressible.mpi_grid = mpi_grid.data;
     sim_data.projection.elliptic_solver->mpi_grid = mpi_grid.data;
     sim_data.particle_levelset_evolution.particle_levelset.mpi_grid =
         mpi_grid.data;
-    if(mpi_grid.data)
+    if (distributed)
     {
         sim_data.boundary = new BOUNDARY_MPI<GRID<TV> >(
                 mpi_grid.data,
@@ -213,6 +254,8 @@ initialize()
             exchanged_phi_ghost,
             false, 3, 0, TV() );
 
-    sim_data.Set_Boundary_Conditions(time); // get so CFL is correct
+    // get so CFL is correct
+    sim_data.Set_Boundary_Conditions(time);
+
     write_output_files(sim_data.first_frame);
 }
