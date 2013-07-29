@@ -43,6 +43,8 @@ WaterDriver()
     //TODO: Initialize the example here
     //TODO: initialize all data and corresponding pointers
 
+    mac_grid->initialize(TV_INT(), RANGE<TV>::Unit_Box(), true);
+
     stream_type = new STREAM_TYPE(float());
 
     // setup time
@@ -52,11 +54,11 @@ WaterDriver()
     frame_rate = 24;
     current_frame = 0;
     output_number = 0;
-    time = time_at_frame(current_frame);
+    time = Time_At_Frame(current_frame);
 
     // other parameters
     write_substeps_level = -1;
-    write_output_files = true;
+    write_output_files_flag = true;
     number_of_ghost_cells = 3;
     cfl = 0.9;
     mpi_grid.data = NULL;
@@ -215,7 +217,7 @@ initialize(bool distributed)
     sim_data.collision_bodies_affecting_fluid.
         Compute_Occupied_Blocks(false,
             (T)2*sim_data.mac_grid.Minimum_Edge_Length(), 5);
-    sim_data.Initialize_Phi();
+    // initialize_phi();
     sim_data.Adjust_Phi_With_Sources(time);
     sim_data.particle_levelset_evolution.Make_Signed_Distance();
     sim_data.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
@@ -257,5 +259,5 @@ initialize(bool distributed)
     // get so CFL is correct
     sim_data.Set_Boundary_Conditions(time);
 
-    write_output_files(sim_data.first_frame);
+    Write_Output_Files(sim_data.first_frame);
 }
