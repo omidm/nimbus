@@ -60,7 +60,7 @@ class Application {
 
     JobTable jobTable;
     DataTable dataTable;
-    SchedulerClient* scheduler;
+    SchedulerClient* client;
 
     Application();
     virtual void load();

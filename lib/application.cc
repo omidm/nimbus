@@ -47,8 +47,9 @@ void Application::load() {
 }
 
 void Application::start(SchedulerClient* sc) {
-  std::cout << "Running Nimbus base application: " << id << std::endl;
-  scheduler = sc;
+  std::cout << "Running Nimbus application: " << id << std::endl;
+  client = sc;
+  load();
 }
 
 void Application::registerJob(std::string name, Job* j) {

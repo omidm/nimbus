@@ -41,34 +41,29 @@
 #include "lib/worker.h"
 
 
-Worker::Worker(Application* a)
-: app(a)
-{}
+Worker::Worker(unsigned int p, Application* a)
+: port(p),
+  app(a) {
+}
 
-void Worker::run(SchedulerClient* c) {
+void Worker::run() {
   std::cout << "Running the Worker" << std::endl;
 
-  client = c;
-
-  // I think the main run loop, which pulls commands off the queue
-  // and dispatches them, should be here. Spawn a separate thread that
-  // reads commands, or do so whenever a job completes. I suspect
-  // the way to do this might be to have a selective thread join.
-  // I.e., "spawn these three threads, join on any one completing".
-  loadSchedulerCommands();
-
-  // Start the app. The scheduler client is up, so the app can
-  // now send commands to the scheduler to dispatch. Start()
-  // is the call where the application will initialize data and seed
-  // the first set of jobs.
-  app->start(c);
+  setupSchedulerInterface();
+  app->start(client);
 
   while (true) {
+    sleep(2);
     std::cout << "Worker running core loop." << std::endl;
-    // pull commands from SchedulerClient
-    // dispatch commands in queue
-    //
+    SchedulerCommand cm("HELLO SCHEDULER;");
+    client->sendCommand(&cm);
   }
+}
+
+void Worker::setupSchedulerInterface() {
+  loadSchedulerCommands();
+  client = new SchedulerClient(port);
+  client->run();
 }
 
 void Worker::loadSchedulerCommands() {

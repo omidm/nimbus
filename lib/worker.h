@@ -56,23 +56,22 @@ typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
   public:
-    explicit Worker(Application * a);
+    Worker(unsigned int p,  Application * a);
 
     int id;
     Computer host;
     unsigned int port;
 
     SchedulerClient* client;
-    boost::thread* scheduler_interface_thread;
 
     DataMap dataMap;
     JobMap jobMap;
     Application* app;
 
-    void run(SchedulerClient* c);
+    void run();
 
   private:
-    void setupSI();
+    void setupSchedulerInterface();
 
     void addJob(Job* job);
     void delJob(Job* job);

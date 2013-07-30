@@ -49,9 +49,11 @@
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
 
-typedef unsigned int ConnectionId;
 class Scheduler;
 class SchedulerServerConnection;
+typedef unsigned int ConnectionId;
+typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
+typedef ConnectionMap::iterator ConnectionMapIter;
 
 using boost::asio::ip::tcp;
 
@@ -60,17 +62,18 @@ class SchedulerServer {
     explicit SchedulerServer(ConnectionId port_no);
     ~SchedulerServer();
 
+    ConnectionMap connections;
+
     void run();
+
     SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
 
     void sendCommand(SchedulerServerConnection* conn, SchedulerCommand* c);
 
   private:
-    typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
-    typedef ConnectionMap::iterator ConnectionMapIter;
-    ConnectionMap connections;
-
     boost::mutex map_mutex;
+
+    boost::thread* connection_subscription_thread;
 
     ConnectionId connection_port_no;
 

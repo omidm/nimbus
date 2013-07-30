@@ -48,28 +48,35 @@ Scheduler::Scheduler(unsigned int p)
 void Scheduler::run() {
   std::cout << "Running the Scheduler" << std::endl;
 
-  loadUserCommands();
-  loadWorkerCommands();
+  setupWorkerInterface();
+  setupUserInterface();
 
-  user_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupUI, this));
+  sleep(10);
+  while (true) {
+    sleep(3);
 
-  worker_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupWI, this));
-
-  // user_interface_thread->join();
-  // worker_interface_thread->join();
-  while (1) {
-    sleep(1);
+    for (ConnectionMapIter iter = server->connections.begin();
+        iter != server->connections.end(); ++iter) {
+        SchedulerServerConnection* con = iter->second;
+        SchedulerCommand* comm = server->receiveCommand(con);
+        std::cout << "Received comm: " << comm->toString() << std::endl;
+    }
   }
 }
 
-void Scheduler::setupWI() {
+void Scheduler::setupWorkerInterface() {
+  loadWorkerCommands();
   server = new SchedulerServer(port);
   server->run();
 }
 
-void Scheduler::setupUI() {
+void Scheduler::setupUserInterface() {
+  loadUserCommands();
+  user_interface_thread = new boost::thread(
+      boost::bind(&Scheduler::getUserCommand, this));
+}
+
+void Scheduler::getUserCommand() {
   while (true) {
     std::cout << "command: ";
     std::string token("runapp");

@@ -57,7 +57,7 @@
 
 class Scheduler {
   public:
-    explicit Scheduler(uint listening_port);
+    explicit Scheduler(unsigned int listening_port);
 
     Computer host;
     unsigned int port;
@@ -78,10 +78,10 @@ class Scheduler {
     Worker * getWorker(int id);
 
   private:
-    void setupUI();
-    void setupWI();
+    void setupUserInterface();
+    void setupWorkerInterface();
+    void getUserCommand();
 
-    boost::thread* worker_interface_thread;
     boost::thread* user_interface_thread;
 
     void loadUserCommands();

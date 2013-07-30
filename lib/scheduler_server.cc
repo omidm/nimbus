@@ -106,7 +106,8 @@ void SchedulerServer::listenForNewConnections() {
 }
 
 void SchedulerServer::run() {
-  listenForNewConnections();
+  connection_subscription_thread = new boost::thread(
+      boost::bind(&SchedulerServer::listenForNewConnections, this));
 }
 
 
