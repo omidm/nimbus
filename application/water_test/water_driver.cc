@@ -32,6 +32,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /*
+  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  */
+
 #include "./water_app.h"
 #include "./water_driver.h"
 
@@ -42,10 +46,6 @@ WaterDriver()
 {
     //TODO: Initialize the example here
     //TODO: initialize all data and corresponding pointers
-
-    mac_grid->initialize(TV_INT(), RANGE<TV>::Unit_Box(), true);
-
-    stream_type = new STREAM_TYPE(float());
 
     // setup time
     initial_time = 0;
@@ -61,7 +61,24 @@ WaterDriver()
     write_output_files_flag = true;
     number_of_ghost_cells = 3;
     cfl = 0.9;
-    mpi_grid.data = NULL;
+
+    // example data and parameters
+    stream_type = new STREAM_TYPE(float());
+    if (!mac_grid->initialize(TV_INT(), RANGE<TV>::Unit_Box(), true))
+        exit -1;
+    if (!sim_data->initialize())
+        exit -1;
+    sim_data->projection =
+        new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >
+        (*mac_grid->data, false, false, false, false, NULL);
+    *sim_data->particle_levelset_evolution
+        (*mac_grid->data, number_of_ghost_cells);
+    *sim_data->incompressible(*mac_grid->data, sim_data->projection);
+    *sim_data->rigid_body_collection(this);
+    *sim_data->collision_bodies_affecting_fluid(*mac_grid->data);
+    Initialize_Particles();
+    Initialize_Read_Write_General_Structures();
+    sim_data.incompressible->Set_Custom_Advection(sim_data->advection_scalar);
 }
 
 template <class TV> WaterDriver<TV> ::

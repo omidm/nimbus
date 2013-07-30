@@ -34,6 +34,8 @@
 
 /*
  * Helper functions in water_driver.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #include "./water_app.h"

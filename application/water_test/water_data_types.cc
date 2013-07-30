@@ -34,6 +34,8 @@
 
 /*
  * Helper functions in water_driver.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #include "lib/nimbus.h"
@@ -116,5 +118,28 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 initialize()
 {
     // TODO: to fill in
-    return false;
+    // nothing for projection
+    boundary_scalar = new  BOUNDARY_UNIFORM<GRID<TV>, T>;
+    phi_boundary_water = new typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
+        BOUNDARY_PHI_WATER;
+    domain_boundary = new VECTOR<VECTOR<bool, 2>, TV::dimension>;
+    sources = new ARRAY<IMPLICIT_OBJECT<TV>*>;
+    particle_levelset_evolution = new 
+        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >;
+    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T>;
+    rigid_geometry_collection = new RIGID_GEOMETRY_COLLECTION<TV>;
+    collision_bodies_affecting_fluid = new typename
+        COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
+        GRID_BASED_COLLISION_GEOMETRY;
+    incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >;
+    if (boundary_scalar == NULL || phi_boundary_water == NULL ||
+            domain_boundary == NULL || sources == NULL ||
+            particle_levelset_evolustion == NULL ||
+            advection_scalar == NULL ||
+            rigid_geometric_collection == NULL ||
+            collision_bodies_affecting_fluid == NULL ||
+            incompressible == NULL)
+        return false;
+    else
+        return true;
 }

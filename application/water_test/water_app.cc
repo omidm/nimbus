@@ -32,6 +32,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
+
 #include "./water_app.h"
 
 void WaterApp::load() {

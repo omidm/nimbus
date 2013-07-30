@@ -36,6 +36,8 @@
  * Include job and function definitions here. Also, any class or struct
  * definitions to group data used by a water simulation can be included
  * here.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
