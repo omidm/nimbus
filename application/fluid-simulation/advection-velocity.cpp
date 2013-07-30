@@ -66,13 +66,13 @@ void run(WATER_DRIVER &driver, WATER_EXAMPLE &example,
                             // interpolation calculation.
                             axis, // part of index.
                             example.mac_grid, // Context.
-                            ((typename AVERAGING_TYPE::FACE_LOOKUP) (*INFO.my_face_velocities_ghost)).Starting_Point_Face(
+                            ((typename AVERAGING_TYPE::FACE_LOOKUP) (*INFO.face_velocities_ghost)).Starting_Point_Face(
                                 axis, face), // Read the velocities.
                             example.mac_grid.Face(axis, face) // Context, function of index.
-                                - INFO.my_dt
+                                - INFO.dt
                                     * averaging.Face_To_Face_Vector(
                                         example.mac_grid, axis, face,
-                                        (typename AVERAGING_TYPE::FACE_LOOKUP) (*INFO.my_face_velocities_ghost)));
+                                        (typename AVERAGING_TYPE::FACE_LOOKUP) (*INFO.face_velocities_ghost)));
                   // Read the velocities.
                 } // Running task over.
               }
