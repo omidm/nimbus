@@ -134,9 +134,9 @@ initialize()
     incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >;
     if (boundary_scalar == NULL || phi_boundary_water == NULL ||
             domain_boundary == NULL || sources == NULL ||
-            particle_levelset_evolustion == NULL ||
+            particle_levelset_evolution == NULL ||
             advection_scalar == NULL ||
-            rigid_geometric_collection == NULL ||
+            rigid_geometry_collection == NULL ||
             collision_bodies_affecting_fluid == NULL ||
             incompressible == NULL)
         return false;
