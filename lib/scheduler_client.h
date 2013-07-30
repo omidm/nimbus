@@ -53,7 +53,7 @@ using boost::asio::ip::tcp;
 
 class SchedulerClient {
   public:
-    explicit SchedulerClient(uint _connection_port_no);
+    explicit SchedulerClient(ConnectionId port_no);
     ~SchedulerClient();
 
     void run();
@@ -61,21 +61,13 @@ class SchedulerClient {
     void sendCommand(SchedulerCommand* c);
 
   private:
-    // port number to connect to the server
     ConnectionId connection_port_no;
-
-    void create_new_connections();
 
     boost::asio::io_service* io_service;
 
-    // socket for connection
     tcp::socket* socket;
 
-    // thread for receiving messages
-    boost::thread* receiving_thread;
-
-    // thread for sending messages
-    boost::thread* sending_thread;
+    void createNewConnections();
 };
 
 

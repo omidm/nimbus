@@ -65,7 +65,7 @@ void Scheduler::run() {
 }
 
 void Scheduler::setupWI() {
-  server = new SchedulerServer(port, this);
+  server = new SchedulerServer(port);
   server->run();
 }
 

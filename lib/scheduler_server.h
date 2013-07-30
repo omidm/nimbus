@@ -57,43 +57,43 @@ using boost::asio::ip::tcp;
 
 class SchedulerServer {
   public:
-    SchedulerServer(unsigned int _connection_port_no, Scheduler* sch);
+    explicit SchedulerServer(ConnectionId port_no);
     ~SchedulerServer();
-
-    Scheduler * scheduler;
 
     void run();
     SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
 
-  private:
-    void listen_for_new_connections();
+    void sendCommand(SchedulerServerConnection* conn, SchedulerCommand* c);
 
+  private:
     typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
     typedef ConnectionMap::iterator ConnectionMapIter;
     ConnectionMap connections;
 
     boost::mutex map_mutex;
-    boost::thread* connection_subscription_thread;
-    unsigned int connection_port_no;
+
+    ConnectionId connection_port_no;
+
+    boost::asio::io_service* io_service;
+
+    Scheduler * scheduler;
+
+    void listenForNewConnections();
 };
 
 
 class SchedulerServerConnection {
   public:
-    SchedulerServerConnection(SchedulerServer* s, tcp::socket* sock);
+    explicit SchedulerServerConnection(tcp::socket* sock);
     ~SchedulerServerConnection();
-    void send_msg(const std::string& msg);
-    void start_listening();
     ConnectionId get_id() const {
         return id;
     }
 
-  private:
-    void listen_for_msgs();
-    ConnectionId id;
-    SchedulerServer* server;
     tcp::socket* socket;
-    boost::thread* listening_thread;
+
+  private:
+    ConnectionId id;
 };
 
 #endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_

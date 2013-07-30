@@ -48,11 +48,10 @@
 
 using boost::asio::ip::tcp;
 
-SchedulerServer::SchedulerServer(unsigned int _connection_port_no,
-                                 Scheduler* sch)
-: scheduler(sch),
-  connection_subscription_thread(NULL),
-  connection_port_no(_connection_port_no) {}
+SchedulerServer::SchedulerServer(ConnectionId port_no)
+  : connection_port_no(port_no) {
+  io_service = new boost::asio::io_service();
+}
 
 SchedulerServer::~SchedulerServer() {
   boost::mutex::scoped_lock lock(map_mutex);
@@ -66,85 +65,55 @@ SchedulerServer::~SchedulerServer() {
 }
 
 
-/* I don't understand what this function is doing. It should return
-   SchedulerCommand* values from the socket. I suspect this is going
-   to need to be a select() call so the scheduler can probe many
-   connections in parallel. I have no idea why there's a send_msg call
-   in here. -pal */
 SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* conn) { // NOLINT
-  // FIXME: memory leak for killing and ending thread listening for
-  // new connections.
+  boost::asio::streambuf response;
+  boost::asio::read_until(*(conn->socket), response, ";");
 
-  std::cout << "\nReceived msg " << std::endl;
+  std::istream is(&response);
+  std::string msg;
+  std::getline(is, msg);
+  std::cout << "\nReceived msg " << msg << std::endl;
 
-  boost::mutex::scoped_lock lock(map_mutex);
-  for (ConnectionMapIter iter = connections.begin();
-       iter != connections.end();
-       ++iter)   {
-    if (iter->first != conn->get_id()) {
-      // iter->second->send_msg(msg);
-    }
-  }
-
-  return NULL;
+  SchedulerCommand* com = new SchedulerCommand(msg);
+  return com;
 }
 
-void SchedulerServer::listen_for_new_connections() {
-  boost::asio::io_service io_service;
+
+void SchedulerServer::sendCommand(SchedulerServerConnection* conn,
+    SchedulerCommand* command) {
+  std::string msg = command->toString();
+  boost::system::error_code ignored_error;
+  boost::asio::write(*(conn->socket), boost::asio::buffer(msg),
+      boost::asio::transfer_all(), ignored_error);
+}
+
+
+void SchedulerServer::listenForNewConnections() {
   tcp::acceptor acceptor(
-      io_service, tcp::endpoint(tcp::v4(), connection_port_no));
+      *io_service, tcp::endpoint(tcp::v4(), connection_port_no));
 
   while (true) {
-    tcp::socket* socket = new tcp::socket(io_service);
+    tcp::socket* socket = new tcp::socket(*io_service);
     acceptor.accept(*socket);
     {
       std::cout << "\nCreating new connection\n";
       boost::mutex::scoped_lock lock(map_mutex);
       SchedulerServerConnection* sc =
-        new SchedulerServerConnection(this, socket);
+        new SchedulerServerConnection(socket);
       connections[sc->get_id()] = sc;
-      sc->start_listening();
     }
   }
 }
 
 void SchedulerServer::run() {
-  connection_subscription_thread = new boost::thread(
-      boost::bind(&SchedulerServer::listen_for_new_connections, this));
-
-  connection_subscription_thread->join();
+  listenForNewConnections();
 }
 
 
-SchedulerServerConnection::SchedulerServerConnection(SchedulerServer* s,
-                                                     tcp::socket* sock)
-  :server(s), socket(sock) {
+SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
+  :socket(sock) {
   static ConnectionId id_assigner = 0;
   id = id_assigner++;
-}
-
-
-void SchedulerServerConnection::listen_for_msgs() {
-  while (true)   {
-    boost::asio::streambuf response;
-    boost::asio::read_until(*socket, response, ";");
-
-    std::istream is(&response);
-    std::string msg;
-    std::getline(is, msg);
-    // server->receiveCommand(msg, this);
-  }
-}
-
-void SchedulerServerConnection::start_listening() {
-  listening_thread = new boost::thread(
-      boost::bind(&SchedulerServerConnection::listen_for_msgs, this));
-}
-
-void SchedulerServerConnection::send_msg(const std::string& msg) {
-  boost::system::error_code ignored_error;
-  boost::asio::write(*socket, boost::asio::buffer(msg),
-      boost::asio::transfer_all(), ignored_error);
 }
 
 SchedulerServerConnection::~SchedulerServerConnection() {

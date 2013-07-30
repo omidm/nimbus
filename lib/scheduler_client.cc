@@ -59,21 +59,14 @@
 using boost::asio::ip::tcp;
 
 
-// Why does the client need access to a worker? Shouldn't the worker
-// be calling the client?
-
-SchedulerClient::SchedulerClient(uint _connection_port_no)
-  : connection_port_no(_connection_port_no) {
-  io_service = new boost::asio::io_service();
-  socket = new tcp::socket(*io_service);
+SchedulerClient::SchedulerClient(ConnectionId port_no)
+  : connection_port_no(port_no) {
+    io_service = new boost::asio::io_service();
+    socket = new tcp::socket(*io_service);
 }
 
 SchedulerClient::~SchedulerClient() {}
 
-/* 
- * This function never exits, and keeps listening to scheduler. Upon command
- * reception it will take the appropriate action. 
- */
 SchedulerCommand* SchedulerClient::receiveCommand() {
   boost::asio::streambuf response;
   boost::asio::read_until(*socket, response, ";");
@@ -87,20 +80,14 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
   return com;
 }
 
-/* 
- * This function never exits, and sends the commands loaded in the command
- * transmission buffer to the scheduler.
- */
 void SchedulerClient::sendCommand(SchedulerCommand* command) {
   std::string msg = command->toString();
   boost::system::error_code ignored_error;
-  boost::asio::write(*socket,
-                     boost::asio::buffer(msg),
-                     boost::asio::transfer_all(),
-                     ignored_error);
+  boost::asio::write(*socket, boost::asio::buffer(msg),
+      boost::asio::transfer_all(), ignored_error);
 }
 
-void SchedulerClient::create_new_connections() {
+void SchedulerClient::createNewConnections() {
   std::cout << "Opening connections." << std::endl;
   tcp::resolver resolver(*io_service);
   tcp::resolver::query query("127.0.0.1", boost::to_string(connection_port_no));
@@ -110,14 +97,7 @@ void SchedulerClient::create_new_connections() {
 }
 
 void SchedulerClient::run() {
-  create_new_connections();
-  //  sending_thread = new boost::thread(boost::bind(&SchedulerClient::sendCommand, this));  // NOLINT
-  //  receiving_thread = new boost::thread(boost::bind(&SchedulerClient::receiveCommand, this)); // NOLINT
-
-  // for now, have no other work to do, so just wait until the listening
-  // thread terminates.
-  //  sending_thread->join();
-  //  receiving_thread->join();
+  createNewConnections();
 }
 
 
