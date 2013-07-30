@@ -33,23 +33,46 @@
  */
 
  /*
-  * This file has the main function that launches Nimbus scheduler. 
+  * Nimbus log interface. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#ifndef NIMBUS_LIB_LOG_H_
+#define NIMBUS_LIB_LOG_H_
+
 #include <iostream> // NOLINT
-#include "lib/log.h"
-#include "./scheduler.h"
+#include <string>
 
-#define LISTENING_PORT 5983
+enum LOG_TYPE {
+  ERROR,
+  WARNING,
+  INFO,
+  DEBUG,
+  NONE
+};
+
+class Log {
+  public:
+    Log(std::ostream*, std::string fname);
+
+    void printSomething() {
+      *output_stream << "Hello! :)" << std::endl;
+    };
+
+  private:
+    std::ostream* output_stream;
+    std::string log_file_name;
+};
 
 
-int main(int argc, char *argv[]) {
-  Log log(&std::cout, "log.txt");
-  log.printSomething();
-  std::cout << "Nimbus is up!" << std::endl;
-  Scheduler * s = new Scheduler(LISTENING_PORT);
-  s->run();
-}
 
+
+
+
+
+
+
+
+
+#endif  // NIMBUS_LIB_LOG_H_
