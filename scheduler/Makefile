@@ -19,7 +19,6 @@ LDFLAGS += -L.
 
 $(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
-	echo $(H_FILES)
 
 clean: clean-files
 	\rm -f $(TARGET)
