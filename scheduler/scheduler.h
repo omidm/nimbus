@@ -52,7 +52,7 @@
 #include "lib/scheduler_server.h"
 #include "lib/application.h"
 #include "lib/cluster.h"
-#include "worker/worker.h"
+#include "lib/worker.h"
 #include "lib/parser.h"
 
 class Scheduler {

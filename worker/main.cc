@@ -41,7 +41,7 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
-#include "./worker.h"
+#include "lib/worker.h"
 #include "lib/application.h"
 #include "../application/1d-stencil/app.h"
 

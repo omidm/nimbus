@@ -33,57 +33,52 @@
  */
 
  /*
-  * Nimbus abstraction of an application. 
+  * A Nimbus worker. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_WORKER_H_
-#define NIMBUS_WORKER_WORKER_H_
-
-#include <boost/thread.hpp>
-#include <string>
-#include <map>
-#include "lib/scheduler_client.h"
-#include "lib/cluster.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/application.h"
-#include "lib/parser.h"
-
-class Worker;
-typedef std::map<int, Worker*> WorkerMap;
-
-class Worker {
-  public:
-    explicit Worker(Application * a);
-
-    int id;
-    Computer host;
-    unsigned int port;
-
-    SchedulerClient* client;
-    boost::thread* scheduler_interface_thread;
-
-    DataMap dataMap;
-    JobMap jobMap;
-    Application* app;
-
-    void run(SchedulerClient* c);
-
-  private:
-    void setupSI();
-
-    void addJob(Job* job);
-    void delJob(Job* job);
-
-    void loadSchedulerCommands();
-
-    CmSet schedulerCmSet;
-};
+#include "lib/worker.h"
 
 
+Worker::Worker(Application* a)
+: app(a)
+{}
 
+void Worker::run(SchedulerClient* c) {
+  std::cout << "Running the Worker" << std::endl;
 
+  client = c;
 
-#endif  // NIMBUS_WORKER_WORKER_H_
+  // I think the main run loop, which pulls commands off the queue
+  // and dispatches them, should be here. Spawn a separate thread that
+  // reads commands, or do so whenever a job completes. I suspect
+  // the way to do this might be to have a selective thread join.
+  // I.e., "spawn these three threads, join on any one completing".
+  loadSchedulerCommands();
+
+  // Start the app. The scheduler client is up, so the app can
+  // now send commands to the scheduler to dispatch. Start()
+  // is the call where the application will initialize data and seed
+  // the first set of jobs.
+  app->start(c);
+
+  while (true) {
+    std::cout << "Worker running core loop." << std::endl;
+    // pull commands from SchedulerClient
+    // dispatch commands in queue
+    //
+  }
+}
+
+void Worker::loadSchedulerCommands() {
+  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    schedulerCmSet.insert(word);
+  }
+}
