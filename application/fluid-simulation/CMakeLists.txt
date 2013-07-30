@@ -21,6 +21,7 @@ SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/myinclude.h
         ${PROJECT_SOURCE_DIR}/advection-velocity.h
         ${PROJECT_SOURCE_DIR}/global-repo.h
+        ${PROJECT_SOURCE_DIR}/job-context.h
 	)
         
 #List the libraries you want to link against - including a higher-level

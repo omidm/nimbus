@@ -41,8 +41,8 @@
 #include <cstdio>
 
 #include "application/fluid-simulation/public/fluid-simulation-app.h"
-#include "worker/job-worker-factory.h"
-#include "worker/job-worker-interface.h"
+#include "worker/experimental/job-worker-factory.h"
+#include "worker/experimental/job-worker-interface.h"
 
 // [TODO] Ugly code... Include class in main file. Reorgnize after discussion.
 class InitJob : public JobWorkerInterface {

@@ -40,8 +40,8 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_JOB_WORKER_FACTORY_H_
-#define NIMBUS_WORKER_JOB_WORKER_FACTORY_H_
+#ifndef NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_FACTORY_H_
+#define NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_FACTORY_H_
 class JobWorkerInterface;
 class JobWorkerFactory {
  public:
@@ -58,4 +58,4 @@ class JobWorkerFactory {
   int list_length;
   JobWorkerInterface* job_list[10];
 };
-#endif  // NIMBUS_WORKER_JOB_WORKER_FACTORY_H_
+#endif  // NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_FACTORY_H_

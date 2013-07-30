@@ -5,6 +5,7 @@
 #ifndef __WATER_DRIVER__
 #define __WATER_DRIVER__
 #include "myinclude.h"
+#include "job-context.h"
 namespace PhysBAM {
 
 class WATER_EXAMPLE;
@@ -56,11 +57,18 @@ public:
 
     TV_INT range_all, range_re, range_x, range_y, range_z;
     int segment_len;
-    T my_dt;
-    T_FACE_ARRAYS_SCALAR *my_face_velocities_ghost;
+    T dt;
+    T_FACE_ARRAYS_SCALAR *face_velocities_ghost;
 
     bool fetcher_stop;
   } ADVECT_VELOCITY_WORKER;
+
+
+  void CalculateDtAndSpawnJob(const struct JobContext &job_context);
+  void BeforeAdvectionJob(const struct JobContext &job_context);
+  void AdvectionJob(const struct JobContext &job_context);
+  void AfterAdvectionJob(const struct JobContext &job_context);
+
 //#####################################################################
 };
 }

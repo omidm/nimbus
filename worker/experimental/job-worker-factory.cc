@@ -37,11 +37,11 @@
   *
   * Author: Hang Qu <quhang@stanford.edu>
   */
-#include "worker/job-worker-factory.h"
+#include "worker/experimental/job-worker-factory.h"
 
 #include <cstdio>
 
-#include "worker/job-worker-interface.h"
+#include "worker/experimental/job-worker-interface.h"
 
 JobWorkerInterface *JobWorkerFactory::New(const int job_catogory_id) {
   if (job_catogory_id >= list_length) {
