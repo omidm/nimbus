@@ -51,15 +51,15 @@ void Scheduler::run() {
   setupWorkerInterface();
   setupUserInterface();
 
-  sleep(10);
+  sleep(2);
   while (true) {
-    sleep(3);
-
+    sleep(2);
     for (ConnectionMapIter iter = server->connections.begin();
         iter != server->connections.end(); ++iter) {
         SchedulerServerConnection* con = iter->second;
         SchedulerCommand* comm = server->receiveCommand(con);
         std::cout << "Received comm: " << comm->toString() << std::endl;
+        server->sendCommand(con, comm);
     }
   }
 }
