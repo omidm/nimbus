@@ -38,71 +38,57 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler.h"
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_H_
 
-Scheduler::Scheduler(unsigned int p)
-: port(p) {
-  appId = 0;
-}
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "lib/scheduler_server.h"
+#include "lib/application.h"
+#include "lib/cluster.h"
+#include "lib/worker.h"
+#include "lib/parser.h"
 
-void Scheduler::run() {
-  std::cout << "Running the Scheduler" << std::endl;
+class Scheduler {
+  public:
+    explicit Scheduler(uint listening_port);
 
-  loadUserCommands();
-  loadWorkerCommands();
+    Computer host;
+    unsigned int port;
+    unsigned int appId;
 
-  user_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupUI, this));
+    SchedulerServer* server;
 
-  worker_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::setupWI, this));
+    // AppMap appMap;
+    WorkerMap workerMap;
+    ClusterMap clusterMap;
 
-  // user_interface_thread->join();
-  // worker_interface_thread->join();
-  while (1) {
-    sleep(1);
-  }
-}
+    void run();
 
-void Scheduler::setupWI() {
-  server = new SchedulerServer(port, this);
-  server->run();
-}
+    void loadClusterMap(std::string);
 
-void Scheduler::setupUI() {
-  while (true) {
-    std::cout << "command: ";
-    std::string token("runapp");
-    std::string str, cm;
-    std::vector<int> args;
-    getline(std::cin, str);
-    parseCommand(str, userCmSet, cm, args);
-    std::cout << "you typed: " << cm << std::endl;
-  }
-}
+    void delWorker(Worker * w);
+    Worker * addWorker();
+    Worker * getWorker(int id);
 
-void Scheduler::loadUserCommands() {
-  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    userCmSet.insert(word);
-  }
-}
+  private:
+    void setupUI();
+    void setupWI();
 
-void Scheduler::loadWorkerCommands() {
-  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    workerCmSet.insert(word);
-  }
-}
+    boost::thread* worker_interface_thread;
+    boost::thread* user_interface_thread;
 
+    void loadUserCommands();
+    void loadWorkerCommands();
 
+    CmSet userCmSet;
+    CmSet workerCmSet;
+};
+
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_H_

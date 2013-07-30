@@ -39,9 +39,7 @@
   */
 
 #include <iostream> // NOLINT
-#include "lib/scheduler.h"
-#include "lib/application.h"
-#include "../application/1d-stencil/app.h"
+#include "./scheduler.h"
 
 #define LISTENING_PORT 5983
 

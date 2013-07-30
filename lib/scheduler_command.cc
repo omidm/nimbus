@@ -38,7 +38,8 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#include "lib/scheduler.h"
+#include "lib/scheduler_command.h"
+#include "lib/parser.h"
 
 SchedulerCommand::SchedulerCommand() {
   name = "no-op";
