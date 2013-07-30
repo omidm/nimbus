@@ -36,6 +36,8 @@
  * Include job and function definitions here. Also, any class or struct
  * definitions to group data used by a water simulation can be included
  * here.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
@@ -60,8 +62,22 @@ template <class TV>
 class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     public RIGID_GEOMETRY_EXAMPLE_VELOCITIES<TV>
 {
+    /* typedefs */
     typedef typename TV::SCALAR T;
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
+    typedef typename LEVELSET_POLICY<GRID<TV> >::
+        LEVELSET T_LEVELSET;
+    typedef typename ADVECTION_POLICY<GRID<TV> >::
+        ADVECTION_SEMI_LAGRANGIAN_SCALAR T_ADVECTION_SEMI_LAGRANGIAN_SCALAR;
+    typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::
+        ARRAYS_SCALAR T_ARRAYS_SCALAR;
+    typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::
+        FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
+    typedef typename T_ARRAYS_SCALAR::template REBIND<bool>::
+        TYPE T_ARRAYS_BOOL;
+    typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::
+        TYPE T_FACE_ARRAYS_BOOL;
 
     public:
 
@@ -96,8 +112,54 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
 
     /* helper functions.
      */
-    void time_at_frame(const int frame) const;
-    void write_output_files(const int frame);
+    void Write_Output_Files(const int frame);
+    void Read_Output_Files(const int frame);
+
+    T Time_At_Frame(const int frame) const
+    {
+        return initial_time + (frame-first_frame)/frame_rate;
+    }
+
+    bool Set_Kinematic_Positions(
+            FRAME<TV> &frame,
+            const T time,
+            const int id)
+    {
+        T range = 0.6;
+        frame.t = TV::All_Ones_Vector()*0.5;
+        if(time<=2)
+            frame.t(2) = time*range+(1-range)/2.;
+        return true;
+    }
+
+    void Get_Levelset_Velocity(
+            const GRID<TV> &grid,
+            T_LEVELSET& levelset,
+            ARRAY<T, FACE_INDEX<TV::dimension> > &V_levelset,
+            const T time) const PHYSBAM_OVERRIDE 
+    {
+        V_levelset = *face_velocities.data;
+    }
+
+    void Get_Levelset_Velocity(
+            const GRID<TV> &grid,
+            LEVELSET_MULTIPLE_UNIFORM<GRID<TV> > &levelset_multiple,
+            ARRAY<T,FACE_INDEX<TV::dimension> > &V_levelset,
+            const T time) const PHYSBAM_OVERRIDE {}
+
+    void Adjust_Particle_For_Domain_Boundaries(
+            PARTICLE_LEVELSET_PARTICLES<TV> &particles,
+            const int index,
+            TV &V,
+            const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
+            const T dt,
+            const T time);
+    void Initialize_Grid(TV_INT counts, RANGE<TV> range);
+    void Set_Boundary_Conditions(const T time);
+    void Adjust_Phi_With_Sources(const T time);
+    void Adjust_Phi_With_Objects(const T time);
+    void Extrapolate_Phi_Into_Objects(const T time);
+    void Initialize_Phi();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_

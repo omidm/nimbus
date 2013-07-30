@@ -32,60 +32,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * A test application that a worker can send and receive commands.
-  *
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  */
+/*
+ * Helper functions in water_driver.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#include <pthread.h>
-#include <iostream>  // NOLINT
+#include "./water_app.h"
+#include "./water_driver.h"
 
-#include "lib/nimbus.h"
-
-using ::std::cout;
-using ::std::endl;
-
-class TestApplication : public Application {
-  public:
-  void load() {
-    cout << "Loading Nimbus test application." << std::endl;
-  }
-
-  void start(SchedulerClient* scheduler) {
-    const char* commands[] = {
-      "no-op",
-      "halt 53",
-      "run job3 job0,job1,job2 job5,job6 data4,data5 data5 blah",
-      "copy   data4          host34   ",
-      "copy       data5 192.244.11.2        ",
-      "query status job3",
-      "run 34",
-      NULL
-    };
-
-    for (int i = 0; commands[i] != NULL; i++) {
-      cout << "Sending:  " << commands[i] << std::endl;
-      SchedulerCommand* c = new SchedulerCommand(commands[i]);
-      scheduler->sendCommand(c);
-      delete c;
-    }
-    while (1) {
-      SchedulerCommand* c = scheduler->receiveCommand();
-      cout << "Recevied: " << c->toString() << std::endl;
-    }
-    cout << "Starting Nimbus test application." << std::endl;
-  }
-};
-
-int main(int argc, char *argv[]) {
-  std::cout << "Worker is up!" << std::endl;
-
-  SchedulerClient* c = new SchedulerClient(NIMBUS_SCHEDULER_PORT);
-  TestApplication * app0 = new TestApplication();
-  app0->load();
-
-  Worker * w = new Worker(app0);
-  c->run();
-  w->run(c);
-}
+using namespace PhysBAM;    // NOLINT

@@ -32,6 +32,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
+
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 

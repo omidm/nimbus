@@ -34,6 +34,8 @@
 
 /* 
  * Data types used by the application jobs and functions.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_
@@ -45,6 +47,26 @@
 
 using namespace PhysBAM;    // NOLINT
 
+/* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
+ * brackets):
+ * mac_grid (equivalent *mac_grid.data)
+ * mpi_grid (mpi_grid.data)
+ * thread_queue (NULL)
+ * face_velocities (*face_velocities.data)
+ * boundary_scalar (*sim_data.boundary_scalar)
+ * boundary (sim_data.boundary)
+ * phi_boundary (sim_data.boundary)
+ * phi_boundary_water (*sim_data.phi_boundary_water)
+ * domain_boundary (*sim_data.domain_boundary)
+ * sources (*sim_data.sources)
+ * particle_levelset_evolution (*sim_data.particle_levelset_evolution)
+ * advection_scalar (*sim_data.advection_scalar)
+ * rigid_geometry_collection (*sim_data.rigid_geometry_collection)
+ * collision_bodies_affecting_fluid (*sim_data.collision_bodies_affecting_fluid)
+ * projection (sim_data.projection)
+ * incompressible (*sim_data.incompressible)
+ */
+
 /* Face array for storing quantities like face velocities.
  */
 template <class TV>
@@ -52,6 +74,8 @@ class FaceArray : public Data {
     typedef typename TV::SCALAR T;
     public:
     ARRAY<T, FACE_INDEX<TV::dimension> > *data;
+    FaceArray();
+    bool initialize();
 };
 
 /* Ghost face array for storing scalar quantities.
@@ -60,14 +84,22 @@ template <class TV>
 class FaceArrayGhost : public Data {
     public:
     typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
+    FaceArrayGhost();
+    bool initialize();
 };
 
 /* Grid class for storing the mac grid information.
  */
 template <class TV>
 class Grid : public Data {
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
     public:
     GRID<TV> *data;
+    Grid();
+    bool initialize(
+            const TV_INT &counts,
+            const RANGE<TV> &box,
+            const bool MAC_grid);
 };
 
 /* MPIGrid class for storing MPI grid information.
@@ -78,6 +110,8 @@ template <class TV>
 class MPIGrid : public Data {
     public:
     MPI_UNIFORM_GRID<GRID<TV> > *data;
+    MPIGrid();
+    bool initialize();
 };
 
 /* Add all other data used by water simulation here.  DO NOT add scalar
@@ -98,7 +132,7 @@ class NonAdvData : public Data {
     VECTOR<VECTOR<bool, 2>, TV::dimension> *domain_boundary;
 
     // sources
-    ARRAY<IMPLICIT_OBJECT<TV> > *sources;
+    ARRAY<IMPLICIT_OBJECT<TV>*> *sources;
 
     // fluid data
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *particle_levelset_evolution;
@@ -113,6 +147,8 @@ class NonAdvData : public Data {
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> > *projection;
     INCOMPRESSIBLE_UNIFORM<GRID<TV> > *incompressible;
 
+    NonAdvData();
+    bool initialize();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

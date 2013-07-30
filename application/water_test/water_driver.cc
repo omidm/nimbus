@@ -32,6 +32,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /*
+  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  */
+
 #include "./water_app.h"
 #include "./water_driver.h"
 
@@ -43,8 +47,6 @@ WaterDriver()
     //TODO: Initialize the example here
     //TODO: initialize all data and corresponding pointers
 
-    stream_type = new STREAM_TYPE(float());
-
     // setup time
     initial_time = 0;
     first_frame = 0;
@@ -52,14 +54,31 @@ WaterDriver()
     frame_rate = 24;
     current_frame = 0;
     output_number = 0;
-    time = time_at_frame(current_frame);
+    time = Time_At_Frame(current_frame);
 
     // other parameters
     write_substeps_level = -1;
-    write_output_files = true;
+    write_output_files_flag = true;
     number_of_ghost_cells = 3;
     cfl = 0.9;
-    mpi_grid.data = NULL;
+
+    // example data and parameters
+    stream_type = new STREAM_TYPE(float());
+    if (!mac_grid->initialize(TV_INT(), RANGE<TV>::Unit_Box(), true))
+        exit -1;
+    if (!sim_data->initialize())
+        exit -1;
+    sim_data->projection =
+        new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >
+        (*mac_grid->data, false, false, false, false, NULL);
+    *sim_data->particle_levelset_evolution
+        (*mac_grid->data, number_of_ghost_cells);
+    *sim_data->incompressible(*mac_grid->data, sim_data->projection);
+    *sim_data->rigid_body_collection(this);
+    *sim_data->collision_bodies_affecting_fluid(*mac_grid->data);
+    Initialize_Particles();
+    Initialize_Read_Write_General_Structures();
+    sim_data.incompressible->Set_Custom_Advection(sim_data->advection_scalar);
 }
 
 template <class TV> WaterDriver<TV> ::
@@ -215,7 +234,7 @@ initialize(bool distributed)
     sim_data.collision_bodies_affecting_fluid.
         Compute_Occupied_Blocks(false,
             (T)2*sim_data.mac_grid.Minimum_Edge_Length(), 5);
-    sim_data.Initialize_Phi();
+    // initialize_phi();
     sim_data.Adjust_Phi_With_Sources(time);
     sim_data.particle_levelset_evolution.Make_Signed_Distance();
     sim_data.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
@@ -257,5 +276,5 @@ initialize(bool distributed)
     // get so CFL is correct
     sim_data.Set_Boundary_Conditions(time);
 
-    write_output_files(sim_data.first_frame);
+    Write_Output_Files(sim_data.first_frame);
 }

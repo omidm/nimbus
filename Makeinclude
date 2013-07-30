@@ -59,7 +59,7 @@ fcheck:
 	@${NIMBUS_FILENAMES}
 
 lint:
-	${NIMBUS_CCLINT} --root=src *.h *.cc
+	@${NIMBUS_CCLINT} --root=src *.h *.cc
 
 check: fcheck lint
 
