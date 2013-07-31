@@ -74,7 +74,7 @@ class TestApplication : public Application {
     SchedulerCommand* c = new SchedulerCommand();
     while (1) {
       c = scheduler->receiveCommand();
-      cout << "Recevied: " << c->toString() << std::endl;
+      cout << "Received command: " << c->toString() << std::endl;
     }
   }
 };

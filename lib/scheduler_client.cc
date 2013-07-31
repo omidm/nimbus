@@ -61,23 +61,33 @@ using boost::asio::ip::tcp;
 
 SchedulerClient::SchedulerClient(ConnectionId port_no)
   : connection_port_no(port_no) {
-    io_service = new boost::asio::io_service();
-    socket = new tcp::socket(*io_service);
+  read_buffer = new boost::asio::streambuf();
+  io_service = new boost::asio::io_service();
+  socket = new tcp::socket(*io_service);
 }
 
 SchedulerClient::~SchedulerClient() {}
 
 SchedulerCommand* SchedulerClient::receiveCommand() {
-  boost::asio::streambuf response;
-  boost::asio::read_until(*socket, response, ";");
+  // Note that read_until can read beyond the delimiter.
+  // Therefore the streambuf needs to persist across calls,
+  // such that data in it can be consumed in later command
+  // requests. -pal
+  boost::asio::read_until(*socket, *read_buffer, ';');
 
-  std::istream is(&response);
-  std::string msg;
-  std::getline(is, msg);
+  std::streamsize size = read_buffer->in_avail();
+  if (size > 0) {
+    std::istream input(read_buffer);
+    std::string command;
+    std::getline(input, command, ';');
 
-  std::cout << "\nReceived msg: " << msg << "\n";
-  SchedulerCommand* com = new SchedulerCommand(msg);
-  return com;
+    SchedulerCommand* com = new SchedulerCommand(command);
+    std::cout << "\nReceived " << command << " as " << com->toString() << "\n";
+
+    return com;
+  } else {
+    return new SchedulerCommand("halt;");
+  }
 }
 
 void SchedulerClient::sendCommand(SchedulerCommand* command) {

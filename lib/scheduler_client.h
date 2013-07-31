@@ -64,7 +64,7 @@ class SchedulerClient {
     ConnectionId connection_port_no;
 
     boost::asio::io_service* io_service;
-
+    boost::asio::streambuf* read_buffer;
     tcp::socket* socket;
 
     void createNewConnections();

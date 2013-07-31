@@ -41,6 +41,7 @@
 #include "lib/data.h"
 #include "lib/job.h"
 #include "lib/worker.h"
+#include "lib/log.h"
 
 #define NIMBUS_SCHEDULER_PORT 5983
 

@@ -39,17 +39,15 @@
   */
 
 #include <iostream> // NOLINT
-#include "lib/log.h"
 #include "./scheduler.h"
-
-#define LISTENING_PORT 5983
+#include "lib/nimbus.h"
 
 
 int main(int argc, char *argv[]) {
   Log log(&std::cout, "log.txt");
   log.printSomething();
   std::cout << "Nimbus is up!" << std::endl;
-  Scheduler * s = new Scheduler(LISTENING_PORT);
+  Scheduler * s = new Scheduler(NIMBUS_SCHEDULER_PORT);
   s->run();
 }
 
