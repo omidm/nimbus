@@ -65,6 +65,7 @@ using namespace PhysBAM;    // NOLINT
  * collision_bodies_affecting_fluid (*sim_data.collision_bodies_affecting_fluid)
  * projection (sim_data.projection)
  * incompressible (*sim_data.incompressible)
+ * kinematic_evolution (*sim_data.kinematic_evolution)
  */
 
 /* Face array for storing quantities like face velocities.
@@ -146,6 +147,9 @@ class NonAdvData : public Data {
     // other containers
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> > *projection;
     INCOMPRESSIBLE_UNIFORM<GRID<TV> > *incompressible;
+
+    // driver data
+    KINEMATIC_EVOLUTION<TV> *kinematic_evolution;
 
     NonAdvData();
     bool initialize();

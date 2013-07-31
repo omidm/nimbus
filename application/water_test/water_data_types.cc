@@ -132,6 +132,7 @@ initialize()
         COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
         GRID_BASED_COLLISION_GEOMETRY;
     incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >;
+    kinematic_evolution = new KINEMATIC_EVOLUTION<TV>;
     if (boundary_scalar == NULL || phi_boundary_water == NULL ||
             domain_boundary == NULL || sources == NULL ||
             particle_levelset_evolution == NULL ||
