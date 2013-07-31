@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   log.writeToFile("**Start of the log file.", INFO, true);
   log.writeToBuffer("Some DEBUG information in the buffer!", DEBUG, true);
   log.writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
-  log.writeBufferToFile(true);
+  log.writeBufferToFile(false);
   log.writeBufferToOutputStream();
 
   Log::printLine("Nimbus is up!", INFO);

@@ -71,6 +71,8 @@ class Log {
 
     void clearBuffer();
 
+    void clearLogFile();
+
     void writeToBuffer(std::string buf,
         LOG_TYPE type = NONE, bool flag = true);
 

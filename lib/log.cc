@@ -44,28 +44,34 @@ Log::Log()
 : output_stream(&std::cout),
   log_file_name("log.txt") {
     clearBuffer();
-    std::ofstream ofs;
-    ofs.open(log_file_name.c_str());
-    ofs << buffer.str();
-    ofs.close();
+    clearLogFile();
 }
 
 Log::Log(std::ostream* os)
 : output_stream(os),
   log_file_name("log.txt") {
+    clearBuffer();
+    clearLogFile();
 }
 
 Log::Log(std::string fname)
 : output_stream(&std::cout),
   log_file_name(fname) {
+    clearBuffer();
+    clearLogFile();
 }
 
 Log::Log(std::ostream* os, std::string fname)
 : output_stream(os),
   log_file_name(fname) {
+    clearBuffer();
+    clearLogFile();
 }
 
-Log::~Log() {}
+Log::~Log() {
+  clearBuffer();
+  clearLogFile();
+}
 
 
 void Log::setOutputStream(std::ostream* os) {
@@ -78,6 +84,15 @@ void Log::setFileName(std::string fname) {
 
 void Log::clearBuffer() {
   buffer.str("");
+}
+
+void Log::clearLogFile() {
+  std::stringstream ss;
+  ss.str("");
+  std::ofstream ofs;
+  ofs.open(log_file_name.c_str());
+  ofs << ss.str();
+  ofs.close();
 }
 
 void Log::writeToBuffer(std::string buf, LOG_TYPE type, bool flag) {
