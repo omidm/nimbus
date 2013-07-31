@@ -55,13 +55,13 @@ class TestApplication : public Application {
   void start(SchedulerClient* scheduler) {
     cout << "Starting Nimbus test application." << std::endl;
     const char* commands[] = {
-      "no-op;",
-      "halt 53;",
-      "run job3 job0,job1,job2 job5,job6 data4,data5 data5 blah;",
-      "copy   data4          host34   ;",
-      "copy       data5 192.244.11.2        ;",
-      "query status job3;",
-      "run 34;",
+      "no-op",
+      "halt 53",
+      "run job3 job0,job1,job2 job5,job6 data4,data5 data5 blah",
+      "copy   data4          host34   ",
+      "copy       data5 192.244.11.2        ",
+      "query status job3",
+      "run 34",
       NULL
     };
 

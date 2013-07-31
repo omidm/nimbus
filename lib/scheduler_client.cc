@@ -69,10 +69,6 @@ SchedulerClient::SchedulerClient(ConnectionId port_no)
 SchedulerClient::~SchedulerClient() {}
 
 SchedulerCommand* SchedulerClient::receiveCommand() {
-  // Note that read_until can read beyond the delimiter.
-  // Therefore the streambuf needs to persist across calls,
-  // such that data in it can be consumed in later command
-  // requests. -pal
   boost::asio::read_until(*socket, *read_buffer, ';');
 
   std::streamsize size = read_buffer->in_avail();
@@ -82,16 +78,18 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     std::getline(input, command, ';');
 
     SchedulerCommand* com = new SchedulerCommand(command);
-    std::cout << "\nReceived " << command << " as " << com->toString() << "\n";
+
+    // std::cout << "\nReceived " << command <<
+    // " as " << com->toString() << "\n";
 
     return com;
   } else {
-    return new SchedulerCommand("halt;");
+    return new SchedulerCommand("halt");
   }
 }
 
 void SchedulerClient::sendCommand(SchedulerCommand* command) {
-  std::string msg = command->toString();
+  std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
   boost::asio::write(*socket, boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
