@@ -37,8 +37,8 @@
   *
   * Author: Hang Qu <quhang@stanford.edu>
   */
-#ifndef NIMBUS_WORKER_JOB_WORKER_INTERFACE_H_
-#define NIMBUS_WORKER_JOB_WORKER_INTERFACE_H_
+#ifndef NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_INTERFACE_H_
+#define NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_INTERFACE_H_
 class JobWorkerFactory;
 class JobWorkerInterface {
  public:
@@ -49,4 +49,4 @@ class JobWorkerInterface {
   // [TODO] Add a callback.
   virtual void Run() = 0;
 };
-#endif  // NIMBUS_WORKER_JOB_WORKER_INTERFACE_H_
+#endif  // NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_INTERFACE_H_

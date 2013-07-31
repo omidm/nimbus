@@ -66,22 +66,29 @@ SchedulerServer::~SchedulerServer() {
 
 
 SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* conn) { // NOLINT
-  boost::asio::streambuf response;
-  boost::asio::read_until(*(conn->socket), response, ";");
+  boost::asio::read_until(*(conn->socket), *(conn->read_buffer), ';');
 
-  std::istream is(&response);
-  std::string msg;
-  std::getline(is, msg);
-  std::cout << "\nReceived msg " << msg << std::endl;
+  std::streamsize size = conn->read_buffer->in_avail();
+  if (size > 0) {
+    std::istream input(conn->read_buffer);
+    std::string command;
+    std::getline(input, command, ';');
 
-  SchedulerCommand* com = new SchedulerCommand(msg);
-  return com;
+    SchedulerCommand* com = new SchedulerCommand(command);
+
+    // std::cout << "\nReceived " << command <<
+    // " as " << com->toString() << "\n";
+
+    return com;
+  } else {
+    return new SchedulerCommand("halt");
+  }
 }
 
 
 void SchedulerServer::sendCommand(SchedulerServerConnection* conn,
     SchedulerCommand* command) {
-  std::string msg = command->toString();
+  std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
   boost::asio::write(*(conn->socket), boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
@@ -115,6 +122,7 @@ SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
   :socket(sock) {
   static ConnectionId id_assigner = 0;
   id = id_assigner++;
+  read_buffer = new boost::asio::streambuf();
 }
 
 SchedulerServerConnection::~SchedulerServerConnection() {

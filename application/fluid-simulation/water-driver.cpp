@@ -8,6 +8,7 @@
 
 #include "water-example.h"
 #include "advection-velocity.h"
+#include "job-context.h"
 #include "global-repo.h"
 #include <sched.h>
 #include <unistd.h>
@@ -262,71 +263,87 @@ void WATER_DRIVER::Run(RANGE<TV_INT>& domain, const T dt, const T time) {
 // Advance_To_Target_Time
 //#####################################################################
 void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
-  bool done = false;
-  for (int substep = 1; !done; substep++) {
+  struct JobContext *temp_job_context = new struct JobContext;
+  temp_job_context->sub_step = 1;
+  temp_job_context->dt = -1;
+  temp_job_context->target_time = target_time;
+  temp_job_context->done_after_this_substep = false;
+  // Initiate the jobs. 
+}
 
-    LOG::Time("Calculate Dt");
-// Configure how many particles per cell?
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-// Calculate time step.
-    T dt = example.cfl * example.incompressible.CFL(example.face_velocities);
-    dt = min(dt, example.particle_levelset_evolution.CFL(false, false));
-    /*if (example.mpi_grid)
-     example.mpi_grid->Synchronize_Dt(dt);*/
-    if (time + dt >= target_time) {
-      dt = target_time - time;
-      done = true;
-    } else if (time + 2 * dt >= target_time) {
-      dt = .5 * (target_time - time);
-    }
-    // Added by quhang for advection parallel.
-    // ADVECT_VELOCITY_WORKER.my_dt = dt;
+void WATER_DRIVER::CalculateDtAndSpawnJob(const struct JobContext &job_context) {
+  struct JobContext *temp_job_context = job_context.clone();
+  float &dt = temp_job_context->dt;
+  const float target_time = temp_job_context->target_time;
+  bool &done = temp_job_context->done_after_this_substep;
+  LOG::Time("Calculate Dt");
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // Calculate time step.
+  dt = example.cfl * example.incompressible.CFL(example.face_velocities);
+  dt = min(dt, example.particle_levelset_evolution.CFL(false, false));
+  if (time + dt >= target_time) {
+    dt = target_time - time;
+    done = true;
+  } else if (time + 2 * dt >= target_time) {
+    dt = .5 * (target_time - time);
+  }
+  // [TODO] Spawn all the jobs. 
+}
 
-    LOG::Time("Compute Occupied Blocks");
-// What is the interaction? Why cannot delete?
-    T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
-    T max_particle_collision_distance =
-        example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor
-            * example.mac_grid.dX.Max();
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,
-        dt * maximum_fluid_speed + 2 * max_particle_collision_distance
-            + (T) .5 * example.mac_grid.dX.Max(), 10);
+void WATER_DRIVER::BeforeAdvectionJob(const struct JobContext &job_context) {
+  struct JobContext *temp_job_context = job_context.clone();
+  const float dt = temp_job_context->dt;
 
-    //LOG::Time("Adjust Phi With Objects");
-// Copy the velocity array for further computation? Complete copy?
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize(example.incompressible.grid,
-        example.number_of_ghost_cells, false);
-    // What is ghost cell????
-    example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,
-        example.face_velocities, face_velocities_ghost, time + dt,
-        example.number_of_ghost_cells);
-    // Added by quhang for advection parallel.
-    ADVECT_VELOCITY_WORKER.my_face_velocities_ghost = &face_velocities_ghost;
+  LOG::Time("Compute Occupied Blocks");
+  // What is the interaction? Why cannot delete?
+  T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
+  T max_particle_collision_distance =
+      example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor
+      * example.mac_grid.dX.Max();
+  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,
+      dt * maximum_fluid_speed + 2 * max_particle_collision_distance
+      + (T) .5 * example.mac_grid.dX.Max(), 10);
 
-    //example.Adjust_Phi_With_Objects(time);
+  // [TODO] Dangerous grammer! Extra care!
+  T_FACE_ARRAYS_SCALAR &face_velocities_ghost = *(new T_FACE_ARRAYS_SCALAR);
+  g_global_repo->face_velocities_ghost = (void*) &face_velocities_ghost;
 
-    //Advect Phi 3.6% (Parallelized)
-    LOG::Time("Advect Phi");
-// Advect the level set. What is extrapolation mode?
-    example.phi_boundary_water.Use_Extrapolation_Mode(false);
-    example.particle_levelset_evolution.Advance_Levelset(dt);
-    example.phi_boundary_water.Use_Extrapolation_Mode(true);
+  face_velocities_ghost.Resize(example.incompressible.grid,
+      example.number_of_ghost_cells, false);
+  example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,
+      example.face_velocities, face_velocities_ghost, time + dt,
+      example.number_of_ghost_cells);
 
-    //Advect Particles 12.1% (Parallelized)
-    LOG::Time("Step Particles");
-// Advect particle.
-    example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
-        face_velocities_ghost, dt, time, true, true, false, false);
 
-    //Advect removed particles (Parallelized)
-    LOG::Time("Advect Removed Particles");
-    // What is removed particles???
-    example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
+  //Advect Phi 3.6% (Parallelized)
+  LOG::Time("Advect Phi");
+  // Advect the level set. What is extrapolation mode?
+  example.phi_boundary_water.Use_Extrapolation_Mode(false);
+  example.particle_levelset_evolution.Advance_Levelset(dt);
+  example.phi_boundary_water.Use_Extrapolation_Mode(true);
+
+  //Advect Particles 12.1% (Parallelized)
+  LOG::Time("Step Particles");
+  // Advect particle.
+  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
+      face_velocities_ghost, dt, time, true, true, false, false);
+
+  //Advect removed particles (Parallelized)
+  LOG::Time("Advect Removed Particles");
+  example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
     RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
     domain.max_corner += TV_INT::All_Ones_Vector();
     DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER, TV>(domain, 0).Run<T, T>(*this,
         &WATER_DRIVER::Run, dt, time);
+
+  // Just finish... And pass back context.
+}
+
+void WATER_DRIVER::AdvectionJob(const struct JobContext &job_context) {
+  struct JobContext *temp_job_context = job_context.clone();
+  const float dt = temp_job_context->dt;
+  ADVECT_VELOCITY_WORKER.face_velocities_ghost = 
+      (T_FACE_ARRAYS_SCALAR*)g_global_repo->face_velocities_ghost;
 
     LOG::Time("Advect V");
 
@@ -334,6 +351,7 @@ void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
       g_global_repo->water_driver->ADVECT_VELOCITY_WORKER;
     ADVECT_VELOCITY_NS::AVERAGING_TYPE averaging;
     ADVECT_VELOCITY_NS::INTERPOLATION_TYPE interpolation;
+    INFO.dt = dt;
     INFO.range_all = g_global_repo->water_example->mac_grid.counts;
     INFO.range_x = INFO.range_y = INFO.range_z = INFO.range_re = INFO.range_all;
     INFO.range_re += TV_INT(2, 2, 2);
@@ -358,10 +376,18 @@ void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
         }
       }
     } // End while
+  // Context not needed...
+}
 
+
+void WATER_DRIVER::AfterAdvectionJob(const struct JobContext &job_context) {
+  struct JobContext *temp_job_context = job_context.clone();
+  const float dt = temp_job_context->dt;
+  T_FACE_ARRAYS_SCALAR &face_velocities_ghost = 
+      *((T_FACE_ARRAYS_SCALAR*)g_global_repo->face_velocities_ghost);
     //Add Forces 0%
     LOG::Time("Forces");
-// Add the force for velocity.
+    // Add the force for velocity.
     example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,
         dt, time, true, 0, example.number_of_ghost_cells);
 
@@ -375,12 +401,10 @@ void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
     //Adjust Phi 0%
     LOG::Time("Adjust Phi");
     example.Adjust_Phi_With_Sources(time + dt);
-// What ghost cell is filled?
     example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time + dt);
 
     //Delete Particles 12.5 (Parallelized)
     LOG::Time("Delete Particles");
-// Delete particles. How is the particle stored.
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid(); //0.1%
     example.particle_levelset_evolution.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(
         1);                           //4.9%
@@ -440,8 +464,10 @@ void WATER_DRIVER::Advance_To_Target_Time(const T target_time) {
         example.face_velocities, exchanged_phi_ghost, false, 3, 0, TV());
 
     time += dt;
-  }
+    delete &face_velocities_ghost;
 }
+
+
 //#####################################################################
 // Simulate_To_Frame
 //#####################################################################

@@ -32,18 +32,84 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+ /*
+  * Nimbus log interface. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_LIB_NIMBUS_H_
-#define NIMBUS_LIB_NIMBUS_H_
+#ifndef NIMBUS_LIB_LOG_H_
+#define NIMBUS_LIB_LOG_H_
 
-#include "lib/application.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/worker.h"
-#include "lib/log.h"
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream> // NOLINT
+#include <string>
 
-#define NIMBUS_SCHEDULER_PORT 5983
+enum LOG_TYPE {
+  ERROR,
+  WARNING,
+  INFO,
+  DEBUG,
+  NONE
+};
+
+std::string getTag(LOG_TYPE type);
+
+class Log {
+  public:
+    Log();
+    explicit Log(std::ostream* os);
+    explicit Log(std::string fname);
+    Log(std::ostream* os, std::string fname);
+    ~Log();
 
 
-#endif  // NIMBUS_LIB_NIMBUS_H_
+    void setOutputStream(std::ostream* os);
+
+    void setFileName(std::string fname);
+
+    void clearBuffer();
+
+    void writeToBuffer(std::string buf,
+        LOG_TYPE type = NONE, bool flag = true);
+
+    void writeToFile(std::string buf,
+        LOG_TYPE type = NONE, bool flag = true);
+
+    void writeToOutputStream(std::string buf,
+        LOG_TYPE type = NONE, bool flag = true);
+
+    void writeBufferToFile(bool flag = true);
+
+    void writeBufferToOutputStream(bool flag = true);
+
+    static void printLine(std::string msg,
+        LOG_TYPE type = NONE, bool flag = true) {
+      if (flag)
+        std::cout << getTag(type) << msg << std::endl;
+    };
+
+    static void print(std::string msg,
+        LOG_TYPE type = NONE, bool flag = true) {
+      if (flag)
+        std::cout << getTag(type) << msg;
+    };
+
+  private:
+    std::ostream* output_stream;
+    std::stringstream buffer;
+    std::string log_file_name;
+};
+
+
+
+
+
+
+
+
+
+
+
+#endif  // NIMBUS_LIB_LOG_H_

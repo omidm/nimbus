@@ -1,8 +1,8 @@
 TARGET = worker
 all: check ${TARGET}
 
-NIMBUS_ROOT = ..
-include ../Makeinclude
+NIMBUS_ROOT = ../..
+include ../../Makeinclude
 
 LINKED_APP_ROOT = $(NIMBUS_ROOT)/application/fluid-simulation/
 LINKED_APP_HEADER = $(wildcard $(NIMBUS_APP_ROOT)/public/*.h)

@@ -53,6 +53,7 @@ class TestApplication : public Application {
   }
 
   void start(SchedulerClient* scheduler) {
+    cout << "Starting Nimbus test application." << std::endl;
     const char* commands[] = {
       "no-op",
       "halt 53",
@@ -70,22 +71,17 @@ class TestApplication : public Application {
       scheduler->sendCommand(c);
       delete c;
     }
+    SchedulerCommand* c = new SchedulerCommand();
     while (1) {
-      SchedulerCommand* c = scheduler->receiveCommand();
-      cout << "Recevied: " << c->toString() << std::endl;
+      c = scheduler->receiveCommand();
+      cout << "Received command: " << c->toString() << std::endl;
     }
-    cout << "Starting Nimbus test application." << std::endl;
   }
 };
 
 int main(int argc, char *argv[]) {
   std::cout << "Worker is up!" << std::endl;
-
-  SchedulerClient* c = new SchedulerClient(NIMBUS_SCHEDULER_PORT);
   TestApplication * app0 = new TestApplication();
-  app0->load();
-
-  Worker * w = new Worker(app0);
-  c->run();
-  w->run(c);
+  Worker * w = new Worker(NIMBUS_SCHEDULER_PORT, app0);
+  w->run();
 }
