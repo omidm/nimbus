@@ -44,8 +44,8 @@
 
 
 int main(int argc, char *argv[]) {
-  Log log(&std::cout, "log.txt");
-  log.printSomething();
+  // Log log;
+  Log::printLine("Hello! :)", INFO);
   std::cout << "Nimbus is up!" << std::endl;
   Scheduler * s = new Scheduler(NIMBUS_SCHEDULER_PORT);
   s->run();

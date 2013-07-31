@@ -40,9 +40,74 @@
 
 #include "lib/log.h"
 
+Log::Log()
+: output_stream(&std::cout),
+  log_file_name("log.txt") {
+}
+
+Log::Log(std::ostream* os)
+: output_stream(os),
+  log_file_name("log.txt") {
+}
+
+Log::Log(std::string fname)
+: output_stream(&std::cout),
+  log_file_name(fname) {
+}
+
 Log::Log(std::ostream* os, std::string fname)
 : output_stream(os),
   log_file_name(fname) {
 }
+
+Log::~Log() {}
+
+
+void Log::setOutputStream(std::ostream* os) {
+  output_stream = os;
+}
+
+void Log::setFileName(std::string fname) {
+  log_file_name = fname;
+}
+
+// void Log::clearBuffer();
+// void Log::writeToBuffer(std::string buf, LOG_TYPE type, bool flag);
+// void Log::writeToFile(std::string buf, LOG_TYPE type, bool flag);
+// void Log::writeToOutputStream(std::string buf, LOG_TYPE type, bool flag);
+// void Log::writeBufferToFile(std::string buf, LOG_TYPE type, bool flag);
+// void Log::writeBufferToOutputStream(std::string buf, LOG_TYPE type, bool
+// flag);
+
+
+
+
+
+
+
+
+
+
+
+
+std::string getTag(LOG_TYPE type) {
+  switch (type) {
+    case ERROR:
+      return "ERROR: ";
+    case WARNING:
+      return "WARNING: ";
+    case INFO:
+      return "INFO: ";
+    case DEBUG:
+      return "DEBUG: ";
+    case NONE:
+      return "";
+    default :
+      return "";
+  }
+}
+
+
+
 
 

@@ -42,6 +42,8 @@
 #define NIMBUS_LIB_LOG_H_
 
 #include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream> // NOLINT
 #include <string>
 
 enum LOG_TYPE {
@@ -52,16 +54,52 @@ enum LOG_TYPE {
   NONE
 };
 
+std::string getTag(LOG_TYPE type);
+
 class Log {
   public:
-    Log(std::ostream*, std::string fname);
+    Log();
+    explicit Log(std::ostream* os);
+    explicit Log(std::string fname);
+    Log(std::ostream* os, std::string fname);
+    ~Log();
 
-    void printSomething() {
-      *output_stream << "Hello! :)" << std::endl;
+
+    void setOutputStream(std::ostream* os);
+
+    void setFileName(std::string fname);
+
+    void clearBuffer();
+
+    void writeToBuffer(std::string buf, LOG_TYPE type, bool flag);
+
+    void writeToFile(std::string buf, LOG_TYPE type, bool flag);
+
+    void writeToOutputStream(std::string buf, LOG_TYPE type, bool flag);
+
+    void writeBufferToFile(std::string buf, LOG_TYPE type, bool flag);
+
+    void writeBufferToOutputStream(std::string buf, LOG_TYPE type, bool flag);
+
+    static void printLine(std::string msg) {
+      std::cout << msg << std::endl;
+    };
+
+    static void printLine(std::string msg, LOG_TYPE type) {
+      std::cout << getTag(type) << msg << std::endl;
+    };
+
+    static void print(std::string msg) {
+      std::cout << msg;
+    };
+
+    static void print(std::string msg, LOG_TYPE type) {
+      std::cout << getTag(type) << msg;
     };
 
   private:
     std::ostream* output_stream;
+    std::stringstream buffer;
     std::string log_file_name;
 };
 
