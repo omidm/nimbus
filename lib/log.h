@@ -71,30 +71,29 @@ class Log {
 
     void clearBuffer();
 
-    void writeToBuffer(std::string buf, LOG_TYPE type, bool flag);
+    void writeToBuffer(std::string buf,
+        LOG_TYPE type = NONE, bool flag = true);
 
-    void writeToFile(std::string buf, LOG_TYPE type, bool flag);
+    void writeToFile(std::string buf,
+        LOG_TYPE type = NONE, bool flag = true);
 
-    void writeToOutputStream(std::string buf, LOG_TYPE type, bool flag);
+    void writeToOutputStream(std::string buf,
+        LOG_TYPE type = NONE, bool flag = true);
 
-    void writeBufferToFile(std::string buf, LOG_TYPE type, bool flag);
+    void writeBufferToFile(bool flag = true);
 
-    void writeBufferToOutputStream(std::string buf, LOG_TYPE type, bool flag);
+    void writeBufferToOutputStream(bool flag = true);
 
-    static void printLine(std::string msg) {
-      std::cout << msg << std::endl;
+    static void printLine(std::string msg,
+        LOG_TYPE type = NONE, bool flag = true) {
+      if (flag)
+        std::cout << getTag(type) << msg << std::endl;
     };
 
-    static void printLine(std::string msg, LOG_TYPE type) {
-      std::cout << getTag(type) << msg << std::endl;
-    };
-
-    static void print(std::string msg) {
-      std::cout << msg;
-    };
-
-    static void print(std::string msg, LOG_TYPE type) {
-      std::cout << getTag(type) << msg;
+    static void print(std::string msg,
+        LOG_TYPE type = NONE, bool flag = true) {
+      if (flag)
+        std::cout << getTag(type) << msg;
     };
 
   private:

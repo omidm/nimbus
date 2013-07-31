@@ -44,9 +44,14 @@
 
 
 int main(int argc, char *argv[]) {
-  // Log log;
-  Log::printLine("Hello! :)", INFO);
-  std::cout << "Nimbus is up!" << std::endl;
+  Log log;
+  log.writeToFile("**Start of the log file.", INFO, true);
+  log.writeToBuffer("Some DEBUG information in the buffer!", DEBUG, true);
+  log.writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
+  log.writeBufferToFile(true);
+  log.writeBufferToOutputStream();
+
+  Log::printLine("Nimbus is up!", INFO);
   Scheduler * s = new Scheduler(NIMBUS_SCHEDULER_PORT);
   s->run();
 }
