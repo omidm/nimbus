@@ -47,7 +47,32 @@
  * simulation data and build the data map should also be called here.
  */
 class WaterApp : public Application {
+
+    typedef float T;
+    typedef PhysBAM::VECTOR<T, 2> TV;
+    typedef PhysBAM::VECTOR<int, TV::dimension> TV_INT;
+
+    public:
+    WaterDriver<TV> driver;
     void load();
+};
+
+class Main : public Job {
+    public:
+    Main(WaterApp *app, JobType type);
+    void Execute(std::string params, const dataArray& da);
+};
+
+class Init : public Job {
+    public:
+    Init(WaterApp *app, JobType type);
+    void Execute(std::string params, const dataArray& da);
+};
+
+class Loop : public Job {
+    public:
+    Loop(WaterApp *app, JobType type);
+    void Execute(std::string params, const dataArray& da);
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

@@ -71,6 +71,8 @@ WaterDriver()
     sim_data->projection =
         new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >
         (*mac_grid->data, false, false, false, false, NULL);
+    if (sim_data->projection == NULL)
+        exit -1;
     *sim_data->particle_levelset_evolution
         (*mac_grid->data, number_of_ghost_cells);
     *sim_data->incompressible(*mac_grid->data, sim_data->projection);
@@ -79,6 +81,15 @@ WaterDriver()
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
     sim_data.incompressible->Set_Custom_Advection(sim_data->advection_scalar);
+    for (int i = 1; i <= TV::dimension; i++)
+    {
+        *sim_data.domain_boundary(i)(1) = true;
+        *sim_data.domain_boundary(i)(2) = true;
+    }
+    *sim_data.domain_boundary(2)(2) = false;
+
+    // driver parameters
+    *sim_data.kinematic_evolution(*sim_data.rigid_geometry_collection, true);
 }
 
 template <class TV> WaterDriver<TV> ::
@@ -235,7 +246,7 @@ initialize(bool distributed)
         Compute_Occupied_Blocks(false,
             (T)2*sim_data.mac_grid.Minimum_Edge_Length(), 5);
     // initialize_phi();
-    sim_data.Adjust_Phi_With_Sources(time);
+    Adjust_Phi_With_Sources(time);
     sim_data.particle_levelset_evolution.Make_Signed_Distance();
     sim_data.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
@@ -274,7 +285,7 @@ initialize(bool distributed)
             false, 3, 0, TV() );
 
     // get so CFL is correct
-    sim_data.Set_Boundary_Conditions(time);
+    Set_Boundary_Conditions(time);
 
     Write_Output_Files(sim_data.first_frame);
 }

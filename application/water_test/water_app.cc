@@ -36,13 +36,86 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "lib/nimbus.h"
 #include "./water_app.h"
 
 void WaterApp::load() {
+
     /* Declare and initialize data and jobs. */
+    std::cout << "Worker beginning to load application" << std::endl;
+
+    registerJob("main", new Main(this, COMP));
+
+    registerJob("init", new Init(this, COMP));
+    registerJob("loop", new Loop(this, COMP));
+
+    registerData("mac_grid_1", new Grid<TV>);
+    registerData("mpi_grid_1", new MPIGrid<TV>);
+    registerData("face_velocities_1", new FaceArray<TV>);
+    registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>);
+    registerData("sim_data_1", new NonAdvData<TV, T>);
+
+    std::cout << "Finished creating job and data definitions" << std::endl;
+
+    std::cout << "Finished loading application" << std::endl;
 }
 
-/* Methods to operate on data. */
+Main::Main(WaterApp *app, JobType type)
+    : Job(app, type)
+{
+};
 
+void Main::Execute(std::string params, const dataArray& da)
+{
+    std::vector<int> j;
+    std::vector<int> d;
+    IDSet before, after, read, write;
+    std::string par;
 
-/* Functions used by the jobs. */
+    app->getNewDataID(5, &d);
+    app->defineData("mac_grid_1", d[0]);
+    app->defineData("mpi_grid_1", d[1]);
+    app->defineData("face_velocities_1", d[2]);
+    app->defineData("face_velocities_ghost_1", d[3]);
+    app->defineData("sim_data_1", d[4]);
+
+    app->getNewJobID(2, &d);
+
+    before.clear();
+    after.clear();
+    read.clear();
+    write.clear();
+    par = "";
+    after.insert(j[1]);
+    read.insert(d[0]);
+    read.insert(d[1]);
+    read.insert(d[2]);
+    read.insert(d[3]);
+    read.insert(d[4]);
+    app->spawnJob("init", j[0], before, after, read, write, par);
+
+    before.clear();
+    after.clear();
+    read.clear();
+    write.clear();
+    par = "";
+    app->spawnJob("loop", j[1], before, after, read, write, par);
+};
+
+Init::Init(WaterApp *app, JobType type)
+    : Job(app, type)
+{
+};
+
+void Init::Execute(std::string params, const dataArray& da)
+{
+};
+
+Loop::Loop(WaterApp *app, JobType type)
+    : Job(app, type)
+{
+};
+
+void Loop::Execute(std::string params, const dataArray& da)
+{
+};
