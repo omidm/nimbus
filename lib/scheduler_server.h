@@ -93,6 +93,7 @@ class SchedulerServerConnection {
         return id;
     }
 
+    boost::asio::streambuf* read_buffer;
     tcp::socket* socket;
 
   private:

@@ -55,7 +55,7 @@ void Worker::run() {
   while (true) {
     sleep(2);
     std::cout << "Worker running core loop." << std::endl;
-    SchedulerCommand cm("HELLO SCHEDULER;");
+    SchedulerCommand cm("HELLO SCHEDULER");
     client->sendCommand(&cm);
   }
 }
