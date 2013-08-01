@@ -46,6 +46,28 @@
 #include <sstream> // NOLINT
 #include <string>
 
+
+#ifdef DEBUG_MODE
+#define dbg_print(...) print(__VA_ARGS__)
+#define dbg_printLine(...) printLine(__VA_ARGS__)
+#define dbg_writeToFile(...) writeToFile(__VA_ARGS__)
+#define dbg_writeToBuffer(...) writeToBuffer(__VA_ARGS__)
+#define dbg_writeBufferToFile(...) writeBufferToFile(__VA_ARGS__)
+#define dbg_writeToOutputStream(...) writeToOutputStream(__VA_ARGS__)
+#define dbg_writeBufferToOutputStream(...) writeBufferToOutputStream(__VA_ARGS__) // NOLINT
+#else
+#define dbg_print(...) none()
+#define dbg_printLine(...) none()
+#define dbg_writeToFile(...) none()
+#define dbg_writeToBuffer(...) none()
+#define dbg_writeBufferToFile(...) none()
+#define dbg_writeToOutputStream(...) none()
+#define dbg_writeBufferToOutputStream(...) none()
+#endif
+
+
+
+
 enum LOG_TYPE {
   ERROR,
   WARNING,
@@ -73,30 +95,21 @@ class Log {
 
     void clearLogFile();
 
-    void writeToBuffer(std::string buf,
-        LOG_TYPE type = NONE, bool flag = true);
+    void writeToBuffer(std::string buf, LOG_TYPE type = NONE);
 
-    void writeToFile(std::string buf,
-        LOG_TYPE type = NONE, bool flag = true);
+    void writeToFile(std::string buf, LOG_TYPE type = NONE);
 
-    void writeToOutputStream(std::string buf,
-        LOG_TYPE type = NONE, bool flag = true);
+    void writeToOutputStream(std::string buf, LOG_TYPE type = NONE);
 
-    void writeBufferToFile(bool flag = true);
+    void writeBufferToFile();
 
-    void writeBufferToOutputStream(bool flag = true);
+    void writeBufferToOutputStream();
 
-    static void printLine(std::string msg,
-        LOG_TYPE type = NONE, bool flag = true) {
-      if (flag)
-        std::cout << getTag(type) << msg << std::endl;
-    };
+    static void printLine(std::string msg, LOG_TYPE type = NONE);
 
-    static void print(std::string msg,
-        LOG_TYPE type = NONE, bool flag = true) {
-      if (flag)
-        std::cout << getTag(type) << msg;
-    };
+    static void print(std::string msg, LOG_TYPE type = NONE);
+
+    static void none() {}
 
   private:
     std::ostream* output_stream;

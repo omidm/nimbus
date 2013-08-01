@@ -95,38 +95,39 @@ void Log::clearLogFile() {
   ofs.close();
 }
 
-void Log::writeToBuffer(std::string buf, LOG_TYPE type, bool flag) {
-  if (flag)
-    buffer << getTag(type) << buf << std::endl;
+void Log::writeToBuffer(std::string buf, LOG_TYPE type) {
+  buffer << getTag(type) << buf << std::endl;
 }
 
-void Log::writeToFile(std::string buf, LOG_TYPE type, bool flag) {
-  if (flag) {
-    std::ofstream ofs;
-    ofs.open(log_file_name.c_str(), std::ofstream::app);
-    ofs << getTag(type) << buf << std::endl;
-    ofs.close();
-  }
+void Log::writeToFile(std::string buf, LOG_TYPE type) {
+  std::ofstream ofs;
+  ofs.open(log_file_name.c_str(), std::ofstream::app);
+  ofs << getTag(type) << buf << std::endl;
+  ofs.close();
 }
 
-void Log::writeToOutputStream(std::string buf, LOG_TYPE type, bool flag) {
-  if (flag)
-    buffer << getTag(type) << buf << std::endl;
+void Log::writeToOutputStream(std::string buf, LOG_TYPE type) {
+  buffer << getTag(type) << buf << std::endl;
 }
 
-void Log::writeBufferToFile(bool flag) {
-  if (flag) {
-    std::ofstream ofs;
-    ofs.open(log_file_name.c_str(), std::ofstream::app);
-    ofs << buffer.str();
-    ofs.close();
-  }
+void Log::writeBufferToFile() {
+  std::ofstream ofs;
+  ofs.open(log_file_name.c_str(), std::ofstream::app);
+  ofs << buffer.str();
+  ofs.close();
 }
 
 
-void Log::writeBufferToOutputStream(bool flag) {
-  if (flag)
-    *output_stream << buffer.str();
+void Log::writeBufferToOutputStream() {
+  *output_stream << buffer.str();
+}
+
+void Log::printLine(std::string msg, LOG_TYPE type) {
+  std::cout << getTag(type) << msg << std::endl;
+}
+
+void Log::print(std::string msg, LOG_TYPE type) {
+  std::cout << getTag(type) << msg;
 }
 
 
@@ -146,8 +147,4 @@ std::string getTag(LOG_TYPE type) {
       return "";
   }
 }
-
-
-
-
 

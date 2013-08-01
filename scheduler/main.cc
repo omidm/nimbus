@@ -38,20 +38,21 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#define DEBUG_MODE
+
 #include <iostream> // NOLINT
 #include "./scheduler.h"
 #include "lib/nimbus.h"
 
-
 int main(int argc, char *argv[]) {
   Log log;
-  log.writeToFile("**Start of the log file.", INFO, true);
-  log.writeToBuffer("Some DEBUG information in the buffer!", DEBUG, true);
-  log.writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
-  log.writeBufferToFile(false);
-  log.writeBufferToOutputStream();
-
+  log.writeToBuffer("**Start of the log file.");
+  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", DEBUG);
+  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
+  log.writeBufferToFile();
   Log::printLine("Nimbus is up!", INFO);
+  Log::dbg_printLine("DEBUG information will be printed!", DEBUG);
+
   Scheduler * s = new Scheduler(NIMBUS_SCHEDULER_PORT);
   s->run();
 }
