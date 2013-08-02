@@ -96,4 +96,20 @@ void parseCommandFromString(const std::string input,
 }
 
 
+int countOccurence(std::string str, std::string substr) {
+  int count = 0;
+  std::size_t pos = -1;
+
+  while (true) {
+    pos = str.find(substr, pos + 1);
+    if (pos != std::string::npos)
+      count++;
+    else
+      break;
+  }
+  return count;
+}
+
+
+
 

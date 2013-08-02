@@ -61,5 +61,6 @@ void parseCommandFromString(const std::string input,
     std::string& command,
     std::vector<std::string>& parameters);
 
+int countOccurence(std::string str, std::string substr);
 
 #endif  // NIMBUS_LIB_PARSER_H_

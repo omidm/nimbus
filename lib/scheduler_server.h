@@ -42,10 +42,13 @@
 #ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
 #define NIMBUS_LIB_SCHEDULER_SERVER_H_
 
+#define DEBUG_MODE
+
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <string>
 #include <map>
+#include "lib/nimbus.h"
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
 
@@ -95,6 +98,7 @@ class SchedulerServerConnection {
 
     boost::asio::streambuf* read_buffer;
     tcp::socket* socket;
+    int command_num;
 
   private:
     ConnectionId id;

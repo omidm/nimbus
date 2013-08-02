@@ -41,6 +41,8 @@
 #ifndef NIMBUS_SCHEDULER_SCHEDULER_H_
 #define NIMBUS_SCHEDULER_SCHEDULER_H_
 
+#define DEBUG_MODE
+
 #include <boost/thread.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
@@ -49,10 +51,9 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "lib/nimbus.h"
 #include "lib/scheduler_server.h"
-#include "lib/application.h"
 #include "lib/cluster.h"
-#include "lib/worker.h"
 #include "lib/parser.h"
 
 class Scheduler {

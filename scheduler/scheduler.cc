@@ -46,7 +46,7 @@ Scheduler::Scheduler(unsigned int p)
 }
 
 void Scheduler::run() {
-  std::cout << "Running the Scheduler" << std::endl;
+  Log::dbg_printLine("Running the Scheduler");
 
   setupWorkerInterface();
   setupUserInterface();
@@ -56,10 +56,19 @@ void Scheduler::run() {
     sleep(2);
     for (ConnectionMapIter iter = server->connections.begin();
         iter != server->connections.end(); ++iter) {
-        SchedulerServerConnection* con = iter->second;
-        SchedulerCommand* comm = server->receiveCommand(con);
-        std::cout << "Received comm: " << comm->toString() << std::endl;
-        server->sendCommand(con, comm);
+      SchedulerServerConnection* con = iter->second;
+      SchedulerCommand* comm = server->receiveCommand(con);
+      if (comm->toString() != "no-command") {
+        std::cout << "Received command: " << comm->toString() << std::endl;
+        if (comm->toString() == "HELLO SCHEDULER") {
+          SchedulerCommand cm("HELLO WORKER");
+          std::cout << "Sending command: " << cm.toString() << std::endl;
+          server->sendCommand(con, &cm);
+        } else {
+          std::cout << "Sending command: " << comm->toString() << std::endl;
+          server->sendCommand(con, comm);
+        }
+      }
     }
   }
 }
@@ -78,7 +87,7 @@ void Scheduler::setupUserInterface() {
 
 void Scheduler::getUserCommand() {
   while (true) {
-    std::cout << "command: ";
+    std::cout << "command: " << std::endl;
     std::string token("runapp");
     std::string str, cm;
     std::vector<int> args;

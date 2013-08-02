@@ -66,22 +66,31 @@ SchedulerServer::~SchedulerServer() {
 
 
 SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* conn) { // NOLINT
-  boost::asio::read_until(*(conn->socket), *(conn->read_buffer), ';');
+  // boost::asio::read_until(*(conn->socket), *(conn->read_buffer), ';');
+  // std::streamsize size = conn->read_buffer->in_avail();
+  // boost::array<char, 128> buf;
+  // boost::asio::read(*(conn->socket), boost::asio::buffer(buf, b));
 
-  std::streamsize size = conn->read_buffer->in_avail();
-  if (size > 0) {
+  boost::system::error_code ignored_error;
+  int bytes_available =conn->socket->available(ignored_error);
+
+  boost::asio::streambuf::mutable_buffers_type bufs =
+    conn->read_buffer->prepare(bytes_available);
+  std::size_t bytes_read = conn->socket->receive(bufs);
+  conn->read_buffer->commit(bytes_read);
+
+  std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
+  conn->command_num += countOccurence(str, ";");
+
+  if (conn->command_num > 0) {
     std::istream input(conn->read_buffer);
     std::string command;
     std::getline(input, command, ';');
-
+    conn->command_num--;
     SchedulerCommand* com = new SchedulerCommand(command);
-
-    // std::cout << "\nReceived " << command <<
-    // " as " << com->toString() << "\n";
-
     return com;
   } else {
-    return new SchedulerCommand("halt");
+    return new SchedulerCommand("no-command");
   }
 }
 
@@ -123,6 +132,7 @@ SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
   static ConnectionId id_assigner = 0;
   id = id_assigner++;
   read_buffer = new boost::asio::streambuf();
+  command_num = 0;
 }
 
 SchedulerServerConnection::~SchedulerServerConnection() {

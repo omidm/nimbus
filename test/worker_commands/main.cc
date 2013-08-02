@@ -66,15 +66,16 @@ class TestApplication : public Application {
     };
 
     for (int i = 0; commands[i] != NULL; i++) {
-      cout << "Sending:  " << commands[i] << std::endl;
-      SchedulerCommand* c = new SchedulerCommand(commands[i]);
-      scheduler->sendCommand(c);
-      delete c;
+      SchedulerCommand cm(commands[i]);
+      cout << "Sending command:  " << cm.toString() << std::endl;
+      scheduler->sendCommand(&cm);
     }
-    SchedulerCommand* c = new SchedulerCommand();
+
     while (1) {
-      c = scheduler->receiveCommand();
-      cout << "Received command: " << c->toString() << std::endl;
+      sleep(1);
+      SchedulerCommand* comm = scheduler->receiveCommand();
+      if (comm->toString() != "no-command")
+        cout << "Received command: " << comm->toString() << std::endl;
     }
   }
 };

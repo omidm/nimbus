@@ -41,6 +41,8 @@
 #ifndef NIMBUS_LIB_WORKER_H_
 #define NIMBUS_LIB_WORKER_H_
 
+// #define DEBUG_MODE
+
 #include <boost/thread.hpp>
 #include <string>
 #include <map>
@@ -50,6 +52,7 @@
 #include "lib/job.h"
 #include "lib/application.h"
 #include "lib/parser.h"
+#include "lib/log.h"
 
 class Worker;
 typedef std::map<int, Worker*> WorkerMap;

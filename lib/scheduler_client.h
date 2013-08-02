@@ -44,6 +44,7 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <map>
+#include "lib/parser.h"
 #include "lib/scheduler_command.h"
 
 typedef uint ConnectionId;
@@ -66,6 +67,7 @@ class SchedulerClient {
     boost::asio::io_service* io_service;
     boost::asio::streambuf* read_buffer;
     tcp::socket* socket;
+    int command_num;
 
     void createNewConnections();
 };

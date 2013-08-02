@@ -53,10 +53,14 @@ void Worker::run() {
   app->start(client);
 
   while (true) {
-    sleep(2);
-    std::cout << "Worker running core loop." << std::endl;
+    sleep(1);
+    Log::dbg_printLine("Worker running core loop.", INFO);
     SchedulerCommand cm("HELLO SCHEDULER");
+    std::cout << "Sending command: " << cm.toString() << std::endl;
     client->sendCommand(&cm);
+    SchedulerCommand* comm = client->receiveCommand();
+    if (comm->toString() != "no-command")
+      std::cout << "Received command: " << comm->toString() << std::endl;
   }
 }
 
