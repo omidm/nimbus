@@ -60,14 +60,8 @@ void Scheduler::run() {
       SchedulerCommand* comm = server->receiveCommand(con);
       if (comm->toString() != "no-command") {
         std::cout << "Received command: " << comm->toString() << std::endl;
-        if (comm->toString() == "HELLO SCHEDULER") {
-          SchedulerCommand cm("HELLO WORKER");
-          std::cout << "Sending command: " << cm.toString() << std::endl;
-          server->sendCommand(con, &cm);
-        } else {
-          std::cout << "Sending command: " << comm->toString() << std::endl;
-          server->sendCommand(con, comm);
-        }
+        std::cout << "Sending command: " << comm->toString() << std::endl;
+        server->sendCommand(con, comm);
       }
     }
   }

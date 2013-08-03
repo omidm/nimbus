@@ -57,9 +57,16 @@ void parseCommand(const std::string& str, const CmSet& cms, std::string& cm,
 
 int parseCommandFile(const std::string& fname, CmSet& cs);
 
-void parseCommandFromString(const std::string input,
+void parseCommandFromString(const std::string& input,
     std::string& command,
     std::vector<std::string>& parameters);
+
+void parseParameterFromString(const std::string& input, std::string& tag,
+    std::string& args, std::string& string_set);
+
+void ParseIDSetFromString(const std::string& input, std::set<int>& set);
+
+bool isSet(const std::string& tag);
 
 int countOccurence(std::string str, std::string substr);
 

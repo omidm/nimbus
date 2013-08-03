@@ -76,11 +76,11 @@ int parseCommandFile(const std::string& fname, CmSet& cs) {
 using boost::tokenizer;
 using boost::char_separator;
 
-char_separator<char> separator(" \n\t");
 
-void parseCommandFromString(const std::string input,
+void parseCommandFromString(const std::string& input,
                             std::string& command,
                             std::vector<std::string>& parameters) {
+  char_separator<char> separator(" \n\t");
   tokenizer<char_separator<char> > tokens(input, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
   if (iter == tokens.end()) {
@@ -95,6 +95,35 @@ void parseCommandFromString(const std::string input,
   }
 }
 
+void parseParameterFromString(const std::string& input, std::string& tag,
+    std::string& args, std::string& string_set) {
+  char_separator<char> separator(":");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  if (iter == tokens.end()) {
+    tag = "";
+    return;
+  }
+
+  tag = *iter++;
+  if (isSet(tag))
+    string_set = *iter;
+  else
+    args = *iter;
+}
+
+void ParseIDSetFromString(const std::string& input, std::set<int>& set) {
+  int num;
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    set.insert(num);
+  }
+}
 
 int countOccurence(std::string str, std::string substr) {
   int count = 0;
@@ -111,5 +140,10 @@ int countOccurence(std::string str, std::string substr) {
 }
 
 
+bool isSet(const std::string& tag) {
+  if (tag == "param" || tag == "name" || "type")
+    return false;
+  return true;
+}
 
 

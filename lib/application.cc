@@ -60,17 +60,18 @@ void Application::registerData(std::string name, Data* d) {
   dataTable[name] = d;
 }
 
+void Application::spawnJob(std::string name, int id, IDSet bfore, IDSet after,
+        IDSet read, IDSet write, std::string params) {
+  SchedulerCommand cm("spawnJob");
+  client->sendCommand(&cm);
+}
+
+void Application::defineData(std::string name, int id) {
+}
+
 void Application::getNewJobID(int req_num, std::vector<int>* result) {
 }
 
 void Application::getNewDataID(int req_num, std::vector<int>* result) {
-}
-
-
-void Application::spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params) {
-}
-
-void Application::defineData(std::string name, int id) {
 }
 

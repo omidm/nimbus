@@ -46,25 +46,34 @@ SchedulerCommand::SchedulerCommand() {
 }
 
 SchedulerCommand::SchedulerCommand(std::string n,
-                                   CommandParameterList p) {
+    const CommandParameterList& p) {
   name = n;
-  parameters = p;
+  CommandParameterList::const_iterator  iter = p.begin();
+  for (; iter != p.end(); ++iter)
+    addParameter(*iter);
 }
 
 SchedulerCommand::SchedulerCommand(std::string command) {
-  parseCommandFromString(command, name, parameters);
+  std::vector<std::string> string_params;
+  parseCommandFromString(command, name, string_params);
+  std::vector<std::string>::iterator  iter = string_params.begin();
+  for (; iter != string_params.end(); ++iter)
+    addParameter(CommandParameter(*iter));
 }
 
 SchedulerCommand::~SchedulerCommand() {}
 
+void SchedulerCommand::addParameter(const CommandParameter& cm) {
+  parameters.push_back(cm);
+}
+
 std::string SchedulerCommand::toString() {
   std::string rval = name;
-  CommandParameterList::const_iterator iter = parameters.begin();
+  CommandParameterList::iterator iter = parameters.begin();
   for (; iter != parameters.end(); ++iter) {
     rval += " ";
-    rval += *iter;
+    rval += iter->toString();
   }
-
   return rval;
 }
 
@@ -75,3 +84,79 @@ std::string SchedulerCommand::getName() {
 CommandParameterList SchedulerCommand::getParameters() {
   return parameters;
 }
+
+
+
+
+
+CommandParameter::CommandParameter() {
+  tag = "empty-field";
+}
+
+CommandParameter::CommandParameter(std::string t, std::string a,
+    const IDSet& s) {
+  tag = t;
+  args = a;
+  set = s;
+}
+
+CommandParameter::CommandParameter(std::string parameter) {
+  std::string string_set;
+  parseParameterFromString(parameter, tag, args, string_set);
+  if (isSet(tag))
+    set = IDSet(string_set);
+}
+
+CommandParameter::~CommandParameter() {}
+
+std::string CommandParameter::toString() {
+  std::string rval = tag;
+  rval += ":";
+  if (isSet(tag))
+    rval += set.toString();
+  else
+    rval += args;
+
+  return rval;
+}
+
+
+
+
+
+
+IDSet::IDSet() {}
+
+IDSet::IDSet(std::string s) {
+  ParseIDSetFromString(s, set);
+}
+
+IDSet::~IDSet() {}
+
+std::string IDSet::toString() {
+  bool empty = true;
+  std::string rval = "{";
+  std::set<int>::iterator iter = set.begin();
+  for (; iter != set.end(); ++iter) {
+    empty = false;
+    std::ostringstream ss;
+    ss << *iter;
+    rval += ss.str();
+    rval += ",";
+  }
+  if (empty)
+    rval += "}";
+  else
+    rval[rval.length() - 1] = '}';
+  return rval;
+}
+
+void IDSet::insert(int n) {
+  set.insert(n);
+}
+
+void IDSet::clear() {
+  set.clear();
+}
+
+

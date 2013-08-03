@@ -43,8 +43,14 @@
 #include <iostream> // NOLINT
 #include "./scheduler.h"
 #include "lib/nimbus.h"
-
+#include "lib/scheduler_command.h"
+#include "lib/parser.h"
 int main(int argc, char *argv[]) {
+  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+  SchedulerCommand cm(str);
+  std::cout << cm.toString() << std::endl;
+
   Log log;
   log.writeToBuffer("**Start of the log file.");
   log.dbg_writeToBuffer("Some DEBUG information in the buffer!", DEBUG);

@@ -49,21 +49,19 @@
 #include "lib/job.h"
 #include "lib/data.h"
 #include "lib/scheduler_client.h"
+#include "lib/scheduler_command.h"
 
 class Application;
 typedef std::map<int, Application*> AppMap;
 
 class Application {
   public:
-    int id;
-    int priority;
-
-    JobTable jobTable;
-    DataTable dataTable;
-    SchedulerClient* client;
-
     Application();
+
+    ~Application();
+
     virtual void load();
+
     virtual void start(SchedulerClient* scheduler);
 
     void registerJob(std::string name, Job* j);
@@ -78,6 +76,17 @@ class Application {
     void getNewJobID(int req_num, std::vector<int>* result);
 
     void getNewDataID(int req_num, std::vector<int>* result);
+
+  private:
+    int id;
+
+    int priority;
+
+    JobTable jobTable;
+
+    DataTable dataTable;
+
+    SchedulerClient* client;
 };
 
 

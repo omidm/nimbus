@@ -42,19 +42,55 @@
 #ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
 #define NIMBUS_LIB_SCHEDULER_COMMAND_H_
 
+#include <sstream> // NOLINT
 #include <string>
 #include <vector>
+#include <set>
 
-typedef std::string CommandParameter;
+
+class IDSet {
+  public:
+    IDSet();
+    explicit IDSet(std::string s);
+    ~IDSet();
+
+    std::string toString();
+    void insert(int n);
+    void clear();
+
+  private:
+    std::set<int> set;
+};
+
+class CommandParameter {
+  public:
+    CommandParameter();
+    explicit CommandParameter(std::string parameter);
+    CommandParameter(std::string tag, std::string args, const IDSet& set);
+    virtual ~CommandParameter();
+
+    virtual std::string toString();
+    // virtual std::string getTag();
+    // virtual std::string getArg();
+    // virtual void getIDSet(IDSet* set);
+
+  private:
+    std::string tag;
+    std::string args;
+    IDSet set;
+};
+
 typedef std::vector<CommandParameter> CommandParameterList;
 
 class SchedulerCommand {
   public:
     SchedulerCommand();
     explicit SchedulerCommand(std::string command);
-    SchedulerCommand(std::string name, CommandParameterList parameters);
+    SchedulerCommand(std::string name,
+        const CommandParameterList& parameters);
     virtual ~SchedulerCommand();
 
+    virtual void addParameter(const CommandParameter& cm);
     virtual std::string toString();
     virtual std::string getName();
     virtual CommandParameterList getParameters();

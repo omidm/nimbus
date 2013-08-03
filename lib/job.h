@@ -46,12 +46,13 @@
 #include <set>
 #include <map>
 #include "lib/data.h"
+#include "lib/scheduler_command.h"
+
 
 class Application;
 class Job;
 typedef std::map<int, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
-typedef std::set<int> IDSet;
 
 
 typedef std::vector<Data*> dataArray;

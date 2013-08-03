@@ -55,7 +55,9 @@ void Worker::run() {
   while (true) {
     sleep(1);
     Log::dbg_printLine("Worker running core loop.", INFO);
-    SchedulerCommand cm("HELLO SCHEDULER");
+    std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+    str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+    SchedulerCommand cm(str);
     std::cout << "Sending command: " << cm.toString() << std::endl;
     client->sendCommand(&cm);
     SchedulerCommand* comm = client->receiveCommand();
