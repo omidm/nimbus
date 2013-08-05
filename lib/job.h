@@ -79,7 +79,7 @@ class Job {
 
     virtual void Execute(std::string params, const dataArray& da) {}
 
-    Job * Clone();
+    virtual Job * Clone();
     void Sleep();
     void Kill();
 };

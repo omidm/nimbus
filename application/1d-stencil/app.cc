@@ -66,11 +66,17 @@ Main::Main(Application* app, JobType type)
   : Job(app, type) {
 };
 
+Job * Main::Clone() {
+  std::cout << "Cloning main job!\n";
+  return new Main(app, type);
+};
+
 void Main::Execute(std::string params, const dataArray& da) {
+  std::cout << "Executing the main job\n";
   std::vector<int> j;
   std::vector<int> d;
   IDSet before, after, read, write;
-  std::string par;
+  std::string par = "none";
   
   app->getNewJobID(5, &j);
   app->getNewDataID(4, &d);

@@ -45,6 +45,7 @@
 
 #include <boost/thread.hpp>
 #include <string>
+#include <vector>
 #include <map>
 #include "lib/scheduler_client.h"
 #include "lib/cluster.h"

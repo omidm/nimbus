@@ -73,6 +73,8 @@ class Application {
 
     void defineData(std::string name, int id);
 
+    Job* cloneJob(std::string name);
+
     void getNewJobID(int req_num, std::vector<int>* result);
 
     void getNewDataID(int req_num, std::vector<int>* result);

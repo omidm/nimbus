@@ -60,18 +60,36 @@ void Application::registerData(std::string name, Data* d) {
   dataTable[name] = d;
 }
 
-void Application::spawnJob(std::string name, int id, IDSet bfore, IDSet after,
+void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
         IDSet read, IDSet write, std::string params) {
-  SchedulerCommand cm("spawnJob");
+  IDSet idset;
+  idset.insert(id);
+  std::string str = "spawnjob";
+  str = str + " name:" + name;
+  str = str + " id:" + idset.toString();
+  str = str + " before:" + before.toString();
+  str = str + " after:" + after.toString();
+  str = str + " read:" + read.toString();
+  str = str + " write:" + write.toString();
+  str = str + " param:" + params;
+  SchedulerCommand cm(str);
   client->sendCommand(&cm);
 }
 
 void Application::defineData(std::string name, int id) {
 }
 
+Job* Application::cloneJob(std::string name) {
+  return jobTable[name]->Clone();
+}
+
 void Application::getNewJobID(int req_num, std::vector<int>* result) {
+  for (int i = 0; i < req_num; i++)
+    result->push_back(i);
 }
 
 void Application::getNewDataID(int req_num, std::vector<int>* result) {
+  for (int i = 0; i < req_num; i++)
+    result->push_back(i);
 }
 

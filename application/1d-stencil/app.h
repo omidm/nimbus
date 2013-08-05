@@ -9,6 +9,7 @@ class Main : public Job {
   public:
     Main(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    Job * Clone();
 };
 
 class Init : public Job {

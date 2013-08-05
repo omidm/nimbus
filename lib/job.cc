@@ -46,6 +46,7 @@ Job::Job(Application* app, JobType type) {
 }
 
 Job* Job::Clone() {
+  std::cout << "cloning the base job\n";
   Job* j = new Job(app, type);
   return j;
 }
