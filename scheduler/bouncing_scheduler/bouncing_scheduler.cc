@@ -38,14 +38,13 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "./scheduler.h"
+#include "./bouncing_scheduler.h"
 
-Scheduler::Scheduler(unsigned int p)
-: port(p) {
-  appId = 0;
+BouncingScheduler::BouncingScheduler(unsigned int p)
+: Scheduler(p) {
 }
 
-void Scheduler::run() {
+void BouncingScheduler::run() {
   Log::dbg_printLine("Running the Scheduler");
 
   setupWorkerInterface();
@@ -57,70 +56,18 @@ void Scheduler::run() {
     std::cout << "Waiting for the first worker to cennect ..." << std::endl;
   }
 
-  SchedulerCommand cm("runmain");
-  std::cout << "Sending command: " << cm.toString() << std::endl;
-  server->sendCommand(server->connections.begin()->second, &cm);
   while (true) {
-    // sleep(2);
+    sleep(1);
     for (ConnectionMapIter iter = server->connections.begin();
         iter != server->connections.end(); ++iter) {
       SchedulerServerConnection* con = iter->second;
       SchedulerCommand* comm = server->receiveCommand(con);
       if (comm->toString() != "no-command") {
         std::cout << "Received command: " << comm->toString() << std::endl;
-        // std::cout << "Sending command: " << comm->toString() << std::endl;
-        // server->sendCommand(con, comm);
+        std::cout << "Sending command: " << comm->toString() << std::endl;
+        server->sendCommand(con, comm);
       }
     }
   }
 }
-
-void Scheduler::setupWorkerInterface() {
-  loadWorkerCommands();
-  server = new SchedulerServer(port);
-  server->run();
-}
-
-void Scheduler::setupUserInterface() {
-  loadUserCommands();
-  user_interface_thread = new boost::thread(
-      boost::bind(&Scheduler::getUserCommand, this));
-}
-
-void Scheduler::getUserCommand() {
-  while (true) {
-    std::cout << "command: " << std::endl;
-    std::string token("runapp");
-    std::string str, cm;
-    std::vector<int> args;
-    getline(std::cin, str);
-    parseCommand(str, userCmSet, cm, args);
-    std::cout << "you typed: " << cm << std::endl;
-  }
-}
-
-void Scheduler::loadUserCommands() {
-  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    userCmSet.insert(word);
-  }
-}
-
-void Scheduler::loadWorkerCommands() {
-  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    workerCmSet.insert(word);
-  }
-}
-
 

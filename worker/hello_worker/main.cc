@@ -33,33 +33,24 @@
  */
 
  /*
-  * This file has the main function that launches Nimbus scheduler. 
+  * A Nimbus worker. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#define DEBUG_MODE
+#include <pthread.h>
+#include <iostream>  // NOLINT
 
-#include <iostream> // NOLINT
-#include "./scheduler.h"
-#include "lib/nimbus.h"
-#include "lib/scheduler_command.h"
-#include "lib/parser.h"
+#include "lib/application.h"
+#include "./hello_worker.h"
+#include "../../application/1d-stencil/app.h"
+
+#define SCHEDULER_PORT 5983
+
 int main(int argc, char *argv[]) {
-  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
-  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
-  SchedulerCommand cm(str);
-  std::cout << cm.toString() << std::endl;
-
-  Log log;
-  log.writeToBuffer("**Start of the log file.");
-  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", DEBUG);
-  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
-  log.writeBufferToFile();
-  Log::printLine("Nimbus is up!", INFO);
-  Log::dbg_printLine("DEBUG information will be printed!", DEBUG);
-
-  Scheduler * s = new Scheduler(NIMBUS_SCHEDULER_PORT);
-  s->run();
+  std::cout << "Worker is up!" << std::endl;
+  App * app = new App();
+  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  w->run();
 }
 

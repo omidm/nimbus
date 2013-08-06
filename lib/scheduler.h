@@ -33,69 +33,63 @@
  */
 
  /*
-  * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#ifndef NIMBUS_LIB_SCHEDULER_H_
+#define NIMBUS_LIB_SCHEDULER_H_
 
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
+#define DEBUG_MODE
 
-#include <map>
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
 #include <string>
 #include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
-#include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
+#include <map>
+#include <set>
+#include "lib/nimbus.h"
+#include "lib/scheduler_server.h"
+#include "lib/cluster.h"
+#include "lib/parser.h"
 
-class Application;
-typedef std::map<int, Application*> AppMap;
-
-class Application {
+class Scheduler {
   public:
-    Application();
+    explicit Scheduler(unsigned int listening_port);
 
-    ~Application();
+    Computer host;
+    unsigned int port;
+    unsigned int appId;
 
-    virtual void load();
+    SchedulerServer* server;
 
-    virtual void start(SchedulerClient* scheduler);
+    // AppMap appMap;
+    WorkerMap workerMap;
+    ClusterMap clusterMap;
 
-    void registerJob(std::string name, Job* j);
+    virtual void run() {}
 
-    void registerData(std::string name, Data* d);
+    void loadClusterMap(std::string);
 
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
+    void delWorker(Worker * w);
+    Worker * addWorker();
+    Worker * getWorker(int id);
 
-    void defineData(std::string name, int id);
+  // private:
+    void setupUserInterface();
+    void setupWorkerInterface();
+    void getUserCommand();
 
-    Job* cloneJob(std::string name);
+    boost::thread* user_interface_thread;
 
-    void getNewJobID(int req_num, std::vector<int>* result);
+    void loadUserCommands();
+    void loadWorkerCommands();
 
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
+    CmSet userCmSet;
+    CmSet workerCmSet;
 };
 
-
-#endif  // NIMBUS_LIB_APPLICATION_H_
+#endif  // NIMBUS_LIB_SCHEDULER_H_

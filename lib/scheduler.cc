@@ -33,69 +33,64 @@
  */
 
  /*
-  * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include "lib/scheduler.h"
 
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
+Scheduler::Scheduler(unsigned int p)
+: port(p) {
+  appId = 0;
+}
 
-#include <map>
-#include <string>
-#include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
-#include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
+void Scheduler::setupWorkerInterface() {
+  loadWorkerCommands();
+  server = new SchedulerServer(port);
+  server->run();
+}
 
-class Application;
-typedef std::map<int, Application*> AppMap;
+void Scheduler::setupUserInterface() {
+  loadUserCommands();
+  user_interface_thread = new boost::thread(
+      boost::bind(&Scheduler::getUserCommand, this));
+}
 
-class Application {
-  public:
-    Application();
+void Scheduler::getUserCommand() {
+  while (true) {
+    std::cout << "command: " << std::endl;
+    std::string token("runapp");
+    std::string str, cm;
+    std::vector<int> args;
+    getline(std::cin, str);
+    parseCommand(str, userCmSet, cm, args);
+    std::cout << "you typed: " << cm << std::endl;
+  }
+}
 
-    ~Application();
+void Scheduler::loadUserCommands() {
+  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    userCmSet.insert(word);
+  }
+}
 
-    virtual void load();
-
-    virtual void start(SchedulerClient* scheduler);
-
-    void registerJob(std::string name, Job* j);
-
-    void registerData(std::string name, Data* d);
-
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
-
-    void defineData(std::string name, int id);
-
-    Job* cloneJob(std::string name);
-
-    void getNewJobID(int req_num, std::vector<int>* result);
-
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
-};
+void Scheduler::loadWorkerCommands() {
+  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    workerCmSet.insert(word);
+  }
+}
 
 
-#endif  // NIMBUS_LIB_APPLICATION_H_

@@ -40,7 +40,10 @@
 
 #include "lib/application.h"
 
-Application::Application() {}
+Application::Application() {
+  jobID = 0;
+  dataID = 0;
+}
 
 void Application::load() {
   std::cout << "Loaded Nimbus base application." << std::endl;
@@ -77,6 +80,13 @@ void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
 }
 
 void Application::defineData(std::string name, int id) {
+  IDSet idset;
+  idset.insert(id);
+  std::string str = "definedata";
+  str = str + " name:" + name;
+  str = str + " id:" + idset.toString();
+  SchedulerCommand cm(str);
+  client->sendCommand(&cm);
 }
 
 Job* Application::cloneJob(std::string name) {
@@ -84,12 +94,19 @@ Job* Application::cloneJob(std::string name) {
 }
 
 void Application::getNewJobID(int req_num, std::vector<int>* result) {
-  for (int i = 0; i < req_num; i++)
-    result->push_back(i);
+  for (int i = 0; i < req_num; i++) {
+    result->push_back(jobID);
+    jobID++;
+  }
 }
 
 void Application::getNewDataID(int req_num, std::vector<int>* result) {
-  for (int i = 0; i < req_num; i++)
-    result->push_back(i);
+  for (int i = 0; i < req_num; i++) {
+    result->push_back(dataID);
+    dataID++;
+  }
 }
+
+
+
 

@@ -33,69 +33,32 @@
  */
 
  /*
-  * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * A Nimbus worker. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
-
-#include <map>
-#include <string>
-#include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
-#include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
-
-class Application;
-typedef std::map<int, Application*> AppMap;
-
-class Application {
-  public:
-    Application();
-
-    ~Application();
-
-    virtual void load();
-
-    virtual void start(SchedulerClient* scheduler);
-
-    void registerJob(std::string name, Job* j);
-
-    void registerData(std::string name, Data* d);
-
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
-
-    void defineData(std::string name, int id);
-
-    Job* cloneJob(std::string name);
-
-    void getNewJobID(int req_num, std::vector<int>* result);
-
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
-};
+#include "./hello_worker.h"
 
 
-#endif  // NIMBUS_LIB_APPLICATION_H_
+SimpleWorker::SimpleWorker(unsigned int p, Application* a)
+: Worker(p, a) {
+}
+
+void SimpleWorker::run() {
+  std::cout << "Running the Worker" << std::endl;
+
+  setupSchedulerInterface();
+  app->start(client);
+
+  while (true) {
+    sleep(1);
+    SchedulerCommand cm("helloscheduler id:{0}");
+    std::cout << "Sending command: " << cm.toString() << std::endl;
+    client->sendCommand(&cm);
+    SchedulerCommand* comm = client->receiveCommand();
+    if (comm->toString() != "no-command") {
+      std::cout << "Received command: " << comm->toString() << std::endl;
+    }
+  }
+}

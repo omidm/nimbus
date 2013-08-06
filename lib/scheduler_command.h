@@ -57,6 +57,9 @@ class IDSet {
     std::string toString();
     void insert(int n);
     void clear();
+    int size();
+
+    typedef std::set<int>::iterator IDSetIter;
 
   private:
     std::set<int> set;

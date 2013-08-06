@@ -33,69 +33,39 @@
  */
 
  /*
-  * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * Nimbus abstraction of an application. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#ifndef NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
+#define NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
 
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
+// #define DEBUG_MODE
 
-#include <map>
+#include <boost/thread.hpp>
 #include <string>
 #include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
+#include <map>
 #include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
+#include "lib/cluster.h"
+#include "lib/data.h"
+#include "lib/job.h"
+#include "lib/application.h"
+#include "lib/parser.h"
+#include "lib/log.h"
+#include "lib/worker.h"
 
-class Application;
-typedef std::map<int, Application*> AppMap;
 
-class Application {
+class SimpleWorker : public Worker {
   public:
-    Application();
+    SimpleWorker(unsigned int p,  Application * a);
 
-    ~Application();
-
-    virtual void load();
-
-    virtual void start(SchedulerClient* scheduler);
-
-    void registerJob(std::string name, Job* j);
-
-    void registerData(std::string name, Data* d);
-
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
-
-    void defineData(std::string name, int id);
-
-    Job* cloneJob(std::string name);
-
-    void getNewJobID(int req_num, std::vector<int>* result);
-
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
+    virtual void run();
 };
 
 
-#endif  // NIMBUS_LIB_APPLICATION_H_
+
+
+
+#endif  // NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_

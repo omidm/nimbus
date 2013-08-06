@@ -2,7 +2,7 @@
 TARGET = scheduler
 all: check $(TARGET)
 
-NIMBUS_ROOT = ..
+NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
 IFLAGS += -I$(LDIR)

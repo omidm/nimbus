@@ -33,63 +33,41 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * A Nimbus worker. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_H_
+#include "./simple_worker.h"
 
-#define DEBUG_MODE
 
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "lib/nimbus.h"
-#include "lib/scheduler_server.h"
-#include "lib/cluster.h"
-#include "lib/parser.h"
+SimpleWorker::SimpleWorker(unsigned int p, Application* a)
+: Worker(p, a) {
+}
 
-class Scheduler {
-  public:
-    explicit Scheduler(unsigned int listening_port);
+void SimpleWorker::run() {
+  std::cout << "Running the Worker" << std::endl;
 
-    Computer host;
-    unsigned int port;
-    unsigned int appId;
+  setupSchedulerInterface();
+  app->start(client);
 
-    SchedulerServer* server;
-
-    // AppMap appMap;
-    WorkerMap workerMap;
-    ClusterMap clusterMap;
-
-    void run();
-
-    void loadClusterMap(std::string);
-
-    void delWorker(Worker * w);
-    Worker * addWorker();
-    Worker * getWorker(int id);
-
-  private:
-    void setupUserInterface();
-    void setupWorkerInterface();
-    void getUserCommand();
-
-    boost::thread* user_interface_thread;
-
-    void loadUserCommands();
-    void loadWorkerCommands();
-
-    CmSet userCmSet;
-    CmSet workerCmSet;
-};
-
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_H_
+  while (true) {
+    sleep(1);
+    // Log::dbg_printLine("Worker running core loop.", INFO);
+    // std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+    // str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+    // SchedulerCommand cm(str);
+    // std::cout << "Sending command: " << cm.toString() << std::endl;
+    // client->sendCommand(&cm);
+    SchedulerCommand* comm = client->receiveCommand();
+    if (comm->toString() != "no-command") {
+      std::cout << "Received command: " << comm->toString() << std::endl;
+      if (comm->getName() == "runmain") {
+        // std::cout << "**** Just before cloning\n";
+        Job * j = app->cloneJob("main");
+        std::vector<Data*> da;
+        j->Execute("none", da);
+      }
+    }
+  }
+}

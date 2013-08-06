@@ -46,33 +46,6 @@ Worker::Worker(unsigned int p, Application* a)
   app(a) {
 }
 
-void Worker::run() {
-  std::cout << "Running the Worker" << std::endl;
-
-  setupSchedulerInterface();
-  app->start(client);
-
-  while (true) {
-    sleep(1);
-    // Log::dbg_printLine("Worker running core loop.", INFO);
-    // std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
-    // str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
-    // SchedulerCommand cm(str);
-    // std::cout << "Sending command: " << cm.toString() << std::endl;
-    // client->sendCommand(&cm);
-    SchedulerCommand* comm = client->receiveCommand();
-    if (comm->toString() != "no-command") {
-      std::cout << "Received command: " << comm->toString() << std::endl;
-      if (comm->getName() == "runmain") {
-        // std::cout << "**** Just before cloning\n";
-        Job * j = app->cloneJob("main");
-        std::vector<Data*> da;
-        j->Execute("none", da);
-      }
-    }
-  }
-}
-
 void Worker::setupSchedulerInterface() {
   loadSchedulerCommands();
   client = new SchedulerClient(port);

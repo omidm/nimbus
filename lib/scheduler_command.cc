@@ -159,4 +159,8 @@ void IDSet::clear() {
   set.clear();
 }
 
+int IDSet::size() {
+  return set.size();
+}
+
 

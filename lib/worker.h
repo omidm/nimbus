@@ -72,9 +72,9 @@ class Worker {
     JobMap jobMap;
     Application* app;
 
-    void run();
+    virtual void run() {}
 
-  private:
+  // private:
     void setupSchedulerInterface();
 
     void addJob(Job* job);

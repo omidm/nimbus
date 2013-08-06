@@ -33,69 +33,33 @@
  */
 
  /*
-  * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * This file has the main function that launches Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#define DEBUG_MODE
 
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
-
-#include <map>
-#include <string>
-#include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
-#include "lib/scheduler_client.h"
+#include <iostream> // NOLINT
+#include "./bouncing_scheduler.h"
+#include "lib/nimbus.h"
 #include "lib/scheduler_command.h"
+#include "lib/parser.h"
+int main(int argc, char *argv[]) {
+  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+  SchedulerCommand cm(str);
+  std::cout << cm.toString() << std::endl;
 
-class Application;
-typedef std::map<int, Application*> AppMap;
+  Log log;
+  log.writeToBuffer("**Start of the log file.");
+  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", DEBUG);
+  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
+  log.writeBufferToFile();
+  Log::printLine("Nimbus is up!", INFO);
+  Log::dbg_printLine("DEBUG information will be printed!", DEBUG);
 
-class Application {
-  public:
-    Application();
+  BouncingScheduler * s = new BouncingScheduler(NIMBUS_SCHEDULER_PORT);
+  s->run();
+}
 
-    ~Application();
-
-    virtual void load();
-
-    virtual void start(SchedulerClient* scheduler);
-
-    void registerJob(std::string name, Job* j);
-
-    void registerData(std::string name, Data* d);
-
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
-
-    void defineData(std::string name, int id);
-
-    Job* cloneJob(std::string name);
-
-    void getNewJobID(int req_num, std::vector<int>* result);
-
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
-};
-
-
-#endif  // NIMBUS_LIB_APPLICATION_H_

@@ -33,24 +33,35 @@
  */
 
  /*
-  * A Nimbus worker. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include <pthread.h>
-#include <iostream>  // NOLINT
+#ifndef NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+#define NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
 
-#include "lib/worker.h"
-#include "lib/application.h"
-#include "../application/1d-stencil/app.h"
+#define DEBUG_MODE
 
-#define SCHEDULER_PORT 5983
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "lib/nimbus.h"
+#include "lib/scheduler_server.h"
+#include "lib/cluster.h"
+#include "lib/parser.h"
+#include "lib/scheduler.h"
 
-int main(int argc, char *argv[]) {
-  std::cout << "Worker is up!" << std::endl;
-  App * app = new App();
-  Worker * w = new Worker(SCHEDULER_PORT, app);
-  w->run();
-}
+class SimpleScheduler : private Scheduler {
+  public:
+    explicit SimpleScheduler(unsigned int listening_port);
 
+    virtual  void run();
+};
+
+#endif  // NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_

@@ -33,69 +33,35 @@
  */
 
  /*
-  * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#ifndef NIMBUS_SCHEDULER_BOUNCING_SCHEDULER_BOUNCING_SCHEDULER_H_
+#define NIMBUS_SCHEDULER_BOUNCING_SCHEDULER_BOUNCING_SCHEDULER_H_
 
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
+#define DEBUG_MODE
 
-#include <map>
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
 #include <string>
 #include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
-#include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
+#include <map>
+#include <set>
+#include "lib/nimbus.h"
+#include "lib/scheduler_server.h"
+#include "lib/cluster.h"
+#include "lib/parser.h"
+#include "lib/scheduler.h"
 
-class Application;
-typedef std::map<int, Application*> AppMap;
-
-class Application {
+class BouncingScheduler : private Scheduler {
   public:
-    Application();
+    explicit BouncingScheduler(unsigned int listening_port);
 
-    ~Application();
-
-    virtual void load();
-
-    virtual void start(SchedulerClient* scheduler);
-
-    void registerJob(std::string name, Job* j);
-
-    void registerData(std::string name, Data* d);
-
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
-
-    void defineData(std::string name, int id);
-
-    Job* cloneJob(std::string name);
-
-    void getNewJobID(int req_num, std::vector<int>* result);
-
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
+    virtual  void run();
 };
 
-
-#endif  // NIMBUS_LIB_APPLICATION_H_
+#endif  // NIMBUS_SCHEDULER_BOUNCING_SCHEDULER_BOUNCING_SCHEDULER_H_
