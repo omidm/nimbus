@@ -103,7 +103,7 @@ CommandParameter::CommandParameter(std::string t, std::string a,
 CommandParameter::CommandParameter(std::string parameter) {
   std::string string_set;
   parseParameterFromString(parameter, tag, args, string_set);
-  if (isSet(tag))
+  if (isSet(string_set))
     set = IDSet(string_set);
 }
 
@@ -112,7 +112,7 @@ CommandParameter::~CommandParameter() {}
 std::string CommandParameter::toString() {
   std::string rval = tag;
   rval += ":";
-  if (isSet(tag))
+  if (args == "")
     rval += set.toString();
   else
     rval += args;

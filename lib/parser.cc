@@ -106,7 +106,7 @@ void parseParameterFromString(const std::string& input, std::string& tag,
   }
 
   tag = *iter++;
-  if (isSet(tag))
+  if (isSet(*iter))
     string_set = *iter;
   else
     args = *iter;
@@ -116,7 +116,7 @@ void ParseIDSetFromString(const std::string& input, std::set<int>& set) {
   int num;
   std::string str = input.substr(1, input.length() - 2);
   char_separator<char> separator(",");
-  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> > tokens(str, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
   for (; iter != tokens.end(); ++iter) {
     std::stringstream ss(*iter);
@@ -140,8 +140,8 @@ int countOccurence(std::string str, std::string substr) {
 }
 
 
-bool isSet(const std::string& tag) {
-  if (tag == "param" || tag == "name" || "type")
+bool isSet(const std::string& str) {
+  if (str.find("{") == std::string::npos)
     return false;
   return true;
 }
