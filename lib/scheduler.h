@@ -80,7 +80,7 @@ class Scheduler {
     Worker * addWorker();
     Worker * getWorker(int id);
 
-  // private:
+  private:
     void setupUserInterface();
     void setupWorkerInterface();
     void getUserCommand();

@@ -77,7 +77,9 @@ class Worker {
 
     virtual void workerCoreProcessor() {}
 
-  // private:
+    void processSchedulerCommand(SchedulerCommand cm);
+
+  private:
     void setupSchedulerInterface();
 
     void addJob(int id, Job* job);
@@ -87,8 +89,6 @@ class Worker {
     void addData(int id, Data* data);
 
     void delData(int id);
-
-    void processSchedulerCommand(SchedulerCommand cm);
 
     void loadSchedulerCommands();
 
