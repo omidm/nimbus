@@ -40,11 +40,13 @@
 
 #include "lib/cluster.h"
 
+using namespace nimbus; // NOLINT
+
 Node::Node() {}
 
 Node::~Node() {}
 
-NodeType Node::getType() {
+NodeType Node::type() {
   return COMPUTER;
 }
 
@@ -53,7 +55,7 @@ Computer::Computer() {}
 
 Computer::~Computer() {}
 
-NodeType Computer::getType() {
+NodeType Computer::type() {
   return COMPUTER;
 }
 
@@ -61,7 +63,7 @@ Switch::Switch() {}
 
 Switch::~Switch() {}
 
-NodeType Switch::getType() {
+NodeType Switch::type() {
   return COMPUTER;
 }
 

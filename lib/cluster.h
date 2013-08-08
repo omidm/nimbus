@@ -47,6 +47,7 @@
 #include <string>
 #include <set>
 
+
 namespace nimbus {
 
 class Computer;
@@ -68,7 +69,7 @@ class Node {
  public:
   Node();
   ~Node();
-  virtual NodeType getType();
+  virtual NodeType type();
 
  private:
   std::string ip_address_;
