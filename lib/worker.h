@@ -63,9 +63,9 @@ class Worker {
  public:
   Worker(unsigned int port,  Application* application);
 
-  void run();
+  virtual void run();
   virtual void workerCoreProcessor() {}
-  void processSchedulerCommand(SchedulerCommand* command);
+  virtual void processSchedulerCommand(SchedulerCommand* command);
 
  private:
   int id_;
@@ -77,15 +77,15 @@ class Worker {
   Application* app_;
   CmSet scheduler_command_set_;
 
-  void setupSchedulerInterface();
+  virtual void setupSchedulerInterface();
 
-  void addJob(Job* job);
-  void deleteJob(int id);
-  void deleteJob(Job* job);
-  void addData(Data* data);
-  void deleteData(int id;)
-  void deleteData(Data* data);
-  void loadSchedulerCommands();
+  virtual void addJob(Job* job);
+  virtual void deleteJob(int id);
+  virtual void deleteJob(Job* job);
+  virtual void addData(Data* data);
+  virtual void deleteData(int id;)
+  virtual void deleteData(Data* data);
+  virtual void loadSchedulerCommands();
 };
 
 }  // namespace nimbus
