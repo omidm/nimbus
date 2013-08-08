@@ -52,10 +52,13 @@
 namespace nimbus {
 typedef std::set<std::string> CmSet;
 
-void parseCommand(const std::string& str, const CmSet& cms, std::string& cm,
-          std::vector<int>& args);
+void parseCommand(const std::string& string,
+                  const CmSet& commandSet,
+                  std::string& command,
+                  std::vector<int>& arguments);
 
-int parseCommandFile(const std::string& fname, CmSet& cs);
+int parseCommandFile(const std::string& fname,
+                     CmSet& cs);
 
 void parseCommandFromString(const std::string& input,
     std::string& command,

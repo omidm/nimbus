@@ -54,7 +54,7 @@ namespace nimbus {
 
 class Scheduler;
 class SchedulerServerConnection;
-typedef unsigned int ConnectionId;
+typedef uint32_t ConnectionId;
 typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
 typedef ConnectionMap::iterator ConnectionMapIter;
 
@@ -63,11 +63,12 @@ using boost::asio::ip::tcp;
 class SchedulerServer {
  public:
   explicit SchedulerServer(ConnectionId port_no);
-  ~SchedulerServer();
+  virtual ~SchedulerServer();
 
-  void run();
-  SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
-  void sendCommand(SchedulerServerConnection* conn, SchedulerCommand* c);
+  virtual void run();
+  virtual SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
+  virtual void sendCommand(SchedulerServerConnection* connection,
+                           SchedulerCommand* command);
 
  private:
   boost::mutex map_mutex_;

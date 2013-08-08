@@ -75,10 +75,10 @@ class CommandParameter {
   CommandParameter(std::string name, std::string value, const IDSet& set);
   virtual ~CommandParameter();
 
-  std::string toString();
-  std::string name();
-  std::string value();
-  IDSet identifier_set();
+  virtual std::string toString();
+  virtual std::string name();
+  virtual std::string value();
+  virtual IDSet* identifier_set();
 
  private:
   std::string name_;
@@ -86,7 +86,7 @@ class CommandParameter {
   IDSet identifier_set_;
 };
 
-typedef std::map<std::string, CommandParameter> CommandParameterList;
+typedef std::vector<CommandParameter*> CommandParameterList;
 
 class SchedulerCommand {
  public:
@@ -101,9 +101,9 @@ class SchedulerCommand {
   virtual std::string name();
   virtual CommandParameterList* parameters();
 
-  private:
-    std::string name_;
-    CommandParameterList parameters_;
+ private:
+  std::string name_;
+  CommandParameterList parameters_;
 };
 
 }  // namespace nimbus
