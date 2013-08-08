@@ -50,58 +50,59 @@
 
 
 class IDSet {
-  public:
-    IDSet();
-    explicit IDSet(std::string s);
-    ~IDSet();
+ public:
+  IDSet();
+  explicit IDSet(std::string s);
+  virtual ~IDSet();
 
-    std::string toString();
-    void insert(int n);
-    void clear();
-    int size();
+  virtual std::string toString();
+  virtual void insert(int n);
+  virtual void clear();
+  virtual int size();
 
-    typedef std::set<int>::iterator IDSetIter;
+  typedef std::set<int>::iterator IDSetIter;
 
-  // private:
-    std::set<int> set;
+ private:
+  std::set<int> identifiers_;
 };
 
 class CommandParameter {
-  public:
-    CommandParameter();
-    explicit CommandParameter(std::string parameter);
-    CommandParameter(std::string tag, std::string arg, const IDSet& set);
-    virtual ~CommandParameter();
+ public:
+  CommandParameter();
+  explicit CommandParameter(std::string parameter);
+  CommandParameter(std::string name, std::string value, const IDSet& set);
+  virtual ~CommandParameter();
 
-    std::string toString();
-    std::string getTag();
-    std::string getArg();
-    IDSet getIDSet();
+  std::string toString();
+  std::string name();
+  std::string value();
+  IDSet identifier_set();
 
-  private:
-    std::string tag;
-    std::string arg;
-    IDSet set;
+ private:
+  std::string name;
+  std::string value_;
+  IDSet identifier_set_;
 };
 
 typedef std::map<std::string, CommandParameter> CommandParameterList;
 
 class SchedulerCommand {
-  public:
-    SchedulerCommand();
-    explicit SchedulerCommand(std::string command);
-    SchedulerCommand(std::string name,
-        const CommandParameterList& parameters);
-    virtual ~SchedulerCommand();
+ public:
+  SchedulerCommand();
+  explicit SchedulerCommand(std::string command);
+  SchedulerCommand(std::string name,
+                   const CommandParameterList& parameters);
+  virtual ~SchedulerCommand();
 
-    virtual void addParameter(CommandParameter cm);
-    virtual std::string toString();
-    virtual std::string getName();
-    virtual CommandParameterList getParameters();
+  virtual void addParameter(CommandParameter parameter);
+  virtual std::string toString();
+  virtual std::string name();
+  virtual CommandParameterList* parameters();
 
   private:
-    std::string name;
-    CommandParameterList parameters;
+    std::string name_;
+    CommandParameterList parameters_;
 };
+}  // namespace nimbus
 
 #endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_

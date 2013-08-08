@@ -34,7 +34,7 @@
 
  /*
   * Nimbus abstraction of an application. Programmers use this base class to
-  * write various application served by Nimbus. 
+  * write various application served by Nimbus.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -51,53 +51,44 @@
 #include "lib/scheduler_client.h"
 #include "lib/scheduler_command.h"
 
+namespace nimbus {
+
 class Application;
 typedef std::map<int, Application*> AppMap;
 
 class Application {
-  public:
-    Application();
+ public:
+  Application();
+  ~Application();
 
-    ~Application();
+  virtual void load();
+  virtual void start(SchedulerClient* scheduler);
 
-    virtual void load();
+  void registerJob(std::string name, Job* job);
+  void registerData(std::string name, Data* data);
+  void spawnJob(std::string name, int id,
+                IDSet beforeSet, IDSet afterSet,
+                IDSet readSet, IDSet writeSet,
+                std::string params);
 
-    virtual void start(SchedulerClient* scheduler);
+  void defineData(std::string name, int id);
+  Job* cloneJob(std::string name);
+  Data* cloneData(std::string name);
+  void getNewJobID(int req_num, std::vector<int>* result);
+  void getNewDataID(int req_num, std::vector<int>* result);
 
-    void registerJob(std::string name, Job* j);
+ private:
+  uint64_t id_;
+  uint64_t priority_;
+  uint64_t job_id_;
+  uint64_t data_id_;
 
-    void registerData(std::string name, Data* d);
-
-    void spawnJob(std::string name, int id, IDSet bfore, IDSet after,
-        IDSet read, IDSet write, std::string params);
-
-    void defineData(std::string name, int id);
-
-    Job* cloneJob(std::string name);
-
-    Data* cloneData(std::string name);
-
-    void getNewJobID(int req_num, std::vector<int>* result);
-
-    void getNewDataID(int req_num, std::vector<int>* result);
-
-  private:
-    int id;
-
-    int priority;
-
-    int jobID;
-
-    int dataID;
-
-    IDSet jobIDPool;
-
-    JobTable jobTable;
-
-    DataTable dataTable;
-
-    SchedulerClient* client;
+  IDSet job_ID_pool_;
+  JobTable job_table_;
+  DataTable data_table_;
+  SchedulerClient* client_;
 };
 
+}  //  namespace nimbus
 
 #endif  // NIMBUS_LIB_APPLICATION_H_

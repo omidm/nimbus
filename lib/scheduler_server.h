@@ -42,8 +42,6 @@
 #ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
 #define NIMBUS_LIB_SCHEDULER_SERVER_H_
 
-#define DEBUG_MODE
-
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <string>
@@ -51,6 +49,8 @@
 #include "lib/nimbus.h"
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
+
+namespace nimbus {
 
 class Scheduler;
 class SchedulerServerConnection;
@@ -61,47 +61,38 @@ typedef ConnectionMap::iterator ConnectionMapIter;
 using boost::asio::ip::tcp;
 
 class SchedulerServer {
-  public:
-    explicit SchedulerServer(ConnectionId port_no);
-    ~SchedulerServer();
+ public:
+  explicit SchedulerServer(ConnectionId port_no);
+  ~SchedulerServer();
 
-    ConnectionMap connections;
+  void run();
+  SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
+  void sendCommand(SchedulerServerConnection* conn, SchedulerCommand* c);
 
-    void run();
-
-    SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
-
-    void sendCommand(SchedulerServerConnection* conn, SchedulerCommand* c);
-
-  private:
-    boost::mutex map_mutex;
-
-    boost::thread* connection_subscription_thread;
-
-    ConnectionId connection_port_no;
-
-    boost::asio::io_service* io_service;
-
-    Scheduler * scheduler;
-
-    void listenForNewConnections();
+ private:
+  boost::mutex map_mutex_;
+  boost::thread* connection_subscription_thread_;
+  ConnectionId connection_port_;
+  boost::asio::io_service* io_service_;
+  Scheduler * scheduler_;
+  ConnectionMap connections_;
+  void listenForNewConnections();
 };
 
 
 class SchedulerServerConnection {
-  public:
-    explicit SchedulerServerConnection(tcp::socket* sock);
-    ~SchedulerServerConnection();
-    ConnectionId get_id() const {
-        return id;
-    }
+ public:
+  explicit SchedulerServerConnection(tcp::socket* sock);
+  ~SchedulerServerConnection();
+  ConnectionId get_id() const {return id;}
 
-    boost::asio::streambuf* read_buffer;
-    tcp::socket* socket;
-    int command_num;
-
-  private:
-    ConnectionId id;
+ private:
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
+  ConnectionId id_;
 };
+
+}  // namespace nimbus
 
 #endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_

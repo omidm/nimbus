@@ -46,36 +46,32 @@
 #include <string>
 #include "lib/cluster.h"
 
+namespace nimbus {
 class Data;
 typedef std::set<Data*> Neighbors;
 typedef std::map<int, Data*> DataMap;
 typedef std::map<std::string, Data*> DataTable;
 
-
 class Data {
-  public:
-    int id;
+ public:
+  Data();
+  virtual ~Data();
 
-    Data();
+  virtual Data* clone();
+  virtual void create() {}
+  virtual void destroy(Computer location);
+  virtual void duplicate(Computer source, Computer destination);
+  virtual void migrate(Compute sourcer, Computer destination);
+  virtual void split(Data *, Data *) = 0;
+  virtual void merge(Data *, Data *) = 0;
 
-    Hosts hosts;
-    Neighbors neighbors;
-
-    virtual Data* Clone();
-
-    virtual void Create() {}
-
-    void Destroy(Computer);
-    void Copy(Computer, Computer);
-    void Migrate(Computer, Computer);
-
-    /* 
-     * If you would like to help the scheduler,
-     * also provide following functions
-     */
-    bool advanceData;
-    void (*funcSplit)(Data *, Data *);
-    void (*funcMerge)(Data *, Data *);
+ private:
+  uint64_t id_;
+  bool advanceData_;
+  Hosts hosts_;
+  Neighbors neighbors_;
 };
+
+}  // namespace nimbus
 
 #endif  // NIMBUS_LIB_DATA_H_

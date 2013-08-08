@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus abstraction of computational resources. 
+  * Nimbus abstraction of computational resources.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -45,6 +45,8 @@
 #include <iostream> // NOLINT
 #include <string>
 #include <set>
+
+namespace nimbus {
 
 class Computer;
 typedef std::set<Computer*> Hosts;
@@ -62,61 +64,74 @@ class Link {
 enum NodeType {COMPUTER, SWITCH};
 
 class Node {
-  public:
-    std::string IP;
-    int id;
+ public:
+  Node();
+  ~Node();
+  virtual NodeType getType();
 
-    NodeType type;
-    LinkSet linkSetP;
-
-    Node();
-    ~Node();
-    virtual NodeType getType();
+ private:
+  std::string ip_address_;
+  int id_;
+  LinkSet linkSet_;
 };
 
-#define NodeSet std::set<Node>
-#define NodeSetP std::set<Node *>
+typedef std::set<Note*> NodeSet;
 
 class Computer : public Node {
-  public:
-    unsigned int memCap;
-    unsigned int l1Cap;
-    unsigned int l2Cap;
-    unsigned int l3Cap;
-    unsigned int coreNum;
+ public:
+  Computer();
+  ~Computer();
+  virtual NodeType type();
 
-    Computer();
-    ~Computer();
-    virtual NodeType getType();
+  virtual uint64_t memory_size();
+  virtual uint32_t level1_cacheSize();
+  virtual uint32_t level2_cacheSize();
+  virtual uint32_t level3_cacheSize();
+  virtual uint32_t core_count();
+
+ private:
+  uint64_t memory_size_;
+  uint32_t level1_cache_size_;
+  uint32_t level2_cache_size_;
+  uint32_t level3_cache_size_;
+  uint32_t core_count_;
 };
 
 class Switch : public Node {
-  public:
-    unsigned int portNum;
-    unsigned int crossSectBand;
+ public:
+  Switch();
+  ~Switch();
+  virtual NodeType type();
 
-    Switch();
-    ~Switch();
-    virtual NodeType getType();
+  virtual uint32_t port_count();
+  virtual uint64_t cross_section_bandwidth();
+
+ private:
+  uint32_t port_count_;
+  uint64_t cross_section_bandwidth_;
 };
 
 
 class ClusterMap {
-  LinkSet linkSet;
-  NodeSet nodeSet;
+ public:
+  ClusterMap();
+  ~ClusterMap();
 
-  void addNode(Node * n);
-  void delNode(Node * n);
+  void addNode(Node * node);
+  void deleteNode(Node * node);
+  void addLink(Link * link);
+  void deleteLink(Link * link);
 
-  void addLink(Link * l);
-  void delLink(Link * l);
+  uint64_t latencyNs(Node * source, Node * destination);
+  uint64_t capacityBps(Node * source, Node * destination);
+  void route(Node * source, Node * destination, NodeSet* storage);
 
-  unsigned int getLatency(Node * n1, Node * n2);
-  unsigned int getCapacity(Node * n1, Node * n2);
-
-  NodeSetP getRoute(Node * n1, Node * n2);
+ private:
+  LinkSet link_set_;
+  NodeSet node_set_;
 };
 
+}  // namespace nimbus
 #endif  // NIMBUS_LIB_CLUSTER_H_
 
 

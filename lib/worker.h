@@ -41,8 +41,6 @@
 #ifndef NIMBUS_LIB_WORKER_H_
 #define NIMBUS_LIB_WORKER_H_
 
-// #define DEBUG_MODE
-
 #include <boost/thread.hpp>
 #include <string>
 #include <vector>
@@ -56,47 +54,37 @@
 #include "lib/parser.h"
 #include "lib/log.h"
 
+namespace nimbus {
+
 class Worker;
 typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
-  public:
-    Worker(unsigned int p,  Application * a);
+ public:
+  Worker(unsigned int p,  Application * a);
 
-    int id;
-    Computer host;
-    unsigned int port;
+  void run();
+  virtual void workerCoreProcessor() {}
+  void processSchedulerCommand(SchedulerCommand cm);
 
-    SchedulerClient* client;
+ private:
+  int id_;
+  Computer host_;
+  unsigned int port_;
+  SchedulerClient* client_;
+  DataMap data_map_;
+  JobMap job_map_;
+  Application* app_;
+  CmSet scheduler_command_set_;
 
-    DataMap dataMap;
-    JobMap jobMap;
-    Application* app;
-
-    void run();
-
-    virtual void workerCoreProcessor() {}
-
-    void processSchedulerCommand(SchedulerCommand cm);
-
-  private:
-    void setupSchedulerInterface();
-
-    void addJob(int id, Job* job);
-
-    void delJob(int id);
-
-    void addData(int id, Data* data);
-
-    void delData(int id);
-
-    void loadSchedulerCommands();
-
-    CmSet schedulerCmSet;
+  void setupSchedulerInterface();
+  void addJob(int id, Job* job);
+  void delJob(int id);
+  void addData(int id, Data* data);
+  void deleteData(int id);
+  void loadSchedulerCommands();
 };
 
-
-
-
+}  // namespace nimbus
 
 #endif  // NIMBUS_LIB_WORKER_H_

@@ -48,42 +48,37 @@
 #include "lib/data.h"
 #include "lib/scheduler_command.h"
 
+namespace nimbus {
 
 class Application;
 class Job;
 typedef std::map<int, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
-
-
-typedef std::vector<Data*> dataArray;
-// typedef void (*FuncToRun)(const dataArray&);
+typedef std::vector<Data*> DataArray;
 
 enum JobType {COMP, SYNC};
 
 class Job {
-  public:
-    int id;
-    JobType type;
-    Application * app;
-    // FuncToRun handler;
+ public:
+  Job(Application* app, JobType type);
+  virtual ~Job();
 
-    Job(Application* app, JobType type);
+  virtual void execute(std::string params, const dataArray& da) = 0;
+  virtual Job* clone();
+  virtual void sleep();
+  virtual void cancel();
 
-    IDSet read;
-    IDSet write;
-
-    IDSet before;
-    IDSet after;
-
-    std::string params;
-
-    virtual void Execute(std::string params, const dataArray& da) {}
-
-    virtual Job * Clone();
-    void Sleep();
-    void Kill();
+ private:
+  uint32_t id_;
+  Application* application_;
+  IDSet read_set_;
+  IDSet write_set_;
+  IDSet before_set_;
+  IDSet after_set_;
+  std::string parameters_
 };
 
+}  // namespace nimbus
 #endif  // NIMBUS_LIB_JOB_H_
 
 

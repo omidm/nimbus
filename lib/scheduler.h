@@ -41,8 +41,6 @@
 #ifndef NIMBUS_LIB_SCHEDULER_H_
 #define NIMBUS_LIB_SCHEDULER_H_
 
-#define DEBUG_MODE
-
 #include <boost/thread.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
@@ -56,42 +54,41 @@
 #include "lib/cluster.h"
 #include "lib/parser.h"
 
+namespace nimbus {
 class Scheduler {
   public:
     explicit Scheduler(unsigned int listening_port);
-
-    Computer host;
-    unsigned int port;
-    unsigned int appId;
-
-    SchedulerServer* server;
-
-    // AppMap appMap;
-    WorkerMap workerMap;
-    ClusterMap clusterMap;
+    virtual ~Scheduler();
 
     void run();
-
     virtual void schedulerCoreProcessor() {}
-
     void loadClusterMap(std::string);
-
-    void delWorker(Worker * w);
+    void deleteWorker(Worker * worker);
     Worker * addWorker();
-    Worker * getWorker(int id);
+    Worker * getWorker(int workerId);
 
   private:
     void setupUserInterface();
     void setupWorkerInterface();
     void getUserCommand();
-
-    boost::thread* user_interface_thread;
-
     void loadUserCommands();
     void loadWorkerCommands();
 
-    CmSet userCmSet;
-    CmSet workerCmSet;
+    boost::thread* user_interface_thread_;
+
+    CmSet user_command_set_;
+    CmSet worker_command_set_;
+
+    Computer host_;
+    uint16_t port_;
+    uint64_t appId_;
+
+    SchedulerServer* server_;
+
+    // AppMap appMap;
+    WorkerMap worker_map_;
+    ClusterMap cluster_map_;
 };
 
+}  // namespace nimbus
 #endif  // NIMBUS_LIB_SCHEDULER_H_
