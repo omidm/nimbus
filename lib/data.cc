@@ -40,9 +40,11 @@
 
 #include "lib/data.h"
 
+using namespace nimbus; // NOLINT
+
 Data::Data() {}
 
-Data* Data::Clone() {
+Data* Data::clone() {
   std::cout << "cloning the base data\n";
   Data* d = new Data();
   return d;

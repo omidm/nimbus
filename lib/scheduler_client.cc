@@ -57,14 +57,14 @@
 #include <iostream>  // NOLINT
 
 using boost::asio::ip::tcp;
+using namespace nimbus; // NOLINT
 
-
-SchedulerClient::SchedulerClient(ConnectionId port_no)
-  : connection_port_no(port_no) {
-  read_buffer = new boost::asio::streambuf();
-  io_service = new boost::asio::io_service();
-  socket = new tcp::socket(*io_service);
-  command_num = 0;
+SchedulerClient::SchedulerClient(uint16_t port_no)
+  : connection_port_no_(port_no) {
+  read_buffer_ = new boost::asio::streambuf();
+  io_service_ = new boost::asio::io_service();
+  socket_ = new tcp::socket(*io_service_);
+  command_num_ = 0;
 }
 
 SchedulerClient::~SchedulerClient() {}
@@ -74,21 +74,21 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
   // std::streamsize size = read_buffer->in_avail();
 
   boost::system::error_code ignored_error;
-  int bytes_available = socket->available(ignored_error);
+  int bytes_available = socket_->available(ignored_error);
 
   boost::asio::streambuf::mutable_buffers_type bufs =
-    read_buffer->prepare(bytes_available);
-  std::size_t bytes_read = socket->receive(bufs);
-  read_buffer->commit(bytes_read);
+    read_buffer_->prepare(bytes_available);
+  std::size_t bytes_read = socket_->receive(bufs);
+  read_buffer_->commit(bytes_read);
 
   std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  command_num += countOccurence(str, ";");
+  command_num_ += countOccurence(str, ";");
 
-  if (command_num > 0) {
-    std::istream input(read_buffer);
+  if (command_num_ > 0) {
+    std::istream input(read_buffer_);
     std::string command;
     std::getline(input, command, ';');
-    command_num--;
+    command_num_--;
     SchedulerCommand* com = new SchedulerCommand(command);
     return com;
   } else {
@@ -99,17 +99,18 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
 void SchedulerClient::sendCommand(SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
-  boost::asio::write(*socket, boost::asio::buffer(msg),
+  boost::asio::write(*socket_, boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
 }
 
 void SchedulerClient::createNewConnections() {
   std::cout << "Opening connections." << std::endl;
-  tcp::resolver resolver(*io_service);
-  tcp::resolver::query query("127.0.0.1", boost::to_string(connection_port_no));
+  tcp::resolver resolver(*io_service_);
+  tcp::resolver::query query("127.0.0.1",
+      boost::to_string(connection_port_no_));
   tcp::resolver::iterator iterator = resolver.resolve(query);
   boost::system::error_code error = boost::asio::error::host_not_found;
-  socket->connect(*iterator, error);
+  socket_->connect(*iterator, error);
 }
 
 void SchedulerClient::run() {

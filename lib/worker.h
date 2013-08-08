@@ -83,7 +83,7 @@ class Worker {
   virtual void deleteJob(int id);
   virtual void deleteJob(Job* job);
   virtual void addData(Data* data);
-  virtual void deleteData(int id;)
+  virtual void deleteData(int id);
   virtual void deleteData(Data* data);
   virtual void loadSchedulerCommands();
 };

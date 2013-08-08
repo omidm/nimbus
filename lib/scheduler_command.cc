@@ -41,6 +41,8 @@
 #include "lib/scheduler_command.h"
 #include "lib/parser.h"
 
+using namespace nimbus; // NOLINT
+
 SchedulerCommand::SchedulerCommand() {
   name = "no-op";
 }

@@ -40,13 +40,15 @@
 
 #include "lib/job.h"
 
+using namespace nimbus; // NOLINT
+
 Job::Job(Application* app, JobType type) {
-  this->app = app;
-  this->type = type;
+  application_ = app;
+  type_ = type;
 }
 
-Job* Job::Clone() {
+Job* Job::clone() {
   std::cout << "cloning the base job\n";
-  Job* j = new Job(app, type);
+  Job* j = new Job(application_, type_);
   return j;
 }

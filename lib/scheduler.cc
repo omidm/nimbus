@@ -40,9 +40,11 @@
 
 #include "lib/scheduler.h"
 
+using namespace nimbus; // NOLINT
+
 Scheduler::Scheduler(unsigned int p)
-: port(p) {
-  appId = 0;
+: port_(p) {
+  appId_ = 0;
 }
 
 void Scheduler::run() {
@@ -56,13 +58,13 @@ void Scheduler::run() {
 
 void Scheduler::setupWorkerInterface() {
   loadWorkerCommands();
-  server = new SchedulerServer(port);
-  server->run();
+  server_ = new SchedulerServer(port_);
+  server_->run();
 }
 
 void Scheduler::setupUserInterface() {
   loadUserCommands();
-  user_interface_thread = new boost::thread(
+  user_interface_thread_ = new boost::thread(
       boost::bind(&Scheduler::getUserCommand, this));
 }
 
@@ -73,7 +75,7 @@ void Scheduler::getUserCommand() {
     std::string str, cm;
     std::vector<int> args;
     getline(std::cin, str);
-    parseCommand(str, userCmSet, cm, args);
+    parseCommand(str, user_command_set_, cm, args);
     std::cout << "you typed: " << cm << std::endl;
   }
 }
@@ -86,7 +88,7 @@ void Scheduler::loadUserCommands() {
     if (cms.fail()) {
       break;
     }
-    userCmSet.insert(word);
+    user_command_set_.insert(word);
   }
 }
 
@@ -98,7 +100,7 @@ void Scheduler::loadWorkerCommands() {
     if (cms.fail()) {
       break;
     }
-    workerCmSet.insert(word);
+    worker_command_set_.insert(word);
   }
 }
 

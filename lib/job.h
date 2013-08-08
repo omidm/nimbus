@@ -63,7 +63,7 @@ class Job {
   Job(Application* app, JobType type);
   virtual ~Job();
 
-  virtual void execute(std::string params, const DataArray& da) = 0;
+  virtual void execute(std::string params, const DataArray& da);
   virtual Job* clone();
   virtual void sleep();
   virtual void cancel();
@@ -71,6 +71,7 @@ class Job {
  private:
   uint32_t id_;
   Application* application_;
+  JobType type_;
   IDSet read_set_;
   IDSet write_set_;
   IDSet before_set_;
