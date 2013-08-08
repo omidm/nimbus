@@ -47,31 +47,30 @@
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
 
-typedef uint ConnectionId;
-class Worker;
+namespace nimbus {
 
+class Worker;
 using boost::asio::ip::tcp;
 
 class SchedulerClient {
-  public:
-    explicit SchedulerClient(ConnectionId port_no);
-    ~SchedulerClient();
+ public:
+  explicit SchedulerClient(uint16_t port);
+  virtual ~SchedulerClient();
 
-    void run();
-    SchedulerCommand* receiveCommand();
-    void sendCommand(SchedulerCommand* c);
+  virtual void run();
+  virtual SchedulerCommand* receiveCommand();
+  virtual void sendCommand(SchedulerCommand* command);
 
-  private:
-    ConnectionId connection_port_no;
+ private:
+  ConnectionId connection_port_no_;
+  boost::asio::io_service* io_service_;
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
 
-    boost::asio::io_service* io_service;
-    boost::asio::streambuf* read_buffer;
-    tcp::socket* socket;
-    int command_num;
-
-    void createNewConnections();
+  void createNewConnections();
 };
 
-
+}  // namespace nimbus
 
 #endif  // NIMBUS_LIB_SCHEDULER_CLIENT_H_

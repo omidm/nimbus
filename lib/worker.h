@@ -61,11 +61,11 @@ typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
  public:
-  Worker(unsigned int p,  Application * a);
+  Worker(unsigned int port,  Application* application);
 
   void run();
   virtual void workerCoreProcessor() {}
-  void processSchedulerCommand(SchedulerCommand cm);
+  void processSchedulerCommand(SchedulerCommand* command);
 
  private:
   int id_;
@@ -78,10 +78,13 @@ class Worker {
   CmSet scheduler_command_set_;
 
   void setupSchedulerInterface();
-  void addJob(int id, Job* job);
-  void delJob(int id);
-  void addData(int id, Data* data);
-  void deleteData(int id);
+
+  void addJob(Job* job);
+  void deleteJob(int id);
+  void deleteJob(Job* job);
+  void addData(Data* data);
+  void deleteData(int id;)
+  void deleteData(Data* data);
   void loadSchedulerCommands();
 };
 

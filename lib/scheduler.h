@@ -60,32 +60,28 @@ class Scheduler {
     explicit Scheduler(unsigned int listening_port);
     virtual ~Scheduler();
 
-    void run();
+    virtual void run();
     virtual void schedulerCoreProcessor() {}
-    void loadClusterMap(std::string);
-    void deleteWorker(Worker * worker);
-    Worker * addWorker();
-    Worker * getWorker(int workerId);
+    virtual void loadClusterMap(std::string);
+    virtual void deleteWorker(Worker * worker);
+    virtual Worker* addWorker();
+    virtual Worker* getWorker(int workerId);
 
   private:
-    void setupUserInterface();
-    void setupWorkerInterface();
-    void getUserCommand();
-    void loadUserCommands();
-    void loadWorkerCommands();
+    virtual void setupUserInterface();
+    virtual void setupWorkerInterface();
+    virtual void getUserCommand();
+    virtual void loadUserCommands();
+    virtual void loadWorkerCommands();
 
     boost::thread* user_interface_thread_;
-
     CmSet user_command_set_;
     CmSet worker_command_set_;
-
     Computer host_;
     uint16_t port_;
     uint64_t appId_;
-
     SchedulerServer* server_;
-
-    // AppMap appMap;
+    // AppMap app_map_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;
 };
