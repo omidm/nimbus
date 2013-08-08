@@ -41,8 +41,8 @@
 #include "lib/application.h"
 
 Application::Application() {
-  jobID = 1;
-  dataID = 1;
+  job_id_ = 1;
+  data_id_ = 1;
 }
 
 void Application::load() {
@@ -50,17 +50,17 @@ void Application::load() {
 }
 
 void Application::start(SchedulerClient* sc) {
-  std::cout << "Running Nimbus application: " << id << std::endl;
-  client = sc;
+  std::cout << "Running Nimbus application: " << id_ << std::endl;
+  client_ = sc;
   load();
 }
 
 void Application::registerJob(std::string name, Job* j) {
-  jobTable[name] = j;
+  job_table_[name] = j;
 }
 
 void Application::registerData(std::string name, Data* d) {
-  dataTable[name] = d;
+  data_table_[name] = d;
 }
 
 void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
@@ -76,7 +76,7 @@ void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
   str = str + " write:" + write.toString();
   str = str + " param:" + params;
   SchedulerCommand cm(str);
-  client->sendCommand(&cm);
+  client_->sendCommand(&cm);
 }
 
 void Application::defineData(std::string name, int id) {
@@ -86,28 +86,28 @@ void Application::defineData(std::string name, int id) {
   str = str + " name:" + name;
   str = str + " id:" + idset.toString();
   SchedulerCommand cm(str);
-  client->sendCommand(&cm);
+  client_->sendCommand(&cm);
 }
 
 Job* Application::cloneJob(std::string name) {
-  return jobTable[name]->Clone();
+  return job_table_[name]->clone();
 }
 
 Data* Application::cloneData(std::string name) {
-  return dataTable[name]->Clone();
+  return data_table_[name]->clone();
 }
 
 void Application::getNewJobID(int req_num, std::vector<int>* result) {
   for (int i = 0; i < req_num; i++) {
-    result->push_back(jobID);
-    jobID++;
+    result->push_back(job_id_);
+    job_id_++;
   }
 }
 
 void Application::getNewDataID(int req_num, std::vector<int>* result) {
   for (int i = 0; i < req_num; i++) {
-    result->push_back(dataID);
-    dataID++;
+    result->push_back(data_id_);
+    data_id_++;
   }
 }
 

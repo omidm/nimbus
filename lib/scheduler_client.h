@@ -50,6 +50,7 @@
 namespace nimbus {
 
 class Worker;
+typedef uint32_t ConnectionId;
 using boost::asio::ip::tcp;
 
 class SchedulerClient {

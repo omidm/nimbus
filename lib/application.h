@@ -51,6 +51,8 @@
 #include "lib/scheduler_client.h"
 #include "lib/scheduler_command.h"
 
+using namespace nimbus; // NOLINT
+
 namespace nimbus {
 
 class Application;
