@@ -41,8 +41,8 @@
 #include "lib/application.h"
 
 Application::Application() {
-  jobID = 0;
-  dataID = 0;
+  jobID = 1;
+  dataID = 1;
 }
 
 void Application::load() {
@@ -91,6 +91,10 @@ void Application::defineData(std::string name, int id) {
 
 Job* Application::cloneJob(std::string name) {
   return jobTable[name]->Clone();
+}
+
+Data* Application::cloneData(std::string name) {
+  return dataTable[name]->Clone();
 }
 
 void Application::getNewJobID(int req_num, std::vector<int>* result) {

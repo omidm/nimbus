@@ -62,12 +62,7 @@ void SimpleWorker::run() {
     SchedulerCommand* comm = client->receiveCommand();
     if (comm->toString() != "no-command") {
       std::cout << "Received command: " << comm->toString() << std::endl;
-      if (comm->getName() == "runmain") {
-        // std::cout << "**** Just before cloning\n";
-        Job * j = app->cloneJob("main");
-        std::vector<Data*> da;
-        j->Execute("none", da);
-      }
+      executeSchedulerCommand(*comm);
     }
   }
 }

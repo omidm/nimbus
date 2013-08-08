@@ -46,6 +46,36 @@ Worker::Worker(unsigned int p, Application* a)
   app(a) {
 }
 
+void Worker::executeSchedulerCommand(SchedulerCommand cm) {
+  std::string command_name = cm.getName();
+
+  if (command_name == "spawnjob") {
+      std::string job_name = cm.getParameters()["name"].getArg();
+      Job * j = app->cloneJob(job_name);
+
+      std::vector<Data*> da;
+      IDSet::IDSetIter iter;
+
+      IDSet read = cm.getParameters()["read"].getIDSet();
+      for (iter = read.set.begin(); iter != read.set.end(); iter++)
+        da.push_back(dataMap[*iter]);
+
+      IDSet write = cm.getParameters()["write"].getIDSet();
+      for (iter = write.set.begin(); iter != write.set.end(); iter++)
+        da.push_back(dataMap[*iter]);
+
+      std::string param = cm.getParameters()["param"].getArg();
+
+      j->Execute(param, da);
+  } else if (command_name == "definedata") {
+      std::string data_name = cm.getParameters()["name"].getArg();
+      Data * d = app->cloneData(data_name);
+      d->Create();
+      IDSet id = cm.getParameters()["id"].getIDSet();
+      addData(*(id.set.begin()), d);
+  }
+}
+
 void Worker::setupSchedulerInterface() {
   loadSchedulerCommands();
   client = new SchedulerClient(port);
@@ -63,3 +93,18 @@ void Worker::loadSchedulerCommands() {
     schedulerCmSet.insert(word);
   }
 }
+
+void Worker::addJob(int id, Job* job) {
+  jobMap[id] = job;
+}
+
+void Worker::delJob(int id) {
+}
+
+void Worker::addData(int id, Data* data) {
+  dataMap[id] = data;
+}
+
+void Worker::delData(int id) {
+}
+

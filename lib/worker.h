@@ -48,6 +48,7 @@
 #include <vector>
 #include <map>
 #include "lib/scheduler_client.h"
+#include "lib/scheduler_command.h"
 #include "lib/cluster.h"
 #include "lib/data.h"
 #include "lib/job.h"
@@ -77,8 +78,15 @@ class Worker {
   // private:
     void setupSchedulerInterface();
 
-    void addJob(Job* job);
-    void delJob(Job* job);
+    void addJob(int id, Job* job);
+
+    void delJob(int id);
+
+    void addData(int id, Data* data);
+
+    void delData(int id);
+
+    void executeSchedulerCommand(SchedulerCommand cm);
 
     void loadSchedulerCommands();
 

@@ -50,7 +50,7 @@ SchedulerCommand::SchedulerCommand(std::string n,
   name = n;
   CommandParameterList::const_iterator  iter = p.begin();
   for (; iter != p.end(); ++iter)
-    addParameter(*iter);
+    addParameter(iter->second);
 }
 
 SchedulerCommand::SchedulerCommand(std::string command) {
@@ -63,8 +63,8 @@ SchedulerCommand::SchedulerCommand(std::string command) {
 
 SchedulerCommand::~SchedulerCommand() {}
 
-void SchedulerCommand::addParameter(const CommandParameter& cm) {
-  parameters.push_back(cm);
+void SchedulerCommand::addParameter(CommandParameter cm) {
+  parameters[cm.getTag()] = cm;
 }
 
 std::string SchedulerCommand::toString() {
@@ -72,7 +72,7 @@ std::string SchedulerCommand::toString() {
   CommandParameterList::iterator iter = parameters.begin();
   for (; iter != parameters.end(); ++iter) {
     rval += " ";
-    rval += iter->toString();
+    rval += (iter->second).toString();
   }
   return rval;
 }
@@ -96,13 +96,13 @@ CommandParameter::CommandParameter() {
 CommandParameter::CommandParameter(std::string t, std::string a,
     const IDSet& s) {
   tag = t;
-  args = a;
+  arg = a;
   set = s;
 }
 
 CommandParameter::CommandParameter(std::string parameter) {
   std::string string_set;
-  parseParameterFromString(parameter, tag, args, string_set);
+  parseParameterFromString(parameter, tag, arg, string_set);
   if (isSet(string_set))
     set = IDSet(string_set);
 }
@@ -112,12 +112,24 @@ CommandParameter::~CommandParameter() {}
 std::string CommandParameter::toString() {
   std::string rval = tag;
   rval += ":";
-  if (args == "")
+  if (arg == "")
     rval += set.toString();
   else
-    rval += args;
+    rval += arg;
 
   return rval;
+}
+
+std::string CommandParameter::getTag() {
+  return tag;
+}
+
+std::string CommandParameter::getArg() {
+  return arg;
+}
+
+IDSet CommandParameter::getIDSet() {
+  return set;
 }
 
 

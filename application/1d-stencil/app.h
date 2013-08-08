@@ -9,49 +9,56 @@ class Main : public Job {
   public:
     Main(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
-    Job * Clone();
+    virtual Job * Clone();
 };
 
 class Init : public Job {
   public:
     Init(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 };
 
 class Print : public Job {
   public:
     Print(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 };
 
 class ApplyLeft : public Job {
   public:
     ApplyLeft(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 };
 
 class ApplyRight : public Job {
   public:
     ApplyRight(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 };
 
 class UpdateLeft : public Job {
   public:
     UpdateLeft(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 };
 
 class UpdateRight : public Job {
   public:
     UpdateRight(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 }; 
 
 class ForLoop : public Job {
   public:
     ForLoop(Application* app, JobType type);
     virtual void Execute(std::string params, const dataArray& da);
+    virtual Job * Clone();
 };
 
 class Vec : public Data {
@@ -59,7 +66,8 @@ class Vec : public Data {
     Vec(int);
     int size;
     int *arr;
-    void Create();
+    virtual void Create();
+    virtual Data * Clone();
 };
 
 class App : public Application {

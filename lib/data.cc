@@ -41,3 +41,10 @@
 #include "lib/data.h"
 
 Data::Data() {}
+
+Data* Data::Clone() {
+  std::cout << "cloning the base data\n";
+  Data* d = new Data();
+  return d;
+}
+

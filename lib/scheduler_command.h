@@ -45,6 +45,7 @@
 #include <sstream> // NOLINT
 #include <string>
 #include <vector>
+#include <map>
 #include <set>
 
 
@@ -61,7 +62,7 @@ class IDSet {
 
     typedef std::set<int>::iterator IDSetIter;
 
-  private:
+  // private:
     std::set<int> set;
 };
 
@@ -69,21 +70,21 @@ class CommandParameter {
   public:
     CommandParameter();
     explicit CommandParameter(std::string parameter);
-    CommandParameter(std::string tag, std::string args, const IDSet& set);
+    CommandParameter(std::string tag, std::string arg, const IDSet& set);
     virtual ~CommandParameter();
 
-    virtual std::string toString();
-    // virtual std::string getTag();
-    // virtual std::string getArg();
-    // virtual void getIDSet(IDSet* set);
+    std::string toString();
+    std::string getTag();
+    std::string getArg();
+    IDSet getIDSet();
 
   private:
     std::string tag;
-    std::string args;
+    std::string arg;
     IDSet set;
 };
 
-typedef std::vector<CommandParameter> CommandParameterList;
+typedef std::map<std::string, CommandParameter> CommandParameterList;
 
 class SchedulerCommand {
   public:
@@ -93,7 +94,7 @@ class SchedulerCommand {
         const CommandParameterList& parameters);
     virtual ~SchedulerCommand();
 
-    virtual void addParameter(const CommandParameter& cm);
+    virtual void addParameter(CommandParameter cm);
     virtual std::string toString();
     virtual std::string getName();
     virtual CommandParameterList getParameters();

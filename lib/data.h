@@ -61,8 +61,10 @@ class Data {
     Hosts hosts;
     Neighbors neighbors;
 
-    Data* Clone();
-    void Create();
+    virtual Data* Clone();
+
+    virtual void Create() {}
+
     void Destroy(Computer);
     void Copy(Computer, Computer);
     void Migrate(Computer, Computer);

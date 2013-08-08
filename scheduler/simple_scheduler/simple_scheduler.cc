@@ -56,19 +56,21 @@ void SimpleScheduler::run() {
     std::cout << "Waiting for the first worker to cennect ..." << std::endl;
   }
 
-  SchedulerCommand cm("runmain");
+  std::string str = "spawnjob name:main id:{0} read:{} write:{}";
+  str += " before:{} after:{} type:operation param:none";
+  SchedulerCommand cm(str);
   std::cout << "Sending command: " << cm.toString() << std::endl;
   server->sendCommand(server->connections.begin()->second, &cm);
   while (true) {
-    // sleep(2);
+    sleep(1);
     for (ConnectionMapIter iter = server->connections.begin();
         iter != server->connections.end(); ++iter) {
       SchedulerServerConnection* con = iter->second;
       SchedulerCommand* comm = server->receiveCommand(con);
       if (comm->toString() != "no-command") {
         std::cout << "Received command: " << comm->toString() << std::endl;
-        // std::cout << "Sending command: " << comm->toString() << std::endl;
-        // server->sendCommand(con, comm);
+        std::cout << "Sending command: " << comm->toString() << std::endl;
+        server->sendCommand(con, comm);
       }
     }
   }
