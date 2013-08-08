@@ -61,9 +61,9 @@ class Data {
   virtual void create() {}
   virtual void destroy(Computer location);
   virtual void duplicate(Computer source, Computer destination);
-  virtual void migrate(Compute sourcer, Computer destination);
-  virtual void split(Data *, Data *) = 0;
-  virtual void merge(Data *, Data *) = 0;
+  virtual void migrate(Computer sourcer, Computer destination);
+  virtual void split(Data *, Data *) {}
+  virtual void merge(Data *, Data *) {}
 
  private:
   uint64_t id_;

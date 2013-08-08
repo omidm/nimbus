@@ -49,6 +49,8 @@
 #include <set>
 
 
+namespace nimbus {
+
 class IDSet {
  public:
   IDSet();
@@ -79,7 +81,7 @@ class CommandParameter {
   IDSet identifier_set();
 
  private:
-  std::string name;
+  std::string name_;
   std::string value_;
   IDSet identifier_set_;
 };
@@ -103,6 +105,7 @@ class SchedulerCommand {
     std::string name_;
     CommandParameterList parameters_;
 };
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_

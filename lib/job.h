@@ -63,7 +63,7 @@ class Job {
   Job(Application* app, JobType type);
   virtual ~Job();
 
-  virtual void execute(std::string params, const dataArray& da) = 0;
+  virtual void execute(std::string params, const DataArray& da) = 0;
   virtual Job* clone();
   virtual void sleep();
   virtual void cancel();
@@ -75,7 +75,7 @@ class Job {
   IDSet write_set_;
   IDSet before_set_;
   IDSet after_set_;
-  std::string parameters_
+  std::string parameters_;
 };
 
 }  // namespace nimbus
