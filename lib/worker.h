@@ -73,7 +73,9 @@ class Worker {
     JobMap jobMap;
     Application* app;
 
-    virtual void run() {}
+    void run();
+
+    virtual void workerCoreProcessor() {}
 
   // private:
     void setupSchedulerInterface();
@@ -86,7 +88,7 @@ class Worker {
 
     void delData(int id);
 
-    void executeSchedulerCommand(SchedulerCommand cm);
+    void processSchedulerCommand(SchedulerCommand cm);
 
     void loadSchedulerCommands();
 

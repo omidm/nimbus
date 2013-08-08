@@ -70,7 +70,9 @@ class Scheduler {
     WorkerMap workerMap;
     ClusterMap clusterMap;
 
-    virtual void run() {}
+    void run();
+
+    virtual void schedulerCoreProcessor() {}
 
     void loadClusterMap(std::string);
 

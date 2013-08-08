@@ -44,12 +44,8 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 : Scheduler(p) {
 }
 
-void SimpleScheduler::run() {
-  Log::dbg_printLine("Running the Scheduler");
-
-  setupWorkerInterface();
-  setupUserInterface();
-
+void SimpleScheduler::schedulerCoreProcessor() {
+  Log::dbg_printLine("Simple Scheduler Core Processor");
 
   while (server->connections.begin() == server->connections.end()) {
     sleep(1);

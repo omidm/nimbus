@@ -61,7 +61,7 @@ class SimpleWorker : public Worker {
   public:
     SimpleWorker(unsigned int p,  Application * a);
 
-    virtual void run();
+    virtual void workerCoreProcessor();
 };
 
 

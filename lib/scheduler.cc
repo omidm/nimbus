@@ -45,6 +45,15 @@ Scheduler::Scheduler(unsigned int p)
   appId = 0;
 }
 
+void Scheduler::run() {
+  Log::dbg_printLine("Running the Scheduler");
+
+  setupWorkerInterface();
+  setupUserInterface();
+
+  schedulerCoreProcessor();
+}
+
 void Scheduler::setupWorkerInterface() {
   loadWorkerCommands();
   server = new SchedulerServer(port);

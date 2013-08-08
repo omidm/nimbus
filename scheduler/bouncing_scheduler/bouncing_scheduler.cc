@@ -44,12 +44,8 @@ BouncingScheduler::BouncingScheduler(unsigned int p)
 : Scheduler(p) {
 }
 
-void BouncingScheduler::run() {
-  Log::dbg_printLine("Running the Scheduler");
-
-  setupWorkerInterface();
-  setupUserInterface();
-
+void BouncingScheduler::schedulerCoreProcessor() {
+  Log::dbg_printLine("Bouncing Scheduler Core Processor");
 
   while (server->connections.begin() == server->connections.end()) {
     sleep(1);

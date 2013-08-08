@@ -45,11 +45,8 @@ SimpleWorker::SimpleWorker(unsigned int p, Application* a)
 : Worker(p, a) {
 }
 
-void SimpleWorker::run() {
-  std::cout << "Running the Worker" << std::endl;
-
-  setupSchedulerInterface();
-  app->start(client);
+void SimpleWorker::workerCoreProcessor() {
+  std::cout << "Simple Worker Core Processor" << std::endl;
 
   while (true) {
     sleep(1);
@@ -62,7 +59,7 @@ void SimpleWorker::run() {
     SchedulerCommand* comm = client->receiveCommand();
     if (comm->toString() != "no-command") {
       std::cout << "Received command: " << comm->toString() << std::endl;
-      executeSchedulerCommand(*comm);
+      processSchedulerCommand(*comm);
     }
   }
 }

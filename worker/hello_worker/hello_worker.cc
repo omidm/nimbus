@@ -41,15 +41,12 @@
 #include "./hello_worker.h"
 
 
-SimpleWorker::SimpleWorker(unsigned int p, Application* a)
+HelloWorker::HelloWorker(unsigned int p, Application* a)
 : Worker(p, a) {
 }
 
-void SimpleWorker::run() {
-  std::cout << "Running the Worker" << std::endl;
-
-  setupSchedulerInterface();
-  app->start(client);
+void HelloWorker::workerCoreProcessor() {
+  std::cout << "Hello Worker Core Processor" << std::endl;
 
   while (true) {
     sleep(1);

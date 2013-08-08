@@ -57,11 +57,11 @@
 #include "lib/worker.h"
 
 
-class SimpleWorker : public Worker {
+class HelloWorker : public Worker {
   public:
-    SimpleWorker(unsigned int p,  Application * a);
+    HelloWorker(unsigned int p,  Application * a);
 
-    virtual void run();
+    virtual void workerCoreProcessor();
 };
 
 

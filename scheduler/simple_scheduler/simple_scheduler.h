@@ -57,11 +57,11 @@
 #include "lib/parser.h"
 #include "lib/scheduler.h"
 
-class SimpleScheduler : private Scheduler {
+class SimpleScheduler : public Scheduler {
   public:
     explicit SimpleScheduler(unsigned int listening_port);
 
-    virtual  void run();
+    virtual  void schedulerCoreProcessor();
 };
 
 #endif  // NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_

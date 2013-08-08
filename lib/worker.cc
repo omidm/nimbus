@@ -46,7 +46,16 @@ Worker::Worker(unsigned int p, Application* a)
   app(a) {
 }
 
-void Worker::executeSchedulerCommand(SchedulerCommand cm) {
+void Worker::run() {
+  std::cout << "Running the Worker" << std::endl;
+
+  setupSchedulerInterface();
+  app->start(client);
+
+  workerCoreProcessor();
+}
+
+void Worker::processSchedulerCommand(SchedulerCommand cm) {
   std::string command_name = cm.getName();
 
   if (command_name == "spawnjob") {

@@ -57,11 +57,11 @@
 #include "lib/parser.h"
 #include "lib/scheduler.h"
 
-class BouncingScheduler : private Scheduler {
+class BouncingScheduler : public Scheduler {
   public:
     explicit BouncingScheduler(unsigned int listening_port);
 
-    virtual  void run();
+    virtual void schedulerCoreProcessor();
 };
 
 #endif  // NIMBUS_SCHEDULER_BOUNCING_SCHEDULER_BOUNCING_SCHEDULER_H_

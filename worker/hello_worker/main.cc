@@ -50,7 +50,7 @@
 int main(int argc, char *argv[]) {
   std::cout << "Worker is up!" << std::endl;
   App * app = new App();
-  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  HelloWorker * w = new HelloWorker(SCHEDULER_PORT, app);
   w->run();
 }
 
