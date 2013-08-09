@@ -82,8 +82,8 @@ std::string SchedulerCommand::name() {
   return name_;
 }
 
-CommandParameterList SchedulerCommand::parameters() {
-  return parameters_;
+CommandParameterList* SchedulerCommand::parameters() {
+  return &parameters_;
 }
 
 
@@ -129,8 +129,8 @@ std::string CommandParameter::value() {
   return value_;
 }
 
-IDSet CommandParameter::identifier_set() {
-  return identifier_set_;
+IDSet* CommandParameter::identifier_set() {
+  return &identifier_set_;
 }
 
 

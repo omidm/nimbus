@@ -82,7 +82,7 @@ class CommandParameter {
   virtual std::string toString();
   virtual std::string name();
   virtual std::string value();
-  virtual IDSet identifier_set();
+  virtual IDSet* identifier_set();
 
  private:
   std::string name_;
@@ -103,7 +103,7 @@ class SchedulerCommand {
   virtual void addParameter(CommandParameter parameter);
   virtual std::string toString();
   virtual std::string name();
-  virtual CommandParameterList parameters();
+  virtual CommandParameterList* parameters();
 
  private:
   std::string name_;

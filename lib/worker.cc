@@ -60,29 +60,29 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
   if (command_name == "spawnjob") {
-      std::string job_name = cm->parameters()["name"].value();
+      std::string job_name = (*(cm->parameters()))["name"].value();
       Job * j = application_->cloneJob(job_name);
 
       std::vector<Data*> da;
       IDSet::IDSetIter iter;
 
-      IDSet read = cm->parameters()["read"].identifier_set();
-      for (iter = read.begin(); iter != read.end(); iter++)
+      IDSet* read = (*(cm->parameters()))["read"].identifier_set();
+      for (iter = read->begin(); iter != read->end(); iter++)
         da.push_back(data_map_[*iter]);
 
-      IDSet write = cm->parameters()["write"].identifier_set();
-      for (iter = write.begin(); iter != write.end(); iter++)
+      IDSet* write = (*(cm->parameters()))["write"].identifier_set();
+      for (iter = write->begin(); iter != write->end(); iter++)
         da.push_back(data_map_[*iter]);
 
-      std::string param = cm->parameters()["param"].value();
+      std::string param = (*(cm->parameters()))["param"].value();
 
       j->execute(param, da);
   } else if (command_name == "definedata") {
-      std::string data_name = cm->parameters()["name"].value();
+      std::string data_name = (*(cm->parameters()))["name"].value();
       Data * d = application_->cloneData(data_name);
       d->create();
-      IDSet id = cm->parameters()["id"].identifier_set();
-      d->set_id(*(id.begin()));
+      IDSet* id = (*(cm->parameters()))["id"].identifier_set();
+      d->set_id(*(id->begin()));
       addData(d);
   }
 }
