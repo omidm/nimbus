@@ -39,17 +39,16 @@
   */
 
 #include "lib/scheduler_command.h"
-#include "lib/parser.h"
 
 using namespace nimbus; // NOLINT
 
 SchedulerCommand::SchedulerCommand() {
-  name = "no-op";
+  name_ = "no-op";
 }
 
 SchedulerCommand::SchedulerCommand(std::string n,
     const CommandParameterList& p) {
-  name = n;
+  name_ = n;
   CommandParameterList::const_iterator  iter = p.begin();
   for (; iter != p.end(); ++iter)
     addParameter(iter->second);
@@ -57,7 +56,7 @@ SchedulerCommand::SchedulerCommand(std::string n,
 
 SchedulerCommand::SchedulerCommand(std::string command) {
   std::vector<std::string> string_params;
-  parseCommandFromString(command, name, string_params);
+  parseCommandFromString(command, name_, string_params);
   std::vector<std::string>::iterator  iter = string_params.begin();
   for (; iter != string_params.end(); ++iter)
     addParameter(CommandParameter(*iter));
@@ -66,25 +65,25 @@ SchedulerCommand::SchedulerCommand(std::string command) {
 SchedulerCommand::~SchedulerCommand() {}
 
 void SchedulerCommand::addParameter(CommandParameter cm) {
-  parameters[cm.getTag()] = cm;
+  parameters_[cm.name()] = cm;
 }
 
 std::string SchedulerCommand::toString() {
-  std::string rval = name;
-  CommandParameterList::iterator iter = parameters.begin();
-  for (; iter != parameters.end(); ++iter) {
+  std::string rval = name_;
+  CommandParameterList::iterator iter = parameters_.begin();
+  for (; iter != parameters_.end(); ++iter) {
     rval += " ";
     rval += (iter->second).toString();
   }
   return rval;
 }
 
-std::string SchedulerCommand::getName() {
-  return name;
+std::string SchedulerCommand::name() {
+  return name_;
 }
 
-CommandParameterList SchedulerCommand::getParameters() {
-  return parameters;
+CommandParameterList SchedulerCommand::parameters() {
+  return parameters_;
 }
 
 
@@ -92,46 +91,46 @@ CommandParameterList SchedulerCommand::getParameters() {
 
 
 CommandParameter::CommandParameter() {
-  tag = "empty-field";
+  name_ = "empty-field";
 }
 
-CommandParameter::CommandParameter(std::string t, std::string a,
-    const IDSet& s) {
-  tag = t;
-  arg = a;
-  set = s;
+CommandParameter::CommandParameter(std::string n,
+    std::string v, const IDSet& s) {
+  name_ = n;
+  value_ = v;
+  identifier_set_ = s;
 }
 
 CommandParameter::CommandParameter(std::string parameter) {
   std::string string_set;
-  parseParameterFromString(parameter, tag, arg, string_set);
+  parseParameterFromString(parameter, name_, value_, string_set);
   if (isSet(string_set))
-    set = IDSet(string_set);
+    identifier_set_ = IDSet(string_set);
 }
 
 CommandParameter::~CommandParameter() {}
 
 std::string CommandParameter::toString() {
-  std::string rval = tag;
+  std::string rval = name_;
   rval += ":";
-  if (arg == "")
-    rval += set.toString();
+  if (value_ == "")
+    rval += identifier_set_.toString();
   else
-    rval += arg;
+    rval += value_;
 
   return rval;
 }
 
-std::string CommandParameter::getTag() {
-  return tag;
+std::string CommandParameter::name() {
+  return name_;
 }
 
-std::string CommandParameter::getArg() {
-  return arg;
+std::string CommandParameter::value() {
+  return value_;
 }
 
-IDSet CommandParameter::getIDSet() {
-  return set;
+IDSet CommandParameter::identifier_set() {
+  return identifier_set_;
 }
 
 
@@ -142,7 +141,7 @@ IDSet CommandParameter::getIDSet() {
 IDSet::IDSet() {}
 
 IDSet::IDSet(std::string s) {
-  ParseIDSetFromString(s, set);
+  parseIDSetFromString(s, identifiers_);
 }
 
 IDSet::~IDSet() {}
@@ -150,8 +149,8 @@ IDSet::~IDSet() {}
 std::string IDSet::toString() {
   bool empty = true;
   std::string rval = "{";
-  std::set<int>::iterator iter = set.begin();
-  for (; iter != set.end(); ++iter) {
+  IDSetIter iter =  identifiers_.begin();
+  for (; iter !=  identifiers_.end(); ++iter) {
     empty = false;
     std::ostringstream ss;
     ss << *iter;
@@ -166,15 +165,15 @@ std::string IDSet::toString() {
 }
 
 void IDSet::insert(int n) {
-  set.insert(n);
+  identifiers_.insert(n);
 }
 
 void IDSet::clear() {
-  set.clear();
+  identifiers_.clear();
 }
 
 int IDSet::size() {
-  return set.size();
+  return identifiers_.size();
 }
 
 

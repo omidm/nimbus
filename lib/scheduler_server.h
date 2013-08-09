@@ -85,7 +85,13 @@ class SchedulerServerConnection {
  public:
   explicit SchedulerServerConnection(tcp::socket* sock);
   ~SchedulerServerConnection();
-  ConnectionId get_id() const {return id_;}
+
+
+  boost::asio::streambuf* read_buffer();
+  tcp::socket* socket();
+  int command_num();
+  void set_command_num(int n);
+  ConnectionId id();
 
  private:
   boost::asio::streambuf* read_buffer_;

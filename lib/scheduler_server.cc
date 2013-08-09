@@ -49,19 +49,19 @@
 using boost::asio::ip::tcp;
 
 SchedulerServer::SchedulerServer(ConnectionId port_no)
-  : connection_port_no(port_no) {
-  io_service = new boost::asio::io_service();
+  : connection_port_(port_no) {
+  io_service_ = new boost::asio::io_service();
 }
 
 SchedulerServer::~SchedulerServer() {
-  boost::mutex::scoped_lock lock(map_mutex);
-  for (ConnectionMapIter iter = connections.begin();
-       iter != connections.end();
+  boost::mutex::scoped_lock lock(map_mutex_);
+  for (ConnectionMapIter iter = connections_.begin();
+       iter != connections_.end();
        ++iter)   {
     SchedulerServerConnection* scon = iter->second;
     delete scon;
   }
-  connections.clear();
+  connections_.clear();
 }
 
 
@@ -72,21 +72,21 @@ SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* con
   // boost::asio::read(*(conn->socket), boost::asio::buffer(buf, b));
 
   boost::system::error_code ignored_error;
-  int bytes_available =conn->socket->available(ignored_error);
+  int bytes_available =conn->socket()->available(ignored_error);
 
   boost::asio::streambuf::mutable_buffers_type bufs =
-    conn->read_buffer->prepare(bytes_available);
-  std::size_t bytes_read = conn->socket->receive(bufs);
-  conn->read_buffer->commit(bytes_read);
+    conn->read_buffer()->prepare(bytes_available);
+  std::size_t bytes_read = conn->socket()->receive(bufs);
+  conn->read_buffer()->commit(bytes_read);
 
   std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  conn->command_num += countOccurence(str, ";");
+  conn->set_command_num(conn->command_num() + countOccurence(str, ";"));
 
-  if (conn->command_num > 0) {
-    std::istream input(conn->read_buffer);
+  if (conn->command_num() > 0) {
+    std::istream input(conn->read_buffer());
     std::string command;
     std::getline(input, command, ';');
-    conn->command_num--;
+    conn->set_command_num(conn->command_num() - 1);
     SchedulerCommand* com = new SchedulerCommand(command);
     return com;
   } else {
@@ -99,40 +99,40 @@ void SchedulerServer::sendCommand(SchedulerServerConnection* conn,
     SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
-  boost::asio::write(*(conn->socket), boost::asio::buffer(msg),
+  boost::asio::write(*(conn->socket()), boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
 }
 
 
 void SchedulerServer::listenForNewConnections() {
   tcp::acceptor acceptor(
-      *io_service, tcp::endpoint(tcp::v4(), connection_port_no));
+      *io_service_, tcp::endpoint(tcp::v4(), connection_port_));
 
   while (true) {
-    tcp::socket* socket = new tcp::socket(*io_service);
+    tcp::socket* socket = new tcp::socket(*io_service_);
     acceptor.accept(*socket);
     {
       std::cout << "\nCreating new connection\n";
-      boost::mutex::scoped_lock lock(map_mutex);
+      boost::mutex::scoped_lock lock(map_mutex_);
       SchedulerServerConnection* sc =
         new SchedulerServerConnection(socket);
-      connections[sc->get_id()] = sc;
+      connections_[sc->id()] = sc;
     }
   }
 }
 
 void SchedulerServer::run() {
-  connection_subscription_thread = new boost::thread(
+  connection_subscription_thread_ = new boost::thread(
       boost::bind(&SchedulerServer::listenForNewConnections, this));
 }
 
 
 SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
-  :socket(sock) {
+  :socket_(sock) {
   static ConnectionId id_assigner = 0;
-  id = id_assigner++;
-  read_buffer = new boost::asio::streambuf();
-  command_num = 0;
+  id_ = id_assigner++;
+  read_buffer_ = new boost::asio::streambuf();
+  command_num_ = 0;
 }
 
 SchedulerServerConnection::~SchedulerServerConnection() {
@@ -140,4 +140,23 @@ SchedulerServerConnection::~SchedulerServerConnection() {
 }
 
 
+boost::asio::streambuf* SchedulerServerConnection::read_buffer() {
+  return read_buffer_;
+}
+
+tcp::socket* SchedulerServerConnection::socket() {
+  return socket_;
+}
+
+int SchedulerServerConnection::command_num() {
+  return command_num_;
+}
+
+void SchedulerServerConnection::set_command_num(int n) {
+  command_num_ = n;
+}
+
+ConnectionId SchedulerServerConnection::id() {
+  return id_;
+}
 

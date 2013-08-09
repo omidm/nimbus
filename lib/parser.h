@@ -64,7 +64,7 @@ void parseCommandFromString(const std::string& input,
     std::string& command,
     std::vector<std::string>& parameters);
 
-void parseParametersFromString(const std::string& input, std::string& tag,
+void parseParameterFromString(const std::string& input, std::string& tag,
     std::string& args, std::string& string_set);
 
 void parseIDSetFromString(const std::string& input, std::set<int>& set);

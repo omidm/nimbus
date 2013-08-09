@@ -114,7 +114,7 @@ void parseParameterFromString(const std::string& input, std::string& tag,
     args = *iter;
 }
 
-void ParseIDSetFromString(const std::string& input, std::set<int>& set) {
+void parseIDSetFromString(const std::string& input, std::set<int>& set) {
   int num;
   std::string str = input.substr(1, input.length() - 2);
   char_separator<char> separator(",");

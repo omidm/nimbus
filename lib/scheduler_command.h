@@ -47,6 +47,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "lib/parser.h"
 
 
 namespace nimbus {
@@ -78,7 +79,7 @@ class CommandParameter {
   virtual std::string toString();
   virtual std::string name();
   virtual std::string value();
-  virtual IDSet* identifier_set();
+  virtual IDSet identifier_set();
 
  private:
   std::string name_;
@@ -86,7 +87,7 @@ class CommandParameter {
   IDSet identifier_set_;
 };
 
-typedef std::vector<CommandParameter*> CommandParameterList;
+typedef std::map<std::string, CommandParameter> CommandParameterList;
 
 class SchedulerCommand {
  public:
@@ -99,7 +100,7 @@ class SchedulerCommand {
   virtual void addParameter(CommandParameter parameter);
   virtual std::string toString();
   virtual std::string name();
-  virtual CommandParameterList* parameters();
+  virtual CommandParameterList parameters();
 
  private:
   std::string name_;
