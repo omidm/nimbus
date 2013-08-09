@@ -85,7 +85,7 @@ class Computer : public Node {
   ~Computer();
 
   virtual NodeType type();
-  virtual uint64_t memory_size() {return memory_size_}
+  virtual uint64_t memory_size() {return memory_size_;}
   virtual uint32_t level1_cache_size() {return level1_cache_size_;}
   virtual uint32_t level2_cache_size() {return level2_cache_size_;}
   virtual uint32_t level3_cache_size() {return level3_cache_size_;}

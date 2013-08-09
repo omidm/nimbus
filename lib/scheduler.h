@@ -64,8 +64,8 @@ class Scheduler {
     virtual void schedulerCoreProcessor() {}
     virtual void loadClusterMap(std::string) {}
     virtual void deleteWorker(Worker * worker) {}
-    virtual Worker* addWorker() {}
-    virtual Worker* getWorker(int workerId) {}
+    virtual void addWorker(Worker * worker) {}
+    virtual Worker* getWorker(int workerId) {return worker_map_[workerId];}
 
   protected:
     SchedulerServer* server_;
