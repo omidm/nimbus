@@ -4,7 +4,7 @@ all: check lib
 NIMBUS_ROOT = ..
 include ../Makeinclude
 
-TARGET = libnimbus.so
+LIBRARY = libnimbus.so
 
 CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
@@ -13,14 +13,18 @@ OBJFILES = $(subst .cc,.o,$(CFILES))
 LFLAGS += -lboost_thread-mt -lboost_system-mt
 SHARED_FLAGS = -shared -fPIC
 
-lib: $(TARGET)
+ifdef OS_DARWIN
+  LINK_FLAG = -install_name @rpath/$(LIBRARY)
+endif
 
-$(TARGET): $(OBJFILES) $(HFILES)
-	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(TARGET)
+lib: $(LIBRARY)
+
+$(LIBRARY): $(OBJFILES) $(HFILES)
+	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	\rm -f $(TARGET)
+	\rm -f $(LIBRARY)
 
