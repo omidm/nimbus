@@ -1,12 +1,10 @@
-# File for 1-d stencil application
-
 TARGET = test
 all: check $(TARGET)
 
-NIMBUS_ROOT = ..
+NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-LDIR = ../../lib/
+LDIR = $(NIMBUS_ROOT)/lib/
 IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
