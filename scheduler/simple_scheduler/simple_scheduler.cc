@@ -47,7 +47,7 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 void SimpleScheduler::schedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
-  while (server->connections.begin() == server->connections.end()) {
+  while (server_->connections()->begin() == server_->connections()->end()) {
     sleep(1);
     std::cout << "Waiting for the first worker to cennect ..." << std::endl;
   }
@@ -56,17 +56,17 @@ void SimpleScheduler::schedulerCoreProcessor() {
   str += " before:{} after:{} type:operation param:none";
   SchedulerCommand cm(str);
   std::cout << "Sending command: " << cm.toString() << std::endl;
-  server->sendCommand(server->connections.begin()->second, &cm);
+  server_->sendCommand(server_->connections()->begin()->second, &cm);
   while (true) {
     sleep(1);
-    for (ConnectionMapIter iter = server->connections.begin();
-        iter != server->connections.end(); ++iter) {
+    for (ConnectionMapIter iter = server_->connections()->begin();
+        iter != server_->connections()->end(); ++iter) {
       SchedulerServerConnection* con = iter->second;
-      SchedulerCommand* comm = server->receiveCommand(con);
+      SchedulerCommand* comm = server_->receiveCommand(con);
       if (comm->toString() != "no-command") {
         std::cout << "Received command: " << comm->toString() << std::endl;
         std::cout << "Sending command: " << comm->toString() << std::endl;
-        server->sendCommand(con, comm);
+        server_->sendCommand(con, comm);
       }
     }
   }

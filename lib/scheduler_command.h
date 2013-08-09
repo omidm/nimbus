@@ -65,6 +65,9 @@ class IDSet {
 
   typedef std::set<int>::iterator IDSetIter;
 
+  IDSetIter begin();
+  IDSetIter end();
+
  private:
   std::set<int> identifiers_;
 };

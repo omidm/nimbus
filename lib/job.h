@@ -61,17 +61,22 @@ enum JobType {COMP, SYNC};
 class Job {
  public:
   Job(Application* app, JobType type);
-  virtual ~Job();
+  virtual ~Job() {}
 
-  virtual void execute(std::string params, const DataArray& da);
+  virtual void execute(std::string params, const DataArray& da) {}
   virtual Job* clone();
-  virtual void sleep();
-  virtual void cancel();
+  virtual void sleep() {}
+  virtual void cancel() {}
+
+  uint64_t id();
+  void set_id(uint64_t id);
+
+ protected:
+  Application* application_;
+  JobType type_;
 
  private:
   uint32_t id_;
-  Application* application_;
-  JobType type_;
   IDSet read_set_;
   IDSet write_set_;
   IDSet before_set_;

@@ -40,55 +40,57 @@
 
 #include "lib/worker.h"
 
+using namespace nimbus; // NOLINT
 
 Worker::Worker(unsigned int p, Application* a)
-: port(p),
-  app(a) {
+: port_(p),
+  application_(a) {
 }
 
 void Worker::run() {
   std::cout << "Running the Worker" << std::endl;
 
   setupSchedulerInterface();
-  app->start(client);
+  application_->start(client_);
 
   workerCoreProcessor();
 }
 
-void Worker::processSchedulerCommand(SchedulerCommand cm) {
-  std::string command_name = cm.getName();
+void Worker::processSchedulerCommand(SchedulerCommand* cm) {
+  std::string command_name = cm->name();
 
   if (command_name == "spawnjob") {
-      std::string job_name = cm.getParameters()["name"].getArg();
-      Job * j = app->cloneJob(job_name);
+      std::string job_name = cm->parameters()["name"].value();
+      Job * j = application_->cloneJob(job_name);
 
       std::vector<Data*> da;
       IDSet::IDSetIter iter;
 
-      IDSet read = cm.getParameters()["read"].getIDSet();
-      for (iter = read.set.begin(); iter != read.set.end(); iter++)
-        da.push_back(dataMap[*iter]);
+      IDSet read = cm->parameters()["read"].identifier_set();
+      for (iter = read.begin(); iter != read.end(); iter++)
+        da.push_back(data_map_[*iter]);
 
-      IDSet write = cm.getParameters()["write"].getIDSet();
-      for (iter = write.set.begin(); iter != write.set.end(); iter++)
-        da.push_back(dataMap[*iter]);
+      IDSet write = cm->parameters()["write"].identifier_set();
+      for (iter = write.begin(); iter != write.end(); iter++)
+        da.push_back(data_map_[*iter]);
 
-      std::string param = cm.getParameters()["param"].getArg();
+      std::string param = cm->parameters()["param"].value();
 
-      j->Execute(param, da);
+      j->execute(param, da);
   } else if (command_name == "definedata") {
-      std::string data_name = cm.getParameters()["name"].getArg();
-      Data * d = app->cloneData(data_name);
-      d->Create();
-      IDSet id = cm.getParameters()["id"].getIDSet();
-      addData(*(id.set.begin()), d);
+      std::string data_name = cm->parameters()["name"].value();
+      Data * d = application_->cloneData(data_name);
+      d->create();
+      IDSet id = cm->parameters()["id"].identifier_set();
+      d->set_id(*(id.begin()));
+      addData(d);
   }
 }
 
 void Worker::setupSchedulerInterface() {
   loadSchedulerCommands();
-  client = new SchedulerClient(port);
-  client->run();
+  client_ = new SchedulerClient(port_);
+  client_->run();
 }
 
 void Worker::loadSchedulerCommands() {
@@ -99,21 +101,21 @@ void Worker::loadSchedulerCommands() {
     if (cms.fail()) {
       break;
     }
-    schedulerCmSet.insert(word);
+    scheduler_command_set_.insert(word);
   }
 }
 
-void Worker::addJob(int id, Job* job) {
-  jobMap[id] = job;
+void Worker::addJob(Job* job) {
+  job_map_[job->id()] = job;
 }
 
-void Worker::delJob(int id) {
+void Worker::deleteJob(int id) {
 }
 
-void Worker::addData(int id, Data* data) {
-  dataMap[id] = data;
+void Worker::addData(Data* data) {
+  data_map_[data->id()] = data;
 }
 
-void Worker::delData(int id) {
+void Worker::deleteData(int id) {
 }
 

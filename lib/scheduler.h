@@ -58,14 +58,17 @@ namespace nimbus {
 class Scheduler {
   public:
     explicit Scheduler(unsigned int listening_port);
-    virtual ~Scheduler();
+    virtual ~Scheduler() {}
 
     virtual void run();
     virtual void schedulerCoreProcessor() {}
-    virtual void loadClusterMap(std::string);
-    virtual void deleteWorker(Worker * worker);
-    virtual Worker* addWorker();
-    virtual Worker* getWorker(int workerId);
+    virtual void loadClusterMap(std::string) {}
+    virtual void deleteWorker(Worker * worker) {}
+    virtual Worker* addWorker() {}
+    virtual Worker* getWorker(int workerId) {}
+
+  protected:
+    SchedulerServer* server_;
 
   private:
     virtual void setupUserInterface();
@@ -80,7 +83,6 @@ class Scheduler {
     Computer host_;
     uint16_t port_;
     uint64_t appId_;
-    SchedulerServer* server_;
     // AppMap app_map_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;

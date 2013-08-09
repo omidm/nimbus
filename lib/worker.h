@@ -67,24 +67,26 @@ class Worker {
   virtual void workerCoreProcessor() {}
   virtual void processSchedulerCommand(SchedulerCommand* command);
 
+ protected:
+  SchedulerClient* client_;
+
  private:
   int id_;
   Computer host_;
   unsigned int port_;
-  SchedulerClient* client_;
   DataMap data_map_;
   JobMap job_map_;
-  Application* app_;
+  Application* application_;
   CmSet scheduler_command_set_;
 
   virtual void setupSchedulerInterface();
 
   virtual void addJob(Job* job);
   virtual void deleteJob(int id);
-  virtual void deleteJob(Job* job);
+  virtual void deleteJob(Job* job) {}
   virtual void addData(Data* data);
   virtual void deleteData(int id);
-  virtual void deleteData(Data* data);
+  virtual void deleteData(Data* data) {}
   virtual void loadSchedulerCommands();
 };
 

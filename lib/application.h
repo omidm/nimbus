@@ -61,7 +61,7 @@ typedef std::map<int, Application*> AppMap;
 class Application {
  public:
   Application();
-  ~Application();
+  ~Application() {}
 
   virtual void load();
   virtual void start(SchedulerClient* scheduler);

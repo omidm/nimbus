@@ -67,5 +67,6 @@ NodeType Switch::type() {
   return COMPUTER;
 }
 
+ClusterMap::ClusterMap() {}
 
-
+ClusterMap::~ClusterMap() {}

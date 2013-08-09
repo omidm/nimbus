@@ -50,3 +50,10 @@ Data* Data::clone() {
   return d;
 }
 
+uint64_t Data::id() {
+  return id_;
+}
+
+void Data::set_id(uint64_t id) {
+  id_ = id;
+}

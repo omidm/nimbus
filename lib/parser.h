@@ -49,7 +49,7 @@
 #include <vector>
 #include <set>
 
-namespace nimbus {
+// namespace nimbus {
 typedef std::set<std::string> CmSet;
 
 void parseCommand(const std::string& string,
@@ -73,5 +73,5 @@ bool isSet(const std::string& tag);
 
 int countOccurence(std::string str, std::string substr);
 
-}  // namespace nimbus
+// }  // namespace nimbus
 #endif  // NIMBUS_LIB_PARSER_H_

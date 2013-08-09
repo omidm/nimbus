@@ -126,6 +126,9 @@ void SchedulerServer::run() {
       boost::bind(&SchedulerServer::listenForNewConnections, this));
 }
 
+ConnectionMap* SchedulerServer::connections() {
+  return &connections_;
+}
 
 SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
   :socket_(sock) {

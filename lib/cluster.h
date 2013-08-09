@@ -85,11 +85,11 @@ class Computer : public Node {
   ~Computer();
 
   virtual NodeType type();
-  virtual uint64_t memory_size();
-  virtual uint32_t level1_cacheSize();
-  virtual uint32_t level2_cacheSize();
-  virtual uint32_t level3_cacheSize();
-  virtual uint32_t core_count();
+  virtual uint64_t memory_size() {}
+  virtual uint32_t level1_cacheSize() {}
+  virtual uint32_t level2_cacheSize() {}
+  virtual uint32_t level3_cacheSize() {}
+  virtual uint32_t core_count() {}
 
  private:
   uint64_t memory_size_;
@@ -105,8 +105,8 @@ class Switch : public Node {
   ~Switch();
 
   virtual NodeType type();
-  virtual uint32_t port_count();
-  virtual uint64_t cross_section_bandwidth();
+  virtual uint32_t port_count() {}
+  virtual uint64_t cross_section_bandwidth() {}
 
  private:
   uint32_t port_count_;
@@ -119,13 +119,13 @@ class ClusterMap {
   ClusterMap();
   ~ClusterMap();
 
-  void addNode(Node * node);
-  void deleteNode(Node * node);
-  void addLink(Link * link);
-  void deleteLink(Link * link);
-  uint64_t latencyNs(Node * source, Node * destination);
-  uint64_t capacityBps(Node * source, Node * destination);
-  void route(Node * source, Node * destination, NodeSet* storage);
+  void addNode(Node * node) {}
+  void deleteNode(Node * node) {}
+  void addLink(Link * link) {}
+  void deleteLink(Link * link) {}
+  uint64_t latencyNs(Node * source, Node * destination) {}
+  uint64_t capacityBps(Node * source, Node * destination) {}
+  void route(Node * source, Node * destination, NodeSet* storage) {}
 
  private:
   LinkSet link_set_;

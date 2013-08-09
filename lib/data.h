@@ -55,15 +55,18 @@ typedef std::map<std::string, Data*> DataTable;
 class Data {
  public:
   Data();
-  virtual ~Data();
+  virtual ~Data() {}
 
   virtual Data* clone();
   virtual void create() {}
-  virtual void destroy(Computer location);
-  virtual void duplicate(Computer source, Computer destination);
-  virtual void migrate(Computer sourcer, Computer destination);
+  virtual void destroy(Computer location) {}
+  virtual void duplicate(Computer source, Computer destination) {}
+  virtual void migrate(Computer sourcer, Computer destination) {}
   virtual void split(Data *, Data *) {}
   virtual void merge(Data *, Data *) {}
+
+  uint64_t id();
+  void set_id(uint64_t id);
 
  private:
   uint64_t id_;

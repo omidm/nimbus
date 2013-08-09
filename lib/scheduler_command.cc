@@ -177,3 +177,12 @@ int IDSet::size() {
 }
 
 
+IDSet::IDSetIter IDSet::begin() {
+  return identifiers_.begin();
+}
+
+IDSet::IDSetIter IDSet::end() {
+  return identifiers_.end();
+}
+
+

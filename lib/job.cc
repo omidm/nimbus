@@ -52,3 +52,11 @@ Job* Job::clone() {
   Job* j = new Job(application_, type_);
   return j;
 }
+
+uint64_t Job::id() {
+  return id_;
+}
+
+void Job::set_id(uint64_t id) {
+  id_ = id;
+}

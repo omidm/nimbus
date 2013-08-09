@@ -70,6 +70,8 @@ class SchedulerServer {
   virtual void sendCommand(SchedulerServerConnection* connection,
                            SchedulerCommand* command);
 
+  ConnectionMap* connections();
+
  private:
   boost::mutex map_mutex_;
   boost::thread* connection_subscription_thread_;

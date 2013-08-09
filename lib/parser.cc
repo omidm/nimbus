@@ -42,7 +42,7 @@
 #include <stdint.h>
 #include <boost/tokenizer.hpp>
 
-using namespace nimbus; // NOLINT
+// using namespace nimbus; // NOLINT
 
 void parseCommand(const std::string& str, const CmSet& cms,
                   std::string& cm, std::vector<int>& args) {
