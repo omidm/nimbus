@@ -86,9 +86,13 @@ CommandParameterList* SchedulerCommand::parameters() {
   return &parameters_;
 }
 
+worker_id_t SchedulerCommand::worker_id() {
+  return worker_id_;
+}
 
-
-
+void SchedulerCommand::set_worker_id(worker_id_t id) {
+  worker_id_ = id;
+}
 
 CommandParameter::CommandParameter() {
   name_ = "empty-field";

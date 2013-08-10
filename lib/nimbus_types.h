@@ -32,16 +32,28 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+/*
+ * Global declaration of Nimbus-wide types.
+ * Author: Philip Levis <pal@cs.stanford.edu>
+ */
 
-#ifndef NIMBUS_LIB_NIMBUS_H_
-#define NIMBUS_LIB_NIMBUS_H_
+#ifndef NIMBUS_LIB_NIMBUS_TYPES_H_
+#define NIMBUS_LIB_NIMBUS_TYPES_H_
 
-#include "lib/nimbus_types.h"
-#include "lib/application.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/worker.h"
-#include "lib/log.h"
+#include <inttypes.h>
 
-#endif  // NIMBUS_LIB_NIMBUS_H_
+#define NIMBUS_SCHEDULER_PORT 5983
+
+namespace nimbus {
+  typedef uint32_t worker_id_t;
+  typedef uint64_t data_id_t;
+  typedef uint64_t job_id_t;
+
+  enum {
+    WORKER_ID_NONE = 0,
+    WORKER_ID_SCHEDULER = 1
+  };
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_LIB_NIMBUS_TYPES_H_

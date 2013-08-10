@@ -32,16 +32,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+ /*
+  * Scheduler abstraction of a worker.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
 
-#ifndef NIMBUS_LIB_NIMBUS_H_
-#define NIMBUS_LIB_NIMBUS_H_
+#ifndef NIMBUS_LIB_SCHEDULER_WORKER_H_
+#define NIMBUS_LIB_SCHEDULER_WORKER_H_
 
-#include "lib/nimbus_types.h"
-#include "lib/application.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/worker.h"
-#include "lib/log.h"
+#include "lib/nimbus.h"
 
-#endif  // NIMBUS_LIB_NIMBUS_H_
+namespace nimbus {
+
+class SchedulerWorker {
+ public:
+  SchedulerWorker(worker_id_t id,
+                  SchedulerServerConnection* conn,
+                  Application* app);
+  virtual ~SchedulerWorker();
+
+  virtual worker_id_t id();
+  virtual SchedulerServerConnection* connection();
+  virtual Application* application();
+
+ private:
+  worker_id_t id_;
+  SchedulerServerConnection* connection_;
+  Application* application_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_LIB_SCHEDULER_WORKER_H_

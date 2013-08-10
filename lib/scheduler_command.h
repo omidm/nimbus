@@ -42,13 +42,14 @@
 #ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
 #define NIMBUS_LIB_SCHEDULER_COMMAND_H_
 
+
 #include <sstream> // NOLINT
 #include <string>
 #include <vector>
 #include <map>
 #include <set>
 #include "lib/parser.h"
-
+#include "lib/nimbus_types.h"
 
 namespace nimbus {
 
@@ -105,10 +106,16 @@ class SchedulerCommand {
   virtual std::string name();
   virtual CommandParameterList* parameters();
 
+  virtual worker_id_t worker_id();
+  virtual void set_worker_id(worker_id_t id);
+
  private:
   std::string name_;
   CommandParameterList parameters_;
+  worker_id_t worker_id_;
 };
+
+typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 
 }  // namespace nimbus
 
