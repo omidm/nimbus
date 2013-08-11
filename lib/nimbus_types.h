@@ -48,7 +48,7 @@ namespace nimbus {
   typedef uint32_t worker_id_t;
   typedef uint64_t data_id_t;
   typedef uint64_t job_id_t;
-
+  typedef uint64_t command_id_t;
   enum {
     WORKER_ID_NONE = 0,
     WORKER_ID_SCHEDULER = 1

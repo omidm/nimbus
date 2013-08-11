@@ -76,26 +76,28 @@ bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
     return false;  // No active connections
   }
 
-  SchedulerServerConnection* conn = iter->second;
+  SchedulerServerConnection* connection = iter->second;
   boost::system::error_code ignored_error;
-  int bytes_available = conn->socket()->available(ignored_error);
+  int bytes_available = connection->socket()->available(ignored_error);
 
   boost::asio::streambuf::mutable_buffers_type bufs =
-    conn->read_buffer()->prepare(bytes_available);
-  std::size_t bytes_read = conn->socket()->receive(bufs);
-  conn->read_buffer()->commit(bytes_read);
+    connection->read_buffer()->prepare(bytes_available);
+  std::size_t bytes_read = connection->socket()->receive(bufs);
+  connection->read_buffer()->commit(bytes_read);
 
   std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  conn->set_command_num(conn->command_num() + countOccurence(str, ";"));
+  command_id_t num = connection->command_num() + countOccurence(str, ";");
+  connection->set_command_num(num);
 
   // Why is this a conditional?
-  if (conn->command_num() > 0) {
-    std::istream input(conn->read_buffer());
-    std::string command;
-    std::getline(input, command, ';');
-    conn->set_command_num(conn->command_num() - 1);
-    SchedulerCommand* com = new SchedulerCommand(command);
-    storage->push_back(com);
+  if (connection->command_num() > 0) {
+    std::istream input(connection->read_buffer());
+    std::string commandText;
+    std::getline(input, commandText, ';');
+    connection->set_command_num(connection->command_num() - 1);
+    SchedulerCommand* command = new SchedulerCommand(commandText);
+    command->set_worker_id(connection->worker_id());
+    storage->push_back(command);
     return true;
   } else {
     return false;
@@ -103,20 +105,20 @@ bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
 }
 
 
-void SchedulerServer::sendCommand(SchedulerServerConnection* conn,
+void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
                                   SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
-  boost::asio::write(*(conn->socket()), boost::asio::buffer(msg),
+  boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
                      boost::asio::transfer_all(), ignored_error);
 }
 
-void SchedulerServer::sendCommands(SchedulerServerConnection* conn,
+void SchedulerServer::sendCommands(SchedulerServerConnection* connection,
                                     SchedulerCommandVector* commands) {
   SchedulerCommandVector::iterator iter = commands->begin();
   for (; iter != commands->end(); ++iter) {
     SchedulerCommand* command = *iter;
-    sendCommand(conn, command);
+    sendCommand(connection, command);
   }
 }
 
