@@ -59,16 +59,21 @@ void SimpleScheduler::schedulerCoreProcessor() {
   server_->sendCommand(server_->connections()->begin()->second, &cm);
   while (true) {
     sleep(1);
-    for (ConnectionMapIter iter = server_->connections()->begin();
-        iter != server_->connections()->end(); ++iter) {
-      SchedulerServerConnection* con = iter->second;
-      SchedulerCommand* comm = server_->receiveCommand(con);
-      if (comm->toString() != "no-command") {
-        std::cout << "Received command: " << comm->toString() << std::endl;
-        std::cout << "Sending command: " << comm->toString() << std::endl;
-        server_->sendCommand(con, comm);
+    SchedulerCommandVector* storage = new SchedulerCommandVector();
+    if (server_->receiveCommands(storage, (uint32_t)10)) {
+      SchedulerCommandVector::iterator iter = storage->begin();
+      for (; iter != storage->end(); iter++) {
+        SchedulerCommand* comm = *iter;
+        iter = storage->erase(iter);
+        if (comm->toString() != "no-command") {
+          std::cout << "Received command: " << comm->toString() << std::endl;
+          std::cout << "Sending command: " << comm->toString() << std::endl;
+          server_->sendCommand(server_->connections()->begin()->second, comm);
+        }
+        delete comm;
       }
     }
+    delete storage;
   }
 }
 

@@ -33,9 +33,10 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol. 
+  * Server side of the Nimbus scheduler protocol.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "lib/scheduler_server.h"
@@ -65,14 +66,19 @@ SchedulerServer::~SchedulerServer() {
 }
 
 
-SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* conn) { // NOLINT
-  // boost::asio::read_until(*(conn->socket), *(conn->read_buffer), ';');
-  // std::streamsize size = conn->read_buffer->in_avail();
-  // boost::array<char, 128> buf;
-  // boost::asio::read(*(conn->socket), boost::asio::buffer(buf, b));
+bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
+                                      uint32_t maxCommands) {
+  // Implementation currently just receives commands from the
+  // first connection, so it can be tested. Should pull commands
+  // from all connections.
+  ConnectionMapIter iter = connections_.begin();
+  if (iter == connections_.end()) {
+    return false;  // No active connections
+  }
 
+  SchedulerServerConnection* conn = iter->second;
   boost::system::error_code ignored_error;
-  int bytes_available =conn->socket()->available(ignored_error);
+  int bytes_available = conn->socket()->available(ignored_error);
 
   boost::asio::streambuf::mutable_buffers_type bufs =
     conn->read_buffer()->prepare(bytes_available);
@@ -82,27 +88,37 @@ SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* con
   std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
   conn->set_command_num(conn->command_num() + countOccurence(str, ";"));
 
+  // Why is this a conditional?
   if (conn->command_num() > 0) {
     std::istream input(conn->read_buffer());
     std::string command;
     std::getline(input, command, ';');
     conn->set_command_num(conn->command_num() - 1);
     SchedulerCommand* com = new SchedulerCommand(command);
-    return com;
+    storage->push_back(com);
+    return true;
   } else {
-    return new SchedulerCommand("no-command");
+    return false;
   }
 }
 
 
 void SchedulerServer::sendCommand(SchedulerServerConnection* conn,
-    SchedulerCommand* command) {
+                                  SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
   boost::asio::write(*(conn->socket()), boost::asio::buffer(msg),
-      boost::asio::transfer_all(), ignored_error);
+                     boost::asio::transfer_all(), ignored_error);
 }
 
+void SchedulerServer::sendCommands(SchedulerServerConnection* conn,
+                                    SchedulerCommandVector* commands) {
+  SchedulerCommandVector::iterator iter = commands->begin();
+  for (; iter != commands->end(); ++iter) {
+    SchedulerCommand* command = *iter;
+    sendCommand(conn, command);
+  }
+}
 
 void SchedulerServer::listenForNewConnections() {
   tcp::acceptor acceptor(
@@ -157,6 +173,14 @@ int SchedulerServerConnection::command_num() {
 
 void SchedulerServerConnection::set_command_num(int n) {
   command_num_ = n;
+}
+
+worker_id_t SchedulerServerConnection::worker_id() {
+  return worker_id_;
+}
+
+void SchedulerServerConnection::set_worker_id(worker_id_t w) {
+  worker_id_ = w;
 }
 
 ConnectionId SchedulerServerConnection::id() {

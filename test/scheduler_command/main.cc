@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   while (commands[i] != NULL) {
     cout << "Testing command \'" << commands[i] << "\'" << std::endl;
     std::string input(commands[i]);
-    SchedulerCommand* c = new SchedulerCommand(commands[i]);
+    nimbus::SchedulerCommand* c = new nimbus::SchedulerCommand(commands[i]);
     std::string output = c->toString();
 
     if (input == output) {
@@ -74,12 +74,12 @@ int main(int argc, char *argv[]) {
       cout << "  output: " << output << std::endl;
       cout << "  translated to string \'" << c->toString() << '\'' << std::endl;
       cout << "  translated to tokens ";
-      cout << c->getName() << ":";
-      CommandParameterList params = c->getParameters();
-      CommandParameterList::const_iterator iter = params.begin();
+      cout << c->name() << ":";
+      nimbus:: CommandParameterList params = c->parameters();
+      nimbus::CommandParameterList::const_iterator iter = params.begin();
       for (; iter != params.end(); ++iter) {
-        std::string param = *iter;
-        cout << param << ";";
+        nimbus::CommandParameter param = *iter;
+        cout << param.toString() << ";";
       }
       cout << std::endl;
     }
