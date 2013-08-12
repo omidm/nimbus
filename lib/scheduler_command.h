@@ -46,6 +46,7 @@
 #include <sstream> // NOLINT
 #include <string>
 #include <vector>
+#include <list>
 #include <map>
 #include <set>
 #include "lib/parser.h"
@@ -97,6 +98,7 @@ class SchedulerCommand {
 };
 
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
+typedef std::list<SchedulerCommand*> SchedulerCommandList;
 
 }  // namespace nimbus
 
