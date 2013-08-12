@@ -41,9 +41,13 @@
 #ifndef NIMBUS_LIB_SCHEDULER_WORKER_H_
 #define NIMBUS_LIB_SCHEDULER_WORKER_H_
 
+#include <list>
 #include "lib/nimbus.h"
 
 namespace nimbus {
+
+class SchedulerServerConnection;
+class Application;
 
 class SchedulerWorker {
  public:
@@ -55,12 +59,17 @@ class SchedulerWorker {
   virtual worker_id_t id();
   virtual SchedulerServerConnection* connection();
   virtual Application* application();
+  virtual bool is_alive();
+  virtual bool MarkDead();
 
  private:
   worker_id_t id_;
   SchedulerServerConnection* connection_;
   Application* application_;
+  bool is_alive_;
 };
+
+typedef std::list<SchedulerWorker*> SchedulerWorkerList;
 
 }  // namespace nimbus
 
