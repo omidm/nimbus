@@ -67,36 +67,37 @@ SchedulerServer::~SchedulerServer() {
   delete io_service_;
 }
 
-bool SchedulerServer::initialize() {
+bool SchedulerServer::Initialize() {
   io_service_ = new boost::asio::io_service();
   acceptor_ = new tcp::acceptor(*io_service_,
                                 tcp::endpoint(tcp::v4(), connection_port_));
   return true;
 }
 
-bool SchedulerServer::receiveCommands(SchedulerCommandList* storage,
+bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
                                       uint32_t maxCommands) {return true;}
 
 
 
-void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
+void SchedulerServer::SendCommand(SchedulerWorker* worker,
                                   SchedulerCommand* command) {
+  SchedulerServerConnection* connection = worker->connection();
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
                      boost::asio::transfer_all(), ignored_error);
 }
 
-void SchedulerServer::sendCommands(SchedulerServerConnection* connection,
+void SchedulerServer::SendCommands(SchedulerWorker* worker,
                                     SchedulerCommandList* commands) {
   SchedulerCommandList::iterator iter = commands->begin();
   for (; iter != commands->end(); ++iter) {
     SchedulerCommand* command = *iter;
-    sendCommand(connection, command);
+    SendCommand(worker, command);
   }
 }
 
-uint32_t SchedulerServer::receiveMessages() {
+uint32_t SchedulerServer::ReceiveMessages() {
     // Implementation currently just receives commands from the
   // first connection, so it can be tested. Should pull commands
   // from all connections.
@@ -133,44 +134,40 @@ uint32_t SchedulerServer::receiveMessages() {
   }
 }
 
-void SchedulerServer::listenForNewConnections() {
+void SchedulerServer::ListenForNewConnections() {
   dbg(DBG_NET, "Scheduler server listening for new connections.\n");
   tcp::socket* socket = new tcp::socket(*io_service_);
   SchedulerServerConnection* server_connection =
     new SchedulerServerConnection(socket);
   acceptor_->async_accept(*server_connection->socket(),
-                          boost::bind(&SchedulerServer::handleAccept,
+                          boost::bind(&SchedulerServer::HandleAccept,
                                       this,
                                       server_connection,
                                       boost::asio::placeholders::error));
 }
 
-void SchedulerServer::handleAccept(SchedulerServerConnection* connection,
+void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
                                    const boost::system::error_code& error) {
   if (!error) {
     dbg(DBG_NET, "Scheduler accepted new connection.\n");
     boost::mutex::scoped_lock lock(map_mutex_);
     connections_[connection->id()] = connection;
-    listenForNewConnections();
+    ListenForNewConnections();
   } else {
     delete connection;
   }
 }
 
-void SchedulerServer::run() {
+void SchedulerServer::Run() {
   dbg(DBG_NET, "Running the scheduler networking server.\n");
-  initialize();
-  listenForNewConnections();
+  Initialize();
+  ListenForNewConnections();
   // receiveMessages();
   io_service_->run();
 }
 
-// connection_subscription_thread_ = new boost::thread(
-//    boost::bind(&SchedulerServer::listenForNewConnections, this));
-//  }
-
-ConnectionMap* SchedulerServer::connections() {
-  return &connections_;
+SchedulerWorkerList* SchedulerServer::workers() {
+  return &workers_;
 }
 
 SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)

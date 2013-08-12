@@ -50,6 +50,7 @@
 #include "lib/nimbus.h"
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
+#include "lib/scheduler_worker.h"
 
 namespace nimbus {
 
@@ -66,16 +67,16 @@ class SchedulerServer {
   explicit SchedulerServer(ConnectionId port_no);
   virtual ~SchedulerServer();
 
-  virtual bool initialize();
-  virtual void run();
-  virtual bool receiveCommands(SchedulerCommandList* storage,
+  virtual bool Initialize();
+  virtual void Run();
+  virtual bool ReceiveCommands(SchedulerCommandList* storage,
                                uint32_t maxCommands);
-  virtual void sendCommand(SchedulerServerConnection* connection,
+  virtual void SendCommand(SchedulerWorker* connection,
                            SchedulerCommand* command);
-  virtual void sendCommands(SchedulerServerConnection* connection,
+  virtual void SendCommands(SchedulerWorker* connection,
                             SchedulerCommandList* commands);
 
-  ConnectionMap* connections();
+  SchedulerWorkerList* workers();
 
  private:
   boost::mutex map_mutex_;
@@ -86,11 +87,14 @@ class SchedulerServer {
   Scheduler * scheduler_;
   ConnectionMap connections_;
   SchedulerCommandList received_commands_;
+  SchedulerWorkerList workers_;
 
-  void listenForNewConnections();
-  void handleAccept(SchedulerServerConnection* connection,
+  void ListenForNewConnections();
+  void HandleAccept(SchedulerServerConnection* connection,
                     const boost::system::error_code& error);
-  uint32_t receiveMessages();
+  uint32_t ReceiveMessages();
+  void AddWorker(SchedulerServerConnection* connection);
+  void MarkWorkerDead(SchedulerWorker* worker);
 };
 
 
