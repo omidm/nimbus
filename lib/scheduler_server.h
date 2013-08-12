@@ -49,9 +49,9 @@
 #include <map>
 #include "lib/nimbus.h"
 #include "lib/parser.h"
-#include "lib/scheduler_command.h"
 #include "lib/scheduler_worker.h"
 #include "lib/scheduler_server_connection.h"
+#include "lib/scheduler_command.h"
 
 namespace nimbus {
 
