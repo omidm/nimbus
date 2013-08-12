@@ -103,6 +103,13 @@ class Command {
 typedef std::vector<Command*> CommandVector;
 typedef std::list<Command*> CommandList;
 
+// class SpawnJobCommand : public Command
+
+
+
+
+
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_LIB_COMMAND_H_
