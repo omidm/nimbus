@@ -33,14 +33,13 @@
  */
 
  /*
-  * Object representation of a scheduler command. Used by workers to
-  * send commands to server and server to send commands down to workers.
+  * Object representation of a set of identifires.
   *
-  * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
-#define NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#ifndef NIMBUS_LIB_IDSET_H_
+#define NIMBUS_LIB_IDSET_H_
 
 #include <sstream> // NOLINT
 #include <string>
@@ -48,49 +47,52 @@
 #include <map>
 #include <set>
 #include "lib/parser.h"
-#include "lib/idset.h"
 
 
 namespace nimbus {
 
-class CommandParameter {
+class IDSet {
  public:
-  CommandParameter();
-  explicit CommandParameter(std::string parameter);
-  CommandParameter(std::string name, std::string value, const IDSet& set);
-  virtual ~CommandParameter();
+  IDSet();
+  explicit IDSet(std::string s);
+  virtual ~IDSet();
 
   virtual std::string toString();
-  virtual std::string name();
-  virtual std::string value();
-  virtual IDSet* identifier_set();
+  virtual void insert(int entry);
+  virtual void clear();
+  virtual int size();
+
+  typedef typename std::set<int>::iterator IDSetIter;
+
+  IDSetIter begin();
+  IDSetIter end();
 
  private:
-  std::string name_;
-  std::string value_;
-  IDSet identifier_set_;
+  typename std::set<int> identifiers_;
 };
 
-typedef std::map<std::string, CommandParameter> CommandParameterList;
 
-class SchedulerCommand {
- public:
-  SchedulerCommand();
-  explicit SchedulerCommand(std::string command);
-  SchedulerCommand(std::string name,
-                   const CommandParameterList& parameters);
-  virtual ~SchedulerCommand();
-
-  virtual void addParameter(CommandParameter parameter);
-  virtual std::string toString();
-  virtual std::string name();
-  virtual CommandParameterList* parameters();
-
- private:
-  std::string name_;
-  CommandParameterList parameters_;
-};
+// template<typename T>
+// class IDSet {
+//  public:
+//   IDSet();
+//   explicit IDSet(std::string s);
+//   virtual ~IDSet();
+//
+//   virtual std::string toString();
+//   virtual void insert(T entry);
+//   virtual void clear();
+//   virtual int size();
+//
+//   typedef typename std::set<T>::iterator IDSetIter;
+//
+//   IDSetIter begin();
+//   IDSetIter end();
+//
+//  private:
+//   typename std::set<T> identifiers_;
+// };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#endif  // NIMBUS_LIB_IDSET_H_
