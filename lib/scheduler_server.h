@@ -66,13 +66,14 @@ class SchedulerServer {
   explicit SchedulerServer(ConnectionId port_no);
   virtual ~SchedulerServer();
 
+  virtual bool initialize();
   virtual void run();
-  virtual bool receiveCommands(SchedulerCommandVector* storage,
+  virtual bool receiveCommands(SchedulerCommandList* storage,
                                uint32_t maxCommands);
   virtual void sendCommand(SchedulerServerConnection* connection,
                            SchedulerCommand* command);
   virtual void sendCommands(SchedulerServerConnection* connection,
-                            SchedulerCommandVector* commands);
+                            SchedulerCommandList* commands);
 
   ConnectionMap* connections();
 
@@ -81,9 +82,15 @@ class SchedulerServer {
   boost::thread* connection_subscription_thread_;
   ConnectionId connection_port_;
   boost::asio::io_service* io_service_;
+  tcp::acceptor* acceptor_;
   Scheduler * scheduler_;
   ConnectionMap connections_;
+  SchedulerCommandList received_commands_;
+
   void listenForNewConnections();
+  void handleAccept(SchedulerServerConnection* connection,
+                    const boost::system::error_code& error);
+  uint32_t receiveMessages();
 };
 
 
@@ -91,7 +98,6 @@ class SchedulerServerConnection {
  public:
   explicit SchedulerServerConnection(tcp::socket* sock);
   virtual ~SchedulerServerConnection();
-
 
   virtual boost::asio::streambuf* read_buffer();
   virtual tcp::socket* socket();

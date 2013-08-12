@@ -33,7 +33,7 @@
  */
 
  /*
-  * This file has the main function that launches Nimbus scheduler. 
+  * This file has the main function that launches Nimbus scheduler.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -46,6 +46,8 @@
 #include "lib/scheduler_command.h"
 #include "lib/parser.h"
 int main(int argc, char *argv[]) {
+  nimbus::nimbus_initialize();
+
   std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
   str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
   SchedulerCommand cm(str);
@@ -53,11 +55,12 @@ int main(int argc, char *argv[]) {
 
   Log log;
   log.writeToBuffer("**Start of the log file.");
-  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", DEBUG);
-  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!", DEBUG);
+  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", LOG_DEBUG);
+  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!",
+                        LOG_DEBUG);
   log.writeBufferToFile();
-  Log::printLine("Nimbus is up!", INFO);
-  Log::dbg_printLine("DEBUG information will be printed!", DEBUG);
+  Log::printLine("Nimbus is up!", LOG_INFO);
+  Log::dbg_printLine("DEBUG information will be printed!", LOG_DEBUG);
 
   SimpleScheduler * s = new SimpleScheduler(NIMBUS_SCHEDULER_PORT);
   s->run();

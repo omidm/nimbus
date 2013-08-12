@@ -44,4 +44,8 @@
 #include "lib/worker.h"
 #include "lib/log.h"
 
+namespace nimbus {
+void nimbus_initialize();
+}
+
 #endif  // NIMBUS_LIB_NIMBUS_H_

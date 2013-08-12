@@ -46,13 +46,13 @@
 #include <string>
 #include <sstream>
 #include <iostream>  // NOLINT
+#include "lib/dbg.h"
+
 
 using boost::asio::ip::tcp;
 
 SchedulerServer::SchedulerServer(ConnectionId port_no)
-  : connection_port_(port_no) {
-  io_service_ = new boost::asio::io_service();
-}
+  : connection_port_(port_no) {}
 
 SchedulerServer::~SchedulerServer() {
   boost::mutex::scoped_lock lock(map_mutex_);
@@ -63,12 +63,41 @@ SchedulerServer::~SchedulerServer() {
     delete scon;
   }
   connections_.clear();
+  delete acceptor_;
+  delete io_service_;
 }
 
+bool SchedulerServer::initialize() {
+  io_service_ = new boost::asio::io_service();
+  acceptor_ = new tcp::acceptor(*io_service_,
+                                tcp::endpoint(tcp::v4(), connection_port_));
+  return true;
+}
 
-bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
-                                      uint32_t maxCommands) {
-  // Implementation currently just receives commands from the
+bool SchedulerServer::receiveCommands(SchedulerCommandList* storage,
+                                      uint32_t maxCommands) {return true;}
+
+
+
+void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
+                                  SchedulerCommand* command) {
+  std::string msg = command->toString() + ";";
+  boost::system::error_code ignored_error;
+  boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
+                     boost::asio::transfer_all(), ignored_error);
+}
+
+void SchedulerServer::sendCommands(SchedulerServerConnection* connection,
+                                    SchedulerCommandList* commands) {
+  SchedulerCommandList::iterator iter = commands->begin();
+  for (; iter != commands->end(); ++iter) {
+    SchedulerCommand* command = *iter;
+    sendCommand(connection, command);
+  }
+}
+
+uint32_t SchedulerServer::receiveMessages() {
+    // Implementation currently just receives commands from the
   // first connection, so it can be tested. Should pull commands
   // from all connections.
   ConnectionMapIter iter = connections_.begin();
@@ -97,52 +126,48 @@ bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
     connection->set_command_num(connection->command_num() - 1);
     SchedulerCommand* command = new SchedulerCommand(commandText);
     command->set_worker_id(connection->worker_id());
-    storage->push_back(command);
+    received_commands_.push_back(command);
     return true;
   } else {
     return false;
   }
 }
 
-
-void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
-                                  SchedulerCommand* command) {
-  std::string msg = command->toString() + ";";
-  boost::system::error_code ignored_error;
-  boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
-                     boost::asio::transfer_all(), ignored_error);
-}
-
-void SchedulerServer::sendCommands(SchedulerServerConnection* connection,
-                                    SchedulerCommandVector* commands) {
-  SchedulerCommandVector::iterator iter = commands->begin();
-  for (; iter != commands->end(); ++iter) {
-    SchedulerCommand* command = *iter;
-    sendCommand(connection, command);
-  }
-}
-
 void SchedulerServer::listenForNewConnections() {
-  tcp::acceptor acceptor(
-      *io_service_, tcp::endpoint(tcp::v4(), connection_port_));
+  dbg(DBG_NET, "Scheduler server listening for new connections.\n");
+  tcp::socket* socket = new tcp::socket(*io_service_);
+  SchedulerServerConnection* server_connection =
+    new SchedulerServerConnection(socket);
+  acceptor_->async_accept(*server_connection->socket(),
+                          boost::bind(&SchedulerServer::handleAccept,
+                                      this,
+                                      server_connection,
+                                      boost::asio::placeholders::error));
+}
 
-  while (true) {
-    tcp::socket* socket = new tcp::socket(*io_service_);
-    acceptor.accept(*socket);
-    {
-      std::cout << "\nCreating new connection\n";
-      boost::mutex::scoped_lock lock(map_mutex_);
-      SchedulerServerConnection* sc =
-        new SchedulerServerConnection(socket);
-      connections_[sc->id()] = sc;
-    }
+void SchedulerServer::handleAccept(SchedulerServerConnection* connection,
+                                   const boost::system::error_code& error) {
+  if (!error) {
+    dbg(DBG_NET, "Scheduler accepted new connection.\n");
+    boost::mutex::scoped_lock lock(map_mutex_);
+    connections_[connection->id()] = connection;
+    listenForNewConnections();
+  } else {
+    delete connection;
   }
 }
 
 void SchedulerServer::run() {
-  connection_subscription_thread_ = new boost::thread(
-      boost::bind(&SchedulerServer::listenForNewConnections, this));
+  dbg(DBG_NET, "Running the scheduler networking server.\n");
+  initialize();
+  listenForNewConnections();
+  // receiveMessages();
+  io_service_->run();
 }
+
+// connection_subscription_thread_ = new boost::thread(
+//    boost::bind(&SchedulerServer::listenForNewConnections, this));
+//  }
 
 ConnectionMap* SchedulerServer::connections() {
   return &connections_;
@@ -151,7 +176,7 @@ ConnectionMap* SchedulerServer::connections() {
 SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
   :socket_(sock) {
   static ConnectionId id_assigner = 0;
-  id_ = id_assigner++;
+  id_ = ++id_assigner;
   read_buffer_ = new boost::asio::streambuf();
   command_num_ = 0;
 }

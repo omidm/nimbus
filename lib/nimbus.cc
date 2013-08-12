@@ -32,48 +32,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Nimbus scheduler. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/** Implementation of nimbus_initialize(). */
 
-#include "./simple_scheduler.h"
+#include "lib/nimbus.h"
+#include "lib/dbg.h"
 
-SimpleScheduler::SimpleScheduler(unsigned int p)
-: Scheduler(p) {
+namespace nimbus {
+void nimbus_initialize() {
+  dbg_init();
+  dbg(DBG_ALL, "Nimbus initialized.\n");
 }
-
-void SimpleScheduler::schedulerCoreProcessor() {
-  Log::dbg_printLine("Simple Scheduler Core Processor");
-
-  while (server_->connections()->begin() == server_->connections()->end()) {
-    sleep(1);
-    std::cout << "Waiting for the first worker to connect ..." << std::endl;
-  }
-
-  std::string str = "spawnjob name:main id:{0} read:{} write:{}";
-  str += " before:{} after:{} type:operation param:none";
-  SchedulerCommand cm(str);
-  std::cout << "Sending command: " << cm.toString() << std::endl;
-  server_->sendCommand(server_->connections()->begin()->second, &cm);
-  while (true) {
-    sleep(1);
-    SchedulerCommandList* storage = new SchedulerCommandList();
-    if (server_->receiveCommands(storage, (uint32_t)10)) {
-      SchedulerCommandList::iterator iter = storage->begin();
-      for (; iter != storage->end(); iter++) {
-        SchedulerCommand* comm = *iter;
-        iter = storage->erase(iter);
-        if (comm->toString() != "no-command") {
-          std::cout << "Received command: " << comm->toString() << std::endl;
-          std::cout << "Sending command: " << comm->toString() << std::endl;
-          server_->sendCommand(server_->connections()->begin()->second, comm);
-        }
-        delete comm;
-      }
-    }
-    delete storage;
-  }
 }
 

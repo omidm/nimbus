@@ -63,12 +63,8 @@ typedef struct dbg_mode {
   uint64_t d_mode;
 } nimbus_dbg_mode_names;
 
-nimbus_dbg_mode dbg_modes = 0;
-
-bool dbg_active(nimbus_dbg_mode mode) {
-  return (dbg_modes & mode) != 0;
-}
-
+void dbg(nimbus_dbg_mode mode, const char *format, ...);
+bool dbg_active(nimbus_dbg_mode mode);
 void dbg_add_mode(const char *mode);
 void dbg_add_modes(const char *modes);
 void dbg_init(void);
@@ -76,14 +72,7 @@ void dbg_help(void);
 void dbg_unset();
 void dbg_set(nimbus_dbg_mode);
 
-void dbg(nimbus_dbg_mode mode, const char *format, ...) {
-  if (dbg_active(mode)) {
-    va_list args;
-    va_start(args, format);
-    vfprintf(stdout, format, args);
-    va_end(args);
-  }
-}
+
 #else
 /* No debugging */
 
