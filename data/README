@@ -1,0 +1,10 @@
+Author: chinmayee.shah@stanford.edu
+
+* This directory contains code to represent various data types, partitions, and
+relationships between partitions and different data defined on the same domain.
+
+* The files in this directory may be included by the application developer, for
+a particular application.
+
+* Code in this directory may update attributes of data class in ../lib/data.h,
+to enable the scheduler to make better data placement decisions.
