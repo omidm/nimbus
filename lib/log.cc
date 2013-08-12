@@ -133,15 +133,15 @@ void Log::print(std::string msg, LOG_TYPE type) {
 
 std::string getTag(LOG_TYPE type) {
   switch (type) {
-    case ERROR:
+    case LOG_ERROR:
       return "ERROR: ";
-    case WARNING:
+    case LOG_WARNING:
       return "WARNING: ";
-    case INFO:
+    case LOG_INFO:
       return "INFO: ";
-    case DEBUG:
+    case LOG_DEBUG:
       return "DEBUG: ";
-    case NONE:
+    case LOG_NONE:
       return "";
     default :
       return "";

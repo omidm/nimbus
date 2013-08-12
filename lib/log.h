@@ -69,11 +69,11 @@
 
 
 enum LOG_TYPE {
-  ERROR,
-  WARNING,
-  INFO,
-  DEBUG,
-  NONE
+  LOG_ERROR,
+  LOG_WARNING,
+  LOG_INFO,
+  LOG_DEBUG,
+  LOG_NONE
 };
 
 std::string getTag(LOG_TYPE type);
@@ -95,19 +95,19 @@ class Log {
 
     void clearLogFile();
 
-    void writeToBuffer(std::string buf, LOG_TYPE type = NONE);
+    void writeToBuffer(std::string buf, LOG_TYPE type = LOG_NONE);
 
-    void writeToFile(std::string buf, LOG_TYPE type = NONE);
+    void writeToFile(std::string buf, LOG_TYPE type = LOG_NONE);
 
-    void writeToOutputStream(std::string buf, LOG_TYPE type = NONE);
+    void writeToOutputStream(std::string buf, LOG_TYPE type = LOG_NONE);
 
     void writeBufferToFile();
 
     void writeBufferToOutputStream();
 
-    static void printLine(std::string msg, LOG_TYPE type = NONE);
+    static void printLine(std::string msg, LOG_TYPE type = LOG_NONE);
 
-    static void print(std::string msg, LOG_TYPE type = NONE);
+    static void print(std::string msg, LOG_TYPE type = LOG_NONE);
 
     static void none() {}
 

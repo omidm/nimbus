@@ -59,7 +59,7 @@ void Scheduler::run() {
 void Scheduler::setupWorkerInterface() {
   loadWorkerCommands();
   server_ = new SchedulerServer(port_);
-  server_->run();
+  server_->Run();
 }
 
 void Scheduler::setupUserInterface() {

@@ -49,28 +49,28 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 void SimpleScheduler::schedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
-  while (server_->connections()->begin() == server_->connections()->end()) {
+  while (server_->workers()->begin() == server_->workers()->end()) {
     sleep(1);
-    std::cout << "Waiting for the first worker to cennect ..." << std::endl;
+    std::cout << "Waiting for the first worker to connect ..." << std::endl;
   }
 
   std::string str = "spawnjob name:main id:{0} read:{} write:{}";
   str += " before:{} after:{} type:operation param:none";
   SchedulerCommand cm(str);
   std::cout << "Sending command: " << cm.toString() << std::endl;
-  server_->sendCommand(server_->connections()->begin()->second, &cm);
+  server_->SendCommand(*(server_->workers()->begin()), &cm);
   while (true) {
     sleep(1);
-    SchedulerCommandVector* storage = new SchedulerCommandVector();
-    if (server_->receiveCommands(storage, (uint32_t)10)) {
-      SchedulerCommandVector::iterator iter = storage->begin();
+    SchedulerCommandList* storage = new SchedulerCommandList();
+    if (server_->ReceiveCommands(storage, (uint32_t)10)) {
+      SchedulerCommandList::iterator iter = storage->begin();
       for (; iter != storage->end(); iter++) {
         SchedulerCommand* comm = *iter;
         iter = storage->erase(iter);
         if (comm->toString() != "no-command") {
           std::cout << "Received command: " << comm->toString() << std::endl;
           std::cout << "Sending command: " << comm->toString() << std::endl;
-          server_->sendCommand(server_->connections()->begin()->second, comm);
+          server_->SendCommand(*(server_->workers()->begin()), comm);
         }
         delete comm;
       }

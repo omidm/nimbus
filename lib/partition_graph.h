@@ -33,36 +33,38 @@
  */
 
  /*
-  * This file has the main function that launches Nimbus scheduler.
+  * PartitionGraph maintains the partitions and relationships between partitions
+  * for a simulation domain (uniform grid/ mesh/ tree). A vertex in the
+  * partition represents a partition. A vertex has associated sets of data
+  * partitions that should preferably stay together.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * PartitionGraph represents the class structure common to different data
+  * types, and flat data structures/ trees may implement their own
+  * PartitionGraph in ../data, that derive from the class defined here.
+  *
+  * PartitionGraph may be used by the scheduler to make good decisions about
+  * data placement.
+  *
+  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#define DEBUG_MODE
+#ifndef NIMBUS_LIB_PARTITION_GRAPH_H_
+#define NIMBUS_LIB_PARTITION_GRAPH_H_
 
-#include <iostream> // NOLINT
-#include "./simple_scheduler.h"
-#include "lib/nimbus.h"
-#include "lib/scheduler_command.h"
-#include "lib/parser.h"
-int main(int argc, char *argv[]) {
-  nimbus::nimbus_initialize();
+#include <set>
 
-  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
-  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
-  SchedulerCommand cm(str);
-  std::cout << cm.toString() << std::endl;
+namespace nimbus {
+    class Vertex;
+    typedef std::set<Vertex*> Vertices;
 
-  Log log;
-  log.writeToBuffer("**Start of the log file.");
-  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", LOG_DEBUG);
-  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!",
-                        LOG_DEBUG);
-  log.writeBufferToFile();
-  Log::printLine("Nimbus is up!", LOG_INFO);
-  Log::dbg_printLine("DEBUG information will be printed!", LOG_DEBUG);
+    class PartitionGraph {
+        public:
+            PartitionGraph();
 
-  SimpleScheduler * s = new SimpleScheduler(NIMBUS_SCHEDULER_PORT);
-  s->run();
-}
+        private:
+            Vertices main_nodes_;
+            Vertices ghost_nodes_;
+    };
+}  // namespace nimbus
 
+#endif  // NIMBUS_LIB_PARTITION_GRAPH_H_

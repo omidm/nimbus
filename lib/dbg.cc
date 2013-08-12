@@ -46,6 +46,21 @@ static nimbus_dbg_mode_names dbg_nametab[] = {
   DBG_NAMETAB
 };
 
+nimbus_dbg_mode dbg_modes = 0;
+
+void dbg(nimbus_dbg_mode mode, const char *format, ...) {
+  if (dbg_active(mode)) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(stdout, format, args);
+    va_end(args);
+  }
+}
+
+bool dbg_active(nimbus_dbg_mode mode) {
+  return (dbg_modes & mode) != 0;
+}
+
 void dbg_unset() {
   dbg_modes = 0;
 }

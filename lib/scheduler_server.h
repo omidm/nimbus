@@ -50,6 +50,7 @@
 #include "lib/nimbus.h"
 #include "lib/parser.h"
 #include "lib/command.h"
+#include "lib/scheduler_worker.h"
 
 namespace nimbus {
 
@@ -66,24 +67,34 @@ class SchedulerServer {
   explicit SchedulerServer(ConnectionId port_no);
   virtual ~SchedulerServer();
 
-  virtual void run();
-  virtual bool receiveCommands(CommandVector* storage,
+  virtual bool Initialize();
+  virtual void Run();
+  virtual bool ReceiveCommands(CommandList* storage,
                                uint32_t maxCommands);
-  virtual void sendCommand(SchedulerServerConnection* connection,
+  virtual void SendCommand(SchedulerWorker* connection,
                            Command* command);
-  virtual void sendCommands(SchedulerServerConnection* connection,
-                            CommandVector* commands);
+  virtual void SendCommands(SchedulerWorker* connection,
+                            CommandList* commands);
 
-  ConnectionMap* connections();
+  SchedulerWorkerList* workers();
 
  private:
   boost::mutex map_mutex_;
   boost::thread* connection_subscription_thread_;
   ConnectionId connection_port_;
   boost::asio::io_service* io_service_;
+  tcp::acceptor* acceptor_;
   Scheduler * scheduler_;
   ConnectionMap connections_;
-  void listenForNewConnections();
+  CommandList received_commands_;
+  SchedulerWorkerList workers_;
+
+  void ListenForNewConnections();
+  void HandleAccept(SchedulerServerConnection* connection,
+                    const boost::system::error_code& error);
+  uint32_t ReceiveMessages();
+  void AddWorker(SchedulerServerConnection* connection);
+  void MarkWorkerDead(SchedulerWorker* worker);
 };
 
 
@@ -91,7 +102,6 @@ class SchedulerServerConnection {
  public:
   explicit SchedulerServerConnection(tcp::socket* sock);
   virtual ~SchedulerServerConnection();
-
 
   virtual boost::asio::streambuf* read_buffer();
   virtual tcp::socket* socket();
