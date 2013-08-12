@@ -33,45 +33,66 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * Object representation of a set of identifires.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_PARSER_H_
-#define NIMBUS_LIB_PARSER_H_
+#ifndef NIMBUS_LIB_IDSET_H_
+#define NIMBUS_LIB_IDSET_H_
 
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
+#include <sstream> // NOLINT
 #include <string>
 #include <vector>
+#include <map>
 #include <set>
+#include "lib/parser.h"
+
 
 namespace nimbus {
-typedef std::set<std::string> CmSet;
 
-void parseCommand(const std::string& string,
-                  const CmSet& commandSet,
-                  std::string& command,
-                  std::vector<int>& arguments);
+class IDSet {
+ public:
+  IDSet();
+  explicit IDSet(std::string s);
+  virtual ~IDSet();
 
-int parseCommandFile(const std::string& fname,
-                     CmSet& cs);
+  virtual std::string toString();
+  virtual void insert(int entry);
+  virtual void clear();
+  virtual int size();
 
-void parseCommandFromString(const std::string& input,
-    std::string& command,
-    std::vector<std::string>& parameters);
+  typedef typename std::set<int>::iterator IDSetIter;
 
-void parseParameterFromString(const std::string& input, std::string& tag,
-    std::string& args, std::string& string_set);
+  IDSetIter begin();
+  IDSetIter end();
 
-void parseIDSetFromString(const std::string& input, std::set<int>& set);
+ private:
+  typename std::set<int> identifiers_;
+};
 
-bool isSet(const std::string& tag);
 
-int countOccurence(std::string str, std::string substr);
+// template<typename T>
+// class IDSet {
+//  public:
+//   IDSet();
+//   explicit IDSet(std::string s);
+//   virtual ~IDSet();
+//
+//   virtual std::string toString();
+//   virtual void insert(T entry);
+//   virtual void clear();
+//   virtual int size();
+//
+//   typedef typename std::set<T>::iterator IDSetIter;
+//
+//   IDSetIter begin();
+//   IDSetIter end();
+//
+//  private:
+//   typename std::set<T> identifiers_;
+// };
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_PARSER_H_
+
+#endif  // NIMBUS_LIB_IDSET_H_

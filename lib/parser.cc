@@ -42,8 +42,7 @@
 #include <stdint.h>
 #include <boost/tokenizer.hpp>
 
-// using namespace nimbus; // NOLINT
-
+namespace nimbus {
 void parseCommand(const std::string& str, const CmSet& cms,
                   std::string& cm, std::vector<int>& args) {
   cm.clear();
@@ -147,5 +146,5 @@ bool isSet(const std::string& str) {
     return false;
   return true;
 }
-
+}  // namespace nimbus
 

@@ -50,29 +50,10 @@
 #include <map>
 #include <set>
 #include "lib/parser.h"
+#include "lib/idset.h"
 #include "lib/nimbus_types.h"
 
 namespace nimbus {
-
-class IDSet {
- public:
-  IDSet();
-  explicit IDSet(std::string s);
-  virtual ~IDSet();
-
-  virtual std::string toString();
-  virtual void insert(int n);
-  virtual void clear();
-  virtual int size();
-
-  typedef std::set<int>::iterator IDSetIter;
-
-  IDSetIter begin();
-  IDSetIter end();
-
- private:
-  std::set<int> identifiers_;
-};
 
 class CommandParameter {
  public:
