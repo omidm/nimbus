@@ -46,7 +46,7 @@
 #include <set>
 #include <map>
 #include "lib/data.h"
-#include "lib/scheduler_command.h"
+#include "lib/command.h"
 
 namespace nimbus {
 

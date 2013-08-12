@@ -33,14 +33,17 @@
  */
 
  /*
-  * Object representation of a scheduler command. Used by workers to
-  * send commands to server and server to send commands down to workers.
+  * Object representation of a command. Used by workers to send commands to
+  * server and server to send commands down to workers. There is a base class
+  * Command to define a command in general. Children of this superclass
+  * implement each of the commands used in Nimbus. 
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
-#define NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#ifndef NIMBUS_LIB_COMMAND_H_
+#define NIMBUS_LIB_COMMAND_H_
 
 
 #include <sstream> // NOLINT
@@ -75,13 +78,13 @@ class CommandParameter {
 
 typedef std::map<std::string, CommandParameter> CommandParameterList;
 
-class SchedulerCommand {
+class Command {
  public:
-  SchedulerCommand();
-  explicit SchedulerCommand(std::string command);
-  SchedulerCommand(std::string name,
+  Command();
+  explicit Command(std::string command);
+  Command(std::string name,
                    const CommandParameterList& parameters);
-  virtual ~SchedulerCommand();
+  virtual ~Command();
 
   virtual void addParameter(CommandParameter parameter);
   virtual std::string toString();
@@ -97,9 +100,9 @@ class SchedulerCommand {
   worker_id_t worker_id_;
 };
 
-typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
-typedef std::list<SchedulerCommand*> SchedulerCommandList;
+typedef std::vector<Command*> CommandVector;
+typedef std::list<Command*> CommandList;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#endif  // NIMBUS_LIB_COMMAND_H_

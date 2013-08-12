@@ -66,7 +66,7 @@ SchedulerServer::~SchedulerServer() {
 }
 
 
-bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
+bool SchedulerServer::receiveCommands(CommandVector* storage,
                                       uint32_t maxCommands) {
   // Implementation currently just receives commands from the
   // first connection, so it can be tested. Should pull commands
@@ -95,7 +95,7 @@ bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
     std::string commandText;
     std::getline(input, commandText, ';');
     connection->set_command_num(connection->command_num() - 1);
-    SchedulerCommand* command = new SchedulerCommand(commandText);
+    Command* command = new Command(commandText);
     command->set_worker_id(connection->worker_id());
     storage->push_back(command);
     return true;
@@ -106,7 +106,7 @@ bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
 
 
 void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
-                                  SchedulerCommand* command) {
+                                  Command* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
@@ -114,10 +114,10 @@ void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
 }
 
 void SchedulerServer::sendCommands(SchedulerServerConnection* connection,
-                                    SchedulerCommandVector* commands) {
-  SchedulerCommandVector::iterator iter = commands->begin();
+                                    CommandVector* commands) {
+  CommandVector::iterator iter = commands->begin();
   for (; iter != commands->end(); ++iter) {
-    SchedulerCommand* command = *iter;
+    Command* command = *iter;
     sendCommand(connection, command);
   }
 }

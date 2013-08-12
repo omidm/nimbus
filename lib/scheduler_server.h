@@ -49,7 +49,7 @@
 #include <map>
 #include "lib/nimbus.h"
 #include "lib/parser.h"
-#include "lib/scheduler_command.h"
+#include "lib/command.h"
 
 namespace nimbus {
 
@@ -67,12 +67,12 @@ class SchedulerServer {
   virtual ~SchedulerServer();
 
   virtual void run();
-  virtual bool receiveCommands(SchedulerCommandVector* storage,
+  virtual bool receiveCommands(CommandVector* storage,
                                uint32_t maxCommands);
   virtual void sendCommand(SchedulerServerConnection* connection,
-                           SchedulerCommand* command);
+                           Command* command);
   virtual void sendCommands(SchedulerServerConnection* connection,
-                            SchedulerCommandVector* commands);
+                            CommandVector* commands);
 
   ConnectionMap* connections();
 

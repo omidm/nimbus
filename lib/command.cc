@@ -33,20 +33,24 @@
  */
 
  /*
-  * A Nimbus scheduler command.
+  * Object representation of a command. Used by workers to send commands to
+  * server and server to send commands down to workers. There is a base class
+  * Command to define a command in general. Children of this superclass
+  * implement each of the commands used in Nimbus. 
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler_command.h"
+#include "lib/command.h"
 
 using namespace nimbus; // NOLINT
 
-SchedulerCommand::SchedulerCommand() {
+Command::Command() {
   name_ = "no-op";
 }
 
-SchedulerCommand::SchedulerCommand(std::string n,
+Command::Command(std::string n,
     const CommandParameterList& p) {
   name_ = n;
   CommandParameterList::const_iterator  iter = p.begin();
@@ -54,7 +58,7 @@ SchedulerCommand::SchedulerCommand(std::string n,
     addParameter(iter->second);
 }
 
-SchedulerCommand::SchedulerCommand(std::string command) {
+Command::Command(std::string command) {
   std::vector<std::string> string_params;
   parseCommandFromString(command, name_, string_params);
   std::vector<std::string>::iterator  iter = string_params.begin();
@@ -62,13 +66,13 @@ SchedulerCommand::SchedulerCommand(std::string command) {
     addParameter(CommandParameter(*iter));
 }
 
-SchedulerCommand::~SchedulerCommand() {}
+Command::~Command() {}
 
-void SchedulerCommand::addParameter(CommandParameter cm) {
+void Command::addParameter(CommandParameter cm) {
   parameters_[cm.name()] = cm;
 }
 
-std::string SchedulerCommand::toString() {
+std::string Command::toString() {
   std::string rval = name_;
   CommandParameterList::iterator iter = parameters_.begin();
   for (; iter != parameters_.end(); ++iter) {
@@ -78,19 +82,19 @@ std::string SchedulerCommand::toString() {
   return rval;
 }
 
-std::string SchedulerCommand::name() {
+std::string Command::name() {
   return name_;
 }
 
-CommandParameterList* SchedulerCommand::parameters() {
+CommandParameterList* Command::parameters() {
   return &parameters_;
 }
 
-worker_id_t SchedulerCommand::worker_id() {
+worker_id_t Command::worker_id() {
   return worker_id_;
 }
 
-void SchedulerCommand::set_worker_id(worker_id_t id) {
+void Command::set_worker_id(worker_id_t id) {
   worker_id_ = id;
 }
 

@@ -69,7 +69,7 @@ SchedulerClient::SchedulerClient(uint16_t port_no)
 
 SchedulerClient::~SchedulerClient() {}
 
-SchedulerCommand* SchedulerClient::receiveCommand() {
+Command* SchedulerClient::receiveCommand() {
   // boost::asio::read_until(*socket, *read_buffer, ';');
   // std::streamsize size = read_buffer->in_avail();
 
@@ -89,14 +89,14 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     std::string command;
     std::getline(input, command, ';');
     command_num_--;
-    SchedulerCommand* com = new SchedulerCommand(command);
+    Command* com = new Command(command);
     return com;
   } else {
-    return new SchedulerCommand("no-command");
+    return new Command("no-command");
   }
 }
 
-void SchedulerClient::sendCommand(SchedulerCommand* command) {
+void SchedulerClient::sendCommand(Command* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
   boost::asio::write(*socket_, boost::asio::buffer(msg),

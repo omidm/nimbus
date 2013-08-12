@@ -46,7 +46,7 @@
 #include <vector>
 #include <map>
 #include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
+#include "lib/command.h"
 #include "lib/cluster.h"
 #include "lib/data.h"
 #include "lib/job.h"
@@ -65,7 +65,7 @@ class Worker {
 
   virtual void run();
   virtual void workerCoreProcessor() {}
-  virtual void processSchedulerCommand(SchedulerCommand* command);
+  virtual void processCommand(Command* command);
 
  protected:
   SchedulerClient* client_;
