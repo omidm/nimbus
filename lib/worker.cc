@@ -56,7 +56,7 @@ void Worker::run() {
   workerCoreProcessor();
 }
 
-void Worker::processCommand(Command* cm) {
+void Worker::processSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
   if (command_name == "spawnjob") {

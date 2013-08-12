@@ -75,7 +75,7 @@ void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
   str = str + " read:" + read.toString();
   str = str + " write:" + write.toString();
   str = str + " param:" + params;
-  Command cm(str);
+  SchedulerCommand cm(str);
   client_->sendCommand(&cm);
 }
 
@@ -85,7 +85,7 @@ void Application::defineData(std::string name, int id) {
   std::string str = "definedata";
   str = str + " name:" + name;
   str = str + " id:" + idset.toString();
-  Command cm(str);
+  SchedulerCommand cm(str);
   client_->sendCommand(&cm);
 }
 

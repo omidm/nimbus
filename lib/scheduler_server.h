@@ -49,8 +49,8 @@
 #include <map>
 #include "lib/nimbus.h"
 #include "lib/parser.h"
-#include "lib/command.h"
 #include "lib/scheduler_worker.h"
+#include "lib/scheduler_command.h"
 
 namespace nimbus {
 
@@ -69,12 +69,12 @@ class SchedulerServer {
 
   virtual bool Initialize();
   virtual void Run();
-  virtual bool ReceiveCommands(CommandList* storage,
+  virtual bool ReceiveCommands(SchedulerCommandList* storage,
                                uint32_t maxCommands);
   virtual void SendCommand(SchedulerWorker* connection,
-                           Command* command);
+                           SchedulerCommand* command);
   virtual void SendCommands(SchedulerWorker* connection,
-                            CommandList* commands);
+                            SchedulerCommandList* commands);
 
   SchedulerWorkerList* workers();
 
@@ -86,7 +86,7 @@ class SchedulerServer {
   tcp::acceptor* acceptor_;
   Scheduler * scheduler_;
   ConnectionMap connections_;
-  CommandList received_commands_;
+  SchedulerCommandList received_commands_;
   SchedulerWorkerList workers_;
 
   void ListenForNewConnections();

@@ -45,7 +45,7 @@
 #include <boost/asio.hpp>
 #include <map>
 #include "lib/parser.h"
-#include "lib/command.h"
+#include "lib/scheduler_command.h"
 
 namespace nimbus {
 
@@ -59,8 +59,8 @@ class SchedulerClient {
   virtual ~SchedulerClient();
 
   virtual void run();
-  virtual Command* receiveCommand();
-  virtual void sendCommand(Command* command);
+  virtual SchedulerCommand* receiveCommand();
+  virtual void sendCommand(SchedulerCommand* command);
 
  private:
   ConnectionId connection_port_no_;

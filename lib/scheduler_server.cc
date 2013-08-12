@@ -74,13 +74,13 @@ bool SchedulerServer::Initialize() {
   return true;
 }
 
-bool SchedulerServer::ReceiveCommands(CommandList* storage,
+bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
                                       uint32_t maxCommands) {return true;}
 
 
 
 void SchedulerServer::SendCommand(SchedulerWorker* worker,
-                                  Command* command) {
+                                  SchedulerCommand* command) {
   SchedulerServerConnection* connection = worker->connection();
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
@@ -89,10 +89,10 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
 }
 
 void SchedulerServer::SendCommands(SchedulerWorker* worker,
-                                    CommandList* commands) {
-  CommandList::iterator iter = commands->begin();
+                                    SchedulerCommandList* commands) {
+  SchedulerCommandList::iterator iter = commands->begin();
   for (; iter != commands->end(); ++iter) {
-    Command* command = *iter;
+    SchedulerCommand* command = *iter;
     SendCommand(worker, command);
   }
 }
@@ -125,7 +125,7 @@ uint32_t SchedulerServer::ReceiveMessages() {
     std::string commandText;
     std::getline(input, commandText, ';');
     connection->set_command_num(connection->command_num() - 1);
-    Command* command = new Command(commandText);
+    SchedulerCommand* command = new SchedulerCommand(commandText);
     command->set_worker_id(connection->worker_id());
     received_commands_.push_back(command);
     return true;

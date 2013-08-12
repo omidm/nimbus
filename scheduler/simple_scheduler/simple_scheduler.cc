@@ -56,16 +56,16 @@ void SimpleScheduler::schedulerCoreProcessor() {
 
   std::string str = "spawnjob name:main id:{0} read:{} write:{}";
   str += " before:{} after:{} type:operation param:none";
-  Command cm(str);
+  SchedulerCommand cm(str);
   std::cout << "Sending command: " << cm.toString() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), &cm);
   while (true) {
     sleep(1);
-    CommandList* storage = new CommandList();
+    SchedulerCommandList* storage = new SchedulerCommandList();
     if (server_->ReceiveCommands(storage, (uint32_t)10)) {
-      CommandList::iterator iter = storage->begin();
+      SchedulerCommandList::iterator iter = storage->begin();
       for (; iter != storage->end(); iter++) {
-        Command* comm = *iter;
+        SchedulerCommand* comm = *iter;
         iter = storage->erase(iter);
         if (comm->toString() != "no-command") {
           std::cout << "Received command: " << comm->toString() << std::endl;

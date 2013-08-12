@@ -43,14 +43,14 @@
 #include <iostream> // NOLINT
 #include "./simple_scheduler.h"
 #include "lib/nimbus.h"
-#include "lib/command.h"
+#include "lib/scheduler_command.h"
 #include "lib/parser.h"
 int main(int argc, char *argv[]) {
   nimbus::nimbus_initialize();
 
   std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
   str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
-  Command cm(str);
+  SchedulerCommand cm(str);
   std::cout << cm.toString() << std::endl;
 
   Log log;
