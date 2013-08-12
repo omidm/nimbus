@@ -33,9 +33,10 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol. 
+  * Server side of the Nimbus scheduler protocol.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 
@@ -66,9 +67,12 @@ class SchedulerServer {
   virtual ~SchedulerServer();
 
   virtual void run();
-  virtual SchedulerCommand* receiveCommand(SchedulerServerConnection* conn);
+  virtual bool receiveCommands(SchedulerCommandVector* storage,
+                               uint32_t maxCommands);
   virtual void sendCommand(SchedulerServerConnection* connection,
                            SchedulerCommand* command);
+  virtual void sendCommands(SchedulerServerConnection* connection,
+                            SchedulerCommandVector* commands);
 
   ConnectionMap* connections();
 
@@ -86,20 +90,24 @@ class SchedulerServer {
 class SchedulerServerConnection {
  public:
   explicit SchedulerServerConnection(tcp::socket* sock);
-  ~SchedulerServerConnection();
+  virtual ~SchedulerServerConnection();
 
 
-  boost::asio::streambuf* read_buffer();
-  tcp::socket* socket();
-  int command_num();
-  void set_command_num(int n);
-  ConnectionId id();
+  virtual boost::asio::streambuf* read_buffer();
+  virtual tcp::socket* socket();
+  virtual int command_num();
+  virtual void set_command_num(int n);
+  virtual ConnectionId id();
+
+  virtual worker_id_t worker_id();
+  virtual void set_worker_id(worker_id_t id);
 
  private:
   boost::asio::streambuf* read_buffer_;
   tcp::socket* socket_;
   int command_num_;
   ConnectionId id_;
+  worker_id_t worker_id_;
 };
 
 }  // namespace nimbus

@@ -33,9 +33,10 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol. 
+  * Server side of the Nimbus scheduler protocol.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "lib/scheduler_server.h"
@@ -65,44 +66,61 @@ SchedulerServer::~SchedulerServer() {
 }
 
 
-SchedulerCommand* SchedulerServer::receiveCommand(SchedulerServerConnection* conn) { // NOLINT
-  // boost::asio::read_until(*(conn->socket), *(conn->read_buffer), ';');
-  // std::streamsize size = conn->read_buffer->in_avail();
-  // boost::array<char, 128> buf;
-  // boost::asio::read(*(conn->socket), boost::asio::buffer(buf, b));
+bool SchedulerServer::receiveCommands(SchedulerCommandVector* storage,
+                                      uint32_t maxCommands) {
+  // Implementation currently just receives commands from the
+  // first connection, so it can be tested. Should pull commands
+  // from all connections.
+  ConnectionMapIter iter = connections_.begin();
+  if (iter == connections_.end()) {
+    return false;  // No active connections
+  }
 
+  SchedulerServerConnection* connection = iter->second;
   boost::system::error_code ignored_error;
-  int bytes_available =conn->socket()->available(ignored_error);
+  int bytes_available = connection->socket()->available(ignored_error);
 
   boost::asio::streambuf::mutable_buffers_type bufs =
-    conn->read_buffer()->prepare(bytes_available);
-  std::size_t bytes_read = conn->socket()->receive(bufs);
-  conn->read_buffer()->commit(bytes_read);
+    connection->read_buffer()->prepare(bytes_available);
+  std::size_t bytes_read = connection->socket()->receive(bufs);
+  connection->read_buffer()->commit(bytes_read);
 
   std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  conn->set_command_num(conn->command_num() + countOccurence(str, ";"));
+  command_id_t num = connection->command_num() + countOccurence(str, ";");
+  connection->set_command_num(num);
 
-  if (conn->command_num() > 0) {
-    std::istream input(conn->read_buffer());
-    std::string command;
-    std::getline(input, command, ';');
-    conn->set_command_num(conn->command_num() - 1);
-    SchedulerCommand* com = new SchedulerCommand(command);
-    return com;
+  // Why is this a conditional?
+  if (connection->command_num() > 0) {
+    std::istream input(connection->read_buffer());
+    std::string commandText;
+    std::getline(input, commandText, ';');
+    connection->set_command_num(connection->command_num() - 1);
+    SchedulerCommand* command = new SchedulerCommand(commandText);
+    command->set_worker_id(connection->worker_id());
+    storage->push_back(command);
+    return true;
   } else {
-    return new SchedulerCommand("no-command");
+    return false;
   }
 }
 
 
-void SchedulerServer::sendCommand(SchedulerServerConnection* conn,
-    SchedulerCommand* command) {
+void SchedulerServer::sendCommand(SchedulerServerConnection* connection,
+                                  SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
-  boost::asio::write(*(conn->socket()), boost::asio::buffer(msg),
-      boost::asio::transfer_all(), ignored_error);
+  boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
+                     boost::asio::transfer_all(), ignored_error);
 }
 
+void SchedulerServer::sendCommands(SchedulerServerConnection* connection,
+                                    SchedulerCommandVector* commands) {
+  SchedulerCommandVector::iterator iter = commands->begin();
+  for (; iter != commands->end(); ++iter) {
+    SchedulerCommand* command = *iter;
+    sendCommand(connection, command);
+  }
+}
 
 void SchedulerServer::listenForNewConnections() {
   tcp::acceptor acceptor(
@@ -157,6 +175,14 @@ int SchedulerServerConnection::command_num() {
 
 void SchedulerServerConnection::set_command_num(int n) {
   command_num_ = n;
+}
+
+worker_id_t SchedulerServerConnection::worker_id() {
+  return worker_id_;
+}
+
+void SchedulerServerConnection::set_worker_id(worker_id_t w) {
+  worker_id_ = w;
 }
 
 ConnectionId SchedulerServerConnection::id() {
