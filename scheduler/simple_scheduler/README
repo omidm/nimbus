@@ -1,0 +1,96 @@
+
+Author: Omid Mashayekhi <omidm@stanford.edu>
+
+====================
+**What does this do:
+====================
+
+This is a simple scheduler that runs an application over a single worker. It
+waits for the first worker to connect, then asks that worker to run the "main"
+job of the application. Then, the "main" job of the application (ie.g. 1d-stencil)
+would spawn new jobs and define new data objects. Scheduler would create all
+data objects on that single worker and runs all the jobs over there. By this
+test we are checking following functionalities:
+
+1. The whole abstraction of the system is sound.
+
+2. The scheduler_server and scheduler_client interfaces work properly. They can
+exchange the commands through the network.
+
+3. The name mapping in the application works and the job and data tables are
+registered properly.
+
+4. Commands are parsed and interpreted as intended.
+
+3. The job and data mappings are sound.
+
+====================
+**How to run it:
+====================
+
+1. issue make
+
+2. run ./scheduler.sh
+
+3. launch the ./worker.sh from simple_worker directory.
+
+
+====================
+**Expected result:
+====================
+
+You should expect to see the following exchange of commands between scheduler
+and worker.
+
+createjob after:{1,2,3} before:{} id:{0} name:main param:t=20,g=6 read:{1,2} type:operation write:{1,2}
+INFO: Nimbus is up!
+DEBUG: DEBUG information will be printed!
+Simple Scheduler Core Processor
+command: 
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+Waiting for the first worker to cennect ...
+
+Creating new connection
+Waiting for the first worker to cennect ...
+Sending command: spawnjob after:{} before:{} id:{0} name:main param:none read:{} type:operation write:{}
+Received command: definedata id:{1} name:mainLeft
+Sending command: definedata id:{1} name:mainLeft
+Received command: definedata id:{2} name:mainRight
+Sending command: definedata id:{2} name:mainRight
+Received command: definedata id:{3} name:ghostLeft
+Sending command: definedata id:{3} name:ghostLeft
+Received command: definedata id:{4} name:ghostRight
+Sending command: definedata id:{4} name:ghostRight
+Received command: spawnjob after:{5} before:{} id:{1} name:init param:none read:{1} write:{1}
+Sending command: spawnjob after:{5} before:{} id:{1} name:init param:none read:{1} write:{1}
+Received command: spawnjob after:{5} before:{} id:{2} name:init param:none read:{2} write:{2}
+Sending command: spawnjob after:{5} before:{} id:{2} name:init param:none read:{2} write:{2}
+Received command: spawnjob after:{5} before:{} id:{3} name:init param:none read:{3} write:{3}
+Sending command: spawnjob after:{5} before:{} id:{3} name:init param:none read:{3} write:{3}
+Received command: spawnjob after:{5} before:{} id:{4} name:init param:none read:{4} write:{4}
+Sending command: spawnjob after:{5} before:{} id:{4} name:init param:none read:{4} write:{4}
+Received command: spawnjob after:{} before:{1,2,3,4} id:{5} name:forLoop param:none read:{} write:{}
+Sending command: spawnjob after:{} before:{1,2,3,4} id:{5} name:forLoop param:none read:{} write:{}
+Received command: spawnjob after:{8,9} before:{} id:{6} name:updateLeft param:none read:{1} write:{3}
+Sending command: spawnjob after:{8,9} before:{} id:{6} name:updateLeft param:none read:{1} write:{3}
+Received command: spawnjob after:{8,9} before:{} id:{7} name:updateRight param:none read:{2} write:{4}
+Sending command: spawnjob after:{8,9} before:{} id:{7} name:updateRight param:none read:{2} write:{4}
+Received command: spawnjob after:{10} before:{6,7} id:{8} name:applyLeft param:none read:{1,4} write:{1}
+Sending command: spawnjob after:{10} before:{6,7} id:{8} name:applyLeft param:none read:{1,4} write:{1}
+Received command: spawnjob after:{10} before:{6,7} id:{9} name:applyRight param:none read:{2,3} write:{2}
+Sending command: spawnjob after:{10} before:{6,7} id:{9} name:applyRight param:none read:{2,3} write:{2}
+Received command: spawnjob after:{} before:{8} id:{11} name:print param:none read:{1} write:{}
+Sending command: spawnjob after:{} before:{8} id:{11} name:print param:none read:{1} write:{}
+Received command: spawnjob after:{} before:{9} id:{12} name:print param:none read:{2} write:{}
+Sending command: spawnjob after:{} before:{9} id:{12} name:print param:none read:{2} write:{}

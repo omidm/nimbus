@@ -33,7 +33,8 @@
  */
 
  /*
-  * A Nimbus worker. 
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */

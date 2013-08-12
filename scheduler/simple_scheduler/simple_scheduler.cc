@@ -33,7 +33,9 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * Simple Nimbus scheduler that is supposed to run the application over a
+  * single worker. It is intended to check the command exchange interface, the
+  * mapping logics and generally the system abstraction soundness.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
