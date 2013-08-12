@@ -33,46 +33,58 @@
  */
 
  /*
-  * Scheduler abstraction of a worker.
+  * A Nimbus scheduler's abstraction of a worker.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_WORKER_H_
-#define NIMBUS_LIB_SCHEDULER_WORKER_H_
+#include "lib/scheduler_worker.h"
+#include "lib/dbg.h"
 
-#include <list>
-#include "lib/nimbus.h"
 namespace nimbus {
 
-class SchedulerServerConnection;
-class Application;
+#define WORKER_BUFSIZE 10240
 
-class SchedulerWorker {
- public:
-  SchedulerWorker(worker_id_t id,
-                  SchedulerServerConnection* conn,
-                  Application* app);
-  virtual ~SchedulerWorker();
+SchedulerWorker::SchedulerWorker(worker_id_t id,
+                                   SchedulerServerConnection* conn,
+                                   Application* app) {
+  worker_id_ = id;
+  connection_ = conn;
+  application_ = app;
+  is_alive_ = true;
+  read_buffer_ = new uint8_t[WORKER_BUFSIZE];
+}
 
-  virtual worker_id_t worker_id();
-  virtual SchedulerServerConnection* connection();
-  virtual Application* application();
-  virtual bool is_alive();
-  virtual void MarkDead();
-  virtual uint8_t* read_buffer();
-  virtual uint32_t read_buffer_length();
+SchedulerWorker::~SchedulerWorker() {
+  // delete connection_;
+}
 
- private:
-  worker_id_t worker_id_;
-  SchedulerServerConnection* connection_;
-  Application* application_;
-  bool is_alive_;
-  uint8_t* read_buffer_;
-};
+worker_id_t SchedulerWorker::worker_id() {
+  return worker_id_;
+}
 
-typedef std::list<SchedulerWorker*> SchedulerWorkerList;
+SchedulerServerConnection* SchedulerWorker::connection() {
+  return connection_;
+}
+
+Application* SchedulerWorker::application() {
+  return application_;
+}
+
+bool SchedulerWorker::is_alive() {
+  return is_alive_;
+}
+
+void SchedulerWorker::MarkDead() {
+  is_alive_ = false;
+}
+
+uint8_t* SchedulerWorker::read_buffer() {
+  return read_buffer_;
+}
+
+uint32_t SchedulerWorker::read_buffer_length() {
+  return WORKER_BUFSIZE;
+}
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_LIB_SCHEDULER_WORKER_H_

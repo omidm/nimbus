@@ -51,18 +51,24 @@
 
 using boost::asio::ip::tcp;
 
+#define BUF_SIZE 102400
+namespace nimbus {
+
 SchedulerServer::SchedulerServer(ConnectionId port_no)
   : connection_port_(port_no) {}
 
 SchedulerServer::~SchedulerServer() {
-  boost::mutex::scoped_lock lock(map_mutex_);
-  for (ConnectionMapIter iter = connections_.begin();
-       iter != connections_.end();
-       ++iter)   {
-    SchedulerServerConnection* scon = iter->second;
-    delete scon;
+  {
+    boost::mutex::scoped_lock lock(worker_mutex_);
+    for (SchedulerWorkerList::iterator iter = workers_.begin();
+         iter != workers_.end();
+         ++iter)   {
+      SchedulerWorker* worker = *iter;
+      worker->MarkDead();
+      delete worker;
+    }
+    workers_.clear();
   }
-  connections_.clear();
   delete acceptor_;
   delete io_service_;
 }
@@ -97,43 +103,6 @@ void SchedulerServer::SendCommands(SchedulerWorker* worker,
   }
 }
 
-uint32_t SchedulerServer::ReceiveMessages() {
-    // Implementation currently just receives commands from the
-  // first connection, so it can be tested. Should pull commands
-  // from all connections.
-  ConnectionMapIter iter = connections_.begin();
-  if (iter == connections_.end()) {
-    return false;  // No active connections
-  }
-
-  SchedulerServerConnection* connection = iter->second;
-  boost::system::error_code ignored_error;
-  int bytes_available = connection->socket()->available(ignored_error);
-
-  boost::asio::streambuf::mutable_buffers_type bufs =
-    connection->read_buffer()->prepare(bytes_available);
-  std::size_t bytes_read = connection->socket()->receive(bufs);
-  connection->read_buffer()->commit(bytes_read);
-
-  std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  command_id_t num = connection->command_num() + countOccurence(str, ";");
-  connection->set_command_num(num);
-
-  // Why is this a conditional?
-  if (connection->command_num() > 0) {
-    std::istream input(connection->read_buffer());
-    std::string commandText;
-    std::getline(input, commandText, ';');
-    connection->set_command_num(connection->command_num() - 1);
-    SchedulerCommand* command = new SchedulerCommand(commandText);
-    command->set_worker_id(connection->worker_id());
-    received_commands_.push_back(command);
-    return true;
-  } else {
-    return false;
-  }
-}
-
 void SchedulerServer::ListenForNewConnections() {
   dbg(DBG_NET, "Scheduler server listening for new connections.\n");
   tcp::socket* socket = new tcp::socket(*io_service_);
@@ -150,19 +119,51 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
                                    const boost::system::error_code& error) {
   if (!error) {
     dbg(DBG_NET, "Scheduler accepted new connection.\n");
-    boost::mutex::scoped_lock lock(map_mutex_);
-    connections_[connection->id()] = connection;
+    SchedulerWorker* worker =  AddWorker(connection);
     ListenForNewConnections();
+    boost::asio::async_read(*(worker->connection()->socket()),
+                            boost::asio::buffer(worker->read_buffer(),
+                                                worker->read_buffer_length()),
+                            boost::bind(&SchedulerServer::HandleRead,
+                                        this,
+                                        worker,
+                                        boost::asio::placeholders::error,
+                                        boost::asio::placeholders::bytes_transferred));
   } else {
     delete connection;
   }
+}
+
+void SchedulerServer::HandleRead(SchedulerWorker* worker,
+                                 const boost::system::error_code& error,
+                                 size_t bytes_transferred) {
+  if (error) {
+    dbg(DBG_NET|DBG_ERROR,
+        "Error %s receiving %i bytes from worker %i.\n",
+        error.message().c_str(), bytes_transferred, worker->worker_id());
+    return;
+  }
+
+  dbg(DBG_NET, "Scheduler received %i bytes from worker %i.\n",
+      bytes_transferred, worker->worker_id());
+
+  // Go through worker buffer, parsing commands and putting
+  // on commmand list
+
+  boost::asio::async_read(*(worker->connection()->socket()),
+                          boost::asio::buffer(worker->read_buffer(),
+                                              worker->read_buffer_length()),
+                          boost::bind(&SchedulerServer::HandleRead,
+                                      this,
+                                      worker,
+                                      boost::asio::placeholders::error,
+                                      boost::asio::placeholders::bytes_transferred));
 }
 
 void SchedulerServer::Run() {
   dbg(DBG_NET, "Running the scheduler networking server.\n");
   Initialize();
   ListenForNewConnections();
-  // receiveMessages();
   io_service_->run();
 }
 
@@ -170,44 +171,18 @@ SchedulerWorkerList* SchedulerServer::workers() {
   return &workers_;
 }
 
-SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
-  :socket_(sock) {
-  static ConnectionId id_assigner = 0;
-  id_ = ++id_assigner;
-  read_buffer_ = new boost::asio::streambuf();
-  command_num_ = 0;
+SchedulerWorker* SchedulerServer::AddWorker(SchedulerServerConnection* connection) { //NOLINT
+  boost::mutex::scoped_lock lock(worker_mutex_);
+  static worker_id_t workerIdentifier = 0;
+  workerIdentifier++;
+  SchedulerWorker* worker = new SchedulerWorker(workerIdentifier,
+                                                connection, NULL);
+  workers_.push_back(worker);
+  return worker;
 }
 
-SchedulerServerConnection::~SchedulerServerConnection() {
-  // FIXME: not actually cleaning up listening thread.
+void SchedulerServer::MarkWorkerDead(SchedulerWorker* worker) {
+  worker->MarkDead();
 }
 
-
-boost::asio::streambuf* SchedulerServerConnection::read_buffer() {
-  return read_buffer_;
-}
-
-tcp::socket* SchedulerServerConnection::socket() {
-  return socket_;
-}
-
-int SchedulerServerConnection::command_num() {
-  return command_num_;
-}
-
-void SchedulerServerConnection::set_command_num(int n) {
-  command_num_ = n;
-}
-
-worker_id_t SchedulerServerConnection::worker_id() {
-  return worker_id_;
-}
-
-void SchedulerServerConnection::set_worker_id(worker_id_t w) {
-  worker_id_ = w;
-}
-
-ConnectionId SchedulerServerConnection::id() {
-  return id_;
-}
-
+}  // namespace nimbus

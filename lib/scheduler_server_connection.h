@@ -33,15 +33,16 @@
  */
 
  /*
-  * Server side of the Nimbus scheduler protocol.
+  * The abstraction of a connection from a scheduler to
+  * a worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 
-#ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
-#define NIMBUS_LIB_SCHEDULER_SERVER_H_
+#ifndef NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+#define NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
@@ -51,54 +52,25 @@
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
 #include "lib/scheduler_worker.h"
-#include "lib/scheduler_server_connection.h"
 
 namespace nimbus {
 
-typedef uint32_t ConnectionId;
-
-using boost::asio::ip::tcp;
-
-class SchedulerServer {
+class SchedulerServerConnection {
  public:
-  explicit SchedulerServer(ConnectionId port_no);
-  virtual ~SchedulerServer();
+  explicit SchedulerServerConnection(tcp::socket* sock);
+  virtual ~SchedulerServerConnection();
 
-  virtual bool Initialize();
-  virtual void Run();
-  virtual bool ReceiveCommands(SchedulerCommandList* storage,
-                               uint32_t maxCommands);
-  virtual void SendCommand(SchedulerWorker* connection,
-                           SchedulerCommand* command);
-  virtual void SendCommands(SchedulerWorker* connection,
-                            SchedulerCommandList* commands);
-
-  SchedulerWorkerList* workers();
+  virtual boost::asio::streambuf* read_buffer();
+  virtual tcp::socket* socket();
+  virtual int command_num();
+  virtual void set_command_num(int n);
 
  private:
-  ConnectionId connection_port_;
-  boost::mutex command_mutex_;
-  SchedulerCommandList received_commands_;
-  boost::mutex worker_mutex_;
-  SchedulerWorkerList workers_;
-
-  boost::asio::io_service* io_service_;
-  tcp::acceptor* acceptor_;
-
-  void ListenForNewConnections();
-  void HandleAccept(SchedulerServerConnection* connection,
-                    const boost::system::error_code& error);
-  void HandleRead(SchedulerWorker* worker,
-                  const boost::system::error_code& error,
-                  size_t bytes_transferred);
-  void HandleWrite(SchedulerWorker* worker,
-                   const boost::system::error_code& error,
-                   size_t bytes_transferred);
-
-  SchedulerWorker* AddWorker(SchedulerServerConnection* connection);
-  void MarkWorkerDead(SchedulerWorker* worker);
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
 };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_
+#endif  // NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
