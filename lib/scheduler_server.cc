@@ -234,6 +234,12 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
   }
 }
 
+
+void SchedulerServer::HandleWrite(SchedulerWorker* worker,
+                                  const boost::system::error_code& error,
+                                  size_t bytes_transferred) {}
+
+
 void SchedulerServer::Run() {
   dbg(DBG_NET, "Running the scheduler networking server.\n");
   Initialize();

@@ -59,20 +59,42 @@ typedef uint32_t ConnectionId;
 
 using boost::asio::ip::tcp;
 
+/** Networking services for a Nimbus scheduler to talk to workers.
+ *  All receive and send calls are non-blocking. Currently
+ *  maintains a list of workers asynchronously: future versions
+ *  will provide callbacks to notify scheduler of updates to the
+ *  worker list.
+ */
 class SchedulerServer {
  public:
   explicit SchedulerServer(ConnectionId port_no);
   virtual ~SchedulerServer();
 
-  virtual bool Initialize();
+  /** Start the server, does not return. A running server accepts
+   *  connections, spools received messages into its message queue,
+   *  and services send requests. */
   virtual void Run();
+
+  /** Pull incoming commands from the received queue. Puts at most
+   *  maxCommands into storage, returning true if it placed one or more.
+   *  Returns false if no commands were placed in storage. */
   virtual bool ReceiveCommands(SchedulerCommandList* storage,
                                uint32_t maxCommands);
-  virtual void SendCommand(SchedulerWorker* connection,
+
+  /** Send command to destinationWorker. Returns immediately and
+   *   processes the send asynchronously.*/
+
+  virtual void SendCommand(SchedulerWorker* destinationWorker,
                            SchedulerCommand* command);
-  virtual void SendCommands(SchedulerWorker* connection,
+
+  /** Send commands to destinationWorker. Returns immediately and
+   *  processes the send asynchronously. */
+  virtual void SendCommands(SchedulerWorker* destinationWorker,
                             SchedulerCommandList* commands);
 
+  /** Returns the current list of workers. Note that SchedulerServer
+   *  may modify this list or the workers on it. Accessing the list
+   *  therefore involves locks for thread safety. */
   SchedulerWorkerList* workers();
 
  private:
@@ -85,18 +107,38 @@ class SchedulerServer {
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
 
-  void ListenForNewConnections();
-  void HandleAccept(SchedulerServerConnection* connection,
-                    const boost::system::error_code& error);
-  void HandleRead(SchedulerWorker* worker,
-                  const boost::system::error_code& error,
-                  size_t bytes_transferred);
-  void HandleWrite(SchedulerWorker* worker,
-                   const boost::system::error_code& error,
-                   size_t bytes_transferred);
-  int EnqueueCommands(char* buffer, size_t size);
-  SchedulerWorker* AddWorker(SchedulerServerConnection* connection);
-  void MarkWorkerDead(SchedulerWorker* worker);
+  /** Create server socket, set up networking and state. */
+  virtual bool Initialize();
+
+  /** Asynchronous call to accept incoming connections. */
+  virtual void ListenForNewConnections();
+
+  /** Callback for a new connection request. */
+  virtual void HandleAccept(SchedulerServerConnection* connection,
+                            const boost::system::error_code& error);
+
+  /** Asynchronous callback to read data. */
+  virtual void HandleRead(SchedulerWorker* worker,
+                          const boost::system::error_code& error,
+                          size_t bytes_transferred);
+
+  /** Asynchronous calback for writing data. */
+  virtual void HandleWrite(SchedulerWorker* worker,
+                           const boost::system::error_code& error,
+                           size_t bytes_transferred);
+
+  /** Call to take a buffer from the network of size, parse them
+      into commands and put them on the pending command queue.
+      Return value is how many bytes were read/parsed, this can
+      be less than size (for example, if the buffer end has an
+      incomplete command. */
+  virtual int EnqueueCommands(char* buffer, size_t size);
+
+  /* Add a worker to the worker list. */
+  virtual SchedulerWorker* AddWorker(SchedulerServerConnection* connection);
+
+  /* Mark a worker dead. */
+  virtual void MarkWorkerDead(SchedulerWorker* worker);
 };
 
 }  // namespace nimbus
