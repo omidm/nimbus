@@ -55,6 +55,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>  // NOLINT
+#include "lib/dbg.h"
 
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
@@ -90,6 +91,8 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     std::getline(input, command, ';');
     command_num_--;
     SchedulerCommand* com = new SchedulerCommand(command);
+    dbg(DBG_NET, "Scheduler client received command %s\n",
+        com->toString().c_str());
     return com;
   } else {
     return new SchedulerCommand("no-command");
@@ -98,6 +101,7 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
 
 void SchedulerClient::sendCommand(SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
+  dbg(DBG_NET, "Client sending command %s.\n", msg.c_str());
   boost::system::error_code ignored_error;
   boost::asio::write(*socket_, boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);

@@ -93,6 +93,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
   for (uint32_t i = 0; i < maxCommands; i++) {
     SchedulerCommand* command = received_commands_.front();
     received_commands_.pop_front();
+    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->toString().c_str());
     storage->push_back(command);
   }
   return true;
