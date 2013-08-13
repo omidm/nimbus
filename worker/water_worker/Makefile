@@ -14,7 +14,7 @@ APP_DIR = $(NIMBUS_ROOT)/application/water_test
 PHYSBAM_DIR = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/
 APP_LIB = -lwater_test
 LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread $(APP_LIB)
-LDFLAGS += -L $(APP_DIR)
+LDFLAGS += -L$(APP_DIR) -Wl,-rpath=$(APP_DIR)
 IFLAGS += -I$(APP_DIR) -I$(PHYSBAM_DIR)
 
 # Add the dependencies here
@@ -23,7 +23,7 @@ IFLAGS += -I$(APP_DIR) -I$(PHYSBAM_DIR)
 
 # Link to water application here
 $(TARGET_WATER): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(APP_LIB_WATER) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(APP_LIB_WATER) $(LFLAGS)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(APP_LIB_WATER) $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)

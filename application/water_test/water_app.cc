@@ -63,17 +63,21 @@ void WaterApp::load() {
     registerData("sim_data_1", new NonAdvData<TV, T>);
 
     std::cout << "Finished creating job and data definitions" << std::endl;
-
     std::cout << "Finished loading application" << std::endl;
 }
 
-Main::Main(WaterApp *app, JobType type)
-    : Job(app, type)
-{
+Main::Main(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job *Main::clone() {
+    std::cout << "Cloning main job\n";
+    return new Main(application_, type_);
 };
 
-void Main::Execute(std::string params, const DataArray& da)
+void Main::execute(std::string params, const DataArray& da)
 {
+    std::cout << "Begin main\n" << std::endl;
+
     std::vector<int> j;
     std::vector<int> d;
     IDSet before, after, read, write;
@@ -109,21 +113,26 @@ void Main::Execute(std::string params, const DataArray& da)
     application_->spawnJob("loop", j[1], before, after, read, write, par);
 };
 
-Init::Init(WaterApp *app, JobType type)
-    : Job(app, type)
-{
-    std::cout << "Beginning initialization" << std::endl;
+Init::Init(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job *Init::clone() {
+    std::cout << "Cloning init job";
+    return new Init(application_, type_);
 };
 
-void Init::Execute(std::string params, const DataArray& da)
-{
-};
-
-Loop::Loop(WaterApp *app, JobType type)
-    : Job(app, type)
+void Init::execute(std::string params, const DataArray& da)
 {
 };
 
-void Loop::Execute(std::string params, const DataArray& da)
+Loop::Loop(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job *Loop::clone() {
+    std::cout << "Cloning loop job";
+    return new Loop(application_, type_);
+};
+
+void Loop::execute(std::string params, const DataArray& da)
 {
 };

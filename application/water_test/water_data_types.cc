@@ -153,8 +153,6 @@ initialize()
 //        return true;
 }
 
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;
 template class Grid<TVF2>;

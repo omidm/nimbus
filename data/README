@@ -8,3 +8,5 @@ a particular application.
 
 * Code in this directory may update attributes of data class in ../lib/data.h,
 to enable the scheduler to make better data placement decisions.
+
+TODO: change method names to start with caps

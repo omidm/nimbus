@@ -45,6 +45,7 @@
 using namespace PhysBAM;
 using nimbus::Data;
 using nimbus::Job;
+using nimbus::Application;
 
 /* Application class launched by Nimbus. Initialization of jobs, using
  * functions in water_driver, should be done here. Methods to initialize
@@ -60,25 +61,28 @@ class WaterApp : public Application {
     public:
     WaterApp();
     WaterDriver<TV> driver;
-    void load();
+    virtual void load();
 };
 
 class Main : public Job {
     public:
-    Main(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
+    Main(Application *app, JobType type);
+    virtual void execute(std::string params, const DataArray& da);
+    virtual Job *clone();
 };
 
 class Init : public Job {
     public:
-    Init(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
+    Init(Application *app, JobType type);
+    virtual void execute(std::string params, const DataArray& da);
+    virtual Job *clone();
 };
 
 class Loop : public Job {
     public:
-    Loop(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
+    Loop(Application *app, JobType type);
+    virtual void execute(std::string params, const DataArray& da);
+    virtual Job *clone();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
