@@ -41,6 +41,7 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
+#include "lib/nimbus.h"
 #include "lib/application.h"
 #include "./simple_worker.h"
 #include "../../application/1d-stencil/app.h"
@@ -48,6 +49,7 @@
 #define SCHEDULER_PORT 5983
 
 int main(int argc, char *argv[]) {
+  nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   App * app = new App();
   SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);

@@ -41,7 +41,7 @@
   */
 
 #include "./simple_scheduler.h"
-
+#include "lib/dbg.h"
 SimpleScheduler::SimpleScheduler(unsigned int p)
 : Scheduler(p) {
 }
@@ -66,6 +66,9 @@ void SimpleScheduler::schedulerCoreProcessor() {
       SchedulerCommandList::iterator iter = storage->begin();
       for (; iter != storage->end(); iter++) {
         SchedulerCommand* comm = *iter;
+        dbg(DBG_NET, "Iterating across command (of %i) %s\n",
+            storage->size(), comm->toString().c_str());
+
         iter = storage->erase(iter);
         if (comm->toString() != "no-command") {
           std::cout << "Received command: " << comm->toString() << std::endl;
