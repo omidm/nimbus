@@ -39,15 +39,22 @@
 #include "lib/nimbus.h"
 #include "./water_app.h"
 
+using nimbus::Data;
+using nimbus::Job;
+using nimbus::Application;
+
+WaterApp::WaterApp()
+{};
+
 void WaterApp::load() {
 
     /* Declare and initialize data and jobs. */
     std::cout << "Worker beginning to load application" << std::endl;
 
-    registerJob("main", new Main(this, COMP));
+    registerJob("main", new Main(this, JOB_COMP));
 
-    registerJob("init", new Init(this, COMP));
-    registerJob("loop", new Loop(this, COMP));
+    registerJob("init", new Init(this, JOB_COMP));
+    registerJob("loop", new Loop(this, JOB_COMP));
 
     registerData("mac_grid_1", new Grid<TV>);
     registerData("mpi_grid_1", new MPIGrid<TV>);
@@ -65,21 +72,21 @@ Main::Main(WaterApp *app, JobType type)
 {
 };
 
-void Main::Execute(std::string params, const dataArray& da)
+void Main::Execute(std::string params, const DataArray& da)
 {
     std::vector<int> j;
     std::vector<int> d;
     IDSet before, after, read, write;
     std::string par;
 
-    app->getNewDataID(5, &d);
-    app->defineData("mac_grid_1", d[0]);
-    app->defineData("mpi_grid_1", d[1]);
-    app->defineData("face_velocities_1", d[2]);
-    app->defineData("face_velocities_ghost_1", d[3]);
-    app->defineData("sim_data_1", d[4]);
+    application_->getNewDataID(5, &d);
+    application_->defineData("mac_grid_1", d[0]);
+    application_->defineData("mpi_grid_1", d[1]);
+    application_->defineData("face_velocities_1", d[2]);
+    application_->defineData("face_velocities_ghost_1", d[3]);
+    application_->defineData("sim_data_1", d[4]);
 
-    app->getNewJobID(2, &d);
+    application_->getNewJobID(2, &d);
 
     before.clear();
     after.clear();
@@ -92,22 +99,23 @@ void Main::Execute(std::string params, const dataArray& da)
     read.insert(d[2]);
     read.insert(d[3]);
     read.insert(d[4]);
-    app->spawnJob("init", j[0], before, after, read, write, par);
+    application_->spawnJob("init", j[0], before, after, read, write, par);
 
     before.clear();
     after.clear();
     read.clear();
     write.clear();
     par = "";
-    app->spawnJob("loop", j[1], before, after, read, write, par);
+    application_->spawnJob("loop", j[1], before, after, read, write, par);
 };
 
 Init::Init(WaterApp *app, JobType type)
     : Job(app, type)
 {
+    std::cout << "Beginning initialization" << std::endl;
 };
 
-void Init::Execute(std::string params, const dataArray& da)
+void Init::Execute(std::string params, const DataArray& da)
 {
 };
 
@@ -116,6 +124,6 @@ Loop::Loop(WaterApp *app, JobType type)
 {
 };
 
-void Loop::Execute(std::string params, const dataArray& da)
+void Loop::Execute(std::string params, const DataArray& da)
 {
 };

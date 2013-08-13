@@ -40,5 +40,3 @@
 
 #include "./water_app.h"
 #include "./water_driver.h"
-
-using namespace PhysBAM;    // NOLINT

@@ -32,53 +32,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * A Nimbus worker. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#include <pthread.h>
+#include <iostream>  // NOLINT
 
-#include "lib/nimbus.h"
-#include "./water_driver.h"
+#include "lib/application.h"
+#include "./simple_worker.h"
+#include "application/water_test/water_app.h"
 
-using namespace PhysBAM;
-using nimbus::Data;
-using nimbus::Job;
+#define SCHEDULER_PORT 5983
 
-/* Application class launched by Nimbus. Initialization of jobs, using
- * functions in water_driver, should be done here. Methods to initialize
- * simulation data and build the data map should also be called here.
- */
-class WaterApp : public Application {
+int main(int argc, char *argv[]) {
+  std::cout << "Water Worker is up!" << std::endl;
+  WaterApp *app = new WaterApp();
+  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  w->run();
+}
 
-    private:
-    typedef float T;
-    typedef VECTOR<T, 2> TV;
-    typedef VECTOR<int, TV::dimension> TV_INT;
-
-    public:
-    WaterApp();
-    WaterDriver<TV> driver;
-    void load();
-};
-
-class Main : public Job {
-    public:
-    Main(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
-
-class Init : public Job {
-    public:
-    Init(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
-
-class Loop : public Job {
-    public:
-    Loop(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
-
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

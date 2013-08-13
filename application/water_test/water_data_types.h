@@ -42,10 +42,9 @@
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_
 
 /* Include relevant PhysBAM files here.
- */
+*/
+#include "lib/nimbus.h"
 #include "./physbam_include.h"
-
-using namespace PhysBAM;    // NOLINT
 
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
  * brackets):
@@ -68,8 +67,14 @@ using namespace PhysBAM;    // NOLINT
  * kinematic_evolution (*sim_data.kinematic_evolution)
  */
 
+using namespace PhysBAM;
+using nimbus::Data;
+
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+
 /* Face array for storing quantities like face velocities.
- */
+*/
 template <class TV>
 class FaceArray : public Data {
     typedef typename TV::SCALAR T;
@@ -80,17 +85,17 @@ class FaceArray : public Data {
 };
 
 /* Ghost face array for storing scalar quantities.
- */
+*/
 template <class TV>
 class FaceArrayGhost : public Data {
     public:
-    typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
-    FaceArrayGhost();
-    bool initialize();
+        typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
+        FaceArrayGhost();
+        bool initialize();
 };
 
 /* Grid class for storing the mac grid information.
- */
+*/
 template <class TV>
 class Grid : public Data {
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
@@ -110,9 +115,9 @@ class Grid : public Data {
 template <class TV>
 class MPIGrid : public Data {
     public:
-    MPI_UNIFORM_GRID<GRID<TV> > *data;
-    MPIGrid();
-    bool initialize();
+        MPI_UNIFORM_GRID<GRID<TV> > *data;
+        MPIGrid();
+        bool initialize();
 };
 
 /* Add all other data used by water simulation here.  DO NOT add scalar
@@ -123,36 +128,36 @@ class NonAdvData : public Data {
 
     public:
 
-    // boundary information
-    BOUNDARY_UNIFORM<GRID<TV>, T>
-        *boundary_scalar,
-        *boundary,
-        *phi_boundary;
-    typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
-        BOUNDARY_PHI_WATER *phi_boundary_water;
-    VECTOR<VECTOR<bool, 2>, TV::dimension> *domain_boundary;
+        // boundary information
+        BOUNDARY_UNIFORM<GRID<TV>, T>
+            *boundary_scalar,
+            *boundary,
+            *phi_boundary;
+        typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
+            BOUNDARY_PHI_WATER *phi_boundary_water;
+        VECTOR<VECTOR<bool, 2>, TV::dimension> *domain_boundary;
 
-    // sources
-    ARRAY<IMPLICIT_OBJECT<TV>*> *sources;
+        // sources
+        ARRAY<IMPLICIT_OBJECT<TV>*> *sources;
 
-    // fluid data
-    PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *particle_levelset_evolution;
-    ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
+        // fluid data
+        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *particle_levelset_evolution;
+        ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
 
-    // rigid body, collision data
-    RIGID_GEOMETRY_COLLECTION<TV> *rigid_geometry_collection;
-    typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
-        GRID_BASED_COLLISION_GEOMETRY *collision_bodies_affecting_fluid;
+        // rigid body, collision data
+        RIGID_GEOMETRY_COLLECTION<TV> *rigid_geometry_collection;
+        typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
+            GRID_BASED_COLLISION_GEOMETRY *collision_bodies_affecting_fluid;
 
-    // other containers
-    PROJECTION_DYNAMICS_UNIFORM<GRID<TV> > *projection;
-    INCOMPRESSIBLE_UNIFORM<GRID<TV> > *incompressible;
+        // other containers
+        PROJECTION_DYNAMICS_UNIFORM<GRID<TV> > *projection;
+        INCOMPRESSIBLE_UNIFORM<GRID<TV> > *incompressible;
 
-    // driver data
-    KINEMATIC_EVOLUTION<TV> *kinematic_evolution;
+        // driver data
+        KINEMATIC_EVOLUTION<TV> *kinematic_evolution;
 
-    NonAdvData();
-    bool initialize();
+        NonAdvData();
+        bool initialize();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

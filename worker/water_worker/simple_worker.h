@@ -32,53 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#ifndef NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
+#define NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
 
-#include "lib/nimbus.h"
-#include "./water_driver.h"
+// #define DEBUG_MODE
 
-using namespace PhysBAM;
-using nimbus::Data;
-using nimbus::Job;
+#include <boost/thread.hpp>
+#include <string>
+#include <vector>
+#include <map>
+#include "lib/scheduler_client.h"
+#include "lib/cluster.h"
+#include "lib/data.h"
+#include "lib/job.h"
+#include "lib/application.h"
+#include "lib/parser.h"
+#include "lib/log.h"
+#include "lib/worker.h"
 
-/* Application class launched by Nimbus. Initialization of jobs, using
- * functions in water_driver, should be done here. Methods to initialize
- * simulation data and build the data map should also be called here.
- */
-class WaterApp : public Application {
 
-    private:
-    typedef float T;
-    typedef VECTOR<T, 2> TV;
-    typedef VECTOR<int, TV::dimension> TV_INT;
+class SimpleWorker : public Worker {
+  public:
+    SimpleWorker(unsigned int p,  Application * a);
 
-    public:
-    WaterApp();
-    WaterDriver<TV> driver;
-    void load();
+    virtual void workerCoreProcessor();
 };
 
-class Main : public Job {
-    public:
-    Main(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
 
-class Init : public Job {
-    public:
-    Init(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
 
-class Loop : public Job {
-    public:
-    Loop(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
 
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+
+#endif  // NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_

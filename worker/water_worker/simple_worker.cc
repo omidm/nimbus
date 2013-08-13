@@ -32,53 +32,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+#include "./simple_worker.h"
 
-#include "lib/nimbus.h"
-#include "./water_driver.h"
 
-using namespace PhysBAM;
-using nimbus::Data;
-using nimbus::Job;
+SimpleWorker::SimpleWorker(unsigned int p, Application* a)
+: Worker(p, a) {
+}
 
-/* Application class launched by Nimbus. Initialization of jobs, using
- * functions in water_driver, should be done here. Methods to initialize
- * simulation data and build the data map should also be called here.
- */
-class WaterApp : public Application {
+void SimpleWorker::workerCoreProcessor() {
+  std::cout << "Simple Worker Core Processor" << std::endl;
 
-    private:
-    typedef float T;
-    typedef VECTOR<T, 2> TV;
-    typedef VECTOR<int, TV::dimension> TV_INT;
-
-    public:
-    WaterApp();
-    WaterDriver<TV> driver;
-    void load();
-};
-
-class Main : public Job {
-    public:
-    Main(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
-
-class Init : public Job {
-    public:
-    Init(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
-
-class Loop : public Job {
-    public:
-    Loop(WaterApp *app, JobType type);
-    void Execute(std::string params, const DataArray& da);
-};
-
-#endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
+  while (true) {
+    sleep(1);
+    // Log::dbg_printLine("Worker running core loop.", INFO);
+    // std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+    // str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+    // SchedulerCommand cm(str);
+    // std::cout << "Sending command: " << cm.toString() << std::endl;
+    // client->sendCommand(&cm);
+    SchedulerCommand* comm = client_->receiveCommand();
+    if (comm->toString() != "no-command") {
+      std::cout << "Received command: " << comm->toString() << std::endl;
+      processSchedulerCommand(comm);
+    }
+  }
+}
