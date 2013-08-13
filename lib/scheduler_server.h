@@ -94,7 +94,7 @@ class SchedulerServer {
   void HandleWrite(SchedulerWorker* worker,
                    const boost::system::error_code& error,
                    size_t bytes_transferred);
-
+  int EnqueueCommands(char* buffer, size_t size);
   SchedulerWorker* AddWorker(SchedulerServerConnection* connection);
   void MarkWorkerDead(SchedulerWorker* worker);
 };

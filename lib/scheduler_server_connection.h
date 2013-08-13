@@ -51,7 +51,6 @@
 #include "lib/nimbus.h"
 #include "lib/parser.h"
 #include "lib/scheduler_command.h"
-#include "lib/scheduler_worker.h"
 
 namespace nimbus {
 

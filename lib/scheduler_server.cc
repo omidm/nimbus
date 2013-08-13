@@ -43,6 +43,7 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <boost/tokenizer.hpp>
 #include <string>
 #include <sstream>
 #include <iostream>  // NOLINT
@@ -135,6 +136,38 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
   }
 }
 
+using boost::tokenizer;
+using boost::char_separator;
+
+  /** Reads commands from buffer with size bytes. Puts commands into
+   * internal command list for later reads. Returns the number of
+   * bytes read. */
+int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
+  buffer[size] = '\0';
+  dbg(DBG_NET, "Read string %s from worker.\n", buffer);
+
+  char* start_pointer = buffer;
+  for (size_t i = 0; i < size; i++) {
+    // When we find a semicolon, replace it with a string terminator \0.
+    // Then when we pass start_pointer to the constructor it will terminate.
+    if (buffer[i] == ';') {
+      buffer[i] = '\0';
+      std::string input(start_pointer);
+      SchedulerCommand* command = new SchedulerCommand(input);
+      {
+        dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
+        boost::mutex::scoped_lock lock(command_mutex_);
+        received_commands_.push_back(command);
+      }
+      // Next string starts after the semicolon
+      start_pointer = buffer + i + 1;
+    }
+  }
+  // We've read this many bytes successfully into
+  // commands
+  return start_pointer - buffer;
+}
+
 void SchedulerServer::HandleRead(SchedulerWorker* worker,
                                  const boost::system::error_code& error,
                                  size_t bytes_transferred) {
@@ -147,27 +180,42 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
 
   dbg(DBG_NET, "Scheduler received %i bytes from worker %i.\n",
       bytes_transferred, worker->worker_id());
+  int real_length = bytes_transferred + worker->existing_bytes();
+  int len = EnqueueCommands(worker->read_buffer(),
+                           real_length);
+  int remaining = (real_length - len);
 
-  std::list<std::string> stringList;
-  int end = separateCommands(worker->buffer(), bytes_transferred,
-                             stringList);
+  // This is for the case when the string buffer had an incomplete
+  // command at its end. Copy the fragement of the command to the beginning
+  // of the buffer, mark how many bytes are valid with existing_bytes.
+  if (remaining > 0) {
+    char* buffer = worker->read_buffer();
+    memcpy(buffer, (buffer + len), remaining);
+    char* read_start_ptr = buffer + remaining;
+    int read_buffer_length = worker->read_buffer_length() - remaining;
 
-  std::list<std::string>::iterator listIterator = stringList.begin();
-  for (; listIterator != stringList.end(); ++listIterator) {
-    std::string sval = *listIterator;
+    worker->set_existing_bytes(remaining);
+    boost::asio::async_read(*(worker->connection()->socket()),
+                            boost::asio::buffer(read_start_ptr,
+                                                read_buffer_length),
+                            boost::asio::transfer_at_least(1),
+                            boost::bind(&SchedulerServer::HandleRead,
+                                        this,
+                                        worker,
+                                        boost::asio::placeholders::error,
+                                        boost::asio::placeholders::bytes_transferred));
+  } else {
+    worker->set_existing_bytes(0);
+    boost::asio::async_read(*(worker->connection()->socket()),
+                            boost::asio::buffer(worker->read_buffer(),
+                                                worker->read_buffer_length()),
+                            boost::asio::transfer_at_least(1),
+                            boost::bind(&SchedulerServer::HandleRead,
+                                        this,
+                                        worker,
+                                        boost::asio::placeholders::error,
+                                        boost::asio::placeholders::bytes_transferred));
   }
-  // Go through worker buffer, parsing commands and putting
-  // on commmand list
-
-  boost::asio::async_read(*(worker->connection()->socket()),
-                          boost::asio::buffer(worker->read_buffer(),
-                                              worker->read_buffer_length()),
-                          boost::asio::transfer_at_least(1),
-                          boost::bind(&SchedulerServer::HandleRead,
-                                      this,
-                                      worker,
-                                      boost::asio::placeholders::error,
-                                      boost::asio::placeholders::bytes_transferred));
 }
 
 void SchedulerServer::Run() {

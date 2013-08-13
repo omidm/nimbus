@@ -81,7 +81,7 @@ using boost::char_separator;
 bool parseCommandFromString(const std::string& input,
                             std::string& command,
                             std::vector<std::string>& parameters) {
-  char_separator<char> separator(" \n\t");
+  char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
   if (iter == tokens.end()) {
@@ -107,7 +107,8 @@ void parseParameterFromString(const std::string& input, std::string& tag,
     return;
   }
 
-  tag = *iter++;
+  tag = *iter;
+  iter++;
   if (isSet(*iter))
     string_set = *iter;
   else

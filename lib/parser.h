@@ -60,7 +60,9 @@ void parseCommand(const std::string& string,
 int parseCommandFile(const std::string& fname,
                      CmSet& cs);
 
-void parseCommandFromString(const std::string& input,
+/** Returns true if there was a valid command in the string,
+    false if no valid command. */
+bool parseCommandFromString(const std::string& input,
     std::string& command,
     std::vector<std::string>& parameters);
 

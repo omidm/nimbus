@@ -52,11 +52,12 @@ SchedulerWorker::SchedulerWorker(worker_id_t id,
   connection_ = conn;
   application_ = app;
   is_alive_ = true;
-  read_buffer_ = new uint8_t[WORKER_BUFSIZE];
+  read_buffer_ = new char[WORKER_BUFSIZE];
 }
 
 SchedulerWorker::~SchedulerWorker() {
-  // delete connection_;
+  delete connection_;
+  delete read_buffer_;
 }
 
 worker_id_t SchedulerWorker::worker_id() {
@@ -79,8 +80,16 @@ void SchedulerWorker::MarkDead() {
   is_alive_ = false;
 }
 
-uint8_t* SchedulerWorker::read_buffer() {
+char* SchedulerWorker::read_buffer() {
   return read_buffer_;
+}
+
+uint32_t SchedulerWorker::existing_bytes() {
+  return existing_bytes_;
+}
+
+void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
+  existing_bytes_ = bytes;
 }
 
 uint32_t SchedulerWorker::read_buffer_length() {

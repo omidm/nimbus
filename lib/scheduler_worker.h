@@ -43,9 +43,10 @@
 
 #include <list>
 #include "lib/nimbus.h"
+#include "lib/scheduler_server_connection.h"
+
 namespace nimbus {
 
-class SchedulerServerConnection;
 class Application;
 
 class SchedulerWorker {
@@ -60,7 +61,9 @@ class SchedulerWorker {
   virtual Application* application();
   virtual bool is_alive();
   virtual void MarkDead();
-  virtual uint8_t* read_buffer();
+  virtual char* read_buffer();
+  virtual uint32_t existing_bytes();
+  virtual void set_existing_bytes(uint32_t bytes);
   virtual uint32_t read_buffer_length();
 
  private:
@@ -68,7 +71,10 @@ class SchedulerWorker {
   SchedulerServerConnection* connection_;
   Application* application_;
   bool is_alive_;
-  uint8_t* read_buffer_;
+  char* read_buffer_;
+  // How many bytes in the read buffer are valid before
+  // a read.
+  uint32_t existing_bytes_;
 };
 
 typedef std::list<SchedulerWorker*> SchedulerWorkerList;

@@ -44,6 +44,7 @@
   */
 
 #include "lib/scheduler_command.h"
+#include "lib/dbg.h"
 
 using namespace nimbus; // NOLINT
 
@@ -63,8 +64,10 @@ SchedulerCommand::SchedulerCommand(std::string command) {
   std::vector<std::string> string_params;
   parseCommandFromString(command, name_, string_params);
   std::vector<std::string>::iterator  iter = string_params.begin();
-  for (; iter != string_params.end(); ++iter)
+  for (; iter != string_params.end(); ++iter) {
+    dbg(DBG_USR1, "Adding parameter %s\n", (*iter).c_str());
     addParameter(CommandParameter(*iter));
+  }
 }
 
 SchedulerCommand::~SchedulerCommand() {}
