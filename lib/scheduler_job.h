@@ -32,30 +32,52 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Nimbus job abstraction from scheduler point of view. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_LIB_NIMBUS_TYPES_H_
-#define NIMBUS_LIB_NIMBUS_TYPES_H_
+#ifndef NIMBUS_LIB_SCHEDULER_JOB_H_
+#define NIMBUS_LIB_SCHEDULER_JOB_H_
 
-#include <inttypes.h>
-
-#define NIMBUS_SCHEDULER_PORT 5983
+#include <vector>
+#include <string>
+#include <set>
+#include <map>
+#include "lib/data.h"
+#include "lib/idset.h"
+#include "lib/nimbus_types.h"
 
 namespace nimbus {
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+
+class SchedulerJob;
+typedef std::map<int, SchedulerJob*> JobMap;
+typedef std::vector<Data*> DataArray;
+
+enum JobType {JOB_COMP, JOB_SYNC};
+
+class SchedulerJob {
+ public:
+  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
+  virtual ~SchedulerJob() {}
+
+  uint64_t id();
+  void set_id(job_id_t id);
+
+
+ private:
+  job_id_t id_;
+  app_id_t app_id_;
+  JobType type_;
+  IDSet read_set_;
+  IDSet write_set_;
+  IDSet before_set_;
+  IDSet after_set_;
+  std::string parameters_;
+};
 
 }  // namespace nimbus
+#endif  // NIMBUS_LIB_SCHEDULER_JOB_H_
 
-#endif  // NIMBUS_LIB_NIMBUS_TYPES_H_
+
