@@ -105,6 +105,7 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   SchedulerServerConnection* connection = worker->connection();
   std::string msg = command->toString() + ";";
   boost::system::error_code ignored_error;
+  // Why are we IGNORING ERRORS!??!?!?
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
                      boost::asio::transfer_all(), ignored_error);
 }
