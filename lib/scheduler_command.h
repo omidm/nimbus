@@ -105,16 +105,18 @@ class SchedulerCommand {
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
 
+
 class SpawnJobCommand : public SchedulerCommand {
   public:
     SpawnJobCommand();
-    explicit SpawnJobCommand(std::vector<IDSet>* idsets);
+    SpawnJobCommand(std::string job_name, JobType job_type,
+        job_id_t job_id, std::vector<IDSet>* idsets, std::string params);
     ~SpawnJobCommand();
 
     virtual std::string toString();
     std::string job_name();
     JobType job_type();
-    job_id_t jog_id();
+    job_id_t job_id();
     IDSet* read_set();
     IDSet* write_set();
     IDSet* after_set();
@@ -132,10 +134,56 @@ class SpawnJobCommand : public SchedulerCommand {
     std::string params_;
 };
 
+class JobDoneCommand : public SchedulerCommand {
+  public:
+    JobDoneCommand();
+    JobDoneCommand(job_id_t job_id, std::string params);
+    ~JobDoneCommand();
+
+    virtual std::string toString();
+    job_id_t job_id();
+    std::string params();
+
+  private:
+    job_id_t job_id_;
+    std::string params_;
+};
+
+class KillJobCommand : public SchedulerCommand {
+  public:
+    KillJobCommand();
+    KillJobCommand(job_id_t job_id, std::string params);
+    ~KillJobCommand();
+
+    virtual std::string toString();
+    job_id_t job_id();
+    std::string params();
+
+  private:
+    job_id_t job_id_;
+    std::string params_;
+};
+
+class PauseJobCommand : public SchedulerCommand {
+  public:
+    PauseJobCommand();
+    PauseJobCommand(job_id_t job_id, std::string params);
+    ~PauseJobCommand();
+
+    virtual std::string toString();
+    job_id_t job_id();
+    std::string params();
+
+  private:
+    job_id_t job_id_;
+    std::string params_;
+};
+
 class DefineDataCommand : public SchedulerCommand {
   public:
     DefineDataCommand();
-    explicit DefineDataCommand(std::vector<IDSet>* idsets);
+    DefineDataCommand(std::string data_name, data_id_t data_id,
+        IDSet* neighbors, std::string params);
     ~DefineDataCommand();
 
     virtual std::string toString();
@@ -151,8 +199,57 @@ class DefineDataCommand : public SchedulerCommand {
     std::string params_;
 };
 
+class DataCreatedCommand : public SchedulerCommand {
+  public:
+    DataCreatedCommand();
+    DataCreatedCommand(data_id_t data_id, std::string params);
+    ~DataCreatedCommand();
 
+    virtual std::string toString();
+    data_id_t data_id();
+    std::string params();
 
+  private:
+    data_id_t data_id_;
+    std::string params_;
+};
+
+class CopyDataCommand : public SchedulerCommand {
+  public:
+    CopyDataCommand();
+    CopyDataCommand(data_id_t data_id_from, data_id_t data_id_to,
+        std::string params);
+    ~CopyDataCommand();
+
+    virtual std::string toString();
+    data_id_t data_id_from();
+    data_id_t data_id_to();
+    std::string params();
+
+  private:
+    data_id_t data_id_from_;
+    data_id_t data_id_to_;
+    std::string params_;
+};
+
+class MigrateDataCommand : public SchedulerCommand {
+  public:
+    MigrateDataCommand();
+    MigrateDataCommand(data_id_t data_id_from, data_id_t data_id_to,
+        std::string params);
+    ~MigrateDataCommand();
+
+    virtual std::string toString();
+    data_id_t data_id_from();
+    data_id_t data_id_to();
+    std::string params();
+
+  private:
+    data_id_t data_id_from_;
+    data_id_t data_id_to_;
+    // TODO(omidm): add the information of the remote worker holding the data.
+    std::string params_;
+};
 
 
 }  // namespace nimbus

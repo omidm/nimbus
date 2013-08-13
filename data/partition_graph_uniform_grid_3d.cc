@@ -33,25 +33,13 @@
  */
 
  /*
-  * PartitionGraph maintains the partitions and relationships between partitions
-  * for a simulation domain (uniform grid/ mesh/ tree). A vertex in the
-  * partition represents a partition. A vertex has associated sets of data
-  * partitions that should preferably stay together.
-  *
-  * PartitionGraph represents the class structure common to different data
-  * types, and flat data structures/ trees may implement their own
-  * PartitionGraph in ../data, that derive from the class defined here.
-  *
-  * PartitionGraph may be used by the scheduler to make good decisions about
-  * data placement.
-  *
   * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#include "lib/partition_graph.h"
+#include "data/partition_graph_uniform_grid_3d.h"
 
 namespace nimbus {
 
-    PartitionGraph::PartitionGraph() {}
+    PartitionGraphUniformGrid3d::PartitionGraphUniformGrid3d() {}
 
 }  // namespace nimbus

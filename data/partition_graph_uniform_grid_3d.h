@@ -33,47 +33,45 @@
  */
 
  /*
-  * PartitionGraph maintains partitions and relationships between partitions
-  * for a simulation domain (uniform grid/ mesh/ tree). A vertex represents a
-  * partition. A vertex has associated sets of data ids corresponding to the
-  * partition.
-  *
-  * PartitionGraph is an interface for different type specific implementation.
-  *
-  * PartitionGraph may be used by the scheduler to make good decisions about
-  * data placement -- for instance, to place ghost regions with parent main
-  * region, and to place data corresponding to the same partition closeby.
+  * PartitionGraph for uniform grid. Supports only static partitioning.
   *
   * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_PARTITION_GRAPH_H_
-#define NIMBUS_LIB_PARTITION_GRAPH_H_
+#ifndef NIMBUS_DATA_PARTITION_GRAPH_UNIFORM_GRID_3D_H_
+#define NIMBUS_DATA_PARTITION_GRAPH_UNIFORM_GRID_3D_H_
 
-#include <set>
-#include <map>
 #include "lib/nimbus_types.h"
+#include "data/partition_graph_flat.h"
 
 namespace nimbus {
-    class Vertex;
-    typedef std::set<Vertex> Vertices;
-    typedef std::set<data_id_t> DataSet;
-    typedef std::map<Vertex, DataSet*> VertexDataSetMap;
-    typedef std::map<Vertex, Vertices*> VertexVerticesMap;
 
-    class PartitionGraph {
+    // TODO(chinmayee): Implement Coord3d and Vertex class
+    class Coord3d;
+
+    class PartitionGraphUniformGrid3d : public PartitionGraphFlat {
         public:
-            virtual ~PartitionGraph();
+            PartitionGraphUniformGrid3d();
+            // add main nodes and neighbor information
+            bool addMainPartition(Vertex partition, Vertices neighbors);
+            // add ghost nodes, parent-child and ghost-neighbor information
+            bool addGhostPartition
+                (Vertex partition, Vertex parent, Vertices neighbors);
+            // finalize the partition graph vertices and relations, programmer
+            // cannot make changes to partition graph after this method is
+            // called
+            void finalize();
+            // create uniform partitions and add all nodes and relation
+            // information
+            bool createUniformPartitions
+                (partition_t x, partition_t y, partition_t z);
 
-            // get main nodes corresponding to main partitions
-            virtual Vertices* getMainNodes() = 0;
-            // get ghost nodes corresponding to ghost partitions
-            virtual Vertices* getGhostNodes() = 0;
-            // get the map between vertices and corresponding data ids
-            virtual VertexDataSetMap* getVertexDataMap() = 0;
-            // get parent-child relations between main nodes and ghost nodes
-            virtual VertexVerticesMap* getParentChildMap() = 0;
+        private:
+            // range of grid, TODO(chinmayee): change these to Coord3d
+            int w_min_, w_max_;
+            // set of main nodes and ghost nodes
+            Vertices *main_nodes_, *ghost_nodes_;
     };
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_PARTITION_GRAPH_H_
+#endif  // NIMBUS_DATA_PARTITION_GRAPH_UNIFORM_GRID_3D_H_
