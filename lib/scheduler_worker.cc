@@ -52,6 +52,7 @@ SchedulerWorker::SchedulerWorker(worker_id_t id,
   connection_ = conn;
   application_ = app;
   is_alive_ = true;
+  existing_bytes_ = 0;
   read_buffer_ = new char[WORKER_BUFSIZE];
 }
 
