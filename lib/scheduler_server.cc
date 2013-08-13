@@ -124,6 +124,7 @@ void SchedulerServer::HandleAccept(SchedulerServerConnection* connection,
     boost::asio::async_read(*(worker->connection()->socket()),
                             boost::asio::buffer(worker->read_buffer(),
                                                 worker->read_buffer_length()),
+                            boost::asio::transfer_at_least(1),
                             boost::bind(&SchedulerServer::HandleRead,
                                         this,
                                         worker,
@@ -147,12 +148,21 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
   dbg(DBG_NET, "Scheduler received %i bytes from worker %i.\n",
       bytes_transferred, worker->worker_id());
 
+  std::list<std::string> stringList;
+  int end = separateCommands(worker->buffer(), bytes_transferred,
+                             stringList);
+
+  std::list<std::string>::iterator listIterator = stringList.begin();
+  for (; listIterator != stringList.end(); ++listIterator) {
+    std::string sval = *listIterator;
+  }
   // Go through worker buffer, parsing commands and putting
   // on commmand list
 
   boost::asio::async_read(*(worker->connection()->socket()),
                           boost::asio::buffer(worker->read_buffer(),
                                               worker->read_buffer_length()),
+                          boost::asio::transfer_at_least(1),
                           boost::bind(&SchedulerServer::HandleRead,
                                       this,
                                       worker,
