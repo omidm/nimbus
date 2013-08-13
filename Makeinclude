@@ -12,6 +12,10 @@ endif
 # Detect if we are running Linux -- should be replaced by autoconf eventually
 ifeq (${OSTYPE}, linux)
   OS_LINUX=TRUE
+else
+ifeq ($(findstring Linux, $(shell uname)), Linux)
+  OS_LINUX=TRUE
+endif
 endif
 
 
