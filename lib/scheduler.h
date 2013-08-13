@@ -78,6 +78,7 @@ class Scheduler {
     virtual void loadWorkerCommands();
 
     boost::thread* user_interface_thread_;
+    boost::thread* worker_thread_;
     CmSet user_command_set_;
     CmSet worker_command_set_;
     Computer host_;

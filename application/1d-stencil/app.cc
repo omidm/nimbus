@@ -29,14 +29,14 @@ void App::load()
 
   std::cout << "Start Creating Data and Job Tables" << std::endl;
   
-  registerJob("main", new Main(this, COMP));
-  registerJob("init", new Init(this, COMP));
-  registerJob("forLoop", new ForLoop(this, COMP));
-  registerJob("print", new Print(this, COMP));
-  registerJob("applyLeft", new ApplyLeft(this, COMP));
-  registerJob("applyRight", new ApplyRight(this, COMP));
-  registerJob("updateLeft", new UpdateLeft(this, SYNC));
-  registerJob("updateRight", new UpdateRight(this, SYNC));
+  registerJob("main", new Main(this, JOB_COMP));
+  registerJob("init", new Init(this, JOB_COMP));
+  registerJob("forLoop", new ForLoop(this, JOB_COMP));
+  registerJob("print", new Print(this, JOB_COMP));
+  registerJob("applyLeft", new ApplyLeft(this, JOB_COMP));
+  registerJob("applyRight", new ApplyRight(this, JOB_COMP));
+  registerJob("updateLeft", new UpdateLeft(this, JOB_SYNC));
+  registerJob("updateRight", new UpdateRight(this, JOB_SYNC));
 
   registerData("mainLeft", new Vec (ML));
   registerData("mainRight", new Vec (ML));
