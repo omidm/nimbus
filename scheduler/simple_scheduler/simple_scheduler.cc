@@ -66,10 +66,9 @@ void SimpleScheduler::schedulerCoreProcessor() {
       SchedulerCommandList::iterator iter = storage->begin();
       for (; iter != storage->end(); iter++) {
         SchedulerCommand* comm = *iter;
-        iter = storage->erase(iter);
         if (comm->toString() != "no-command") {
-          std::cout << "Received command: " << comm->toString() << std::endl;
-          std::cout << "Sending command: " << comm->toString() << std::endl;
+          std::cout << "OMID Received command: " << comm->toString() << std::endl;
+          std::cout << "OMID Sending command: " << comm->toString() << std::endl;
           server_->SendCommand(*(server_->workers()->begin()), comm);
         }
         delete comm;
