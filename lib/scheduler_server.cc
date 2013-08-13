@@ -82,7 +82,21 @@ bool SchedulerServer::Initialize() {
 }
 
 bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
-                                      uint32_t maxCommands) {return true;}
+                                      uint32_t maxCommands) {
+  boost::mutex::scoped_lock(command_mutex_);
+  uint32_t pending = received_commands_.size();
+  if (pending == 0) {
+    return false;
+  } else if (pending < maxCommands) {
+    maxCommands = pending;
+  }
+  for (uint32_t i = 0; i < maxCommands; i++) {
+    SchedulerCommand* command = received_commands_.front();
+    received_commands_.pop_front();
+    storage->push_back(command);
+  }
+  return true;
+}
 
 
 
@@ -165,6 +179,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
   }
   // We've read this many bytes successfully into
   // commands
+  dbg(DBG_NET, "Scheduler now has %i entries in command queue.\n", received_commands_.size());
   return start_pointer - buffer;
 }
 
