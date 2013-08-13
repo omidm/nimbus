@@ -33,46 +33,44 @@
  */
 
  /*
-  * Scheduler abstraction of a worker.
+  * The abstraction of a connection from a scheduler to
+  * a worker.
   *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_WORKER_H_
-#define NIMBUS_LIB_SCHEDULER_WORKER_H_
 
-#include <list>
+#ifndef NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+#define NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+#include <string>
+#include <map>
 #include "lib/nimbus.h"
+#include "lib/parser.h"
+#include "lib/scheduler_command.h"
+#include "lib/scheduler_worker.h"
+
 namespace nimbus {
 
-class SchedulerServerConnection;
-class Application;
-
-class SchedulerWorker {
+class SchedulerServerConnection {
  public:
-  SchedulerWorker(worker_id_t id,
-                  SchedulerServerConnection* conn,
-                  Application* app);
-  virtual ~SchedulerWorker();
+  explicit SchedulerServerConnection(tcp::socket* sock);
+  virtual ~SchedulerServerConnection();
 
-  virtual worker_id_t worker_id();
-  virtual SchedulerServerConnection* connection();
-  virtual Application* application();
-  virtual bool is_alive();
-  virtual void MarkDead();
-  virtual uint8_t* read_buffer();
-  virtual uint32_t read_buffer_length();
+  virtual boost::asio::streambuf* read_buffer();
+  virtual tcp::socket* socket();
+  virtual int command_num();
+  virtual void set_command_num(int n);
 
  private:
-  worker_id_t worker_id_;
-  SchedulerServerConnection* connection_;
-  Application* application_;
-  bool is_alive_;
-  uint8_t* read_buffer_;
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
 };
-
-typedef std::list<SchedulerWorker*> SchedulerWorkerList;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_SCHEDULER_WORKER_H_
+#endif  // NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_

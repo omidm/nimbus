@@ -50,15 +50,12 @@
 #include "lib/nimbus.h"
 #include "lib/parser.h"
 #include "lib/scheduler_worker.h"
+#include "lib/scheduler_server_connection.h"
 #include "lib/scheduler_command.h"
 
 namespace nimbus {
 
-class Scheduler;
-class SchedulerServerConnection;
 typedef uint32_t ConnectionId;
-typedef std::map<ConnectionId, SchedulerServerConnection*> ConnectionMap;
-typedef ConnectionMap::iterator ConnectionMapIter;
 
 using boost::asio::ip::tcp;
 
@@ -79,45 +76,27 @@ class SchedulerServer {
   SchedulerWorkerList* workers();
 
  private:
-  boost::mutex map_mutex_;
-  boost::thread* connection_subscription_thread_;
   ConnectionId connection_port_;
+  boost::mutex command_mutex_;
+  SchedulerCommandList received_commands_;
+  boost::mutex worker_mutex_;
+  SchedulerWorkerList workers_;
+
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
-  Scheduler * scheduler_;
-  ConnectionMap connections_;
-  SchedulerCommandList received_commands_;
-  SchedulerWorkerList workers_;
 
   void ListenForNewConnections();
   void HandleAccept(SchedulerServerConnection* connection,
                     const boost::system::error_code& error);
-  uint32_t ReceiveMessages();
-  void AddWorker(SchedulerServerConnection* connection);
+  void HandleRead(SchedulerWorker* worker,
+                  const boost::system::error_code& error,
+                  size_t bytes_transferred);
+  void HandleWrite(SchedulerWorker* worker,
+                   const boost::system::error_code& error,
+                   size_t bytes_transferred);
+
+  SchedulerWorker* AddWorker(SchedulerServerConnection* connection);
   void MarkWorkerDead(SchedulerWorker* worker);
-};
-
-
-class SchedulerServerConnection {
- public:
-  explicit SchedulerServerConnection(tcp::socket* sock);
-  virtual ~SchedulerServerConnection();
-
-  virtual boost::asio::streambuf* read_buffer();
-  virtual tcp::socket* socket();
-  virtual int command_num();
-  virtual void set_command_num(int n);
-  virtual ConnectionId id();
-
-  virtual worker_id_t worker_id();
-  virtual void set_worker_id(worker_id_t id);
-
- private:
-  boost::asio::streambuf* read_buffer_;
-  tcp::socket* socket_;
-  int command_num_;
-  ConnectionId id_;
-  worker_id_t worker_id_;
 };
 
 }  // namespace nimbus
