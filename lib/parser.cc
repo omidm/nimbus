@@ -78,7 +78,7 @@ using boost::tokenizer;
 using boost::char_separator;
 
 
-void parseCommandFromString(const std::string& input,
+bool parseCommandFromString(const std::string& input,
                             std::string& command,
                             std::vector<std::string>& parameters) {
   char_separator<char> separator(" \n\t");
@@ -86,7 +86,7 @@ void parseCommandFromString(const std::string& input,
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
   if (iter == tokens.end()) {
     command = "";
-    return;
+    return false;
   }
 
   command = *iter;
@@ -94,6 +94,7 @@ void parseCommandFromString(const std::string& input,
   for (; iter != tokens.end(); ++iter) {
     parameters.push_back(*iter);
   }
+  return true;
 }
 
 void parseParameterFromString(const std::string& input, std::string& tag,

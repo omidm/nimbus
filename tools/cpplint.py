@@ -623,7 +623,11 @@ class _CppLintState(object):
     for category, count in self.errors_by_category.iteritems():
       sys.stderr.write('Category \'%s\' errors found: %d\n' %
                        (category, count))
-    sys.stderr.write('Total errors found: %d\n' % self.error_count)
+    if (self.error_count == 0):
+      sys.stderr.write('All files meet formatting guidelines.\n')
+    else:
+      sys.stderr.write('Total errors found: %d\n' % self.error_count)
+      
 
 _cpplint_state = _CppLintState()
 
@@ -2873,9 +2877,9 @@ def CheckStyle(filename, clean_lines, linenum, file_extension, nesting_state,
     if line_width > 100:
       error(filename, linenum, 'whitespace/line_length', 4,
             'Lines should very rarely be longer than 100 characters')
-    elif line_width > 80:
-      error(filename, linenum, 'whitespace/line_length', 2,
-            'Lines should be <= 80 characters long')
+#    elif line_width > 80:
+#      error(filename, linenum, 'whitespace/line_length', 2,
+#            'Lines should be <= 80 characters long')
 
   if (cleansed_line.count(';') > 1 and
       # for loops are allowed two ;'s (and may run over two lines).
@@ -3922,7 +3926,7 @@ def ProcessFile(filename, vlevel, extra_check_functions=[]):
             'One or more unexpected \\r (^M) found;'
             'better to use only a \\n')
 
-  sys.stderr.write('Done processing %s\n' % filename)
+  #sys.stderr.write('Done processing %s\n' % filename)
 
 
 def PrintUsage(message):

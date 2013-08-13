@@ -32,59 +32,50 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * A Nimbus job. 
+/**
+  * Abstraction of a connection from a Nimbus scheduler to
+  * a worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_JOB_H_
-#define NIMBUS_LIB_JOB_H_
-
-#include <vector>
+#include "lib/scheduler_server_connection.h"
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 #include <string>
-#include <set>
-#include <map>
-#include "lib/data.h"
-#include "lib/idset.h"
+#include "lib/dbg.h"
+
+
+using boost::asio::ip::tcp;
 
 namespace nimbus {
 
-class Application;
-class Job;
-typedef std::map<int, Job*> JobMap;
-typedef std::map<std::string, Job*> JobTable;
-typedef std::vector<Data*> DataArray;
+SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
+  :socket_(sock) {
+  read_buffer_ = new boost::asio::streambuf();
+  command_num_ = 0;
+}
 
-enum JobType {JOB_COMP, JOB_SYNC};
+SchedulerServerConnection::~SchedulerServerConnection() {
+  // FIXME: not actually cleaning up listening thread.
+}
 
-class Job {
- public:
-  Job(Application* app, JobType type);
-  virtual ~Job() {}
 
-  virtual void execute(std::string params, const DataArray& da) {}
-  virtual Job* clone();
-  virtual void sleep() {}
-  virtual void cancel() {}
+boost::asio::streambuf* SchedulerServerConnection::read_buffer() {
+  return read_buffer_;
+}
 
-  uint64_t id();
-  void set_id(uint64_t id);
+tcp::socket* SchedulerServerConnection::socket() {
+  return socket_;
+}
 
- protected:
-  Application* application_;
-  JobType type_;
+int SchedulerServerConnection::command_num() {
+  return command_num_;
+}
 
- private:
-  uint32_t id_;
-  IDSet read_set_;
-  IDSet write_set_;
-  IDSet before_set_;
-  IDSet after_set_;
-  std::string parameters_;
-};
+void SchedulerServerConnection::set_command_num(int n) {
+  command_num_ = n;
+}
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_JOB_H_
-
-

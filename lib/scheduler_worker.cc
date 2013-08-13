@@ -33,58 +33,58 @@
  */
 
  /*
-  * A Nimbus job. 
+  * A Nimbus scheduler's abstraction of a worker.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_JOB_H_
-#define NIMBUS_LIB_JOB_H_
-
-#include <vector>
-#include <string>
-#include <set>
-#include <map>
-#include "lib/data.h"
-#include "lib/idset.h"
+#include "lib/scheduler_worker.h"
+#include "lib/dbg.h"
 
 namespace nimbus {
 
-class Application;
-class Job;
-typedef std::map<int, Job*> JobMap;
-typedef std::map<std::string, Job*> JobTable;
-typedef std::vector<Data*> DataArray;
+#define WORKER_BUFSIZE 10240
 
-enum JobType {JOB_COMP, JOB_SYNC};
+SchedulerWorker::SchedulerWorker(worker_id_t id,
+                                   SchedulerServerConnection* conn,
+                                   Application* app) {
+  worker_id_ = id;
+  connection_ = conn;
+  application_ = app;
+  is_alive_ = true;
+  read_buffer_ = new uint8_t[WORKER_BUFSIZE];
+}
 
-class Job {
- public:
-  Job(Application* app, JobType type);
-  virtual ~Job() {}
+SchedulerWorker::~SchedulerWorker() {
+  // delete connection_;
+}
 
-  virtual void execute(std::string params, const DataArray& da) {}
-  virtual Job* clone();
-  virtual void sleep() {}
-  virtual void cancel() {}
+worker_id_t SchedulerWorker::worker_id() {
+  return worker_id_;
+}
 
-  uint64_t id();
-  void set_id(uint64_t id);
+SchedulerServerConnection* SchedulerWorker::connection() {
+  return connection_;
+}
 
- protected:
-  Application* application_;
-  JobType type_;
+Application* SchedulerWorker::application() {
+  return application_;
+}
 
- private:
-  uint32_t id_;
-  IDSet read_set_;
-  IDSet write_set_;
-  IDSet before_set_;
-  IDSet after_set_;
-  std::string parameters_;
-};
+bool SchedulerWorker::is_alive() {
+  return is_alive_;
+}
+
+void SchedulerWorker::MarkDead() {
+  is_alive_ = false;
+}
+
+uint8_t* SchedulerWorker::read_buffer() {
+  return read_buffer_;
+}
+
+uint32_t SchedulerWorker::read_buffer_length() {
+  return WORKER_BUFSIZE;
+}
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_JOB_H_
-
-

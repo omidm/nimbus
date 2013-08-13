@@ -33,58 +33,44 @@
  */
 
  /*
-  * A Nimbus job. 
+  * The abstraction of a connection from a scheduler to
+  * a worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_JOB_H_
-#define NIMBUS_LIB_JOB_H_
 
-#include <vector>
+#ifndef NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+#define NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
 #include <string>
-#include <set>
 #include <map>
-#include "lib/data.h"
-#include "lib/idset.h"
+#include "lib/nimbus.h"
+#include "lib/parser.h"
+#include "lib/scheduler_command.h"
+#include "lib/scheduler_worker.h"
 
 namespace nimbus {
 
-class Application;
-class Job;
-typedef std::map<int, Job*> JobMap;
-typedef std::map<std::string, Job*> JobTable;
-typedef std::vector<Data*> DataArray;
-
-enum JobType {JOB_COMP, JOB_SYNC};
-
-class Job {
+class SchedulerServerConnection {
  public:
-  Job(Application* app, JobType type);
-  virtual ~Job() {}
+  explicit SchedulerServerConnection(tcp::socket* sock);
+  virtual ~SchedulerServerConnection();
 
-  virtual void execute(std::string params, const DataArray& da) {}
-  virtual Job* clone();
-  virtual void sleep() {}
-  virtual void cancel() {}
-
-  uint64_t id();
-  void set_id(uint64_t id);
-
- protected:
-  Application* application_;
-  JobType type_;
+  virtual boost::asio::streambuf* read_buffer();
+  virtual tcp::socket* socket();
+  virtual int command_num();
+  virtual void set_command_num(int n);
 
  private:
-  uint32_t id_;
-  IDSet read_set_;
-  IDSet write_set_;
-  IDSet before_set_;
-  IDSet after_set_;
-  std::string parameters_;
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
 };
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_JOB_H_
 
-
+#endif  // NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_

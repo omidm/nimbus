@@ -43,7 +43,6 @@
 
 #include <list>
 #include "lib/nimbus.h"
-
 namespace nimbus {
 
 class SchedulerServerConnection;
@@ -56,17 +55,20 @@ class SchedulerWorker {
                   Application* app);
   virtual ~SchedulerWorker();
 
-  virtual worker_id_t id();
+  virtual worker_id_t worker_id();
   virtual SchedulerServerConnection* connection();
   virtual Application* application();
   virtual bool is_alive();
-  virtual bool MarkDead();
+  virtual void MarkDead();
+  virtual uint8_t* read_buffer();
+  virtual uint32_t read_buffer_length();
 
  private:
-  worker_id_t id_;
+  worker_id_t worker_id_;
   SchedulerServerConnection* connection_;
   Application* application_;
   bool is_alive_;
+  uint8_t* read_buffer_;
 };
 
 typedef std::list<SchedulerWorker*> SchedulerWorkerList;
