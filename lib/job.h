@@ -46,7 +46,7 @@
 #include <set>
 #include <map>
 #include "lib/data.h"
-#include "lib/scheduler_command.h"
+#include "lib/idset.h"
 
 namespace nimbus {
 
@@ -56,7 +56,7 @@ typedef std::map<int, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
 typedef std::vector<Data*> DataArray;
 
-enum JobType {COMP, SYNC};
+enum JobType {JOB_COMP, JOB_SYNC};
 
 class Job {
  public:

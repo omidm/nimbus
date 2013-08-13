@@ -34,9 +34,13 @@
 
  /*
   * Object representation of a scheduler command. Used by workers to
-  * send commands to server and server to send commands down to workers.
+  * send commands to server and server to send commands down to workers. The
+  * super class SchedulerCommand is inherited by its children implemented here.
+  * Each child represents a specific command exchanged between scheduler and
+  * worker.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
 #ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
@@ -49,6 +53,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include "lib/job.h"
 #include "lib/parser.h"
 #include "lib/idset.h"
 #include "lib/nimbus_types.h"
@@ -99,6 +104,56 @@ class SchedulerCommand {
 
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
+
+class SpawnJobCommand : public SchedulerCommand {
+  public:
+    SpawnJobCommand();
+    explicit SpawnJobCommand(std::vector<IDSet>* idsets);
+    ~SpawnJobCommand();
+
+    virtual std::string toString();
+    std::string job_name();
+    JobType job_type();
+    job_id_t jog_id();
+    IDSet* read_set();
+    IDSet* write_set();
+    IDSet* after_set();
+    IDSet* before_set();
+    std::string params();
+
+  private:
+    std::string job_name_;
+    JobType job_type_;
+    job_id_t job_id_;
+    IDSet read_set_;
+    IDSet write_set_;
+    IDSet after_set_;
+    IDSet before_set_;
+    std::string params_;
+};
+
+class DefineDataCommand : public SchedulerCommand {
+  public:
+    DefineDataCommand();
+    explicit DefineDataCommand(std::vector<IDSet>* idsets);
+    ~DefineDataCommand();
+
+    virtual std::string toString();
+    std::string data_name();
+    data_id_t data_id();
+    IDSet* neighbor_set();
+    std::string params();
+
+  private:
+    std::string data_name_;
+    data_id_t data_id_;
+    IDSet neighbor_set_;
+    std::string params_;
+};
+
+
+
+
 
 }  // namespace nimbus
 

@@ -33,9 +33,14 @@
  */
 
  /*
-  * A Nimbus scheduler command.
+  * Object representation of a scheduler command. Used by workers to
+  * send commands to server and server to send commands down to workers. The
+  * super class SchedulerCommand is inherited by its children implemented here.
+  * Each child represents a specific command exchanged between scheduler and
+  * worker.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
 #include "lib/scheduler_command.h"
