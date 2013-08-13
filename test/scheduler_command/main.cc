@@ -75,10 +75,10 @@ int main(int argc, char *argv[]) {
       cout << "  translated to string \'" << c->toString() << '\'' << std::endl;
       cout << "  translated to tokens ";
       cout << c->name() << ":";
-      nimbus:: CommandParameterList params = c->parameters();
-      nimbus::CommandParameterList::const_iterator iter = params.begin();
-      for (; iter != params.end(); ++iter) {
-        nimbus::CommandParameter param = *iter;
+      nimbus::CommandParameterList* params = c->parameters();
+      nimbus::CommandParameterList::const_iterator iter = params->begin();
+      for (; iter != params->end(); ++iter) {
+        nimbus::CommandParameter param = iter->second;
         cout << param.toString() << ";";
       }
       cout << std::endl;
