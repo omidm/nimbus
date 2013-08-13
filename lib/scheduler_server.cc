@@ -90,6 +90,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
   } else if (pending < maxCommands) {
     maxCommands = pending;
   }
+  storage->clear();
   for (uint32_t i = 0; i < maxCommands; i++) {
     SchedulerCommand* command = received_commands_.front();
     received_commands_.pop_front();

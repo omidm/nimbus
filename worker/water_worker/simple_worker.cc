@@ -32,30 +32,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_LIB_NIMBUS_TYPES_H_
-#define NIMBUS_LIB_NIMBUS_TYPES_H_
+#include "./simple_worker.h"
 
-#include <inttypes.h>
 
-#define NIMBUS_SCHEDULER_PORT 5983
+SimpleWorker::SimpleWorker(unsigned int p, Application* a)
+: Worker(p, a) {
+}
 
-namespace nimbus {
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+void SimpleWorker::workerCoreProcessor() {
+  std::cout << "Simple Worker Core Processor" << std::endl;
 
-}  // namespace nimbus
-
-#endif  // NIMBUS_LIB_NIMBUS_TYPES_H_
+  while (true) {
+    sleep(1);
+    // Log::dbg_printLine("Worker running core loop.", INFO);
+    // std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+    // str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+    // SchedulerCommand cm(str);
+    // std::cout << "Sending command: " << cm.toString() << std::endl;
+    // client->sendCommand(&cm);
+    SchedulerCommand* comm = client_->receiveCommand();
+    if (comm->toString() != "no-command") {
+      std::cout << "Received command: " << comm->toString() << std::endl;
+      processSchedulerCommand(comm);
+    }
+  }
+}

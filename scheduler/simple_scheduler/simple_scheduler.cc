@@ -68,11 +68,9 @@ void SimpleScheduler::schedulerCoreProcessor() {
         SchedulerCommand* comm = *iter;
         dbg(DBG_NET, "Iterating across command (of %i) %s\n",
             storage->size(), comm->toString().c_str());
-
-        iter = storage->erase(iter);
         if (comm->toString() != "no-command") {
-          std::cout << "Received command: " << comm->toString() << std::endl;
-          std::cout << "Sending command: " << comm->toString() << std::endl;
+          std::cout << "OMID Received command: " << comm->toString() << std::endl;
+          std::cout << "OMID Sending command: " << comm->toString() << std::endl;
           server_->SendCommand(*(server_->workers()->begin()), comm);
         }
         delete comm;

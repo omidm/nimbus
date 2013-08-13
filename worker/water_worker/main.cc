@@ -32,30 +32,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * A Nimbus worker. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  */
 
-#ifndef NIMBUS_LIB_NIMBUS_TYPES_H_
-#define NIMBUS_LIB_NIMBUS_TYPES_H_
+#include <pthread.h>
+#include <iostream>  // NOLINT
 
-#include <inttypes.h>
+#include "lib/application.h"
+#include "./simple_worker.h"
+#include "application/water_test/water_app.h"
 
-#define NIMBUS_SCHEDULER_PORT 5983
+#define SCHEDULER_PORT 5983
 
-namespace nimbus {
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+int main(int argc, char *argv[]) {
+  std::cout << "Water Worker is up!" << std::endl;
+  WaterApp *app = new WaterApp();
+  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  w->run();
+}
 
-}  // namespace nimbus
-
-#endif  // NIMBUS_LIB_NIMBUS_TYPES_H_

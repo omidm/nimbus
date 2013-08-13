@@ -42,17 +42,23 @@
 #include "lib/nimbus.h"
 #include "./water_driver.h"
 
+using namespace PhysBAM;
+using nimbus::Data;
+using nimbus::Job;
+
 /* Application class launched by Nimbus. Initialization of jobs, using
  * functions in water_driver, should be done here. Methods to initialize
  * simulation data and build the data map should also be called here.
  */
 class WaterApp : public Application {
 
+    private:
     typedef float T;
-    typedef PhysBAM::VECTOR<T, 2> TV;
-    typedef PhysBAM::VECTOR<int, TV::dimension> TV_INT;
+    typedef VECTOR<T, 2> TV;
+    typedef VECTOR<int, TV::dimension> TV_INT;
 
     public:
+    WaterApp();
     WaterDriver<TV> driver;
     void load();
 };
@@ -60,19 +66,19 @@ class WaterApp : public Application {
 class Main : public Job {
     public:
     Main(WaterApp *app, JobType type);
-    void Execute(std::string params, const dataArray& da);
+    void Execute(std::string params, const DataArray& da);
 };
 
 class Init : public Job {
     public:
     Init(WaterApp *app, JobType type);
-    void Execute(std::string params, const dataArray& da);
+    void Execute(std::string params, const DataArray& da);
 };
 
 class Loop : public Job {
     public:
     Loop(WaterApp *app, JobType type);
-    void Execute(std::string params, const dataArray& da);
+    void Execute(std::string params, const DataArray& da);
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

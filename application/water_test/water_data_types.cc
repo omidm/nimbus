@@ -41,6 +41,9 @@
 #include "lib/nimbus.h"
 #include "./water_data_types.h"
 
+using namespace PhysBAM;
+using nimbus::Data;
+
 template <class TV> FaceArray<TV>::
 FaceArray()
 {
@@ -50,11 +53,12 @@ FaceArray()
 template <class TV> bool FaceArray<TV>::
 initialize()
 {
-    data = new ARRAY<T, FACE_INDEX<TV::dimension> >;
-    if (data != NULL)
-        return true;
-    else
-        return false;
+    return false;
+//    data = new ARRAY<T, FACE_INDEX<TV::dimension> >;
+//    if (data != NULL)
+//        return true;
+//    else
+//        return false;
 }
 
 template <class TV> FaceArrayGhost<TV>::
@@ -66,11 +70,12 @@ FaceArrayGhost()
 template <class TV> bool FaceArrayGhost<TV>::
 initialize()
 {
-    data = new typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS;
-    if (data != NULL)
-        return true;
-    else
-        return false;
+    return false;
+//    data = new typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS;
+//    if (data != NULL)
+//        return true;
+//    else
+//        return false;
 }
 
 template <class TV> Grid<TV>::
@@ -86,27 +91,29 @@ initialize(
         const bool MAC_grid
         )
 {
-    data = new GRID<TV>(counts, box, MAC_grid);
-    if (data != NULL)
-        return true;
-    else
-        return false;
+    return false;
+//    data = new GRID<TV>(counts, box, MAC_grid);
+//    if (data != NULL)
+//        return true;
+//    else
+//        return false;
 }
 
 template <class TV> MPIGrid<TV>::
-MPIGrid()
+MPIGrid():
+    data(0)
 {
-    data = NULL;
 }
 
 template <class TV> bool MPIGrid<TV>::
 initialize()
 {
-    data = new MPI_UNIFORM_GRID<GRID<TV> >;
-    if (data != NULL)
-        return true;
-    else
-        return false;
+    return false;
+//    data = new MPI_UNIFORM_GRID<GRID<TV> >();
+//    if (data != NULL)
+//        return true;
+//    else
+//        return false;
 }
 
 template <class TV, class T> NonAdvData<TV, T>::
@@ -117,30 +124,39 @@ NonAdvData()
 template <class TV, class T> bool NonAdvData<TV, T>::
 initialize()
 {
-    // TODO: to fill in
-    // nothing for projection
-    boundary_scalar = new  BOUNDARY_UNIFORM<GRID<TV>, T>;
-    phi_boundary_water = new typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
-        BOUNDARY_PHI_WATER;
-    domain_boundary = new VECTOR<VECTOR<bool, 2>, TV::dimension>;
-    sources = new ARRAY<IMPLICIT_OBJECT<TV>*>;
-    particle_levelset_evolution = new 
-        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >;
-    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T>;
-    rigid_geometry_collection = new RIGID_GEOMETRY_COLLECTION<TV>;
-    collision_bodies_affecting_fluid = new typename
-        COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
-        GRID_BASED_COLLISION_GEOMETRY;
-    incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >;
-    kinematic_evolution = new KINEMATIC_EVOLUTION<TV>;
-    if (boundary_scalar == NULL || phi_boundary_water == NULL ||
-            domain_boundary == NULL || sources == NULL ||
-            particle_levelset_evolution == NULL ||
-            advection_scalar == NULL ||
-            rigid_geometry_collection == NULL ||
-            collision_bodies_affecting_fluid == NULL ||
-            incompressible == NULL)
-        return false;
-    else
-        return true;
+    return false;
+//    // TODO: to fill in
+//    // nothing for projection
+//    boundary_scalar = new  BOUNDARY_UNIFORM<GRID<TV>, T>;
+//    phi_boundary_water = new typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
+//        BOUNDARY_PHI_WATER;
+//    domain_boundary = new VECTOR<VECTOR<bool, 2>, TV::dimension>;
+//    sources = new ARRAY<IMPLICIT_OBJECT<TV>*>;
+//    particle_levelset_evolution = new 
+//        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >;
+//    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T>;
+//    rigid_geometry_collection = new RIGID_GEOMETRY_COLLECTION<TV>;
+//    collision_bodies_affecting_fluid = new typename
+//        COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
+//        GRID_BASED_COLLISION_GEOMETRY;
+//    incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >;
+//    kinematic_evolution = new KINEMATIC_EVOLUTION<TV>;
+//    if (boundary_scalar == NULL || phi_boundary_water == NULL ||
+//            domain_boundary == NULL || sources == NULL ||
+//            particle_levelset_evolution == NULL ||
+//            advection_scalar == NULL ||
+//            rigid_geometry_collection == NULL ||
+//            collision_bodies_affecting_fluid == NULL ||
+//            incompressible == NULL)
+//        return false;
+//    else
+//        return true;
 }
+
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+template class FaceArray<TVF2>;
+template class FaceArrayGhost<TVF2>;
+template class Grid<TVF2>;
+template class MPIGrid<TVF2>;
+template class NonAdvData<TVF2, TF>;
