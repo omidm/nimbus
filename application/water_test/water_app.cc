@@ -39,6 +39,9 @@
 #include "lib/nimbus.h"
 #include "./water_app.h"
 
+static int ml = 200;
+static int gl = 0;
+
 using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
@@ -56,11 +59,11 @@ void WaterApp::load() {
     registerJob("init", new Init(this, JOB_COMP));
     registerJob("loop", new Loop(this, JOB_COMP));
 
-    registerData("mac_grid_1", new Grid<TV>);
-    registerData("mpi_grid_1", new MPIGrid<TV>);
-    registerData("face_velocities_1", new FaceArray<TV>);
-    registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>);
-    registerData("sim_data_1", new NonAdvData<TV, T>);
+    registerData("mac_grid_1", new Grid<TV>(ml));
+    registerData("mpi_grid_1", new MPIGrid<TV>(ml));
+    registerData("face_velocities_1", new FaceArray<TV>(ml));
+    registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
+    registerData("sim_data_1", new NonAdvData<TV, T>(ml));
 
     std::cout << "Finished creating job and data definitions" << std::endl;
     std::cout << "Finished loading application" << std::endl;
@@ -69,7 +72,7 @@ void WaterApp::load() {
 Main::Main(Application *app, JobType type)
     : Job(app, type) {};
 
-Job *Main::clone() {
+Job* Main::clone() {
     std::cout << "Cloning main job\n";
     return new Main(application_, type_);
 };
@@ -81,42 +84,49 @@ void Main::execute(std::string params, const DataArray& da)
     std::vector<int> j;
     std::vector<int> d;
     IDSet before, after, read, write;
-    std::string par;
+    std::string par = "none";
 
     application_->getNewDataID(5, &d);
+
     application_->defineData("mac_grid_1", d[0]);
     application_->defineData("mpi_grid_1", d[1]);
     application_->defineData("face_velocities_1", d[2]);
     application_->defineData("face_velocities_ghost_1", d[3]);
     application_->defineData("sim_data_1", d[4]);
 
-    application_->getNewJobID(2, &d);
+    std::cout << "Defined data\n";
+
+    application_->getNewJobID(2, &j);
 
     before.clear();
     after.clear();
     read.clear();
     write.clear();
-    par = "";
     after.insert(j[1]);
     read.insert(d[0]);
     read.insert(d[1]);
     read.insert(d[2]);
     read.insert(d[3]);
     read.insert(d[4]);
+    std::cout << "Spawning init\n";
     application_->spawnJob("init", j[0], before, after, read, write, par);
+    std::cout << "Spawned init\n";
 
     before.clear();
     after.clear();
     read.clear();
     write.clear();
-    par = "";
+    std::cout << "Spawning loop\n";
     application_->spawnJob("loop", j[1], before, after, read, write, par);
+    std::cout << "Spawned loop\n";
+
+    std::cout << "Completed main\n";
 };
 
 Init::Init(Application *app, JobType type)
     : Job(app, type) {};
 
-Job *Init::clone() {
+Job* Init::clone() {
     std::cout << "Cloning init job";
     return new Init(application_, type_);
 };
@@ -128,7 +138,7 @@ void Init::execute(std::string params, const DataArray& da)
 Loop::Loop(Application *app, JobType type)
     : Job(app, type) {};
 
-Job *Loop::clone() {
+Job* Loop::clone() {
     std::cout << "Cloning loop job";
     return new Loop(application_, type_);
 };

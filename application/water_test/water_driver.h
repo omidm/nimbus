@@ -86,11 +86,11 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
 
     /* water simulation data
      */
-    Grid<TV> mac_grid;
-    MPIGrid<TV> mpi_grid;
-    FaceArray<TV> face_velocities;
-    FaceArrayGhost<TV> face_velocities_ghost;
-    NonAdvData<TV, T> sim_data;
+    Grid<TV> mac_grid(int size);
+    MPIGrid<TV> mpi_grid(int size);
+    FaceArray<TV> face_velocities(int size);
+    FaceArrayGhost<TV> face_velocities_ghost(int size);
+    NonAdvData<TV, T> sim_data(int size);
 
     /* water simulation parameters
      */
