@@ -80,7 +80,8 @@ void Main::execute(std::string params, const DataArray& da) {
   std::cout << "Executing the main job\n";
   std::vector<int> j;
   std::vector<int> d;
-  IDSet before, after, read, write;
+  IDSet<job_id_t> before, after;
+  IDSet<data_id_t> read, write;
   std::string par = "none";
   
   application_->getNewJobID(5, &j);
@@ -137,7 +138,8 @@ void ForLoop::execute(std::string params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<int> j;
   std::vector<int> d;
-  IDSet before, after, read, write;
+  IDSet<job_id_t> before, after;
+  IDSet<data_id_t> read, write;
   std::string par = "none";
   int counter = 0;
   int condition = 0;

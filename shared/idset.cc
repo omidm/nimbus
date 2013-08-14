@@ -42,16 +42,19 @@
 
 using namespace nimbus; // NOLINT
 
+template<typename T>
+IDSet<T>::IDSet() {}
 
-IDSet::IDSet() {}
-
-IDSet::IDSet(std::string s) {
+template<typename T>
+IDSet<T>::IDSet(std::string s) {
   parseIDSetFromString(s, identifiers_);
 }
 
-IDSet::~IDSet() {}
+template<typename T>
+IDSet<T>::~IDSet() {}
 
-std::string IDSet::toString() {
+template<typename T>
+std::string IDSet<T>::toString() {
   bool empty = true;
   std::string rval = "{";
   IDSetIter iter =  identifiers_.begin();
@@ -69,82 +72,34 @@ std::string IDSet::toString() {
   return rval;
 }
 
-void IDSet::insert(int n) {
+template<typename T>
+void IDSet<T>::insert(T n) {
   identifiers_.insert(n);
 }
 
-void IDSet::clear() {
+template<typename T>
+void IDSet<T>::clear() {
   identifiers_.clear();
 }
 
-int IDSet::size() {
+template<typename T>
+int IDSet<T>::size() {
   return identifiers_.size();
 }
 
 
-IDSet::IDSetIter IDSet::begin() {
+template<typename T>
+typename IDSet<T>::IDSetIter IDSet<T>::begin() {
   return identifiers_.begin();
 }
 
-IDSet::IDSetIter IDSet::end() {
+template<typename T>
+typename IDSet<T>::IDSetIter IDSet<T>::end() {
   return identifiers_.end();
 }
 
+template class IDSet<uint64_t>;
+template class IDSet<uint32_t>;
 
-// template<typename T>
-// IDSet<T>::IDSet() {}
-//
-// template<typename T>
-// IDSet<T>::IDSet(std::string s) {
-//   parseIDSetFromString(s, identifiers_);
-// }
-//
-// template<typename T>
-// IDSet<T>::~IDSet() {}
-//
-// template<typename T>
-// std::string IDSet<T>::toString() {
-//   bool empty = true;
-//   std::string rval = "{";
-//   IDSetIter iter =  identifiers_.begin();
-//   for (; iter !=  identifiers_.end(); ++iter) {
-//     empty = false;
-//     std::ostringstream ss;
-//     ss << *iter;
-//     rval += ss.str();
-//     rval += ",";
-//   }
-//   if (empty)
-//     rval += "}";
-//   else
-//     rval[rval.length() - 1] = '}';
-//   return rval;
-// }
-//
-// template<typename T>
-// void IDSet<T>::insert(int n) {
-//   identifiers_.insert(n);
-// }
-//
-// template<typename T>
-// void IDSet<T>::clear() {
-//   identifiers_.clear();
-// }
-//
-// template<typename T>
-// int IDSet<T>::size() {
-//   return identifiers_.size();
-// }
-//
-//
-// template<typename T>
-// IDSet<T>::IDSetIter IDSet<T>::begin() {
-//   return identifiers_.begin();
-// }
-//
-// template<typename T>
-// IDSet<T>::IDSetIter IDSet<>::end() {
-//   return identifiers_.end();
-// }
 
 

@@ -64,13 +64,13 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
       Job * j = application_->cloneJob(job_name);
 
       std::vector<Data*> da;
-      IDSet::IDSetIter iter;
+      IDSet<data_id_t>::IDSetIter iter;
 
-      IDSet* read = (*(cm->parameters()))["read"].identifier_set();
+      IDSet<data_id_t>* read = (*(cm->parameters()))["read"].identifier_set();
       for (iter = read->begin(); iter != read->end(); iter++)
         da.push_back(data_map_[*iter]);
 
-      IDSet* write = (*(cm->parameters()))["write"].identifier_set();
+      IDSet<data_id_t>* write = (*(cm->parameters()))["write"].identifier_set();
       for (iter = write->begin(); iter != write->end(); iter++)
         da.push_back(data_map_[*iter]);
 
@@ -81,7 +81,7 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
       std::string data_name = (*(cm->parameters()))["name"].value();
       Data * d = application_->cloneData(data_name);
       d->create();
-      IDSet* id = (*(cm->parameters()))["id"].identifier_set();
+      IDSet<data_id_t>* id = (*(cm->parameters()))["id"].identifier_set();
       d->set_id(*(id->begin()));
       addData(d);
   }

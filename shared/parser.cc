@@ -113,7 +113,20 @@ void parseParameterFromString(const std::string& input, std::string& tag,
     args = *iter;
 }
 
-void parseIDSetFromString(const std::string& input, std::set<int>& set) {
+void parseIDSetFromString(const std::string& input, std::set<uint64_t>& set) {
+  int num;
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    set.insert(num);
+  }
+}
+
+void parseIDSetFromString(const std::string& input, std::set<uint32_t>& set) {
   int num;
   std::string str = input.substr(1, input.length() - 2);
   char_separator<char> separator(",");

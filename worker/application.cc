@@ -63,9 +63,11 @@ void Application::registerData(std::string name, Data* d) {
   data_table_[name] = d;
 }
 
-void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
-        IDSet read, IDSet write, std::string params) {
-  IDSet idset;
+void Application::spawnJob(std::string name, job_id_t id,
+    IDSet<job_id_t> before, IDSet<job_id_t> after,
+    IDSet<data_id_t> read, IDSet<data_id_t> write,
+    std::string params) {
+  IDSet<job_id_t> idset;
   idset.insert(id);
   std::string str = "spawnjob";
   str = str + " name:" + name;
@@ -79,8 +81,8 @@ void Application::spawnJob(std::string name, int id, IDSet before, IDSet after,
   client_->sendCommand(&cm);
 }
 
-void Application::defineData(std::string name, int id) {
-  IDSet idset;
+void Application::defineData(std::string name, data_id_t id) {
+  IDSet<data_id_t> idset;
   idset.insert(id);
   std::string str = "definedata";
   str = str + " name:" + name;
