@@ -48,7 +48,7 @@ using nimbus::Job;
 using nimbus::Application;
 
 WaterApp::WaterApp():
-    driver(STREAM_TYPE(float()))
+    driver(STREAM_TYPE(T()))
 {};
 
 void WaterApp::load() {
