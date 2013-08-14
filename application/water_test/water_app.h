@@ -39,7 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./water_driver.h"
 
 using namespace PhysBAM;
@@ -68,21 +68,21 @@ class Main : public Job {
     public:
     Main(Application *app, JobType type);
     virtual void execute(std::string params, const DataArray& da);
-    virtual Job *clone();
+    virtual Job* clone();
 };
 
 class Init : public Job {
     public:
     Init(Application *app, JobType type);
     virtual void execute(std::string params, const DataArray& da);
-    virtual Job *clone();
+    virtual Job* clone();
 };
 
 class Loop : public Job {
     public:
     Loop(Application *app, JobType type);
     virtual void execute(std::string params, const DataArray& da);
-    virtual Job *clone();
+    virtual Job* clone();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

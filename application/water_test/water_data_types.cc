@@ -38,16 +38,27 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./water_data_types.h"
 
 using namespace PhysBAM;
 using nimbus::Data;
 
 template <class TV> FaceArray<TV>::
-FaceArray()
+FaceArray(int size)
 {
     data = NULL;
+}
+
+template <class TV> void FaceArray<TV>::
+create()
+{
+}
+
+template <class TV> Data* FaceArray<TV>::
+clone()
+{
+    return NULL;
 }
 
 template <class TV> bool FaceArray<TV>::
@@ -62,9 +73,20 @@ initialize()
 }
 
 template <class TV> FaceArrayGhost<TV>::
-FaceArrayGhost()
+FaceArrayGhost(int size)
 {
     data = NULL;
+}
+
+template <class TV> void FaceArrayGhost<TV>::
+create()
+{
+}
+
+template <class TV> Data* FaceArrayGhost<TV>::
+clone()
+{
+    return NULL;
 }
 
 template <class TV> bool FaceArrayGhost<TV>::
@@ -79,9 +101,20 @@ initialize()
 }
 
 template <class TV> Grid<TV>::
-Grid()
+Grid(int size)
 {
     data = NULL;
+}
+
+template <class TV> void Grid<TV>::
+create()
+{
+}
+
+template <class TV> Data* Grid<TV>::
+clone()
+{
+    return NULL;
 }
 
 template <class TV> bool Grid<TV>::
@@ -100,9 +133,20 @@ initialize(
 }
 
 template <class TV> MPIGrid<TV>::
-MPIGrid():
+MPIGrid(int size):
     data(0)
 {
+}
+
+template <class TV> void MPIGrid<TV>::
+create()
+{
+}
+
+template <class TV> Data* MPIGrid<TV>::
+clone()
+{
+    return NULL;
 }
 
 template <class TV> bool MPIGrid<TV>::
@@ -117,8 +161,19 @@ initialize()
 }
 
 template <class TV, class T> NonAdvData<TV, T>::
-NonAdvData()
+NonAdvData(int size)
 {
+}
+
+template <class TV, class T> void NonAdvData<TV, T>::
+create()
+{
+}
+
+template <class TV, class T> Data* NonAdvData<TV, T>::
+clone()
+{
+    return NULL;
 }
 
 template <class TV, class T> bool NonAdvData<TV, T>::

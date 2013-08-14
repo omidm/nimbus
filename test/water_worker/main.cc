@@ -42,14 +42,16 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
-#include "lib/application.h"
+#include "shared/nimbus.h"
+#include "worker/application.h"
 #include "./simple_worker.h"
 #include "application/water_test/water_app.h"
 
 #define SCHEDULER_PORT 5983
 
 int main(int argc, char *argv[]) {
-  std::cout << "Water Worker is up!" << std::endl;
+  nimbus_initialize();
+  std::cout << "Simple Worker is up!" << std::endl;
   WaterApp *app = new WaterApp();
   SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
   w->run();

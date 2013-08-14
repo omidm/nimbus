@@ -43,7 +43,7 @@
 
 /* Include relevant PhysBAM files here.
 */
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./physbam_include.h"
 
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
@@ -79,9 +79,12 @@ template <class TV>
 class FaceArray : public Data {
     typedef typename TV::SCALAR T;
     public:
-    ARRAY<T, FACE_INDEX<TV::dimension> > *data;
-    FaceArray();
+    FaceArray(int size);
+    virtual void create();
+    virtual Data* clone();
     bool initialize();
+    // physbam structures and methods
+    ARRAY<T, FACE_INDEX<TV::dimension> > *data;
 };
 
 /* Ghost face array for storing scalar quantities.
@@ -89,9 +92,12 @@ class FaceArray : public Data {
 template <class TV>
 class FaceArrayGhost : public Data {
     public:
-        typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
-        FaceArrayGhost();
+        FaceArrayGhost(int size);
+        virtual void create();
+        virtual Data* clone();
         bool initialize();
+        // physbam structures and methods
+        typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
 };
 
 /* Grid class for storing the mac grid information.
@@ -100,12 +106,15 @@ template <class TV>
 class Grid : public Data {
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
     public:
-    GRID<TV> *data;
-    Grid();
+    Grid(int size);
+    virtual void create();
+    virtual Data* clone();
     bool initialize(
             const TV_INT &counts,
             const RANGE<TV> &box,
             const bool MAC_grid);
+    // physbam structures and methods
+    GRID<TV> *data;
 };
 
 /* MPIGrid class for storing MPI grid information.
@@ -115,9 +124,12 @@ class Grid : public Data {
 template <class TV>
 class MPIGrid : public Data {
     public:
-        MPI_UNIFORM_GRID<GRID<TV> > *data;
-        MPIGrid();
+        MPIGrid(int size);
+        virtual void create();
+        virtual Data* clone();
         bool initialize();
+        // physbam structures and methods
+        MPI_UNIFORM_GRID<GRID<TV> > *data;
 };
 
 /* Add all other data used by water simulation here.  DO NOT add scalar
@@ -127,6 +139,12 @@ template <class TV, class T>
 class NonAdvData : public Data {
 
     public:
+        NonAdvData(int size);
+        virtual void create();
+        virtual Data* clone();
+        bool initialize();
+
+        // physbam structures and methods
 
         // boundary information
         BOUNDARY_UNIFORM<GRID<TV>, T>
@@ -155,9 +173,6 @@ class NonAdvData : public Data {
 
         // driver data
         KINEMATIC_EVOLUTION<TV> *kinematic_evolution;
-
-        NonAdvData();
-        bool initialize();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_
