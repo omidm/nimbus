@@ -33,21 +33,52 @@
  */
 
  /*
-  * Nimbus data abstraction from scheduler point of view. 
+  * Scheduler abstraction of a worker.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#include "lib/scheduler_data.h"
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
 
-using namespace nimbus; // NOLINT
+#include <list>
+#include "lib/nimbus.h"
+#include "lib/scheduler_server_connection.h"
 
-SchedulerData::SchedulerData() {}
+namespace nimbus {
 
-uint64_t SchedulerData::id() {
-  return id_;
-}
+class Application;
 
-void SchedulerData::set_id(uint64_t id) {
-  id_ = id;
-}
+class SchedulerWorker {
+ public:
+  SchedulerWorker(worker_id_t id,
+                  SchedulerServerConnection* conn,
+                  Application* app);
+  virtual ~SchedulerWorker();
+
+  virtual worker_id_t worker_id();
+  virtual SchedulerServerConnection* connection();
+  virtual Application* application();
+  virtual bool is_alive();
+  virtual void MarkDead();
+  virtual char* read_buffer();
+  virtual uint32_t existing_bytes();
+  virtual void set_existing_bytes(uint32_t bytes);
+  virtual uint32_t read_buffer_length();
+
+ private:
+  worker_id_t worker_id_;
+  SchedulerServerConnection* connection_;
+  Application* application_;
+  bool is_alive_;
+  char* read_buffer_;
+  // How many bytes in the read buffer are valid before
+  // a read.
+  uint32_t existing_bytes_;
+};
+
+typedef std::list<SchedulerWorker*> SchedulerWorkerList;
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_

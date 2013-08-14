@@ -33,51 +33,75 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_JOB_H_
-#define NIMBUS_LIB_SCHEDULER_JOB_H_
+#include "scheduler/scheduler.h"
 
-#include <vector>
-#include <string>
-#include <set>
-#include <map>
-#include "lib/data.h"
-#include "lib/idset.h"
-#include "lib/nimbus_types.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+Scheduler::Scheduler(unsigned int p)
+: port_(p) {
+  appId_ = 0;
+}
 
-class SchedulerJob;
-typedef std::map<int, SchedulerJob*> JobMap;
-typedef std::vector<Data*> DataArray;
+void Scheduler::run() {
+  Log::dbg_printLine("Running the Scheduler");
 
-enum JobType {JOB_COMP, JOB_SYNC};
+  setupWorkerInterface();
+  setupUserInterface();
 
-class SchedulerJob {
- public:
-  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
-  virtual ~SchedulerJob() {}
+  schedulerCoreProcessor();
+}
 
-  uint64_t id();
-  void set_id(job_id_t id);
+void Scheduler::setupWorkerInterface() {
+  loadWorkerCommands();
+  server_ = new SchedulerServer(port_);
+  worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+}
 
+void Scheduler::setupUserInterface() {
+  loadUserCommands();
+  user_interface_thread_ = new boost::thread(
+      boost::bind(&Scheduler::getUserCommand, this));
+}
 
- private:
-  job_id_t id_;
-  app_id_t app_id_;
-  JobType type_;
-  IDSet read_set_;
-  IDSet write_set_;
-  IDSet before_set_;
-  IDSet after_set_;
-  std::string parameters_;
-};
+void Scheduler::getUserCommand() {
+  while (true) {
+    std::cout << "command: " << std::endl;
+    std::string token("runapp");
+    std::string str, cm;
+    std::vector<int> args;
+    getline(std::cin, str);
+    parseCommand(str, user_command_set_, cm, args);
+    std::cout << "you typed: " << cm << std::endl;
+  }
+}
 
-}  // namespace nimbus
-#endif  // NIMBUS_LIB_SCHEDULER_JOB_H_
+void Scheduler::loadUserCommands() {
+  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    user_command_set_.insert(word);
+  }
+}
+
+void Scheduler::loadWorkerCommands() {
+  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    worker_command_set_.insert(word);
+  }
+}
 
 

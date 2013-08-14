@@ -33,68 +33,51 @@
  */
 
  /*
-  * A Nimbus scheduler's abstraction of a worker.
+  * Nimbus job abstraction from scheduler point of view. 
   *
-  * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler_worker.h"
-#include "lib/dbg.h"
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+
+#include <vector>
+#include <string>
+#include <set>
+#include <map>
+#include "lib/data.h"
+#include "lib/idset.h"
+#include "lib/nimbus_types.h"
 
 namespace nimbus {
 
-#define WORKER_BUFSIZE 10240
+class SchedulerJob;
+typedef std::map<int, SchedulerJob*> JobMap;
+typedef std::vector<Data*> DataArray;
 
-SchedulerWorker::SchedulerWorker(worker_id_t id,
-                                   SchedulerServerConnection* conn,
-                                   Application* app) {
-  worker_id_ = id;
-  connection_ = conn;
-  application_ = app;
-  is_alive_ = true;
-  existing_bytes_ = 0;
-  read_buffer_ = new char[WORKER_BUFSIZE];
-}
+enum JobType {JOB_COMP, JOB_SYNC};
 
-SchedulerWorker::~SchedulerWorker() {
-  delete connection_;
-  delete read_buffer_;
-}
+class SchedulerJob {
+ public:
+  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
+  virtual ~SchedulerJob() {}
 
-worker_id_t SchedulerWorker::worker_id() {
-  return worker_id_;
-}
+  uint64_t id();
+  void set_id(job_id_t id);
 
-SchedulerServerConnection* SchedulerWorker::connection() {
-  return connection_;
-}
 
-Application* SchedulerWorker::application() {
-  return application_;
-}
-
-bool SchedulerWorker::is_alive() {
-  return is_alive_;
-}
-
-void SchedulerWorker::MarkDead() {
-  is_alive_ = false;
-}
-
-char* SchedulerWorker::read_buffer() {
-  return read_buffer_;
-}
-
-uint32_t SchedulerWorker::existing_bytes() {
-  return existing_bytes_;
-}
-
-void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
-  existing_bytes_ = bytes;
-}
-
-uint32_t SchedulerWorker::read_buffer_length() {
-  return WORKER_BUFSIZE;
-}
+ private:
+  job_id_t id_;
+  app_id_t app_id_;
+  JobType type_;
+  IDSet read_set_;
+  IDSet write_set_;
+  IDSet before_set_;
+  IDSet after_set_;
+  std::string parameters_;
+};
 
 }  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+
+

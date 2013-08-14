@@ -33,75 +33,40 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * Nimbus data abstraction from scheduler point of view. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler.h"
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_DATA_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_DATA_H_
 
-using namespace nimbus; // NOLINT
+#include <set>
+#include <map>
+#include <string>
+#include "lib/cluster.h"
 
-Scheduler::Scheduler(unsigned int p)
-: port_(p) {
-  appId_ = 0;
-}
+namespace nimbus {
 
-void Scheduler::run() {
-  Log::dbg_printLine("Running the Scheduler");
+class SchedulerData;
+typedef std::set<SchedulerData*> Neighbors;
+typedef std::map<int, SchedulerData*> DataMap;
 
-  setupWorkerInterface();
-  setupUserInterface();
+class SchedulerData {
+ public:
+  SchedulerData();
+  virtual ~SchedulerData() {}
 
-  schedulerCoreProcessor();
-}
+  uint64_t id();
+  void set_id(uint64_t id);
 
-void Scheduler::setupWorkerInterface() {
-  loadWorkerCommands();
-  server_ = new SchedulerServer(port_);
-  worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
-}
+ private:
+  uint64_t id_;
+  bool advanceData_;
+  Hosts hosts_;
+  Neighbors neighbors_;
+};
 
-void Scheduler::setupUserInterface() {
-  loadUserCommands();
-  user_interface_thread_ = new boost::thread(
-      boost::bind(&Scheduler::getUserCommand, this));
-}
+}  // namespace nimbus
 
-void Scheduler::getUserCommand() {
-  while (true) {
-    std::cout << "command: " << std::endl;
-    std::string token("runapp");
-    std::string str, cm;
-    std::vector<int> args;
-    getline(std::cin, str);
-    parseCommand(str, user_command_set_, cm, args);
-    std::cout << "you typed: " << cm << std::endl;
-  }
-}
-
-void Scheduler::loadUserCommands() {
-  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    user_command_set_.insert(word);
-  }
-}
-
-void Scheduler::loadWorkerCommands() {
-  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    worker_command_set_.insert(word);
-  }
-}
-
-
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_DATA_H_

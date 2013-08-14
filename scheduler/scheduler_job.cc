@@ -33,40 +33,25 @@
  */
 
  /*
-  * Nimbus data abstraction from scheduler point of view. 
+  * Nimbus job abstraction from scheduler point of view. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_DATA_H_
-#define NIMBUS_LIB_SCHEDULER_DATA_H_
+#include "scheduler/scheduler_job.h"
 
-#include <set>
-#include <map>
-#include <string>
-#include "lib/cluster.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
+  id_ = id;
+  type_ = type;
+  app_id_ = app_id;
+}
 
-class SchedulerData;
-typedef std::set<SchedulerData*> Neighbors;
-typedef std::map<int, SchedulerData*> DataMap;
+uint64_t SchedulerJob::id() {
+  return id_;
+}
 
-class SchedulerData {
- public:
-  SchedulerData();
-  virtual ~SchedulerData() {}
-
-  uint64_t id();
-  void set_id(uint64_t id);
-
- private:
-  uint64_t id_;
-  bool advanceData_;
-  Hosts hosts_;
-  Neighbors neighbors_;
-};
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_LIB_SCHEDULER_DATA_H_
+void SchedulerJob::set_id(job_id_t id) {
+  id_ = id;
+}

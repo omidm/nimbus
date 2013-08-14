@@ -33,61 +33,68 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * A Nimbus scheduler's abstraction of a worker.
   *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_H_
-#define NIMBUS_LIB_SCHEDULER_H_
-
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "lib/nimbus.h"
-#include "lib/scheduler_server.h"
-#include "lib/cluster.h"
-#include "lib/parser.h"
+#include "scheduler/scheduler_worker.h"
+#include "lib/dbg.h"
 
 namespace nimbus {
-class Scheduler {
-  public:
-    explicit Scheduler(unsigned int listening_port);
-    virtual ~Scheduler() {}
 
-    virtual void run();
-    virtual void schedulerCoreProcessor() {}
-    virtual void loadClusterMap(std::string) {}
-    virtual void deleteWorker(Worker * worker) {}
-    virtual void addWorker(Worker * worker) {}
-    virtual Worker* getWorker(int workerId) {return worker_map_[workerId];}
+#define WORKER_BUFSIZE 10240
 
-  protected:
-    SchedulerServer* server_;
+SchedulerWorker::SchedulerWorker(worker_id_t id,
+                                   SchedulerServerConnection* conn,
+                                   Application* app) {
+  worker_id_ = id;
+  connection_ = conn;
+  application_ = app;
+  is_alive_ = true;
+  existing_bytes_ = 0;
+  read_buffer_ = new char[WORKER_BUFSIZE];
+}
 
-  private:
-    virtual void setupUserInterface();
-    virtual void setupWorkerInterface();
-    virtual void getUserCommand();
-    virtual void loadUserCommands();
-    virtual void loadWorkerCommands();
+SchedulerWorker::~SchedulerWorker() {
+  delete connection_;
+  delete read_buffer_;
+}
 
-    boost::thread* user_interface_thread_;
-    boost::thread* worker_thread_;
-    CmSet user_command_set_;
-    CmSet worker_command_set_;
-    Computer host_;
-    uint16_t port_;
-    uint64_t appId_;
-    // AppMap app_map_;
-    WorkerMap worker_map_;
-    ClusterMap cluster_map_;
-};
+worker_id_t SchedulerWorker::worker_id() {
+  return worker_id_;
+}
+
+SchedulerServerConnection* SchedulerWorker::connection() {
+  return connection_;
+}
+
+Application* SchedulerWorker::application() {
+  return application_;
+}
+
+bool SchedulerWorker::is_alive() {
+  return is_alive_;
+}
+
+void SchedulerWorker::MarkDead() {
+  is_alive_ = false;
+}
+
+char* SchedulerWorker::read_buffer() {
+  return read_buffer_;
+}
+
+uint32_t SchedulerWorker::existing_bytes() {
+  return existing_bytes_;
+}
+
+void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
+  existing_bytes_ = bytes;
+}
+
+uint32_t SchedulerWorker::read_buffer_length() {
+  return WORKER_BUFSIZE;
+}
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_SCHEDULER_H_

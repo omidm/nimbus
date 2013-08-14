@@ -33,25 +33,61 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Nimbus scheduler. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler_job.h"
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_H_
 
-using namespace nimbus; // NOLINT
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "lib/nimbus.h"
+#include "lib/scheduler_server.h"
+#include "lib/cluster.h"
+#include "lib/parser.h"
 
-SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
-  id_ = id;
-  type_ = type;
-  app_id_ = app_id;
-}
+namespace nimbus {
+class Scheduler {
+  public:
+    explicit Scheduler(unsigned int listening_port);
+    virtual ~Scheduler() {}
 
-uint64_t SchedulerJob::id() {
-  return id_;
-}
+    virtual void run();
+    virtual void schedulerCoreProcessor() {}
+    virtual void loadClusterMap(std::string) {}
+    virtual void deleteWorker(Worker * worker) {}
+    virtual void addWorker(Worker * worker) {}
+    virtual Worker* getWorker(int workerId) {return worker_map_[workerId];}
 
-void SchedulerJob::set_id(job_id_t id) {
-  id_ = id;
-}
+  protected:
+    SchedulerServer* server_;
+
+  private:
+    virtual void setupUserInterface();
+    virtual void setupWorkerInterface();
+    virtual void getUserCommand();
+    virtual void loadUserCommands();
+    virtual void loadWorkerCommands();
+
+    boost::thread* user_interface_thread_;
+    boost::thread* worker_thread_;
+    CmSet user_command_set_;
+    CmSet worker_command_set_;
+    Computer host_;
+    uint16_t port_;
+    uint64_t appId_;
+    // AppMap app_map_;
+    WorkerMap worker_map_;
+    ClusterMap cluster_map_;
+};
+
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_H_
