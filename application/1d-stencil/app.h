@@ -1,9 +1,9 @@
 #ifndef _1DSTENCIL
 #define _1DSTENCIL
 
-#include "lib/application.h"
-#include "lib/job.h"
-#include "lib/data.h"
+#include "worker/application.h"
+#include "worker/job.h"
+#include "worker/data.h"
 
 using namespace nimbus; // NOLINT
 

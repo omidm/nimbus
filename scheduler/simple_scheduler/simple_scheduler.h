@@ -53,11 +53,12 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "lib/nimbus.h"
-#include "lib/scheduler_server.h"
-#include "lib/cluster.h"
-#include "lib/parser.h"
-#include "lib/scheduler.h"
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server.h"
+#include "shared/cluster.h"
+#include "shared/parser.h"
+#include "scheduler/scheduler.h"
 
 class SimpleScheduler : public Scheduler {
   public:

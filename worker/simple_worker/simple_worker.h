@@ -48,14 +48,14 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "lib/scheduler_client.h"
-#include "lib/cluster.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/application.h"
-#include "lib/parser.h"
-#include "lib/log.h"
-#include "lib/worker.h"
+#include "shared/scheduler_client.h"
+#include "shared/cluster.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "shared/parser.h"
+#include "shared/log.h"
+#include "worker/worker.h"
 
 
 class SimpleWorker : public Worker {

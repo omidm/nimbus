@@ -42,9 +42,10 @@
 
 #include <iostream> // NOLINT
 #include "./simple_scheduler.h"
-#include "lib/nimbus.h"
-#include "lib/scheduler_command.h"
-#include "lib/parser.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_command.h"
+#include "shared/parser.h"
+
 int main(int argc, char *argv[]) {
   nimbus::nimbus_initialize();
 

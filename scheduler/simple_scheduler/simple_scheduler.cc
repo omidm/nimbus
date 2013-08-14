@@ -41,7 +41,7 @@
   */
 
 #include "./simple_scheduler.h"
-#include "lib/dbg.h"
+
 SimpleScheduler::SimpleScheduler(unsigned int p)
 : Scheduler(p) {
 }

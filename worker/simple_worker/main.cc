@@ -41,8 +41,8 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
-#include "lib/nimbus.h"
-#include "lib/application.h"
+#include "shared/nimbus.h"
+#include "worker/application.h"
 #include "./simple_worker.h"
 #include "../../application/1d-stencil/app.h"
 
