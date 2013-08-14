@@ -15,8 +15,8 @@ APP_H_FILES = $(wildcard $(ADIR)*.h)
 APP_CPP_FILES = $(wildcard $(ADIR)*.cc)
 APP_OBJECT_FILES = $(subst .cc,.o,$(APP_CPP_FILES))
  
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
-LDFLAGS += -L.
+LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -l1d_stencil
+LDFLAGS += -L$(ADIR) -Wl,-rpath=$(ADIR)
 
 # Add the dependencies here
 %.o: %.cc

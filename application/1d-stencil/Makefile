@@ -1,30 +1,30 @@
-# File for 1-d stencil application
 
-TARGET = app
-all: check $(TARGET)
+all: check application
 
 NIMBUS_ROOT = ../..
-include ${NIMBUS_ROOT}/Makeinclude
+include $(NIMBUS_ROOT)/Makeinclude
 
-IFLAGS += -I$(LDIR)
-H_FILES = $(wildcard *.h)
-CPP_FILES = $(wildcard *.cc)
+LIBRARY = lib1d_stencil.so
 
-OBJECT_FILES = app.o main.o
+CFLAGS += -fPIC
+CFILES = $(wildcard *.cc)
+HFILES = $(wildcard *.h)
+OBJFILES = $(subst .cc,.o,$(CFILES))
+LFLAGS += -lboost_thread-mt -lboost_system-mt
+SHARED_FLAGS = -shared -fPIC
 
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
-LDFLAGS += -L.
+ifdef OS_DARWIN
+  LINK_FLAG = -install_name @rpath/$(LIBRARY)
+endif
 
-# Add the dependencies here
+application: $(LIBRARY)
+
+$(LIBRARY): $(OBJFILES) $(HFILES)
+	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
+
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
-
 clean: clean-files
-	\rm -f $(TARGET)
+	\rm -f $(LIBRARY)
 
-#mpi: $(CPP_FILES) $(H_FILES) 
-#	mpiCC -o scheduler-mpi $(CPP_FILES) $(INCL)                              
-  
