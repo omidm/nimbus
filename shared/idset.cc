@@ -51,6 +51,11 @@ IDSet<T>::IDSet(std::string s) {
 }
 
 template<typename T>
+IDSet<T>::IDSet(const IDSet<T>& other)
+: identifiers_(other.identifiers_) {
+}
+
+template<typename T>
 IDSet<T>::~IDSet() {}
 
 template<typename T>
@@ -96,6 +101,12 @@ typename IDSet<T>::IDSetIter IDSet<T>::begin() {
 template<typename T>
 typename IDSet<T>::IDSetIter IDSet<T>::end() {
   return identifiers_.end();
+}
+
+template<typename T>
+IDSet<T>& IDSet<T>::operator= (const IDSet<T>& right) {
+  identifiers_ = right.identifiers_;
+  return *this;
 }
 
 template class IDSet<uint64_t>;

@@ -58,6 +58,7 @@ class IDSet {
  public:
   IDSet();
   explicit IDSet(std::string s);
+  IDSet(const IDSet<T>& other);
   virtual ~IDSet();
 
   virtual std::string toString();
@@ -69,6 +70,8 @@ class IDSet {
 
   IDSetIter begin();
   IDSetIter end();
+
+  IDSet<T>& operator= (const IDSet<T>& right);
 
  private:
   typename std::set<T> identifiers_;
