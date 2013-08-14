@@ -33,25 +33,66 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Object representation of a set of identifires.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SHARED_IDSET_H_
+#define NIMBUS_SHARED_IDSET_H_
 
-#include "data/partition_graph.h"
+#include <sstream> // NOLINT
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/parser.h"
+
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+class IDSet {
+ public:
+  IDSet();
+  explicit IDSet(std::string s);
+  virtual ~IDSet();
+
+  virtual std::string toString();
+  virtual void insert(int entry);
+  virtual void clear();
+  virtual int size();
+
+  typedef typename std::set<int>::iterator IDSetIter;
+
+  IDSetIter begin();
+  IDSetIter end();
+
+ private:
+  typename std::set<int> identifiers_;
+};
+
+
+// template<typename T>
+// class IDSet {
+//  public:
+//   IDSet();
+//   explicit IDSet(std::string s);
+//   virtual ~IDSet();
+//
+//   virtual std::string toString();
+//   virtual void insert(T entry);
+//   virtual void clear();
+//   virtual int size();
+//
+//   typedef typename std::set<T>::iterator IDSetIter;
+//
+//   IDSetIter begin();
+//   IDSetIter end();
+//
+//  private:
+//   typename std::set<T> identifiers_;
+// };
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SHARED_IDSET_H_

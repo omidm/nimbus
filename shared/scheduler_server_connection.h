@@ -33,25 +33,45 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * The abstraction of a connection from a scheduler to
+  * a worker.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
 
-#include "data/partition_graph.h"
+#ifndef NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
+#define NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
+
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <map>
+#include <string>
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/parser.h"
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+class SchedulerServerConnection {
+ public:
+  explicit SchedulerServerConnection(tcp::socket* sock);
+  virtual ~SchedulerServerConnection();
+
+  virtual boost::asio::streambuf* read_buffer();
+  virtual tcp::socket* socket();
+  virtual int command_num();
+  virtual void set_command_num(int n);
+
+ private:
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
+};
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_

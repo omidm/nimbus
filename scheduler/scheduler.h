@@ -33,25 +33,61 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus scheduler. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_H_
 
-#include "data/partition_graph.h"
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/nimbus.h"
+#include "shared/scheduler_server.h"
+#include "shared/cluster.h"
+#include "shared/parser.h"
 
 namespace nimbus {
+class Scheduler {
+  public:
+    explicit Scheduler(unsigned int listening_port);
+    virtual ~Scheduler() {}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+    virtual void run();
+    virtual void schedulerCoreProcessor() {}
+    virtual void loadClusterMap(std::string) {}
+    virtual void deleteWorker(Worker * worker) {}
+    virtual void addWorker(Worker * worker) {}
+    virtual Worker* getWorker(int workerId) {return worker_map_[workerId];}
+
+  protected:
+    SchedulerServer* server_;
+
+  private:
+    virtual void setupUserInterface();
+    virtual void setupWorkerInterface();
+    virtual void getUserCommand();
+    virtual void loadUserCommands();
+    virtual void loadWorkerCommands();
+
+    boost::thread* user_interface_thread_;
+    boost::thread* worker_thread_;
+    CmSet user_command_set_;
+    CmSet worker_command_set_;
+    Computer host_;
+    uint16_t port_;
+    uint64_t appId_;
+    // AppMap app_map_;
+    WorkerMap worker_map_;
+    ClusterMap cluster_map_;
+};
+
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_H_

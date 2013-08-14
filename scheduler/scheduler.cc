@@ -33,25 +33,75 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus scheduler. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#include "scheduler/scheduler.h"
 
-#include "data/partition_graph.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+Scheduler::Scheduler(unsigned int p)
+: port_(p) {
+  appId_ = 0;
+}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+void Scheduler::run() {
+  Log::dbg_printLine("Running the Scheduler");
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+  setupWorkerInterface();
+  setupUserInterface();
+
+  schedulerCoreProcessor();
+}
+
+void Scheduler::setupWorkerInterface() {
+  loadWorkerCommands();
+  server_ = new SchedulerServer(port_);
+  worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+}
+
+void Scheduler::setupUserInterface() {
+  loadUserCommands();
+  user_interface_thread_ = new boost::thread(
+      boost::bind(&Scheduler::getUserCommand, this));
+}
+
+void Scheduler::getUserCommand() {
+  while (true) {
+    std::cout << "command: " << std::endl;
+    std::string token("runapp");
+    std::string str, cm;
+    std::vector<int> args;
+    getline(std::cin, str);
+    parseCommand(str, user_command_set_, cm, args);
+    std::cout << "you typed: " << cm << std::endl;
+  }
+}
+
+void Scheduler::loadUserCommands() {
+  std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    user_command_set_.insert(word);
+  }
+}
+
+void Scheduler::loadWorkerCommands() {
+  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  while (true) {
+    std::string word;
+    cms >> word;
+    if (cms.fail()) {
+      break;
+    }
+    worker_command_set_.insert(word);
+  }
+}
+
+

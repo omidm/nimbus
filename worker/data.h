@@ -33,25 +33,48 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus abstraction of data. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_WORKER_DATA_H_
+#define NIMBUS_WORKER_DATA_H_
 
-#include "data/partition_graph.h"
+#include <set>
+#include <map>
+#include <string>
+#include "shared/cluster.h"
 
 namespace nimbus {
+class Data;
+typedef std::set<Data*> Neighbors;
+typedef std::map<int, Data*> DataMap;
+typedef std::map<std::string, Data*> DataTable;
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+class Data {
+ public:
+  Data();
+  virtual ~Data() {}
+
+  virtual Data* clone();
+  virtual void create() {}
+  virtual void destroy(Computer location) {}
+  virtual void duplicate(Computer source, Computer destination) {}
+  virtual void migrate(Computer sourcer, Computer destination) {}
+  virtual void split(Data *, Data *) {}
+  virtual void merge(Data *, Data *) {}
+
+  uint64_t id();
+  void set_id(uint64_t id);
+
+ private:
+  uint64_t id_;
+  bool advanceData_;
+  Hosts hosts_;
+  Neighbors neighbors_;
+};
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_WORKER_DATA_H_

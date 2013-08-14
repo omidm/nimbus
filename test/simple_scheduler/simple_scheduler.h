@@ -33,25 +33,38 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Simple Nimbus scheduler that is supposed to run the application over a
+  * single worker. It is intended to check the command exchange interface, the
+  * mapping logics and generally the system abstraction soundness.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+#define NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
 
-#include "data/partition_graph.h"
+#define DEBUG_MODE
 
-namespace nimbus {
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server.h"
+#include "shared/cluster.h"
+#include "shared/parser.h"
+#include "scheduler/scheduler.h"
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+class SimpleScheduler : public Scheduler {
+  public:
+    explicit SimpleScheduler(unsigned int listening_port);
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+    virtual  void schedulerCoreProcessor();
+};
+
+#endif  // NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_

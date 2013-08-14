@@ -32,26 +32,45 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+/**
+  * Abstraction of a connection from a Nimbus scheduler to
+  * a worker.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#include "shared/scheduler_server_connection.h"
 
-#include "data/partition_graph.h"
+using boost::asio::ip::tcp;
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
+  :socket_(sock) {
+  read_buffer_ = new boost::asio::streambuf();
+  command_num_ = 0;
+}
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+SchedulerServerConnection::~SchedulerServerConnection() {
+  // FIXME: not actually cleaning up listening thread.
+}
+
+
+boost::asio::streambuf* SchedulerServerConnection::read_buffer() {
+  return read_buffer_;
+}
+
+tcp::socket* SchedulerServerConnection::socket() {
+  return socket_;
+}
+
+int SchedulerServerConnection::command_num() {
+  return command_num_;
+}
+
+void SchedulerServerConnection::set_command_num(int n) {
+  command_num_ = n;
+}
+
+}  // namespace nimbus

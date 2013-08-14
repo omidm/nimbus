@@ -33,25 +33,50 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Client (worker) side interface of the Nimbus scheduler protocol. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SHARED_SCHEDULER_CLIENT_H_
+#define NIMBUS_SHARED_SCHEDULER_CLIENT_H_
 
-#include "data/partition_graph.h"
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <map>
+#include <string>
+#include <sstream>
+#include <iostream>  // NOLINT
+#include "shared/dbg.h"
+#include "shared/parser.h"
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+class Worker;
+typedef uint32_t ConnectionId;
+using boost::asio::ip::tcp;
+
+class SchedulerClient {
+ public:
+  explicit SchedulerClient(uint16_t port);
+  virtual ~SchedulerClient();
+
+  virtual void run();
+  virtual SchedulerCommand* receiveCommand();
+  virtual void sendCommand(SchedulerCommand* command);
+
+ private:
+  ConnectionId connection_port_no_;
+  boost::asio::io_service* io_service_;
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
+
+  void createNewConnections();
+};
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SHARED_SCHEDULER_CLIENT_H_

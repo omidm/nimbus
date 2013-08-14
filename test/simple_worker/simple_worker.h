@@ -33,25 +33,40 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_TEST_SIMPLE_WORKER_SIMPLE_WORKER_H_
+#define NIMBUS_TEST_SIMPLE_WORKER_SIMPLE_WORKER_H_
 
-#include "data/partition_graph.h"
+// #define DEBUG_MODE
 
-namespace nimbus {
+#include <boost/thread.hpp>
+#include <string>
+#include <vector>
+#include <map>
+#include "shared/scheduler_client.h"
+#include "shared/cluster.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "shared/parser.h"
+#include "shared/log.h"
+#include "worker/worker.h"
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+class SimpleWorker : public Worker {
+  public:
+    SimpleWorker(unsigned int p,  Application * a);
+
+    virtual void workerCoreProcessor();
+};
+
+
+
+
+
+#endif  // NIMBUS_TEST_SIMPLE_WORKER_SIMPLE_WORKER_H_

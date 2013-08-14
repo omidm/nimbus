@@ -32,26 +32,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
-  */
+/* Header file for application developers. */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SHARED_NIMBUS_H_
+#define NIMBUS_SHARED_NIMBUS_H_
 
-#include "data/partition_graph.h"
+#include "shared/log.h"
+#include "shared/nimbus_types.h"
+#include "worker/application.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/worker.h"
 
 namespace nimbus {
+void nimbus_initialize();
+}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
-
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SHARED_NIMBUS_H_

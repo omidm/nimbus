@@ -33,25 +33,67 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * A Nimbus scheduler's abstraction of a worker.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-
-#include "data/partition_graph.h"
+#include "scheduler/scheduler_worker.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+#define WORKER_BUFSIZE 10240
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+SchedulerWorker::SchedulerWorker(worker_id_t id,
+                                   SchedulerServerConnection* conn,
+                                   Application* app) {
+  worker_id_ = id;
+  connection_ = conn;
+  application_ = app;
+  is_alive_ = true;
+  existing_bytes_ = 0;
+  read_buffer_ = new char[WORKER_BUFSIZE];
+}
+
+SchedulerWorker::~SchedulerWorker() {
+  delete connection_;
+  delete read_buffer_;
+}
+
+worker_id_t SchedulerWorker::worker_id() {
+  return worker_id_;
+}
+
+SchedulerServerConnection* SchedulerWorker::connection() {
+  return connection_;
+}
+
+Application* SchedulerWorker::application() {
+  return application_;
+}
+
+bool SchedulerWorker::is_alive() {
+  return is_alive_;
+}
+
+void SchedulerWorker::MarkDead() {
+  is_alive_ = false;
+}
+
+char* SchedulerWorker::read_buffer() {
+  return read_buffer_;
+}
+
+uint32_t SchedulerWorker::existing_bytes() {
+  return existing_bytes_;
+}
+
+void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
+  existing_bytes_ = bytes;
+}
+
+uint32_t SchedulerWorker::read_buffer_length() {
+  return WORKER_BUFSIZE;
+}
+
+}  // namespace nimbus

@@ -33,25 +33,49 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Parser for Nimbus scheduler protocol. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SHARED_PARSER_H_
+#define NIMBUS_SHARED_PARSER_H_
 
-#include "data/partition_graph.h"
+#include <stdint.h>
+#include <boost/tokenizer.hpp>
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <set>
 
 namespace nimbus {
+typedef std::set<std::string> CmSet;
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+void parseCommand(const std::string& string,
+                  const CmSet& commandSet,
+                  std::string& command,
+                  std::vector<int>& arguments);
+
+int parseCommandFile(const std::string& fname,
+                     CmSet& cs);
+
+/** Returns true if there was a valid command in the string,
+    false if no valid command. */
+bool parseCommandFromString(const std::string& input,
+    std::string& command,
+    std::vector<std::string>& parameters);
+
+void parseParameterFromString(const std::string& input, std::string& tag,
+    std::string& args, std::string& string_set);
+
+void parseIDSetFromString(const std::string& input, std::set<int>& set);
+
+bool isSet(const std::string& tag);
+
+int countOccurence(std::string str, std::string substr);
+
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SHARED_PARSER_H_

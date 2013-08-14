@@ -33,25 +33,58 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * A Nimbus job. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_WORKER_JOB_H_
+#define NIMBUS_WORKER_JOB_H_
 
-#include "data/partition_graph.h"
+#include <vector>
+#include <string>
+#include <set>
+#include <map>
+#include "worker/data.h"
+#include "shared/idset.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+class Application;
+class Job;
+typedef std::map<int, Job*> JobMap;
+typedef std::map<std::string, Job*> JobTable;
+typedef std::vector<Data*> DataArray;
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+enum JobType {JOB_COMP, JOB_SYNC};
+
+class Job {
+ public:
+  Job(Application* app, JobType type);
+  virtual ~Job() {}
+
+  virtual void execute(std::string params, const DataArray& da) {}
+  virtual Job* clone();
+  virtual void sleep() {}
+  virtual void cancel() {}
+
+  uint64_t id();
+  void set_id(uint64_t id);
+
+ protected:
+  Application* application_;
+  JobType type_;
+
+ private:
+  uint32_t id_;
+  IDSet read_set_;
+  IDSet write_set_;
+  IDSet before_set_;
+  IDSet after_set_;
+  std::string parameters_;
+};
+
+}  // namespace nimbus
+#endif  // NIMBUS_WORKER_JOB_H_
+
+

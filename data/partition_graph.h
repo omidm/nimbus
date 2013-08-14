@@ -33,25 +33,48 @@
  */
 
  /*
+  * PartitionGraph maintains partitions and relationships between partitions
+  * for a simulation domain (uniform grid/ mesh/ tree). A vertex represents a
+  * partition. A vertex has associated sets of data ids corresponding to the
+  * partition.
+  *
+  * PartitionGraph is an interface for different type specific implementation.
+  *
+  * PartitionGraph may be used by the scheduler to make good decisions about
+  * data placement -- for instance, to place ghost regions with parent main
+  * region, and to place data corresponding to the same partition closeby.
+  *
   * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_DATA_PARTITION_GRAPH_H_
+#define NIMBUS_DATA_PARTITION_GRAPH_H_
 
-#include "data/partition_graph.h"
+#include <set>
+#include <map>
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
+    class Vertex;
+    typedef std::set<Vertex> Vertices;
+    typedef std::set<data_id_t> DataSet;
+    typedef std::map<Vertex, DataSet*> VertexDataSetMap;
+    typedef std::map<Vertex, Vertices*> VertexVerticesMap;
 
-    class PartitionGraphFlat : public PartitionGraph {
+    class PartitionGraph {
         public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
+            PartitionGraph() {}
+            virtual ~PartitionGraph() {}
+
+            // get main nodes corresponding to main partitions
+            virtual Vertices* getMainNodes() = 0;
+            // get ghost nodes corresponding to ghost partitions
+            virtual Vertices* getGhostNodes() = 0;
+            // get the map between vertices and corresponding data ids
+            virtual VertexDataSetMap* getVertexDataMap() = 0;
+            // get parent-child relations between main nodes and ghost nodes
+            virtual VertexVerticesMap* getParentChildMap() = 0;
     };
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_DATA_PARTITION_GRAPH_H_

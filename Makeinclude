@@ -20,7 +20,7 @@ endif
 
 
 # LDIR is needed for rpath directives for dynamic loading
-LDIR = ${NIMBUS_ROOT}/lib
+LDIR = ${NIMBUS_ROOT}
 
 CPP = g++
 # Flags for all cpp invocations
@@ -30,7 +30,7 @@ CFLAGS = -Wall -g -pg
 # optimizations under Darwin -pal
 ifdef OS_DARWIN
   CFLAGS  += -Wl,-no_implicit_dylibs
-  LDFLAGS += -Wl,-rpath /Users/pal/src/cloud/src/nimbus/lib/
+  LDFLAGS += -Wl,-rpath /Users/pal/src/cloud/src/nimbus/
 endif
 
 # -I params for all cpp invocations
@@ -42,7 +42,7 @@ LFLAGS   =
 
 # -L params for linking invocation
 LDFLAGS += -L/opt/local/lib # Link with MacPorts libraries
-LDFLAGS += -L${NIMBUS_ROOT}/lib/ # Link with Nimbus libraries
+LDFLAGS += -L${NIMBUS_ROOT}/ # Link with Nimbus libraries
 
 # -rpath tells executable where to look for libraries; without it executables
 # do not find Nimbus libraries under Linux -pal

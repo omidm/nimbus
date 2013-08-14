@@ -33,25 +33,40 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus data abstraction from scheduler point of view. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_DATA_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_DATA_H_
 
-#include "data/partition_graph.h"
+#include <set>
+#include <map>
+#include <string>
+#include "shared/cluster.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+class SchedulerData;
+typedef std::set<SchedulerData*> Neighbors;
+typedef std::map<int, SchedulerData*> DataMap;
+
+class SchedulerData {
+ public:
+  SchedulerData();
+  virtual ~SchedulerData() {}
+
+  uint64_t id();
+  void set_id(uint64_t id);
+
+ private:
+  uint64_t id_;
+  bool advanceData_;
+  Hosts hosts_;
+  Neighbors neighbors_;
+};
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_DATA_H_

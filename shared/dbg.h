@@ -32,26 +32,60 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
-  */
+/*
+ *   FILE: dbg.h
+ * AUTHOR: Philip Levis, original work by Mike Castelle
+ *  DESCR: Run-time configuration of debug output
+ *
+ * Debug output determined by DBG environment variable. dbg_modes.h has
+ * definitions of the settings possible. One can specify multiple debugging
+ * outputs by comma-delimiting (e.g. DBG=sched,timer). Compiling with
+ * NDEBUG defined (e.g. -DNDEBUG) will stop all of the debugging
+ * output, will remove the debugging commands from the object file.
+ *
+ * example usage: dbg(DBG_TIMER, "timer went off at %d\n", time);
+ *
+ */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SHARED_DBG_H_
+#define NIMBUS_SHARED_DBG_H_
 
-#include "data/partition_graph.h"
+#if !defined(_NIMBUS_NO_DBG)
 
-namespace nimbus {
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include "shared/log.h"
+#include "shared/nimbus_types.h"
+#include "shared/dbg_modes.h"
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+extern "C" {
+typedef struct dbg_mode {
+  const char* d_name;
+  uint64_t d_mode;
+} nimbus_dbg_mode_names;
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+void dbg(nimbus_dbg_mode mode, const char *format, ...);
+bool dbg_active(nimbus_dbg_mode mode);
+void dbg_add_mode(const char *mode);
+void dbg_add_modes(const char *modes);
+void dbg_init(void);
+void dbg_help(void);
+void dbg_unset();
+void dbg_set(nimbus_dbg_mode);
+
+
+#else
+/* No debugging */
+
+#define dbg(...) { }
+#define dbg_add_mode(...) { }
+#define dbg_add_modes(...) { }
+#define dbg_init() { }
+#define dbg_help() { }
+#define dbg_active(x) (FALSE)
+
+#endif
+} // NOLINT
+#endif  // NIMBUS_SHARED_DBG_H_

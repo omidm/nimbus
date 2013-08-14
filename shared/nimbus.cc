@@ -32,26 +32,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
-  */
+/** Implementation of nimbus_initialize(). */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-
-#include "data/partition_graph.h"
+#include "shared/nimbus.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
+void nimbus_initialize() {
+  dbg_init();
+  dbg(DBG_ALL, "Nimbus initialized.\n");
+}
+}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
-
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_

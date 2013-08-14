@@ -33,25 +33,37 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * This file has the main function that launches Nimbus scheduler.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#define DEBUG_MODE
 
-#include "data/partition_graph.h"
+#include <iostream> // NOLINT
+#include "./simple_scheduler.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_command.h"
+#include "shared/parser.h"
 
-namespace nimbus {
+int main(int argc, char *argv[]) {
+  nimbus::nimbus_initialize();
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
+  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
+  SchedulerCommand cm(str);
+  std::cout << cm.toString() << std::endl;
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+  Log log;
+  log.writeToBuffer("**Start of the log file.");
+  log.dbg_writeToBuffer("Some DEBUG information in the buffer!", LOG_DEBUG);
+  log.dbg_writeToBuffer("Some more DEBUG information in the buffer!",
+                        LOG_DEBUG);
+  log.writeBufferToFile();
+  Log::printLine("Nimbus is up!", LOG_INFO);
+  Log::dbg_printLine("DEBUG information will be printed!", LOG_DEBUG);
+
+  SimpleScheduler * s = new SimpleScheduler(NIMBUS_SCHEDULER_PORT);
+  s->run();
+}
+

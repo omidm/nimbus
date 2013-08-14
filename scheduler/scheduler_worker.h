@@ -33,25 +33,53 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Scheduler abstraction of a worker.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
 
-#include "data/partition_graph.h"
+#include <list>
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server_connection.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
+class Application;
+
+class SchedulerWorker {
+ public:
+  SchedulerWorker(worker_id_t id,
+                  SchedulerServerConnection* conn,
+                  Application* app);
+  virtual ~SchedulerWorker();
+
+  virtual worker_id_t worker_id();
+  virtual SchedulerServerConnection* connection();
+  virtual Application* application();
+  virtual bool is_alive();
+  virtual void MarkDead();
+  virtual char* read_buffer();
+  virtual uint32_t existing_bytes();
+  virtual void set_existing_bytes(uint32_t bytes);
+  virtual uint32_t read_buffer_length();
+
+ private:
+  worker_id_t worker_id_;
+  SchedulerServerConnection* connection_;
+  Application* application_;
+  bool is_alive_;
+  char* read_buffer_;
+  // How many bytes in the read buffer are valid before
+  // a read.
+  uint32_t existing_bytes_;
+};
+
+typedef std::list<SchedulerWorker*> SchedulerWorkerList;
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_

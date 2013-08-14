@@ -32,26 +32,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
-  */
+/*
+ * Global declaration of Nimbus-wide types.
+ * Author: Philip Levis <pal@cs.stanford.edu>
+ */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
+#define NIMBUS_SHARED_NIMBUS_TYPES_H_
 
-#include "data/partition_graph.h"
+#include <inttypes.h>
+
+#define NIMBUS_SCHEDULER_PORT 5983
 
 namespace nimbus {
+  typedef uint32_t worker_id_t;
+  typedef uint32_t app_id_t;
+  typedef uint64_t data_id_t;
+  typedef uint64_t job_id_t;
+  typedef uint64_t command_id_t;
+  typedef uint64_t partition_t;
+  enum {
+    WORKER_ID_NONE = 0,
+    WORKER_ID_SCHEDULER = 1
+  };
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_

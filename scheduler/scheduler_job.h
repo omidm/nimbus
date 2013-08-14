@@ -33,25 +33,51 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus job abstraction from scheduler point of view. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#ifndef NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+#define NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
 
-#include "data/partition_graph.h"
+#include <vector>
+#include <string>
+#include <set>
+#include <map>
+#include "worker/data.h"
+#include "shared/idset.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+class SchedulerJob;
+typedef std::map<int, SchedulerJob*> JobMap;
+typedef std::vector<Data*> DataArray;
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+enum JobType {JOB_COMP, JOB_SYNC};
+
+class SchedulerJob {
+ public:
+  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
+  virtual ~SchedulerJob() {}
+
+  uint64_t id();
+  void set_id(job_id_t id);
+
+
+ private:
+  job_id_t id_;
+  app_id_t app_id_;
+  JobType type_;
+  IDSet read_set_;
+  IDSet write_set_;
+  IDSet before_set_;
+  IDSet after_set_;
+  std::string parameters_;
+};
+
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+
+

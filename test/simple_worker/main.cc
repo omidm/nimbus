@@ -33,25 +33,26 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * A Nimbus worker. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#include <pthread.h>
+#include <iostream>  // NOLINT
 
-#include "data/partition_graph.h"
+#include "shared/nimbus.h"
+#include "worker/application.h"
+#include "./simple_worker.h"
+#include "../../application/1d-stencil/app.h"
 
-namespace nimbus {
+#define SCHEDULER_PORT 5983
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+int main(int argc, char *argv[]) {
+  nimbus_initialize();
+  std::cout << "Simple Worker is up!" << std::endl;
+  App * app = new App();
+  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  w->run();
+}
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_

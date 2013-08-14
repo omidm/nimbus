@@ -33,25 +33,30 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * A Nimbus job. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#include "worker/job.h"
 
-#include "data/partition_graph.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+Job::Job(Application* app, JobType type) {
+  application_ = app;
+  type_ = type;
+}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+Job* Job::clone() {
+  std::cout << "cloning the base job\n";
+  Job* j = new Job(application_, type_);
+  return j;
+}
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+uint64_t Job::id() {
+  return id_;
+}
+
+void Job::set_id(uint64_t id) {
+  id_ = id;
+}

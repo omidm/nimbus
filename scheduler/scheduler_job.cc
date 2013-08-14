@@ -33,25 +33,25 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus job abstraction from scheduler point of view. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#include "scheduler/scheduler_job.h"
 
-#include "data/partition_graph.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
+  id_ = id;
+  type_ = type;
+  app_id_ = app_id;
+}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+uint64_t SchedulerJob::id() {
+  return id_;
+}
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+void SchedulerJob::set_id(job_id_t id) {
+  id_ = id;
+}

@@ -33,25 +33,40 @@
  */
 
  /*
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Nimbus abstraction of computational resources. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
-#define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+#include "shared/cluster.h"
 
-#include "data/partition_graph.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+Node::Node() {}
 
-    class PartitionGraphFlat : public PartitionGraph {
-        public:
-            // get neighbor-neighbor relations between main nodes
-            virtual VertexVerticesMap* getNeighborMap() = 0;
-            // get ghost neighbors for a main node
-            virtual VertexVerticesMap* getGhostNeighborMap() = 0;
-            // get overlay edges
-            virtual VertexVerticesMap* getOverlayMap() = 0;
-    };
-}  // namespace nimbus
+Node::~Node() {}
 
-#endif  // NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
+NodeType Node::type() {
+  return COMPUTER;
+}
+
+
+Computer::Computer() {}
+
+Computer::~Computer() {}
+
+NodeType Computer::type() {
+  return COMPUTER;
+}
+
+Switch::Switch() {}
+
+Switch::~Switch() {}
+
+NodeType Switch::type() {
+  return COMPUTER;
+}
+
+ClusterMap::ClusterMap() {}
+
+ClusterMap::~ClusterMap() {}
