@@ -39,8 +39,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
-#define NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
+#ifndef NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
+#define NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
 
 // #define DEBUG_MODE
 
@@ -48,14 +48,14 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "lib/scheduler_client.h"
-#include "lib/cluster.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/application.h"
-#include "lib/parser.h"
-#include "lib/log.h"
-#include "lib/worker.h"
+#include "shared/scheduler_client.h"
+#include "shared/cluster.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "shared/parser.h"
+#include "shared/log.h"
+#include "worker/worker.h"
 
 
 class SimpleWorker : public Worker {
@@ -69,4 +69,4 @@ class SimpleWorker : public Worker {
 
 
 
-#endif  // NIMBUS_WORKER_SIMPLE_WORKER_SIMPLE_WORKER_H_
+#endif  // NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
