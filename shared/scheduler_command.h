@@ -96,8 +96,10 @@ class SchedulerCommand {
   virtual worker_id_t worker_id();
   virtual void set_worker_id(worker_id_t id);
 
- private:
+ protected:
   std::string name_;
+
+ private:
   CommandParameterList parameters_;
   worker_id_t worker_id_;
 };
@@ -109,30 +111,31 @@ typedef std::list<SchedulerCommand*> SchedulerCommandList;
 class SpawnJobCommand : public SchedulerCommand {
   public:
     SpawnJobCommand();
-    SpawnJobCommand(std::string job_name, JobType job_type, job_id_t job_id,
-        std::vector<IDSet<job_id_t> >* job_idsets,
-        std::vector<IDSet<data_id_t> >* data_idsets,
-        std::string params);
+    SpawnJobCommand(std::string job_name,
+        const IDSet<job_id_t>& job_id,
+        const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        JobType job_type, std::string params);
     ~SpawnJobCommand();
 
     virtual std::string toString();
     std::string job_name();
     JobType job_type();
-    job_id_t job_id();
-    IDSet<data_id_t>* read_set();
-    IDSet<data_id_t>* write_set();
-    IDSet<job_id_t>* after_set();
-    IDSet<job_id_t>* before_set();
+    IDSet<job_id_t> job_id();
+    IDSet<data_id_t> read_set();
+    IDSet<data_id_t> write_set();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
     std::string params();
 
   private:
     std::string job_name_;
-    JobType job_type_;
-    job_id_t job_id_;
+    IDSet<job_id_t> job_id_;
     IDSet<data_id_t> read_set_;
     IDSet<data_id_t> write_set_;
-    IDSet<job_id_t> after_set_;
     IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    JobType job_type_;
     std::string params_;
 };
 

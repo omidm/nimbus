@@ -145,8 +145,73 @@ IDSet<job_id_t>* CommandParameter::identifier_set() {
   return &identifier_set_;
 }
 
+// ************************************************
 
+SpawnJobCommand::SpawnJobCommand() {
+  name_ = "spawnjob";
+}
 
+SpawnJobCommand::SpawnJobCommand(std::string job_name,
+    const IDSet<job_id_t>& job_id,
+    const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    JobType job_type, std::string params)
+: job_name_(job_name), job_id_(job_id),
+  read_set_(read), write_set_(write),
+  before_set_(before), after_set_(after),
+  job_type_(job_type), params_(params) {
+}
+
+SpawnJobCommand::~SpawnJobCommand() {
+}
+
+std::string SpawnJobCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (job_name_ + " ");
+  str += (job_id_.toString() + " ");
+  str += (read_set_.toString() + " ");
+  str += (write_set_.toString() + " ");
+  str += (before_set_.toString() + " ");
+  str += (after_set_.toString() + " ");
+  if (job_type_ == JOB_COMP)
+    str += "COMP ";
+  else
+    str += "SYNC ";
+  str += params_;
+  return str;
+}
+
+std::string SpawnJobCommand::job_name() {
+  return job_name_;
+}
+
+JobType SpawnJobCommand::job_type() {
+  return job_type_;
+}
+
+IDSet<job_id_t> SpawnJobCommand::job_id() {
+  return job_id_;
+}
+
+IDSet<data_id_t> SpawnJobCommand::read_set() {
+  return read_set_;
+}
+
+IDSet<data_id_t> SpawnJobCommand::write_set() {
+  return write_set_;
+}
+
+IDSet<job_id_t> SpawnJobCommand::after_set() {
+  return after_set_;
+}
+IDSet<job_id_t> SpawnJobCommand::before_set() {
+  return before_set_;
+}
+
+std::string SpawnJobCommand::params() {
+  return params_;
+}
 
 
 
