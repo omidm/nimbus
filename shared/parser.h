@@ -71,7 +71,9 @@ bool parseCommandFromString(const std::string& input,
 void parseParameterFromString(const std::string& input, std::string& tag,
     std::string& args, std::string& string_set);
 
-void parseIDSetFromString(const std::string& input, std::set<int>& set);
+void parseIDSetFromString(const std::string& input, std::set<uint64_t>& set);
+
+void parseIDSetFromString(const std::string& input, std::set<uint32_t>& set);
 
 bool isSet(const std::string& tag);
 

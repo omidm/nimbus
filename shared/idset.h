@@ -47,10 +47,13 @@
 #include <map>
 #include <set>
 #include "shared/parser.h"
+#include "shared/nimbus_types.h"
+
 
 
 namespace nimbus {
 
+template<typename T>
 class IDSet {
  public:
   IDSet();
@@ -58,40 +61,18 @@ class IDSet {
   virtual ~IDSet();
 
   virtual std::string toString();
-  virtual void insert(int entry);
+  virtual void insert(T entry);
   virtual void clear();
   virtual int size();
 
-  typedef typename std::set<int>::iterator IDSetIter;
+  typedef typename std::set<T>::iterator IDSetIter;
 
   IDSetIter begin();
   IDSetIter end();
 
  private:
-  typename std::set<int> identifiers_;
+  typename std::set<T> identifiers_;
 };
-
-
-// template<typename T>
-// class IDSet {
-//  public:
-//   IDSet();
-//   explicit IDSet(std::string s);
-//   virtual ~IDSet();
-//
-//   virtual std::string toString();
-//   virtual void insert(T entry);
-//   virtual void clear();
-//   virtual int size();
-//
-//   typedef typename std::set<T>::iterator IDSetIter;
-//
-//   IDSetIter begin();
-//   IDSetIter end();
-//
-//  private:
-//   typename std::set<T> identifiers_;
-// };
 
 }  // namespace nimbus
 

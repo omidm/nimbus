@@ -107,7 +107,7 @@ CommandParameter::CommandParameter() {
 }
 
 CommandParameter::CommandParameter(std::string n,
-    std::string v, const IDSet& s) {
+    std::string v, const IDSet<job_id_t>& s) {
   name_ = n;
   value_ = v;
   identifier_set_ = s;
@@ -117,7 +117,7 @@ CommandParameter::CommandParameter(std::string parameter) {
   std::string string_set;
   parseParameterFromString(parameter, name_, value_, string_set);
   if (isSet(string_set))
-    identifier_set_ = IDSet(string_set);
+    identifier_set_ = IDSet<job_id_t>(string_set);
 }
 
 CommandParameter::~CommandParameter() {}
@@ -141,7 +141,7 @@ std::string CommandParameter::value() {
   return value_;
 }
 
-IDSet* CommandParameter::identifier_set() {
+IDSet<job_id_t>* CommandParameter::identifier_set() {
   return &identifier_set_;
 }
 

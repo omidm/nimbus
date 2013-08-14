@@ -76,11 +76,11 @@ class Job {
   JobType type_;
 
  private:
-  uint32_t id_;
-  IDSet read_set_;
-  IDSet write_set_;
-  IDSet before_set_;
-  IDSet after_set_;
+  job_id_t id_;
+  IDSet<data_id_t> read_set_;
+  IDSet<data_id_t> write_set_;
+  IDSet<job_id_t> before_set_;
+  IDSet<job_id_t> after_set_;
   std::string parameters_;
 };
 

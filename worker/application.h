@@ -68,12 +68,12 @@ class Application {
 
   void registerJob(std::string name, Job* job);
   void registerData(std::string name, Data* data);
-  void spawnJob(std::string name, int id,
-                IDSet beforeSet, IDSet afterSet,
-                IDSet readSet, IDSet writeSet,
+  void spawnJob(std::string name, job_id_t id,
+                IDSet<job_id_t> beforeSet, IDSet<job_id_t> afterSet,
+                IDSet<data_id_t> readSet, IDSet<data_id_t> writeSet,
                 std::string params);
 
-  void defineData(std::string name, int id);
+  void defineData(std::string name, data_id_t id);
   Job* cloneJob(std::string name);
   Data* cloneData(std::string name);
   void getNewJobID(int req_num, std::vector<int>* result);
@@ -85,7 +85,7 @@ class Application {
   uint64_t job_id_;
   uint64_t data_id_;
 
-  IDSet job_ID_pool_;
+  IDSet<job_id_t> job_ID_pool_;
   JobTable job_table_;
   DataTable data_table_;
   SchedulerClient* client_;

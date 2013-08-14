@@ -64,18 +64,18 @@ class CommandParameter {
  public:
   CommandParameter();
   explicit CommandParameter(std::string parameter);
-  CommandParameter(std::string name, std::string value, const IDSet& set);
+  CommandParameter(std::string name, std::string value, const IDSet<job_id_t>& set);
   virtual ~CommandParameter();
 
   virtual std::string toString();
   virtual std::string name();
   virtual std::string value();
-  virtual IDSet* identifier_set();
+  virtual IDSet<job_id_t>* identifier_set();
 
  private:
   std::string name_;
   std::string value_;
-  IDSet identifier_set_;
+  IDSet<job_id_t> identifier_set_;
 };
 
 typedef std::map<std::string, CommandParameter> CommandParameterList;
@@ -109,28 +109,30 @@ typedef std::list<SchedulerCommand*> SchedulerCommandList;
 class SpawnJobCommand : public SchedulerCommand {
   public:
     SpawnJobCommand();
-    SpawnJobCommand(std::string job_name, JobType job_type,
-        job_id_t job_id, std::vector<IDSet>* idsets, std::string params);
+    SpawnJobCommand(std::string job_name, JobType job_type, job_id_t job_id,
+        std::vector<IDSet<job_id_t> >* job_idsets,
+        std::vector<IDSet<data_id_t> >* data_idsets,
+        std::string params);
     ~SpawnJobCommand();
 
     virtual std::string toString();
     std::string job_name();
     JobType job_type();
     job_id_t job_id();
-    IDSet* read_set();
-    IDSet* write_set();
-    IDSet* after_set();
-    IDSet* before_set();
+    IDSet<data_id_t>* read_set();
+    IDSet<data_id_t>* write_set();
+    IDSet<job_id_t>* after_set();
+    IDSet<job_id_t>* before_set();
     std::string params();
 
   private:
     std::string job_name_;
     JobType job_type_;
     job_id_t job_id_;
-    IDSet read_set_;
-    IDSet write_set_;
-    IDSet after_set_;
-    IDSet before_set_;
+    IDSet<data_id_t> read_set_;
+    IDSet<data_id_t> write_set_;
+    IDSet<job_id_t> after_set_;
+    IDSet<job_id_t> before_set_;
     std::string params_;
 };
 
@@ -183,19 +185,19 @@ class DefineDataCommand : public SchedulerCommand {
   public:
     DefineDataCommand();
     DefineDataCommand(std::string data_name, data_id_t data_id,
-        IDSet* neighbors, std::string params);
+        IDSet<data_id_t>* neighbors, std::string params);
     ~DefineDataCommand();
 
     virtual std::string toString();
     std::string data_name();
     data_id_t data_id();
-    IDSet* neighbor_set();
+    IDSet<data_id_t>* neighbor_set();
     std::string params();
 
   private:
     std::string data_name_;
     data_id_t data_id_;
-    IDSet neighbor_set_;
+    IDSet<data_id_t> neighbor_set_;
     std::string params_;
 };
 
