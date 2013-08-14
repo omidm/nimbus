@@ -50,13 +50,8 @@
 
 using namespace PhysBAM;
 
-/* This is more like WATER_EXAMPLE.h than WATER_DRIVER.h from the original
- * PhysBAM project Water, in the sense that it directly contains all the data
- * that methods in WATER_DRIVER.cpp are operating on, rather than accessing the
- * data through driver->example. However, each machine will launch its own copy
- * of WaterDriver, like in the PhysBAM project. This initialization should
- * happen in load() in WaterApp, after which the job and data maps should be
- * built.
+/* This class contains all constant parameters and policies, and functions to
+ * operate on data supplied by Nimbus.
  */
 template <class TV>
 class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
@@ -84,23 +79,12 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     WaterDriver(const STREAM_TYPE stream_type_input);
     virtual ~WaterDriver();
 
-    /* water simulation data
-     */
-    Grid<TV> *mac_grid;
-    MPIGrid<TV> *mpi_grid;
-    FaceArray<TV> *face_velocities;
-    FaceArrayGhost<TV> *face_velocities_ghost;
-    NonAdvData<TV, T> *sim_data;
-
     /* water simulation parameters
      */
-    int number_of_ghost_cells;
-    T cfl, initial_time, time, frame_rate;
-    int first_frame, last_frame, current_frame, output_number;
     STREAM_TYPE stream_type;
-    int write_substeps_level;
-    bool write_output_files_flag;
-    std::string frame_title, output_directory;
+    int number_of_ghost_cells;
+    T cfl, initial_time, frame_rate;
+    int first_frame, last_frame;
 
     /* water driver functions, these should be called from the execute
      * functions for the jobs
@@ -119,47 +103,6 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     {
         return initial_time + (frame-first_frame)/frame_rate;
     }
-
-//    bool Set_Kinematic_Positions(
-//            FRAME<TV> &frame,
-//            const T time,
-//            const int id)
-//    {
-//        T range = 0.6;
-//        frame.t = TV::All_Ones_Vector()*0.5;
-//        if(time<=2)
-//            frame.t(2) = time*range+(1-range)/2.;
-//        return true;
-//    }
-//
-//    void Get_Levelset_Velocity(
-//            const GRID<TV> &grid,
-//            T_LEVELSET& levelset,
-//            ARRAY<T, FACE_INDEX<TV::dimension> > &V_levelset,
-//            const T time) const PHYSBAM_OVERRIDE 
-//    {
-//        V_levelset = *face_velocities.data;
-//    }
-//
-//    void Get_Levelset_Velocity(
-//            const GRID<TV> &grid,
-//            LEVELSET_MULTIPLE_UNIFORM<GRID<TV> > &levelset_multiple,
-//            ARRAY<T,FACE_INDEX<TV::dimension> > &V_levelset,
-//            const T time) const PHYSBAM_OVERRIDE {}
-//
-//    void Adjust_Particle_For_Domain_Boundaries(
-//            PARTICLE_LEVELSET_PARTICLES<TV> &particles,
-//            const int index,
-//            TV &V,
-//            const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
-//            const T dt,
-//            const T time);
-//    void Initialize_Grid(TV_INT counts, RANGE<TV> range);
-//    void Set_Boundary_Conditions(const T time);
-//    void Adjust_Phi_With_Sources(const T time);
-//    void Adjust_Phi_With_Objects(const T time);
-//    void Extrapolate_Phi_Into_Objects(const T time);
-//    void Initialize_Phi();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
