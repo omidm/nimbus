@@ -83,7 +83,8 @@ void Main::execute(std::string params, const DataArray& da)
 
     std::vector<int> j;
     std::vector<int> d;
-    IDSet before, after, read, write;
+    IDSet<job_id_t> before, after;
+    IDSet<data_id_t> read, write;
     std::string par = "none";
 
     application_->getNewDataID(5, &d);
