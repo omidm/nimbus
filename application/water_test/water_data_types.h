@@ -43,7 +43,7 @@
 
 /* Include relevant PhysBAM files here.
 */
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./physbam_include.h"
 
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in

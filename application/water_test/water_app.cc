@@ -36,7 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./water_app.h"
 
 static int ml = 200;

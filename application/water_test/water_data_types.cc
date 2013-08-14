@@ -38,7 +38,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./water_data_types.h"
 
 using namespace PhysBAM;

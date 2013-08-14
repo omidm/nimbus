@@ -39,7 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 
-#include "lib/nimbus.h"
+#include "shared/nimbus.h"
 #include "./water_driver.h"
 
 using namespace PhysBAM;

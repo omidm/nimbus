@@ -52,7 +52,7 @@
 int main(int argc, char *argv[]) {
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
-  App * app = new App();
+  WaterApp *app = new WaterApp();
   SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
   w->run();
 }
