@@ -40,14 +40,14 @@
   */
 
 
-#ifndef NIMBUS_LIB_APPLICATION_H_
-#define NIMBUS_LIB_APPLICATION_H_
+#ifndef NIMBUS_WORKER_APPLICATION_H_
+#define NIMBUS_WORKER_APPLICATION_H_
 
 #include <map>
 #include <string>
 #include <vector>
-#include "lib/job.h"
-#include "lib/data.h"
+#include "worker/job.h"
+#include "worker/data.h"
 #include "lib/scheduler_client.h"
 #include "lib/scheduler_command.h"
 
@@ -93,4 +93,4 @@ class Application {
 
 }  //  namespace nimbus
 
-#endif  // NIMBUS_LIB_APPLICATION_H_
+#endif  // NIMBUS_WORKER_APPLICATION_H_

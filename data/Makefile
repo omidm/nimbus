@@ -1,4 +1,4 @@
-all: check data
+all: check data_t
 
 NIMBUS_ROOT = ..
 include $(NIMBUS_ROOT)/Makeinclude
@@ -8,7 +8,7 @@ CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
-data: $(OBJFILES) $(HFILES)
+data_t: $(OBJFILES) $(HFILES)
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 

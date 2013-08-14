@@ -53,7 +53,7 @@
 #include <list>
 #include <map>
 #include <set>
-#include "lib/job.h"
+#include "worker/job.h"
 #include "lib/parser.h"
 #include "lib/idset.h"
 #include "lib/nimbus_types.h"

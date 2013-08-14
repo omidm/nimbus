@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/worker.h"
+#include "worker/worker.h"
 
 using namespace nimbus; // NOLINT
 

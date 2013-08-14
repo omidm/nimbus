@@ -33,47 +33,63 @@
  */
 
  /*
-  * PartitionGraph maintains partitions and relationships between partitions
-  * for a simulation domain (uniform grid/ mesh/ tree). A vertex represents a
-  * partition. A vertex has associated sets of data ids corresponding to the
-  * partition.
+  * Nimbus abstraction of an application. 
   *
-  * PartitionGraph is an interface for different type specific implementation.
-  *
-  * PartitionGraph may be used by the scheduler to make good decisions about
-  * data placement -- for instance, to place ghost regions with parent main
-  * region, and to place data corresponding to the same partition closeby.
-  *
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_PARTITION_GRAPH_H_
-#define NIMBUS_LIB_PARTITION_GRAPH_H_
+#ifndef NIMBUS_WORKER_WORKER_H_
+#define NIMBUS_WORKER_WORKER_H_
 
-#include <set>
+#include <boost/thread.hpp>
+#include <string>
+#include <vector>
 #include <map>
-#include "lib/nimbus_types.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "lib/scheduler_client.h"
+#include "lib/scheduler_command.h"
+#include "lib/cluster.h"
+#include "lib/parser.h"
+#include "lib/log.h"
 
 namespace nimbus {
-    class Vertex;
-    typedef std::set<Vertex> Vertices;
-    typedef std::set<data_id_t> DataSet;
-    typedef std::map<Vertex, DataSet*> VertexDataSetMap;
-    typedef std::map<Vertex, Vertices*> VertexVerticesMap;
 
-    class PartitionGraph {
-        public:
-            virtual ~PartitionGraph();
+class Worker;
+typedef std::map<int, Worker*> WorkerMap;
 
-            // get main nodes corresponding to main partitions
-            virtual Vertices* getMainNodes() = 0;
-            // get ghost nodes corresponding to ghost partitions
-            virtual Vertices* getGhostNodes() = 0;
-            // get the map between vertices and corresponding data ids
-            virtual VertexDataSetMap* getVertexDataMap() = 0;
-            // get parent-child relations between main nodes and ghost nodes
-            virtual VertexVerticesMap* getParentChildMap() = 0;
-    };
+class Worker {
+ public:
+  Worker(unsigned int port,  Application* application);
+
+  virtual void run();
+  virtual void workerCoreProcessor() {}
+  virtual void processSchedulerCommand(SchedulerCommand* command);
+
+ protected:
+  SchedulerClient* client_;
+
+ private:
+  int id_;
+  Computer host_;
+  unsigned int port_;
+  DataMap data_map_;
+  JobMap job_map_;
+  Application* application_;
+  CmSet scheduler_command_set_;
+
+  virtual void setupSchedulerInterface();
+
+  virtual void addJob(Job* job);
+  virtual void deleteJob(int id);
+  virtual void deleteJob(Job* job) {}
+  virtual void addData(Data* data);
+  virtual void deleteData(int id);
+  virtual void deleteData(Data* data) {}
+  virtual void loadSchedulerCommands();
+};
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_PARTITION_GRAPH_H_
+#endif  // NIMBUS_WORKER_WORKER_H_

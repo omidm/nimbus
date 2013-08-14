@@ -38,14 +38,14 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_JOB_H_
-#define NIMBUS_LIB_JOB_H_
+#ifndef NIMBUS_WORKER_JOB_H_
+#define NIMBUS_WORKER_JOB_H_
 
 #include <vector>
 #include <string>
 #include <set>
 #include <map>
-#include "lib/data.h"
+#include "worker/data.h"
 #include "lib/idset.h"
 
 namespace nimbus {
@@ -85,6 +85,6 @@ class Job {
 };
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_JOB_H_
+#endif  // NIMBUS_WORKER_JOB_H_
 
 

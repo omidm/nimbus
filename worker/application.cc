@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/application.h"
+#include "worker/application.h"
 
 Application::Application() {
   job_id_ = 1;

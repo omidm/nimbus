@@ -38,43 +38,22 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_DATA_H_
-#define NIMBUS_LIB_DATA_H_
+#include "worker/data.h"
 
-#include <set>
-#include <map>
-#include <string>
-#include "lib/cluster.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
-class Data;
-typedef std::set<Data*> Neighbors;
-typedef std::map<int, Data*> DataMap;
-typedef std::map<std::string, Data*> DataTable;
+Data::Data() {}
 
-class Data {
- public:
-  Data();
-  virtual ~Data() {}
+Data* Data::clone() {
+  std::cout << "cloning the base data\n";
+  Data* d = new Data();
+  return d;
+}
 
-  virtual Data* clone();
-  virtual void create() {}
-  virtual void destroy(Computer location) {}
-  virtual void duplicate(Computer source, Computer destination) {}
-  virtual void migrate(Computer sourcer, Computer destination) {}
-  virtual void split(Data *, Data *) {}
-  virtual void merge(Data *, Data *) {}
+uint64_t Data::id() {
+  return id_;
+}
 
-  uint64_t id();
-  void set_id(uint64_t id);
-
- private:
-  uint64_t id_;
-  bool advanceData_;
-  Hosts hosts_;
-  Neighbors neighbors_;
-};
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_LIB_DATA_H_
+void Data::set_id(uint64_t id) {
+  id_ = id;
+}

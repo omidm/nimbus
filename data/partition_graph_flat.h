@@ -39,7 +39,7 @@
 #ifndef NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
 #define NIMBUS_DATA_PARTITION_GRAPH_FLAT_H_
 
-#include "lib/partition_graph.h"
+#include "data/partition_graph.h"
 
 namespace nimbus {
 

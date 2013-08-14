@@ -37,12 +37,12 @@
 #ifndef NIMBUS_LIB_NIMBUS_H_
 #define NIMBUS_LIB_NIMBUS_H_
 
-#include "lib/nimbus_types.h"
-#include "lib/application.h"
-#include "lib/data.h"
-#include "lib/job.h"
-#include "lib/worker.h"
 #include "lib/log.h"
+#include "lib/nimbus_types.h"
+#include "worker/application.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/worker.h"
 
 namespace nimbus {
 void nimbus_initialize();

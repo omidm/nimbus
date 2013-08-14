@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/job.h"
+#include "worker/job.h"
 
 using namespace nimbus; // NOLINT
 
