@@ -41,8 +41,15 @@
 
 using namespace PhysBAM;
 
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
 template <class TV> WaterDriver<TV> ::
-WaterDriver()
+WaterDriver(const STREAM_TYPE stream_type_input):
+    stream_type(stream_type_input)
 {
     //TODO: Initialize the example here
     //TODO: initialize all data and corresponding pointers
@@ -62,8 +69,7 @@ WaterDriver()
     number_of_ghost_cells = 3;
     cfl = 0.9;
 
-//    // example data and parameters
-//    stream_type = new STREAM_TYPE(float());
+    // example data and parameters
 //    if (!mac_grid->initialize(TV_INT(), RANGE<TV>::Unit_Box(), true))
 //        exit -1;
 //    if (!sim_data->initialize())

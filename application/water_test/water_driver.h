@@ -81,23 +81,23 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
 
     public:
 
-    WaterDriver();
+    WaterDriver(const STREAM_TYPE stream_type_input);
     virtual ~WaterDriver();
 
     /* water simulation data
      */
-    Grid<TV> mac_grid(int size);
-    MPIGrid<TV> mpi_grid(int size);
-    FaceArray<TV> face_velocities(int size);
-    FaceArrayGhost<TV> face_velocities_ghost(int size);
-    NonAdvData<TV, T> sim_data(int size);
+    Grid<TV> *mac_grid;
+    MPIGrid<TV> *mpi_grid;
+    FaceArray<TV> *face_velocities;
+    FaceArrayGhost<TV> *face_velocities_ghost;
+    NonAdvData<TV, T> *sim_data;
 
     /* water simulation parameters
      */
     int number_of_ghost_cells;
     T cfl, initial_time, time, frame_rate;
     int first_frame, last_frame, current_frame, output_number;
-//    STREAM_TYPE stream_type;
+    STREAM_TYPE stream_type;
     int write_substeps_level;
     bool write_output_files_flag;
     std::string frame_title, output_directory;

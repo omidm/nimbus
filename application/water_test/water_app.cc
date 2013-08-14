@@ -42,11 +42,13 @@
 static int ml = 200;
 static int gl = 0;
 
+using namespace PhysBAM;
 using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
-WaterApp::WaterApp()
+WaterApp::WaterApp():
+    driver(STREAM_TYPE(float()))
 {};
 
 void WaterApp::load() {

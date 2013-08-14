@@ -54,35 +54,36 @@ using nimbus::Application;
 class WaterApp : public Application {
 
     private:
-    typedef float T;
-    typedef VECTOR<T, 2> TV;
-    typedef VECTOR<int, TV::dimension> TV_INT;
+        // define templates for actual instantiation
+        typedef float T;
+        typedef VECTOR<T, 2> TV;
+        typedef VECTOR<int, TV::dimension> TV_INT;
 
     public:
-    WaterApp();
-    WaterDriver<TV> driver;
-    virtual void load();
+        WaterApp();
+        WaterDriver<TV> driver;
+        virtual void load();
 };
 
 class Main : public Job {
     public:
-    Main(Application *app, JobType type);
-    virtual void execute(std::string params, const DataArray& da);
-    virtual Job* clone();
+        Main(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
 };
 
 class Init : public Job {
     public:
-    Init(Application *app, JobType type);
-    virtual void execute(std::string params, const DataArray& da);
-    virtual Job* clone();
+        Init(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
 };
 
 class Loop : public Job {
     public:
-    Loop(Application *app, JobType type);
-    virtual void execute(std::string params, const DataArray& da);
-    virtual Job* clone();
+        Loop(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

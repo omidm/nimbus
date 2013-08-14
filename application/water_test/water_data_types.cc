@@ -44,9 +44,16 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
+    this->size_ = size;
     data = NULL;
 }
 
@@ -75,6 +82,7 @@ initialize()
 template <class TV> FaceArrayGhost<TV>::
 FaceArrayGhost(int size)
 {
+    this->size_ = size;
     data = NULL;
 }
 
@@ -103,6 +111,7 @@ initialize()
 template <class TV> Grid<TV>::
 Grid(int size)
 {
+    this->size_ = size;
     data = NULL;
 }
 
@@ -133,9 +142,10 @@ initialize(
 }
 
 template <class TV> MPIGrid<TV>::
-MPIGrid(int size):
-    data(0)
+MPIGrid(int size)
 {
+    this->size_ = size;
+    data = NULL;
 }
 
 template <class TV> void MPIGrid<TV>::
@@ -163,6 +173,17 @@ initialize()
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
+    this->size_ = size;
+    boundary_scalar = NULL;
+    phi_boundary_water = NULL;
+    domain_boundary = NULL;
+    sources = NULL;
+    particle_levelset_evolution = NULL;
+    advection_scalar = NULL;
+    rigid_geometry_collection = NULL;
+    collision_bodies_affecting_fluid = NULL;
+    incompressible = NULL;
+    kinematic_evolution = NULL;
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
