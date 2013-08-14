@@ -63,7 +63,8 @@ namespace nimbus {
 
     class PartitionGraph {
         public:
-            virtual ~PartitionGraph();
+            PartitionGraph() {}
+            virtual ~PartitionGraph() {}
 
             // get main nodes corresponding to main partitions
             virtual Vertices* getMainNodes() = 0;
