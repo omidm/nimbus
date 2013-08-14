@@ -33,47 +33,50 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * Client (worker) side interface of the Nimbus scheduler protocol. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_PARSER_H_
-#define NIMBUS_LIB_PARSER_H_
+#ifndef NIMBUS_SHARED_SCHEDULER_CLIENT_H_
+#define NIMBUS_SHARED_SCHEDULER_CLIENT_H_
 
 #include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <map>
 #include <string>
-#include <vector>
-#include <set>
+#include <sstream>
+#include <iostream>  // NOLINT
+#include "shared/dbg.h"
+#include "shared/parser.h"
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
-typedef std::set<std::string> CmSet;
 
-void parseCommand(const std::string& string,
-                  const CmSet& commandSet,
-                  std::string& command,
-                  std::vector<int>& arguments);
+class Worker;
+typedef uint32_t ConnectionId;
+using boost::asio::ip::tcp;
 
-int parseCommandFile(const std::string& fname,
-                     CmSet& cs);
+class SchedulerClient {
+ public:
+  explicit SchedulerClient(uint16_t port);
+  virtual ~SchedulerClient();
 
-/** Returns true if there was a valid command in the string,
-    false if no valid command. */
-bool parseCommandFromString(const std::string& input,
-    std::string& command,
-    std::vector<std::string>& parameters);
+  virtual void run();
+  virtual SchedulerCommand* receiveCommand();
+  virtual void sendCommand(SchedulerCommand* command);
 
-void parseParameterFromString(const std::string& input, std::string& tag,
-    std::string& args, std::string& string_set);
+ private:
+  ConnectionId connection_port_no_;
+  boost::asio::io_service* io_service_;
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
 
-void parseIDSetFromString(const std::string& input, std::set<int>& set);
-
-bool isSet(const std::string& tag);
-
-int countOccurence(std::string str, std::string substr);
+  void createNewConnections();
+};
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_PARSER_H_
+
+#endif  // NIMBUS_SHARED_SCHEDULER_CLIENT_H_

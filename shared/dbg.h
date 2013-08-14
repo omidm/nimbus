@@ -32,44 +32,60 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * The abstraction of a connection from a scheduler to
-  * a worker.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  */
+/*
+ *   FILE: dbg.h
+ * AUTHOR: Philip Levis, original work by Mike Castelle
+ *  DESCR: Run-time configuration of debug output
+ *
+ * Debug output determined by DBG environment variable. dbg_modes.h has
+ * definitions of the settings possible. One can specify multiple debugging
+ * outputs by comma-delimiting (e.g. DBG=sched,timer). Compiling with
+ * NDEBUG defined (e.g. -DNDEBUG) will stop all of the debugging
+ * output, will remove the debugging commands from the object file.
+ *
+ * example usage: dbg(DBG_TIMER, "timer went off at %d\n", time);
+ *
+ */
+
+#ifndef NIMBUS_SHARED_DBG_H_
+#define NIMBUS_SHARED_DBG_H_
+
+#if !defined(_NIMBUS_NO_DBG)
+
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include "shared/log.h"
+#include "shared/nimbus_types.h"
+#include "shared/dbg_modes.h"
+
+extern "C" {
+typedef struct dbg_mode {
+  const char* d_name;
+  uint64_t d_mode;
+} nimbus_dbg_mode_names;
+
+void dbg(nimbus_dbg_mode mode, const char *format, ...);
+bool dbg_active(nimbus_dbg_mode mode);
+void dbg_add_mode(const char *mode);
+void dbg_add_modes(const char *modes);
+void dbg_init(void);
+void dbg_help(void);
+void dbg_unset();
+void dbg_set(nimbus_dbg_mode);
 
 
-#ifndef NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
-#define NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+#else
+/* No debugging */
 
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <string>
-#include <map>
-#include "lib/nimbus.h"
-#include "lib/parser.h"
-#include "lib/scheduler_command.h"
+#define dbg(...) { }
+#define dbg_add_mode(...) { }
+#define dbg_add_modes(...) { }
+#define dbg_init() { }
+#define dbg_help() { }
+#define dbg_active(x) (FALSE)
 
-namespace nimbus {
-
-class SchedulerServerConnection {
- public:
-  explicit SchedulerServerConnection(tcp::socket* sock);
-  virtual ~SchedulerServerConnection();
-
-  virtual boost::asio::streambuf* read_buffer();
-  virtual tcp::socket* socket();
-  virtual int command_num();
-  virtual void set_command_num(int n);
-
- private:
-  boost::asio::streambuf* read_buffer_;
-  tcp::socket* socket_;
-  int command_num_;
-};
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_LIB_SCHEDULER_SERVER_CONNECTION_H_
+#endif
+} // NOLINT
+#endif  // NIMBUS_SHARED_DBG_H_

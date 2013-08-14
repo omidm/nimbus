@@ -44,7 +44,7 @@
 #include <set>
 #include <map>
 #include <string>
-#include "lib/cluster.h"
+#include "shared/cluster.h"
 
 namespace nimbus {
 class Data;

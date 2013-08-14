@@ -48,8 +48,8 @@
 #include <vector>
 #include "worker/job.h"
 #include "worker/data.h"
-#include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
+#include "shared/scheduler_client.h"
+#include "shared/scheduler_command.h"
 
 using namespace nimbus; // NOLINT
 

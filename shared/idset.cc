@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/idset.h"
+#include "shared/idset.h"
 
 using namespace nimbus; // NOLINT
 

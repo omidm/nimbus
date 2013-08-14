@@ -39,7 +39,7 @@
 
 #if !defined(_NIMBUS_NO_DBG)
 
-#include "lib/dbg.h"
+#include "shared/dbg.h"
 
 extern "C" {
 static nimbus_dbg_mode_names dbg_nametab[] = {

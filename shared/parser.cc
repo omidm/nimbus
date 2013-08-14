@@ -38,9 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/parser.h"
-#include <stdint.h>
-#include <boost/tokenizer.hpp>
+#include "shared/parser.h"
 
 namespace nimbus {
 void parseCommand(const std::string& str, const CmSet& cms,

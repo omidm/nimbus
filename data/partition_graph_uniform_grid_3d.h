@@ -41,7 +41,7 @@
 #ifndef NIMBUS_DATA_PARTITION_GRAPH_UNIFORM_GRID_3D_H_
 #define NIMBUS_DATA_PARTITION_GRAPH_UNIFORM_GRID_3D_H_
 
-#include "lib/nimbus_types.h"
+#include "shared/nimbus_types.h"
 #include "data/partition_graph_flat.h"
 
 namespace nimbus {

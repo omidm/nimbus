@@ -32,50 +32,46 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
-  * Abstraction of a connection from a Nimbus scheduler to
+ /*
+  * The abstraction of a connection from a scheduler to
   * a worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#include "lib/scheduler_server_connection.h"
+
+#ifndef NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
+#define NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
+
+#include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+#include <map>
 #include <string>
-#include "lib/dbg.h"
-
-
-using boost::asio::ip::tcp;
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/parser.h"
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
 
-SchedulerServerConnection::SchedulerServerConnection(tcp::socket* sock)
-  :socket_(sock) {
-  read_buffer_ = new boost::asio::streambuf();
-  command_num_ = 0;
-}
+class SchedulerServerConnection {
+ public:
+  explicit SchedulerServerConnection(tcp::socket* sock);
+  virtual ~SchedulerServerConnection();
 
-SchedulerServerConnection::~SchedulerServerConnection() {
-  // FIXME: not actually cleaning up listening thread.
-}
+  virtual boost::asio::streambuf* read_buffer();
+  virtual tcp::socket* socket();
+  virtual int command_num();
+  virtual void set_command_num(int n);
 
-
-boost::asio::streambuf* SchedulerServerConnection::read_buffer() {
-  return read_buffer_;
-}
-
-tcp::socket* SchedulerServerConnection::socket() {
-  return socket_;
-}
-
-int SchedulerServerConnection::command_num() {
-  return command_num_;
-}
-
-void SchedulerServerConnection::set_command_num(int n) {
-  command_num_ = n;
-}
+ private:
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  int command_num_;
+};
 
 }  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_

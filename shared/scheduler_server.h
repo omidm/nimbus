@@ -40,18 +40,18 @@
   */
 
 
-#ifndef NIMBUS_LIB_SCHEDULER_SERVER_H_
-#define NIMBUS_LIB_SCHEDULER_SERVER_H_
+#ifndef NIMBUS_SHARED_SCHEDULER_SERVER_H_
+#define NIMBUS_SHARED_SCHEDULER_SERVER_H_
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <string>
 #include <map>
-#include "lib/nimbus.h"
-#include "lib/parser.h"
+#include "shared/nimbus.h"
+#include "shared/parser.h"
+#include "shared/scheduler_command.h"
+#include "shared/scheduler_server_connection.h"
 #include "scheduler/scheduler_worker.h"
-#include "lib/scheduler_server_connection.h"
-#include "lib/scheduler_command.h"
 
 namespace nimbus {
 
@@ -143,4 +143,4 @@ class SchedulerServer {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_SCHEDULER_SERVER_H_
+#endif  // NIMBUS_SHARED_SCHEDULER_SERVER_H_

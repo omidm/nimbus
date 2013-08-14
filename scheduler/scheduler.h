@@ -49,10 +49,10 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "lib/nimbus.h"
-#include "lib/scheduler_server.h"
-#include "lib/cluster.h"
-#include "lib/parser.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server.h"
+#include "shared/cluster.h"
+#include "shared/parser.h"
 
 namespace nimbus {
 class Scheduler {

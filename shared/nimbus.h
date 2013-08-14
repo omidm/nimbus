@@ -32,15 +32,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** Implementation of nimbus_initialize(). */
+/* Header file for application developers. */
 
-#include "lib/nimbus.h"
-#include "lib/dbg.h"
+#ifndef NIMBUS_SHARED_NIMBUS_H_
+#define NIMBUS_SHARED_NIMBUS_H_
+
+#include "shared/log.h"
+#include "shared/nimbus_types.h"
+#include "worker/application.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/worker.h"
 
 namespace nimbus {
-void nimbus_initialize() {
-  dbg_init();
-  dbg(DBG_ALL, "Nimbus initialized.\n");
-}
+void nimbus_initialize();
 }
 
+#endif  // NIMBUS_SHARED_NIMBUS_H_

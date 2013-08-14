@@ -32,67 +32,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/** Implementation of nimbus_initialize(). */
 
-#ifndef NIMBUS_LIB_IDSET_H_
-#define NIMBUS_LIB_IDSET_H_
-
-#include <sstream> // NOLINT
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "lib/parser.h"
-
+#include "shared/nimbus.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
+void nimbus_initialize() {
+  dbg_init();
+  dbg(DBG_ALL, "Nimbus initialized.\n");
+}
+}
 
-class IDSet {
- public:
-  IDSet();
-  explicit IDSet(std::string s);
-  virtual ~IDSet();
-
-  virtual std::string toString();
-  virtual void insert(int entry);
-  virtual void clear();
-  virtual int size();
-
-  typedef typename std::set<int>::iterator IDSetIter;
-
-  IDSetIter begin();
-  IDSetIter end();
-
- private:
-  typename std::set<int> identifiers_;
-};
-
-
-// template<typename T>
-// class IDSet {
-//  public:
-//   IDSet();
-//   explicit IDSet(std::string s);
-//   virtual ~IDSet();
-//
-//   virtual std::string toString();
-//   virtual void insert(T entry);
-//   virtual void clear();
-//   virtual int size();
-//
-//   typedef typename std::set<T>::iterator IDSetIter;
-//
-//   IDSetIter begin();
-//   IDSetIter end();
-//
-//  private:
-//   typename std::set<T> identifiers_;
-// };
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_LIB_IDSET_H_

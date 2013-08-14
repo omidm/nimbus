@@ -38,8 +38,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_LOG_H_
-#define NIMBUS_LIB_LOG_H_
+#ifndef NIMBUS_SHARED_LOG_H_
+#define NIMBUS_SHARED_LOG_H_
 
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
@@ -118,13 +118,4 @@ class Log {
 };
 
 
-
-
-
-
-
-
-
-
-
-#endif  // NIMBUS_LIB_LOG_H_
+#endif  // NIMBUS_SHARED_LOG_H_

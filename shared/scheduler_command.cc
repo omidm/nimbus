@@ -43,8 +43,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler_command.h"
-#include "lib/dbg.h"
+#include "shared/scheduler_command.h"
+#include "shared/dbg.h"
 
 using namespace nimbus; // NOLINT
 

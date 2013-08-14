@@ -48,14 +48,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/scheduler_client.h"
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <string>
-#include <sstream>
-#include <iostream>  // NOLINT
-#include "lib/dbg.h"
+#include "shared/scheduler_client.h"
 
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT

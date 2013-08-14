@@ -48,11 +48,11 @@
 #include "worker/data.h"
 #include "worker/job.h"
 #include "worker/application.h"
-#include "lib/scheduler_client.h"
-#include "lib/scheduler_command.h"
-#include "lib/cluster.h"
-#include "lib/parser.h"
-#include "lib/log.h"
+#include "shared/scheduler_client.h"
+#include "shared/scheduler_command.h"
+#include "shared/cluster.h"
+#include "shared/parser.h"
+#include "shared/log.h"
 
 namespace nimbus {
 

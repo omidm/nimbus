@@ -33,40 +33,49 @@
  */
 
  /*
-  * Nimbus abstraction of computational resources. 
+  * Parser for Nimbus scheduler protocol. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/cluster.h"
+#ifndef NIMBUS_SHARED_PARSER_H_
+#define NIMBUS_SHARED_PARSER_H_
 
-using namespace nimbus; // NOLINT
+#include <stdint.h>
+#include <boost/tokenizer.hpp>
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <set>
 
-Node::Node() {}
+namespace nimbus {
+typedef std::set<std::string> CmSet;
 
-Node::~Node() {}
+void parseCommand(const std::string& string,
+                  const CmSet& commandSet,
+                  std::string& command,
+                  std::vector<int>& arguments);
 
-NodeType Node::type() {
-  return COMPUTER;
-}
+int parseCommandFile(const std::string& fname,
+                     CmSet& cs);
 
+/** Returns true if there was a valid command in the string,
+    false if no valid command. */
+bool parseCommandFromString(const std::string& input,
+    std::string& command,
+    std::vector<std::string>& parameters);
 
-Computer::Computer() {}
+void parseParameterFromString(const std::string& input, std::string& tag,
+    std::string& args, std::string& string_set);
 
-Computer::~Computer() {}
+void parseIDSetFromString(const std::string& input, std::set<int>& set);
 
-NodeType Computer::type() {
-  return COMPUTER;
-}
+bool isSet(const std::string& tag);
 
-Switch::Switch() {}
+int countOccurence(std::string str, std::string substr);
 
-Switch::~Switch() {}
-
-NodeType Switch::type() {
-  return COMPUTER;
-}
-
-ClusterMap::ClusterMap() {}
-
-ClusterMap::~ClusterMap() {}
+}  // namespace nimbus
+#endif  // NIMBUS_SHARED_PARSER_H_

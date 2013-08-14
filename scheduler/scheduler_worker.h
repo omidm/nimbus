@@ -42,8 +42,9 @@
 #define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
 
 #include <list>
-#include "lib/nimbus.h"
-#include "lib/scheduler_server_connection.h"
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server_connection.h"
 
 namespace nimbus {
 

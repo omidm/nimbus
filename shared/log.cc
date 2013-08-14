@@ -38,7 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "lib/log.h"
+#include "shared/log.h"
 
 Log::Log()
 : output_stream(&std::cout),

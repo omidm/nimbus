@@ -39,8 +39,8 @@
   */
 
 
-#ifndef NIMBUS_LIB_CLUSTER_H_
-#define NIMBUS_LIB_CLUSTER_H_
+#ifndef NIMBUS_SHARED_CLUSTER_H_
+#define NIMBUS_SHARED_CLUSTER_H_
 
 #include <inttypes.h>
 #include <iostream> // NOLINT
@@ -133,6 +133,6 @@ class ClusterMap {
 };
 
 }  // namespace nimbus
-#endif  // NIMBUS_LIB_CLUSTER_H_
+#endif  // NIMBUS_SHARED_CLUSTER_H_
 
 

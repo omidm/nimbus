@@ -38,8 +38,8 @@
  *  DESCR: Definition of dbg modes and the bindings to DBG env settings. 
  */
 
-#ifndef NIMBUS_LIB_DBG_MODES_H_
-#define NIMBUS_LIB_DBG_MODES_H_
+#ifndef NIMBUS_SHARED_DBG_MODES_H_
+#define NIMBUS_SHARED_DBG_MODES_H_
 
 typedef uint64_t nimbus_dbg_mode;
 
@@ -90,4 +90,4 @@ enum {
 
 #define DBG_ENV         "DBG"
 
-#endif  // NIMBUS_LIB_DBG_MODES_H_
+#endif  // NIMBUS_SHARED_DBG_MODES_H_

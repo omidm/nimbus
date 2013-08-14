@@ -33,45 +33,40 @@
  */
 
  /*
-  * Client (worker) side interface of the Nimbus scheduler protocol. 
+  * Nimbus abstraction of computational resources. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_CLIENT_H_
-#define NIMBUS_LIB_SCHEDULER_CLIENT_H_
+#include "shared/cluster.h"
 
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <map>
-#include "lib/parser.h"
-#include "lib/scheduler_command.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+Node::Node() {}
 
-class Worker;
-typedef uint32_t ConnectionId;
-using boost::asio::ip::tcp;
+Node::~Node() {}
 
-class SchedulerClient {
- public:
-  explicit SchedulerClient(uint16_t port);
-  virtual ~SchedulerClient();
+NodeType Node::type() {
+  return COMPUTER;
+}
 
-  virtual void run();
-  virtual SchedulerCommand* receiveCommand();
-  virtual void sendCommand(SchedulerCommand* command);
 
- private:
-  ConnectionId connection_port_no_;
-  boost::asio::io_service* io_service_;
-  boost::asio::streambuf* read_buffer_;
-  tcp::socket* socket_;
-  int command_num_;
+Computer::Computer() {}
 
-  void createNewConnections();
-};
+Computer::~Computer() {}
 
-}  // namespace nimbus
+NodeType Computer::type() {
+  return COMPUTER;
+}
 
-#endif  // NIMBUS_LIB_SCHEDULER_CLIENT_H_
+Switch::Switch() {}
+
+Switch::~Switch() {}
+
+NodeType Switch::type() {
+  return COMPUTER;
+}
+
+ClusterMap::ClusterMap() {}
+
+ClusterMap::~ClusterMap() {}

@@ -45,9 +45,9 @@
 #include <string>
 #include <set>
 #include <map>
-#include "lib/data.h"
-#include "lib/idset.h"
-#include "lib/nimbus_types.h"
+#include "worker/data.h"
+#include "shared/idset.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 

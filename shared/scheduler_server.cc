@@ -39,7 +39,7 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#include "lib/scheduler_server.h"
+#include "shared/scheduler_server.h"
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -47,7 +47,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>  // NOLINT
-#include "lib/dbg.h"
+#include "shared/dbg.h"
 
 
 using boost::asio::ip::tcp;

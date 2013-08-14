@@ -32,57 +32,67 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- *   FILE: dbg.h
- * AUTHOR: Philip Levis, original work by Mike Castelle
- *  DESCR: Run-time configuration of debug output
- *
- * Debug output determined by DBG environment variable. dbg_modes.h has
- * definitions of the settings possible. One can specify multiple debugging
- * outputs by comma-delimiting (e.g. DBG=sched,timer). Compiling with
- * NDEBUG defined (e.g. -DNDEBUG) will stop all of the debugging
- * output, will remove the debugging commands from the object file.
- *
- * example usage: dbg(DBG_TIMER, "timer went off at %d\n", time);
- *
- */
+ /*
+  * Object representation of a set of identifires.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_LIB_DBG_H_
-#define NIMBUS_LIB_DBG_H_
+#ifndef NIMBUS_SHARED_IDSET_H_
+#define NIMBUS_SHARED_IDSET_H_
 
-#if !defined(_NIMBUS_NO_DBG)
-
-#include <stdio.h>
-#include <stdarg.h>
-#include "lib/nimbus.h"
-#include "lib/dbg_modes.h"
-
-extern "C" {
-typedef struct dbg_mode {
-  const char* d_name;
-  uint64_t d_mode;
-} nimbus_dbg_mode_names;
-
-void dbg(nimbus_dbg_mode mode, const char *format, ...);
-bool dbg_active(nimbus_dbg_mode mode);
-void dbg_add_mode(const char *mode);
-void dbg_add_modes(const char *modes);
-void dbg_init(void);
-void dbg_help(void);
-void dbg_unset();
-void dbg_set(nimbus_dbg_mode);
+#include <sstream> // NOLINT
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/parser.h"
 
 
-#else
-/* No debugging */
+namespace nimbus {
 
-#define dbg(...) { }
-#define dbg_add_mode(...) { }
-#define dbg_add_modes(...) { }
-#define dbg_init() { }
-#define dbg_help() { }
-#define dbg_active(x) (FALSE)
+class IDSet {
+ public:
+  IDSet();
+  explicit IDSet(std::string s);
+  virtual ~IDSet();
 
-#endif
-} // NOLINT
-#endif  // NIMBUS_LIB_DBG_H_
+  virtual std::string toString();
+  virtual void insert(int entry);
+  virtual void clear();
+  virtual int size();
+
+  typedef typename std::set<int>::iterator IDSetIter;
+
+  IDSetIter begin();
+  IDSetIter end();
+
+ private:
+  typename std::set<int> identifiers_;
+};
+
+
+// template<typename T>
+// class IDSet {
+//  public:
+//   IDSet();
+//   explicit IDSet(std::string s);
+//   virtual ~IDSet();
+//
+//   virtual std::string toString();
+//   virtual void insert(T entry);
+//   virtual void clear();
+//   virtual int size();
+//
+//   typedef typename std::set<T>::iterator IDSetIter;
+//
+//   IDSetIter begin();
+//   IDSetIter end();
+//
+//  private:
+//   typename std::set<T> identifiers_;
+// };
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_IDSET_H_

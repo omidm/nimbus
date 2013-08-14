@@ -46,7 +46,7 @@
 #include <set>
 #include <map>
 #include "worker/data.h"
-#include "lib/idset.h"
+#include "shared/idset.h"
 
 namespace nimbus {
 

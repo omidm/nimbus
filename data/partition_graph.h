@@ -52,7 +52,7 @@
 
 #include <set>
 #include <map>
-#include "lib/nimbus_types.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
     class Vertex;

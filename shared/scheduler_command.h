@@ -43,8 +43,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_LIB_SCHEDULER_COMMAND_H_
-#define NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_H_
+#define NIMBUS_SHARED_SCHEDULER_COMMAND_H_
 
 
 #include <sstream> // NOLINT
@@ -54,9 +54,9 @@
 #include <map>
 #include <set>
 #include "worker/job.h"
-#include "lib/parser.h"
-#include "lib/idset.h"
-#include "lib/nimbus_types.h"
+#include "shared/parser.h"
+#include "shared/idset.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
@@ -254,4 +254,4 @@ class MigrateDataCommand : public SchedulerCommand {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_LIB_SCHEDULER_COMMAND_H_
+#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_H_

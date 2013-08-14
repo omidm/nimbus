@@ -39,7 +39,6 @@
   */
 
 #include "scheduler/scheduler_worker.h"
-#include "lib/dbg.h"
 
 namespace nimbus {
 
