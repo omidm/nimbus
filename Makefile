@@ -25,20 +25,20 @@ endif
 
 lib: $(LIBRARY)
 
-.PHONY: scheduler worker data shared
-scheduler:  
+.PHONY: scheduler_t worker_t data_t shared_t
+scheduler_t:  
 	cd scheduler; make; cd ..
 
-worker:
+worker_t:
 	cd worker; make; cd ..
 
-data: 
+data_t: 
 	cd data; make; cd ..
 
-shared:
-	cd lib; make -f Makefile2; cd ..
+shared_t:
+	cd shared; make; cd ..
 
-$(LIBRARY): scheduler worker data shared
+$(LIBRARY): scheduler_t worker_t data_t shared_t
 	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
 
 clean: clean-files
