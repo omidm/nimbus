@@ -40,8 +40,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
-#define NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+#ifndef NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+#define NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
 
 #define DEBUG_MODE
 
@@ -67,4 +67,4 @@ class SimpleScheduler : public Scheduler {
     virtual  void schedulerCoreProcessor();
 };
 
-#endif  // NIMBUS_SCHEDULER_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+#endif  // NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
