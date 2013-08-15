@@ -27,7 +27,7 @@ template<class TV> void Write_Substep_Helper(void* writer,const std::string& tit
 //#####################################################################
 template<class TV> WATER_DRIVER<TV>::
 WATER_DRIVER(WATER_EXAMPLE<TV>& example)
-    :example(example),thread_queue(example.thread_queue)
+    :example(example)
 {
     DEBUG_SUBSTEPS::Set_Substep_Writer((void*)this,&Write_Substep_Helper<TV>);
 }
@@ -96,17 +96,9 @@ Initialize()
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
     example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
     example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
-    if(thread_queue){
-        ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar=new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(thread_queue);
-        example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
-        example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
-        example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(thread_queue);
-        example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=thread_queue;
-        if(PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> >* refinement=dynamic_cast<PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> >*>(&example.projection))
-            refinement->thread_queue=thread_queue;}
-    else{
+
         example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
-        example.incompressible.Set_Custom_Advection(example.advection_scalar);}
+        example.incompressible.Set_Custom_Advection(example.advection_scalar);
 
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
@@ -269,26 +261,17 @@ Advance_To_Target_Time(const T target_time)
 
         //Project 7% (Parallelizedish)
         //LOG::Time("Project");
-        {
         LOG::SCOPE *scope=0;
-        if(!thread_queue) scope=new LOG::SCOPE("Project");
-        LOG::Time("Boundary Conditions");
+        scope=new LOG::SCOPE("Project");
         example.Set_Boundary_Conditions(time);
         example.incompressible.Set_Dirichlet_Boundary_Conditions(&example.particle_levelset_evolution.phi,0);
         example.projection.p*=dt;
-        {
-        LOG::SCOPE *scope=0;
-        if(!thread_queue) scope=new LOG::SCOPE("Implicit Part");
         example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
         example.incompressible.Advance_One_Time_Step_Implicit_Part(example.face_velocities,dt,time,true);
-        delete scope;
-        }
-        LOG::Time("Boundary Condition Face");
         example.projection.p*=(1/dt);
         example.incompressible.boundary->Apply_Boundary_Condition_Face(example.incompressible.grid,example.face_velocities,time+dt);
         example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
         delete scope;
-        }
 
         //Extrapolate Velocity 7%
         LOG::Time("Extrapolate Velocity");
@@ -296,7 +279,8 @@ Advance_To_Target_Time(const T target_time)
         example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time+dt,8);
         example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
 
-        time+=dt;}
+        time+=dt;
+    }
 }
 //#####################################################################
 // Simulate_To_Frame

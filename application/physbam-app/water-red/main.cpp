@@ -92,7 +92,7 @@ int main(int argc,char *argv[])
     parse_args.Parse(argc,argv);
     parse_args.Print_Arguments(argc,argv);
     
-    WATER_EXAMPLE<TV>* example=new WATER_EXAMPLE<TV>(stream_type,parse_args.Get_Integer_Value("-threads"),parse_args.Get_Integer_Value("-refine"));
+    WATER_EXAMPLE<TV>* example=new WATER_EXAMPLE<TV>(stream_type,parse_args.Get_Integer_Value("-refine"));
 
     int scale=parse_args.Get_Integer_Value("-scale");
     example->Initialize_Grid(TV_INT::All_Ones_Vector()*scale,RANGE<TV>(TV(),TV::All_Ones_Vector()));

@@ -51,7 +51,6 @@ public:
 
     GRID<TV> mac_grid;
     MPI_UNIFORM_GRID<GRID<TV> > *mpi_grid;
-    THREAD_QUEUE* thread_queue;
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection;
     PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > particle_levelset_evolution;
     INCOMPRESSIBLE_UNIFORM<GRID<TV> > incompressible;
@@ -64,7 +63,7 @@ public:
     T_GRID_BASED_COLLISION_GEOMETRY collision_bodies_affecting_fluid;
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
 
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,int number_of_threads=1,int refine=0);
+    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,int refine=0);
     virtual ~WATER_EXAMPLE();
     
     T Time_At_Frame(const int frame) const
