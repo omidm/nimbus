@@ -71,8 +71,6 @@ Initialize()
 
     example.projection.Initialize_Grid(example.mac_grid);
 
-    example.collision_bodies_affecting_fluid.Initialize_Grids();
-
     example.face_velocities.Resize(example.mac_grid);
 
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
@@ -80,9 +78,6 @@ Initialize()
     example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
     example.boundary=&example.boundary_scalar;
     example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
-
-    example.incompressible.Initialize_Grids(example.mac_grid);
-    example.incompressible.Set_Custom_Advection(example.advection_scalar);
 
     example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
     example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
@@ -102,6 +97,8 @@ Initialize()
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
 
+    example.incompressible.Initialize_Grids(example.mac_grid);
+    example.incompressible.Set_Custom_Advection(example.advection_scalar);
     example.incompressible.Set_Custom_Advection(example.advection_scalar);
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
@@ -110,19 +107,6 @@ Initialize()
     example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
     example.incompressible.projection.elliptic_solver->pcg.Show_Results();
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
-
-    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
-    example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    example.Initialize_Phi();
-    example.Adjust_Phi_With_Sources(time);
-    example.particle_levelset_evolution.Make_Signed_Distance();
-
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
-    example.particle_levelset_evolution.Set_Seed(2606);
-    example.particle_levelset_evolution.Seed_Particles(time);
-    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-
     //add forces
     example.incompressible.Set_Gravity();
     example.incompressible.Set_Body_Force(true);
@@ -137,6 +121,20 @@ Initialize()
     example.incompressible.Set_Viscosity(0);
     example.incompressible.Set_Variable_Viscosity(false);
     example.incompressible.projection.Set_Density(1e3);
+
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
+    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+
+    example.Initialize_Phi();
+    example.Adjust_Phi_With_Sources(time);
+    example.particle_levelset_evolution.Make_Signed_Distance();
+
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.particle_levelset_evolution.Set_Seed(2606);
+    example.particle_levelset_evolution.Seed_Particles(time);
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
