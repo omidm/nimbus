@@ -67,10 +67,7 @@ Initialize()
     }
     example.domain_boundary(2)(2)=false;
 
-    example.projection.Initialize_Grid(example.mac_grid);
-
     example.face_velocities.Resize(example.mac_grid);
-
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
     example.phi_boundary=&example.phi_boundary_water;
@@ -139,6 +136,7 @@ Initialize()
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
 
+    example.projection.Initialize_Grid(example.mac_grid);
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
     Write_Output_Files(example.first_frame);
