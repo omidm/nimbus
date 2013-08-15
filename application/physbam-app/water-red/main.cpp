@@ -64,20 +64,17 @@ int main(int argc,char *argv[])
     WATER_EXAMPLE<TV>* example=new WATER_EXAMPLE<TV>(stream_type);
 
     int scale=parse_args.Get_Integer_Value("-scale");
-    example->Initialize_Grid(TV_INT::All_Ones_Vector()*scale,RANGE<TV>(TV(),TV::All_Ones_Vector()));
     example->last_frame=parse_args.Get_Integer_Value("-e");
     example->write_substeps_level=parse_args.Get_Integer_Value("-substep");
     example->cfl=parse_args.Get_Double_Value("-cfl");
-    Add_Source(example);
     //Add_Sphere(example);
-
-    // Custom Partition
-    TV_INT ppd=TV_INT::All_Ones_Vector();
-    ppd(1)=4;
 
     FILE_UTILITIES::Create_Directory(example->output_directory+"/common");
     LOG::Instance()->Copy_Log_To_File(example->output_directory+"/common/log.txt",false);
     
+    example->Initialize_Grid(TV_INT::All_Ones_Vector()*scale,RANGE<TV>(TV(),TV::All_Ones_Vector()));
+    Add_Source(example);
+
     WATER_DRIVER<TV> driver(*example);
 
     driver.Execute_Main_Program();
