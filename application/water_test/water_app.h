@@ -61,7 +61,7 @@ class WaterApp : public Application {
 
     public:
         WaterApp();
-        WaterDriver<TV> driver;
+        WaterDriver<TV> *driver;
         virtual void load();
 };
 

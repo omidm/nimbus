@@ -89,10 +89,10 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     /* water driver functions, these should be called from the execute
      * functions for the jobs
      */
-    void initialize(bool distributed);
-    void run_upto_advection();
-    void run_advect();
-    void run_after_advection();
+    void initialize(bool distributed) {}
+    void run_upto_advection() {}
+    void run_advect() {}
+    void run_after_advection() {}
 
     /* helper functions.
     */

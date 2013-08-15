@@ -49,7 +49,7 @@ using nimbus::Job;
 using nimbus::Application;
 
 WaterApp::WaterApp():
-    driver(STREAM_TYPE(T()))
+    driver( new WaterDriver<TV> ( STREAM_TYPE(T()) ) )
 {};
 
 void WaterApp::load() {
@@ -137,6 +137,7 @@ Job* Init::clone() {
 
 void Init::execute(std::string params, const DataArray& da)
 {
+//    application_->driver.initialize(false);
 };
 
 Loop::Loop(Application *app, JobType type)
