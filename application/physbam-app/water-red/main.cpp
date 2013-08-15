@@ -37,34 +37,6 @@ void Add_Source(WATER_EXAMPLE<VECTOR<T,3> >* example)
     example->sources.Append(analytic);
 }
 
-template<class T>
-void Add_Sphere(WATER_EXAMPLE<VECTOR<T,1> >* example)
-{
-    PHYSBAM_FATAL_ERROR();
-}
-
-template<class T>
-void Add_Sphere(WATER_EXAMPLE<VECTOR<T,2> >* example)
-{
-    typedef float RW;
-    STREAM_TYPE stream_type((RW()));
-    std::string model_file_name="../../Public_Data/Archives/Rigid_Bodies_2D/circle";
-    T radius=0.1;
-    int rigid_particle_id=example->rigid_geometry_collection.Add_Rigid_Geometry(stream_type,model_file_name,radius,true,true,true,true);
-    example->rigid_geometry_collection.particles.rigid_geometry(rigid_particle_id)->is_static=false;
-}
-
-template<class T>
-void Add_Sphere(WATER_EXAMPLE<VECTOR<T,3> >* example)
-{
-    typedef float RW;
-    STREAM_TYPE stream_type((RW()));
-    std::string model_file_name="../../Public_Data/Archives/Rigid_Bodies/sphere";
-    T radius=0.1;
-    int rigid_particle_id=example->rigid_geometry_collection.Add_Rigid_Geometry(stream_type,model_file_name,radius,true,true,true,true);
-    example->rigid_geometry_collection.particles.rigid_geometry(rigid_particle_id)->is_static=false;
-}
-
 int main(int argc,char *argv[])
 {
     typedef float T;
