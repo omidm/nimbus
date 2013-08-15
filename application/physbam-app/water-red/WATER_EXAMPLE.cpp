@@ -107,20 +107,6 @@ Adjust_Phi_With_Sources(const T time)
         for(int i=1;i<=sources.m;i++) particle_levelset_evolution.phi(index)=min(particle_levelset_evolution.phi(index),sources(i)->Extended_Phi(iterator.Location()));}
 }
 //#####################################################################
-// Adjust_Phi_With_Objects
-//#####################################################################
-template<class TV> void WATER_EXAMPLE<TV>::
-Adjust_Phi_With_Objects(const T time)
-{
-}
-//#####################################################################
-// Extrapolate_Phi_Into_Objects
-//#####################################################################
-template<class TV> void WATER_EXAMPLE<TV>::
-Extrapolate_Phi_Into_Objects(const T time)
-{
-}
-//#####################################################################
 // Adjust_Particle_For_Domain_Boundaries
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::

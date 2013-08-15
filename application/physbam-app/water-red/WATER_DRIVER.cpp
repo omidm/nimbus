@@ -60,8 +60,6 @@ Initialize()
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
     
-    // initialize collision objects
-
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
 
     {
@@ -75,10 +73,6 @@ Initialize()
 
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_CFL_Number((T).9);
-
-    example.incompressible.mpi_grid=NULL;
-    example.projection.elliptic_solver->mpi_grid=NULL;
-    example.particle_levelset_evolution.particle_levelset.mpi_grid=NULL;
 
         example.boundary=&example.boundary_scalar;
         example.phi_boundary=&example.phi_boundary_water;
@@ -194,17 +188,12 @@ Advance_To_Target_Time(const T target_time)
         T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
         example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
 
-        example.Adjust_Phi_With_Objects(time);
-        
         //Advect Phi 3.6% (Parallelized)
         LOG::Time("Advect Phi");
         example.phi_boundary_water.Use_Extrapolation_Mode(false);
         example.particle_levelset_evolution.Advance_Levelset(dt);
         example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
-        LOG::Time("Extrapolate Phi Into Objects");
-        example.Extrapolate_Phi_Into_Objects(time+dt);
-        
         //Advect Particles 12.1% (Parallelized)
         LOG::Time("Step Particles");
         example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);

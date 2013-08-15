@@ -78,8 +78,6 @@ public:
     void Read_Output_Files(const int frame);
     void Set_Boundary_Conditions(const T time);
     void Adjust_Phi_With_Sources(const T time);
-    void Adjust_Phi_With_Objects(const T time);
-    void Extrapolate_Phi_Into_Objects(const T time);
     void Initialize_Phi();
 
 //#####################################################################
