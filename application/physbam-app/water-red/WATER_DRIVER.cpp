@@ -126,12 +126,12 @@ Initialize()
     example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
     example.collision_bodies_affecting_fluid.Rasterize_Objects();
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
 
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
-    example.particle_levelset_evolution.Make_Signed_Distance();
 
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.particle_levelset_evolution.Make_Signed_Distance();
     example.particle_levelset_evolution.Set_Seed(2606);
     example.particle_levelset_evolution.Seed_Particles(time);
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
