@@ -79,24 +79,6 @@ Initialize()
     example.boundary=&example.boundary_scalar;
     example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-    example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
-    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-    example.particle_levelset_evolution.Set_Time(time);
-    example.particle_levelset_evolution.Set_CFL_Number((T).9);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
-    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
-    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
-    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
-    example.particle_levelset_evolution.Use_Particle_Levelset(true);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
-    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
-
     example.incompressible.Initialize_Grids(example.mac_grid);
     example.incompressible.Set_Custom_Advection(example.advection_scalar);
     example.incompressible.Set_Custom_Advection(example.advection_scalar);
@@ -128,6 +110,24 @@ Initialize()
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
 
+    example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
+    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
+    example.particle_levelset_evolution.Set_Time(time);
+    example.particle_levelset_evolution.Set_CFL_Number((T).9);
+    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
+    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
+    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
+    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
+    example.particle_levelset_evolution.Use_Particle_Levelset(true);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
+    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
+
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
 
@@ -141,6 +141,7 @@ Initialize()
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
+
     Write_Output_Files(example.first_frame);
 }
 //#####################################################################
