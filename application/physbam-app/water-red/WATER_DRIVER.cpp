@@ -110,7 +110,6 @@ Initialize()
         example.Initialize_Phi();
         example.Adjust_Phi_With_Sources(time);
         example.particle_levelset_evolution.Make_Signed_Distance();
-        example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
@@ -194,7 +193,6 @@ Advance_To_Target_Time(const T target_time)
         
         //Advect removed particles (Parallelized)
         LOG::Time("Advect Removed Particles");
-        example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
         RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
         DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
 
@@ -215,7 +213,6 @@ Advance_To_Target_Time(const T target_time)
         //Adjust Phi 0%
         LOG::Time("Adjust Phi");
         example.Adjust_Phi_With_Sources(time+dt);
-        example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time+dt);
 
         //Delete Particles 12.5 (Parallelized)
         LOG::Time("Delete Particles");
@@ -228,7 +225,6 @@ Advance_To_Target_Time(const T target_time)
         LOG::Time("Reincorporate Particles");
         if(example.particle_levelset_evolution.particle_levelset.use_removed_positive_particles || example.particle_levelset_evolution.particle_levelset.use_removed_negative_particles)
             example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
-        example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time+dt);
 
         //Project 7% (Parallelizedish)
         //LOG::Time("Project");
