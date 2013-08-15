@@ -55,8 +55,6 @@ class SchedulerJob;
 typedef std::map<int, SchedulerJob*> JobMap;
 typedef std::vector<Data*> DataArray;
 
-enum JobType {JOB_COMP, JOB_SYNC};
-
 class SchedulerJob {
  public:
   SchedulerJob(job_id_t id, app_id_t app_id, JobType type);

@@ -46,7 +46,6 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "shared/parser.h"
 #include "shared/nimbus_types.h"
 
 
@@ -58,6 +57,7 @@ class IDSet {
  public:
   IDSet();
   explicit IDSet(std::string s);
+  explicit IDSet(const std::set<T>& set);
   IDSet(const IDSet<T>& other);
   virtual ~IDSet();
 

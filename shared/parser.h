@@ -50,8 +50,11 @@
 #include <string>
 #include <vector>
 #include <set>
+#include "shared/idset.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
+
 typedef std::set<std::string> CmSet;
 
 void parseCommand(const std::string& string,
@@ -78,6 +81,28 @@ void parseIDSetFromString(const std::string& input, std::set<uint32_t>& set);
 bool isSet(const std::string& tag);
 
 int countOccurence(std::string str, std::string substr);
+
+// ********************************************************
+
+bool ParseSpawnJobCommand(const std::string& input,
+    std::string& job_name,
+    IDSet<job_id_t>& job_id,
+    IDSet<data_id_t>& read, IDSet<data_id_t>& write,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
+    JobType& job_type, std::string& params);
+
+
+bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
+
+bool ParseIDSet(const std::string& input, std::set<uint32_t>& set);
+
+
+
+
+
+
+
+
 
 }  // namespace nimbus
 #endif  // NIMBUS_SHARED_PARSER_H_

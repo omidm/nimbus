@@ -47,7 +47,12 @@ IDSet<T>::IDSet() {}
 
 template<typename T>
 IDSet<T>::IDSet(std::string s) {
-  parseIDSetFromString(s, identifiers_);
+  // parseIDSetFromString(s, identifiers_);
+}
+
+template<typename T>
+IDSet<T>::IDSet(const std::set<T>& set) {
+  identifiers_ = set;
 }
 
 template<typename T>
