@@ -22,11 +22,11 @@ using namespace PhysBAM;
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input,int refine)
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input)
     :stream_type(stream_type_input),initial_time(0),first_frame(0),last_frame(100),frame_rate(24),
     write_substeps_level(-1),write_output_files(true),output_directory("output"),number_of_ghost_cells(3),
     cfl(.9),mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(refine>1?*new PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> >(mac_grid,particle_levelset_evolution.particle_levelset.levelset,refine):*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL//thread_queue
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL//thread_queue
                 )),
     particle_levelset_evolution(mac_grid,number_of_ghost_cells),incompressible(mac_grid,projection),boundary(0),collision_bodies_affecting_fluid(mac_grid)
 {

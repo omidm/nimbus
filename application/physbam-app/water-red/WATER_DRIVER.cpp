@@ -62,13 +62,11 @@ Initialize()
     
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
 
-    {
         example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
         example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
         example.incompressible.Initialize_Grids(example.mac_grid);
         example.projection.Initialize_Grid(example.mac_grid);
         example.collision_bodies_affecting_fluid.Initialize_Grids();
-    }
     example.face_velocities.Resize(example.mac_grid);
 
     example.particle_levelset_evolution.Set_Time(time);
@@ -76,10 +74,6 @@ Initialize()
 
         example.boundary=&example.boundary_scalar;
         example.phi_boundary=&example.phi_boundary_water;
-
-    if(PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> > *refine=dynamic_cast<PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> >*>(&example.projection)){
-        refine->boundary=example.boundary;
-        refine->phi_boundary=example.phi_boundary;}
 
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
     example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
