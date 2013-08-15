@@ -43,9 +43,9 @@ template<class TV> WATER_EXAMPLE<TV>::
 ~WATER_EXAMPLE()
 {
     delete &projection;
-    if(mpi_grid){
-        delete boundary;
-        delete phi_boundary;}
+//    if(mpi_grid){
+//        delete boundary;
+//        delete phi_boundary;}
 }
 //#####################################################################
 // Initialize_Phi
@@ -160,7 +160,6 @@ Write_Output_Files(const int frame)
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/mac_velocities",face_velocities);
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/common/grid",mac_grid);
-    if(mpi_grid) FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/common/global_grid",mpi_grid->global_grid);
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/pressure",incompressible.projection.p);
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_N",projection.elliptic_solver->psi_N);
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_D",projection.elliptic_solver->psi_D);

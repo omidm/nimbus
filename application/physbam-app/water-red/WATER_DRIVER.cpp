@@ -5,7 +5,6 @@
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
-#include <PhysBAM_Tools/Parallel_Computation/BOUNDARY_MPI.h>
 #include <PhysBAM_Tools/Parallel_Computation/DOMAIN_ITERATOR_THREADED.h>
 #include <PhysBAM_Tools/Parallel_Computation/PCG_SPARSE_THREADED.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_UTILITIES.h>
@@ -77,17 +76,12 @@ Initialize()
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_CFL_Number((T).9);
 
-    if(example.mpi_grid) example.mpi_grid->Initialize(example.domain_boundary);
-    example.incompressible.mpi_grid=example.mpi_grid;
-    example.projection.elliptic_solver->mpi_grid=example.mpi_grid;
-    example.particle_levelset_evolution.particle_levelset.mpi_grid=example.mpi_grid;
-    if(example.mpi_grid){
-        example.boundary=new BOUNDARY_MPI<GRID<TV> >(example.mpi_grid,example.boundary_scalar);
-        example.phi_boundary=new BOUNDARY_MPI<GRID<TV> >(example.mpi_grid,example.phi_boundary_water);
-        example.particle_levelset_evolution.particle_levelset.last_unique_particle_id=example.mpi_grid->rank*30000000;}
-    else{
+    example.incompressible.mpi_grid=NULL;
+    example.projection.elliptic_solver->mpi_grid=NULL;
+    example.particle_levelset_evolution.particle_levelset.mpi_grid=NULL;
+
         example.boundary=&example.boundary_scalar;
-        example.phi_boundary=&example.phi_boundary_water;}
+        example.phi_boundary=&example.phi_boundary_water;
 
     if(PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> > *refine=dynamic_cast<PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM<GRID<TV> >*>(&example.projection)){
         refine->boundary=example.boundary;
@@ -188,7 +182,6 @@ Advance_To_Target_Time(const T target_time)
         LOG::Time("Calculate Dt");
         example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
         T dt=example.cfl*example.incompressible.CFL(example.face_velocities);dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
-        if(example.mpi_grid) example.mpi_grid->Synchronize_Dt(dt);
         if(time+dt>=target_time){dt=target_time-time;done=true;}
         else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
 

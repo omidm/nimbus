@@ -1,5 +1,3 @@
-#include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
-#include <PhysBAM_Tools/Parallel_Computation/MPI_WORLD.h>
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
 #include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
 #include <PhysBAM_Geometry/Basic_Geometry/CYLINDER.h>
@@ -87,7 +85,6 @@ int main(int argc,char *argv[])
     parse_args.Add_Double_Argument("-cfl",1,"cfl number");
 
     LOG::Initialize_Logging(false,false,1<<30,true,parse_args.Get_Integer_Value("-threads"));
-    MPI_WORLD mpi_world(argc,argv);
 
     parse_args.Parse(argc,argv);
     parse_args.Print_Arguments(argc,argv);
@@ -105,13 +102,6 @@ int main(int argc,char *argv[])
     // Custom Partition
     TV_INT ppd=TV_INT::All_Ones_Vector();
     ppd(1)=4;
-
-    if(mpi_world.initialized){
-        // Custom Partition
-        example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3,false,ppd);
-        // Original Partition
-        //example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3);
-        if(example->mpi_grid->Number_Of_Processors()>1) example->output_directory+=STRING_UTILITIES::string_sprintf("/%d",(mpi_world.rank+1));}
 
     FILE_UTILITIES::Create_Directory(example->output_directory+"/common");
     LOG::Instance()->Copy_Log_To_File(example->output_directory+"/common/log.txt",false);
