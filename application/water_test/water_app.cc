@@ -49,12 +49,13 @@ using nimbus::Job;
 using nimbus::Application;
 
 WaterApp::WaterApp()
-{
-    WaterDriver<TV> *driver = new WaterDriver<TV> ( STREAM_TYPE(T()) );
-    set_app_data(driver);
-};
+    : driver(NULL)
+{};
 
 void WaterApp::load() {
+
+    WaterDriver<TV> *driver = new WaterDriver<TV> ( STREAM_TYPE(T()) );
+    set_app_data(driver);
 
     /* Declare and initialize data and jobs. */
     std::cout << "Worker beginning to load application" << std::endl;
@@ -140,7 +141,15 @@ Job* Init::clone() {
 void Init::execute(std::string params, const DataArray& da)
 {
     WaterDriver<TV>* driver = (WaterDriver<TV>*)application_->app_data();
+    if (driver == NULL)
+    {
+        std::cout << "Null water driver in init\n";
+        exit -1;
+    }
+    // TODO(chinmayee): Implement driver initialize to set constant policies
+    // and parameter values
     driver->initialize(false);
+    // TODO(chinmayee): Initializa all the remaining data over here
 };
 
 Loop::Loop(Application *app, JobType type)
@@ -152,5 +161,4 @@ Job* Loop::clone() {
 };
 
 void Loop::execute(std::string params, const DataArray& da)
-{
-};
+{};
