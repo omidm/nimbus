@@ -90,6 +90,7 @@ class SchedulerCommand {
 
   virtual void addParameter(CommandParameter parameter);
   virtual std::string toString();
+  virtual std::string toStringWTags();
   virtual std::string name();
   virtual CommandParameterList* parameters();
 
@@ -119,6 +120,7 @@ class SpawnJobCommand : public SchedulerCommand {
     ~SpawnJobCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     std::string job_name();
     JobType job_type();
     IDSet<job_id_t> job_id();
@@ -146,6 +148,7 @@ class JobDoneCommand : public SchedulerCommand {
     ~JobDoneCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     job_id_t job_id();
     std::string params();
 
@@ -161,6 +164,7 @@ class KillJobCommand : public SchedulerCommand {
     ~KillJobCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     job_id_t job_id();
     std::string params();
 
@@ -176,6 +180,7 @@ class PauseJobCommand : public SchedulerCommand {
     ~PauseJobCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     job_id_t job_id();
     std::string params();
 
@@ -192,6 +197,7 @@ class DefineDataCommand : public SchedulerCommand {
     ~DefineDataCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     std::string data_name();
     data_id_t data_id();
     IDSet<data_id_t>* neighbor_set();
@@ -211,6 +217,7 @@ class DataCreatedCommand : public SchedulerCommand {
     ~DataCreatedCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     data_id_t data_id();
     std::string params();
 
@@ -227,6 +234,7 @@ class CopyDataCommand : public SchedulerCommand {
     ~CopyDataCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     data_id_t data_id_from();
     data_id_t data_id_to();
     std::string params();
@@ -245,6 +253,7 @@ class MigrateDataCommand : public SchedulerCommand {
     ~MigrateDataCommand();
 
     virtual std::string toString();
+    virtual std::string toStringWTags();
     data_id_t data_id_from();
     data_id_t data_id_to();
     std::string params();

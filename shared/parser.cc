@@ -159,5 +159,155 @@ bool isSet(const std::string& str) {
     return false;
   return true;
 }
+
+// ********************************************************
+
+bool ParseSpawnJobCommand(const std::string& input,
+    std::string& job_name,
+    IDSet<job_id_t>& job_id,
+    IDSet<data_id_t>& read, IDSet<data_id_t>& write,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
+    JobType& job_type, std::string& params) {
+  int num = 8;
+  std::set<job_id_t> job_id_set;
+  std::set<data_id_t> data_id_set;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: SpawnJobCommand has only " << i <<
+        "parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: SpawnJobCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  job_name = *iter;
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<data_id_t> temp(job_id_set);
+    job_id = temp;
+  } else {
+    std::cout << "ERROR: job id set is not well formatted" << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, data_id_set)) {
+    IDSet<data_id_t> temp(data_id_set);
+    read = temp;
+  } else {
+    std::cout << "ERROR: read set is not well formatted" << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, data_id_set)) {
+    IDSet<data_id_t> temp(data_id_set);
+    write = temp;
+  } else {
+    std::cout << "ERROR: write set is not well formatted" << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<data_id_t> temp(job_id_set);
+    before = temp;
+  } else {
+    std::cout << "ERROR: before set is not well formatted" << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<data_id_t> temp(job_id_set);
+    after = temp;
+  } else {
+    std::cout << "ERROR: after set is not well formatted" << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (*iter == "COMP") {
+    job_type = JOB_COMP;
+  } else if (*iter == "SYNC") {
+    job_type = JOB_SYNC;
+  } else {
+    std::cout << "ERROR: job type is not known!" << std::endl;
+    return false;
+  }
+
+  iter++;
+  params = *iter;
+
+  return true;
+}
+
+
+bool ParseIDSet(const std::string& input, std::set<uint64_t>& set) {
+  uint64_t num;
+  set.clear();
+  if (input[0] != '{' || input[input.length() - 1] != '}') {
+    std::cout << "ERROR: wrong format for IDSet." << std::endl;
+    return false;
+  }
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    if (ss.fail()) {
+      std::cout << "ERROR: wrong element in IDSet." << std::endl;
+      return false;
+    }
+    set.insert(num);
+  }
+  return true;
+}
+
+bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
+  uint64_t num;
+  set.clear();
+  if (input[0] != '{' || input[input.length() - 1] != '}') {
+    std::cout << "ERROR: wrong format for IDSet." << std::endl;
+    return false;
+  }
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    if (ss.fail()) {
+      std::cout << "ERROR: wrong element in IDSet." << std::endl;
+      return false;
+    }
+    set.insert(num);
+  }
+  return true;
+}
+
+
+
+
+
+
+
+
+
+
 }  // namespace nimbus
 

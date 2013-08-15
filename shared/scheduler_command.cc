@@ -86,6 +86,10 @@ std::string SchedulerCommand::toString() {
   return rval;
 }
 
+std::string SchedulerCommand::toStringWTags() {
+  return toString();
+}
+
 std::string SchedulerCommand::name() {
   return name_;
 }
@@ -160,6 +164,7 @@ SpawnJobCommand::SpawnJobCommand(std::string job_name,
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
   job_type_(job_type), params_(params) {
+    name_ = "spawnjob";
 }
 
 SpawnJobCommand::~SpawnJobCommand() {
@@ -179,6 +184,23 @@ std::string SpawnJobCommand::toString() {
   else
     str += "SYNC ";
   str += params_;
+  return str;
+}
+
+std::string SpawnJobCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("name:" + job_name_ + " ");
+  str += ("id:" + job_id_.toString() + " ");
+  str += ("read:" + read_set_.toString() + " ");
+  str += ("write:" + write_set_.toString() + " ");
+  str += ("before:" + before_set_.toString() + " ");
+  str += ("after:" + after_set_.toString() + " ");
+  if (job_type_ == JOB_COMP)
+    str += "type:COMP ";
+  else
+    str += "type:SYNC ";
+  str += ("params:" + params_);
   return str;
 }
 

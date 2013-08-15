@@ -56,6 +56,11 @@ namespace nimbus {
     WORKER_ID_SCHEDULER = 1
   };
 
+  enum JobType {
+    JOB_COMP,
+    JOB_SYNC
+  };
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
