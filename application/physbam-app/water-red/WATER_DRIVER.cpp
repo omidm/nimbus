@@ -60,6 +60,13 @@ Initialize()
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
     
+    for(int i=1;i<=TV::dimension;i++)
+    {
+        example.domain_boundary(i)(1)=true;
+        example.domain_boundary(i)(2)=true;
+    }
+        example.domain_boundary(2)(2)=false;
+    
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
 
         example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
@@ -96,6 +103,7 @@ Initialize()
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
 
+    example.incompressible.Set_Custom_Advection(example.advection_scalar);
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
