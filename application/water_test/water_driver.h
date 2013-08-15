@@ -44,7 +44,7 @@
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_
 
 /* Include relevant PhysBAM files here.
- */
+*/
 #include "./physbam_include.h"
 #include "./water_data_types.h"
 
@@ -77,10 +77,10 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     public:
 
     WaterDriver(const STREAM_TYPE stream_type_input);
-    virtual ~WaterDriver();
+    virtual ~WaterDriver() {}
 
     /* water simulation parameters
-     */
+    */
     STREAM_TYPE stream_type;
     int number_of_ghost_cells;
     T cfl, initial_time, frame_rate;
@@ -95,7 +95,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
     void run_after_advection();
 
     /* helper functions.
-     */
+    */
     void Write_Output_Files(const int frame);
     void Read_Output_Files(const int frame);
 

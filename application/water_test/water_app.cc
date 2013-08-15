@@ -36,6 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <iostream>
 #include "shared/nimbus.h"
 #include "./water_app.h"
 
