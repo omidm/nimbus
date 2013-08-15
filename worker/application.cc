@@ -43,6 +43,7 @@
 Application::Application() {
   job_id_ = 1;
   data_id_ = 1;
+  app_data_ = NULL;
 }
 
 void Application::load() {
@@ -113,6 +114,10 @@ void Application::getNewDataID(int req_num, std::vector<int>* result) {
   }
 }
 
+void* Application::app_data() {
+    return app_data_;
+}
 
-
-
+void Application::set_app_data(void* data) {
+    app_data_ = data;
+}

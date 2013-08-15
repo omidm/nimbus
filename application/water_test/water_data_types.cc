@@ -38,6 +38,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <iostream>
 #include "shared/nimbus.h"
 #include "./water_data_types.h"
 
@@ -47,6 +48,7 @@ using nimbus::Data;
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
+    this->size_ = size;
     data = NULL;
 }
 
@@ -58,23 +60,20 @@ create()
 template <class TV> Data* FaceArray<TV>::
 clone()
 {
-    return NULL;
+    std::cout << "Cloning facearray\n";
+    return new FaceArray<TV>(size_);
 }
 
 template <class TV> bool FaceArray<TV>::
 initialize()
 {
     return false;
-//    data = new ARRAY<T, FACE_INDEX<TV::dimension> >;
-//    if (data != NULL)
-//        return true;
-//    else
-//        return false;
 }
 
 template <class TV> FaceArrayGhost<TV>::
 FaceArrayGhost(int size)
 {
+    this->size_ = size;
     data = NULL;
 }
 
@@ -86,23 +85,20 @@ create()
 template <class TV> Data* FaceArrayGhost<TV>::
 clone()
 {
-    return NULL;
+    std::cout << "Cloning facearrayghost\n";
+    return new FaceArrayGhost<TV>(size_);
 }
 
 template <class TV> bool FaceArrayGhost<TV>::
 initialize()
 {
     return false;
-//    data = new typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS;
-//    if (data != NULL)
-//        return true;
-//    else
-//        return false;
 }
 
 template <class TV> Grid<TV>::
 Grid(int size)
 {
+    this->size_ = size;
     data = NULL;
 }
 
@@ -114,7 +110,8 @@ create()
 template <class TV> Data* Grid<TV>::
 clone()
 {
-    return NULL;
+    std::cout << "Cloning grid\n";
+    return new Grid<TV>(size_);
 }
 
 template <class TV> bool Grid<TV>::
@@ -125,17 +122,13 @@ initialize(
         )
 {
     return false;
-//    data = new GRID<TV>(counts, box, MAC_grid);
-//    if (data != NULL)
-//        return true;
-//    else
-//        return false;
 }
 
 template <class TV> MPIGrid<TV>::
-MPIGrid(int size):
-    data(0)
+MPIGrid(int size)
 {
+    this->size_ = size;
+    data = NULL;
 }
 
 template <class TV> void MPIGrid<TV>::
@@ -146,23 +139,30 @@ create()
 template <class TV> Data* MPIGrid<TV>::
 clone()
 {
-    return NULL;
+    std::cout << "Cloning mpigrid\n";
+    return new MPIGrid<TV>(size_);
 }
 
 template <class TV> bool MPIGrid<TV>::
 initialize()
 {
     return false;
-//    data = new MPI_UNIFORM_GRID<GRID<TV> >();
-//    if (data != NULL)
-//        return true;
-//    else
-//        return false;
 }
 
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
+    this->size_ = size;
+    boundary_scalar = NULL;
+    phi_boundary_water = NULL;
+    domain_boundary = NULL;
+    sources = NULL;
+    particle_levelset_evolution = NULL;
+    advection_scalar = NULL;
+    rigid_geometry_collection = NULL;
+    collision_bodies_affecting_fluid = NULL;
+    incompressible = NULL;
+    kinematic_evolution = NULL;
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
@@ -173,40 +173,21 @@ create()
 template <class TV, class T> Data* NonAdvData<TV, T>::
 clone()
 {
-    return NULL;
+    std::cout << "Cloning nonadvdata\n";
+    return new NonAdvData<TV, T>(size_);
 }
 
 template <class TV, class T> bool NonAdvData<TV, T>::
 initialize()
 {
     return false;
-//    // TODO: to fill in
-//    // nothing for projection
-//    boundary_scalar = new  BOUNDARY_UNIFORM<GRID<TV>, T>;
-//    phi_boundary_water = new typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
-//        BOUNDARY_PHI_WATER;
-//    domain_boundary = new VECTOR<VECTOR<bool, 2>, TV::dimension>;
-//    sources = new ARRAY<IMPLICIT_OBJECT<TV>*>;
-//    particle_levelset_evolution = new 
-//        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >;
-//    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T>;
-//    rigid_geometry_collection = new RIGID_GEOMETRY_COLLECTION<TV>;
-//    collision_bodies_affecting_fluid = new typename
-//        COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
-//        GRID_BASED_COLLISION_GEOMETRY;
-//    incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >;
-//    kinematic_evolution = new KINEMATIC_EVOLUTION<TV>;
-//    if (boundary_scalar == NULL || phi_boundary_water == NULL ||
-//            domain_boundary == NULL || sources == NULL ||
-//            particle_levelset_evolution == NULL ||
-//            advection_scalar == NULL ||
-//            rigid_geometry_collection == NULL ||
-//            collision_bodies_affecting_fluid == NULL ||
-//            incompressible == NULL)
-//        return false;
-//    else
-//        return true;
 }
+
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+#endif  // TEMPLATE_USE
 
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;

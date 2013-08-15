@@ -78,6 +78,8 @@ class Application {
   Data* cloneData(std::string name);
   void getNewJobID(int req_num, std::vector<int>* result);
   void getNewDataID(int req_num, std::vector<int>* result);
+  void* app_data();
+  void set_app_data(void* data);
 
  private:
   uint64_t id_;
@@ -89,6 +91,7 @@ class Application {
   JobTable job_table_;
   DataTable data_table_;
   SchedulerClient* client_;
+  void* app_data_;
 };
 
 }  //  namespace nimbus

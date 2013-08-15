@@ -70,27 +70,28 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
-
 /* Face array for storing quantities like face velocities.
 */
 template <class TV>
 class FaceArray : public Data {
-    typedef typename TV::SCALAR T;
+    private:
+        int size_;
+        typedef typename TV::SCALAR T;
     public:
-    FaceArray(int size);
-    virtual void create();
-    virtual Data* clone();
-    bool initialize();
-    // physbam structures and methods
-    ARRAY<T, FACE_INDEX<TV::dimension> > *data;
+        FaceArray(int size);
+        virtual void create();
+        virtual Data* clone();
+        bool initialize();
+        // physbam structures and methods
+        ARRAY<T, FACE_INDEX<TV::dimension> > *data;
 };
 
 /* Ghost face array for storing scalar quantities.
 */
 template <class TV>
 class FaceArrayGhost : public Data {
+    private:
+        int size_;
     public:
         FaceArrayGhost(int size);
         virtual void create();
@@ -104,17 +105,19 @@ class FaceArrayGhost : public Data {
 */
 template <class TV>
 class Grid : public Data {
-    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+    private:
+        int size_;
+        typedef typename TV::template REBIND<int>::TYPE TV_INT;
     public:
-    Grid(int size);
-    virtual void create();
-    virtual Data* clone();
-    bool initialize(
-            const TV_INT &counts,
-            const RANGE<TV> &box,
-            const bool MAC_grid);
-    // physbam structures and methods
-    GRID<TV> *data;
+        Grid(int size);
+        virtual void create();
+        virtual Data* clone();
+        bool initialize(
+                const TV_INT &counts,
+                const RANGE<TV> &box,
+                const bool MAC_grid);
+        // physbam structures and methods
+        GRID<TV> *data;
 };
 
 /* MPIGrid class for storing MPI grid information.
@@ -123,6 +126,8 @@ class Grid : public Data {
  */
 template <class TV>
 class MPIGrid : public Data {
+    private:
+        int size_;
     public:
         MPIGrid(int size);
         virtual void create();
@@ -137,7 +142,8 @@ class MPIGrid : public Data {
  */
 template <class TV, class T>
 class NonAdvData : public Data {
-
+    private:
+        int size_;
     public:
         NonAdvData(int size);
         virtual void create();

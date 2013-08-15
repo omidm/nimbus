@@ -47,42 +47,39 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
+typedef float T;
+typedef VECTOR<T, 2> TV;
+typedef VECTOR<int, TV::dimension> TV_INT;
+
 /* Application class launched by Nimbus. Initialization of jobs, using
  * functions in water_driver, should be done here. Methods to initialize
  * simulation data and build the data map should also be called here.
  */
 class WaterApp : public Application {
-
-    private:
-    typedef float T;
-    typedef VECTOR<T, 2> TV;
-    typedef VECTOR<int, TV::dimension> TV_INT;
-
     public:
-    WaterApp();
-    WaterDriver<TV> driver;
-    virtual void load();
+        WaterApp();
+        virtual void load();
 };
 
 class Main : public Job {
     public:
-    Main(Application *app, JobType type);
-    virtual void execute(std::string params, const DataArray& da);
-    virtual Job* clone();
+        Main(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
 };
 
 class Init : public Job {
     public:
-    Init(Application *app, JobType type);
-    virtual void execute(std::string params, const DataArray& da);
-    virtual Job* clone();
+        Init(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
 };
 
 class Loop : public Job {
     public:
-    Loop(Application *app, JobType type);
-    virtual void execute(std::string params, const DataArray& da);
-    virtual Job* clone();
+        Loop(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
