@@ -67,12 +67,11 @@ Initialize()
     }
     example.domain_boundary(2)(2)=false;
 
-    example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
-
     example.projection.Initialize_Grid(example.mac_grid);
 
     example.face_velocities.Resize(example.mac_grid);
 
+    example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
     example.phi_boundary=&example.phi_boundary_water;
     example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
