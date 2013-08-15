@@ -45,12 +45,6 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
-#endif  // TEMPLATE_USE
-
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
@@ -188,6 +182,12 @@ initialize()
 {
     return false;
 }
+
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+#endif  // TEMPLATE_USE
 
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;

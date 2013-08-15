@@ -36,16 +36,11 @@
   * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
+#include <iostream>
 #include "./water_app.h"
 #include "./water_driver.h"
 
 using namespace PhysBAM;
-
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
-#endif  // TEMPLATE_USE
 
 template <class TV> WaterDriver<TV> ::
 WaterDriver(const STREAM_TYPE stream_type_input):
@@ -61,5 +56,17 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     number_of_ghost_cells = 3;
     cfl = 0.9;
 };
+
+template <class TV>
+void WaterDriver<TV> :: initialize(bool distributed)
+{
+    std::cout << "Initialize water driver....\n";
+}
+
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+#endif  // TEMPLATE_USE
 
 template class WaterDriver<TVF2>;

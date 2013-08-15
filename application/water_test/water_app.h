@@ -47,21 +47,17 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
+typedef float T;
+typedef VECTOR<T, 2> TV;
+typedef VECTOR<int, TV::dimension> TV_INT;
+
 /* Application class launched by Nimbus. Initialization of jobs, using
  * functions in water_driver, should be done here. Methods to initialize
  * simulation data and build the data map should also be called here.
  */
 class WaterApp : public Application {
-
-    private:
-        // define templates for actual instantiation
-        typedef float T;
-        typedef VECTOR<T, 2> TV;
-        typedef VECTOR<int, TV::dimension> TV_INT;
-
     public:
         WaterApp();
-        WaterDriver<TV> *driver;
         virtual void load();
 };
 

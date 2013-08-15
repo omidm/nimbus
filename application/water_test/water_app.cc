@@ -48,9 +48,11 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
-WaterApp::WaterApp():
-    driver( new WaterDriver<TV> ( STREAM_TYPE(T()) ) )
-{};
+WaterApp::WaterApp()
+{
+    WaterDriver<TV> *driver = new WaterDriver<TV> ( STREAM_TYPE(T()) );
+    set_app_data(driver);
+};
 
 void WaterApp::load() {
 
@@ -131,20 +133,21 @@ Init::Init(Application *app, JobType type)
     : Job(app, type) {};
 
 Job* Init::clone() {
-    std::cout << "Cloning init job";
+    std::cout << "Cloning init job\n";
     return new Init(application_, type_);
 };
 
 void Init::execute(std::string params, const DataArray& da)
 {
-//    application_->driver.initialize(false);
+    WaterDriver<TV>* driver = (WaterDriver<TV>*)application_->app_data();
+    driver->initialize(false);
 };
 
 Loop::Loop(Application *app, JobType type)
     : Job(app, type) {};
 
 Job* Loop::clone() {
-    std::cout << "Cloning loop job";
+    std::cout << "Cloning loop job\n";
     return new Loop(application_, type_);
 };
 

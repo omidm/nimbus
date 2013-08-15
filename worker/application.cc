@@ -114,10 +114,10 @@ void Application::getNewDataID(int req_num, std::vector<int>* result) {
   }
 }
 
-Data* Application::app_dataa() {
+void* Application::app_data() {
     return app_data_;
 }
 
-void Application::set_app_data(Data* data) {
+void Application::set_app_data(void* data) {
     app_data_ = data;
 }
