@@ -16,17 +16,17 @@
 #include "WATER_EXAMPLE.h"
 using namespace PhysBAM;
 namespace{
-template<class TV> void Write_Substep_Helper(void* writer,const std::string& title,int substep,int level)
-{
-    ((WATER_DRIVER<TV>*)writer)->Write_Substep(title,substep,level);
-}
+    template<class TV> void Write_Substep_Helper(void* writer,const std::string& title,int substep,int level)
+    {
+        ((WATER_DRIVER<TV>*)writer)->Write_Substep(title,substep,level);
+    }
 };
 //#####################################################################
 // Initialize
 //#####################################################################
 template<class TV> WATER_DRIVER<TV>::
-WATER_DRIVER(WATER_EXAMPLE<TV>& example)
-    :example(example)
+    WATER_DRIVER(WATER_EXAMPLE<TV>& example)
+:example(example)
 {
     DEBUG_SUBSTEPS::Set_Substep_Writer((void*)this,&Write_Substep_Helper<TV>);
 }
@@ -59,40 +59,39 @@ Initialize()
     current_frame=example.first_frame;
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
-    
+
     for(int i=1;i<=TV::dimension;i++)
     {
         example.domain_boundary(i)(1)=true;
         example.domain_boundary(i)(2)=true;
     }
-        example.domain_boundary(2)(2)=false;
-    
+    example.domain_boundary(2)(2)=false;
+
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
 
-        example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
-        example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-        example.incompressible.Initialize_Grids(example.mac_grid);
-        example.projection.Initialize_Grid(example.mac_grid);
-        example.collision_bodies_affecting_fluid.Initialize_Grids();
+    example.projection.Initialize_Grid(example.mac_grid);
+
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
+
     example.face_velocities.Resize(example.mac_grid);
 
-    example.particle_levelset_evolution.Set_Time(time);
-    example.particle_levelset_evolution.Set_CFL_Number((T).9);
-
-        example.boundary=&example.boundary_scalar;
-        example.phi_boundary=&example.phi_boundary_water;
-
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
+    example.phi_boundary=&example.phi_boundary_water;
     example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
+    example.boundary=&example.boundary_scalar;
     example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-        example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
-        example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    example.incompressible.Initialize_Grids(example.mac_grid);
+    example.incompressible.Set_Custom_Advection(example.advection_scalar);
 
+    example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
+    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
+    example.particle_levelset_evolution.Set_Time(time);
+    example.particle_levelset_evolution.Set_CFL_Number((T).9);
+    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
-
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
     example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
     example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
@@ -112,18 +111,18 @@ Initialize()
     example.incompressible.projection.elliptic_solver->pcg.Show_Results();
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
-        example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
-        example.collision_bodies_affecting_fluid.Rasterize_Objects();
-        example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
-        example.Initialize_Phi();
-        example.Adjust_Phi_With_Sources(time);
-        example.particle_levelset_evolution.Make_Signed_Distance();
+    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.Initialize_Phi();
+    example.Adjust_Phi_With_Sources(time);
+    example.particle_levelset_evolution.Make_Signed_Distance();
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
     example.particle_levelset_evolution.Seed_Particles(time);
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-    
+
     //add forces
     example.incompressible.Set_Gravity();
     example.incompressible.Set_Body_Force(true);
@@ -198,7 +197,7 @@ Advance_To_Target_Time(const T target_time)
         //Advect Particles 12.1% (Parallelized)
         LOG::Time("Step Particles");
         example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
-        
+
         //Advect removed particles (Parallelized)
         LOG::Time("Advect Removed Particles");
         RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
@@ -207,7 +206,7 @@ Advance_To_Target_Time(const T target_time)
         //Advect Velocities 26% (Parallelized)
         LOG::Time("Advect V");
         example.incompressible.advection->Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.incompressible.boundary,dt,time);
-        
+
         //Add Forces 0%
         LOG::Time("Forces");
         example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
@@ -228,7 +227,7 @@ Advance_To_Target_Time(const T target_time)
         example.particle_levelset_evolution.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
         example.particle_levelset_evolution.particle_levelset.Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
         example.particle_levelset_evolution.particle_levelset.Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
-        
+
         //Reincorporate Particles 0% (Parallelized)
         LOG::Time("Reincorporate Particles");
         if(example.particle_levelset_evolution.particle_levelset.use_removed_positive_particles || example.particle_levelset_evolution.particle_levelset.use_removed_negative_particles)
