@@ -57,7 +57,7 @@ Initialize()
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
     // setup time
-    if(example.restart) current_frame=example.restart;else current_frame=example.first_frame;
+    current_frame=example.first_frame;
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
     
@@ -122,22 +122,17 @@ Initialize()
     example.incompressible.projection.elliptic_solver->pcg.Show_Results();
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
-    if(example.restart){
-        example.Read_Output_Files(example.restart);
-        example.collision_bodies_affecting_fluid.Rasterize_Objects();
-        example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);} // compute grid visibility (for advection later)
-    else{
         example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
         example.Initialize_Phi();
         example.Adjust_Phi_With_Sources(time);
         example.particle_levelset_evolution.Make_Signed_Distance();
-        example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);}
+        example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
-    if(!example.restart) example.particle_levelset_evolution.Seed_Particles(time);
+    example.particle_levelset_evolution.Seed_Particles(time);
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
     
     //add forces
@@ -160,7 +155,7 @@ Initialize()
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
-    if(!example.restart) Write_Output_Files(example.first_frame);
+    Write_Output_Files(example.first_frame);
 }
 //#####################################################################
 // Run

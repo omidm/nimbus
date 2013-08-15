@@ -44,7 +44,6 @@ public:
     int write_substeps_level;
     bool write_output_files;
     std::string output_directory;
-    int restart;
     int number_of_ghost_cells;
 
     T cfl;

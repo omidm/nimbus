@@ -96,7 +96,6 @@ int main(int argc,char *argv[])
 
     int scale=parse_args.Get_Integer_Value("-scale");
     example->Initialize_Grid(TV_INT::All_Ones_Vector()*scale,RANGE<TV>(TV(),TV::All_Ones_Vector()));
-    example->restart=parse_args.Get_Integer_Value("-restart");
     example->last_frame=parse_args.Get_Integer_Value("-e");
     example->write_substeps_level=parse_args.Get_Integer_Value("-substep");
     example->cfl=parse_args.Get_Double_Value("-cfl");
