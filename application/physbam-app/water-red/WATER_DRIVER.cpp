@@ -68,6 +68,7 @@ Initialize()
     example.domain_boundary(2)(2)=false;
 
     example.face_velocities.Resize(example.mac_grid);
+
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
     example.phi_boundary=&example.phi_boundary_water;
@@ -123,10 +124,8 @@ Initialize()
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
-
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
-
     example.particle_levelset_evolution.Make_Signed_Distance();
     example.particle_levelset_evolution.Set_Seed(2606);
     example.particle_levelset_evolution.Seed_Particles(time);
