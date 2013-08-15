@@ -120,23 +120,6 @@ class Grid : public Data {
         GRID<TV> *data;
 };
 
-/* MPIGrid class for storing MPI grid information.
- * TODO: Eventually eliminate this, and build a data structure
- * combining Grid and MPIGrid.
- */
-template <class TV>
-class MPIGrid : public Data {
-    private:
-        int size_;
-    public:
-        MPIGrid(int size);
-        virtual void create();
-        virtual Data* clone();
-        bool initialize();
-        // physbam structures and methods
-        MPI_UNIFORM_GRID<GRID<TV> > *data;
-};
-
 /* Add all other data used by water simulation here.  DO NOT add scalar
  * values. Scalar values can be passed around directly as parameters.
  */
@@ -168,17 +151,13 @@ class NonAdvData : public Data {
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *particle_levelset_evolution;
         ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
 
-        // rigid body, collision data
-        RIGID_GEOMETRY_COLLECTION<TV> *rigid_geometry_collection;
+        // collision geometry
         typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
             GRID_BASED_COLLISION_GEOMETRY *collision_bodies_affecting_fluid;
 
         // other containers
         PROJECTION_DYNAMICS_UNIFORM<GRID<TV> > *projection;
         INCOMPRESSIBLE_UNIFORM<GRID<TV> > *incompressible;
-
-        // driver data
-        KINEMATIC_EVOLUTION<TV> *kinematic_evolution;
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

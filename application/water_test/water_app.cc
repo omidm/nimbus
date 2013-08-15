@@ -37,8 +37,10 @@
  */
 
 #include <iostream>
+#include "assert.h"
 #include "shared/nimbus.h"
 #include "./water_app.h"
+#include "./water_driver.h"
 
 static int ml = 200;
 static int gl = 0;
@@ -48,8 +50,11 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
+typedef float T;
+typedef VECTOR<T, 2> TV;
+typedef VECTOR<int, TV::dimension> TV_INT;
+
 WaterApp::WaterApp()
-    : driver(NULL)
 {};
 
 void WaterApp::load() {
@@ -66,7 +71,6 @@ void WaterApp::load() {
     registerJob("loop", new Loop(this, JOB_COMP));
 
     registerData("mac_grid_1", new Grid<TV>(ml));
-    registerData("mpi_grid_1", new MPIGrid<TV>(ml));
     registerData("face_velocities_1", new FaceArray<TV>(ml));
     registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
     registerData("sim_data_1", new NonAdvData<TV, T>(ml));
@@ -93,13 +97,12 @@ void Main::execute(std::string params, const DataArray& da)
     IDSet<data_id_t> read, write;
     std::string par = "none";
 
-    application_->getNewDataID(5, &d);
+    application_->getNewDataID(4, &d);
 
     application_->defineData("mac_grid_1", d[0]);
-    application_->defineData("mpi_grid_1", d[1]);
-    application_->defineData("face_velocities_1", d[2]);
-    application_->defineData("face_velocities_ghost_1", d[3]);
-    application_->defineData("sim_data_1", d[4]);
+    application_->defineData("face_velocities_1", d[1]);
+    application_->defineData("face_velocities_ghost_1", d[2]);
+    application_->defineData("sim_data_1", d[3]);
 
     std::cout << "Defined data\n";
 
@@ -114,7 +117,6 @@ void Main::execute(std::string params, const DataArray& da)
     read.insert(d[1]);
     read.insert(d[2]);
     read.insert(d[3]);
-    read.insert(d[4]);
     std::cout << "Spawning init\n";
     application_->spawnJob("init", j[0], before, after, read, write, par);
     std::cout << "Spawned init\n";
@@ -140,12 +142,9 @@ Job* Init::clone() {
 
 void Init::execute(std::string params, const DataArray& da)
 {
-    WaterDriver<TV>* driver = (WaterDriver<TV>*)application_->app_data();
-    if (driver == NULL)
-    {
-        std::cout << "Null water driver in init\n";
-        exit -1;
-    }
+    void *data = application_->app_data();
+    assert(data!=NULL);
+    WaterDriver<TV> *driver = (WaterDriver<TV> *)data;
     // TODO(chinmayee): Implement driver initialize to set constant policies
     // and parameter values
     driver->initialize(false);

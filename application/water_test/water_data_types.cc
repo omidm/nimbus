@@ -124,31 +124,6 @@ initialize(
     return false;
 }
 
-template <class TV> MPIGrid<TV>::
-MPIGrid(int size)
-{
-    this->size_ = size;
-    data = NULL;
-}
-
-template <class TV> void MPIGrid<TV>::
-create()
-{
-}
-
-template <class TV> Data* MPIGrid<TV>::
-clone()
-{
-    std::cout << "Cloning mpigrid\n";
-    return new MPIGrid<TV>(size_);
-}
-
-template <class TV> bool MPIGrid<TV>::
-initialize()
-{
-    return false;
-}
-
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
@@ -159,10 +134,8 @@ NonAdvData(int size)
     sources = NULL;
     particle_levelset_evolution = NULL;
     advection_scalar = NULL;
-    rigid_geometry_collection = NULL;
     collision_bodies_affecting_fluid = NULL;
     incompressible = NULL;
-    kinematic_evolution = NULL;
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
@@ -192,5 +165,4 @@ typedef float TF;
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;
 template class Grid<TVF2>;
-template class MPIGrid<TVF2>;
 template class NonAdvData<TVF2, TF>;

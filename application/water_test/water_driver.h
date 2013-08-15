@@ -54,8 +54,7 @@ using namespace PhysBAM;
  * operate on data supplied by Nimbus.
  */
 template <class TV>
-class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >,
-    public RIGID_GEOMETRY_EXAMPLE_VELOCITIES<TV>
+class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
 {
     /* typedefs */
     typedef typename TV::SCALAR T;

@@ -40,16 +40,10 @@
 #define NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
 
 #include "shared/nimbus.h"
-#include "./water_driver.h"
 
-using namespace PhysBAM;
 using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
-
-typedef float T;
-typedef VECTOR<T, 2> TV;
-typedef VECTOR<int, TV::dimension> TV_INT;
 
 /* Application class launched by Nimbus. Initialization of jobs, using
  * functions in water_driver, should be done here. Methods to initialize
