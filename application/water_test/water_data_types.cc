@@ -181,6 +181,53 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 initialize(FaceArray<TV> *face_velocities)
 {
     std::cout << "Initializaing non advection data\n";
+
+    for(int i=1;i<=TV::dimension;i++)
+    {
+        (*domain_boundary)(i)(1)=true;
+        (*domain_boundary)(i)(2)=true;
+    }
+    (*domain_boundary)(2)(2)=false;
+
+    phi_boundary_water->Set_Velocity_Pointer(*face_velocities->data);
+
+    VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries = 
+        VECTOR_UTILITIES::Complement(*domain_boundary);
+
+    phi_boundary = phi_boundary_water;
+    phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
+
+    boundary = boundary_scalar;
+    boundary->Set_Constant_Extrapolation(domain_open_boundaries);
+
+    incompressible->Initialize_Grids(*grid);
+    incompressible->Set_Custom_Advection(*advection_scalar);
+    incompressible->Set_Custom_Advection(*advection_scalar);
+    incompressible->Set_Custom_Boundary(*boundary);
+    incompressible->projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
+    incompressible->projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
+    incompressible->projection.elliptic_solver->pcg.evolution_solver_type =
+        krylov_solver_cg;
+    incompressible->projection.elliptic_solver->pcg.cg_restart_iterations=0;
+    incompressible->projection.elliptic_solver->pcg.Show_Results();
+    incompressible->projection.collidable_solver->Use_External_Level_Set
+        (particle_levelset_evolution->particle_levelset.levelset);
+    //add forces
+    incompressible->Set_Gravity();
+    incompressible->Set_Body_Force(true);
+    incompressible->projection.Use_Non_Zero_Divergence(false);
+    incompressible->projection.elliptic_solver->Solve_Neumann_Regions(true);
+    incompressible->projection.elliptic_solver->solve_single_cell_neumann_regions=false;
+    incompressible->Use_Explicit_Part_Of_Implicit_Viscosity(false);
+    incompressible->Set_Maximum_Implicit_Viscosity_Iterations(40);
+    incompressible->Use_Variable_Vorticity_Confinement(false);
+    incompressible->Set_Surface_Tension(0);
+    incompressible->Set_Variable_Surface_Tension(false);
+    incompressible->Set_Viscosity(0);
+    incompressible->Set_Variable_Viscosity(false);
+    incompressible->projection.Set_Density(1e3);
+
+    std::cout << "Successfully initialized non advection data\n";
     return false;
 }
 

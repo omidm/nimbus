@@ -48,7 +48,7 @@
 
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
  * brackets):
- * mac_grid (equivalent *mac_grid.data)
+ * mac_grid (equivalent *corresponding data.grid)
  * face_velocities (*face_velocities.data)
  * boundary_scalar (*sim_data.boundary_scalar)
  * boundary (sim_data.boundary)
