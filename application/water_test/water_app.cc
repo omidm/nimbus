@@ -40,6 +40,7 @@
 #include "assert.h"
 #include "shared/nimbus.h"
 #include "./water_app.h"
+#include "./water_data_types.h"
 #include "./water_driver.h"
 
 static int ml = 200;
@@ -53,6 +54,8 @@ using nimbus::Application;
 typedef float T;
 typedef VECTOR<T, 2> TV;
 typedef VECTOR<int, TV::dimension> TV_INT;
+
+// TODO(chinmayee): alternative to assert?? pointer arithmetic error.
 
 WaterApp::WaterApp()
 {};

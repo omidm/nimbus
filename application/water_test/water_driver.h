@@ -46,7 +46,6 @@
 /* Include relevant PhysBAM files here.
 */
 #include "./physbam_include.h"
-#include "./water_data_types.h"
 
 using namespace PhysBAM;
 

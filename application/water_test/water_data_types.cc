@@ -46,6 +46,10 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
+// TODO(someone): right now, create may/ may not allocate required amount of
+// memory. Will have to dig deep into PhysBAM to allocate required amount of
+// memory at the beginning itself.
+
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
@@ -58,10 +62,14 @@ template <class TV> void FaceArray<TV>::
 create()
 {
     std::cout << "Creating FaceArray\n";
+
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
     grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
             RANGE<TV>::Unit_Box(), true);
     assert(grid);
+
+    data = new  ARRAY<T,FACE_INDEX<TV::dimension> >();
+    assert(data);
 }
 
 template <class TV> Data* FaceArray<TV>::
@@ -89,10 +97,15 @@ template <class TV> void FaceArrayGhost<TV>::
 create()
 {
     std::cout << "Creating FaceArrayGhost\n";
+
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
     grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
             RANGE<TV>::Unit_Box(), true);
     assert(grid);
+
+    data = new typename GRID_ARRAYS_POLICY<GRID<TV> >::
+        FACE_ARRAYS();
+    assert(data);
 }
 
 template <class TV> Data* FaceArrayGhost<TV>::
@@ -112,6 +125,8 @@ template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
     this->size_ = size;
+
+    number_of_ghost_cells = 3;
 
     grid = NULL;
 
@@ -141,6 +156,25 @@ create()
     grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
             RANGE<TV>::Unit_Box(), true);
     assert(grid);
+
+    boundary_scalar = new BOUNDARY_UNIFORM<GRID<TV>, T>();
+    phi_boundary_water = new
+        typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
+        BOUNDARY_PHI_WATER();
+    domain_boundary = new VECTOR<VECTOR<bool,2>,TV::dimension>();
+
+    particle_levelset_evolution = new
+        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >
+        (*grid, number_of_ghost_cells);
+    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>();
+
+    collision_bodies_affecting_fluid = new
+        typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
+        GRID_BASED_COLLISION_GEOMETRY(*grid);
+
+    projection = new PROJECTION_DYNAMICS_UNIFORM< GRID<TV> >
+        (*grid, false, false, false, false, NULL);
+    incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >(*grid, *projection);
 }
 
 template <class TV, class T> Data* NonAdvData<TV, T>::

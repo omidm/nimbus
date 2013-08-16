@@ -114,6 +114,9 @@ class NonAdvData : public Data {
 
         // physbam structures and methods
 
+        // TODO(chinmayee): need to have this as a parameter
+        int number_of_ghost_cells;
+
         GRID<TV> *grid;
 
         // boundary information
