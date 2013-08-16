@@ -39,6 +39,7 @@
  */
 
 #include <iostream>
+#include "assert.h"
 #include "shared/nimbus.h"
 #include "./water_data_types.h"
 
@@ -95,34 +96,9 @@ initialize()
     return false;
 }
 
-template <class TV> Grid<TV>::
-Grid(int size)
-{
-    this->size_ = size;
-    data = NULL;
-}
-
-template <class TV> void Grid<TV>::
-create()
-{
-}
-
-template <class TV> Data* Grid<TV>::
-clone()
-{
-    std::cout << "Cloning grid\n";
-    return new Grid<TV>(size_);
-}
-
-template <class TV> bool Grid<TV>::
-initialize(
-        const TV_INT &counts,
-        const RANGE<TV> &box,
-        const bool MAC_grid
-        )
-{
-    return false;
-}
+//    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+//    data = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
+//            RANGE<TV>::Unit_Box(), true);
 
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
@@ -164,5 +140,4 @@ typedef float TF;
 
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;
-template class Grid<TVF2>;
 template class NonAdvData<TVF2, TF>;

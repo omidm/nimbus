@@ -79,6 +79,7 @@ class FaceArray : public Data {
         virtual Data* clone();
         bool initialize();
         // physbam structures and methods
+        GRID<TV> *grid;
         ARRAY<T, FACE_INDEX<TV::dimension> > *data;
 };
 
@@ -94,26 +95,8 @@ class FaceArrayGhost : public Data {
         virtual Data* clone();
         bool initialize();
         // physbam structures and methods
+        GRID<TV> *grid;
         typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
-};
-
-/* Grid class for storing the mac grid information.
-*/
-template <class TV>
-class Grid : public Data {
-    private:
-        int size_;
-        typedef typename TV::template REBIND<int>::TYPE TV_INT;
-    public:
-        Grid(int size);
-        virtual void create();
-        virtual Data* clone();
-        bool initialize(
-                const TV_INT &counts,
-                const RANGE<TV> &box,
-                const bool MAC_grid);
-        // physbam structures and methods
-        GRID<TV> *data;
 };
 
 /* Add all other data used by water simulation here.  DO NOT add scalar
@@ -130,6 +113,8 @@ class NonAdvData : public Data {
         bool initialize();
 
         // physbam structures and methods
+
+        GRID<TV> *grid;
 
         // boundary information
         BOUNDARY_UNIFORM<GRID<TV>, T>

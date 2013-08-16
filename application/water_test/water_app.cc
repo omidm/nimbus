@@ -70,7 +70,6 @@ void WaterApp::load() {
     registerJob("init", new Init(this, JOB_COMP));
     registerJob("loop", new Loop(this, JOB_COMP));
 
-    registerData("mac_grid_1", new Grid<TV>(ml));
     registerData("face_velocities_1", new FaceArray<TV>(ml));
     registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
     registerData("sim_data_1", new NonAdvData<TV, T>(ml));
@@ -97,12 +96,11 @@ void Main::execute(std::string params, const DataArray& da)
     IDSet<data_id_t> read, write;
     std::string par = "none";
 
-    application_->getNewDataID(4, &d);
+    application_->getNewDataID(3, &d);
 
-    application_->defineData("mac_grid_1", d[0]);
-    application_->defineData("face_velocities_1", d[1]);
-    application_->defineData("face_velocities_ghost_1", d[2]);
-    application_->defineData("sim_data_1", d[3]);
+    application_->defineData("face_velocities_1", d[0]);
+    application_->defineData("face_velocities_ghost_1", d[1]);
+    application_->defineData("sim_data_1", d[2]);
 
     std::cout << "Defined data\n";
 
@@ -116,7 +114,6 @@ void Main::execute(std::string params, const DataArray& da)
     read.insert(d[0]);
     read.insert(d[1]);
     read.insert(d[2]);
-    read.insert(d[3]);
     std::cout << "Spawning init\n";
     application_->spawnJob("init", j[0], before, after, read, write, par);
     std::cout << "Spawned init\n";
@@ -142,6 +139,7 @@ Job* Init::clone() {
 
 void Init::execute(std::string params, const DataArray& da)
 {
+    std::cout << "Executing init jon\n";
     void *data = application_->app_data();
     assert(data!=NULL);
     WaterDriver<TV> *driver = (WaterDriver<TV> *)data;
