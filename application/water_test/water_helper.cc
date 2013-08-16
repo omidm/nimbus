@@ -58,8 +58,13 @@ Initialize_Phi()
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-Set_Boundary_Conditions(const T time)
+Set_Boundary_Conditions(
+        WaterDriver<TV> *driver,
+        const T time,
+        FaceArray<TV> *face_velocities)
 {
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
     projection->elliptic_solver->psi_D.Fill(false);
     projection->elliptic_solver->psi_N.Fill(false);
 
@@ -74,53 +79,53 @@ Set_Boundary_Conditions(const T time)
                 -TV_INT::Axis_Vector(axis) : TV_INT();
             TV_INT boundary_face_offset = axis_side==1?
                 TV_INT::Axis_Vector(axis) : -TV_INT::Axis_Vector(axis);
-            if (domain_boundary(axis)(axis_side))
+            if ((*domain_boundary)(axis)(axis_side))
             {
                 for (typename GRID<TV>::FACE_ITERATOR
-                        iterator(mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
+                        iterator(*grid, 1, GRID<TV>::BOUNDARY_REGION, side);
                         iterator.Valid(); iterator.Next())
                 {
                     TV_INT face = iterator.Face_Index() + boundary_face_offset;
-                    if (particle_levelset_evolution.phi(face + interior_cell_offset) <= 0)
+                    if (particle_levelset_evolution->phi(face + interior_cell_offset) <= 0)
                     {
-                        if (face_velocities.Component(axis).Valid_Index(face))
+                        if (face_velocities->data->Component(axis).Valid_Index(face))
                         {
-                            projection.elliptic_solver->psi_N.Component(axis)(face) = true;
-                            face_velocities.Component(axis)(face)=0;
+                            projection->elliptic_solver->psi_N.Component(axis)(face) = true;
+                            face_velocities->data->Component(axis)(face)=0;
                         }
                     }
                     else
                     {
-                        TV_INT cell = face+exterior_cell_offset;
-                        projection.elliptic_solver->psi_D(cell)=true;
-                        projection.p(cell)=0;
+                        TV_INT cell = face + exterior_cell_offset;
+                        projection->elliptic_solver->psi_D(cell)=true;
+                        projection->p(cell)=0;
                     }
                 }
             }
             else for (typename GRID<TV>::FACE_ITERATOR
-                    iterator(mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
+                    iterator(*grid, 1, GRID<TV>::BOUNDARY_REGION, side);
                     iterator.Valid(); iterator.Next())
             {
                 TV_INT cell = iterator.Face_Index() + interior_cell_offset;
-                projection.elliptic_solver->psi_D(cell) = true;
-                projection.p(cell)=0;
+                projection->elliptic_solver->psi_D(cell) = true;
+                projection->p(cell)=0;
             }
         }
     }
-    for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
+    for (typename GRID<TV>::FACE_ITERATOR iterator(*grid);
             iterator.Valid(); iterator.Next())
     {
-        for(int i=1;i<=sources.m;i++)
+        for(int i=1; i <= sources->m; i++)
         {
-            if(time<=3 && sources(i)->Lazy_Inside(iterator.Location()))
+            if(time<=3 && (*sources)(i)->Lazy_Inside(iterator.Location()))
             {
-                projection.elliptic_solver->
+                projection->elliptic_solver->
                     psi_N(iterator.Full_Index()) = true;
                 if((TV::dimension==2 && iterator.Axis() == 1) ||
                         (TV::dimension==3 && iterator.Axis() == 3))
-                    face_velocities(iterator.Full_Index()) = -1;
+                    (*face_velocities->data)(iterator.Full_Index()) = -1;
                 else
-                    face_velocities(iterator.Full_Index()) = 0;
+                    (*face_velocities->data)(iterator.Full_Index()) = 0;
             }
         }
     }
