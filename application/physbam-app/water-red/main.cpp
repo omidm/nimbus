@@ -72,6 +72,7 @@ int main(int argc,char *argv[])
     FILE_UTILITIES::Create_Directory(example->output_directory+"/common");
     LOG::Instance()->Copy_Log_To_File(example->output_directory+"/common/log.txt",false);
     
+    // NOT REQUIRED IN NIMBUS
     example->Initialize_Grid(TV_INT::All_Ones_Vector()*scale,RANGE<TV>(TV(),TV::All_Ones_Vector()));
     Add_Source(example);
 

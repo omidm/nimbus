@@ -50,12 +50,18 @@ template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
     this->size_ = size;
+    grid = NULL;
     data = NULL;
 }
 
 template <class TV> void FaceArray<TV>::
 create()
 {
+    std::cout << "Creating FaceArray\n";
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+    grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
+            RANGE<TV>::Unit_Box(), true);
+    assert(grid);
 }
 
 template <class TV> Data* FaceArray<TV>::
@@ -75,12 +81,18 @@ template <class TV> FaceArrayGhost<TV>::
 FaceArrayGhost(int size)
 {
     this->size_ = size;
+    grid = NULL;
     data = NULL;
 }
 
 template <class TV> void FaceArrayGhost<TV>::
 create()
 {
+    std::cout << "Creating FaceArrayGhost\n";
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+    grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
+            RANGE<TV>::Unit_Box(), true);
+    assert(grid);
 }
 
 template <class TV> Data* FaceArrayGhost<TV>::
@@ -96,27 +108,39 @@ initialize()
     return false;
 }
 
-//    typedef typename TV::template REBIND<int>::TYPE TV_INT;
-//    data = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
-//            RANGE<TV>::Unit_Box(), true);
-
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
     this->size_ = size;
+
+    grid = NULL;
+
     boundary_scalar = NULL;
+    boundary = NULL;
+    phi_boundary = NULL;
     phi_boundary_water = NULL;
     domain_boundary = NULL;
+
     sources = NULL;
+
     particle_levelset_evolution = NULL;
     advection_scalar = NULL;
+
     collision_bodies_affecting_fluid = NULL;
+
+    projection = NULL;
     incompressible = NULL;
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
 create()
 {
+    std::cout << "Creating NonAdvData\n";
+
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+    grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
+            RANGE<TV>::Unit_Box(), true);
+    assert(grid);
 }
 
 template <class TV, class T> Data* NonAdvData<TV, T>::
