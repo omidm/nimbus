@@ -61,6 +61,8 @@ template <class TV>
 void WaterDriver<TV> :: initialize(bool distributed)
 {
     std::cout << "Initialize water driver....\n";
+    Initialize_Particles();
+    Initialize_Read_Write_General_Structures();
 }
 
 #ifndef TEMPLATE_USE

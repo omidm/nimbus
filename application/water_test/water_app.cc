@@ -149,6 +149,7 @@ void Init::execute(std::string params, const DataArray& da)
     // and parameter values
     driver->initialize(false);
     // TODO(chinmayee): Initializa all the remaining data over here
+    // initialize mac grid
 };
 
 Loop::Loop(Application *app, JobType type)

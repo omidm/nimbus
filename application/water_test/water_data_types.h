@@ -49,8 +49,6 @@
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
  * brackets):
  * mac_grid (equivalent *mac_grid.data)
- * mpi_grid (mpi_grid.data)
- * thread_queue (NULL)
  * face_velocities (*face_velocities.data)
  * boundary_scalar (*sim_data.boundary_scalar)
  * boundary (sim_data.boundary)
@@ -60,11 +58,9 @@
  * sources (*sim_data.sources)
  * particle_levelset_evolution (*sim_data.particle_levelset_evolution)
  * advection_scalar (*sim_data.advection_scalar)
- * rigid_geometry_collection (*sim_data.rigid_geometry_collection)
  * collision_bodies_affecting_fluid (*sim_data.collision_bodies_affecting_fluid)
  * projection (sim_data.projection)
  * incompressible (*sim_data.incompressible)
- * kinematic_evolution (*sim_data.kinematic_evolution)
  */
 
 using namespace PhysBAM;
