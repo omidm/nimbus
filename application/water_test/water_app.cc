@@ -64,8 +64,15 @@ void WaterApp::load() {
 
     std::cout << "Worker beginning to load application" << std::endl;
 
+    LOG::Initialize_Logging(false, false, 1<<30, true, 1);
+
     WaterDriver<TV> *driver = new WaterDriver<TV> ( STREAM_TYPE(T()) );
     assert(driver);
+
+    FILE_UTILITIES::Create_Directory(driver->output_directory+"/common");
+    LOG::Instance()->Copy_Log_To_File
+        (driver->output_directory+"/common/log.txt", false);
+
     driver->initialize(false);
     set_app_data(driver);
 
@@ -162,7 +169,12 @@ void Init::execute(std::string params, const DataArray& da)
 
     std::cout << "Got data with ids " << face_velocities->id_debug << " and " << sim_data->id_debug << "\n";
 
-    sim_data->initialize(face_velocities);
+    void *app_data = application_->app_data();
+    WaterDriver<TV> *driver = (WaterDriver<TV> *)app_data;
+    assert(driver);
+    int frame = 0;
+
+    sim_data->initialize(driver, face_velocities, frame);
 
     std::cout << "Successfully completed init job\n";
 };

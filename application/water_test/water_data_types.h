@@ -45,6 +45,7 @@
 */
 #include "shared/nimbus.h"
 #include "./physbam_include.h"
+#include "./water_driver.h"
 
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
  * brackets):
@@ -119,12 +120,17 @@ class NonAdvData : public Data {
         NonAdvData(int size);
         virtual void create();
         virtual Data* clone();
-        bool initialize(FaceArray<TV> *face_velocities);
+        bool initialize
+            (WaterDriver<TV> *driver,
+             FaceArray<TV> *face_velocities,
+             const int frame);
 
         // physbam structures and methods
 
         // TODO(chinmayee): need to have this as a parameter
         int number_of_ghost_cells;
+        T time;
+        int current_frame;
 
         GRID<TV> *grid;
 
@@ -151,6 +157,10 @@ class NonAdvData : public Data {
         // other containers
         PROJECTION_DYNAMICS_UNIFORM<GRID<TV> > *projection;
         INCOMPRESSIBLE_UNIFORM<GRID<TV> > *incompressible;
+
+        // helper methods
+        void Initialize_Phi();
+        void Set_Boundary_Conditions(const T time);
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

@@ -54,6 +54,11 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     // other parameters
     number_of_ghost_cells = 3;
     cfl = 0.9;
+
+    // I/O & logging
+    write_substeps_level = -1;
+    write_output_files = true;
+    output_directory = "output";
 };
 
 template<class TV>

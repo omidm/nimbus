@@ -78,11 +78,17 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
     virtual ~WaterDriver() {}
 
     /* water simulation parameters
-    */
+     */
     STREAM_TYPE stream_type;
     int number_of_ghost_cells;
     T cfl, initial_time, frame_rate;
     int first_frame, last_frame;
+
+    /* I/O, logging
+     */
+    int write_substeps_level;
+    bool write_output_files;
+    std::string output_directory;
 
     /* water driver functions, these should be called from the execute
      * functions for the jobs

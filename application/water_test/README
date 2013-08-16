@@ -24,15 +24,8 @@ different data.
 NOTES (Chinmayee)
 ------------------------------------------------------------------------------
 
-- TODO: Need to combine Nimbus Makefile and PhysBAM CMake file.
-- TODO: Synchronization??
-- TODO: Do we need to keep rigid bodies in water simulation?
-- TODO: Perform decomposition for all other parts apart from velocity advection
-  too.
-- TODO: Combine Grid and MPIGrid.
-- TODO: Figure out how to construct the data map.
-- Advection of velocity finally needs only grid, face velocity, ghost velocity
-  and dt. Boundary and time are not needed.
-- Mac grid, once constructed and initialized by each processor, does not change
-  over time with the progress of simulation. It provides the local grid view to
-  each processor.
+- I/O & logging will work correctly only as long as we have just one worker.
+  Need to fix this when we have multiple workers.
+- Synchronization??
+- Perform decomposition for all other parts apart from velocity advection too.
+- Figure out how to construct the data map.

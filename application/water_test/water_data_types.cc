@@ -120,6 +120,8 @@ NonAdvData(int size)
     this->size_ = size;
 
     number_of_ghost_cells = 3;
+    time = (T)0;
+    current_frame = 0;
 
     grid = NULL;
 
@@ -178,11 +180,15 @@ clone()
 }
 
 template <class TV, class T> bool NonAdvData<TV, T>::
-initialize(FaceArray<TV> *face_velocities)
+initialize
+(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const int frame)
 {
-    std::cout << "Initializaing non advection data\n";
+    std::cout << "Initializaing non advection data ...\n";
 
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
+    current_frame = frame;
+    time = driver->Time_At_Frame(frame);
 
     for(int i=1;i<=TV::dimension;i++)
     {
@@ -201,6 +207,8 @@ initialize(FaceArray<TV> *face_velocities)
 
     boundary = boundary_scalar;
     boundary->Set_Constant_Extrapolation(domain_open_boundaries);
+
+    std::cout << "Moving to incompressible ...\n";
 
     incompressible->Initialize_Grids(*grid);
     incompressible->Set_Custom_Advection(*advection_scalar);
@@ -229,6 +237,8 @@ initialize(FaceArray<TV> *face_velocities)
     incompressible->Set_Variable_Viscosity(false);
     incompressible->projection.Set_Density(1e3);
 
+    std::cout << "Moving to collision bodies affecting fluid ...\n";
+
     collision_bodies_affecting_fluid->Initialize_Grids();
     collision_bodies_affecting_fluid->Update_Intersection_Acceleration_Structures(false);
     collision_bodies_affecting_fluid->Rasterize_Objects();
@@ -236,16 +246,16 @@ initialize(FaceArray<TV> *face_velocities)
         (false, (T)2*grid->Minimum_Edge_Length(), 5);
     collision_bodies_affecting_fluid->Compute_Grid_Visibility();
 
+    std::cout << "Moving to particle levelset evolution ...\n";
+
     particle_levelset_evolution->Initialize_Domain(*grid);
     particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
-    //TODO(chinmayee):
-    //particle_levelset_evolution->Set_Time(time);
+    particle_levelset_evolution->Set_Time(time);
     particle_levelset_evolution->Set_CFL_Number((T).9);
     particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*advection_scalar);
     particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
-    //TODO(chinmayee):
-    //particle_levelset_evolution->Set_Levelset_Callbacks(example);
+    particle_levelset_evolution->Set_Levelset_Callbacks(*driver);
     particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
     particle_levelset_evolution->particle_levelset.levelset.
         Set_Custom_Boundary(*phi_boundary);
@@ -259,23 +269,36 @@ initialize(FaceArray<TV> *face_velocities)
     particle_levelset_evolution->particle_levelset.levelset.
         Set_Face_Velocities_Valid_Mask(&incompressible->valid_mask);
     particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
-    //TODO(chinmayee):
-    //Initialize_Phi();
-    //Adjust_Phi_With_Sources(time);
-    particle_levelset_evolution->Make_Signed_Distance();
-    particle_levelset_evolution->Set_Seed(2606);
-    //TODO(chinmayee):
-    //particle_levelset_evolution->Seed_Particles(time);
-    particle_levelset_evolution->Delete_Particles_Outside_Grid();
 
-   ARRAY<T,TV_INT> exchanged_phi_ghost(grid->Domain_Indices(8));
-   // particle_levelset_evolution->particle_levelset.levelset.boundary->
-   //     Fill_Ghost_Cells(*grid, particle_levelset_evolution->phi,
-   //             exchanged_phi_ghost, 0, time, 8);
+    Initialize_Phi();
+
+    std::cout << "Initialized phi ...\n";
+
+    //TODO(chinmayee):
+    //Adjust_Phi_With_Sources(time);
+    std::cout << "1\n";
+    particle_levelset_evolution->Make_Signed_Distance();
+    std::cout << "2\n";
+    particle_levelset_evolution->Set_Seed(2606);
+    std::cout << "3\n";
+    particle_levelset_evolution->Seed_Particles(time);
+    std::cout << "4\n";
+    particle_levelset_evolution->Delete_Particles_Outside_Grid();
+    std::cout << "5\n";
+
+    std::cout << "Extrapolate etc ...\n";
+
+    ARRAY<T,TV_INT> exchanged_phi_ghost(grid->Domain_Indices(8));
+    particle_levelset_evolution->particle_levelset.levelset.boundary->
+        Fill_Ghost_Cells(*grid, particle_levelset_evolution->phi,
+                exchanged_phi_ghost, 0, time, 8);
     incompressible->Extrapolate_Velocity_Across_Interface
         (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
 
     projection->Initialize_Grid(*grid);
+
+    std::cout << "Moving to incomplete implementation ...\n";
+
     //TODO(chinmayee):
     //Set_Boundary_Conditions(time); // get so CFL is correct
 

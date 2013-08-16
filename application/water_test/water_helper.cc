@@ -39,4 +39,28 @@
  */
 
 #include "./water_app.h"
+#include "./water_data_types.h"
 #include "./water_driver.h"
+#include "./physbam_include.h"
+
+template <class TV, class T> void NonAdvData<TV, T>::
+Initialize_Phi()
+{
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
+    ARRAY<T,TV_INT> &phi = particle_levelset_evolution->phi;
+    for (typename GRID<TV>::CELL_ITERATOR iterator(*grid);
+            iterator.Valid(); iterator.Next())
+    {
+        const TV &X = iterator.Location();
+        phi(iterator.Cell_Index()) = X.y - (T)grid->min_dX*5;
+    }
+}
+
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
+template class NonAdvData<TVF2, TF>;
