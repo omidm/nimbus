@@ -182,6 +182,8 @@ initialize(FaceArray<TV> *face_velocities)
 {
     std::cout << "Initializaing non advection data\n";
 
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
     for(int i=1;i<=TV::dimension;i++)
     {
         (*domain_boundary)(i)(1)=true;
@@ -226,6 +228,59 @@ initialize(FaceArray<TV> *face_velocities)
     incompressible->Set_Viscosity(0);
     incompressible->Set_Variable_Viscosity(false);
     incompressible->projection.Set_Density(1e3);
+
+    collision_bodies_affecting_fluid->Initialize_Grids();
+    collision_bodies_affecting_fluid->Update_Intersection_Acceleration_Structures(false);
+    collision_bodies_affecting_fluid->Rasterize_Objects();
+    collision_bodies_affecting_fluid->Compute_Occupied_Blocks
+        (false, (T)2*grid->Minimum_Edge_Length(), 5);
+    collision_bodies_affecting_fluid->Compute_Grid_Visibility();
+
+    particle_levelset_evolution->Initialize_Domain(*grid);
+    particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
+    //TODO(chinmayee):
+    //particle_levelset_evolution->Set_Time(time);
+    particle_levelset_evolution->Set_CFL_Number((T).9);
+    particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*advection_scalar);
+    particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
+    //TODO(chinmayee):
+    //particle_levelset_evolution->Set_Levelset_Callbacks(example);
+    particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
+    particle_levelset_evolution->particle_levelset.levelset.
+        Set_Custom_Boundary(*phi_boundary);
+    particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
+    particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
+    particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
+    particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
+    particle_levelset_evolution->Use_Particle_Levelset(true);
+    particle_levelset_evolution->particle_levelset.levelset.
+        Set_Collision_Body_List(*collision_bodies_affecting_fluid);
+    particle_levelset_evolution->particle_levelset.levelset.
+        Set_Face_Velocities_Valid_Mask(&incompressible->valid_mask);
+    particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
+    //TODO(chinmayee):
+    //Initialize_Phi();
+    //Adjust_Phi_With_Sources(time);
+    particle_levelset_evolution->Make_Signed_Distance();
+    particle_levelset_evolution->Set_Seed(2606);
+    //TODO(chinmayee):
+    //particle_levelset_evolution->Seed_Particles(time);
+    particle_levelset_evolution->Delete_Particles_Outside_Grid();
+
+   ARRAY<T,TV_INT> exchanged_phi_ghost(grid->Domain_Indices(8));
+   // particle_levelset_evolution->particle_levelset.levelset.boundary->
+   //     Fill_Ghost_Cells(*grid, particle_levelset_evolution->phi,
+   //             exchanged_phi_ghost, 0, time, 8);
+    incompressible->Extrapolate_Velocity_Across_Interface
+        (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
+
+    projection->Initialize_Grid(*grid);
+    //TODO(chinmayee):
+    //Set_Boundary_Conditions(time); // get so CFL is correct
+
+    //TODO(chinmayee):
+    //Write_Output_Files(example.first_frame);
 
     std::cout << "Successfully initialized non advection data\n";
     return false;

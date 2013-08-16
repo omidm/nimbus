@@ -52,14 +52,14 @@
  * face_velocities (*face_velocities.data)
  * boundary_scalar (*sim_data.boundary_scalar)
  * boundary (sim_data.boundary)
- * phi_boundary (sim_data.boundary)
+ * phi_boundary (sim_data.phi_boundary)
  * phi_boundary_water (*sim_data.phi_boundary_water)
  * domain_boundary (*sim_data.domain_boundary)
  * sources (*sim_data.sources)
  * particle_levelset_evolution (*sim_data.particle_levelset_evolution)
  * advection_scalar (*sim_data.advection_scalar)
  * collision_bodies_affecting_fluid (*sim_data.collision_bodies_affecting_fluid)
- * projection (sim_data.projection)
+ * projection (*sim_data.projection)
  * incompressible (*sim_data.incompressible)
  */
 
