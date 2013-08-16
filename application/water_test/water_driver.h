@@ -94,8 +94,9 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
 
     /* helper functions.
     */
-    void Write_Output_Files(const int frame);
-    void Read_Output_Files(const int frame);
+    void Write_Substep
+        (const std::string &title, const int substep, const int level = 0)
+        {}
 
     T Time_At_Frame(const int frame) const
     {

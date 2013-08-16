@@ -74,10 +74,13 @@ class FaceArray : public Data {
         int size_;
         typedef typename TV::SCALAR T;
     public:
+
+        int id_debug;
+
         FaceArray(int size);
         virtual void create();
         virtual Data* clone();
-        bool initialize();
+
         // physbam structures and methods
         GRID<TV> *grid;
         ARRAY<T, FACE_INDEX<TV::dimension> > *data;
@@ -90,10 +93,13 @@ class FaceArrayGhost : public Data {
     private:
         int size_;
     public:
+
+        int id_debug;
+
         FaceArrayGhost(int size);
         virtual void create();
         virtual Data* clone();
-        bool initialize();
+
         // physbam structures and methods
         GRID<TV> *grid;
         typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
@@ -107,10 +113,13 @@ class NonAdvData : public Data {
     private:
         int size_;
     public:
+
+        int id_debug;
+
         NonAdvData(int size);
         virtual void create();
         virtual Data* clone();
-        bool initialize();
+        bool initialize(FaceArray<TV> *face_velocities);
 
         // physbam structures and methods
 

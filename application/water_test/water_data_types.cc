@@ -53,6 +53,7 @@ using nimbus::Data;
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
+    id_debug = 22;
     this->size_ = size;
     grid = NULL;
     data = NULL;
@@ -70,6 +71,7 @@ create()
 
     data = new  ARRAY<T,FACE_INDEX<TV::dimension> >();
     assert(data);
+    data->Resize(*grid);
 }
 
 template <class TV> Data* FaceArray<TV>::
@@ -79,15 +81,10 @@ clone()
     return new FaceArray<TV>(size_);
 }
 
-template <class TV> bool FaceArray<TV>::
-initialize()
-{
-    return false;
-}
-
 template <class TV> FaceArrayGhost<TV>::
 FaceArrayGhost(int size)
 {
+    id_debug = 33;
     this->size_ = size;
     grid = NULL;
     data = NULL;
@@ -115,15 +112,11 @@ clone()
     return new FaceArrayGhost<TV>(size_);
 }
 
-template <class TV> bool FaceArrayGhost<TV>::
-initialize()
-{
-    return false;
-}
-
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
+    id_debug = 44;
+
     this->size_ = size;
 
     number_of_ghost_cells = 3;
@@ -185,8 +178,9 @@ clone()
 }
 
 template <class TV, class T> bool NonAdvData<TV, T>::
-initialize()
+initialize(FaceArray<TV> *face_velocities)
 {
+    std::cout << "Initializaing non advection data\n";
     return false;
 }
 

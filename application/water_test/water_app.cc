@@ -62,11 +62,14 @@ WaterApp::WaterApp()
 
 void WaterApp::load() {
 
+    std::cout << "Worker beginning to load application" << std::endl;
+
     WaterDriver<TV> *driver = new WaterDriver<TV> ( STREAM_TYPE(T()) );
+    assert(driver);
+    driver->initialize(false);
     set_app_data(driver);
 
     /* Declare and initialize data and jobs. */
-    std::cout << "Worker beginning to load application" << std::endl;
 
     registerJob("main", new Main(this, JOB_COMP));
 
@@ -142,15 +145,26 @@ Job* Init::clone() {
 
 void Init::execute(std::string params, const DataArray& da)
 {
-    std::cout << "Executing init jon\n";
-    void *data = application_->app_data();
-    assert(data!=NULL);
-    WaterDriver<TV> *driver = (WaterDriver<TV> *)data;
-    // TODO(chinmayee): Implement driver initialize to set constant policies
-    // and parameter values
-    driver->initialize(false);
+    std::cout << "Executing init job\n";
+
     // TODO(chinmayee): Initializa all the remaining data over here
     // initialize mac grid
+    // TODO(chinmayee): Fix this after bug in Nimbus is fixed.
+//    FaceArray<TV> *face_velocities = (FaceArray<TV> *)da[0];
+//    NonAdvData<TV, T> *sim_data = (NonAdvData<TV, T> *)da[2];
+
+// TODO(chinmayee): REMOVE TEMPORARY FIX
+    FaceArray<TV> *face_velocities = new FaceArray<TV>(ml);
+    NonAdvData<TV, T> *sim_data = new NonAdvData<TV, T>(ml);
+    face_velocities->create();
+    sim_data->create();
+//
+
+    std::cout << "Got data with ids " << face_velocities->id_debug << " and " << sim_data->id_debug << "\n";
+
+    sim_data->initialize(face_velocities);
+
+    std::cout << "Successfully completed init job\n";
 };
 
 Loop::Loop(Application *app, JobType type)

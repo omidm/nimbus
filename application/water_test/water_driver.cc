@@ -56,12 +56,21 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     cfl = 0.9;
 };
 
+template<class TV>
+void Write_Substep_Helper
+(void *writer, const std::string &title, int substep, int level)
+{
+    ((WaterDriver<TV> *)writer)->Write_Substep(title, substep, level);
+};
+
 template <class TV>
 void WaterDriver<TV> :: initialize(bool distributed)
 {
     std::cout << "Initialize water driver....\n";
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
+
+    DEBUG_SUBSTEPS::Set_Substep_Writer((void *)this, &Write_Substep_Helper<TV>);
 }
 
 #ifndef TEMPLATE_USE
