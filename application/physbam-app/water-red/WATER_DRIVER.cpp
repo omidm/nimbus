@@ -60,14 +60,14 @@ Initialize()
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
 
+    example.face_velocities.Resize(example.mac_grid);
+
     for(int i=1;i<=TV::dimension;i++)
     {
         example.domain_boundary(i)(1)=true;
         example.domain_boundary(i)(2)=true;
     }
     example.domain_boundary(2)(2)=false;
-
-    example.face_velocities.Resize(example.mac_grid);
 
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
