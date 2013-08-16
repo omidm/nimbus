@@ -161,6 +161,16 @@ class NonAdvData : public Data {
         // helper methods
         void Initialize_Phi();
         void Set_Boundary_Conditions(const T time);
+        void Asjust_Phi_With_Sources(const T time) {}
+        void Adjust_Particle_For_Domain_Boundaries(
+                PARTICLE_LEVELSET_PARTICLES<TV> &particles,
+                const int index,
+                TV &V,
+                const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
+                const T dt,
+                const T time) {}
+        void Write_Output_Files_EF(const int frame) {}
+        void Read_Output_Files_EF(const int frame) {}
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

@@ -57,6 +57,75 @@ Initialize_Phi()
     }
 }
 
+template <class TV, class T> void NonAdvData<TV, T>::
+Set_Boundary_Conditions(const T time)
+{
+    projection->elliptic_solver->psi_D.Fill(false);
+    projection->elliptic_solver->psi_N.Fill(false);
+
+    for(int axis = 1; axis <= TV::dimension; axis++)
+    {
+        for(int axis_side =1; axis_side <= 2; axis_side++)
+        {
+            int side = 2*(axis-1) + axis_side;
+            TV_INT interior_cell_offset = axis_side==1?
+                TV_INT() : -TV_INT::Axis_Vector(axis);
+            TV_INT exterior_cell_offset = axis_side==1?
+                -TV_INT::Axis_Vector(axis) : TV_INT();
+            TV_INT boundary_face_offset = axis_side==1?
+                TV_INT::Axis_Vector(axis) : -TV_INT::Axis_Vector(axis);
+            if (domain_boundary(axis)(axis_side))
+            {
+                for (typename GRID<TV>::FACE_ITERATOR
+                        iterator(mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
+                        iterator.Valid(); iterator.Next())
+                {
+                    TV_INT face = iterator.Face_Index() + boundary_face_offset;
+                    if (particle_levelset_evolution.phi(face + interior_cell_offset) <= 0)
+                    {
+                        if (face_velocities.Component(axis).Valid_Index(face))
+                        {
+                            projection.elliptic_solver->psi_N.Component(axis)(face) = true;
+                            face_velocities.Component(axis)(face)=0;
+                        }
+                    }
+                    else
+                    {
+                        TV_INT cell = face+exterior_cell_offset;
+                        projection.elliptic_solver->psi_D(cell)=true;
+                        projection.p(cell)=0;
+                    }
+                }
+            }
+            else for (typename GRID<TV>::FACE_ITERATOR
+                    iterator(mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
+                    iterator.Valid(); iterator.Next())
+            {
+                TV_INT cell = iterator.Face_Index() + interior_cell_offset;
+                projection.elliptic_solver->psi_D(cell) = true;
+                projection.p(cell)=0;
+            }
+        }
+    }
+    for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
+            iterator.Valid(); iterator.Next())
+    {
+        for(int i=1;i<=sources.m;i++)
+        {
+            if(time<=3 && sources(i)->Lazy_Inside(iterator.Location()))
+            {
+                projection.elliptic_solver->
+                    psi_N(iterator.Full_Index()) = true;
+                if((TV::dimension==2 && iterator.Axis() == 1) ||
+                        (TV::dimension==3 && iterator.Axis() == 3))
+                    face_velocities(iterator.Full_Index()) = -1;
+                else
+                    face_velocities(iterator.Full_Index()) = 0;
+            }
+        }
+    }
+}
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;
