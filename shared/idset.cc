@@ -42,12 +42,49 @@
 
 using namespace nimbus; // NOLINT
 
+// Following two functions are temporarily added, since we are in transition of
+// changing the parsers and constructors. Until then, these two would be used
+// in the constructor of the IDSet. Ideally the constructor should not call
+// parser, which is the case in the coming implementation. I could not include
+// these two from parser.h due to cyclic #include problem.
+
+#include <boost/tokenizer.hpp>
+using boost::tokenizer;
+using boost::char_separator;
+
+void tempParseIDSetFromString(const std::string& input, std::set<uint64_t>& set) {
+  int num;
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    set.insert(num);
+  }
+}
+
+void tempParseIDSetFromString(const std::string& input, std::set<uint32_t>& set) {
+  int num;
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    set.insert(num);
+  }
+}
+
+
 template<typename T>
 IDSet<T>::IDSet() {}
 
 template<typename T>
 IDSet<T>::IDSet(std::string s) {
-  // parseIDSetFromString(s, identifiers_);
+  tempParseIDSetFromString(s, identifiers_);
 }
 
 template<typename T>
