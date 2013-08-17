@@ -76,6 +76,10 @@ class FaceArray : public Data {
         typedef typename TV::SCALAR T;
     public:
 
+        void Advection (WaterDriver<TV> *driver,
+             FaceArray<TV> *face_velocities,
+             const T time_target) {}
+
         int id_debug;
 
         FaceArray(int size);
@@ -131,6 +135,14 @@ class NonAdvData : public Data {
             (WaterDriver<TV> *driver,
              FaceArray<TV> *face_velocities,
              const int frame);
+
+        void BeforeAdvection (WaterDriver<TV> *driver,
+             FaceArray<TV> *face_velocities,
+             const T time_target) {}
+
+        void AfterAdvection (WaterDriver<TV> *driver,
+             FaceArray<TV> *face_velocities,
+             const T time_target) {}
 
         // physbam structures and methods
 
