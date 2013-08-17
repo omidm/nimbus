@@ -73,7 +73,7 @@ void WaterApp::load() {
     LOG::Instance()->Copy_Log_To_File
         (driver->output_directory+"/common/log.txt", false);
 
-    driver->initialize(false);
+    driver->create();
     set_app_data(driver);
 
     /* Declare and initialize data and jobs. */
