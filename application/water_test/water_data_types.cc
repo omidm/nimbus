@@ -327,8 +327,7 @@ initialize
 
     Set_Boundary_Conditions(driver, time, face_velocities); // get so CFL is correct
 
-    //TODO(chinmayee):
-    //Write_Output_Files(example.first_frame);
+    driver->Write_Output_Files(driver->first_frame);
 
     std::cout << "Successfully initialized non advection data\n";
     return false;
