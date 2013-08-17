@@ -208,6 +208,9 @@ initialize
     current_frame = frame;
     time = driver->Time_At_Frame(frame);
 
+    driver->current_frame = current_frame;
+    driver->time = time;
+
     for(int i=1;i<=TV::dimension;i++)
     {
         (*domain_boundary)(i)(1)=true;
@@ -293,7 +296,7 @@ initialize
     std::cout << "Initialized phi ...\n";
 
     //TODO(chinmayee):
-    //Adjust_Phi_With_Sources(time);
+    Adjust_Phi_With_Sources(time);
     std::cout << "1\n";
     particle_levelset_evolution->Make_Signed_Distance();
     std::cout << "2\n";
@@ -318,7 +321,7 @@ initialize
     std::cout << "Moving to incomplete implementation ...\n";
 
     //TODO(chinmayee):
-    //Set_Boundary_Conditions(time); // get so CFL is correct
+    Set_Boundary_Conditions(driver, time, face_velocities); // get so CFL is correct
 
     //TODO(chinmayee):
     //Write_Output_Files(example.first_frame);
