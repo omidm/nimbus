@@ -24,6 +24,12 @@ different data.
 NOTES (Chinmayee)
 ------------------------------------------------------------------------------
 
+- Need to set_levelset_callback correctly at the beginning of every job, for
+  NonAdvData particle_levelset_evolution, since there is a callback.
+- Need to set NonAdvData and FaceArray at the beginning of every job, for 
+  WaterDriver : for the levelset callback functions get_levelset_velocity,
+  adjust_particle_for_domain_boundaries, adjust_particle_for_objects as they
+  are inherited from parent class and have a fixed signature.
 - I/O & logging will work correctly only as long as we have just one worker.
   Need to fix this when we have multiple workers.
 - Synchronization??

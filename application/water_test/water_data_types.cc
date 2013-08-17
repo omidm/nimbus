@@ -140,6 +140,9 @@ NonAdvData(int size)
 
     projection = NULL;
     incompressible = NULL;
+
+    face_velocities = NULL;
+    sim_data = NULL;
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
