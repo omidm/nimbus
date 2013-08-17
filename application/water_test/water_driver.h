@@ -45,6 +45,7 @@
 
 /* Include relevant PhysBAM files here.
 */
+#include "shared/nimbus.h"
 #include "./physbam_include.h"
 
 using namespace PhysBAM;
@@ -53,7 +54,7 @@ using namespace PhysBAM;
  * operate on data supplied by Nimbus.
  */
 template <class TV>
-class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
+class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
 {
     private:
         /* typedefs */
@@ -73,10 +74,17 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
         typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::
             TYPE T_FACE_ARRAYS_BOOL;
 
+        int size_;
+
     public:
+
+        int id_debug;
 
         WaterDriver(const STREAM_TYPE stream_type_input);
         virtual ~WaterDriver() {}
+
+        virtual void create();
+        virtual Data* clone();
 
         /* water simulation parameters
         */
@@ -94,7 +102,6 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
         /* water driver functions, these should be called from the execute
          * functions for the jobs
          */
-        void initialize(bool distributed);
         void run_upto_advection() {}
         void run_advect() {}
         void run_after_advection() {}

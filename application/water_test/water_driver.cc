@@ -59,6 +59,9 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     write_substeps_level = -1;
     write_output_files = true;
     output_directory = "output";
+
+    // debugging information
+    id_debug = 99;
 };
 
 template<class TV>
@@ -69,7 +72,14 @@ void Write_Substep_Helper
 };
 
 template <class TV>
-void WaterDriver<TV> :: initialize(bool distributed)
+Data* WaterDriver<TV> :: clone()
+{
+    std::cout << "Cloning waterdriver\n";
+    return new WaterDriver<TV>(stream_type);
+};
+
+template <class TV>
+void WaterDriver<TV> :: create()
 {
     std::cout << "Initialize water driver....\n";
     Initialize_Particles();
