@@ -132,8 +132,8 @@ Set_Boundary_Conditions(
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-Write_Output_Files_EF(const int frame, FaceArray<TV>* face_velocities,
-    WaterDriver<TV> * driver) {
+Write_Output_Files_EF(const int frame, FaceArray<TV> *face_velocities,
+    WaterDriver<TV> *driver) {
   if(!driver->write_output_files) return;
   std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
   FILE_UTILITIES::Write_To_File(driver->stream_type,

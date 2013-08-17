@@ -180,6 +180,7 @@ void Init::execute(std::string params, const DataArray& da)
     assert(sim_data);
 
     int frame = 0;
+
     driver->face_velocities = face_velocities;
     driver->sim_data = sim_data;
     sim_data->initialize(driver, face_velocities, frame);

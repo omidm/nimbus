@@ -149,6 +149,30 @@ Write_Substep(
     }
 }
 
+template<class TV> void WaterDriver<TV>::
+Write_Output_Files(const int frame)
+{
+    FILE_UTILITIES::Create_Directory(output_directory);
+    FILE_UTILITIES::Create_Directory(output_directory +
+            STRING_UTILITIES::string_sprintf("/%d",frame));
+    FILE_UTILITIES::Create_Directory(output_directory + "/common");
+
+    FILE_UTILITIES::Write_To_Text_File(output_directory +
+            STRING_UTILITIES::string_sprintf("/%d/frame_title", frame),
+            frame_title);
+
+    if(frame == first_frame) 
+        FILE_UTILITIES::Write_To_Text_File
+            (output_directory + "/common/first_frame", frame, "\n");
+
+    NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
+    FaceArray<TV> *fv = (FaceArray<TV> *)face_velocities;
+    sd->Write_Output_Files_EF(frame, fv, this);
+
+    FILE_UTILITIES::Write_To_Text_File
+        (output_directory + "/common/last_frame", frame, "\n");
+}
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;
