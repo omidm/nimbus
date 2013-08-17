@@ -309,6 +309,57 @@ initialize
     return false;
 }
 
+template <class TV, class T> void NonAdvData<TV, T>::
+BeforeAdvection
+(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const T target_time)
+{
+
+//TODO(omidm): This part should be added to the Loop Job itself. 
+// ***********************************************************************
+//    bool done=false;for(int substep=1;!done;substep++){
+        LOG::Time("Calculate Dt");
+        (*particle_levelset_evolution).Set_Number_Particles_Per_Cell(16);
+        T dt = driver->cfl * incompressible->CFL(*face_velocities->data);
+        dt = min(dt, (*particle_levelset_evolution).CFL(false,false));
+//        if(time+dt>=target_time){dt=target_time-time;done=true;}
+//        else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
+// ***********************************************************************
+
+
+
+        LOG::Time("Compute Occupied Blocks");
+        T maximum_fluid_speed= face_velocities->data->Maxabs().Max();
+        T max_particle_collision_distance=particle_levelset_evolution->particle_levelset.max_collision_distance_factor
+          * grid->dX.Max();
+        collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true, dt *
+            maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 *
+            grid->dX.Max(), 10);
+
+        LOG::Time("Adjust Phi With Objects");
+        T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+        face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
+        incompressible->boundary->Fill_Ghost_Cells_Face(*grid,
+            *face_velocities->data, face_velocities_ghost, time + dt, number_of_ghost_cells);
+
+        //Advect Phi 3.6% (Parallelized)
+        LOG::Time("Advect Phi");
+        phi_boundary_water->Use_Extrapolation_Mode(false);
+        particle_levelset_evolution->Advance_Levelset(dt);
+        phi_boundary_water->Use_Extrapolation_Mode(true);
+
+        //Advect Particles 12.1% (Parallelized)
+        LOG::Time("Step Particles");
+        particle_levelset_evolution->particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
+
+        //Advect removed particles (Parallelized)
+        LOG::Time("Advect Removed Particles");
+        RANGE<TV_INT> domain(grid->Domain_Indices());
+        domain.max_corner += TV_INT::All_Ones_Vector();
+
+        // TODO(omidm): unomment and fix it.
+//        DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
+
+}
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;

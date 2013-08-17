@@ -122,6 +122,16 @@ class NonAdvData : public Data {
   typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
   typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
 
+
+    typedef typename ADVECTION_POLICY<GRID<TV> >::ADVECTION_SEMI_LAGRANGIAN_SCALAR T_ADVECTION_SEMI_LAGRANGIAN_SCALAR;
+    typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::ARRAYS_SCALAR T_ARRAYS_SCALAR;
+    typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
+    typedef typename T_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_ARRAYS_BOOL;
+    typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_FACE_ARRAYS_BOOL;
+
+
+
+
     private:
         int size_;
     public:
@@ -138,7 +148,7 @@ class NonAdvData : public Data {
 
         void BeforeAdvection (WaterDriver<TV> *driver,
              FaceArray<TV> *face_velocities,
-             const T time_target) {}
+             const T time_target); 
 
         void AfterAdvection (WaterDriver<TV> *driver,
              FaceArray<TV> *face_velocities,
