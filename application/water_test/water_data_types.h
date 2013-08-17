@@ -111,6 +111,13 @@ class FaceArrayGhost : public Data {
  */
 template <class TV, class T>
 class NonAdvData : public Data {
+
+  typedef typename TV::template REBIND<int>::TYPE TV_INT;
+  typedef typename LEVELSET_POLICY<GRID<TV> >::LEVELSET T_LEVELSET;
+  typedef typename LEVELSET_POLICY<GRID<TV> >::PARTICLE_LEVELSET T_PARTICLE_LEVELSET;
+  typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
+  typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
+
     private:
         int size_;
     public:
@@ -172,8 +179,9 @@ class NonAdvData : public Data {
                 TV &V,
                 const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
                 const T dt,
-                const T time);
-        void Write_Output_Files_EF(const int frame) {}
+                const T time); 
+        void Write_Output_Files_EF(const int frame, FaceArray<TV>*
+            face_velocities, WaterDriver<TV> * driver);
         void Read_Output_Files_EF(const int frame) {}
 };
 
