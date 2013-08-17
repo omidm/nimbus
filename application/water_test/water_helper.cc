@@ -131,6 +131,40 @@ Set_Boundary_Conditions(
     }
 }
 
+template <class TV, class T> void NonAdvData<TV, T>::
+Write_Output_Files_EF(const int frame, FaceArray<TV>* face_velocities,
+    WaterDriver<TV> * driver) {
+  if(!driver->write_output_files) return;
+  std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
+  FILE_UTILITIES::Write_To_File(driver->stream_type,
+      driver->output_directory+"/"+f+"/mac_velocities",
+      *(face_velocities->data));
+  FILE_UTILITIES::Write_To_File(driver->stream_type,
+      driver->output_directory+"/common/grid", *grid);
+  FILE_UTILITIES::Write_To_File(driver->stream_type,
+      driver->output_directory+"/"+f+"/pressure", (*incompressible).projection.p);
+  FILE_UTILITIES::Write_To_File(driver->stream_type,
+      driver->output_directory+"/"+f+"/psi_N", (*projection).elliptic_solver->psi_N);
+  FILE_UTILITIES::Write_To_File(driver->stream_type,
+      driver->output_directory+"/"+f+"/psi_D", (*projection).elliptic_solver->psi_D);
+  // T_PARTICLE_LEVELSET& particle_levelset = (*particle_levelset_evolution).particle_levelset;
+//  FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
+//  FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
+//  FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
+//  FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
+//  FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
+//  FILE_UTILITIES::Write_To_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
+//#ifndef COMPILE_WITHOUT_DOUBLE_SUPPORT
+//#else
+//  PHYSBAM_FATAL_ERROR("Cannot
+//      read
+//      doubles");
+//#endif
+//
+
+
+}
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;
