@@ -38,6 +38,7 @@
 
 #include <iostream>
 #include "./water_driver.h"
+#include "./water_data_types.h"
 
 using namespace PhysBAM;
 
@@ -102,6 +103,29 @@ template <class TV>
 int WaterDriver<TV> :: get_debug_info()
 {
     return id_debug;
+}
+
+template <class TV> void WaterDriver<TV>::
+Get_Levelset_Velocity(
+        const GRID<TV> &grid,
+        T_LEVELSET& levelset,
+        ARRAY<T,FACE_INDEX<TV::dimension> > &V_levelset,
+        const T time) const PHYSBAM_OVERRIDE
+{
+    FaceArray<TV> *fv = (FaceArray<TV> *)face_velocities;
+    V_levelset = *fv->data;
+}
+
+template <class TV> void WaterDriver<TV>::
+Adjust_Particle_For_Domain_Boundaries(
+        PARTICLE_LEVELSET_PARTICLES<TV> &particles,
+        const int index, TV &V,
+        const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
+        const T dt, const T time)
+{
+    NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
+    sd->Adjust_Particle_For_Domain_Boundaries(particles, index, V,
+            particle_type, dt, time);
 }
 
 #ifndef TEMPLATE_USE

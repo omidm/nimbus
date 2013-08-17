@@ -80,6 +80,9 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
 
     public:
 
+        Data *face_velocities;
+        Data *sim_data;
+
         int id_debug;
 
         WaterDriver(const STREAM_TYPE stream_type_input);
@@ -120,6 +123,26 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         {
             return initial_time + (frame-first_frame)/frame_rate;
         }
+
+        /* callback functions needed here
+        */
+        void Adjust_Particle_For_Domain_Boundaries(
+                PARTICLE_LEVELSET_PARTICLES<TV> &particles,
+                const int index,TV &V,
+                const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
+                const T dt, const T time);
+
+        void Get_Levelset_Velocity(
+                const GRID<TV> &grid,
+                T_LEVELSET &levelset,
+                ARRAY<T,FACE_INDEX<TV::dimension> > &V_levelset,
+                const T time) const PHYSBAM_OVERRIDE;
+
+        void Get_Levelset_Velocity(
+                const GRID<TV> &grid,
+                LEVELSET_MULTIPLE_UNIFORM<GRID<TV> > &levelset_multiple,
+                ARRAY<T, FACE_INDEX<TV::dimension> > &V_levelset,
+                const T time) const PHYSBAM_OVERRIDE {}
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DRIVER_H_

@@ -150,7 +150,6 @@ void Init::execute(std::string params, const DataArray& da)
 
     WaterDriver<TV> *driver = NULL;
     FaceArray<TV> *face_velocities = NULL;
-//    FaceArrayGhost<TV> *face_velocities_ghost = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -165,7 +164,6 @@ void Init::execute(std::string params, const DataArray& da)
                 face_velocities = (FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
-//                face_velocities_ghost = (FaceArrayGhost<TV> *)da[i];
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
@@ -182,6 +180,8 @@ void Init::execute(std::string params, const DataArray& da)
     assert(sim_data);
 
     int frame = 0;
+    driver->face_velocities = face_velocities;
+    driver->sim_data = sim_data;
     sim_data->initialize(driver, face_velocities, frame);
 
     std::cout << "Successfully completed init job\n";
