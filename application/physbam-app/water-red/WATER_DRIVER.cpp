@@ -57,7 +57,7 @@ Initialize()
 
     // setup time
     current_frame=example.first_frame;
-    output_number=current_frame;
+ //   output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
 
     example.face_velocities.Resize(example.mac_grid);
@@ -113,6 +113,8 @@ Initialize()
     example.particle_levelset_evolution.Set_CFL_Number((T).9);
     example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+    //TODO:  NOTE:  call this wehenever data is migrated, at the beginning of a
+    //job
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
@@ -125,7 +127,7 @@ Initialize()
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
     example.Initialize_Phi();
-    example.Adjust_Phi_With_Sources(time);
+//    example.Adjust_Phi_With_Sources(time);
     example.particle_levelset_evolution.Make_Signed_Distance();
     example.particle_levelset_evolution.Set_Seed(2606);
     example.particle_levelset_evolution.Seed_Particles(time);
