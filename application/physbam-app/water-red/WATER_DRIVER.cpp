@@ -197,8 +197,9 @@ Advance_To_Target_Time(const T target_time)
 
         //Advect removed particles (Parallelized)
         LOG::Time("Advect Removed Particles");
-        RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
-        DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
+        RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
+        domain.max_corner+=TV_INT::All_Ones_Vector();
+        Run(domain, dt, time);
 
         //Advect Velocities 26% (Parallelized)
         LOG::Time("Advect V");
@@ -212,7 +213,6 @@ Advance_To_Target_Time(const T target_time)
         LOG::Time("Modify Levelset");
         example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
         example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
-        //example.particle_levelset_evolution.Make_Signed_Distance(); //TODO(mlentine) Figure out why this was needed
 
         //Adjust Phi 0%
         LOG::Time("Adjust Phi");

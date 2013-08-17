@@ -349,12 +349,10 @@ BeforeAdvection
 //        else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
 // ***********************************************************************
 
-
-
         LOG::Time("Compute Occupied Blocks");
-        T maximum_fluid_speed= face_velocities->data->Maxabs().Max();
-        T max_particle_collision_distance=particle_levelset_evolution->particle_levelset.max_collision_distance_factor
-          * grid->dX.Max();
+        T maximum_fluid_speed = face_velocities->data->Maxabs().Max();
+        T max_particle_collision_distance = particle_levelset_evolution->
+            particle_levelset.max_collision_distance_factor * grid->dX.Max();
         collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true, dt *
             maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 *
             grid->dX.Max(), 10);
@@ -363,7 +361,8 @@ BeforeAdvection
         T_FACE_ARRAYS_SCALAR face_velocities_ghost;
         face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
         incompressible->boundary->Fill_Ghost_Cells_Face(*grid,
-            *face_velocities->data, face_velocities_ghost, time + dt, number_of_ghost_cells);
+                *face_velocities->data, face_velocities_ghost, time + dt,
+                number_of_ghost_cells);
 
         //Advect Phi 3.6% (Parallelized)
         LOG::Time("Advect Phi");
@@ -373,17 +372,52 @@ BeforeAdvection
 
         //Advect Particles 12.1% (Parallelized)
         LOG::Time("Step Particles");
-        particle_levelset_evolution->particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
+        particle_levelset_evolution->particle_levelset.Euler_Step_Particles
+            (face_velocities_ghost, dt, time, true, true, false, false);
 
         //Advect removed particles (Parallelized)
         LOG::Time("Advect Removed Particles");
         RANGE<TV_INT> domain(grid->Domain_Indices());
         domain.max_corner += TV_INT::All_Ones_Vector();
 
-        // TODO(omidm): unomment and fix it.
-//        DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
-
+        incompressible->boundary->Fill_Ghost_Cells_Face(*grid,
+                *face_velocities->data, face_velocities_ghost, time + dt,
+                number_of_ghost_cells);
+        LINEAR_INTERPOLATION_UNIFORM<GRID<TV>,TV> interpolation;
+        PARTICLE_LEVELSET_UNIFORM<GRID<TV> > &pls =
+            particle_levelset_evolution->particle_levelset;
+        if (pls.use_removed_positive_particles)
+            for(typename GRID<TV>::NODE_ITERATOR iterator(*grid, domain);
+                    iterator.Valid();iterator.Next())
+                if (pls.removed_positive_particles(iterator.Node_Index()))
+                {
+                    PARTICLE_LEVELSET_REMOVED_PARTICLES<TV> &particles = 
+                        *pls.removed_positive_particles(iterator.Node_Index());
+                    for (int p=1; p<=particles.array_collection->Size(); p++)
+                    {
+                        TV X = particles.X(p),
+                           V = interpolation.Clamped_To_Array_Face
+                               (*grid, face_velocities_ghost, X);
+                        if (-pls.levelset.Phi(X) > 1.5*particles.radius(p))
+                            V-=-TV::Axis_Vector(2)*.3; // buoyancy
+                        particles.V(p) = V;
+                    }
+                }
+        if (pls.use_removed_negative_particles)
+            for(typename GRID<TV>::NODE_ITERATOR iterator(*grid,domain);
+                    iterator.Valid();iterator.Next())
+                if(pls.removed_negative_particles(iterator.Node_Index()))
+                {
+                    PARTICLE_LEVELSET_REMOVED_PARTICLES<TV> &particles =
+                        *pls.removed_negative_particles(iterator.Node_Index());
+                    for (int p=1; p <= particles.array_collection->Size(); p++)
+                        particles.V(p) += -TV::Axis_Vector(2)*dt*9.8; // ballistic
+                    for(int p=1; p<=particles.array_collection->Size(); p++)
+                        particles.V(p) += dt * interpolation.Clamped_To_Array_Face
+                            (*grid, incompressible->force, particles.X(p));
+                } // external forces
 }
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;

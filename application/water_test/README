@@ -30,6 +30,8 @@ NOTES (Chinmayee)
   WaterDriver : for the levelset callback functions get_levelset_velocity,
   adjust_particle_for_domain_boundaries, adjust_particle_for_objects as they
   are inherited from parent class and have a fixed signature.
+- Ghost cells?
+- Fix memory leaks: destructors.
 - I/O & logging will work correctly only as long as we have just one worker.
   Need to fix this when we have multiple workers.
 - Synchronization??
