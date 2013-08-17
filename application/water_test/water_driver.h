@@ -46,7 +46,6 @@
 /* Include relevant PhysBAM files here.
 */
 #include "./physbam_include.h"
-#include "./water_data_types.h"
 
 using namespace PhysBAM;
 
@@ -73,9 +72,6 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >
             TYPE T_ARRAYS_BOOL;
         typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::
             TYPE T_FACE_ARRAYS_BOOL;
-
-        FaceArray<TV> *face_velocities;
-        NonAdvData<TV, T> *sim_data;
 
     public:
 
