@@ -63,6 +63,8 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     write_substeps_level = -1;
     write_output_files = true;
     output_directory = "output";
+    frame_title = "";
+    output_number = 0;
 
     // debugging information
     id_debug = driver_id;
@@ -126,6 +128,25 @@ Adjust_Particle_For_Domain_Boundaries(
     NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
     sd->Adjust_Particle_For_Domain_Boundaries(particles, index, V,
             particle_type, dt, time);
+}
+
+template <class TV> void WaterDriver<TV>::
+Write_Substep(
+        const std::string &title,
+        const int substep,
+        const int level)
+{
+    if (level <= write_substeps_level)
+    {
+        frame_title = title;
+        std::stringstream ss;
+        ss << "Writing substep [" << frame_title << "]: output_number="
+            <<output_number+1 << ", time=" << time << ", frame=" <<
+            current_frame << ", substep=" << substep << std::endl;
+        LOG::filecout(ss.str());
+//        Write_Output_Files(++output_number);
+        frame_title="";
+    }
 }
 
 #ifndef TEMPLATE_USE

@@ -202,7 +202,6 @@ class NonAdvData : public Data {
                 const T time,
                 FaceArray<TV> *face_velocities);
         void Adjust_Phi_With_Sources(const T time);
-        // TODO: NOTOK, need this in driver
         void Adjust_Particle_For_Domain_Boundaries(
                 PARTICLE_LEVELSET_PARTICLES<TV> &particles,
                 const int index,
@@ -210,8 +209,10 @@ class NonAdvData : public Data {
                 const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
                 const T dt,
                 const T time); 
-        void Write_Output_Files_EF(const int frame, FaceArray<TV>*
-            face_velocities, WaterDriver<TV> * driver);
+
+        void Write_Output_Files_EF(const int frame,
+                FaceArray<TV>* face_velocities,
+                WaterDriver<TV> * driver);
         void Read_Output_Files_EF(const int frame) {}
 };
 

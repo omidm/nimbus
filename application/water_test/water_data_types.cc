@@ -211,6 +211,7 @@ initialize
     time = driver->Time_At_Frame(frame);
 
     driver->current_frame = current_frame;
+    driver->output_number = current_frame;
     driver->time = time;
 
     for(int i=1;i<=TV::dimension;i++)
@@ -297,7 +298,6 @@ initialize
 
     std::cout << "Initialized phi ...\n";
 
-    //TODO(chinmayee):
     std::cout << "Just before adjust phi with sources ...\n";
     Adjust_Phi_With_Sources(time);
     std::cout << "After adjust phi with sources ...\n";
@@ -325,7 +325,6 @@ initialize
 
     std::cout << "Moving to incomplete implementation ...\n";
 
-    //TODO(chinmayee):
     Set_Boundary_Conditions(driver, time, face_velocities); // get so CFL is correct
 
     //TODO(chinmayee):

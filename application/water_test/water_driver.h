@@ -99,6 +99,8 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         int number_of_ghost_cells;
         T cfl, initial_time, time, frame_rate;
         int first_frame, last_frame, current_frame;
+        int output_number;
+        std::string frame_title;
 
         /* I/O, logging
         */
@@ -116,8 +118,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         /* helper functions.
         */
         void Write_Substep
-            (const std::string &title, const int substep, const int level = 0)
-            {}
+            (const std::string &title, const int substep, const int level = 0);
 
         T Time_At_Frame(const int frame) const
         {
