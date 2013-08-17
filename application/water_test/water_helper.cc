@@ -131,6 +131,27 @@ Set_Boundary_Conditions(
     }
 }
 
+template <class TV, class T> void NonAdvData<TV, T>::
+Adjust_Phi_With_Sources(const T time)
+{
+    typedef typename TV::template REBIND<int>::TYPE TV_INT;
+
+    if (time>3)
+        return;
+
+    for (typename GRID<TV>::CELL_ITERATOR iterator(*grid);
+            iterator.Valid(); iterator.Next())
+    {
+        TV_INT index=iterator.Cell_Index();
+        for(int i = 1; i <= sources->m; i++)
+        {
+            particle_levelset_evolution->phi(index) =
+                min(particle_levelset_evolution->phi(index),
+                        (*sources)(i)->Extended_Phi( iterator.Location() ) );
+        }
+    }
+}
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;

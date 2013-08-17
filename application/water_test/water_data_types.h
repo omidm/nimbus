@@ -164,7 +164,7 @@ class NonAdvData : public Data {
                 WaterDriver<TV> *driver,
                 const T time,
                 FaceArray<TV> *face_velocities);
-        void Asjust_Phi_With_Sources(const T time) {}
+        void Adjust_Phi_With_Sources(const T time);
         void Adjust_Particle_For_Domain_Boundaries(
                 PARTICLE_LEVELSET_PARTICLES<TV> &particles,
                 const int index,
