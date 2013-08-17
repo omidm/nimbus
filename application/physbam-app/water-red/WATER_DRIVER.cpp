@@ -203,6 +203,7 @@ Advance_To_Target_Time(const T target_time)
 
         //Advect Velocities 26% (Parallelized)
         LOG::Time("Advect V");
+        example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
         example.incompressible.advection->Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.incompressible.boundary,dt,time);
 
         //Add Forces 0%

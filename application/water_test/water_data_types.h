@@ -71,6 +71,9 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
+template <class TV, class T>
+class NonAdvData;
+
 /* Face array for storing quantities like face velocities.
 */
 template <class TV>
@@ -78,11 +81,13 @@ class FaceArray : public Data {
     private:
         int size_;
         typedef typename TV::SCALAR T;
+        typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
+
     public:
 
         void Advection (WaterDriver<TV> *driver,
-             FaceArray<TV> *face_velocities,
-             const T time_target) {}
+             NonAdvData<TV, T> *sim_data,
+             const T time_target);
 
         int id_debug;
 
@@ -160,13 +165,13 @@ class NonAdvData : public Data {
 
         void AfterAdvection (WaterDriver<TV> *driver,
              FaceArray<TV> *face_velocities,
-             const T time_target) {}
+             const T time_target);
 
         // physbam structures and methods
 
         // TODO(chinmayee): need to have this as a parameter
         int number_of_ghost_cells;
-        T time;
+        T time, dt;
         int current_frame;
 
         GRID<TV> *grid;
