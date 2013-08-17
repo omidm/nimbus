@@ -48,6 +48,8 @@
 #include "shared/nimbus.h"
 #include "./physbam_include.h"
 
+#define driver_id 15
+
 using namespace PhysBAM;
 
 /* This class contains all constant parameters and policies, and functions to
@@ -85,13 +87,15 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
 
         virtual void create();
         virtual Data* clone();
+        virtual int get_debug_info();
 
         /* water simulation parameters
         */
+        //TODO(eventually): time and frame information should not be here
         STREAM_TYPE stream_type;
         int number_of_ghost_cells;
-        T cfl, initial_time, frame_rate;
-        int first_frame, last_frame;
+        T cfl, initial_time, time, frame_rate;
+        int first_frame, last_frame, current_frame;
 
         /* I/O, logging
         */

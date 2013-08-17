@@ -42,6 +42,7 @@
 #include "./water_app.h"
 #include "./water_data_types.h"
 #include "./water_driver.h"
+#include "stdlib.h"
 
 static int ml = 200;
 static int gl = 0;
@@ -66,16 +67,6 @@ void WaterApp::load() {
 
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
-    WaterDriver<TV> *driver = new WaterDriver<TV> ( STREAM_TYPE(T()) );
-    assert(driver);
-
-    FILE_UTILITIES::Create_Directory(driver->output_directory+"/common");
-    LOG::Instance()->Copy_Log_To_File
-        (driver->output_directory+"/common/log.txt", false);
-
-    driver->create();
-    set_app_data(driver);
-
     /* Declare and initialize data and jobs. */
 
     registerJob("main", new Main(this, JOB_COMP));
@@ -83,6 +74,7 @@ void WaterApp::load() {
     registerJob("init", new Init(this, JOB_COMP));
     registerJob("loop", new Loop(this, JOB_COMP));
 
+    registerData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     registerData("face_velocities_1", new FaceArray<TV>(ml));
     registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
     registerData("sim_data_1", new NonAdvData<TV, T>(ml));
@@ -109,11 +101,12 @@ void Main::execute(std::string params, const DataArray& da)
     IDSet<data_id_t> read, write;
     std::string par = "none";
 
-    application_->getNewDataID(3, &d);
+    application_->getNewDataID(4, &d);
 
-    application_->defineData("face_velocities_1", d[0]);
-    application_->defineData("face_velocities_ghost_1", d[1]);
-    application_->defineData("sim_data_1", d[2]);
+    application_->defineData("water_driver_1", d[0]);
+    application_->defineData("face_velocities_1", d[1]);
+    application_->defineData("face_velocities_ghost_1", d[2]);
+    application_->defineData("sim_data_1", d[3]);
 
     std::cout << "Defined data\n";
 
@@ -127,6 +120,7 @@ void Main::execute(std::string params, const DataArray& da)
     read.insert(d[0]);
     read.insert(d[1]);
     read.insert(d[2]);
+    read.insert(d[3]);
     std::cout << "Spawning init\n";
     application_->spawnJob("init", j[0], before, after, read, write, par);
     std::cout << "Spawned init\n";
@@ -154,26 +148,40 @@ void Init::execute(std::string params, const DataArray& da)
 {
     std::cout << "Executing init job\n";
 
-    // TODO(chinmayee): Initializa all the remaining data over here
-    // initialize mac grid
-    // TODO(chinmayee): Fix this after bug in Nimbus is fixed.
-//    FaceArray<TV> *face_velocities = (FaceArray<TV> *)da[0];
-//    NonAdvData<TV, T> *sim_data = (NonAdvData<TV, T> *)da[2];
+    WaterDriver<TV> *driver = NULL;
+    FaceArray<TV> *face_velocities = NULL;
+//    FaceArrayGhost<TV> *face_velocities_ghost = NULL;
+    NonAdvData<TV, T> *sim_data = NULL;
 
-// TODO(chinmayee): REMOVE TEMPORARY FIX
-    FaceArray<TV> *face_velocities = new FaceArray<TV>(ml);
-    NonAdvData<TV, T> *sim_data = new NonAdvData<TV, T>(ml);
-    face_velocities->create();
-    sim_data->create();
-//
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        switch (da[i]->get_debug_info())
+        {
+            case driver_id:
+                driver = (WaterDriver<TV> *)da[i];
+                break;
+            case face_array_id:
+                face_velocities = (FaceArray<TV> *)da[i];
+                break;
+            case face_array_ghost_id:
+//                face_velocities_ghost = (FaceArrayGhost<TV> *)da[i];
+                break;
+            case non_adv_id:
+                sim_data = (NonAdvData<TV, T> *)da[i];
+                break;
+            default:
+                std::cout << "Error : unknown data!!\n";
+                exit(EXIT_FAILURE);
+        }
+    }
 
-    std::cout << "Got data with ids " << face_velocities->id_debug << " and " << sim_data->id_debug << "\n";
-
-    void *app_data = application_->app_data();
-    WaterDriver<TV> *driver = (WaterDriver<TV> *)app_data;
     assert(driver);
-    int frame = 0;
+    assert(face_velocities);
+    assert(face_velocities_ghost);
+    assert(sim_data);
 
+    int frame = 0;
     sim_data->initialize(driver, face_velocities, frame);
 
     std::cout << "Successfully completed init job\n";

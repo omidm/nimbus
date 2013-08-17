@@ -57,3 +57,7 @@ uint64_t Data::id() {
 void Data::set_id(uint64_t id) {
   id_ = id;
 }
+
+int Data::get_debug_info() {
+    return -1;
+}

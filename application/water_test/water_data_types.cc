@@ -53,7 +53,7 @@ using nimbus::Data;
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
-    id_debug = 22;
+    id_debug = face_array_id;
     this->size_ = size;
     grid = NULL;
     data = NULL;
@@ -81,10 +81,16 @@ clone()
     return new FaceArray<TV>(size_);
 }
 
+template <class TV>
+int FaceArray<TV> :: get_debug_info()
+{
+    return id_debug;
+}
+
 template <class TV> FaceArrayGhost<TV>::
 FaceArrayGhost(int size)
 {
-    id_debug = 33;
+    id_debug = face_array_ghost_id;
     this->size_ = size;
     grid = NULL;
     data = NULL;
@@ -112,10 +118,16 @@ clone()
     return new FaceArrayGhost<TV>(size_);
 }
 
+template <class TV>
+int FaceArrayGhost<TV> :: get_debug_info()
+{
+    return id_debug;
+}
+
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
-    id_debug = 44;
+    id_debug = non_adv_id;
 
     this->size_ = size;
 
@@ -177,6 +189,12 @@ clone()
 {
     std::cout << "Cloning nonadvdata\n";
     return new NonAdvData<TV, T>(size_);
+}
+
+template <class TV, class T>
+int NonAdvData<TV, T> :: get_debug_info()
+{
+    return id_debug;
 }
 
 template <class TV, class T> bool NonAdvData<TV, T>::

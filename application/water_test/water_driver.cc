@@ -46,10 +46,13 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     stream_type(stream_type_input)
 {
     // setup time
-    initial_time = 0;
-    first_frame = 0;
+    initial_time = (T)0;
+    first_frame = (T)0;
+    time = (T)0;
+
     last_frame = 100;
     frame_rate = 24;
+    current_frame = 0;
 
     // other parameters
     number_of_ghost_cells = 3;
@@ -61,7 +64,7 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     output_directory = "output";
 
     // debugging information
-    id_debug = 99;
+    id_debug = driver_id;
 };
 
 template<class TV>
@@ -81,11 +84,24 @@ Data* WaterDriver<TV> :: clone()
 template <class TV>
 void WaterDriver<TV> :: create()
 {
-    std::cout << "Initialize water driver....\n";
+    std::cout << "Initialize water driver ...\n";
+
+    FILE_UTILITIES::Create_Directory(output_directory+"/common");
+    LOG::Instance()->Copy_Log_To_File
+        (output_directory+"/common/log.txt", false);
+
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 
     DEBUG_SUBSTEPS::Set_Substep_Writer((void *)this, &Write_Substep_Helper<TV>);
+
+    std::cout << "Completed initializing water driver\n";
+}
+
+template <class TV>
+int WaterDriver<TV> :: get_debug_info()
+{
+    return id_debug;
 }
 
 #ifndef TEMPLATE_USE

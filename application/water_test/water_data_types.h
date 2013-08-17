@@ -47,6 +47,10 @@
 #include "./physbam_include.h"
 #include "./water_driver.h"
 
+#define face_array_id 20
+#define face_array_ghost_id 25
+#define non_adv_id 30
+
 /* WATER_EXAMPLE is structured as follows (with the equivalent here shown in
  * brackets):
  * mac_grid (equivalent *corresponding data.grid)
@@ -85,6 +89,7 @@ class FaceArray : public Data {
         FaceArray(int size);
         virtual void create();
         virtual Data* clone();
+        virtual int get_debug_info();
 
         // physbam structures and methods
         GRID<TV> *grid;
@@ -104,6 +109,7 @@ class FaceArrayGhost : public Data {
         FaceArrayGhost(int size);
         virtual void create();
         virtual Data* clone();
+        virtual int get_debug_info();
 
         // physbam structures and methods
         GRID<TV> *grid;
@@ -141,6 +147,8 @@ class NonAdvData : public Data {
         NonAdvData(int size);
         virtual void create();
         virtual Data* clone();
+        virtual int get_debug_info();
+
         bool initialize
             (WaterDriver<TV> *driver,
              FaceArray<TV> *face_velocities,

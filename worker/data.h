@@ -65,6 +65,8 @@ class Data {
   virtual void split(Data *, Data *) {}
   virtual void merge(Data *, Data *) {}
 
+  virtual int get_debug_info();
+
   uint64_t id();
   void set_id(uint64_t id);
 
