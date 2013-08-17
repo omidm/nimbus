@@ -171,7 +171,7 @@ class NonAdvData : public Data {
                 TV &V,
                 const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
                 const T dt,
-                const T time) {}
+                const T time);
         void Write_Output_Files_EF(const int frame) {}
         void Read_Output_Files_EF(const int frame) {}
 };
