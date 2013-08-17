@@ -170,6 +170,8 @@ create()
         BOUNDARY_PHI_WATER();
     domain_boundary = new VECTOR<VECTOR<bool,2>,TV::dimension>();
 
+    sources = new ARRAY<IMPLICIT_OBJECT<TV> *>();
+
     particle_levelset_evolution = new
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >
         (*grid, number_of_ghost_cells);
@@ -296,7 +298,10 @@ initialize
     std::cout << "Initialized phi ...\n";
 
     //TODO(chinmayee):
+    std::cout << "Just before adjust phi with sources ...\n";
     Adjust_Phi_With_Sources(time);
+    std::cout << "After adjust phi with sources ...\n";
+
     std::cout << "1\n";
     particle_levelset_evolution->Make_Signed_Distance();
     std::cout << "2\n";
