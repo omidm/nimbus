@@ -60,7 +60,7 @@ void SimpleScheduler::schedulerCoreProcessor() {
   std::cout << "Sending command: " << cm.toString() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), &cm);
   while (true) {
-    sleep(1);
+    // sleep(1);
     SchedulerCommandList* storage = new SchedulerCommandList();
     if (server_->ReceiveCommands(storage, (uint32_t)10)) {
       SchedulerCommandList::iterator iter = storage->begin();
