@@ -209,7 +209,7 @@ Job* UptoAdvect::clone() {
 void UptoAdvect::execute(std::string params, const DataArray& da)
 {
 
-    std::cout << "Running upto advect\n";
+    std::cout << "@@ Running upto advect\n";
 
     WaterDriver<TV> *driver = NULL;
     FaceArray<TV> *face_velocities = NULL;
@@ -240,6 +240,8 @@ void UptoAdvect::execute(std::string params, const DataArray& da)
     assert(driver);
     assert(face_velocities);
     assert(sim_data);
+
+    sim_data->BeforeAdvection(driver, face_velocities);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
@@ -257,7 +259,7 @@ Job* Advect::clone() {
 
 void Advect::execute(std::string params, const DataArray& da)
 {
-    std::cout << "Running advect\n";
+    std::cout << "@@ Running advect\n";
 
     WaterDriver<TV> *driver = NULL;
     FaceArray<TV> *face_velocities = NULL;
@@ -288,6 +290,8 @@ void Advect::execute(std::string params, const DataArray& da)
     assert(driver);
     assert(face_velocities);
     assert(sim_data);
+
+    face_velocities->Advection(driver, sim_data);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
@@ -304,7 +308,7 @@ Job* AfterAdvect::clone() {
 
 void AfterAdvect::execute(std::string params, const DataArray& da)
 {
-    std::cout << "Running after advect\n";
+    std::cout << "@@ Running after advect\n";
 
     WaterDriver<TV> *driver = NULL;
     FaceArray<TV> *face_velocities = NULL;
@@ -335,6 +339,8 @@ void AfterAdvect::execute(std::string params, const DataArray& da)
     assert(driver);
     assert(face_velocities);
     assert(sim_data);
+
+    sim_data->AfterAdvection(driver, face_velocities);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();

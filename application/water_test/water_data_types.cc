@@ -335,7 +335,7 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 
 template <class TV, class T> void NonAdvData<TV, T>::
 BeforeAdvection
-(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const T target_time)
+(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities)
 {
     LOG::Time("Compute Occupied Blocks");
     T maximum_fluid_speed = face_velocities->data->Maxabs().Max();
@@ -407,8 +407,7 @@ BeforeAdvection
 
 template <class TV> void FaceArray<TV>::
 Advection (WaterDriver<TV> *driver,
-        NonAdvData<TV, T> *sim_data,
-        const T time_target)
+        NonAdvData<TV, T> *sim_data)
 {
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
     face_velocities_ghost.Resize
@@ -425,7 +424,7 @@ Advection (WaterDriver<TV> *driver,
 
 template <class TV, class T> void NonAdvData<TV, T>::
     AfterAdvection
-(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const T target_time)
+(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities)
 {
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
     face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);

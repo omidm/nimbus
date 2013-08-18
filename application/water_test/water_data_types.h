@@ -86,8 +86,7 @@ class FaceArray : public Data {
     public:
 
         void Advection (WaterDriver<TV> *driver,
-             NonAdvData<TV, T> *sim_data,
-             const T time_target);
+             NonAdvData<TV, T> *sim_data);
 
         int id_debug;
 
@@ -160,12 +159,10 @@ class NonAdvData : public Data {
              const int frame);
 
         void BeforeAdvection (WaterDriver<TV> *driver,
-             FaceArray<TV> *face_velocities,
-             const T time_target); 
+             FaceArray<TV> *face_velocities); 
 
         void AfterAdvection (WaterDriver<TV> *driver,
-             FaceArray<TV> *face_velocities,
-             const T time_target);
+             FaceArray<TV> *face_velocities);
 
         // physbam structures and methods
 
