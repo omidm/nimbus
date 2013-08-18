@@ -387,7 +387,9 @@ void Loop::execute(std::string params, const DataArray& da)
         sim_data->get_debug_info();
     std::cout << "Barrier "<<x<<"\n";
 
-    if (driver->CheckProceed())
+    driver->IncreaseTime();
+
+    if (!driver->CheckProceed())
     {
         std::cout << "... Simulation completed ...\n";
     }

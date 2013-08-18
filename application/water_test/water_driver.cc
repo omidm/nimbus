@@ -54,7 +54,7 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     first_frame = (T)0;
     time = (T)0;
 
-    last_frame = 100;
+    last_frame = 5;
     frame_rate = 24;
     current_frame = 0;
 
@@ -147,7 +147,7 @@ Write_Substep(
             <<output_number+1 << ", time=" << time << ", frame=" <<
             current_frame << ", substep=" << substep << std::endl;
         LOG::filecout(ss.str());
-//        Write_Output_Files(++output_number);
+        Write_Output_Files(++output_number);
         frame_title="";
     }
 }
@@ -181,7 +181,7 @@ CheckProceed()
 {
     NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
 
-    std::cout << "Simulating frame: " << current_frame
+    std::cout << "## Simulating frame: " << current_frame
         << ", time :" << time << "\n";
 
     if (frame_done)
@@ -215,7 +215,7 @@ CheckProceed()
 }
 
 template<class TV> void WaterDriver<TV>::
-IncreaseTime(const T dt)
+IncreaseTime()
 {
     time += dt;
     NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;

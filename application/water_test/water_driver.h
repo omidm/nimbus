@@ -114,7 +114,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
          * functions for the jobs
          */
         bool CheckProceed();
-        void IncreaseTime(const T dt);
+        void IncreaseTime();
 
         /* helper functions.
         */
