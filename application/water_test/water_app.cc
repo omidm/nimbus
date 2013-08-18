@@ -74,8 +74,9 @@ void WaterApp::load() {
     registerJob("init", new Init(this, JOB_COMP));
     registerJob("loop", new Loop(this, JOB_COMP));
     registerJob("uptoadvect", new UptoAdvect(this, JOB_COMP));
-    registerJob("advect", new Loop(this, JOB_COMP));
+    registerJob("advect", new Advect(this, JOB_COMP));
     registerJob("afteradvect", new AfterAdvect(this, JOB_COMP));
+    registerJob("writeframe", new WriteFrame(this, JOB_COMP));
 
     registerData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     registerData("face_velocities_1", new FaceArray<TV>(ml));
@@ -401,7 +402,7 @@ void Loop::execute(std::string params, const DataArray& da)
     }
     else
     {
-        std::cout << "Spawining new simulation jobs ...\n";
+        std::cout << "Spawning new simulation jobs ...\n";
 
         std::vector<int> d;
         d.push_back(1);
@@ -414,7 +415,7 @@ void Loop::execute(std::string params, const DataArray& da)
         IDSet<data_id_t> read, write;
 
         std::vector<int> j;
-        application_->getNewJobID(4, &j);
+        application_->getNewJobID(5, &j);
 
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -429,6 +430,7 @@ void Loop::execute(std::string params, const DataArray& da)
 
         before.clear(); after.clear();
         read.clear(); write.clear();
+        before.insert(j[0]);
         after.insert(j[2]);
         read.insert(d[0]); read.insert(d[1]);
         read.insert(d[2]); read.insert(d[3]);
@@ -440,6 +442,7 @@ void Loop::execute(std::string params, const DataArray& da)
 
         before.clear(); after.clear();
         read.clear(); write.clear();
+        before.insert(j[1]);
         after.insert(j[3]);
         read.insert(d[0]); read.insert(d[1]);
         read.insert(d[2]); read.insert(d[3]);
@@ -451,6 +454,19 @@ void Loop::execute(std::string params, const DataArray& da)
 
         before.clear(); after.clear();
         read.clear(); write.clear();
+        before.insert(j[2]);
+        after.insert(j[4]);
+        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[2]); read.insert(d[3]);
+        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[2]); write.insert(d[3]);
+        std::cout << "Spawning writeframe\n";
+        application_->spawnJob("writeframe", j[3], before, after, read, write, par);
+        std::cout << "Spawned afteradvect\n";
+
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        before.insert(j[3]);
         read.insert(d[0]); read.insert(d[1]);
         read.insert(d[2]); read.insert(d[3]);
         write.insert(d[0]); write.insert(d[1]);
@@ -460,3 +476,55 @@ void Loop::execute(std::string params, const DataArray& da)
         std::cout << "Spawned loop\n";
     }
 };
+
+WriteFrame::WriteFrame(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job* WriteFrame::clone() {
+    std::cout << "Cloning write frame job\n";
+    return new WriteFrame(application_, type_);
+};
+
+void WriteFrame::execute(std::string params, const DataArray& da)
+{
+    std::cout << "@@ Executing write frame job\n";
+
+    WaterDriver<TV> *driver = NULL;
+    FaceArray<TV> *face_velocities = NULL;
+    NonAdvData<TV, T> *sim_data = NULL;
+
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        switch (da[i]->get_debug_info())
+        {
+            case driver_id:
+                driver = (WaterDriver<TV> *)da[i];
+                break;
+            case face_array_id:
+                face_velocities = (FaceArray<TV> *)da[i];
+                break;
+            case face_array_ghost_id:
+                break;
+            case non_adv_id:
+                sim_data = (NonAdvData<TV, T> *)da[i];
+                break;
+            default:
+                std::cout << "Error : unknown data!!\n";
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    assert(driver);
+    assert(face_velocities);
+    assert(sim_data);
+
+    if (driver->IsFrameDone())
+    {
+        driver->Write_Output_Files(driver->current_frame);
+    }
+
+    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
+        sim_data->get_debug_info();
+    std::cout << "Barrier "<<x<<"\n";
+}

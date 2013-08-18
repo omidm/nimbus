@@ -222,6 +222,12 @@ IncreaseTime()
     sd->time = time;
 }
 
+template<class TV> bool WaterDriver<TV>::
+IsFrameDone()
+{
+    return frame_done;
+}
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;

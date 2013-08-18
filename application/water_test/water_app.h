@@ -97,4 +97,11 @@ class AfterAdvect : public Job {
         virtual Job* clone();
 };
 
+class WriteFrame : public Job {
+    public:
+        WriteFrame(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
+};
+
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_

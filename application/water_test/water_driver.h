@@ -115,6 +115,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
          */
         bool CheckProceed();
         void IncreaseTime();
+        bool IsFrameDone();
 
         /* helper functions.
         */
