@@ -73,6 +73,9 @@ void WaterApp::load() {
 
     registerJob("init", new Init(this, JOB_COMP));
     registerJob("loop", new Loop(this, JOB_COMP));
+    registerJob("uptoadvect", new UptoAdvect(this, JOB_COMP));
+    registerJob("advect", new Loop(this, JOB_COMP));
+    registerJob("afteradvect", new AfterAdvect(this, JOB_COMP));
 
     registerData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     registerData("face_velocities_1", new FaceArray<TV>(ml));
@@ -129,6 +132,14 @@ void Main::execute(std::string params, const DataArray& da)
     after.clear();
     read.clear();
     write.clear();
+    read.insert(d[0]);
+    read.insert(d[1]);
+    read.insert(d[2]);
+    read.insert(d[3]);
+    write.insert(d[0]);
+    write.insert(d[1]);
+    write.insert(d[2]);
+    write.insert(d[3]);
     std::cout << "Spawning loop\n";
     application_->spawnJob("loop", j[1], before, after, read, write, par);
     std::cout << "Spawned loop\n";
@@ -176,7 +187,6 @@ void Init::execute(std::string params, const DataArray& da)
 
     assert(driver);
     assert(face_velocities);
-    assert(face_velocities_ghost);
     assert(sim_data);
 
     int frame = 0;
@@ -188,6 +198,149 @@ void Init::execute(std::string params, const DataArray& da)
     std::cout << "Successfully completed init job\n";
 };
 
+UptoAdvect::UptoAdvect(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job* UptoAdvect::clone() {
+    std::cout << "Cloning upto advect job\n";
+    return new UptoAdvect(application_, type_);
+};
+
+void UptoAdvect::execute(std::string params, const DataArray& da)
+{
+
+    std::cout << "Running upto advect\n";
+
+    WaterDriver<TV> *driver = NULL;
+    FaceArray<TV> *face_velocities = NULL;
+    NonAdvData<TV, T> *sim_data = NULL;
+
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        switch (da[i]->get_debug_info())
+        {
+            case driver_id:
+                driver = (WaterDriver<TV> *)da[i];
+                break;
+            case face_array_id:
+                face_velocities = (FaceArray<TV> *)da[i];
+                break;
+            case face_array_ghost_id:
+                break;
+            case non_adv_id:
+                sim_data = (NonAdvData<TV, T> *)da[i];
+                break;
+            default:
+                std::cout << "Error : unknown data!!\n";
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    assert(driver);
+    assert(face_velocities);
+    assert(sim_data);
+
+    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
+        sim_data->get_debug_info();
+    std::cout << "Barrier "<<x<<"\n";
+
+};
+
+Advect::Advect(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job* Advect::clone() {
+    std::cout << "Cloning advect job\n";
+    return new Advect(application_, type_);
+};
+
+void Advect::execute(std::string params, const DataArray& da)
+{
+    std::cout << "Running advect\n";
+
+    WaterDriver<TV> *driver = NULL;
+    FaceArray<TV> *face_velocities = NULL;
+    NonAdvData<TV, T> *sim_data = NULL;
+
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        switch (da[i]->get_debug_info())
+        {
+            case driver_id:
+                driver = (WaterDriver<TV> *)da[i];
+                break;
+            case face_array_id:
+                face_velocities = (FaceArray<TV> *)da[i];
+                break;
+            case face_array_ghost_id:
+                break;
+            case non_adv_id:
+                sim_data = (NonAdvData<TV, T> *)da[i];
+                break;
+            default:
+                std::cout << "Error : unknown data!!\n";
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    assert(driver);
+    assert(face_velocities);
+    assert(sim_data);
+
+    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
+        sim_data->get_debug_info();
+    std::cout << "Barrier "<<x<<"\n";
+};
+
+AfterAdvect::AfterAdvect(Application *app, JobType type)
+    : Job(app, type) {};
+
+Job* AfterAdvect::clone() {
+    std::cout << "Cloning after advect job\n";
+    return new AfterAdvect(application_, type_);
+};
+
+void AfterAdvect::execute(std::string params, const DataArray& da)
+{
+    std::cout << "Running after advect\n";
+
+    WaterDriver<TV> *driver = NULL;
+    FaceArray<TV> *face_velocities = NULL;
+    NonAdvData<TV, T> *sim_data = NULL;
+
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        switch (da[i]->get_debug_info())
+        {
+            case driver_id:
+                driver = (WaterDriver<TV> *)da[i];
+                break;
+            case face_array_id:
+                face_velocities = (FaceArray<TV> *)da[i];
+                break;
+            case face_array_ghost_id:
+                break;
+            case non_adv_id:
+                sim_data = (NonAdvData<TV, T> *)da[i];
+                break;
+            default:
+                std::cout << "Error : unknown data!!\n";
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    assert(driver);
+    assert(face_velocities);
+    assert(sim_data);
+
+    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
+        sim_data->get_debug_info();
+    std::cout << "Barrier "<<x<<"\n";
+};
+
 Loop::Loop(Application *app, JobType type)
     : Job(app, type) {};
 
@@ -197,4 +350,105 @@ Job* Loop::clone() {
 };
 
 void Loop::execute(std::string params, const DataArray& da)
-{};
+{
+    std::cout << "Executing forloop job\n";
+
+    WaterDriver<TV> *driver = NULL;
+    FaceArray<TV> *face_velocities = NULL;
+    NonAdvData<TV, T> *sim_data = NULL;
+
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        switch (da[i]->get_debug_info())
+        {
+            case driver_id:
+                driver = (WaterDriver<TV> *)da[i];
+                break;
+            case face_array_id:
+                face_velocities = (FaceArray<TV> *)da[i];
+                break;
+            case face_array_ghost_id:
+                break;
+            case non_adv_id:
+                sim_data = (NonAdvData<TV, T> *)da[i];
+                break;
+            default:
+                std::cout << "Error : unknown data!!\n";
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    assert(driver);
+    assert(face_velocities);
+    assert(sim_data);
+
+    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
+        sim_data->get_debug_info();
+    std::cout << "Barrier "<<x<<"\n";
+
+    if (driver->CheckProceed())
+    {
+        std::cout << "... Simulation completed ...\n";
+    }
+    else
+    {
+        std::cout << "Spawining new simulation jobs ...\n";
+
+        std::vector<int> d;
+        d.push_back(1);
+        d.push_back(2);
+        d.push_back(3);
+        d.push_back(4);
+        std::string par = "none";
+
+        IDSet<job_id_t> before, after;
+        IDSet<data_id_t> read, write;
+
+        std::vector<int> j;
+        application_->getNewJobID(4, &j);
+
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        after.insert(j[1]);
+        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[2]); read.insert(d[3]);
+        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[2]); write.insert(d[3]);
+        std::cout << "Spawning upto advect\n";
+        application_->spawnJob("uptoadvect", j[0], before, after, read, write, par);
+        std::cout << "Spawned upto advect\n";
+
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        after.insert(j[2]);
+        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[2]); read.insert(d[3]);
+        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[2]); write.insert(d[3]);
+        std::cout << "Spawning advect\n";
+        application_->spawnJob("advect", j[1], before, after, read, write, par);
+        std::cout << "Spawned advect\n";
+
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        after.insert(j[3]);
+        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[2]); read.insert(d[3]);
+        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[2]); write.insert(d[3]);
+        std::cout << "Spawning afteradvect\n";
+        application_->spawnJob("afteradvect", j[2], before, after, read, write, par);
+        std::cout << "Spawned afteradvect\n";
+
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[2]); read.insert(d[3]);
+        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[2]); write.insert(d[3]);
+        std::cout << "Spawning loop\n";
+        application_->spawnJob("loop", j[3], before, after, read, write, par);
+        std::cout << "Spawned loop\n";
+    }
+};

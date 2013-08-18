@@ -76,4 +76,25 @@ class Loop : public Job {
         virtual Job* clone();
 };
 
+class UptoAdvect : public Job {
+    public:
+        UptoAdvect(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
+};
+
+class Advect : public Job {
+    public:
+        Advect(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
+};
+
+class AfterAdvect : public Job {
+    public:
+        AfterAdvect(Application *app, JobType type);
+        virtual void execute(std::string params, const DataArray& da);
+        virtual Job* clone();
+};
+
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_APP_H_
