@@ -436,9 +436,74 @@ Advection (WaterDriver<TV> *driver,
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-AfterAdvection
+    AfterAdvection
 (WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const T target_time)
-{}
+{
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+    face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
+    incompressible->boundary->Fill_Ghost_Cells_Face(incompressible->grid,
+            *face_velocities->data, face_velocities_ghost, time + dt,
+            number_of_ghost_cells);
+
+    //Add Forces 0%
+    LOG::Time("Forces");
+    incompressible->Advance_One_Time_Step_Forces
+        (*face_velocities->data, dt, time, true, 0, number_of_ghost_cells);
+
+    //Modify Levelset with Particles 15% (Parallelizedish)
+    LOG::Time("Modify Levelset");
+    particle_levelset_evolution->particle_levelset.Exchange_Overlap_Particles();
+    particle_levelset_evolution->Modify_Levelset_And_Particles(&face_velocities_ghost);
+
+    //Adjust Phi 0%
+    LOG::Time("Adjust Phi");
+    Adjust_Phi_With_Sources(time + dt);
+
+    //Delete Particles 12.5 (Parallelized)
+    LOG::Time("Delete Particles");
+    particle_levelset_evolution->Delete_Particles_Outside_Grid();                                                        //0.1%
+    particle_levelset_evolution->particle_levelset.
+        Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
+    particle_levelset_evolution->particle_levelset.
+        Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
+    particle_levelset_evolution->particle_levelset.
+        Identify_And_Remove_Escaped_Particles
+        (face_velocities_ghost, 1.5, time + dt); //2.4%
+
+    //Reincorporate Particles 0% (Parallelized)
+    LOG::Time("Reincorporate Particles");
+    if (particle_levelset_evolution->particle_levelset.
+            use_removed_positive_particles ||
+            particle_levelset_evolution->particle_levelset.
+            use_removed_negative_particles)
+        particle_levelset_evolution->particle_levelset.
+            Reincorporate_Removed_Particles(1, 1, 0, true);
+
+    //Project 7% (Parallelizedish)
+    LOG::SCOPE *scope=0;
+    scope=new LOG::SCOPE("Project");
+    Set_Boundary_Conditions(driver, time, face_velocities);
+    incompressible->Set_Dirichlet_Boundary_Conditions
+        (&particle_levelset_evolution->phi, 0);
+    projection->p *= dt;
+    projection->collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
+    incompressible->Advance_One_Time_Step_Implicit_Part
+        (*face_velocities->data, dt, time, true);
+    projection->p *= (1/dt);
+    incompressible->boundary->Apply_Boundary_Condition_Face
+        (incompressible->grid, *face_velocities->data, time + dt);
+    projection->collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
+    delete scope;
+
+    //Extrapolate Velocity 7%
+    LOG::Time("Extrapolate Velocity");
+    T_ARRAYS_SCALAR exchanged_phi_ghost(grid->Domain_Indices(8));
+    particle_levelset_evolution->particle_levelset.levelset.boundary->
+        Fill_Ghost_Cells(*grid, particle_levelset_evolution->phi,
+                exchanged_phi_ghost, 0, time + dt, 8);
+    incompressible->Extrapolate_Velocity_Across_Interface
+        (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
+}
 
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE

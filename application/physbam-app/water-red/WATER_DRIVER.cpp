@@ -208,6 +208,7 @@ Advance_To_Target_Time(const T target_time)
 
         //Add Forces 0%
         LOG::Time("Forces");
+        example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
         example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
 
         //Modify Levelset with Particles 15% (Parallelizedish)
