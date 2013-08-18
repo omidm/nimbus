@@ -173,6 +173,39 @@ Write_Output_Files(const int frame)
         (output_directory + "/common/last_frame", frame, "\n");
 }
 
+template<class TV> bool WaterDriver<TV>::
+CheckProceed(const T target_time)
+{
+    LOG::Time("Calculate Dt");
+    NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
+    FaceArray<TV> *fv = (FaceArray<TV> *)face_velocities;
+    bool done = false;
+
+    sd->particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
+    dt = cfl * sd->incompressible->CFL(*fv->data);
+    dt = min(dt, sd->particle_levelset_evolution->CFL(false, false));
+    if ( time + dt >= target_time)
+    {
+        dt = target_time-time;
+        done=true;
+    }
+    else if (time + 2*dt >= target_time)
+    {
+        dt = .5*(target_time - time);
+    }
+
+    sd->dt = dt;
+    return done;
+}
+
+template<class TV> void WaterDriver<TV>::
+IncreaseTime(const T dt)
+{
+    time += dt;
+    NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
+    sd->time = time;
+}
+
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;

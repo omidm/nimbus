@@ -97,7 +97,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         //TODO(eventually): time and frame information should not be here
         STREAM_TYPE stream_type;
         int number_of_ghost_cells;
-        T cfl, initial_time, time, frame_rate;
+        T cfl, initial_time, time, dt, frame_rate;
         int first_frame, last_frame, current_frame;
         int output_number;
         std::string frame_title;
@@ -111,9 +111,8 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         /* water driver functions, these should be called from the execute
          * functions for the jobs
          */
-        void run_upto_advection() {}
-        void run_advect() {}
-        void run_after_advection() {}
+        bool CheckProceed(const T target_time);
+        void IncreaseTime(const T dt);
 
         /* helper functions.
         */

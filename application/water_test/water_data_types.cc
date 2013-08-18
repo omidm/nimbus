@@ -337,18 +337,6 @@ template <class TV, class T> void NonAdvData<TV, T>::
 BeforeAdvection
 (WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const T target_time)
 {
-
-    //TODO(omidm): This part should be added to the Loop Job itself. 
-    // ***********************************************************************
-    //    bool done=false;for(int substep=1;!done;substep++){
-    LOG::Time("Calculate Dt");
-    (*particle_levelset_evolution).Set_Number_Particles_Per_Cell(16);
-    dt = driver->cfl * incompressible->CFL(*face_velocities->data);
-    dt = min(dt, (*particle_levelset_evolution).CFL(false,false));
-    //        if(time+dt>=target_time){dt=target_time-time;done=true;}
-    //        else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
-    // ***********************************************************************
-
     LOG::Time("Compute Occupied Blocks");
     T maximum_fluid_speed = face_velocities->data->Maxabs().Max();
     T max_particle_collision_distance = particle_levelset_evolution->
