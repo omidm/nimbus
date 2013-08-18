@@ -77,6 +77,8 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
             TYPE T_FACE_ARRAYS_BOOL;
 
         int size_;
+        int frame_done;
+        T target_time;
 
     public:
 
@@ -111,7 +113,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         /* water driver functions, these should be called from the execute
          * functions for the jobs
          */
-        bool CheckProceed(const T target_time);
+        bool CheckProceed();
         void IncreaseTime(const T dt);
 
         /* helper functions.

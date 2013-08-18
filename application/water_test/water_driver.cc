@@ -46,6 +46,9 @@ template <class TV> WaterDriver<TV> ::
 WaterDriver(const STREAM_TYPE stream_type_input):
     stream_type(stream_type_input)
 {
+    frame_done = true;
+    target_time = (T)0;
+
     // setup time
     initial_time = (T)0;
     first_frame = (T)0;
@@ -174,12 +177,25 @@ Write_Output_Files(const int frame)
 }
 
 template<class TV> bool WaterDriver<TV>::
-CheckProceed(const T target_time)
+CheckProceed()
 {
-    LOG::Time("Calculate Dt");
     NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
+
+    std::cout << "Simulating frame: " << current_frame
+        << ", time :" << time << "\n";
+
+    if (frame_done)
+    {
+        frame_done = false;
+        current_frame++;
+        sd->current_frame = current_frame;
+        if (current_frame > last_frame)
+            return false;
+        target_time = Time_At_Frame(current_frame);
+    }
+
+    LOG::Time("Calculate Dt");
     FaceArray<TV> *fv = (FaceArray<TV> *)face_velocities;
-    bool done = false;
 
     sd->particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
     dt = cfl * sd->incompressible->CFL(*fv->data);
@@ -187,7 +203,7 @@ CheckProceed(const T target_time)
     if ( time + dt >= target_time)
     {
         dt = target_time-time;
-        done=true;
+        frame_done=true;
     }
     else if (time + 2*dt >= target_time)
     {
@@ -195,7 +211,7 @@ CheckProceed(const T target_time)
     }
 
     sd->dt = dt;
-    return done;
+    return true;
 }
 
 template<class TV> void WaterDriver<TV>::
