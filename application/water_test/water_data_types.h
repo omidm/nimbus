@@ -211,6 +211,7 @@ class NonAdvData : public Data {
                 const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
                 const T dt,
                 const T time); 
+        void Add_Source();
 
         void Write_Output_Files_EF(const int frame,
                 FaceArray<TV>* face_velocities,

@@ -53,7 +53,7 @@ Initialize_Phi()
             iterator.Valid(); iterator.Next())
     {
         const TV &X = iterator.Location();
-        phi(iterator.Cell_Index()) = X.y + X.x - (T)grid->min_dX*100;
+        phi(iterator.Cell_Index()) = X.y - (T)grid->min_dX*100;
     }
 }
 

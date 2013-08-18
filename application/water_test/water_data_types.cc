@@ -423,7 +423,7 @@ Advection (WaterDriver<TV> *driver,
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-    AfterAdvection
+AfterAdvection
 (WaterDriver<TV> *driver, FaceArray<TV> *face_velocities)
 {
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
@@ -490,6 +490,19 @@ template <class TV, class T> void NonAdvData<TV, T>::
                 exchanged_phi_ghost, 0, time + dt, 8);
     incompressible->Extrapolate_Velocity_Across_Interface
         (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
+}
+
+template <class TV, class T> void NonAdvData<TV, T>::
+Add_Source()
+{
+    TV point1, point2;
+    BOX<TV> source;
+    point1 = TV::All_Ones_Vector()*(T).5;point1(1) = .95;
+    point1(2)=.6;point2=TV::All_Ones_Vector()*(T).65;
+    point2(1)=1;point2(2)=.75;
+    source.min_corner = point1;
+    source.max_corner = point2;
+    sources->Append(new ANALYTIC_IMPLICIT_OBJECT<BOX<TV> >(source));
 }
 
 #ifndef TEMPLATE_USE
