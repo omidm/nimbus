@@ -47,6 +47,7 @@
 #include <sstream> // NOLINT
 #include <string>
 
+#define MAX_BUFF_SIZE  256
 
 #ifdef DEBUG_MODE
 #define dbg_print(...) print(__VA_ARGS__)

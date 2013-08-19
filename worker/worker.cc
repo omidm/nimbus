@@ -45,6 +45,7 @@ using namespace nimbus; // NOLINT
 Worker::Worker(unsigned int p, Application* a)
 : port_(p),
   application_(a) {
+    log.InitTime();
 }
 
 void Worker::run() {
@@ -76,14 +77,38 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
 
       std::string param = (*(cm->parameters()))["param"].value();
 
+      IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
+      job_id_t id = *(id_set->begin());
+
+      log.StartTimer();
       j->execute(param, da);
+      log.StopTimer();
+
+      char buff[MAX_BUFF_SIZE];
+      snprintf(buff, sizeof(buff),
+          "Execute Job, name:%25s  id:%4ld  length(ms):%6.3lf  time(s):%6.3lf",
+          job_name.c_str(), id, 1000 * log.timer(), log.GetTime());
+
+      log.writeToFile(std::string(buff), LOG_INFO);
   } else if (command_name == "definedata") {
       std::string data_name = (*(cm->parameters()))["name"].value();
       Data * d = application_->cloneData(data_name);
+
+      IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
+      data_id_t id = *(id_set->begin());
+
+      log.StartTimer();
       d->create();
-      IDSet<data_id_t>* id = (*(cm->parameters()))["id"].identifier_set();
-      d->set_id(*(id->begin()));
+      d->set_id(id);
       addData(d);
+      log.StopTimer();
+
+      char buff[MAX_BUFF_SIZE];
+      snprintf(buff, sizeof(buff),
+          "Create Data, name:%25s  id:%4ld  length(ms):%6.3lf  time(s):%6.3lf",
+          data_name.c_str(), id, 1000 * log.timer(), log.GetTime());
+
+      log.writeToFile(std::string(buff), LOG_INFO);
   }
 }
 

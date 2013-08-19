@@ -72,6 +72,7 @@ class Worker {
 
  private:
   int id_;
+  Log log;
   Computer host_;
   unsigned int port_;
   DataMap data_map_;
