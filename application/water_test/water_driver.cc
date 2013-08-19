@@ -42,6 +42,13 @@
 
 using namespace PhysBAM;
 
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef VECTOR<float, 3> TVF3;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
 template <class TV> WaterDriver<TV> ::
 WaterDriver(const STREAM_TYPE stream_type_input):
     stream_type(stream_type_input)
@@ -55,7 +62,7 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     time = (T)0;
 
     last_frame = 20;
-    frame_rate = 24;
+    frame_rate = 15;
     current_frame = 0;
 
     // other parameters
@@ -228,10 +235,5 @@ IsFrameDone()
     return frame_done;
 }
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
-#endif  // TEMPLATE_USE
-
 template class WaterDriver<TVF2>;
+template class WaterDriver<TVF3>;

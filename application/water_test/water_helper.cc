@@ -43,6 +43,13 @@
 #include "./water_driver.h"
 #include "./physbam_include.h"
 
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef VECTOR<float, 3> TVF3;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
 template <class TV, class T> void NonAdvData<TV, T>::
 Initialize_Phi()
 {
@@ -53,7 +60,7 @@ Initialize_Phi()
             iterator.Valid(); iterator.Next())
     {
         const TV &X = iterator.Location();
-        phi(iterator.Cell_Index()) = X.y - (T)grid->min_dX*100 + X.x;
+        phi(iterator.Cell_Index()) = X.y - (T)0.35;
     }
 }
 
@@ -244,10 +251,5 @@ Adjust_Particle_For_Domain_Boundaries(
     }
 }
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
-#endif  // TEMPLATE_USE
-
 template class NonAdvData<TVF2, TF>;
+template class NonAdvData<TVF3, TF>;
