@@ -44,7 +44,7 @@
 #include "./water_driver.h"
 #include "stdlib.h"
 
-static int ml = 125;
+static int ml = 75;
 static int gl = 0;
 
 using namespace PhysBAM;
