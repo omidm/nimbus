@@ -195,7 +195,7 @@ void Init::execute(std::string params, const DataArray& da)
     driver->face_velocities = face_velocities;
     driver->sim_data = sim_data;
 
-    sim_data->Add_Source();
+    Add_Source(sim_data);
     sim_data->initialize(driver, face_velocities, frame);
 
     std::cout << "Successfully completed init job\n";

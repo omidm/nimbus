@@ -71,6 +71,13 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef VECTOR<float, 3> TVF3;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
 template <class TV, class T>
 class NonAdvData;
 
@@ -211,12 +218,14 @@ class NonAdvData : public Data {
                 const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
                 const T dt,
                 const T time); 
-        void Add_Source();
 
         void Write_Output_Files_EF(const int frame,
                 FaceArray<TV>* face_velocities,
                 WaterDriver<TV> * driver);
         void Read_Output_Files_EF(const int frame) {}
 };
+
+void Add_Source(NonAdvData<TVF2, TF> *sim_data);
+void Add_Source(NonAdvData<TVF3, TF> *sim_data);
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_WATER_DATA_TYPES_H_

@@ -46,6 +46,13 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
+#ifndef TEMPLATE_USE
+#define TEMPLATE_USE
+typedef VECTOR<float, 2> TVF2;
+typedef VECTOR<float, 3> TVF3;
+typedef float TF;
+#endif  // TEMPLATE_USE
+
 // TODO(someone): right now, create may/ may not allocate required amount of
 // memory. Will have to dig deep into PhysBAM to allocate required amount of
 // memory at the beginning itself.
@@ -488,25 +495,41 @@ AfterAdvection
         (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
 }
 
-template <class TV, class T> void NonAdvData<TV, T>::
-Add_Source()
+void Add_Source(NonAdvData<TVF2, TF> *sim_data)
 {
-    TV point1, point2;
-    BOX<TV> source;
-    point1 = TV::All_Ones_Vector()*(T).5;point1(1) = .95;
-    point1(2)=.6;point2=TV::All_Ones_Vector()*(T).65;
-    point2(1)=1;point2(2)=.75;
+    TVF2 point1, point2;
+    BOX<TVF2> source;
+    point1 = TVF2::All_Ones_Vector()*(TF).5;
+    point1(1) = .95;
+    point1(2)=.6;
+    point2 = TVF2::All_Ones_Vector()*(TF).65;
+    point2(1)=1;
+    point2(2)=.75;
     source.min_corner = point1;
     source.max_corner = point2;
-    sources->Append(new ANALYTIC_IMPLICIT_OBJECT<BOX<TV> >(source));
+    sim_data->sources->Append(new ANALYTIC_IMPLICIT_OBJECT<BOX<TVF2> >(source));
 }
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef float TF;
-#endif  // TEMPLATE_USE
+
+void Add_Source(NonAdvData<TVF3, TF> *sim_data)
+{
+    TVF3 point1, point2;
+    CYLINDER<TF> source;
+    point1 = TVF3::All_Ones_Vector()*(TF).8;
+    point1(1)=.4;
+    point1(3)=.95;
+    point2=TVF3::All_Ones_Vector()*(TF).8;
+    point2(1)=.4;
+    point2(3)=1;
+    source.Set_Endpoints(point1, point2);
+    source.radius=.1;
+    IMPLICIT_OBJECT<TVF3>* analytic = new ANALYTIC_IMPLICIT_OBJECT<CYLINDER<TF> >(source);
+    sim_data->sources->Append(analytic);
+}
 
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;
 template class NonAdvData<TVF2, TF>;
+template class FaceArray<TVF3>;
+template class FaceArrayGhost<TVF3>;
+template class NonAdvData<TVF3, TF>;
