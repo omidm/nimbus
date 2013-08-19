@@ -86,7 +86,7 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
 
       char buff[MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "Execute Job, name:%25s  id:%4ld  length(ms):%6.3lf  time(s):%6.3lf",
+          "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
           job_name.c_str(), id, 1000 * log.timer(), log.GetTime());
 
       log.writeToFile(std::string(buff), LOG_INFO);
@@ -105,7 +105,7 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
 
       char buff[MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "Create Data, name:%25s  id:%4ld  length(ms):%6.3lf  time(s):%6.3lf",
+          "Create Data, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
           data_name.c_str(), id, 1000 * log.timer(), log.GetTime());
 
       log.writeToFile(std::string(buff), LOG_INFO);
