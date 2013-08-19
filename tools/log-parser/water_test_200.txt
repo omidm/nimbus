@@ -1,0 +1,17 @@
+file name: log.txt
+name:                    advect time(s):  0.614
+name:               afteradvect time(s):  6.211
+name:         face_velocities_1 time(s):  0.000
+name:   face_velocities_ghost_1 time(s):  0.000
+name:                      init time(s):  0.301
+name:                      loop time(s):  0.201
+name:                      main time(s):  0.001
+name:                sim_data_1 time(s):  0.001
+name:                uptoadvect time(s):  1.518
+name:            water_driver_1 time(s):  0.002
+name:                writeframe time(s):  0.286
+
+total time(s):       11.515
+useful time(s):       9.135
+nimbus overhead(s):   2.380
+efficiency:           0.793
