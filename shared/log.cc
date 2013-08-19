@@ -82,6 +82,51 @@ void Log::setFileName(std::string fname) {
   log_file_name = fname;
 }
 
+void Log::InitTime() {
+  gettimeofday(&start_time_, NULL);
+  timer_ = 0;
+  timer_is_on_ = false;
+}
+
+struct timeval* Log::start_time() {
+  return &start_time_;
+}
+
+void Log::set_start_time(struct timeval* time) {
+  start_time_.tv_sec = time->tv_sec;
+  start_time_.tv_usec = time->tv_usec;
+}
+
+double Log::timer() {
+  if (timer_is_on_)
+    return static_cast<double>(-1);
+  else
+    return timer_;
+}
+
+double Log::GetTime() {
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  double time  = (static_cast<double>(t.tv_sec - start_time_.tv_sec)) +
+  .000001 * (static_cast<double>(t.tv_usec - start_time_.tv_usec));
+  return time;
+}
+
+void Log::StartTimer() {
+  gettimeofday(&timer_start_time_, NULL);
+  timer_is_on_ = true;
+}
+
+void Log::StopTimer() {
+  if (!timer_is_on_)
+    return;
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  timer_  = (static_cast<double>(t.tv_sec - timer_start_time_.tv_sec)) +
+  .000001 * (static_cast<double>(t.tv_usec - timer_start_time_.tv_usec));
+  timer_is_on_ = false;
+}
+
 void Log::clearBuffer() {
   buffer.str("");
 }

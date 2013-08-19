@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SHARED_LOG_H_
 #define NIMBUS_SHARED_LOG_H_
 
+#include <sys/time.h>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream> // NOLINT
@@ -91,6 +92,20 @@ class Log {
 
     void setFileName(std::string fname);
 
+    void InitTime();
+
+    struct timeval* start_time();
+
+    void set_start_time(struct timeval* time);
+
+    double timer();
+
+    double GetTime();
+
+    void StartTimer();
+
+    void StopTimer();
+
     void clearBuffer();
 
     void clearLogFile();
@@ -115,6 +130,10 @@ class Log {
     std::ostream* output_stream;
     std::stringstream buffer;
     std::string log_file_name;
+    struct timeval start_time_;
+    struct timeval timer_start_time_;
+    double timer_;
+    bool timer_is_on_;
 };
 
 

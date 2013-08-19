@@ -42,7 +42,7 @@
 #ifndef NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
 #define NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
 
-// #define DEBUG_MODE
+#define DEBUG_MODE
 
 #include <boost/thread.hpp>
 #include <string>

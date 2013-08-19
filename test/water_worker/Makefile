@@ -26,4 +26,4 @@ $(TARGET_WATER): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(LFLAGS)
 
 clean: clean-files
-	\rm -f $(TARGET)
+	\rm -f $(TARGET_WATER)
