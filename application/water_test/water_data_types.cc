@@ -298,10 +298,6 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 
     std::cout << "Initialized phi ...\n";
 
-    std::cout << "Just before adjust phi with sources ...\n";
-    Adjust_Phi_With_Sources(time);
-    std::cout << "After adjust phi with sources ...\n";
-
     std::cout << "1\n";
     particle_levelset_evolution->Make_Signed_Distance();
     std::cout << "2\n";

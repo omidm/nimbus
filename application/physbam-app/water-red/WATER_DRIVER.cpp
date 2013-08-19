@@ -57,7 +57,7 @@ Initialize()
 
     // setup time
     current_frame=example.first_frame;
- //   output_number=current_frame;
+    output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
 
     example.face_velocities.Resize(example.mac_grid);
@@ -113,8 +113,6 @@ Initialize()
     example.particle_levelset_evolution.Set_CFL_Number((T).9);
     example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    //TODO:  NOTE:  call this wehenever data is migrated, at the beginning of a
-    //job
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
@@ -127,7 +125,7 @@ Initialize()
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
     example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
     example.Initialize_Phi();
-//    example.Adjust_Phi_With_Sources(time);
+    example.Adjust_Phi_With_Sources(time);
     example.particle_levelset_evolution.Make_Signed_Distance();
     example.particle_levelset_evolution.Set_Seed(2606);
     example.particle_levelset_evolution.Seed_Particles(time);
@@ -197,24 +195,22 @@ Advance_To_Target_Time(const T target_time)
 
         //Advect removed particles (Parallelized)
         LOG::Time("Advect Removed Particles");
-        RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
-        domain.max_corner+=TV_INT::All_Ones_Vector();
-        Run(domain, dt, time);
+        RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
+        DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
 
         //Advect Velocities 26% (Parallelized)
         LOG::Time("Advect V");
-        example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
         example.incompressible.advection->Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.incompressible.boundary,dt,time);
 
         //Add Forces 0%
         LOG::Time("Forces");
-        example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
         example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
 
         //Modify Levelset with Particles 15% (Parallelizedish)
         LOG::Time("Modify Levelset");
         example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
         example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
+        //example.particle_levelset_evolution.Make_Signed_Distance(); //TODO(mlentine) Figure out why this was needed
 
         //Adjust Phi 0%
         LOG::Time("Adjust Phi");
