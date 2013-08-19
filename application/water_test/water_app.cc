@@ -44,7 +44,7 @@
 #include "./water_driver.h"
 #include "stdlib.h"
 
-static int ml = 200;
+static int ml = 125;
 static int gl = 0;
 
 using namespace PhysBAM;
@@ -53,7 +53,7 @@ using nimbus::Job;
 using nimbus::Application;
 
 typedef float T;
-typedef VECTOR<T, 2> TV;
+typedef VECTOR<T, 3> TV;
 typedef VECTOR<int, TV::dimension> TV_INT;
 
 // TODO(chinmayee): alternative to assert?? pointer arithmetic error.
