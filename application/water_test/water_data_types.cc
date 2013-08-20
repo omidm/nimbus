@@ -302,6 +302,7 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
 
     Initialize_Phi();
+    Adjust_Phi_With_Sources(time);
 
     std::cout << "Initialized phi ...\n";
 
