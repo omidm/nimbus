@@ -1,9 +1,3 @@
 *.o
 *.out
 *tags
-*.aux
-*.log
-*.aux
-*.dvi
-*.pdf
-*tags
