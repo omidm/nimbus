@@ -60,8 +60,7 @@ Initialize_Phi()
     ARRAY<T,TV_INT>& phi=particle_levelset_evolution.phi;
     for(typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);iterator.Valid();iterator.Next()){
         const TV &X=iterator.Location();
-        phi(iterator.Cell_Index())=X.y-(T)mac_grid.min_dX*5;}
-        //phi(iterator.Cell_Index())=X.y-.9;}
+        phi(iterator.Cell_Index())=X.y-(T)0.35;}
 }
 //#####################################################################
 // Initialize_Phi

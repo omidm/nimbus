@@ -1,0 +1,39 @@
+------------------------------------------------------------------------------
+Author:	chinmaye.shah@stanford.edy (Chinmayee Shah),
+		quhang@stanford.edu (Hang Qu)
+------------------------------------------------------------------------------
+
+This code requires physbam-lib code to be built first. To compile the source
+(release version)
+make and change directory to Build/Release within this folder. Use ccmake to
+then generate the makefile (ccmake ../..). The generated make file can then be
+used to build the code. You will need a minimum of 2.8.7 CMake version to build
+the Makefile.
+
+This directory should contain a water simulation in the job-data form as
+expected by Nimbus scheduler. To get started, we will have 4 kinds of jobs:
+1. a for loop job to generate more jobs (for_job)
+2. all functions before advection (before_adv_job_x)
+3. advection (adv_job_x)
+4. all functions after advection (after_adv_job_x)
+
+Here, x is used to distinguish different jobs that may be operating on
+different data.
+
+------------------------------------------------------------------------------
+NOTES (Chinmayee)
+------------------------------------------------------------------------------
+
+- Need to set_levelset_callback correctly at the beginning of every job, for
+  NonAdvData particle_levelset_evolution, since there is a callback.
+- Need to set NonAdvData and FaceArray at the beginning of every job, for 
+  WaterDriver : for the levelset callback functions get_levelset_velocity,
+  adjust_particle_for_domain_boundaries, adjust_particle_for_objects as they
+  are inherited from parent class and have a fixed signature.
+- Ghost cells?
+- Fix memory leaks: destructors.
+- I/O & logging will work correctly only as long as we have just one worker.
+  Need to fix this when we have multiple workers.
+- Synchronization??
+- Perform decomposition for all other parts apart from velocity advection too.
+- Figure out how to construct the data map.

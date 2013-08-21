@@ -42,8 +42,8 @@ int main(int argc,char *argv[])
     typedef float T;
     typedef float RW;
     STREAM_TYPE stream_type((RW()));
-    typedef VECTOR<T,2> TV;
-    //typedef VECTOR<T,3> TV;
+    //typedef VECTOR<T,2> TV;
+    typedef VECTOR<T,3> TV;
     typedef VECTOR<int,TV::dimension> TV_INT;
 
 

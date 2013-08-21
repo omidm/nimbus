@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2013 Stanford University.
  * All rights reserved.
@@ -32,28 +33,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * A Nimbus worker. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
-  */
+/* 
+ * Include job and function definitions here. Also, any class or struct
+ * definitions to group data used by a water simulation can be included
+ * here.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#include <pthread.h>
-#include <iostream>  // NOLINT
+#ifndef NIMBUS_APPLICATION_MULTIPLE_V1_FORWARD_DECL_H_
+#define NIMBUS_APPLICATION_MULTIPLE_V1_FORWARD_DECL_H_
 
+#include "./physbam_include.h"
 #include "shared/nimbus.h"
-#include "worker/application.h"
-#include "./simple_worker.h"
-#include "application/water_test_multiple_v1/water_app.h"
 
-#define SCHEDULER_PORT 5983
+using namespace PhysBAM;
+using nimbus::Data;
 
-int main(int argc, char *argv[]) {
-  nimbus_initialize();
-  std::cout << "Simple Worker is up!" << std::endl;
-  WaterApp *app = new WaterApp();
-  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
-  w->run();
-}
+class WaterDriver;
 
+class FaceArray;
+
+class FaceArrayGhost;
+
+class NonAdvData;
+
+#endif // NIMBUS_APPLICATION_MULTIPLE_V!_FORWARD_DECL_H_
