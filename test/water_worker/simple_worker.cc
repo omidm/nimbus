@@ -62,5 +62,6 @@ void SimpleWorker::workerCoreProcessor() {
       std::cout << "Received command: " << comm->toString() << std::endl;
       processSchedulerCommand(comm);
     }
+    delete comm;
   }
 }
