@@ -190,7 +190,6 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
   }
   // We've read this many bytes successfully into
   // commands
-  dbg(DBG_NET, "Scheduler now has %i entries in command queue.\n", received_commands_.size());
   return start_pointer - buffer;
 }
 
