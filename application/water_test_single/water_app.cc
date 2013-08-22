@@ -44,7 +44,7 @@
 #include "./water_driver.h"
 #include "stdlib.h"
 
-static int ml = 125;
+static int ml = 64;
 static int gl = 0;
 
 using namespace PhysBAM;
@@ -53,7 +53,7 @@ using nimbus::Job;
 using nimbus::Application;
 
 typedef float T;
-typedef VECTOR<T, 3> TV;
+typedef VECTOR<T, 2> TV;
 typedef VECTOR<int, TV::dimension> TV_INT;
 
 // TODO(chinmayee): alternative to assert?? pointer arithmetic error.
@@ -474,7 +474,7 @@ void Loop::execute(std::string params, const DataArray& da)
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
         std::cout << "Spawning loop\n";
-        application_->spawnJob("loop", j[3], before, after, read, write, par);
+        application_->spawnJob("loop", j[4], before, after, read, write, par);
         std::cout << "Spawned loop\n";
     }
 };
