@@ -59,6 +59,7 @@ void Scheduler::run() {
 void Scheduler::setupWorkerInterface() {
   loadWorkerCommands();
   server_ = new SchedulerServer(port_);
+  server_->set_worker_command_set(&worker_command_set_);
   worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }
 
@@ -93,15 +94,11 @@ void Scheduler::loadUserCommands() {
 }
 
 void Scheduler::loadWorkerCommands() {
-  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    worker_command_set_.insert(word);
-  }
+  // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  worker_command_set_.insert(
+      std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
+  worker_command_set_.insert(
+      std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
 }
 
 

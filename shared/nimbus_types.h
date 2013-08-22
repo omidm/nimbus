@@ -61,6 +61,11 @@ namespace nimbus {
     JOB_SYNC
   };
 
+  enum SchedulerCommandType {
+    COMMAND_SPAWN_JOB,
+    COMMAND_DEFINE_DATA
+  };
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_

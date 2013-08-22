@@ -162,6 +162,37 @@ bool isSet(const std::string& str) {
 
 // ********************************************************
 
+bool parseSchedulerCommand(const std::string& input,
+    CommandSet* command_set,
+    std::string& name, std::string& param_segment,
+    SchedulerCommandType& command_type) {
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  if (iter == tokens.end()) {
+    std::cout << "ERROR: Command is empty." << std::endl;
+    return false;
+  }
+  name = *iter;
+  bool name_is_valid = false;
+  CommandSet::iterator itr = command_set->begin();
+  for (; itr != command_set->end(); itr++) {
+    if (name == itr->first) {
+      name_is_valid = true;
+      command_type = itr->second;
+      break;
+    }
+  }
+  if (!name_is_valid) {
+    std::cout << "ERROR: Command name is unknown: " << name << std::endl;
+    return false;
+  }
+
+  param_segment = input.substr(name.length());
+  return true;
+}
+
+
 bool ParseSpawnJobCommand(const std::string& input,
     std::string& job_name,
     IDSet<job_id_t>& job_id,

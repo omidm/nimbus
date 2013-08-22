@@ -50,12 +50,14 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <utility>
 #include "shared/idset.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
 
 typedef std::set<std::string> CmSet;
+typedef std::set<std::pair<std::string, SchedulerCommandType> > CommandSet;
 
 void parseCommand(const std::string& string,
                   const CmSet& commandSet,
@@ -83,6 +85,11 @@ bool isSet(const std::string& tag);
 int countOccurence(std::string str, std::string substr);
 
 // ********************************************************
+
+bool parseSchedulerCommand(const std::string& input,
+    CommandSet* command_set,
+    std::string& name, std::string& param_segment,
+    SchedulerCommandType& command_type);
 
 bool ParseSpawnJobCommand(const std::string& input,
     std::string& job_name,

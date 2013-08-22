@@ -80,7 +80,7 @@ class Scheduler {
     boost::thread* user_interface_thread_;
     boost::thread* worker_thread_;
     CmSet user_command_set_;
-    CmSet worker_command_set_;
+    CommandSet worker_command_set_;
     Computer host_;
     uint16_t port_;
     uint64_t appId_;

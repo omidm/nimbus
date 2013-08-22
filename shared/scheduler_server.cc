@@ -171,6 +171,13 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
     if (buffer[i] == ';') {
       buffer[i] = '\0';
       std::string input(start_pointer);
+
+      std::string n, s;
+      SchedulerCommandType t;
+      parseSchedulerCommand(input, worker_command_set_, n, s, t);
+      std::cout << "***Parsed Scheduler Command name: " << n <<
+        " param_seg: " << s << " type: " << t << std::endl;
+
       SchedulerCommand* command = new SchedulerCommand(input);
       {
         dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
@@ -252,6 +259,10 @@ void SchedulerServer::Run() {
 
 SchedulerWorkerList* SchedulerServer::workers() {
   return &workers_;
+}
+
+void SchedulerServer::set_worker_command_set(CommandSet* cms) {
+  worker_command_set_ = cms;
 }
 
 SchedulerWorker* SchedulerServer::AddWorker(SchedulerServerConnection* connection) { //NOLINT
