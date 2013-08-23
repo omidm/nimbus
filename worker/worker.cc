@@ -60,56 +60,60 @@ void Worker::run() {
 void Worker::processSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
-  std::cout << "********OMID 1\n";
   if (command_name == "spawnjob") {
-      std::string job_name = (*(cm->parameters()))["name"].value();
-      Job * j = application_->cloneJob(job_name);
+    SpawnJobCommand* sjc = reinterpret_cast<SpawnJobCommand*>(cm);
+    Job * j = application_->cloneJob(sjc->job_name());
 
-      std::vector<Data*> da;
-      IDSet<data_id_t>::IDSetIter iter;
+    std::vector<Data*> da;
+    IDSet<data_id_t>::IDSetIter iter;
 
-      IDSet<data_id_t>* read = (*(cm->parameters()))["read"].identifier_set();
-      for (iter = read->begin(); iter != read->end(); iter++)
-        da.push_back(data_map_[*iter]);
+    IDSet<data_id_t> read = sjc->read_set();
+    for (iter = read.begin(); iter != read.end(); iter++)
+      da.push_back(data_map_[*iter]);
 
-      IDSet<data_id_t>* write = (*(cm->parameters()))["write"].identifier_set();
-      for (iter = write->begin(); iter != write->end(); iter++)
-        da.push_back(data_map_[*iter]);
+    IDSet<data_id_t> write = sjc->write_set();
+    for (iter = write.begin(); iter != write.end(); iter++)
+      da.push_back(data_map_[*iter]);
 
-      std::string param = (*(cm->parameters()))["param"].value();
+    // std::string param = (*(cm->parameters()))["param"].value();
 
-      IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
-      job_id_t id = *(id_set->begin());
+    // IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
+    job_id_t id = *(sjc->job_id().begin());
 
-      log.StartTimer();
-      j->execute(param, da);
-      log.StopTimer();
+    log.StartTimer();
+    j->execute(sjc->params(), da);
+    log.StopTimer();
 
-      char buff[MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff),
-          "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-          job_name.c_str(), id, 1000 * log.timer(), log.GetTime());
+    char buff[MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff),
+        "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+        sjc->job_name().c_str(), id, 1000 * log.timer(), log.GetTime());
 
-      log.writeToFile(std::string(buff), LOG_INFO);
+    log.writeToFile(std::string(buff), LOG_INFO);
   } else if (command_name == "definedata") {
-      std::string data_name = (*(cm->parameters()))["name"].value();
-      Data * d = application_->cloneData(data_name);
+    DefineDataCommand* ddc = reinterpret_cast<DefineDataCommand*>(cm);
+    // std::string data_name = (*(cm->parameters()))["name"].value();
+    Data * d = application_->cloneData(ddc->data_name());
 
-      IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
-      data_id_t id = *(id_set->begin());
+    // IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
+    data_id_t id = *(ddc->data_id().begin());
 
-      log.StartTimer();
-      d->create();
-      d->set_id(id);
-      addData(d);
-      log.StopTimer();
+    log.StartTimer();
+    d->create();
+    d->set_id(id);
+    addData(d);
+    log.StopTimer();
 
-      char buff[MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff),
-          "Create Data, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-          data_name.c_str(), id, 1000 * log.timer(), log.GetTime());
+    char buff[MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff),
+        "Create Data, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+        ddc->data_name().c_str(), id, 1000 * log.timer(), log.GetTime());
 
-      log.writeToFile(std::string(buff), LOG_INFO);
+    log.writeToFile(std::string(buff), LOG_INFO);
+  } else {
+    std::cout << "ERROR: " << cm->toString() <<
+      " have not been implemented in ProcessSchedulerCommand yet." <<
+      std::endl;
   }
 }
 
