@@ -70,15 +70,11 @@ void Application::spawnJob(std::string name, job_id_t id,
     std::string params) {
   IDSet<job_id_t> idset;
   idset.insert(id);
-  std::string str = "spawnjob";
-  str = str + " name:" + name;
-  str = str + " id:" + idset.toString();
-  str = str + " before:" + before.toString();
-  str = str + " after:" + after.toString();
-  str = str + " read:" + read.toString();
-  str = str + " write:" + write.toString();
-  str = str + " param:" + params;
-  SchedulerCommand cm(str);
+  if (params == "")
+    params = "none";
+  JobType type = JOB_COMP;
+
+  SpawnJobCommand cm(name, idset, read, write, before, after, type, params);
   client_->sendCommand(&cm);
 }
 

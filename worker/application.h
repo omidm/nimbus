@@ -48,6 +48,7 @@
 #include <vector>
 #include "worker/job.h"
 #include "worker/data.h"
+#include "shared/nimbus_types.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command.h"
 
