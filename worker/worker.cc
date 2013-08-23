@@ -75,9 +75,6 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
     for (iter = write.begin(); iter != write.end(); iter++)
       da.push_back(data_map_[*iter]);
 
-    // std::string param = (*(cm->parameters()))["param"].value();
-
-    // IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
     job_id_t id = *(sjc->job_id().begin());
 
     log.StartTimer();
@@ -92,10 +89,8 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
     log.writeToFile(std::string(buff), LOG_INFO);
   } else if (command_name == "definedata") {
     DefineDataCommand* ddc = reinterpret_cast<DefineDataCommand*>(cm);
-    // std::string data_name = (*(cm->parameters()))["name"].value();
     Data * d = application_->cloneData(ddc->data_name());
 
-    // IDSet<data_id_t>* id_set = (*(cm->parameters()))["id"].identifier_set();
     data_id_t id = *(ddc->data_id().begin());
 
     log.StartTimer();

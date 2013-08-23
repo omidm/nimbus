@@ -84,7 +84,6 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     std::getline(input, command, ';');
     command_num_--;
 
-    // SchedulerCommand* com = new SchedulerCommand(command);
     SchedulerCommand* com = NULL;
     if (SchedulerCommand::GenerateSchedulerCommandChild(
           command, scheduler_command_set_, com)) {
@@ -95,7 +94,6 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     }
     return com;
   } else {
-    // return new SchedulerCommand("no-command");
     return NULL;
   }
 }

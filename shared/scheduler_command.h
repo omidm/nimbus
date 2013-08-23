@@ -109,6 +109,8 @@ class SchedulerCommand {
   worker_id_t worker_id_;
 };
 
+// ************************************************
+
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
 

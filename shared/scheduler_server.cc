@@ -172,7 +172,6 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       buffer[i] = '\0';
       std::string input(start_pointer);
 
-//      SchedulerCommand* command = new SchedulerCommand(input);
       SchedulerCommand* command;
       if (SchedulerCommand::GenerateSchedulerCommandChild(
           input, worker_command_set_, command)) {
