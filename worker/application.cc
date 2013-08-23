@@ -81,10 +81,9 @@ void Application::spawnJob(std::string name, job_id_t id,
 void Application::defineData(std::string name, data_id_t id) {
   IDSet<data_id_t> idset;
   idset.insert(id);
-  std::string str = "definedata";
-  str = str + " name:" + name;
-  str = str + " id:" + idset.toString();
-  SchedulerCommand cm(str);
+  IDSet<data_id_t> neighbor;
+  std::string params = "none";
+  DefineDataCommandCommand cm(name, idset, neighbor, params);
   client_->sendCommand(&cm);
 }
 
