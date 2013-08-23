@@ -194,11 +194,11 @@ SpawnJobCommand::SpawnJobCommand() {
   name_ = "spawnjob";
 }
 
-SpawnJobCommand::SpawnJobCommand(std::string job_name,
+SpawnJobCommand::SpawnJobCommand(const std::string& job_name,
     const IDSet<job_id_t>& job_id,
     const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    JobType job_type, std::string params)
+    const JobType& job_type, const std::string& params)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
@@ -274,5 +274,54 @@ std::string SpawnJobCommand::params() {
   return params_;
 }
 
+// ********************************
 
+DefineDataCommand::DefineDataCommand(const std::string& data_name,
+    const IDSet<data_id_t>& data_id,
+    const IDSet<data_id_t>& neighbor,
+    const std::string& params)
+: data_name_(data_name), data_id_(data_id),
+  neighbor_set_(neighbor), params_(params) {
+    name_ = "definedata";
+}
+
+DefineDataCommand::~DefineDataCommand() {
+}
+
+std::string DefineDataCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (data_name_ + " ");
+  str += (data_id_.toString() + " ");
+  str += (neighbor_set_.toString() + " ");
+  str += params_;
+  return str;
+}
+
+std::string DefineDataCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("name:" + data_name_ + " ");
+  str += ("id:" + data_id_.toString() + " ");
+  str += ("neighbor:" + neighbor_set_.toString() + " ");
+  str += ("params:" + params_);
+  return str;
+}
+
+std::string DefineDataCommand::data_name() {
+  return data_name_;
+}
+
+
+IDSet<data_id_t> DefineDataCommand::data_id() {
+  return data_id_;
+}
+
+IDSet<data_id_t> DefineDataCommand::neighbor_set() {
+  return neighbor_set_;
+}
+
+std::string DefineDataCommand::params() {
+  return params_;
+}
 

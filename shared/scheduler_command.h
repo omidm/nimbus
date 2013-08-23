@@ -116,11 +116,11 @@ typedef std::list<SchedulerCommand*> SchedulerCommandList;
 class SpawnJobCommand : public SchedulerCommand {
   public:
     SpawnJobCommand();
-    SpawnJobCommand(std::string job_name,
+    SpawnJobCommand(const std::string& job_name,
         const IDSet<job_id_t>& job_id,
         const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        JobType job_type, std::string params);
+        const JobType& job_type, const std::string& params);
     ~SpawnJobCommand();
 
     virtual std::string toString();
@@ -196,20 +196,22 @@ class PauseJobCommand : public SchedulerCommand {
 class DefineDataCommand : public SchedulerCommand {
   public:
     DefineDataCommand();
-    DefineDataCommand(std::string data_name, data_id_t data_id,
-        IDSet<data_id_t>* neighbors, std::string params);
+    DefineDataCommand(const std::string& data_name,
+        const IDSet<data_id_t>& data_id,
+        const IDSet<data_id_t>& neighbor_set,
+        const std::string& params);
     ~DefineDataCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string data_name();
-    data_id_t data_id();
-    IDSet<data_id_t>* neighbor_set();
+    IDSet<data_id_t> data_id();
+    IDSet<data_id_t> neighbor_set();
     std::string params();
 
   private:
     std::string data_name_;
-    data_id_t data_id_;
+    IDSet<data_id_t> data_id_;
     IDSet<data_id_t> neighbor_set_;
     std::string params_;
 };
