@@ -49,30 +49,35 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 void SimpleScheduler::schedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
-  std::string test = "spawnjob main {0} {1,2} {4,5} ";
-  test += " {6,7,8} {10,20,30} COMP none";
-  SchedulerCommand* gen_com = NULL;
-  bool cond = SchedulerCommand::GenerateSchedulerCommandChild(
-      test, &worker_command_set_, gen_com);
-  if (cond) {
-    std::cout << "*****parsed properly" << std::endl;
-    std::cout << gen_com->toStringWTags() << std::endl;
-    assert(gen_com);
-  } else {
-    std::cout << "ERROR: *****did not generate anything" << std::endl;
-    assert(gen_com == NULL);
-  }
+//  std::string test = "spawnjob main {0} {1,2} {4,5} ";
+//  test += " {6,7,8} {10,20,30} COMP none";
+//  SchedulerCommand* gen_com = NULL;
+//  bool cond = SchedulerCommand::GenerateSchedulerCommandChild(
+//      test, &worker_command_set_, gen_com);
+//  if (cond) {
+//    std::cout << "*****parsed properly" << std::endl;
+//    std::cout << gen_com->toStringWTags() << std::endl;
+//    assert(gen_com);
+//  } else {
+//    std::cout << "ERROR: *****did not generate anything" << std::endl;
+//    assert(gen_com == NULL);
+//  }
 
   while (server_->workers()->begin() == server_->workers()->end()) {
     sleep(1);
     std::cout << "Waiting for the first worker to connect ..." << std::endl;
   }
 
-  std::string str = "spawnjob name:main id:{0} read:{} write:{}";
-  str += " before:{} after:{} type:operation param:none";
-  SchedulerCommand cm(str);
-  std::cout << "Sending command: " << cm.toString() << std::endl;
-  server_->SendCommand(*(server_->workers()->begin()), &cm);
+//  std::string str = "spawnjob name:main id:{0} read:{} write:{}";
+//  str += " before:{} after:{} type:operation param:none";
+//  SchedulerCommand cm(str);
+  std::string str = "spawnjob main {0} {} {} {} {} COMP none";
+  SchedulerCommand* cm;
+  SchedulerCommand::GenerateSchedulerCommandChild(
+      str, &worker_command_set_, cm);
+  std::cout << "Sending command: " << cm->toString() << std::endl;
+  server_->SendCommand(*(server_->workers()->begin()), cm);
+
   while (true) {
     // sleep(1);
     SchedulerCommandList* storage = new SchedulerCommandList();
@@ -82,11 +87,9 @@ void SimpleScheduler::schedulerCoreProcessor() {
         SchedulerCommand* comm = *iter;
         dbg(DBG_NET, "Iterating across command (of %i) %s\n",
             storage->size(), comm->toString().c_str());
-        if (comm->toString() != "no-command") {
-          std::cout << "OMID Received command: " << comm->toString() << std::endl;
-          std::cout << "OMID Sending command: " << comm->toString() << std::endl;
-          server_->SendCommand(*(server_->workers()->begin()), comm);
-        }
+        std::cout << "OMID Received command: " << comm->toString() << std::endl;
+        std::cout << "OMID Sending command: " << comm->toString() << std::endl;
+        server_->SendCommand(*(server_->workers()->begin()), comm);
         delete comm;
       }
     }
