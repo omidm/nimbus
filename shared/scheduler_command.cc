@@ -180,8 +180,20 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
             read, write, before, after, job_type, params);
       }
     } else if (type == COMMAND_DEFINE_DATA) {
-      std::cout << "ERROR: Have not built definedata yet." << std::endl;
-      return false;
+      std::string data_name;
+      IDSet<data_id_t> data_id;
+      IDSet<data_id_t> neighbor;
+      std::string params;
+
+      bool cond = ParseDefineDataCommand(param_segment, data_name,
+          data_id, neighbor, params);
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid definedata." << std::endl;
+        return false;
+      } else {
+        generated = new DefineDataCommand(data_name, data_id,
+            neighbor, params);
+      }
     } else {
       std::cout << "ERROR: Unknown command." << std::endl;
       return false;

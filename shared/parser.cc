@@ -284,6 +284,57 @@ bool ParseSpawnJobCommand(const std::string& input,
   return true;
 }
 
+bool ParseDefineDataCommand(const std::string& input,
+    std::string& data_name,
+    IDSet<data_id_t>& data_id,
+    IDSet<data_id_t>& neighbor,
+    std::string& params) {
+  int num = 4;
+  std::set<data_id_t> data_id_set;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: DefineDataCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: DefineDataCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  data_name = *iter;
+
+  iter++;
+  if (ParseIDSet(*iter, data_id_set)) {
+    IDSet<data_id_t> temp(data_id_set);
+    data_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid data id set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, data_id_set)) {
+    IDSet<data_id_t> temp(data_id_set);
+    neighbor = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid neighbor set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  params = *iter;
+
+  return true;
+}
 
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set) {
   uint64_t num;

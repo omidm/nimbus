@@ -98,6 +98,11 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
     JobType& job_type, std::string& params);
 
+bool ParseDefineDataCommand(const std::string& input,
+    std::string& data_name,
+    IDSet<data_id_t>& data_id,
+    IDSet<data_id_t>& neighbor,
+    std::string& params);
 
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
 

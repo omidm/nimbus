@@ -83,7 +83,7 @@ void Application::defineData(std::string name, data_id_t id) {
   idset.insert(id);
   IDSet<data_id_t> neighbor;
   std::string params = "none";
-  DefineDataCommandCommand cm(name, idset, neighbor, params);
+  DefineDataCommand cm(name, idset, neighbor, params);
   client_->sendCommand(&cm);
 }
 
