@@ -45,11 +45,13 @@
 #include <map>
 #include <string>
 #include "shared/cluster.h"
+#include "shared/idset.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 class Data;
 typedef std::set<Data*> Neighbors;
-typedef std::map<int, Data*> DataMap;
+typedef std::map<data_id_t, Data*> DataMap;
 typedef std::map<std::string, Data*> DataTable;
 
 class Data {
@@ -59,7 +61,13 @@ class Data {
 
   virtual Data* clone();
   virtual void create() {}
-  virtual void destroy(Computer location) {}
+  virtual void destroy(data_id_t id) {}
+  virtual void LocalCopy(data_id_t id_source, data_id_t id_destination) {}
+  // TODO(omidm): Computer needs to be changed to worker, will be changed soon.
+  virtual void RemoteCopy(Computer source, data_id_t id_source,
+      Computer destination, data_id_t id_destination) {}
+
+
   virtual void duplicate(Computer source, Computer destination) {}
   virtual void migrate(Computer sourcer, Computer destination) {}
   virtual void split(Data *, Data *) {}
@@ -74,7 +82,9 @@ class Data {
   uint64_t id_;
   bool advanceData_;
   Hosts hosts_;
-  Neighbors neighbors_;
+
+  // Set od data ids that could be involved in SYNC jobs with this data.
+  IDSet<data_id_t> neighbor_set_;
 };
 
 }  // namespace nimbus
