@@ -60,6 +60,7 @@ void Worker::run() {
 void Worker::processSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
+  std::cout << "********OMID 1\n";
   if (command_name == "spawnjob") {
       std::string job_name = (*(cm->parameters()))["name"].value();
       Job * j = application_->cloneJob(job_name);
@@ -115,19 +116,16 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
 void Worker::setupSchedulerInterface() {
   loadSchedulerCommands();
   client_ = new SchedulerClient(port_);
+  client_->set_scheduler_command_set(&scheduler_command_set_);
   client_->run();
 }
 
 void Worker::loadSchedulerCommands() {
-  std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  while (true) {
-    std::string word;
-    cms >> word;
-    if (cms.fail()) {
-      break;
-    }
-    scheduler_command_set_.insert(word);
-  }
+  // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
 }
 
 void Worker::addJob(Job* job) {

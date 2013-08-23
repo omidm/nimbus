@@ -67,12 +67,15 @@ class SchedulerClient {
   virtual SchedulerCommand* receiveCommand();
   virtual void sendCommand(SchedulerCommand* command);
 
+  void set_scheduler_command_set(CommandSet* cms);
+
  private:
   ConnectionId connection_port_no_;
   boost::asio::io_service* io_service_;
   boost::asio::streambuf* read_buffer_;
   tcp::socket* socket_;
   int command_num_;
+  CommandSet* scheduler_command_set_;
 
   void createNewConnections();
 };

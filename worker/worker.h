@@ -69,6 +69,7 @@ class Worker {
 
  protected:
   SchedulerClient* client_;
+  CommandSet scheduler_command_set_;
 
  private:
   int id_;
@@ -78,7 +79,6 @@ class Worker {
   DataMap data_map_;
   JobMap job_map_;
   Application* application_;
-  CmSet scheduler_command_set_;
 
   virtual void setupSchedulerInterface();
 

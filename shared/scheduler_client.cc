@@ -83,12 +83,20 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     std::string command;
     std::getline(input, command, ';');
     command_num_--;
-    SchedulerCommand* com = new SchedulerCommand(command);
-    dbg(DBG_NET, "Scheduler client received command %s\n",
-        com->toString().c_str());
+
+    // SchedulerCommand* com = new SchedulerCommand(command);
+    SchedulerCommand* com = NULL;
+    if (SchedulerCommand::GenerateSchedulerCommandChild(
+          command, scheduler_command_set_, com)) {
+      dbg(DBG_NET, "Scheduler client received command %s\n",
+          com->toString().c_str());
+    } else {
+      dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
+    }
     return com;
   } else {
-    return new SchedulerCommand("no-command");
+    // return new SchedulerCommand("no-command");
+    return NULL;
   }
 }
 
@@ -114,4 +122,8 @@ void SchedulerClient::run() {
   createNewConnections();
 }
 
+
+void SchedulerClient::set_scheduler_command_set(CommandSet* cms) {
+  scheduler_command_set_ = cms;
+}
 

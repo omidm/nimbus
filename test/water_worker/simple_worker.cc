@@ -58,10 +58,10 @@ void SimpleWorker::workerCoreProcessor() {
     // std::cout << "Sending command: " << cm.toString() << std::endl;
     // client->sendCommand(&cm);
     SchedulerCommand* comm = client_->receiveCommand();
-    if (comm->toString() != "no-command") {
+    if (comm != NULL) {
       std::cout << "Received command: " << comm->toString() << std::endl;
       processSchedulerCommand(comm);
+      delete comm;
     }
-    delete comm;
   }
 }
