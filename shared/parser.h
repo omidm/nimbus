@@ -86,7 +86,7 @@ int countOccurence(std::string str, std::string substr);
 
 // ********************************************************
 
-bool parseSchedulerCommand(const std::string& input,
+bool ParseSchedulerCommand(const std::string& input,
     CommandSet* command_set,
     std::string& name, std::string& param_segment,
     SchedulerCommandType& command_type);

@@ -49,6 +49,20 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 void SimpleScheduler::schedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
+  std::string test = "spawnjob main {0} {1,2} {4,5} ";
+  test += " {6,7,8} {10,20,30} COMP none";
+  SchedulerCommand* gen_com = NULL;
+  bool cond = SchedulerCommand::GenerateSchedulerCommandChild(
+      test, &worker_command_set_, gen_com);
+  if (cond) {
+    std::cout << "*****parsed properly" << std::endl;
+    std::cout << gen_com->toStringWTags() << std::endl;
+    assert(gen_com);
+  } else {
+    std::cout << "ERROR: *****did not generate anything" << std::endl;
+    assert(gen_com == NULL);
+  }
+
   while (server_->workers()->begin() == server_->workers()->end()) {
     sleep(1);
     std::cout << "Waiting for the first worker to connect ..." << std::endl;

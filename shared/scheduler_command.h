@@ -94,6 +94,10 @@ class SchedulerCommand {
   virtual std::string name();
   virtual CommandParameterList* parameters();
 
+  static bool GenerateSchedulerCommandChild(const std::string& input,
+      CommandSet* command_set,
+      SchedulerCommand*& ptr_generated_command);
+
   virtual worker_id_t worker_id();
   virtual void set_worker_id(worker_id_t id);
 

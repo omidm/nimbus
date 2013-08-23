@@ -151,6 +151,45 @@ IDSet<job_id_t>* CommandParameter::identifier_set() {
 
 // ************************************************
 
+bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
+    CommandSet* command_set,
+    SchedulerCommand*& generated) {
+  std::string name, param_segment;
+  SchedulerCommandType type;
+  if (!ParseSchedulerCommand(input, command_set, name, param_segment, type)) {
+    std::cout << "ERROR: Could not detect valid scheduler command." << std::endl;
+    return false;
+  } else {
+    if (type == COMMAND_SPAWN_JOB) {
+      std::string job_name;
+      IDSet<job_id_t> job_id;
+      IDSet<data_id_t> read;
+      IDSet<data_id_t> write;
+      IDSet<job_id_t> before;
+      IDSet<job_id_t> after;
+      JobType job_type;
+      std::string params;
+
+      bool cond = ParseSpawnJobCommand(param_segment, job_name, job_id,
+          read, write, before, after, job_type, params);
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid spawnjob." << std::endl;
+        return false;
+      } else {
+        generated = new SpawnJobCommand(job_name, job_id,
+            read, write, before, after, job_type, params);
+      }
+    } else if (type == COMMAND_DEFINE_DATA) {
+      std::cout << "ERROR: Have not built definedata yet." << std::endl;
+      return false;
+    } else {
+      std::cout << "ERROR: Unknown command." << std::endl;
+      return false;
+    }
+    return true;
+  }
+}
+
 SpawnJobCommand::SpawnJobCommand() {
   name_ = "spawnjob";
 }

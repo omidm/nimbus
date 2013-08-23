@@ -162,7 +162,7 @@ bool isSet(const std::string& str) {
 
 // ********************************************************
 
-bool parseSchedulerCommand(const std::string& input,
+bool ParseSchedulerCommand(const std::string& input,
     CommandSet* command_set,
     std::string& name, std::string& param_segment,
     SchedulerCommandType& command_type) {
@@ -209,7 +209,7 @@ bool ParseSpawnJobCommand(const std::string& input,
   for (int i = 0; i < num; i++) {
     if (iter == tokens.end()) {
       std::cout << "ERROR: SpawnJobCommand has only " << i <<
-        "parameters (expected " << num << ")." << std::endl;
+        " parameters (expected " << num << ")." << std::endl;
       return false;
     }
     iter++;
@@ -228,7 +228,7 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<data_id_t> temp(job_id_set);
     job_id = temp;
   } else {
-    std::cout << "ERROR: job id set is not well formatted" << std::endl;
+    std::cout << "ERROR: Could not detect valid job id set." << std::endl;
     return false;
   }
 
@@ -237,7 +237,7 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<data_id_t> temp(data_id_set);
     read = temp;
   } else {
-    std::cout << "ERROR: read set is not well formatted" << std::endl;
+    std::cout << "ERROR: Could not detect valid read set." << std::endl;
     return false;
   }
 
@@ -246,7 +246,7 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<data_id_t> temp(data_id_set);
     write = temp;
   } else {
-    std::cout << "ERROR: write set is not well formatted" << std::endl;
+    std::cout << "ERROR: Could not detect valid write set." << std::endl;
     return false;
   }
 
@@ -255,7 +255,7 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<data_id_t> temp(job_id_set);
     before = temp;
   } else {
-    std::cout << "ERROR: before set is not well formatted" << std::endl;
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
     return false;
   }
 
@@ -264,7 +264,7 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<data_id_t> temp(job_id_set);
     after = temp;
   } else {
-    std::cout << "ERROR: after set is not well formatted" << std::endl;
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
     return false;
   }
 
@@ -274,7 +274,7 @@ bool ParseSpawnJobCommand(const std::string& input,
   } else if (*iter == "SYNC") {
     job_type = JOB_SYNC;
   } else {
-    std::cout << "ERROR: job type is not known!" << std::endl;
+    std::cout << "ERROR: Unknown job type." << std::endl;
     return false;
   }
 
@@ -330,11 +330,6 @@ bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
   }
   return true;
 }
-
-
-
-
-
 
 
 

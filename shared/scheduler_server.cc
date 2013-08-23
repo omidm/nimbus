@@ -172,17 +172,15 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       buffer[i] = '\0';
       std::string input(start_pointer);
 
-      std::string n, s;
-      SchedulerCommandType t;
-      parseSchedulerCommand(input, worker_command_set_, n, s, t);
-      std::cout << "***Parsed Scheduler Command name: " << n <<
-        " param_seg: " << s << " type: " << t << std::endl;
-
-      SchedulerCommand* command = new SchedulerCommand(input);
-      {
+//      SchedulerCommand* command = new SchedulerCommand(input);
+      SchedulerCommand* command;
+      if (SchedulerCommand::GenerateSchedulerCommandChild(
+          input, worker_command_set_, command)) {
         dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
         boost::mutex::scoped_lock lock(command_mutex_);
         received_commands_.push_back(command);
+      } else {
+        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
       }
       // Next string starts after the semicolon
       start_pointer = buffer + i + 1;
