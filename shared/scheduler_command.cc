@@ -182,17 +182,18 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     } else if (type == COMMAND_DEFINE_DATA) {
       std::string data_name;
       IDSet<data_id_t> data_id;
-      IDSet<data_id_t> neighbor;
+      IDSet<partition_t> partition_id;
+      IDSet<partition_t> neighbor_partitions;
       std::string params;
 
       bool cond = ParseDefineDataCommand(param_segment, data_name,
-          data_id, neighbor, params);
+          data_id, partition_id, neighbor_partitions, params);
       if (!cond) {
         std::cout << "ERROR: Could not detect valid definedata." << std::endl;
         return false;
       } else {
         generated = new DefineDataCommand(data_name, data_id,
-            neighbor, params);
+            partition_id, neighbor_partitions, params);
       }
     } else {
       std::cout << "ERROR: Unknown command." << std::endl;
@@ -286,14 +287,15 @@ std::string SpawnJobCommand::params() {
   return params_;
 }
 
-// ********************************
-
 DefineDataCommand::DefineDataCommand(const std::string& data_name,
     const IDSet<data_id_t>& data_id,
-    const IDSet<data_id_t>& neighbor,
+    const IDSet<partition_t>& partition_id,
+    const IDSet<partition_t>& neighbor_partitions,
     const std::string& params)
 : data_name_(data_name), data_id_(data_id),
-  neighbor_set_(neighbor), params_(params) {
+  partition_id_(partition_id),
+  neighbor_partitions_(neighbor_partitions),
+  params_(params) {
     name_ = "definedata";
 }
 
@@ -305,7 +307,8 @@ std::string DefineDataCommand::toString() {
   str += (name_ + " ");
   str += (data_name_ + " ");
   str += (data_id_.toString() + " ");
-  str += (neighbor_set_.toString() + " ");
+  str += (partition_id_.toString() + " ");
+  str += (neighbor_partitions_.toString() + " ");
   str += params_;
   return str;
 }
@@ -315,7 +318,8 @@ std::string DefineDataCommand::toStringWTags() {
   str += (name_ + " ");
   str += ("name:" + data_name_ + " ");
   str += ("id:" + data_id_.toString() + " ");
-  str += ("neighbor:" + neighbor_set_.toString() + " ");
+  str += ("partition-id:" + data_id_.toString() + " ");
+  str += ("neighbor-partitions:" + neighbor_partitions_.toString() + " ");
   str += ("params:" + params_);
   return str;
 }
@@ -329,8 +333,12 @@ IDSet<data_id_t> DefineDataCommand::data_id() {
   return data_id_;
 }
 
-IDSet<data_id_t> DefineDataCommand::neighbor_set() {
-  return neighbor_set_;
+IDSet<partition_t> DefineDataCommand::partition_id() {
+  return data_id_;
+}
+
+IDSet<partition_t> DefineDataCommand::neighbor_partitions() {
+  return neighbor_partitions_;
 }
 
 std::string DefineDataCommand::params() {

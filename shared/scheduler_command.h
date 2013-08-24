@@ -199,22 +199,25 @@ class DefineDataCommand : public SchedulerCommand {
   public:
     DefineDataCommand();
     DefineDataCommand(const std::string& data_name,
-        const IDSet<data_id_t>& data_id,
-        const IDSet<data_id_t>& neighbor_set,
-        const std::string& params);
+    const IDSet<data_id_t>& data_id,
+    const IDSet<partition_t>& partition_id,
+    const IDSet<partition_t>& neighbor_partition,
+    const std::string& params);
     ~DefineDataCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string data_name();
     IDSet<data_id_t> data_id();
-    IDSet<data_id_t> neighbor_set();
+    IDSet<partition_t> partition_id();
+    IDSet<partition_t> neighbor_partitions();
     std::string params();
 
   private:
     std::string data_name_;
     IDSet<data_id_t> data_id_;
-    IDSet<data_id_t> neighbor_set_;
+    IDSet<partition_t> partition_id_;
+    IDSet<partition_t> neighbor_partitions_;
     std::string params_;
 };
 

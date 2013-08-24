@@ -64,26 +64,36 @@ void Application::registerData(std::string name, Data* d) {
   data_table_[name] = d;
 }
 
-void Application::spawnJob(std::string name, job_id_t id,
-    IDSet<job_id_t> before, IDSet<job_id_t> after,
-    IDSet<data_id_t> read, IDSet<data_id_t> write,
+void Application::SpawnJob(const std::string& name,
+    const job_id_t& id,
+    const IDSet<data_id_t>& read,
+    const IDSet<data_id_t>& write,
+    const IDSet<job_id_t>& before,
+    const IDSet<job_id_t>& after,
+    const JobType& type,
     std::string params) {
-  IDSet<job_id_t> idset;
-  idset.insert(id);
+  IDSet<data_id_t> id_set;
+  id_set.insert(id);
   if (params == "")
     params = "none";
-  JobType type = JOB_COMP;
 
-  SpawnJobCommand cm(name, idset, read, write, before, after, type, params);
+  SpawnJobCommand cm(name, id_set, read, write, before, after, type, params);
   client_->sendCommand(&cm);
 }
 
-void Application::defineData(std::string name, data_id_t id) {
-  IDSet<data_id_t> idset;
-  idset.insert(id);
-  IDSet<data_id_t> neighbor;
-  std::string params = "none";
-  DefineDataCommand cm(name, idset, neighbor, params);
+void Application::DefineData(const std::string& name,
+    const data_id_t& id,
+    const partition_t& partition_id,
+    const IDSet<partition_t>& neighbor_partitions,
+    std::string params) {
+  IDSet<data_id_t> id_set;
+  id_set.insert(id);
+  IDSet<partition_t> partition_id_set;
+  partition_id_set.insert(partition_id);
+  if (params == "")
+    params = "none";
+
+  DefineDataCommand cm(name, id_set, partition_id_set, neighbor_partitions, params);
   client_->sendCommand(&cm);
 }
 

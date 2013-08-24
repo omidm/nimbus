@@ -75,16 +75,20 @@ class Data {
 
   virtual int get_debug_info();
 
-  uint64_t id();
-  void set_id(uint64_t id);
+  data_id_t id();
+  void set_id(data_id_t id);
 
  private:
-  uint64_t id_;
+  data_id_t id_;
+  partition_t partition_id_;
   bool advanceData_;
   Hosts hosts_;
 
-  // Set od data ids that could be involved in SYNC jobs with this data.
-  IDSet<data_id_t> neighbor_set_;
+  // Set of data ids that could be involved in SYNC jobs with this data.
+  IDSet<data_id_t> neighbors_;
+
+  // Set of partition ids neighbor to this partition.
+  IDSet<data_id_t> neighbor_partitions_;
 };
 
 }  // namespace nimbus

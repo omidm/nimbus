@@ -69,12 +69,21 @@ class Application {
 
   void registerJob(std::string name, Job* job);
   void registerData(std::string name, Data* data);
-  void spawnJob(std::string name, job_id_t id,
-                IDSet<job_id_t> beforeSet, IDSet<job_id_t> afterSet,
-                IDSet<data_id_t> readSet, IDSet<data_id_t> writeSet,
-                std::string params);
+  void SpawnJob(const std::string& name,
+      const job_id_t& id,
+      const IDSet<data_id_t>& read,
+      const IDSet<data_id_t>& write,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      const JobType& type,
+      std::string params);
 
-  void defineData(std::string name, data_id_t id);
+  void DefineData(const std::string& name,
+      const data_id_t& id,
+      const partition_t& partition_id,
+      const IDSet<partition_t>& neighbor_partition,
+      std::string params);
+
   Job* cloneJob(std::string name);
   Data* cloneData(std::string name);
   void getNewJobID(int req_num, std::vector<int>* result);

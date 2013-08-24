@@ -287,10 +287,12 @@ bool ParseSpawnJobCommand(const std::string& input,
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     IDSet<data_id_t>& data_id,
-    IDSet<data_id_t>& neighbor,
+    IDSet<partition_t>& partition_id,
+    IDSet<partition_t>& neighbor_partitions,
     std::string& params) {
-  int num = 4;
+  int num = 5;
   std::set<data_id_t> data_id_set;
+  std::set<partition_t> partition_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -322,11 +324,20 @@ bool ParseDefineDataCommand(const std::string& input,
   }
 
   iter++;
-  if (ParseIDSet(*iter, data_id_set)) {
-    IDSet<data_id_t> temp(data_id_set);
-    neighbor = temp;
+  if (ParseIDSet(*iter, partition_id_set)) {
+    IDSet<data_id_t> temp(partition_id_set);
+    partition_id = temp;
   } else {
-    std::cout << "ERROR: Could not detect valid neighbor set." << std::endl;
+    std::cout << "ERROR: Could not detect valid partition id set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, partition_id_set)) {
+    IDSet<data_id_t> temp(partition_id_set);
+    neighbor_partitions = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid partition neighbor set." << std::endl;
     return false;
   }
 

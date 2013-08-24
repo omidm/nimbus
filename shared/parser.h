@@ -101,7 +101,8 @@ bool ParseSpawnJobCommand(const std::string& input,
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     IDSet<data_id_t>& data_id,
-    IDSet<data_id_t>& neighbor,
+    IDSet<partition_t>& partition_id,
+    IDSet<partition_t>& neighbor_partitions,
     std::string& params);
 
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
