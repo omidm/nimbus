@@ -4,6 +4,7 @@
 #include "worker/application.h"
 #include "worker/job.h"
 #include "worker/data.h"
+#include "shared/nimbus_types.h"
 
 using namespace nimbus; // NOLINT
 

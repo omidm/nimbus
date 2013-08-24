@@ -80,49 +80,51 @@ void Main::execute(std::string params, const DataArray& da) {
   std::cout << "Executing the main job\n";
   std::vector<int> j;
   std::vector<int> d;
-  IDSet<job_id_t> before, after;
   IDSet<data_id_t> read, write;
-  std::string par = "none";
+  IDSet<job_id_t> before, after;
+  IDSet<partition_t> neighbor_partitions;
+  partition_t partition_id = 0;
+  std::string par;
   
   application_->getNewJobID(5, &j);
   application_->getNewDataID(4, &d);
 
-  application_->defineData("mainLeft", d[0]);
-  application_->defineData("mainRight", d[1]);
-  application_->defineData("ghostLeft", d[2]);
-  application_->defineData("ghostRight", d[3]);
+  application_->DefineData("mainLeft", d[0], partition_id, neighbor_partitions, par);
+  application_->DefineData("mainRight", d[1], partition_id, neighbor_partitions, par);
+  application_->DefineData("ghostLeft", d[2], partition_id, neighbor_partitions, par);
+  application_->DefineData("ghostRight", d[3], partition_id, neighbor_partitions, par);
 
-  before.clear();
-  after.clear(); after.insert(j[4]);
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[0]);
-  application_->spawnJob("init", j[0], before, after, read, write, par);
-
   before.clear();
   after.clear(); after.insert(j[4]);
+  application_->SpawnJob("init", j[0], read, write, before, after, JOB_COMP, par);
+
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[1]);
-  application_->spawnJob("init", j[1], before, after, read, write, par);
-
   before.clear();
   after.clear(); after.insert(j[4]);
+  application_->SpawnJob("init", j[1], read, write, before, after, JOB_COMP, par);
+
   read.clear(); read.insert(d[2]);
   write.clear(); write.insert(d[2]);
-  application_->spawnJob("init", j[2], before, after, read, write, par);
-
   before.clear();
   after.clear(); after.insert(j[4]);
+  application_->SpawnJob("init", j[2], read, write, before, after, JOB_COMP, par);
+
   read.clear(); read.insert(d[3]);
   write.clear(); write.insert(d[3]);
-  application_->spawnJob("init", j[3], before, after, read, write, par);
+  before.clear();
+  after.clear(); after.insert(j[4]);
+  application_->SpawnJob("init", j[3], read, write, before, after, JOB_COMP, par);
 
-  before.clear(); before.insert(j[0]); before.insert(j[1]); before.insert(j[2]); before.insert(j[3]);
-  after.clear();
   read.clear();
   write.clear();
+  before.clear(); before.insert(j[0]); before.insert(j[1]); before.insert(j[2]); before.insert(j[3]);
+  after.clear();
   // TODO: Load the "par" with the ids of four defined data instances.
   // TODO: Load the for loop couter and condition in "par"
-  application_->spawnJob("forLoop", j[4], before, after, read, write, par);
+  application_->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
 };
 
 ForLoop::ForLoop(Application* app, JobType type)
@@ -138,9 +140,9 @@ void ForLoop::execute(std::string params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<int> j;
   std::vector<int> d;
-  IDSet<job_id_t> before, after;
   IDSet<data_id_t> read, write;
-  std::string par = "none";
+  IDSet<job_id_t> before, after;
+  std::string par;
   int counter = 0;
   int condition = 0;
   
@@ -154,51 +156,51 @@ void ForLoop::execute(std::string params, const DataArray& da) {
   // TODO: Load the for loop couter and condition from "params"; update counter.
 
 
-  before.clear();
-  after.clear(); after.insert(j[2]); after.insert(j[3]);
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[2]);
-  application_->spawnJob("updateLeft", j[0], before, after, read, write, par);
-
   before.clear();
   after.clear(); after.insert(j[2]); after.insert(j[3]);
+  application_->SpawnJob("updateLeft", j[0], read, write, before, after, JOB_COMP, par);
+
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[3]);
-  application_->spawnJob("updateRight", j[1], before, after, read, write, par);
+  before.clear();
+  after.clear(); after.insert(j[2]); after.insert(j[3]);
+  application_->SpawnJob("updateRight", j[1], read, write, before, after, JOB_COMP, par);
 
-  before.clear(); before.insert(j[0]); before.insert(j[1]);
-  after.clear(); after.insert(j[4]);
   read.clear(); read.insert(d[0]); read.insert(d[3]);
   write.clear(); write.insert(d[0]);
-  application_->spawnJob("applyLeft", j[2], before, after, read, write, par);
+  before.clear(); before.insert(j[0]); before.insert(j[1]);
+  after.clear(); after.insert(j[4]);
+  application_->SpawnJob("applyLeft", j[2], read, write, before, after, JOB_COMP, par);
 
   before.clear(); before.insert(j[0]); before.insert(j[1]);
   after.clear(); after.insert(j[4]);
   read.clear(); read.insert(d[1]); read.insert(d[2]);
   write.clear(); write.insert(d[1]);
-  application_->spawnJob("applyRight", j[3], before, after, read, write, par);
+  application_->SpawnJob("applyRight", j[3], read, write, before, after, JOB_COMP, par);
 
   if (counter > condition) {
-  before.clear(); before.insert(j[2]); before.insert(j[3]);
-  after.clear();
   read.clear();
   write.clear();
+  before.clear(); before.insert(j[2]); before.insert(j[3]);
+  after.clear();
   // TODO: Load the "par" with the ids of four defined data instances.  
   // TODO: Load the for loop couter and condition in "par"
-  application_->spawnJob("forLoop", j[4], before, after, read, write, par);
+  application_->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
   }
   else {
   before.clear(); before.insert(j[2]);
   after.clear();
   read.clear(); read.insert(d[0]);
   write.clear();
-  application_->spawnJob("print", j[5], before, after, read, write, par);
+  application_->SpawnJob("print", j[5], read, write, before, after, JOB_COMP, par);
 
   before.clear(); before.insert(j[3]);
   after.clear();
   read.clear(); read.insert(d[1]);
   write.clear();
-  application_->spawnJob("print", j[6], before, after, read, write, par);
+  application_->SpawnJob("print", j[6], read, write, before, after, JOB_COMP, par);
   }
 };
 
