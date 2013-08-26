@@ -98,21 +98,35 @@ class SchedulerCommand {
       CommandSet* command_set,
       SchedulerCommand*& ptr_generated_command);
 
-  virtual worker_id_t worker_id();
-  virtual void set_worker_id(worker_id_t id);
+  // virtual worker_id_t worker_id();
+  // virtual void set_worker_id(worker_id_t id);
 
  protected:
   std::string name_;
 
  private:
   CommandParameterList parameters_;
-  worker_id_t worker_id_;
+  // worker_id_t worker_id_;
 };
 
 // ************************************************
 
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
+
+class HandshakeCommand : public SchedulerCommand {
+  public:
+    HandshakeCommand();
+    explicit HandshakeCommand(const IDSet<worker_id_t>& worker_id);
+    ~HandshakeCommand();
+
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    IDSet<worker_id_t> worker_id();
+
+  private:
+    IDSet<worker_id_t> worker_id_;
+};
 
 
 class SpawnJobCommand : public SchedulerCommand {

@@ -51,6 +51,7 @@ SchedulerWorker::SchedulerWorker(worker_id_t id,
   connection_ = conn;
   application_ = app;
   is_alive_ = true;
+  handshake_done_ = false;
   existing_bytes_ = 0;
   read_buffer_ = new char[WORKER_BUFSIZE];
 }
@@ -74,6 +75,14 @@ Application* SchedulerWorker::application() {
 
 bool SchedulerWorker::is_alive() {
   return is_alive_;
+}
+
+bool SchedulerWorker::handshake_done() {
+  return handshake_done_;
+}
+
+void SchedulerWorker::set_handshake_done(bool flag) {
+  handshake_done_ = flag;
 }
 
 void SchedulerWorker::MarkDead() {

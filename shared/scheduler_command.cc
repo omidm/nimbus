@@ -98,13 +98,13 @@ CommandParameterList* SchedulerCommand::parameters() {
   return &parameters_;
 }
 
-worker_id_t SchedulerCommand::worker_id() {
-  return worker_id_;
-}
+// worker_id_t SchedulerCommand::worker_id() {
+//   return worker_id_;
+// }
 
-void SchedulerCommand::set_worker_id(worker_id_t id) {
-  worker_id_ = id;
-}
+// void SchedulerCommand::set_worker_id(worker_id_t id) {
+//   worker_id_ = id;
+// }
 
 CommandParameter::CommandParameter() {
   name_ = "empty-field";
@@ -195,6 +195,17 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
         generated = new DefineDataCommand(data_name, data_id,
             partition_id, neighbor_partitions, params);
       }
+    } else if (type == COMMAND_HANDSHAKE) {
+      IDSet<worker_id_t> worker_id;
+
+      bool cond = ParseHandshakeCommand(param_segment, worker_id);
+
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid handshake." << std::endl;
+        return false;
+      } else {
+        generated = new HandshakeCommand(worker_id);
+      }
     } else {
       std::cout << "ERROR: Unknown command." << std::endl;
       return false;
@@ -202,6 +213,39 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     return true;
   }
 }
+
+
+HandshakeCommand::HandshakeCommand() {
+  name_ = "handshake";
+}
+
+HandshakeCommand::HandshakeCommand(const IDSet<worker_id_t>& worker_id)
+: worker_id_(worker_id) {
+    name_ = "handshake";
+}
+
+HandshakeCommand::~HandshakeCommand() {
+}
+
+std::string HandshakeCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += worker_id_.toString();
+  return str;
+}
+
+std::string HandshakeCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("worker-id:" + worker_id_.toString());
+  return str;
+}
+
+
+IDSet<worker_id_t> HandshakeCommand::worker_id() {
+  return worker_id_;
+}
+
 
 SpawnJobCommand::SpawnJobCommand() {
   name_ = "spawnjob";

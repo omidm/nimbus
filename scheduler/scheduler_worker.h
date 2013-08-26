@@ -61,6 +61,8 @@ class SchedulerWorker {
   virtual SchedulerServerConnection* connection();
   virtual Application* application();
   virtual bool is_alive();
+  virtual bool handshake_done();
+  virtual void set_handshake_done(bool flag);
   virtual void MarkDead();
   virtual char* read_buffer();
   virtual uint32_t existing_bytes();
@@ -72,6 +74,7 @@ class SchedulerWorker {
   SchedulerServerConnection* connection_;
   Application* application_;
   bool is_alive_;
+  bool handshake_done_;
   char* read_buffer_;
   // How many bytes in the read buffer are valid before
   // a read.

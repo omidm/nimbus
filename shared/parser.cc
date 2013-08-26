@@ -193,6 +193,41 @@ bool ParseSchedulerCommand(const std::string& input,
 }
 
 
+
+bool ParseHandshakeCommand(const std::string& input,
+    IDSet<worker_id_t>& worker_id) {
+  int num = 1;
+  std::set<worker_id_t> worker_id_set;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: SpawnJobCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: SpawnJobCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (ParseIDSet(*iter, worker_id_set)) {
+    IDSet<worker_id_t> temp(worker_id_set);
+    worker_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid worker id set." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 bool ParseSpawnJobCommand(const std::string& input,
     std::string& job_name,
     IDSet<job_id_t>& job_id,

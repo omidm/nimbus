@@ -51,6 +51,7 @@ void SimpleWorker::workerCoreProcessor() {
 
   while (true) {
     // sleep(1);
+    // std::cout << "While Loop Worker ID: " << id_ << std::endl;
     // Log::dbg_printLine("Worker running core loop.", INFO);
     // std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
     // str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";

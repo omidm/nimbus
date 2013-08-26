@@ -62,6 +62,7 @@ class Scheduler {
 
     virtual void run();
     virtual void schedulerCoreProcessor() {}
+    virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
     virtual void loadClusterMap(std::string) {}
     virtual void deleteWorker(Worker * worker) {}
     virtual void addWorker(Worker * worker) {}

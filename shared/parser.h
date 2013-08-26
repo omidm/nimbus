@@ -105,6 +105,9 @@ bool ParseDefineDataCommand(const std::string& input,
     IDSet<partition_t>& neighbor_partitions,
     std::string& params);
 
+bool ParseHandshakeCommand(const std::string& input,
+    IDSet<worker_id_t>& worker_id);
+
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
 
 bool ParseIDSet(const std::string& input, std::set<uint32_t>& set);
