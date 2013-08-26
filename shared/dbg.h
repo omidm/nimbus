@@ -74,7 +74,7 @@ void dbg_init(void);
 void dbg_help(void);
 void dbg_unset();
 void dbg_set(nimbus_dbg_mode);
-
+} // NOLINT
 
 #else
 /* No debugging */
@@ -87,5 +87,4 @@ void dbg_set(nimbus_dbg_mode);
 #define dbg_active(x) (FALSE)
 
 #endif
-} // NOLINT
 #endif  // NIMBUS_SHARED_DBG_H_
