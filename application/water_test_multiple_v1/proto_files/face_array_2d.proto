@@ -1,0 +1,24 @@
+package communication;
+
+message FaceArrayMsg {
+
+    // size of the grid/ data
+    required int32 size_ = 1;
+
+    message Grid {
+    }
+
+    // message mac grid
+    // this should be relatively stratight forward. just copy all the fields.
+    optional Grid mac_grid = 2;
+
+    message Array {
+    }
+
+    // message face_velocities
+    // send buffer_size, all data from base_pointer, domain_indices.
+    // initialize member data using base_pointer. see resize for reference.
+    // range contains tv min corner, max corner.
+    // vector contains an array.
+    optional Array face_velocities = 3;
+}
