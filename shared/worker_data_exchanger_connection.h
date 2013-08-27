@@ -32,42 +32,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Abstraction of a connection between two Nimbus workers.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
 
-#include <inttypes.h>
+#ifndef NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
+#define NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
 
-#define NIMBUS_SCHEDULER_PORT 5983
+#include <boost/thread.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+#include <map>
+#include <string>
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/parser.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
 
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
+class WorkerDataExchangerConnection {
+ public:
+  explicit WorkerDataExchangerConnection(tcp::socket* sock);
+  virtual ~WorkerDataExchangerConnection();
 
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE
-  };
+  boost::asio::streambuf* read_buffer();
+  tcp::socket* socket();
+  bool data_fully_received();
+  void data_fully_received(bool flag);
+
+ private:
+  boost::asio::streambuf* read_buffer_;
+  tcp::socket* socket_;
+  bool data_fully_received_;
+};
+
+typedef std::map<worker_id_t, WorkerDataExchangerConnection*>
+WorkerDataExchangerConnectionMap;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_

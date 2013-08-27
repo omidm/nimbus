@@ -32,42 +32,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Class that represent the serialized data in Nimbus.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_SHARED_SERIALIZED_DATA_H_
+#define NIMBUS_SHARED_SERIALIZED_DATA_H_
 
-#include <inttypes.h>
 
-#define NIMBUS_SCHEDULER_PORT 5983
+#include <list>
+#include <map>
+#include <string>
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
 
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
+class SerializedData {
+  public:
+    SerializedData();
+    ~SerializedData();
 
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE
-  };
+    char* data_ptr();
+    void set_data_ptr(char* ptr);
+    size_t size();
+    void set_size(size_t s);
+
+  private:
+    char* data_ptr_;
+    size_t size_;
+};
+
+typedef std::list<SerializedData*> SerializedDataList;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SHARED_SERIALIZED_DATA_H_

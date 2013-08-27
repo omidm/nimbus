@@ -46,7 +46,7 @@ Worker::Worker(unsigned int p, Application* a)
 : port_(p),
   application_(a) {
     log.InitTime();
-    id_ = 13;
+    id_ = -1;
 }
 
 void Worker::run() {
