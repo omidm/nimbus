@@ -71,9 +71,9 @@ class Worker {
  protected:
   SchedulerClient* client_;
   CommandSet scheduler_command_set_;
+  worker_id_t id_;
 
  private:
-  int id_;
   Log log;
   Computer host_;
   unsigned int port_;

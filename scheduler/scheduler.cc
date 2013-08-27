@@ -56,6 +56,32 @@ void Scheduler::run() {
   schedulerCoreProcessor();
 }
 
+void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
+  std::string command_name = cm->name();
+
+  if (command_name == "spawnjob") {
+    server_->SendCommand(*(server_->workers()->begin()), cm);
+  } else if (command_name == "definedata") {
+    server_->SendCommand(*(server_->workers()->begin()), cm);
+  } else if (command_name == "handshake") {
+    HandshakeCommand* hsc = reinterpret_cast<HandshakeCommand*>(cm);
+    worker_id_t id = *(hsc->worker_id().begin());
+
+    SchedulerWorkerList::iterator iter = server_->workers()->begin();
+    for (; iter != server_->workers()->end(); iter++) {
+      if ((*iter)->worker_id() == id) {
+        (*iter)->set_handshake_done(true);
+        // std::cout << "**** Successful Hand shake ID: " << id << std::endl;
+        break;
+      }
+    }
+  } else {
+    std::cout << "ERROR: " << cm->toString() <<
+      " have not been implemented in ProcessSchedulerCommand yet." <<
+      std::endl;
+  }
+}
+
 void Scheduler::setupWorkerInterface() {
   loadWorkerCommands();
   server_ = new SchedulerServer(port_);
@@ -99,6 +125,8 @@ void Scheduler::loadWorkerCommands() {
       std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
   worker_command_set_.insert(
       std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
+  worker_command_set_.insert(
+      std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
 }
 
 

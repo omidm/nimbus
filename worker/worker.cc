@@ -46,6 +46,7 @@ Worker::Worker(unsigned int p, Application* a)
 : port_(p),
   application_(a) {
     log.InitTime();
+    id_ = 13;
 }
 
 void Worker::run() {
@@ -105,6 +106,11 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
         ddc->data_name().c_str(), id, 1000 * log.timer(), log.GetTime());
 
     log.writeToFile(std::string(buff), LOG_INFO);
+  } else if (command_name == "handshake") {
+    HandshakeCommand* hsc = reinterpret_cast<HandshakeCommand*>(cm);
+    client_->sendCommand(cm);
+
+    id_ = *(hsc->worker_id().begin());
   } else {
     std::cout << "ERROR: " << cm->toString() <<
       " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -125,6 +131,8 @@ void Worker::loadSchedulerCommands() {
       std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
   scheduler_command_set_.insert(
       std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
 }
 
 void Worker::addJob(Job* job) {

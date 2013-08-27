@@ -41,6 +41,7 @@
   */
 
 #include "./simple_scheduler.h"
+#define WORKER_NUM 4
 
 SimpleScheduler::SimpleScheduler(unsigned int p)
 : Scheduler(p) {
@@ -63,9 +64,43 @@ void SimpleScheduler::schedulerCoreProcessor() {
 //    assert(gen_com == NULL);
 //  }
 
-  while (server_->workers()->begin() == server_->workers()->end()) {
-    sleep(1);
-    std::cout << "Waiting for the first worker to connect ..." << std::endl;
+  SchedulerWorkerList::iterator iter = server_->workers()->begin();
+//  while (server_->workers()->begin() == server_->workers()->end()) {
+//    sleep(1);
+//    std::cout << "Waiting for the first worker to connect ..." << std::endl;
+//  }
+
+  while (true) {
+    // sleep(1);
+    int ready_num = 0;
+    for (iter = server_->workers()->begin();
+        iter != server_->workers()->end(); iter++) {
+      if ((*iter)->handshake_done()) {
+        ready_num++;
+      } else {
+        IDSet<worker_id_t> worker_id;
+        worker_id.insert((*iter)->worker_id());
+        SchedulerCommand* cm = new HandshakeCommand(worker_id);
+        server_->SendCommand(*iter, cm);
+        delete cm;
+      }
+    }
+    if (ready_num >= WORKER_NUM)
+      break;
+
+    std::cout << ready_num << " workers are registered, waiting for " <<
+      WORKER_NUM - ready_num << " more workers to join ..."  << std::endl;
+
+    SchedulerCommandList* storage = new SchedulerCommandList();
+    if (server_->ReceiveCommands(storage, (uint32_t)10)) {
+      SchedulerCommandList::iterator iter = storage->begin();
+      for (; iter != storage->end(); iter++) {
+        SchedulerCommand* comm = *iter;
+        ProcessSchedulerCommand(comm);
+        delete comm;
+      }
+    }
+    delete storage;
   }
 
 //  std::string str = "spawnjob name:main id:{0} read:{} write:{}";
@@ -87,9 +122,10 @@ void SimpleScheduler::schedulerCoreProcessor() {
         SchedulerCommand* comm = *iter;
         dbg(DBG_NET, "Iterating across command (of %i) %s\n",
             storage->size(), comm->toString().c_str());
-        std::cout << "OMID Received command: " << comm->toString() << std::endl;
-        std::cout << "OMID Sending command: " << comm->toString() << std::endl;
-        server_->SendCommand(*(server_->workers()->begin()), comm);
+        // std::cout << "OMID Received command: " << comm->toString() << std::endl;
+        // std::cout << "OMID Sending command: " << comm->toString() << std::endl;
+        // server_->SendCommand(*(server_->workers()->begin()), comm);
+        ProcessSchedulerCommand(comm);
         delete comm;
       }
     }
