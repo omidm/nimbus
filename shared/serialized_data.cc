@@ -49,3 +49,18 @@ SerializedData::SerializedData(char* data_ptr, size_t size)
 : data_ptr_(data_ptr), size_(size) {
 }
 
+char* SerializedData::data_ptr() {
+  return data_ptr_;
+}
+
+void  SerializedData::set_data_ptr(char* ptr) {
+  data_ptr_ = ptr;
+}
+
+size_t SerializedData:: size() {
+  return size_;
+}
+
+void SerializedData:: set_size(size_t size) {
+  size_ = size;
+}

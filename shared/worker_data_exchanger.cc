@@ -117,11 +117,13 @@ void WorkerDataExchanger::AddReceiveConnection(WorkerDataExchangerConnection* co
   receive_connections_.push_back(connection);
 }
 
+/*
 void WorkerDataExchanger::AddSendConnection(worker_id_t worker_id,
       WorkerDataExchangerConnection* connection) {
   boost::mutex::scoped_lock lock(send_connection_mutex_);
   send_connections_[worker_id] = connection;
 }
+*/
 
 void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
                                  const boost::system::error_code& error,
@@ -171,7 +173,7 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
       size_t data_length = 0;
       buffer[i] = '\0';
       std::string input(buffer);
-      // TODO(omidm) parse the input.
+      ParseWorkerDataHeader(input, job_id, data_length);
       connection->set_middle_of_data(true);
       connection->set_middle_of_header(false);
       connection->set_job_id(job_id);
@@ -195,10 +197,92 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
     connection->set_middle_of_header(true);
     SerializedData* ser_data =
       new SerializedData(connection->data_ptr(), connection->data_length());
-    data_map_[connection->job_id()] = ser_data;
+    AddSerializedData(connection->job_id(), ser_data);
     return remaining;
   }
 }
+
+void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
+    SerializedData* ser_data) {
+    data_map_[job_id] = ser_data;
+}
+
+void WorkerDataExchanger::RemoveSerializedData(job_id_t job_id) {
+  data_map_.erase(job_id);
+}
+
+bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
+      std::string ip_address, port_t port_no) {
+  boost::mutex::scoped_lock lock(address_book_mutex_);
+  address_book_[worker_id] = std::make_pair(ip_address, port_no);
+  return true;
+}
+
+bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
+      SerializedData& ser_data) {
+  if (data_map_.count(job_id) == 0) {
+    return false;
+  } else {
+    SerializedData* sd = data_map_[job_id];
+    ser_data.set_size(sd->size());
+    ser_data.set_data_ptr(sd->data_ptr());
+    RemoveSerializedData(job_id);
+    return true;
+  }
+}
+
+bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
+      worker_id_t worker_id, SerializedData& ser_data) {
+  char* buf = ser_data.data_ptr();
+  size_t size = ser_data.size();
+  boost::mutex::scoped_lock lock1(send_connection_mutex_);
+  boost::mutex::scoped_lock lock2(address_book_mutex_);
+  if (send_connections_.count(worker_id) == 0) {
+    if (address_book_.count(worker_id) == 0) {
+      std::cout << "ERROR: could not find the address info of the worker id: " <<
+        worker_id << std::endl;
+      return false;
+    } else {
+      std::pair<std::string, port_t> add = address_book_[worker_id];
+      CreateNewSendConnection(worker_id, add.first, add.second);
+    }
+  }
+  WorkerDataExchangerConnection* connection = send_connections_[worker_id];
+  boost::system::error_code ignored_error;
+  boost::asio::write(*(connection->socket()), boost::asio::buffer(buf, size),
+      boost::asio::transfer_all(), ignored_error);
+  return true;
+}
+
+bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
+      std::string ip_address, port_t port_no) {
+  std::cout << "Opening new worker-worker connection." << std::endl;
+  tcp::resolver resolver(*io_service_);
+  tcp::resolver::query query(ip_address,
+      boost::to_string(port_no));
+  tcp::resolver::iterator iterator = resolver.resolve(query);
+  boost::system::error_code error =
+    boost::asio::error::host_not_found;
+  tcp::socket* socket = new tcp::socket(*io_service_);
+  WorkerDataExchangerConnection* connection =
+    new WorkerDataExchangerConnection(socket);
+  socket->connect(*iterator, error);
+  send_connections_[worker_id] = connection;
+  return true;
+}
+
+WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {
+  return &send_connections_;
+}
+
+WorkerDataExchangerConnectionList* WorkerDataExchanger::receive_connections() {
+  return &receive_connections_;
+}
+
+SerializedDataMap* WorkerDataExchanger::data_map() {
+  return &data_map_;
+}
+
 
 /*
 
