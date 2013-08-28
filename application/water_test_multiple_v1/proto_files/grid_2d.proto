@@ -1,0 +1,14 @@
+package communication;
+
+import "vector_2d.proto";
+import "range_2d.proto";
+
+message Grid {
+    optional Vector_Int counts = 1;
+    optional Range_Float domain = 2;
+    optional Vector_Float dx = 3;
+    optional Vector_Float one_over_dx = 4;
+    optional Vector_Int number_of_cells = 5;
+    optional float min_dX = 6;
+    optional float MAC_offset = 7;
+}
