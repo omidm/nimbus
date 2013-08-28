@@ -1,15 +1,14 @@
 package communication;
 
+import "vector_2d.proto";
+import "grid_2d.proto";
+
 message FaceArrayMsg {
 
     // size of the grid/ data
-    required int32 size_ = 1;
-
-    message Grid {
-    }
+    optional int32 size_ = 1;
 
     // message mac grid
-    // this should be relatively stratight forward. just copy all the fields.
     optional Grid mac_grid = 2;
 
     message Array {

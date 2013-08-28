@@ -1,0 +1,13 @@
+package communication;
+
+import "vector_2d.proto";
+
+message Range_Int {
+    optional Vector_Int min_corner = 1;
+    optional Vector_Int max_corner = 2;
+}
+
+message Range_Float {
+    optional Vector_Float min_corner = 1;
+    optional Vector_Float max_corner = 2;
+}
