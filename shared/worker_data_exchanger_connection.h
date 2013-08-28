@@ -59,13 +59,14 @@ class WorkerDataExchangerConnection {
   explicit WorkerDataExchangerConnection(tcp::socket* sock);
   virtual ~WorkerDataExchangerConnection();
 
-  boost::asio::streambuf* read_buffer();
+  char* read_buffer();
   tcp::socket* socket();
+  size_t read_buffer_length();
   bool data_fully_received();
-  void data_fully_received(bool flag);
+  void set_data_fully_received(bool flag);
 
  private:
-  boost::asio::streambuf* read_buffer_;
+  char* read_buffer_;
   tcp::socket* socket_;
   bool data_fully_received_;
 };

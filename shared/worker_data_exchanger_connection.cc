@@ -40,7 +40,7 @@
 
 #include "shared/worker_data_exchanger_connection.h"
 
-/*
+#define WORKER_DATA_BUFSIZE 10240
 
 using boost::asio::ip::tcp;
 
@@ -48,16 +48,15 @@ namespace nimbus {
 
 WorkerDataExchangerConnection::WorkerDataExchangerConnection(tcp::socket* sock)
   :socket_(sock) {
-  read_buffer_ = new boost::asio::streambuf();
-  command_num_ = 0;
+  read_buffer_ = new char[WORKER_DATA_BUFSIZE];
+  data_fully_received_ = true;
 }
 
 WorkerDataExchangerConnection::~WorkerDataExchangerConnection() {
-  // FIXME: not actually cleaning up listening thread.
 }
 
 
-boost::asio::streambuf* WorkerDataExchangerConnection::read_buffer() {
+char* WorkerDataExchangerConnection::read_buffer() {
   return read_buffer_;
 }
 
@@ -65,14 +64,18 @@ tcp::socket* WorkerDataExchangerConnection::socket() {
   return socket_;
 }
 
-int WorkerDataExchangerConnection::command_num() {
-  return command_num_;
+bool WorkerDataExchangerConnection::data_fully_received() {
+  return data_fully_received_;
 }
 
-void WorkerDataExchangerConnection::set_command_num(int n) {
-  command_num_ = n;
+void WorkerDataExchangerConnection::set_data_fully_received(bool flag) {
+  data_fully_received_ = flag;
 }
+
+size_t WorkerDataExchangerConnection::read_buffer_length() {
+  return WORKER_DATA_BUFSIZE;
+}
+
 
 }  // namespace nimbus
 
-*/

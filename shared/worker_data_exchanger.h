@@ -95,8 +95,6 @@ class WorkerDataExchanger {
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
 
-  virtual bool Initialize();
-
   virtual void ListenForNewConnections();
 
   virtual bool CreateNewConnection(worker_id_t worker_id,

@@ -40,38 +40,80 @@
 
 #include "shared/worker_data_exchanger.h"
 
-/*
 
 using boost::asio::ip::tcp;
 
 #define BUF_SIZE 102400
 namespace nimbus {
 
-WorkerDataExchanger::WorkerDataExchanger(ConnectionId port_no)
-  : connection_port_(port_no) {}
+WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
+  : listening_port_(port_no) {
+  io_service_ = new boost::asio::io_service();
+  acceptor_ = new tcp::acceptor(*io_service_,
+      tcp::endpoint(tcp::v4(), listening_port_));
+}
 
 WorkerDataExchanger::~WorkerDataExchanger() {
   {
-    boost::mutex::scoped_lock lock(worker_mutex_);
-    for (SchedulerWorkerList::iterator iter = workers_.begin();
-         iter != workers_.end();
-         ++iter)   {
-      SchedulerWorker* worker = *iter;
-      worker->MarkDead();
-      delete worker;
+    boost::mutex::scoped_lock lock(connection_mutex_);
+    WorkerDataExchangerConnectionMap::iterator iter = connections_.begin();
+    for (; iter != connections_.end(); iter++)   {
+      WorkerDataExchangerConnection* connection = iter->second;
+      delete connection;
     }
-    workers_.clear();
+    connections_.clear();
   }
   delete acceptor_;
   delete io_service_;
 }
 
-bool WorkerDataExchanger::Initialize() {
-  io_service_ = new boost::asio::io_service();
-  acceptor_ = new tcp::acceptor(*io_service_,
-                                tcp::endpoint(tcp::v4(), connection_port_));
-  return true;
+void WorkerDataExchanger::Run() {
+  dbg(DBG_NET, "Running the worker data exchanger.\n");
+  ListenForNewConnections();
+  io_service_->run();
 }
+
+void WorkerDataExchanger::ListenForNewConnections() {
+  dbg(DBG_NET, "Worker data exchanger listening for new connections.\n");
+  tcp::socket* socket = new tcp::socket(*io_service_);
+  WorkerDataExchangerConnection* connection =
+    new WorkerDataExchangerConnection(socket);
+  acceptor_->async_accept(*connection->socket(),
+      boost::bind(&WorkerDataExchanger::HandleAccept,
+        this, connection, boost::asio::placeholders::error));
+}
+
+void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection,
+                                   const boost::system::error_code& error) {
+  if (!error) {
+    dbg(DBG_NET, "Worker accepted new connection.\n");
+    // AddConnection(connection);
+    ListenForNewConnections();
+    boost::asio::async_read(*(connection->socket()),
+        boost::asio::buffer(connection->read_buffer(),
+          connection->read_buffer_length()),
+        boost::asio::transfer_at_least(1),
+        boost::bind(&WorkerDataExchanger::HandleRead,
+          this,
+          connection,
+          boost::asio::placeholders::error,
+          boost::asio::placeholders::bytes_transferred));
+  } else {
+    delete connection;
+  }
+}
+
+/*
+void WorkerDataExchanger::AddConnection(WorkerDataExchangerConnection* connection) { //NOLINT
+  boost::mutex::scoped_lock lock(worker_mutex_);
+  static worker_id_t workerIdentifier = 0;
+  workerIdentifier++;
+  SchedulerWorker* worker = new SchedulerWorker(workerIdentifier,
+                                                connection, NULL);
+  workers_.push_back(worker);
+  return worker;
+}
+
 
 bool WorkerDataExchanger::ReceiveCommands(SchedulerCommandList* storage,
                                       uint32_t maxCommands) {
@@ -111,38 +153,6 @@ void WorkerDataExchanger::SendCommands(SchedulerWorker* worker,
   for (; iter != commands->end(); ++iter) {
     SchedulerCommand* command = *iter;
     SendCommand(worker, command);
-  }
-}
-
-void WorkerDataExchanger::ListenForNewConnections() {
-  dbg(DBG_NET, "Scheduler server listening for new connections.\n");
-  tcp::socket* socket = new tcp::socket(*io_service_);
-  WorkerDataExchangerConnection* server_connection =
-    new WorkerDataExchangerConnection(socket);
-  acceptor_->async_accept(*server_connection->socket(),
-                          boost::bind(&WorkerDataExchanger::HandleAccept,
-                                      this,
-                                      server_connection,
-                                      boost::asio::placeholders::error));
-}
-
-void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection,
-                                   const boost::system::error_code& error) {
-  if (!error) {
-    dbg(DBG_NET, "Scheduler accepted new connection.\n");
-    SchedulerWorker* worker =  AddWorker(connection);
-    ListenForNewConnections();
-    boost::asio::async_read(*(worker->connection()->socket()),
-                            boost::asio::buffer(worker->read_buffer(),
-                                                worker->read_buffer_length()),
-                            boost::asio::transfer_at_least(1),
-                            boost::bind(&WorkerDataExchanger::HandleRead,
-                                        this,
-                                        worker,
-                                        boost::asio::placeholders::error,
-                                        boost::asio::placeholders::bytes_transferred));
-  } else {
-    delete connection;
   }
 }
 
@@ -235,13 +245,6 @@ void WorkerDataExchanger::HandleWrite(SchedulerWorker* worker,
                                   size_t bytes_transferred) {}
 
 
-void WorkerDataExchanger::Run() {
-  dbg(DBG_NET, "Running the scheduler networking server.\n");
-  Initialize();
-  ListenForNewConnections();
-  io_service_->run();
-}
-
 SchedulerWorkerList* WorkerDataExchanger::workers() {
   return &workers_;
 }
@@ -250,19 +253,9 @@ void WorkerDataExchanger::set_worker_command_set(CommandSet* cms) {
   worker_command_set_ = cms;
 }
 
-SchedulerWorker* WorkerDataExchanger::AddWorker(WorkerDataExchangerConnection* connection) { //NOLINT
-  boost::mutex::scoped_lock lock(worker_mutex_);
-  static worker_id_t workerIdentifier = 0;
-  workerIdentifier++;
-  SchedulerWorker* worker = new SchedulerWorker(workerIdentifier,
-                                                connection, NULL);
-  workers_.push_back(worker);
-  return worker;
-}
-
 void WorkerDataExchanger::MarkWorkerDead(SchedulerWorker* worker) {
   worker->MarkDead();
 }
+*/
 
 }  // namespace nimbus
-*/
