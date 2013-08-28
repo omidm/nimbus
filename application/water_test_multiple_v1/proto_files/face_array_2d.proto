@@ -5,9 +5,9 @@ import "range_2d.proto";
 
 // initialize face arrays data (physbam) from values
 
-message FaceArray {
+message FaceArray2d {
     optional int32 buffer_size = 1;
-    optional RangeInt domain_indices = 2;
+    optional RangeInt2d domain_indices = 2;
     optional bool values_present = 3;
     repeated float values = 4;
 }

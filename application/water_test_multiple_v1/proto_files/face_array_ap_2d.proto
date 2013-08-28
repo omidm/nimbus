@@ -4,14 +4,14 @@ import "vector_2d.proto";
 import "grid_2d.proto";
 import "face_array_2d.proto";
 
-message FaceArrayPDU {
+message FaceArrayAp2d {
 
     // size of the grid/ data
-    optional int32 size_ = 1;
+    optional int32 size = 1;
 
     // message mac grid
-    optional Grid mac_grid = 2;
+    optional Grid2d mac_grid = 2;
 
     // message face_velocities
-    optional FaceArray face_velocities = 3;
+    optional FaceArray2d face_velocities = 3;
 }
