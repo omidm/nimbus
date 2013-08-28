@@ -55,13 +55,22 @@ WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
 
 WorkerDataExchanger::~WorkerDataExchanger() {
   {
-    boost::mutex::scoped_lock lock(connection_mutex_);
-    WorkerDataExchangerConnectionMap::iterator iter = connections_.begin();
-    for (; iter != connections_.end(); iter++)   {
+    boost::mutex::scoped_lock lock(send_connection_mutex_);
+    WorkerDataExchangerConnectionMap::iterator iter = send_connections_.begin();
+    for (; iter != send_connections_.end(); iter++)   {
       WorkerDataExchangerConnection* connection = iter->second;
       delete connection;
     }
-    connections_.clear();
+    send_connections_.clear();
+  }
+  {
+    boost::mutex::scoped_lock lock(receive_connection_mutex_);
+    WorkerDataExchangerConnectionList::iterator iter = receive_connections_.begin();
+    for (; iter != receive_connections_.end(); iter++)   {
+      WorkerDataExchangerConnection* connection = *iter;
+      delete connection;
+    }
+    receive_connections_.clear();
   }
   delete acceptor_;
   delete io_service_;
@@ -87,11 +96,11 @@ void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection
                                    const boost::system::error_code& error) {
   if (!error) {
     dbg(DBG_NET, "Worker accepted new connection.\n");
-    // AddConnection(connection);
+    AddReceiveConnection(connection);
     ListenForNewConnections();
     boost::asio::async_read(*(connection->socket()),
         boost::asio::buffer(connection->read_buffer(),
-          connection->read_buffer_length()),
+          connection->read_buffer_max_length()),
         boost::asio::transfer_at_least(1),
         boost::bind(&WorkerDataExchanger::HandleRead,
           this,
@@ -103,17 +112,95 @@ void WorkerDataExchanger::HandleAccept(WorkerDataExchangerConnection* connection
   }
 }
 
-/*
-void WorkerDataExchanger::AddConnection(WorkerDataExchangerConnection* connection) { //NOLINT
-  boost::mutex::scoped_lock lock(worker_mutex_);
-  static worker_id_t workerIdentifier = 0;
-  workerIdentifier++;
-  SchedulerWorker* worker = new SchedulerWorker(workerIdentifier,
-                                                connection, NULL);
-  workers_.push_back(worker);
-  return worker;
+void WorkerDataExchanger::AddReceiveConnection(WorkerDataExchangerConnection* connection) { //NOLINT
+  boost::mutex::scoped_lock lock(receive_connection_mutex_);
+  receive_connections_.push_back(connection);
 }
 
+void WorkerDataExchanger::AddSendConnection(worker_id_t worker_id,
+      WorkerDataExchangerConnection* connection) {
+  boost::mutex::scoped_lock lock(send_connection_mutex_);
+  send_connections_[worker_id] = connection;
+}
+
+void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
+                                 const boost::system::error_code& error,
+                                 size_t bytes_transferred) {
+  if (error) {
+    dbg(DBG_NET|DBG_ERROR, "Error %s.\n", error.message().c_str());
+    return;
+  }
+
+  size_t read_data_len = 0;
+  size_t read_header_len = 0;
+  size_t bytes_available = bytes_transferred + connection->existing_bytes();
+
+  if (connection->middle_of_header()) {
+    read_header_len = ReadHeader(connection, connection->read_buffer(), bytes_available);
+  }
+  if (connection->middle_of_data()) {
+    read_data_len = ReadData(connection, connection->read_buffer() + read_header_len,
+        bytes_available - read_header_len);
+  }
+  size_t read_len = read_data_len + read_header_len;
+  size_t remaining = bytes_available - read_len;
+  char* buffer = connection->read_buffer();
+  memcpy(buffer, (buffer + read_len), remaining);
+  connection->set_existing_bytes(remaining);
+
+  char* read_start_ptr = buffer + remaining;
+  size_t read_buffer_length = connection->read_buffer_max_length() - remaining;
+
+  boost::asio::async_read(*(connection->socket()),
+      boost::asio::buffer(read_start_ptr,
+        read_buffer_length),
+      boost::asio::transfer_at_least(1),
+      boost::bind(&WorkerDataExchanger::HandleRead,
+        this,
+        connection,
+        boost::asio::placeholders::error,
+        boost::asio::placeholders::bytes_transferred));
+}
+
+size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection,
+      char* buffer, size_t size) {
+  size_t i = 0;
+  for (; i < size; i++) {
+    if (buffer[i] == ';') {
+      job_id_t job_id = 0;
+      size_t data_length = 0;
+      buffer[i] = '\0';
+      std::string input(buffer);
+      // TODO(omidm) parse the input.
+      connection->set_middle_of_data(true);
+      connection->set_middle_of_header(false);
+      connection->set_job_id(job_id);
+      connection->set_data_length(data_length);
+      connection->AllocateData(data_length);
+      return (i + 1);
+    }
+  }
+  return 0;
+}
+
+size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
+      char* buffer, size_t size) {
+  size_t remaining = connection->remaining_data_length();
+  if (size < remaining) {
+    connection->AppendData(buffer, size);
+    return size;
+  } else {
+    connection->AppendData(buffer, remaining);
+    connection->set_middle_of_data(false);
+    connection->set_middle_of_header(true);
+    SerializedData* ser_data =
+      new SerializedData(connection->data_ptr(), connection->data_length());
+    data_map_[connection->job_id()] = ser_data;
+    return remaining;
+  }
+}
+
+/*
 
 bool WorkerDataExchanger::ReceiveCommands(SchedulerCommandList* storage,
                                       uint32_t maxCommands) {
@@ -187,56 +274,6 @@ int WorkerDataExchanger::EnqueueCommands(char* buffer, size_t size) {
   // We've read this many bytes successfully into
   // commands
   return start_pointer - buffer;
-}
-
-void WorkerDataExchanger::HandleRead(SchedulerWorker* worker,
-                                 const boost::system::error_code& error,
-                                 size_t bytes_transferred) {
-  if (error) {
-    dbg(DBG_NET|DBG_ERROR,
-        "Error %s receiving %i bytes from worker %i.\n",
-        error.message().c_str(), bytes_transferred, worker->worker_id());
-    return;
-  }
-
-  dbg(DBG_NET, "Scheduler received %i bytes from worker %i.\n",
-      bytes_transferred, worker->worker_id());
-  int real_length = bytes_transferred + worker->existing_bytes();
-  int len = EnqueueCommands(worker->read_buffer(),
-                           real_length);
-  int remaining = (real_length - len);
-
-  // This is for the case when the string buffer had an incomplete
-  // command at its end. Copy the fragement of the command to the beginning
-  // of the buffer, mark how many bytes are valid with existing_bytes.
-  if (remaining > 0) {
-    char* buffer = worker->read_buffer();
-    memcpy(buffer, (buffer + len), remaining);
-    char* read_start_ptr = buffer + remaining;
-    int read_buffer_length = worker->read_buffer_length() - remaining;
-
-    worker->set_existing_bytes(remaining);
-    boost::asio::async_read(*(worker->connection()->socket()),
-                            boost::asio::buffer(read_start_ptr,
-                                                read_buffer_length),
-                            boost::asio::transfer_at_least(1),
-                            boost::bind(&WorkerDataExchanger::HandleRead,
-                                        this,
-                                        worker,
-                                        boost::asio::placeholders::error,
-                                        boost::asio::placeholders::bytes_transferred));
-  } else {
-    worker->set_existing_bytes(0);
-    boost::asio::async_read(*(worker->connection()->socket()),
-                            boost::asio::buffer(worker->read_buffer(),
-                                                worker->read_buffer_length()),
-                            boost::asio::transfer_at_least(1),
-                            boost::bind(&WorkerDataExchanger::HandleRead,
-                                        this,
-                                        worker,
-                                        boost::asio::placeholders::error,
-                                        boost::asio::placeholders::bytes_transferred));
-  }
 }
 
 

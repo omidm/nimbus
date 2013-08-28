@@ -45,12 +45,14 @@
 #include <list>
 #include <map>
 #include <string>
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
 class SerializedData {
   public:
     SerializedData();
+    SerializedData(char* data_ptr, size_t size);
     ~SerializedData();
 
     char* data_ptr();
@@ -64,6 +66,7 @@ class SerializedData {
 };
 
 typedef std::list<SerializedData*> SerializedDataList;
+typedef std::map<job_id_t, SerializedData*> SerializedDataMap;
 
 }  // namespace nimbus
 

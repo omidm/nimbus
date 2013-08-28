@@ -46,6 +46,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <map>
+#include <list>
 #include <string>
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -59,17 +60,42 @@ class WorkerDataExchangerConnection {
   explicit WorkerDataExchangerConnection(tcp::socket* sock);
   virtual ~WorkerDataExchangerConnection();
 
-  char* read_buffer();
+  void AllocateData(size_t size);
+
+  void AppendData(char* buffer, size_t size);
+
   tcp::socket* socket();
-  size_t read_buffer_length();
-  bool data_fully_received();
-  void set_data_fully_received(bool flag);
+  job_id_t job_id();
+  char* data_ptr();
+  char* read_buffer();
+  size_t existing_bytes();
+  size_t read_buffer_max_length();
+  size_t data_length();
+  size_t remaining_data_length();
+  bool middle_of_data();
+  bool middle_of_header();
+
+  void set_job_id(job_id_t job_id);
+  void set_data_length(size_t len);
+  void set_existing_bytes(size_t len);
+  void set_middle_of_data(bool flag);
+  void set_middle_of_header(bool flag);
 
  private:
-  char* read_buffer_;
   tcp::socket* socket_;
-  bool data_fully_received_;
+  job_id_t job_id_;
+  char* data_ptr_;
+  char* data_cursor_;
+  char* read_buffer_;
+  size_t existing_bytes_;
+  size_t data_length_;
+  size_t remaining_data_length_;
+  bool middle_of_data_;
+  bool middle_of_header_;
 };
+
+typedef std::list<WorkerDataExchangerConnection*>
+WorkerDataExchangerConnectionList;
 
 typedef std::map<worker_id_t, WorkerDataExchangerConnection*>
 WorkerDataExchangerConnectionMap;

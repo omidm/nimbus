@@ -49,30 +49,92 @@ namespace nimbus {
 WorkerDataExchangerConnection::WorkerDataExchangerConnection(tcp::socket* sock)
   :socket_(sock) {
   read_buffer_ = new char[WORKER_DATA_BUFSIZE];
-  data_fully_received_ = true;
+  existing_bytes_ = 0;
+  middle_of_data_ = false;
+  middle_of_header_ = true;
 }
 
 WorkerDataExchangerConnection::~WorkerDataExchangerConnection() {
+  delete read_buffer_;
+  delete socket_;
 }
 
+void WorkerDataExchangerConnection::AllocateData(size_t size) {
+  data_ptr_ = new char[size];
+  data_cursor_ = data_ptr_;
+  remaining_data_length_ = size;
+}
 
-char* WorkerDataExchangerConnection::read_buffer() {
-  return read_buffer_;
+void WorkerDataExchangerConnection::AppendData(char* buffer, size_t size) {
+  if (size > remaining_data_length_) {
+    std::cout << "ERROR: Appending beyond the size of data, ignored." <<
+      std::endl;
+    return;
+  }
+  memcpy(data_cursor_, buffer, size);
+  data_cursor_ += size;
+  remaining_data_length_ -= size;
 }
 
 tcp::socket* WorkerDataExchangerConnection::socket() {
   return socket_;
 }
 
-bool WorkerDataExchangerConnection::data_fully_received() {
-  return data_fully_received_;
+
+char* WorkerDataExchangerConnection::data_ptr() {
+  return data_ptr_;
 }
 
-void WorkerDataExchangerConnection::set_data_fully_received(bool flag) {
-  data_fully_received_ = flag;
+char* WorkerDataExchangerConnection::read_buffer() {
+  return read_buffer_;
 }
 
-size_t WorkerDataExchangerConnection::read_buffer_length() {
+size_t WorkerDataExchangerConnection::existing_bytes() {
+  return existing_bytes_;
+}
+
+void WorkerDataExchangerConnection::set_existing_bytes(size_t len) {
+  existing_bytes_ = len;
+}
+
+size_t WorkerDataExchangerConnection::data_length() {
+  return data_length_;
+}
+
+void WorkerDataExchangerConnection::set_data_length(size_t len) {
+  data_length_ = len;
+}
+
+job_id_t WorkerDataExchangerConnection::job_id() {
+  return job_id_;
+}
+
+void WorkerDataExchangerConnection::set_job_id(job_id_t job_id) {
+  job_id_ = job_id;
+}
+
+bool WorkerDataExchangerConnection::middle_of_header() {
+  return middle_of_header_;
+}
+
+void WorkerDataExchangerConnection::set_middle_of_header(bool flag) {
+  middle_of_header_ = flag;
+}
+
+bool WorkerDataExchangerConnection::middle_of_data() {
+  return middle_of_data_;
+}
+
+void WorkerDataExchangerConnection::set_middle_of_data(bool flag) {
+  middle_of_data_ = flag;
+}
+
+
+size_t WorkerDataExchangerConnection::remaining_data_length() {
+  return remaining_data_length_;
+}
+
+size_t WorkerDataExchangerConnection::read_buffer_max_length() {
   return WORKER_DATA_BUFSIZE;
 }
 

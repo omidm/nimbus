@@ -75,10 +75,12 @@ class WorkerDataExchanger {
   virtual bool ReceiveSerializedData(job_id_t job_id,
       SerializedData& ser_data);
 
-  virtual void SendSerializedData(worker_id_t worker_id,
-      const SerializedData& ser_data);
+  virtual void SendSerializedData(job_id_t job_id,
+      worker_id_t worker_id, const SerializedData& ser_data);
 
-  WorkerDataExchangerConnectionMap* connections();
+  WorkerDataExchangerConnectionMap* send_connections();
+
+  WorkerDataExchangerConnectionList* receive_connections();
 
   SerializedDataList* data_list();
 
@@ -88,9 +90,11 @@ class WorkerDataExchanger {
   port_t listening_port_;
   AddressBook address_book_;
   boost::mutex data_mutex_;
-  SerializedDataList data_list_;
-  boost::mutex connection_mutex_;
-  WorkerDataExchangerConnectionMap connections_;
+  SerializedDataMap data_map_;
+  boost::mutex send_connection_mutex_;
+  WorkerDataExchangerConnectionMap send_connections_;
+  boost::mutex receive_connection_mutex_;
+  WorkerDataExchangerConnectionList receive_connections_;
 
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;
@@ -111,9 +115,16 @@ class WorkerDataExchanger {
                            const boost::system::error_code& error,
                            size_t bytes_transferred);
 
-  virtual int EnqueueCommands(char* buffer, size_t size);
+  virtual size_t ReadData(WorkerDataExchangerConnection* connection,
+      char* buffer, size_t size);
 
-  virtual void AddConnection(WorkerDataExchangerConnection* connection);
+  virtual size_t ReadHeader(WorkerDataExchangerConnection* connection,
+      char* buffer, size_t size);
+
+  virtual void AddSendConnection(worker_id_t worker_id,
+      WorkerDataExchangerConnection* connection);
+
+  virtual void AddReceiveConnection(WorkerDataExchangerConnection* connection);
 
   virtual void AddSerializedData(SerializedData* ser_data);
 };
