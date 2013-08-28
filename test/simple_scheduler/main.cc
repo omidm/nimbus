@@ -43,6 +43,7 @@
 #include <iostream> // NOLINT
 #include "./simple_scheduler.h"
 #include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "shared/scheduler_command.h"
 #include "shared/parser.h"
 

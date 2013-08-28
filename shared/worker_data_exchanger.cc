@@ -282,6 +282,11 @@ bool WorkerDataExchanger::CreateNewSendConnection(worker_id_t worker_id,
   return true;
 }
 
+void WorkerDataExchanger::HandleWrite(WorkerDataExchangerConnection* connection,
+                           const boost::system::error_code& error,
+                           size_t bytes_transferred) {
+}
+
 WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {
   return &send_connections_;
 }

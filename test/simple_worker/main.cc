@@ -42,17 +42,16 @@
 #include <iostream>  // NOLINT
 
 #include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "worker/application.h"
 #include "./simple_worker.h"
 #include "../../application/1d-stencil/app.h"
-
-#define SCHEDULER_PORT 5983
 
 int main(int argc, char *argv[]) {
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   App * app = new App();
-  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_PORT, app);
   w->run();
 }
 

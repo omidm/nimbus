@@ -33,40 +33,28 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * Address book to hard code the IP and the port number for the workers.
+ * Ultimately we will not use this, but for now and before implementing the IP
+ * and port query from worker to scheduler, we will use this.
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_SHARED_ADDRESS_BOOK_H_
+#define NIMBUS_SHARED_ADDRESS_BOOK_H_
 
-#include <inttypes.h>
-#include "shared/address_book.h"
+#define NIMBUS_SCHEDULER_PORT 5983
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+#define WORKER_IP_1 "127.0.0.1"
+#define WORKER_IP_2 "127.0.0.1"
+#define WORKER_IP_3 "127.0.0.1"
+#define WORKER_IP_4 "127.0.0.1"
 
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
+#define WORKER_PORT_1 5901
+#define WORKER_PORT_2 5902
+#define WORKER_PORT_3 5903
+#define WORKER_PORT_4 5904
 
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE
-  };
 
-}  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SHARED_ADDRESS_BOOK_H_
