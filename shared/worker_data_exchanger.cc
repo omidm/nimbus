@@ -249,6 +249,17 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
   }
   WorkerDataExchangerConnection* connection = send_connections_[worker_id];
   boost::system::error_code ignored_error;
+
+  std::string header;
+  std::ostringstream ss_j;
+  ss_j << job_id;
+  header += (ss_j.str() + " ");
+  std::ostringstream ss_s;
+  ss_s << size;
+  header += (ss_s.str() + ";");
+
+  boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
+      boost::asio::transfer_all(), ignored_error);
   boost::asio::write(*(connection->socket()), boost::asio::buffer(buf, size),
       boost::asio::transfer_all(), ignored_error);
   return true;
