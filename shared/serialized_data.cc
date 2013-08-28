@@ -42,3 +42,10 @@
 
 using namespace nimbus; // NOLINT
 
+SerializedData::SerializedData() {
+}
+
+SerializedData::SerializedData(char* data_ptr, size_t size)
+: data_ptr_(data_ptr), size_(size) {
+}
+
