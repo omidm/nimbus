@@ -53,10 +53,6 @@ typedef VECTOR<float, 3> TVF3;
 typedef float TF;
 #endif  // TEMPLATE_USE
 
-// TODO(someone): right now, create may/ may not allocate required amount of
-// memory. Will have to dig deep into PhysBAM to allocate required amount of
-// memory at the beginning itself.
-
 template <class TV> FaceArray<TV>::
 FaceArray(int size)
 {
@@ -518,6 +514,7 @@ void Add_Source(NonAdvData<TVF2, TF> *sim_data)
 }
 
 
+/*
 void Add_Source(NonAdvData<TVF3, TF> *sim_data)
 {
     TVF3 point1, point2;
@@ -533,10 +530,11 @@ void Add_Source(NonAdvData<TVF3, TF> *sim_data)
     IMPLICIT_OBJECT<TVF3>* analytic = new ANALYTIC_IMPLICIT_OBJECT<CYLINDER<TF> >(source);
     sim_data->sources->Append(analytic);
 }
+*/
 
 template class FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;
 template class NonAdvData<TVF2, TF>;
-template class FaceArray<TVF3>;
-template class FaceArrayGhost<TVF3>;
-template class NonAdvData<TVF3, TF>;
+//template class FaceArray<TVF3>;
+//template class FaceArrayGhost<TVF3>;
+//template class NonAdvData<TVF3, TF>;

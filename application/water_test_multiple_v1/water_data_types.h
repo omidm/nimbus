@@ -105,6 +105,8 @@ class FaceArray : public Data {
         // physbam structures and methods
         GRID<TV> *grid;
         ARRAY<T, FACE_INDEX<TV::dimension> > *data;
+
+        virtual bool Serialize(char **buffer, int *buff_size);
 };
 
 /* Ghost face array for storing scalar quantities.
@@ -226,6 +228,6 @@ class NonAdvData : public Data {
 };
 
 void Add_Source(NonAdvData<TVF2, TF> *sim_data);
-void Add_Source(NonAdvData<TVF3, TF> *sim_data);
+//void Add_Source(NonAdvData<TVF3, TF> *sim_data);
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_

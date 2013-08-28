@@ -252,4 +252,4 @@ Adjust_Particle_For_Domain_Boundaries(
 }
 
 template class NonAdvData<TVF2, TF>;
-template class NonAdvData<TVF3, TF>;
+//template class NonAdvData<TVF3, TF>;

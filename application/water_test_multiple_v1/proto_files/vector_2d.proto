@@ -1,11 +1,11 @@
 package communication;
 
-message Vector_Int {
+message VectorInt {
     optional sint32 x = 1;
     optional sint32 y = 2;
 }
 
-message Vector_Float {
+message VectorFloat {
     optional float x = 1;
     optional float y = 2;
 }

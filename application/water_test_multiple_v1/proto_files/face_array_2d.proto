@@ -1,23 +1,13 @@
 package communication;
 
 import "vector_2d.proto";
-import "grid_2d.proto";
+import "range_2d.proto";
 
-message FaceArrayMsg {
+// initialize face arrays data (physbam) from values
 
-    // size of the grid/ data
-    optional int32 size_ = 1;
-
-    // message mac grid
-    optional Grid mac_grid = 2;
-
-    message Array {
-    }
-
-    // message face_velocities
-    // send buffer_size, all data from base_pointer, domain_indices.
-    // initialize member data using base_pointer. see resize for reference.
-    // range contains tv min corner, max corner.
-    // vector contains an array.
-    optional Array face_velocities = 3;
+message FaceArray {
+    optional int32 buffer_size = 1;
+    optional RangeInt domain_indices = 2;
+    optional bool values_present = 3;
+    repeated float values = 4;
 }
