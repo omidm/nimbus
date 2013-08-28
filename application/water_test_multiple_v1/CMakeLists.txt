@@ -56,6 +56,8 @@ SET(${PROJECT_NAME}_h
         
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
+SET(PROTO_LIB protobuf)
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
+LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
 
 INCLUDE(${PROJECT_SOURCE_DIR}/../physbam-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
