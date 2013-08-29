@@ -1,0 +1,12 @@
+------------------------------------------------------------------------------
+Author:	chinmaye.shah@stanford.edy (Chinmayee Shah)
+------------------------------------------------------------------------------
+
+*.proto files corresponding to different physbam data structures and water_app
+data structures.
+
+*.h and *.cc files provide a conversion between the physbam/ water_app objects
+and protocol buffer objects.
+
+File names are relative to the current directory, water_test_...,
+physbam-lib/Public_Library or nimbus.
