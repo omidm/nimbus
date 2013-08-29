@@ -37,3 +37,21 @@
  */
 
 #include "physbam_serialize_data_2d.h"
+
+namespace physbam_pb {
+
+    bool make_pb_object(VI2 *phys_vec,
+            ::communication::PhysbamVectorInt2d* pb_vec) {
+        pb_vec->set_x((*phys_vec)[0]);
+        pb_vec->set_y((*phys_vec)[1]);
+        return true;
+    }
+
+    bool make_pb_object(VF2 *phys_vec,
+            ::communication::PhysbamVectorFloat2d* pb_vec) {
+        pb_vec->set_x((*phys_vec)[0]);
+        pb_vec->set_y((*phys_vec)[1]);
+        return false;
+    }
+
+} // namespace physbam_pb

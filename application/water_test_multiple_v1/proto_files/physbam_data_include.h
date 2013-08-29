@@ -42,10 +42,9 @@
 
 #include "PhysBAM_Tools/Vectors/VECTOR.h"
 
-namespace physbam_pb
-{
+namespace physbam_pb {
     typedef ::PhysBAM::VECTOR<float, 2> VF2;
     typedef ::PhysBAM::VECTOR<int, 2> VI2;
-}
+} // namespace physbam_pb
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_

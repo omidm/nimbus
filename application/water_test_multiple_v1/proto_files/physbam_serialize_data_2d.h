@@ -47,10 +47,13 @@
 // Now include physbam related files
 #include "physbam_data_include.h"
 
-namespace physbam_pb
-{
-    bool make_pb_object(VI2 *vec, ::communication::PhysbamVectorFloat2d* vec_pb);
-    bool make_pb_object(VF2 *vec, ::communication::PhysbamVectorInt2d* vec_pb);
-}
+namespace physbam_pb {
+
+    bool make_pb_object
+        (VI2 *phys_vec, ::communication::PhysbamVectorInt2d* pb_vec);
+    bool make_pb_object
+        (VF2 *phys_vec, ::communication::PhysbamVectorFloat2d* pb_vec);
+
+} // namespace physbam_pb
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_2D_H_
