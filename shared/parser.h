@@ -112,6 +112,9 @@ bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
 
 bool ParseIDSet(const std::string& input, std::set<uint32_t>& set);
 
+bool ParseWorkerDataHeader(const std::string& input,
+    job_id_t& job_id, size_t& data_length);
+
 
 
 

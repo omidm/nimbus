@@ -58,7 +58,7 @@ class SerializedData {
     char* data_ptr();
     void set_data_ptr(char* ptr);
     size_t size();
-    void set_size(size_t s);
+    void set_size(size_t size);
 
   private:
     char* data_ptr_;

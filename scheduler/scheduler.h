@@ -49,7 +49,7 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "shared/scheduler_server.h"
 #include "shared/cluster.h"
 #include "shared/parser.h"
@@ -57,7 +57,7 @@
 namespace nimbus {
 class Scheduler {
   public:
-    explicit Scheduler(unsigned int listening_port);
+    explicit Scheduler(port_t listening_port);
     virtual ~Scheduler() {}
 
     virtual void run();
@@ -83,8 +83,8 @@ class Scheduler {
     boost::thread* user_interface_thread_;
     boost::thread* worker_thread_;
     Computer host_;
-    uint16_t port_;
-    uint64_t appId_;
+    port_t listening_port_;
+    app_id_t appId_;
     // AppMap app_map_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;

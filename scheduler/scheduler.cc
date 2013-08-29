@@ -42,8 +42,8 @@
 
 using namespace nimbus; // NOLINT
 
-Scheduler::Scheduler(unsigned int p)
-: port_(p) {
+Scheduler::Scheduler(port_t p)
+: listening_port_(p) {
   appId_ = 0;
 }
 
@@ -84,7 +84,7 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 
 void Scheduler::setupWorkerInterface() {
   loadWorkerCommands();
-  server_ = new SchedulerServer(port_);
+  server_ = new SchedulerServer(listening_port_);
   server_->set_worker_command_set(&worker_command_set_);
   worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }

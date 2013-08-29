@@ -60,7 +60,7 @@ using boost::asio::ip::tcp;
 
 class SchedulerClient {
  public:
-  explicit SchedulerClient(uint16_t port);
+  SchedulerClient(std::string scheduler_ip, port_t scheduler_port);
   virtual ~SchedulerClient();
 
   virtual void run();
@@ -70,7 +70,8 @@ class SchedulerClient {
   void set_scheduler_command_set(CommandSet* cms);
 
  private:
-  ConnectionId connection_port_no_;
+  std::string scheduler_ip_;
+  port_t scheduler_port_;
   boost::asio::io_service* io_service_;
   boost::asio::streambuf* read_buffer_;
   tcp::socket* socket_;

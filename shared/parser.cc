@@ -428,6 +428,51 @@ bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
   return true;
 }
 
+bool ParseWorkerDataHeader(const std::string& input,
+    job_id_t& job_id, size_t& data_length) {
+  int num = 2;
+  job_id_t temp_j;
+  size_t temp_d;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: Data header has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: DefineDataCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  std::stringstream ss_j(*iter);
+  ss_j >> temp_j;
+  if (ss_j.fail()) {
+    std::cout << "ERROR: wrong element for job id." << std::endl;
+    return false;
+  } else {
+    job_id = temp_j;
+  }
+
+  iter++;
+  std::stringstream ss_d(*iter);
+  ss_d >> temp_d;
+  if (ss_d.fail()) {
+    std::cout << "ERROR: wrong element for data length." << std::endl;
+    return false;
+  } else {
+    data_length = temp_d;
+  }
+  return true;
+}
+
 
 
 

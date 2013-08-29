@@ -52,7 +52,6 @@
 #include <utility>
 #include <map>
 #include "shared/dbg.h"
-#include "shared/nimbus.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
 #include "shared/serialized_data.h"
@@ -75,19 +74,20 @@ class WorkerDataExchanger {
   virtual bool ReceiveSerializedData(job_id_t job_id,
       SerializedData& ser_data);
 
-  virtual void SendSerializedData(job_id_t job_id,
-      worker_id_t worker_id, const SerializedData& ser_data);
+  virtual bool SendSerializedData(job_id_t job_id,
+      worker_id_t worker_id, SerializedData& ser_data);
 
   WorkerDataExchangerConnectionMap* send_connections();
 
   WorkerDataExchangerConnectionList* receive_connections();
 
-  SerializedDataList* data_list();
+  SerializedDataMap* data_map();
 
  private:
   typedef std::map<worker_id_t, std::pair<std::string, port_t> >AddressBook;
 
   port_t listening_port_;
+  boost::mutex address_book_mutex_;
   AddressBook address_book_;
   boost::mutex data_mutex_;
   SerializedDataMap data_map_;
@@ -100,9 +100,6 @@ class WorkerDataExchanger {
   tcp::acceptor* acceptor_;
 
   virtual void ListenForNewConnections();
-
-  virtual bool CreateNewConnection(worker_id_t worker_id,
-      std::string ip_address, port_t port_no);
 
   virtual void HandleAccept(WorkerDataExchangerConnection* connection,
                             const boost::system::error_code& error);
@@ -121,12 +118,17 @@ class WorkerDataExchanger {
   virtual size_t ReadHeader(WorkerDataExchangerConnection* connection,
       char* buffer, size_t size);
 
-  virtual void AddSendConnection(worker_id_t worker_id,
-      WorkerDataExchangerConnection* connection);
+  virtual bool CreateNewSendConnection(worker_id_t worker_id,
+      std::string ip_address, port_t port_no);
+
+  // virtual void AddSendConnection(worker_id_t worker_id,
+  //     WorkerDataExchangerConnection* connection);
 
   virtual void AddReceiveConnection(WorkerDataExchangerConnection* connection);
 
-  virtual void AddSerializedData(SerializedData* ser_data);
+  virtual void AddSerializedData(job_id_t job_id, SerializedData* ser_data);
+
+  virtual void RemoveSerializedData(job_id_t job_id);
 };
 
 }  // namespace nimbus

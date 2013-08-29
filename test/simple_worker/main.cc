@@ -42,17 +42,36 @@
 #include <iostream>  // NOLINT
 
 #include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "worker/application.h"
 #include "./simple_worker.h"
 #include "../../application/1d-stencil/app.h"
 
-#define SCHEDULER_PORT 5983
-
 int main(int argc, char *argv[]) {
+  port_t listening_port;
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  if (*argv[1] == '1') {
+    listening_port = WORKER_PORT_1;
+  } else if (*argv[1] == '2') {
+    listening_port = WORKER_PORT_2;
+  } else if (*argv[1] == '3') {
+    listening_port = WORKER_PORT_3;
+  } else if (*argv[1] == '4') {
+    listening_port = WORKER_PORT_4;
+  } else {
+    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   App * app = new App();
-  SimpleWorker * w = new SimpleWorker(SCHEDULER_PORT, app);
+  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
+      NIMBUS_SCHEDULER_PORT, listening_port, app);
   w->run();
 }
 
