@@ -55,6 +55,7 @@
 #include <set>
 #include "worker/job.h"
 #include "shared/parser.h"
+#include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/nimbus_types.h"
 
@@ -117,15 +118,20 @@ typedef std::list<SchedulerCommand*> SchedulerCommandList;
 class HandshakeCommand : public SchedulerCommand {
   public:
     HandshakeCommand();
-    explicit HandshakeCommand(const IDSet<worker_id_t>& worker_id);
+    explicit HandshakeCommand(const ID<worker_id_t>& worker_id,
+        const std::string& ip, const ID<port_t>& port);
     ~HandshakeCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
-    IDSet<worker_id_t> worker_id();
+    ID<worker_id_t> worker_id();
+    std::string ip();
+    ID<port_t> port();
 
   private:
-    IDSet<worker_id_t> worker_id_;
+    ID<worker_id_t> worker_id_;
+    std::string ip_;
+    ID<port_t> port_;
 };
 
 

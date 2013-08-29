@@ -36,12 +36,14 @@
   * Scheduler abstraction of a worker.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
 #ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
 #define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
 
 #include <list>
+#include <string>
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "shared/scheduler_server_connection.h"
@@ -58,6 +60,10 @@ class SchedulerWorker {
   virtual ~SchedulerWorker();
 
   virtual worker_id_t worker_id();
+  virtual std::string ip();
+  virtual void set_ip(std::string ip);
+  virtual port_t port();
+  virtual void set_port(port_t port);
   virtual SchedulerServerConnection* connection();
   virtual Application* application();
   virtual bool is_alive();
@@ -71,6 +77,8 @@ class SchedulerWorker {
 
  private:
   worker_id_t worker_id_;
+  std::string ip_;
+  port_t port_;
   SchedulerServerConnection* connection_;
   Application* application_;
   bool is_alive_;

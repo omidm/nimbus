@@ -51,6 +51,7 @@
 #include <vector>
 #include <set>
 #include <utility>
+#include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/nimbus_types.h"
 
@@ -106,11 +107,16 @@ bool ParseDefineDataCommand(const std::string& input,
     std::string& params);
 
 bool ParseHandshakeCommand(const std::string& input,
-    IDSet<worker_id_t>& worker_id);
+    ID<worker_id_t>& worker_id,
+    std::string& ip, ID<port_t>& port);
 
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
 
 bool ParseIDSet(const std::string& input, std::set<uint32_t>& set);
+
+bool ParseID(const std::string& input, uint64_t& elem);
+
+bool ParseID(const std::string& input, uint32_t& elem);
 
 bool ParseWorkerDataHeader(const std::string& input,
     job_id_t& job_id, size_t& data_length);

@@ -33,93 +33,60 @@
  */
 
  /*
-  * A Nimbus scheduler's abstraction of a worker.
+  * Object representation of an identifires.
   *
-  * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_worker.h"
+#include "shared/id.h"
 
-namespace nimbus {
+using namespace nimbus; // NOLINT
 
-#define WORKER_BUFSIZE 10240
 
-SchedulerWorker::SchedulerWorker(worker_id_t id,
-                                   SchedulerServerConnection* conn,
-                                   Application* app) {
-  worker_id_ = id;
-  connection_ = conn;
-  application_ = app;
-  is_alive_ = true;
-  handshake_done_ = false;
-  existing_bytes_ = 0;
-  read_buffer_ = new char[WORKER_BUFSIZE];
+template<typename T>
+ID<T>::ID() {
+  elem_ = 0;
 }
 
-SchedulerWorker::~SchedulerWorker() {
-  delete connection_;
-  delete read_buffer_;
+template<typename T>
+ID<T>::ID(const T& elem) {
+  elem_ = elem;
 }
 
-worker_id_t SchedulerWorker::worker_id() {
-  return worker_id_;
+template<typename T>
+ID<T>::ID(const ID<T>& other)
+: elem_(other.elem_) {
 }
 
-std::string SchedulerWorker::ip() {
-  return ip_;
+template<typename T>
+ID<T>::~ID() {}
+
+template<typename T>
+std::string ID<T>::toString() {
+  std::ostringstream ss;
+  ss << elem_;
+  std::string rval;
+  return ss.str();
 }
 
-void SchedulerWorker::set_ip(std::string ip) {
-  ip_ = ip;
+template<typename T>
+void ID<T>::set_elem(T elem) {
+  elem_ = elem;
 }
 
-port_t SchedulerWorker::port() {
-  return port_;
+template<typename T>
+T ID<T>::elem() {
+  return elem_;
 }
 
-void SchedulerWorker::set_port(port_t port) {
-  port_ = port;
+template<typename T>
+ID<T>& ID<T>::operator= (const ID<T>& right) {
+  elem_ = right.elem_;
+  return *this;
 }
 
-SchedulerServerConnection* SchedulerWorker::connection() {
-  return connection_;
-}
+template class ID<uint64_t>;
+template class ID<uint32_t>;
 
-Application* SchedulerWorker::application() {
-  return application_;
-}
 
-bool SchedulerWorker::is_alive() {
-  return is_alive_;
-}
 
-bool SchedulerWorker::handshake_done() {
-  return handshake_done_;
-}
-
-void SchedulerWorker::set_handshake_done(bool flag) {
-  handshake_done_ = flag;
-}
-
-void SchedulerWorker::MarkDead() {
-  is_alive_ = false;
-}
-
-char* SchedulerWorker::read_buffer() {
-  return read_buffer_;
-}
-
-uint32_t SchedulerWorker::existing_bytes() {
-  return existing_bytes_;
-}
-
-void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
-  existing_bytes_ = bytes;
-}
-
-uint32_t SchedulerWorker::read_buffer_length() {
-  return WORKER_BUFSIZE;
-}
-
-}  // namespace nimbus
