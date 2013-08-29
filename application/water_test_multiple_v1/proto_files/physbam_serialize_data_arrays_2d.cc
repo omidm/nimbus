@@ -37,8 +37,8 @@
  */
 
 #include "assert.h"
-#include "physbam_serialize_data_common_2d.h"
 #include "physbam_serialize_data_arrays_2d.h"
+#include "physbam_serialize_data_common_2d.h"
 
 namespace physbam_pb {
 

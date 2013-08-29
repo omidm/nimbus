@@ -36,15 +36,10 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_ARRAYS_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_ARRAYS_2D_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_SERIALIZE_DATA_ARRAYS_2D_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_SERIALIZE_DATA_ARRAYS_2D_H_
 
-// IMPORTANT: first include the protocol buffer generated files
-// in order to avoid pollution due to using namespace physbam
-// in water_data_types, and functions overloaded by physbam
 #include "pb_include_2d.h"
-
-// Now include physbam related files
 #include "physbam_data_include.h"
 
 namespace physbam_pb {
@@ -54,4 +49,4 @@ namespace physbam_pb {
 
 } // namespace physbam_pb
 
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_ARRAYS_2D_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_SERIALIZE_DATA_ARRAYS_2D_H_

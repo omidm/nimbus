@@ -14,6 +14,6 @@ physbam-lib/Public_Library or nimbus.
 ------------------------------------------------------------------------------
 
 To build .cc and .h files from protocol buffer files, run ./build_proto.sh. To
-Clean the generated files, run ./clean_proto.sh.
+clean the generated files, run ./clean_proto.sh.
 
 ------------------------------------------------------------------------------
