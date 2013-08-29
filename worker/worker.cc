@@ -133,8 +133,9 @@ void Worker::setupSchedulerInterface() {
   loadSchedulerCommands();
   client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
   client_->set_scheduler_command_set(&scheduler_command_set_);
-  client_thread_ = new boost::thread(
-      boost::bind(&SchedulerClient::run, client_));
+  client_->run();
+  // client_thread_ = new boost::thread(
+  //     boost::bind(&SchedulerClient::run, client_));
 }
 
 void Worker::loadSchedulerCommands() {

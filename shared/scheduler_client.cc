@@ -120,7 +120,7 @@ void SchedulerClient::createNewConnections() {
 
 void SchedulerClient::run() {
   createNewConnections();
-  io_service_->run();
+  // io_service_->run();
 }
 
 
