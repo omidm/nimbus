@@ -49,6 +49,9 @@ SerializedData::SerializedData(char* data_ptr, size_t size)
 : data_ptr_(data_ptr), size_(size) {
 }
 
+SerializedData::~SerializedData() {
+}
+
 char* SerializedData::data_ptr() {
   return data_ptr_;
 }

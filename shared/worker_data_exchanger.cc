@@ -43,7 +43,6 @@
 
 using boost::asio::ip::tcp;
 
-#define BUF_SIZE 102400
 namespace nimbus {
 
 WorkerDataExchanger::WorkerDataExchanger(port_t port_no)
@@ -133,19 +132,33 @@ void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
     return;
   }
 
-  size_t read_data_len = 0;
-  size_t read_header_len = 0;
+  size_t read_len = 0;
+  size_t read_data_len, read_header_len, remaining;
   size_t bytes_available = bytes_transferred + connection->existing_bytes();
 
-  if (connection->middle_of_header()) {
-    read_header_len = ReadHeader(connection, connection->read_buffer(), bytes_available);
+  while (true) {
+    read_data_len = 0;
+    read_header_len = 0;
+    remaining = bytes_available - read_len;
+
+    if (connection->middle_of_header()) {
+      read_header_len = ReadHeader(connection,
+          connection->read_buffer() + read_len, remaining);
+      read_len += read_header_len;
+      remaining = bytes_available - read_len;
+    }
+
+    if (connection->middle_of_data()) {
+      read_data_len = ReadData(connection,
+          connection->read_buffer() + read_len, remaining);
+      read_len += read_data_len;
+      remaining = bytes_available - read_len;
+    }
+
+    if (((read_data_len + read_header_len) == 0) || (remaining == 0))
+      break;
   }
-  if (connection->middle_of_data()) {
-    read_data_len = ReadData(connection, connection->read_buffer() + read_header_len,
-        bytes_available - read_header_len);
-  }
-  size_t read_len = read_data_len + read_header_len;
-  size_t remaining = bytes_available - read_len;
+
   char* buffer = connection->read_buffer();
   memcpy(buffer, (buffer + read_len), remaining);
   connection->set_existing_bytes(remaining);

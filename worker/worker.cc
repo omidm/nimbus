@@ -162,3 +162,12 @@ void Worker::addData(Data* data) {
 void Worker::deleteData(int id) {
 }
 
+worker_id_t Worker::id() {
+  return id_;
+}
+
+void Worker::set_id(worker_id_t id) {
+  id_ = id;
+}
+
+

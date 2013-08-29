@@ -47,6 +47,8 @@
 #include "./simple_worker.h"
 #include "../../application/1d-stencil/app.h"
 
+extern int worker_num;
+
 int main(int argc, char *argv[]) {
   port_t listening_port;
   if (argc < 2) {
@@ -56,12 +58,16 @@ int main(int argc, char *argv[]) {
   }
   if (*argv[1] == '1') {
     listening_port = WORKER_PORT_1;
+    worker_num = 1;
   } else if (*argv[1] == '2') {
     listening_port = WORKER_PORT_2;
+    worker_num = 2;
   } else if (*argv[1] == '3') {
     listening_port = WORKER_PORT_3;
+    worker_num = 3;
   } else if (*argv[1] == '4') {
     listening_port = WORKER_PORT_4;
+    worker_num = 4;
   } else {
     std::cout << "ERROR: argument should be an integer (1 to 4)." <<
       std::endl;

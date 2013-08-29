@@ -49,6 +49,7 @@
 #include <vector>
 #include <map>
 #include "shared/scheduler_client.h"
+#include "shared/serialized_data.h"
 #include "shared/cluster.h"
 #include "worker/data.h"
 #include "worker/job.h"

@@ -41,6 +41,7 @@
 #include "shared/worker_data_exchanger_connection.h"
 
 #define WORKER_DATA_BUFSIZE 10240
+// #define WORKER_DATA_BUFSIZE 8
 
 using boost::asio::ip::tcp;
 

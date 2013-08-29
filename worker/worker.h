@@ -70,18 +70,21 @@ class Worker {
   virtual void workerCoreProcessor() {}
   virtual void processSchedulerCommand(SchedulerCommand* command);
 
+  worker_id_t id();
+  void set_id(worker_id_t id);
+
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
   CommandSet scheduler_command_set_;
   worker_id_t id_;
+  std::string scheduler_ip_;
+  port_t scheduler_port_;
+  port_t listening_port_;
 
  private:
   Log log;
   Computer host_;
-  std::string scheduler_ip_;
-  port_t scheduler_port_;
-  port_t listening_port_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
   DataMap data_map_;

@@ -41,6 +41,7 @@
 
 #include "./simple_worker.h"
 
+int worker_num;
 
 SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
         port_t listening_port, Application * a)
@@ -49,6 +50,77 @@ SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
 
 void SimpleWorker::workerCoreProcessor() {
   std::cout << "Simple Worker Core Processor" << std::endl;
+
+  // Update the addressbook manually instead of query from scheduler;
+  data_exchanger_->AddContactInfo(1, WORKER_IP_1, WORKER_PORT_1);
+  data_exchanger_->AddContactInfo(2, WORKER_IP_2, WORKER_PORT_2);
+  data_exchanger_->AddContactInfo(3, WORKER_IP_3, WORKER_PORT_3);
+  data_exchanger_->AddContactInfo(4, WORKER_IP_4, WORKER_PORT_4);
+
+  // So we have time to launch both workers, will remove when added
+  // async_connect, and query from scheduler;
+  // sleep(5);
+
+  // Send some data;
+  if (worker_num == 1) {
+    std::string data_s = "hello hello hello to WORKER 2";
+    SerializedData ser_data_s((char*)(data_s.c_str()), data_s.length()); // NOLINT
+    data_exchanger_->SendSerializedData(201, 2, ser_data_s);
+  }
+
+  if (worker_num == 2) {
+    std::string data_s = "Long Long Long Long Long Long Long Long to WORKER 1";
+    SerializedData ser_data_s((char*)(data_s.c_str()), data_s.length()); // NOLINT
+    data_exchanger_->SendSerializedData(101, 1, ser_data_s);
+  }
+
+  if (worker_num == 2) {
+    std::string data_s = "Second Message to WORKER 1";
+    SerializedData ser_data_s((char*)(data_s.c_str()), data_s.length()); // NOLINT
+    data_exchanger_->SendSerializedData(102, 1, ser_data_s);
+  }
+
+  // Receive the data.
+  if (worker_num == 1) {
+    SerializedData ser_data_r;
+    while (!data_exchanger_->ReceiveSerializedData(102, ser_data_r)) {
+      // std::cout << "Waiting to receive data " << 1 << " ..." << std::endl;
+      // sleep(1);
+    }
+    char * buf_r = new char[ser_data_r.size() + 1];
+    memcpy(buf_r, ser_data_r.data_ptr(), ser_data_r.size());
+    buf_r[ser_data_r.size()] = '\0';
+    std::string data_r(buf_r);
+    std::cout << "Received data. :) " << 102 << " : " << data_r << std::endl;
+  }
+
+  if (worker_num == 1) {
+    SerializedData ser_data_r;
+    while (!data_exchanger_->ReceiveSerializedData(101, ser_data_r)) {
+      // std::cout << "Waiting to receive data " << 1 << " ..." << std::endl;
+      // sleep(1);
+    }
+    char * buf_r = new char[ser_data_r.size() + 1];
+    memcpy(buf_r, ser_data_r.data_ptr(), ser_data_r.size());
+    buf_r[ser_data_r.size()] = '\0';
+    std::string data_r(buf_r);
+    std::cout << "Received data. :) " << 101 << " : " << data_r << std::endl;
+  }
+
+  if (worker_num == 2) {
+    SerializedData ser_data_r;
+    while (!data_exchanger_->ReceiveSerializedData(201, ser_data_r)) {
+      // std::cout << "Waiting to receive data " << 1 << " ..." << std::endl;
+      // sleep(1);
+    }
+    char * buf_r = new char[ser_data_r.size() + 1];
+    memcpy(buf_r, ser_data_r.data_ptr(), ser_data_r.size());
+    buf_r[ser_data_r.size()] = '\0';
+    std::string data_r(buf_r);
+    std::cout << "Received data. :) " << 201 << " : " << data_r << std::endl;
+  }
+
+  std::cout << "Just before the main loop of core processor." << std::endl;
 
   while (true) {
     // sleep(1);
