@@ -42,12 +42,14 @@
 
 #include "PhysBAM_Tools/Vectors/VECTOR.h"
 #include "PhysBAM_Tools/Math_Tools/RANGE.h"
+#include "PhysBAM_Tools/Grids_Uniform/GRID.h"
 
 namespace physbam_pb {
     typedef ::PhysBAM::VECTOR<int, 2> VI2;
     typedef ::PhysBAM::VECTOR<float, 2> VF2;
     typedef ::PhysBAM::RANGE<VI2> RangeI2;
     typedef ::PhysBAM::RANGE<VF2> RangeF2;
+    typedef ::PhysBAM::GRID<VF2> Grid2;
 } // namespace physbam_pb
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_

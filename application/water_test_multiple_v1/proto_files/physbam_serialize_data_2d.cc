@@ -41,47 +41,89 @@
 
 namespace physbam_pb {
 
-    //TODO(chinmayee): Make changes in all below code for required/ optional if
-    //necessary
-
-    bool make_pb_object(VI2 *phys_vec,
+    void make_pb_object(VI2 *phys_vec,
             ::communication::PhysbamVectorInt2d *pb_vec) {
-        assert(phys_vec);
         assert(pb_vec);
-        pb_vec->set_x((*phys_vec)[0]);
-        pb_vec->set_y((*phys_vec)[1]);
-        return true;
+        if (phys_vec != NULL) {
+            pb_vec->set_x((*phys_vec)[0]);
+            pb_vec->set_y((*phys_vec)[1]);
+        }
     }
 
-    bool make_pb_object(VF2 *phys_vec,
+    void make_pb_object(VF2 *phys_vec,
             ::communication::PhysbamVectorFloat2d *pb_vec) {
-        assert(phys_vec);
         assert(pb_vec);
-        pb_vec->set_x((*phys_vec)[0]);
-        pb_vec->set_y((*phys_vec)[1]);
-        return true;
+        if (phys_vec != NULL) {
+            pb_vec->set_x((*phys_vec)[0]);
+            pb_vec->set_y((*phys_vec)[1]);
+        }
     }
 
-    bool make_pb_object(RangeI2 *phys_range,
+    void make_pb_object(RangeI2 *phys_range,
             ::communication::PhysbamRangeInt2d *pb_range) {
-        assert(phys_range);
         assert(pb_range);
-        VI2 phys_range_min = phys_range->Minimum_Corner();
-        VI2 phys_range_max = phys_range->Maximum_Corner();
-        ::communication::PhysbamVectorInt2d *pb_range_min = 
-            pb_range->mutable_min_corner();
-        ::communication::PhysbamVectorInt2d *pb_range_max = 
-            pb_range->mutable_max_corner();
-        make_pb_object(&phys_range_min, pb_range_min);
-        make_pb_object(&phys_range_max, pb_range_max);
-        return true;
+        if (phys_range != NULL) {
+            VI2 phys_range_min = phys_range->Minimum_Corner();
+            VI2 phys_range_max = phys_range->Maximum_Corner();
+            ::communication::PhysbamVectorInt2d *pb_range_min = 
+                pb_range->mutable_min_corner();
+            ::communication::PhysbamVectorInt2d *pb_range_max = 
+                pb_range->mutable_max_corner();
+            make_pb_object(&phys_range_min, pb_range_min);
+            make_pb_object(&phys_range_max, pb_range_max);
+        }
     }
 
-    bool make_pb_object(RangeF2 *phys_range,
+    void make_pb_object(RangeF2 *phys_range,
             ::communication::PhysbamRangeFloat2d *pb_range) {
-        assert(phys_range);
         assert(pb_range);
-        return false;
+        if (phys_range != NULL) {
+            VF2 phys_range_min = phys_range->Minimum_Corner();
+            VF2 phys_range_max = phys_range->Maximum_Corner();
+            ::communication::PhysbamVectorFloat2d *pb_range_min = 
+                pb_range->mutable_min_corner();
+            ::communication::PhysbamVectorFloat2d *pb_range_max = 
+                pb_range->mutable_max_corner();
+            make_pb_object(&phys_range_min, pb_range_min);
+            make_pb_object(&phys_range_max, pb_range_max);
+        }
+    }
+
+    void make_pb_object(Grid2 *phys_grid,
+            ::communication::PhysbamGrid2d *pb_grid) {
+
+        assert(pb_grid);
+
+        if (phys_grid != NULL) {
+
+            VI2 phys_grid_counts = phys_grid->counts;
+            ::communication::PhysbamVectorInt2d *pb_grid_counts =
+                pb_grid->mutable_counts();
+            make_pb_object(&phys_grid_counts, pb_grid_counts);
+
+            RangeF2 phys_grid_domain = phys_grid->domain;
+            ::communication::PhysbamRangeFloat2d *pb_grid_domain =
+                pb_grid->mutable_domain();
+            make_pb_object(&phys_grid_domain, pb_grid_domain);
+
+            VF2 phys_grid_dx = phys_grid->dX;
+            ::communication::PhysbamVectorFloat2d *pb_grid_dx =
+                pb_grid->mutable_dx();
+            make_pb_object(&phys_grid_dx, pb_grid_dx);
+
+            VF2 phys_grid_one_over_dx = phys_grid->one_over_dX;
+            ::communication::PhysbamVectorFloat2d *pb_grid_one_over_dx =
+                pb_grid->mutable_one_over_dx();
+            make_pb_object(&phys_grid_one_over_dx, pb_grid_one_over_dx);
+
+            VI2 phys_grid_num_cells = phys_grid->numbers_of_cells;
+            ::communication::PhysbamVectorInt2d *pb_grid_num_cells =
+                pb_grid->mutable_numbers_of_cells();
+            make_pb_object(&phys_grid_num_cells, pb_grid_num_cells);
+
+            pb_grid->set_min_dx(phys_grid->min_dX);
+            pb_grid->set_mac_offset(phys_grid->MAC_offset);
+        }
     }
 
 } // namespace physbam_pb

@@ -49,17 +49,20 @@
 
 namespace physbam_pb {
 
-    bool make_pb_object(VI2 *phys_vec,
+    void make_pb_object(VI2 *phys_vec,
             ::communication::PhysbamVectorInt2d *pb_vec);
 
-    bool make_pb_object(VF2 *phys_vec,
+    void make_pb_object(VF2 *phys_vec,
             ::communication::PhysbamVectorFloat2d *pb_vec);
 
-    bool make_pb_object(RangeI2 *phys_range,
+    void make_pb_object(RangeI2 *phys_range,
             ::communication::PhysbamRangeInt2d *pb_range);
 
-    bool make_pb_object(RangeF2 *phys_range,
+    void make_pb_object(RangeF2 *phys_range,
             ::communication::PhysbamRangeFloat2d *pb_range);
+
+    void make_pb_object(Grid2 *phys_grid,
+            ::communication::PhysbamGrid2d *pb_grid);
 
 } // namespace physbam_pb
 
