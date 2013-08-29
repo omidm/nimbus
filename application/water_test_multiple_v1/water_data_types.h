@@ -105,8 +105,6 @@ class FaceArray : public Data {
         // physbam structures and methods
         GRID<TV> *grid;
         ARRAY<T, FACE_INDEX<TV::dimension> > *data;
-
-        virtual bool Serialize(char **buffer, int *buff_size);
 };
 
 /* Ghost face array for storing scalar quantities.

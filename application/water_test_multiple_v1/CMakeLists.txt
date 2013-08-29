@@ -17,23 +17,28 @@ include_directories(${NIMBUS_ROOT})
 include_directories(${PROTO_DIR})
 
 SET(PROTO_FILES_h
-        ${PROTO_DIR}/vector_2d.pb.h
-        ${PROTO_DIR}/range_2d.pb.h
-        ${PROTO_DIR}/grid_2d.pb.h
-        ${PROTO_DIR}/face_array_2d.pb.h
-        ${PROTO_DIR}/face_array_ap_2d.pb.h
+        ${PROTO_DIR}/physbam_vector_2d.pb.h
+        ${PROTO_DIR}/physbam_range_2d.pb.h
+        ${PROTO_DIR}/physbam_grid_2d.pb.h
+        ${PROTO_DIR}/physbam_face_array_2d.pb.h
+        ${PROTO_DIR}/app_face_array_2d.pb.h
     )
 
 SET(PROTO_FILES_cc
-        ${PROTO_DIR}/vector_2d.pb.cc
-        ${PROTO_DIR}/range_2d.pb.cc
-        ${PROTO_DIR}/grid_2d.pb.cc
-        ${PROTO_DIR}/face_array_2d.pb.cc
-        ${PROTO_DIR}/face_array_ap_2d.pb.cc
+        ${PROTO_DIR}/physbam_vector_2d.pb.cc
+        ${PROTO_DIR}/physbam_range_2d.pb.cc
+        ${PROTO_DIR}/physbam_grid_2d.pb.cc
+        ${PROTO_DIR}/physbam_face_array_2d.pb.cc
+        ${PROTO_DIR}/app_face_array_2d.pb.cc
+    )
+
+SET(PROTO_HELPER_h
+        ${PROTO_DIR}/pb_include_2d.h
+        ${PROTO_DIR}/physbam_serialize_data_2d.h
     )
 
 SET(PROTO_HELPER_cc
-        ${PROTO_DIR}/serialize_data_ap.cc
+        ${PROTO_DIR}/physbam_serialize_data_2d.cc
     )
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
@@ -43,6 +48,7 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/water_driver.cc
         ${PROJECT_SOURCE_DIR}/water_app.cc
         ${PROTO_FILES_h}
+        ${PROTO_HELPER_h}
 	)
 
 SET(${PROJECT_NAME}_h

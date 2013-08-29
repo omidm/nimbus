@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2013 Stanford University.
  * All rights reserved.
@@ -36,19 +37,15 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "water_data_types.h"
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef VECTOR<float, 3> TVF3;
-typedef float TF;
-#endif  // TEMPLATE_USE
+#include "PhysBAM_Tools/Vectors/VECTOR.h"
 
-template <class TV> bool FaceArray<TV>::
-Serialize(char **buffer, int *buff_size)
+namespace physbam_pb
 {
-    return false;
+    typedef ::PhysBAM::VECTOR<float, 2> VF2;
+    typedef ::PhysBAM::VECTOR<int, 2> VI2;
 }
 
-template class FaceArray<TVF2>;
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_

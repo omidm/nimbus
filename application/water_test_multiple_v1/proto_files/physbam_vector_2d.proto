@@ -1,11 +1,11 @@
 package communication;
 
-message VectorInt2d {
+message PhysbamVectorInt2d {
     optional sint32 x = 1;
     optional sint32 y = 2;
 }
 
-message VectorFloat2d {
+message PhysbamVectorFloat2d {
     optional float x = 1;
     optional float y = 2;
 }
