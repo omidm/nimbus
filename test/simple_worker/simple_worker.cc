@@ -41,8 +41,6 @@
 
 #include "./simple_worker.h"
 
-int worker_num;
-
 SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
         port_t listening_port, Application * a)
 : Worker(scheduler_ip, scheduler_port, listening_port, a) {
@@ -62,26 +60,26 @@ void SimpleWorker::workerCoreProcessor() {
   // sleep(5);
 
   // Send some data;
-  if (worker_num == 1) {
+  if (listening_port_ == WORKER_PORT_1) {
     std::string data_s = "hello hello hello to WORKER 2";
     SerializedData ser_data_s((char*)(data_s.c_str()), data_s.length()); // NOLINT
     data_exchanger_->SendSerializedData(201, 2, ser_data_s);
   }
 
-  if (worker_num == 2) {
+  if (listening_port_ == WORKER_PORT_2) {
     std::string data_s = "Long Long Long Long Long Long Long Long to WORKER 1";
     SerializedData ser_data_s((char*)(data_s.c_str()), data_s.length()); // NOLINT
     data_exchanger_->SendSerializedData(101, 1, ser_data_s);
   }
 
-  if (worker_num == 2) {
+  if (listening_port_ == WORKER_PORT_2) {
     std::string data_s = "Second Message to WORKER 1";
     SerializedData ser_data_s((char*)(data_s.c_str()), data_s.length()); // NOLINT
     data_exchanger_->SendSerializedData(102, 1, ser_data_s);
   }
 
   // Receive the data.
-  if (worker_num == 1) {
+  if (listening_port_ == WORKER_PORT_1) {
     SerializedData ser_data_r;
     while (!data_exchanger_->ReceiveSerializedData(102, ser_data_r)) {
       // std::cout << "Waiting to receive data " << 1 << " ..." << std::endl;
@@ -94,7 +92,7 @@ void SimpleWorker::workerCoreProcessor() {
     std::cout << "Received data. :) " << 102 << " : " << data_r << std::endl;
   }
 
-  if (worker_num == 1) {
+  if (listening_port_ == WORKER_PORT_1) {
     SerializedData ser_data_r;
     while (!data_exchanger_->ReceiveSerializedData(101, ser_data_r)) {
       // std::cout << "Waiting to receive data " << 1 << " ..." << std::endl;
@@ -107,7 +105,7 @@ void SimpleWorker::workerCoreProcessor() {
     std::cout << "Received data. :) " << 101 << " : " << data_r << std::endl;
   }
 
-  if (worker_num == 2) {
+  if (listening_port_ == WORKER_PORT_2) {
     SerializedData ser_data_r;
     while (!data_exchanger_->ReceiveSerializedData(201, ser_data_r)) {
       // std::cout << "Waiting to receive data " << 1 << " ..." << std::endl;
