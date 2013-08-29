@@ -36,21 +36,51 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "assert.h"
 #include "physbam_serialize_data_2d.h"
 
 namespace physbam_pb {
 
+    //TODO(chinmayee): Make changes in all below code for required/ optional if
+    //necessary
+
     bool make_pb_object(VI2 *phys_vec,
-            ::communication::PhysbamVectorInt2d* pb_vec) {
+            ::communication::PhysbamVectorInt2d *pb_vec) {
+        assert(phys_vec);
+        assert(pb_vec);
         pb_vec->set_x((*phys_vec)[0]);
         pb_vec->set_y((*phys_vec)[1]);
         return true;
     }
 
     bool make_pb_object(VF2 *phys_vec,
-            ::communication::PhysbamVectorFloat2d* pb_vec) {
+            ::communication::PhysbamVectorFloat2d *pb_vec) {
+        assert(phys_vec);
+        assert(pb_vec);
         pb_vec->set_x((*phys_vec)[0]);
         pb_vec->set_y((*phys_vec)[1]);
+        return true;
+    }
+
+    bool make_pb_object(RangeI2 *phys_range,
+            ::communication::PhysbamRangeInt2d *pb_range) {
+        assert(phys_range);
+        assert(pb_range);
+        VI2 phys_range_min = phys_range->Minimum_Corner();
+        VI2 phys_range_max = phys_range->Maximum_Corner();
+        ::communication::PhysbamVectorInt2d *pb_range_min = 
+            pb_range->mutable_min_corner();
+        ::communication::PhysbamVectorInt2d *pb_range_max = 
+            pb_range->mutable_max_corner();
+        make_pb_object(&phys_range_min, pb_range_min);
+        make_pb_object(&phys_range_max, pb_range_max);
+        return true;
+    }
+
+    bool make_pb_object(RangeF2 *phys_range,
+            ::communication::PhysbamRangeFloat2d *pb_range) {
+        assert(phys_range);
+        assert(pb_range);
         return false;
     }
 
