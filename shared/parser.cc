@@ -195,33 +195,47 @@ bool ParseSchedulerCommand(const std::string& input,
 
 
 bool ParseHandshakeCommand(const std::string& input,
-    IDSet<worker_id_t>& worker_id) {
-  int num = 1;
-  std::set<worker_id_t> worker_id_set;
+    ID<worker_id_t>& worker_id,
+    std::string& ip, ID<port_t>& port) {
+  int num = 3;
+  worker_id_t worker_id_elem;
+  port_t port_elem;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
   for (int i = 0; i < num; i++) {
     if (iter == tokens.end()) {
-      std::cout << "ERROR: SpawnJobCommand has only " << i <<
+      std::cout << "ERROR: HandshakeCommand has only " << i <<
         " parameters (expected " << num << ")." << std::endl;
       return false;
     }
     iter++;
   }
   if (iter != tokens.end()) {
-    std::cout << "ERROR: SpawnJobCommand has more than "<<
+    std::cout << "ERROR: HandshakeCommand has more than "<<
       num << " parameters." << std::endl;
     return false;
   }
 
   iter = tokens.begin();
-  if (ParseIDSet(*iter, worker_id_set)) {
-    IDSet<worker_id_t> temp(worker_id_set);
+  if (ParseID(*iter, worker_id_elem)) {
+    ID<worker_id_t> temp(worker_id_elem);
     worker_id = temp;
   } else {
-    std::cout << "ERROR: Could not detect valid worker id set." << std::endl;
+    std::cout << "ERROR: Could not detect valid worker id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  ip = *iter;
+
+  iter++;
+  if (ParseID(*iter, port_elem)) {
+    ID<port_t> temp(port_elem);
+    port = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid port." << std::endl;
     return false;
   }
 

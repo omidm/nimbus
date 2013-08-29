@@ -78,9 +78,12 @@ void SimpleScheduler::schedulerCoreProcessor() {
       if ((*iter)->handshake_done()) {
         ready_num++;
       } else {
-        IDSet<worker_id_t> worker_id;
-        worker_id.insert((*iter)->worker_id());
-        SchedulerCommand* cm = new HandshakeCommand(worker_id);
+        ID<worker_id_t> worker_id;
+        worker_id.set_elem((*iter)->worker_id());
+        std::string ip("you-know");
+        ID<port_t> port(0);
+
+        SchedulerCommand* cm = new HandshakeCommand(worker_id, ip, port);
         server_->SendCommand(*iter, cm);
         delete cm;
       }

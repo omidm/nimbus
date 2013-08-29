@@ -36,6 +36,7 @@
   * A Nimbus scheduler's abstraction of a worker.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
 #include "scheduler/scheduler_worker.h"
@@ -63,6 +64,22 @@ SchedulerWorker::~SchedulerWorker() {
 
 worker_id_t SchedulerWorker::worker_id() {
   return worker_id_;
+}
+
+std::string SchedulerWorker::ip() {
+  return ip_;
+}
+
+void SchedulerWorker::set_ip(std::string ip) {
+  ip_ = ip;
+}
+
+port_t SchedulerWorker::port() {
+  return port_;
+}
+
+void SchedulerWorker::set_port(port_t port) {
+  port_ = port;
 }
 
 SchedulerServerConnection* SchedulerWorker::connection() {

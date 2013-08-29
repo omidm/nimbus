@@ -113,9 +113,13 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
     log.writeToFile(std::string(buff), LOG_INFO);
   } else if (command_name == "handshake") {
     HandshakeCommand* hsc = reinterpret_cast<HandshakeCommand*>(cm);
-    client_->sendCommand(cm);
 
-    id_ = *(hsc->worker_id().begin());
+    ID<port_t> port(listening_port_);
+    HandshakeCommand new_cm = HandshakeCommand(hsc->worker_id(),
+        boost::asio::ip::host_name(), port);
+    client_->sendCommand(&new_cm);
+
+    id_ = hsc->worker_id().elem();
   } else {
     std::cout << "ERROR: " << cm->toString() <<
       " have not been implemented in ProcessSchedulerCommand yet." <<

@@ -65,13 +65,17 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     server_->SendCommand(*(server_->workers()->begin()), cm);
   } else if (command_name == "handshake") {
     HandshakeCommand* hsc = reinterpret_cast<HandshakeCommand*>(cm);
-    worker_id_t id = *(hsc->worker_id().begin());
 
     SchedulerWorkerList::iterator iter = server_->workers()->begin();
     for (; iter != server_->workers()->end(); iter++) {
-      if ((*iter)->worker_id() == id) {
+      if ((*iter)->worker_id() == hsc->worker_id().elem()) {
+        // std::string ip =
+        //   (*iter)->connection()->socket()->remote_endpoint().address().to_string();
+        (*iter)->set_ip(hsc->ip());
+        (*iter)->set_port(hsc->port().elem());
         (*iter)->set_handshake_done(true);
-        // std::cout << "**** Successful Hand shake ID: " << id << std::endl;
+        std::cout << "Registered worker, id: " << (*iter)->worker_id() <<
+          " IP: " << (*iter)->ip() << " port: " << (*iter)->port() << std::endl;
         break;
       }
     }

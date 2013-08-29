@@ -196,15 +196,17 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
             partition_id, neighbor_partitions, params);
       }
     } else if (type == COMMAND_HANDSHAKE) {
-      IDSet<worker_id_t> worker_id;
+      ID<worker_id_t> worker_id;
+      std::string ip;
+      ID<port_t> port;
 
-      bool cond = ParseHandshakeCommand(param_segment, worker_id);
+      bool cond = ParseHandshakeCommand(param_segment, worker_id, ip, port);
 
       if (!cond) {
         std::cout << "ERROR: Could not detect valid handshake." << std::endl;
         return false;
       } else {
-        generated = new HandshakeCommand(worker_id);
+        generated = new HandshakeCommand(worker_id, ip, port);
       }
     } else {
       std::cout << "ERROR: Unknown command." << std::endl;
@@ -219,8 +221,9 @@ HandshakeCommand::HandshakeCommand() {
   name_ = "handshake";
 }
 
-HandshakeCommand::HandshakeCommand(const IDSet<worker_id_t>& worker_id)
-: worker_id_(worker_id) {
+HandshakeCommand::HandshakeCommand(const ID<worker_id_t>& worker_id,
+    const std::string& ip, const ID<port_t>& port)
+: worker_id_(worker_id), ip_(ip), port_(port) {
     name_ = "handshake";
 }
 
@@ -230,7 +233,9 @@ HandshakeCommand::~HandshakeCommand() {
 std::string HandshakeCommand::toString() {
   std::string str;
   str += (name_ + " ");
-  str += worker_id_.toString();
+  str += (worker_id_.toString() + " ");
+  str += (ip_ + " ");
+  str += port_.toString();
   return str;
 }
 
@@ -238,13 +243,25 @@ std::string HandshakeCommand::toStringWTags() {
   std::string str;
   str += (name_ + " ");
   str += ("worker-id:" + worker_id_.toString());
+  str += ("ip:" + ip_ + " ");
+  str += ("port" + port_.toString());
   return str;
 }
 
 
-IDSet<worker_id_t> HandshakeCommand::worker_id() {
+ID<worker_id_t> HandshakeCommand::worker_id() {
   return worker_id_;
 }
+
+std::string HandshakeCommand::ip() {
+  return ip_;
+}
+
+ID<port_t> HandshakeCommand::port() {
+  return port_;
+}
+
+
 
 
 SpawnJobCommand::SpawnJobCommand() {
