@@ -51,6 +51,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command.h"
+#include "shared/worker_data_exchanger.h"
 #include "shared/cluster.h"
 #include "shared/parser.h"
 #include "shared/log.h"
@@ -62,7 +63,8 @@ typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
  public:
-  Worker(unsigned int port,  Application* application);
+  Worker(std::string scheuler_ip, port_t scheduler_port,
+      port_t listening_port_, Application* application);
 
   virtual void run();
   virtual void workerCoreProcessor() {}
@@ -70,18 +72,25 @@ class Worker {
 
  protected:
   SchedulerClient* client_;
+  WorkerDataExchanger* data_exchanger_;
   CommandSet scheduler_command_set_;
   worker_id_t id_;
 
  private:
   Log log;
   Computer host_;
-  unsigned int port_;
+  std::string scheduler_ip_;
+  port_t scheduler_port_;
+  port_t listening_port_;
+  boost::thread* client_thread_;
+  boost::thread* data_exchanger_thread_;
   DataMap data_map_;
   JobMap job_map_;
   Application* application_;
 
   virtual void setupSchedulerInterface();
+
+  virtual void SetupDataExchangerInterface();
 
   virtual void addJob(Job* job);
   virtual void deleteJob(int id);

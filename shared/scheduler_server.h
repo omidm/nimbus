@@ -47,7 +47,7 @@
 #include <boost/asio.hpp>
 #include <string>
 #include <map>
-#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "shared/parser.h"
 #include "shared/scheduler_command.h"
 #include "shared/scheduler_server_connection.h"
@@ -67,7 +67,7 @@ using boost::asio::ip::tcp;
  */
 class SchedulerServer {
  public:
-  explicit SchedulerServer(ConnectionId port_no);
+  explicit SchedulerServer(port_t listening_port);
   virtual ~SchedulerServer();
 
   /** Start the server, does not return. A running server accepts
@@ -100,7 +100,7 @@ class SchedulerServer {
   void set_worker_command_set(CommandSet* cms);
 
  private:
-  ConnectionId connection_port_;
+  port_t listening_port_;
   boost::mutex command_mutex_;
   SchedulerCommandList received_commands_;
   boost::mutex worker_mutex_;

@@ -55,8 +55,8 @@ using boost::asio::ip::tcp;
 #define BUF_SIZE 102400
 namespace nimbus {
 
-SchedulerServer::SchedulerServer(ConnectionId port_no)
-  : connection_port_(port_no) {}
+SchedulerServer::SchedulerServer(port_t port_no)
+  : listening_port_(port_no) {}
 
 SchedulerServer::~SchedulerServer() {
   {
@@ -77,7 +77,7 @@ SchedulerServer::~SchedulerServer() {
 bool SchedulerServer::Initialize() {
   io_service_ = new boost::asio::io_service();
   acceptor_ = new tcp::acceptor(*io_service_,
-                                tcp::endpoint(tcp::v4(), connection_port_));
+      tcp::endpoint(tcp::v4(), listening_port_));
   return true;
 }
 

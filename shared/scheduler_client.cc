@@ -53,8 +53,10 @@
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
 
-SchedulerClient::SchedulerClient(uint16_t port_no)
-  : connection_port_no_(port_no) {
+SchedulerClient::SchedulerClient(std::string scheduler_ip,
+    port_t scheduler_port)
+  : scheduler_ip_(scheduler_ip),
+    scheduler_port_(scheduler_port) {
   read_buffer_ = new boost::asio::streambuf();
   io_service_ = new boost::asio::io_service();
   socket_ = new tcp::socket(*io_service_);
@@ -109,8 +111,8 @@ void SchedulerClient::sendCommand(SchedulerCommand* command) {
 void SchedulerClient::createNewConnections() {
   std::cout << "Opening connections." << std::endl;
   tcp::resolver resolver(*io_service_);
-  tcp::resolver::query query("127.0.0.1",
-      boost::to_string(connection_port_no_));
+  tcp::resolver::query query(scheduler_ip_,
+      boost::to_string(scheduler_port_));
   tcp::resolver::iterator iterator = resolver.resolve(query);
   boost::system::error_code error = boost::asio::error::host_not_found;
   socket_->connect(*iterator, error);
@@ -118,6 +120,7 @@ void SchedulerClient::createNewConnections() {
 
 void SchedulerClient::run() {
   createNewConnections();
+  io_service_->run();
 }
 
 

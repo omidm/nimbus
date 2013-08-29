@@ -42,8 +42,11 @@
 
 using namespace nimbus; // NOLINT
 
-Worker::Worker(unsigned int p, Application* a)
-: port_(p),
+Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
+    port_t listening_port, Application* a)
+: scheduler_ip_(scheduler_ip),
+  scheduler_port_(scheduler_port),
+  listening_port_(listening_port),
   application_(a) {
     log.InitTime();
     id_ = -1;
@@ -54,6 +57,8 @@ void Worker::run() {
 
   setupSchedulerInterface();
   application_->start(client_);
+
+  SetupDataExchangerInterface();
 
   workerCoreProcessor();
 }
@@ -118,11 +123,18 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
   }
 }
 
+void Worker::SetupDataExchangerInterface() {
+  data_exchanger_ = new WorkerDataExchanger(listening_port_);
+  data_exchanger_thread_ = new boost::thread(
+      boost::bind(&WorkerDataExchanger::Run, data_exchanger_));
+}
+
 void Worker::setupSchedulerInterface() {
   loadSchedulerCommands();
-  client_ = new SchedulerClient(port_);
+  client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
   client_->set_scheduler_command_set(&scheduler_command_set_);
-  client_->run();
+  client_thread_ = new boost::thread(
+      boost::bind(&SchedulerClient::run, client_));
 }
 
 void Worker::loadSchedulerCommands() {

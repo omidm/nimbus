@@ -49,11 +49,12 @@
 #include <list>
 #include <string>
 #include "shared/dbg.h"
-#include "shared/nimbus.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
+
+using boost::asio::ip::tcp;
 
 class WorkerDataExchangerConnection {
  public:

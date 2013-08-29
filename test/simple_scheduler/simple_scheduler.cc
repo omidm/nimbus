@@ -71,7 +71,7 @@ void SimpleScheduler::schedulerCoreProcessor() {
 //  }
 
   while (true) {
-    // sleep(1);
+    sleep(1);
     int ready_num = 0;
     for (iter = server_->workers()->begin();
         iter != server_->workers()->end(); iter++) {
