@@ -406,7 +406,7 @@ bool ParseIDSet(const std::string& input, std::set<uint64_t>& set) {
 }
 
 bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
-  uint64_t num;
+  uint32_t num;
   set.clear();
   if (input[0] != '{' || input[input.length() - 1] != '}') {
     std::cout << "ERROR: wrong format for IDSet." << std::endl;
@@ -425,6 +425,30 @@ bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
     }
     set.insert(num);
   }
+  return true;
+}
+
+bool ParseID(const std::string& input, uint64_t& elem) {
+  uint64_t num;
+  std::stringstream ss(input);
+  ss >> num;
+  if (ss.fail()) {
+    std::cout << "ERROR: wrong element as ID." << std::endl;
+    return false;
+  }
+  elem = num;
+  return true;
+}
+
+bool ParseID(const std::string& input, uint32_t& elem) {
+  uint32_t num;
+  std::stringstream ss(input);
+  ss >> num;
+  if (ss.fail()) {
+    std::cout << "ERROR: wrong element as ID." << std::endl;
+    return false;
+  }
+  elem = num;
   return true;
 }
 
