@@ -6,7 +6,9 @@
 #include <PhysBAM_Tools/Grids_Uniform/FACE_INDEX.h>
 #include <PhysBAM_Tools/Grids_Uniform_Interpolation/LINEAR_INTERPOLATION_MAC_2D_HELPER.h>
 #include <PhysBAM_Tools/Math_Tools/Componentwise_Min_Max.h>
-using namespace PhysBAM;
+
+namespace PhysBAM {
+
 template<class T_GRID> template<class T_BLOCK_2,class T_FACE_LOOKUP> typename T_GRID::VECTOR_T::SCALAR LINEAR_INTERPOLATION_MAC_2D_HELPER<T_GRID>::
 Interpolate_Face_X_Transformed(const T_BLOCK_2& block,const T_FACE_LOOKUP& face_velocities,const VECTOR<T,2>& DX) // between 0 and 1 in the dual cell
 {
@@ -68,4 +70,6 @@ Extrema_Face_Y_Transformed(const T_BLOCK_2& block,const T_FACE_LOOKUP& u_min,con
     else return VECTOR<T,2>(
         Componentwise_Min(block.Face_Y_Value(u_min,2),block.Face_Y_Value(u_min,3),block.Face_Y_Value(u_min,4),block.Face_Y_Value(u_min,5)),
         Componentwise_Max(block.Face_Y_Value(u_max,2),block.Face_Y_Value(u_max,3),block.Face_Y_Value(u_max,4),block.Face_Y_Value(u_max,5)));
+}
+
 }
