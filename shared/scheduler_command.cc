@@ -199,18 +199,19 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       }
     } else if (type == COMMAND_CREATE_DATA) {
       std::string data_name;
+      ID<job_id_t> job_id;
       ID<data_id_t> data_id;
       IDSet<job_id_t> before;
       IDSet<job_id_t> after;
 
-      bool cond = ParseCreateDataCommand(param_segment, data_name, data_id,
-          before, after);
+      bool cond = ParseCreateDataCommand(param_segment, job_id,
+          data_name, data_id, before, after);
       if (!cond) {
         std::cout << "ERROR: Could not detect valid createdata." << std::endl;
         return false;
       } else {
-        generated = new CreateDataCommand(data_name, data_id,
-            before, after);
+        generated = new CreateDataCommand(job_id,
+            data_name, data_id, before, after);
       }
     } else if (type == COMMAND_DEFINE_DATA) {
       std::string data_name;
@@ -474,10 +475,11 @@ CreateDataCommand::CreateDataCommand() {
   name_ = "createdata";
 }
 
-CreateDataCommand::CreateDataCommand(const std::string& data_name,
-    const ID<data_id_t>& data_id,
+CreateDataCommand::CreateDataCommand(const ID<job_id_t>& job_id,
+    const std::string& data_name, const ID<data_id_t>& data_id,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after)
-: data_name_(data_name), data_id_(data_id),
+: job_id_(job_id),
+  data_name_(data_name), data_id_(data_id),
   before_set_(before), after_set_(after) {
     name_ = "createdata";
 }
@@ -488,6 +490,7 @@ CreateDataCommand::~CreateDataCommand() {
 std::string CreateDataCommand::toString() {
   std::string str;
   str += (name_ + " ");
+  str += (job_id_.toString() + " ");
   str += (data_name_ + " ");
   str += (data_id_.toString() + " ");
   str += (before_set_.toString() + " ");
@@ -498,11 +501,16 @@ std::string CreateDataCommand::toString() {
 std::string CreateDataCommand::toStringWTags() {
   std::string str;
   str += (name_ + " ");
+  str += ("job-id:" + job_id_.toString() + " ");
   str += ("name:" + data_name_ + " ");
-  str += ("id:" + data_id_.toString() + " ");
+  str += ("data-id:" + data_id_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString());
   return str;
+}
+
+ID<job_id_t> CreateDataCommand::job_id() {
+  return job_id_;
 }
 
 std::string CreateDataCommand::data_name() {

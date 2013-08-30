@@ -202,21 +202,23 @@ class ComputeJobCommand : public SchedulerCommand {
 class CreateDataCommand : public SchedulerCommand {
   public:
     CreateDataCommand();
-    CreateDataCommand(const std::string& data_name,
-        const ID<data_id_t>& data_id,
+    CreateDataCommand(const ID<job_id_t>& jog_id,
+        const std::string& data_name, const ID<data_id_t>& data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~CreateDataCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
     std::string data_name();
     ID<data_id_t> data_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
 
   private:
+    ID<job_id_t> job_id_;
     std::string data_name_;
-    ID<job_id_t> data_id_;
+    ID<data_id_t> data_id_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
 };

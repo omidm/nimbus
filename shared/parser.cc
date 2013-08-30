@@ -455,10 +455,11 @@ bool ParseComputeJobCommand(const std::string& input,
 
 
 bool ParseCreateDataCommand(const std::string& input,
-    std::string& data_name,
-    ID<data_id_t>& data_id,
+    ID<job_id_t>& job_id,
+    std::string& data_name, ID<data_id_t>& data_id,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after) {
-  int num = 4;
+  int num = 5;
+  job_id_t job_id_elem;
   data_id_t data_id_elem;
   std::set<job_id_t> job_id_set;
 
@@ -480,6 +481,15 @@ bool ParseCreateDataCommand(const std::string& input,
   }
 
   iter = tokens.begin();
+  if (ParseID(*iter, job_id_elem)) {
+    ID<job_id_t> temp(job_id_elem);
+    job_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
   data_name = *iter;
 
   iter++;

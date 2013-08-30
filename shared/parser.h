@@ -107,8 +107,8 @@ bool ParseComputeJobCommand(const std::string& input,
     std::string& params);
 
 bool ParseCreateDataCommand(const std::string& input,
-    std::string& data_name,
-    ID<data_id_t>& data_id,
+    ID<job_id_t>& job_id,
+    std::string& data_name, ID<data_id_t>& data_id,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after);
 
 
