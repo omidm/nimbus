@@ -38,8 +38,8 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_DRIVER_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_DRIVER_H_
 
 /* Include relevant PhysBAM files here.
 */
@@ -228,4 +228,4 @@ class NonAdvData : public Data {
 void Add_Source(NonAdvData<TVF2, TF> *sim_data);
 //void Add_Source(NonAdvData<TVF3, TF> *sim_data);
 
-#endif  // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_
+#endif  // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_DRIVER_H_
