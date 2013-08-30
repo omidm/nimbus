@@ -167,19 +167,77 @@ class SpawnJobCommand : public SchedulerCommand {
     std::string params_;
 };
 
+class ComputeJobCommand : public SchedulerCommand {
+  public:
+    ComputeJobCommand();
+    ComputeJobCommand(const std::string& job_name,
+        const ID<job_id_t>& job_id,
+        const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        const std::string& params);
+    ~ComputeJobCommand();
+
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    std::string job_name();
+    ID<job_id_t> job_id();
+    IDSet<data_id_t> read_set();
+    IDSet<data_id_t> write_set();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+    std::string params();
+
+  private:
+    std::string job_name_;
+    ID<job_id_t> job_id_;
+    IDSet<data_id_t> read_set_;
+    IDSet<data_id_t> write_set_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    std::string params_;
+};
+
+
+
+class CreateDataCommand : public SchedulerCommand {
+  public:
+    CreateDataCommand();
+    CreateDataCommand(const ID<job_id_t>& jog_id,
+        const std::string& data_name, const ID<data_id_t>& data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+    ~CreateDataCommand();
+
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
+    std::string data_name();
+    ID<data_id_t> data_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+
+  private:
+    ID<job_id_t> job_id_;
+    std::string data_name_;
+    ID<data_id_t> data_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+};
+
+
 class JobDoneCommand : public SchedulerCommand {
   public:
     JobDoneCommand();
-    JobDoneCommand(job_id_t job_id, std::string params);
+    JobDoneCommand(const ID<job_id_t>& job_id,
+        const std::string& params);
     ~JobDoneCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
-    job_id_t job_id();
+    ID<job_id_t> job_id();
     std::string params();
 
   private:
-    job_id_t job_id_;
+    ID<job_id_t> job_id_;
     std::string params_;
 };
 
@@ -241,6 +299,8 @@ class DefineDataCommand : public SchedulerCommand {
     std::string params_;
 };
 
+/*
+
 class DataCreatedCommand : public SchedulerCommand {
   public:
     DataCreatedCommand();
@@ -296,6 +356,7 @@ class MigrateDataCommand : public SchedulerCommand {
     std::string params_;
 };
 
+*/
 
 }  // namespace nimbus
 

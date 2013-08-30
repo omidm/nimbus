@@ -99,6 +99,19 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
     JobType& job_type, std::string& params);
 
+bool ParseComputeJobCommand(const std::string& input,
+    std::string& job_name,
+    ID<job_id_t>& job_id,
+    IDSet<data_id_t>& read, IDSet<data_id_t>& write,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
+    std::string& params);
+
+bool ParseCreateDataCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    std::string& data_name, ID<data_id_t>& data_id,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
+
+
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     IDSet<data_id_t>& data_id,
@@ -109,6 +122,10 @@ bool ParseDefineDataCommand(const std::string& input,
 bool ParseHandshakeCommand(const std::string& input,
     ID<worker_id_t>& worker_id,
     std::string& ip, ID<port_t>& port);
+
+bool ParseJobDoneCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    std::string& params);
 
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
 
