@@ -36,9 +36,9 @@
   * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
+#include "data_face_arrays.h"
 #include <iostream>
 #include "water_driver.h"
-#include "water_app_data.h"
 #include "water_data_driver.h"
 
 using namespace PhysBAM;

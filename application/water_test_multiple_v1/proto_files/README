@@ -2,6 +2,11 @@
 Author:	chinmaye.shah@stanford.edy (Chinmayee Shah)
 ------------------------------------------------------------------------------
 
+To build .cc and .h files from protocol buffer files, run ./build_proto.sh. To
+clean the generated files, run ./clean_proto.sh.
+
+------------------------------------------------------------------------------
+
 *.proto files corresponding to different physbam data structures and water_app
 data structures.
 
@@ -10,10 +15,5 @@ and protocol buffer objects.
 
 File names are relative to the current directory, water_test_...,
 physbam-lib/Public_Library or nimbus.
-
-------------------------------------------------------------------------------
-
-To build .cc and .h files from protocol buffer files, run ./build_proto.sh. To
-clean the generated files, run ./clean_proto.sh.
 
 ------------------------------------------------------------------------------

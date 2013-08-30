@@ -36,13 +36,14 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "advection.h"
 #include "assert.h"
+#include "data_face_arrays.h"
 #include <iostream>
 #include "shared/nimbus.h"
 #include "stdlib.h"
+#include "types.h"
 #include "water_app.h"
-#include "water_app_data.h"
-#include "water_app_advection.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
 
@@ -53,10 +54,6 @@ using namespace PhysBAM;
 using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
-
-typedef float T;
-typedef VECTOR<T, 2> TV;
-typedef VECTOR<int, TV::dimension> TV_INT;
 
 // TODO(chinmayee): alternative to assert?? pointer arithmetic error.
 

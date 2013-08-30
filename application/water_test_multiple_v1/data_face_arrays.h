@@ -36,11 +36,50 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "assert.h"
-#include "app_serialize_data_2d.h"
-#include "physbam_serialize_data_arrays_2d.h"
-#include "physbam_serialize_data_common_2d.h"
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 
-namespace physbam_pb {
+#include "physbam_include.h"
+#include "shared/nimbus.h"
 
-} // namespace physbam_pb
+#define face_array_id 20
+
+namespace water_app_data {
+
+    typedef float TF;
+
+    /* Face array for storing quantities like face velocities.
+    */
+    template <class TV>
+        class FaceArray : public ::nimbus::Data {
+
+            private:
+
+                typedef typename TV::SCALAR T;
+                typedef typename TV::template REBIND<int>::TYPE TV_INT;
+                typedef typename ::PhysBAM::GRID<TV> T_GRID;
+                typedef typename ::PhysBAM::RANGE<TV> T_RANGE;
+                typedef typename 
+                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+                    T_FACE_ARRAY;
+
+                int size_;
+
+            public:
+
+                FaceArray(int size);
+                virtual void create();
+                virtual ::nimbus::Data* clone();
+                virtual int get_debug_info();
+
+                // debug information
+                int id_debug;
+
+                // physbam structures and methods
+                T_GRID *grid;
+                T_FACE_ARRAY *data;
+        };
+
+} // namespace water_app_data
+
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_

@@ -11,7 +11,7 @@
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_3D.h>
 
-using namespace PhysBAM;
+namespace PhysBAM {
 
 template<class T_GRID,class T2,class T_AVERAGING,class T_INTERPOLATION> ADVECTION_SEMI_LAGRANGIAN_UNIFORM<T_GRID,T2,T_AVERAGING,T_INTERPOLATION>::
 ADVECTION_SEMI_LAGRANGIAN_UNIFORM()
@@ -79,4 +79,6 @@ Update_Advection_Equation_Face_Lookup(const T_GRID& grid,T_FACE_ARRAYS_SCALAR& Z
     else for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()){TV_INT face=iterator.Face_Index();int axis=iterator.Axis();
         Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),
             iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities));}
+}
+
 }

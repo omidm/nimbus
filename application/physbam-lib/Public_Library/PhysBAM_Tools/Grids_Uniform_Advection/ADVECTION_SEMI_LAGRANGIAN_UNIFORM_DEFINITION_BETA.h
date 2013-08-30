@@ -12,7 +12,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/DOMAIN_ITERATOR_THREADED.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_3D.h>
 
-using namespace PhysBAM;
+namespace PhysBAM {
 
 template<class T_GRID,class T2,class T_AVERAGING,class T_INTERPOLATION> ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<T_GRID,T2,T_AVERAGING,T_INTERPOLATION>::
 ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA(THREAD_QUEUE* thread_queue_input)
@@ -117,4 +117,6 @@ Update_Advection_Equation_Face_Lookup_Threaded(RANGE<TV_INT>& domain,int axis,co
     else for(FACE_ITERATOR iterator(grid,domain,axis);iterator.Valid();iterator.Next()){TV_INT face=iterator.Face_Index();int axis=iterator.Axis();
         Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,iterator.grid,Z_ghost.Starting_Point_Face(axis,face),
             iterator.Location()-dt*averaging.Face_To_Face_Vector(iterator.grid,axis,face,face_velocities));}
+}
+
 }

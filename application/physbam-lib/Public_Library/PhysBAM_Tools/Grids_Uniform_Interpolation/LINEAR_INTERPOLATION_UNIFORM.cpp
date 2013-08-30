@@ -4,6 +4,8 @@
 #include <PhysBAM_Tools/Matrices/SYMMETRIC_MATRIX_3X3.h>
 #include <PhysBAM_Tools/Matrices/MATRIX_3X3.h>
 
+using namespace PhysBAM;
+
 template class LINEAR_INTERPOLATION_UNIFORM<GRID<VECTOR<float,1> >,SYMMETRIC_MATRIX<float,2>,FACE_LOOKUP_UNIFORM<GRID<VECTOR<float,1> > > >;
 template class LINEAR_INTERPOLATION_UNIFORM<GRID<VECTOR<float,1> >,VECTOR<float,1>,FACE_LOOKUP_UNIFORM<GRID<VECTOR<float,1> > > >;
 template class LINEAR_INTERPOLATION_UNIFORM<GRID<VECTOR<float,1> >,VECTOR<float,2>,FACE_LOOKUP_UNIFORM<GRID<VECTOR<float,1> > > >;

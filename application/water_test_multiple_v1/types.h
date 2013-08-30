@@ -33,17 +33,20 @@
  */
 
 /* 
+ * Common types to be used by water application, driver and job functions
+ * operating on data.
+ *
+ * Can also initialize constants used by application, driver and job functions
+ * here.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_SERIALIZE_DATA_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_SERIALIZE_DATA_2D_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_
 
-#include "pb_include_2d.h"
-#include "physbam_data_include.h"
+typedef float T;
+typedef ::PhysBAM::VECTOR<float, 2> TV;
+typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
 
-namespace physbam_pb {
-
-} // namespace physbam_pb
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_SERIALIZE_DATA_2D_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_

@@ -12,7 +12,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/THREADED_ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_3D.h>
 
-using namespace PhysBAM;
+namespace PhysBAM {
 
 template<class T_GRID,class T2,class T_AVERAGING,class T_INTERPOLATION> THREADED_ADVECTION_SEMI_LAGRANGIAN_UNIFORM<T_GRID,T2,T_AVERAGING,T_INTERPOLATION>::
 THREADED_ADVECTION_SEMI_LAGRANGIAN_UNIFORM()
@@ -66,3 +66,5 @@ Update_Advection_Equation_Face_Lookup(const T_GRID& grid,T_FACE_ARRAYS_SCALAR& Z
     thread_queue->Wait();
 }
 #endif
+
+}

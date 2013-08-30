@@ -32,22 +32,51 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Forward declaration of data to avoid circular dependencies.
- * TODO(chinmayee): fix all previous hacks when doing required code
- * refactoring.
- *
+/*
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
-
-template <class TV> class WaterDriver;
-template <class TV, class T> class NonAdvData;
+#include "data_face_arrays.h"
+#include "physbam_include.h"
+#include "proto_files/physbam_serialize_data_common_2d.h"
+#include "proto_files/physbam_serialize_data_arrays_2d.h"
+#include "shared/nimbus.h"
 
 namespace water_app_data {
-    template <class TV> class FaceArray;
-}
 
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
+    template <class TV> FaceArray<TV>::
+        FaceArray(int size) {
+            id_debug = face_array_id;
+            this->size_ = size;
+            grid = NULL;
+            data = NULL;
+        }
+
+    template <class TV> void FaceArray<TV>::
+        create() {
+            std::cout << "Creating FaceArray\n";
+            grid = new T_GRID(TV_INT::All_Ones_Vector()*size_,
+                    T_RANGE::Unit_Box(), true);
+            assert(grid);
+            data = new  T_FACE_ARRAY();
+            assert(data);
+            data->Resize(*grid);
+        }
+
+    template <class TV> ::nimbus::Data* FaceArray<TV>::
+        clone() {
+            std::cout << "Cloning facearray\n";
+            return new FaceArray<TV>(size_);
+        }
+
+    template <class TV> int FaceArray<TV>::
+        get_debug_info() {
+            return id_debug;
+        }
+
+    namespace {
+        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
+    } // namespace
+    template class ::water_app_data::FaceArray<TVF2>;
+
+} // namespace water_app_data
