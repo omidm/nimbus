@@ -56,6 +56,7 @@ SET(${PROJECT_NAME}_cpp
 
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/physbam_include.h
+        ${PROJECT_SOURCE_DIR}/water_app_data_fwd_decl.h
         ${PROJECT_SOURCE_DIR}/water_app_data.h
         ${PROJECT_SOURCE_DIR}/water_data_driver.h
         ${PROJECT_SOURCE_DIR}/water_driver.h

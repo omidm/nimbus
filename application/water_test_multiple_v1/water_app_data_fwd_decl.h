@@ -33,57 +33,21 @@
  */
 
 /* 
- * Data used by application.
+ * Forward declaration of data to avoid circular dependencies.
+ * TODO(chinmayee): fix all previous hacks when doing required code
+ * refactoring.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
 
-#include "shared/nimbus.h"
-#include "physbam_include.h"
-
-#define face_array_id 20
+template <class TV> class WaterDriver;
+template <class TV, class T> class NonAdvData;
 
 namespace water_app_data {
+    template <class TV> class FaceArray;
+}
 
-    typedef ::PhysBAM::VECTOR<float, 2> TVF2;
-    typedef float TF;
-
-    /* Face array for storing quantities like face velocities.
-    */
-    template <class TV>
-        class FaceArray : public ::nimbus::Data {
-
-            private:
-
-                typedef typename TV::SCALAR T;
-                typedef typename TV::template REBIND<int>::TYPE TV_INT;
-                typedef typename ::PhysBAM::GRID_ARRAYS_POLICY<GRID<TV> >
-                    ::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
-                typedef typename ::PhysBAM::GRID<TV> T_GRID;
-                typedef typename 
-                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-                    T_FACE_ARRAY;
-
-                int size_;
-
-            public:
-
-                FaceArray(int size);
-                virtual void create();
-                virtual ::nimbus::Data* clone();
-                virtual int get_debug_info();
-
-                // debug information
-                int id_debug;
-
-                // physbam structures and methods
-                T_GRID *grid;
-                T_FACE_ARRAY *data;
-        };
-
-} // namespace water_app_data
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_

@@ -36,14 +36,15 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include <iostream>
 #include "assert.h"
+#include <iostream>
 #include "shared/nimbus.h"
+#include "stdlib.h"
 #include "water_app.h"
 #include "water_app_data.h"
+#include "water_app_advection.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
-#include "stdlib.h"
 
 static int ml = 200;
 static int gl = 0;
@@ -297,8 +298,7 @@ void Advect::execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
-    //TODO(chinmayee): fix this after advection is fixed
-    //face_velocities->Advection(driver, sim_data);
+    Advection(driver, face_velocities, sim_data);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();

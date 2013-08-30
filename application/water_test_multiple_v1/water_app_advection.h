@@ -41,4 +41,13 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
 
+#include "physbam_include.h"
+#include "water_app_data_fwd_decl.h"
+
+template <class TV, class T>
+void Advection (
+        WaterDriver<TV> *driver,
+        ::water_app_data::FaceArray<TV> *face_velocities,
+        NonAdvData<TV, T> *sim_data);
+
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
