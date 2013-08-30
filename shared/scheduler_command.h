@@ -198,6 +198,30 @@ class ComputeJobCommand : public SchedulerCommand {
 };
 
 
+
+class CreateDataCommand : public SchedulerCommand {
+  public:
+    CreateDataCommand();
+    CreateDataCommand(const std::string& data_name,
+        const ID<data_id_t>& data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+    ~CreateDataCommand();
+
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    std::string data_name();
+    ID<data_id_t> data_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+
+  private:
+    std::string data_name_;
+    ID<job_id_t> data_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+};
+
+
 class JobDoneCommand : public SchedulerCommand {
   public:
     JobDoneCommand();
@@ -273,6 +297,8 @@ class DefineDataCommand : public SchedulerCommand {
     std::string params_;
 };
 
+/*
+
 class DataCreatedCommand : public SchedulerCommand {
   public:
     DataCreatedCommand();
@@ -328,6 +354,7 @@ class MigrateDataCommand : public SchedulerCommand {
     std::string params_;
 };
 
+*/
 
 }  // namespace nimbus
 

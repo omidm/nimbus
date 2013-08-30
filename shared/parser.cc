@@ -454,6 +454,65 @@ bool ParseComputeJobCommand(const std::string& input,
 }
 
 
+bool ParseCreateDataCommand(const std::string& input,
+    std::string& data_name,
+    ID<data_id_t>& data_id,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after) {
+  int num = 4;
+  data_id_t data_id_elem;
+  std::set<job_id_t> job_id_set;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: CreateDataCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: CreateDataCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  data_name = *iter;
+
+  iter++;
+  if (ParseID(*iter, data_id_elem)) {
+    ID<data_id_t> temp(data_id_elem);
+    data_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    before = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    after = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     IDSet<data_id_t>& data_id,
