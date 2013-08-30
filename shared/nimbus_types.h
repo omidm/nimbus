@@ -65,7 +65,8 @@ namespace nimbus {
     COMMAND_SPAWN_JOB,
     COMMAND_DEFINE_DATA,
     COMMAND_HANDSHAKE,
-    COMMAND_JOBDONE
+    COMMAND_JOB_DONE,
+    COMMAND_COMPUTE_JOB
   };
 
 }  // namespace nimbus

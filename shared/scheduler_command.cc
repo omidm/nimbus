@@ -179,6 +179,24 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
         generated = new SpawnJobCommand(job_name, job_id,
             read, write, before, after, job_type, params);
       }
+    } else if (type == COMMAND_COMPUTE_JOB) {
+      std::string job_name;
+      ID<job_id_t> job_id;
+      IDSet<data_id_t> read;
+      IDSet<data_id_t> write;
+      IDSet<job_id_t> before;
+      IDSet<job_id_t> after;
+      std::string params;
+
+      bool cond = ParseComputeJobCommand(param_segment, job_name, job_id,
+          read, write, before, after, params);
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid computejob." << std::endl;
+        return false;
+      } else {
+        generated = new ComputeJobCommand(job_name, job_id,
+            read, write, before, after, params);
+      }
     } else if (type == COMMAND_DEFINE_DATA) {
       std::string data_name;
       IDSet<data_id_t> data_id;
@@ -208,7 +226,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       } else {
         generated = new HandshakeCommand(worker_id, ip, port);
       }
-    } else if (type == COMMAND_JOBDONE) {
+    } else if (type == COMMAND_JOB_DONE) {
       ID<job_id_t> job_id;
       std::string params;
 
@@ -360,6 +378,79 @@ std::string SpawnJobCommand::params() {
   return params_;
 }
 
+
+
+ComputeJobCommand::ComputeJobCommand() {
+  name_ = "computejob";
+}
+
+ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
+    const ID<job_id_t>& job_id,
+    const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    const std::string& params)
+: job_name_(job_name), job_id_(job_id),
+  read_set_(read), write_set_(write),
+  before_set_(before), after_set_(after),
+  params_(params) {
+    name_ = "computejob";
+}
+
+ComputeJobCommand::~ComputeJobCommand() {
+}
+
+std::string ComputeJobCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (job_name_ + " ");
+  str += (job_id_.toString() + " ");
+  str += (read_set_.toString() + " ");
+  str += (write_set_.toString() + " ");
+  str += (before_set_.toString() + " ");
+  str += (after_set_.toString() + " ");
+  str += params_;
+  return str;
+}
+
+std::string ComputeJobCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("name:" + job_name_ + " ");
+  str += ("id:" + job_id_.toString() + " ");
+  str += ("read:" + read_set_.toString() + " ");
+  str += ("write:" + write_set_.toString() + " ");
+  str += ("before:" + before_set_.toString() + " ");
+  str += ("after:" + after_set_.toString() + " ");
+  str += ("params:" + params_);
+  return str;
+}
+
+std::string ComputeJobCommand::job_name() {
+  return job_name_;
+}
+
+ID<job_id_t> ComputeJobCommand::job_id() {
+  return job_id_;
+}
+
+IDSet<data_id_t> ComputeJobCommand::read_set() {
+  return read_set_;
+}
+
+IDSet<data_id_t> ComputeJobCommand::write_set() {
+  return write_set_;
+}
+
+IDSet<job_id_t> ComputeJobCommand::after_set() {
+  return after_set_;
+}
+IDSet<job_id_t> ComputeJobCommand::before_set() {
+  return before_set_;
+}
+
+std::string ComputeJobCommand::params() {
+  return params_;
+}
 
 
 
