@@ -41,7 +41,8 @@
 #include <iostream>
 #include "assert.h"
 #include "shared/nimbus.h"
-#include "./water_data_types.h"
+#include "water_app_data.h"
+#include "water_data_driver.h"
 
 using namespace PhysBAM;
 using nimbus::Data;
@@ -49,46 +50,8 @@ using nimbus::Data;
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
 typedef VECTOR<float, 2> TVF2;
-typedef VECTOR<float, 3> TVF3;
 typedef float TF;
 #endif  // TEMPLATE_USE
-
-template <class TV> FaceArray<TV>::
-FaceArray(int size)
-{
-    id_debug = face_array_id;
-    this->size_ = size;
-    grid = NULL;
-    data = NULL;
-}
-
-template <class TV> void FaceArray<TV>::
-create()
-{
-    std::cout << "Creating FaceArray\n";
-
-    typedef typename TV::template REBIND<int>::TYPE TV_INT;
-    grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
-            RANGE<TV>::Unit_Box(), true);
-    assert(grid);
-
-    data = new  ARRAY<T,FACE_INDEX<TV::dimension> >();
-    assert(data);
-    data->Resize(*grid);
-}
-
-template <class TV> Data* FaceArray<TV>::
-clone()
-{
-    std::cout << "Cloning facearray\n";
-    return new FaceArray<TV>(size_);
-}
-
-    template <class TV>
-int FaceArray<TV> :: get_debug_info()
-{
-    return id_debug;
-}
 
 template <class TV> FaceArrayGhost<TV>::
 FaceArrayGhost(int size)
@@ -204,7 +167,7 @@ int NonAdvData<TV, T> :: get_debug_info()
 
 template <class TV, class T> bool NonAdvData<TV, T>::
     initialize
-(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities, const int frame)
+(WaterDriver<TV> *driver, ::water_app_data::FaceArray<TV> *face_velocities, const int frame)
 {
     std::cout << "Initializaing non advection data ...\n";
 
@@ -335,7 +298,7 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 
 template <class TV, class T> void NonAdvData<TV, T>::
 BeforeAdvection
-(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities)
+(WaterDriver<TV> *driver, ::water_app_data::FaceArray<TV> *face_velocities)
 {
     LOG::Time("Compute Occupied Blocks");
     T maximum_fluid_speed = face_velocities->data->Maxabs().Max();
@@ -405,7 +368,8 @@ BeforeAdvection
             } // external forces
 }
 
-template <class TV> void FaceArray<TV>::
+/* TODO(chinmayee): reimplement this in water_app_advection
+template <class TV> void ::water_app_data::FaceArray<TV>::
 Advection (WaterDriver<TV> *driver,
         NonAdvData<TV, T> *sim_data)
 {
@@ -427,10 +391,11 @@ Advection (WaterDriver<TV> *driver,
             *grid, *data, face_velocities_ghost, face_velocities_ghost,
             *sim_data->incompressible->boundary, sim_data->dt, sim_data->time);
 }
+*/
 
 template <class TV, class T> void NonAdvData<TV, T>::
 AfterAdvection
-(WaterDriver<TV> *driver, FaceArray<TV> *face_velocities)
+(WaterDriver<TV> *driver, ::water_app_data::FaceArray<TV> *face_velocities)
 {
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
     face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
@@ -513,28 +478,6 @@ void Add_Source(NonAdvData<TVF2, TF> *sim_data)
     sim_data->sources->Append(new ANALYTIC_IMPLICIT_OBJECT<BOX<TVF2> >(source));
 }
 
-
-/*
-void Add_Source(NonAdvData<TVF3, TF> *sim_data)
-{
-    TVF3 point1, point2;
-    CYLINDER<TF> source;
-    point1 = TVF3::All_Ones_Vector()*(TF).8;
-    point1(1)=.4;
-    point1(3)=.95;
-    point2=TVF3::All_Ones_Vector()*(TF).8;
-    point2(1)=.4;
-    point2(3)=1;
-    source.Set_Endpoints(point1, point2);
-    source.radius=.1;
-    IMPLICIT_OBJECT<TVF3>* analytic = new ANALYTIC_IMPLICIT_OBJECT<CYLINDER<TF> >(source);
-    sim_data->sources->Append(analytic);
-}
-*/
-
-template class FaceArray<TVF2>;
+template class ::water_app_data::FaceArray<TVF2>;
 template class FaceArrayGhost<TVF2>;
 template class NonAdvData<TVF2, TF>;
-//template class FaceArray<TVF3>;
-//template class FaceArrayGhost<TVF3>;
-//template class NonAdvData<TVF3, TF>;
