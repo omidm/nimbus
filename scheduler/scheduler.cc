@@ -50,8 +50,8 @@ Scheduler::Scheduler(port_t p)
 void Scheduler::run() {
   Log::dbg_printLine("Running the Scheduler");
 
-  setupWorkerInterface();
-  setupUserInterface();
+  SetupWorkerInterface();
+  SetupUserInterface();
 
   schedulerCoreProcessor();
 }
@@ -86,20 +86,20 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   }
 }
 
-void Scheduler::setupWorkerInterface() {
-  loadWorkerCommands();
+void Scheduler::SetupWorkerInterface() {
+  LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
   server_->set_worker_command_set(&worker_command_set_);
   worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }
 
-void Scheduler::setupUserInterface() {
-  loadUserCommands();
+void Scheduler::SetupUserInterface() {
+  LoadUserCommands();
   user_interface_thread_ = new boost::thread(
-      boost::bind(&Scheduler::getUserCommand, this));
+      boost::bind(&Scheduler::GetUserCommand, this));
 }
 
-void Scheduler::getUserCommand() {
+void Scheduler::GetUserCommand() {
   while (true) {
     std::cout << "command: " << std::endl;
     std::string token("runapp");
@@ -111,7 +111,7 @@ void Scheduler::getUserCommand() {
   }
 }
 
-void Scheduler::loadUserCommands() {
+void Scheduler::LoadUserCommands() {
   std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
   while (true) {
     std::string word;
@@ -123,7 +123,7 @@ void Scheduler::loadUserCommands() {
   }
 }
 
-void Scheduler::loadWorkerCommands() {
+void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
   worker_command_set_.insert(
       std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));

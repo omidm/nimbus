@@ -74,11 +74,11 @@ class Scheduler {
     CommandSet worker_command_set_;
 
   private:
-    virtual void setupUserInterface();
-    virtual void setupWorkerInterface();
-    virtual void getUserCommand();
-    virtual void loadUserCommands();
-    virtual void loadWorkerCommands();
+    virtual void SetupUserInterface();
+    virtual void SetupWorkerInterface();
+    virtual void GetUserCommand();
+    virtual void LoadUserCommands();
+    virtual void LoadWorkerCommands();
 
     boost::thread* user_interface_thread_;
     boost::thread* worker_thread_;
