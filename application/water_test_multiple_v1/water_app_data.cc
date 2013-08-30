@@ -38,6 +38,10 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "shared/nimbus.h"
+#include "physbam_include.h"
+#include "water_app_data.h"
+
 namespace water_app_data {
 
     template <class TV> FaceArray<TV>::
@@ -69,5 +73,10 @@ namespace water_app_data {
         get_debug_info() {
             return id_debug;
         }
+
+    namespace {
+        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
+    } // namespace
+    template class ::water_app_data::FaceArray<TVF2>;
 
 } // namespace water_app_data

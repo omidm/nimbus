@@ -48,7 +48,6 @@
 #include "water_app_data.h"
 #include "water_driver.h"
 
-#define face_array_id 20
 #define face_array_ghost_id 25
 #define non_adv_id 30
 

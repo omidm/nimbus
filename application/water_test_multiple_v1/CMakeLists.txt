@@ -45,9 +45,11 @@ SET(PROTO_HELPER_cc
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
-        ${PROJECT_SOURCE_DIR}/water_data_types.cc
+        ${PROJECT_SOURCE_DIR}/water_app_data.cc
+        ${PROJECT_SOURCE_DIR}/water_data_driver.cc
         ${PROJECT_SOURCE_DIR}/water_helper.cc
         ${PROJECT_SOURCE_DIR}/water_driver.cc
+        ${PROJECT_SOURCE_DIR}/water_app_advection.cc
         ${PROJECT_SOURCE_DIR}/water_app.cc
         ${PROTO_FILES_h}
         ${PROTO_HELPER_h}
@@ -55,8 +57,11 @@ SET(${PROJECT_NAME}_cpp
 
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/physbam_include.h
-        ${PROJECT_SOURCE_DIR}/water_data_types.h
+        ${PROJECT_SOURCE_DIR}/water_app_data_fwd_decl.h
+        ${PROJECT_SOURCE_DIR}/water_app_data.h
+        ${PROJECT_SOURCE_DIR}/water_data_driver.h
         ${PROJECT_SOURCE_DIR}/water_driver.h
+        ${PROJECT_SOURCE_DIR}/water_app_advection.h
         ${PROJECT_SOURCE_DIR}/water_app.h
         ${PROTO_FILES_cc}
         ${PROTO_HELPER_cc}

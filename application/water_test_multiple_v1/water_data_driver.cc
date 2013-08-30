@@ -373,23 +373,6 @@ template <class TV> void ::water_app_data::FaceArray<TV>::
 Advection (WaterDriver<TV> *driver,
         NonAdvData<TV, T> *sim_data)
 {
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize
-        (sim_data->incompressible->grid, sim_data->number_of_ghost_cells, false);
-    sim_data->incompressible->boundary->Fill_Ghost_Cells_Face(
-            sim_data->incompressible->grid, *data,
-            face_velocities_ghost, sim_data->time + sim_data->dt,
-            sim_data->number_of_ghost_cells);
-
-    //TODO: serialize/ deserialize, advection needs:
-    //sim_data->incompressible->advection (probably needed only for advect V)
-    //sim_data->incompressible->boundary (needed elsewhere)
-    //sim_data->dt (parameter)
-    //face_velocities (needed elsewhere)
-    //face_velocities_ghost (needed elsewhere)
-    sim_data->incompressible->advection->Update_Advection_Equation_Face(
-            *grid, *data, face_velocities_ghost, face_velocities_ghost,
-            *sim_data->incompressible->boundary, sim_data->dt, sim_data->time);
 }
 */
 
