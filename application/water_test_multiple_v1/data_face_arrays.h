@@ -33,24 +33,52 @@
  */
 
 /* 
- * Methods used in advection in water application.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 
+#include "shared/nimbus.h"
 #include "physbam_include.h"
-#include "water_app_data_fwd_decl.h"
 
-namespace {
-    typedef ::PhysBAM::VECTOR<float, 2> TV;
-    typedef float T;
-} // namespace
+#define face_array_id 20
 
-void Advection (
-        ::water_app_data::FaceArray<TV> *face_velocities,
-        NonAdvData<TV, T> *sim_data);
+namespace water_app_data {
 
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
+    typedef float TF;
+
+    /* Face array for storing quantities like face velocities.
+    */
+    template <class TV>
+        class FaceArray : public ::nimbus::Data {
+
+            private:
+
+                typedef typename TV::SCALAR T;
+                typedef typename TV::template REBIND<int>::TYPE TV_INT;
+                typedef typename ::PhysBAM::GRID<TV> T_GRID;
+                typedef typename 
+                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+                    T_FACE_ARRAY;
+
+                int size_;
+
+            public:
+
+                FaceArray(int size);
+                virtual void create();
+                virtual ::nimbus::Data* clone();
+                virtual int get_debug_info();
+
+                // debug information
+                int id_debug;
+
+                // physbam structures and methods
+                T_GRID *grid;
+                T_FACE_ARRAY *data;
+        };
+
+} // namespace water_app_data
+
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_

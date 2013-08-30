@@ -38,8 +38,8 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "data_face_arrays.h"
 #include "water_app.h"
-#include "water_app_data.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
 #include "physbam_include.h"

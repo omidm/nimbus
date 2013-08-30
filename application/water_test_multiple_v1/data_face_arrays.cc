@@ -33,14 +33,12 @@
  */
 
 /*
- * Implementation of functions for data classes used by application.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #include "shared/nimbus.h"
 #include "physbam_include.h"
-#include "water_app_data.h"
+#include "data_face_arrays.h"
 
 namespace water_app_data {
 

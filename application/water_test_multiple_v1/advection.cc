@@ -33,54 +33,53 @@
  */
 
 /* 
- * Data used by application.
+ * Methods used in advection in water application.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_H_
-
-#include "shared/nimbus.h"
+#include "advection.h"
+#include "data_face_arrays.h"
 #include "physbam_include.h"
+#include "types.h"
+#include "water_data_driver.h"
+#include "water_driver.h"
 
-#define face_array_id 20
+void Advection (
+        ::water_app_data::FaceArray<TV> *face_velocities,
+        NonAdvData<TV, T> *sim_data) {
 
-namespace water_app_data {
+    typedef typename ::PhysBAM::GRID<TV> T_GRID;
+    typedef typename ::PhysBAM::GRID_ARRAYS_POLICY<GRID<TV> >
+        ::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
+    typedef typename 
+        ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+        T_FACE_ARRAY;
 
-    typedef float TF;
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+    face_velocities_ghost.Resize(
+            sim_data->incompressible->grid,
+            sim_data->number_of_ghost_cells,
+            false);
+    sim_data->incompressible->boundary->Fill_Ghost_Cells_Face(
+            sim_data->incompressible->grid,
+            *face_velocities->data,
+            face_velocities_ghost,
+            sim_data->time + sim_data->dt,
+            sim_data->number_of_ghost_cells);
 
-    /* Face array for storing quantities like face velocities.
-    */
-    template <class TV>
-        class FaceArray : public ::nimbus::Data {
-
-            private:
-
-                typedef typename TV::SCALAR T;
-                typedef typename TV::template REBIND<int>::TYPE TV_INT;
-                typedef typename ::PhysBAM::GRID<TV> T_GRID;
-                typedef typename 
-                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-                    T_FACE_ARRAY;
-
-                int size_;
-
-            public:
-
-                FaceArray(int size);
-                virtual void create();
-                virtual ::nimbus::Data* clone();
-                virtual int get_debug_info();
-
-                // debug information
-                int id_debug;
-
-                // physbam structures and methods
-                T_GRID *grid;
-                T_FACE_ARRAY *data;
-        };
-
-} // namespace water_app_data
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_H_
+    //TODO: serialize/ deserialize, advection needs:
+    //sim_data->incompressible->advection (probably needed only for advect V)
+    //sim_data->incompressible->boundary (needed elsewhere)
+    //sim_data->dt (parameter)
+    //face_velocities (needed elsewhere)
+    //face_velocities_ghost (needed elsewhere)
+    sim_data->incompressible->advection->Update_Advection_Equation_Face(
+            *face_velocities->grid,
+            *face_velocities->data,
+            face_velocities_ghost,
+            face_velocities_ghost,
+            *sim_data->incompressible->boundary,
+            sim_data->dt,
+            sim_data->time);
+}

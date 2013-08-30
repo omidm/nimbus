@@ -33,21 +33,20 @@
  */
 
 /* 
- * Forward declaration of data to avoid circular dependencies.
- * TODO(chinmayee): fix all previous hacks when doing required code
- * refactoring.
+ * Common types to be used by water application, driver and job functions
+ * operating on data.
+ *
+ * Can also initialize constants used by application, driver and job functions
+ * here.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_
 
-template <class TV> class WaterDriver;
-template <class TV, class T> class NonAdvData;
+typedef float T;
+typedef ::PhysBAM::VECTOR<float, 2> TV;
+typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
 
-namespace water_app_data {
-    template <class TV> class FaceArray;
-}
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_DATA_FWD_DECL_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_

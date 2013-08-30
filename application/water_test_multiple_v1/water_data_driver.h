@@ -43,9 +43,9 @@
 
 /* Include relevant PhysBAM files here.
 */
+#include "data_face_arrays.h"
 #include "shared/nimbus.h"
 #include "physbam_include.h"
-#include "water_app_data.h"
 #include "water_driver.h"
 
 #define face_array_ghost_id 25

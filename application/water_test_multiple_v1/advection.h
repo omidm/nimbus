@@ -38,53 +38,15 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "physbam_include.h"
-#include "water_app_data.h"
-#include "water_app_advection.h"
-#include "water_data_driver.h"
-#include "water_driver.h"
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_
 
-namespace {
-    typedef ::PhysBAM::VECTOR<float, 2> TV;
-    typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
-    typedef float T;
-} // namespace
+#include "data_fwd_decl.h"
+#include "physbam_include.h"
+#include "types.h"
 
 void Advection (
         ::water_app_data::FaceArray<TV> *face_velocities,
-        NonAdvData<TV, T> *sim_data) {
+        NonAdvData<TV, T> *sim_data);
 
-    typedef typename ::PhysBAM::GRID<TV> T_GRID;
-    typedef typename ::PhysBAM::GRID_ARRAYS_POLICY<GRID<TV> >
-        ::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
-    typedef typename 
-        ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-        T_FACE_ARRAY;
-
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize(
-            sim_data->incompressible->grid,
-            sim_data->number_of_ghost_cells,
-            false);
-    sim_data->incompressible->boundary->Fill_Ghost_Cells_Face(
-            sim_data->incompressible->grid,
-            *face_velocities->data,
-            face_velocities_ghost,
-            sim_data->time + sim_data->dt,
-            sim_data->number_of_ghost_cells);
-
-    //TODO: serialize/ deserialize, advection needs:
-    //sim_data->incompressible->advection (probably needed only for advect V)
-    //sim_data->incompressible->boundary (needed elsewhere)
-    //sim_data->dt (parameter)
-    //face_velocities (needed elsewhere)
-    //face_velocities_ghost (needed elsewhere)
-    sim_data->incompressible->advection->Update_Advection_Equation_Face(
-            *face_velocities->grid,
-            *face_velocities->data,
-            face_velocities_ghost,
-            face_velocities_ghost,
-            *sim_data->incompressible->boundary,
-            sim_data->dt,
-            sim_data->time);
-}
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_
