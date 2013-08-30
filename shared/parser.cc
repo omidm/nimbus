@@ -523,6 +523,111 @@ bool ParseCreateDataCommand(const std::string& input,
 }
 
 
+bool ParseRemoteCopyCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    ID<data_id_t>& from_data_id,
+    ID<data_id_t>& to_data_id,
+    ID<worker_id_t>& to_worker_id,
+    std::string& to_ip,
+    ID<port_t>& to_port,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after) {
+  int num = 8;
+  job_id_t job_id_elem;
+  data_id_t data_id_elem;
+  worker_id_t worker_id_elem;
+  port_t port_elem;
+  std::set<job_id_t> job_id_set;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: RemoteCopyCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: RemoteCopyCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (ParseID(*iter, job_id_elem)) {
+    ID<job_id_t> temp(job_id_elem);
+    job_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseID(*iter, data_id_elem)) {
+    ID<data_id_t> temp(data_id_elem);
+    from_data_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid from data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseID(*iter, data_id_elem)) {
+    ID<data_id_t> temp(data_id_elem);
+    to_data_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid to data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseID(*iter, worker_id_elem)) {
+    ID<worker_id_t> temp(worker_id_elem);
+    to_worker_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid to worker id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  to_ip = *iter;
+
+  iter++;
+  if (ParseID(*iter, port_elem)) {
+    ID<port_t> temp(port_elem);
+    to_port = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid to port." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    before = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    after = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+
+
+
+
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     IDSet<data_id_t>& data_id,
