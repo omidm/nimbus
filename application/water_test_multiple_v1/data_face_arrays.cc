@@ -36,9 +36,11 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "shared/nimbus.h"
-#include "physbam_include.h"
 #include "data_face_arrays.h"
+#include "physbam_include.h"
+#include "proto_files/physbam_serialize_data_common_2d.h"
+#include "proto_files/physbam_serialize_data_arrays_2d.h"
+#include "shared/nimbus.h"
 
 namespace water_app_data {
 

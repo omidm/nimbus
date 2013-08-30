@@ -19,3 +19,8 @@ You will need a minimum of 2.8.7 CMake version to build the Makefile.
     make
 
 ------------------------------------------------------------------------------
+
+File names are relative to the current directory, physbam-lib/Public_Library
+or nimbus.
+
+------------------------------------------------------------------------------

@@ -39,8 +39,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 
-#include "shared/nimbus.h"
 #include "physbam_include.h"
+#include "shared/nimbus.h"
 
 #define face_array_id 20
 
