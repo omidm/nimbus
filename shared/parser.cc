@@ -242,6 +242,44 @@ bool ParseHandshakeCommand(const std::string& input,
   return true;
 }
 
+bool ParseJobDoneCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    std::string& params) {
+  int num = 2;
+  job_id_t job_id_elem;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: JobDoneCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: JobDone has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (ParseID(*iter, job_id_elem)) {
+    ID<job_id_t> temp(job_id_elem);
+    job_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  params = *iter;
+
+  return true;
+}
+
 bool ParseSpawnJobCommand(const std::string& input,
     std::string& job_name,
     IDSet<job_id_t>& job_id,

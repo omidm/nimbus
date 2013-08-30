@@ -208,6 +208,18 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       } else {
         generated = new HandshakeCommand(worker_id, ip, port);
       }
+    } else if (type == COMMAND_JOBDONE) {
+      ID<job_id_t> job_id;
+      std::string params;
+
+      bool cond = ParseJobDoneCommand(param_segment, job_id, params);
+
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid jobdone." << std::endl;
+        return false;
+      } else {
+        generated = new JobDoneCommand(job_id, params);
+      }
     } else {
       std::cout << "ERROR: Unknown command." << std::endl;
       return false;
@@ -348,6 +360,13 @@ std::string SpawnJobCommand::params() {
   return params_;
 }
 
+
+
+
+DefineDataCommand::DefineDataCommand() {
+  name_ = "definedata";
+}
+
 DefineDataCommand::DefineDataCommand(const std::string& data_name,
     const IDSet<data_id_t>& data_id,
     const IDSet<partition_t>& partition_id,
@@ -405,4 +424,44 @@ IDSet<partition_t> DefineDataCommand::neighbor_partitions() {
 std::string DefineDataCommand::params() {
   return params_;
 }
+
+
+
+
+JobDoneCommand::JobDoneCommand() {
+  name_ = "jobdone";
+}
+
+JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
+    const std::string& params)
+: job_id_(job_id), params_(params) {
+  name_ = "jobdone";
+}
+
+JobDoneCommand::~JobDoneCommand() {
+}
+
+std::string JobDoneCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (job_id_.toString() + " ");
+  str += params_;
+  return str;
+}
+
+std::string JobDoneCommand::toStringWTags() {
+  std::string str;
+  str += ("name:" + name_ + " ");
+  str += ("id:" + job_id_.toString() + " ");
+  str += ("params:" + params_);
+  return str;
+}
+ID<job_id_t> JobDoneCommand::job_id() {
+  return job_id_;
+}
+
+std::string JobDoneCommand::params() {
+  return params_;
+}
+
 

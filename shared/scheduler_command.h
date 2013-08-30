@@ -170,16 +170,17 @@ class SpawnJobCommand : public SchedulerCommand {
 class JobDoneCommand : public SchedulerCommand {
   public:
     JobDoneCommand();
-    JobDoneCommand(job_id_t job_id, std::string params);
+    JobDoneCommand(const ID<job_id_t>& job_id,
+        const std::string& params);
     ~JobDoneCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
-    job_id_t job_id();
+    ID<job_id_t> job_id();
     std::string params();
 
   private:
-    job_id_t job_id_;
+    ID<job_id_t> job_id_;
     std::string params_;
 };
 

@@ -64,7 +64,8 @@ namespace nimbus {
   enum SchedulerCommandType {
     COMMAND_SPAWN_JOB,
     COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE
+    COMMAND_HANDSHAKE,
+    COMMAND_JOBDONE
   };
 
 }  // namespace nimbus

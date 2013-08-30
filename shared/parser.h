@@ -110,6 +110,10 @@ bool ParseHandshakeCommand(const std::string& input,
     ID<worker_id_t>& worker_id,
     std::string& ip, ID<port_t>& port);
 
+bool ParseJobDoneCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    std::string& params);
+
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
 
 bool ParseIDSet(const std::string& input, std::set<uint32_t>& set);
