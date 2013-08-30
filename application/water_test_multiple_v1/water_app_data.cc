@@ -74,7 +74,9 @@ namespace water_app_data {
             return id_debug;
         }
 
-    typedef ::PhysBAM::VECTOR<float, 2> TVF2;
+    namespace {
+        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
+    } // namespace
     template class ::water_app_data::FaceArray<TVF2>;
 
 } // namespace water_app_data

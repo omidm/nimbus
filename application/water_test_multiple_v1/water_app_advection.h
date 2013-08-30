@@ -44,9 +44,12 @@
 #include "physbam_include.h"
 #include "water_app_data_fwd_decl.h"
 
-template <class TV, class T>
+namespace {
+    typedef ::PhysBAM::VECTOR<float, 2> TV;
+    typedef float T;
+} // namespace
+
 void Advection (
-        WaterDriver<TV> *driver,
         ::water_app_data::FaceArray<TV> *face_velocities,
         NonAdvData<TV, T> *sim_data);
 

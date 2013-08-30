@@ -44,13 +44,16 @@
 #include "water_data_driver.h"
 #include "water_driver.h"
 
+namespace {
+    typedef ::PhysBAM::VECTOR<float, 2> TV;
+    typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
+    typedef float T;
+} // namespace
+
 void Advection (
-        WaterDriver<TV> *driver,
         ::water_app_data::FaceArray<TV> *face_velocities,
         NonAdvData<TV, T> *sim_data) {
 
-    typedef typename TV::SCALAR T;
-    typedef typename TV::template REBIND<int>::TYPE TV_INT;
     typedef typename ::PhysBAM::GRID<TV> T_GRID;
     typedef typename ::PhysBAM::GRID_ARRAYS_POLICY<GRID<TV> >
         ::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
@@ -77,7 +80,7 @@ void Advection (
     //face_velocities (needed elsewhere)
     //face_velocities_ghost (needed elsewhere)
     sim_data->incompressible->advection->Update_Advection_Equation_Face(
-            *face_velociites->grid,
+            *face_velocities->grid,
             *face_velocities->data,
             face_velocities_ghost,
             face_velocities_ghost,

@@ -48,7 +48,6 @@
 
 namespace water_app_data {
 
-    typedef ::PhysBAM::VECTOR<float, 2> TVF2;
     typedef float TF;
 
     /* Face array for storing quantities like face velocities.
@@ -60,8 +59,6 @@ namespace water_app_data {
 
                 typedef typename TV::SCALAR T;
                 typedef typename TV::template REBIND<int>::TYPE TV_INT;
-                typedef typename ::PhysBAM::GRID_ARRAYS_POLICY<GRID<TV> >
-                    ::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
                 typedef typename ::PhysBAM::GRID<TV> T_GRID;
                 typedef typename 
                     ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
