@@ -67,7 +67,8 @@ namespace nimbus {
     COMMAND_HANDSHAKE,
     COMMAND_JOB_DONE,
     COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA
+    COMMAND_CREATE_DATA,
+    COMMAND_REMOTE_COPY
   };
 
 }  // namespace nimbus
