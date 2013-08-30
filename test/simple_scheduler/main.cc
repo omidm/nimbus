@@ -88,6 +88,6 @@ int main(int argc, char *argv[]) {
   Log::dbg_printLine("DEBUG information will be printed!", LOG_DEBUG);
 
   SimpleScheduler * s = new SimpleScheduler(NIMBUS_SCHEDULER_PORT);
-  s->run();
+  s->Run();
 }
 

@@ -47,13 +47,13 @@ Scheduler::Scheduler(port_t p)
   appId_ = 0;
 }
 
-void Scheduler::run() {
+void Scheduler::Run() {
   Log::dbg_printLine("Running the Scheduler");
 
   SetupWorkerInterface();
   SetupUserInterface();
 
-  schedulerCoreProcessor();
+  SchedulerCoreProcessor();
 }
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
@@ -90,7 +90,7 @@ void Scheduler::SetupWorkerInterface() {
   LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
   server_->set_worker_command_set(&worker_command_set_);
-  worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+  worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }
 
 void Scheduler::SetupUserInterface() {

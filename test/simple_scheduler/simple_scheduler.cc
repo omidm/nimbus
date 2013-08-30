@@ -47,7 +47,7 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 : Scheduler(p) {
 }
 
-void SimpleScheduler::schedulerCoreProcessor() {
+void SimpleScheduler::SchedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
 //  std::string test = "spawnjob main {0} {1,2} {4,5} ";
