@@ -1,5 +1,7 @@
 #include <PhysBAM_Tools/Grids_Uniform_Interpolation/LINEAR_INTERPOLATION_UNIFORM.h>
-using namespace PhysBAM;
+
+namespace PhysBAM {
+
 //#####################################################################
 // Function Clamped_To_Array_No_Extrema
 //#####################################################################
@@ -220,4 +222,6 @@ template<class T_GRID,class T2,class T_FACE_LOOKUP> ARRAY<PAIR<FACE_INDEX<T_GRID
 From_Block_Face_Component_Weights(const int axis,const T_GRID& grid,const BLOCK_UNIFORM<T_GRID>& block,const typename T_FACE_LOOKUP::LOOKUP& u,const TV& X) const
 {
     return T_LINEAR_INTERPOLATION_MAC_HELPER::Interpolate_Face_Component_Weights(axis,block,u,X);
+}
+
 }
