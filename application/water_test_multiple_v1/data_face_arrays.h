@@ -58,6 +58,7 @@ namespace water_app_data {
                 typedef typename TV::SCALAR T;
                 typedef typename TV::template REBIND<int>::TYPE TV_INT;
                 typedef typename ::PhysBAM::GRID<TV> T_GRID;
+                typedef typename ::PhysBAM::RANGE<TV> T_RANGE;
                 typedef typename 
                     ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
                     T_FACE_ARRAY;

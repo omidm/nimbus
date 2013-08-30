@@ -56,7 +56,7 @@ namespace water_app_data {
         create() {
             std::cout << "Creating FaceArray\n";
             grid = new T_GRID(TV_INT::All_Ones_Vector()*size_,
-                    RANGE<TV>::Unit_Box(), true);
+                    T_RANGE::Unit_Box(), true);
             assert(grid);
             data = new  T_FACE_ARRAY();
             assert(data);
