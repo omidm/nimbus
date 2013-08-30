@@ -36,52 +36,29 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "assert.h"
-#include "physbam_serialize_data_2d.h"
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_SERIALIZE_DATA_COMMON_2D_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_SERIALIZE_DATA_COMMON_2D_H_
+
+#include "pb_include_2d.h"
+#include "physbam_data_include.h"
 
 namespace physbam_pb {
 
-    //TODO(chinmayee): Make changes in all below code for required/ optional if
-    //necessary
+    void make_pb_object(VI2 *phys_vec,
+            ::communication::PhysbamVectorInt2d *pb_vec);
 
-    bool make_pb_object(VI2 *phys_vec,
-            ::communication::PhysbamVectorInt2d *pb_vec) {
-        assert(phys_vec);
-        assert(pb_vec);
-        pb_vec->set_x((*phys_vec)[0]);
-        pb_vec->set_y((*phys_vec)[1]);
-        return true;
-    }
+    void make_pb_object(VF2 *phys_vec,
+            ::communication::PhysbamVectorFloat2d *pb_vec);
 
-    bool make_pb_object(VF2 *phys_vec,
-            ::communication::PhysbamVectorFloat2d *pb_vec) {
-        assert(phys_vec);
-        assert(pb_vec);
-        pb_vec->set_x((*phys_vec)[0]);
-        pb_vec->set_y((*phys_vec)[1]);
-        return true;
-    }
+    void make_pb_object(RangeI2 *phys_range,
+            ::communication::PhysbamRangeInt2d *pb_range);
 
-    bool make_pb_object(RangeI2 *phys_range,
-            ::communication::PhysbamRangeInt2d *pb_range) {
-        assert(phys_range);
-        assert(pb_range);
-        VI2 phys_range_min = phys_range->Minimum_Corner();
-        VI2 phys_range_max = phys_range->Maximum_Corner();
-        ::communication::PhysbamVectorInt2d *pb_range_min = 
-            pb_range->mutable_min_corner();
-        ::communication::PhysbamVectorInt2d *pb_range_max = 
-            pb_range->mutable_max_corner();
-        make_pb_object(&phys_range_min, pb_range_min);
-        make_pb_object(&phys_range_max, pb_range_max);
-        return true;
-    }
+    void make_pb_object(RangeF2 *phys_range,
+            ::communication::PhysbamRangeFloat2d *pb_range);
 
-    bool make_pb_object(RangeF2 *phys_range,
-            ::communication::PhysbamRangeFloat2d *pb_range) {
-        assert(phys_range);
-        assert(pb_range);
-        return false;
-    }
+    void make_pb_object(Grid2 *phys_grid,
+            ::communication::PhysbamGrid2d *pb_grid);
 
 } // namespace physbam_pb
+
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_SERIALIZE_DATA_COMMON_2D_H_

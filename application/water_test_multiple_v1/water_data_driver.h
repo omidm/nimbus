@@ -38,14 +38,15 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_DRIVER_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_DRIVER_H_
 
 /* Include relevant PhysBAM files here.
 */
 #include "shared/nimbus.h"
-#include "./physbam_include.h"
-#include "./water_driver.h"
+#include "physbam_include.h"
+#include "water_app_data.h"
+#include "water_driver.h"
 
 #define face_array_id 20
 #define face_array_ghost_id 25
@@ -80,32 +81,6 @@ typedef float TF;
 
 template <class TV, class T>
 class NonAdvData;
-
-/* Face array for storing quantities like face velocities.
-*/
-template <class TV>
-class FaceArray : public Data {
-    private:
-        int size_;
-        typedef typename TV::SCALAR T;
-        typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
-
-    public:
-
-        void Advection (WaterDriver<TV> *driver,
-             NonAdvData<TV, T> *sim_data);
-
-        int id_debug;
-
-        FaceArray(int size);
-        virtual void create();
-        virtual Data* clone();
-        virtual int get_debug_info();
-
-        // physbam structures and methods
-        GRID<TV> *grid;
-        ARRAY<T, FACE_INDEX<TV::dimension> > *data;
-};
 
 /* Ghost face array for storing scalar quantities.
 */
@@ -162,14 +137,14 @@ class NonAdvData : public Data {
 
         bool initialize
             (WaterDriver<TV> *driver,
-             FaceArray<TV> *face_velocities,
+             ::water_app_data::FaceArray<TV> *face_velocities,
              const int frame);
 
         void BeforeAdvection (WaterDriver<TV> *driver,
-             FaceArray<TV> *face_velocities); 
+             ::water_app_data::FaceArray<TV> *face_velocities); 
 
         void AfterAdvection (WaterDriver<TV> *driver,
-             FaceArray<TV> *face_velocities);
+             ::water_app_data::FaceArray<TV> *face_velocities);
 
         // physbam structures and methods
 
@@ -209,7 +184,7 @@ class NonAdvData : public Data {
         void Set_Boundary_Conditions(
                 WaterDriver<TV> *driver,
                 const T time,
-                FaceArray<TV> *face_velocities);
+                ::water_app_data::FaceArray<TV> *face_velocities);
         void Adjust_Phi_With_Sources(const T time);
         void Adjust_Particle_For_Domain_Boundaries(
                 PARTICLE_LEVELSET_PARTICLES<TV> &particles,
@@ -220,7 +195,7 @@ class NonAdvData : public Data {
                 const T time); 
 
         void Write_Output_Files_EF(const int frame,
-                FaceArray<TV>* face_velocities,
+                ::water_app_data::FaceArray<TV>* face_velocities,
                 WaterDriver<TV> * driver);
         void Read_Output_Files_EF(const int frame) {}
 };
@@ -228,4 +203,4 @@ class NonAdvData : public Data {
 void Add_Source(NonAdvData<TVF2, TF> *sim_data);
 //void Add_Source(NonAdvData<TVF3, TF> *sim_data);
 
-#endif  // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_TYPES_H_
+#endif  // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DATA_DRIVER_H_

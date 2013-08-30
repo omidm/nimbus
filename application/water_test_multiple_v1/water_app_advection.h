@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2013 Stanford University.
  * All rights reserved.
@@ -34,24 +33,12 @@
  */
 
 /* 
+ * Methods used in advection in water application.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_
 
-#include "PhysBAM_Tools/Vectors/VECTOR.h"
-#include "PhysBAM_Tools/Math_Tools/RANGE.h"
-#include "PhysBAM_Tools/Grids_Uniform/GRID.h"
-#include "PhysBAM_Tools/Grids_Uniform_Arrays/FACE_ARRAYS.h"
-
-namespace physbam_pb {
-    typedef ::PhysBAM::VECTOR<int, 2> VI2;
-    typedef ::PhysBAM::VECTOR<float, 2> VF2;
-    typedef ::PhysBAM::RANGE<VI2> RangeI2;
-    typedef ::PhysBAM::RANGE<VF2> RangeF2;
-    typedef ::PhysBAM::GRID<VF2> Grid2;
-    typedef ::PhysBAM::ARRAY<float, ::PhysBAM::FACE_INDEX<2> > FaceArray2;
-} // namespace physbam_pb
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_ADVECTION_H_

@@ -36,31 +36,31 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_2D_H_
-
-// IMPORTANT: first include the protocol buffer generated files
-// in order to avoid pollution due to using namespace physbam
-// in water_data_types, and functions overloaded by physbam
-#include "pb_include_2d.h"
-
-// Now include physbam related files
-#include "physbam_data_include.h"
+#include "assert.h"
+#include "physbam_serialize_data_arrays_2d.h"
+#include "physbam_serialize_data_common_2d.h"
 
 namespace physbam_pb {
 
-    bool make_pb_object(VI2 *phys_vec,
-            ::communication::PhysbamVectorInt2d *pb_vec);
+    void make_pb_object(FaceArray2 *phys_fa,
+            ::communication::PhysbamFaceArray2d *pb_fa) {
 
-    bool make_pb_object(VF2 *phys_vec,
-            ::communication::PhysbamVectorFloat2d *pb_vec);
+        assert(pb_fa);
 
-    bool make_pb_object(RangeI2 *phys_range,
-            ::communication::PhysbamRangeInt2d *pb_range);
+        if (phys_fa != NULL) {
 
-    bool make_pb_object(RangeF2 *phys_range,
-            ::communication::PhysbamRangeFloat2d *pb_range);
+            RangeI2 phys_fa_domain_indices = phys_fa->domain_indices;
+            ::communication::PhysbamRangeInt2d *pb_fa_domain_indices =
+                pb_fa->mutable_domain_indices();
+            make_pb_object(&phys_fa_domain_indices, pb_fa_domain_indices);
+
+            int buff_size = phys_fa->buffer_size;
+            pb_fa->set_buffer_size(buff_size);
+            float *buff_values = phys_fa->base_pointer;
+            for (int i = 0; i < buff_size; i++) {
+                pb_fa->add_values(buff_values[i]);
+            }
+        }
+    }
 
 } // namespace physbam_pb
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_SERIALIZE_DATA_2D_H_

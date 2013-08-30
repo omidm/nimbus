@@ -296,7 +296,8 @@ void Advect::execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
-    face_velocities->Advection(driver, sim_data);
+    //TODO(chinmayee): fix this after advection is fixed
+    //face_velocities->Advection(driver, sim_data);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();

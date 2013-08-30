@@ -38,10 +38,11 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "./water_app.h"
-#include "./water_data_types.h"
-#include "./water_driver.h"
-#include "./physbam_include.h"
+#include "water_app.h"
+#include "water_app_data.h"
+#include "water_data_driver.h"
+#include "water_driver.h"
+#include "physbam_include.h"
 
 #ifndef TEMPLATE_USE
 #define TEMPLATE_USE
@@ -68,7 +69,7 @@ template <class TV, class T> void NonAdvData<TV, T>::
 Set_Boundary_Conditions(
         WaterDriver<TV> *driver,
         const T time,
-        FaceArray<TV> *face_velocities)
+        ::water_app_data::FaceArray<TV> *face_velocities)
 {
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
 
@@ -139,7 +140,7 @@ Set_Boundary_Conditions(
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-Write_Output_Files_EF(const int frame, FaceArray<TV> *face_velocities,
+Write_Output_Files_EF(const int frame, ::water_app_data::FaceArray<TV> *face_velocities,
     WaterDriver<TV> *driver) {
   if(!driver->write_output_files) return;
   std::string f=STRING_UTILITIES::string_sprintf("%d",frame);

@@ -8,7 +8,7 @@ message PhysbamGrid2d {
     optional PhysbamRangeFloat2d domain = 2;
     optional PhysbamVectorFloat2d dx = 3;
     optional PhysbamVectorFloat2d one_over_dx = 4;
-    optional PhysbamVectorInt2d number_of_cells = 5;
-    optional float min_dX = 6;
+    optional PhysbamVectorInt2d numbers_of_cells = 5;
+    optional float min_dx = 6;
     optional float MAC_offset = 7;
 }

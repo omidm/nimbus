@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2013 Stanford University.
  * All rights reserved.
@@ -33,25 +32,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
+/*
+ * Implementation of functions for data classes used by application.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
+namespace water_app_data {
 
-#include "PhysBAM_Tools/Vectors/VECTOR.h"
-#include "PhysBAM_Tools/Math_Tools/RANGE.h"
-#include "PhysBAM_Tools/Grids_Uniform/GRID.h"
-#include "PhysBAM_Tools/Grids_Uniform_Arrays/FACE_ARRAYS.h"
+    template <class TV> FaceArray<TV>::
+        FaceArray(int size) {
+            id_debug = face_array_id;
+            this->size_ = size;
+            grid = NULL;
+            data = NULL;
+        }
 
-namespace physbam_pb {
-    typedef ::PhysBAM::VECTOR<int, 2> VI2;
-    typedef ::PhysBAM::VECTOR<float, 2> VF2;
-    typedef ::PhysBAM::RANGE<VI2> RangeI2;
-    typedef ::PhysBAM::RANGE<VF2> RangeF2;
-    typedef ::PhysBAM::GRID<VF2> Grid2;
-    typedef ::PhysBAM::ARRAY<float, ::PhysBAM::FACE_INDEX<2> > FaceArray2;
-} // namespace physbam_pb
+    template <class TV> void FaceArray<TV>::
+        create() {
+            std::cout << "Creating FaceArray\n";
+            grid = new T_GRID(TV_INT::All_Ones_Vector()*size_,
+                    RANGE<TV>::Unit_Box(), true);
+            assert(grid);
+            data = new  T_FACE_ARRAY();
+            assert(data);
+            data->Resize(*grid);
+        }
 
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_
+    template <class TV> ::nimbus::Data* FaceArray<TV>::
+        clone() {
+            std::cout << "Cloning facearray\n";
+            return new FaceArray<TV>(size_);
+        }
+
+    template <class TV> int FaceArray<TV>::
+        get_debug_info() {
+            return id_debug;
+        }
+
+} // namespace water_app_data
