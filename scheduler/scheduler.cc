@@ -131,6 +131,8 @@ void Scheduler::loadWorkerCommands() {
       std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
   worker_command_set_.insert(
       std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
+  worker_command_set_.insert(
+      std::make_pair(std::string("jobdone"), COMMAND_JOB_DONE));
 }
 
 

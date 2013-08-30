@@ -150,6 +150,16 @@ void Worker::loadSchedulerCommands() {
       std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
   scheduler_command_set_.insert(
       std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("jobdone"), COMMAND_JOB_DONE));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("computejob"), COMMAND_COMPUTE_JOB));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("createdata"), COMMAND_CREATE_DATA));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("remotecopy"), COMMAND_REMOTE_COPY));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("localcopy"), COMMAND_LOCAL_COPY));
 }
 
 void Worker::addJob(Job* job) {
