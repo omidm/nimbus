@@ -44,13 +44,15 @@
 #include "shared/nimbus.h"
 #include "physbam_include.h"
 
+#define face_array_id 20
+
 namespace water_app_data {
 
     typedef ::PhysBAM::VECTOR<float, 2> TVF2;
     typedef float TF;
 
     /* Face array for storing quantities like face velocities.
-     */
+    */
     template <class TV>
         class FaceArray : public ::nimbus::Data {
 

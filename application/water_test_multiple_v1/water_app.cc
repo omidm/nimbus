@@ -39,9 +39,10 @@
 #include <iostream>
 #include "assert.h"
 #include "shared/nimbus.h"
-#include "./water_app.h"
-#include "./water_data_types.h"
-#include "./water_driver.h"
+#include "water_app.h"
+#include "water_app_data.h"
+#include "water_data_driver.h"
+#include "water_driver.h"
 #include "stdlib.h"
 
 static int ml = 200;
@@ -79,7 +80,7 @@ void WaterApp::load() {
     registerJob("writeframe", new WriteFrame(this, JOB_COMP));
 
     registerData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    registerData("face_velocities_1", new FaceArray<TV>(ml));
+    registerData("face_velocities_1", new ::water_app_data::FaceArray<TV>(ml));
     registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
     registerData("sim_data_1", new NonAdvData<TV, T>(ml));
 
@@ -163,7 +164,7 @@ void Init::execute(std::string params, const DataArray& da)
     std::cout << "Executing init job\n";
 
     WaterDriver<TV> *driver = NULL;
-    FaceArray<TV> *face_velocities = NULL;
+    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -175,7 +176,7 @@ void Init::execute(std::string params, const DataArray& da)
                 driver = (WaterDriver<TV> *)da[i];
                 break;
             case face_array_id:
-                face_velocities = (FaceArray<TV> *)da[i];
+                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
                 break;
@@ -217,7 +218,7 @@ void UptoAdvect::execute(std::string params, const DataArray& da)
     std::cout << "@@ Running upto advect\n";
 
     WaterDriver<TV> *driver = NULL;
-    FaceArray<TV> *face_velocities = NULL;
+    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -229,7 +230,7 @@ void UptoAdvect::execute(std::string params, const DataArray& da)
                 driver = (WaterDriver<TV> *)da[i];
                 break;
             case face_array_id:
-                face_velocities = (FaceArray<TV> *)da[i];
+                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
                 break;
@@ -267,7 +268,7 @@ void Advect::execute(std::string params, const DataArray& da)
     std::cout << "@@ Running advect\n";
 
     WaterDriver<TV> *driver = NULL;
-    FaceArray<TV> *face_velocities = NULL;
+    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -279,7 +280,7 @@ void Advect::execute(std::string params, const DataArray& da)
                 driver = (WaterDriver<TV> *)da[i];
                 break;
             case face_array_id:
-                face_velocities = (FaceArray<TV> *)da[i];
+                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
                 break;
@@ -317,7 +318,7 @@ void AfterAdvect::execute(std::string params, const DataArray& da)
     std::cout << "@@ Running after advect\n";
 
     WaterDriver<TV> *driver = NULL;
-    FaceArray<TV> *face_velocities = NULL;
+    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -329,7 +330,7 @@ void AfterAdvect::execute(std::string params, const DataArray& da)
                 driver = (WaterDriver<TV> *)da[i];
                 break;
             case face_array_id:
-                face_velocities = (FaceArray<TV> *)da[i];
+                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
                 break;
@@ -366,7 +367,7 @@ void Loop::execute(std::string params, const DataArray& da)
     std::cout << "Executing forloop job\n";
 
     WaterDriver<TV> *driver = NULL;
-    FaceArray<TV> *face_velocities = NULL;
+    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -378,7 +379,7 @@ void Loop::execute(std::string params, const DataArray& da)
                 driver = (WaterDriver<TV> *)da[i];
                 break;
             case face_array_id:
-                face_velocities = (FaceArray<TV> *)da[i];
+                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
                 break;
@@ -495,7 +496,7 @@ void WriteFrame::execute(std::string params, const DataArray& da)
     std::cout << "@@ Executing write frame job\n";
 
     WaterDriver<TV> *driver = NULL;
-    FaceArray<TV> *face_velocities = NULL;
+    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
     for (int i = 0; i < 4; i++)
@@ -507,7 +508,7 @@ void WriteFrame::execute(std::string params, const DataArray& da)
                 driver = (WaterDriver<TV> *)da[i];
                 break;
             case face_array_id:
-                face_velocities = (FaceArray<TV> *)da[i];
+                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
                 break;
             case face_array_ghost_id:
                 break;
