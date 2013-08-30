@@ -68,7 +68,8 @@ namespace nimbus {
     COMMAND_JOB_DONE,
     COMMAND_COMPUTE_JOB,
     COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY
+    COMMAND_REMOTE_COPY,
+    COMMAND_LOCAL_COPY
   };
 
 }  // namespace nimbus

@@ -120,6 +120,12 @@ bool ParseRemoteCopyCommand(const std::string& input,
     ID<port_t>& to_port,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after);
 
+bool ParseLocalCopyCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    ID<data_id_t>& from_data_id,
+    ID<data_id_t>& to_data_id,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
+
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     IDSet<data_id_t>& data_id,
