@@ -24,3 +24,10 @@ File names are relative to the current directory, physbam-lib/Public_Library
 or nimbus.
 
 ------------------------------------------------------------------------------
+
+The policy used during serialization is:
+
+- If a member in the original object is NULL, the corresponding member in
+  protocol buffer object is initialized to zero.
+
+------------------------------------------------------------------------------

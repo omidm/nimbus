@@ -71,7 +71,7 @@ namespace water_app_data {
                 virtual void create();
                 virtual ::nimbus::Data* clone();
                 virtual int get_debug_info();
-                void Serialize(char **buffer, int *buff_size);
+                bool Serialize(char **buffer, int *buff_size);
 
                 // physbam structures and methods
                 T_GRID *grid;
