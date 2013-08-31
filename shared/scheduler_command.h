@@ -257,7 +257,30 @@ class RemoteCopyCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set_;
 };
 
+class LocalCopyCommand : public SchedulerCommand {
+  public:
+    LocalCopyCommand();
+    LocalCopyCommand(const ID<job_id_t>& jog_id,
+        const ID<data_id_t>& from_data_id,
+        const ID<data_id_t>& to_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+    ~LocalCopyCommand();
 
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
+    ID<data_id_t> from_data_id();
+    ID<data_id_t> to_data_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+
+  private:
+    ID<job_id_t> job_id_;
+    ID<data_id_t> from_data_id_;
+    ID<data_id_t> to_data_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+};
 
 
 

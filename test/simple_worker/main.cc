@@ -74,6 +74,6 @@ int main(int argc, char *argv[]) {
   App * app = new App();
   SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
       NIMBUS_SCHEDULER_PORT, listening_port, app);
-  w->run();
+  w->Run();
 }
 

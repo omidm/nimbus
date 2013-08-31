@@ -226,11 +226,27 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       bool cond = ParseRemoteCopyCommand(param_segment, job_id, from_data_id,
           to_data_id, to_worker_id, to_ip, to_port, before, after);
       if (!cond) {
-        std::cout << "ERROR: Could not detect valid createdata." << std::endl;
+        std::cout << "ERROR: Could not detect valid remotecopy." << std::endl;
         return false;
       } else {
         generated = new RemoteCopyCommand(job_id, from_data_id,
             to_data_id, to_worker_id, to_ip, to_port, before, after);
+      }
+    } else if (type == COMMAND_LOCAL_COPY) {
+      ID<job_id_t> job_id;
+      ID<data_id_t> from_data_id;
+      ID<data_id_t> to_data_id;
+      IDSet<job_id_t> before;
+      IDSet<job_id_t> after;
+
+      bool cond = ParseLocalCopyCommand(param_segment, job_id, from_data_id,
+          to_data_id, before, after);
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid localcopy." << std::endl;
+        return false;
+      } else {
+        generated = new LocalCopyCommand(job_id, from_data_id,
+            to_data_id, before, after);
       }
     } else if (type == COMMAND_DEFINE_DATA) {
       std::string data_name;
@@ -630,6 +646,66 @@ IDSet<job_id_t> RemoteCopyCommand::before_set() {
   return before_set_;
 }
 
+
+LocalCopyCommand::LocalCopyCommand() {
+  name_ = "localcopy";
+}
+
+LocalCopyCommand::LocalCopyCommand(const ID<job_id_t>& job_id,
+    const ID<data_id_t>& from_data_id,
+    const ID<data_id_t>& to_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after)
+: job_id_(job_id),
+  from_data_id_(from_data_id),
+  to_data_id_(to_data_id),
+  before_set_(before), after_set_(after) {
+    name_ = "localcopy";
+}
+
+LocalCopyCommand::~LocalCopyCommand() {
+}
+
+std::string LocalCopyCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (job_id_.toString() + " ");
+  str += (from_data_id_.toString() + " ");
+  str += (to_data_id_.toString() + " ");
+  str += (before_set_.toString() + " ");
+  str += after_set_.toString();
+  return str;
+}
+
+std::string LocalCopyCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("job-id:" + job_id_.toString() + " ");
+  str += ("from-data-id:" + from_data_id_.toString() + " ");
+  str += ("to-data-id:" + to_data_id_.toString() + " ");
+  str += ("before:" + before_set_.toString() + " ");
+  str += ("after:" + after_set_.toString());
+  return str;
+}
+
+ID<job_id_t> LocalCopyCommand::job_id() {
+  return job_id_;
+}
+
+ID<data_id_t> LocalCopyCommand::from_data_id() {
+  return from_data_id_;
+}
+
+ID<data_id_t> LocalCopyCommand::to_data_id() {
+  return to_data_id_;
+}
+
+IDSet<job_id_t> LocalCopyCommand::after_set() {
+  return after_set_;
+}
+
+IDSet<job_id_t> LocalCopyCommand::before_set() {
+  return before_set_;
+}
 
 
 

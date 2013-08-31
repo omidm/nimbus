@@ -47,38 +47,24 @@ Scheduler::Scheduler(port_t p)
   appId_ = 0;
 }
 
-void Scheduler::run() {
+void Scheduler::Run() {
   Log::dbg_printLine("Running the Scheduler");
 
-  setupWorkerInterface();
-  setupUserInterface();
+  SetupWorkerInterface();
+  SetupUserInterface();
 
-  schedulerCoreProcessor();
+  SchedulerCoreProcessor();
 }
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
   if (command_name == "spawnjob") {
-    server_->SendCommand(*(server_->workers()->begin()), cm);
+    ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
   } else if (command_name == "definedata") {
-    server_->SendCommand(*(server_->workers()->begin()), cm);
+    ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
   } else if (command_name == "handshake") {
-    HandshakeCommand* hsc = reinterpret_cast<HandshakeCommand*>(cm);
-
-    SchedulerWorkerList::iterator iter = server_->workers()->begin();
-    for (; iter != server_->workers()->end(); iter++) {
-      if ((*iter)->worker_id() == hsc->worker_id().elem()) {
-        // std::string ip =
-        //   (*iter)->connection()->socket()->remote_endpoint().address().to_string();
-        (*iter)->set_ip(hsc->ip());
-        (*iter)->set_port(hsc->port().elem());
-        (*iter)->set_handshake_done(true);
-        std::cout << "Registered worker, id: " << (*iter)->worker_id() <<
-          " IP: " << (*iter)->ip() << " port: " << (*iter)->port() << std::endl;
-        break;
-      }
-    }
+    ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
   } else {
     std::cout << "ERROR: " << cm->toString() <<
       " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -86,20 +72,58 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   }
 }
 
-void Scheduler::setupWorkerInterface() {
-  loadWorkerCommands();
+
+void Scheduler::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
+    server_->SendCommand(*(server_->workers()->begin()), cm);
+}
+
+void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
+    server_->SendCommand(*(server_->workers()->begin()), cm);
+}
+
+void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
+  SchedulerWorkerList::iterator iter = server_->workers()->begin();
+  for (; iter != server_->workers()->end(); iter++) {
+    if ((*iter)->worker_id() == cm->worker_id().elem()) {
+      // std::string ip =
+      //   (*iter)->connection()->socket()->remote_endpoint().address().to_string();
+      (*iter)->set_ip(cm->ip());
+      (*iter)->set_port(cm->port().elem());
+      (*iter)->set_handshake_done(true);
+      std::cout << "Registered worker, id: " << (*iter)->worker_id() <<
+        " IP: " << (*iter)->ip() << " port: " << (*iter)->port() << std::endl;
+      break;
+    }
+  }
+}
+
+
+void Scheduler::SetupWorkerInterface() {
+  LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
   server_->set_worker_command_set(&worker_command_set_);
-  worker_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+  worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }
 
-void Scheduler::setupUserInterface() {
-  loadUserCommands();
+void Scheduler::LoadWorkerCommands() {
+  // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
+  worker_command_set_.insert(
+      std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
+  worker_command_set_.insert(
+      std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
+  worker_command_set_.insert(
+      std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
+  worker_command_set_.insert(
+      std::make_pair(std::string("jobdone"), COMMAND_JOB_DONE));
+}
+
+void Scheduler::SetupUserInterface() {
+  LoadUserCommands();
   user_interface_thread_ = new boost::thread(
-      boost::bind(&Scheduler::getUserCommand, this));
+      boost::bind(&Scheduler::GetUserCommand, this));
 }
 
-void Scheduler::getUserCommand() {
+void Scheduler::GetUserCommand() {
   while (true) {
     std::cout << "command: " << std::endl;
     std::string token("runapp");
@@ -111,7 +135,7 @@ void Scheduler::getUserCommand() {
   }
 }
 
-void Scheduler::loadUserCommands() {
+void Scheduler::LoadUserCommands() {
   std::stringstream cms("loadapp runapp killapp haltapp resumeapp quit");
   while (true) {
     std::string word;
@@ -121,16 +145,6 @@ void Scheduler::loadUserCommands() {
     }
     user_command_set_.insert(word);
   }
-}
-
-void Scheduler::loadWorkerCommands() {
-  // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_set_.insert(
-      std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
-  worker_command_set_.insert(
-      std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
-  worker_command_set_.insert(
-      std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
 }
 
 

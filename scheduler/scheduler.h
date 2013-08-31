@@ -60,13 +60,16 @@ class Scheduler {
     explicit Scheduler(port_t listening_port);
     virtual ~Scheduler() {}
 
-    virtual void run();
-    virtual void schedulerCoreProcessor() {}
+    virtual void Run();
+    virtual void SchedulerCoreProcessor() {}
     virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
-    virtual void loadClusterMap(std::string) {}
-    virtual void deleteWorker(Worker * worker) {}
-    virtual void addWorker(Worker * worker) {}
-    virtual Worker* getWorker(int workerId) {return worker_map_[workerId];}
+    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm);
+    virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
+    virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
+    virtual void LoadClusterMap(std::string) {}
+    virtual void DeleteWorker(Worker * worker) {}
+    virtual void AddWorker(Worker * worker) {}
+    virtual Worker* GetWorker(int workerId) {return worker_map_[workerId];}
 
   protected:
     SchedulerServer* server_;
@@ -74,14 +77,14 @@ class Scheduler {
     CommandSet worker_command_set_;
 
   private:
-    virtual void setupUserInterface();
-    virtual void setupWorkerInterface();
-    virtual void getUserCommand();
-    virtual void loadUserCommands();
-    virtual void loadWorkerCommands();
+    virtual void SetupUserInterface();
+    virtual void SetupWorkerInterface();
+    virtual void GetUserCommand();
+    virtual void LoadUserCommands();
+    virtual void LoadWorkerCommands();
 
     boost::thread* user_interface_thread_;
-    boost::thread* worker_thread_;
+    boost::thread* worker_interface_thread_;
     Computer host_;
     port_t listening_port_;
     app_id_t appId_;
