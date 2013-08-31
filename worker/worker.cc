@@ -52,18 +52,18 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     id_ = -1;
 }
 
-void Worker::run() {
+void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
 
-  setupSchedulerInterface();
+  SetupSchedulerInterface();
   application_->start(client_);
 
   SetupDataExchangerInterface();
 
-  workerCoreProcessor();
+  WorkerCoreProcessor();
 }
 
-void Worker::processSchedulerCommand(SchedulerCommand* cm) {
+void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
   if (command_name == "spawnjob") {
@@ -102,7 +102,7 @@ void Worker::processSchedulerCommand(SchedulerCommand* cm) {
     log.StartTimer();
     d->create();
     d->set_id(id);
-    addData(d);
+    AddData(d);
     log.StopTimer();
 
     char buff[MAX_BUFF_SIZE];
@@ -133,8 +133,8 @@ void Worker::SetupDataExchangerInterface() {
       boost::bind(&WorkerDataExchanger::Run, data_exchanger_));
 }
 
-void Worker::setupSchedulerInterface() {
-  loadSchedulerCommands();
+void Worker::SetupSchedulerInterface() {
+  LoadSchedulerCommands();
   client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
   client_->set_scheduler_command_set(&scheduler_command_set_);
   client_->run();
@@ -142,7 +142,7 @@ void Worker::setupSchedulerInterface() {
   //     boost::bind(&SchedulerClient::run, client_));
 }
 
-void Worker::loadSchedulerCommands() {
+void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
   scheduler_command_set_.insert(
       std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
@@ -162,18 +162,18 @@ void Worker::loadSchedulerCommands() {
       std::make_pair(std::string("localcopy"), COMMAND_LOCAL_COPY));
 }
 
-void Worker::addJob(Job* job) {
+void Worker::AddJob(Job* job) {
   job_map_[job->id()] = job;
 }
 
-void Worker::deleteJob(int id) {
+void Worker::DeleteJob(int id) {
 }
 
-void Worker::addData(Data* data) {
+void Worker::AddData(Data* data) {
   data_map_[data->id()] = data;
 }
 
-void Worker::deleteData(int id) {
+void Worker::DeleteData(int id) {
 }
 
 worker_id_t Worker::id() {

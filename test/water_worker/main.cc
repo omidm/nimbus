@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   WaterApp *app = new WaterApp();
   SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
       NIMBUS_SCHEDULER_PORT, listening_port, app);
-  w->run();
+  w->Run();
 }
 
 

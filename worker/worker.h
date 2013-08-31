@@ -66,9 +66,9 @@ class Worker {
   Worker(std::string scheuler_ip, port_t scheduler_port,
       port_t listening_port_, Application* application);
 
-  virtual void run();
-  virtual void workerCoreProcessor() {}
-  virtual void processSchedulerCommand(SchedulerCommand* command);
+  virtual void Run();
+  virtual void WorkerCoreProcessor() {}
+  virtual void ProcessSchedulerCommand(SchedulerCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);
@@ -91,17 +91,17 @@ class Worker {
   JobMap job_map_;
   Application* application_;
 
-  virtual void setupSchedulerInterface();
+  virtual void SetupSchedulerInterface();
 
   virtual void SetupDataExchangerInterface();
 
-  virtual void addJob(Job* job);
-  virtual void deleteJob(int id);
-  virtual void deleteJob(Job* job) {}
-  virtual void addData(Data* data);
-  virtual void deleteData(int id);
-  virtual void deleteData(Data* data) {}
-  virtual void loadSchedulerCommands();
+  virtual void AddJob(Job* job);
+  virtual void DeleteJob(int id);
+  virtual void DeleteJob(Job* job) {}
+  virtual void AddData(Data* data);
+  virtual void DeleteData(int id);
+  virtual void DeleteData(Data* data) {}
+  virtual void LoadSchedulerCommands();
 };
 
 }  // namespace nimbus
