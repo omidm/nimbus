@@ -10,8 +10,8 @@ message AppFaceArray2d {
     optional int32 size = 1;
 
     // message mac grid
-    optional PhysbamGrid2d mac_grid = 2;
+    optional PhysbamGrid2d grid = 2;
 
     // message face_velocities
-    optional PhysbamFaceArray2d face_velocities = 3;
+    optional PhysbamFaceArray2d data = 3;
 }

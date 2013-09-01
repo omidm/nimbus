@@ -46,20 +46,18 @@ namespace physbam_pb {
             ::communication::PhysbamFaceArray2d *pb_fa) {
 
         assert(pb_fa);
+        assert(phys_fa);
 
-        if (phys_fa != NULL) {
+        RangeI2 phys_fa_domain_indices = phys_fa->domain_indices;
+        ::communication::PhysbamRangeInt2d *pb_fa_domain_indices =
+            pb_fa->mutable_domain_indices();
+        make_pb_object(&phys_fa_domain_indices, pb_fa_domain_indices);
 
-            RangeI2 phys_fa_domain_indices = phys_fa->domain_indices;
-            ::communication::PhysbamRangeInt2d *pb_fa_domain_indices =
-                pb_fa->mutable_domain_indices();
-            make_pb_object(&phys_fa_domain_indices, pb_fa_domain_indices);
-
-            int buff_size = phys_fa->buffer_size;
-            pb_fa->set_buffer_size(buff_size);
-            float *buff_values = phys_fa->base_pointer;
-            for (int i = 0; i < buff_size; i++) {
-                pb_fa->add_values(buff_values[i]);
-            }
+        int buff_size = phys_fa->buffer_size;
+        pb_fa->set_buffer_size(buff_size);
+        float *buff_values = phys_fa->base_pointer;
+        for (int i = 0; i < buff_size; i++) {
+            pb_fa->add_values(buff_values[i]);
         }
     }
 

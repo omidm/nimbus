@@ -38,15 +38,16 @@
 
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "proto_files/physbam_serialize_data_common_2d.h"
+#include "proto_files/app_face_array_2d.pb.h"
 #include "proto_files/physbam_serialize_data_arrays_2d.h"
+#include "proto_files/physbam_serialize_data_common_2d.h"
 #include "shared/nimbus.h"
+#include "string.h"
 
 namespace water_app_data {
 
     template <class TV> FaceArray<TV>::
         FaceArray(int size) {
-            id_debug = face_array_id;
             this->size_ = size;
             grid = NULL;
             data = NULL;
@@ -71,7 +72,30 @@ namespace water_app_data {
 
     template <class TV> int FaceArray<TV>::
         get_debug_info() {
-            return id_debug;
+            return face_array_id;
+        }
+
+    template <class TV> bool FaceArray<TV>::
+        Serialize(char **buffer, int *buff_size) {
+            assert(buffer);
+            assert(buff_size);
+            ::communication::AppFaceArray2d pb_fa;
+            pb_fa.set_size(size_);
+            if (grid != NULL) {
+                ::communication::PhysbamGrid2d *pb_fa_grid =
+                    pb_fa.mutable_grid();
+                ::physbam_pb::make_pb_object(grid, pb_fa_grid);
+            }
+            if (data != NULL) {
+                ::communication::PhysbamFaceArray2d *pb_fa_data =
+                    pb_fa.mutable_data();
+                ::physbam_pb::make_pb_object(data, pb_fa_data);
+            }
+            if (!pb_fa.SerializeToString((std::string *)buffer)) {
+                *buff_size = 0;
+                return false;
+            }
+            return true;
         }
 
     namespace {
