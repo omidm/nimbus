@@ -66,65 +66,98 @@ void Worker::Run() {
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
-  if (command_name == "spawnjob") {
-    SpawnJobCommand* sjc = reinterpret_cast<SpawnJobCommand*>(cm);
-    Job * j = application_->cloneJob(sjc->job_name());
-
-    std::vector<Data*> da;
-    IDSet<data_id_t>::IDSetIter iter;
-
-    IDSet<data_id_t> read = sjc->read_set();
-    for (iter = read.begin(); iter != read.end(); iter++)
-      da.push_back(data_map_[*iter]);
-
-    IDSet<data_id_t> write = sjc->write_set();
-    for (iter = write.begin(); iter != write.end(); iter++)
-      da.push_back(data_map_[*iter]);
-
-    job_id_t id = *(sjc->job_id().begin());
-
-    log.StartTimer();
-    j->execute(sjc->params(), da);
-    log.StopTimer();
-
-    char buff[MAX_BUFF_SIZE];
-    snprintf(buff, sizeof(buff),
-        "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-        sjc->job_name().c_str(), id, 1000 * log.timer(), log.GetTime());
-
-    log.writeToFile(std::string(buff), LOG_INFO);
+  if (command_name == "handshake") {
+    ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
+  } else if (command_name == "jobdone") {
+    ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
+  } else if (command_name == "computejob") {
+    ProcessComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(cm));
+  } else if (command_name == "createdata") {
+    ProcessCreateDataCommand(reinterpret_cast<CreateDataCommand*>(cm));
+  } else if (command_name == "remotecopy") {
+    ProcessRemoteCopyCommand(reinterpret_cast<RemoteCopyCommand*>(cm));
+  } else if (command_name == "localcopy") {
+    ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
+  } else if (command_name == "spawnjob") {
+    ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
   } else if (command_name == "definedata") {
-    DefineDataCommand* ddc = reinterpret_cast<DefineDataCommand*>(cm);
-    Data * d = application_->cloneData(ddc->data_name());
-
-    data_id_t id = *(ddc->data_id().begin());
-
-    log.StartTimer();
-    d->create();
-    d->set_id(id);
-    AddData(d);
-    log.StopTimer();
-
-    char buff[MAX_BUFF_SIZE];
-    snprintf(buff, sizeof(buff),
-        "Create Data, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-        ddc->data_name().c_str(), id, 1000 * log.timer(), log.GetTime());
-
-    log.writeToFile(std::string(buff), LOG_INFO);
-  } else if (command_name == "handshake") {
-    HandshakeCommand* hsc = reinterpret_cast<HandshakeCommand*>(cm);
-
-    ID<port_t> port(listening_port_);
-    HandshakeCommand new_cm = HandshakeCommand(hsc->worker_id(),
-        boost::asio::ip::host_name(), port);
-    client_->sendCommand(&new_cm);
-
-    id_ = hsc->worker_id().elem();
+    ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
   } else {
     std::cout << "ERROR: " << cm->toString() <<
       " have not been implemented in ProcessSchedulerCommand yet." <<
       std::endl;
   }
+}
+
+void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
+  ID<port_t> port(listening_port_);
+  HandshakeCommand new_cm = HandshakeCommand(cm->worker_id(),
+      boost::asio::ip::host_name(), port);
+  client_->sendCommand(&new_cm);
+
+  id_ = cm->worker_id().elem();
+}
+
+void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
+}
+
+void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
+}
+
+void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
+}
+
+void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
+}
+
+void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
+}
+
+void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
+  Job * j = application_->cloneJob(cm->job_name());
+
+  std::vector<Data*> da;
+  IDSet<data_id_t>::IDSetIter iter;
+
+  IDSet<data_id_t> read = cm->read_set();
+  for (iter = read.begin(); iter != read.end(); iter++)
+    da.push_back(data_map_[*iter]);
+
+  IDSet<data_id_t> write = cm->write_set();
+  for (iter = write.begin(); iter != write.end(); iter++)
+    da.push_back(data_map_[*iter]);
+
+  job_id_t id = *(cm->job_id().begin());
+
+  log.StartTimer();
+  j->execute(cm->params(), da);
+  log.StopTimer();
+
+  char buff[MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+      cm->job_name().c_str(), id, 1000 * log.timer(), log.GetTime());
+
+  log.writeToFile(std::string(buff), LOG_INFO);
+}
+
+void Worker::ProcessDefineDataCommand(DefineDataCommand* cm) {
+  Data * d = application_->cloneData(cm->data_name());
+
+  data_id_t id = *(cm->data_id().begin());
+
+  log.StartTimer();
+  d->create();
+  d->set_id(id);
+  AddData(d);
+  log.StopTimer();
+
+  char buff[MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "Create Data, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+      cm->data_name().c_str(), id, 1000 * log.timer(), log.GetTime());
+
+  log.writeToFile(std::string(buff), LOG_INFO);
 }
 
 void Worker::SetupDataExchangerInterface() {
