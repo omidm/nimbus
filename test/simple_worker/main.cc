@@ -47,8 +47,6 @@
 #include "./simple_worker.h"
 #include "../../application/1d-stencil/app.h"
 
-extern int worker_num;
-
 int main(int argc, char *argv[]) {
   port_t listening_port;
   if (argc < 2) {

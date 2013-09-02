@@ -65,6 +65,8 @@ class SimpleScheduler : public Scheduler {
     explicit SimpleScheduler(unsigned int listening_port);
 
     virtual  void SchedulerCoreProcessor();
+    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm);
+    virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
 };
 
 #endif  // NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_

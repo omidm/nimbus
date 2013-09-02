@@ -50,65 +50,11 @@ SimpleScheduler::SimpleScheduler(unsigned int p)
 void SimpleScheduler::SchedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
-//  std::string test = "spawnjob main {0} {1,2} {4,5} ";
-//  test += " {6,7,8} {10,20,30} COMP none";
-//  SchedulerCommand* gen_com = NULL;
-//  bool cond = SchedulerCommand::GenerateSchedulerCommandChild(
-//      test, &worker_command_set_, gen_com);
-//  if (cond) {
-//    std::cout << "*****parsed properly" << std::endl;
-//    std::cout << gen_com->toStringWTags() << std::endl;
-//    assert(gen_com);
-//  } else {
-//    std::cout << "ERROR: *****did not generate anything" << std::endl;
-//    assert(gen_com == NULL);
-//  }
-
-  SchedulerWorkerList::iterator iter = server_->workers()->begin();
-//  while (server_->workers()->begin() == server_->workers()->end()) {
-//    sleep(1);
-//    std::cout << "Waiting for the first worker to connect ..." << std::endl;
-//  }
-
-  while (true) {
+  while (server_->workers()->begin() == server_->workers()->end()) {
     sleep(1);
-    int ready_num = 0;
-    for (iter = server_->workers()->begin();
-        iter != server_->workers()->end(); iter++) {
-      if ((*iter)->handshake_done()) {
-        ready_num++;
-      } else {
-        ID<worker_id_t> worker_id;
-        worker_id.set_elem((*iter)->worker_id());
-        std::string ip("you-know");
-        ID<port_t> port(0);
-
-        SchedulerCommand* cm = new HandshakeCommand(worker_id, ip, port);
-        server_->SendCommand(*iter, cm);
-        delete cm;
-      }
-    }
-    if (ready_num >= WORKER_NUM)
-      break;
-
-    std::cout << ready_num << " workers are registered, waiting for " <<
-      WORKER_NUM - ready_num << " more workers to join ..."  << std::endl;
-
-    SchedulerCommandList* storage = new SchedulerCommandList();
-    if (server_->ReceiveCommands(storage, (uint32_t)10)) {
-      SchedulerCommandList::iterator iter = storage->begin();
-      for (; iter != storage->end(); iter++) {
-        SchedulerCommand* comm = *iter;
-        ProcessSchedulerCommand(comm);
-        delete comm;
-      }
-    }
-    delete storage;
+    std::cout << "Waiting for the first worker to connect ..." << std::endl;
   }
 
-//  std::string str = "spawnjob name:main id:{0} read:{} write:{}";
-//  str += " before:{} after:{} type:operation param:none";
-//  SchedulerCommand cm(str);
   std::string str = "spawnjob main {0} {} {} {} {} COMP none";
   SchedulerCommand* cm;
   SchedulerCommand::GenerateSchedulerCommandChild(
@@ -125,14 +71,19 @@ void SimpleScheduler::SchedulerCoreProcessor() {
         SchedulerCommand* comm = *iter;
         dbg(DBG_NET, "Iterating across command (of %i) %s\n",
             storage->size(), comm->toString().c_str());
-        // std::cout << "OMID Received command: " << comm->toString() << std::endl;
-        // std::cout << "OMID Sending command: " << comm->toString() << std::endl;
-        // server_->SendCommand(*(server_->workers()->begin()), comm);
         ProcessSchedulerCommand(comm);
         delete comm;
       }
     }
     delete storage;
   }
+}
+
+void SimpleScheduler::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
+    server_->SendCommand(*(server_->workers()->begin()), cm);
+}
+
+void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
+    server_->SendCommand(*(server_->workers()->begin()), cm);
 }
 

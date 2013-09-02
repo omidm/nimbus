@@ -74,11 +74,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 
 
 void Scheduler::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
-    server_->SendCommand(*(server_->workers()->begin()), cm);
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
-    server_->SendCommand(*(server_->workers()->begin()), cm);
 }
 
 void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
