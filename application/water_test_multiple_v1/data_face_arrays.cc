@@ -41,6 +41,8 @@
 #include "proto_files/app_face_array_2d.pb.h"
 #include "proto_files/physbam_serialize_data_arrays_2d.h"
 #include "proto_files/physbam_serialize_data_common_2d.h"
+#include "proto_files/physbam_deserialize_data_arrays_2d.h"
+#include "proto_files/physbam_deserialize_data_common_2d.h"
 #include "shared/nimbus.h"
 #include "string.h"
 
@@ -95,6 +97,20 @@ namespace water_app_data {
                 *buff_size = 0;
                 return false;
             }
+            return true;
+        }
+
+    template <class TV> bool FaceArray<TV>::
+        DeSerialize(char const *buffer, const int buff_size) {
+            if (buff_size <= 0)
+                return false;
+            assert(buffer);
+            ::communication::AppFaceArray2d pb_fa;
+            pb_fa.ParseFromString((std::string)buffer);
+            if (pb_fa.has_grid())
+                ::physbam_pb::make_physbam_object(grid, pb_fa.grid());
+            if (pb_fa.has_data())
+                ::physbam_pb::make_physbam_object(data, pb_fa.data());
             return true;
         }
 
