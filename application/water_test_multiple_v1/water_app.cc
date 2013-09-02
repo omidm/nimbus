@@ -295,7 +295,20 @@ void Advect::execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
+    char **buffer = new char*;
+    *buffer = 0;
+    int *buff_size = new int;
+    *buff_size = 0;
+    if (!face_velocities->Serialize(buffer, buff_size))
+        printf("*** Cannot serialize face velocities!!\n");
+    else
+        printf("*** Serialized face velocities!!\n");
+
     Advection(face_velocities, sim_data);
+
+    free(*buffer);
+    free(buffer);
+    free(buff_size);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();

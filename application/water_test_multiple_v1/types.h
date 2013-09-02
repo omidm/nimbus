@@ -49,4 +49,6 @@ typedef float T;
 typedef ::PhysBAM::VECTOR<float, 2> TV;
 typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
 
+#define app_last_frame 2
+
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_TYPES_H_

@@ -46,7 +46,7 @@
 /* Include relevant PhysBAM files here.
 */
 #include "shared/nimbus.h"
-#include "./physbam_include.h"
+#include "physbam_include.h"
 
 #define driver_id 15
 

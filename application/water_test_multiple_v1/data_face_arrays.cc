@@ -93,13 +93,19 @@ namespace water_app_data {
                     pb_fa.mutable_data();
                 ::physbam_pb::make_pb_object(data, pb_fa_data);
             }
-            if (!pb_fa.SerializeToString((std::string *)buffer)) {
+            std::string ser;
+            if (!pb_fa.SerializeToString(&ser)) {
                 *buff_size = 0;
                 return false;
             }
+            *buff_size = ser.length();
+            *buffer = new char(*buff_size + 1);
+            strcpy(*buffer, ser.c_str());
             return true;
         }
 
+    // DeSerialize should be called only after create has been called. Create
+    // ensures that required memory has been allocated.
     template <class TV> bool FaceArray<TV>::
         DeSerialize(char const *buffer, const int buff_size) {
             if (buff_size <= 0)
@@ -107,8 +113,9 @@ namespace water_app_data {
             assert(buffer);
             ::communication::AppFaceArray2d pb_fa;
             pb_fa.ParseFromString((std::string)buffer);
-            if (pb_fa.has_grid())
+            if (pb_fa.has_grid()) {
                 ::physbam_pb::make_physbam_object(grid, pb_fa.grid());
+            }
             if (pb_fa.has_data())
                 ::physbam_pb::make_physbam_object(data, pb_fa.data());
             return true;
