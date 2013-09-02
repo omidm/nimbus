@@ -37,12 +37,14 @@ SET(PROTO_HELPER_h
         ${PROTO_DIR}/physbam_serialize_data_common_2d.h
         ${PROTO_DIR}/physbam_serialize_data_arrays_2d.h
         ${PROTO_DIR}/physbam_deserialize_data_common_2d.h
+        ${PROTO_DIR}/physbam_deserialize_data_arrays_2d.h
     )
 
 SET(PROTO_HELPER_cc
         ${PROTO_DIR}/physbam_serialize_data_common_2d.cc
         ${PROTO_DIR}/physbam_serialize_data_arrays_2d.cc
         ${PROTO_DIR}/physbam_deserialize_data_common_2d.cc
+        ${PROTO_DIR}/physbam_deserialize_data_arrays_2d.cc
     )
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
