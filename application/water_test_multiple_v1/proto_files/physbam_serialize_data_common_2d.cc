@@ -45,16 +45,16 @@ namespace physbam_pb {
             ::communication::PhysbamVectorInt2d *pb_vec) {
         assert(pb_vec);
         assert(phys_vec);
-        pb_vec->set_x((*phys_vec)[0]);
-        pb_vec->set_y((*phys_vec)[1]);
+        pb_vec->set_x((*phys_vec)(1));
+        pb_vec->set_y((*phys_vec)(2));
     }
 
     void make_pb_object(VF2 *phys_vec,
             ::communication::PhysbamVectorFloat2d *pb_vec) {
         assert(pb_vec);
         assert(phys_vec);
-        pb_vec->set_x((*phys_vec)[0]);
-        pb_vec->set_y((*phys_vec)[1]);
+        pb_vec->set_x((*phys_vec)[1]);
+        pb_vec->set_y((*phys_vec)[2]);
     }
 
     void make_pb_object(RangeI2 *phys_range,
