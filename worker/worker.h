@@ -69,6 +69,16 @@ class Worker {
   virtual void Run();
   virtual void WorkerCoreProcessor() {}
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
+  virtual void ProcessComputeJobCommand(ComputeJobCommand* command);
+  virtual void ProcessCreateDataCommand(CreateDataCommand* command);
+  virtual void ProcessRemoteCopyCommand(RemoteCopyCommand* command);
+  virtual void ProcessLocalCopyCommand(LocalCopyCommand* command);
+  virtual void ProcessHandshakeCommand(HandshakeCommand* command);
+  virtual void ProcessJobDoneCommand(JobDoneCommand* command);
+
+  // Will remove it later, they are here so the simple_worker would still work.
+  virtual void ProcessSpawnJobCommand(SpawnJobCommand* command);
+  virtual void ProcessDefineDataCommand(DefineDataCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);
