@@ -42,6 +42,14 @@
 
 using namespace nimbus; // NOLINT
 
+Job::Job() {
+}
+
+Job::~Job() {
+}
+
+// TODO(omidm) should remove this later. left it now so the tests
+// that use it still pass.
 Job::Job(Application* app, JobType type) {
   application_ = app;
   type_ = type;
@@ -49,14 +57,50 @@ Job::Job(Application* app, JobType type) {
 
 Job* Job::clone() {
   std::cout << "cloning the base job\n";
-  Job* j = new Job(application_, type_);
+  Job* j = new Job();
   return j;
 }
 
-uint64_t Job::id() {
+ID<job_id_t> Job::id() {
   return id_;
 }
 
-void Job::set_id(uint64_t id) {
+IDSet<data_id_t> Job::read_set() {
+  return read_set_;
+}
+
+IDSet<data_id_t> Job::write_set() {
+  return write_set_;
+}
+
+IDSet<job_id_t> Job::before_set() {
+  return before_set_;
+}
+
+IDSet<job_id_t> Job::after_set() {
+  return after_set_;
+}
+
+void Job::set_id(ID<job_id_t> id) {
   id_ = id;
 }
+
+void Job::set_read_set(IDSet<data_id_t> read_set) {
+  read_set_ = read_set;
+}
+
+void Job::set_write_set(IDSet<data_id_t> write_set) {
+  write_set_ = write_set;
+}
+
+void Job::set_before_set(IDSet<job_id_t> before_set) {
+  before_set_ = before_set;
+}
+
+void Job::set_after_set(IDSet<job_id_t> after_set) {
+  after_set_ = after_set;
+}
+
+
+
+
