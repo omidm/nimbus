@@ -49,6 +49,7 @@
 #include "worker/data.h"
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
 
 namespace nimbus {

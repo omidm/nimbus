@@ -112,6 +112,10 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 }
 
 void RemoteCopySendJob::Execute(std::string params, const DataArray& da) {
+  SerializedData ser_data;
+  da[0]->Serialize(&ser_data);
+  data_exchanger_->SendSerializedData(id_.elem(), to_worker_id_.elem(), ser_data);
+  delete ser_data.data_ptr();
 }
 
 Job* RemoteCopySendJob::Clone() {
