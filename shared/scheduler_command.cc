@@ -279,15 +279,16 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       }
     } else if (type == COMMAND_JOB_DONE) {
       ID<job_id_t> job_id;
+      IDSet<job_id_t> after_set;
       std::string params;
 
-      bool cond = ParseJobDoneCommand(param_segment, job_id, params);
+      bool cond = ParseJobDoneCommand(param_segment, job_id, after_set, params);
 
       if (!cond) {
         std::cout << "ERROR: Could not detect valid jobdone." << std::endl;
         return false;
       } else {
-        generated = new JobDoneCommand(job_id, params);
+        generated = new JobDoneCommand(job_id, after_set, params);
       }
     } else {
       std::cout << "ERROR: Unknown command." << std::endl;
@@ -782,8 +783,9 @@ JobDoneCommand::JobDoneCommand() {
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
+    const IDSet<job_id_t>& after_set,
     const std::string& params)
-: job_id_(job_id), params_(params) {
+: job_id_(job_id), after_set_(after_set), params_(params) {
   name_ = "jobdone";
 }
 
@@ -794,6 +796,7 @@ std::string JobDoneCommand::toString() {
   std::string str;
   str += (name_ + " ");
   str += (job_id_.toString() + " ");
+  str += (after_set_.toString() + " ");
   str += params_;
   return str;
 }
@@ -802,11 +805,17 @@ std::string JobDoneCommand::toStringWTags() {
   std::string str;
   str += ("name:" + name_ + " ");
   str += ("id:" + job_id_.toString() + " ");
+  str += ("after:" + after_set_.toString() + " ");
   str += ("params:" + params_);
   return str;
 }
+
 ID<job_id_t> JobDoneCommand::job_id() {
   return job_id_;
+}
+
+IDSet<job_id_t> JobDoneCommand::after_set() {
+  return after_set_;
 }
 
 std::string JobDoneCommand::params() {

@@ -139,6 +139,7 @@ bool ParseHandshakeCommand(const std::string& input,
 
 bool ParseJobDoneCommand(const std::string& input,
     ID<job_id_t>& job_id,
+    IDSet<job_id_t>& after_set,
     std::string& params);
 
 bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
