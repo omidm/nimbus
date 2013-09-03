@@ -149,6 +149,30 @@ void RemoteCopySendJob::set_to_port(ID<port_t> port) {
 
 
 
+RemoteCopyReceiveJob::RemoteCopyReceiveJob() {
+}
+
+RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
+}
+
+void RemoteCopyReceiveJob::Execute(std::string params, const DataArray& da) {
+  Data * data_copy;
+  da[0]->DeSerialize(*serialized_data_, &data_copy);
+  da[0]->Copy(data_copy);
+
+  data_copy->destroy();
+  delete serialized_data_->data_ptr();
+  delete serialized_data_;
+}
+
+Job* RemoteCopyReceiveJob::Clone() {
+  return new RemoteCopyReceiveJob();
+}
+
+void RemoteCopyReceiveJob::set_serialized_data(SerializedData* ser_data) {
+  serialized_data_ = ser_data;
+}
+
 
 
 

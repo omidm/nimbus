@@ -128,6 +128,26 @@ class RemoteCopySendJob : public Job {
     WorkerDataExchanger* data_exchanger_;
 };
 
+class RemoteCopyReceiveJob : public Job {
+  public:
+    RemoteCopyReceiveJob();
+    ~RemoteCopyReceiveJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    void set_serialized_data(SerializedData* ser_data);
+
+  private:
+    SerializedData * serialized_data_;
+};
+
+
+
+
+
 }  // namespace nimbus
 #endif  // NIMBUS_WORKER_JOB_H_
 
