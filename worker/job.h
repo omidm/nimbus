@@ -67,10 +67,10 @@ class Job {
     // that use it still pass.
     Job(Application* app, JobType type);
 
-    virtual void execute(std::string params, const DataArray& da) {}
-    virtual Job* clone();
-    virtual void sleep() {}
-    virtual void cancel() {}
+    virtual void Execute(std::string params, const DataArray& da) {}
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
 
     ID<job_id_t> id();
     IDSet<data_id_t> read_set();
@@ -100,6 +100,7 @@ class Job {
     Application* application_;
     JobType type_;
 };
+
 
 }  // namespace nimbus
 #endif  // NIMBUS_WORKER_JOB_H_

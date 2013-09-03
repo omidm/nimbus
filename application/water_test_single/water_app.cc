@@ -90,12 +90,12 @@ void WaterApp::load() {
 Main::Main(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* Main::clone() {
+Job* Main::Clone() {
     std::cout << "Cloning main job\n";
     return new Main(application_, type_);
 };
 
-void Main::execute(std::string params, const DataArray& da)
+void Main::Execute(std::string params, const DataArray& da)
 {
     std::cout << "Begin main\n" << std::endl;
 
@@ -153,12 +153,12 @@ void Main::execute(std::string params, const DataArray& da)
 Init::Init(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* Init::clone() {
+Job* Init::Clone() {
     std::cout << "Cloning init job\n";
     return new Init(application_, type_);
 };
 
-void Init::execute(std::string params, const DataArray& da)
+void Init::Execute(std::string params, const DataArray& da)
 {
     std::cout << "Executing init job\n";
 
@@ -206,12 +206,12 @@ void Init::execute(std::string params, const DataArray& da)
 UptoAdvect::UptoAdvect(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* UptoAdvect::clone() {
+Job* UptoAdvect::Clone() {
     std::cout << "Cloning upto advect job\n";
     return new UptoAdvect(application_, type_);
 };
 
-void UptoAdvect::execute(std::string params, const DataArray& da)
+void UptoAdvect::Execute(std::string params, const DataArray& da)
 {
 
     std::cout << "@@ Running upto advect\n";
@@ -257,12 +257,12 @@ void UptoAdvect::execute(std::string params, const DataArray& da)
 Advect::Advect(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* Advect::clone() {
+Job* Advect::Clone() {
     std::cout << "Cloning advect job\n";
     return new Advect(application_, type_);
 };
 
-void Advect::execute(std::string params, const DataArray& da)
+void Advect::Execute(std::string params, const DataArray& da)
 {
     std::cout << "@@ Running advect\n";
 
@@ -306,12 +306,12 @@ void Advect::execute(std::string params, const DataArray& da)
 AfterAdvect::AfterAdvect(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* AfterAdvect::clone() {
+Job* AfterAdvect::Clone() {
     std::cout << "Cloning after advect job\n";
     return new AfterAdvect(application_, type_);
 };
 
-void AfterAdvect::execute(std::string params, const DataArray& da)
+void AfterAdvect::Execute(std::string params, const DataArray& da)
 {
     std::cout << "@@ Running after advect\n";
 
@@ -355,12 +355,12 @@ void AfterAdvect::execute(std::string params, const DataArray& da)
 Loop::Loop(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* Loop::clone() {
+Job* Loop::Clone() {
     std::cout << "Cloning loop job\n";
     return new Loop(application_, type_);
 };
 
-void Loop::execute(std::string params, const DataArray& da)
+void Loop::Execute(std::string params, const DataArray& da)
 {
     std::cout << "Executing forloop job\n";
 
@@ -484,12 +484,12 @@ void Loop::execute(std::string params, const DataArray& da)
 WriteFrame::WriteFrame(Application *app, JobType type)
     : Job(app, type) {};
 
-Job* WriteFrame::clone() {
+Job* WriteFrame::Clone() {
     std::cout << "Cloning write frame job\n";
     return new WriteFrame(application_, type_);
 };
 
-void WriteFrame::execute(std::string params, const DataArray& da)
+void WriteFrame::Execute(std::string params, const DataArray& da)
 {
     std::cout << "@@ Executing write frame job\n";
 
