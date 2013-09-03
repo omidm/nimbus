@@ -112,6 +112,18 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
 }
 
 void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
+  Data * data = application_->cloneData(cm->data_name());
+  data->set_id(cm->data_id().elem());
+  AddData(data);
+
+  Job * job = new CreateDataJob();
+  job->set_id(cm->job_id());
+  IDSet<data_id_t> write_set;
+  write_set.insert(cm->data_id().elem());
+  job->set_write_set(write_set);
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
