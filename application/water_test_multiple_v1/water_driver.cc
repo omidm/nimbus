@@ -36,9 +36,9 @@
   * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
+#include "app_config.h"
 #include "data_face_arrays.h"
 #include <iostream>
-#include "types.h"
 #include "water_driver.h"
 #include "water_data_driver.h"
 
@@ -63,7 +63,7 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     first_frame = (T)0;
     time = (T)0;
 
-    last_frame = app_last_frame;
+    last_frame = kAppLastFrame;
     frame_rate = 24;
     current_frame = 0;
 

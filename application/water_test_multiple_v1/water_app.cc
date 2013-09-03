@@ -37,18 +37,15 @@
  */
 
 #include "advection.h"
+#include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
 #include <iostream>
 #include "shared/nimbus.h"
 #include "stdlib.h"
-#include "types.h"
 #include "water_app.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
-
-static int ml = 200;
-static int gl = 0;
 
 using namespace PhysBAM;
 using nimbus::Data;
@@ -78,9 +75,9 @@ void WaterApp::load() {
     registerJob("writeframe", new WriteFrame(this, JOB_COMP));
 
     registerData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    registerData("face_velocities_1", new ::water_app_data::FaceArray<TV>(ml));
-    registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
-    registerData("sim_data_1", new NonAdvData<TV, T>(ml));
+    registerData("face_velocities_1", new ::water_app_data::FaceArray<TV>(kMainSize));
+    registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(kGhostSize));
+    registerData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
 
     std::cout << "Finished creating job and data definitions" << std::endl;
     std::cout << "Finished loading application" << std::endl;

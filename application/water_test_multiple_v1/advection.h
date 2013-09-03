@@ -41,9 +41,9 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_
 
+#include "app_config.h"
 #include "data_fwd_decl.h"
 #include "physbam_include.h"
-#include "types.h"
 
 void Advection (
         ::water_app_data::FaceArray<TV> *face_velocities,

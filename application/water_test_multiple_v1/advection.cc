@@ -39,9 +39,9 @@
  */
 
 #include "advection.h"
+#include "app_config.h"
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "types.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
 
