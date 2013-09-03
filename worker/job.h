@@ -49,6 +49,7 @@
 #include "worker/data.h"
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/worker_data_exchanger.h"
 
 namespace nimbus {
 
@@ -101,6 +102,30 @@ class Job {
     JobType type_;
 };
 
+class RemoteCopySendJob : public Job {
+  public:
+    explicit RemoteCopySendJob(WorkerDataExchanger* de);
+    ~RemoteCopySendJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    ID<worker_id_t> to_worker_id();
+    std::string to_ip();
+    ID<port_t> to_port();
+
+    void set_to_worker_id(ID<worker_id_t> worker_id);
+    void set_to_ip(std::string ip);
+    void set_to_port(ID<port_t> port);
+
+  private:
+    ID<worker_id_t> to_worker_id_;
+    std::string to_ip_;
+    ID<port_t> to_port_;
+    WorkerDataExchanger* data_exchanger_;
+};
 
 }  // namespace nimbus
 #endif  // NIMBUS_WORKER_JOB_H_
