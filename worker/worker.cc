@@ -139,6 +139,17 @@ void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
 }
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
+  Job * job = new LocalCopyJob();
+  job->set_id(cm->job_id());
+  IDSet<data_id_t> read_set;
+  read_set.insert(cm->from_data_id().elem());
+  job->set_read_set(read_set);
+  IDSet<data_id_t> write_set;
+  write_set.insert(cm->to_data_id().elem());
+  job->set_write_set(write_set);
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
