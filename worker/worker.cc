@@ -102,6 +102,13 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
 }
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
+  Job * job = application_->cloneJob(cm->job_name());
+  job->set_id(cm->job_id());
+  job->set_read_set(cm->read_set());
+  job->set_write_set(cm->write_set());
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
