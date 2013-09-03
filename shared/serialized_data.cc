@@ -50,7 +50,6 @@ SerializedData::SerializedData(char* data_ptr, size_t size)
 }
 
 SerializedData::~SerializedData() {
-  delete data_ptr_;
 }
 
 char* SerializedData::data_ptr() {
