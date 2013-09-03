@@ -45,6 +45,7 @@
 #include <string>
 #include <set>
 #include <map>
+#include <list>
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
 #include "shared/id.h"
@@ -56,7 +57,8 @@ namespace nimbus {
 
 class Application;
 class Job;
-typedef std::map<int, Job*> JobMap;
+typedef std::list<Job*> JobList;
+typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
 typedef std::vector<Data*> DataArray;
 

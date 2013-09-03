@@ -98,19 +98,18 @@ class Worker {
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
   DataMap data_map_;
-  JobMap job_map_;
+  JobList ready_jobs_;
+  JobList blocked_jobs_;
+  JobList pending_transfer_jobs_;
+  std::map<job_id_t, IDSet<job_id_t> > done_jobs_;
   Application* application_;
 
   virtual void SetupSchedulerInterface();
 
   virtual void SetupDataExchangerInterface();
 
-  virtual void AddJob(Job* job);
-  virtual void DeleteJob(int id);
-  virtual void DeleteJob(Job* job) {}
   virtual void AddData(Data* data);
-  virtual void DeleteData(int id);
-  virtual void DeleteData(Data* data) {}
+  virtual void DeleteData(data_id_t data_id);
   virtual void LoadSchedulerCommands();
 };
 

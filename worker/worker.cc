@@ -195,18 +195,12 @@ void Worker::LoadSchedulerCommands() {
       std::make_pair(std::string("localcopy"), COMMAND_LOCAL_COPY));
 }
 
-void Worker::AddJob(Job* job) {
-  job_map_[job->id().elem()] = job;
-}
-
-void Worker::DeleteJob(int id) {
-}
-
 void Worker::AddData(Data* data) {
   data_map_[data->id()] = data;
 }
 
-void Worker::DeleteData(int id) {
+void Worker::DeleteData(data_id_t data_id) {
+  data_map_.erase(data_id);
 }
 
 worker_id_t Worker::id() {
