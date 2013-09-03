@@ -146,6 +146,19 @@ class RemoteCopyReceiveJob : public Job {
     SerializedData * serialized_data_;
 };
 
+class LocalCopyJob : public Job {
+  public:
+    LocalCopyJob();
+    ~LocalCopyJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+  private:
+};
+
 
 
 

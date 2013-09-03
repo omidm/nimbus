@@ -175,5 +175,17 @@ void RemoteCopyReceiveJob::set_serialized_data(SerializedData* ser_data) {
 
 
 
+LocalCopyJob::LocalCopyJob() {
+}
 
+LocalCopyJob::~LocalCopyJob() {
+}
+
+Job* LocalCopyJob::Clone() {
+  return new LocalCopyJob();
+}
+
+void LocalCopyJob::Execute(std::string params, const DataArray& da) {
+  da[1]->Copy(da[0]);
+}
 
