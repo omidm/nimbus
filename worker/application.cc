@@ -98,7 +98,7 @@ void Application::DefineData(const std::string& name,
 }
 
 Job* Application::cloneJob(std::string name) {
-  return job_table_[name]->clone();
+  return job_table_[name]->Clone();
 }
 
 Data* Application::cloneData(std::string name) {

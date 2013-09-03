@@ -130,7 +130,7 @@ void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
   job_id_t id = *(cm->job_id().begin());
 
   log.StartTimer();
-  j->execute(cm->params(), da);
+  j->Execute(cm->params(), da);
   log.StopTimer();
 
   char buff[MAX_BUFF_SIZE];
@@ -196,7 +196,7 @@ void Worker::LoadSchedulerCommands() {
 }
 
 void Worker::AddJob(Job* job) {
-  job_map_[job->id()] = job;
+  job_map_[job->id().elem()] = job;
 }
 
 void Worker::DeleteJob(int id) {

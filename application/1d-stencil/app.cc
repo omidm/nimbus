@@ -71,12 +71,12 @@ Main::Main(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * Main::clone() {
+Job * Main::Clone() {
   std::cout << "Cloning main job!\n";
   return new Main(application_, type_);
 };
 
-void Main::execute(std::string params, const DataArray& da) {
+void Main::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the main job\n";
   std::vector<int> j;
   std::vector<int> d;
@@ -131,12 +131,12 @@ ForLoop::ForLoop(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * ForLoop::clone() {
+Job * ForLoop::Clone() {
   std::cout << "Cloning forLoop job!\n";
   return new ForLoop(application_, type_);
 };
 
-void ForLoop::execute(std::string params, const DataArray& da) {
+void ForLoop::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<int> j;
   std::vector<int> d;
@@ -208,12 +208,12 @@ Init::Init(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * Init::clone() {
+Job * Init::Clone() {
   std::cout << "Cloning init job!\n";
   return new Init(application_, type_);
 };
 
-void Init::execute(std::string params, const DataArray& da)
+void Init::Execute(std::string params, const DataArray& da)
 {
   std::cout << "Executing the init job\n";
   Vec *d = (Vec*)(da[0]);
@@ -226,12 +226,12 @@ Print::Print(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * Print::clone() {
+Job * Print::Clone() {
   std::cout << "Cloning print job!\n";
   return new Print(application_, type_);
 };
 
-void Print::execute(std::string params, const DataArray& da)
+void Print::Execute(std::string params, const DataArray& da)
 {
   std::cout << "Executing the print job\n";
   Vec *d = (Vec*)(da[0]);
@@ -245,12 +245,12 @@ ApplyLeft::ApplyLeft(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * ApplyLeft::clone() {
+Job * ApplyLeft::Clone() {
   std::cout << "Cloning applyLeft job!\n";
   return new ApplyLeft(application_, type_);
 };
 
-void ApplyLeft::execute(std::string params, const DataArray& da)
+void ApplyLeft::Execute(std::string params, const DataArray& da)
 {
   std::cout << "Executing the applyLeft job\n";
   int sten [] = {-1, +2, -1, 0};
@@ -277,12 +277,12 @@ ApplyRight::ApplyRight(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * ApplyRight::clone() {
+Job * ApplyRight::Clone() {
   std::cout << "Cloning applyRight job!\n";
   return new ApplyRight(application_, type_);
 };
 
-void ApplyRight::execute(std::string params, const DataArray& da)
+void ApplyRight::Execute(std::string params, const DataArray& da)
 {
   std::cout << "Executing the applyRight job\n";
 
@@ -293,12 +293,12 @@ UpdateLeft::UpdateLeft(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * UpdateLeft::clone() {
+Job * UpdateLeft::Clone() {
   std::cout << "Cloning updateLeft job!\n";
   return new UpdateLeft(application_, type_);
 };
 
-void UpdateLeft::execute(std::string params, const DataArray& da)
+void UpdateLeft::Execute(std::string params, const DataArray& da)
 {
   std::cout << "Executing the updateLeft job\n";
   Vec *d1 = (Vec*)(da[0]);
@@ -313,12 +313,12 @@ UpdateRight::UpdateRight(Application* app, JobType type)
   : Job(app, type) {
 };
 
-Job * UpdateRight::clone() {
+Job * UpdateRight::Clone() {
   std::cout << "Cloning updateRight job!\n";
   return new UpdateRight(application_, type_);
 };
 
-void UpdateRight::execute(std::string params, const DataArray& da)
+void UpdateRight::Execute(std::string params, const DataArray& da)
 {
   std::cout << "Executing the updateRight job\n";
   Vec *d1 = (Vec*)(da[0]);

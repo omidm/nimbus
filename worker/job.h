@@ -45,7 +45,9 @@
 #include <string>
 #include <set>
 #include <map>
+#include "shared/nimbus_types.h"
 #include "worker/data.h"
+#include "shared/id.h"
 #include "shared/idset.h"
 
 namespace nimbus {
@@ -57,30 +59,48 @@ typedef std::map<std::string, Job*> JobTable;
 typedef std::vector<Data*> DataArray;
 
 class Job {
- public:
-  Job(Application* app, JobType type);
-  virtual ~Job() {}
+  public:
+    Job();
+    virtual ~Job();
 
-  virtual void execute(std::string params, const DataArray& da) {}
-  virtual Job* clone();
-  virtual void sleep() {}
-  virtual void cancel() {}
+    // TODO(omidm) should remove this later. left it now so the tests
+    // that use it still pass.
+    Job(Application* app, JobType type);
 
-  uint64_t id();
-  void set_id(uint64_t id);
+    virtual void Execute(std::string params, const DataArray& da) {}
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
 
- protected:
-  Application* application_;
-  JobType type_;
+    ID<job_id_t> id();
+    IDSet<data_id_t> read_set();
+    IDSet<data_id_t> write_set();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+    std::string parameters();
 
- private:
-  job_id_t id_;
-  IDSet<data_id_t> read_set_;
-  IDSet<data_id_t> write_set_;
-  IDSet<job_id_t> before_set_;
-  IDSet<job_id_t> after_set_;
-  std::string parameters_;
+    void set_id(ID<job_id_t> id);
+    void set_read_set(IDSet<data_id_t> read_set);
+    void set_write_set(IDSet<data_id_t> write_set);
+    void set_before_set(IDSet<job_id_t> before_set);
+    void set_after_set(IDSet<job_id_t> after_set);
+    void set_parapeters(std::string parameters);
+
+
+  protected:
+    ID<job_id_t> id_;
+    IDSet<data_id_t> read_set_;
+    IDSet<data_id_t> write_set_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    std::string parameters_;
+
+    // TODO(omidm) should remove bothe of them, later; left them now so the tests
+    // that use them still pass.
+    Application* application_;
+    JobType type_;
 };
+
 
 }  // namespace nimbus
 #endif  // NIMBUS_WORKER_JOB_H_
