@@ -66,6 +66,13 @@ namespace water_app_data {
             data->Resize(*grid);
         }
 
+    template <class TV> void FaceArray<TV>::
+        destroy() {
+            printf("Destroying face array\n");
+            free(grid);
+            free(data);
+        }
+
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         clone() {
             std::cout << "Cloning facearray\n";
