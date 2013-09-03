@@ -189,3 +189,21 @@ void LocalCopyJob::Execute(std::string params, const DataArray& da) {
   da[1]->Copy(da[0]);
 }
 
+
+
+CreateDataJob::CreateDataJob() {
+}
+
+CreateDataJob::~CreateDataJob() {
+}
+
+Job* CreateDataJob::Clone() {
+  return new CreateDataJob();
+}
+
+void CreateDataJob::Execute(std::string params, const DataArray& da) {
+  da[0]->create();
+}
+
+
+
