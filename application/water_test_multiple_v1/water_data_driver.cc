@@ -368,18 +368,13 @@ BeforeAdvection
             } // external forces
 }
 
-/* TODO(chinmayee): reimplement this in water_app_advection
-template <class TV> void ::water_app_data::FaceArray<TV>::
-Advection (WaterDriver<TV> *driver,
-        NonAdvData<TV, T> *sim_data)
-{
-}
-*/
-
 template <class TV, class T> void NonAdvData<TV, T>::
 AfterAdvection
 (WaterDriver<TV> *driver, ::water_app_data::FaceArray<TV> *face_velocities)
 {
+    // Set required pointers
+    phi_boundary_water->Set_Velocity_Pointer(*face_velocities->data);
+
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
     face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
     incompressible->boundary->Fill_Ghost_Cells_Face(incompressible->grid,

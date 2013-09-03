@@ -51,7 +51,7 @@ typedef float T;
 typedef ::PhysBAM::VECTOR<float, 2> TV;
 typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
 
-const int kAppLastFrame = 2;
+const int kAppLastFrame = 10;
 const int kMainSize = 100;
 const int kGhostSize = 0;
 
