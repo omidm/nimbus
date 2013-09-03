@@ -58,50 +58,50 @@ class WaterApp : public Application {
 class Main : public Job {
     public:
         Main(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 class Init : public Job {
     public:
         Init(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 class Loop : public Job {
     public:
         Loop(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 class UptoAdvect : public Job {
     public:
         UptoAdvect(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 class Advect : public Job {
     public:
         Advect(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 class AfterAdvect : public Job {
     public:
         AfterAdvect(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 class WriteFrame : public Job {
     public:
         WriteFrame(Application *app, JobType type);
-        virtual void execute(std::string params, const DataArray& da);
-        virtual Job* clone();
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
 };
 
 #endif  // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
