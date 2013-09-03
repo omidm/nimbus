@@ -61,7 +61,7 @@ class Data {
 
   virtual Data* clone();
   virtual void create() {}
-  virtual void destroy(data_id_t id) {}
+  virtual void destroy() {}
   virtual void LocalCopy(data_id_t id_source, data_id_t id_destination) {}
   // TODO(omidm): Computer needs to be changed to worker, will be changed soon.
   virtual void RemoteCopy(Computer source, data_id_t id_source,

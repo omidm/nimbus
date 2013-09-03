@@ -301,6 +301,14 @@ void Advect::Execute(std::string params, const DataArray& da)
     else
         printf("*** Serialized face velocities!!\n");
 
+    //face_velocities->destroy();
+    //face_velocities->create();
+
+    if (!face_velocities->DeSerialize(*buffer, *buff_size))
+        printf("*** Deserialization unsuccessful!!\n");
+    else
+        printf("*** Successfully deserialized!!\n");
+
     Advection(face_velocities, sim_data);
 
     free(*buffer);

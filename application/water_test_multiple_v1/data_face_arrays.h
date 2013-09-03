@@ -69,6 +69,7 @@ namespace water_app_data {
 
                 FaceArray(int size);
                 virtual void create();
+                virtual void destroy();
                 virtual ::nimbus::Data* clone();
                 virtual int get_debug_info();
                 bool Serialize(char **buffer, int *buff_size);
