@@ -67,7 +67,11 @@ class Worker {
       port_t listening_port_, Application* application);
 
   virtual void Run();
-  virtual void WorkerCoreProcessor() {}
+  virtual void WorkerCoreProcessor();
+  virtual void ScanBlockedJobs();
+  virtual void ScanPendingTransferJobs();
+  virtual void GetJobsToRun(JobList* list, size_t max_num);
+  virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
   virtual void ProcessComputeJobCommand(ComputeJobCommand* command);
   virtual void ProcessCreateDataCommand(CreateDataCommand* command);

@@ -40,6 +40,8 @@
 
 #include "worker/worker.h"
 
+#define MAX_PARALLEL_JOB 10
+
 using namespace nimbus; // NOLINT
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
@@ -62,6 +64,46 @@ void Worker::Run() {
 
   WorkerCoreProcessor();
 }
+
+void Worker::WorkerCoreProcessor() {
+  std::cout << "Base Worker Core Processor" << std::endl;
+
+  while (true) {
+    SchedulerCommand* comm = client_->receiveCommand();
+    if (comm != NULL) {
+      std::cout << "Received command: " << comm->toString()
+        << std::endl;
+      ProcessSchedulerCommand(comm);
+      delete comm;
+    }
+
+    ScanBlockedJobs();
+
+    ScanPendingTransferJobs();
+
+    JobList jobs_to_run;
+    GetJobsToRun(&jobs_to_run, (size_t)(MAX_PARALLEL_JOB));
+    JobList::iterator iter = jobs_to_run.begin();
+    for (; iter != jobs_to_run.end(); iter++) {
+      ExecuteJob(*iter);
+    }
+  }
+}
+
+void Worker::ScanBlockedJobs() {
+}
+
+void Worker::ScanPendingTransferJobs() {
+}
+
+void Worker::GetJobsToRun(JobList* list, size_t max_num) {
+}
+
+void Worker::ExecuteJob(Job* job) {
+}
+
+
+
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
