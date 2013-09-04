@@ -99,6 +99,15 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
+  std::map<job_id_t, IDSet<job_id_t> >::iterator iter;
+  for (iter = done_jobs_.begin(); iter != done_jobs_.end();) {
+    iter->second.remove(cm->job_id().elem());
+    if (iter->second.size() == 0)
+      done_jobs_.erase(iter++);
+    else
+      ++iter;
+  }
+  done_jobs_[cm->job_id().elem()] = cm->after_set();
 }
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
