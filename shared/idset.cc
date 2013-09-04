@@ -125,6 +125,11 @@ void IDSet<T>::insert(T n) {
 }
 
 template<typename T>
+void IDSet<T>::remove(T n) {
+  identifiers_.erase(n);
+}
+
+template<typename T>
 void IDSet<T>::clear() {
   identifiers_.clear();
 }
