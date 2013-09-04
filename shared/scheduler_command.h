@@ -289,16 +289,20 @@ class JobDoneCommand : public SchedulerCommand {
   public:
     JobDoneCommand();
     JobDoneCommand(const ID<job_id_t>& job_id,
+        const IDSet<job_id_t>& after_set,
         const std::string& params);
     ~JobDoneCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
+    IDSet<job_id_t> after_set();
     std::string params();
+
 
   private:
     ID<job_id_t> job_id_;
+    IDSet<job_id_t> after_set_;
     std::string params_;
 };
 

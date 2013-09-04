@@ -232,13 +232,11 @@ bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
 }
 
 bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
-      SerializedData& ser_data) {
+      SerializedData** ser_data) {
   if (data_map_.count(job_id) == 0) {
     return false;
   } else {
-    SerializedData* sd = data_map_[job_id];
-    ser_data.set_size(sd->size());
-    ser_data.set_data_ptr(sd->data_ptr());
+    *ser_data = data_map_[job_id];
     RemoveSerializedData(job_id);
     return true;
   }

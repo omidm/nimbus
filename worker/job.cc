@@ -104,3 +104,106 @@ void Job::set_after_set(IDSet<job_id_t> after_set) {
 
 
 
+RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da) {
+  data_exchanger_ = da;
+}
+
+RemoteCopySendJob::~RemoteCopySendJob() {
+}
+
+void RemoteCopySendJob::Execute(std::string params, const DataArray& da) {
+  SerializedData ser_data;
+  da[0]->Serialize(&ser_data);
+  data_exchanger_->SendSerializedData(id_.elem(), to_worker_id_.elem(), ser_data);
+  delete ser_data.data_ptr();
+}
+
+Job* RemoteCopySendJob::Clone() {
+  return new RemoteCopySendJob(data_exchanger_);
+}
+
+ID<worker_id_t> RemoteCopySendJob::to_worker_id() {
+  return to_worker_id_;
+}
+
+std::string RemoteCopySendJob::to_ip() {
+  return to_ip_;
+}
+
+ID<port_t> RemoteCopySendJob::to_port() {
+  return to_port_;
+}
+
+
+void RemoteCopySendJob::set_to_worker_id(ID<worker_id_t> worker_id) {
+  to_worker_id_ = worker_id;
+}
+
+void RemoteCopySendJob::set_to_ip(std::string ip) {
+  to_ip_ = ip;
+}
+
+void RemoteCopySendJob::set_to_port(ID<port_t> port) {
+  to_port_ = port;
+}
+
+
+
+RemoteCopyReceiveJob::RemoteCopyReceiveJob() {
+}
+
+RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
+}
+
+void RemoteCopyReceiveJob::Execute(std::string params, const DataArray& da) {
+  Data * data_copy;
+  da[0]->DeSerialize(*serialized_data_, &data_copy);
+  da[0]->Copy(data_copy);
+
+  data_copy->destroy();
+  delete serialized_data_->data_ptr();
+  delete serialized_data_;
+}
+
+Job* RemoteCopyReceiveJob::Clone() {
+  return new RemoteCopyReceiveJob();
+}
+
+void RemoteCopyReceiveJob::set_serialized_data(SerializedData* ser_data) {
+  serialized_data_ = ser_data;
+}
+
+
+
+LocalCopyJob::LocalCopyJob() {
+}
+
+LocalCopyJob::~LocalCopyJob() {
+}
+
+Job* LocalCopyJob::Clone() {
+  return new LocalCopyJob();
+}
+
+void LocalCopyJob::Execute(std::string params, const DataArray& da) {
+  da[1]->Copy(da[0]);
+}
+
+
+
+CreateDataJob::CreateDataJob() {
+}
+
+CreateDataJob::~CreateDataJob() {
+}
+
+Job* CreateDataJob::Clone() {
+  return new CreateDataJob();
+}
+
+void CreateDataJob::Execute(std::string params, const DataArray& da) {
+  da[0]->create();
+}
+
+
+

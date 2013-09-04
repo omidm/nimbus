@@ -45,16 +45,20 @@
 #include <string>
 #include <set>
 #include <map>
+#include <list>
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/serialized_data.h"
+#include "shared/worker_data_exchanger.h"
 
 namespace nimbus {
 
 class Application;
 class Job;
-typedef std::map<int, Job*> JobMap;
+typedef std::list<Job*> JobList;
+typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
 typedef std::vector<Data*> DataArray;
 
@@ -100,6 +104,75 @@ class Job {
     Application* application_;
     JobType type_;
 };
+
+class RemoteCopySendJob : public Job {
+  public:
+    explicit RemoteCopySendJob(WorkerDataExchanger* de);
+    ~RemoteCopySendJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    ID<worker_id_t> to_worker_id();
+    std::string to_ip();
+    ID<port_t> to_port();
+
+    void set_to_worker_id(ID<worker_id_t> worker_id);
+    void set_to_ip(std::string ip);
+    void set_to_port(ID<port_t> port);
+
+  private:
+    ID<worker_id_t> to_worker_id_;
+    std::string to_ip_;
+    ID<port_t> to_port_;
+    WorkerDataExchanger* data_exchanger_;
+};
+
+class RemoteCopyReceiveJob : public Job {
+  public:
+    RemoteCopyReceiveJob();
+    ~RemoteCopyReceiveJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+    void set_serialized_data(SerializedData* ser_data);
+
+  private:
+    SerializedData * serialized_data_;
+};
+
+class LocalCopyJob : public Job {
+  public:
+    LocalCopyJob();
+    ~LocalCopyJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+  private:
+};
+
+class CreateDataJob : public Job {
+  public:
+    CreateDataJob();
+    ~CreateDataJob();
+
+    virtual void Execute(std::string params, const DataArray& da);
+    virtual Job* Clone();
+    virtual void Sleep() {}
+    virtual void Cancel() {}
+
+  private:
+};
+
+
 
 
 }  // namespace nimbus

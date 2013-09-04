@@ -244,9 +244,11 @@ bool ParseHandshakeCommand(const std::string& input,
 
 bool ParseJobDoneCommand(const std::string& input,
     ID<job_id_t>& job_id,
+    IDSet<job_id_t>& after_set,
     std::string& params) {
-  int num = 2;
+  int num = 3;
   job_id_t job_id_elem;
+  std::set<job_id_t> job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -271,6 +273,15 @@ bool ParseJobDoneCommand(const std::string& input,
     job_id = temp;
   } else {
     std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    after_set = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
     return false;
   }
 

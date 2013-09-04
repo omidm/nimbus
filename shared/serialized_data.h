@@ -60,6 +60,8 @@ class SerializedData {
     size_t size();
     void set_size(size_t size);
 
+    SerializedData& operator= (const SerializedData& right);
+
   private:
     char* data_ptr_;
     size_t size_;

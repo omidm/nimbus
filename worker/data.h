@@ -46,6 +46,7 @@
 #include <string>
 #include "shared/cluster.h"
 #include "shared/idset.h"
+#include "shared/serialized_data.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -62,10 +63,10 @@ class Data {
   virtual Data* clone();
   virtual void create() {}
   virtual void destroy() {}
-  virtual void LocalCopy(data_id_t id_source, data_id_t id_destination) {}
-  // TODO(omidm): Computer needs to be changed to worker, will be changed soon.
-  virtual void RemoteCopy(Computer source, data_id_t id_source,
-      Computer destination, data_id_t id_destination) {}
+
+  virtual void Copy(Data* from) {}
+  virtual bool Serialize(SerializedData* ser_data) {return false;}
+  virtual bool DeSerialize(const SerializedData& ser_data, Data** result) {return false;}
 
 
   virtual void duplicate(Computer source, Computer destination) {}

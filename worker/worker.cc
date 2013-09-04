@@ -40,6 +40,8 @@
 
 #include "worker/worker.h"
 
+#define MAX_PARALLEL_JOB 10
+
 using namespace nimbus; // NOLINT
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
@@ -62,6 +64,46 @@ void Worker::Run() {
 
   WorkerCoreProcessor();
 }
+
+void Worker::WorkerCoreProcessor() {
+  std::cout << "Base Worker Core Processor" << std::endl;
+
+  while (true) {
+    SchedulerCommand* comm = client_->receiveCommand();
+    if (comm != NULL) {
+      std::cout << "Received command: " << comm->toString()
+        << std::endl;
+      ProcessSchedulerCommand(comm);
+      delete comm;
+    }
+
+    ScanBlockedJobs();
+
+    ScanPendingTransferJobs();
+
+    JobList jobs_to_run;
+    GetJobsToRun(&jobs_to_run, (size_t)(MAX_PARALLEL_JOB));
+    JobList::iterator iter = jobs_to_run.begin();
+    for (; iter != jobs_to_run.end(); iter++) {
+      ExecuteJob(*iter);
+    }
+  }
+}
+
+void Worker::ScanBlockedJobs() {
+}
+
+void Worker::ScanPendingTransferJobs() {
+}
+
+void Worker::GetJobsToRun(JobList* list, size_t max_num) {
+}
+
+void Worker::ExecuteJob(Job* job) {
+}
+
+
+
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
@@ -99,18 +141,78 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
+  std::map<job_id_t, IDSet<job_id_t> >::iterator iter;
+  for (iter = done_jobs_.begin(); iter != done_jobs_.end();) {
+    iter->second.remove(cm->job_id().elem());
+    if (iter->second.size() == 0)
+      done_jobs_.erase(iter++);
+    else
+      ++iter;
+  }
+  done_jobs_[cm->job_id().elem()] = cm->after_set();
 }
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
+  Job * job = application_->cloneJob(cm->job_name());
+  job->set_id(cm->job_id());
+  job->set_read_set(cm->read_set());
+  job->set_write_set(cm->write_set());
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
+  Data * data = application_->cloneData(cm->data_name());
+  data->set_id(cm->data_id().elem());
+  AddData(data);
+
+  Job * job = new CreateDataJob();
+  job->set_id(cm->job_id());
+  IDSet<data_id_t> write_set;
+  write_set.insert(cm->data_id().elem());
+  job->set_write_set(write_set);
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
+  if (cm->to_worker_id().elem() == id_) {
+    Job * job = new RemoteCopyReceiveJob();
+    job->set_id(cm->job_id());
+    IDSet<data_id_t> write_set;
+    write_set.insert(cm->to_data_id().elem());
+    job->set_write_set(write_set);
+    job->set_before_set(cm->before_set());
+    job->set_after_set(cm->after_set());
+    blocked_jobs_.push_back(job);
+  } else {
+    Job * job = new RemoteCopySendJob(data_exchanger_);
+    data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
+        cm->to_ip(), cm->to_port().elem());
+    job->set_id(cm->job_id());
+    IDSet<data_id_t> read_set;
+    read_set.insert(cm->from_data_id().elem());
+    job->set_read_set(read_set);
+    job->set_before_set(cm->before_set());
+    job->set_after_set(cm->after_set());
+    blocked_jobs_.push_back(job);
+  }
 }
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
+  Job * job = new LocalCopyJob();
+  job->set_id(cm->job_id());
+  IDSet<data_id_t> read_set;
+  read_set.insert(cm->from_data_id().elem());
+  job->set_read_set(read_set);
+  IDSet<data_id_t> write_set;
+  write_set.insert(cm->to_data_id().elem());
+  job->set_write_set(write_set);
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
@@ -195,18 +297,12 @@ void Worker::LoadSchedulerCommands() {
       std::make_pair(std::string("localcopy"), COMMAND_LOCAL_COPY));
 }
 
-void Worker::AddJob(Job* job) {
-  job_map_[job->id().elem()] = job;
-}
-
-void Worker::DeleteJob(int id) {
-}
-
 void Worker::AddData(Data* data) {
   data_map_[data->id()] = data;
 }
 
-void Worker::DeleteData(int id) {
+void Worker::DeleteData(data_id_t data_id) {
+  data_map_.erase(data_id);
 }
 
 worker_id_t Worker::id() {

@@ -72,7 +72,7 @@ class WorkerDataExchanger {
       std::string ip_address, port_t port_no);
 
   virtual bool ReceiveSerializedData(job_id_t job_id,
-      SerializedData& ser_data);
+      SerializedData** ser_data);
 
   virtual bool SendSerializedData(job_id_t job_id,
       worker_id_t worker_id, SerializedData& ser_data);

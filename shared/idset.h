@@ -63,6 +63,7 @@ class IDSet {
 
   virtual std::string toString();
   virtual void insert(T entry);
+  virtual void remove(T entry);
   virtual void clear();
   virtual int size();
 

@@ -67,3 +67,10 @@ size_t SerializedData:: size() {
 void SerializedData:: set_size(size_t size) {
   size_ = size;
 }
+
+SerializedData& SerializedData::operator= (const SerializedData& right) {
+  data_ptr_ = right.data_ptr_;
+  size_ = right.size_;
+  return *this;
+}
+
