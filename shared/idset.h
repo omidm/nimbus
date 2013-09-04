@@ -61,13 +61,14 @@ class IDSet {
   IDSet(const IDSet<T>& other);
   virtual ~IDSet();
 
+  typedef typename std::set<T>::iterator IDSetIter;
+
   virtual std::string toString();
   virtual void insert(T entry);
   virtual void remove(T entry);
+  virtual void remove(IDSetIter it);
   virtual void clear();
   virtual int size();
-
-  typedef typename std::set<T>::iterator IDSetIter;
 
   IDSetIter begin();
   IDSetIter end();

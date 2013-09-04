@@ -130,6 +130,11 @@ void IDSet<T>::remove(T n) {
 }
 
 template<typename T>
+void IDSet<T>::remove(IDSetIter it) {
+  identifiers_.erase(it);
+}
+
+template<typename T>
 void IDSet<T>::clear() {
   identifiers_.clear();
 }
