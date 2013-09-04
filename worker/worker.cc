@@ -91,6 +91,24 @@ void Worker::WorkerCoreProcessor() {
 }
 
 void Worker::ScanBlockedJobs() {
+  JobList::iterator iter;
+  for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end();) {
+    IDSet<job_id_t> req = (*iter)->before_set();
+    IDSet<job_id_t>::IDSetIter it;
+    for (it = req.begin(); it != req.end();) {
+      if (done_jobs_.count(*it) != 0)
+        req.remove(it++);
+      else
+        ++it;
+    }
+    (*iter)->set_before_set(req);
+    if ((*iter)->before_set().size() == 0) {
+      ready_jobs_.push_back(*iter);
+      blocked_jobs_.erase(iter++);
+    } else {
+      ++iter;
+    }
+  }
 }
 
 void Worker::ScanPendingTransferJobs() {
