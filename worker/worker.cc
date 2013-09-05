@@ -160,6 +160,9 @@ void Worker::ExecuteJob(Job* job) {
       job->name().c_str(), job->id().elem(), 1000 * log.timer(), log.GetTime());
 
   log.writeToFile(std::string(buff), LOG_INFO);
+
+  JobDoneCommand cm(job->id(), job->after_set(), "nothing_yet");
+  client_->sendCommand(&cm);
 }
 
 
