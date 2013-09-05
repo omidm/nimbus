@@ -46,21 +46,21 @@ Application::Application() {
   app_data_ = NULL;
 }
 
-void Application::load() {
+void Application::Load() {
   std::cout << "Loaded Nimbus base application." << std::endl;
 }
 
-void Application::start(SchedulerClient* sc) {
+void Application::Start(SchedulerClient* sc) {
   std::cout << "Running Nimbus application: " << id_ << std::endl;
   client_ = sc;
-  load();
+  Load();
 }
 
-void Application::registerJob(std::string name, Job* j) {
+void Application::RegisterJob(std::string name, Job* j) {
   job_table_[name] = j;
 }
 
-void Application::registerData(std::string name, Data* d) {
+void Application::RegisterData(std::string name, Data* d) {
   data_table_[name] = d;
 }
 
@@ -125,22 +125,22 @@ void Application::DefineData(const std::string& name,
   client_->sendCommand(&cm);
 }
 
-Job* Application::cloneJob(std::string name) {
+Job* Application::CloneJob(std::string name) {
   return job_table_[name]->Clone();
 }
 
-Data* Application::cloneData(std::string name) {
+Data* Application::CloneData(std::string name) {
   return data_table_[name]->Clone();
 }
 
-void Application::getNewJobID(int req_num, std::vector<int>* result) {
+void Application::GetNewJobID(int req_num, std::vector<int>* result) {
   for (int i = 0; i < req_num; i++) {
     result->push_back(job_id_);
     job_id_++;
   }
 }
 
-void Application::getNewDataID(int req_num, std::vector<int>* result) {
+void Application::GetNewDataID(int req_num, std::vector<int>* result) {
   for (int i = 0; i < req_num; i++) {
     result->push_back(data_id_);
     data_id_++;

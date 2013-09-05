@@ -61,7 +61,7 @@ typedef VECTOR<int, TV::dimension> TV_INT;
 WaterApp::WaterApp()
 {};
 
-void WaterApp::load() {
+void WaterApp::Load() {
 
     std::cout << "Worker beginning to load application" << std::endl;
 
@@ -69,19 +69,19 @@ void WaterApp::load() {
 
     /* Declare and initialize data and jobs. */
 
-    registerJob("main", new Main(this, JOB_COMP));
+    RegisterJob("main", new Main(this, JOB_COMP));
 
-    registerJob("init", new Init(this, JOB_COMP));
-    registerJob("loop", new Loop(this, JOB_COMP));
-    registerJob("uptoadvect", new UptoAdvect(this, JOB_COMP));
-    registerJob("advect", new Advect(this, JOB_COMP));
-    registerJob("afteradvect", new AfterAdvect(this, JOB_COMP));
-    registerJob("writeframe", new WriteFrame(this, JOB_COMP));
+    RegisterJob("init", new Init(this, JOB_COMP));
+    RegisterJob("loop", new Loop(this, JOB_COMP));
+    RegisterJob("uptoadvect", new UptoAdvect(this, JOB_COMP));
+    RegisterJob("advect", new Advect(this, JOB_COMP));
+    RegisterJob("afteradvect", new AfterAdvect(this, JOB_COMP));
+    RegisterJob("writeframe", new WriteFrame(this, JOB_COMP));
 
-    registerData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    registerData("face_velocities_1", new FaceArray<TV>(ml));
-    registerData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
-    registerData("sim_data_1", new NonAdvData<TV, T>(ml));
+    RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
+    RegisterData("face_velocities_1", new FaceArray<TV>(ml));
+    RegisterData("face_velocities_ghost_1", new FaceArrayGhost<TV>(gl));
+    RegisterData("sim_data_1", new NonAdvData<TV, T>(ml));
 
     std::cout << "Finished creating job and data definitions" << std::endl;
     std::cout << "Finished loading application" << std::endl;
@@ -107,7 +107,7 @@ void Main::Execute(std::string params, const DataArray& da)
     partition_t partition_id = 0;
     std::string par;
 
-    application_->getNewDataID(4, &d);
+    application_->GetNewDataID(4, &d);
 
     application_->DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
     application_->DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
@@ -116,7 +116,7 @@ void Main::Execute(std::string params, const DataArray& da)
 
     std::cout << "Defined data\n";
 
-    application_->getNewJobID(2, &j);
+    application_->GetNewJobID(2, &j);
 
     before.clear();
     after.clear();
@@ -419,7 +419,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         IDSet<data_id_t> read, write;
 
         std::vector<int> j;
-        application_->getNewJobID(5, &j);
+        application_->GetNewJobID(5, &j);
 
         before.clear(); after.clear();
         read.clear(); write.clear();

@@ -64,11 +64,11 @@ class Application {
   Application();
   ~Application() {}
 
-  virtual void load();
-  virtual void start(SchedulerClient* scheduler);
+  virtual void Load();
+  virtual void Start(SchedulerClient* scheduler);
 
-  void registerJob(std::string name, Job* job);
-  void registerData(std::string name, Data* data);
+  void RegisterJob(std::string name, Job* job);
+  void RegisterData(std::string name, Data* data);
   void SpawnJob(const std::string& name,
       const job_id_t& id,
       const IDSet<data_id_t>& read,
@@ -99,10 +99,10 @@ class Application {
       const IDSet<partition_t>& neighbor_partition,
       std::string params);
 
-  Job* cloneJob(std::string name);
-  Data* cloneData(std::string name);
-  void getNewJobID(int req_num, std::vector<int>* result);
-  void getNewDataID(int req_num, std::vector<int>* result);
+  Job* CloneJob(std::string name);
+  Data* CloneData(std::string name);
+  void GetNewJobID(int req_num, std::vector<int>* result);
+  void GetNewDataID(int req_num, std::vector<int>* result);
   void* app_data();
   void set_app_data(void* data);
 

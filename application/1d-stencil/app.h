@@ -76,7 +76,7 @@ class Vec : public Data {
 class App : public Application {
   public:
     App();
-    virtual void load();
+    virtual void Load();
 };
 
 

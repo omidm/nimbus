@@ -24,24 +24,24 @@ App::App()
 
 };
 
-void App::load()
+void App::Load()
 {
 
   std::cout << "Start Creating Data and Job Tables" << std::endl;
   
-  registerJob("main", new Main(this, JOB_COMP));
-  registerJob("init", new Init(this, JOB_COMP));
-  registerJob("forLoop", new ForLoop(this, JOB_COMP));
-  registerJob("print", new Print(this, JOB_COMP));
-  registerJob("applyLeft", new ApplyLeft(this, JOB_COMP));
-  registerJob("applyRight", new ApplyRight(this, JOB_COMP));
-  registerJob("updateLeft", new UpdateLeft(this, JOB_SYNC));
-  registerJob("updateRight", new UpdateRight(this, JOB_SYNC));
+  RegisterJob("main", new Main(this, JOB_COMP));
+  RegisterJob("init", new Init(this, JOB_COMP));
+  RegisterJob("forLoop", new ForLoop(this, JOB_COMP));
+  RegisterJob("print", new Print(this, JOB_COMP));
+  RegisterJob("applyLeft", new ApplyLeft(this, JOB_COMP));
+  RegisterJob("applyRight", new ApplyRight(this, JOB_COMP));
+  RegisterJob("updateLeft", new UpdateLeft(this, JOB_SYNC));
+  RegisterJob("updateRight", new UpdateRight(this, JOB_SYNC));
 
-  registerData("mainLeft", new Vec (ML));
-  registerData("mainRight", new Vec (ML));
-  registerData("ghostLeft", new Vec (GL));
-  registerData("ghostRight", new Vec (GL));
+  RegisterData("mainLeft", new Vec (ML));
+  RegisterData("mainRight", new Vec (ML));
+  RegisterData("ghostLeft", new Vec (GL));
+  RegisterData("ghostRight", new Vec (GL));
 
   std::cout << "Finished Creating Data and Job Tables" << std::endl;
 
@@ -86,8 +86,8 @@ void Main::Execute(std::string params, const DataArray& da) {
   partition_t partition_id = 0;
   std::string par;
   
-  application_->getNewJobID(5, &j);
-  application_->getNewDataID(4, &d);
+  application_->GetNewJobID(5, &j);
+  application_->GetNewDataID(4, &d);
 
   application_->DefineData("mainLeft", d[0], partition_id, neighbor_partitions, par);
   application_->DefineData("mainRight", d[1], partition_id, neighbor_partitions, par);
@@ -146,7 +146,7 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   int counter = 0;
   int condition = 0;
   
-  application_->getNewJobID(7, &j);
+  application_->GetNewJobID(7, &j);
   // TODO: Load "d" with the ids of data instances from the "params".
   d.push_back(1);
   d.push_back(2);

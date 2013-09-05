@@ -58,7 +58,7 @@ void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
 
   SetupSchedulerInterface();
-  application_->start(client_);
+  application_->Start(client_);
 
   SetupDataExchangerInterface();
 
@@ -216,7 +216,7 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
 }
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
-  Job * job = application_->cloneJob(cm->job_name());
+  Job * job = application_->CloneJob(cm->job_name());
   job->set_name("Compute:" + cm->job_name());
   job->set_id(cm->job_id());
   job->set_read_set(cm->read_set());
@@ -228,7 +228,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
 }
 
 void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
-  Data * data = application_->cloneData(cm->data_name());
+  Data * data = application_->CloneData(cm->data_name());
   data->set_id(cm->data_id().elem());
   AddData(data);
 
@@ -285,7 +285,7 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
 }
 
 void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
-  Job * j = application_->cloneJob(cm->job_name());
+  Job * j = application_->CloneJob(cm->job_name());
 
   std::vector<Data*> da;
   IDSet<data_id_t>::IDSetIter iter;
@@ -313,7 +313,7 @@ void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
 }
 
 void Worker::ProcessDefineDataCommand(DefineDataCommand* cm) {
-  Data * d = application_->cloneData(cm->data_name());
+  Data * d = application_->CloneData(cm->data_name());
 
   data_id_t id = *(cm->data_id().begin());
 
