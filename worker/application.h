@@ -78,6 +78,21 @@ class Application {
       const JobType& type,
       std::string params);
 
+  void SpawnComputeJob(const std::string& name,
+      const job_id_t& id,
+      const IDSet<data_id_t>& read,
+      const IDSet<data_id_t>& write,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      std::string params);
+
+  void SpawnCopyJob(const job_id_t& id,
+      const data_id_t& from_id,
+      const data_id_t& to_id,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      std::string params);
+
   void DefineData(const std::string& name,
       const data_id_t& id,
       const partition_t& partition_id,

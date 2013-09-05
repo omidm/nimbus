@@ -72,12 +72,40 @@ void Application::SpawnJob(const std::string& name,
     const IDSet<job_id_t>& after,
     const JobType& type,
     std::string params) {
-  IDSet<data_id_t> id_set;
+  IDSet<job_id_t> id_set;
   id_set.insert(id);
   if (params == "")
     params = "none";
 
   SpawnJobCommand cm(name, id_set, read, write, before, after, type, params);
+  client_->sendCommand(&cm);
+}
+
+void Application::SpawnComputeJob(const std::string& name,
+    const job_id_t& id,
+    const IDSet<data_id_t>& read,
+    const IDSet<data_id_t>& write,
+    const IDSet<job_id_t>& before,
+    const IDSet<job_id_t>& after,
+    std::string params) {
+  if (params == "")
+    params = "none";
+
+  SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after, params);
+  client_->sendCommand(&cm);
+}
+
+void Application::SpawnCopyJob(const job_id_t& id,
+    const data_id_t& from_id,
+    const data_id_t& to_id,
+    const IDSet<job_id_t>& before,
+    const IDSet<job_id_t>& after,
+    std::string params) {
+  if (params == "")
+    params = "none";
+
+  SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<data_id_t>(from_id),
+      ID<data_id_t>(to_id), before, after, params);
   client_->sendCommand(&cm);
 }
 
