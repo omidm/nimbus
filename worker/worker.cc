@@ -220,6 +220,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_write_set(cm->write_set());
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  job->set_parameters(cm->params());
   blocked_jobs_.push_back(job);
 }
 
