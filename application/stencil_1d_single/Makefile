@@ -1,0 +1,31 @@
+
+#all: check application
+all: application
+
+NIMBUS_ROOT = ../..
+include $(NIMBUS_ROOT)/Makeinclude
+
+LIBRARY = libstencil_1d_single.so
+
+CFLAGS += -fPIC
+CFILES = $(wildcard *.cc)
+HFILES = $(wildcard *.h)
+OBJFILES = $(subst .cc,.o,$(CFILES))
+LFLAGS += -lboost_thread-mt -lboost_system-mt
+SHARED_FLAGS = -shared -fPIC
+
+ifdef OS_DARWIN
+  LINK_FLAG = -install_name @rpath/$(LIBRARY)
+endif
+
+application: $(LIBRARY)
+
+$(LIBRARY): $(OBJFILES) $(HFILES)
+	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
+
+%.o: %.cc
+	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
+
+clean: clean-files
+	\rm -f $(LIBRARY)
+
