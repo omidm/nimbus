@@ -63,9 +63,14 @@ class Scheduler {
     virtual void Run();
     virtual void SchedulerCoreProcessor() {}
     virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
-    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm);
+    virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
+    virtual void ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm);
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
+
+    // Will remove it later, just here so simple_scheduler will pass.
+    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm) {}
+
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(Worker * worker) {}
     virtual void AddWorker(Worker * worker) {}

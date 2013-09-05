@@ -61,6 +61,10 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 
   if (command_name == "spawnjob") {
     ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
+  } else if (command_name == "spawncomputejob") {
+    ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
+  } else if (command_name == "spawncopyjob") {
+    ProcessSpawnCopyJobCommand(reinterpret_cast<SpawnCopyJobCommand*>(cm));
   } else if (command_name == "definedata") {
     ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
   } else if (command_name == "handshake") {
@@ -73,7 +77,10 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 
-void Scheduler::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
+void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
+}
+
+void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
@@ -107,6 +114,10 @@ void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
   worker_command_set_.insert(
       std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
+  worker_command_set_.insert(
+      std::make_pair(std::string("spawncomputejob"), COMMAND_SPAWN_COMPUTE_JOB));
+  worker_command_set_.insert(
+      std::make_pair(std::string("spawncopyjob"), COMMAND_SPAWN_COPY_JOB));
   worker_command_set_.insert(
       std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
   worker_command_set_.insert(
