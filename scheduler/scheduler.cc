@@ -56,6 +56,9 @@ void Scheduler::Run() {
   SchedulerCoreProcessor();
 }
 
+void Scheduler::SchedulerCoreProcessor() {
+}
+
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   std::string command_name = cm->name();
 
@@ -69,6 +72,8 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
   } else if (command_name == "handshake") {
     ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
+  } else if (command_name == "jobdone") {
+    ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
   } else {
     std::cout << "ERROR: " << cm->toString() <<
       " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -102,6 +107,8 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
   }
 }
 
+void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
+}
 
 void Scheduler::SetupWorkerInterface() {
   LoadWorkerCommands();
