@@ -103,7 +103,10 @@ void Worker::ScanBlockedJobs() {
     }
     (*iter)->set_before_set(req);
     if ((*iter)->before_set().size() == 0) {
-      ready_jobs_.push_back(*iter);
+      if (dynamic_cast<RemoteCopyReceiveJob*>(*iter) == NULL) // NOLINT
+        ready_jobs_.push_back(*iter);
+      else
+        pending_transfer_jobs_.push_back(*iter);
       blocked_jobs_.erase(iter++);
     } else {
       ++iter;
@@ -112,6 +115,17 @@ void Worker::ScanBlockedJobs() {
 }
 
 void Worker::ScanPendingTransferJobs() {
+  JobList::iterator iter;
+  for (iter = pending_transfer_jobs_.begin(); iter != pending_transfer_jobs_.end();) {
+    SerializedData* ser_data;
+    if (data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data)) {
+      static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
+      ready_jobs_.push_back(*iter);
+      pending_transfer_jobs_.erase(iter++);
+    } else {
+      ++iter;
+    }
+  }
 }
 
 void Worker::GetJobsToRun(JobList* list, size_t max_num) {
