@@ -318,7 +318,7 @@ void Worker::ProcessDefineDataCommand(DefineDataCommand* cm) {
   data_id_t id = *(cm->data_id().begin());
 
   log.StartTimer();
-  d->create();
+  d->Create();
   d->set_id(id);
   AddData(d);
   log.StopTimer();

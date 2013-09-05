@@ -69,8 +69,8 @@ class Vec : public Data {
     Vec(int);
     int size;
     int *arr;
-    virtual void create();
-    virtual Data * clone();
+    virtual void Create();
+    virtual Data * Clone();
 };
 
 class App : public Application {

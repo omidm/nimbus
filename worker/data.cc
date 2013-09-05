@@ -44,7 +44,7 @@ using namespace nimbus; // NOLINT
 
 Data::Data() {}
 
-Data* Data::clone() {
+Data* Data::Clone() {
   std::cout << "cloning the base data\n";
   Data* d = new Data();
   return d;

@@ -130,7 +130,7 @@ Job* Application::cloneJob(std::string name) {
 }
 
 Data* Application::cloneData(std::string name) {
-  return data_table_[name]->clone();
+  return data_table_[name]->Clone();
 }
 
 void Application::getNewJobID(int req_num, std::vector<int>* result) {

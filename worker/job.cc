@@ -176,7 +176,7 @@ void RemoteCopyReceiveJob::Execute(std::string params, const DataArray& da) {
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
 
-  data_copy->destroy();
+  data_copy->Destroy();
   delete serialized_data_->data_ptr();
   delete serialized_data_;
 }
@@ -218,7 +218,7 @@ Job* CreateDataJob::Clone() {
 }
 
 void CreateDataJob::Execute(std::string params, const DataArray& da) {
-  da[0]->create();
+  da[0]->Create();
 }
 
 

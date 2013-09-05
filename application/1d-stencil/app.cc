@@ -9,12 +9,12 @@ Vec::Vec(int size)
   this->size = size;
 };
 
-Data * Vec::clone() {
+Data * Vec::Clone() {
   std::cout << "Cloning Vec data!\n";
   return new Vec(size);
 };
 
-void Vec::create()
+void Vec::Create()
 {
   arr = new int[size];
 };

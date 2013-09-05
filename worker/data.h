@@ -60,9 +60,9 @@ class Data {
   Data();
   virtual ~Data() {}
 
-  virtual Data* clone();
-  virtual void create() {}
-  virtual void destroy() {}
+  virtual Data* Clone();
+  virtual void Create() {}
+  virtual void Destroy() {}
 
   virtual void Copy(Data* from) {}
   virtual bool Serialize(SerializedData* ser_data) {return false;}

@@ -67,7 +67,7 @@ FaceArray(int size)
 }
 
 template <class TV> void FaceArray<TV>::
-create()
+Create()
 {
     std::cout << "Creating FaceArray\n";
 
@@ -82,7 +82,7 @@ create()
 }
 
 template <class TV> Data* FaceArray<TV>::
-clone()
+Clone()
 {
     std::cout << "Cloning facearray\n";
     return new FaceArray<TV>(size_);
@@ -104,7 +104,7 @@ FaceArrayGhost(int size)
 }
 
 template <class TV> void FaceArrayGhost<TV>::
-create()
+Create()
 {
     std::cout << "Creating FaceArrayGhost\n";
 
@@ -119,7 +119,7 @@ create()
 }
 
 template <class TV> Data* FaceArrayGhost<TV>::
-clone()
+Clone()
 {
     std::cout << "Cloning facearrayghost\n";
     return new FaceArrayGhost<TV>(size_);
@@ -162,7 +162,7 @@ NonAdvData(int size)
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-create()
+Create()
 {
     std::cout << "Creating NonAdvData\n";
 
@@ -194,7 +194,7 @@ create()
 }
 
 template <class TV, class T> Data* NonAdvData<TV, T>::
-clone()
+Clone()
 {
     std::cout << "Cloning nonadvdata\n";
     return new NonAdvData<TV, T>(size_);

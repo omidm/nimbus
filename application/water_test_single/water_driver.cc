@@ -61,7 +61,7 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     first_frame = (T)0;
     time = (T)0;
 
-    last_frame = 2;
+    last_frame = 20;
     frame_rate = 24;
     current_frame = 0;
 
@@ -88,14 +88,14 @@ void Write_Substep_Helper
 };
 
 template <class TV>
-Data* WaterDriver<TV> :: clone()
+Data* WaterDriver<TV> :: Clone()
 {
     std::cout << "Cloning waterdriver\n";
     return new WaterDriver<TV>(stream_type);
 };
 
 template <class TV>
-void WaterDriver<TV> :: create()
+void WaterDriver<TV> :: Create()
 {
     std::cout << "Initialize water driver ...\n";
 
