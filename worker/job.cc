@@ -61,6 +61,10 @@ Job* Job::Clone() {
   return j;
 }
 
+std::string Job::name() {
+  return name_;
+}
+
 ID<job_id_t> Job::id() {
   return id_;
 }
@@ -79,6 +83,10 @@ IDSet<job_id_t> Job::before_set() {
 
 IDSet<job_id_t> Job::after_set() {
   return after_set_;
+}
+
+void Job::set_name(std::string name) {
+  name_ = name;
 }
 
 void Job::set_id(ID<job_id_t> id) {

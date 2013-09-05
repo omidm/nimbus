@@ -150,18 +150,16 @@ void Worker::ExecuteJob(Job* job) {
   for (iter = write.begin(); iter != write.end(); iter++)
     da.push_back(data_map_[*iter]);
 
-  job_id_t id = job->id().elem();
-
   log.StartTimer();
   job->Execute(job->parameters(), da);
   log.StopTimer();
 
-//  char buff[MAX_BUFF_SIZE];
-//  snprintf(buff, sizeof(buff),
-//      "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-//      cm->job_name().c_str(), id, 1000 * log.timer(), log.GetTime());
-//
-//  log.writeToFile(std::string(buff), LOG_INFO);
+  char buff[MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+      job->name().c_str(), job->id().elem(), 1000 * log.timer(), log.GetTime());
+
+  log.writeToFile(std::string(buff), LOG_INFO);
 }
 
 
@@ -216,6 +214,7 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   Job * job = application_->cloneJob(cm->job_name());
+  job->set_name("Compute:" + cm->job_name());
   job->set_id(cm->job_id());
   job->set_read_set(cm->read_set());
   job->set_write_set(cm->write_set());
@@ -230,6 +229,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   AddData(data);
 
   Job * job = new CreateDataJob();
+  job->set_name("CreateData:" + cm->data_name());
   job->set_id(cm->job_id());
   IDSet<data_id_t> write_set;
   write_set.insert(cm->data_id().elem());
@@ -242,6 +242,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
 void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
   if (cm->to_worker_id().elem() == id_) {
     Job * job = new RemoteCopyReceiveJob();
+    job->set_name("RemoteCopyReceive");
     job->set_id(cm->job_id());
     IDSet<data_id_t> write_set;
     write_set.insert(cm->to_data_id().elem());
@@ -253,6 +254,7 @@ void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
     Job * job = new RemoteCopySendJob(data_exchanger_);
     data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
         cm->to_ip(), cm->to_port().elem());
+    job->set_name("RemoteCopySend");
     job->set_id(cm->job_id());
     IDSet<data_id_t> read_set;
     read_set.insert(cm->from_data_id().elem());
@@ -265,6 +267,7 @@ void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob();
+  job->set_name("LocalCopy");
   job->set_id(cm->job_id());
   IDSet<data_id_t> read_set;
   read_set.insert(cm->from_data_id().elem());

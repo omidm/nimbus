@@ -76,6 +76,7 @@ class Job {
     virtual void Sleep() {}
     virtual void Cancel() {}
 
+    std::string name();
     ID<job_id_t> id();
     IDSet<data_id_t> read_set();
     IDSet<data_id_t> write_set();
@@ -83,6 +84,7 @@ class Job {
     IDSet<job_id_t> after_set();
     std::string parameters();
 
+    void set_name(std::string name);
     void set_id(ID<job_id_t> id);
     void set_read_set(IDSet<data_id_t> read_set);
     void set_write_set(IDSet<data_id_t> write_set);
@@ -92,6 +94,7 @@ class Job {
 
 
   protected:
+    std::string name_;
     ID<job_id_t> id_;
     IDSet<data_id_t> read_set_;
     IDSet<data_id_t> write_set_;
