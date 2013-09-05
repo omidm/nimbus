@@ -90,7 +90,7 @@ class Job {
     void set_write_set(IDSet<data_id_t> write_set);
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
-    void set_parapeters(std::string parameters);
+    void set_parameters(std::string parameters);
 
 
   protected:

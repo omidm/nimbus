@@ -85,6 +85,10 @@ IDSet<job_id_t> Job::after_set() {
   return after_set_;
 }
 
+std::string Job::parameters() {
+  return parameters_;
+}
+
 void Job::set_name(std::string name) {
   name_ = name;
 }
@@ -107,6 +111,10 @@ void Job::set_before_set(IDSet<job_id_t> before_set) {
 
 void Job::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
+}
+
+void Job::set_parameters(std::string parameters) {
+  parameters_ = parameters;
 }
 
 
