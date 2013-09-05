@@ -139,7 +139,29 @@ void Worker::GetJobsToRun(JobList* list, size_t max_num) {
 }
 
 void Worker::ExecuteJob(Job* job) {
-  // OMID
+  DataArray da;
+  IDSet<data_id_t>::IDSetIter iter;
+
+  IDSet<data_id_t> read = job->read_set();
+  for (iter = read.begin(); iter != read.end(); iter++)
+    da.push_back(data_map_[*iter]);
+
+  IDSet<data_id_t> write = job->write_set();
+  for (iter = write.begin(); iter != write.end(); iter++)
+    da.push_back(data_map_[*iter]);
+
+  job_id_t id = job->id().elem();
+
+  log.StartTimer();
+  job->Execute(job->parameters(), da);
+  log.StopTimer();
+
+//  char buff[MAX_BUFF_SIZE];
+//  snprintf(buff, sizeof(buff),
+//      "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+//      cm->job_name().c_str(), id, 1000 * log.timer(), log.GetTime());
+//
+//  log.writeToFile(std::string(buff), LOG_INFO);
 }
 
 
