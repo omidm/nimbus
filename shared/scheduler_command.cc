@@ -191,16 +191,29 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
         bool cond = ParseSpawnComputeJobCommand(param_segment, job_name, job_id,
             read, write, before, after, params);
         if (!cond) {
-          std::cout << "ERROR: Could not detect valid spawnjob." << std::endl;
+          std::cout << "ERROR: Could not detect valid spawncomputejob." << std::endl;
           return false;
         } else {
           generated = new SpawnComputeJobCommand(job_name, job_id,
               read, write, before, after, params);
         }
+    } else if (type == COMMAND_SPAWN_COPY_JOB) {
+      ID<job_id_t> job_id;
+      ID<data_id_t> from_id;
+      ID<data_id_t> to_id;
+      IDSet<job_id_t> before;
+      IDSet<job_id_t> after;
+      std::string params;
 
-
-
-
+      bool cond = ParseSpawnCopyJobCommand(param_segment, job_id,
+          from_id, to_id, before, after, params);
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid spawncopyjob." << std::endl;
+        return false;
+      } else {
+        generated = new SpawnCopyJobCommand(job_id,
+            from_id, to_id, before, after, params);
+      }
     } else if (type == COMMAND_COMPUTE_JOB) {
       std::string job_name;
       ID<job_id_t> job_id;
@@ -526,13 +539,70 @@ std::string SpawnComputeJobCommand::params() {
 }
 
 
+SpawnCopyJobCommand::SpawnCopyJobCommand() {
+  name_ = "spawncopyjob";
+}
 
+SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
+    const ID<data_id_t>& from_id, const ID<data_id_t>& to_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    const std::string& params)
+: job_id_(job_id),
+  from_id_(from_id), to_id_(to_id),
+  before_set_(before), after_set_(after),
+  params_(params) {
+    name_ = "spawncopyjob";
+}
 
+SpawnCopyJobCommand::~SpawnCopyJobCommand() {
+}
 
+std::string SpawnCopyJobCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (job_id_.toString() + " ");
+  str += (from_id_.toString() + " ");
+  str += (to_id_.toString() + " ");
+  str += (before_set_.toString() + " ");
+  str += (after_set_.toString() + " ");
+  str += params_;
+  return str;
+}
 
+std::string SpawnCopyJobCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("id:" + job_id_.toString() + " ");
+  str += ("from:" + from_id_.toString() + " ");
+  str += ("to:" + to_id_.toString() + " ");
+  str += ("before:" + before_set_.toString() + " ");
+  str += ("after:" + after_set_.toString() + " ");
+  str += ("params:" + params_);
+  return str;
+}
 
+ID<job_id_t> SpawnCopyJobCommand::job_id() {
+  return job_id_;
+}
 
+ID<data_id_t> SpawnCopyJobCommand::from_id() {
+  return from_id_;
+}
 
+ID<data_id_t> SpawnCopyJobCommand::to_id() {
+  return to_id_;
+}
+
+IDSet<job_id_t> SpawnCopyJobCommand::after_set() {
+  return after_set_;
+}
+IDSet<job_id_t> SpawnCopyJobCommand::before_set() {
+  return before_set_;
+}
+
+std::string SpawnCopyJobCommand::params() {
+  return params_;
+}
 
 ComputeJobCommand::ComputeJobCommand() {
   name_ = "computejob";

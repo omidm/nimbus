@@ -198,6 +198,32 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     std::string params_;
 };
 
+class SpawnCopyJobCommand : public SchedulerCommand {
+  public:
+    SpawnCopyJobCommand();
+    SpawnCopyJobCommand(const ID<job_id_t>& job_id,
+        const ID<data_id_t>& from_id, const ID<data_id_t>& to_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        const std::string& params);
+    ~SpawnCopyJobCommand();
+
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
+    ID<data_id_t> from_id();
+    ID<data_id_t> to_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+    std::string params();
+
+  private:
+    ID<job_id_t> job_id_;
+    ID<data_id_t> from_id_;
+    ID<data_id_t> to_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    std::string params_;
+};
 
 class ComputeJobCommand : public SchedulerCommand {
   public:

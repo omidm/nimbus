@@ -106,6 +106,12 @@ bool ParseSpawnComputeJobCommand(const std::string& input,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
     std::string& params);
 
+bool ParseSpawnCopyJobCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    ID<data_id_t>& from_id, ID<data_id_t>& to_id,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
+    std::string& params);
+
 bool ParseComputeJobCommand(const std::string& input,
     std::string& job_name,
     ID<job_id_t>& job_id,
