@@ -108,6 +108,10 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
+  SchedulerWorkerList::iterator iter = server_->workers()->begin();
+  for (; iter != server_->workers()->end(); iter++) {
+    server_->SendCommand(*iter, cm);
+  }
 }
 
 void Scheduler::SetupWorkerInterface() {
