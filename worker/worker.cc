@@ -129,9 +129,17 @@ void Worker::ScanPendingTransferJobs() {
 }
 
 void Worker::GetJobsToRun(JobList* list, size_t max_num) {
+  list->clear();
+  size_t ready_num = ready_jobs_.size();
+  for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
+    Job* job = ready_jobs_.front();
+    list->push_back(job);
+    ready_jobs_.pop_front();
+  }
 }
 
 void Worker::ExecuteJob(Job* job) {
+  // OMID
 }
 
 
