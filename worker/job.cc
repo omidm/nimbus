@@ -39,10 +39,12 @@
   */
 
 #include "worker/job.h"
+#include "worker/application.h"
 
 using namespace nimbus; // NOLINT
 
 Job::Job() {
+  app_is_set_ = false;
 }
 
 Job::~Job() {
@@ -59,6 +61,48 @@ Job* Job::Clone() {
   std::cout << "cloning the base job\n";
   Job* j = new Job();
   return j;
+}
+
+void Job::SpawnComputeJob(const std::string& name,
+    const job_id_t& id,
+    const IDSet<data_id_t>& read,
+    const IDSet<data_id_t>& write,
+    const IDSet<job_id_t>& before,
+    const IDSet<job_id_t>& after,
+    std::string params) {
+  if (app_is_set_) {
+    application_->SpawnComputeJob(name, id, read, write, before, after, params);
+  } else {
+    std::cout << "ERROR: SpawnComputeJob, application has not beet set." <<
+      std::endl;
+  }
+}
+
+void Job::SpawnCopyJob(const job_id_t& id,
+    const data_id_t& from_id,
+    const data_id_t& to_id,
+    const IDSet<job_id_t>& before,
+    const IDSet<job_id_t>& after,
+    std::string params) {
+  if (app_is_set_) {
+    application_->SpawnCopyJob(id, from_id, to_id, before, after, params);
+  } else {
+    std::cout << "ERROR: SpawnCopyJob, application has not beet set." <<
+      std::endl;
+  }
+}
+
+void Job::DefineData(const std::string& name,
+    const data_id_t& id,
+    const partition_t& partition_id,
+    const IDSet<partition_t>& neighbor_partition,
+    std::string params) {
+  if (app_is_set_) {
+    application_->DefineData(name, id, partition_id, neighbor_partition, params);
+  } else {
+    std::cout << "ERROR: DefineData, application has not beet set." <<
+      std::endl;
+  }
 }
 
 std::string Job::name() {
@@ -123,6 +167,7 @@ void Job::set_parameters(std::string parameters) {
 
 void Job::set_application(Application* app) {
   application_ = app;
+  app_is_set_ = true;
 }
 
 
@@ -138,7 +183,7 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 void RemoteCopySendJob::Execute(std::string params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
-  data_exchanger_->SendSerializedData(id_.elem(), to_worker_id_.elem(), ser_data);
+  data_exchanger_->SendSerializedData(id().elem(), to_worker_id_.elem(), ser_data);
   delete ser_data.data_ptr();
 }
 

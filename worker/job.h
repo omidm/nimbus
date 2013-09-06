@@ -76,6 +76,27 @@ class Job {
     virtual void Sleep() {}
     virtual void Cancel() {}
 
+  void SpawnComputeJob(const std::string& name,
+      const job_id_t& id,
+      const IDSet<data_id_t>& read,
+      const IDSet<data_id_t>& write,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      std::string params);
+
+  void SpawnCopyJob(const job_id_t& id,
+      const data_id_t& from_id,
+      const data_id_t& to_id,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      std::string params);
+
+  void DefineData(const std::string& name,
+      const data_id_t& id,
+      const partition_t& partition_id,
+      const IDSet<partition_t>& neighbor_partition,
+      std::string params);
+
     std::string name();
     ID<job_id_t> id();
     IDSet<data_id_t> read_set();
@@ -94,8 +115,7 @@ class Job {
     void set_parameters(std::string parameters);
     void set_application(Application* app);
 
-
-  protected:
+  private:
     std::string name_;
     ID<job_id_t> id_;
     IDSet<data_id_t> read_set_;
@@ -104,7 +124,9 @@ class Job {
     IDSet<job_id_t> after_set_;
     std::string parameters_;
     Application* application_;
+    bool app_is_set_;
 
+  protected:
     // TODO(omidm) should remove it later; left them now so the tests
     // that use it still pass.
     JobType type_;

@@ -73,7 +73,7 @@ Main::Main(Application* app, JobType type)
 
 Job * Main::Clone() {
   std::cout << "Cloning main job!\n";
-  return new Main(application_, type_);
+  return new Main(application(), type_);
 };
 
 void Main::Execute(std::string params, const DataArray& da) {
@@ -86,37 +86,37 @@ void Main::Execute(std::string params, const DataArray& da) {
   partition_t partition_id = 0;
   std::string par;
   
-  application_->GetNewJobID(5, &j);
-  application_->GetNewDataID(4, &d);
+  application()->GetNewJobID(5, &j);
+  application()->GetNewDataID(4, &d);
 
-  application_->DefineData("mainLeft", d[0], partition_id, neighbor_partitions, par);
-  application_->DefineData("mainRight", d[1], partition_id, neighbor_partitions, par);
-  application_->DefineData("ghostLeft", d[2], partition_id, neighbor_partitions, par);
-  application_->DefineData("ghostRight", d[3], partition_id, neighbor_partitions, par);
+  application()->DefineData("mainLeft", d[0], partition_id, neighbor_partitions, par);
+  application()->DefineData("mainRight", d[1], partition_id, neighbor_partitions, par);
+  application()->DefineData("ghostLeft", d[2], partition_id, neighbor_partitions, par);
+  application()->DefineData("ghostRight", d[3], partition_id, neighbor_partitions, par);
 
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[0]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application_->SpawnJob("init", j[0], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("init", j[0], read, write, before, after, JOB_COMP, par);
 
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[1]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application_->SpawnJob("init", j[1], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("init", j[1], read, write, before, after, JOB_COMP, par);
 
   read.clear(); read.insert(d[2]);
   write.clear(); write.insert(d[2]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application_->SpawnJob("init", j[2], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("init", j[2], read, write, before, after, JOB_COMP, par);
 
   read.clear(); read.insert(d[3]);
   write.clear(); write.insert(d[3]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application_->SpawnJob("init", j[3], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("init", j[3], read, write, before, after, JOB_COMP, par);
 
   read.clear();
   write.clear();
@@ -124,7 +124,7 @@ void Main::Execute(std::string params, const DataArray& da) {
   after.clear();
   // TODO: Load the "par" with the ids of four defined data instances.
   // TODO: Load the for loop couter and condition in "par"
-  application_->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
 };
 
 ForLoop::ForLoop(Application* app, JobType type)
@@ -133,7 +133,7 @@ ForLoop::ForLoop(Application* app, JobType type)
 
 Job * ForLoop::Clone() {
   std::cout << "Cloning forLoop job!\n";
-  return new ForLoop(application_, type_);
+  return new ForLoop(application(), type_);
 };
 
 void ForLoop::Execute(std::string params, const DataArray& da) {
@@ -146,7 +146,7 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   int counter = 0;
   int condition = 0;
   
-  application_->GetNewJobID(7, &j);
+  application()->GetNewJobID(7, &j);
   // TODO: Load "d" with the ids of data instances from the "params".
   d.push_back(1);
   d.push_back(2);
@@ -160,25 +160,25 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   write.clear(); write.insert(d[2]);
   before.clear();
   after.clear(); after.insert(j[2]); after.insert(j[3]);
-  application_->SpawnJob("updateLeft", j[0], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("updateLeft", j[0], read, write, before, after, JOB_COMP, par);
 
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[3]);
   before.clear();
   after.clear(); after.insert(j[2]); after.insert(j[3]);
-  application_->SpawnJob("updateRight", j[1], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("updateRight", j[1], read, write, before, after, JOB_COMP, par);
 
   read.clear(); read.insert(d[0]); read.insert(d[3]);
   write.clear(); write.insert(d[0]);
   before.clear(); before.insert(j[0]); before.insert(j[1]);
   after.clear(); after.insert(j[4]);
-  application_->SpawnJob("applyLeft", j[2], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("applyLeft", j[2], read, write, before, after, JOB_COMP, par);
 
   before.clear(); before.insert(j[0]); before.insert(j[1]);
   after.clear(); after.insert(j[4]);
   read.clear(); read.insert(d[1]); read.insert(d[2]);
   write.clear(); write.insert(d[1]);
-  application_->SpawnJob("applyRight", j[3], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("applyRight", j[3], read, write, before, after, JOB_COMP, par);
 
   if (counter > condition) {
   read.clear();
@@ -187,20 +187,20 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   after.clear();
   // TODO: Load the "par" with the ids of four defined data instances.  
   // TODO: Load the for loop couter and condition in "par"
-  application_->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
   }
   else {
   before.clear(); before.insert(j[2]);
   after.clear();
   read.clear(); read.insert(d[0]);
   write.clear();
-  application_->SpawnJob("print", j[5], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("print", j[5], read, write, before, after, JOB_COMP, par);
 
   before.clear(); before.insert(j[3]);
   after.clear();
   read.clear(); read.insert(d[1]);
   write.clear();
-  application_->SpawnJob("print", j[6], read, write, before, after, JOB_COMP, par);
+  application()->SpawnJob("print", j[6], read, write, before, after, JOB_COMP, par);
   }
 };
 
@@ -210,7 +210,7 @@ Init::Init(Application* app, JobType type)
 
 Job * Init::Clone() {
   std::cout << "Cloning init job!\n";
-  return new Init(application_, type_);
+  return new Init(application(), type_);
 };
 
 void Init::Execute(std::string params, const DataArray& da)
@@ -228,7 +228,7 @@ Print::Print(Application* app, JobType type)
 
 Job * Print::Clone() {
   std::cout << "Cloning print job!\n";
-  return new Print(application_, type_);
+  return new Print(application(), type_);
 };
 
 void Print::Execute(std::string params, const DataArray& da)
@@ -247,7 +247,7 @@ ApplyLeft::ApplyLeft(Application* app, JobType type)
 
 Job * ApplyLeft::Clone() {
   std::cout << "Cloning applyLeft job!\n";
-  return new ApplyLeft(application_, type_);
+  return new ApplyLeft(application(), type_);
 };
 
 void ApplyLeft::Execute(std::string params, const DataArray& da)
@@ -279,7 +279,7 @@ ApplyRight::ApplyRight(Application* app, JobType type)
 
 Job * ApplyRight::Clone() {
   std::cout << "Cloning applyRight job!\n";
-  return new ApplyRight(application_, type_);
+  return new ApplyRight(application(), type_);
 };
 
 void ApplyRight::Execute(std::string params, const DataArray& da)
@@ -295,7 +295,7 @@ UpdateLeft::UpdateLeft(Application* app, JobType type)
 
 Job * UpdateLeft::Clone() {
   std::cout << "Cloning updateLeft job!\n";
-  return new UpdateLeft(application_, type_);
+  return new UpdateLeft(application(), type_);
 };
 
 void UpdateLeft::Execute(std::string params, const DataArray& da)
@@ -315,7 +315,7 @@ UpdateRight::UpdateRight(Application* app, JobType type)
 
 Job * UpdateRight::Clone() {
   std::cout << "Cloning updateRight job!\n";
-  return new UpdateRight(application_, type_);
+  return new UpdateRight(application(), type_);
 };
 
 void UpdateRight::Execute(std::string params, const DataArray& da)
