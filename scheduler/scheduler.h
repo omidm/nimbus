@@ -79,6 +79,7 @@ class Scheduler {
 
   protected:
     SchedulerServer* server_;
+    IDMaker id_maker_;
     CmSet user_command_set_;
     CommandSet worker_command_set_;
 

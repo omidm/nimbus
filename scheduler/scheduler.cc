@@ -52,6 +52,7 @@ void Scheduler::Run() {
 
   SetupWorkerInterface();
   SetupUserInterface();
+  id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
 }
