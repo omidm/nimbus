@@ -89,6 +89,10 @@ std::string Job::parameters() {
   return parameters_;
 }
 
+Application* Job::application() {
+  return application_;
+}
+
 void Job::set_name(std::string name) {
   name_ = name;
 }
@@ -115,6 +119,10 @@ void Job::set_after_set(IDSet<job_id_t> after_set) {
 
 void Job::set_parameters(std::string parameters) {
   parameters_ = parameters;
+}
+
+void Job::set_application(Application* app) {
+  application_ = app;
 }
 
 

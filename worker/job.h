@@ -83,6 +83,7 @@ class Job {
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     std::string parameters();
+    Application* application();
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
@@ -91,6 +92,7 @@ class Job {
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
     void set_parameters(std::string parameters);
+    void set_application(Application* app);
 
 
   protected:
@@ -101,10 +103,10 @@ class Job {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     std::string parameters_;
-
-    // TODO(omidm) should remove bothe of them, later; left them now so the tests
-    // that use them still pass.
     Application* application_;
+
+    // TODO(omidm) should remove it later; left them now so the tests
+    // that use it still pass.
     JobType type_;
 };
 
