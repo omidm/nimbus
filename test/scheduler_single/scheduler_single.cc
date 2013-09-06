@@ -66,18 +66,16 @@ void SimpleScheduler::SchedulerCoreProcessor() {
 
   while (true) {
     // sleep(1);
-    SchedulerCommandList* storage = new SchedulerCommandList();
-    if (server_->ReceiveCommands(storage, (uint32_t)10)) {
-      SchedulerCommandList::iterator iter = storage->begin();
-      for (; iter != storage->end(); iter++) {
+    SchedulerCommandList storage;
+    if (server_->ReceiveCommands(&storage, (uint32_t)10)) {
+      SchedulerCommandList::iterator iter = storage.begin();
+      for (; iter != storage.end(); iter++) {
         SchedulerCommand* comm = *iter;
-        dbg(DBG_NET, "Iterating across command (of %i) %s\n",
-            storage->size(), comm->toString().c_str());
+        std::cout << "Received command: " << comm->toStringWTags() << std::endl;
         ProcessSchedulerCommand(comm);
         delete comm;
       }
     }
-    delete storage;
   }
 }
 

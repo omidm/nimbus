@@ -106,25 +106,25 @@ void Main::Execute(std::string params, const DataArray& da) {
   write.clear(); write.insert(d[0]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application()->SpawnJob("init", j[0], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("init", j[0], read, write, before, after, par);
 
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[1]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application()->SpawnJob("init", j[1], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("init", j[1], read, write, before, after, par);
 
   read.clear(); read.insert(d[2]);
   write.clear(); write.insert(d[2]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application()->SpawnJob("init", j[2], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("init", j[2], read, write, before, after, par);
 
   read.clear(); read.insert(d[3]);
   write.clear(); write.insert(d[3]);
   before.clear();
   after.clear(); after.insert(j[4]);
-  application()->SpawnJob("init", j[3], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("init", j[3], read, write, before, after, par);
 
   read.clear();
   write.clear();
@@ -132,7 +132,7 @@ void Main::Execute(std::string params, const DataArray& da) {
   after.clear();
   // TODO(omidm): Load the "par" with the ids of four defined data instances.
   // TODO(omidm): Load the for loop couter and condition in "par"
-  application()->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
 };
 
 ForLoop::ForLoop(Application* app) {
