@@ -49,6 +49,7 @@
 #include "worker/job.h"
 #include "worker/data.h"
 #include "shared/nimbus_types.h"
+#include "shared/id_maker.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command.h"
 
@@ -65,10 +66,12 @@ class Application {
   ~Application() {}
 
   virtual void Load();
-  virtual void Start(SchedulerClient* scheduler);
+  virtual void Start(SchedulerClient* client, IDMaker* id_maker);
 
   void RegisterJob(std::string name, Job* job);
   void RegisterData(std::string name, Data* data);
+
+  // TODO(omidm) remove later.
   void SpawnJob(const std::string& name,
       const job_id_t& id,
       const IDSet<data_id_t>& read,
@@ -101,22 +104,27 @@ class Application {
 
   Job* CloneJob(std::string name);
   Data* CloneData(std::string name);
-  void GetNewJobID(int req_num, std::vector<int>* result);
-  void GetNewDataID(int req_num, std::vector<int>* result);
+  bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
+  bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
   void* app_data();
   void set_app_data(void* data);
 
- private:
-  uint64_t id_;
-  uint64_t priority_;
-  uint64_t job_id_;
-  uint64_t data_id_;
+  // TODO(omidm) remove both of them.
+  void GetNewJobID(int req_num, std::vector<int>* result);
+  void GetNewDataID(int req_num, std::vector<int>* result);
 
-  IDSet<job_id_t> job_ID_pool_;
+ private:
+  app_id_t id_;
+  size_t priority_;
   JobTable job_table_;
   DataTable data_table_;
   SchedulerClient* client_;
+  IDMaker* id_maker_;
   void* app_data_;
+
+  // TODO(omidm) remove both of them.
+  uint64_t job_id_;
+  uint64_t data_id_;
 };
 
 }  //  namespace nimbus

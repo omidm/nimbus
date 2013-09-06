@@ -50,9 +50,10 @@ void Application::Load() {
   std::cout << "Loaded Nimbus base application." << std::endl;
 }
 
-void Application::Start(SchedulerClient* sc) {
+void Application::Start(SchedulerClient* client, IDMaker* id_maker) {
   std::cout << "Running Nimbus application: " << id_ << std::endl;
-  client_ = sc;
+  client_ = client;
+  id_maker_ = id_maker;
   Load();
 }
 
@@ -123,6 +124,16 @@ Data* Application::CloneData(std::string name) {
   return data_table_[name]->Clone();
 }
 
+bool Application::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
+  return id_maker_->GetNewJobID(result, req_num);
+}
+
+bool Application::GetNewDataID(std::vector<data_id_t>* result, size_t req_num) {
+  return id_maker_->GetNewDataID(result, req_num);
+}
+
+
+// TODO(omidm) remove both of them.
 void Application::GetNewJobID(int req_num, std::vector<int>* result) {
   for (int i = 0; i < req_num; i++) {
     result->push_back(job_id_);
@@ -136,6 +147,8 @@ void Application::GetNewDataID(int req_num, std::vector<int>* result) {
     data_id_++;
   }
 }
+
+
 
 void* Application::app_data() {
     return app_data_;

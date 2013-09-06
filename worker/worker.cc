@@ -58,7 +58,7 @@ void Worker::Run() {
   std::cout << "Running the Worker" << std::endl;
 
   SetupSchedulerInterface();
-  application_->Start(client_);
+  application_->Start(client_, &id_maker_);
 
   SetupDataExchangerInterface();
 
