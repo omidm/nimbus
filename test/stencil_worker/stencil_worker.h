@@ -63,8 +63,6 @@ class SimpleWorker : public Worker {
   public:
     SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
         port_t listening_port, Application * a);
-
-    virtual void WorkerCoreProcessor();
 };
 
 

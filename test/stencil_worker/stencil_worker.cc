@@ -46,15 +46,3 @@ SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
 : Worker(scheduler_ip, scheduler_port, listening_port, a) {
 }
 
-void SimpleWorker::WorkerCoreProcessor() {
-  std::cout << "Simple Worker Core Processor" << std::endl;
-
-  while (true) {
-    SchedulerCommand* comm = client_->receiveCommand();
-    if (comm != NULL) {
-      std::cout << "Received command: " << comm->toString() << std::endl;
-      ProcessSchedulerCommand(comm);
-      delete comm;
-    }
-  }
-}
