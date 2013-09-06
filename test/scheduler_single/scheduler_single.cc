@@ -55,12 +55,14 @@ void SimpleScheduler::SchedulerCoreProcessor() {
     std::cout << "Waiting for the first worker to connect ..." << std::endl;
   }
 
-  std::string str = "spawnjob main {0} {} {} {} {} COMP none";
-  SchedulerCommand* cm;
-  SchedulerCommand::GenerateSchedulerCommandChild(
-      str, &worker_command_set_, cm);
-  std::cout << "Sending command: " << cm->toString() << std::endl;
-  server_->SendCommand(*(server_->workers()->begin()), cm);
+  std::string str = "spawncomputejob main {0} {} {} {} {} none";
+  ID<job_id_t> id(0);
+  IDSet<data_id_t> read, write;
+  IDSet<job_id_t> before, after;
+  std::string params;
+  ComputeJobCommand cm("main", id, read, write, before, after, params);
+  std::cout << "Sending command: " << cm.toString() << std::endl;
+  server_->SendCommand(*(server_->workers()->begin()), &cm);
 
   while (true) {
     // sleep(1);
