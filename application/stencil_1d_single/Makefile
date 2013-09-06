@@ -1,6 +1,6 @@
 
-#all: check application
-all: application
+all: check application
+# all: application
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
