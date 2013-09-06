@@ -69,33 +69,10 @@ void App::Load() {
   RegisterJob("updateLeft", new UpdateLeft());
   RegisterJob("updateRight", new UpdateRight());
 
-  RegisterData("mainLeft", new Vec(ML));
-  RegisterData("mainRight", new Vec(ML));
-  RegisterData("ghostLeft", new Vec(GL));
-  RegisterData("ghostRight", new Vec(GL));
+  RegisterData("main", new Vec(ML));
+  RegisterData("ghost", new Vec(GL));
 
   std::cout << "Finished Creating Data and Job Tables" << std::endl;
-
-  /*
-   * Now based on this do the followings
-   *
-   * 1) Populate the job dependency graph.
-   *    (i.e. JobSets and DataSets for each Job)
-   *
-   * 2) Populate the dataMap and jobMap of the application.
-   *    (i.e. key value pairs to map the data and job from scheduler commands.)
-   *
-   */
-
-  /*
-  initialize->after.insert(applyLeft);
-  initialize->after.insert(applyRight);
-
-  applyLeft->before.insert(initialize);
-  applyLeft->after.insert(updateLeft);
-  applyLeft->after.insert(updateRight);
-  */
-  // Continue like this
 };
 
 Main::Main(Application* app) {
@@ -120,10 +97,10 @@ void Main::Execute(std::string params, const DataArray& da) {
   application()->GetNewJobID(5, &j);
   application()->GetNewDataID(4, &d);
 
-  application()->DefineData("mainLeft", d[0], partition_id, neighbor_partitions, par);
-  application()->DefineData("mainRight", d[1], partition_id, neighbor_partitions, par);
-  application()->DefineData("ghostLeft", d[2], partition_id, neighbor_partitions, par);
-  application()->DefineData("ghostRight", d[3], partition_id, neighbor_partitions, par);
+  DefineData("main", d[0], partition_id, neighbor_partitions, par);
+  DefineData("main", d[1], partition_id, neighbor_partitions, par);
+  DefineData("ghost", d[2], partition_id, neighbor_partitions, par);
+  DefineData("ghost", d[3], partition_id, neighbor_partitions, par);
 
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[0]);
