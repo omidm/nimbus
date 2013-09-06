@@ -151,6 +151,14 @@ IDSet<job_id_t>* CommandParameter::identifier_set() {
 
 // ************************************************
 
+bool IsEmptyString(std::string str) {
+  for (size_t i = 0; i < str.length(); i++) {
+    if (str[i] != ' ')
+      return false;
+  }
+  return true;
+}
+
 bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     CommandSet* command_set,
     SchedulerCommand*& generated) {
@@ -414,6 +422,8 @@ std::string SpawnJobCommand::toString() {
   else
     str += "SYNC ";
   str += params_;
+  if (IsEmptyString(params_))
+    str += "no-params";
   return str;
 }
 
@@ -495,6 +505,8 @@ std::string SpawnComputeJobCommand::toString() {
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
   str += params_;
+  if (IsEmptyString(params_))
+    str += "no-params";
   return str;
 }
 
@@ -566,6 +578,8 @@ std::string SpawnCopyJobCommand::toString() {
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
   str += params_;
+  if (IsEmptyString(params_))
+    str += "no-params";
   return str;
 }
 
@@ -633,6 +647,8 @@ std::string ComputeJobCommand::toString() {
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
   str += params_;
+  if (IsEmptyString(params_))
+    str += "no-params";
   return str;
 }
 
@@ -912,6 +928,8 @@ std::string DefineDataCommand::toString() {
   str += (partition_id_.toString() + " ");
   str += (neighbor_partitions_.toString() + " ");
   str += params_;
+  if (IsEmptyString(params_))
+    str += "no-params";
   return str;
 }
 
@@ -970,6 +988,8 @@ std::string JobDoneCommand::toString() {
   str += (job_id_.toString() + " ");
   str += (after_set_.toString() + " ");
   str += params_;
+  if (IsEmptyString(params_))
+    str += "no-params";
   return str;
 }
 

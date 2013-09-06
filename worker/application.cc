@@ -74,8 +74,6 @@ void Application::SpawnJob(const std::string& name,
     std::string params) {
   IDSet<job_id_t> id_set;
   id_set.insert(id);
-  if (params == "")
-    params = "none";
 
   SpawnJobCommand cm(name, id_set, read, write, before, after, type, params);
   client_->sendCommand(&cm);
@@ -88,8 +86,6 @@ void Application::SpawnComputeJob(const std::string& name,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     std::string params) {
-  if (params == "")
-    params = "none";
 
   SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after, params);
   client_->sendCommand(&cm);
@@ -101,8 +97,6 @@ void Application::SpawnCopyJob(const job_id_t& id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     std::string params) {
-  if (params == "")
-    params = "none";
 
   SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<data_id_t>(from_id),
       ID<data_id_t>(to_id), before, after, params);
@@ -118,8 +112,6 @@ void Application::DefineData(const std::string& name,
   id_set.insert(id);
   IDSet<partition_t> partition_id_set;
   partition_id_set.insert(partition_id);
-  if (params == "")
-    params = "none";
 
   DefineDataCommand cm(name, id_set, partition_id_set, neighbor_partitions, params);
   client_->sendCommand(&cm);
