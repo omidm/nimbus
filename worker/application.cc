@@ -108,12 +108,10 @@ void Application::DefineData(const std::string& name,
     const partition_t& partition_id,
     const IDSet<partition_t>& neighbor_partitions,
     std::string params) {
-  IDSet<data_id_t> id_set;
-  id_set.insert(id);
-  IDSet<partition_t> partition_id_set;
-  partition_id_set.insert(partition_id);
+  ID<data_id_t> id_made(id);
+  ID<partition_t> partition_id_made(partition_id);
 
-  DefineDataCommand cm(name, id_set, partition_id_set, neighbor_partitions, params);
+  DefineDataCommand cm(name, id_made, partition_id_made, neighbor_partitions, params);
   client_->sendCommand(&cm);
 }
 

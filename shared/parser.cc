@@ -880,12 +880,13 @@ bool ParseLocalCopyCommand(const std::string& input,
 
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
-    IDSet<data_id_t>& data_id,
-    IDSet<partition_t>& partition_id,
+    ID<data_id_t>& data_id,
+    ID<partition_t>& partition_id,
     IDSet<partition_t>& neighbor_partitions,
     std::string& params) {
   int num = 5;
-  std::set<data_id_t> data_id_set;
+  data_id_t data_id_elem;
+  partition_t partition_id_elem;
   std::set<partition_t> partition_id_set;
 
   char_separator<char> separator(" \n\t\r");
@@ -909,20 +910,20 @@ bool ParseDefineDataCommand(const std::string& input,
   data_name = *iter;
 
   iter++;
-  if (ParseIDSet(*iter, data_id_set)) {
-    IDSet<data_id_t> temp(data_id_set);
+  if (ParseID(*iter, data_id_elem)) {
+    ID<data_id_t> temp(data_id_elem);
     data_id = temp;
   } else {
-    std::cout << "ERROR: Could not detect valid data id set." << std::endl;
+    std::cout << "ERROR: Could not detect valid data id." << std::endl;
     return false;
   }
 
   iter++;
-  if (ParseIDSet(*iter, partition_id_set)) {
-    IDSet<data_id_t> temp(partition_id_set);
+  if (ParseID(*iter, partition_id_elem)) {
+    ID<data_id_t> temp(partition_id_elem);
     partition_id = temp;
   } else {
-    std::cout << "ERROR: Could not detect valid partition id set." << std::endl;
+    std::cout << "ERROR: Could not detect valid partiiton id." << std::endl;
     return false;
   }
 

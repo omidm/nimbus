@@ -293,8 +293,8 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       }
     } else if (type == COMMAND_DEFINE_DATA) {
       std::string data_name;
-      IDSet<data_id_t> data_id;
-      IDSet<partition_t> partition_id;
+      ID<data_id_t> data_id;
+      ID<partition_t> partition_id;
       IDSet<partition_t> neighbor_partitions;
       std::string params;
 
@@ -906,8 +906,8 @@ DefineDataCommand::DefineDataCommand() {
 }
 
 DefineDataCommand::DefineDataCommand(const std::string& data_name,
-    const IDSet<data_id_t>& data_id,
-    const IDSet<partition_t>& partition_id,
+    const ID<data_id_t>& data_id,
+    const ID<partition_t>& partition_id,
     const IDSet<partition_t>& neighbor_partitions,
     const std::string& params)
 : data_name_(data_name), data_id_(data_id),
@@ -949,11 +949,11 @@ std::string DefineDataCommand::data_name() {
 }
 
 
-IDSet<data_id_t> DefineDataCommand::data_id() {
+ID<data_id_t> DefineDataCommand::data_id() {
   return data_id_;
 }
 
-IDSet<partition_t> DefineDataCommand::partition_id() {
+ID<partition_t> DefineDataCommand::partition_id() {
   return data_id_;
 }
 
@@ -995,7 +995,7 @@ std::string JobDoneCommand::toString() {
 
 std::string JobDoneCommand::toStringWTags() {
   std::string str;
-  str += ("name:" + name_ + " ");
+  str += (name_ + " ");
   str += ("id:" + job_id_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
   str += ("params:" + params_);

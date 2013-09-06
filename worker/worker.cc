@@ -315,7 +315,7 @@ void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
 void Worker::ProcessDefineDataCommand(DefineDataCommand* cm) {
   Data * d = application_->CloneData(cm->data_name());
 
-  data_id_t id = *(cm->data_id().begin());
+  data_id_t id = cm->data_id().elem();
 
   log.StartTimer();
   d->Create();
