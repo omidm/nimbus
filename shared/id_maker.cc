@@ -59,7 +59,7 @@ void IDMaker::Initialize(worker_id_t worker_id) {
   last_data_id_ = first_data_id_;
 }
 
-bool IDMaker::GetNewJobID(size_t req_num, std::vector<job_id_t>* result) {
+bool IDMaker::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   result->clear();
   if (!initialized_) {
     std::cout << "ERROR: IDMaker has not been initialized yet." << std::endl;
@@ -74,7 +74,7 @@ bool IDMaker::GetNewJobID(size_t req_num, std::vector<job_id_t>* result) {
   return true;
 }
 
-bool IDMaker::GetNewDataID(size_t req_num, std::vector<data_id_t>* result) {
+bool IDMaker::GetNewDataID(std::vector<data_id_t>* result, size_t req_num) {
   result->clear();
   if (!initialized_) {
     std::cout << "ERROR: IDMaker has not been initialized yet." << std::endl;

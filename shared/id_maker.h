@@ -55,8 +55,8 @@ class IDMaker {
     ~IDMaker();
 
     void Initialize(worker_id_t worker_id);
-    bool GetNewJobID(size_t req_num, std::vector<job_id_t>* result);
-    bool GetNewDataID(size_t req_num, std::vector<data_id_t>* result);
+    bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
+    bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
 
   private:
     bool initialized_;
