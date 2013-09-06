@@ -63,7 +63,7 @@ Job* Job::Clone() {
   return j;
 }
 
-void Job::SpawnComputeJob(const std::string& name,
+bool Job::SpawnComputeJob(const std::string& name,
     const job_id_t& id,
     const IDSet<data_id_t>& read,
     const IDSet<data_id_t>& write,
@@ -72,13 +72,15 @@ void Job::SpawnComputeJob(const std::string& name,
     std::string params) {
   if (app_is_set_) {
     application_->SpawnComputeJob(name, id, read, write, before, after, params);
+    return true;
   } else {
-    std::cout << "ERROR: SpawnComputeJob, application has not beet set." <<
+    std::cout << "ERROR: SpawnComputeJob, application has not been set." <<
       std::endl;
+    return false;
   }
 }
 
-void Job::SpawnCopyJob(const job_id_t& id,
+bool Job::SpawnCopyJob(const job_id_t& id,
     const data_id_t& from_id,
     const data_id_t& to_id,
     const IDSet<job_id_t>& before,
@@ -86,22 +88,46 @@ void Job::SpawnCopyJob(const job_id_t& id,
     std::string params) {
   if (app_is_set_) {
     application_->SpawnCopyJob(id, from_id, to_id, before, after, params);
+    return true;
   } else {
-    std::cout << "ERROR: SpawnCopyJob, application has not beet set." <<
+    std::cout << "ERROR: SpawnCopyJob, application has not been set." <<
       std::endl;
+    return false;
   }
 }
 
-void Job::DefineData(const std::string& name,
+bool Job::DefineData(const std::string& name,
     const data_id_t& id,
     const partition_t& partition_id,
     const IDSet<partition_t>& neighbor_partition,
     std::string params) {
   if (app_is_set_) {
     application_->DefineData(name, id, partition_id, neighbor_partition, params);
+    return true;
   } else {
-    std::cout << "ERROR: DefineData, application has not beet set." <<
+    std::cout << "ERROR: DefineData, application has not been set." <<
       std::endl;
+    return false;
+  }
+}
+
+bool Job::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
+  if (app_is_set_) {
+    return application_->GetNewJobID(result, req_num);
+  } else {
+    std::cout << "ERROR: GetNewJobID, application has not been set." <<
+      std::endl;
+    return false;
+  }
+}
+
+bool Job::GetNewDataID(std::vector<data_id_t>* result, size_t req_num) {
+  if (app_is_set_) {
+    return application_->GetNewDataID(result, req_num);
+  } else {
+    std::cout << "ERROR: GetNewDataID, application has not been set." <<
+      std::endl;
+    return false;
   }
 }
 

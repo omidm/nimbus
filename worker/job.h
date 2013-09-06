@@ -76,26 +76,29 @@ class Job {
     virtual void Sleep() {}
     virtual void Cancel() {}
 
-  void SpawnComputeJob(const std::string& name,
-      const job_id_t& id,
-      const IDSet<data_id_t>& read,
-      const IDSet<data_id_t>& write,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      std::string params);
+    bool SpawnComputeJob(const std::string& name,
+        const job_id_t& id,
+        const IDSet<data_id_t>& read,
+        const IDSet<data_id_t>& write,
+        const IDSet<job_id_t>& before,
+        const IDSet<job_id_t>& after,
+        std::string params);
 
-  void SpawnCopyJob(const job_id_t& id,
-      const data_id_t& from_id,
-      const data_id_t& to_id,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      std::string params);
+    bool SpawnCopyJob(const job_id_t& id,
+        const data_id_t& from_id,
+        const data_id_t& to_id,
+        const IDSet<job_id_t>& before,
+        const IDSet<job_id_t>& after,
+        std::string params);
 
-  void DefineData(const std::string& name,
-      const data_id_t& id,
-      const partition_t& partition_id,
-      const IDSet<partition_t>& neighbor_partition,
-      std::string params);
+    bool DefineData(const std::string& name,
+        const data_id_t& id,
+        const partition_t& partition_id,
+        const IDSet<partition_t>& neighbor_partition,
+        std::string params);
+
+    bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
+    bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
 
     std::string name();
     ID<job_id_t> id();
