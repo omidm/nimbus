@@ -367,9 +367,9 @@ std::string HandshakeCommand::toString() {
 std::string HandshakeCommand::toStringWTags() {
   std::string str;
   str += (name_ + " ");
-  str += ("worker-id:" + worker_id_.toString());
+  str += ("worker-id:" + worker_id_.toString() + " ");
   str += ("ip:" + ip_ + " ");
-  str += ("port" + port_.toString());
+  str += ("port:" + port_.toString());
   return str;
 }
 
