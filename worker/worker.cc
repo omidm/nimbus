@@ -201,6 +201,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   client_->sendCommand(&new_cm);
 
   id_ = cm->worker_id().elem();
+  id_maker_.Initialize(id_);
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {

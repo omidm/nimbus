@@ -49,6 +49,7 @@
 #include "worker/job.h"
 #include "worker/application.h"
 #include "shared/nimbus_types.h"
+#include "shared/id_maker.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command.h"
 #include "shared/worker_data_exchanger.h"
@@ -90,6 +91,7 @@ class Worker {
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
+  IDMaker id_maker_;
   CommandSet scheduler_command_set_;
   worker_id_t id_;
   std::string scheduler_ip_;
