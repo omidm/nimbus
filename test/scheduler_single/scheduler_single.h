@@ -65,7 +65,7 @@ class SimpleScheduler : public Scheduler {
     explicit SimpleScheduler(unsigned int listening_port);
 
     virtual  void SchedulerCoreProcessor();
-    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm);
+    virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
 };
 

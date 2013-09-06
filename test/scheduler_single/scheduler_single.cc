@@ -51,11 +51,38 @@ void SimpleScheduler::SchedulerCoreProcessor() {
   Log::dbg_printLine("Simple Scheduler Core Processor");
 
   while (server_->workers()->begin() == server_->workers()->end()) {
-    sleep(1);
     std::cout << "Waiting for the first worker to connect ..." << std::endl;
+    sleep(1);
   }
 
-  std::string str = "spawncomputejob main {0} {} {} {} {} none";
+  SchedulerWorkerList::iterator iter = server_->workers()->begin();
+  while (true) {
+    sleep(1);
+    std::cout << "Waiting for the handshake to complete ..." << std::endl;
+    if ((*iter)->handshake_done()) {
+      break;
+    } else {
+      ID<worker_id_t> worker_id;
+      worker_id.set_elem((*iter)->worker_id());
+      std::string ip("you-know");
+      ID<port_t> port(0);
+      HandshakeCommand cm(worker_id, ip, port);
+      server_->SendCommand(*iter, &cm);
+    }
+
+    SchedulerCommandList storage;
+    if (server_->ReceiveCommands(&storage, (uint32_t)10)) {
+      SchedulerCommandList::iterator iter = storage.begin();
+      for (; iter != storage.end(); iter++) {
+        SchedulerCommand* comm = *iter;
+        std::cout << "Received command: " << comm->toStringWTags() << std::endl;
+        ProcessSchedulerCommand(comm);
+        delete comm;
+      }
+    }
+  }
+
+
   ID<job_id_t> id(0);
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
@@ -79,8 +106,9 @@ void SimpleScheduler::SchedulerCoreProcessor() {
   }
 }
 
-void SimpleScheduler::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
-    server_->SendCommand(*(server_->workers()->begin()), cm);
+void SimpleScheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
+  // server_->SendCommand(*(server_->workers()->begin()), cm);
+  std::cout << "****OMID\n";
 }
 
 void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
