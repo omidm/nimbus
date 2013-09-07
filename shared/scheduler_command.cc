@@ -938,7 +938,7 @@ std::string DefineDataCommand::toStringWTags() {
   str += (name_ + " ");
   str += ("name:" + data_name_ + " ");
   str += ("id:" + data_id_.toString() + " ");
-  str += ("partition-id:" + data_id_.toString() + " ");
+  str += ("partition-id:" + partition_id_.toString() + " ");
   str += ("neighbor-partitions:" + neighbor_partitions_.toString() + " ");
   str += ("params:" + params_);
   return str;

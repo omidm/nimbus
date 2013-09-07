@@ -86,16 +86,16 @@ Job * Main::Clone() {
 
 void Main::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the main job\n";
-  std::vector<int> j;
-  std::vector<int> d;
+  std::vector<job_id_t> j;
+  std::vector<data_id_t> d;
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_t> neighbor_partitions;
   partition_t partition_id = 0;
   std::string par;
 
-  application()->GetNewJobID(5, &j);
-  application()->GetNewDataID(4, &d);
+  GetNewJobID(&j, 5);
+  GetNewDataID(&d, 4);
 
   DefineData("main", d[0], partition_id, neighbor_partitions, par);
   DefineData("main", d[1], partition_id, neighbor_partitions, par);
@@ -146,15 +146,15 @@ Job * ForLoop::Clone() {
 
 void ForLoop::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
-  std::vector<int> j;
-  std::vector<int> d;
+  std::vector<job_id_t> j;
+  std::vector<data_id_t> d;
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
   std::string par;
   int counter = 0;
   int condition = 0;
 
-  application()->GetNewJobID(7, &j);
+  GetNewJobID(&j, 7);
   // TODO(omidm): Load "d" with the ids of data instances from the "params".
   d.push_back(1);
   d.push_back(2);

@@ -71,7 +71,7 @@ void Worker::WorkerCoreProcessor() {
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
     if (comm != NULL) {
-      std::cout << "Received command: " << comm->toString()
+      std::cout << "Received command: " << comm->toStringWTags()
         << std::endl;
       ProcessSchedulerCommand(comm);
       delete comm;

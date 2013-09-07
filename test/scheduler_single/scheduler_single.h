@@ -67,6 +67,12 @@ class SimpleScheduler : public Scheduler {
     virtual  void SchedulerCoreProcessor();
     virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
+    virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
+
+  private:
+    SchedulerCommandList pending_compute_jobs_;
+    std::map<job_id_t, data_id_t> job_data_map_;
+    std::map<data_id_t, bool> create_data_;
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_SINGLE_SCHEDULER_SINGLE_H_
