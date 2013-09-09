@@ -156,10 +156,14 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
 
   GetNewJobID(&j, 7);
   // TODO(omidm): Load "d" with the ids of data instances from the "params".
-  d.push_back(1);
-  d.push_back(2);
-  d.push_back(3);
-  d.push_back(4);
+  d.push_back(16777217);
+  d.push_back(16777218);
+  d.push_back(16777219);
+  d.push_back(16777220);
+//  d.push_back(1);
+//  d.push_back(2);
+//  d.push_back(3);
+//  d.push_back(4);
 
   // TODO(omidm): Load the for loop couter and condition from "params"; update counter.
 
@@ -168,25 +172,25 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   write.clear(); write.insert(d[2]);
   before.clear();
   after.clear(); after.insert(j[2]); after.insert(j[3]);
-  application()->SpawnJob("updateLeft", j[0], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("updateLeft", j[0], read, write, before, after, par);
 
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[3]);
   before.clear();
   after.clear(); after.insert(j[2]); after.insert(j[3]);
-  application()->SpawnJob("updateRight", j[1], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("updateRight", j[1], read, write, before, after, par);
 
   read.clear(); read.insert(d[0]); read.insert(d[3]);
   write.clear(); write.insert(d[0]);
   before.clear(); before.insert(j[0]); before.insert(j[1]);
   after.clear(); after.insert(j[4]);
-  application()->SpawnJob("applyLeft", j[2], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("applyLeft", j[2], read, write, before, after, par);
 
   before.clear(); before.insert(j[0]); before.insert(j[1]);
   after.clear(); after.insert(j[4]);
   read.clear(); read.insert(d[1]); read.insert(d[2]);
   write.clear(); write.insert(d[1]);
-  application()->SpawnJob("applyRight", j[3], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("applyRight", j[3], read, write, before, after, par);
 
   if (counter > condition) {
   read.clear();
@@ -195,19 +199,19 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   after.clear();
   // TODO(omidm): Load the "par" with the ids of four defined data instances.
   // TODO(omidm): Load the for loop couter and condition in "par"
-  application()->SpawnJob("forLoop", j[4], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
   } else {
   before.clear(); before.insert(j[2]);
   after.clear();
   read.clear(); read.insert(d[0]);
   write.clear();
-  application()->SpawnJob("print", j[5], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("print", j[5], read, write, before, after, par);
 
   before.clear(); before.insert(j[3]);
   after.clear();
   read.clear(); read.insert(d[1]);
   write.clear();
-  application()->SpawnJob("print", j[6], read, write, before, after, JOB_COMP, par);
+  SpawnComputeJob("print", j[6], read, write, before, after, par);
   }
 };
 
