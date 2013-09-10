@@ -42,19 +42,26 @@
 #ifndef NIMBUS_APPLICATION_STENCIL_1D_SINGLE_APP_H_
 #define NIMBUS_APPLICATION_STENCIL_1D_SINGLE_APP_H_
 
+#include <boost/tokenizer.hpp>
 #include <string>
 #include <iostream> // NOLINT
 #include "worker/application.h"
 #include "worker/job.h"
 #include "worker/data.h"
+#include "shared/parser.h"
 #include "shared/nimbus_types.h"
 
 #define ML 4
 #define GL 1
+#define LOOP_COUNTER 3
+#define LOOP_CONDITION 0
 
 using nimbus::Job;
 using nimbus::Data;
 using nimbus::Application;
+using boost::tokenizer;
+using boost::char_separator;
+
 
 class Main : public Job {
   public:

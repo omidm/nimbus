@@ -94,7 +94,7 @@ void Main::Execute(std::string params, const DataArray& da) {
   partition_t partition_id = 0;
   std::string par;
 
-  GetNewJobID(&j, 5);
+  GetNewJobID(&j, 7);
   GetNewDataID(&d, 4);
 
   DefineData("main", d[0], partition_id, neighbor_partitions, par);
@@ -130,8 +130,11 @@ void Main::Execute(std::string params, const DataArray& da) {
   write.clear();
   before.clear(); before.insert(j[0]); before.insert(j[1]); before.insert(j[2]); before.insert(j[3]); // NOLINT
   after.clear();
-  // TODO(omidm): Load the "par" with the ids of four defined data instances.
-  // TODO(omidm): Load the for loop couter and condition in "par"
+  IDSet<data_id_t> temp_set;
+  temp_set.insert(d[0]); temp_set.insert(d[1]); temp_set.insert(d[2]); temp_set.insert(d[3]);
+  ID<data_id_t> counter(LOOP_COUNTER);
+  par = temp_set.toString();
+  par += ("-" + counter.toString());
   SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
 };
 
@@ -151,67 +154,82 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
   std::string par;
-  int counter = 0;
-  int condition = 0;
-
-  GetNewJobID(&j, 7);
-  // TODO(omidm): Load "d" with the ids of data instances from the "params".
-  d.push_back(16777217);
-  d.push_back(16777218);
-  d.push_back(16777219);
-  d.push_back(16777220);
-//  d.push_back(1);
-//  d.push_back(2);
-//  d.push_back(3);
-//  d.push_back(4);
-
-  // TODO(omidm): Load the for loop couter and condition from "params"; update counter.
 
 
-  read.clear(); read.insert(d[0]);
-  write.clear(); write.insert(d[2]);
-  before.clear();
-  after.clear(); after.insert(j[2]); after.insert(j[3]);
-  SpawnComputeJob("updateLeft", j[0], read, write, before, after, par);
 
-  read.clear(); read.insert(d[1]);
-  write.clear(); write.insert(d[3]);
-  before.clear();
-  after.clear(); after.insert(j[2]); after.insert(j[3]);
-  SpawnComputeJob("updateRight", j[1], read, write, before, after, par);
 
-  read.clear(); read.insert(d[0]); read.insert(d[3]);
-  write.clear(); write.insert(d[0]);
-  before.clear(); before.insert(j[0]); before.insert(j[1]);
-  after.clear(); after.insert(j[4]);
-  SpawnComputeJob("applyLeft", j[2], read, write, before, after, par);
+  char_separator<char> separator("-");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
 
-  before.clear(); before.insert(j[0]); before.insert(j[1]);
-  after.clear(); after.insert(j[4]);
-  read.clear(); read.insert(d[1]); read.insert(d[2]);
-  write.clear(); write.insert(d[1]);
-  SpawnComputeJob("applyRight", j[3], read, write, before, after, par);
+  std::set<data_id_t> temp_set;
+  nimbus::ParseIDSet(*iter, temp_set);
+  std::set<data_id_t>::iterator it;
+  for (it = temp_set.begin(); it != temp_set.end(); it++) {
+    d.push_back(*it);
+  }
 
-  if (counter > condition) {
-  read.clear();
-  write.clear();
-  before.clear(); before.insert(j[2]); before.insert(j[3]);
-  after.clear();
-  // TODO(omidm): Load the "par" with the ids of four defined data instances.
-  // TODO(omidm): Load the for loop couter and condition in "par"
-  SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
+  iter++;
+  uint32_t counter;
+  nimbus::ParseID(*iter, counter);
+
+//  d.push_back(16777217);
+//  d.push_back(16777218);
+//  d.push_back(16777219);
+//  d.push_back(16777220);
+
+
+  if (counter > LOOP_CONDITION) {
+    GetNewJobID(&j, 5);
+
+    read.clear(); read.insert(d[1]);
+    write.clear(); write.insert(d[3]);
+    before.clear();
+    after.clear(); after.insert(j[2]); after.insert(j[3]);
+    SpawnComputeJob("updateLeft", j[0], read, write, before, after, par);
+
+    read.clear(); read.insert(d[0]);
+    write.clear(); write.insert(d[2]);
+    before.clear();
+    after.clear(); after.insert(j[2]); after.insert(j[3]);
+    SpawnComputeJob("updateRight", j[1], read, write, before, after, par);
+
+    read.clear(); read.insert(d[0]); read.insert(d[3]);
+    write.clear(); write.insert(d[0]);
+    before.clear(); before.insert(j[0]); before.insert(j[1]);
+    after.clear(); after.insert(j[4]);
+    SpawnComputeJob("applyLeft", j[2], read, write, before, after, par);
+
+    read.clear(); read.insert(d[1]); read.insert(d[2]);
+    write.clear(); write.insert(d[1]);
+    before.clear(); before.insert(j[0]); before.insert(j[1]);
+    after.clear(); after.insert(j[4]);
+    SpawnComputeJob("applyRight", j[3], read, write, before, after, par);
+
+    read.clear();
+    write.clear();
+    before.clear(); before.insert(j[2]); before.insert(j[3]);
+    after.clear();
+    IDSet<data_id_t> temp_set;
+    temp_set.insert(d[0]); temp_set.insert(d[1]); temp_set.insert(d[2]); temp_set.insert(d[3]);
+    ID<data_id_t> temp_counter(counter - 1);
+    par = temp_set.toString();
+    par += ("-" + temp_counter.toString());
+    SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
   } else {
-  before.clear(); before.insert(j[2]);
-  after.clear();
-  read.clear(); read.insert(d[0]);
-  write.clear();
-  SpawnComputeJob("print", j[5], read, write, before, after, par);
+    GetNewJobID(&j, 2);
 
-  before.clear(); before.insert(j[3]);
-  after.clear();
-  read.clear(); read.insert(d[1]);
-  write.clear();
-  SpawnComputeJob("print", j[6], read, write, before, after, par);
+    read.clear(); read.insert(d[0]);
+    write.clear();
+    before.clear();
+    after.clear(); after.insert(j[1]);
+    SpawnComputeJob("print", j[0], read, write, before, after, par);
+
+    read.clear(); read.insert(d[1]);
+    write.clear();
+    before.clear(); before.insert(j[0]);
+    after.clear();
+    SpawnComputeJob("print", j[1], read, write, before, after, par);
   }
 };
 
@@ -227,7 +245,7 @@ void Init::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the init job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
   for (int i = 0; i < d->size ; i++)
-    d->arr[i] = 0;
+    d->arr[i] = i;
 };
 
 
@@ -287,6 +305,23 @@ Job * ApplyRight::Clone() {
 
 void ApplyRight::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the applyRight job\n";
+  int sten[] = {-1, +2, -1, 0};
+
+  Vec *d1 = reinterpret_cast<Vec*>(da[0]);
+  Vec *d2 = reinterpret_cast<Vec*>(da[1]);
+
+  int len = d1->size;
+  int *main = d1->arr;
+  int *ghost = d2->arr;
+  int temp[len]; // NOLINT
+
+  temp[0] = sten[0] * ghost[0] + sten[1] * main[0] + sten[2] * main[1];
+  temp[len-1] = sten[0] * main[len-2] + sten[1] * main[len-1] + sten[2] * sten[3];
+  for (int i = 1; i < (len - 1); i++)
+    temp[i] = sten[0] * main[i-1] + sten[1] * main[i] + sten[2] * main[i+1];
+
+  for (int i = 0; i < len; i++)
+    main[i] = temp[i];
 };
 
 UpdateLeft::UpdateLeft() {
@@ -322,7 +357,7 @@ void UpdateRight::Execute(std::string params, const DataArray& da) {
 
   int *main = d1->arr;
   int *ghost = d2->arr;
-  ghost[0] = main[0];
+  ghost[0] = main[d1->size - 1];
 };
 
 
