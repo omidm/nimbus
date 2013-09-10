@@ -121,7 +121,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
         if (create_data_.count(*it) == 0) {
           data_created = false;
           break;
-        } else if (!create_data_[*it]) {
+        } else if (!create_data_[*it].second) {
           data_created = false;
           break;
         }
@@ -131,20 +131,43 @@ void SimpleScheduler::SchedulerCoreProcessor() {
         if (create_data_.count(*it) == 0) {
           data_created = false;
           break;
-        } else if (!create_data_[*it]) {
+        } else if (!create_data_[*it].second) {
           data_created = false;
           break;
         }
       }
       if (data_created) {
-        std::cout << "Sending command: " << comm->toStringWTags() << std::endl;
-        server_->SendCommand(*(server_->workers()->begin()), comm);
+        SchedulerWorker *worker;
+        if ((read.size() == 0) && (write.size() == 0)) {
+          worker = *(server_->workers()->begin());
+        } else if (read.size() != 0) {
+          worker_id_t worker_id = create_data_[*(read.begin())].first;
+          SchedulerWorkerList::iterator it = server_->workers()->begin();
+          for (; it != server_->workers()->end(); it++) {
+            if ((*it)->worker_id() == worker_id) {
+              worker = *it;
+              break;
+            }
+          }
+        } else {
+          worker_id_t worker_id = create_data_[*(write.begin())].first;
+          SchedulerWorkerList::iterator it = server_->workers()->begin();
+          for (; it != server_->workers()->end(); it++) {
+            if ((*it)->worker_id() == worker_id) {
+              worker = *it;
+              break;
+            }
+          }
+        }
+
+        std::cout << "Sending command [to worker " << worker->worker_id()
+          << "]: " << comm->toStringWTags() << std::endl;
+        server_->SendCommand(worker, comm);
         pending_compute_jobs_.erase(iter++);
         delete comm;
       } else {
         ++iter;
       }
-      // sleep(1);
     }
   }
 }
@@ -164,9 +187,22 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
   SchedulerCommand* comm = new CreateDataCommand(id, cm->data_name(),
       cm->data_id(), before, after);
   job_data_map_[id.elem()] = cm->data_id().elem();
-  create_data_[cm->data_id().elem()] = false;
-  std::cout << "Sending command: " << comm->toStringWTags() << std::endl;
-  server_->SendCommand(*(server_->workers()->begin()), comm);
+
+  SchedulerWorker* worker;
+  // TODO(omidm): do somthing smarter!!
+  worker_id_t worker_id = (worker_id_t)cm->partition_id().elem();
+  SchedulerWorkerList::iterator it = server_->workers()->begin();
+  for (; it != server_->workers()->end(); it++) {
+    if ((*it)->worker_id() == worker_id) {
+      worker = *it;
+      break;
+    }
+  }
+
+  create_data_[cm->data_id().elem()] = std::make_pair(worker_id, false);
+  std::cout << "Sending command [to worker " << worker->worker_id()
+    << "]: " << comm->toStringWTags() << std::endl;
+  server_->SendCommand(worker, comm);
   delete comm;
 }
 
@@ -177,7 +213,7 @@ void SimpleScheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
     server_->SendCommand(*iter, cm);
   }
   if (job_data_map_.count(cm->job_id().elem()) != 0) {
-    create_data_[job_data_map_[cm->job_id().elem()]] = true;
+    create_data_[job_data_map_[cm->job_id().elem()]].second = true;
   }
 }
 
