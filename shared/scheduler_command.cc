@@ -954,7 +954,7 @@ ID<data_id_t> DefineDataCommand::data_id() {
 }
 
 ID<partition_t> DefineDataCommand::partition_id() {
-  return data_id_;
+  return partition_id_;
 }
 
 IDSet<partition_t> DefineDataCommand::neighbor_partitions() {
