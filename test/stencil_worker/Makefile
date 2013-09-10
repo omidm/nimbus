@@ -1,6 +1,7 @@
 
-TARGET = worker
-all: check $(TARGET)
+TARGET_SINGLE = worker_single
+TARGET_MULTI = worker_multi
+all: check $(TARGET_SINGLE) $(TARGET_MULTI)
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
@@ -10,21 +11,35 @@ H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 
-ADIR = ${NIMBUS_ROOT}/application/stencil_1d_single/
- 
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_single
-LDFLAGS += -L$(ADIR) -Wl,-rpath=$(ADIR)
+ADIR_SINGLE = ${NIMBUS_ROOT}/application/stencil_1d_single/
+ADIR_MULTI = ${NIMBUS_ROOT}/application/stencil_1d_multi/
+
+LFLAGS_SINGLE = $(LFLAGS)
+LFLAGS_SINGLE += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_single
+LDFLAGS_SINGLE = $(LDFLAGS)
+LDFLAGS_SINGLE += -L$(ADIR_SINGLE) -Wl,-rpath=$(ADIR_SINGLE)
+
+LFLAGS_MULTI = $(LFLAGS)
+LFLAGS_MULTI += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_multi
+LDFLAGS_MULTI = $(LDFLAGS)
+LDFLAGS_MULTI += -L$(ADIR_MULTI) -Wl,-rpath=$(ADIR_MULTI)
 
 # Add the dependencies here
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
-application_t:
-	cd ${ADIR}; make; cd -
+application_single:
+	cd ${ADIR_SINGLE}; make; cd -
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES) application_t
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) $(APP_OBJECT_FILES) -o $(TARGET) $(LFLAGS)
+application_multi:
+	cd ${ADIR_MULTI}; make; cd -
+
+$(TARGET_SINGLE): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES) application_single
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS_SINGLE) $(LFLAGS_SINGLE) $(OBJECT_FILES) -o $(TARGET_SINGLE) $(LFLAGS_SINGLE)
+
+$(TARGET_MULTI): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES) application_multi
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS_MULTI) $(LFLAGS_MULTI) $(OBJECT_FILES) -o $(TARGET_MULTI) $(LFLAGS_MULTI)
 
 clean: clean-files
-	\rm -f $(TARGET)
+	\rm -f $(TARGET_SINGLE) $(TARGET_MULTI)
 
