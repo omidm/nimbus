@@ -213,7 +213,8 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
     else
       ++iter;
   }
-  done_jobs_[cm->job_id().elem()] = cm->after_set();
+  if (cm->after_set().size() != 0)
+    done_jobs_[cm->job_id().elem()] = cm->after_set();
 }
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
