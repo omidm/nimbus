@@ -98,20 +98,6 @@ class ApplyRight : public Job {
     virtual Job * Clone();
 };
 
-class UpdateLeft : public Job {
-  public:
-    UpdateLeft();
-    virtual void Execute(std::string params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-class UpdateRight : public Job {
-  public:
-    UpdateRight();
-    virtual void Execute(std::string params, const DataArray& da);
-    virtual Job * Clone();
-};
-
 class ForLoop : public Job {
   public:
     explicit ForLoop(Application* app);
@@ -133,14 +119,6 @@ class App : public Application {
     App();
     virtual void Load();
 };
-
-
-
-
-
-
-
-
 
 
 

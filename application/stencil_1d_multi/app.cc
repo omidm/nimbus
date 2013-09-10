@@ -256,10 +256,12 @@ Job * Init::Clone() {
 };
 
 void Init::Execute(std::string params, const DataArray& da) {
+  uint32_t base_val;
+  nimbus::ParseID(params, base_val);
   std::cout << "Executing the init job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
   for (int i = 0; i < d->size ; i++)
-    d->arr[i] = i;
+    d->arr[i] = base_val + i;
 };
 
 
@@ -273,9 +275,12 @@ Job * Print::Clone() {
 
 void Print::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the print job\n";
-  Vec *d = reinterpret_cast<Vec*>(da[0]);
-  for (int i = 0; i < d->size; i++)
-    std::cout << d->arr[i] << ", ";
+  Vec *d1 = reinterpret_cast<Vec*>(da[0]);
+  Vec *d2 = reinterpret_cast<Vec*>(da[1]);
+  for (int i = 0; i < d1->size; i++)
+    std::cout << d1->arr[i] << ", ";
+  for (int i = 0; i < d2->size; i++)
+    std::cout << d2->arr[i] << ", ";
   std::cout << std::endl;
 };
 
@@ -290,23 +295,25 @@ Job * ApplyLeft::Clone() {
 
 void ApplyLeft::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the applyLeft job\n";
-  int sten[] = {-1, +2, -1, 0};
+  int sten[] = {-1, +2, -1};
 
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
+  Vec *d3 = reinterpret_cast<Vec*>(da[2]);
+  Vec *d4 = reinterpret_cast<Vec*>(da[3]);
 
-  int len = d1->size;
-  int *main = d1->arr;
-  int *ghost = d2->arr;
-  int temp[len]; // NOLINT
+  int len = d2->size;
+  int temp_middle[len]; // NOLINT
 
-  temp[0] = sten[0] * sten[3] + sten[1] * main[0] + sten[2] * main[1];
-  temp[len-1] = sten[0] * main[len-2] + sten[1] * main[len-1] + sten[2] * ghost[0];
+  temp_middle[0] = sten[0] * d1->arr[0] + sten[1] * d2->arr[0] + sten[2] * d2->arr[1];
+  temp_middle[len-1] = sten[0] * d2->arr[len-2] + sten[1] * d2->arr[len-1] + sten[2] * d3->arr[0];
   for (int i = 1; i < (len - 1); i++)
-    temp[i] = sten[0] * main[i-1] + sten[1] * main[i] + sten[2] * main[i+1];
+    temp_middle[i] = sten[0] * d2->arr[i-1] + sten[1] * d2->arr[i] + sten[2] * d2->arr[i+1];
 
   for (int i = 0; i < len; i++)
-    main[i] = temp[i];
+    d2->arr[i] = temp_middle[i];
+
+  d3->arr[0] =  sten[0] * d2->arr[len-1] + sten[1] * d3->arr[0] + sten[2] * d4->arr[0];
 };
 
 ApplyRight::ApplyRight() {
@@ -319,61 +326,26 @@ Job * ApplyRight::Clone() {
 
 void ApplyRight::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the applyRight job\n";
-  int sten[] = {-1, +2, -1, 0};
+  int sten[] = {-1, +2, -1};
 
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
+  Vec *d3 = reinterpret_cast<Vec*>(da[2]);
+  Vec *d4 = reinterpret_cast<Vec*>(da[3]);
 
-  int len = d1->size;
-  int *main = d1->arr;
-  int *ghost = d2->arr;
-  int temp[len]; // NOLINT
+  int len = d2->size;
+  int temp_middle[len]; // NOLINT
 
-  temp[0] = sten[0] * ghost[0] + sten[1] * main[0] + sten[2] * main[1];
-  temp[len-1] = sten[0] * main[len-2] + sten[1] * main[len-1] + sten[2] * sten[3];
+  temp_middle[0] = sten[0] * d1->arr[0] + sten[1] * d2->arr[0] + sten[2] * d2->arr[1];
+  temp_middle[len-1] = sten[0] * d2->arr[len-2] + sten[1] * d2->arr[len-1] + sten[2] * d3->arr[0];
   for (int i = 1; i < (len - 1); i++)
-    temp[i] = sten[0] * main[i-1] + sten[1] * main[i] + sten[2] * main[i+1];
+    temp_middle[i] = sten[0] * d2->arr[i-1] + sten[1] * d2->arr[i] + sten[2] * d2->arr[i+1];
 
   for (int i = 0; i < len; i++)
-    main[i] = temp[i];
+    d2->arr[i] = temp_middle[i];
+
+  d1->arr[0] =  sten[0] * d4->arr[0] + sten[1] * d1->arr[0] + sten[2] * d2->arr[0];
 };
-
-UpdateLeft::UpdateLeft() {
-};
-
-Job * UpdateLeft::Clone() {
-  std::cout << "Cloning updateLeft job!\n";
-  return new UpdateLeft();
-};
-
-void UpdateLeft::Execute(std::string params, const DataArray& da) {
-  std::cout << "Executing the updateLeft job\n";
-  Vec *d1 = reinterpret_cast<Vec*>(da[0]);
-  Vec *d2 = reinterpret_cast<Vec*>(da[1]);
-
-  int *main = d1->arr;
-  int *ghost = d2->arr;
-  ghost[0] = main[0];
-};
-
-UpdateRight::UpdateRight() {
-};
-
-Job * UpdateRight::Clone() {
-  std::cout << "Cloning updateRight job!\n";
-  return new UpdateRight();
-};
-
-void UpdateRight::Execute(std::string params, const DataArray& da) {
-  std::cout << "Executing the updateRight job\n";
-  Vec *d1 = reinterpret_cast<Vec*>(da[0]);
-  Vec *d2 = reinterpret_cast<Vec*>(da[1]);
-
-  int *main = d1->arr;
-  int *ghost = d2->arr;
-  ghost[0] = main[d1->size - 1];
-};
-
 
 
 
