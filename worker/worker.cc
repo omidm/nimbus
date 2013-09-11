@@ -257,9 +257,10 @@ void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
     job->set_after_set(cm->after_set());
     blocked_jobs_.push_back(job);
   } else {
-    Job * job = new RemoteCopySendJob(data_exchanger_);
+    RemoteCopySendJob * job = new RemoteCopySendJob(data_exchanger_);
     data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
         cm->to_ip(), cm->to_port().elem());
+    job->set_to_worker_id(cm->to_worker_id());
     job->set_name("RemoteCopySend");
     job->set_id(cm->job_id());
     IDSet<data_id_t> read_set;
