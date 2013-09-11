@@ -55,9 +55,9 @@ class SerializedData {
     SerializedData(char* data_ptr, size_t size);
     ~SerializedData();
 
-    char* data_ptr();
+    char* data_ptr() const;
     void set_data_ptr(char* ptr);
-    size_t size();
+    size_t size() const;
     void set_size(size_t size);
 
     SerializedData& operator= (const SerializedData& right);

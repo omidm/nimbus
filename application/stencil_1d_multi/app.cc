@@ -41,18 +41,66 @@
 
 #include "./app.h"
 
+using vector_msg::VectorMsg;
+
 Vec::Vec(int size) {
-  this->size = size;
+  size_ = size;
+};
+
+Vec::~Vec() {
 };
 
 Data * Vec::Clone() {
   std::cout << "Cloning Vec data!\n";
-  return new Vec(size);
+  return new Vec(size_);
 };
 
 void Vec::Create() {
-  arr = new int[size];
+  arr_ = new int[size_];
 };
+
+void Vec::Destroy() {
+  delete arr_;
+};
+
+void Vec::Copy(Data* from) {
+  Vec *d = reinterpret_cast<Vec*>(from);
+  for (int i = 0; i < size_; i++)
+    arr_[i] = d->arr()[i];
+}
+
+bool Vec::Serialize(SerializedData* ser_data) {
+  VectorMsg vec_msg;
+  for (int i = 0; i < size_; i++)
+    vec_msg.add_elem(arr_[i]);
+  std::string str;
+  vec_msg.SerializeToString(&str);
+  char* ptr = new char[str.length()];
+  memcpy(ptr, str.c_str(), str.length());
+  ser_data->set_data_ptr(ptr);
+  ser_data->set_size(str.length());
+  return true;
+}
+
+bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
+  VectorMsg vec_msg;
+  std::string str(ser_data.data_ptr(), ser_data.size());
+  vec_msg.ParseFromString(str);
+  Vec* vec = new Vec(size_);
+  for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
+     vec->arr()[i] = vec_msg.elem(i);
+
+  *result = vec;
+  return true;
+}
+
+int Vec::size() {
+  return size_;
+}
+
+int* Vec::arr() {
+  return arr_;
+}
 
 App::App() {
 };
@@ -276,8 +324,8 @@ void Init::Execute(std::string params, const DataArray& da) {
   nimbus::ParseID(params, base_val);
   std::cout << "Executing the init job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
-  for (int i = 0; i < d->size ; i++)
-    d->arr[i] = base_val + i;
+  for (int i = 0; i < d->size() ; i++)
+    d->arr()[i] = base_val + i;
 };
 
 
@@ -293,10 +341,10 @@ void Print::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the print job\n";
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
-  for (int i = 0; i < d1->size; i++)
-    std::cout << d1->arr[i] << ", ";
-  for (int i = 0; i < d2->size; i++)
-    std::cout << d2->arr[i] << ", ";
+  for (int i = 0; i < d1->size(); i++)
+    std::cout << d1->arr()[i] << ", ";
+  for (int i = 0; i < d2->size(); i++)
+    std::cout << d2->arr()[i] << ", ";
   std::cout << std::endl;
 };
 
@@ -318,18 +366,18 @@ void ApplyLeft::Execute(std::string params, const DataArray& da) {
   Vec *d3 = reinterpret_cast<Vec*>(da[2]);
   Vec *d4 = reinterpret_cast<Vec*>(da[3]);
 
-  int len = d2->size;
+  int len = d2->size();
   int temp_middle[len]; // NOLINT
 
-  temp_middle[0] = sten[0] * d1->arr[0] + sten[1] * d2->arr[0] + sten[2] * d2->arr[1];
-  temp_middle[len-1] = sten[0] * d2->arr[len-2] + sten[1] * d2->arr[len-1] + sten[2] * d3->arr[0];
+  temp_middle[0] = sten[0] * d1->arr()[0] + sten[1] * d2->arr()[0] + sten[2] * d2->arr()[1];
+  temp_middle[len-1] = sten[0] * d2->arr()[len-2] + sten[1] * d2->arr()[len-1] + sten[2] * d3->arr()[0]; // NOLINT
   for (int i = 1; i < (len - 1); i++)
-    temp_middle[i] = sten[0] * d2->arr[i-1] + sten[1] * d2->arr[i] + sten[2] * d2->arr[i+1];
+    temp_middle[i] = sten[0] * d2->arr()[i-1] + sten[1] * d2->arr()[i] + sten[2] * d2->arr()[i+1];
 
   for (int i = 0; i < len; i++)
-    d2->arr[i] = temp_middle[i];
+    d2->arr()[i] = temp_middle[i];
 
-  d3->arr[0] =  sten[0] * d2->arr[len-1] + sten[1] * d3->arr[0] + sten[2] * d4->arr[0];
+  d3->arr()[0] =  sten[0] * d2->arr()[len-1] + sten[1] * d3->arr()[0] + sten[2] * d4->arr()[0];
 };
 
 ApplyRight::ApplyRight() {
@@ -349,18 +397,18 @@ void ApplyRight::Execute(std::string params, const DataArray& da) {
   Vec *d3 = reinterpret_cast<Vec*>(da[2]);
   Vec *d4 = reinterpret_cast<Vec*>(da[3]);
 
-  int len = d2->size;
+  int len = d2->size();
   int temp_middle[len]; // NOLINT
 
-  temp_middle[0] = sten[0] * d1->arr[0] + sten[1] * d2->arr[0] + sten[2] * d2->arr[1];
-  temp_middle[len-1] = sten[0] * d2->arr[len-2] + sten[1] * d2->arr[len-1] + sten[2] * d3->arr[0];
+  temp_middle[0] = sten[0] * d1->arr()[0] + sten[1] * d2->arr()[0] + sten[2] * d2->arr()[1];
+  temp_middle[len-1] = sten[0] * d2->arr()[len-2] + sten[1] * d2->arr()[len-1] + sten[2] * d3->arr()[0]; // NOLINT
   for (int i = 1; i < (len - 1); i++)
-    temp_middle[i] = sten[0] * d2->arr[i-1] + sten[1] * d2->arr[i] + sten[2] * d2->arr[i+1];
+    temp_middle[i] = sten[0] * d2->arr()[i-1] + sten[1] * d2->arr()[i] + sten[2] * d2->arr()[i+1];
 
   for (int i = 0; i < len; i++)
-    d2->arr[i] = temp_middle[i];
+    d2->arr()[i] = temp_middle[i];
 
-  d1->arr[0] =  sten[0] * d4->arr[0] + sten[1] * d1->arr[0] + sten[2] * d2->arr[0];
+  d1->arr()[0] =  sten[0] * d4->arr()[0] + sten[1] * d1->arr()[0] + sten[2] * d2->arr()[0];
 };
 
 

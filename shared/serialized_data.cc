@@ -52,7 +52,7 @@ SerializedData::SerializedData(char* data_ptr, size_t size)
 SerializedData::~SerializedData() {
 }
 
-char* SerializedData::data_ptr() {
+char* SerializedData::data_ptr() const {
   return data_ptr_;
 }
 
@@ -60,7 +60,7 @@ void  SerializedData::set_data_ptr(char* ptr) {
   data_ptr_ = ptr;
 }
 
-size_t SerializedData:: size() {
+size_t SerializedData:: size() const {
   return size_;
 }
 
