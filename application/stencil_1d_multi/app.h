@@ -50,6 +50,7 @@
 #include "worker/data.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
+#include "protocol_buffer/vector_msg.pb.h"
 
 #define ML 4
 #define GL 1

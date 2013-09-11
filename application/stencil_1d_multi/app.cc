@@ -84,6 +84,22 @@ Job * Main::Clone() {
 
 void Main::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the main job\n";
+
+  using  vector_msg::VectorMsg;
+  VectorMsg a;
+  for (int i = 0; i < 4; i++) {
+    a.add_elem(i + 10);
+  }
+  std::string str;
+  a.SerializeToString(&str);
+  VectorMsg b;
+  b.ParseFromString(str);
+  for (int i = 0; i < b.elem_size(); i++)
+    std::cout << b.elem(i) << ", ";
+  std::cout << std::endl;
+  sleep(10);
+
+
   std::vector<job_id_t> j;
   std::vector<data_id_t> d;
   IDSet<data_id_t> read, write;

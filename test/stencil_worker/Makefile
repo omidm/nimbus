@@ -15,12 +15,12 @@ ADIR_SINGLE = ${NIMBUS_ROOT}/application/stencil_1d_single/
 ADIR_MULTI = ${NIMBUS_ROOT}/application/stencil_1d_multi/
 
 LFLAGS_SINGLE = $(LFLAGS)
-LFLAGS_SINGLE += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_single
+LFLAGS_SINGLE += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_single -lprotobuf
 LDFLAGS_SINGLE = $(LDFLAGS)
 LDFLAGS_SINGLE += -L$(ADIR_SINGLE) -Wl,-rpath=$(ADIR_SINGLE)
 
 LFLAGS_MULTI = $(LFLAGS)
-LFLAGS_MULTI += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_multi
+LFLAGS_MULTI += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_multi -lprotobuf
 LDFLAGS_MULTI = $(LDFLAGS)
 LDFLAGS_MULTI += -L$(ADIR_MULTI) -Wl,-rpath=$(ADIR_MULTI)
 
@@ -34,10 +34,10 @@ application_single:
 application_multi:
 	cd ${ADIR_MULTI}; make; cd -
 
-$(TARGET_SINGLE): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES) application_single
+$(TARGET_SINGLE): application_single $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS_SINGLE) $(LFLAGS_SINGLE) $(OBJECT_FILES) -o $(TARGET_SINGLE) $(LFLAGS_SINGLE)
 
-$(TARGET_MULTI): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES) application_multi
+$(TARGET_MULTI): application_multi $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS_MULTI) $(LFLAGS_MULTI) $(OBJECT_FILES) -o $(TARGET_MULTI) $(LFLAGS_MULTI)
 
 clean: clean-files
