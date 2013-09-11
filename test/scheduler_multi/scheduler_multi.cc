@@ -169,6 +169,96 @@ void SimpleScheduler::SchedulerCoreProcessor() {
         ++iter;
       }
     }
+
+    for (iter = pending_copy_jobs_.begin();
+        iter != pending_copy_jobs_.end();) {
+      SpawnCopyJobCommand* comm = reinterpret_cast<SpawnCopyJobCommand*>(*iter);
+      bool data_created = true;
+      data_id_t from_id = comm->from_id().elem();
+      if (create_data_.count(from_id) == 0) {
+        data_created = false;
+      } else if (!create_data_[from_id].second) {
+        data_created = false;
+      }
+
+      data_id_t to_id = comm->to_id().elem();
+      if (create_data_.count(to_id) == 0) {
+        data_created = false;
+      } else if (!create_data_[to_id].second) {
+        data_created = false;
+      }
+      if (data_created) {
+        worker_id_t sender_id = create_data_[from_id].first;
+        worker_id_t receiver_id = create_data_[to_id].first;
+
+        if (sender_id == receiver_id) {
+          SchedulerWorker* worker;
+          SchedulerWorkerList::iterator it = server_->workers()->begin();
+          for (; it != server_->workers()->end(); it++) {
+            if ((*it)->worker_id() == sender_id) {
+              worker = *it;
+              break;
+            }
+          }
+          LocalCopyCommand* cm = new LocalCopyCommand(comm->job_id(),
+              comm->from_id(), comm->to_id(),
+              comm->before_set(), comm->after_set());
+          std::cout << "Sending command [to worker " << worker->worker_id()
+            << "]: " << cm->toStringWTags() << std::endl;
+          server_->SendCommand(worker, cm);
+          delete cm;
+        } else {
+          SchedulerWorker* worker_sender;
+          SchedulerWorkerList::iterator it = server_->workers()->begin();
+          for (; it != server_->workers()->end(); it++) {
+            if ((*it)->worker_id() == sender_id) {
+              worker_sender = *it;
+              break;
+            }
+          }
+          SchedulerWorker* worker_receiver;
+          it = server_->workers()->begin();
+          for (; it != server_->workers()->end(); it++) {
+            if ((*it)->worker_id() == receiver_id) {
+              worker_receiver = *it;
+              break;
+            }
+          }
+
+
+
+          std::cout << "OMID********************" <<
+            worker_receiver->worker_id() << std::endl;
+
+          std::vector<job_id_t> j;
+          id_maker_.GetNewJobID(&j, 1);
+          ID<job_id_t> id(j[0]);
+          RemoteCopyCommand* cm_s = new RemoteCopyCommand(id,
+              comm->from_id(), comm->to_id(),
+              ID<worker_id_t>(worker_receiver->worker_id()),
+              worker_receiver->ip(), ID<port_t>(worker_receiver->port()),
+              comm->before_set(), comm->after_set());
+          std::cout << "Sending command [to worker " << worker_sender->worker_id()
+            << "]: " << cm_s->toStringWTags() << std::endl;
+          server_->SendCommand(worker_sender, cm_s);
+          delete cm_s;
+
+          RemoteCopyCommand* cm_r = new RemoteCopyCommand(comm->job_id(),
+              comm->from_id(), comm->to_id(),
+              ID<worker_id_t>(worker_receiver->worker_id()),
+              worker_receiver->ip(), ID<port_t>(worker_receiver->port()),
+              comm->before_set(), comm->after_set());
+          std::cout << "Sending command [to worker " << worker_receiver->worker_id()
+            << "]: " << cm_r->toStringWTags() << std::endl;
+          server_->SendCommand(worker_sender, cm_r);
+          delete cm_r;
+        }
+        pending_copy_jobs_.erase(iter++);
+        delete comm;
+      } else {
+        ++iter;
+      }
+    }
   }
 }
 
@@ -177,6 +267,13 @@ void SimpleScheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) 
       cm->read_set(), cm->write_set(), cm->before_set(), cm->after_set(),
       cm->params());
   pending_compute_jobs_.push_back(comm);
+}
+
+void SimpleScheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
+  SchedulerCommand* comm = new SpawnCopyJobCommand(cm->job_id(),
+      cm->from_id(), cm->to_id(), cm->before_set(), cm->after_set(),
+      cm->params());
+  pending_copy_jobs_.push_back(comm);
 }
 
 void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
@@ -188,7 +285,7 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
       cm->data_id(), before, after);
   job_data_map_[id.elem()] = cm->data_id().elem();
 
-  SchedulerWorker* worker;
+  SchedulerWorker* worker = NULL;
   // TODO(omidm): do somthing smarter!!
   worker_id_t worker_id = (worker_id_t)cm->partition_id().elem();
   SchedulerWorkerList::iterator it = server_->workers()->begin();

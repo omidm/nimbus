@@ -71,6 +71,7 @@ class SimpleScheduler : public Scheduler {
 
     virtual  void SchedulerCoreProcessor();
     virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
+    virtual void ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm);
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
 
