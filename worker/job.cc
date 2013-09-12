@@ -209,12 +209,16 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 void RemoteCopySendJob::Execute(std::string params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
-  data_exchanger_->SendSerializedData(id().elem(), to_worker_id_.elem(), ser_data);
+  data_exchanger_->SendSerializedData(receive_job_id().elem(), to_worker_id_.elem(), ser_data);
   delete ser_data.data_ptr();
 }
 
 Job* RemoteCopySendJob::Clone() {
   return new RemoteCopySendJob(data_exchanger_);
+}
+
+ID<job_id_t> RemoteCopySendJob::receive_job_id() {
+  return receive_job_id_;
 }
 
 ID<worker_id_t> RemoteCopySendJob::to_worker_id() {
@@ -229,6 +233,10 @@ ID<port_t> RemoteCopySendJob::to_port() {
   return to_port_;
 }
 
+
+void RemoteCopySendJob::set_receive_job_id(ID<job_id_t> receive_job_id) {
+  receive_job_id_ = receive_job_id;
+}
 
 void RemoteCopySendJob::set_to_worker_id(ID<worker_id_t> worker_id) {
   to_worker_id_ = worker_id;

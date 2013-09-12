@@ -256,24 +256,39 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
         generated = new CreateDataCommand(job_id,
             data_name, data_id, before, after);
       }
-    } else if (type == COMMAND_REMOTE_COPY) {
+    } else if (type == COMMAND_REMOTE_COPY_SEND) {
       ID<job_id_t> job_id;
+      ID<job_id_t> receive_job_id;
       ID<data_id_t> from_data_id;
-      ID<data_id_t> to_data_id;
       ID<worker_id_t> to_worker_id;
       std::string to_ip;
       ID<port_t> to_port;
       IDSet<job_id_t> before;
       IDSet<job_id_t> after;
 
-      bool cond = ParseRemoteCopyCommand(param_segment, job_id, from_data_id,
-          to_data_id, to_worker_id, to_ip, to_port, before, after);
+      bool cond = ParseRemoteCopySendCommand(param_segment, job_id, receive_job_id,
+          from_data_id, to_worker_id, to_ip, to_port, before, after);
       if (!cond) {
-        std::cout << "ERROR: Could not detect valid remotecopy." << std::endl;
+        std::cout << "ERROR: Could not detect valid remotecopysend." << std::endl;
         return false;
       } else {
-        generated = new RemoteCopyCommand(job_id, from_data_id,
-            to_data_id, to_worker_id, to_ip, to_port, before, after);
+        generated = new RemoteCopySendCommand(job_id, receive_job_id,
+            from_data_id, to_worker_id, to_ip, to_port, before, after);
+      }
+    } else if (type == COMMAND_REMOTE_COPY_RECEIVE) {
+      ID<job_id_t> job_id;
+      ID<data_id_t> to_data_id;
+      IDSet<job_id_t> before;
+      IDSet<job_id_t> after;
+
+      bool cond = ParseRemoteCopyReceiveCommand(param_segment, job_id,
+          to_data_id, before, after);
+      if (!cond) {
+        std::cout << "ERROR: Could not detect valid remotecopyreceive." << std::endl;
+        return false;
+      } else {
+        generated = new RemoteCopyReceiveCommand(job_id,
+            to_data_id, before, after);
       }
     } else if (type == COMMAND_LOCAL_COPY) {
       ID<job_id_t> job_id;
@@ -753,34 +768,34 @@ IDSet<job_id_t> CreateDataCommand::before_set() {
 }
 
 
-RemoteCopyCommand::RemoteCopyCommand() {
-  name_ = "remotecopy";
+RemoteCopySendCommand::RemoteCopySendCommand() {
+  name_ = "remotecopysend";
 }
 
-RemoteCopyCommand::RemoteCopyCommand(const ID<job_id_t>& job_id,
+RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
+    const ID<job_id_t>& receive_job_id,
     const ID<data_id_t>& from_data_id,
-    const ID<data_id_t>& to_data_id,
     const ID<worker_id_t>& to_worker_id,
     const std::string to_ip, const ID<port_t>& to_port,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after)
 : job_id_(job_id),
+  receive_job_id_(receive_job_id),
   from_data_id_(from_data_id),
-  to_data_id_(to_data_id),
   to_worker_id_(to_worker_id),
   to_ip_(to_ip), to_port_(to_port),
   before_set_(before), after_set_(after) {
-    name_ = "remotecopy";
+    name_ = "remotecopysend";
 }
 
-RemoteCopyCommand::~RemoteCopyCommand() {
+RemoteCopySendCommand::~RemoteCopySendCommand() {
 }
 
-std::string RemoteCopyCommand::toString() {
+std::string RemoteCopySendCommand::toString() {
   std::string str;
   str += (name_ + " ");
   str += (job_id_.toString() + " ");
+  str += (receive_job_id_.toString() + " ");
   str += (from_data_id_.toString() + " ");
-  str += (to_data_id_.toString() + " ");
   str += (to_worker_id_.toString() + " ");
   str += (to_ip_ + " ");
   str += (to_port_.toString() + " ");
@@ -789,12 +804,12 @@ std::string RemoteCopyCommand::toString() {
   return str;
 }
 
-std::string RemoteCopyCommand::toStringWTags() {
+std::string RemoteCopySendCommand::toStringWTags() {
   std::string str;
   str += (name_ + " ");
   str += ("job-id:" + job_id_.toString() + " ");
+  str += ("receive-job-id:" + receive_job_id_.toString() + " ");
   str += ("from-data-id:" + from_data_id_.toString() + " ");
-  str += ("to-data-id:" + to_data_id_.toString() + " ");
   str += ("to-worker-id:" + to_worker_id_.toString() + " ");
   str += ("to-ip:" + to_ip_ + " ");
   str += ("to-port:" + to_port_.toString() + " ");
@@ -803,35 +818,89 @@ std::string RemoteCopyCommand::toStringWTags() {
   return str;
 }
 
-ID<job_id_t> RemoteCopyCommand::job_id() {
+ID<job_id_t> RemoteCopySendCommand::job_id() {
   return job_id_;
 }
 
-ID<data_id_t> RemoteCopyCommand::from_data_id() {
+ID<job_id_t> RemoteCopySendCommand::receive_job_id() {
+  return receive_job_id_;
+}
+
+ID<data_id_t> RemoteCopySendCommand::from_data_id() {
   return from_data_id_;
 }
 
-ID<data_id_t> RemoteCopyCommand::to_data_id() {
-  return to_data_id_;
-}
-
-ID<worker_id_t> RemoteCopyCommand::to_worker_id() {
+ID<worker_id_t> RemoteCopySendCommand::to_worker_id() {
   return to_worker_id_;
 }
 
-std::string RemoteCopyCommand::to_ip() {
+std::string RemoteCopySendCommand::to_ip() {
   return to_ip_;
 }
 
-ID<port_t> RemoteCopyCommand::to_port() {
+ID<port_t> RemoteCopySendCommand::to_port() {
   return to_port_;
 }
 
-IDSet<job_id_t> RemoteCopyCommand::after_set() {
+IDSet<job_id_t> RemoteCopySendCommand::after_set() {
   return after_set_;
 }
 
-IDSet<job_id_t> RemoteCopyCommand::before_set() {
+IDSet<job_id_t> RemoteCopySendCommand::before_set() {
+  return before_set_;
+}
+
+
+
+RemoteCopyReceiveCommand::RemoteCopyReceiveCommand() {
+  name_ = "remotecopyreceive";
+}
+
+RemoteCopyReceiveCommand::RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
+    const ID<data_id_t>& to_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after)
+: job_id_(job_id),
+  to_data_id_(to_data_id),
+  before_set_(before), after_set_(after) {
+    name_ = "remotecopyreceive";
+}
+
+RemoteCopyReceiveCommand::~RemoteCopyReceiveCommand() {
+}
+
+std::string RemoteCopyReceiveCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (job_id_.toString() + " ");
+  str += (to_data_id_.toString() + " ");
+  str += (before_set_.toString() + " ");
+  str += after_set_.toString();
+  return str;
+}
+
+std::string RemoteCopyReceiveCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("job-id:" + job_id_.toString() + " ");
+  str += ("to-data-id:" + to_data_id_.toString() + " ");
+  str += ("before:" + before_set_.toString() + " ");
+  str += ("after:" + after_set_.toString());
+  return str;
+}
+
+ID<job_id_t> RemoteCopyReceiveCommand::job_id() {
+  return job_id_;
+}
+
+ID<data_id_t> RemoteCopyReceiveCommand::to_data_id() {
+  return to_data_id_;
+}
+
+IDSet<job_id_t> RemoteCopyReceiveCommand::after_set() {
+  return after_set_;
+}
+
+IDSet<job_id_t> RemoteCopyReceiveCommand::before_set() {
   return before_set_;
 }
 

@@ -282,22 +282,22 @@ class CreateDataCommand : public SchedulerCommand {
 };
 
 
-class RemoteCopyCommand : public SchedulerCommand {
+class RemoteCopySendCommand : public SchedulerCommand {
   public:
-    RemoteCopyCommand();
-    RemoteCopyCommand(const ID<job_id_t>& jog_id,
+    RemoteCopySendCommand();
+    RemoteCopySendCommand(const ID<job_id_t>& job_id,
+        const ID<job_id_t>& receive_job_id,
         const ID<data_id_t>& from_data_id,
-        const ID<data_id_t>& to_data_id,
         const ID<worker_id_t>& to_worker_id,
         const std::string to_ip, const ID<port_t>& to_port,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
-    ~RemoteCopyCommand();
+    ~RemoteCopySendCommand();
 
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
+    ID<job_id_t> receive_job_id();
     ID<data_id_t> from_data_id();
-    ID<data_id_t> to_data_id();
     ID<worker_id_t> to_worker_id();
     std::string to_ip();
     ID<port_t> to_port();
@@ -306,14 +306,40 @@ class RemoteCopyCommand : public SchedulerCommand {
 
   private:
     ID<job_id_t> job_id_;
+    ID<job_id_t> receive_job_id_;
     ID<data_id_t> from_data_id_;
-    ID<data_id_t> to_data_id_;
     ID<worker_id_t> to_worker_id_;
     std::string to_ip_;
     ID<port_t> to_port_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
 };
+
+class RemoteCopyReceiveCommand : public SchedulerCommand {
+  public:
+    RemoteCopyReceiveCommand();
+    RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
+        const ID<data_id_t>& to_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+    ~RemoteCopyReceiveCommand();
+
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
+    ID<data_id_t> to_data_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+
+  private:
+    ID<job_id_t> job_id_;
+    ID<data_id_t> to_data_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+};
+
+
+
+
 
 class LocalCopyCommand : public SchedulerCommand {
   public:

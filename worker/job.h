@@ -145,15 +145,18 @@ class RemoteCopySendJob : public Job {
     virtual void Sleep() {}
     virtual void Cancel() {}
 
+    ID<job_id_t> receive_job_id();
     ID<worker_id_t> to_worker_id();
     std::string to_ip();
     ID<port_t> to_port();
 
+    void set_receive_job_id(ID<job_id_t> receive_job_id);
     void set_to_worker_id(ID<worker_id_t> worker_id);
     void set_to_ip(std::string ip);
     void set_to_port(ID<port_t> port);
 
   private:
+    ID<job_id_t> receive_job_id_;
     ID<worker_id_t> to_worker_id_;
     std::string to_ip_;
     ID<port_t> to_port_;

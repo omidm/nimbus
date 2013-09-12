@@ -694,10 +694,10 @@ bool ParseCreateDataCommand(const std::string& input,
 }
 
 
-bool ParseRemoteCopyCommand(const std::string& input,
+bool ParseRemoteCopySendCommand(const std::string& input,
     ID<job_id_t>& job_id,
+    ID<job_id_t>& receive_job_id,
     ID<data_id_t>& from_data_id,
-    ID<data_id_t>& to_data_id,
     ID<worker_id_t>& to_worker_id,
     std::string& to_ip,
     ID<port_t>& to_port,
@@ -714,14 +714,14 @@ bool ParseRemoteCopyCommand(const std::string& input,
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
   for (int i = 0; i < num; i++) {
     if (iter == tokens.end()) {
-      std::cout << "ERROR: RemoteCopyCommand has only " << i <<
+      std::cout << "ERROR: RemoteCopySendCommand has only " << i <<
         " parameters (expected " << num << ")." << std::endl;
       return false;
     }
     iter++;
   }
   if (iter != tokens.end()) {
-    std::cout << "ERROR: RemoteCopyCommand has more than "<<
+    std::cout << "ERROR: RemoteCopySendCommand has more than "<<
       num << " parameters." << std::endl;
     return false;
   }
@@ -736,20 +736,20 @@ bool ParseRemoteCopyCommand(const std::string& input,
   }
 
   iter++;
-  if (ParseID(*iter, data_id_elem)) {
-    ID<data_id_t> temp(data_id_elem);
-    from_data_id = temp;
+  if (ParseID(*iter, job_id_elem)) {
+    ID<job_id_t> temp(job_id_elem);
+    receive_job_id = temp;
   } else {
-    std::cout << "ERROR: Could not detect valid from data id." << std::endl;
+    std::cout << "ERROR: Could not detect valid receive job id." << std::endl;
     return false;
   }
 
   iter++;
   if (ParseID(*iter, data_id_elem)) {
     ID<data_id_t> temp(data_id_elem);
-    to_data_id = temp;
+    from_data_id = temp;
   } else {
-    std::cout << "ERROR: Could not detect valid to data id." << std::endl;
+    std::cout << "ERROR: Could not detect valid from data id." << std::endl;
     return false;
   }
 
@@ -794,6 +794,75 @@ bool ParseRemoteCopyCommand(const std::string& input,
 
   return true;
 }
+
+bool ParseRemoteCopyReceiveCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    ID<data_id_t>& to_data_id,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after) {
+  int num = 4;
+  job_id_t job_id_elem;
+  data_id_t data_id_elem;
+  std::set<job_id_t> job_id_set;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: RemoteCopyReceiveCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: RemoteCopyReceiveCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (ParseID(*iter, job_id_elem)) {
+    ID<job_id_t> temp(job_id_elem);
+    job_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseID(*iter, data_id_elem)) {
+    ID<data_id_t> temp(data_id_elem);
+    to_data_id = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid to data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    before = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, job_id_set)) {
+    IDSet<job_id_t> temp(job_id_set);
+    after = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+
+
+
 
 
 bool ParseLocalCopyCommand(const std::string& input,

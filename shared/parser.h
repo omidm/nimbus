@@ -124,14 +124,20 @@ bool ParseCreateDataCommand(const std::string& input,
     std::string& data_name, ID<data_id_t>& data_id,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after);
 
-bool ParseRemoteCopyCommand(const std::string& input,
+bool ParseRemoteCopySendCommand(const std::string& input,
     ID<job_id_t>& job_id,
+    ID<job_id_t>& receive_job_id,
     ID<data_id_t>& from_data_id,
-    ID<data_id_t>& to_data_id,
     ID<worker_id_t>& to_worker_id,
     std::string& to_ip,
     ID<port_t>& to_port,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after);
+
+bool ParseRemoteCopyReceiveCommand(const std::string& input,
+    ID<job_id_t>& job_id,
+    ID<data_id_t>& to_data_id,
+    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
+
 
 bool ParseLocalCopyCommand(const std::string& input,
     ID<job_id_t>& job_id,

@@ -179,8 +179,10 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     ProcessComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(cm));
   } else if (command_name == "createdata") {
     ProcessCreateDataCommand(reinterpret_cast<CreateDataCommand*>(cm));
-  } else if (command_name == "remotecopy") {
-    ProcessRemoteCopyCommand(reinterpret_cast<RemoteCopyCommand*>(cm));
+  } else if (command_name == "remotecopysend") {
+    ProcessRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(cm));
+  } else if (command_name == "remotecopyreceive") {
+    ProcessRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(cm));
   } else if (command_name == "localcopy") {
     ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
   } else if (command_name == "spawnjob") {
@@ -245,31 +247,34 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   blocked_jobs_.push_back(job);
 }
 
-void Worker::ProcessRemoteCopyCommand(RemoteCopyCommand* cm) {
-  if (cm->to_worker_id().elem() == id_) {
-    Job * job = new RemoteCopyReceiveJob();
-    job->set_name("RemoteCopyReceive");
-    job->set_id(cm->job_id());
-    IDSet<data_id_t> write_set;
-    write_set.insert(cm->to_data_id().elem());
-    job->set_write_set(write_set);
-    job->set_before_set(cm->before_set());
-    job->set_after_set(cm->after_set());
-    blocked_jobs_.push_back(job);
-  } else {
-    RemoteCopySendJob * job = new RemoteCopySendJob(data_exchanger_);
-    data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
-        cm->to_ip(), cm->to_port().elem());
-    job->set_to_worker_id(cm->to_worker_id());
-    job->set_name("RemoteCopySend");
-    job->set_id(cm->job_id());
-    IDSet<data_id_t> read_set;
-    read_set.insert(cm->from_data_id().elem());
-    job->set_read_set(read_set);
-    job->set_before_set(cm->before_set());
-    job->set_after_set(cm->after_set());
-    blocked_jobs_.push_back(job);
-  }
+void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
+  RemoteCopySendJob * job = new RemoteCopySendJob(data_exchanger_);
+  data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
+      cm->to_ip(), cm->to_port().elem());
+  job->set_name("RemoteCopySend");
+  job->set_id(cm->job_id());
+  job->set_receive_job_id(cm->receive_job_id());
+  job->set_to_worker_id(cm->to_worker_id());
+  job->set_to_ip(cm->to_ip());
+  job->set_to_port(cm->to_port());
+  IDSet<data_id_t> read_set;
+  read_set.insert(cm->from_data_id().elem());
+  job->set_read_set(read_set);
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
+}
+
+void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
+  Job * job = new RemoteCopyReceiveJob();
+  job->set_name("RemoteCopyReceive");
+  job->set_id(cm->job_id());
+  IDSet<data_id_t> write_set;
+  write_set.insert(cm->to_data_id().elem());
+  job->set_write_set(write_set);
+  job->set_before_set(cm->before_set());
+  job->set_after_set(cm->after_set());
+  blocked_jobs_.push_back(job);
 }
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
@@ -364,7 +369,9 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_set_.insert(
       std::make_pair(std::string("createdata"), COMMAND_CREATE_DATA));
   scheduler_command_set_.insert(
-      std::make_pair(std::string("remotecopy"), COMMAND_REMOTE_COPY));
+      std::make_pair(std::string("remotecopysend"), COMMAND_REMOTE_COPY_SEND));
+  scheduler_command_set_.insert(
+      std::make_pair(std::string("remotecopyreceive"), COMMAND_REMOTE_COPY_RECEIVE));
   scheduler_command_set_.insert(
       std::make_pair(std::string("localcopy"), COMMAND_LOCAL_COPY));
 }

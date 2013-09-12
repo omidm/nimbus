@@ -225,16 +225,11 @@ void SimpleScheduler::SchedulerCoreProcessor() {
             }
           }
 
-
-
-          std::cout << "OMID********************" <<
-            worker_receiver->worker_id() << std::endl;
-
           std::vector<job_id_t> j;
           id_maker_.GetNewJobID(&j, 1);
           ID<job_id_t> id(j[0]);
-          RemoteCopyCommand* cm_s = new RemoteCopyCommand(id,
-              comm->from_id(), comm->to_id(),
+          RemoteCopySendCommand* cm_s = new RemoteCopySendCommand(
+              id, comm->job_id(), comm->from_id(),
               ID<worker_id_t>(worker_receiver->worker_id()),
               worker_receiver->ip(), ID<port_t>(worker_receiver->port()),
               comm->before_set(), comm->after_set());
@@ -243,10 +238,8 @@ void SimpleScheduler::SchedulerCoreProcessor() {
           server_->SendCommand(worker_sender, cm_s);
           delete cm_s;
 
-          RemoteCopyCommand* cm_r = new RemoteCopyCommand(comm->job_id(),
-              comm->from_id(), comm->to_id(),
-              ID<worker_id_t>(worker_receiver->worker_id()),
-              worker_receiver->ip(), ID<port_t>(worker_receiver->port()),
+          RemoteCopyReceiveCommand* cm_r = new RemoteCopyReceiveCommand(
+              comm->job_id(), comm->to_id(),
               comm->before_set(), comm->after_set());
           std::cout << "Sending command [to worker " << worker_receiver->worker_id()
             << "]: " << cm_r->toStringWTags() << std::endl;
