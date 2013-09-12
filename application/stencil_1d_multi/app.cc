@@ -133,21 +133,6 @@ Job * Main::Clone() {
 void Main::Execute(std::string params, const DataArray& da) {
   std::cout << "Executing the main job\n";
 
-  using  vector_msg::VectorMsg;
-  VectorMsg a;
-  for (int i = 0; i < 4; i++) {
-    a.add_elem(i + 10);
-  }
-  std::string str;
-  a.SerializeToString(&str);
-  VectorMsg b;
-  b.ParseFromString(str);
-  for (int i = 0; i < b.elem_size(); i++)
-    std::cout << b.elem(i) << ", ";
-  std::cout << std::endl;
-  sleep(10);
-
-
   std::vector<job_id_t> j;
   std::vector<data_id_t> d;
   IDSet<data_id_t> read, write;
@@ -291,6 +276,7 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
     after.clear();
     IDSet<data_id_t> temp_set;
     temp_set.insert(d[0]); temp_set.insert(d[1]); temp_set.insert(d[2]); temp_set.insert(d[3]);
+    temp_set.insert(d[4]); temp_set.insert(d[5]); temp_set.insert(d[6]); temp_set.insert(d[7]);
     par = temp_set.toString();
     par += ("-" + ID<data_id_t>(counter - 1).toString());
     SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
