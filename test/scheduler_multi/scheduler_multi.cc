@@ -250,7 +250,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
               comm->before_set(), comm->after_set());
           std::cout << "Sending command [to worker " << worker_receiver->worker_id()
             << "]: " << cm_r->toStringWTags() << std::endl;
-          server_->SendCommand(worker_sender, cm_r);
+          server_->SendCommand(worker_receiver, cm_r);
           delete cm_r;
         }
         pending_copy_jobs_.erase(iter++);
