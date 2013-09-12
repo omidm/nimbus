@@ -87,6 +87,7 @@ bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
   std::string str(ser_data.data_ptr(), ser_data.size());
   vec_msg.ParseFromString(str);
   Vec* vec = new Vec(size_);
+  vec->Create();
   for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
      vec->arr()[i] = vec_msg.elem(i);
 
@@ -360,10 +361,10 @@ void ApplyLeft::Execute(std::string params, const DataArray& da) {
   for (int i = 1; i < (len - 1); i++)
     temp_middle[i] = sten[0] * d2->arr()[i-1] + sten[1] * d2->arr()[i] + sten[2] * d2->arr()[i+1];
 
+  d3->arr()[0] =  sten[0] * d2->arr()[len-1] + sten[1] * d3->arr()[0] + sten[2] * d4->arr()[0];
+
   for (int i = 0; i < len; i++)
     d2->arr()[i] = temp_middle[i];
-
-  d3->arr()[0] =  sten[0] * d2->arr()[len-1] + sten[1] * d3->arr()[0] + sten[2] * d4->arr()[0];
 };
 
 ApplyRight::ApplyRight() {
@@ -391,10 +392,10 @@ void ApplyRight::Execute(std::string params, const DataArray& da) {
   for (int i = 1; i < (len - 1); i++)
     temp_middle[i] = sten[0] * d2->arr()[i-1] + sten[1] * d2->arr()[i] + sten[2] * d2->arr()[i+1];
 
+  d1->arr()[0] =  sten[0] * d4->arr()[0] + sten[1] * d1->arr()[0] + sten[2] * d2->arr()[0];
+
   for (int i = 0; i < len; i++)
     d2->arr()[i] = temp_middle[i];
-
-  d1->arr()[0] =  sten[0] * d4->arr()[0] + sten[1] * d1->arr()[0] + sten[2] * d2->arr()[0];
 };
 
 

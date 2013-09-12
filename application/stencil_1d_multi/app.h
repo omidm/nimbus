@@ -54,7 +54,7 @@
 
 #define ML 4
 #define GL 1
-#define LOOP_COUNTER 3
+#define LOOP_COUNTER 2
 #define LOOP_CONDITION 0
 
 using nimbus::Job;
