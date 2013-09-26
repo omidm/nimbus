@@ -57,49 +57,49 @@ class WaterApp : public Application {
 
 class Main : public Job {
     public:
-        Main(Application *app, JobType type);
+        Main(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Init : public Job {
     public:
-        Init(Application *app, JobType type);
+        Init(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Loop : public Job {
     public:
-        Loop(Application *app, JobType type);
+        Loop(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class UptoAdvect : public Job {
     public:
-        UptoAdvect(Application *app, JobType type);
+        UptoAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Advect : public Job {
     public:
-        Advect(Application *app, JobType type);
+        Advect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class AfterAdvect : public Job {
     public:
-        AfterAdvect(Application *app, JobType type);
+        AfterAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class WriteFrame : public Job {
     public:
-        WriteFrame(Application *app, JobType type);
+        WriteFrame(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };

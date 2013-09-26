@@ -53,7 +53,6 @@ namespace physbam_pb {
     typedef ::PhysBAM::RANGE<VF2> RangeF2;
     typedef ::PhysBAM::GRID<VF2> Grid2;
     typedef ::PhysBAM::ARRAY<float, ::PhysBAM::FACE_INDEX<2> > FaceArray2;
-    typedef ::PhysBAM::
 } // namespace physbam_pb
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PHYSBAM_DATA_INCLUDE_2D_H_

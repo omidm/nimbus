@@ -65,14 +65,14 @@ void WaterApp::Load() {
 
     /* Declare and initialize data and jobs. */
 
-    RegisterJob("main", new Main(this, JOB_COMP));
+    RegisterJob("main", new Main(this));
 
-    RegisterJob("init", new Init(this, JOB_COMP));
-    RegisterJob("loop", new Loop(this, JOB_COMP));
-    RegisterJob("uptoadvect", new UptoAdvect(this, JOB_COMP));
-    RegisterJob("advect", new Advect(this, JOB_COMP));
-    RegisterJob("afteradvect", new AfterAdvect(this, JOB_COMP));
-    RegisterJob("writeframe", new WriteFrame(this, JOB_COMP));
+    RegisterJob("init", new Init(this));
+    RegisterJob("loop", new Loop(this));
+    RegisterJob("uptoadvect", new UptoAdvect(this));
+    RegisterJob("advect", new Advect(this));
+    RegisterJob("afteradvect", new AfterAdvect(this));
+    RegisterJob("writeframe", new WriteFrame(this));
 
     RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("face_velocities_1", new ::water_app_data::FaceArray<TV>(kMainSize));
@@ -83,12 +83,13 @@ void WaterApp::Load() {
     std::cout << "Finished loading application" << std::endl;
 }
 
-Main::Main(Application *app, JobType type)
-    : Job(app, type) {};
+Main::Main(Application *app) {
+    set_application(app);
+};
 
 Job* Main::Clone() {
     std::cout << "Cloning main job\n";
-    return new Main(application(), type_);
+    return new Main(application());
 };
 
 void Main::Execute(std::string params, const DataArray& da)
@@ -131,6 +132,7 @@ void Main::Execute(std::string params, const DataArray& da)
     after.clear();
     read.clear();
     write.clear();
+    before.insert(j[0]);
     read.insert(d[0]);
     read.insert(d[1]);
     read.insert(d[2]);
@@ -146,12 +148,13 @@ void Main::Execute(std::string params, const DataArray& da)
     std::cout << "Completed main\n";
 };
 
-Init::Init(Application *app, JobType type)
-    : Job(app, type) {};
+Init::Init(Application *app) {
+    set_application(app);
+}
 
 Job* Init::Clone() {
     std::cout << "Cloning init job\n";
-    return new Init(application(), type_);
+    return new Init(application());
 };
 
 void Init::Execute(std::string params, const DataArray& da)
@@ -199,12 +202,13 @@ void Init::Execute(std::string params, const DataArray& da)
     std::cout << "Successfully completed init job\n";
 };
 
-UptoAdvect::UptoAdvect(Application *app, JobType type)
-    : Job(app, type) {};
+UptoAdvect::UptoAdvect(Application *app) {
+    set_application(app);
+};
 
 Job* UptoAdvect::Clone() {
     std::cout << "Cloning upto advect job\n";
-    return new UptoAdvect(application(), type_);
+    return new UptoAdvect(application());
 };
 
 void UptoAdvect::Execute(std::string params, const DataArray& da)
@@ -250,12 +254,13 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
 
 };
 
-Advect::Advect(Application *app, JobType type)
-    : Job(app, type) {};
+Advect::Advect(Application *app) {
+    set_application(app);
+};
 
 Job* Advect::Clone() {
     std::cout << "Cloning advect job\n";
-    return new Advect(application(), type_);
+    return new Advect(application());
 };
 
 void Advect::Execute(std::string params, const DataArray& da)
@@ -292,42 +297,20 @@ void Advect::Execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
-    char **buffer = new char*;
-    *buffer = 0;
-    int *buff_size = new int;
-    *buff_size = 0;
-//    if (!face_velocities->Serialize(buffer, buff_size))
-//        printf("*** Cannot serialize face velocities!!\n");
-//    else
-//        printf("*** Serialized face velocities!!\n");
-//
-//    face_velocities->Destroy();
-//    face_velocities->Create();
-//
-//    if (!face_velocities->DeSerialize(*buffer, *buff_size))
-//        printf("*** Deserialization unsuccessful!!\n");
-//    else
-//        printf("*** Successfully deserialized!!\n");
-
     Advection(face_velocities, sim_data);
-
-    printf("### Completed advection successfully after deserialization\n");
-
-    free(*buffer);
-    free(buffer);
-    free(buff_size);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
     std::cout << "Barrier "<<x<<"\n";
 };
 
-AfterAdvect::AfterAdvect(Application *app, JobType type)
-    : Job(app, type) {};
+AfterAdvect::AfterAdvect(Application *app) {
+    set_application(app);
+};
 
 Job* AfterAdvect::Clone() {
     std::cout << "Cloning after advect job\n";
-    return new AfterAdvect(application(), type_);
+    return new AfterAdvect(application());
 };
 
 void AfterAdvect::Execute(std::string params, const DataArray& da)
@@ -371,12 +354,13 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
     std::cout << "Barrier "<<x<<"\n";
 };
 
-Loop::Loop(Application *app, JobType type)
-    : Job(app, type) {};
+Loop::Loop(Application *app) {
+    set_application(app);
+};
 
 Job* Loop::Clone() {
     std::cout << "Cloning loop job\n";
-    return new Loop(application(), type_);
+    return new Loop(application());
 };
 
 void Loop::Execute(std::string params, const DataArray& da)
@@ -500,12 +484,13 @@ void Loop::Execute(std::string params, const DataArray& da)
     }
 };
 
-WriteFrame::WriteFrame(Application *app, JobType type)
-    : Job(app, type) {};
+WriteFrame::WriteFrame(Application *app) {
+    set_application(app);
+};
 
 Job* WriteFrame::Clone() {
     std::cout << "Cloning write frame job\n";
-    return new WriteFrame(application(), type_);
+    return new WriteFrame(application());
 };
 
 void WriteFrame::Execute(std::string params, const DataArray& da)
