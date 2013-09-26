@@ -39,16 +39,17 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
-#define NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
+#ifndef NIMBUS_TEST_SIMPLE_WORKER_STENCIL_WORKER_H_
+#define NIMBUS_TEST_SIMPLE_WORKER_STENCIL_WORKER_H_
 
-#define DEBUG_MODE
+// #define DEBUG_MODE
 
 #include <boost/thread.hpp>
 #include <string>
 #include <vector>
 #include <map>
 #include "shared/scheduler_client.h"
+#include "shared/serialized_data.h"
 #include "shared/cluster.h"
 #include "worker/data.h"
 #include "worker/job.h"
@@ -62,12 +63,10 @@ class SimpleWorker : public Worker {
   public:
     SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
         port_t listening_port, Application * a);
-
-    virtual void WorkerCoreProcessor();
 };
 
 
 
 
 
-#endif  // NIMBUS_TEST_WATER_WORKER_SIMPLE_WORKER_H_
+#endif  // NIMBUS_TEST_SIMPLE_WORKER_STENCIL_WORKER_H_

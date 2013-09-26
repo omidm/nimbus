@@ -90,14 +90,14 @@ void Write_Substep_Helper
 };
 
 template <class TV>
-Data* WaterDriver<TV> :: clone()
+Data* WaterDriver<TV> :: Clone()
 {
     std::cout << "Cloning waterdriver\n";
     return new WaterDriver<TV>(stream_type);
 };
 
 template <class TV>
-void WaterDriver<TV> :: create()
+void WaterDriver<TV> :: Create()
 {
     std::cout << "Initialize water driver ...\n";
 

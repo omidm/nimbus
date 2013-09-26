@@ -49,32 +49,38 @@
 namespace water_app_data {
 
     template <class TV> FaceArray<TV>::
-        FaceArray(int size) {
-            this->size_ = size;
-            grid = NULL;
-            data = NULL;
+        FaceArray(int size) : size_(size), grid(0), data(0) {
         }
 
     template <class TV> void FaceArray<TV>::
-        create() {
+        Create() {
             std::cout << "Creating FaceArray\n";
-            grid = new T_GRID(TV_INT::All_Ones_Vector()*size_,
-                    T_RANGE::Unit_Box(), true);
-            assert(grid);
-            data = new  T_FACE_ARRAY();
-            assert(data);
-            data->Resize(*grid);
+            if (!grid)
+                delete grid;
+            if (!data)
+                delete data;
+            if (size_ == 0) {
+                grid = new T_GRID();
+                data = new T_FACE_ARRAY();
+            }
+            else {
+                grid = new T_GRID(TV_INT::All_Ones_Vector()*size_,
+                        T_RANGE::Unit_Box(), true);
+                assert(grid);
+                data = new  T_FACE_ARRAY(*grid);
+                assert(data);
+            }
         }
 
     template <class TV> void FaceArray<TV>::
-        destroy() {
+        Destroy() {
             printf("Destroying face array\n");
-            free(grid);
-            free(data);
+            delete grid;
+            delete data;
         }
 
     template <class TV> ::nimbus::Data* FaceArray<TV>::
-        clone() {
+        Clone() {
             std::cout << "Cloning facearray\n";
             return new FaceArray<TV>(size_);
         }
@@ -85,9 +91,8 @@ namespace water_app_data {
         }
 
     template <class TV> bool FaceArray<TV>::
-        Serialize(char **buffer, int *buff_size) {
-            assert(buffer);
-            assert(buff_size);
+        Serialize(SerializedData *ser_data) {
+            assert(ser_data);
             ::communication::AppFaceArray2d pb_fa;
             pb_fa.set_size(size_);
             if (grid != NULL) {
@@ -102,29 +107,37 @@ namespace water_app_data {
             }
             std::string ser;
             if (!pb_fa.SerializeToString(&ser)) {
-                *buff_size = 0;
+                ser_data->set_size(0);
                 return false;
             }
-            *buff_size = ser.length();
-            *buffer = new char(*buff_size + 1);
-            strcpy(*buffer, ser.c_str());
+            ser_data->set_size(ser.length());
+            char *buffer = new char(ser.length() + 1);
+            strcpy(buffer, ser.c_str());
+            ser_data->set_data_ptr(buffer);
             return true;
         }
 
-    // DeSerialize should be called only after create has been called. Create
+    // DeSerialize should be called only after Create has been called. Create
     // ensures that required memory has been allocated.
     template <class TV> bool FaceArray<TV>::
-        DeSerialize(char const *buffer, const int buff_size) {
+        DeSerialize(const SerializedData &ser_data, Data **result) {
+            assert(result);
+            const char *buffer = ser_data.data_ptr();
+            const int buff_size = ser_data.size();
             if (buff_size <= 0)
                 return false;
             assert(buffer);
             ::communication::AppFaceArray2d pb_fa;
+            *result = new FaceArray<TV>(0);
+            FaceArray<TV> *des = (FaceArray<TV> *)(*result);
+            if (*result == NULL)
+                return false;
             pb_fa.ParseFromString((std::string)buffer);
             if (pb_fa.has_grid()) {
-                ::physbam_pb::make_physbam_object(grid, pb_fa.grid());
+                ::physbam_pb::make_physbam_object(des->grid, pb_fa.grid());
             }
             if (pb_fa.has_data())
-                ::physbam_pb::make_physbam_object(data, pb_fa.data());
+                ::physbam_pb::make_physbam_object(des->data, pb_fa.data());
             return true;
         }
 

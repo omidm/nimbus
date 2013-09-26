@@ -90,8 +90,8 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         WaterDriver(const STREAM_TYPE stream_type_input);
         virtual ~WaterDriver() {}
 
-        virtual void create();
-        virtual Data* clone();
+        virtual void Create();
+        virtual Data* Clone();
         virtual int get_debug_info();
 
         /* water simulation parameters
