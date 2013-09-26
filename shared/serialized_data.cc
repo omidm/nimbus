@@ -42,7 +42,7 @@
 
 using namespace nimbus; // NOLINT
 
-SerializedData::SerializedData() {
+SerializedData::SerializedData():data_ptr_(0), size_(0) {
 }
 
 SerializedData::SerializedData(char* data_ptr, size_t size)

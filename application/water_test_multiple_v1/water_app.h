@@ -52,7 +52,7 @@ using nimbus::Application;
 class WaterApp : public Application {
     public:
         WaterApp();
-        virtual void load();
+        virtual void Load();
 };
 
 class Main : public Job {

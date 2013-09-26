@@ -68,12 +68,12 @@ namespace water_app_data {
             public:
 
                 FaceArray(int size);
-                virtual void create();
-                virtual void destroy();
-                virtual ::nimbus::Data* clone();
+                virtual void Create();
+                virtual void Destroy();
+                virtual ::nimbus::Data* Clone();
                 virtual int get_debug_info();
-                bool Serialize(char **buffer, int *buff_size);
-                bool DeSerialize(const char *buffer, const int buff_size);
+                virtual bool Serialize(SerializedData *ser_data);
+                virtual bool DeSerialize(const SerializedData& ser_data, Data **result);
 
                 // physbam structures and methods
                 T_GRID *grid;

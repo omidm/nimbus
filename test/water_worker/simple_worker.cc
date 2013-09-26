@@ -41,28 +41,8 @@
 
 #include "./simple_worker.h"
 
-
 SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
         port_t listening_port, Application * a)
 : Worker(scheduler_ip, scheduler_port, listening_port, a) {
 }
 
-void SimpleWorker::WorkerCoreProcessor() {
-  std::cout << "Simple Worker Core Processor" << std::endl;
-
-  while (true) {
-    // sleep(1);
-    // Log::dbg_printLine("Worker running core loop.", LOG_INFO);
-    // std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
-    // str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
-    // SchedulerCommand cm(str);
-    // std::cout << "Sending command: " << cm.toString() << std::endl;
-    // client->sendCommand(&cm);
-    SchedulerCommand* comm = client_->receiveCommand();
-    if (comm != NULL) {
-      std::cout << "Received command: " << comm->toString() << std::endl;
-      ProcessSchedulerCommand(comm);
-      delete comm;
-    }
-  }
-}

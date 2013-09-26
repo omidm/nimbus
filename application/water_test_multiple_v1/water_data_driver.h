@@ -92,8 +92,8 @@ class FaceArrayGhost : public Data {
         int id_debug;
 
         FaceArrayGhost(int size);
-        virtual void create();
-        virtual Data* clone();
+        virtual void Create();
+        virtual Data* Clone();
         virtual int get_debug_info();
 
         // physbam structures and methods
@@ -130,8 +130,8 @@ class NonAdvData : public Data {
         int id_debug;
 
         NonAdvData(int size);
-        virtual void create();
-        virtual Data* clone();
+        virtual void Create();
+        virtual Data* Clone();
         virtual int get_debug_info();
 
         bool initialize
