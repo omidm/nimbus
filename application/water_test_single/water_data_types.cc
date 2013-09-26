@@ -191,6 +191,8 @@ Create()
     projection = new PROJECTION_DYNAMICS_UNIFORM< GRID<TV> >
         (*grid, false, false, false, false, NULL);
     incompressible = new INCOMPRESSIBLE_UNIFORM<GRID<TV> >(*grid, *projection);
+
+    std::cout << "Done NonAdvData\n";
 }
 
 template <class TV, class T> Data* NonAdvData<TV, T>::
