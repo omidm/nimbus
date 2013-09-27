@@ -42,6 +42,7 @@
 
 #include "PhysBAM_Tools/Vectors/VECTOR.h"
 #include "PhysBAM_Tools/Math_Tools/RANGE.h"
+#include "PhysBAM_Tools/Arrays/ARRAY_VIEW.h"
 #include "PhysBAM_Tools/Grids_Uniform/GRID.h"
 #include "PhysBAM_Tools/Grids_Uniform_Arrays/FACE_ARRAYS.h"
 #include "PhysBAM_Tools/Grids_Uniform_Boundaries/BOUNDARY_UNIFORM.h"
@@ -51,6 +52,7 @@ namespace physbam_pb {
     typedef ::PhysBAM::VECTOR<float, 2> VF2;
     typedef ::PhysBAM::RANGE<VI2> RangeI2;
     typedef ::PhysBAM::RANGE<VF2> RangeF2;
+    typedef ::PhysBAM::ARRAY_VIEW<float, VI2> ArrayView2;
     typedef ::PhysBAM::GRID<VF2> Grid2;
     typedef ::PhysBAM::ARRAY<float, ::PhysBAM::FACE_INDEX<2> > FaceArray2;
 } // namespace physbam_pb

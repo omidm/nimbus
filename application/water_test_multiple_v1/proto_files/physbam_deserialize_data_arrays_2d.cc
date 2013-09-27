@@ -39,6 +39,7 @@
 #include "assert.h"
 #include "physbam_deserialize_data_arrays_2d.h"
 #include "physbam_deserialize_data_common_2d.h"
+#define INITIALIZATION_VALUE 0
 
 namespace physbam_pb {
 
@@ -46,19 +47,40 @@ namespace physbam_pb {
             const ::communication::PhysbamFaceArray2d &pb_fa) {
 
         assert(phys_fa);
-
-        
         
         if (pb_fa.has_domain_indices())
             make_physbam_object(
                     &phys_fa->domain_indices,
                     pb_fa.domain_indices());
+        
+        assert(pb_fa.has_domain_indices()); //zhihao: didn't handle the case in which pb_fa doesn't have domain_indices
+        RangeI2 domain = phys_fa->domain_indices;
+        int dimension = phys_fa->dimension;        
+        VECTOR<RangeI2, dimension> domains;
+        VI2 sizes_new;        
+        for (int i = 1; i <= phys_fa->dimension; i++) {
+            domains(i) = domain;
+            domains(i).max_corner(i)++;
+            sizes_new(i) = (domains(i).Edge_Lengths() + 1).Product();            
+        }
+        
+        int buffer_size = sizes_new.Sum();
+        
+        float* p = new float[buffer_size];
+        float* p_start = p;
+        for (int i = 1; i <= dimension; i++) {
+        	ArrayView2 array_new(domains(i), p_start);
+            array_new.Fill(INITIALIZATION_VALUE);
+            p_start += sizes_new(i);
+        }
+        phys_fa->base_pointer = p;
 
         if (pb_fa.has_buffer_size())
             phys_fa->buffer_size = pb_fa.buffer_size();
 
         assert(pb_fa.buffer_size() == pb_fa.values_size());
-
+        assert(buffer_size = pb_fa.buffer_size()); //zhihao: do we have to assert this? 
+        
         float *buff_values = phys_fa->base_pointer;
         for (int i = 0; i < pb_fa.values_size(); i++) {
             buff_values[i] = pb_fa.values(i);
