@@ -47,18 +47,27 @@ namespace physbam_pb {
             const ::communication::PhysbamFaceArray2d &pb_fa) {
 
         assert(phys_fa);
+        phys_fa->Clean_Memory();
         
         if (pb_fa.has_domain_indices())
             make_physbam_object(
                     &phys_fa->domain_indices,
                     pb_fa.domain_indices());
         
+        if (pb_fa.has_buffer_size())
+            phys_fa->buffer_size = pb_fa.buffer_size();
+        assert(pb_fa.buffer_size() == pb_fa.values_size());
+        
+        /*
+         * The following code is for initializing phys_fa, by copying Resize() method in /PhysBAM/PhysBAM_Tools/Grids_Uniform_Arrays/FACE_ARRAYS.h
+         * Now we directly call Clean_Memory() method. If find any problem with Clean_Memory(), may switch back to Resize() method.
+         * 
         assert(pb_fa.has_domain_indices()); //zhihao: didn't handle the case in which pb_fa doesn't have domain_indices
         RangeI2 domain = phys_fa->domain_indices;
-        int dimension = phys_fa->dimension;        
-        VECTOR<RangeI2, dimension> domains;
+        int dimension = phys_fa->dimension;
+        VectorRangeI2 domains;
         VI2 sizes_new;        
-        for (int i = 1; i <= phys_fa->dimension; i++) {
+        for (int i = 1; i <= dimension; i++) {
             domains(i) = domain;
             domains(i).max_corner(i)++;
             sizes_new(i) = (domains(i).Edge_Lengths() + 1).Product();            
@@ -75,11 +84,8 @@ namespace physbam_pb {
         }
         phys_fa->base_pointer = p;
 
-        if (pb_fa.has_buffer_size())
-            phys_fa->buffer_size = pb_fa.buffer_size();
-
-        assert(pb_fa.buffer_size() == pb_fa.values_size());
         assert(buffer_size = pb_fa.buffer_size()); //zhihao: do we have to assert this? 
+        */
         
         float *buff_values = phys_fa->base_pointer;
         for (int i = 0; i < pb_fa.values_size(); i++) {
