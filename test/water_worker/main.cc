@@ -46,8 +46,12 @@
 #include "shared/nimbus_types.h"
 #include "worker/application.h"
 #include "./simple_worker.h"
-#include "application/water_test_multiple_v1/water_app.h"
 
+#if defined(_SINGLE_WORKER)
+#include "application/water_test_single/water_app.h"
+#else
+#include "application/water_test_multiple_v1/water_app.h"
+#endif
 
 int main(int argc, char *argv[]) {
   port_t listening_port;

@@ -68,12 +68,6 @@ void Advection (
             sim_data->time + sim_data->dt,
             sim_data->number_of_ghost_cells);
 
-    //TODO: serialize/ deserialize, advection needs:
-    //sim_data->incompressible->advection (probably needed only for advect V)
-    //sim_data->incompressible->boundary (needed elsewhere)
-    //sim_data->dt (parameter)
-    //face_velocities (needed elsewhere)
-    //face_velocities_ghost (needed elsewhere)
     sim_data->incompressible->advection->Update_Advection_Equation_Face(
             *face_velocities->grid,
             *face_velocities->data,

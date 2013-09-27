@@ -56,13 +56,14 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     stream_type(stream_type_input)
 {
     frame_done = true;
-    target_time = (T)0;
 
     // setup time
+    target_time = (T)0;
     initial_time = (T)0;
-    first_frame = (T)0;
     time = (T)0;
+    dt = (T)0;
 
+    first_frame = (T)0;
     last_frame = kAppLastFrame;
     frame_rate = 24;
     current_frame = 0;
