@@ -96,24 +96,24 @@ void Main::Execute(std::string params, const DataArray& da)
 {
     std::cout << "Begin main\n" << std::endl;
 
-    std::vector<int> j;
-    std::vector<int> d;
+    std::vector<job_id_t> j;
+    std::vector<data_id_t> d;
     IDSet<data_id_t> read, write;
     IDSet<job_id_t> before, after;
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
     std::string par;
 
-    application()->GetNewDataID(4, &d);
+    GetNewDataID(&d, 4);
 
-    application()->DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
-    application()->DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
-    application()->DefineData("face_velocities_ghost_1", d[2], partition_id, neighbor_partitions, par);
-    application()->DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
+    DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
+    DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
+    DefineData("face_velocities_ghost_1", d[2], partition_id, neighbor_partitions, par);
+    DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
 
     std::cout << "Defined data\n";
 
-    application()->GetNewJobID(2, &j);
+    GetNewJobID(&j, 2);
 
     before.clear();
     after.clear();
@@ -125,7 +125,7 @@ void Main::Execute(std::string params, const DataArray& da)
     read.insert(d[2]);
     read.insert(d[3]);
     std::cout << "Spawning init\n";
-    application()->SpawnComputeJob("init", j[0], read, write, before, after, par);
+    SpawnComputeJob("init", j[0], read, write, before, after, par);
     std::cout << "Spawned init\n";
 
     before.clear();
@@ -142,7 +142,7 @@ void Main::Execute(std::string params, const DataArray& da)
     write.insert(d[2]);
     write.insert(d[3]);
     std::cout << "Spawning loop\n";
-    application()->SpawnComputeJob("loop", j[1], read, write, before, after, par);
+    SpawnComputeJob("loop", j[1], read, write, before, after, par);
     std::cout << "Spawned loop\n";
 
     std::cout << "Completed main\n";
@@ -411,18 +411,18 @@ void Loop::Execute(std::string params, const DataArray& da)
     {
         std::cout << "Spawning new simulation jobs ...\n";
 
-        std::vector<int> d;
-        d.push_back(1);
-        d.push_back(2);
-        d.push_back(3);
-        d.push_back(4);
+        std::vector<data_id_t> d;
+        d.push_back(16777217);
+        d.push_back(16777218);
+        d.push_back(16777219);
+        d.push_back(16777220);
         std::string par;
 
         IDSet<job_id_t> before, after;
         IDSet<data_id_t> read, write;
 
-        std::vector<int> j;
-        application()->GetNewJobID(5, &j);
+        std::vector<job_id_t> j;
+        GetNewJobID(&j, 5);
 
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -432,7 +432,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
         std::cout << "Spawning upto advect\n";
-        application()->SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
+        SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         std::cout << "Spawned upto advect\n";
 
         before.clear(); after.clear();
@@ -444,7 +444,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
         std::cout << "Spawning advect\n";
-        application()->SpawnComputeJob("advect", j[1], read, write, before, after, par);
+        SpawnComputeJob("advect", j[1], read, write, before, after, par);
         std::cout << "Spawned advect\n";
 
         before.clear(); after.clear();
@@ -456,7 +456,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
         std::cout << "Spawning afteradvect\n";
-        application()->SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
+        SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
         std::cout << "Spawned afteradvect\n";
 
         before.clear(); after.clear();
@@ -468,7 +468,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
         std::cout << "Spawning writeframe\n";
-        application()->SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
+        SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
         std::cout << "Spawned afteradvect\n";
 
         before.clear(); after.clear();
@@ -479,7 +479,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
         std::cout << "Spawning loop\n";
-        application()->SpawnComputeJob("loop", j[4], read, write, before, after, par);
+        SpawnComputeJob("loop", j[4], read, write, before, after, par);
         std::cout << "Spawned loop\n";
     }
 };
