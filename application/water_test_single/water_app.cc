@@ -100,15 +100,15 @@ void Main::Execute(std::string params, const DataArray& da)
 {
     std::cout << "Begin main\n" << std::endl;
 
-    std::vector<int> j;
-    std::vector<int> d;
+    std::vector<job_id_t> j;
+    std::vector<data_id_t> d;
     IDSet<data_id_t> read, write;
     IDSet<job_id_t> before, after;
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
     std::string par;
 
-    GetNewDataID(4, &d);
+    GetNewDataID(&d, 4);
 
     DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
     DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
@@ -117,7 +117,7 @@ void Main::Execute(std::string params, const DataArray& da)
 
     std::cout << "Defined data\n";
 
-    GetNewJobID(2, &j);
+    GetNewJobID(&j, 2);
 
     before.clear();
     after.clear();
@@ -415,18 +415,18 @@ void Loop::Execute(std::string params, const DataArray& da)
     {
         std::cout << "Spawning new simulation jobs ...\n";
 
-        std::vector<int> d;
-        d.push_back(1);
-        d.push_back(2);
-        d.push_back(3);
-        d.push_back(4);
+        std::vector<data_id_t> d;
+        d.push_back(16777217);
+        d.push_back(16777218);
+        d.push_back(16777219);
+        d.push_back(16777220);
         std::string par;
 
         IDSet<job_id_t> before, after;
         IDSet<data_id_t> read, write;
 
-        std::vector<int> j;
-        GetNewJobID(5, &j);
+        std::vector<job_id_t> j;
+        GetNewJobID(&j, 5);
 
         before.clear(); after.clear();
         read.clear(); write.clear();
