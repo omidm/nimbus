@@ -527,8 +527,8 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
-    if (driver->IsFrameDone())
-    {
+    if (driver->IsFrameDone()) {
+        std::cout << "#### Should write now\n";
         driver->Write_Output_Files(driver->current_frame);
     }
 
