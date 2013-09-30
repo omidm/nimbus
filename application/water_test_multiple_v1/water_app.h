@@ -39,6 +39,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 
+#include "app_config.h"
+#include "physbam_include.h"
 #include "shared/nimbus.h"
 
 using nimbus::Data;
@@ -52,11 +54,21 @@ using nimbus::Application;
 class WaterApp : public Application {
 
     private:
-        ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
+        PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::GRID<TV>, T>
+            *advection_scalar_;
 
     public:
         WaterApp();
         virtual void Load();
+        PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::GRID<TV>, T>*
+            advection_scalar() {
+                return advection_scalar_;
+            }
+        void set_advection_scalar(
+                PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::
+                GRID<TV>, T> *adv) {
+            advection_scalar_ = adv;
+        }
 };
 
 class Main : public Job {

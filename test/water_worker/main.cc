@@ -42,10 +42,10 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
+#include "simple_worker.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
 #include "worker/application.h"
-#include "./simple_worker.h"
 
 #if defined(_SINGLE_WORKER)
 #include "application/water_test_single/water_app.h"

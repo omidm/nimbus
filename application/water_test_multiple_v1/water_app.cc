@@ -82,7 +82,7 @@ void WaterApp::Load() {
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
 
-    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>();
+    set_advection_scalar(new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>());
 }
 
 Main::Main(Application *app) {
@@ -245,6 +245,12 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
     assert(driver);
     assert(face_velocities);
     assert(sim_data);
+
+    WaterApp *water_app = (WaterApp *)application();
+    sim_data->incompressible->
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*(water_app->advection_scalar()));
 
     sim_data->BeforeAdvection(driver, face_velocities);
 

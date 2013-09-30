@@ -112,7 +112,6 @@ NonAdvData(int size)
     sources = NULL;
 
     particle_levelset_evolution = NULL;
-    advection_scalar = NULL;
 
     collision_bodies_affecting_fluid = NULL;
 
@@ -141,7 +140,6 @@ Create()
     particle_levelset_evolution = new
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >
         (*grid, number_of_ghost_cells);
-    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>();
 
     collision_bodies_affecting_fluid = new
         typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
@@ -201,8 +199,6 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     std::cout << "Moving to incompressible ...\n";
 
     incompressible->Initialize_Grids(*grid);
-    incompressible->Set_Custom_Advection(*advection_scalar);
-    incompressible->Set_Custom_Advection(*advection_scalar);
     incompressible->Set_Custom_Boundary(*boundary);
     incompressible->projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     incompressible->projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
@@ -242,8 +238,6 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
     particle_levelset_evolution->Set_Time(time);
     particle_levelset_evolution->Set_CFL_Number((T).9);
-    particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*advection_scalar);
     particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
     particle_levelset_evolution->Set_Levelset_Callbacks(*driver);
     particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);

@@ -24,6 +24,8 @@ OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 PHYSBAM_DIR = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/
 APP_LIB = -lwater_test
 
+IFLAGS += -I$(PHYSBAM_DIR)
+
 ####################################
 # ENTER application directory here #
 ####################################
