@@ -120,9 +120,6 @@ class NonAdvData : public Data {
     typedef typename T_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_ARRAYS_BOOL;
     typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_FACE_ARRAYS_BOOL;
 
-
-
-
     private:
         int size_;
     public:
@@ -168,7 +165,6 @@ class NonAdvData : public Data {
 
         // fluid data
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *particle_levelset_evolution;
-        ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
 
         // collision geometry
         typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::

@@ -40,8 +40,8 @@
 #include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
-#include <iostream>
 #include "shared/nimbus.h"
+#include "stdio.h"
 #include "stdlib.h"
 #include "water_app.h"
 #include "water_data_driver.h"
@@ -54,16 +54,16 @@ using nimbus::Application;
 
 // TODO(chinmayee): alternative to assert?? pointer arithmetic error.
 
-WaterApp::WaterApp()
-{};
+WaterApp::WaterApp() {
+};
 
 void WaterApp::Load() {
 
-    std::cout << "Worker beginning to load application" << std::endl;
+    printf("Worker beginning to load application\n");
 
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
-    /* Declare and initialize data and jobs. */
+    /* Declare and initialize data, jobs and policies. */
 
     RegisterJob("main", new Main(this));
 
@@ -79,8 +79,10 @@ void WaterApp::Load() {
     RegisterData("face_velocities_ghost_1", new FaceArrayGhost<TV>(kGhostSize));
     RegisterData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
 
-    std::cout << "Finished creating job and data definitions" << std::endl;
-    std::cout << "Finished loading application" << std::endl;
+    printf("Finished creating job and data definitions\n");
+    printf("Finished loading application\n");
+
+    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>();
 }
 
 Main::Main(Application *app) {
@@ -88,13 +90,13 @@ Main::Main(Application *app) {
 };
 
 Job* Main::Clone() {
-    std::cout << "Cloning main job\n";
+    printf("Cloning main job\n");
     return new Main(application());
 };
 
 void Main::Execute(std::string params, const DataArray& da)
 {
-    std::cout << "Begin main\n" << std::endl;
+    printf("Begin main\n");
 
     std::vector<job_id_t> j;
     std::vector<data_id_t> d;
@@ -111,7 +113,7 @@ void Main::Execute(std::string params, const DataArray& da)
     DefineData("face_velocities_ghost_1", d[2], partition_id, neighbor_partitions, par);
     DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
 
-    std::cout << "Defined data\n";
+    printf("Defined data\n");
 
     GetNewJobID(&j, 2);
 
@@ -124,9 +126,8 @@ void Main::Execute(std::string params, const DataArray& da)
     read.insert(d[1]);
     read.insert(d[2]);
     read.insert(d[3]);
-    std::cout << "Spawning init\n";
     SpawnComputeJob("init", j[0], read, write, before, after, par);
-    std::cout << "Spawned init\n";
+    printf("Spawned init\n");
 
     before.clear();
     after.clear();
@@ -141,11 +142,10 @@ void Main::Execute(std::string params, const DataArray& da)
     write.insert(d[1]);
     write.insert(d[2]);
     write.insert(d[3]);
-    std::cout << "Spawning loop\n";
     SpawnComputeJob("loop", j[1], read, write, before, after, par);
-    std::cout << "Spawned loop\n";
+    printf("Spawned loop\n");
 
-    std::cout << "Completed main\n";
+    printf("Completed main\n");
 };
 
 Init::Init(Application *app) {
@@ -153,13 +153,13 @@ Init::Init(Application *app) {
 }
 
 Job* Init::Clone() {
-    std::cout << "Cloning init job\n";
+    printf("Cloning init job\n");
     return new Init(application());
 };
 
 void Init::Execute(std::string params, const DataArray& da)
 {
-    std::cout << "Executing init job\n";
+    printf("Executing init job\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
@@ -167,7 +167,7 @@ void Init::Execute(std::string params, const DataArray& da)
 
     for (int i = 0; i < 4; i++)
     {
-        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
         {
             case driver_id:
@@ -182,7 +182,7 @@ void Init::Execute(std::string params, const DataArray& da)
                 sim_data = (NonAdvData<TV, T> *)da[i];
                 break;
             default:
-                std::cout << "Error : unknown data!!\n";
+                printf("Error : unknown data!!\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -199,7 +199,7 @@ void Init::Execute(std::string params, const DataArray& da)
     Add_Source(sim_data);
     sim_data->initialize(driver, face_velocities, frame);
 
-    std::cout << "Successfully completed init job\n";
+    printf("Successfully completed init job\n");
 };
 
 UptoAdvect::UptoAdvect(Application *app) {
@@ -207,14 +207,14 @@ UptoAdvect::UptoAdvect(Application *app) {
 };
 
 Job* UptoAdvect::Clone() {
-    std::cout << "Cloning upto advect job\n";
+    printf("Cloning upto advect job\n");
     return new UptoAdvect(application());
 };
 
 void UptoAdvect::Execute(std::string params, const DataArray& da)
 {
 
-    std::cout << "@@ Running upto advect\n";
+    printf("@@ Running upto advect\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
@@ -222,7 +222,7 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
 
     for (int i = 0; i < 4; i++)
     {
-        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
         {
             case driver_id:
@@ -237,7 +237,7 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
                 sim_data = (NonAdvData<TV, T> *)da[i];
                 break;
             default:
-                std::cout << "Error : unknown data!!\n";
+                printf("Error : unknown data!!\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -250,7 +250,7 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
-    std::cout << "Barrier "<<x<<"\n";
+    printf("Barrier %i\n", x);
 
 };
 
@@ -259,13 +259,13 @@ Advect::Advect(Application *app) {
 };
 
 Job* Advect::Clone() {
-    std::cout << "Cloning advect job\n";
+    printf("Cloning advect job\n");
     return new Advect(application());
 };
 
 void Advect::Execute(std::string params, const DataArray& da)
 {
-    std::cout << "@@ Running advect\n";
+    printf("@@ Running advect\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
@@ -273,7 +273,7 @@ void Advect::Execute(std::string params, const DataArray& da)
 
     for (int i = 0; i < 4; i++)
     {
-        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
         {
             case driver_id:
@@ -288,7 +288,7 @@ void Advect::Execute(std::string params, const DataArray& da)
                 sim_data = (NonAdvData<TV, T> *)da[i];
                 break;
             default:
-                std::cout << "Error : unknown data!!\n";
+                printf("Error : unknown data!!\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -301,7 +301,7 @@ void Advect::Execute(std::string params, const DataArray& da)
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
-    std::cout << "Barrier "<<x<<"\n";
+    printf("Barrier %i\n", x);
 };
 
 AfterAdvect::AfterAdvect(Application *app) {
@@ -309,13 +309,13 @@ AfterAdvect::AfterAdvect(Application *app) {
 };
 
 Job* AfterAdvect::Clone() {
-    std::cout << "Cloning after advect job\n";
+    printf("Cloning after advect job\n");
     return new AfterAdvect(application());
 };
 
 void AfterAdvect::Execute(std::string params, const DataArray& da)
 {
-    std::cout << "@@ Running after advect\n";
+    printf("@@ Running after advect\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
@@ -323,7 +323,7 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
 
     for (int i = 0; i < 4; i++)
     {
-        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
         {
             case driver_id:
@@ -338,7 +338,7 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
                 sim_data = (NonAdvData<TV, T> *)da[i];
                 break;
             default:
-                std::cout << "Error : unknown data!!\n";
+                printf("Error : unknown data!!\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -351,7 +351,7 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
-    std::cout << "Barrier "<<x<<"\n";
+    printf("Barrier %i\n", x);
 };
 
 Loop::Loop(Application *app) {
@@ -359,13 +359,13 @@ Loop::Loop(Application *app) {
 };
 
 Job* Loop::Clone() {
-    std::cout << "Cloning loop job\n";
+    printf("Cloning loop job\n");
     return new Loop(application());
 };
 
 void Loop::Execute(std::string params, const DataArray& da)
 {
-    std::cout << "Executing forloop job\n";
+    printf("Executing forloop job\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
@@ -373,7 +373,7 @@ void Loop::Execute(std::string params, const DataArray& da)
 
     for (int i = 0; i < 4; i++)
     {
-        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
         {
             case driver_id:
@@ -388,7 +388,7 @@ void Loop::Execute(std::string params, const DataArray& da)
                 sim_data = (NonAdvData<TV, T> *)da[i];
                 break;
             default:
-                std::cout << "Error : unknown data!!\n";
+                printf("Error : unknown data!!\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -399,17 +399,17 @@ void Loop::Execute(std::string params, const DataArray& da)
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
-    std::cout << "Barrier "<<x<<"\n";
+    printf("Barrier %i\n", x);
 
     driver->IncreaseTime();
 
     if (!driver->CheckProceed())
     {
-        std::cout << "... Simulation completed ...\n";
+        printf("... Simulation completed ...\n");
     }
     else
     {
-        std::cout << "Spawning new simulation jobs ...\n";
+        printf("Spawning new simulation jobs ...\n");
 
         std::vector<data_id_t> d;
         d.push_back(16777217);
@@ -431,9 +431,8 @@ void Loop::Execute(std::string params, const DataArray& da)
         read.insert(d[2]); read.insert(d[3]);
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
-        std::cout << "Spawning upto advect\n";
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
-        std::cout << "Spawned upto advect\n";
+        printf("Spawned upto advect\n");
 
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -443,9 +442,8 @@ void Loop::Execute(std::string params, const DataArray& da)
         read.insert(d[2]); read.insert(d[3]);
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
-        std::cout << "Spawning advect\n";
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
-        std::cout << "Spawned advect\n";
+        printf("Spawned advect\n");
 
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -455,9 +453,8 @@ void Loop::Execute(std::string params, const DataArray& da)
         read.insert(d[2]); read.insert(d[3]);
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
-        std::cout << "Spawning afteradvect\n";
         SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
-        std::cout << "Spawned afteradvect\n";
+        printf("Spawned afteradvect\n");
 
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -467,9 +464,8 @@ void Loop::Execute(std::string params, const DataArray& da)
         read.insert(d[2]); read.insert(d[3]);
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
-        std::cout << "Spawning writeframe\n";
         SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
-        std::cout << "Spawned afteradvect\n";
+        printf("Spawned afteradvect\n");
 
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -478,9 +474,8 @@ void Loop::Execute(std::string params, const DataArray& da)
         read.insert(d[2]); read.insert(d[3]);
         write.insert(d[0]); write.insert(d[1]);
         write.insert(d[2]); write.insert(d[3]);
-        std::cout << "Spawning loop\n";
         SpawnComputeJob("loop", j[4], read, write, before, after, par);
-        std::cout << "Spawned loop\n";
+        printf("Spawned loop\n");
     }
 };
 
@@ -489,13 +484,13 @@ WriteFrame::WriteFrame(Application *app) {
 };
 
 Job* WriteFrame::Clone() {
-    std::cout << "Cloning write frame job\n";
+    printf("Cloning write frame job\n");
     return new WriteFrame(application());
 };
 
 void WriteFrame::Execute(std::string params, const DataArray& da)
 {
-    std::cout << "@@ Executing write frame job\n";
+    printf( "@@ Executing write frame job\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
@@ -503,7 +498,7 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
 
     for (int i = 0; i < 4; i++)
     {
-        std::cout<<"* Data with debug id "<<da[i]->get_debug_info()<<"\n";
+        printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
         {
             case driver_id:
@@ -518,7 +513,7 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
                 sim_data = (NonAdvData<TV, T> *)da[i];
                 break;
             default:
-                std::cout << "Error : unknown data!!\n";
+                printf("Error : unknown data!!\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -528,11 +523,10 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
     assert(sim_data);
 
     if (driver->IsFrameDone()) {
-        std::cout << "#### Should write now\n";
         driver->Write_Output_Files(driver->current_frame);
     }
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
-    std::cout << "Barrier "<<x<<"\n";
+    printf("Barrier %i\n", x);
 }

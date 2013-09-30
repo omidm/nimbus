@@ -50,6 +50,10 @@ using nimbus::Application;
  * simulation data and build the data map should also be called here.
  */
 class WaterApp : public Application {
+
+    private:
+        ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
+
     public:
         WaterApp();
         virtual void Load();
