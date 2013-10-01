@@ -52,8 +52,6 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
-// TODO(chinmayee): alternative to assert?? pointer arithmetic error.
-
 WaterApp::WaterApp() {
 };
 
@@ -303,6 +301,12 @@ void Advect::Execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
+    WaterApp *water_app = (WaterApp *)application();
+    sim_data->incompressible->
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+
     Advection(face_velocities, sim_data);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
@@ -352,6 +356,12 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
     assert(driver);
     assert(face_velocities);
     assert(sim_data);
+
+    WaterApp *water_app = (WaterApp *)application();
+    sim_data->incompressible->
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*(water_app->advection_scalar()));
 
     sim_data->AfterAdvection(driver, face_velocities);
 

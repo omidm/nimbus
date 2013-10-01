@@ -103,7 +103,6 @@ NonAdvData(int size)
 
     grid = NULL;
 
-    boundary_scalar = NULL;
     boundary = NULL;
     phi_boundary = NULL;
     phi_boundary_water = NULL;
@@ -129,7 +128,7 @@ Create()
             RANGE<TV>::Unit_Box(), true);
     assert(grid);
 
-    boundary_scalar = new BOUNDARY_UNIFORM<GRID<TV>, T>();
+    boundary = new BOUNDARY_UNIFORM<GRID<TV>, T>();
     phi_boundary_water = new
         typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
         BOUNDARY_PHI_WATER();
@@ -193,7 +192,6 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     phi_boundary = phi_boundary_water;
     phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-    boundary = boundary_scalar;
     boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
     std::cout << "Moving to incompressible ...\n";
