@@ -36,8 +36,6 @@
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PHYSBAM_INCLUDE_H_
 
 // main.cpp
-#include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
-#include <PhysBAM_Tools/Parallel_Computation/MPI_WORLD.h>
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
 #include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
 #include <PhysBAM_Geometry/Basic_Geometry/CYLINDER.h>
@@ -76,7 +74,6 @@
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
-#include <PhysBAM_Tools/Parallel_Computation/BOUNDARY_MPI.h>
 #include <PhysBAM_Tools/Parallel_Computation/DOMAIN_ITERATOR_THREADED.h>
 #include <PhysBAM_Tools/Parallel_Computation/PCG_SPARSE_THREADED.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_UTILITIES.h>

@@ -135,9 +135,7 @@ class NonAdvData : public Data {
         GRID<TV> *grid;
 
         // boundary information
-        BOUNDARY_UNIFORM<GRID<TV>, T>
-            *boundary,
-            *phi_boundary;
+        BOUNDARY_UNIFORM<GRID<TV>, T> *phi_boundary;
         typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
             BOUNDARY_PHI_WATER *phi_boundary_water;
         VECTOR<VECTOR<bool, 2>, TV::dimension> *domain_boundary;
