@@ -190,14 +190,9 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     phi_boundary = phi_boundary_water;
     phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-    //TOFO: FIX THIS
-    //boundary->Set_Constant_Extrapolation(domain_open_boundaries);
-
     std::cout << "Moving to incompressible ...\n";
 
     incompressible->Initialize_Grids(*grid);
-    //TODO: FIX THIS
-    //incompressible->Set_Custom_Boundary(*boundary);
     incompressible->projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     incompressible->projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
     incompressible->projection.elliptic_solver->pcg.evolution_solver_type =
