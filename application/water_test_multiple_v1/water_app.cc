@@ -47,7 +47,6 @@
 #include "water_data_driver.h"
 #include "water_driver.h"
 
-using namespace PhysBAM;
 using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
@@ -80,7 +79,21 @@ void WaterApp::Load() {
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
 
-    set_advection_scalar(new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>());
+    /* Application data initialization. */
+
+    set_advection_scalar(new PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::GRID<TV>,T>());
+
+    set_boundary(new PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T>());
+    PhysBAM::VECTOR<PhysBAM::VECTOR<bool, 2>, TV::dimension> domain_boundary;
+    for(int i=1;i<=TV::dimension;i++)
+    {
+        domain_boundary(i)(1)=true;
+        domain_boundary(i)(2)=true;
+    }
+    domain_boundary(2)(2)=false;
+    PhysBAM::VECTOR<PhysBAM::VECTOR<bool,2>,TV::dimension> domain_open_boundaries = 
+        PhysBAM::VECTOR_UTILITIES::Complement(domain_boundary);
+    boundary()->Set_Constant_Extrapolation(domain_open_boundaries);
 }
 
 Main::Main(Application *app) {
@@ -195,6 +208,9 @@ void Init::Execute(std::string params, const DataArray& da)
     driver->sim_data = sim_data;
 
     Add_Source(sim_data);
+
+    WaterApp *water_app = (WaterApp *)application();
+    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     sim_data->initialize(driver, face_velocities, frame);
 
     printf("Successfully completed init job\n");
@@ -249,6 +265,7 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
 
     sim_data->BeforeAdvection(driver, face_velocities);
 
@@ -306,6 +323,7 @@ void Advect::Execute(std::string params, const DataArray& da)
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
 
     Advection(face_velocities, sim_data);
 
@@ -362,6 +380,7 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
 
     sim_data->AfterAdvection(driver, face_velocities);
 

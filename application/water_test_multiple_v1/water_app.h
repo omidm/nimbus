@@ -73,7 +73,7 @@ class WaterApp : public Application {
             advection_scalar_ = advection_scalar;
         }
 
-        PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T> *boundary() {
+        PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T>* boundary() {
             return boundary_;
         }
 
