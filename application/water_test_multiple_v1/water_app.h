@@ -47,10 +47,6 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
-void fill_ghost_cells(::water_app_data::FaceArray<TV>* result,
-    std::vector< ::water_app_data::FaceArray<TV>* > parts,
-    int bandwidth);
-
 /* Application class launched by Nimbus. Initialization of jobs, using
  * functions in water_driver, should be done here. Methods to initialize
  * simulation data and build the data map should also be called here.

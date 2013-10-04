@@ -215,19 +215,15 @@ void Init::Execute(std::string params, const DataArray& da)
 
 
     // Test for the fill ghost cells
-//    int bandwidth = 3;
-//    ::water_app_data::FaceArray<TV>* face_velocities_ghost = new
-//      ::water_app_data::FaceArray<TV>(100);
-//    face_velocities_ghost->data->Resize(*(face_velocities->grid),
-//        bandwidth,false);
-//    std::vector< ::water_app_data::FaceArray<TV>* > parts;
-//    for (int i = 0; i < 9; i++) {
-//      parts.push_back(face_velocities);
-//    }
-//    fill_ghost_cells(face_velocities_ghost, parts,
-//        bandwidth);
-
-
+    int bandwidth = 3;
+    ::water_app_data::FaceArray<TV>* face_velocities_ghost = new ::water_app_data::FaceArray<TV>(100);
+    face_velocities_ghost->Create();
+    face_velocities_ghost->data->Resize(*(face_velocities->grid), bandwidth,false);
+    std::vector< ::water_app_data::FaceArray<TV>* > parts;
+    for (int i = 0; i < 9; i++) {
+      parts.push_back(face_velocities);
+    }
+    water_app_data::FaceArray<TV>::fill_ghost_cells(face_velocities_ghost, parts, bandwidth);
 
     printf("Successfully completed init job\n");
 };
@@ -584,90 +580,7 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
 
 
 
-void put_array(::water_app_data::FaceArray<TV>* to,
-    ::water_app_data::FaceArray<TV>* from,
-    RANGE<VECTOR<int, 2> >& box) {
-  VECTOR<int, 2> i;
-  VECTOR<int, 2> j;
-  for (int axis = 1; axis <= 2; axis++) {
-    j.x = 1;
-    for(i.x = box.min_corner.x; i.x <= box.max_corner.x; i.x++)
-    {
-      j.y = 1;
-      for(i.y = box.min_corner.y; i.y <= box.max_corner.y; i.y++) {
-        (*(to->data))(axis, i) = (*(from->data))(axis, j);
-        j.y++;
-      }
-      j.x++;
-    }
-  }
-}
 
-
-void fill_ghost_cells(::water_app_data::FaceArray<TV>* result,
-    std::vector< ::water_app_data::FaceArray<TV>* > parts,
-    int bandwidth) {
-
-  VECTOR<int, 2> min_corner, max_corner;
-  RANGE<VECTOR<int, 2> > box;
-
-  int len_x = result->grid->numbers_of_cells(1);
-  int len_y = result->grid->numbers_of_cells(2);
-
-  min_corner = VECTOR<int, 2>(1, 1);
-  max_corner = VECTOR<int, 2>(len_x, len_y);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[0], box);
-
-  min_corner = VECTOR<int, 2>(1 - bandwidth, 1 - bandwidth);
-  max_corner = VECTOR<int, 2>(0, 0);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[1], box);
-
-  min_corner = VECTOR<int, 2>(1, 1 - bandwidth);
-  max_corner = VECTOR<int, 2>(len_x, 0);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[2], box);
-
-  min_corner = VECTOR<int, 2>(len_x + 1, 1 - bandwidth);
-  max_corner = VECTOR<int, 2>(len_x + bandwidth, 0);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[3], box);
-
-  min_corner = VECTOR<int, 2>(1 - bandwidth, 1);
-  max_corner = VECTOR<int, 2>(0, len_y);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[4], box);
-
-  min_corner = VECTOR<int, 2>(len_x + 1, 1);
-  max_corner = VECTOR<int, 2>(len_x + bandwidth, len_y);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[5], box);
-
-  min_corner = VECTOR<int, 2>(1 - bandwidth, len_y + 1);
-  max_corner = VECTOR<int, 2>(0, len_y + bandwidth);
-  box = RANGE<VECTOR<int, 2> >(min_corner,max_corner);
-  put_array(result, parts[6], box);
-
-  min_corner = VECTOR<int, 2>(1, len_y + 1);
-  max_corner = VECTOR<int, 2>(len_x, len_y + bandwidth);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[7], box);
-
-  min_corner = VECTOR<int, 2>(len_x + 1, len_y + 1);
-  max_corner = VECTOR<int, 2>(len_x + bandwidth, len_y + bandwidth);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[8], box);
-
-  std::cout << std::endl << "OMID" << bandwidth << len_x << len_y << box << std::endl;
-  std::cout << std::endl << "OMID" << std::endl;
-  std::cout << std::endl << "OMID domain: " << result->grid->domain << std::endl;
-  std::cout << std::endl << "OMID numbers_of_cells: " << result->grid->numbers_of_cells << std::endl;
-  std::cout << std::endl << "OMID counts: " << result->grid->counts << std::endl;
-  std::cout << std::endl << "OMID dX: " << result->grid->dX << std::endl;
-  std::cout << std::endl << "OMID domain_indices: " << result->data->domain_indices << std::endl;
-
-}
 
 
 
