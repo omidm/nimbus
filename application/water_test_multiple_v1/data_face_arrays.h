@@ -47,6 +47,7 @@
 namespace water_app_data {
 
     typedef float TF;
+    typedef ::PhysBAM::VECTOR<int, 2> TV_INT2;
 
     /* Face array for storing quantities like face velocities.
     */
@@ -75,6 +76,8 @@ namespace water_app_data {
                 virtual bool Serialize(SerializedData *ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data **result);
 
+                static void put_face_array(FaceArray<TV>* to,
+                    FaceArray<TV>* from, ::PhysBAM::RANGE<TV_INT2>& box);
                 static void fill_ghost_cells(FaceArray<TV>* result,
                     std::vector<FaceArray<TV>* > parts, int bandwidth);
 
