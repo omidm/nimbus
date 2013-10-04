@@ -584,17 +584,24 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
 
 
 
-void put_array(::water_app_data::FaceArray<TV>* to,
+void put_face_array(::water_app_data::FaceArray<TV>* to,
     ::water_app_data::FaceArray<TV>* from,
     RANGE<VECTOR<int, 2> >& box) {
   VECTOR<int, 2> i;
   VECTOR<int, 2> j;
   for (int axis = 1; axis <= 2; axis++) {
+    int dx = 0;
+    int dy = 0;
+    if (axis == 1)
+      dx = 1;
+    else
+      dy = 1;
+
     j.x = 1;
-    for(i.x = box.min_corner.x; i.x <= box.max_corner.x; i.x++)
+    for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++)
     {
       j.y = 1;
-      for(i.y = box.min_corner.y; i.y <= box.max_corner.y; i.y++) {
+      for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
         (*(to->data))(axis, i) = (*(from->data))(axis, j);
         j.y++;
       }
@@ -614,50 +621,59 @@ void fill_ghost_cells(::water_app_data::FaceArray<TV>* result,
   int len_x = result->grid->numbers_of_cells(1);
   int len_y = result->grid->numbers_of_cells(2);
 
-  min_corner = VECTOR<int, 2>(1, 1);
-  max_corner = VECTOR<int, 2>(len_x, len_y);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[0], box);
-
+  std::cout << std::endl << "OMID 1" << std::endl;
   min_corner = VECTOR<int, 2>(1 - bandwidth, 1 - bandwidth);
   max_corner = VECTOR<int, 2>(0, 0);
   box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[1], box);
+  put_face_array(result, parts[1], box);
 
-  min_corner = VECTOR<int, 2>(1, 1 - bandwidth);
-  max_corner = VECTOR<int, 2>(len_x, 0);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[2], box);
-
+  std::cout << std::endl << "OMID 2" << std::endl;
   min_corner = VECTOR<int, 2>(len_x + 1, 1 - bandwidth);
   max_corner = VECTOR<int, 2>(len_x + bandwidth, 0);
   box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[3], box);
+  put_face_array(result, parts[3], box);
 
-  min_corner = VECTOR<int, 2>(1 - bandwidth, 1);
-  max_corner = VECTOR<int, 2>(0, len_y);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[4], box);
-
-  min_corner = VECTOR<int, 2>(len_x + 1, 1);
-  max_corner = VECTOR<int, 2>(len_x + bandwidth, len_y);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[5], box);
-
+  std::cout << std::endl << "OMID 3" << std::endl;
   min_corner = VECTOR<int, 2>(1 - bandwidth, len_y + 1);
   max_corner = VECTOR<int, 2>(0, len_y + bandwidth);
   box = RANGE<VECTOR<int, 2> >(min_corner,max_corner);
-  put_array(result, parts[6], box);
+  put_face_array(result, parts[6], box);
 
-  min_corner = VECTOR<int, 2>(1, len_y + 1);
-  max_corner = VECTOR<int, 2>(len_x, len_y + bandwidth);
-  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[7], box);
-
+  std::cout << std::endl << "OMID 4" << std::endl;
   min_corner = VECTOR<int, 2>(len_x + 1, len_y + 1);
   max_corner = VECTOR<int, 2>(len_x + bandwidth, len_y + bandwidth);
   box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
-  put_array(result, parts[8], box);
+  put_face_array(result, parts[8], box);
+
+  std::cout << std::endl << "OMID 5" << std::endl;
+  min_corner = VECTOR<int, 2>(1, 1 - bandwidth);
+  max_corner = VECTOR<int, 2>(len_x, 0);
+  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
+  put_face_array(result, parts[2], box);
+
+  std::cout << std::endl << "OMID 6" << std::endl;
+  min_corner = VECTOR<int, 2>(1 - bandwidth, 1);
+  max_corner = VECTOR<int, 2>(0, len_y);
+  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
+  put_face_array(result, parts[4], box);
+
+  std::cout << std::endl << "OMID 7" << std::endl;
+  min_corner = VECTOR<int, 2>(len_x + 1, 1);
+  max_corner = VECTOR<int, 2>(len_x + bandwidth, len_y);
+  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
+  put_face_array(result, parts[5], box);
+
+  std::cout << std::endl << "OMID 8" << std::endl;
+  min_corner = VECTOR<int, 2>(1, len_y + 1);
+  max_corner = VECTOR<int, 2>(len_x, len_y + bandwidth);
+  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
+  put_face_array(result, parts[7], box);
+
+  std::cout << std::endl << "OMID 9" << std::endl;
+  min_corner = VECTOR<int, 2>(1, 1);
+  max_corner = VECTOR<int, 2>(len_x, len_y);
+  box = RANGE<VECTOR<int, 2> >(min_corner, max_corner);
+  put_face_array(result, parts[0], box);
 
   std::cout << std::endl << "OMID" << bandwidth << len_x << len_y << box << std::endl;
   std::cout << std::endl << "OMID" << std::endl;
