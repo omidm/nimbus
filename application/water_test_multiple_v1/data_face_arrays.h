@@ -63,6 +63,8 @@ namespace water_app_data {
                 typedef typename 
                     ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
                     T_FACE_ARRAY;
+                typedef typename ::PhysBAM::BOUNDARY_UNIFORM
+                    < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
 
                 int size_;
 
@@ -79,6 +81,7 @@ namespace water_app_data {
                 void Initialize_Ghost_Regions(
                         T_FACE_ARRAY *extended_vel,
                         int bandwidth,
+                        T_BOUNDARY *boundary,
                         bool extrapolate);
 
                 static void Put_Face_Array(

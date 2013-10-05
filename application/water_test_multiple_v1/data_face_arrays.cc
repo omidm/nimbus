@@ -146,14 +146,19 @@ namespace water_app_data {
         Initialize_Ghost_Regions(
                 T_FACE_ARRAY *extended_vel,
                 int bandwidth,
+                T_BOUNDARY *boundary,
                 bool extrpolate) {
             (*extended_vel) = (*data);
-            extended_vel->Resize(*grid,  bandwidth, false);
+            extended_vel->Resize(*grid, bandwidth, false);
+            boundary->Fill_Ghost_Cells_Face(*grid, *data, *extended_vel, 0,
+                    bandwidth);
         }
 
     template <class TV> void FaceArray<TV>::
-        Put_Face_Array(FaceArray<TV>* to,
-                FaceArray<TV>* from, ::PhysBAM::RANGE<TV_INT2>& box) {
+        Put_Face_Array(
+                FaceArray<TV>* to,
+                FaceArray<TV>* from,
+                ::PhysBAM::RANGE<TV_INT2>& box) {
             TV_INT2 i, j;
             for (int axis = 1; axis <= 2; axis++) {
                 int dx = 0;
@@ -177,8 +182,10 @@ namespace water_app_data {
         }
 
     template <class TV> void FaceArray<TV>::
-        Fill_Ghost_Cells(FaceArray<TV>* result,
-                std::vector<FaceArray<TV>* > parts, int bandwidth) {
+        Fill_Ghost_Cells(
+                FaceArray<TV>* result,
+                std::vector<FaceArray<TV>* > parts,
+                int bandwidth) {
 
             TV_INT2 min_corner, max_corner;
             ::PhysBAM::RANGE<TV_INT2> box;
