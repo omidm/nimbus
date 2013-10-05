@@ -156,8 +156,8 @@ namespace water_app_data {
 
     template <class TV> void FaceArray<TV>::
         Put_Face_Array(
-                FaceArray<TV>* to,
-                FaceArray<TV>* from,
+                T_FACE_ARRAY* to,
+                T_FACE_ARRAY* from,
                 ::PhysBAM::RANGE<TV_INT2>& box) {
             TV_INT2 i, j;
             for (int axis = 1; axis <= 2; axis++) {
@@ -169,11 +169,10 @@ namespace water_app_data {
                     dy = 1;
 
                 j.x = 1;
-                for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++)
-                {
+                for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++) {
                     j.y = 1;
                     for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
-                        (*(to->data))(axis, i) = (*(from->data))(axis, j);
+                        (*(to))(axis, i) = (*(from))(axis, j);
                         j.y++;
                     }
                     j.x++;
@@ -183,15 +182,17 @@ namespace water_app_data {
 
     template <class TV> void FaceArray<TV>::
         Fill_Ghost_Cells(
-                FaceArray<TV>* result,
-                std::vector<FaceArray<TV>* > parts,
+                T_FACE_ARRAY* result,
+                std::vector<T_FACE_ARRAY * > parts,
                 int bandwidth) {
 
             TV_INT2 min_corner, max_corner;
             ::PhysBAM::RANGE<TV_INT2> box;
 
-            int len_x = result->grid->numbers_of_cells(1);
-            int len_y = result->grid->numbers_of_cells(2);
+            TV_INT2 max_d = result->domain_indices.Maximum_Corner();
+            TV_INT2 min_d = result->domain_indices.Minimum_Corner();
+            int len_x = max_d.x - min_d.x + 1;
+            int len_y = max_d.y - min_d.y + 1;
 
             min_corner = TV_INT2(1 - bandwidth, 1 - bandwidth);
             max_corner = TV_INT2(0, 0);

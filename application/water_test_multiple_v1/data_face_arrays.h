@@ -68,6 +68,11 @@ namespace water_app_data {
 
                 int size_;
 
+                static void Put_Face_Array(
+                        T_FACE_ARRAY* to,
+                        T_FACE_ARRAY* from,
+                        ::PhysBAM::RANGE<TV_INT2>& box);
+
             public:
 
                 FaceArray(int size);
@@ -84,13 +89,9 @@ namespace water_app_data {
                         T_BOUNDARY *boundary,
                         bool extrapolate);
 
-                static void Put_Face_Array(
-                        FaceArray<TV>* to,
-                        FaceArray<TV>* from,
-                        ::PhysBAM::RANGE<TV_INT2>& box);
                 static void Fill_Ghost_Cells(
-                        FaceArray<TV>* result,
-                        std::vector<FaceArray<TV>* > parts,
+                        T_FACE_ARRAY* result,
+                        std::vector<T_FACE_ARRAY* > parts,
                         int bandwidth);
 
                 // physbam structures and methods
