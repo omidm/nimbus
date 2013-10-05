@@ -76,11 +76,19 @@ namespace water_app_data {
                 virtual bool Serialize(SerializedData *ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data **result);
 
-                static void put_face_array(FaceArray<TV>* to,
-                    FaceArray<TV>* from, ::PhysBAM::RANGE<TV_INT2>& box);
-                static void fill_ghost_cells(FaceArray<TV>* result,
-                    std::vector<FaceArray<TV>* > parts, int bandwidth);
+                void Initialize_Ghost_Regions(
+                        T_FACE_ARRAY *extended_vel,
+                        int bandwidth,
+                        bool extrapolate);
 
+                static void Put_Face_Array(
+                        FaceArray<TV>* to,
+                        FaceArray<TV>* from,
+                        ::PhysBAM::RANGE<TV_INT2>& box);
+                static void Fill_Ghost_Cells(
+                        FaceArray<TV>* result,
+                        std::vector<FaceArray<TV>* > parts,
+                        int bandwidth);
 
                 // physbam structures and methods
                 T_GRID *grid;

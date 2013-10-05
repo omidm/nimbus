@@ -218,12 +218,12 @@ void Init::Execute(std::string params, const DataArray& da)
     int bandwidth = 3;
     ::water_app_data::FaceArray<TV>* face_velocities_ghost = new ::water_app_data::FaceArray<TV>(100);
     face_velocities_ghost->Create();
-    face_velocities_ghost->data->Resize(*(face_velocities->grid), bandwidth,false);
+    face_velocities_ghost->data->Resize(*(face_velocities->grid), bandwidth, false);
     std::vector< ::water_app_data::FaceArray<TV>* > parts;
     for (int i = 0; i < 9; i++) {
       parts.push_back(face_velocities);
     }
-    water_app_data::FaceArray<TV>::fill_ghost_cells(face_velocities_ghost, parts, bandwidth);
+    ::water_app_data::FaceArray<TV>::Fill_Ghost_Cells(face_velocities_ghost, parts, bandwidth);
 
     printf("Successfully completed init job\n");
 };
