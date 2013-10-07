@@ -46,8 +46,11 @@
 #include "shared/nimbus.h"
 #include "string.h"
 
-
 namespace water_app_data {
+
+    namespace {
+        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
+    } // namespace
 
     template <class TV> FaceArray<TV>::
         FaceArray(int size) : size_(size), grid(0), data(0) {
@@ -247,9 +250,6 @@ namespace water_app_data {
             Put_Face_Array(result, parts[0]->data, box);
         }
 
-    namespace {
-        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
-    } // namespace
     template class ::water_app_data::FaceArray<TVF2>;
 
 } // namespace water_app_data

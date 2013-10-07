@@ -44,12 +44,10 @@
 #include "water_driver.h"
 #include "physbam_include.h"
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef VECTOR<float, 3> TVF3;
-typedef float TF;
-#endif  // TEMPLATE_USE
+namespace {
+    typedef VECTOR<float, 2> TVF2;
+    typedef float TF;
+}  // namespace
 
 template <class TV, class T> void NonAdvData<TV, T>::
 Initialize_Phi()
@@ -253,4 +251,3 @@ Adjust_Particle_For_Domain_Boundaries(
 }
 
 template class NonAdvData<TVF2, TF>;
-//template class NonAdvData<TVF3, TF>;
