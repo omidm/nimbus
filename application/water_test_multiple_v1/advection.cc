@@ -42,38 +42,21 @@
 #include "app_config.h"
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "water_data_driver.h"
-#include "water_driver.h"
+#include "water_app.h"
 
-void Advection (
+void Advect_Velocities (
         ::water_app_data::FaceArray<TV> *face_velocities,
-        NonAdvData<TV, T> *sim_data) {
+        T_FACE_ARRAY *face_vel_extended,
+        WaterApp *water_app,
+        int dt,
+        int time) {
 
-    typedef typename ::PhysBAM::GRID<TV> T_GRID;
-    typedef typename ::PhysBAM::GRID_ARRAYS_POLICY<GRID<TV> >
-        ::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
-    typedef typename 
-        ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-        T_FACE_ARRAY;
-
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize(
-            sim_data->incompressible->grid,
-            sim_data->number_of_ghost_cells,
-            false);
-    sim_data->incompressible->boundary->Fill_Ghost_Cells_Face(
-            sim_data->incompressible->grid,
-            *face_velocities->data,
-            face_velocities_ghost,
-            sim_data->time + sim_data->dt,
-            sim_data->number_of_ghost_cells);
-
-    sim_data->incompressible->advection->Update_Advection_Equation_Face(
+    water_app->advection_scalar()->Update_Advection_Equation_Face(
             *face_velocities->grid,
             *face_velocities->data,
-            face_velocities_ghost,
-            face_velocities_ghost,
-            *sim_data->incompressible->boundary,
-            sim_data->dt,
-            sim_data->time);
+            *face_vel_extended,
+            *face_vel_extended,
+            *water_app->boundary(),
+            dt,
+            time);
 }

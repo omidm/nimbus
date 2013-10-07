@@ -53,6 +53,11 @@ typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
 
 const int kAppLastFrame = 10;
 const int kMainSize = 100;
-const int kGhostSize = 0;
+const int kGhostSize = 3;
+
+// useful typedefs
+typedef typename 
+    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+    T_FACE_ARRAY;
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_

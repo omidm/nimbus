@@ -219,21 +219,6 @@ void Init::Execute(std::string params, const DataArray& da)
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     sim_data->initialize(driver, face_velocities, frame);
 
-
-    // Test for the fill ghost cells
-//    int bandwidth = 3;
-//    ::water_app_data::FaceArray<TV>* face_velocities_ghost = new 
-//        ::water_app_data::FaceArray<TV>(100);
-//    face_velocities_ghost->Create();
-//    face_velocities_ghost->data->Resize(*(face_velocities->grid), bandwidth,
-//            false);
-//    std::vector< ::water_app_data::FaceArray<TV>* > parts;
-//    for (int i = 0; i < 9; i++) {
-//      parts.push_back(face_velocities);
-//    }
-//    ::water_app_data::FaceArray<TV>::Fill_Ghost_Cells(face_velocities_ghost,
-//            parts, bandwidth);
-//
     printf("Successfully completed init job\n");
 };
 
@@ -346,7 +331,13 @@ void Advect::Execute(std::string params, const DataArray& da)
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
 
-    Advection(face_velocities, sim_data);
+    T_FACE_ARRAY *face_vel_extended = 
+        new T_FACE_ARRAY(*(face_velocities->grid), kGhostSize);
+    face_velocities->Initialize_Ghost_Regions(face_vel_extended,
+            kGhostSize, water_app->boundary(), true);
+
+    Advect_Velocities(face_velocities, face_vel_extended,
+            water_app, 0, 0);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();

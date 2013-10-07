@@ -44,9 +44,13 @@
 #include "app_config.h"
 #include "data_fwd_decl.h"
 #include "physbam_include.h"
+#include "water_app.h"
 
-void Advection (
+void Advect_Velocities (
         ::water_app_data::FaceArray<TV> *face_velocities,
-        NonAdvData<TV, T> *sim_data);
+        T_FACE_ARRAY *face_vel_extended,
+        WaterApp *water_app,
+        int dt,
+        int time);
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_

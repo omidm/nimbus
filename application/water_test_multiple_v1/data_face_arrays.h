@@ -65,13 +65,14 @@ namespace water_app_data {
                     T_FACE_ARRAY;
                 typedef typename ::PhysBAM::BOUNDARY_UNIFORM
                     < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
+                typedef typename ::PhysBAM::RANGE<TV_INT2> T_BOX;
 
                 int size_;
 
                 static void Put_Face_Array(
-                        T_FACE_ARRAY* to,
-                        T_FACE_ARRAY* from,
-                        ::PhysBAM::RANGE<TV_INT2>& box);
+                        T_FACE_ARRAY *to,
+                        T_FACE_ARRAY *from,
+                        ::PhysBAM::RANGE<TV_INT2> &box);
 
             public:
 
@@ -91,7 +92,7 @@ namespace water_app_data {
 
                 static void Fill_Ghost_Cells(
                         T_FACE_ARRAY* result,
-                        std::vector<T_FACE_ARRAY* > parts,
+                        std::vector<FaceArray* > parts,
                         int bandwidth);
 
                 // physbam structures and methods
