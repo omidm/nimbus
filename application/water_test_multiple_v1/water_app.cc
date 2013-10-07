@@ -40,6 +40,7 @@
 #include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
+#include "proto_files/adv_vel_par.pb.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -471,6 +472,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         std::vector<job_id_t> j;
         GetNewJobID(&j, 5);
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         after.insert(j[1]);
@@ -481,6 +483,10 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
 
+        ::parameters::AdvVelPar adv_vel_par_pb;
+        adv_vel_par_pb.set_dt(driver->dt);
+        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb.SerializeToString(&par);
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
@@ -492,6 +498,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
         printf("Spawned advect\n");
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[1]);
@@ -503,6 +510,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
         printf("Spawned afteradvect\n");
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[2]);
@@ -514,6 +522,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
         printf("Spawned afteradvect\n");
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[3]);
