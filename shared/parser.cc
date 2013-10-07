@@ -41,6 +41,9 @@
 #include "shared/parser.h"
 
 namespace nimbus {
+
+// TODO(omidm): remove these obsolete parse functions.
+
 void parseCommand(const std::string& str, const CmSet& cms,
                   std::string& cm, std::vector<int>& args) {
   cm.clear();
@@ -248,7 +251,7 @@ bool ParseJobDoneCommand(const std::string& input,
     std::string& params) {
   int num = 3;
   job_id_t job_id_elem;
-  std::set<job_id_t> job_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -298,8 +301,8 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
     JobType& job_type, std::string& params) {
   int num = 8;
-  std::set<job_id_t> job_id_set;
-  std::set<data_id_t> data_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
+  IDSet<data_id_t>::IDSetContainer data_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -390,8 +393,8 @@ bool ParseSpawnComputeJobCommand(const std::string& input,
     std::string& params) {
   int num = 7;
   job_id_t job_id_elem;
-  std::set<job_id_t> job_id_set;
-  std::set<data_id_t> data_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
+  IDSet<data_id_t>::IDSetContainer data_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -472,7 +475,7 @@ bool ParseSpawnCopyJobCommand(const std::string& input,
   int num = 6;
   job_id_t job_id_elem;
   data_id_t data_id_elem;
-  std::set<job_id_t> job_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -550,8 +553,8 @@ bool ParseComputeJobCommand(const std::string& input,
     std::string& params) {
   int num = 7;
   job_id_t job_id_elem;
-  std::set<job_id_t> job_id_set;
-  std::set<data_id_t> data_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
+  IDSet<data_id_t>::IDSetContainer data_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -632,7 +635,7 @@ bool ParseCreateDataCommand(const std::string& input,
   int num = 5;
   job_id_t job_id_elem;
   data_id_t data_id_elem;
-  std::set<job_id_t> job_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -707,7 +710,7 @@ bool ParseRemoteCopySendCommand(const std::string& input,
   data_id_t data_id_elem;
   worker_id_t worker_id_elem;
   port_t port_elem;
-  std::set<job_id_t> job_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -802,7 +805,7 @@ bool ParseRemoteCopyReceiveCommand(const std::string& input,
   int num = 4;
   job_id_t job_id_elem;
   data_id_t data_id_elem;
-  std::set<job_id_t> job_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -873,7 +876,7 @@ bool ParseLocalCopyCommand(const std::string& input,
   int num = 5;
   job_id_t job_id_elem;
   data_id_t data_id_elem;
-  std::set<job_id_t> job_id_set;
+  IDSet<job_id_t>::IDSetContainer job_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -956,7 +959,7 @@ bool ParseDefineDataCommand(const std::string& input,
   int num = 5;
   data_id_t data_id_elem;
   partition_t partition_id_elem;
-  std::set<partition_t> partition_id_set;
+  IDSet<partition_t>::IDSetContainer partition_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -1011,9 +1014,9 @@ bool ParseDefineDataCommand(const std::string& input,
   return true;
 }
 
-bool ParseIDSet(const std::string& input, std::set<uint64_t>& set) {
+bool ParseIDSet(const std::string& input, IDSet<uint64_t>::IDSetContainer& list) {
   uint64_t num;
-  set.clear();
+  list.clear();
   if (input[0] != '{' || input[input.length() - 1] != '}') {
     std::cout << "ERROR: wrong format for IDSet." << std::endl;
     return false;
@@ -1029,14 +1032,14 @@ bool ParseIDSet(const std::string& input, std::set<uint64_t>& set) {
       std::cout << "ERROR: wrong element in IDSet." << std::endl;
       return false;
     }
-    set.insert(num);
+    list.push_back(num);
   }
   return true;
 }
 
-bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
+bool ParseIDSet(const std::string& input, IDSet<uint32_t>::IDSetContainer& list) {
   uint32_t num;
-  set.clear();
+  list.clear();
   if (input[0] != '{' || input[input.length() - 1] != '}') {
     std::cout << "ERROR: wrong format for IDSet." << std::endl;
     return false;
@@ -1052,7 +1055,7 @@ bool ParseIDSet(const std::string& input, std::set<uint32_t>& set) {
       std::cout << "ERROR: wrong element in IDSet." << std::endl;
       return false;
     }
-    set.insert(num);
+    list.push_back(num);
   }
   return true;
 }

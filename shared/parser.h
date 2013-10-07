@@ -57,9 +57,11 @@
 
 namespace nimbus {
 
-typedef std::set<std::string> CmSet;
 typedef std::set<std::pair<std::string, SchedulerCommandType> > CommandSet;
 
+// TODO(omidm): remove obsolete functions, defs.
+
+typedef std::set<std::string> CmSet;
 void parseCommand(const std::string& string,
                   const CmSet& commandSet,
                   std::string& command,
@@ -161,9 +163,9 @@ bool ParseJobDoneCommand(const std::string& input,
     IDSet<job_id_t>& after_set,
     std::string& params);
 
-bool ParseIDSet(const std::string& input, std::set<uint64_t>& set);
+bool ParseIDSet(const std::string& input, IDSet<uint64_t>::IDSetContainer& set);
 
-bool ParseIDSet(const std::string& input, std::set<uint32_t>& set);
+bool ParseIDSet(const std::string& input, IDSet<uint32_t>::IDSetContainer& set);
 
 bool ParseID(const std::string& input, uint64_t& elem);
 
