@@ -47,7 +47,6 @@
 namespace water_app_data {
 
     typedef float TF;
-    typedef ::PhysBAM::VECTOR<int, 2> TV_INT2;
 
     /* Face array for storing quantities like face velocities.
     */
@@ -63,8 +62,16 @@ namespace water_app_data {
                 typedef typename 
                     ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
                     T_FACE_ARRAY;
+                typedef typename ::PhysBAM::BOUNDARY_UNIFORM
+                    < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
+                typedef typename ::PhysBAM::RANGE<TV_INT> T_BOX;
 
                 int size_;
+
+                static void Put_Face_Array(
+                        T_FACE_ARRAY *to,
+                        T_FACE_ARRAY *from,
+                        T_BOX &box);
 
             public:
 
@@ -76,11 +83,16 @@ namespace water_app_data {
                 virtual bool Serialize(SerializedData *ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data **result);
 
-                static void put_face_array(FaceArray<TV>* to,
-                    FaceArray<TV>* from, ::PhysBAM::RANGE<TV_INT2>& box);
-                static void fill_ghost_cells(FaceArray<TV>* result,
-                    std::vector<FaceArray<TV>* > parts, int bandwidth);
+                void Initialize_Ghost_Regions(
+                        T_FACE_ARRAY *extended_vel,
+                        int bandwidth,
+                        T_BOUNDARY *boundary,
+                        bool extrapolate);
 
+                static void Fill_Ghost_Cells(
+                        T_FACE_ARRAY* result,
+                        std::vector<FaceArray* > parts,
+                        int bandwidth);
 
                 // physbam structures and methods
                 T_GRID *grid;

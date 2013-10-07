@@ -44,12 +44,10 @@
 
 using namespace PhysBAM;
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef VECTOR<float, 3> TVF3;
-typedef float TF;
-#endif  // TEMPLATE_USE
+namespace {
+    typedef VECTOR<float, 2> TVF2;
+    typedef float TF;
+}  // namespace
 
 template <class TV> WaterDriver<TV> ::
 WaterDriver(const STREAM_TYPE stream_type_input):
@@ -239,4 +237,3 @@ IsFrameDone()
 }
 
 template class WaterDriver<TVF2>;
-//template class WaterDriver<TVF3>;

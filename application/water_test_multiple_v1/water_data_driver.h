@@ -54,12 +54,10 @@
 using namespace PhysBAM;
 using nimbus::Data;
 
-#ifndef TEMPLATE_USE
-#define TEMPLATE_USE
-typedef VECTOR<float, 2> TVF2;
-typedef VECTOR<float, 3> TVF3;
-typedef float TF;
-#endif  // TEMPLATE_USE
+namespace {
+    typedef VECTOR<float, 2> TVF2;
+    typedef float TF;
+}  // namespace
 
 template <class TV, class T>
 class NonAdvData;

@@ -22,6 +22,7 @@ SET(PROTO_FILES_h
         ${PROTO_DIR}/physbam_grid_2d.pb.h
         ${PROTO_DIR}/physbam_face_array_2d.pb.h
         ${PROTO_DIR}/app_face_array_2d.pb.h
+        ${PROTO_DIR}/adv_vel_par.pb.h
     )
 
 SET(PROTO_FILES_cc
@@ -30,6 +31,7 @@ SET(PROTO_FILES_cc
         ${PROTO_DIR}/physbam_grid_2d.pb.cc
         ${PROTO_DIR}/physbam_face_array_2d.pb.cc
         ${PROTO_DIR}/app_face_array_2d.pb.cc
+        ${PROTO_DIR}/adv_vel_par.pb.cc
     )
 
 SET(PROTO_HELPER_h

@@ -1,0 +1,6 @@
+package parameters;
+
+message AdvVelPar {
+    required int32 dt = 1;
+    optional int32 time = 2;
+}

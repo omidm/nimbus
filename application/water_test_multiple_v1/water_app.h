@@ -54,31 +54,31 @@ using nimbus::Application;
 class WaterApp : public Application {
 
     private:
-        PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::GRID<TV>, T>
+        ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM< ::PhysBAM::GRID<TV>, T>
             *advection_scalar_;
-        PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T> *boundary_;
+        ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary_;
 
     public:
         WaterApp();
         virtual void Load();
 
-        PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::GRID<TV>, T>*
+        ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM< ::PhysBAM::GRID<TV>, T>*
             advection_scalar() {
                 return advection_scalar_;
             }
 
         void set_advection_scalar(
-                PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::
+                ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM< ::PhysBAM::
                 GRID<TV>, T> *advection_scalar) {
             advection_scalar_ = advection_scalar;
         }
 
-        PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T>* boundary() {
+        ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T>* boundary() {
             return boundary_;
         }
 
         void set_boundary(
-                PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T> *boundary) {
+                ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary) {
             boundary_ = boundary;
         }
 };

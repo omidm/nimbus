@@ -46,8 +46,11 @@
 #include "shared/nimbus.h"
 #include "string.h"
 
-
 namespace water_app_data {
+
+    namespace {
+        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
+    } // namespace
 
     template <class TV> FaceArray<TV>::
         FaceArray(int size) : size_(size), grid(0), data(0) {
@@ -142,93 +145,111 @@ namespace water_app_data {
             return true;
         }
 
-
-    
     template <class TV> void FaceArray<TV>::
-    put_face_array(FaceArray<TV>* to,
-        FaceArray<TV>* from, ::PhysBAM::RANGE<TV_INT2>& box) {
-      TV_INT2 i, j;
-      for (int axis = 1; axis <= 2; axis++) {
-        int dx = 0;
-        int dy = 0;
-        if (axis == 1)
-          dx = 1;
-        else
-          dy = 1;
-
-        j.x = 1;
-        for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++)
-        {
-          j.y = 1;
-          for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
-            (*(to->data))(axis, i) = (*(from->data))(axis, j);
-            j.y++;
-          }
-          j.x++;
+        Initialize_Ghost_Regions(
+                T_FACE_ARRAY *extended_vel,
+                int bandwidth,
+                T_BOUNDARY *boundary,
+                bool extrapolate) {
+            extended_vel->Resize(*grid, bandwidth, false);
+            if (extrapolate)
+                boundary->Fill_Ghost_Cells_Face(
+                        *grid,
+                        *data,
+                        *extended_vel,
+                        0,
+                        bandwidth); // this also copies the center values
+            else
+                T_FACE_ARRAY::Put(*data, *extended_vel);
         }
-      }
-    }
-
 
     template <class TV> void FaceArray<TV>::
-    fill_ghost_cells(FaceArray<TV>* result,
-        std::vector<FaceArray<TV>* > parts, int bandwidth) {
+        Put_Face_Array(
+                T_FACE_ARRAY* to,
+                T_FACE_ARRAY* from,
+                T_BOX& box) {
+            TV_INT i, j;
+            for (int axis = 1; axis <= 2; axis++) {
+                int dx = 0;
+                int dy = 0;
+                if (axis == 1)
+                    dx = 1;
+                else
+                    dy = 1;
 
-      TV_INT2 min_corner, max_corner;
-      ::PhysBAM::RANGE<TV_INT2> box;
+                j.x = 1;
+                for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++) {
+                    j.y = 1;
+                    for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
+                        (*(to))(axis, i) = (*(from))(axis, j);
+                        j.y++;
+                    }
+                    j.x++;
+                }
+            }
+        }
 
-      int len_x = result->grid->numbers_of_cells(1);
-      int len_y = result->grid->numbers_of_cells(2);
+    template <class TV> void FaceArray<TV>::
+        Fill_Ghost_Cells(
+                T_FACE_ARRAY* result,
+                std::vector<FaceArray * > parts,
+                int bandwidth) {
 
-      min_corner = TV_INT2(1 - bandwidth, 1 - bandwidth);
-      max_corner = TV_INT2(0, 0);
-      box = ::PhysBAM::RANGE<TV_INT2>(min_corner, max_corner);
-      put_face_array(result, parts[1], box);
+            TV_INT min_corner, max_corner;
+            ::PhysBAM::RANGE<TV_INT> box;
 
-      min_corner = TV_INT2(len_x + 1, 1 - bandwidth);
-      max_corner = TV_INT2(len_x + bandwidth, 0);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[3], box);
+            TV_INT max_d = result->domain_indices.Maximum_Corner();
+            TV_INT min_d = result->domain_indices.Minimum_Corner();
+            int len_x = max_d.x - min_d.x + 1;
+            int len_y = max_d.y - min_d.y + 1;
 
-      min_corner = TV_INT2(1 - bandwidth, len_y + 1);
-      max_corner = TV_INT2(0, len_y + bandwidth);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner,max_corner);
-      put_face_array(result, parts[6], box);
+            if (parts[1]) {
+                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
+                Put_Face_Array(result, parts[1]->data, box);
+            }
 
-      min_corner = TV_INT2(len_x + 1, len_y + 1);
-      max_corner = TV_INT2(len_x + bandwidth, len_y + bandwidth);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[8], box);
+            if (parts[3]) {
+                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                Put_Face_Array(result, parts[3]->data, box);
+            }
 
-      min_corner = TV_INT2(1, 1 - bandwidth);
-      max_corner = TV_INT2(len_x, 0);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[2], box);
+            if (parts[6]) {
+                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                Put_Face_Array(result, parts[6]->data, box);
+            }
 
-      min_corner = TV_INT2(1 - bandwidth, 1);
-      max_corner = TV_INT2(0, len_y);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[4], box);
+            if (parts[8]) {
+                box = T_BOX
+                    (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
+                Put_Face_Array(result, parts[8]->data, box);
+            }
 
-      min_corner = TV_INT2(len_x + 1, 1);
-      max_corner = TV_INT2(len_x + bandwidth, len_y);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[5], box);
+            if (parts[2]) {
+                box = T_BOX(1, len_x, 1-bandwidth, 0);
+                Put_Face_Array(result, parts[2]->data, box);
+            }
 
-      min_corner = TV_INT2(1, len_y + 1);
-      max_corner = TV_INT2(len_x, len_y + bandwidth);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[7], box);
+            if (parts[4]) {
+                box = T_BOX(1-bandwidth, 0, 1, len_y);
+                Put_Face_Array(result, parts[4]->data, box);
+            }
 
-      min_corner = TV_INT2(1, 1);
-      max_corner = TV_INT2(len_x, len_y);
-      box = ::PhysBAM::RANGE<TV_INT2 >(min_corner, max_corner);
-      put_face_array(result, parts[0], box);
-    }
+            if (parts[5]) {
+                box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
+                Put_Face_Array(result, parts[5]->data, box);
+            }
 
-    namespace {
-        typedef ::PhysBAM::VECTOR<float, 2> TVF2;
-    } // namespace
+            if (parts[7]) {
+                box = T_BOX
+                    (1, len_x, len_y+1, len_y+bandwidth);
+                Put_Face_Array(result, parts[7]->data, box);
+            }
+
+            assert(parts[0]);
+            box = T_BOX(1, len_x, 1, len_y);
+            Put_Face_Array(result, parts[0]->data, box);
+        }
+
     template class ::water_app_data::FaceArray<TVF2>;
 
 } // namespace water_app_data

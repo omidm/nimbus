@@ -40,6 +40,7 @@
 #include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
+#include "proto_files/adv_vel_par.pb.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "stdlib.h"
@@ -72,8 +73,10 @@ void WaterApp::Load() {
     RegisterJob("writeframe", new WriteFrame(this));
 
     RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    RegisterData("face_velocities_1", new ::water_app_data::FaceArray<TV>(kMainSize));
-    RegisterData("face_velocities_ghost_1", new FaceArrayGhost<TV>(kGhostSize));
+    RegisterData("face_velocities_1", new ::water_app_data
+            ::FaceArray<TV>(kMainSize));
+    RegisterData("face_velocities_ghost_1", new
+            FaceArrayGhost<TV>(kGhostSize));
     RegisterData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
 
     printf("Finished creating job and data definitions\n");
@@ -81,18 +84,21 @@ void WaterApp::Load() {
 
     /* Application data initialization. */
 
-    set_advection_scalar(new PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM<PhysBAM::GRID<TV>,T>());
+    set_advection_scalar(new ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM
+            < ::PhysBAM::GRID<TV>,T>());
 
-    set_boundary(new PhysBAM::BOUNDARY_UNIFORM<PhysBAM::GRID<TV>, T>());
-    PhysBAM::VECTOR<PhysBAM::VECTOR<bool, 2>, TV::dimension> domain_boundary;
+    set_boundary(new ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T>());
+    ::PhysBAM::VECTOR< ::PhysBAM::VECTOR<bool, 2>, TV::dimension>
+        domain_boundary;
     for(int i=1;i<=TV::dimension;i++)
     {
         domain_boundary(i)(1)=true;
         domain_boundary(i)(2)=true;
     }
     domain_boundary(2)(2)=false;
-    PhysBAM::VECTOR<PhysBAM::VECTOR<bool,2>,TV::dimension> domain_open_boundaries = 
-        PhysBAM::VECTOR_UTILITIES::Complement(domain_boundary);
+    ::PhysBAM::VECTOR< ::PhysBAM::VECTOR<bool,2>,TV::dimension>
+        domain_open_boundaries = ::PhysBAM::VECTOR_UTILITIES
+        ::Complement(domain_boundary);
     boundary()->Set_Constant_Extrapolation(domain_open_boundaries);
 }
 
@@ -121,7 +127,8 @@ void Main::Execute(std::string params, const DataArray& da)
 
     DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
     DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
-    DefineData("face_velocities_ghost_1", d[2], partition_id, neighbor_partitions, par);
+    DefineData("face_velocities_ghost_1", d[2], partition_id,
+            neighbor_partitions, par);
     DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
 
     printf("Defined data\n");
@@ -212,18 +219,6 @@ void Init::Execute(std::string params, const DataArray& da)
     WaterApp *water_app = (WaterApp *)application();
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     sim_data->initialize(driver, face_velocities, frame);
-
-
-    // Test for the fill ghost cells
-    int bandwidth = 3;
-    ::water_app_data::FaceArray<TV>* face_velocities_ghost = new ::water_app_data::FaceArray<TV>(100);
-    face_velocities_ghost->Create();
-    face_velocities_ghost->data->Resize(*(face_velocities->grid), bandwidth,false);
-    std::vector< ::water_app_data::FaceArray<TV>* > parts;
-    for (int i = 0; i < 9; i++) {
-      parts.push_back(face_velocities);
-    }
-    water_app_data::FaceArray<TV>::fill_ghost_cells(face_velocities_ghost, parts, bandwidth);
 
     printf("Successfully completed init job\n");
 };
@@ -337,7 +332,13 @@ void Advect::Execute(std::string params, const DataArray& da)
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
 
-    Advection(face_velocities, sim_data);
+    T_FACE_ARRAY *face_vel_extended = 
+        new T_FACE_ARRAY(*(face_velocities->grid), kGhostSize);
+    face_velocities->Initialize_Ghost_Regions(face_vel_extended,
+            kGhostSize, water_app->boundary(), true);
+
+    Advect_Velocities(face_velocities, face_vel_extended,
+            water_app, 0, 0);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
@@ -471,6 +472,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         std::vector<job_id_t> j;
         GetNewJobID(&j, 5);
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         after.insert(j[1]);
@@ -481,6 +483,10 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
 
+        ::parameters::AdvVelPar adv_vel_par_pb;
+        adv_vel_par_pb.set_dt(driver->dt);
+        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb.SerializeToString(&par);
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
@@ -492,6 +498,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
         printf("Spawned advect\n");
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[1]);
@@ -503,6 +510,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
         printf("Spawned afteradvect\n");
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[2]);
@@ -514,6 +522,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
         printf("Spawned afteradvect\n");
 
+        par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[3]);
@@ -577,14 +586,3 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
         sim_data->get_debug_info();
     printf("Barrier %i\n", x);
 }
-
-
-
-
-
-
-
-
-
-
-
