@@ -325,6 +325,9 @@ void Advect::Execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
+    ::parameters::AdvVelPar adv_vel_par_pb;
+    adv_vel_par_pb.ParseFromString(params);
+
     WaterApp *water_app = (WaterApp *)application();
     sim_data->incompressible->
         Set_Custom_Advection(*(water_app->advection_scalar()));
@@ -337,8 +340,10 @@ void Advect::Execute(std::string params, const DataArray& da)
     face_velocities->Initialize_Ghost_Regions(face_vel_extended,
             kGhostSize, water_app->boundary(), true);
 
-    Advect_Velocities(face_velocities, face_vel_extended,
-            water_app, 0, 0);
+    Advect_Velocities(face_velocities, face_vel_extended, water_app,
+            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+
+    delete(face_vel_extended);
 
     int x = driver->get_debug_info() + face_velocities->get_debug_info() +
         sim_data->get_debug_info();
