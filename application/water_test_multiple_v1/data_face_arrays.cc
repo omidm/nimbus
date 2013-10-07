@@ -164,8 +164,8 @@ namespace water_app_data {
         Put_Face_Array(
                 T_FACE_ARRAY* to,
                 T_FACE_ARRAY* from,
-                ::PhysBAM::RANGE<TV_INT2>& box) {
-            TV_INT2 i, j;
+                T_BOX& box) {
+            TV_INT i, j;
             for (int axis = 1; axis <= 2; axis++) {
                 int dx = 0;
                 int dy = 0;
@@ -192,65 +192,58 @@ namespace water_app_data {
                 std::vector<FaceArray * > parts,
                 int bandwidth) {
 
-            TV_INT2 min_corner, max_corner;
-            ::PhysBAM::RANGE<TV_INT2> box;
+            TV_INT min_corner, max_corner;
+            ::PhysBAM::RANGE<TV_INT> box;
 
-            TV_INT2 max_d = result->domain_indices.Maximum_Corner();
-            TV_INT2 min_d = result->domain_indices.Minimum_Corner();
+            TV_INT max_d = result->domain_indices.Maximum_Corner();
+            TV_INT min_d = result->domain_indices.Minimum_Corner();
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
 
             if (parts[1]) {
-                box = ::PhysBAM::RANGE<TV_INT2>
-                    (1-bandwidth, 0, 1-bandwidth, 0);
+                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                 Put_Face_Array(result, parts[1]->data, box);
             }
 
             if (parts[3]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
-                    (len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                 Put_Face_Array(result, parts[3]->data, box);
             }
 
             if (parts[6]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
-                    (1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                 Put_Face_Array(result, parts[6]->data, box);
             }
 
             if (parts[8]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
+                box = T_BOX
                     (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
                 Put_Face_Array(result, parts[8]->data, box);
             }
 
             if (parts[2]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
-                    (1, len_x, 1-bandwidth, 0);
+                box = T_BOX(1, len_x, 1-bandwidth, 0);
                 Put_Face_Array(result, parts[2]->data, box);
             }
 
             if (parts[4]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
-                    (1-bandwidth, 0, 1, len_y);
+                box = T_BOX(1-bandwidth, 0, 1, len_y);
                 Put_Face_Array(result, parts[4]->data, box);
             }
 
             if (parts[5]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
-                    (len_x+1, len_x+bandwidth, 1, len_y);
+                box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
                 Put_Face_Array(result, parts[5]->data, box);
             }
 
             if (parts[7]) {
-                box = ::PhysBAM::RANGE<TV_INT2 >
+                box = T_BOX
                     (1, len_x, len_y+1, len_y+bandwidth);
                 Put_Face_Array(result, parts[7]->data, box);
             }
 
             assert(parts[0]);
-            box = ::PhysBAM::RANGE<TV_INT2 >
-                (1, len_x, 1, len_y);
+            box = T_BOX(1, len_x, 1, len_y);
             Put_Face_Array(result, parts[0]->data, box);
         }
 

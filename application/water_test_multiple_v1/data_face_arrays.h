@@ -47,7 +47,6 @@
 namespace water_app_data {
 
     typedef float TF;
-    typedef ::PhysBAM::VECTOR<int, 2> TV_INT2;
 
     /* Face array for storing quantities like face velocities.
     */
@@ -65,14 +64,14 @@ namespace water_app_data {
                     T_FACE_ARRAY;
                 typedef typename ::PhysBAM::BOUNDARY_UNIFORM
                     < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
-                typedef typename ::PhysBAM::RANGE<TV_INT2> T_BOX;
+                typedef typename ::PhysBAM::RANGE<TV_INT> T_BOX;
 
                 int size_;
 
                 static void Put_Face_Array(
                         T_FACE_ARRAY *to,
                         T_FACE_ARRAY *from,
-                        ::PhysBAM::RANGE<TV_INT2> &box);
+                        T_BOX &box);
 
             public:
 
