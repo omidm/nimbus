@@ -325,8 +325,9 @@ void Advect::Execute(std::string params, const DataArray& da)
     assert(face_velocities);
     assert(sim_data);
 
-    ::parameters::AdvVelPar adv_vel_par_pb;
-    adv_vel_par_pb.ParseFromString(params);
+    printf("### PARAMETERS \"%s\"\n", params.c_str());
+//    ::parameters::AdvVelPar adv_vel_par_pb;
+//    adv_vel_par_pb.ParseFromString(params);
 
     WaterApp *water_app = (WaterApp *)application();
     sim_data->incompressible->
@@ -338,10 +339,13 @@ void Advect::Execute(std::string params, const DataArray& da)
     T_FACE_ARRAY *face_vel_extended = 
         new T_FACE_ARRAY(*(face_velocities->grid), kGhostSize);
     face_velocities->Initialize_Ghost_Regions(face_vel_extended,
-            kGhostSize, water_app->boundary(), true);
+            water_app->boundary(), kGhostSize,
+            driver->dt + driver->time, true);
 
+//    Advect_Velocities(face_velocities, face_vel_extended, water_app,
+//            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
     Advect_Velocities(face_velocities, face_vel_extended, water_app,
-            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+            driver->dt, driver->time, sim_data);
 
     delete(face_vel_extended);
 
@@ -492,6 +496,7 @@ void Loop::Execute(std::string params, const DataArray& da)
         adv_vel_par_pb.set_dt(driver->dt);
         adv_vel_par_pb.set_time(driver->time);
         adv_vel_par_pb.SerializeToString(&par);
+        printf("*** PARAMETERS \"%s\"\n", par.c_str());
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);

@@ -85,8 +85,9 @@ namespace water_app_data {
 
                 void Initialize_Ghost_Regions(
                         T_FACE_ARRAY *extended_vel,
-                        int bandwidth,
                         T_BOUNDARY *boundary,
+                        int bandwidth,
+                        TF time,
                         bool extrapolate);
 
                 static void Fill_Ghost_Cells(

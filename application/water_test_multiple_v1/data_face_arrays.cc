@@ -148,8 +148,9 @@ namespace water_app_data {
     template <class TV> void FaceArray<TV>::
         Initialize_Ghost_Regions(
                 T_FACE_ARRAY *extended_vel,
-                int bandwidth,
                 T_BOUNDARY *boundary,
+                int bandwidth,
+                TF time,
                 bool extrapolate) {
             extended_vel->Resize(*grid, bandwidth, false);
             if (extrapolate)
@@ -157,7 +158,7 @@ namespace water_app_data {
                         *grid,
                         *data,
                         *extended_vel,
-                        0,
+                        time,
                         bandwidth); // this also copies the center values
             else
                 T_FACE_ARRAY::Put(*data, *extended_vel);

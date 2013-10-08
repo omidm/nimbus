@@ -38,6 +38,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
 #include <iostream>
@@ -96,7 +97,7 @@ NonAdvData(int size)
 
     this->size_ = size;
 
-    number_of_ghost_cells = 3;
+    number_of_ghost_cells = kGhostSize;
     time = (T)0;
     current_frame = 0;
 
