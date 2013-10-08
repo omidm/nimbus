@@ -44,6 +44,7 @@
 #include <stdint.h>
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -174,6 +175,11 @@ bool ParseID(const std::string& input, uint32_t& elem);
 bool ParseWorkerDataHeader(const std::string& input,
     job_id_t& job_id, size_t& data_length);
 
+void EscapeString(std::string* input);
+
+void UnescapeString(std::string* input);
+
+bool IsEmptyString(std::string str);
 
 
 
