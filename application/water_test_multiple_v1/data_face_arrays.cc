@@ -53,7 +53,10 @@ namespace water_app_data {
     } // namespace
 
     template <class TV> FaceArray<TV>::
-        FaceArray(int size) : size_(size), grid(0), data(0) {
+        FaceArray(TV_INT size) :
+            size_(size),
+            grid(0),
+            data(0) {
         }
 
     template <class TV> void FaceArray<TV>::
@@ -63,19 +66,12 @@ namespace water_app_data {
                 delete grid;
             if (!data)
                 delete data;
-            if (size_ == 0) {
-                grid = new T_GRID();
-                data = new T_FACE_ARRAY();
-            }
-            else {
-                grid = new T_GRID(
-                        TV_INT::All_Ones_Vector()*size_,
-                        T_RANGE::Unit_Box(),
-                        true);
-                assert(grid);
-                data = new  T_FACE_ARRAY(*grid);
-                assert(data);
-            }
+            grid = new T_GRID(size_,
+                    T_RANGE::Unit_Box(),
+                    true);
+            assert(grid);
+            data = new  T_FACE_ARRAY(*grid);
+            assert(data);
         }
 
     template <class TV> void FaceArray<TV>::
@@ -100,7 +96,9 @@ namespace water_app_data {
         Serialize(SerializedData *ser_data) {
             assert(ser_data);
             ::communication::AppFaceArray2d pb_fa;
-            pb_fa.set_size(size_);
+            ::communication::PhysbamVectorInt2d *pb_fa_size = 
+                pb_fa.mutable_size();
+            ::physbam_pb::make_pb_object(&size_, pb_fa_size);
             if (grid != NULL) {
                 ::communication::PhysbamGrid2d *pb_fa_grid =
                     pb_fa.mutable_grid();
@@ -134,11 +132,14 @@ namespace water_app_data {
                 return false;
             assert(buffer);
             ::communication::AppFaceArray2d pb_fa;
-            *result = new FaceArray<TV>(0);
-            FaceArray<TV> *des = (FaceArray<TV> *)(*result);
+            pb_fa.ParseFromString((std::string)buffer);
+            TV_INT size;
+            ::physbam_pb::make_physbam_object(&size, pb_fa.size());
+            *result = new FaceArray<TV>(size);
             if (*result == NULL)
                 return false;
-            pb_fa.ParseFromString((std::string)buffer);
+            FaceArray<TV> *des = (FaceArray<TV> *)(*result);
+            des->Create();
             if (pb_fa.has_grid()) {
                 ::physbam_pb::make_physbam_object(des->grid, pb_fa.grid());
             }

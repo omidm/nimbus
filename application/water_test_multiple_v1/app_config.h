@@ -48,8 +48,9 @@
 #include "physbam_include.h"
 
 typedef float T;
-typedef ::PhysBAM::VECTOR<float, 2> TV;
-typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
+const int dimension = 2;
+typedef ::PhysBAM::VECTOR<float, dimension> TV;
+typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
 
 const int kAppLastFrame = 10;
 const int kMainSize = 100;

@@ -54,26 +54,25 @@ namespace water_app_data {
         class FaceArray : public ::nimbus::Data {
 
             private:
-
                 typedef typename TV::SCALAR T;
                 typedef typename TV::template REBIND<int>::TYPE TV_INT;
                 typedef typename ::PhysBAM::GRID<TV> T_GRID;
                 typedef typename ::PhysBAM::RANGE<TV> T_RANGE;
                 typedef typename 
-                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX< TV::dimension> >
                     T_FACE_ARRAY;
                 typedef typename ::PhysBAM::BOUNDARY_UNIFORM
                     < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
                 typedef typename ::PhysBAM::RANGE<TV_INT> T_BOX;
 
-                int size_;
+                TV_INT size_;
 
                 void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX &box);
                 void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
 
             public:
 
-                FaceArray(int size);
+                FaceArray(TV_INT size);
                 virtual void Create();
                 virtual void Destroy();
                 virtual ::nimbus::Data* Clone();

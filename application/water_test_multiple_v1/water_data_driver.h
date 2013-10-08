@@ -62,26 +62,6 @@ namespace {
 template <class TV, class T>
 class NonAdvData;
 
-/* Ghost face array for storing scalar quantities.
-*/
-template <class TV>
-class FaceArrayGhost : public Data {
-    private:
-        int size_;
-    public:
-
-        int id_debug;
-
-        FaceArrayGhost(int size);
-        virtual void Create();
-        virtual Data* Clone();
-        virtual int get_debug_info();
-
-        // physbam structures and methods
-        GRID<TV> *grid;
-        typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
-};
-
 /* Add all other data used by water simulation here.  DO NOT add scalar
  * values. Scalar values can be passed around directly as parameters.
  */

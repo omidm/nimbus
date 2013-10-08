@@ -52,6 +52,10 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
+namespace {
+    TV_INT size_main = TV_INT::All_Ones_Vector() * kMainSize;
+};
+
 WaterApp::WaterApp() {
 };
 
@@ -74,9 +78,7 @@ void WaterApp::Load() {
 
     RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("face_velocities_1", new ::water_app_data
-            ::FaceArray<TV>(kMainSize));
-    RegisterData("face_velocities_ghost_1", new
-            FaceArrayGhost<TV>(kGhostSize));
+            ::FaceArray<TV>(size_main));
     RegisterData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
 
     printf("Finished creating job and data definitions\n");
@@ -127,8 +129,7 @@ void Main::Execute(std::string params, const DataArray& da)
 
     DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
     DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
-    DefineData("face_velocities_ghost_1", d[2], partition_id,
-            neighbor_partitions, par);
+    DefineData("face_velocities_1", d[2], partition_id, neighbor_partitions, par);
     DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
 
     printf("Defined data\n");
@@ -142,7 +143,6 @@ void Main::Execute(std::string params, const DataArray& da)
     after.insert(j[1]);
     read.insert(d[0]);
     read.insert(d[1]);
-    read.insert(d[2]);
     read.insert(d[3]);
     SpawnComputeJob("init", j[0], read, write, before, after, par);
     printf("Spawned init\n");
@@ -158,7 +158,6 @@ void Main::Execute(std::string params, const DataArray& da)
     read.insert(d[3]);
     write.insert(d[0]);
     write.insert(d[1]);
-    write.insert(d[2]);
     write.insert(d[3]);
     SpawnComputeJob("loop", j[1], read, write, before, after, par);
     printf("Spawned loop\n");

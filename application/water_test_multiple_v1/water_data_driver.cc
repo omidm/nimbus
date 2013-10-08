@@ -53,43 +53,6 @@ namespace {
     typedef float TF;
 }  // namespace
 
-template <class TV> FaceArrayGhost<TV>::
-FaceArrayGhost(int size)
-{
-    id_debug = face_array_ghost_id;
-    this->size_ = size;
-    grid = NULL;
-    data = NULL;
-}
-
-template <class TV> void FaceArrayGhost<TV>::
-Create()
-{
-    std::cout << "Creating FaceArrayGhost\n";
-
-    typedef typename TV::template REBIND<int>::TYPE TV_INT;
-    grid = new GRID<TV> (TV_INT::All_Ones_Vector()*size_,
-            RANGE<TV>::Unit_Box(), true);
-    assert(grid);
-
-    data = new typename GRID_ARRAYS_POLICY<GRID<TV> >::
-        FACE_ARRAYS();
-    assert(data);
-}
-
-template <class TV> Data* FaceArrayGhost<TV>::
-Clone()
-{
-    std::cout << "Cloning facearrayghost\n";
-    return new FaceArrayGhost<TV>(size_);
-}
-
-    template <class TV>
-int FaceArrayGhost<TV> :: get_debug_info()
-{
-    return id_debug;
-}
-
 template <class TV, class T> NonAdvData<TV, T>::
 NonAdvData(int size)
 {
@@ -444,5 +407,4 @@ void Add_Source(NonAdvData<TVF2, TF> *sim_data)
 }
 
 template class ::water_app_data::FaceArray<TVF2>;
-template class FaceArrayGhost<TVF2>;
 template class NonAdvData<TVF2, TF>;
