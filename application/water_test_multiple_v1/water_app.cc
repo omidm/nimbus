@@ -338,9 +338,13 @@ void Advect::Execute(std::string params, const DataArray& da)
 
     T_FACE_ARRAY *face_vel_extended = 
         new T_FACE_ARRAY(*(face_velocities->grid), kGhostSize);
-    face_velocities->Initialize_Ghost_Regions(face_vel_extended,
-            water_app->boundary(), kGhostSize,
-            driver->dt + driver->time, true);
+    face_velocities->Extend_Array(
+            face_velocities->data,
+            face_vel_extended,
+            water_app->boundary(),
+            kGhostSize,
+            driver->dt + driver->time,
+            true);
 
 //    Advect_Velocities(face_velocities, face_vel_extended, water_app,
 //            adv_vel_par_pb.dt(), adv_vel_par_pb.time());

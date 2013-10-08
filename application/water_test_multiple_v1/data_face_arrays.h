@@ -68,10 +68,8 @@ namespace water_app_data {
 
                 int size_;
 
-                static void Glue_Face_Array(
-                        T_FACE_ARRAY *to,
-                        T_FACE_ARRAY *from,
-                        T_BOX &box);
+                void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX &box);
+                void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
 
             public:
 
@@ -83,7 +81,8 @@ namespace water_app_data {
                 virtual bool Serialize(SerializedData *ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data **result);
 
-                void Initialize_Ghost_Regions(
+                static void Extend_Array(
+                        T_FACE_ARRAY *original_vel,
                         T_FACE_ARRAY *extended_vel,
                         T_BOUNDARY *boundary,
                         int bandwidth,
@@ -92,12 +91,10 @@ namespace water_app_data {
 
                 /* This needs the center region right now due to the way it is
                  * implemented. */
-                static void Fill_Ghost_Cells(
+                static void Fill_Regions(
                         T_FACE_ARRAY* result,
                         std::vector<FaceArray* > parts,
                         int bandwidth);
-
-                void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
 
                 static void Copy_Updated_Regions(
                         T_FACE_ARRAY *updated,

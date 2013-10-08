@@ -68,8 +68,10 @@ namespace water_app_data {
                 data = new T_FACE_ARRAY();
             }
             else {
-                grid = new T_GRID(TV_INT::All_Ones_Vector()*size_,
-                        T_RANGE::Unit_Box(), true);
+                grid = new T_GRID(
+                        TV_INT::All_Ones_Vector()*size_,
+                        T_RANGE::Unit_Box(),
+                        true);
                 assert(grid);
                 data = new  T_FACE_ARRAY(*grid);
                 assert(data);
@@ -146,27 +148,35 @@ namespace water_app_data {
         }
 
     template <class TV> void FaceArray<TV>::
-        Initialize_Ghost_Regions(
+        Extend_Array(
+                T_FACE_ARRAY *original_vel,
                 T_FACE_ARRAY *extended_vel,
                 T_BOUNDARY *boundary,
                 int bandwidth,
                 TF time,
                 bool extrapolate) {
-            extended_vel->Resize(*grid, bandwidth, false);
-            if (extrapolate)
+            TV_INT new_min = original_vel->domain_indices.min_corner;
+            TV_INT new_max = original_vel->domain_indices.max_corner;
+            T_BOX extended_range = T_BOX(new_min-bandwidth, new_max + bandwidth);
+            extended_vel->Resize(extended_range, true, false, 0);
+            if (extrapolate) {
+                T_GRID extended_grid(
+                        new_max - new_min + 1,
+                        T_RANGE::Unit_Box(),
+                        true);
                 boundary->Fill_Ghost_Cells_Face(
-                        *grid,
-                        *data,
+                        extended_grid,
+                        *original_vel,
                         *extended_vel,
                         time,
                         bandwidth); // this also copies the center values
+            }
             else
-                T_FACE_ARRAY::Put(*data, *extended_vel);
+                T_FACE_ARRAY::Put(*original_vel, *extended_vel);
         }
 
     template <class TV> void FaceArray<TV>::
         Glue_Face_Array(
-                T_FACE_ARRAY* to,
                 T_FACE_ARRAY* from,
                 T_BOX& box) {
             TV_INT i, j;
@@ -182,7 +192,7 @@ namespace water_app_data {
                 for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++) {
                     j.y = 1;
                     for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
-                        (*(to))(axis, i) = (*(from))(axis, j);
+                        (*(data))(axis, i) = (*(from))(axis, j);
                         j.y++;
                     }
                     j.x++;
@@ -193,7 +203,7 @@ namespace water_app_data {
     /* This needs the center region right now due to the way it is
      * implemented. */
     template <class TV> void FaceArray<TV>::
-        Fill_Ghost_Cells(
+        Fill_Regions(
                 T_FACE_ARRAY* result,
                 std::vector<FaceArray * > parts,
                 int bandwidth) {
@@ -208,49 +218,49 @@ namespace water_app_data {
 
             if (parts[1]) {
                 box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-                Glue_Face_Array(result, parts[1]->data, box);
+                parts[1]->Glue_Face_Array(result,  box);
             }
 
             if (parts[3]) {
                 box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-                Glue_Face_Array(result, parts[3]->data, box);
+                parts[3]->Glue_Face_Array(result, box);
             }
 
             if (parts[6]) {
                 box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-                Glue_Face_Array(result, parts[6]->data, box);
+                parts[6]->Glue_Face_Array(result, box);
             }
 
             if (parts[8]) {
                 box = T_BOX
                     (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
-                Glue_Face_Array(result, parts[8]->data, box);
+                parts[8]->Glue_Face_Array(result, box);
             }
 
             if (parts[2]) {
                 box = T_BOX(1, len_x, 1-bandwidth, 0);
-                Glue_Face_Array(result, parts[2]->data, box);
+                parts[2]->Glue_Face_Array(result, box);
             }
 
             if (parts[4]) {
                 box = T_BOX(1-bandwidth, 0, 1, len_y);
-                Glue_Face_Array(result, parts[4]->data, box);
+                parts[4]->Glue_Face_Array(result, box);
             }
 
             if (parts[5]) {
                 box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
-                Glue_Face_Array(result, parts[5]->data, box);
+                parts[5]->Glue_Face_Array(result, box);
             }
 
             if (parts[7]) {
                 box = T_BOX
                     (1, len_x, len_y+1, len_y+bandwidth);
-                Glue_Face_Array(result, parts[7]->data, box);
+                parts[7]->Glue_Face_Array(result, box);
             }
 
             assert(parts[0]);
             box = T_BOX(1, len_x, 1, len_y);
-            Glue_Face_Array(result, parts[0]->data, box);
+            parts[0]->Glue_Face_Array(result, box);
         }
 
     template <class TV> void FaceArray<TV>::
