@@ -162,9 +162,9 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
   tokenizer<char_separator<char> > tokens(params, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
 
-  std::set<data_id_t> temp_set;
+  IDSet<data_id_t>::IDSetContainer temp_set;
   nimbus::ParseIDSet(*iter, temp_set);
-  std::set<data_id_t>::iterator it;
+  IDSet<data_id_t>::IDSetContainer::iterator it;
   for (it = temp_set.begin(); it != temp_set.end(); it++) {
     d.push_back(*it);
   }

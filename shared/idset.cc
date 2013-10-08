@@ -52,7 +52,11 @@ using namespace nimbus; // NOLINT
 using boost::tokenizer;
 using boost::char_separator;
 
-void tempParseIDSetFromString(const std::string& input, std::set<uint64_t>& set) {
+
+// TODO(omidm): make sure that these are not used anymore and then remove.
+
+void tempParseIDSetFromString(const std::string& input,
+    IDSet<uint64_t>::IDSetContainer& list) {
   int num;
   std::string str = input.substr(1, input.length() - 2);
   char_separator<char> separator(",");
@@ -61,11 +65,12 @@ void tempParseIDSetFromString(const std::string& input, std::set<uint64_t>& set)
   for (; iter != tokens.end(); ++iter) {
     std::stringstream ss(*iter);
     ss >> num;
-    set.insert(num);
+    list.push_back(num);
   }
 }
 
-void tempParseIDSetFromString(const std::string& input, std::set<uint32_t>& set) {
+void tempParseIDSetFromString(const std::string& input,
+    IDSet<uint32_t>::IDSetContainer& list) {
   int num;
   std::string str = input.substr(1, input.length() - 2);
   char_separator<char> separator(",");
@@ -74,22 +79,24 @@ void tempParseIDSetFromString(const std::string& input, std::set<uint32_t>& set)
   for (; iter != tokens.end(); ++iter) {
     std::stringstream ss(*iter);
     ss >> num;
-    set.insert(num);
+    list.push_back(num);
   }
 }
-
-
-template<typename T>
-IDSet<T>::IDSet() {}
 
 template<typename T>
 IDSet<T>::IDSet(std::string s) {
   tempParseIDSetFromString(s, identifiers_);
 }
 
+
+
+
 template<typename T>
-IDSet<T>::IDSet(const std::set<T>& set) {
-  identifiers_ = set;
+IDSet<T>::IDSet() {}
+
+template<typename T>
+IDSet<T>::IDSet(const IDSetContainer& ids) {
+  identifiers_ = ids;
 }
 
 template<typename T>
@@ -121,12 +128,26 @@ std::string IDSet<T>::toString() {
 
 template<typename T>
 void IDSet<T>::insert(T n) {
-  identifiers_.insert(n);
+  IDSetIter iter =  identifiers_.begin();
+  for (; iter !=  identifiers_.end(); ++iter) {
+    if (*iter == n) {
+      std::cout << "WARNING: The IDSet already has " << n
+        << ", nothing was added to the container." << std::endl;
+      return;
+    }
+  }
+  identifiers_.push_back(n);
 }
 
 template<typename T>
 void IDSet<T>::remove(T n) {
-  identifiers_.erase(n);
+  IDSetIter iter =  identifiers_.begin();
+  for (; iter !=  identifiers_.end(); ++iter) {
+    if (*iter == n) {
+      identifiers_.erase(iter);
+      break;
+    }
+  }
 }
 
 template<typename T>
