@@ -199,7 +199,7 @@ namespace water_app_data {
                 int bandwidth) {
 
             TV_INT min_corner, max_corner;
-            ::PhysBAM::RANGE<TV_INT> box;
+            T_BOX box;
 
             TV_INT max_d = result->domain_indices.Maximum_Corner();
             TV_INT min_d = result->domain_indices.Minimum_Corner();
@@ -262,6 +262,24 @@ namespace water_app_data {
                 T_FACE_ARRAY* updated,
                 std::vector<FaceArray* > parts,
                 int bandwidth) {
+            TV_INT min_corner, max_corner;
+            T_BOX box;
+            TV_INT max_d = updated->domain_indices.Maximum_Corner();
+            TV_INT min_d = updated->domain_indices.Minimum_Corner();
+            int len_x = max_d.x - min_d.x + 1;
+            int len_y = max_d.y - min_d.y + 1;
+            if (parts[1]) {
+                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
+                parts[1]->Update_Face_Array(updated, box);
+            }
+            if (parts[3]) {
+                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                parts[3]->Update_Face_Array(updated, box);
+            }
+            if (parts[6]) {
+                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                parts[6]->Update_Face_Array(updated, box);
+            }
         }
 
     template class ::water_app_data::FaceArray<TVF2>;

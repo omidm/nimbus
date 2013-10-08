@@ -99,7 +99,7 @@ namespace water_app_data {
 
                 void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
 
-                void Copy_Updated_Regions(
+                static void Copy_Updated_Regions(
                         T_FACE_ARRAY *updated,
                         std::vector<FaceArray* > parts,
                         int bandwidth);
