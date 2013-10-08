@@ -165,7 +165,7 @@ namespace water_app_data {
         }
 
     template <class TV> void FaceArray<TV>::
-        Put_Face_Array(
+        Glue_Face_Array(
                 T_FACE_ARRAY* to,
                 T_FACE_ARRAY* from,
                 T_BOX& box) {
@@ -190,6 +190,8 @@ namespace water_app_data {
             }
         }
 
+    /* This needs the center region right now due to the way it is
+     * implemented. */
     template <class TV> void FaceArray<TV>::
         Fill_Ghost_Cells(
                 T_FACE_ARRAY* result,
@@ -206,49 +208,60 @@ namespace water_app_data {
 
             if (parts[1]) {
                 box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-                Put_Face_Array(result, parts[1]->data, box);
+                Glue_Face_Array(result, parts[1]->data, box);
             }
 
             if (parts[3]) {
                 box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-                Put_Face_Array(result, parts[3]->data, box);
+                Glue_Face_Array(result, parts[3]->data, box);
             }
 
             if (parts[6]) {
                 box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-                Put_Face_Array(result, parts[6]->data, box);
+                Glue_Face_Array(result, parts[6]->data, box);
             }
 
             if (parts[8]) {
                 box = T_BOX
                     (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
-                Put_Face_Array(result, parts[8]->data, box);
+                Glue_Face_Array(result, parts[8]->data, box);
             }
 
             if (parts[2]) {
                 box = T_BOX(1, len_x, 1-bandwidth, 0);
-                Put_Face_Array(result, parts[2]->data, box);
+                Glue_Face_Array(result, parts[2]->data, box);
             }
 
             if (parts[4]) {
                 box = T_BOX(1-bandwidth, 0, 1, len_y);
-                Put_Face_Array(result, parts[4]->data, box);
+                Glue_Face_Array(result, parts[4]->data, box);
             }
 
             if (parts[5]) {
                 box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
-                Put_Face_Array(result, parts[5]->data, box);
+                Glue_Face_Array(result, parts[5]->data, box);
             }
 
             if (parts[7]) {
                 box = T_BOX
                     (1, len_x, len_y+1, len_y+bandwidth);
-                Put_Face_Array(result, parts[7]->data, box);
+                Glue_Face_Array(result, parts[7]->data, box);
             }
 
             assert(parts[0]);
             box = T_BOX(1, len_x, 1, len_y);
-            Put_Face_Array(result, parts[0]->data, box);
+            Glue_Face_Array(result, parts[0]->data, box);
+        }
+
+    template <class TV> void FaceArray<TV>::
+        Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box) {
+        }
+
+    template <class TV> void FaceArray<TV>::
+        Copy_Updated_Regions(
+                T_FACE_ARRAY* updated,
+                std::vector<FaceArray* > parts,
+                int bandwidth) {
         }
 
     template class ::water_app_data::FaceArray<TVF2>;

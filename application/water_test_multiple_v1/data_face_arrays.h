@@ -68,7 +68,7 @@ namespace water_app_data {
 
                 int size_;
 
-                static void Put_Face_Array(
+                static void Glue_Face_Array(
                         T_FACE_ARRAY *to,
                         T_FACE_ARRAY *from,
                         T_BOX &box);
@@ -90,8 +90,17 @@ namespace water_app_data {
                         TF time,
                         bool extrapolate);
 
+                /* This needs the center region right now due to the way it is
+                 * implemented. */
                 static void Fill_Ghost_Cells(
                         T_FACE_ARRAY* result,
+                        std::vector<FaceArray* > parts,
+                        int bandwidth);
+
+                void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
+
+                void Copy_Updated_Regions(
+                        T_FACE_ARRAY *updated,
                         std::vector<FaceArray* > parts,
                         int bandwidth);
 

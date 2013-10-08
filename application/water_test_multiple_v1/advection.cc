@@ -53,17 +53,6 @@ void Advect_Velocities (
         int time,
         NonAdvData<TV, T> *sim_data) {
 
-    face_vel_extended->Resize(
-            sim_data->incompressible->grid,
-            sim_data->number_of_ghost_cells,
-            false);
-    sim_data->incompressible->boundary->Fill_Ghost_Cells_Face(
-            *face_velocities->grid,
-            *face_velocities->data,
-            *face_vel_extended,
-            time,
-            sim_data->number_of_ghost_cells);
-
     water_app->advection_scalar()->Update_Advection_Equation_Face(
             *face_velocities->grid,
             *face_velocities->data,

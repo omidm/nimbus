@@ -492,11 +492,11 @@ void Loop::Execute(std::string params, const DataArray& da)
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
 
-        ::parameters::AdvVelPar adv_vel_par_pb;
-        adv_vel_par_pb.set_dt(driver->dt);
-        adv_vel_par_pb.set_time(driver->time);
-        adv_vel_par_pb.SerializeToString(&par);
-        printf("*** PARAMETERS \"%s\"\n", par.c_str());
+//        ::parameters::AdvVelPar adv_vel_par_pb;
+//        adv_vel_par_pb.set_dt(driver->dt);
+//        adv_vel_par_pb.set_time(driver->time);
+//        adv_vel_par_pb.SerializeToString(&par);
+//        printf("*** PARAMETERS \"%s\"\n", par.c_str());
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
