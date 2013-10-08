@@ -94,7 +94,8 @@ namespace water_app_data {
                 static void Fill_Regions(
                         T_FACE_ARRAY* result,
                         std::vector<FaceArray* > parts,
-                        int bandwidth);
+                        int bandwidth,
+                        int offset);
 
                 static void Copy_Updated_Regions(
                         T_FACE_ARRAY *updated,

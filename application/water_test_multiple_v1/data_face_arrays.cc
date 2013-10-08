@@ -206,13 +206,14 @@ namespace water_app_data {
         Fill_Regions(
                 T_FACE_ARRAY* result,
                 std::vector<FaceArray * > parts,
-                int bandwidth) {
+                int bandwidth,
+                int offset = 0) {
 
             TV_INT min_corner, max_corner;
             T_BOX box;
 
-            TV_INT max_d = result->domain_indices.Maximum_Corner();
-            TV_INT min_d = result->domain_indices.Minimum_Corner();
+            TV_INT max_d = result->domain_indices.Maximum_Corner() - offset;
+            TV_INT min_d = result->domain_indices.Minimum_Corner() + offset;
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
 
