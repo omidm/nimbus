@@ -143,7 +143,12 @@ void Main::Execute(std::string params, const DataArray& da)
     after.insert(j[1]);
     read.insert(d[0]);
     read.insert(d[1]);
+    read.insert(d[2]);
     read.insert(d[3]);
+    write.insert(d[0]);
+    write.insert(d[1]);
+    write.insert(d[2]);
+    write.insert(d[3]);
     SpawnComputeJob("init", j[0], read, write, before, after, par);
     printf("Spawned init\n");
 
@@ -158,6 +163,7 @@ void Main::Execute(std::string params, const DataArray& da)
     read.insert(d[3]);
     write.insert(d[0]);
     write.insert(d[1]);
+    write.insert(d[2]);
     write.insert(d[3]);
     SpawnComputeJob("loop", j[1], read, write, before, after, par);
     printf("Spawned loop\n");
@@ -472,10 +478,10 @@ void Loop::Execute(std::string params, const DataArray& da)
         printf("Spawning new simulation jobs ...\n");
 
         std::vector<data_id_t> d;
-        d.push_back(16777217);
-        d.push_back(16777218);
-        d.push_back(16777219);
-        d.push_back(16777220);
+        d.push_back(da[0]->id());
+        d.push_back(da[1]->id());
+        d.push_back(da[2]->id());
+        d.push_back(da[3]->id());
         std::string par;
 
         IDSet<job_id_t> before, after;
