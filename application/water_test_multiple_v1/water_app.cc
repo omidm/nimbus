@@ -44,6 +44,7 @@
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <vector>
 #include "water_app.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
@@ -53,7 +54,11 @@ using nimbus::Job;
 using nimbus::Application;
 
 namespace {
-    TV_INT size_main = TV_INT::All_Ones_Vector() * kMainSize;
+    TV_INT main_size = TV_INT::All_Ones_Vector() * kMainSize;
+    TV_INT ghost_vert_size(kGhostSize, kMainSize);
+    TV_INT ghost_horiz_size(kMainSize, kGhostSize);
+    std::string ghost_vert_name = "ghost_vel_x";
+    std::string ghost_horiz_name = "ghost_vel_y";
 };
 
 WaterApp::WaterApp() {
@@ -77,8 +82,12 @@ void WaterApp::Load() {
     RegisterJob("writeframe", new WriteFrame(this));
 
     RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    RegisterData("face_velocities_1", new ::water_app_data
-            ::FaceArray<TV>(size_main));
+    RegisterData(
+            "face_velocities",
+            new ::water_app_data::FaceArray<TV>(main_size));
+    RegisterData(
+            ghost_vert_name,
+            new ::water_app_data::FaceArray<TV>(ghost_vert_size));
     RegisterData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
 
     printf("Finished creating job and data definitions\n");
