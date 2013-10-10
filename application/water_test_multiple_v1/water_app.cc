@@ -55,12 +55,12 @@ using nimbus::Application;
 namespace {
     TV_INT all_main_size(kAllMainSize, kAllMainSize);
     TV_INT main_size(kMainSize, kMainSize);
-    TV_INT ghost_vert_size(kGhostSize, kMainSize);
-    TV_INT ghost_horiz_size(kMainSize, kGhostSize);
-    TV_INT ghost_corner_size(kGhostSize, kGhostSize);
-    std::string ghost_vert_name = "ghost_vel_vert";
-    std::string ghost_horiz_name = "ghost_vel_horiz";
-    std::string ghost_corner_name = "ghost_vel_corner";
+    TV_INT ghost_vert_in_size(kGhostSize, kMainSize);
+    TV_INT ghost_horiz_in_size(kMainSize, kGhostSize);
+    TV_INT ghost_corner_in_size(kGhostSize, kGhostSize);
+    std::string ghost_vert_in_name = "ghost_vel_vert_in";
+    std::string ghost_horiz_in_name = "ghost_vel_horiz_in";
+    std::string ghost_corner_in_name = "ghost_vel_corner_in";
 };
 
 WaterApp::WaterApp() {
@@ -91,14 +91,14 @@ void WaterApp::Load() {
             "face_velocities",
             new ::water_app_data::FaceArray<TV>(main_size));
     RegisterData(
-            ghost_vert_name,
-            new ::water_app_data::FaceArray<TV>(ghost_vert_size));
+            ghost_vert_in_name,
+            new ::water_app_data::FaceArray<TV>(ghost_vert_in_size));
     RegisterData(
-            ghost_horiz_name,
-            new ::water_app_data::FaceArray<TV>(ghost_horiz_size));
+            ghost_horiz_in_name,
+            new ::water_app_data::FaceArray<TV>(ghost_horiz_in_size));
     RegisterData(
-            ghost_corner_name,
-            new ::water_app_data::FaceArray<TV>(ghost_corner_size));
+            ghost_corner_in_name,
+            new ::water_app_data::FaceArray<TV>(ghost_corner_in_size));
     RegisterData("sim_data", new NonAdvData<TV, T>(kAllMainSize));
 
     printf("Finished creating job and data definitions\n");
@@ -148,14 +148,14 @@ void Main::Execute(std::string params, const DataArray& da) {
     DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
     DefineData("face_velocities_all", d[1], partition_id, neighbor_partitions, par);
     DefineData("face_velocities", d[2], partition_id, neighbor_partitions, par);
-    DefineData(ghost_vert_name, d[3], partition_id, neighbor_partitions, par);
-    DefineData(ghost_vert_name, d[4], partition_id, neighbor_partitions, par);
-    DefineData(ghost_horiz_name, d[5], partition_id, neighbor_partitions, par);
-    DefineData(ghost_horiz_name, d[6], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_name, d[7], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_name, d[8], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_name, d[9], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_name, d[10], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_in_name, d[3], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_in_name, d[4], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_in_name, d[5], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_in_name, d[6], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_name, d[7], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_name, d[8], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_name, d[9], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_name, d[10], partition_id, neighbor_partitions, par);
     DefineData("sim_data", d[11], partition_id, neighbor_partitions, par);
 
     printf("Defined data\n");
