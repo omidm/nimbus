@@ -126,7 +126,7 @@ Get_Levelset_Velocity(
         const T time) const PHYSBAM_OVERRIDE
 {
     ::water_app_data::FaceArray<TV> *fv = (::water_app_data::FaceArray<TV> *)face_velocities;
-    V_levelset = *fv->data;
+    V_levelset = *fv->data();
 }
 
 template <class TV> void WaterDriver<TV>::
@@ -206,7 +206,7 @@ CheckProceed()
     ::water_app_data::FaceArray<TV> *fv = (::water_app_data::FaceArray<TV> *)face_velocities;
 
     sd->particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
-    dt = cfl * sd->incompressible->CFL(*fv->data);
+    dt = cfl * sd->incompressible->CFL(*fv->data());
     dt = min(dt, sd->particle_levelset_evolution->CFL(false, false));
     if ( time + dt >= target_time)
     {

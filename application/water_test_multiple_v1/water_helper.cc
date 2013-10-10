@@ -94,10 +94,10 @@ Set_Boundary_Conditions(
                     TV_INT face = iterator.Face_Index() + boundary_face_offset;
                     if (particle_levelset_evolution->phi(face + interior_cell_offset) <= 0)
                     {
-                        if (face_velocities->data->Component(axis).Valid_Index(face))
+                        if (face_velocities->data()->Component(axis).Valid_Index(face))
                         {
                             projection->elliptic_solver->psi_N.Component(axis)(face) = true;
-                            face_velocities->data->Component(axis)(face)=0;
+                            face_velocities->data()->Component(axis)(face)=0;
                         }
                     }
                     else
@@ -129,9 +129,9 @@ Set_Boundary_Conditions(
                     psi_N(iterator.Full_Index()) = true;
                 if((TV::dimension==2 && iterator.Axis() == 1) ||
                         (TV::dimension==3 && iterator.Axis() == 3))
-                    (*face_velocities->data)(iterator.Full_Index()) = -1;
+                    (*face_velocities->data())(iterator.Full_Index()) = -1;
                 else
-                    (*face_velocities->data)(iterator.Full_Index()) = 0;
+                    (*face_velocities->data())(iterator.Full_Index()) = 0;
             }
         }
     }
@@ -144,7 +144,7 @@ Write_Output_Files_EF(const int frame, ::water_app_data::FaceArray<TV> *face_vel
   std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
   FILE_UTILITIES::Write_To_File(driver->stream_type,
       driver->output_directory+"/"+f+"/mac_velocities",
-      *(face_velocities->data));
+      *(face_velocities->data()));
   FILE_UTILITIES::Write_To_File(driver->stream_type,
       driver->output_directory+"/common/grid", *grid);
   FILE_UTILITIES::Write_To_File(driver->stream_type,

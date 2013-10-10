@@ -349,9 +349,9 @@ void Advect::Execute(std::string params, const DataArray& da) {
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
 
     T_FACE_ARRAY *face_vel_extended = 
-        new T_FACE_ARRAY(*(face_velocities->grid), kGhostSize);
+        new T_FACE_ARRAY(*(face_velocities->grid()), kGhostSize);
     face_velocities->Extend_Array(
-            face_velocities->data,
+            face_velocities->data(),
             face_vel_extended,
             water_app->boundary(),
             kGhostSize,

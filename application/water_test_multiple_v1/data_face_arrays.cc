@@ -55,30 +55,30 @@ namespace water_app_data {
     template <class TV> FaceArray<TV>::
         FaceArray(TV_INT size) :
             size_(size),
-            grid(0),
-            data(0) {
+            grid_(0),
+            data_(0) {
         }
 
     template <class TV> void FaceArray<TV>::
         Create() {
             std::cout << "Creating FaceArray\n";
-            if (!grid)
-                delete grid;
-            if (!data)
-                delete data;
-            grid = new T_GRID(size_,
+            if (!grid_)
+                delete grid_;
+            if (!data_)
+                delete data_;
+            grid_ = new T_GRID(size_,
                     T_RANGE::Unit_Box(),
                     true);
-            assert(grid);
-            data = new  T_FACE_ARRAY(*grid);
-            assert(data);
+            assert(grid_);
+            data_ = new  T_FACE_ARRAY(*grid_);
+            assert(data_);
         }
 
     template <class TV> void FaceArray<TV>::
         Destroy() {
             printf("Destroying face array\n");
-            delete grid;
-            delete data;
+            delete grid_;
+            delete data_;
         }
 
     template <class TV> ::nimbus::Data* FaceArray<TV>::
@@ -99,15 +99,15 @@ namespace water_app_data {
             ::communication::PhysbamVectorInt2d *pb_fa_size = 
                 pb_fa.mutable_size();
             ::physbam_pb::make_pb_object(&size_, pb_fa_size);
-            if (grid != NULL) {
+            if (grid_ != NULL) {
                 ::communication::PhysbamGrid2d *pb_fa_grid =
                     pb_fa.mutable_grid();
-                ::physbam_pb::make_pb_object(grid, pb_fa_grid);
+                ::physbam_pb::make_pb_object(grid_, pb_fa_grid);
             }
-            if (data != NULL) {
+            if (data_ != NULL) {
                 ::communication::PhysbamFaceArray2d *pb_fa_data =
                     pb_fa.mutable_data();
-                ::physbam_pb::make_pb_object(data, pb_fa_data);
+                ::physbam_pb::make_pb_object(data_, pb_fa_data);
             }
             std::string ser;
             if (!pb_fa.SerializeToString(&ser)) {
@@ -141,10 +141,10 @@ namespace water_app_data {
             FaceArray<TV> *des = (FaceArray<TV> *)(*result);
             des->Create();
             if (pb_fa.has_grid()) {
-                ::physbam_pb::make_physbam_object(des->grid, pb_fa.grid());
+                ::physbam_pb::make_physbam_object(des->grid_, pb_fa.grid());
             }
             if (pb_fa.has_data())
-                ::physbam_pb::make_physbam_object(des->data, pb_fa.data());
+                ::physbam_pb::make_physbam_object(des->data_, pb_fa.data());
             return true;
         }
 
@@ -193,7 +193,7 @@ namespace water_app_data {
                 for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++) {
                     j.y = 1;
                     for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
-                        (*(data))(axis, i) = (*(from))(axis, j);
+                        (*(data_))(axis, i) = (*(from))(axis, j);
                         j.y++;
                     }
                     j.x++;

@@ -66,6 +66,8 @@ namespace water_app_data {
                 typedef typename ::PhysBAM::RANGE<TV_INT> T_BOX;
 
                 TV_INT size_;
+                T_GRID *grid_;
+                T_FACE_ARRAY *data_;
 
                 void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX &box);
                 void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
@@ -101,9 +103,21 @@ namespace water_app_data {
                         std::vector<FaceArray* > parts,
                         int bandwidth);
 
-                // physbam structures and methods
-                T_GRID *grid;
-                T_FACE_ARRAY *data;
+                T_GRID *grid() {
+                    return grid_;
+                }
+
+                T_FACE_ARRAY *data() {
+                    return data_;
+                }
+
+                void set_grid(T_GRID *grid) {
+                    grid_ = grid;
+                }
+
+                void set_data(T_FACE_ARRAY *data) {
+                    data_ = data;
+                }
         };
 
 } // namespace water_app_data

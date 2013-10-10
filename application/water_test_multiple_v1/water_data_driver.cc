@@ -145,7 +145,7 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     }
     (*domain_boundary)(2)(2)=false;
 
-    phi_boundary_water->Set_Velocity_Pointer(*face_velocities->data);
+    phi_boundary_water->Set_Velocity_Pointer(*face_velocities->data());
 
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries = 
         VECTOR_UTILITIES::Complement(*domain_boundary);
@@ -232,7 +232,7 @@ template <class TV, class T> bool NonAdvData<TV, T>::
         Fill_Ghost_Cells(*grid, particle_levelset_evolution->phi,
                 exchanged_phi_ghost, 0, time, 8);
     incompressible->Extrapolate_Velocity_Across_Interface
-        (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
+        (*face_velocities->data(), exchanged_phi_ghost, false, 3, 0, TV());
 
     projection->Initialize_Grid(*grid);
 
@@ -251,7 +251,7 @@ BeforeAdvection
 (WaterDriver<TV> *driver, ::water_app_data::FaceArray<TV> *face_velocities)
 {
     LOG::Time("Compute Occupied Blocks");
-    T maximum_fluid_speed = face_velocities->data->Maxabs().Max();
+    T maximum_fluid_speed = face_velocities->data()->Maxabs().Max();
     T max_particle_collision_distance = particle_levelset_evolution->
         particle_levelset.max_collision_distance_factor * grid->dX.Max();
     collision_bodies_affecting_fluid->Compute_Occupied_Blocks(true, dt *
@@ -261,7 +261,7 @@ BeforeAdvection
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
     face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
     incompressible->boundary->Fill_Ghost_Cells_Face(incompressible->grid,
-            *face_velocities->data, face_velocities_ghost, time + dt,
+            *face_velocities->data(), face_velocities_ghost, time + dt,
             number_of_ghost_cells);
 
     //Advect Phi 3.6% (Parallelized)
@@ -281,7 +281,7 @@ BeforeAdvection
     domain.max_corner += TV_INT::All_Ones_Vector();
 
     incompressible->boundary->Fill_Ghost_Cells_Face(*grid,
-            *face_velocities->data, face_velocities_ghost, time + dt,
+            *face_velocities->data(), face_velocities_ghost, time + dt,
             number_of_ghost_cells);
     LINEAR_INTERPOLATION_UNIFORM<GRID<TV>,TV> interpolation;
     PARTICLE_LEVELSET_UNIFORM<GRID<TV> > &pls =
@@ -323,18 +323,18 @@ AfterAdvection
 (WaterDriver<TV> *driver, ::water_app_data::FaceArray<TV> *face_velocities)
 {
     // Set required pointers
-    phi_boundary_water->Set_Velocity_Pointer(*face_velocities->data);
+    phi_boundary_water->Set_Velocity_Pointer(*face_velocities->data());
 
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;
     face_velocities_ghost.Resize(incompressible->grid, number_of_ghost_cells, false);
     incompressible->boundary->Fill_Ghost_Cells_Face(incompressible->grid,
-            *face_velocities->data, face_velocities_ghost, time + dt,
+            *face_velocities->data(), face_velocities_ghost, time + dt,
             number_of_ghost_cells);
 
     //Add Forces 0%
     LOG::Time("Forces");
     incompressible->Advance_One_Time_Step_Forces
-        (*face_velocities->data, dt, time, true, 0, number_of_ghost_cells);
+        (*face_velocities->data(), dt, time, true, 0, number_of_ghost_cells);
 
     //Modify Levelset with Particles 15% (Parallelizedish)
     LOG::Time("Modify Levelset");
@@ -374,10 +374,10 @@ AfterAdvection
     projection->p *= dt;
     projection->collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
     incompressible->Advance_One_Time_Step_Implicit_Part
-        (*face_velocities->data, dt, time, true);
+        (*face_velocities->data(), dt, time, true);
     projection->p *= (1/dt);
     incompressible->boundary->Apply_Boundary_Condition_Face
-        (incompressible->grid, *face_velocities->data, time + dt);
+        (incompressible->grid, *face_velocities->data(), time + dt);
     projection->collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
     delete scope;
 
@@ -388,7 +388,7 @@ AfterAdvection
         Fill_Ghost_Cells(*grid, particle_levelset_evolution->phi,
                 exchanged_phi_ghost, 0, time + dt, 8);
     incompressible->Extrapolate_Velocity_Across_Interface
-        (*face_velocities->data, exchanged_phi_ghost, false, 3, 0, TV());
+        (*face_velocities->data(), exchanged_phi_ghost, false, 3, 0, TV());
 }
 
 void Add_Source(NonAdvData<TVF2, TF> *sim_data)

@@ -54,8 +54,8 @@ void Advect_Velocities (
         NonAdvData<TV, T> *sim_data) {
 
     water_app->advection_scalar()->Update_Advection_Equation_Face(
-            *face_velocities->grid,
-            *face_velocities->data,
+            *face_velocities->grid(),
+            *face_velocities->data(),
             *face_vel_extended,
             *face_vel_extended,
             *sim_data->incompressible->boundary,
