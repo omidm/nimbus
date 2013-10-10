@@ -112,8 +112,7 @@ void WaterApp::Load() {
     set_boundary(new ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T>());
     ::PhysBAM::VECTOR< ::PhysBAM::VECTOR<bool, 2>, TV::dimension>
         domain_boundary;
-    for(int i=1;i<=TV::dimension;i++)
-    {
+    for(int i=1;i<=TV::dimension;i++) {
         domain_boundary(i)(1)=true;
         domain_boundary(i)(2)=true;
     }
@@ -133,8 +132,7 @@ Job* Main::Clone() {
     return new Main(application());
 };
 
-void Main::Execute(std::string params, const DataArray& da)
-{
+void Main::Execute(std::string params, const DataArray& da) {
     printf("Begin main\n");
 
     std::vector<job_id_t> j;
@@ -204,19 +202,16 @@ Job* Init::Clone() {
     return new Init(application());
 };
 
-void Init::Execute(std::string params, const DataArray& da)
-{
+void Init::Execute(std::string params, const DataArray& da) {
     printf("Executing init job\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
+        switch (da[i]->get_debug_info()) {
             case driver_id:
                 driver = (WaterDriver<TV> *)da[i];
                 break;
@@ -259,8 +254,7 @@ Job* UptoAdvect::Clone() {
     return new UptoAdvect(application());
 };
 
-void UptoAdvect::Execute(std::string params, const DataArray& da)
-{
+void UptoAdvect::Execute(std::string params, const DataArray& da) {
 
     printf("@@ Running upto advect\n");
 
@@ -268,11 +262,9 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
+        switch (da[i]->get_debug_info()) {
             case driver_id:
                 driver = (WaterDriver<TV> *)da[i];
                 break;
@@ -316,19 +308,16 @@ Job* Advect::Clone() {
     return new Advect(application());
 };
 
-void Advect::Execute(std::string params, const DataArray& da)
-{
+void Advect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running advect\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
+        switch (da[i]->get_debug_info()) {
             case driver_id:
                 driver = (WaterDriver<TV> *)da[i];
                 break;
@@ -390,19 +379,16 @@ Job* AfterAdvect::Clone() {
     return new AfterAdvect(application());
 };
 
-void AfterAdvect::Execute(std::string params, const DataArray& da)
-{
+void AfterAdvect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running after advect\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
+        switch (da[i]->get_debug_info()) {
             case driver_id:
                 driver = (WaterDriver<TV> *)da[i];
                 break;
@@ -445,19 +431,16 @@ Job* Loop::Clone() {
     return new Loop(application());
 };
 
-void Loop::Execute(std::string params, const DataArray& da)
-{
+void Loop::Execute(std::string params, const DataArray& da) {
     printf("Executing forloop job\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
+        switch (da[i]->get_debug_info()) {
             case driver_id:
                 driver = (WaterDriver<TV> *)da[i];
                 break;
@@ -483,12 +466,10 @@ void Loop::Execute(std::string params, const DataArray& da)
 
     driver->IncreaseTime();
 
-    if (!driver->CheckProceed())
-    {
+    if (!driver->CheckProceed()) {
         printf("... Simulation completed ...\n");
     }
-    else
-    {
+    else {
         printf("Spawning new simulation jobs ...\n");
 
         std::vector<data_id_t> d;
@@ -577,19 +558,16 @@ Job* WriteFrame::Clone() {
     return new WriteFrame(application());
 };
 
-void WriteFrame::Execute(std::string params, const DataArray& da)
-{
+void WriteFrame::Execute(std::string params, const DataArray& da) {
     printf( "@@ Executing write frame job\n");
 
     WaterDriver<TV> *driver = NULL;
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 3; i++)
-    {
+    for (int i = 0; i < 3; i++) {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
+        switch (da[i]->get_debug_info()) {
             case driver_id:
                 driver = (WaterDriver<TV> *)da[i];
                 break;
