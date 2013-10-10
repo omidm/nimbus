@@ -204,7 +204,7 @@ namespace water_app_data {
     /* This needs the center region right now due to the way it is
      * implemented. */
     template <class TV> void FaceArray<TV>::
-        Fill_Regions(
+        Glue_Regions(
                 T_FACE_ARRAY* result,
                 std::vector<FaceArray * > parts,
                 int bandwidth,
@@ -270,7 +270,7 @@ namespace water_app_data {
         }
 
     template <class TV> void FaceArray<TV>::
-        Copy_Updated_Regions(
+        Update_Regions(
                 T_FACE_ARRAY* updated,
                 std::vector<FaceArray* > parts,
                 int bandwidth) {

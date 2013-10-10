@@ -92,13 +92,13 @@ namespace water_app_data {
 
                 /* This needs the center region right now due to the way it is
                  * implemented. */
-                static void Fill_Regions(
+                static void Glue_Regions(
                         T_FACE_ARRAY* result,
                         std::vector<FaceArray* > parts,
                         int bandwidth,
                         int offset);
 
-                static void Copy_Updated_Regions(
+                static void Update_Regions(
                         T_FACE_ARRAY *updated,
                         std::vector<FaceArray* > parts,
                         int bandwidth);
