@@ -53,8 +53,10 @@ typedef ::PhysBAM::VECTOR<float, dimension> TV;
 typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
 
 const int kAppLastFrame = 10;
-const int kMainSize = 100;
+const int kAllMainSize = 200;
 const int kGhostSize = 3;
+const int kWorkers = 4;
+const int kMainSize = kAllMainSize/4 - 2*kGhostSize;
 
 // useful typedefs
 typedef typename 

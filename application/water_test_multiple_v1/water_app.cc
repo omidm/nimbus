@@ -1,5 +1,4 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -54,11 +53,14 @@ using nimbus::Job;
 using nimbus::Application;
 
 namespace {
-    TV_INT main_size = TV_INT::All_Ones_Vector() * kMainSize;
+    TV_INT all_main_size(kAllMainSize, kAllMainSize);
+    TV_INT main_size(kMainSize, kMainSize);
     TV_INT ghost_vert_size(kGhostSize, kMainSize);
     TV_INT ghost_horiz_size(kMainSize, kGhostSize);
-    std::string ghost_vert_name = "ghost_vel_x";
-    std::string ghost_horiz_name = "ghost_vel_y";
+    TV_INT ghost_corner_size(kGhostSize, kGhostSize);
+    std::string ghost_vert_name = "ghost_vel_vert";
+    std::string ghost_horiz_name = "ghost_vel_horiz";
+    std::string ghost_corner_name = "ghost_vel_corner";
 };
 
 WaterApp::WaterApp() {
@@ -81,14 +83,23 @@ void WaterApp::Load() {
     RegisterJob("afteradvect", new AfterAdvect(this));
     RegisterJob("writeframe", new WriteFrame(this));
 
-    RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
+    RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
+    RegisterData(
+            "face_velocities_all",
+            new ::water_app_data::FaceArray<TV>(all_main_size));
     RegisterData(
             "face_velocities",
             new ::water_app_data::FaceArray<TV>(main_size));
     RegisterData(
             ghost_vert_name,
             new ::water_app_data::FaceArray<TV>(ghost_vert_size));
-    RegisterData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
+    RegisterData(
+            ghost_horiz_name,
+            new ::water_app_data::FaceArray<TV>(ghost_horiz_size));
+    RegisterData(
+            ghost_corner_name,
+            new ::water_app_data::FaceArray<TV>(ghost_corner_size));
+    RegisterData("sim_data", new NonAdvData<TV, T>(kAllMainSize));
 
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
@@ -134,12 +145,20 @@ void Main::Execute(std::string params, const DataArray& da)
     partition_t partition_id = 0;
     std::string par;
 
-    GetNewDataID(&d, 4);
+    GetNewDataID(&d, 12);
 
-    DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
-    DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
-    DefineData("face_velocities_1", d[2], partition_id, neighbor_partitions, par);
-    DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
+    DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
+    DefineData("face_velocities_all", d[1], partition_id, neighbor_partitions, par);
+    DefineData("face_velocities", d[2], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_name, d[3], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_name, d[4], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_name, d[5], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_name, d[6], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_name, d[7], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_name, d[8], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_name, d[9], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_name, d[10], partition_id, neighbor_partitions, par);
+    DefineData("sim_data", d[11], partition_id, neighbor_partitions, par);
 
     printf("Defined data\n");
 
@@ -152,12 +171,10 @@ void Main::Execute(std::string params, const DataArray& da)
     after.insert(j[1]);
     read.insert(d[0]);
     read.insert(d[1]);
-    read.insert(d[2]);
-    read.insert(d[3]);
+    read.insert(d[11]);
     write.insert(d[0]);
     write.insert(d[1]);
-    write.insert(d[2]);
-    write.insert(d[3]);
+    write.insert(d[11]);
     SpawnComputeJob("init", j[0], read, write, before, after, par);
     printf("Spawned init\n");
 
@@ -168,12 +185,10 @@ void Main::Execute(std::string params, const DataArray& da)
     before.insert(j[0]);
     read.insert(d[0]);
     read.insert(d[1]);
-    read.insert(d[2]);
-    read.insert(d[3]);
+    read.insert(d[11]);
     write.insert(d[0]);
     write.insert(d[1]);
-    write.insert(d[2]);
-    write.insert(d[3]);
+    write.insert(d[11]);
     SpawnComputeJob("loop", j[1], read, write, before, after, par);
     printf("Spawned loop\n");
 
@@ -197,7 +212,7 @@ void Init::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
@@ -207,8 +222,6 @@ void Init::Execute(std::string params, const DataArray& da)
                 break;
             case face_array_id:
                 face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
@@ -255,7 +268,7 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
@@ -265,8 +278,6 @@ void UptoAdvect::Execute(std::string params, const DataArray& da)
                 break;
             case face_array_id:
                 face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
@@ -313,7 +324,7 @@ void Advect::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
@@ -323,8 +334,6 @@ void Advect::Execute(std::string params, const DataArray& da)
                 break;
             case face_array_id:
                 face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
@@ -389,7 +398,7 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
@@ -399,8 +408,6 @@ void AfterAdvect::Execute(std::string params, const DataArray& da)
                 break;
             case face_array_id:
                 face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
@@ -446,7 +453,7 @@ void Loop::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
@@ -456,8 +463,6 @@ void Loop::Execute(std::string params, const DataArray& da)
                 break;
             case face_array_id:
                 face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
@@ -580,7 +585,7 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
     ::water_app_data::FaceArray<TV> *face_velocities = NULL;
     NonAdvData<TV, T> *sim_data = NULL;
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 3; i++)
     {
         printf("* Data with debug id %i\n", da[i]->get_debug_info());
         switch (da[i]->get_debug_info())
@@ -590,8 +595,6 @@ void WriteFrame::Execute(std::string params, const DataArray& da)
                 break;
             case face_array_id:
                 face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
                 break;
             case non_adv_id:
                 sim_data = (NonAdvData<TV, T> *)da[i];
