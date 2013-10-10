@@ -53,14 +53,17 @@ using nimbus::Job;
 using nimbus::Application;
 
 namespace {
-    TV_INT all_main_size(kAllMainSize, kAllMainSize);
+    TV_INT main_all_size(kMainAllSize, kMainAllSize);
     TV_INT main_size(kMainSize, kMainSize);
     TV_INT ghost_vert_in_size(kGhostSize, kMainSize);
     TV_INT ghost_horiz_in_size(kMainSize, kGhostSize);
     TV_INT ghost_corner_in_size(kGhostSize, kGhostSize);
-    std::string ghost_vert_in_name = "ghost_vel_vert_in";
-    std::string ghost_horiz_in_name = "ghost_vel_horiz_in";
-    std::string ghost_corner_in_name = "ghost_vel_corner_in";
+
+    std::string main_all_vel = "main_all_vel";
+    std::string main_vel = "main_vel";
+    std::string ghost_vert_in_vel = "ghost_vel_vert_in";
+    std::string ghost_horiz_in_vel = "ghost_vel_horiz_in";
+    std::string ghost_corner_in_vel = "ghost_vel_corner_in";
 };
 
 WaterApp::WaterApp() {
@@ -85,21 +88,21 @@ void WaterApp::Load() {
 
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData(
-            "face_velocities_all",
-            new ::water_app_data::FaceArray<TV>(all_main_size));
+            main_all_vel,
+            new ::water_app_data::FaceArray<TV>(main_all_size));
     RegisterData(
-            "face_velocities",
+            main_vel,
             new ::water_app_data::FaceArray<TV>(main_size));
     RegisterData(
-            ghost_vert_in_name,
+            ghost_vert_in_vel,
             new ::water_app_data::FaceArray<TV>(ghost_vert_in_size));
     RegisterData(
-            ghost_horiz_in_name,
+            ghost_horiz_in_vel,
             new ::water_app_data::FaceArray<TV>(ghost_horiz_in_size));
     RegisterData(
-            ghost_corner_in_name,
+            ghost_corner_in_vel,
             new ::water_app_data::FaceArray<TV>(ghost_corner_in_size));
-    RegisterData("sim_data", new NonAdvData<TV, T>(kAllMainSize));
+    RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
 
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
@@ -148,14 +151,14 @@ void Main::Execute(std::string params, const DataArray& da) {
     DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
     DefineData("face_velocities_all", d[1], partition_id, neighbor_partitions, par);
     DefineData("face_velocities", d[2], partition_id, neighbor_partitions, par);
-    DefineData(ghost_vert_in_name, d[3], partition_id, neighbor_partitions, par);
-    DefineData(ghost_vert_in_name, d[4], partition_id, neighbor_partitions, par);
-    DefineData(ghost_horiz_in_name, d[5], partition_id, neighbor_partitions, par);
-    DefineData(ghost_horiz_in_name, d[6], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_name, d[7], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_name, d[8], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_name, d[9], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_name, d[10], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_in_vel, d[3], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_in_vel, d[4], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_in_vel, d[5], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_in_vel, d[6], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[7], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[8], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[9], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[10], partition_id, neighbor_partitions, par);
     DefineData("sim_data", d[11], partition_id, neighbor_partitions, par);
 
     printf("Defined data\n");
