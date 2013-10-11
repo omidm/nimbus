@@ -224,6 +224,7 @@ void Init::Execute(std::string params, const DataArray& da) {
     }
     GetJobData();
     int frame = 0;
+    T_FACE_ARRAY *fv = new T_FACE_ARRAY();
     driver->face_velocities = velocities[0]->data();
     driver->sim_data = sim_data;
     Add_Source(sim_data);
@@ -233,6 +234,7 @@ void Init::Execute(std::string params, const DataArray& da) {
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*(water_app->advection_scalar()));
+    delete(fv);
     printf("Successfully completed init job\n");
 };
 

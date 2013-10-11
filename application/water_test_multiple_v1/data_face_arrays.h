@@ -68,6 +68,7 @@ namespace water_app_data {
                 TV_INT size_;
                 T_GRID *grid_;
                 T_FACE_ARRAY *data_;
+                int 
 
                 void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX &box);
                 void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
@@ -101,7 +102,8 @@ namespace water_app_data {
                 static void Update_Regions(
                         T_FACE_ARRAY *updated,
                         std::vector<FaceArray* > parts,
-                        int bandwidth);
+                        int bandwidth,
+                        int offset);
 
                 T_GRID *grid() {
                     return grid_;
