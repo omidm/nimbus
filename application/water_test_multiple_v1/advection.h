@@ -50,8 +50,7 @@ void Advect_Velocities (
         ::water_app_data::FaceArray<TV> *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,
-        int dt,
-        int time,
-        NonAdvData<TV, T> *sim_data);
+        T dt,
+        T time);
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_ADVECTION_H_

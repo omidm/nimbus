@@ -49,16 +49,15 @@ void Advect_Velocities (
         ::water_app_data::FaceArray<TV> *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,
-        int dt,
-        int time,
-        NonAdvData<TV, T> *sim_data) {
+        T dt,
+        T time) {
 
     water_app->advection_scalar()->Update_Advection_Equation_Face(
             *face_velocities->grid(),
             *face_velocities->data(),
             *face_vel_extended,
             *face_vel_extended,
-            *sim_data->incompressible->boundary,
-            sim_data->dt,
-            sim_data->time);
+            *water_app->boundary(),
+            dt,
+            time);
 }

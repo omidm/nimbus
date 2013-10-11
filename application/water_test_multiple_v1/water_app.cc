@@ -317,7 +317,7 @@ void Advect::Execute(std::string params, const DataArray& da) {
             true);
 
     Advect_Velocities(velocities[0], face_vel_extended, water_app,
-            adv_vel_par_pb.dt(), adv_vel_par_pb.time(), sim_data);
+            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
 
     delete(face_vel_extended);
 };
