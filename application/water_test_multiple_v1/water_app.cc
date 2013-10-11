@@ -52,20 +52,35 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
+/* Assumption: types_list contains a maximum of one kWaterDriver and one
+ * kFaceArray. */
 #define GetJobData()                                                        \
-    assert(da[0]->get_debug_info() == driver_id);                           \
-    WaterDriver<TV> *driver = (WaterDriver<TV> *)da[0];                     \
-    assert(da[1]->get_debug_info() == non_adv_id);                          \
-    NonAdvData<TV, T> *sim_data = (NonAdvData<TV, T> *)da[1];               \
+    WaterDriver<TV> *driver = NULL;                                         \
+    NonAdvData<TV, T> *sim_data = NULL;                                     \
     std::vector< ::water_app_data::FaceArray<TV>* > velocities;             \
-    for (unsigned int i = 0; i < 9; i++) {                                  \
-        assert(da[2+i]->get_debug_info() == face_array_id);                 \
-        velocities.push_back((::water_app_data::FaceArray<TV> *)da[2+i]);   \
-    };                                                                      \
-    printf("*** Barrier %i, %i, %i ***\n",                                  \
-            driver->get_debug_info(),                                       \
-            sim_data->get_debug_info(),                                     \
-            velocities[0]->get_debug_info())
+    int data_num = types_list.size();                                       \
+    assert(data_num = da.size());                                           \
+    printf("*** Liszt size = %i ***\n", data_num);                          \
+    for (int i = 0; i < data_num; i++) {                                    \
+        switch (types_list[i]) {                                            \
+            case driver_id:                                                 \
+                assert(da[i]->get_debug_info() == driver_id);               \
+                driver = (WaterDriver<TV> *)da[i];                          \
+                break;                                                      \
+            case non_adv_id:                                                \
+                assert(da[i]->get_debug_info() == non_adv_id);              \
+                sim_data = (NonAdvData<TV, T> *)da[1];                      \
+                break;                                                      \
+            case face_array_id:                                             \
+                assert(da[i]->get_debug_info() == face_array_id);           \
+                velocities.push_back(                                       \
+                        (::water_app_data::FaceArray<TV> *)da[i]);          \
+                break;                                                      \
+        }                                                                   \
+    }                                                                       \
+    if (driver || sim_data || velocities.size())                            \
+        asm volatile("" : : : "memory");
+    // asm is just a barrier to allow code to compile with unused variables    
 
 namespace {
     TV_INT main_size(kMainAllSize, kMainAllSize);
@@ -74,21 +89,18 @@ namespace {
     TV_INT ghost_corner_in_size(kGhostSize, kGhostSize);
 
     /* Advection does not require global location. Only counts and grid
-       methods are needed. */
+     * methods are needed. */
 
     std::string main_vel = "main_vel";
     std::string ghost_vert_in_vel = "ghost_vel_vert_in";
     std::string ghost_horiz_in_vel = "ghost_vel_horiz_in";
     std::string ghost_corner_in_vel = "ghost_vel_corner_in";
-
-
 };
 
 WaterApp::WaterApp() {
 };
 
 void WaterApp::Load() {
-
     printf("Worker beginning to load application\n");
 
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
@@ -216,6 +228,12 @@ Job* Init::Clone() {
 
 void Init::Execute(std::string params, const DataArray& da) {
     printf("Executing init job\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
+    }
     GetJobData();
     int frame = 0;
     driver->face_velocities = velocities[0];
@@ -241,6 +259,12 @@ Job* UptoAdvect::Clone() {
 
 void UptoAdvect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running upto advect\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
+    }
     GetJobData();
 
     WaterApp *water_app = (WaterApp *)application();
@@ -264,6 +288,12 @@ Job* Advect::Clone() {
 
 void Advect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running advect\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
+    }
     GetJobData();
 
     printf("### PARAMETERS \"%s\"\n", params.c_str());
@@ -306,6 +336,12 @@ Job* AfterAdvect::Clone() {
 
 void AfterAdvect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running after advect\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
+    }
     GetJobData();
 
     WaterApp *water_app = (WaterApp *)application();
@@ -329,6 +365,12 @@ Job* Loop::Clone() {
 
 void Loop::Execute(std::string params, const DataArray& da) {
     printf("Executing forloop job\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
+    }
     GetJobData();
     driver->IncreaseTime();
 
@@ -426,6 +468,12 @@ Job* WriteFrame::Clone() {
 
 void WriteFrame::Execute(std::string params, const DataArray& da) {
     printf( "@@ Executing write frame job\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
+    }
     GetJobData();
 
     if (driver->IsFrameDone()) {
