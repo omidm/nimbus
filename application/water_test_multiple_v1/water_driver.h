@@ -43,38 +43,24 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DRIVER_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_DRIVER_H_
 
-/* Include relevant PhysBAM files here.
-*/
-#include "shared/nimbus.h"
+/* Include relevant PhysBAM files here. */
 #include "physbam_include.h"
+#include "shared/nimbus.h"
 
 #define driver_id 15
 
 using namespace PhysBAM;
 
 /* This class contains all constant parameters and policies, and functions to
- * operate on data supplied by Nimbus.
- */
+ * operate on data supplied by Nimbus. */
 template <class TV>
 class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
 {
     private:
-        /* typedefs */
         typedef typename TV::SCALAR T;
         typedef typename TV::template REBIND<int>::TYPE TV_INT;
-
-        typedef typename LEVELSET_POLICY<GRID<TV> >::
-            LEVELSET T_LEVELSET;
-        typedef typename ADVECTION_POLICY<GRID<TV> >::
-            ADVECTION_SEMI_LAGRANGIAN_SCALAR T_ADVECTION_SEMI_LAGRANGIAN_SCALAR;
-        typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::
-            ARRAYS_SCALAR T_ARRAYS_SCALAR;
-        typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::
-            FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
-        typedef typename T_ARRAYS_SCALAR::template REBIND<bool>::
-            TYPE T_ARRAYS_BOOL;
-        typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::
-            TYPE T_FACE_ARRAYS_BOOL;
+        typedef typename LEVELSET_POLICY<GRID<TV> >::LEVELSET T_LEVELSET;
+        typedef ARRAY<T, FACE_INDEX< TV::dimension> > T_FACE_ARRAY;
 
         int size_;
         int frame_done;
@@ -82,7 +68,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
 
     public:
 
-        Data *face_velocities;
+        T_FACE_ARRAY *face_velocities;
         Data *sim_data;
 
         int id_debug;
@@ -94,9 +80,7 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         virtual Data* Clone();
         virtual int get_debug_info();
 
-        /* water simulation parameters
-        */
-        //TODO(eventually): time and frame information should not be here
+        /* water simulation parameters */
         STREAM_TYPE stream_type;
         int number_of_ghost_cells;
         T cfl, initial_time, time, dt, frame_rate;
@@ -104,21 +88,18 @@ class WaterDriver : public LEVELSET_CALLBACKS<GRID<TV> >, public Data
         int output_number;
         std::string frame_title;
 
-        /* I/O, logging
-        */
+        /* I/O, logging */
         int write_substeps_level;
         bool write_output_files;
         std::string output_directory;
 
         /* water driver functions, these should be called from the execute
-         * functions for the jobs
-         */
+         * functions for the jobs */
         bool CheckProceed();
         void IncreaseTime();
         bool IsFrameDone();
 
-        /* helper functions.
-        */
+        /* helper functions. */
         void Write_Substep
             (const std::string &title, const int substep, const int level = 0);
         void Write_Output_Files(const int frame);

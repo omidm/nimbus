@@ -39,6 +39,7 @@
 #include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
+#include "physbam_include.h"
 #include "proto_files/adv_vel_par.pb.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
@@ -223,11 +224,11 @@ void Init::Execute(std::string params, const DataArray& da) {
     }
     GetJobData();
     int frame = 0;
-    driver->face_velocities = velocities[0];
+    driver->face_velocities = velocities[0]->data();
     driver->sim_data = sim_data;
     Add_Source(sim_data);
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
-    sim_data->initialize(driver, velocities[0], frame);
+    sim_data->initialize(driver, velocities[0]->data(), frame);
     sim_data->incompressible->
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->particle_levelset_evolution->Levelset_Advection(1).
@@ -253,7 +254,7 @@ void UptoAdvect::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    sim_data->BeforeAdvection(driver, velocities[0]);
+    sim_data->BeforeAdvection(driver, velocities[0]->data());
 };
 
 Advect::Advect(Application *app) {
@@ -307,7 +308,7 @@ void AfterAdvect::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    sim_data->AfterAdvection(driver, velocities[0]);
+    sim_data->AfterAdvection(driver, velocities[0]->data());
 };
 
 Loop::Loop(Application *app) {

@@ -37,8 +37,8 @@
   */
 
 #include "app_config.h"
-#include "data_face_arrays.h"
 #include <iostream>
+#include "physbam_include.h"
 #include "water_driver.h"
 #include "water_data_driver.h"
 
@@ -125,8 +125,7 @@ Get_Levelset_Velocity(
         ARRAY<T,FACE_INDEX<TV::dimension> > &V_levelset,
         const T time) const PHYSBAM_OVERRIDE
 {
-    ::water_app_data::FaceArray<TV> *fv = (::water_app_data::FaceArray<TV> *)face_velocities;
-    V_levelset = *fv->data();
+    V_levelset = *face_velocities;
 }
 
 template <class TV> void WaterDriver<TV>::
@@ -177,8 +176,7 @@ Write_Output_Files(const int frame)
             (output_directory + "/common/first_frame", frame, "\n");
 
     NonAdvData<TV, T> *sd = (NonAdvData<TV, T> *)sim_data;
-    ::water_app_data::FaceArray<TV> *fv = (::water_app_data::FaceArray<TV> *)face_velocities;
-    sd->Write_Output_Files_EF(frame, fv, this);
+    sd->Write_Output_Files_EF(frame, face_velocities, this);
 
     FILE_UTILITIES::Write_To_Text_File
         (output_directory + "/common/last_frame", frame, "\n");
@@ -203,10 +201,8 @@ CheckProceed()
     }
 
     LOG::Time("Calculate Dt");
-    ::water_app_data::FaceArray<TV> *fv = (::water_app_data::FaceArray<TV> *)face_velocities;
-
     sd->particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
-    dt = cfl * sd->incompressible->CFL(*fv->data());
+    dt = cfl * sd->incompressible->CFL(*face_velocities);
     dt = min(dt, sd->particle_levelset_evolution->CFL(false, false));
     if ( time + dt >= target_time)
     {
