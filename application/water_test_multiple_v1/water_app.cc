@@ -228,6 +228,10 @@ void Init::Execute(std::string params, const DataArray& da) {
     Add_Source(sim_data);
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     sim_data->initialize(driver, velocities[0], frame);
+    sim_data->incompressible->
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*(water_app->advection_scalar()));
     printf("Successfully completed init job\n");
 };
 
@@ -249,11 +253,6 @@ void UptoAdvect::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     sim_data->BeforeAdvection(driver, velocities[0]);
 };
 
@@ -277,11 +276,6 @@ void Advect::Execute(std::string params, const DataArray& da) {
     GetJobData();
     ::parameters::AdvVelPar adv_vel_par_pb;
     adv_vel_par_pb.ParseFromString(params);
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     T_FACE_ARRAY *face_vel_extended = 
         new T_FACE_ARRAY(*(velocities[0]->grid()), kGhostSize);
     velocities[0]->Extend_Array(
@@ -291,7 +285,6 @@ void Advect::Execute(std::string params, const DataArray& da) {
             kGhostSize,
             driver->dt + driver->time,
             true);
-
     Advect_Velocities(velocities[0], face_vel_extended, water_app,
             adv_vel_par_pb.dt(), adv_vel_par_pb.time());
     delete(face_vel_extended);
@@ -315,11 +308,6 @@ void AfterAdvect::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
     sim_data->AfterAdvection(driver, velocities[0]);
 };
 
