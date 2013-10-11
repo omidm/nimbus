@@ -269,7 +269,6 @@ void Advect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running advect\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
     for (int i = 0; i < 9; i++) {
         types_list.push_back(face_array_id);
     }
@@ -364,9 +363,9 @@ void Loop::Execute(std::string params, const DataArray& da) {
         read.clear(); write.clear();
         before.insert(j[0]);
         after.insert(j[2]);
-        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[0]);
         read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[0]);
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
         printf("Spawned advect\n");
