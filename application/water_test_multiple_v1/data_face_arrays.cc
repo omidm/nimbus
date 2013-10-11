@@ -121,8 +121,8 @@ namespace water_app_data {
             return true;
         }
 
-    // DeSerialize should be called only after Create has been called. Create
-    // ensures that required memory has been allocated.
+    /* DeSerialize should be called only after Create has been called. Create
+       ensures that required memory has been allocated. */
     template <class TV> bool FaceArray<TV>::
         DeSerialize(const SerializedData &ser_data, Data **result) {
             assert(result);
@@ -182,21 +182,14 @@ namespace water_app_data {
                 T_BOX& box) {
             TV_INT i, j;
             for (int axis = 1; axis <= 2; axis++) {
-                int dx = 0;
-                int dy = 0;
-                if (axis == 1)
-                    dx = 1;
-                else
-                    dy = 1;
-
-                j.x = 1;
-                for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++) {
-                    j.y = 1;
-                    for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
+                int dx = axis == 1? 1 : 0;
+                int dy = axis == 2? 1 : 0;
+                for(j.x = 1, i.x = box.min_corner.x;
+                        i.x <= (box.max_corner.x + dx); i.x++, j.x++) {
+                    for(j.y = 1, i.y = box.min_corner.y;
+                            i.y <= (box.max_corner.y + dy); i.y++, j.y++) {
                         (*(data_))(axis, i) = (*(from))(axis, j);
-                        j.y++;
                     }
-                    j.x++;
                 }
             }
         }
@@ -209,57 +202,46 @@ namespace water_app_data {
                 std::vector<FaceArray * > parts,
                 int bandwidth,
                 int offset = 0) {
-
             TV_INT min_corner, max_corner;
             T_BOX box;
-
             TV_INT max_d = result->domain_indices.Maximum_Corner() - offset;
             TV_INT min_d = result->domain_indices.Minimum_Corner() + offset;
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
-
             if (parts[1]) {
                 box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                 parts[1]->Glue_Face_Array(result,  box);
             }
-
             if (parts[3]) {
                 box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                 parts[3]->Glue_Face_Array(result, box);
             }
-
             if (parts[6]) {
                 box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                 parts[6]->Glue_Face_Array(result, box);
             }
-
             if (parts[8]) {
                 box = T_BOX
                     (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
                 parts[8]->Glue_Face_Array(result, box);
             }
-
             if (parts[2]) {
                 box = T_BOX(1, len_x, 1-bandwidth, 0);
                 parts[2]->Glue_Face_Array(result, box);
             }
-
             if (parts[4]) {
                 box = T_BOX(1-bandwidth, 0, 1, len_y);
                 parts[4]->Glue_Face_Array(result, box);
             }
-
             if (parts[5]) {
                 box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
                 parts[5]->Glue_Face_Array(result, box);
             }
-
             if (parts[7]) {
                 box = T_BOX
                     (1, len_x, len_y+1, len_y+bandwidth);
                 parts[7]->Glue_Face_Array(result, box);
             }
-
             assert(parts[0]);
             box = T_BOX(1, len_x, 1, len_y);
             parts[0]->Glue_Face_Array(result, box);
@@ -267,6 +249,18 @@ namespace water_app_data {
 
     template <class TV> void FaceArray<TV>::
         Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box) {
+            TV_INT i, j;
+            for (int axis = 1; axis <= 2; axis++) {
+                int dx = axis == 1? 1 : 0;
+                int dy = axis == 2? 1 : 0;
+                for(j.x = 1, i.x = box.min_corner.x;
+                        i.x <= (box.max_corner.x + dx); i.x++, j.x++) {
+                    for(j.y = 1, i.y = box.min_corner.y;
+                            i.y <= (box.max_corner.y + dy); i.y++, j.y++) {
+                        (*(data_))(axis, j) = (*(from))(axis, j);
+                    }
+                }
+            }
         }
 
     template <class TV> void FaceArray<TV>::
@@ -292,6 +286,31 @@ namespace water_app_data {
                 box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                 parts[6]->Update_Face_Array(updated, box);
             }
+            if (parts[8]) {
+                box = T_BOX
+                    (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
+                parts[8]->Update_Face_Array(updated, box);
+            }
+            if (parts[2]) {
+                box = T_BOX(1, len_x, 1-bandwidth, 0);
+                parts[2]->Update_Face_Array(updated, box);
+            }
+            if (parts[4]) {
+                box = T_BOX(1-bandwidth, 0, 1, len_y);
+                parts[4]->Update_Face_Array(updated, box);
+            }
+            if (parts[5]) {
+                box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
+                parts[5]->Update_Face_Array(updated, box);
+            }
+            if (parts[7]) {
+                box = T_BOX
+                    (1, len_x, len_y+1, len_y+bandwidth);
+                parts[7]->Update_Face_Array(updated, box);
+            }
+            assert(parts[0]);
+            box = T_BOX(1, len_x, 1, len_y);
+            parts[0]->Update_Face_Array(updated, box);
         }
 
     template class ::water_app_data::FaceArray<TVF2>;
