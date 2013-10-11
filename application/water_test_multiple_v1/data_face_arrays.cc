@@ -263,6 +263,8 @@ namespace water_app_data {
             }
         }
 
+    /* This needs the center region right now due to the way it is
+     * implemented. */
     template <class TV> void FaceArray<TV>::
         Update_Regions(
                 T_FACE_ARRAY* updated,
