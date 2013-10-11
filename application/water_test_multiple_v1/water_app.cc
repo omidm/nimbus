@@ -296,9 +296,8 @@ void Advect::Execute(std::string params, const DataArray& da) {
     }
     GetJobData();
 
-    printf("### PARAMETERS \"%s\"\n", params.c_str());
-//    ::parameters::AdvVelPar adv_vel_par_pb;
-//    adv_vel_par_pb.ParseFromString(params);
+    ::parameters::AdvVelPar adv_vel_par_pb;
+    adv_vel_par_pb.ParseFromString(params);
 
     WaterApp *water_app = (WaterApp *)application();
     sim_data->incompressible->
@@ -317,10 +316,8 @@ void Advect::Execute(std::string params, const DataArray& da) {
             driver->dt + driver->time,
             true);
 
-//    Advect_Velocities(face_velocities, face_vel_extended, water_app,
-//            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
     Advect_Velocities(velocities[0], face_vel_extended, water_app,
-            driver->dt, driver->time, sim_data);
+            adv_vel_par_pb.dt(), adv_vel_par_pb.time(), sim_data);
 
     delete(face_vel_extended);
 };
@@ -404,11 +401,10 @@ void Loop::Execute(std::string params, const DataArray& da) {
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
 
-//        ::parameters::AdvVelPar adv_vel_par_pb;
-//        adv_vel_par_pb.set_dt(driver->dt);
-//        adv_vel_par_pb.set_time(driver->time);
-//        adv_vel_par_pb.SerializeToString(&par);
-//        printf("*** PARAMETERS \"%s\"\n", par.c_str());
+        ::parameters::AdvVelPar adv_vel_par_pb;
+        adv_vel_par_pb.set_dt(driver->dt);
+        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb.SerializeToString(&par);
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
