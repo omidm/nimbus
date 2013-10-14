@@ -44,6 +44,5 @@
 #include "physbam_range_2d.pb.h"
 #include "physbam_grid_2d.pb.h"
 #include "physbam_face_array_2d.pb.h"
-#include "app_face_array_2d.pb.h"
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_PB_INCLUDE_2D_H_

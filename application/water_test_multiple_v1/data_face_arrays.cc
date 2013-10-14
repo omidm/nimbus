@@ -38,7 +38,6 @@
 
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "proto_files/app_face_array_2d.pb.h"
 #include "proto_files/physbam_serialize_data_arrays_2d.h"
 #include "proto_files/physbam_serialize_data_common_2d.h"
 #include "proto_files/physbam_deserialize_data_arrays_2d.h"
@@ -57,6 +56,14 @@ namespace water_app_data {
             size_(size),
             grid_(0),
             data_(0){}
+
+    template <class TV> FaceArray<TV>::
+        FaceArray(TV_INT size, DataRegion region) :
+            size_(size),
+            grid_(0),
+            data_(0){
+                set_region(region);
+            }
 
     template <class TV> void FaceArray<TV>::
         Create() {
@@ -94,29 +101,8 @@ namespace water_app_data {
     template <class TV> bool FaceArray<TV>::
         Serialize(SerializedData *ser_data) {
             assert(ser_data);
-            ::communication::AppFaceArray2d pb_fa;
-            ::communication::PhysbamVectorInt2d *pb_fa_size = 
-                pb_fa.mutable_size();
-            ::physbam_pb::make_pb_object(&size_, pb_fa_size);
-            if (grid_ != NULL) {
-                ::communication::PhysbamGrid2d *pb_fa_grid =
-                    pb_fa.mutable_grid();
-                ::physbam_pb::make_pb_object(grid_, pb_fa_grid);
-            }
-            if (data_ != NULL) {
-                ::communication::PhysbamFaceArray2d *pb_fa_data =
-                    pb_fa.mutable_data();
-                ::physbam_pb::make_pb_object(data_, pb_fa_data);
-            }
-            std::string ser;
-            if (!pb_fa.SerializeToString(&ser)) {
-                ser_data->set_size(0);
-                return false;
-            }
-            ser_data->set_size(ser.length());
-            char *buffer = new char(ser.length() + 1);
-            strcpy(buffer, ser.c_str());
-            ser_data->set_data_ptr(buffer);
+            ::communication::PhysbamFaceArray2d pb_fa;
+            ::physbam_pb::make_pb_object(data(), &pb_fa);
             return true;
         }
 
@@ -130,20 +116,10 @@ namespace water_app_data {
             if (buff_size <= 0)
                 return false;
             assert(buffer);
-            ::communication::AppFaceArray2d pb_fa;
+            ::communication::PhysbamFaceArray2d pb_fa;
             pb_fa.ParseFromString((std::string)buffer);
-            TV_INT size;
-            ::physbam_pb::make_physbam_object(&size, pb_fa.size());
-            *result = new FaceArray<TV>(size);
-            if (*result == NULL)
-                return false;
             FaceArray<TV> *des = (FaceArray<TV> *)(*result);
-            des->Create();
-            if (pb_fa.has_grid()) {
-                ::physbam_pb::make_physbam_object(des->grid_, pb_fa.grid());
-            }
-            if (pb_fa.has_data())
-                ::physbam_pb::make_physbam_object(des->data_, pb_fa.data());
+            ::physbam_pb::make_physbam_object(des->data(), pb_fa);
             return true;
         }
 
