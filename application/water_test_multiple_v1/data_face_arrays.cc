@@ -56,8 +56,7 @@ namespace water_app_data {
         FaceArray(TV_INT size) :
             size_(size),
             grid_(0),
-            data_(0) {
-        }
+            data_(0){}
 
     template <class TV> void FaceArray<TV>::
         Create() {
@@ -179,15 +178,15 @@ namespace water_app_data {
     template <class TV> void FaceArray<TV>::
         Glue_Face_Array(
                 T_FACE_ARRAY* from,
-                T_BOX& box) {
+                T_BOX *box) {
             TV_INT i, j;
             for (int axis = 1; axis <= 2; axis++) {
                 int dx = axis == 1? 1 : 0;
                 int dy = axis == 2? 1 : 0;
-                for(j.x = 1, i.x = box.min_corner.x;
-                        i.x <= (box.max_corner.x + dx); i.x++, j.x++) {
-                    for(j.y = 1, i.y = box.min_corner.y;
-                            i.y <= (box.max_corner.y + dy); i.y++, j.y++) {
+                for(j.x = 1, i.x = box->min_corner.x;
+                        i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
+                    for(j.y = 1, i.y = box->min_corner.y;
+                            i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
                         (*(data_))(axis, i) = (*(from))(axis, j);
                     }
                 }
@@ -199,7 +198,7 @@ namespace water_app_data {
     template <class TV> void FaceArray<TV>::
         Glue_Regions(
                 T_FACE_ARRAY* result,
-                std::vector<FaceArray * > parts,
+                std::vector<FaceArray * > *parts,
                 int bandwidth,
                 int offset = 0) {
             TV_INT min_corner, max_corner;
@@ -208,55 +207,62 @@ namespace water_app_data {
             TV_INT min_d = result->domain_indices.Minimum_Corner() + offset;
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
-            if (parts[1]) {
-                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-                parts[1]->Glue_Face_Array(result,  box);
+            unsigned int parts_num = parts->size();
+            for (unsigned int i = 0; i < parts_num; i++)
+            {
+                FaceArray *part = (*parts)[i];
+                switch(part->region())
+                {
+                    case kDataBottomLeft:
+                        box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
+                        break;
+                    case kDataBottomRight:
+                        box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                        break;
+                    case kDataUpperLeft:
+                        box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataUpperRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                len_y+1,
+                                len_y+bandwidth);
+                        break;
+                    case kDataBottom:
+                        box = T_BOX(1, len_x, 1-bandwidth, 0);
+                        break;
+                    case kDataLeft:
+                        box = T_BOX(1-bandwidth, 0, 1, len_y);
+                        break;
+                    case kDataRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                1,
+                                len_y);
+                        break;
+                    case kDataUp:
+                        box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataInterior:
+                        box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                }
+                part->Glue_Face_Array(result, &box);
             }
-            if (parts[3]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-                parts[3]->Glue_Face_Array(result, box);
-            }
-            if (parts[6]) {
-                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-                parts[6]->Glue_Face_Array(result, box);
-            }
-            if (parts[8]) {
-                box = T_BOX
-                    (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
-                parts[8]->Glue_Face_Array(result, box);
-            }
-            if (parts[2]) {
-                box = T_BOX(1, len_x, 1-bandwidth, 0);
-                parts[2]->Glue_Face_Array(result, box);
-            }
-            if (parts[4]) {
-                box = T_BOX(1-bandwidth, 0, 1, len_y);
-                parts[4]->Glue_Face_Array(result, box);
-            }
-            if (parts[5]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
-                parts[5]->Glue_Face_Array(result, box);
-            }
-            if (parts[7]) {
-                box = T_BOX
-                    (1, len_x, len_y+1, len_y+bandwidth);
-                parts[7]->Glue_Face_Array(result, box);
-            }
-            assert(parts[0]);
-            box = T_BOX(1, len_x, 1, len_y);
-            parts[0]->Glue_Face_Array(result, box);
         }
 
     template <class TV> void FaceArray<TV>::
-        Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box) {
+        Update_Face_Array(T_FACE_ARRAY* from, T_BOX *box) {
             TV_INT i, j;
             for (int axis = 1; axis <= 2; axis++) {
                 int dx = axis == 1? 1 : 0;
                 int dy = axis == 2? 1 : 0;
-                for(j.x = 1, i.x = box.min_corner.x;
-                        i.x <= (box.max_corner.x + dx); i.x++, j.x++) {
-                    for(j.y = 1, i.y = box.min_corner.y;
-                            i.y <= (box.max_corner.y + dy); i.y++, j.y++) {
+                for(j.x = 1, i.x = box->min_corner.x;
+                        i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
+                    for(j.y = 1, i.y = box->min_corner.y;
+                            i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
                         (*(data_))(axis, j) = (*(from))(axis, j);
                     }
                 }
@@ -268,7 +274,7 @@ namespace water_app_data {
     template <class TV> void FaceArray<TV>::
         Update_Regions(
                 T_FACE_ARRAY* updated,
-                std::vector<FaceArray* > parts,
+                std::vector<FaceArray* > *parts,
                 int bandwidth,
                 int offset = 0) {
             TV_INT min_corner, max_corner;
@@ -277,43 +283,50 @@ namespace water_app_data {
             TV_INT min_d = updated->domain_indices.Minimum_Corner() + offset;
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
-            if (parts[1]) {
-                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-                parts[1]->Update_Face_Array(updated, box);
+            unsigned int parts_num = parts->size();
+            for (unsigned int i = 0; i < parts_num; i++)
+            {
+                FaceArray *part = (*parts)[i];
+                switch(part->region())
+                {
+                    case kDataBottomLeft:
+                        box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
+                        break;
+                    case kDataBottomRight:
+                        box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                        break;
+                    case kDataUpperLeft:
+                        box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataUpperRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                len_y+1,
+                                len_y+bandwidth);
+                        break;
+                    case kDataBottom:
+                        box = T_BOX(1, len_x, 1-bandwidth, 0);
+                        break;
+                    case kDataLeft:
+                        box = T_BOX(1-bandwidth, 0, 1, len_y);
+                        break;
+                    case kDataRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                1,
+                                len_y);
+                        break;
+                    case kDataUp:
+                        box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataInterior:
+                        box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                }
+                part->Update_Face_Array(updated, &box);
             }
-            if (parts[3]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-                parts[3]->Update_Face_Array(updated, box);
-            }
-            if (parts[6]) {
-                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-                parts[6]->Update_Face_Array(updated, box);
-            }
-            if (parts[8]) {
-                box = T_BOX
-                    (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
-                parts[8]->Update_Face_Array(updated, box);
-            }
-            if (parts[2]) {
-                box = T_BOX(1, len_x, 1-bandwidth, 0);
-                parts[2]->Update_Face_Array(updated, box);
-            }
-            if (parts[4]) {
-                box = T_BOX(1-bandwidth, 0, 1, len_y);
-                parts[4]->Update_Face_Array(updated, box);
-            }
-            if (parts[5]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
-                parts[5]->Update_Face_Array(updated, box);
-            }
-            if (parts[7]) {
-                box = T_BOX
-                    (1, len_x, len_y+1, len_y+bandwidth);
-                parts[7]->Update_Face_Array(updated, box);
-            }
-            assert(parts[0]);
-            box = T_BOX(1, len_x, 1, len_y);
-            parts[0]->Update_Face_Array(updated, box);
         }
 
     template class ::water_app_data::FaceArray<TVF2>;

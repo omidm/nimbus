@@ -70,8 +70,8 @@ namespace water_app_data {
                 T_GRID *grid_;
                 T_FACE_ARRAY *data_;
 
-                void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX &box);
-                void Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box);
+                void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX *box);
+                void Update_Face_Array(T_FACE_ARRAY* from, T_BOX *box);
 
             public:
 
@@ -95,13 +95,13 @@ namespace water_app_data {
                  * implemented. */
                 static void Glue_Regions(
                         T_FACE_ARRAY* result,
-                        std::vector<FaceArray* > parts,
+                        std::vector<FaceArray* > *parts,
                         int bandwidth,
                         int offset);
 
                 static void Update_Regions(
                         T_FACE_ARRAY *updated,
-                        std::vector<FaceArray* > parts,
+                        std::vector<FaceArray* > *parts,
                         int bandwidth,
                         int offset);
 

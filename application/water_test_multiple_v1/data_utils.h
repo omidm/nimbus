@@ -46,6 +46,7 @@
 namespace water_app_data {
 
     enum DataRegion {
+        kDataInterior,
         kDataUpperLeft,
         kDataUp,
         kDataUpperRight,
@@ -53,14 +54,14 @@ namespace water_app_data {
         kDataBottomRight,
         kDataBottom,
         kDataBottomLeft,
-        kDataLeft,
-        kDataInterior
+        kDataLeft
     };
 
     class SimData : public ::nimbus::Data {
         private:
             DataRegion region_;
         public:
+            SimData() : region_(kDataInterior) {}
             DataRegion region() {
                 return region_;
             }

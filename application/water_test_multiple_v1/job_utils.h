@@ -44,6 +44,7 @@
 #include "shared/nimbus.h"
 
 enum JobRegion {
+    kJobInterior,
     kJobUpperLeft,
     kJobUp,
     kJobUpperRight,
@@ -51,14 +52,14 @@ enum JobRegion {
     kJobBottomRight,
     kJobBottom,
     kJobBottomLeft,
-    kJobLeft,
-    kJobInterior
+    kJobLeft
 };
 
 class SimJob : public Job {
     private:
         JobRegion region_;
     public:
+        SimJob() : region_(kJobInterior) {}
         JobRegion region() {
             return region_;
         }
