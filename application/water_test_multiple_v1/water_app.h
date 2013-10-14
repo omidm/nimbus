@@ -91,18 +91,6 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
-class SimJob : public Job {
-    private:
-        JobRegion region_;
-    public:
-        JobRegion region() {
-            return region_;
-        }
-        void set_region(JobRegion region) {
-            region_ = region;
-        }
-};
-
 class Init : public SimJob {
     public:
         Init(Application *app);

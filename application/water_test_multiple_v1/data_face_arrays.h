@@ -39,6 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 
+#include "data_utils.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
 
@@ -51,7 +52,7 @@ namespace water_app_data {
     /* Face array for storing quantities like face velocities.
     */
     template <class TV>
-        class FaceArray : public ::nimbus::Data {
+        class FaceArray : public SimData {
 
             private:
                 typedef typename TV::SCALAR T;

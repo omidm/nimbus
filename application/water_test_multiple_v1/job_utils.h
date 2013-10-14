@@ -41,6 +41,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 
+#include "shared/nimbus.h"
+
 enum JobRegion {
     kJobUpperLeft,
     kJobUp,
@@ -51,6 +53,18 @@ enum JobRegion {
     kJobBottomLeft,
     kJobLeft,
     kJobInterior
+};
+
+class SimJob : public Job {
+    private:
+        JobRegion region_;
+    public:
+        JobRegion region() {
+            return region_;
+        }
+        void set_region(JobRegion region) {
+            region_ = region;
+        }
 };
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_

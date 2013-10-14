@@ -41,16 +41,34 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
 
-enum DataRegion {
-    kDataUpperLeft,
-    kDataUp,
-    kDataUpperRight,
-    kDataRight,
-    kDataBottomRight,
-    kDataBottom,
-    kDataBottomLeft,
-    kDataLeft,
-    kDataInterior
-};
+#include "shared/nimbus.h"
+
+namespace water_app_data {
+
+    enum DataRegion {
+        kDataUpperLeft,
+        kDataUp,
+        kDataUpperRight,
+        kDataRight,
+        kDataBottomRight,
+        kDataBottom,
+        kDataBottomLeft,
+        kDataLeft,
+        kDataInterior
+    };
+
+    class SimData : public ::nimbus::Data {
+        private:
+            DataRegion region_;
+        public:
+            DataRegion region() {
+                return region_;
+            }
+            void set_region(DataRegion region) {
+                region_ = region;
+            }
+    };
+
+} // namespace water_app_data
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
