@@ -38,7 +38,6 @@
 
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "proto_files/app_face_array_2d.pb.h"
 #include "proto_files/physbam_serialize_data_arrays_2d.h"
 #include "proto_files/physbam_serialize_data_common_2d.h"
 #include "proto_files/physbam_deserialize_data_arrays_2d.h"
@@ -55,30 +54,37 @@ namespace water_app_data {
     template <class TV> FaceArray<TV>::
         FaceArray(TV_INT size) :
             size_(size),
-            grid(0),
-            data(0) {
-        }
+            grid_(0),
+            data_(0){}
+
+    template <class TV> FaceArray<TV>::
+        FaceArray(TV_INT size, DataRegion region) :
+            size_(size),
+            grid_(0),
+            data_(0){
+                set_region(region);
+            }
 
     template <class TV> void FaceArray<TV>::
         Create() {
             std::cout << "Creating FaceArray\n";
-            if (!grid)
-                delete grid;
-            if (!data)
-                delete data;
-            grid = new T_GRID(size_,
+            if (!grid_)
+                delete grid_;
+            if (!data_)
+                delete data_;
+            grid_ = new T_GRID(size_,
                     T_RANGE::Unit_Box(),
                     true);
-            assert(grid);
-            data = new  T_FACE_ARRAY(*grid);
-            assert(data);
+            assert(grid_);
+            data_ = new  T_FACE_ARRAY(*grid_);
+            assert(data_);
         }
 
     template <class TV> void FaceArray<TV>::
         Destroy() {
             printf("Destroying face array\n");
-            delete grid;
-            delete data;
+            delete grid_;
+            delete data_;
         }
 
     template <class TV> ::nimbus::Data* FaceArray<TV>::
@@ -95,34 +101,13 @@ namespace water_app_data {
     template <class TV> bool FaceArray<TV>::
         Serialize(SerializedData *ser_data) {
             assert(ser_data);
-            ::communication::AppFaceArray2d pb_fa;
-            ::communication::PhysbamVectorInt2d *pb_fa_size = 
-                pb_fa.mutable_size();
-            ::physbam_pb::make_pb_object(&size_, pb_fa_size);
-            if (grid != NULL) {
-                ::communication::PhysbamGrid2d *pb_fa_grid =
-                    pb_fa.mutable_grid();
-                ::physbam_pb::make_pb_object(grid, pb_fa_grid);
-            }
-            if (data != NULL) {
-                ::communication::PhysbamFaceArray2d *pb_fa_data =
-                    pb_fa.mutable_data();
-                ::physbam_pb::make_pb_object(data, pb_fa_data);
-            }
-            std::string ser;
-            if (!pb_fa.SerializeToString(&ser)) {
-                ser_data->set_size(0);
-                return false;
-            }
-            ser_data->set_size(ser.length());
-            char *buffer = new char(ser.length() + 1);
-            strcpy(buffer, ser.c_str());
-            ser_data->set_data_ptr(buffer);
+            ::communication::PhysbamFaceArray2d pb_fa;
+            ::physbam_pb::make_pb_object(data(), &pb_fa);
             return true;
         }
 
-    // DeSerialize should be called only after Create has been called. Create
-    // ensures that required memory has been allocated.
+    /* DeSerialize should be called only after Create has been called. Create
+       ensures that required memory has been allocated. */
     template <class TV> bool FaceArray<TV>::
         DeSerialize(const SerializedData &ser_data, Data **result) {
             assert(result);
@@ -131,20 +116,10 @@ namespace water_app_data {
             if (buff_size <= 0)
                 return false;
             assert(buffer);
-            ::communication::AppFaceArray2d pb_fa;
+            ::communication::PhysbamFaceArray2d pb_fa;
             pb_fa.ParseFromString((std::string)buffer);
-            TV_INT size;
-            ::physbam_pb::make_physbam_object(&size, pb_fa.size());
-            *result = new FaceArray<TV>(size);
-            if (*result == NULL)
-                return false;
             FaceArray<TV> *des = (FaceArray<TV> *)(*result);
-            des->Create();
-            if (pb_fa.has_grid()) {
-                ::physbam_pb::make_physbam_object(des->grid, pb_fa.grid());
-            }
-            if (pb_fa.has_data())
-                ::physbam_pb::make_physbam_object(des->data, pb_fa.data());
+            ::physbam_pb::make_physbam_object(des->data(), pb_fa);
             return true;
         }
 
@@ -179,24 +154,17 @@ namespace water_app_data {
     template <class TV> void FaceArray<TV>::
         Glue_Face_Array(
                 T_FACE_ARRAY* from,
-                T_BOX& box) {
+                T_BOX *box) {
             TV_INT i, j;
             for (int axis = 1; axis <= 2; axis++) {
-                int dx = 0;
-                int dy = 0;
-                if (axis == 1)
-                    dx = 1;
-                else
-                    dy = 1;
-
-                j.x = 1;
-                for(i.x = box.min_corner.x; i.x <= (box.max_corner.x + dx); i.x++) {
-                    j.y = 1;
-                    for(i.y = box.min_corner.y; i.y <= (box.max_corner.y + dy); i.y++) {
-                        (*(data))(axis, i) = (*(from))(axis, j);
-                        j.y++;
+                int dx = axis == 1? 1 : 0;
+                int dy = axis == 2? 1 : 0;
+                for(j.x = 1, i.x = box->min_corner.x;
+                        i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
+                    for(j.y = 1, i.y = box->min_corner.y;
+                            i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
+                        (*(data_))(axis, i) = (*(from))(axis, j);
                     }
-                    j.x++;
                 }
             }
         }
@@ -204,93 +172,136 @@ namespace water_app_data {
     /* This needs the center region right now due to the way it is
      * implemented. */
     template <class TV> void FaceArray<TV>::
-        Fill_Regions(
+        Glue_Regions(
                 T_FACE_ARRAY* result,
-                std::vector<FaceArray * > parts,
+                std::vector<FaceArray * > *parts,
                 int bandwidth,
                 int offset = 0) {
-
             TV_INT min_corner, max_corner;
             T_BOX box;
-
             TV_INT max_d = result->domain_indices.Maximum_Corner() - offset;
             TV_INT min_d = result->domain_indices.Minimum_Corner() + offset;
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
-
-            if (parts[1]) {
-                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-                parts[1]->Glue_Face_Array(result,  box);
+            unsigned int parts_num = parts->size();
+            for (unsigned int i = 0; i < parts_num; i++)
+            {
+                FaceArray *part = (*parts)[i];
+                switch(part->region())
+                {
+                    case kDataBottomLeft:
+                        box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
+                        break;
+                    case kDataBottomRight:
+                        box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                        break;
+                    case kDataUpperLeft:
+                        box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataUpperRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                len_y+1,
+                                len_y+bandwidth);
+                        break;
+                    case kDataBottom:
+                        box = T_BOX(1, len_x, 1-bandwidth, 0);
+                        break;
+                    case kDataLeft:
+                        box = T_BOX(1-bandwidth, 0, 1, len_y);
+                        break;
+                    case kDataRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                1,
+                                len_y);
+                        break;
+                    case kDataUp:
+                        box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataInterior:
+                        box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                }
+                part->Glue_Face_Array(result, &box);
             }
-
-            if (parts[3]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-                parts[3]->Glue_Face_Array(result, box);
-            }
-
-            if (parts[6]) {
-                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-                parts[6]->Glue_Face_Array(result, box);
-            }
-
-            if (parts[8]) {
-                box = T_BOX
-                    (len_x+1, len_x+bandwidth, len_y+1, len_y+bandwidth);
-                parts[8]->Glue_Face_Array(result, box);
-            }
-
-            if (parts[2]) {
-                box = T_BOX(1, len_x, 1-bandwidth, 0);
-                parts[2]->Glue_Face_Array(result, box);
-            }
-
-            if (parts[4]) {
-                box = T_BOX(1-bandwidth, 0, 1, len_y);
-                parts[4]->Glue_Face_Array(result, box);
-            }
-
-            if (parts[5]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1, len_y);
-                parts[5]->Glue_Face_Array(result, box);
-            }
-
-            if (parts[7]) {
-                box = T_BOX
-                    (1, len_x, len_y+1, len_y+bandwidth);
-                parts[7]->Glue_Face_Array(result, box);
-            }
-
-            assert(parts[0]);
-            box = T_BOX(1, len_x, 1, len_y);
-            parts[0]->Glue_Face_Array(result, box);
         }
 
     template <class TV> void FaceArray<TV>::
-        Update_Face_Array(T_FACE_ARRAY* from, T_BOX& box) {
+        Update_Face_Array(T_FACE_ARRAY* from, T_BOX *box) {
+            TV_INT i, j;
+            for (int axis = 1; axis <= 2; axis++) {
+                int dx = axis == 1? 1 : 0;
+                int dy = axis == 2? 1 : 0;
+                for(j.x = 1, i.x = box->min_corner.x;
+                        i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
+                    for(j.y = 1, i.y = box->min_corner.y;
+                            i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
+                        (*(data_))(axis, j) = (*(from))(axis, j);
+                    }
+                }
+            }
         }
 
+    /* This needs the center region right now due to the way it is
+     * implemented. */
     template <class TV> void FaceArray<TV>::
-        Copy_Updated_Regions(
+        Update_Regions(
                 T_FACE_ARRAY* updated,
-                std::vector<FaceArray* > parts,
-                int bandwidth) {
+                std::vector<FaceArray* > *parts,
+                int bandwidth,
+                int offset = 0) {
             TV_INT min_corner, max_corner;
             T_BOX box;
-            TV_INT max_d = updated->domain_indices.Maximum_Corner();
-            TV_INT min_d = updated->domain_indices.Minimum_Corner();
+            TV_INT max_d = updated->domain_indices.Maximum_Corner() - offset;
+            TV_INT min_d = updated->domain_indices.Minimum_Corner() + offset;
             int len_x = max_d.x - min_d.x + 1;
             int len_y = max_d.y - min_d.y + 1;
-            if (parts[1]) {
-                box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-                parts[1]->Update_Face_Array(updated, box);
-            }
-            if (parts[3]) {
-                box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-                parts[3]->Update_Face_Array(updated, box);
-            }
-            if (parts[6]) {
-                box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-                parts[6]->Update_Face_Array(updated, box);
+            unsigned int parts_num = parts->size();
+            for (unsigned int i = 0; i < parts_num; i++)
+            {
+                FaceArray *part = (*parts)[i];
+                switch(part->region())
+                {
+                    case kDataBottomLeft:
+                        box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
+                        break;
+                    case kDataBottomRight:
+                        box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
+                        break;
+                    case kDataUpperLeft:
+                        box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataUpperRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                len_y+1,
+                                len_y+bandwidth);
+                        break;
+                    case kDataBottom:
+                        box = T_BOX(1, len_x, 1-bandwidth, 0);
+                        break;
+                    case kDataLeft:
+                        box = T_BOX(1-bandwidth, 0, 1, len_y);
+                        break;
+                    case kDataRight:
+                        box = T_BOX(
+                                len_x+1,
+                                len_x+bandwidth,
+                                1,
+                                len_y);
+                        break;
+                    case kDataUp:
+                        box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
+                        break;
+                    case kDataInterior:
+                        box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                }
+                part->Update_Face_Array(updated, &box);
             }
         }
 

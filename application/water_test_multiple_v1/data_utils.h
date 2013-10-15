@@ -33,30 +33,43 @@
  */
 
 /* 
+ * This file enumerates the type of data, based on location --
+ * (corner/ side/ interior).
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "assert.h"
-#include "physbam_serialize_data_arrays_2d.h"
-#include "physbam_serialize_data_common_2d.h"
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
 
-namespace physbam_pb {
+#include "shared/nimbus.h"
 
-    void make_pb_object(FaceArray2 *phys_fa,
-            ::communication::PhysbamFaceArray2d *pb_fa) {
+namespace water_app_data {
 
-        assert(pb_fa);
-        assert(phys_fa);
+    enum DataRegion {
+        kDataInterior,
+        kDataUpperLeft,
+        kDataUp,
+        kDataUpperRight,
+        kDataRight,
+        kDataBottomRight,
+        kDataBottom,
+        kDataBottomLeft,
+        kDataLeft
+    };
 
-        make_pb_object(
-                &phys_fa->domain_indices,
-                pb_fa->mutable_domain_indices());
-        int buff_size = phys_fa->buffer_size;
-        pb_fa->set_buffer_size(buff_size);
-        float *buff_values = phys_fa->base_pointer;
-        for (int i = 0; i < buff_size; i++) {
-            pb_fa->add_values(buff_values[i]);
-        }
-    }
+    class SimData : public ::nimbus::Data {
+        private:
+            DataRegion region_;
+        public:
+            SimData() : region_(kDataInterior) {}
+            DataRegion region() {
+                return region_;
+            }
+            void set_region(DataRegion region) {
+                region_ = region;
+            }
+    };
 
-} // namespace physbam_pb
+} // namespace water_app_data
+
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_

@@ -38,11 +38,10 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "data_face_arrays.h"
+#include "physbam_include.h"
 #include "water_app.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
-#include "physbam_include.h"
 
 namespace {
     typedef VECTOR<float, 2> TVF2;
@@ -67,7 +66,7 @@ template <class TV, class T> void NonAdvData<TV, T>::
 Set_Boundary_Conditions(
         WaterDriver<TV> *driver,
         const T time,
-        ::water_app_data::FaceArray<TV> *face_velocities)
+        T_FACE_ARRAY *face_velocities)
 {
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
 
@@ -94,10 +93,10 @@ Set_Boundary_Conditions(
                     TV_INT face = iterator.Face_Index() + boundary_face_offset;
                     if (particle_levelset_evolution->phi(face + interior_cell_offset) <= 0)
                     {
-                        if (face_velocities->data->Component(axis).Valid_Index(face))
+                        if (face_velocities->Component(axis).Valid_Index(face))
                         {
                             projection->elliptic_solver->psi_N.Component(axis)(face) = true;
-                            face_velocities->data->Component(axis)(face)=0;
+                            face_velocities->Component(axis)(face)=0;
                         }
                     }
                     else
@@ -129,22 +128,23 @@ Set_Boundary_Conditions(
                     psi_N(iterator.Full_Index()) = true;
                 if((TV::dimension==2 && iterator.Axis() == 1) ||
                         (TV::dimension==3 && iterator.Axis() == 3))
-                    (*face_velocities->data)(iterator.Full_Index()) = -1;
+                    (*face_velocities)(iterator.Full_Index()) = -1;
                 else
-                    (*face_velocities->data)(iterator.Full_Index()) = 0;
+                    (*face_velocities)(iterator.Full_Index()) = 0;
             }
         }
     }
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
-Write_Output_Files_EF(const int frame, ::water_app_data::FaceArray<TV> *face_velocities,
+Write_Output_Files_EF(const int frame, T_FACE_ARRAY *face_velocities,
     WaterDriver<TV> *driver) {
   if(!driver->write_output_files) return;
   std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-  FILE_UTILITIES::Write_To_File(driver->stream_type,
-      driver->output_directory+"/"+f+"/mac_velocities",
-      *(face_velocities->data));
+  FILE_UTILITIES::Write_To_File(
+          driver->stream_type,
+          driver->output_directory+"/"+f+"/mac_velocities",
+          *face_velocities);
   FILE_UTILITIES::Write_To_File(driver->stream_type,
       driver->output_directory+"/common/grid", *grid);
   FILE_UTILITIES::Write_To_File(driver->stream_type,

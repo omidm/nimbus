@@ -47,20 +47,13 @@ namespace physbam_pb {
             const ::communication::PhysbamFaceArray2d &pb_fa) {
 
         assert(phys_fa);
-        
-        RangeI2 domain_indices;
-        if (pb_fa.has_domain_indices())
-            make_physbam_object(
-                    &domain_indices,
-                    pb_fa.domain_indices());
-        
-        phys_fa->Resize(domain_indices, false, false);
-
-        if (pb_fa.has_buffer_size())
-            phys_fa->buffer_size = pb_fa.buffer_size();
+        assert(phys_fa->buffer_size() == pb_fa.buffer_size());
         assert(pb_fa.buffer_size() == pb_fa.values_size());
-        assert(pb_fa.buffer_size() == phys_fa->buffer_size);
         
+        make_physbam_object(
+                &phys_fa->domain_indices,
+                pb_fa.domain_indices());
+        phys_fa->buffer_size = pb_fa.buffer_size();
         float *buff_values = phys_fa->base_pointer;
         for (int i = 0; i < pb_fa.values_size(); i++) {
             buff_values[i] = pb_fa.values(i);

@@ -1,5 +1,4 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -40,10 +39,12 @@
 #include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
+#include "physbam_include.h"
 #include "proto_files/adv_vel_par.pb.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include <vector>
 #include "water_app.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
@@ -52,48 +53,92 @@ using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
+/* Assumption: types_list contains a maximum of one kWaterDriver and one
+ * kFaceArray. */
+#define GetJobData()                                                        \
+    WaterDriver<TV> *driver = NULL;                                         \
+    NonAdvData<TV, T> *sim_data = NULL;                                     \
+    std::vector< ::water_app_data::FaceArray<TV>* > velocities;             \
+    int data_num = types_list.size();                                       \
+    assert(data_num == da.size());                                          \
+    printf("*** Liszt size = %i ***\n", data_num);                          \
+    for (int i = 0; i < data_num; i++) {                                    \
+        switch (types_list[i]) {                                            \
+            case driver_id:                                                 \
+                assert(da[i]->get_debug_info() == driver_id);               \
+                driver = (WaterDriver<TV> *)da[i];                          \
+                break;                                                      \
+            case non_adv_id:                                                \
+                assert(da[i]->get_debug_info() == non_adv_id);              \
+                sim_data = (NonAdvData<TV, T> *)da[1];                      \
+                break;                                                      \
+            case face_array_id:                                             \
+                assert(da[i]->get_debug_info() == face_array_id);           \
+                velocities.push_back(                                       \
+                        (::water_app_data::FaceArray<TV> *)da[i]);          \
+                break;                                                      \
+        }                                                                   \
+    }                                                                       \
+    WaterApp *water_app = (WaterApp *)application();                        \
+    if (!water_app && driver && sim_data && velocities.size())                            \
+        asm volatile("" : : : "memory");
+    // asm is just a barrier to allow code to compile with unused variables    
+
 namespace {
-    TV_INT size_main = TV_INT::All_Ones_Vector() * kMainSize;
+    TV_INT main_size(kMainAllSize, kMainAllSize);
+    TV_INT ghost_vert_in_size(kGhostSize, kMainSize);
+    TV_INT ghost_horiz_in_size(kMainSize, kGhostSize);
+    TV_INT ghost_corner_in_size(kGhostSize, kGhostSize);
+
+    /* Advection does not require global location. Only counts and grid
+     * methods are needed. */
+
+    std::string main_vel = "main_vel";
+    std::string ghost_vert_in_vel = "ghost_vel_vert_in";
+    std::string ghost_horiz_in_vel = "ghost_vel_horiz_in";
+    std::string ghost_corner_in_vel = "ghost_vel_corner_in";
 };
 
 WaterApp::WaterApp() {
 };
 
 void WaterApp::Load() {
-
     printf("Worker beginning to load application\n");
-
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
     /* Declare and initialize data, jobs and policies. */
-
     RegisterJob("main", new Main(this));
-
     RegisterJob("init", new Init(this));
     RegisterJob("loop", new Loop(this));
     RegisterJob("uptoadvect", new UptoAdvect(this));
     RegisterJob("advect", new Advect(this));
     RegisterJob("afteradvect", new AfterAdvect(this));
     RegisterJob("writeframe", new WriteFrame(this));
-
-    RegisterData("water_driver_1", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    RegisterData("face_velocities_1", new ::water_app_data
-            ::FaceArray<TV>(size_main));
-    RegisterData("sim_data_1", new NonAdvData<TV, T>(kMainSize));
-
+    RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
+    RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
+    RegisterData(
+            main_vel,
+            new ::water_app_data::FaceArray<TV>(main_size));
+    RegisterData(
+            ghost_vert_in_vel,
+            new ::water_app_data::FaceArray<TV>(ghost_vert_in_size));
+    RegisterData(
+            ghost_horiz_in_vel,
+            new ::water_app_data::FaceArray<TV>(ghost_horiz_in_size));
+    RegisterData(
+            ghost_corner_in_vel,
+            new ::water_app_data::FaceArray<TV>(ghost_corner_in_size));
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
 
     /* Application data initialization. */
-
     set_advection_scalar(new ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM
             < ::PhysBAM::GRID<TV>,T>());
 
     set_boundary(new ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T>());
     ::PhysBAM::VECTOR< ::PhysBAM::VECTOR<bool, 2>, TV::dimension>
         domain_boundary;
-    for(int i=1;i<=TV::dimension;i++)
-    {
+    for(int i=1;i<=TV::dimension;i++) {
         domain_boundary(i)(1)=true;
         domain_boundary(i)(2)=true;
     }
@@ -113,10 +158,8 @@ Job* Main::Clone() {
     return new Main(application());
 };
 
-void Main::Execute(std::string params, const DataArray& da)
-{
+void Main::Execute(std::string params, const DataArray& da) {
     printf("Begin main\n");
-
     std::vector<job_id_t> j;
     std::vector<data_id_t> d;
     IDSet<data_id_t> read, write;
@@ -124,44 +167,41 @@ void Main::Execute(std::string params, const DataArray& da)
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
     std::string par;
-
-    GetNewDataID(&d, 4);
-
-    DefineData("water_driver_1", d[0], partition_id, neighbor_partitions, par);
-    DefineData("face_velocities_1", d[1], partition_id, neighbor_partitions, par);
-    DefineData("face_velocities_1", d[2], partition_id, neighbor_partitions, par);
-    DefineData("sim_data_1", d[3], partition_id, neighbor_partitions, par);
-
+    GetNewDataID(&d, 11);
+    DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
+    DefineData("sim_data", d[1], partition_id, neighbor_partitions, par);
+    DefineData(main_vel, d[2], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[3], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_in_vel, d[4], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[5], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_in_vel, d[6], partition_id, neighbor_partitions, par);
+    DefineData(ghost_vert_in_vel, d[7], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[8], partition_id, neighbor_partitions, par);
+    DefineData(ghost_horiz_in_vel, d[9], partition_id, neighbor_partitions, par);
+    DefineData(ghost_corner_in_vel, d[10], partition_id, neighbor_partitions, par);
     printf("Defined data\n");
-
     GetNewJobID(&j, 2);
-
     before.clear();
     after.clear();
     read.clear();
     write.clear();
     after.insert(j[1]);
-    read.insert(d[0]);
-    read.insert(d[1]);
-    read.insert(d[3]);
+    for (unsigned int i = 0; i < d.size(); i++) {
+        read.insert(d[i]);
+        write.insert(d[i]);
+    }
     SpawnComputeJob("init", j[0], read, write, before, after, par);
     printf("Spawned init\n");
-
     before.clear();
     after.clear();
     read.clear();
     write.clear();
-    before.insert(j[0]);
-    read.insert(d[0]);
-    read.insert(d[1]);
-    read.insert(d[2]);
-    read.insert(d[3]);
-    write.insert(d[0]);
-    write.insert(d[1]);
-    write.insert(d[3]);
+    for (unsigned int i = 0; i < d.size(); i++) {
+        read.insert(d[i]);
+        write.insert(d[i]);
+    }
     SpawnComputeJob("loop", j[1], read, write, before, after, par);
     printf("Spawned loop\n");
-
     printf("Completed main\n");
 };
 
@@ -174,51 +214,27 @@ Job* Init::Clone() {
     return new Init(application());
 };
 
-void Init::Execute(std::string params, const DataArray& da)
-{
+void Init::Execute(std::string params, const DataArray& da) {
     printf("Executing init job\n");
-
-    WaterDriver<TV> *driver = NULL;
-    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
-    NonAdvData<TV, T> *sim_data = NULL;
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
-            case driver_id:
-                driver = (WaterDriver<TV> *)da[i];
-                break;
-            case face_array_id:
-                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
-                break;
-            case non_adv_id:
-                sim_data = (NonAdvData<TV, T> *)da[i];
-                break;
-            default:
-                printf("Error : unknown data!!\n");
-                exit(EXIT_FAILURE);
-        }
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
     }
-
-    assert(driver);
-    assert(face_velocities);
-    assert(sim_data);
-
+    GetJobData();
     int frame = 0;
-
-    driver->face_velocities = face_velocities;
+    T_FACE_ARRAY *fv = new T_FACE_ARRAY();
+    driver->face_velocities = velocities[0]->data();
     driver->sim_data = sim_data;
-
     Add_Source(sim_data);
-
-    WaterApp *water_app = (WaterApp *)application();
     sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
-    sim_data->initialize(driver, face_velocities, frame);
-
+    sim_data->initialize(driver, velocities[0]->data(), frame);
+    sim_data->incompressible->
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    delete(fv);
     printf("Successfully completed init job\n");
 };
 
@@ -231,54 +247,16 @@ Job* UptoAdvect::Clone() {
     return new UptoAdvect(application());
 };
 
-void UptoAdvect::Execute(std::string params, const DataArray& da)
-{
-
+void UptoAdvect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running upto advect\n");
-
-    WaterDriver<TV> *driver = NULL;
-    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
-    NonAdvData<TV, T> *sim_data = NULL;
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
-            case driver_id:
-                driver = (WaterDriver<TV> *)da[i];
-                break;
-            case face_array_id:
-                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
-                break;
-            case non_adv_id:
-                sim_data = (NonAdvData<TV, T> *)da[i];
-                break;
-            default:
-                printf("Error : unknown data!!\n");
-                exit(EXIT_FAILURE);
-        }
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
     }
-
-    assert(driver);
-    assert(face_velocities);
-    assert(sim_data);
-
-    WaterApp *water_app = (WaterApp *)application();
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
-
-    sim_data->BeforeAdvection(driver, face_velocities);
-
-    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
-        sim_data->get_debug_info();
-    printf("Barrier %i\n", x);
-
+    GetJobData();
+    sim_data->BeforeAdvection(driver, velocities[0]->data());
 };
 
 Advect::Advect(Application *app) {
@@ -290,71 +268,28 @@ Job* Advect::Clone() {
     return new Advect(application());
 };
 
-void Advect::Execute(std::string params, const DataArray& da)
-{
+void Advect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running advect\n");
-
-    WaterDriver<TV> *driver = NULL;
-    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
-    NonAdvData<TV, T> *sim_data = NULL;
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
-            case driver_id:
-                driver = (WaterDriver<TV> *)da[i];
-                break;
-            case face_array_id:
-                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
-                break;
-            case non_adv_id:
-                sim_data = (NonAdvData<TV, T> *)da[i];
-                break;
-            default:
-                printf("Error : unknown data!!\n");
-                exit(EXIT_FAILURE);
-        }
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
     }
-
-    assert(driver);
-    assert(face_velocities);
-    assert(sim_data);
-
-    printf("### PARAMETERS \"%s\"\n", params.c_str());
-//    ::parameters::AdvVelPar adv_vel_par_pb;
-//    adv_vel_par_pb.ParseFromString(params);
-
-    WaterApp *water_app = (WaterApp *)application();
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
-
+    GetJobData();
+    ::parameters::AdvVelPar adv_vel_par_pb;
+    adv_vel_par_pb.ParseFromString(params);
     T_FACE_ARRAY *face_vel_extended = 
-        new T_FACE_ARRAY(*(face_velocities->grid), kGhostSize);
-    face_velocities->Extend_Array(
-            face_velocities->data,
+        new T_FACE_ARRAY(*(velocities[0]->grid()), kGhostSize);
+    velocities[0]->Extend_Array(
+            velocities[0]->data(),
             face_vel_extended,
             water_app->boundary(),
             kGhostSize,
             driver->dt + driver->time,
             true);
-
-//    Advect_Velocities(face_velocities, face_vel_extended, water_app,
-//            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
-    Advect_Velocities(face_velocities, face_vel_extended, water_app,
-            driver->dt, driver->time, sim_data);
-
+    Advect_Velocities(velocities[0], face_vel_extended, water_app,
+            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
     delete(face_vel_extended);
-
-    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
-        sim_data->get_debug_info();
-    printf("Barrier %i\n", x);
 };
 
 AfterAdvect::AfterAdvect(Application *app) {
@@ -366,52 +301,16 @@ Job* AfterAdvect::Clone() {
     return new AfterAdvect(application());
 };
 
-void AfterAdvect::Execute(std::string params, const DataArray& da)
-{
+void AfterAdvect::Execute(std::string params, const DataArray& da) {
     printf("@@ Running after advect\n");
-
-    WaterDriver<TV> *driver = NULL;
-    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
-    NonAdvData<TV, T> *sim_data = NULL;
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
-            case driver_id:
-                driver = (WaterDriver<TV> *)da[i];
-                break;
-            case face_array_id:
-                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
-                break;
-            case non_adv_id:
-                sim_data = (NonAdvData<TV, T> *)da[i];
-                break;
-            default:
-                printf("Error : unknown data!!\n");
-                exit(EXIT_FAILURE);
-        }
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
     }
-
-    assert(driver);
-    assert(face_velocities);
-    assert(sim_data);
-
-    WaterApp *water_app = (WaterApp *)application();
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
-
-    sim_data->AfterAdvection(driver, face_velocities);
-
-    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
-        sim_data->get_debug_info();
-    printf("Barrier %i\n", x);
+    GetJobData();
+    sim_data->AfterAdvection(driver, velocities[0]->data());
 };
 
 Loop::Loop(Application *app) {
@@ -423,67 +322,32 @@ Job* Loop::Clone() {
     return new Loop(application());
 };
 
-void Loop::Execute(std::string params, const DataArray& da)
-{
+void Loop::Execute(std::string params, const DataArray& da) {
     printf("Executing forloop job\n");
-
-    WaterDriver<TV> *driver = NULL;
-    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
-    NonAdvData<TV, T> *sim_data = NULL;
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
-            case driver_id:
-                driver = (WaterDriver<TV> *)da[i];
-                break;
-            case face_array_id:
-                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
-                break;
-            case non_adv_id:
-                sim_data = (NonAdvData<TV, T> *)da[i];
-                break;
-            default:
-                printf("Error : unknown data!!\n");
-                exit(EXIT_FAILURE);
-        }
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
     }
-
-    assert(driver);
-    assert(face_velocities);
-    assert(sim_data);
-
-    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
-        sim_data->get_debug_info();
-    printf("Barrier %i\n", x);
-
+    GetJobData();
     driver->IncreaseTime();
-
-    if (!driver->CheckProceed())
-    {
+    if (!driver->CheckProceed()) {
         printf("... Simulation completed ...\n");
     }
-    else
-    {
+    else {
         printf("Spawning new simulation jobs ...\n");
 
         std::vector<data_id_t> d;
-        d.push_back(16777217);
-        d.push_back(16777218);
-        d.push_back(16777219);
-        d.push_back(16777220);
+        d.push_back(da[0]->id());
+        d.push_back(da[1]->id());
+        d.push_back(da[2]->id());
+        d.push_back(da[3]->id());
         std::string par;
-
         IDSet<job_id_t> before, after;
         IDSet<data_id_t> read, write;
-
         std::vector<job_id_t> j;
         GetNewJobID(&j, 5);
-
         par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -494,23 +358,20 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
-
-//        ::parameters::AdvVelPar adv_vel_par_pb;
-//        adv_vel_par_pb.set_dt(driver->dt);
-//        adv_vel_par_pb.set_time(driver->time);
-//        adv_vel_par_pb.SerializeToString(&par);
-//        printf("*** PARAMETERS \"%s\"\n", par.c_str());
+        ::parameters::AdvVelPar adv_vel_par_pb;
+        adv_vel_par_pb.set_dt(driver->dt);
+        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb.SerializeToString(&par);
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
         after.insert(j[2]);
-        read.insert(d[0]); read.insert(d[1]);
+        read.insert(d[0]);
         read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]); write.insert(d[1]);
+        write.insert(d[0]);
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
         printf("Spawned advect\n");
-
         par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -522,7 +383,6 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
         printf("Spawned afteradvect\n");
-
         par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -534,7 +394,6 @@ void Loop::Execute(std::string params, const DataArray& da)
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
         printf("Spawned afteradvect\n");
-
         par = "";
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -557,45 +416,16 @@ Job* WriteFrame::Clone() {
     return new WriteFrame(application());
 };
 
-void WriteFrame::Execute(std::string params, const DataArray& da)
-{
+void WriteFrame::Execute(std::string params, const DataArray& da) {
     printf( "@@ Executing write frame job\n");
-
-    WaterDriver<TV> *driver = NULL;
-    ::water_app_data::FaceArray<TV> *face_velocities = NULL;
-    NonAdvData<TV, T> *sim_data = NULL;
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("* Data with debug id %i\n", da[i]->get_debug_info());
-        switch (da[i]->get_debug_info())
-        {
-            case driver_id:
-                driver = (WaterDriver<TV> *)da[i];
-                break;
-            case face_array_id:
-                face_velocities = (::water_app_data::FaceArray<TV> *)da[i];
-                break;
-            case face_array_ghost_id:
-                break;
-            case non_adv_id:
-                sim_data = (NonAdvData<TV, T> *)da[i];
-                break;
-            default:
-                printf("Error : unknown data!!\n");
-                exit(EXIT_FAILURE);
-        }
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < 9; i++) {
+        types_list.push_back(face_array_id);
     }
-
-    assert(driver);
-    assert(face_velocities);
-    assert(sim_data);
-
+    GetJobData();
     if (driver->IsFrameDone()) {
         driver->Write_Output_Files(driver->current_frame);
     }
-
-    int x = driver->get_debug_info() + face_velocities->get_debug_info() +
-        sim_data->get_debug_info();
-    printf("Barrier %i\n", x);
 }

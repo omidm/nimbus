@@ -40,6 +40,7 @@
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 
 #include "app_config.h"
+#include "job_utils.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
 
@@ -90,42 +91,42 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
-class Init : public Job {
+class Init : public SimJob {
     public:
         Init(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Loop : public Job {
+class Loop : public SimJob {
     public:
         Loop(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class UptoAdvect : public Job {
+class UptoAdvect : public SimJob {
     public:
         UptoAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Advect : public Job {
+class Advect : public SimJob {
     public:
         Advect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class AfterAdvect : public Job {
+class AfterAdvect : public SimJob {
     public:
         AfterAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class WriteFrame : public Job {
+class WriteFrame : public SimJob {
     public:
         WriteFrame(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
