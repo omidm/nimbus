@@ -47,17 +47,19 @@
 
 #include "physbam_include.h"
 
-typedef float T;
-typedef ::PhysBAM::VECTOR<float, 2> TV;
-typedef ::PhysBAM::VECTOR<int, 2> TV_INT;
-
-const int kAppLastFrame = 10;
-const int kMainSize = 100;
-const int kGhostSize = 3;
-
 // useful typedefs
+typedef float T;
+const int dimension = 2;
+typedef ::PhysBAM::VECTOR<float, dimension> TV;
+typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
 typedef typename 
     ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
     T_FACE_ARRAY;
+
+const int kAppLastFrame = 10;
+const int kMainAllSize = 100;
+const int kGhostSize = 3;
+const int kWorkers = 1;
+const int kMainSize = kMainAllSize/kWorkers - 2*kGhostSize;
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_

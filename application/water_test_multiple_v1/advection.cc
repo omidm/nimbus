@@ -43,17 +43,18 @@
 #include "data_face_arrays.h"
 #include "physbam_include.h"
 #include "water_app.h"
+#include "water_data_driver.h"
 
 void Advect_Velocities (
         ::water_app_data::FaceArray<TV> *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,
-        int dt,
-        int time) {
+        T dt,
+        T time) {
 
     water_app->advection_scalar()->Update_Advection_Equation_Face(
-            *face_velocities->grid,
-            *face_velocities->data,
+            *face_velocities->grid(),
+            *face_velocities->data(),
             *face_vel_extended,
             *face_vel_extended,
             *water_app->boundary(),

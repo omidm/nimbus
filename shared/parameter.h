@@ -32,31 +32,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Object representation of the parameter field.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include "assert.h"
-#include "physbam_serialize_data_arrays_2d.h"
-#include "physbam_serialize_data_common_2d.h"
+#ifndef NIMBUS_SHARED_PARAMETER_H_
+#define NIMBUS_SHARED_PARAMETER_H_
 
-namespace physbam_pb {
+#include <string>
+#include "shared/nimbus_types.h"
+#include "shared/idset.h"
+#include "shared/serialized_data.h"
 
-    void make_pb_object(FaceArray2 *phys_fa,
-            ::communication::PhysbamFaceArray2d *pb_fa) {
 
-        assert(pb_fa);
-        assert(phys_fa);
 
-        make_pb_object(
-                &phys_fa->domain_indices,
-                pb_fa->mutable_domain_indices());
-        int buff_size = phys_fa->buffer_size;
-        pb_fa->set_buffer_size(buff_size);
-        float *buff_values = phys_fa->base_pointer;
-        for (int i = 0; i < buff_size; i++) {
-            pb_fa->add_values(buff_values[i]);
-        }
-    }
+namespace nimbus {
 
-} // namespace physbam_pb
+template<typename T_ID>
+class Parameter {
+ public:
+  Parameter();
+  virtual ~Parameter();
+
+  SerializedData ser_data();
+  IDSet<T_ID> idset();
+
+  void set_ser_data(SerializedData ser_data);
+  void set_idset(IDSet<T_ID> idset);
+
+  std::string toString();
+  Parameter<T_ID>& operator= (const Parameter<T_ID>& right);
+
+ private:
+  SerializedData ser_data_;
+  IDSet<T_ID> idset_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_PARAMETER_H_

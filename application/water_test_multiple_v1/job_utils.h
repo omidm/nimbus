@@ -33,30 +33,39 @@
  */
 
 /* 
+ * This file enumerates the type of jobs, based on location --
+ * (corner/ side/ interior).
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "assert.h"
-#include "physbam_serialize_data_arrays_2d.h"
-#include "physbam_serialize_data_common_2d.h"
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 
-namespace physbam_pb {
+#include "shared/nimbus.h"
 
-    void make_pb_object(FaceArray2 *phys_fa,
-            ::communication::PhysbamFaceArray2d *pb_fa) {
+enum JobRegion {
+    kJobInterior,
+    kJobUpperLeft,
+    kJobUp,
+    kJobUpperRight,
+    kJobRight,
+    kJobBottomRight,
+    kJobBottom,
+    kJobBottomLeft,
+    kJobLeft
+};
 
-        assert(pb_fa);
-        assert(phys_fa);
-
-        make_pb_object(
-                &phys_fa->domain_indices,
-                pb_fa->mutable_domain_indices());
-        int buff_size = phys_fa->buffer_size;
-        pb_fa->set_buffer_size(buff_size);
-        float *buff_values = phys_fa->base_pointer;
-        for (int i = 0; i < buff_size; i++) {
-            pb_fa->add_values(buff_values[i]);
+class SimJob : public Job {
+    private:
+        JobRegion region_;
+    public:
+        SimJob() : region_(kJobInterior) {}
+        JobRegion region() {
+            return region_;
         }
-    }
+        void set_region(JobRegion region) {
+            region_ = region;
+        }
+};
 
-} // namespace physbam_pb
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_

@@ -39,6 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_FACE_ARRAYS_H_
 
+#include "data_utils.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
 
@@ -51,31 +52,31 @@ namespace water_app_data {
     /* Face array for storing quantities like face velocities.
     */
     template <class TV>
-        class FaceArray : public ::nimbus::Data {
+        class FaceArray : public SimData {
 
             private:
-
                 typedef typename TV::SCALAR T;
                 typedef typename TV::template REBIND<int>::TYPE TV_INT;
-                typedef typename ::PhysBAM::GRID<TV> T_GRID;
-                typedef typename ::PhysBAM::RANGE<TV> T_RANGE;
-                typedef typename 
-                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+                typedef ::PhysBAM::GRID<TV> T_GRID;
+                typedef ::PhysBAM::RANGE<TV> T_RANGE;
+                typedef
+                    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX< TV::dimension> >
                     T_FACE_ARRAY;
-                typedef typename ::PhysBAM::BOUNDARY_UNIFORM
+                typedef ::PhysBAM::BOUNDARY_UNIFORM
                     < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
-                typedef typename ::PhysBAM::RANGE<TV_INT> T_BOX;
+                typedef ::PhysBAM::RANGE<TV_INT> T_BOX;
 
-                int size_;
+                TV_INT size_;
+                T_GRID *grid_;
+                T_FACE_ARRAY *data_;
 
-                static void Put_Face_Array(
-                        T_FACE_ARRAY *to,
-                        T_FACE_ARRAY *from,
-                        T_BOX &box);
+                void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX *box);
+                void Update_Face_Array(T_FACE_ARRAY* from, T_BOX *box);
 
             public:
 
-                FaceArray(int size);
+                FaceArray(TV_INT size);
+                FaceArray(TV_INT size, DataRegion region);
                 virtual void Create();
                 virtual void Destroy();
                 virtual ::nimbus::Data* Clone();
@@ -83,20 +84,43 @@ namespace water_app_data {
                 virtual bool Serialize(SerializedData *ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data **result);
 
-                void Initialize_Ghost_Regions(
+                static void Extend_Array(
+                        T_FACE_ARRAY *original_vel,
                         T_FACE_ARRAY *extended_vel,
-                        int bandwidth,
                         T_BOUNDARY *boundary,
+                        int bandwidth,
+                        TF time,
                         bool extrapolate);
 
-                static void Fill_Ghost_Cells(
+                /* This needs the center region right now due to the way it is
+                 * implemented. */
+                static void Glue_Regions(
                         T_FACE_ARRAY* result,
-                        std::vector<FaceArray* > parts,
-                        int bandwidth);
+                        std::vector<FaceArray* > *parts,
+                        int bandwidth,
+                        int offset);
 
-                // physbam structures and methods
-                T_GRID *grid;
-                T_FACE_ARRAY *data;
+                static void Update_Regions(
+                        T_FACE_ARRAY *updated,
+                        std::vector<FaceArray* > *parts,
+                        int bandwidth,
+                        int offset);
+
+                T_GRID *grid() {
+                    return grid_;
+                }
+
+                T_FACE_ARRAY *data() {
+                    return data_;
+                }
+
+                void set_grid(T_GRID *grid) {
+                    grid_ = grid;
+                }
+
+                void set_data(T_FACE_ARRAY *data) {
+                    data_ = data;
+                }
         };
 
 } // namespace water_app_data

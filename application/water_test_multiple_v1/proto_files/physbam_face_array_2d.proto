@@ -6,7 +6,7 @@ import "physbam_range_2d.proto";
 // initialize face arrays data (physbam) from values
 
 message PhysbamFaceArray2d {
-    optional PhysbamRangeInt2d domain_indices = 1;
-    optional int32 buffer_size = 2;
+    required PhysbamRangeInt2d domain_indices = 1;
+    required int32 buffer_size = 2;
     repeated float values = 3;
 }

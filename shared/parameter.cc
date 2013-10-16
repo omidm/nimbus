@@ -32,31 +32,56 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Object representation of the parameter field.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include "assert.h"
-#include "physbam_serialize_data_arrays_2d.h"
-#include "physbam_serialize_data_common_2d.h"
+#include "shared/parameter.h"
 
-namespace physbam_pb {
 
-    void make_pb_object(FaceArray2 *phys_fa,
-            ::communication::PhysbamFaceArray2d *pb_fa) {
 
-        assert(pb_fa);
-        assert(phys_fa);
+namespace nimbus {
 
-        make_pb_object(
-                &phys_fa->domain_indices,
-                pb_fa->mutable_domain_indices());
-        int buff_size = phys_fa->buffer_size;
-        pb_fa->set_buffer_size(buff_size);
-        float *buff_values = phys_fa->base_pointer;
-        for (int i = 0; i < buff_size; i++) {
-            pb_fa->add_values(buff_values[i]);
-        }
-    }
+template<typename T_ID>
+Parameter<T_ID>::Parameter() {
+}
 
-} // namespace physbam_pb
+template<typename T_ID>
+Parameter<T_ID>::~Parameter() {
+}
+
+
+template<typename T_ID>
+SerializedData Parameter<T_ID>::ser_data() {
+  return ser_data_;
+}
+
+template<typename T_ID>
+IDSet<T_ID> Parameter<T_ID>::idset() {
+  return idset_;
+}
+
+template<typename T_ID>
+void Parameter<T_ID>::set_ser_data(SerializedData ser_data) {
+}
+
+
+template<typename T_ID>
+void Parameter<T_ID>::set_idset(IDSet<T_ID> idset) {
+}
+
+template<typename T_ID>
+std::string Parameter<T_ID>::toString() {
+  std::string str;
+  return str;
+}
+
+template<typename T_ID>
+Parameter<T_ID>& Parameter<T_ID>::operator= (const Parameter<T_ID>& right) {
+  return *this;
+}
+
+}  // namespace nimbus
+

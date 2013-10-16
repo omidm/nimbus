@@ -60,7 +60,7 @@ WaterDriver(const STREAM_TYPE stream_type_input):
     initial_time = (T)0;
     first_frame = (T)0;
     time = (T)0;
-    ft = (T)0;
+    dt = (T)0;
 
     last_frame = 20;
     frame_rate = 24;

@@ -151,14 +151,6 @@ IDSet<job_id_t>* CommandParameter::identifier_set() {
 
 // ************************************************
 
-bool IsEmptyString(std::string str) {
-  for (size_t i = 0; i < str.length(); i++) {
-    if (str[i] != ' ')
-      return false;
-  }
-  return true;
-}
-
 bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     CommandSet* command_set,
     SchedulerCommand*& generated) {
@@ -436,9 +428,13 @@ std::string SpawnJobCommand::toString() {
     str += "COMP ";
   else
     str += "SYNC ";
-  str += params_;
+
+  std::string temp = params_;
+  EscapeString(&temp);
+  str += temp;
   if (IsEmptyString(params_))
     str += "no-params";
+
   return str;
 }
 
@@ -519,9 +515,13 @@ std::string SpawnComputeJobCommand::toString() {
   str += (write_set_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-  str += params_;
+
+  std::string temp = params_;
+  EscapeString(&temp);
+  str += temp;
   if (IsEmptyString(params_))
     str += "no-params";
+
   return str;
 }
 
@@ -592,9 +592,13 @@ std::string SpawnCopyJobCommand::toString() {
   str += (to_id_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-  str += params_;
+
+  std::string temp = params_;
+  EscapeString(&temp);
+  str += temp;
   if (IsEmptyString(params_))
     str += "no-params";
+
   return str;
 }
 
@@ -661,9 +665,13 @@ std::string ComputeJobCommand::toString() {
   str += (write_set_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-  str += params_;
+
+  std::string temp = params_;
+  EscapeString(&temp);
+  str += temp;
   if (IsEmptyString(params_))
     str += "no-params";
+
   return str;
 }
 
@@ -996,9 +1004,13 @@ std::string DefineDataCommand::toString() {
   str += (data_id_.toString() + " ");
   str += (partition_id_.toString() + " ");
   str += (neighbor_partitions_.toString() + " ");
-  str += params_;
+
+  std::string temp = params_;
+  EscapeString(&temp);
+  str += temp;
   if (IsEmptyString(params_))
     str += "no-params";
+
   return str;
 }
 
@@ -1056,9 +1068,13 @@ std::string JobDoneCommand::toString() {
   str += (name_ + " ");
   str += (job_id_.toString() + " ");
   str += (after_set_.toString() + " ");
-  str += params_;
+
+  std::string temp = params_;
+  EscapeString(&temp);
+  str += temp;
   if (IsEmptyString(params_))
     str += "no-params";
+
   return str;
 }
 

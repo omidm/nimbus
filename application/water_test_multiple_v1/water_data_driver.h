@@ -43,10 +43,9 @@
 
 /* Include relevant PhysBAM files here.
 */
-#include "data_face_arrays.h"
-#include "shared/nimbus.h"
+#include "data_fwd_decl.h"
 #include "physbam_include.h"
-#include "water_driver.h"
+#include "shared/nimbus.h"
 
 #define face_array_ghost_id 25
 #define non_adv_id 30
@@ -62,47 +61,19 @@ namespace {
 template <class TV, class T>
 class NonAdvData;
 
-/* Ghost face array for storing scalar quantities.
-*/
-template <class TV>
-class FaceArrayGhost : public Data {
-    private:
-        int size_;
-    public:
-
-        int id_debug;
-
-        FaceArrayGhost(int size);
-        virtual void Create();
-        virtual Data* Clone();
-        virtual int get_debug_info();
-
-        // physbam structures and methods
-        GRID<TV> *grid;
-        typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS *data;
-};
-
 /* Add all other data used by water simulation here.  DO NOT add scalar
  * values. Scalar values can be passed around directly as parameters.
  */
 template <class TV, class T>
 class NonAdvData : public Data {
 
-  typedef typename TV::template REBIND<int>::TYPE TV_INT;
-  typedef typename LEVELSET_POLICY<GRID<TV> >::LEVELSET T_LEVELSET;
-  typedef typename LEVELSET_POLICY<GRID<TV> >::PARTICLE_LEVELSET T_PARTICLE_LEVELSET;
-  typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
-  typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
-
-
-    typedef typename ADVECTION_POLICY<GRID<TV> >::ADVECTION_SEMI_LAGRANGIAN_SCALAR T_ADVECTION_SEMI_LAGRANGIAN_SCALAR;
-    typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::ARRAYS_SCALAR T_ARRAYS_SCALAR;
-    typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::FACE_ARRAYS T_FACE_ARRAYS_SCALAR;
-    typedef typename T_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_ARRAYS_BOOL;
-    typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_FACE_ARRAYS_BOOL;
-
     private:
+        typedef typename TV::template REBIND<int>::TYPE TV_INT;
+        typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::ARRAYS_SCALAR T_ARRAYS_SCALAR;
+        typedef typename LEVELSET_POLICY<GRID<TV> >::PARTICLE_LEVELSET T_PARTICLE_LEVELSET;
+        typedef ARRAY<T, FACE_INDEX< TV::dimension> > T_FACE_ARRAY;
         int size_;
+
     public:
 
         int id_debug;
@@ -112,20 +83,21 @@ class NonAdvData : public Data {
         virtual Data* Clone();
         virtual int get_debug_info();
 
-        bool initialize
-            (WaterDriver<TV> *driver,
-             ::water_app_data::FaceArray<TV> *face_velocities,
-             const int frame);
+        bool initialize(
+                WaterDriver<TV> *driver,
+                T_FACE_ARRAY *face_velocities,
+                const int frame);
 
-        void BeforeAdvection (WaterDriver<TV> *driver,
-             ::water_app_data::FaceArray<TV> *face_velocities); 
+        void BeforeAdvection (
+                WaterDriver<TV> *driver,
+                T_FACE_ARRAY *face_velocities); 
 
-        void AfterAdvection (WaterDriver<TV> *driver,
-             ::water_app_data::FaceArray<TV> *face_velocities);
+        void AfterAdvection (
+                WaterDriver<TV> *driver,
+                T_FACE_ARRAY *face_velocities);
 
         // physbam structures and methods
 
-        // TODO(chinmayee): need to have this as a parameter
         int number_of_ghost_cells;
         T time, dt;
         int current_frame;
@@ -157,7 +129,7 @@ class NonAdvData : public Data {
         void Set_Boundary_Conditions(
                 WaterDriver<TV> *driver,
                 const T time,
-                ::water_app_data::FaceArray<TV> *face_velocities);
+                T_FACE_ARRAY *face_velocities);
         void Adjust_Phi_With_Sources(const T time);
         void Adjust_Particle_For_Domain_Boundaries(
                 PARTICLE_LEVELSET_PARTICLES<TV> &particles,
@@ -167,9 +139,10 @@ class NonAdvData : public Data {
                 const T dt,
                 const T time); 
 
-        void Write_Output_Files_EF(const int frame,
-                ::water_app_data::FaceArray<TV>* face_velocities,
-                WaterDriver<TV> * driver);
+        void Write_Output_Files_EF(
+                const int frame,
+                T_FACE_ARRAY *face_velocities,
+                WaterDriver<TV> *driver);
         void Read_Output_Files_EF(const int frame) {}
 };
 

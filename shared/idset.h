@@ -43,8 +43,7 @@
 
 #include <sstream> // NOLINT
 #include <string>
-#include <vector>
-#include <map>
+#include <list>
 #include <set>
 #include "shared/nimbus_types.h"
 
@@ -55,13 +54,16 @@ namespace nimbus {
 template<typename T>
 class IDSet {
  public:
+  typedef typename std::list<T> IDSetContainer;
+  typedef typename std::list<T>::iterator IDSetIter;
+
   IDSet();
-  explicit IDSet(std::string s);
-  explicit IDSet(const std::set<T>& set);
+  explicit IDSet(const IDSetContainer& ids);
   IDSet(const IDSet<T>& other);
   virtual ~IDSet();
 
-  typedef typename std::set<T>::iterator IDSetIter;
+  // TODO(omidm): remove this obsolete constructor.
+  explicit IDSet(std::string s);
 
   virtual std::string toString();
   virtual void insert(T entry);
@@ -76,7 +78,7 @@ class IDSet {
   IDSet<T>& operator= (const IDSet<T>& right);
 
  private:
-  typename std::set<T> identifiers_;
+  typename std::list<T> identifiers_;
 };
 
 }  // namespace nimbus
