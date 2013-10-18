@@ -210,7 +210,7 @@ void RemoteCopySendJob::Execute(std::string params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(), to_worker_id_.elem(), ser_data);
-  delete ser_data.data_ptr();
+  // delete ser_data.data_ptr(); // Not needed with shared pointer.
 }
 
 Job* RemoteCopySendJob::Clone() {
@@ -264,7 +264,7 @@ void RemoteCopyReceiveJob::Execute(std::string params, const DataArray& da) {
   da[0]->Copy(data_copy);
 
   data_copy->Destroy();
-  delete serialized_data_->data_ptr();
+  // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
   delete serialized_data_;
 }
 
