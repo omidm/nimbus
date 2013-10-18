@@ -50,6 +50,10 @@ Job::Job() {
 Job::~Job() {
 }
 
+std::string Job::job_name() {
+    return job_name_;
+}
+
 // TODO(omidm) should remove this later. left it now so the tests
 // that use it still pass.
 Job::Job(Application* app, JobType type) {
