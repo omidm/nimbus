@@ -33,75 +33,43 @@
  */
 
  /*
-  * Abstraction of a connection between two Nimbus workers.
+  * Object representation of the parameter field.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#ifndef NIMBUS_SHARED_PARAMETER_H_
+#define NIMBUS_SHARED_PARAMETER_H_
 
-#ifndef NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
-#define NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
-
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <map>
-#include <list>
 #include <string>
-#include "shared/dbg.h"
-#include "shared/parser.h"
 #include "shared/nimbus_types.h"
+#include "shared/idset.h"
+#include "shared/serialized_data.h"
+
+
 
 namespace nimbus {
 
-using boost::asio::ip::tcp;
-
-class WorkerDataExchangerConnection {
+template<typename T_ID>
+class Parameter {
  public:
-  explicit WorkerDataExchangerConnection(tcp::socket* sock);
-  virtual ~WorkerDataExchangerConnection();
+  Parameter();
+  virtual ~Parameter();
 
-  void AllocateData(size_t size);
+  SerializedData ser_data();
+  IDSet<T_ID> idset();
 
-  void AppendData(char* buffer, size_t size);
+  void set_ser_data(SerializedData ser_data);
+  void set_idset(IDSet<T_ID> idset);
 
-  tcp::socket* socket();
-  job_id_t job_id();
-  boost::shared_ptr<char> data_ptr();
-  char* read_buffer();
-  size_t existing_bytes();
-  size_t read_buffer_max_length();
-  size_t data_length();
-  size_t remaining_data_length();
-  bool middle_of_data();
-  bool middle_of_header();
-
-  void set_job_id(job_id_t job_id);
-  void set_data_length(size_t len);
-  void set_existing_bytes(size_t len);
-  void set_middle_of_data(bool flag);
-  void set_middle_of_header(bool flag);
+  std::string toString();
+  Parameter<T_ID>& operator= (const Parameter<T_ID>& right);
 
  private:
-  tcp::socket* socket_;
-  job_id_t job_id_;
-  boost::shared_ptr<char> data_ptr_;
-  char* data_cursor_;
-  char* read_buffer_;
-  size_t existing_bytes_;
-  size_t data_length_;
-  size_t remaining_data_length_;
-  bool middle_of_data_;
-  bool middle_of_header_;
+  SerializedData ser_data_;
+  IDSet<T_ID> idset_;
 };
-
-typedef std::list<WorkerDataExchangerConnection*>
-WorkerDataExchangerConnectionList;
-
-typedef std::map<worker_id_t, WorkerDataExchangerConnection*>
-WorkerDataExchangerConnectionMap;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
+#endif  // NIMBUS_SHARED_PARAMETER_H_

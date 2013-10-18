@@ -33,75 +33,55 @@
  */
 
  /*
-  * Abstraction of a connection between two Nimbus workers.
+  * Object representation of the parameter field.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include "shared/parameter.h"
 
-#ifndef NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
-#define NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_
 
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <map>
-#include <list>
-#include <string>
-#include "shared/dbg.h"
-#include "shared/parser.h"
-#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-using boost::asio::ip::tcp;
+template<typename T_ID>
+Parameter<T_ID>::Parameter() {
+}
 
-class WorkerDataExchangerConnection {
- public:
-  explicit WorkerDataExchangerConnection(tcp::socket* sock);
-  virtual ~WorkerDataExchangerConnection();
+template<typename T_ID>
+Parameter<T_ID>::~Parameter() {
+}
 
-  void AllocateData(size_t size);
 
-  void AppendData(char* buffer, size_t size);
+template<typename T_ID>
+SerializedData Parameter<T_ID>::ser_data() {
+  return ser_data_;
+}
 
-  tcp::socket* socket();
-  job_id_t job_id();
-  boost::shared_ptr<char> data_ptr();
-  char* read_buffer();
-  size_t existing_bytes();
-  size_t read_buffer_max_length();
-  size_t data_length();
-  size_t remaining_data_length();
-  bool middle_of_data();
-  bool middle_of_header();
+template<typename T_ID>
+IDSet<T_ID> Parameter<T_ID>::idset() {
+  return idset_;
+}
 
-  void set_job_id(job_id_t job_id);
-  void set_data_length(size_t len);
-  void set_existing_bytes(size_t len);
-  void set_middle_of_data(bool flag);
-  void set_middle_of_header(bool flag);
+template<typename T_ID>
+void Parameter<T_ID>::set_ser_data(SerializedData ser_data) {
+}
 
- private:
-  tcp::socket* socket_;
-  job_id_t job_id_;
-  boost::shared_ptr<char> data_ptr_;
-  char* data_cursor_;
-  char* read_buffer_;
-  size_t existing_bytes_;
-  size_t data_length_;
-  size_t remaining_data_length_;
-  bool middle_of_data_;
-  bool middle_of_header_;
-};
 
-typedef std::list<WorkerDataExchangerConnection*>
-WorkerDataExchangerConnectionList;
+template<typename T_ID>
+void Parameter<T_ID>::set_idset(IDSet<T_ID> idset) {
+}
 
-typedef std::map<worker_id_t, WorkerDataExchangerConnection*>
-WorkerDataExchangerConnectionMap;
+template<typename T_ID>
+std::string Parameter<T_ID>::toString() {
+  std::string str;
+  return str;
+}
+
+template<typename T_ID>
+Parameter<T_ID>& Parameter<T_ID>::operator= (const Parameter<T_ID>& right) {
+  return *this;
+}
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_WORKER_DATA_EXCHANGER_CONNECTION_H_

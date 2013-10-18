@@ -84,7 +84,7 @@ bool Vec::Serialize(SerializedData* ser_data) {
 
 bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
   VectorMsg vec_msg;
-  std::string str(ser_data.data_ptr(), ser_data.size());
+  std::string str(ser_data.data_ptr_raw(), ser_data.size());
   vec_msg.ParseFromString(str);
   Vec* vec = new Vec(size_);
   vec->Create();

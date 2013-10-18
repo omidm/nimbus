@@ -81,15 +81,13 @@ class WorkerDataExchanger {
 
   WorkerDataExchangerConnectionList* receive_connections();
 
-  SerializedDataMap* data_map();
-
  private:
   typedef std::map<worker_id_t, std::pair<std::string, port_t> >AddressBook;
 
   port_t listening_port_;
   boost::mutex address_book_mutex_;
   AddressBook address_book_;
-  boost::mutex data_mutex_;
+  boost::mutex data_map_mutex_;
   SerializedDataMap data_map_;
   boost::mutex send_connection_mutex_;
   WorkerDataExchangerConnectionMap send_connections_;
