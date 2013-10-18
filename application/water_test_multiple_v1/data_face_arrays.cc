@@ -111,7 +111,7 @@ namespace water_app_data {
     template <class TV> bool FaceArray<TV>::
         DeSerialize(const SerializedData &ser_data, Data **result) {
             assert(result);
-            const char *buffer = ser_data.data_ptr();
+            const char *buffer = ser_data.data_ptr_raw();
             const int buff_size = ser_data.size();
             if (buff_size <= 0)
                 return false;
