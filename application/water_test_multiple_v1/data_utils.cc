@@ -32,65 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * This file enumerates the type of data, based on location --
- * (corner/ side/ interior) and utility functions.
- * The code works for only 2d regions.
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
-
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
-
-#include "PhysBAM_Tools/Vectors/VECTOR.h"
-#include "shared/nimbus.h"
+#include "data_utils.h"
 
 namespace water_app_data {
 
-    namespace {
-        const int dimension = 2;
-        typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
+    void GetDataRegionNames(std::string names[kDataNum]) {
+        names[kDataInterior] = "DataInterior";
+        names[kDataInUpperLeft] = "DataInUpperLeft";
+        names[kDataInUpper] = "DataInUpper";
+        names[kDataInUpperRight] = "DataInUpperRight";
+        names[kDataInRight] = "DataInRight";
+        names[kDataInBottomRight] = "DataInBottomRight";
+        names[kDataInBottom] = "DataInBottom";
+        names[kDataInBottomLeft] = "DataInBottomLeft";
+        names[kDataInLeft] = "DataInLeft";
     }
 
-    // data locations for a partition
-    // update GetDataRegionNames and GetDataRegionSizes
-    // when you update DataRegion
-    enum DataRegion {
-        kDataInterior,
-        kDataInUpperLeft,
-        kDataInUpper,
-        kDataInUpperRight,
-        kDataInRight,
-        kDataInBottomRight,
-        kDataInBottom,
-        kDataInBottomLeft,
-        kDataInLeft,
-        kDataNum
-    };
-    // this function depends on enum DataRegion, and should be changed if
-    // DataRegion is updated
-    void GetDataRegionNames(std::string names[kDataNum]);
-    // this function depends on enum DataRegion, and should be changed if
-    // DataRegion is updated
     void GetDataRegionSizes(
             TV_INT sizes[kDataNum],
             TV_INT part_center_size,
             TV_INT sim_center_size,
-            int ghost_band);
-
-    class SimData : public ::nimbus::Data {
-        private:
-            DataRegion region_;
-        public:
-            SimData() : region_(kDataInterior) {}
-            DataRegion region() {
-                return region_;
-            }
-            void set_region(DataRegion region) {
-                region_ = region;
-            }
-    };
+            int ghost_band) {
+        TV_INT part_ghost_corner_size(ghost_band, ghost_band);
+        TV_INT part_ghost_vert_size = part_center_size;
+        TV_INT part_ghost_horiz_size = part_center_size;
+        part_ghost_vert_size(0) = ghost_band;
+        part_ghost_horiz_size(1) = ghost_band;
+        sizes[kDataInterior] = sim_center_size;
+        sizes[kDataInUpperLeft] = part_ghost_corner_size;
+        sizes[kDataInUpper] = part_ghost_horiz_size;
+        sizes[kDataInUpperRight] = part_ghost_corner_size;
+        sizes[kDataInRight] = part_ghost_vert_size;
+        sizes[kDataInBottomRight] = part_ghost_corner_size;
+        sizes[kDataInBottom] = part_ghost_horiz_size;
+        sizes[kDataInBottomLeft] = part_ghost_corner_size;
+        sizes[kDataInLeft] = part_ghost_vert_size;
+    }
 
 } // namespace water_app_data
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_

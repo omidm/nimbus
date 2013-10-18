@@ -95,6 +95,7 @@ void WaterApp::Load() {
     RegisterJob("writeframe", new WriteFrame(this));
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
+
     RegisterData(
             main_vel,
             new ::water_app_data::FaceArray<TV>(main_size));

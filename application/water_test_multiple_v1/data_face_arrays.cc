@@ -189,40 +189,42 @@ namespace water_app_data {
                 FaceArray *part = (*parts)[i];
                 switch(part->region())
                 {
-                    case kDataBottomLeft:
+                    case kDataInBottomLeft:
                         box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                         break;
-                    case kDataBottomRight:
+                    case kDataInBottomRight:
                         box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                         break;
-                    case kDataUpperLeft:
+                    case kDataInUpperLeft:
                         box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataUpperRight:
+                    case kDataInUpperRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 len_y+1,
                                 len_y+bandwidth);
                         break;
-                    case kDataBottom:
+                    case kDataInBottom:
                         box = T_BOX(1, len_x, 1-bandwidth, 0);
                         break;
-                    case kDataLeft:
+                    case kDataInLeft:
                         box = T_BOX(1-bandwidth, 0, 1, len_y);
                         break;
-                    case kDataRight:
+                    case kDataInRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 1,
                                 len_y);
                         break;
-                    case kDataUp:
+                    case kDataInUpper:
                         box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
                         break;
                     case kDataInterior:
                         box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                    default:
                         break;
                 }
                 part->Glue_Face_Array(result, &box);
@@ -265,40 +267,42 @@ namespace water_app_data {
                 FaceArray *part = (*parts)[i];
                 switch(part->region())
                 {
-                    case kDataBottomLeft:
+                    case kDataInBottomLeft:
                         box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                         break;
-                    case kDataBottomRight:
+                    case kDataInBottomRight:
                         box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                         break;
-                    case kDataUpperLeft:
+                    case kDataInUpperLeft:
                         box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataUpperRight:
+                    case kDataInUpperRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 len_y+1,
                                 len_y+bandwidth);
                         break;
-                    case kDataBottom:
+                    case kDataInBottom:
                         box = T_BOX(1, len_x, 1-bandwidth, 0);
                         break;
-                    case kDataLeft:
+                    case kDataInLeft:
                         box = T_BOX(1-bandwidth, 0, 1, len_y);
                         break;
-                    case kDataRight:
+                    case kDataInRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 1,
                                 len_y);
                         break;
-                    case kDataUp:
+                    case kDataInUpper:
                         box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
                         break;
                     case kDataInterior:
                         box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                    default:
                         break;
                 }
                 part->Update_Face_Array(updated, &box);
