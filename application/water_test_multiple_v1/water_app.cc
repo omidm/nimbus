@@ -56,31 +56,10 @@ using nimbus::Application;
 /* Assumption: types_list contains a maximum of one kWaterDriver and one
  * kFaceArray. */
 #define GetJobData()                                                        \
-    WaterDriver<TV> *driver = NULL;                                         \
-    NonAdvData<TV, T> *sim_data = NULL;                                     \
-    std::vector< ::water_app_data::FaceArray<TV>* > velocities;             \
-    int data_num = types_list.size();                                       \
-    assert(data_num == da.size());                                          \
-    printf("*** Liszt size = %i ***\n", data_num);                          \
-    for (int i = 0; i < data_num; i++) {                                    \
-        switch (types_list[i]) {                                            \
-            case driver_id:                                                 \
-                assert(da[i]->get_debug_info() == driver_id);               \
-                driver = (WaterDriver<TV> *)da[i];                          \
-                break;                                                      \
-            case non_adv_id:                                                \
-                assert(da[i]->get_debug_info() == non_adv_id);              \
-                sim_data = (NonAdvData<TV, T> *)da[1];                      \
-                break;                                                      \
-            case face_array_id:                                             \
-                assert(da[i]->get_debug_info() == face_array_id);           \
-                velocities.push_back(                                       \
-                        (::water_app_data::FaceArray<TV> *)da[i]);          \
-                break;                                                      \
-        }                                                                   \
-    }                                                                       \
     WaterApp *water_app = (WaterApp *)application();                        \
-    if (!water_app && driver && sim_data && velocities.size())                            \
+    ::water_app_job::JobData job_data;                                      \
+    CollectData(da, job_data);                                              \
+    if (!water_app)              \
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
@@ -196,6 +175,7 @@ void Main::Execute(std::string params, const DataArray& da) {
     after.clear();
     read.clear();
     write.clear();
+    before.insert(j[0]);
     for (unsigned int i = 0; i < d.size(); i++) {
         read.insert(d[i]);
         write.insert(d[i]);
@@ -225,14 +205,18 @@ void Init::Execute(std::string params, const DataArray& da) {
     GetJobData();
     int frame = 0;
     T_FACE_ARRAY *fv = new T_FACE_ARRAY();
-    driver->face_velocities = velocities[0]->data();
-    driver->sim_data = sim_data;
-    Add_Source(sim_data);
-    sim_data->incompressible->Set_Custom_Boundary(*water_app->boundary());
-    sim_data->initialize(driver, velocities[0]->data(), frame);
-    sim_data->incompressible->
+    job_data.driver->face_velocities = job_data.central_vels[0]->data();
+    job_data.driver->sim_data = job_data.sim_data;
+    Add_Source(job_data.sim_data);
+    job_data.sim_data->incompressible->
+        Set_Custom_Boundary(*water_app->boundary());
+    job_data.sim_data->initialize(
+            job_data.driver,
+            job_data.central_vels[0]->data(),
+            frame);
+    job_data.sim_data->incompressible->
         Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+    job_data.sim_data->particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*(water_app->advection_scalar()));
     delete(fv);
     printf("Successfully completed init job\n");
@@ -256,7 +240,9 @@ void UptoAdvect::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    sim_data->BeforeAdvection(driver, velocities[0]->data());
+    job_data.sim_data->BeforeAdvection(
+            job_data.driver,
+            job_data.central_vels[0]->data());
 };
 
 Advect::Advect(Application *app) {
@@ -279,15 +265,15 @@ void Advect::Execute(std::string params, const DataArray& da) {
     ::parameters::AdvVelPar adv_vel_par_pb;
     adv_vel_par_pb.ParseFromString(params);
     T_FACE_ARRAY *face_vel_extended = 
-        new T_FACE_ARRAY(*(velocities[0]->grid()), kGhostSize);
-    velocities[0]->Extend_Array(
-            velocities[0]->data(),
+        new T_FACE_ARRAY(*(job_data.central_vels[0]->grid()), kGhostSize);
+    job_data.central_vels[0]->Extend_Array(
+            job_data.central_vels[0]->data(),
             face_vel_extended,
             water_app->boundary(),
             kGhostSize,
-            driver->dt + driver->time,
+            job_data.driver->dt + job_data.driver->time,
             true);
-    Advect_Velocities(velocities[0], face_vel_extended, water_app,
+    Advect_Velocities(job_data.central_vels[0], face_vel_extended, water_app,
             adv_vel_par_pb.dt(), adv_vel_par_pb.time());
     delete(face_vel_extended);
 };
@@ -310,7 +296,9 @@ void AfterAdvect::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    sim_data->AfterAdvection(driver, velocities[0]->data());
+    job_data.sim_data->AfterAdvection(
+            job_data.driver,
+            job_data.central_vels[0]->data());
 };
 
 Loop::Loop(Application *app) {
@@ -331,8 +319,8 @@ void Loop::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    driver->IncreaseTime();
-    if (!driver->CheckProceed()) {
+    job_data.driver->IncreaseTime();
+    if (!job_data.driver->CheckProceed()) {
         printf("... Simulation completed ...\n");
     }
     else {
@@ -359,8 +347,8 @@ void Loop::Execute(std::string params, const DataArray& da) {
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
         ::parameters::AdvVelPar adv_vel_par_pb;
-        adv_vel_par_pb.set_dt(driver->dt);
-        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb.set_dt(job_data.driver->dt);
+        adv_vel_par_pb.set_time(job_data.driver->time);
         adv_vel_par_pb.SerializeToString(&par);
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -425,7 +413,7 @@ void WriteFrame::Execute(std::string params, const DataArray& da) {
         types_list.push_back(face_array_id);
     }
     GetJobData();
-    if (driver->IsFrameDone()) {
-        driver->Write_Output_Files(driver->current_frame);
+    if (job_data.driver->IsFrameDone()) {
+        job_data.driver->Write_Output_Files(job_data.driver->current_frame);
     }
 }

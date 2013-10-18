@@ -32,36 +32,43 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Common types to be used by water application, driver and job functions
- * operating on data.
- *
- * Can also initialize constants used by application, driver and job functions
- * here.
- *
+/*
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
+#include "app_config.h"
+#include "data_face_arrays.h"
+#include "job_utils.h"
+#include "shared/nimbus.h"
+#include "water_data_driver.h"
+#include "water_driver.h"
 
-#include "physbam_include.h"
+namespace water_app_job {
 
-// application configuration
-const int dimension = 2;
-const int kAppLastFrame = 10;
-const int kMainAllSize = 100;
-const int kGhostSize = 3;
-const int kWorkers = 1;
+    JobData::JobData() :
+        driver(0),
+        sim_data(0) {
+        }
 
-// useful values and typedefs from above constants
-const int kMainSize = kMainAllSize/kWorkers - 2*kGhostSize;
-const int kGhostNum = (dimension == 2)? 8 : 26; 
-typedef float T;
-typedef ::PhysBAM::VECTOR<float, dimension> TV;
-typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
-typedef typename 
-    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-    T_FACE_ARRAY;
+    void SimJob::CollectData(const ::nimbus::DataArray& da, JobData& job_data) {
+        unsigned int data_num = da.size();
+        for (unsigned int i = 0; i < data_num; i++) {
+            switch (da[i]->get_debug_info()) {
+                case driver_id:
+                    job_data.driver = (WaterDriver<TV> *)da[i];
+                    break;
+                case non_adv_id:
+                    job_data.sim_data = (NonAdvData<TV, T> *)da[i];
+                    break;
+                case face_array_id:
+                    FaceArray *vel = (FaceArray * )da[i];
+                    if (vel->region() == ::water_app_data::kDataInterior)
+                        job_data.central_vels.push_back(vel);
+                    else
+                        job_data.boundary_vels.push_back(vel);
+                    break;
+            }
+        }
+    }
 
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
+} // namespace water_app_job

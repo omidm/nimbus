@@ -35,37 +35,53 @@
 /* 
  * This file enumerates the type of jobs, based on location --
  * (corner/ side/ interior).
+ * It also defines some functions useful for jobs in the application code, to
+ * handle nimbus data objects.
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 
+#include "app_config.h"
+#include "data_fwd_decl.h"
+#include "physbam_include.h"
 #include "shared/nimbus.h"
 
-enum JobRegion {
-    kJobInterior,
-    kJobUpperLeft,
-    kJobUp,
-    kJobUpperRight,
-    kJobRight,
-    kJobBottomRight,
-    kJobBottom,
-    kJobBottomLeft,
-    kJobLeft
-};
+namespace water_app_job {
 
-class SimJob : public Job {
-    private:
-        JobRegion region_;
-    public:
-        SimJob() : region_(kJobInterior) {}
-        JobRegion region() {
-            return region_;
-        }
-        void set_region(JobRegion region) {
-            region_ = region;
-        }
-};
+    enum JobRegion {
+        kJobSingle,
+        kJobAll
+    };
+
+    typedef ::water_app_data::FaceArray<TV> FaceArray;
+    typedef std::vector<FaceArray * > FaceArrayList;
+
+    struct JobData {
+        WaterDriver<TV> *driver;
+        NonAdvData<TV, T> *sim_data;
+        // this list is interpreted, based on the type of the job
+        FaceArrayList boundary_vels;
+        // this list is interpreted, based on the type of the job
+        FaceArrayList central_vels;
+        JobData();
+    };
+
+    class SimJob : public Job {
+        private:
+            JobRegion region_;
+        public:
+            SimJob() : region_(kJobSingle) {}
+            JobRegion region() {
+                return region_;
+            }
+            void set_region(JobRegion region) {
+                region_ = region;
+            }
+            void CollectData(const ::nimbus::DataArray& da, JobData& job_data);
+    };
+
+} // namespace water_app_job
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
