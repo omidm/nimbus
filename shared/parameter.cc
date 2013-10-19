@@ -49,6 +49,12 @@ Parameter<T_ID>::Parameter() {
 }
 
 template<typename T_ID>
+Parameter<T_ID>::Parameter(SerializedData ser_data, IDSet<T_ID> idset) {
+  ser_data_ = ser_data;
+  idset_ = idset;
+}
+
+template<typename T_ID>
 Parameter<T_ID>::~Parameter() {
 }
 

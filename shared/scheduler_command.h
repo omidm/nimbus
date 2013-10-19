@@ -57,6 +57,7 @@
 #include "shared/parser.h"
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/escaper.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {

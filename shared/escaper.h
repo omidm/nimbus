@@ -33,44 +33,29 @@
  */
 
  /*
-  * Object representation of the parameter field.
+  * Helper functions for escaping and unescaping.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_PARAMETER_H_
-#define NIMBUS_SHARED_PARAMETER_H_
+#ifndef NIMBUS_SHARED_ESCAPER_H_
+#define NIMBUS_SHARED_ESCAPER_H_
 
+#include <boost/algorithm/string/replace.hpp>
 #include <string>
 #include "shared/nimbus_types.h"
-#include "shared/idset.h"
-#include "shared/serialized_data.h"
-
-
 
 namespace nimbus {
 
-template<typename T_ID>
-class Parameter {
- public:
-  Parameter();
-  Parameter(SerializedData ser_data, IDSet<T_ID> idset);
-  virtual ~Parameter();
+void EscapeString(std::string* input);
 
-  SerializedData ser_data();
-  IDSet<T_ID> idset();
+void UnescapeString(std::string* input);
 
-  void set_ser_data(SerializedData ser_data);
-  void set_idset(IDSet<T_ID> idset);
+bool IsEmptyString(std::string str);
 
-  std::string toString();
-  Parameter<T_ID>& operator= (const Parameter<T_ID>& right);
 
- private:
-  SerializedData ser_data_;
-  IDSet<T_ID> idset_;
-};
+
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_PARAMETER_H_
+#endif  // NIMBUS_SHARED_ESCAPER_H_

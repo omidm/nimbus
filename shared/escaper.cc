@@ -33,44 +33,39 @@
  */
 
  /*
-  * Object representation of the parameter field.
+  * Helper functions for escaping and unescaping.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_PARAMETER_H_
-#define NIMBUS_SHARED_PARAMETER_H_
 
-#include <string>
-#include "shared/nimbus_types.h"
-#include "shared/idset.h"
-#include "shared/serialized_data.h"
+#include "shared/escaper.h"
+
+bool IsEmptyString(std::string str) {
+  if (str.length() == 0) {
+      return true;
+  }
+  return false;
+}
+
+void EscapeString(std::string* input) {
+  boost::algorithm::replace_all(*input, "%", "%0");
+  boost::algorithm::replace_all(*input, ";", "%1");
+  boost::algorithm::replace_all(*input, " ", "%2");
+  boost::algorithm::replace_all(*input, "\n", "%3");
+  boost::algorithm::replace_all(*input, "\t", "%4");
+  boost::algorithm::replace_all(*input, "\r", "%5");
+  boost::algorithm::replace_all(*input, ",", "%6");
+}
+
+void UnescapeString(std::string* input) {
+  boost::algorithm::replace_all(*input, "%1", ";");
+  boost::algorithm::replace_all(*input, "%2", " ");
+  boost::algorithm::replace_all(*input, "%3", "\n");
+  boost::algorithm::replace_all(*input, "%4", "\t");
+  boost::algorithm::replace_all(*input, "%5", "\r");
+  boost::algorithm::replace_all(*input, "%6", ",");
+  boost::algorithm::replace_all(*input, "%0", "%");
+}
 
 
-
-namespace nimbus {
-
-template<typename T_ID>
-class Parameter {
- public:
-  Parameter();
-  Parameter(SerializedData ser_data, IDSet<T_ID> idset);
-  virtual ~Parameter();
-
-  SerializedData ser_data();
-  IDSet<T_ID> idset();
-
-  void set_ser_data(SerializedData ser_data);
-  void set_idset(IDSet<T_ID> idset);
-
-  std::string toString();
-  Parameter<T_ID>& operator= (const Parameter<T_ID>& right);
-
- private:
-  SerializedData ser_data_;
-  IDSet<T_ID> idset_;
-};
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_PARAMETER_H_
