@@ -52,16 +52,11 @@ namespace water_app_data {
     } // namespace
 
     template <class TV> FaceArray<TV>::
-        FaceArray(TV_INT size) :
-            size_(size),
-            grid_(0),
-            data_(0){}
-
-    template <class TV> FaceArray<TV>::
-        FaceArray(TV_INT size, DataRegion region) :
+        FaceArray(std::string ntypename, TV_INT size, DataRegion region) :
             size_(size),
             grid_(0),
             data_(0){
+                set_name(ntypename);
                 set_region(region);
             }
 
@@ -90,7 +85,7 @@ namespace water_app_data {
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         Clone() {
             std::cout << "Cloning facearray\n";
-            return new FaceArray<TV>(size_);
+            return new FaceArray<TV>(name(), size_, region());
         }
 
     template <class TV> int FaceArray<TV>::
@@ -189,40 +184,42 @@ namespace water_app_data {
                 FaceArray *part = (*parts)[i];
                 switch(part->region())
                 {
-                    case kDataBottomLeft:
+                    case kDataInBottomLeft:
                         box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                         break;
-                    case kDataBottomRight:
+                    case kDataInBottomRight:
                         box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                         break;
-                    case kDataUpperLeft:
+                    case kDataInUpperLeft:
                         box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataUpperRight:
+                    case kDataInUpperRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 len_y+1,
                                 len_y+bandwidth);
                         break;
-                    case kDataBottom:
+                    case kDataInBottom:
                         box = T_BOX(1, len_x, 1-bandwidth, 0);
                         break;
-                    case kDataLeft:
+                    case kDataInLeft:
                         box = T_BOX(1-bandwidth, 0, 1, len_y);
                         break;
-                    case kDataRight:
+                    case kDataInRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 1,
                                 len_y);
                         break;
-                    case kDataUp:
+                    case kDataInUpper:
                         box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
                         break;
                     case kDataInterior:
                         box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                    default:
                         break;
                 }
                 part->Glue_Face_Array(result, &box);
@@ -265,40 +262,42 @@ namespace water_app_data {
                 FaceArray *part = (*parts)[i];
                 switch(part->region())
                 {
-                    case kDataBottomLeft:
+                    case kDataInBottomLeft:
                         box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                         break;
-                    case kDataBottomRight:
+                    case kDataInBottomRight:
                         box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                         break;
-                    case kDataUpperLeft:
+                    case kDataInUpperLeft:
                         box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataUpperRight:
+                    case kDataInUpperRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 len_y+1,
                                 len_y+bandwidth);
                         break;
-                    case kDataBottom:
+                    case kDataInBottom:
                         box = T_BOX(1, len_x, 1-bandwidth, 0);
                         break;
-                    case kDataLeft:
+                    case kDataInLeft:
                         box = T_BOX(1-bandwidth, 0, 1, len_y);
                         break;
-                    case kDataRight:
+                    case kDataInRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 1,
                                 len_y);
                         break;
-                    case kDataUp:
+                    case kDataInUpper:
                         box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
                         break;
                     case kDataInterior:
                         box = T_BOX(1, len_x, 1, len_y);
+                        break;
+                    default:
                         break;
                 }
                 part->Update_Face_Array(updated, &box);

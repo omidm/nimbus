@@ -39,6 +39,7 @@
 #include "app_config.h"
 #include "assert.h"
 #include "data_face_arrays.h"
+#include "data_utils.h"
 #include "physbam_include.h"
 #include "proto_files/adv_vel_par.pb.h"
 #include "shared/nimbus.h"
@@ -64,6 +65,7 @@ using nimbus::Application;
     // asm is just a barrier to allow code to compile with unused variables    
 
 namespace {
+    const int kDataNum = ::water_app_data::kDataNum;
     TV_INT main_size(kMainAllSize, kMainAllSize);
     TV_INT ghost_vert_in_size(kGhostSize, kMainSize);
     TV_INT ghost_horiz_in_size(kMainSize, kGhostSize);
@@ -79,6 +81,8 @@ namespace {
 };
 
 WaterApp::WaterApp() {
+    std::string names[5];
+    water_app_data::GetDataRegionNames(names);
 };
 
 void WaterApp::Load() {
@@ -95,18 +99,19 @@ void WaterApp::Load() {
     RegisterJob("writeframe", new WriteFrame(this));
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
-    RegisterData(
-            main_vel,
-            new ::water_app_data::FaceArray<TV>(main_size));
-    RegisterData(
-            ghost_vert_in_vel,
-            new ::water_app_data::FaceArray<TV>(ghost_vert_in_size));
-    RegisterData(
-            ghost_horiz_in_vel,
-            new ::water_app_data::FaceArray<TV>(ghost_horiz_in_size));
-    RegisterData(
-            ghost_corner_in_vel,
-            new ::water_app_data::FaceArray<TV>(ghost_corner_in_size));
+
+//    RegisterData(
+//            main_vel,
+//            new ::water_app_data::FaceArray<TV>(main_size));
+//    RegisterData(
+//            ghost_vert_in_vel,
+//            new ::water_app_data::FaceArray<TV>(ghost_vert_in_size));
+//    RegisterData(
+//            ghost_horiz_in_vel,
+//            new ::water_app_data::FaceArray<TV>(ghost_horiz_in_size));
+//    RegisterData(
+//            ghost_corner_in_vel,
+//            new ::water_app_data::FaceArray<TV>(ghost_corner_in_size));
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
 

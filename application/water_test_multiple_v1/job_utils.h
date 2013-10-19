@@ -50,9 +50,15 @@
 
 namespace water_app_job {
 
+    // job locations in a simulation :
+    // TODO LATER - need to add jobs on other possible regions
     enum JobRegion {
-        kJobSingle,
-        kJobAll
+        kJobAll,
+        kJobUpperLeft,
+        kJobUpperRight,
+        kJobBottomRight,
+        kJobBottomLeft,
+        kJobNum
     };
 
     typedef ::water_app_data::FaceArray<TV> FaceArray;
@@ -72,7 +78,7 @@ namespace water_app_job {
         private:
             JobRegion region_;
         public:
-            SimJob() : region_(kJobSingle) {}
+            SimJob() : region_(kJobAll) {}
             JobRegion region() {
                 return region_;
             }
