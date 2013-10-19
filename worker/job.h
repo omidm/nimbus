@@ -117,7 +117,6 @@ class Job {
     void set_after_set(IDSet<job_id_t> after_set);
     void set_parameters(std::string parameters);
     void set_application(Application* app);
-    std::string hob_name();
 
   private:
     std::string name_;
@@ -129,7 +128,6 @@ class Job {
     std::string parameters_;
     Application* application_;
     bool app_is_set_;
-    std::string job_name_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests
