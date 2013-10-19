@@ -165,34 +165,6 @@ bool isSet(const std::string& str) {
 
 // ********************************************************
 
-bool IsEmptyString(std::string str) {
-  if (str.length() == 0) {
-      return true;
-  }
-  return false;
-}
-
-void EscapeString(std::string* input) {
-  boost::algorithm::replace_all(*input, "%", "%0");
-  boost::algorithm::replace_all(*input, ";", "%1");
-  boost::algorithm::replace_all(*input, " ", "%2");
-  boost::algorithm::replace_all(*input, "\n", "%3");
-  boost::algorithm::replace_all(*input, "\t", "%4");
-  boost::algorithm::replace_all(*input, "\r", "%5");
-  boost::algorithm::replace_all(*input, ",", "%6");
-}
-
-void UnescapeString(std::string* input) {
-  boost::algorithm::replace_all(*input, "%1", ";");
-  boost::algorithm::replace_all(*input, "%2", " ");
-  boost::algorithm::replace_all(*input, "%3", "\n");
-  boost::algorithm::replace_all(*input, "%4", "\t");
-  boost::algorithm::replace_all(*input, "%5", "\r");
-  boost::algorithm::replace_all(*input, "%6", ",");
-  boost::algorithm::replace_all(*input, "%0", "%");
-}
-
-
 bool ParseSchedulerCommand(const std::string& input,
     CommandSet* command_set,
     std::string& name, std::string& param_segment,
@@ -1162,6 +1134,12 @@ bool ParseWorkerDataHeader(const std::string& input,
   }
   return true;
 }
+
+bool ParseParameter(const std::string& input,
+    SerializedData& ser_data, IDSet<uint64_t>& idset) {return true;}
+
+bool ParseParameter(const std::string& input,
+    SerializedData& ser_data, IDSet<uint32_t>& idset) {return true;}
 
 
 
