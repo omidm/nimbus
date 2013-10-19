@@ -40,6 +40,7 @@
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 
 #include "app_config.h"
+#include "data_utils.h"
 #include "job_utils.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
@@ -55,6 +56,7 @@ using nimbus::Application;
 class WaterApp : public Application {
 
     private:
+        static const int kDataNum = ::water_app_data::kDataNum;
         ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM< ::PhysBAM::GRID<TV>, T>
             *advection_scalar_;
         ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary_;

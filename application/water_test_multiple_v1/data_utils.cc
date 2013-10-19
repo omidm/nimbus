@@ -36,7 +36,7 @@
 
 namespace water_app_data {
 
-    void GetDataRegionNames(std::string names[kDataNum]) {
+    void GetDataRegionNames(std::string names[]) {
         names[kDataInterior] = "DataInterior";
         names[kDataInUpperLeft] = "DataInUpperLeft";
         names[kDataInUpper] = "DataInUpper";
@@ -49,7 +49,7 @@ namespace water_app_data {
     }
 
     void GetDataRegionSizes(
-            TV_INT sizes[kDataNum],
+            TV_INT sizes[],
             TV_INT part_center_size,
             TV_INT sim_center_size,
             int ghost_band) {

@@ -69,11 +69,11 @@ namespace water_app_data {
     };
     // this function depends on enum DataRegion, and should be changed if
     // DataRegion is updated
-    void GetDataRegionNames(std::string names[kDataNum]);
+    void GetDataRegionNames(std::string names[]);
     // this function depends on enum DataRegion, and should be changed if
     // DataRegion is updated
     void GetDataRegionSizes(
-            TV_INT sizes[kDataNum],
+            TV_INT sizes[],
             TV_INT part_center_size,
             TV_INT sim_center_size,
             int ghost_band);
