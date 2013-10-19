@@ -56,7 +56,11 @@ using nimbus::Application;
 class WaterApp : public Application {
 
     private:
-        static const int kDataNum = ::water_app_data::kDataNum;
+        static const int data_num_ = ::water_app_data::kDataNum;
+        static std::string data_region_names_[data_num_];
+        static TV_INT data_region_sizes_[data_num_];
+        static TV_INT tv_int_error;
+
         ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM< ::PhysBAM::GRID<TV>, T>
             *advection_scalar_;
         ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary_;
@@ -83,6 +87,22 @@ class WaterApp : public Application {
         void set_boundary(
                 ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary) {
             boundary_ = boundary;
+        }
+
+        static std::string data_region_name(const int index) {
+            if (index >= data_num_)
+                return "";
+            return data_region_names_[index];
+        }
+
+        static TV_INT &data_region_size(const int index) {
+            if (index >= data_num_)
+                return tv_int_error;
+            return data_region_sizes_[index];
+        }
+
+        static const int data_num() {
+            return data_num_;
         }
 };
 

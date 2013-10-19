@@ -75,7 +75,7 @@ namespace water_app_data {
 
             public:
 
-                FaceArray(std::string ntype_name, TV_INT size, DataRegion region);
+                FaceArray(TV_INT size, DataRegion region);
                 virtual void Create();
                 virtual void Destroy();
                 virtual ::nimbus::Data* Clone();

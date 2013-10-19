@@ -64,29 +64,22 @@ using nimbus::Application;
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
-namespace {
-    const int kDataNum = ::water_app_data::kDataNum;
-    TV_INT main_size(kMainAllSize, kMainAllSize);
-    TV_INT ghost_vert_in_size(kGhostSize, kMainSize);
-    TV_INT ghost_horiz_in_size(kMainSize, kGhostSize);
-    TV_INT ghost_corner_in_size(kGhostSize, kGhostSize);
-
-    /* Advection does not require global location. Only counts and grid
-     * methods are needed. */
-
-    std::string main_vel = "main_vel";
-    std::string ghost_vert_in_vel = "ghost_vel_vert_in";
-    std::string ghost_horiz_in_vel = "ghost_vel_horiz_in";
-    std::string ghost_corner_in_vel = "ghost_vel_corner_in";
-};
-
 WaterApp::WaterApp() {
-    std::string names[5];
-    water_app_data::GetDataRegionNames(names);
 };
 
 void WaterApp::Load() {
     printf("Worker beginning to load application\n");
+
+    /* Initialize application constants. */
+    TV_INT main_size(kMainSize, kMainSize);
+    TV_INT main_all_size(kMainAllSize, kMainAllSize);
+    ::water_app_data::GetDataRegionNames(data_region_names_);
+    ::water_app_data::GetDataRegionSizes(
+            data_region_sizes_,
+            main_size,
+            main_all_size,
+            kGhostSize);
+
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
     /* Declare and initialize data, jobs and policies. */
@@ -100,18 +93,15 @@ void WaterApp::Load() {
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
 
-//    RegisterData(
-//            main_vel,
-//            new ::water_app_data::FaceArray<TV>(main_size));
-//    RegisterData(
-//            ghost_vert_in_vel,
-//            new ::water_app_data::FaceArray<TV>(ghost_vert_in_size));
-//    RegisterData(
-//            ghost_horiz_in_vel,
-//            new ::water_app_data::FaceArray<TV>(ghost_horiz_in_size));
-//    RegisterData(
-//            ghost_corner_in_vel,
-//            new ::water_app_data::FaceArray<TV>(ghost_corner_in_size));
+    for (int i = 0; i < data_num(); i++) {
+        std::string ntype_name = "velocities_"+data_region_name(i);
+        RegisterData(
+                ntype_name,
+                new FaceArray(
+                    data_region_size(i),
+                    (::water_app_data::DataRegion)i) );
+    }
+
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
 
@@ -154,15 +144,15 @@ void Main::Execute(std::string params, const DataArray& da) {
     GetNewDataID(&d, 11);
     DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
     DefineData("sim_data", d[1], partition_id, neighbor_partitions, par);
-    DefineData(main_vel, d[2], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_vel, d[3], partition_id, neighbor_partitions, par);
-    DefineData(ghost_horiz_in_vel, d[4], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_vel, d[5], partition_id, neighbor_partitions, par);
-    DefineData(ghost_vert_in_vel, d[6], partition_id, neighbor_partitions, par);
-    DefineData(ghost_vert_in_vel, d[7], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_vel, d[8], partition_id, neighbor_partitions, par);
-    DefineData(ghost_horiz_in_vel, d[9], partition_id, neighbor_partitions, par);
-    DefineData(ghost_corner_in_vel, d[10], partition_id, neighbor_partitions, par);
+//    DefineData(main_vel, d[2], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_corner_in_vel, d[3], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_horiz_in_vel, d[4], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_corner_in_vel, d[5], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_vert_in_vel, d[6], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_vert_in_vel, d[7], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_corner_in_vel, d[8], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_horiz_in_vel, d[9], partition_id, neighbor_partitions, par);
+//    DefineData(ghost_corner_in_vel, d[10], partition_id, neighbor_partitions, par);
     printf("Defined data\n");
     GetNewJobID(&j, 2);
     before.clear();
