@@ -41,6 +41,8 @@
 
 #include "shared/escaper.h"
 
+namespace nimbus {
+
 bool IsEmptyString(std::string str) {
   if (str.length() == 0) {
       return true;
@@ -56,6 +58,7 @@ void EscapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "\t", "%4");
   boost::algorithm::replace_all(*input, "\r", "%5");
   boost::algorithm::replace_all(*input, ",", "%6");
+  boost::algorithm::replace_all(*input, ":", "%7");
 }
 
 void UnescapeString(std::string* input) {
@@ -65,7 +68,10 @@ void UnescapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%4", "\t");
   boost::algorithm::replace_all(*input, "%5", "\r");
   boost::algorithm::replace_all(*input, "%6", ",");
+  boost::algorithm::replace_all(*input, "%7", ":");
   boost::algorithm::replace_all(*input, "%0", "%");
 }
+
+}  // namespace nimbus
 
 

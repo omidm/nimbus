@@ -46,8 +46,12 @@ SerializedData::SerializedData()
   :size_(0) {
 }
 
-SerializedData::SerializedData(boost::shared_ptr<char> data_ptr, size_t size)
+SerializedData::SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size)
 : data_ptr_(data_ptr), size_(size) {
+}
+
+SerializedData::SerializedData(const SerializedData& other)
+: data_ptr_(other.data_ptr_), size_(other.size_) {
 }
 
 SerializedData::~SerializedData() {
@@ -75,6 +79,12 @@ size_t SerializedData:: size() const {
 
 void SerializedData:: set_size(size_t size) {
   size_ = size;
+}
+
+std::string SerializedData::toString() {
+  std::string str(get_pointer(data_ptr_), size_);
+  EscapeString(&str);
+  return str;
 }
 
 SerializedData& SerializedData::operator= (const SerializedData& right) {

@@ -46,6 +46,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include "shared/escaper.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -53,7 +54,8 @@ namespace nimbus {
 class SerializedData {
   public:
     SerializedData();
-    SerializedData(boost::shared_ptr<char> data_ptr, size_t size);
+    SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size);
+    SerializedData(const SerializedData& other);
     ~SerializedData();
 
     size_t size() const;
@@ -64,6 +66,7 @@ class SerializedData {
     void set_data_ptr(char* ptr);
     void set_data_ptr(boost::shared_ptr<char> ptr);
 
+    std::string toString();
     SerializedData& operator= (const SerializedData& right);
 
   private:
