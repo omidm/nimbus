@@ -53,7 +53,7 @@ namespace nimbus {
 class SerializedData {
   public:
     SerializedData();
-    SerializedData(boost::shared_ptr<char> data_ptr, size_t size);
+    SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size);
     SerializedData(const SerializedData& other);
     ~SerializedData();
 

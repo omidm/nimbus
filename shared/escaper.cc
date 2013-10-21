@@ -41,6 +41,8 @@
 
 #include "shared/escaper.h"
 
+namespace nimbus {
+
 bool IsEmptyString(std::string str) {
   if (str.length() == 0) {
       return true;
@@ -67,5 +69,7 @@ void UnescapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%6", ",");
   boost::algorithm::replace_all(*input, "%0", "%");
 }
+
+}  // namespace nimbus
 
 
