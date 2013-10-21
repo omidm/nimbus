@@ -81,6 +81,12 @@ void SerializedData:: set_size(size_t size) {
   size_ = size;
 }
 
+std::string SerializedData::toString() {
+  std::string str(get_pointer(data_ptr_), size_);
+  EscapeString(&str);
+  return str;
+}
+
 SerializedData& SerializedData::operator= (const SerializedData& right) {
   data_ptr_ = right.data_ptr_;
   size_ = right.size_;

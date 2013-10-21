@@ -76,16 +76,20 @@ IDSet<T_ID> Parameter<T_ID>::idset() {
 
 template<typename T_ID>
 void Parameter<T_ID>::set_ser_data(SerializedData ser_data) {
+  ser_data_ = ser_data;
 }
 
 
 template<typename T_ID>
 void Parameter<T_ID>::set_idset(IDSet<T_ID> idset) {
+  idset_ = idset;
 }
 
 template<typename T_ID>
 std::string Parameter<T_ID>::toString() {
   std::string str;
+  str += (ser_data_.toString() + ":");
+  str += idset_.toString();
   return str;
 }
 
