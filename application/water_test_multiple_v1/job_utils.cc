@@ -50,6 +50,11 @@ namespace water_app_job {
         sim_data(0) {
         }
 
+    // default constructor
+    SimJob::SimJob() : region_(kJobAll) {}
+
+    SimJob::SimJob(JobRegion region) : region_(region) {}
+
     void SimJob::CollectData(const ::nimbus::DataArray& da, JobData& job_data) {
         unsigned int data_num = da.size();
         for (unsigned int i = 0; i < data_num; i++) {
@@ -69,6 +74,9 @@ namespace water_app_job {
                     break;
             }
         }
+    }
+
+    void SimJob::GetJobDataTypes(std::string ntypes[]) {
     }
 
 } // namespace water_app_job

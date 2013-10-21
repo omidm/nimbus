@@ -75,7 +75,8 @@ namespace water_app_job {
         private:
             JobRegion region_;
         public:
-            SimJob() : region_(kJobAll) {}
+            SimJob();
+            SimJob(JobRegion region);
             JobRegion region() {
                 return region_;
             }
@@ -83,6 +84,7 @@ namespace water_app_job {
                 region_ = region;
             }
             void CollectData(const ::nimbus::DataArray& da, JobData& job_data);
+            void GetJobDataTypes(std::string ntype_names[]);
     };
 
 } // namespace water_app_job

@@ -64,6 +64,11 @@ using nimbus::Application;
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
+namespace water_app_data {
+    std::string kDataRegionNames[kDataNum];
+    TV_INT kDataRegionSizes[kDataNum];
+} // namespace water_app_data
+
 WaterApp::WaterApp() {
 };
 
@@ -73,9 +78,9 @@ void WaterApp::Load() {
     /* Initialize application constants. */
     TV_INT main_size(kMainSize, kMainSize);
     TV_INT main_all_size(kMainAllSize, kMainAllSize);
-    ::water_app_data::GetDataRegionNames(data_region_names_);
+    ::water_app_data::GetDataRegionNames(::water_app_data::kDataRegionNames);
     ::water_app_data::GetDataRegionSizes(
-            data_region_sizes_,
+            ::water_app_data::kDataRegionSizes,
             main_size,
             main_all_size,
             kGhostSize);
@@ -94,19 +99,21 @@ void WaterApp::Load() {
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
 
     /* Declare velocity types. */
-    for (int i = 0; i < data_types_num(); i++) {
-        std::string ntype_name = "velocities_"+data_region_name(i);
+    for (int i = 0; i < ::water_app_data::kDataNum; i++) {
+        std::string ntype_name = "velocities_"+
+            ::water_app_data::kDataRegionNames[i];
         RegisterData(
                 ntype_name,
                 new FaceArray(
-                    data_region_size(i),
+                    ::water_app_data::kDataRegionSizes[i],
                     (::water_app_data::DataRegion)i) );
     }
 
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
 
-    /* Application data initialization. */
+    /* Application data initialization -- initialization of partition specific
+     * data happens later. */
     set_advection_scalar(new ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM
             < ::PhysBAM::GRID<TV>,T>());
 
@@ -134,8 +141,8 @@ Job* Main::Clone() {
 };
 
 void Main::Execute(std::string params, const DataArray& da) {
-    WaterApp *water_app = (WaterApp *)application();
-    int data_num = water_app->total_regions_num() * 1 + 2;
+//    WaterApp *water_app = (WaterApp *)application();
+    int data_num = 2;
     printf("Begin main\n");
     std::vector<job_id_t> j;
     std::vector<data_id_t> d;
@@ -144,7 +151,7 @@ void Main::Execute(std::string params, const DataArray& da) {
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
     std::string par;
-    GetNewDataID(&d, 2+data_num);
+    GetNewDataID(&d, data_num);
     DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
     DefineData("sim_data", d[1], partition_id, neighbor_partitions, par);
     GetNewJobID(&j, 2);
