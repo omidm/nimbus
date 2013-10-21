@@ -52,11 +52,10 @@ namespace water_app_data {
     } // namespace
 
     template <class TV> FaceArray<TV>::
-        FaceArray(std::string ntypename, TV_INT size, DataRegion region) :
+        FaceArray(TV_INT size, DataRegion region) :
             size_(size),
             grid_(0),
             data_(0){
-                set_name(ntypename);
                 set_region(region);
             }
 
@@ -85,7 +84,7 @@ namespace water_app_data {
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         Clone() {
             std::cout << "Cloning facearray\n";
-            return new FaceArray<TV>(name(), size_, region());
+            return new FaceArray<TV>(size_, region());
         }
 
     template <class TV> int FaceArray<TV>::

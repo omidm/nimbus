@@ -61,9 +61,6 @@ namespace water_app_job {
         kJobNum
     };
 
-    typedef ::water_app_data::FaceArray<TV> FaceArray;
-    typedef std::vector<FaceArray * > FaceArrayList;
-
     struct JobData {
         WaterDriver<TV> *driver;
         NonAdvData<TV, T> *sim_data;

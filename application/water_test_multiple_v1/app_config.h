@@ -45,7 +45,9 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
 
+#include "data_fwd_decl.h"
 #include "physbam_include.h"
+#include <vector>
 
 // application configuration
 const int dimension = 2;
@@ -60,8 +62,10 @@ const int kGhostNum = (dimension == 2)? 8 : 26;
 typedef float T;
 typedef ::PhysBAM::VECTOR<float, dimension> TV;
 typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
-typedef typename 
-    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-    T_FACE_ARRAY;
+typedef ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+T_FACE_ARRAY;
+typedef ::water_app_data::FaceArray<TV> FaceArray;
+typedef std::vector<FaceArray * > FaceArrayList;
+typedef std::vector<FaceArrayList * > ListFaceArrayList;
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
