@@ -32,50 +32,46 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Helper functions for escaping and unescaping.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
 
-#include <inttypes.h>
-#include "shared/address_book.h"
+#include "shared/escaper.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  typedef uint64_t param_id_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
 
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
+bool IsEmptyString(std::string str) {
+  if (str.length() == 0) {
+      return true;
+  }
+  return false;
+}
 
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_SPAWN_COMPUTE_JOB,
-    COMMAND_SPAWN_COPY_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE,
-    COMMAND_JOB_DONE,
-    COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY_SEND,
-    COMMAND_REMOTE_COPY_RECEIVE,
-    COMMAND_LOCAL_COPY
-  };
+void EscapeString(std::string* input) {
+  boost::algorithm::replace_all(*input, "%", "%0");
+  boost::algorithm::replace_all(*input, ";", "%1");
+  boost::algorithm::replace_all(*input, " ", "%2");
+  boost::algorithm::replace_all(*input, "\n", "%3");
+  boost::algorithm::replace_all(*input, "\t", "%4");
+  boost::algorithm::replace_all(*input, "\r", "%5");
+  boost::algorithm::replace_all(*input, ",", "%6");
+  boost::algorithm::replace_all(*input, ":", "%7");
+}
+
+void UnescapeString(std::string* input) {
+  boost::algorithm::replace_all(*input, "%1", ";");
+  boost::algorithm::replace_all(*input, "%2", " ");
+  boost::algorithm::replace_all(*input, "%3", "\n");
+  boost::algorithm::replace_all(*input, "%4", "\t");
+  boost::algorithm::replace_all(*input, "%5", "\r");
+  boost::algorithm::replace_all(*input, "%6", ",");
+  boost::algorithm::replace_all(*input, "%7", ":");
+  boost::algorithm::replace_all(*input, "%0", "%");
+}
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+

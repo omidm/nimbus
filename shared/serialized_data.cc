@@ -42,22 +42,40 @@
 
 using namespace nimbus; // NOLINT
 
-SerializedData::SerializedData():data_ptr_(0), size_(0) {
+SerializedData::SerializedData()
+  :size_(0) {
 }
 
-SerializedData::SerializedData(char* data_ptr, size_t size)
+SerializedData::SerializedData(std::string str)
+: data_ptr_(boost::shared_ptr<char>(new char[str.size()])), size_(str.size()) {
+    memcpy(get_pointer(data_ptr_), str.c_str(), size_);
+}
+
+SerializedData::SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size)
 : data_ptr_(data_ptr), size_(size) {
+}
+
+SerializedData::SerializedData(const SerializedData& other)
+: data_ptr_(other.data_ptr_), size_(other.size_) {
 }
 
 SerializedData::~SerializedData() {
 }
 
-char* SerializedData::data_ptr() const {
+boost::shared_ptr<char> SerializedData::data_ptr() const {
   return data_ptr_;
 }
 
-void  SerializedData::set_data_ptr(char* ptr) {
+char* SerializedData::data_ptr_raw() const {
+  return get_pointer(data_ptr_);
+}
+
+void  SerializedData::set_data_ptr(boost::shared_ptr<char> ptr) {
   data_ptr_ = ptr;
+}
+
+void  SerializedData::set_data_ptr(char* ptr) {
+  data_ptr_ = boost::shared_ptr<char> (ptr);
 }
 
 size_t SerializedData:: size() const {
@@ -66,6 +84,17 @@ size_t SerializedData:: size() const {
 
 void SerializedData:: set_size(size_t size) {
   size_ = size;
+}
+
+std::string SerializedData::toString() {
+  if (size_ == 0) {
+    std::string str = "empty";
+    return str;
+  } else {
+    std::string str(get_pointer(data_ptr_), size_);
+    EscapeString(&str);
+    return str;
+  }
 }
 
 SerializedData& SerializedData::operator= (const SerializedData& right) {

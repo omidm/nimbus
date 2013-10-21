@@ -61,3 +61,11 @@ void Data::set_id(uint64_t id) {
 int Data::get_debug_info() {
     return -1;
 }
+
+std::string Data::name() {
+    return name_;
+}
+
+void Data::set_name(std::string name) {
+    name_ = name;
+}

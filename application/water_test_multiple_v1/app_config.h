@@ -45,21 +45,31 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
 
+#include "data_fwd_decl.h"
 #include "physbam_include.h"
+#include <vector>
 
-// useful typedefs
-typedef float T;
+// application configuration
 const int dimension = 2;
-typedef ::PhysBAM::VECTOR<float, dimension> TV;
-typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
-typedef typename 
-    ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
-    T_FACE_ARRAY;
-
 const int kAppLastFrame = 10;
 const int kMainAllSize = 100;
 const int kGhostSize = 3;
 const int kWorkers = 1;
+// number of corner and edge partitions
+// to calculcate how many dta chunks should be defined
+const int kCornerRegions = 1;
+const int kEdgeRegions = 0;
+
+// useful values and typedefs from above constants
 const int kMainSize = kMainAllSize/kWorkers - 2*kGhostSize;
+const int kGhostNum = (dimension == 2)? 8 : 26; 
+typedef float T;
+typedef ::PhysBAM::VECTOR<float, dimension> TV;
+typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
+typedef ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+T_FACE_ARRAY;
+typedef ::water_app_data::FaceArray<TV> FaceArray;
+typedef std::vector<FaceArray * > FaceArrayList;
+typedef std::vector<FaceArrayList * > ListFaceArrayList;
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_

@@ -217,10 +217,12 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
 
 void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
     SerializedData* ser_data) {
-    data_map_[job_id] = ser_data;
+  boost::mutex::scoped_lock lock(data_map_mutex_);
+  data_map_[job_id] = ser_data;
 }
 
 void WorkerDataExchanger::RemoveSerializedData(job_id_t job_id) {
+  boost::mutex::scoped_lock lock(data_map_mutex_);
   data_map_.erase(job_id);
 }
 
@@ -233,7 +235,13 @@ bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
 
 bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
       SerializedData** ser_data) {
-  if (data_map_.count(job_id) == 0) {
+  int available;
+  {
+    boost::mutex::scoped_lock lock(data_map_mutex_);
+    available = data_map_.count(job_id);
+  }
+
+  if (!available) {
     return false;
   } else {
     *ser_data = data_map_[job_id];
@@ -244,7 +252,7 @@ bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
 
 bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
       worker_id_t worker_id, SerializedData& ser_data) {
-  char* buf = ser_data.data_ptr();
+  boost::shared_ptr<char> buf = ser_data.data_ptr();
   size_t size = ser_data.size();
   boost::mutex::scoped_lock lock1(send_connection_mutex_);
   boost::mutex::scoped_lock lock2(address_book_mutex_);
@@ -271,7 +279,8 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
 
   boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
       boost::asio::transfer_all(), ignored_error);
-  boost::asio::write(*(connection->socket()), boost::asio::buffer(buf, size),
+  boost::asio::write(*(connection->socket()),
+      boost::asio::buffer(get_pointer(buf), size),
       boost::asio::transfer_all(), ignored_error);
   return true;
 }
@@ -304,10 +313,6 @@ WorkerDataExchangerConnectionMap* WorkerDataExchanger::send_connections() {
 
 WorkerDataExchangerConnectionList* WorkerDataExchanger::receive_connections() {
   return &receive_connections_;
-}
-
-SerializedDataMap* WorkerDataExchanger::data_map() {
-  return &data_map_;
 }
 
 

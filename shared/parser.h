@@ -44,7 +44,6 @@
 #include <stdint.h>
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
-#include <boost/algorithm/string/replace.hpp>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -54,6 +53,8 @@
 #include <utility>
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/serialized_data.h"
+#include "shared/escaper.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -175,17 +176,11 @@ bool ParseID(const std::string& input, uint32_t& elem);
 bool ParseWorkerDataHeader(const std::string& input,
     job_id_t& job_id, size_t& data_length);
 
-void EscapeString(std::string* input);
+bool ParseSerializedData(const std::string& input,
+    boost::shared_ptr<char>& data_ptr, size_t& size);
 
-void UnescapeString(std::string* input);
-
-bool IsEmptyString(std::string str);
-
-
-
-
-
-
+bool ParseParameter(const std::string& input,
+    SerializedData& ser_data, IDSet<param_id_t>& idset);
 
 
 }  // namespace nimbus

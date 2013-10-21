@@ -78,6 +78,8 @@ class Data {
 
   data_id_t id();
   void set_id(data_id_t id);
+  std::string name();
+  void set_name(std::string name);
 
  private:
   data_id_t id_;
@@ -90,6 +92,9 @@ class Data {
 
   // Set of partition ids neighbor to this partition.
   IDSet<data_id_t> neighbor_partitions_;
+
+  // data name
+  std::string name_;
 };
 
 }  // namespace nimbus

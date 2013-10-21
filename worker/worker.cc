@@ -163,6 +163,7 @@ void Worker::ExecuteJob(Job* job) {
 
   JobDoneCommand cm(job->id(), job->after_set(), "nothing_yet");
   client_->sendCommand(&cm);
+  delete job;
 }
 
 

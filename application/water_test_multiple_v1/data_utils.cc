@@ -32,50 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+#include "data_utils.h"
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+namespace water_app_data {
 
-#include <inttypes.h>
-#include "shared/address_book.h"
+    void GetDataRegionNames(std::string names[]) {
+        names[kDataInterior] = "DataInterior";
+        names[kDataInUpperLeft] = "DataInUpperLeft";
+        names[kDataInUpper] = "DataInUpper";
+        names[kDataInUpperRight] = "DataInUpperRight";
+        names[kDataInRight] = "DataInRight";
+        names[kDataInBottomRight] = "DataInBottomRight";
+        names[kDataInBottom] = "DataInBottom";
+        names[kDataInBottomLeft] = "DataInBottomLeft";
+        names[kDataInLeft] = "DataInLeft";
+    }
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  typedef uint64_t param_id_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+    void GetDataRegionSizes(
+            TV_INT sizes[],
+            TV_INT part_center_size,
+            TV_INT sim_center_size,
+            int ghost_band) {
+        TV_INT part_ghost_corner_size(ghost_band, ghost_band);
+        TV_INT part_ghost_vert_size = part_center_size;
+        TV_INT part_ghost_horiz_size = part_center_size;
+        part_ghost_vert_size(0) = ghost_band;
+        part_ghost_horiz_size(1) = ghost_band;
+        sizes[kDataInterior] = sim_center_size;
+        sizes[kDataInUpperLeft] = part_ghost_corner_size;
+        sizes[kDataInUpper] = part_ghost_horiz_size;
+        sizes[kDataInUpperRight] = part_ghost_corner_size;
+        sizes[kDataInRight] = part_ghost_vert_size;
+        sizes[kDataInBottomRight] = part_ghost_corner_size;
+        sizes[kDataInBottom] = part_ghost_horiz_size;
+        sizes[kDataInBottomLeft] = part_ghost_corner_size;
+        sizes[kDataInLeft] = part_ghost_vert_size;
+    }
 
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
-
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_SPAWN_COMPUTE_JOB,
-    COMMAND_SPAWN_COPY_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE,
-    COMMAND_JOB_DONE,
-    COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY_SEND,
-    COMMAND_REMOTE_COPY_RECEIVE,
-    COMMAND_LOCAL_COPY
-  };
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+} // namespace water_app_data

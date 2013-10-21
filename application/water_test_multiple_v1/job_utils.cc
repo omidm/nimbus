@@ -33,49 +33,42 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#include "app_config.h"
+#include "data_face_arrays.h"
+#include "job_utils.h"
+#include "shared/nimbus.h"
+#include "water_data_driver.h"
+#include "water_driver.h"
 
-#include <inttypes.h>
-#include "shared/address_book.h"
+namespace water_app_job {
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  typedef uint64_t param_id_t;
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+    JobData::JobData() :
+        driver(0),
+        sim_data(0) {
+        }
 
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
+    void SimJob::CollectData(const ::nimbus::DataArray& da, JobData& job_data) {
+        unsigned int data_num = da.size();
+        for (unsigned int i = 0; i < data_num; i++) {
+            switch (da[i]->get_debug_info()) {
+                case driver_id:
+                    job_data.driver = (WaterDriver<TV> *)da[i];
+                    break;
+                case non_adv_id:
+                    job_data.sim_data = (NonAdvData<TV, T> *)da[i];
+                    break;
+                case face_array_id:
+                    FaceArray *vel = (FaceArray * )da[i];
+                    if (vel->region() == ::water_app_data::kDataInterior)
+                        job_data.central_vels.push_back(vel);
+                    else
+                        job_data.boundary_vels.push_back(vel);
+                    break;
+            }
+        }
+    }
 
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_SPAWN_COMPUTE_JOB,
-    COMMAND_SPAWN_COPY_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE,
-    COMMAND_JOB_DONE,
-    COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY_SEND,
-    COMMAND_REMOTE_COPY_RECEIVE,
-    COMMAND_LOCAL_COPY
-  };
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+} // namespace water_app_job

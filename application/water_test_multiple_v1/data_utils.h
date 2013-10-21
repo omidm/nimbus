@@ -34,28 +34,51 @@
 
 /* 
  * This file enumerates the type of data, based on location --
- * (corner/ side/ interior).
+ * (corner/ side/ interior) and utility functions.
+ * The code works for only 2d regions.
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
 
+#include "PhysBAM_Tools/Vectors/VECTOR.h"
 #include "shared/nimbus.h"
 
 namespace water_app_data {
 
+    namespace {
+        const int dimension = 2;
+        typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
+    }
+
+    // data locations for a partition
+    // update GetDataRegionNames and GetDataRegionSizes
+    // when you update DataRegion
     enum DataRegion {
         kDataInterior,
-        kDataUpperLeft,
-        kDataUp,
-        kDataUpperRight,
-        kDataRight,
-        kDataBottomRight,
-        kDataBottom,
-        kDataBottomLeft,
-        kDataLeft
+        kDataInUpperLeft,
+        kDataInUpper,
+        kDataInUpperRight,
+        kDataInRight,
+        kDataInBottomRight,
+        kDataInBottom,
+        kDataInBottomLeft,
+        kDataInLeft,
+        kDataNum
     };
+    const int kCornerNum = 5;
+    const int kEdgeNum = 3;
+    // this function depends on enum DataRegion, and should be changed if
+    // DataRegion is updated
+    void GetDataRegionNames(std::string names[]);
+    // this function depends on enum DataRegion, and should be changed if
+    // DataRegion is updated
+    void GetDataRegionSizes(
+            TV_INT sizes[],
+            TV_INT part_center_size,
+            TV_INT sim_center_size,
+            int ghost_band);
 
     class SimData : public ::nimbus::Data {
         private:

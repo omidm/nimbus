@@ -75,7 +75,6 @@ namespace water_app_data {
 
             public:
 
-                FaceArray(TV_INT size);
                 FaceArray(TV_INT size, DataRegion region);
                 virtual void Create();
                 virtual void Destroy();

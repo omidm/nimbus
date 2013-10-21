@@ -42,9 +42,11 @@
 #define NIMBUS_SHARED_SERIALIZED_DATA_H_
 
 
+#include <boost/shared_ptr.hpp>
 #include <list>
 #include <map>
 #include <string>
+#include "shared/escaper.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -52,18 +54,24 @@ namespace nimbus {
 class SerializedData {
   public:
     SerializedData();
-    SerializedData(char* data_ptr, size_t size);
+    explicit SerializedData(std::string str);
+    SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size);
+    SerializedData(const SerializedData& other);
     ~SerializedData();
 
-    char* data_ptr() const;
-    void set_data_ptr(char* ptr);
     size_t size() const;
-    void set_size(size_t size);
+    char* data_ptr_raw() const;
+    boost::shared_ptr<char> data_ptr() const;
 
+    void set_size(size_t size);
+    void set_data_ptr(char* ptr);
+    void set_data_ptr(boost::shared_ptr<char> ptr);
+
+    std::string toString();
     SerializedData& operator= (const SerializedData& right);
 
   private:
-    char* data_ptr_;
+    boost::shared_ptr<char> data_ptr_;
     size_t size_;
 };
 
