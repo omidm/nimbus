@@ -98,5 +98,8 @@ Parameter<T_ID>& Parameter<T_ID>::operator= (const Parameter<T_ID>& right) {
   return *this;
 }
 
+template class Parameter<uint64_t>;
+template class Parameter<uint32_t>;
+
 }  // namespace nimbus
 

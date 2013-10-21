@@ -46,6 +46,11 @@ SerializedData::SerializedData()
   :size_(0) {
 }
 
+SerializedData::SerializedData(std::string str)
+: data_ptr_(boost::shared_ptr<char>(new char[str.size()])), size_(str.size()) {
+    memcpy(get_pointer(data_ptr_), str.c_str(), size_);
+}
+
 SerializedData::SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size)
 : data_ptr_(data_ptr), size_(size) {
 }
