@@ -44,62 +44,49 @@
 
 namespace nimbus {
 
-template<typename T_ID>
-Parameter<T_ID>::Parameter() {
+Parameter::Parameter() {
 }
 
-template<typename T_ID>
-Parameter<T_ID>::Parameter(const SerializedData& ser_data, const IDSet<T_ID>& idset)
+Parameter::Parameter(const SerializedData& ser_data, const IDSet<param_id_t>& idset)
   : ser_data_(ser_data), idset_(idset) {
 }
 
-template<typename T_ID>
-Parameter<T_ID>::Parameter(const Parameter<T_ID>& other)
+Parameter::Parameter(const Parameter& other)
   : ser_data_(other.ser_data_), idset_(other.idset_) {
 }
 
 
-template<typename T_ID>
-Parameter<T_ID>::~Parameter() {
+Parameter::~Parameter() {
 }
 
 
-template<typename T_ID>
-SerializedData Parameter<T_ID>::ser_data() {
+SerializedData Parameter::ser_data() {
   return ser_data_;
 }
 
-template<typename T_ID>
-IDSet<T_ID> Parameter<T_ID>::idset() {
+IDSet<param_id_t> Parameter::idset() {
   return idset_;
 }
 
-template<typename T_ID>
-void Parameter<T_ID>::set_ser_data(SerializedData ser_data) {
+void Parameter::set_ser_data(SerializedData ser_data) {
   ser_data_ = ser_data;
 }
 
 
-template<typename T_ID>
-void Parameter<T_ID>::set_idset(IDSet<T_ID> idset) {
+void Parameter::set_idset(IDSet<param_id_t> idset) {
   idset_ = idset;
 }
 
-template<typename T_ID>
-std::string Parameter<T_ID>::toString() {
+std::string Parameter::toString() {
   std::string str;
   str += (ser_data_.toString() + ":");
   str += idset_.toString();
   return str;
 }
 
-template<typename T_ID>
-Parameter<T_ID>& Parameter<T_ID>::operator= (const Parameter<T_ID>& right) {
+Parameter& Parameter::operator= (const Parameter& right) {
   return *this;
 }
-
-template class Parameter<uint64_t>;
-template class Parameter<uint32_t>;
 
 }  // namespace nimbus
 

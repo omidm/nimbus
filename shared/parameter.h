@@ -50,26 +50,25 @@
 
 namespace nimbus {
 
-template<typename T_ID>
 class Parameter {
   public:
     Parameter();
-    Parameter(const SerializedData& ser_data, const IDSet<T_ID>& idset);
-    Parameter(const Parameter<T_ID>& other);
+    Parameter(const SerializedData& ser_data, const IDSet<param_id_t>& idset);
+    Parameter(const Parameter& other);
     virtual ~Parameter();
 
     SerializedData ser_data();
-    IDSet<T_ID> idset();
+    IDSet<param_id_t> idset();
 
     void set_ser_data(SerializedData ser_data);
-    void set_idset(IDSet<T_ID> idset);
+    void set_idset(IDSet<param_id_t> idset);
 
     std::string toString();
-    Parameter<T_ID>& operator= (const Parameter<T_ID>& right);
+    Parameter& operator= (const Parameter& right);
 
   private:
     SerializedData ser_data_;
-    IDSet<T_ID> idset_;
+    IDSet<param_id_t> idset_;
 };
 
 }  // namespace nimbus

@@ -180,10 +180,7 @@ bool ParseSerializedData(const std::string& input,
     boost::shared_ptr<char>& data_ptr, size_t& size);
 
 bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<uint64_t>& idset);
-
-bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<uint32_t>& idset);
+    SerializedData& ser_data, IDSet<param_id_t>& idset);
 
 
 }  // namespace nimbus

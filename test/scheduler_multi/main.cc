@@ -78,20 +78,20 @@ int main(int argc, char *argv[]) {
 //  }
 //
 //  while (!cond) {}
-//
+
 //  std::string str("X\0;:,", 5);
 //  SerializedData ser_data(str);
-//  IDSet<uint64_t> idset;
+//  IDSet<param_id_t> idset;
 //  idset.insert(13);
-//  Parameter<uint64_t> param(ser_data, idset);
+//  Parameter param(ser_data, idset);
 //  std::string param_str = param.toString();
 //  std::cout << "param to string before: " << param_str << std::endl;
 //
 //  bool parsed = false;
 //  SerializedData temp_ser_data;
-//  IDSet<uint64_t> temp_idset;
+//  IDSet<param_id_t> temp_idset;
 //  parsed = ParseParameter(param_str, temp_ser_data, temp_idset);
-//  Parameter<uint64_t> temp_param(temp_ser_data, temp_idset);
+//  Parameter temp_param(temp_ser_data, temp_idset);
 //  std::cout << "parsed ser_data: " << temp_ser_data.toString() << std::endl;
 //  std::cout << "parsed idset: " << temp_idset.toString() << std::endl;
 //  std::cout << "param to string after: " << temp_param.toString() << std::endl;
