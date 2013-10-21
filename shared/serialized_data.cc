@@ -82,9 +82,14 @@ void SerializedData:: set_size(size_t size) {
 }
 
 std::string SerializedData::toString() {
-  std::string str(get_pointer(data_ptr_), size_);
-  EscapeString(&str);
-  return str;
+  if (size_ == 0) {
+    std::string str = "empty";
+    return str;
+  } else {
+    std::string str(get_pointer(data_ptr_), size_);
+    EscapeString(&str);
+    return str;
+  }
 }
 
 SerializedData& SerializedData::operator= (const SerializedData& right) {
