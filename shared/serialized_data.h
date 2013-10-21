@@ -54,6 +54,7 @@ class SerializedData {
   public:
     SerializedData();
     SerializedData(boost::shared_ptr<char> data_ptr, size_t size);
+    SerializedData(const SerializedData& other);
     ~SerializedData();
 
     size_t size() const;

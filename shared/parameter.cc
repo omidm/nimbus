@@ -49,10 +49,15 @@ Parameter<T_ID>::Parameter() {
 }
 
 template<typename T_ID>
-Parameter<T_ID>::Parameter(SerializedData ser_data, IDSet<T_ID> idset) {
-  ser_data_ = ser_data;
-  idset_ = idset;
+Parameter<T_ID>::Parameter(const SerializedData& ser_data, const IDSet<T_ID>& idset)
+  : ser_data_(ser_data), idset_(idset) {
 }
+
+template<typename T_ID>
+Parameter<T_ID>::Parameter(const Parameter<T_ID>& other)
+  : ser_data_(other.ser_data_), idset_(other.idset_) {
+}
+
 
 template<typename T_ID>
 Parameter<T_ID>::~Parameter() {

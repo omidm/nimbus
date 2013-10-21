@@ -50,6 +50,10 @@ SerializedData::SerializedData(boost::shared_ptr<char> data_ptr, size_t size)
 : data_ptr_(data_ptr), size_(size) {
 }
 
+SerializedData::SerializedData(const SerializedData& other)
+: data_ptr_(other.data_ptr_), size_(other.size_) {
+}
+
 SerializedData::~SerializedData() {
 }
 

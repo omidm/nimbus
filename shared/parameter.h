@@ -54,7 +54,8 @@ template<typename T_ID>
 class Parameter {
  public:
   Parameter();
-  Parameter(SerializedData ser_data, IDSet<T_ID> idset);
+  Parameter(const SerializedData& ser_data, const IDSet<T_ID>& idset);
+  Parameter(const Parameter<T_ID>& other);
   virtual ~Parameter();
 
   SerializedData ser_data();
