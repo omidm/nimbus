@@ -93,7 +93,8 @@ void WaterApp::Load() {
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
 
-    for (int i = 0; i < data_num(); i++) {
+    /* Declare velocity types. */
+    for (int i = 0; i < data_types_num(); i++) {
         std::string ntype_name = "velocities_"+data_region_name(i);
         RegisterData(
                 ntype_name,
@@ -133,6 +134,8 @@ Job* Main::Clone() {
 };
 
 void Main::Execute(std::string params, const DataArray& da) {
+    WaterApp *water_app = (WaterApp *)application();
+    int data_num = water_app->total_regions_num() * 1 + 2;
     printf("Begin main\n");
     std::vector<job_id_t> j;
     std::vector<data_id_t> d;
@@ -141,19 +144,9 @@ void Main::Execute(std::string params, const DataArray& da) {
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
     std::string par;
-    GetNewDataID(&d, 11);
+    GetNewDataID(&d, 2+data_num);
     DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
     DefineData("sim_data", d[1], partition_id, neighbor_partitions, par);
-//    DefineData(main_vel, d[2], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_corner_in_vel, d[3], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_horiz_in_vel, d[4], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_corner_in_vel, d[5], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_vert_in_vel, d[6], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_vert_in_vel, d[7], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_corner_in_vel, d[8], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_horiz_in_vel, d[9], partition_id, neighbor_partitions, par);
-//    DefineData(ghost_corner_in_vel, d[10], partition_id, neighbor_partitions, par);
-    printf("Defined data\n");
     GetNewJobID(&j, 2);
     before.clear();
     after.clear();

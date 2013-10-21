@@ -55,6 +55,10 @@ const int kAppLastFrame = 10;
 const int kMainAllSize = 100;
 const int kGhostSize = 3;
 const int kWorkers = 1;
+// number of corner and edge partitions
+// to calculcate how many dta chunks should be defined
+const int kCornerRegions = 1;
+const int kEdgeRegions = 0;
 
 // useful values and typedefs from above constants
 const int kMainSize = kMainAllSize/kWorkers - 2*kGhostSize;

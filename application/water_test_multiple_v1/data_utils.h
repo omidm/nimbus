@@ -67,6 +67,8 @@ namespace water_app_data {
         kDataInLeft,
         kDataNum
     };
+    const int kCornerNum = 5;
+    const int kEdgeNum = 3;
     // this function depends on enum DataRegion, and should be changed if
     // DataRegion is updated
     void GetDataRegionNames(std::string names[]);
