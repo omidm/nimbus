@@ -115,7 +115,7 @@ class UptoAdvect : public ::application::SimJob {
 
 class Advect : public ::application::SimJob {
     public:
-        Advect(Application *app);
+        Advect(Application *app, ::application::JobRegion region);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };

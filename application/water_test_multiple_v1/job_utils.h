@@ -53,6 +53,7 @@ namespace application {
 
     // job locations in a simulation :
     // TODO LATER - need to add jobs on other possible regions
+    // update GetJobRegionNames accordingly
     enum JobRegion {
         kJobAll,
         kJobUpperLeft,
@@ -61,6 +62,14 @@ namespace application {
         kJobBottomLeft,
         kJobNum
     };
+    // enumerate all job region names in kJobRegionNames
+    extern std::string kJobRegionNames[kJobNum];
+
+    void GetJobRegionNames(std::string names[]);
+    int GetJobDataNum(JobRegion region) __attribute__ ((deprecated));
+    void GetJobDataTypes(
+            JobRegion region,
+            std::vector<std::string> ntype_names);
 
     struct JobData {
         WaterDriver<TV> *driver;
@@ -71,11 +80,6 @@ namespace application {
         FaceArrayList central_vels;
         JobData();
     };
-
-    int GetJobDataNum(JobRegion region) __attribute__ ((deprecated));
-    void GetJobDataTypes(
-            JobRegion region,
-            std::vector<std::string> ntype_names);
 
     class SimJob : public Job {
         private:
@@ -91,7 +95,6 @@ namespace application {
             }
             void CollectData(const ::nimbus::DataArray& da, JobData& job_data);
     };
-
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_

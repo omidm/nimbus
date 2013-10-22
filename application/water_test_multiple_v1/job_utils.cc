@@ -90,8 +90,7 @@ namespace application {
     // TODO: edit this once single worker works
     void GetJobDataTypes(
             JobRegion region,
-            std::vector<std::string> ntype_names)
-    {
+            std::vector<std::string> ntype_names) {
         switch (region) {
             case kJobAll:
                 ntype_names.push_back(kDataRegionNames[kDataInterior]);
@@ -107,6 +106,14 @@ namespace application {
             default:
                 break;
         }
+    }
+
+    void GetJobRegionNames(std::string names[]) {
+        names[kJobAll] = "JobAll";
+        names[kJobUpperLeft] = "JobUpperLeft";
+        names[kJobUpperRight] = "JobUpperRight";
+        names[kJobBottomRight] = "JobBottomRight";
+        names[kJobBottomLeft] = "JobBottomLeft";
     }
 
 } // namespace application
