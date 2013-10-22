@@ -58,16 +58,16 @@ using nimbus::Application;
  * kFaceArray. */
 #define GetJobData()                                                        \
     WaterApp *water_app = (WaterApp *)application();                        \
-    ::water_app_job::JobData job_data;                                      \
+    ::application::JobData job_data;                                      \
     CollectData(da, job_data);                                              \
     if (!water_app)              \
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
-namespace water_app_data {
+namespace application {
     std::string kDataRegionNames[kDataNum];
     TV_INT kDataRegionSizes[kDataNum];
-} // namespace water_app_data
+} // namespace application
 
 WaterApp::WaterApp() {
 };
@@ -78,9 +78,9 @@ void WaterApp::Load() {
     /* Initialize application constants. */
     TV_INT main_size(kMainSize, kMainSize);
     TV_INT main_all_size(kMainAllSize, kMainAllSize);
-    ::water_app_data::GetDataRegionNames(::water_app_data::kDataRegionNames);
-    ::water_app_data::GetDataRegionSizes(
-            ::water_app_data::kDataRegionSizes,
+    ::application::GetDataRegionNames(::application::kDataRegionNames);
+    ::application::GetDataRegionSizes(
+            ::application::kDataRegionSizes,
             main_size,
             main_all_size,
             kGhostSize);
@@ -99,14 +99,14 @@ void WaterApp::Load() {
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
 
     /* Declare velocity types. */
-    for (int i = 0; i < ::water_app_data::kDataNum; i++) {
+    for (int i = 0; i < ::application::kDataNum; i++) {
         std::string ntype_name = "velocities_"+
-            ::water_app_data::kDataRegionNames[i];
+            ::application::kDataRegionNames[i];
         RegisterData(
                 ntype_name,
                 new FaceArray(
-                    ::water_app_data::kDataRegionSizes[i],
-                    (::water_app_data::DataRegion)i) );
+                    ::application::kDataRegionSizes[i],
+                    (::application::DataRegion)i) );
     }
 
     printf("Finished creating job and data definitions\n");

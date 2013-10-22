@@ -45,7 +45,7 @@
 #include "PhysBAM_Tools/Vectors/VECTOR.h"
 #include "shared/nimbus.h"
 
-namespace water_app_data {
+namespace application {
 
     namespace {
         const int dimension = 2;
@@ -94,6 +94,6 @@ namespace water_app_data {
             }
     };
 
-} // namespace water_app_data
+} // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_

@@ -52,7 +52,7 @@ namespace water_app_data {
     } // namespace
 
     template <class TV> FaceArray<TV>::
-        FaceArray(TV_INT size, DataRegion region) :
+        FaceArray(TV_INT size, ::application::DataRegion region) :
             size_(size),
             grid_(0),
             data_(0){
@@ -183,39 +183,39 @@ namespace water_app_data {
                 FaceArray *part = (*parts)[i];
                 switch(part->region())
                 {
-                    case kDataInBottomLeft:
+                    case ::application::kDataInBottomLeft:
                         box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                         break;
-                    case kDataInBottomRight:
+                    case ::application::kDataInBottomRight:
                         box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                         break;
-                    case kDataInUpperLeft:
+                    case ::application::kDataInUpperLeft:
                         box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataInUpperRight:
+                    case ::application::kDataInUpperRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 len_y+1,
                                 len_y+bandwidth);
                         break;
-                    case kDataInBottom:
+                    case ::application::kDataInBottom:
                         box = T_BOX(1, len_x, 1-bandwidth, 0);
                         break;
-                    case kDataInLeft:
+                    case ::application::kDataInLeft:
                         box = T_BOX(1-bandwidth, 0, 1, len_y);
                         break;
-                    case kDataInRight:
+                    case ::application::kDataInRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 1,
                                 len_y);
                         break;
-                    case kDataInUpper:
+                    case ::application::kDataInUpper:
                         box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataInterior:
+                    case ::application::kDataInterior:
                         box = T_BOX(1, len_x, 1, len_y);
                         break;
                     default:
@@ -261,39 +261,39 @@ namespace water_app_data {
                 FaceArray *part = (*parts)[i];
                 switch(part->region())
                 {
-                    case kDataInBottomLeft:
+                    case ::application::kDataInBottomLeft:
                         box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
                         break;
-                    case kDataInBottomRight:
+                    case ::application::kDataInBottomRight:
                         box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
                         break;
-                    case kDataInUpperLeft:
+                    case ::application::kDataInUpperLeft:
                         box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataInUpperRight:
+                    case ::application::kDataInUpperRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 len_y+1,
                                 len_y+bandwidth);
                         break;
-                    case kDataInBottom:
+                    case ::application::kDataInBottom:
                         box = T_BOX(1, len_x, 1-bandwidth, 0);
                         break;
-                    case kDataInLeft:
+                    case ::application::kDataInLeft:
                         box = T_BOX(1-bandwidth, 0, 1, len_y);
                         break;
-                    case kDataInRight:
+                    case ::application::kDataInRight:
                         box = T_BOX(
                                 len_x+1,
                                 len_x+bandwidth,
                                 1,
                                 len_y);
                         break;
-                    case kDataInUpper:
+                    case ::application::kDataInUpper:
                         box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
                         break;
-                    case kDataInterior:
+                    case ::application::kDataInterior:
                         box = T_BOX(1, len_x, 1, len_y);
                         break;
                     default:

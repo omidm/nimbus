@@ -52,7 +52,7 @@ namespace water_app_data {
     /* Face array for storing quantities like face velocities.
     */
     template <class TV>
-        class FaceArray : public SimData {
+        class FaceArray : public ::application::SimData {
 
             private:
                 typedef typename TV::SCALAR T;
@@ -75,7 +75,7 @@ namespace water_app_data {
 
             public:
 
-                FaceArray(TV_INT size, DataRegion region);
+                FaceArray(TV_INT size, ::application::DataRegion region);
                 virtual void Create();
                 virtual void Destroy();
                 virtual ::nimbus::Data* Clone();

@@ -92,42 +92,42 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
-class Init : public ::water_app_job::SimJob {
+class Init : public ::application::SimJob {
     public:
         Init(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Loop : public ::water_app_job::SimJob {
+class Loop : public ::application::SimJob {
     public:
         Loop(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class UptoAdvect : public ::water_app_job::SimJob {
+class UptoAdvect : public ::application::SimJob {
     public:
         UptoAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Advect : public ::water_app_job::SimJob {
+class Advect : public ::application::SimJob {
     public:
         Advect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class AfterAdvect : public ::water_app_job::SimJob {
+class AfterAdvect : public ::application::SimJob {
     public:
         AfterAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class WriteFrame : public ::water_app_job::SimJob {
+class WriteFrame : public ::application::SimJob {
     public:
         WriteFrame(Application *app);
         virtual void Execute(std::string params, const DataArray& da);

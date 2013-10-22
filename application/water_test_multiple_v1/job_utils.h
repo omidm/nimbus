@@ -48,7 +48,7 @@
 #include "physbam_include.h"
 #include "shared/nimbus.h"
 
-namespace water_app_job {
+namespace application {
 
     // job locations in a simulation :
     // TODO LATER - need to add jobs on other possible regions
@@ -84,6 +84,7 @@ namespace water_app_job {
                 region_ = region;
             }
             void CollectData(const ::nimbus::DataArray& da, JobData& job_data);
+            int GetJobDataNum();
             void GetJobDataTypes(std::string ntype_names[]);
     };
 

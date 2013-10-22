@@ -38,12 +38,13 @@
 
 #include "app_config.h"
 #include "data_face_arrays.h"
+#include "data_utils.h"
 #include "job_utils.h"
 #include "shared/nimbus.h"
 #include "water_data_driver.h"
 #include "water_driver.h"
 
-namespace water_app_job {
+namespace application {
 
     JobData::JobData() :
         driver(0),
@@ -67,7 +68,7 @@ namespace water_app_job {
                     break;
                 case face_array_id:
                     FaceArray *vel = (FaceArray * )da[i];
-                    if (vel->region() == ::water_app_data::kDataInterior)
+                    if (vel->region() == kDataInterior)
                         job_data.central_vels.push_back(vel);
                     else
                         job_data.boundary_vels.push_back(vel);
@@ -76,7 +77,25 @@ namespace water_app_job {
         }
     }
 
-    void SimJob::GetJobDataTypes(std::string ntypes[]) {
+    // TODO: edit this once single worker works
+    int SimJob::GetJobDataNum() {
+        switch(region()) {
+            case kJobAll:
+                return 9;
+            default:
+                return -1;
+        }
     }
 
-} // namespace water_app_job
+    // TODO: edit this once single worker works
+    void SimJob::GetJobDataTypes(std::string ntype_names[]) {
+        switch (region()) {
+            case kJobAll:
+                assert(ntype_names.size() == 9);
+                break;
+            default:
+                break;
+        }
+    }
+
+} // namespace application
