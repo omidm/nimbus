@@ -109,13 +109,7 @@ void WaterApp::Load() {
     RegisterJob("init", new Init(this));
     RegisterJob("loop", new Loop(this));
     RegisterJob("uptoadvect", new UptoAdvect(this));
-    for (int i = 0; i < ::application::kJobNum; i++) {
-        std::string ntype_name = "advection_"+
-            ::application::kJobRegionNames[i];
-        RegisterJob(
-                ntype_name,
-                new Advect(this, (::application::JobRegion)i));
-    }
+    RegisterJob("advect", new Advect(this));
     RegisterJob("afteradvect", new AfterAdvect(this));
     RegisterJob("writeframe", new WriteFrame(this));
 
@@ -184,6 +178,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
     // adv data
     for (int i = 0; i < kAdvJobTypesNum; i++) {
         int num = adv_data_types[i].size();
+        partition_id = (partition_t)i;
         for (int j = 0; j < num; j++) {
             DefineData(
                     adv_data_types[i][j],
@@ -195,41 +190,33 @@ void Main::Execute(Parameter params, const DataArray& da) {
         }
     }
 
-    /* Spawn required jobs -- we have one init job for nonadvection data, and
-     * multiple init jobs for advection data; one loop job.
+    /* Spawn required jobs -- we have one init job and one loop job here.
      * Order:
      * - common init
-     * - individual inits
      * - loop
      */
-    int job_num = 2 + kAdvJobTypesNum;
+    int job_num = 2;
     std::vector<job_id_t> j;
     GetNewJobID(&j, job_num);
     IDSet<data_id_t> read, write;
     IDSet<job_id_t> before, after;
-    Parameter par;
-    // common init
-    before.clear();
-    after.clear();
-    read.clear();
-    write.clear();
+    Parameter par_job;
+    IDSet<data_id_t> alldata;
+    for (unsigned int i = 0; i < d.size(); i++) {
+        alldata.insert(d[i]);
+        read.insert(d[i]);
+        write.insert(d[i]);
+    }
+    // init
+    before.clear(); after.clear();
     after.insert(j[1]);
-    for (unsigned int i = 0; i < d.size(); i++) {
-        read.insert(d[i]);
-        write.insert(d[i]);
-    }
-    SpawnComputeJob("init", j[0], read, write, before, after, par);
+    SpawnComputeJob("init", j[0], read, write, before, after, par_job);
     printf("Spawned init\n");
-    before.clear();
-    after.clear();
-    read.clear();
-    write.clear();
+    before.clear(); after.clear();
     before.insert(j[0]);
-    for (unsigned int i = 0; i < d.size(); i++) {
-        read.insert(d[i]);
-        write.insert(d[i]);
-    }
-    SpawnComputeJob("loop", j[1], read, write, before, after, par);
+    read.clear(); write.clear();
+    par_job.set_idset(alldata);
+    SpawnComputeJob("loop", j[1], read, write, before, after, par_job);
     printf("Spawned loop\n");
     printf("Completed main\n");
 };
@@ -294,14 +281,13 @@ void UptoAdvect::Execute(Parameter params, const DataArray& da) {
             job_data.central_vels[0]->data());
 };
 
-Advect::Advect(Application *app, ::application::JobRegion region) {
+Advect::Advect(Application *app) {
     set_application(app);
-    set_region(region);
 };
 
 Job* Advect::Clone() {
     printf("Cloning advect job\n");
-    return new Advect(application(), region());
+    return new Advect(application());
 };
 
 void Advect::Execute(Parameter params, const DataArray& da) {

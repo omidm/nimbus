@@ -69,9 +69,9 @@ namespace application {
     };
     const int kCornerNum = 5;
     const int kEdgeNum = 3;
-    // enumerate all data names in kDataRegionNames
+    // enumerate all data region names in kDataRegionNames
     extern std::string kDataRegionNames[kDataNum];
-    // enumaerate all data sizes in kDataRegionSizes
+    // enumaerate all data region sizes in kDataRegionSizes
     extern TV_INT kDataRegionSizes[kDataNum];
 
     void GetDataRegionNames(std::string names[]);
