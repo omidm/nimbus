@@ -46,6 +46,7 @@
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
 
 #include "app_utils.h"
+#include "job_utils.h"
 
 // application configuration
 const int kAppLastFrame = 10;
@@ -54,6 +55,13 @@ const int kGhostSize = 3;
 const int kWorkers = 1;
 
 // include job types here
+const ::application::JobRegion kAdvJobs[] = {
+    ::application::kJobAll
+};
+
+const ::application::JobRegion kOtherJobs[] = {
+    ::application::kJobAll
+};
 
 // number of corner and edge partitions
 // to calculcate how many dta chunks should be defined
