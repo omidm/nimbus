@@ -88,17 +88,9 @@ void WaterApp::Load() {
 
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
-    /* Declare and initialize data, jobs and policies. */
-    RegisterJob("main", new Main(this));
-    RegisterJob("init", new Init(this));
-    RegisterJob("loop", new Loop(this));
-    RegisterJob("uptoadvect", new UptoAdvect(this));
-    RegisterJob("advect", new Advect(this));
-    RegisterJob("afteradvect", new AfterAdvect(this));
-    RegisterJob("writeframe", new WriteFrame(this));
+    /* Declare data types. */
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
-
     /* Declare velocity types. */
     for (int i = 0; i < ::application::kDataNum; i++) {
         std::string ntype_name = "velocities_"+
@@ -109,6 +101,15 @@ void WaterApp::Load() {
                     ::application::kDataRegionSizes[i],
                     (::application::DataRegion)i) );
     }
+
+    /* Declare job types. */
+    RegisterJob("main", new Main(this));
+    RegisterJob("init", new Init(this));
+    RegisterJob("loop", new Loop(this));
+    RegisterJob("uptoadvect", new UptoAdvect(this));
+    RegisterJob("advect", new Advect(this));
+    RegisterJob("afteradvect", new AfterAdvect(this));
+    RegisterJob("writeframe", new WriteFrame(this));
 
     printf("Finished creating job and data definitions\n");
     printf("Finished loading application\n");
@@ -143,18 +144,43 @@ Job* Main::Clone() {
 
 void Main::Execute(std::string params, const DataArray& da) {
 //    WaterApp *water_app = (WaterApp *)application();
-    int data_num = 2;
     printf("Begin main\n");
     std::vector<job_id_t> j;
     std::vector<data_id_t> d;
     IDSet<data_id_t> read, write;
     IDSet<job_id_t> before, after;
+    std::string par;
+
+    /* Define data as necessary for jobs here. */
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
-    std::string par;
+    int data_num = 2;
+    std::vector<data_id_t> adv_data_ids[kAdvJobTypesNum];
+    std::vector<std::string> adv_data_types[kAdvJobTypesNum];
+    for (int i = 0; i < kAdvJobTypesNum; i++) {
+        ::application::GetJobDataTypes(kAdvJobTypes[i], adv_data_types[i]);
+        int num = adv_data_types[i].size();
+        for (int j = 0; j < num; j++) {
+            adv_data_ids[i].push_back((data_id_t)(data_num+j));
+        }
+        data_num += num;
+    }
     GetNewDataID(&d, data_num);
     DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
     DefineData("sim_data", d[1], partition_id, neighbor_partitions, par);
+    for (int i = 0; i < kAdvJobTypesNum; i++) {
+        int num = adv_data_types[i].size();
+        for (int j = 0; j < num; j++) {
+            DefineData(
+                    adv_data_types[i][j],
+                    adv_data_ids[i][j],
+                    partition_id,
+                    neighbor_partitions,
+                    par
+                    );
+        }
+    }
+
     GetNewJobID(&j, 2);
     before.clear();
     after.clear();

@@ -47,6 +47,7 @@
 #include "data_fwd_decl.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
+#include <vector>
 
 namespace application {
 
@@ -71,6 +72,11 @@ namespace application {
         JobData();
     };
 
+    int GetJobDataNum(JobRegion region) __attribute__ ((deprecated));
+    void GetJobDataTypes(
+            JobRegion region,
+            std::vector<std::string> ntype_names);
+
     class SimJob : public Job {
         private:
             JobRegion region_;
@@ -84,8 +90,6 @@ namespace application {
                 region_ = region;
             }
             void CollectData(const ::nimbus::DataArray& da, JobData& job_data);
-            int GetJobDataNum();
-            void GetJobDataTypes(std::string ntype_names[]);
     };
 
 } // namespace application

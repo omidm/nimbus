@@ -78,8 +78,8 @@ namespace application {
     }
 
     // TODO: edit this once single worker works
-    int SimJob::GetJobDataNum() {
-        switch(region()) {
+    int GetJobDataNum(JobRegion region) {
+        switch(region) {
             case kJobAll:
                 return 9;
             default:
@@ -88,19 +88,21 @@ namespace application {
     }
 
     // TODO: edit this once single worker works
-    void SimJob::GetJobDataTypes(std::string ntype_names[]) {
-        switch (region()) {
+    void GetJobDataTypes(
+            JobRegion region,
+            std::vector<std::string> ntype_names)
+    {
+        switch (region) {
             case kJobAll:
-                assert(ntype_names.size() == 9);
-                ntype_names[0] = kDataRegionNames[kDataInterior];
-                ntype_names[1] = kDataRegionNames[kDataInUpperLeft];
-                ntype_names[2] = kDataRegionNames[kDataInUpper];
-                ntype_names[3] = kDataRegionNames[kDataInUpperRight];
-                ntype_names[4] = kDataRegionNames[kDataInRight];
-                ntype_names[5] = kDataRegionNames[kDataInBottomRight];
-                ntype_names[6] = kDataRegionNames[kDataInBottom];
-                ntype_names[7] = kDataRegionNames[kDataInBottomLeft];
-                ntype_names[8] = kDataRegionNames[kDataInLeft];
+                ntype_names.push_back(kDataRegionNames[kDataInterior]);
+                ntype_names.push_back(kDataRegionNames[kDataInUpperLeft]);
+                ntype_names.push_back(kDataRegionNames[kDataInUpper]);
+                ntype_names.push_back(kDataRegionNames[kDataInUpperRight]);
+                ntype_names.push_back(kDataRegionNames[kDataInRight]);
+                ntype_names.push_back(kDataRegionNames[kDataInBottomRight]);
+                ntype_names.push_back(kDataRegionNames[kDataInBottom]);
+                ntype_names.push_back(kDataRegionNames[kDataInBottomLeft]);
+                ntype_names.push_back(kDataRegionNames[kDataInLeft]);
                 break;
             default:
                 break;
