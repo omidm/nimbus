@@ -92,6 +92,15 @@ namespace application {
         switch (region()) {
             case kJobAll:
                 assert(ntype_names.size() == 9);
+                ntype_names[0] = kDataRegionNames[kDataInterior];
+                ntype_names[1] = kDataRegionNames[kDataInUpperLeft];
+                ntype_names[2] = kDataRegionNames[kDataInUpper];
+                ntype_names[3] = kDataRegionNames[kDataInUpperRight];
+                ntype_names[4] = kDataRegionNames[kDataInRight];
+                ntype_names[5] = kDataRegionNames[kDataInBottomRight];
+                ntype_names[6] = kDataRegionNames[kDataInBottom];
+                ntype_names[7] = kDataRegionNames[kDataInBottomLeft];
+                ntype_names[8] = kDataRegionNames[kDataInLeft];
                 break;
             default:
                 break;
