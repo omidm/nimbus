@@ -176,11 +176,11 @@ bool ParseID(const std::string& input, uint32_t& elem);
 bool ParseWorkerDataHeader(const std::string& input,
     job_id_t& job_id, size_t& data_length);
 
-bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<uint64_t>& idset);
+bool ParseSerializedData(const std::string& input,
+    boost::shared_ptr<char>& data_ptr, size_t& size);
 
 bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<uint32_t>& idset);
+    SerializedData& ser_data, IDSet<param_id_t>& idset);
 
 
 }  // namespace nimbus

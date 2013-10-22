@@ -1135,13 +1135,60 @@ bool ParseWorkerDataHeader(const std::string& input,
   return true;
 }
 
-bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<uint64_t>& idset) {return true;}
+bool ParseSerializedData(const std::string& input,
+    boost::shared_ptr<char>& data_ptr, size_t& size) {
+  std::string str = input;
+  UnescapeString(&str);
+  size = str.length();
+  data_ptr = boost::shared_ptr<char>(new char[size]);
+  memcpy(get_pointer(data_ptr), str.c_str(), size);
+  return true;
+}
 
 bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<uint32_t>& idset) {return true;}
+    SerializedData& ser_data, IDSet<param_id_t>& idset) {
+  int num = 2;
+  IDSet<param_id_t>::IDSetContainer list;
+  boost::shared_ptr<char> data_ptr;
+  size_t size;
 
+  char_separator<char> separator(":");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: Parameter has only " << i <<
+        " fields (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: Parameter has more than "<<
+      num << " fields." << std::endl;
+    return false;
+  }
 
+  iter = tokens.begin();
+  if (ParseSerializedData(*iter, data_ptr, size)) {
+    SerializedData temp(data_ptr, size);
+    ser_data = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid serialized data." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (ParseIDSet(*iter, list)) {
+    IDSet<param_id_t> temp(list);
+    idset = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid idset." << std::endl;
+    return false;
+  }
+
+  return true;
+}
 
 
 

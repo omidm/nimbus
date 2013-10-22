@@ -46,6 +46,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_command.h"
 #include "shared/parser.h"
+#include "shared/parameter.h"
 
 int main(int argc, char *argv[]) {
   nimbus::nimbus_initialize();
@@ -77,6 +78,25 @@ int main(int argc, char *argv[]) {
 //  }
 //
 //  while (!cond) {}
+
+//  std::string str("X\0;:,", 5);
+//  SerializedData ser_data(str);
+//  IDSet<param_id_t> idset;
+//  idset.insert(13);
+//  Parameter param(ser_data, idset);
+//  std::string param_str = param.toString();
+//  std::cout << "param to string before: " << param_str << std::endl;
+//
+//  bool parsed = false;
+//  SerializedData temp_ser_data;
+//  IDSet<param_id_t> temp_idset;
+//  parsed = ParseParameter(param_str, temp_ser_data, temp_idset);
+//  Parameter temp_param(temp_ser_data, temp_idset);
+//  std::cout << "parsed ser_data: " << temp_ser_data.toString() << std::endl;
+//  std::cout << "parsed idset: " << temp_idset.toString() << std::endl;
+//  std::cout << "param to string after: " << temp_param.toString() << std::endl;
+//  while (!parsed) {}
+
 
   Log log;
   log.writeToBuffer("**Start of the log file.");
