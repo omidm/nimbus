@@ -71,7 +71,7 @@ class Job {
     // that use it still pass.
     Job(Application* app, JobType type);
 
-    virtual void Execute(std::string params, const DataArray& da) {}
+    virtual void Execute(Parameter params, const DataArray& da) {}
     virtual Job* Clone();
     virtual void Sleep() {}
     virtual void Cancel() {}
@@ -82,20 +82,20 @@ class Job {
         const IDSet<data_id_t>& write,
         const IDSet<job_id_t>& before,
         const IDSet<job_id_t>& after,
-        std::string params);
+        const Parameter& params);
 
     bool SpawnCopyJob(const job_id_t& id,
         const data_id_t& from_id,
         const data_id_t& to_id,
         const IDSet<job_id_t>& before,
         const IDSet<job_id_t>& after,
-        std::string params);
+        const Parameter& params);
 
     bool DefineData(const std::string& name,
         const data_id_t& id,
         const partition_t& partition_id,
         const IDSet<partition_t>& neighbor_partition,
-        std::string params);
+        const Parameter& params);
 
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
     bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
@@ -106,7 +106,7 @@ class Job {
     IDSet<data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
-    std::string parameters();
+    Parameter parameters();
     Application* application();
 
     void set_name(std::string name);
@@ -115,7 +115,7 @@ class Job {
     void set_write_set(IDSet<data_id_t> write_set);
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
-    void set_parameters(std::string parameters);
+    void set_parameters(Parameter parameters);
     void set_application(Application* app);
 
   private:
@@ -125,7 +125,7 @@ class Job {
     IDSet<data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
-    std::string parameters_;
+    Parameter parameters_;
     Application* application_;
     bool app_is_set_;
 
@@ -140,7 +140,7 @@ class RemoteCopySendJob : public Job {
     explicit RemoteCopySendJob(WorkerDataExchanger* de);
     ~RemoteCopySendJob();
 
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job* Clone();
     virtual void Sleep() {}
     virtual void Cancel() {}
@@ -168,7 +168,7 @@ class RemoteCopyReceiveJob : public Job {
     RemoteCopyReceiveJob();
     ~RemoteCopyReceiveJob();
 
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job* Clone();
     virtual void Sleep() {}
     virtual void Cancel() {}
@@ -184,7 +184,7 @@ class LocalCopyJob : public Job {
     LocalCopyJob();
     ~LocalCopyJob();
 
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job* Clone();
     virtual void Sleep() {}
     virtual void Cancel() {}
@@ -197,7 +197,7 @@ class CreateDataJob : public Job {
     CreateDataJob();
     ~CreateDataJob();
 
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job* Clone();
     virtual void Sleep() {}
     virtual void Cancel() {}

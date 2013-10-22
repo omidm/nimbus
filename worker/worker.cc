@@ -161,7 +161,8 @@ void Worker::ExecuteJob(Job* job) {
 
   log.writeToFile(std::string(buff), LOG_INFO);
 
-  JobDoneCommand cm(job->id(), job->after_set(), "nothing_yet");
+  Parameter params;
+  JobDoneCommand cm(job->id(), job->after_set(), params);
   client_->sendCommand(&cm);
   delete job;
 }

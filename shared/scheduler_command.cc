@@ -168,7 +168,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       IDSet<job_id_t> before;
       IDSet<job_id_t> after;
       JobType job_type;
-      std::string params;
+      Parameter params;
 
       bool cond = ParseSpawnJobCommand(param_segment, job_name, job_id,
           read, write, before, after, job_type, params);
@@ -186,7 +186,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
         IDSet<data_id_t> write;
         IDSet<job_id_t> before;
         IDSet<job_id_t> after;
-        std::string params;
+        Parameter params;
 
         bool cond = ParseSpawnComputeJobCommand(param_segment, job_name, job_id,
             read, write, before, after, params);
@@ -203,7 +203,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       ID<data_id_t> to_id;
       IDSet<job_id_t> before;
       IDSet<job_id_t> after;
-      std::string params;
+      Parameter params;
 
       bool cond = ParseSpawnCopyJobCommand(param_segment, job_id,
           from_id, to_id, before, after, params);
@@ -221,7 +221,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       IDSet<data_id_t> write;
       IDSet<job_id_t> before;
       IDSet<job_id_t> after;
-      std::string params;
+      Parameter params;
 
       bool cond = ParseComputeJobCommand(param_segment, job_name, job_id,
           read, write, before, after, params);
@@ -303,7 +303,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       ID<data_id_t> data_id;
       ID<partition_t> partition_id;
       IDSet<partition_t> neighbor_partitions;
-      std::string params;
+      Parameter params;
 
       bool cond = ParseDefineDataCommand(param_segment, data_name,
           data_id, partition_id, neighbor_partitions, params);
@@ -330,7 +330,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     } else if (type == COMMAND_JOB_DONE) {
       ID<job_id_t> job_id;
       IDSet<job_id_t> after_set;
-      std::string params;
+      Parameter params;
 
       bool cond = ParseJobDoneCommand(param_segment, job_id, after_set, params);
 
@@ -404,7 +404,7 @@ SpawnJobCommand::SpawnJobCommand(const std::string& job_name,
     const IDSet<job_id_t>& job_id,
     const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const JobType& job_type, const std::string& params)
+    const JobType& job_type, const Parameter& params)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
@@ -428,12 +428,7 @@ std::string SpawnJobCommand::toString() {
     str += "COMP ";
   else
     str += "SYNC ";
-
-  std::string temp = params_;
-  EscapeString(&temp);
-  str += temp;
-  if (IsEmptyString(params_))
-    str += "no-params";
+  str += params_.toString();
 
   return str;
 }
@@ -451,7 +446,7 @@ std::string SpawnJobCommand::toStringWTags() {
     str += "type:COMP ";
   else
     str += "type:SYNC ";
-  str += ("params:" + params_);
+  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -482,7 +477,7 @@ IDSet<job_id_t> SpawnJobCommand::before_set() {
   return before_set_;
 }
 
-std::string SpawnJobCommand::params() {
+Parameter SpawnJobCommand::params() {
   return params_;
 }
 
@@ -495,7 +490,7 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
     const ID<job_id_t>& job_id,
     const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const std::string& params)
+    const Parameter& params)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
@@ -515,12 +510,7 @@ std::string SpawnComputeJobCommand::toString() {
   str += (write_set_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-
-  std::string temp = params_;
-  EscapeString(&temp);
-  str += temp;
-  if (IsEmptyString(params_))
-    str += "no-params";
+  str += params_.toString();
 
   return str;
 }
@@ -534,7 +524,7 @@ std::string SpawnComputeJobCommand::toStringWTags() {
   str += ("write:" + write_set_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_);
+  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -561,7 +551,7 @@ IDSet<job_id_t> SpawnComputeJobCommand::before_set() {
   return before_set_;
 }
 
-std::string SpawnComputeJobCommand::params() {
+Parameter SpawnComputeJobCommand::params() {
   return params_;
 }
 
@@ -573,7 +563,7 @@ SpawnCopyJobCommand::SpawnCopyJobCommand() {
 SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
     const ID<data_id_t>& from_id, const ID<data_id_t>& to_id,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const std::string& params)
+    const Parameter& params)
 : job_id_(job_id),
   from_id_(from_id), to_id_(to_id),
   before_set_(before), after_set_(after),
@@ -592,12 +582,7 @@ std::string SpawnCopyJobCommand::toString() {
   str += (to_id_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-
-  std::string temp = params_;
-  EscapeString(&temp);
-  str += temp;
-  if (IsEmptyString(params_))
-    str += "no-params";
+  str += params_.toString();
 
   return str;
 }
@@ -610,7 +595,7 @@ std::string SpawnCopyJobCommand::toStringWTags() {
   str += ("to:" + to_id_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_);
+  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -633,7 +618,7 @@ IDSet<job_id_t> SpawnCopyJobCommand::before_set() {
   return before_set_;
 }
 
-std::string SpawnCopyJobCommand::params() {
+Parameter SpawnCopyJobCommand::params() {
   return params_;
 }
 
@@ -645,7 +630,7 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     const ID<job_id_t>& job_id,
     const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const std::string& params)
+    const Parameter& params)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
@@ -665,12 +650,7 @@ std::string ComputeJobCommand::toString() {
   str += (write_set_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-
-  std::string temp = params_;
-  EscapeString(&temp);
-  str += temp;
-  if (IsEmptyString(params_))
-    str += "no-params";
+  str += params_.toString();
 
   return str;
 }
@@ -684,7 +664,7 @@ std::string ComputeJobCommand::toStringWTags() {
   str += ("write:" + write_set_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_);
+  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -711,7 +691,7 @@ IDSet<job_id_t> ComputeJobCommand::before_set() {
   return before_set_;
 }
 
-std::string ComputeJobCommand::params() {
+Parameter ComputeJobCommand::params() {
   return params_;
 }
 
@@ -986,7 +966,7 @@ DefineDataCommand::DefineDataCommand(const std::string& data_name,
     const ID<data_id_t>& data_id,
     const ID<partition_t>& partition_id,
     const IDSet<partition_t>& neighbor_partitions,
-    const std::string& params)
+    const Parameter& params)
 : data_name_(data_name), data_id_(data_id),
   partition_id_(partition_id),
   neighbor_partitions_(neighbor_partitions),
@@ -1004,12 +984,7 @@ std::string DefineDataCommand::toString() {
   str += (data_id_.toString() + " ");
   str += (partition_id_.toString() + " ");
   str += (neighbor_partitions_.toString() + " ");
-
-  std::string temp = params_;
-  EscapeString(&temp);
-  str += temp;
-  if (IsEmptyString(params_))
-    str += "no-params";
+  str += params_.toString();
 
   return str;
 }
@@ -1021,7 +996,7 @@ std::string DefineDataCommand::toStringWTags() {
   str += ("id:" + data_id_.toString() + " ");
   str += ("partition-id:" + partition_id_.toString() + " ");
   str += ("neighbor-partitions:" + neighbor_partitions_.toString() + " ");
-  str += ("params:" + params_);
+  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -1042,7 +1017,7 @@ IDSet<partition_t> DefineDataCommand::neighbor_partitions() {
   return neighbor_partitions_;
 }
 
-std::string DefineDataCommand::params() {
+Parameter DefineDataCommand::params() {
   return params_;
 }
 
@@ -1055,7 +1030,7 @@ JobDoneCommand::JobDoneCommand() {
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
     const IDSet<job_id_t>& after_set,
-    const std::string& params)
+    const Parameter& params)
 : job_id_(job_id), after_set_(after_set), params_(params) {
   name_ = "jobdone";
 }
@@ -1068,12 +1043,7 @@ std::string JobDoneCommand::toString() {
   str += (name_ + " ");
   str += (job_id_.toString() + " ");
   str += (after_set_.toString() + " ");
-
-  std::string temp = params_;
-  EscapeString(&temp);
-  str += temp;
-  if (IsEmptyString(params_))
-    str += "no-params";
+  str += params_.toString();
 
   return str;
 }
@@ -1083,7 +1053,7 @@ std::string JobDoneCommand::toStringWTags() {
   str += (name_ + " ");
   str += ("id:" + job_id_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_);
+  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -1095,7 +1065,7 @@ IDSet<job_id_t> JobDoneCommand::after_set() {
   return after_set_;
 }
 
-std::string JobDoneCommand::params() {
+Parameter JobDoneCommand::params() {
   return params_;
 }
 

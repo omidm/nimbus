@@ -69,7 +69,7 @@ bool Job::SpawnComputeJob(const std::string& name,
     const IDSet<data_id_t>& write,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
-    std::string params) {
+    const Parameter& params) {
   if (app_is_set_) {
     application_->SpawnComputeJob(name, id, read, write, before, after, params);
     return true;
@@ -85,7 +85,7 @@ bool Job::SpawnCopyJob(const job_id_t& id,
     const data_id_t& to_id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
-    std::string params) {
+    const Parameter& params) {
   if (app_is_set_) {
     application_->SpawnCopyJob(id, from_id, to_id, before, after, params);
     return true;
@@ -100,7 +100,7 @@ bool Job::DefineData(const std::string& name,
     const data_id_t& id,
     const partition_t& partition_id,
     const IDSet<partition_t>& neighbor_partition,
-    std::string params) {
+    const Parameter& params) {
   if (app_is_set_) {
     application_->DefineData(name, id, partition_id, neighbor_partition, params);
     return true;
@@ -155,7 +155,7 @@ IDSet<job_id_t> Job::after_set() {
   return after_set_;
 }
 
-std::string Job::parameters() {
+Parameter Job::parameters() {
   return parameters_;
 }
 
@@ -187,7 +187,7 @@ void Job::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
 }
 
-void Job::set_parameters(std::string parameters) {
+void Job::set_parameters(Parameter parameters) {
   parameters_ = parameters;
 }
 
@@ -206,7 +206,7 @@ RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da) {
 RemoteCopySendJob::~RemoteCopySendJob() {
 }
 
-void RemoteCopySendJob::Execute(std::string params, const DataArray& da) {
+void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(), to_worker_id_.elem(), ser_data);
@@ -258,7 +258,7 @@ RemoteCopyReceiveJob::RemoteCopyReceiveJob() {
 RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
-void RemoteCopyReceiveJob::Execute(std::string params, const DataArray& da) {
+void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   Data * data_copy;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
@@ -288,7 +288,7 @@ Job* LocalCopyJob::Clone() {
   return new LocalCopyJob();
 }
 
-void LocalCopyJob::Execute(std::string params, const DataArray& da) {
+void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
   da[1]->Copy(da[0]);
 }
 
@@ -304,7 +304,7 @@ Job* CreateDataJob::Clone() {
   return new CreateDataJob();
 }
 
-void CreateDataJob::Execute(std::string params, const DataArray& da) {
+void CreateDataJob::Execute(Parameter params, const DataArray& da) {
   da[0]->Create();
 }
 

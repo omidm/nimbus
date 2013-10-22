@@ -84,7 +84,7 @@ Job * Main::Clone() {
   return new Main(application());
 };
 
-void Main::Execute(std::string params, const DataArray& da) {
+void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
   std::vector<job_id_t> j;
   std::vector<data_id_t> d;
@@ -92,7 +92,8 @@ void Main::Execute(std::string params, const DataArray& da) {
   IDSet<job_id_t> before, after;
   IDSet<partition_t> neighbor_partitions;
   partition_t partition_id = 0;
-  std::string par;
+  Parameter par;
+  IDSet<param_id_t> params_idset;
 
   GetNewJobID(&j, 7);
   GetNewDataID(&d, 4);
@@ -130,11 +131,11 @@ void Main::Execute(std::string params, const DataArray& da) {
   write.clear();
   before.clear(); before.insert(j[0]); before.insert(j[1]); before.insert(j[2]); before.insert(j[3]); // NOLINT
   after.clear();
-  IDSet<data_id_t> temp_set;
-  temp_set.insert(d[0]); temp_set.insert(d[1]); temp_set.insert(d[2]); temp_set.insert(d[3]);
-  ID<data_id_t> counter(LOOP_COUNTER);
-  par = temp_set.toString();
-  par += ("-" + counter.toString());
+  params_idset.clear();
+  params_idset.insert(d[0]); params_idset.insert(d[1]);
+  params_idset.insert(d[2]); params_idset.insert(d[3]);
+  params_idset.insert(LOOP_COUNTER);
+  par.set_idset(params_idset);
   SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
 };
 
@@ -147,31 +148,21 @@ Job * ForLoop::Clone() {
   return new ForLoop(application());
 };
 
-void ForLoop::Execute(std::string params, const DataArray& da) {
+void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<job_id_t> j;
   std::vector<data_id_t> d;
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
-  std::string par;
+  Parameter par;
+  IDSet<param_id_t> params_idset;
 
 
-
-
-  char_separator<char> separator("-");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-
-  IDSet<data_id_t>::IDSetContainer temp_set;
-  nimbus::ParseIDSet(*iter, temp_set);
   IDSet<data_id_t>::IDSetContainer::iterator it;
+  IDSet<param_id_t> temp_set = params.idset();
   for (it = temp_set.begin(); it != temp_set.end(); it++) {
     d.push_back(*it);
   }
-
-  iter++;
-  uint32_t counter;
-  nimbus::ParseID(*iter, counter);
 
 //  d.push_back(16777217);
 //  d.push_back(16777218);
@@ -179,7 +170,7 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
 //  d.push_back(16777220);
 
 
-  if (counter > LOOP_CONDITION) {
+  if (d[4] > LOOP_CONDITION) {
     GetNewJobID(&j, 5);
 
     read.clear(); read.insert(d[1]);
@@ -210,11 +201,11 @@ void ForLoop::Execute(std::string params, const DataArray& da) {
     write.clear();
     before.clear(); before.insert(j[2]); before.insert(j[3]);
     after.clear();
-    IDSet<data_id_t> temp_set;
-    temp_set.insert(d[0]); temp_set.insert(d[1]); temp_set.insert(d[2]); temp_set.insert(d[3]);
-    ID<data_id_t> temp_counter(counter - 1);
-    par = temp_set.toString();
-    par += ("-" + temp_counter.toString());
+    params_idset.clear();
+    params_idset.insert(d[0]); params_idset.insert(d[1]);
+    params_idset.insert(d[2]); params_idset.insert(d[3]);
+    params_idset.insert(d[4] - 1);
+    par.set_idset(params_idset);
     SpawnComputeJob("forLoop", j[4], read, write, before, after, par);
   } else {
     GetNewJobID(&j, 2);
@@ -241,7 +232,7 @@ Job * Init::Clone() {
   return new Init();
 };
 
-void Init::Execute(std::string params, const DataArray& da) {
+void Init::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the init job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
   for (int i = 0; i < d->size ; i++)
@@ -257,7 +248,7 @@ Job * Print::Clone() {
   return new Print();
 };
 
-void Print::Execute(std::string params, const DataArray& da) {
+void Print::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the print job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
   for (int i = 0; i < d->size; i++)
@@ -274,7 +265,7 @@ Job * ApplyLeft::Clone() {
   return new ApplyLeft();
 };
 
-void ApplyLeft::Execute(std::string params, const DataArray& da) {
+void ApplyLeft::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the applyLeft job\n";
   int sten[] = {-1, +2, -1, 0};
 
@@ -303,7 +294,7 @@ Job * ApplyRight::Clone() {
   return new ApplyRight();
 };
 
-void ApplyRight::Execute(std::string params, const DataArray& da) {
+void ApplyRight::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the applyRight job\n";
   int sten[] = {-1, +2, -1, 0};
 
@@ -332,7 +323,7 @@ Job * UpdateLeft::Clone() {
   return new UpdateLeft();
 };
 
-void UpdateLeft::Execute(std::string params, const DataArray& da) {
+void UpdateLeft::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the updateLeft job\n";
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
@@ -350,7 +341,7 @@ Job * UpdateRight::Clone() {
   return new UpdateRight();
 };
 
-void UpdateRight::Execute(std::string params, const DataArray& da) {
+void UpdateRight::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the updateRight job\n";
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);

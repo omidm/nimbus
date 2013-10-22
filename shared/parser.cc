@@ -248,10 +248,12 @@ bool ParseHandshakeCommand(const std::string& input,
 bool ParseJobDoneCommand(const std::string& input,
     ID<job_id_t>& job_id,
     IDSet<job_id_t>& after_set,
-    std::string& params) {
+    Parameter& params) {
   int num = 3;
   job_id_t job_id_elem;
   IDSet<job_id_t>::IDSetContainer job_id_set;
+  SerializedData ser_data;
+  IDSet<param_id_t> param_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -289,8 +291,13 @@ bool ParseJobDoneCommand(const std::string& input,
   }
 
   iter++;
-  params = *iter;
-  UnescapeString(&params);
+  if (ParseParameter(*iter, ser_data, param_id_set)) {
+    Parameter temp(ser_data, param_id_set);
+    params = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -300,10 +307,12 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<job_id_t>& job_id,
     IDSet<data_id_t>& read, IDSet<data_id_t>& write,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    JobType& job_type, std::string& params) {
+    JobType& job_type, Parameter& params) {
   int num = 8;
   IDSet<job_id_t>::IDSetContainer job_id_set;
   IDSet<data_id_t>::IDSetContainer data_id_set;
+  SerializedData ser_data;
+  IDSet<param_id_t> param_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -381,8 +390,13 @@ bool ParseSpawnJobCommand(const std::string& input,
   }
 
   iter++;
-  params = *iter;
-  UnescapeString(&params);
+  if (ParseParameter(*iter, ser_data, param_id_set)) {
+    Parameter temp(ser_data, param_id_set);
+    params = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -392,11 +406,13 @@ bool ParseSpawnComputeJobCommand(const std::string& input,
     ID<job_id_t>& job_id,
     IDSet<data_id_t>& read, IDSet<data_id_t>& write,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    std::string& params) {
+    Parameter& params) {
   int num = 7;
   job_id_t job_id_elem;
   IDSet<job_id_t>::IDSetContainer job_id_set;
   IDSet<data_id_t>::IDSetContainer data_id_set;
+  SerializedData ser_data;
+  IDSet<param_id_t> param_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -464,8 +480,13 @@ bool ParseSpawnComputeJobCommand(const std::string& input,
   }
 
   iter++;
-  params = *iter;
-  UnescapeString(&params);
+  if (ParseParameter(*iter, ser_data, param_id_set)) {
+    Parameter temp(ser_data, param_id_set);
+    params = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -474,11 +495,13 @@ bool ParseSpawnCopyJobCommand(const std::string& input,
     ID<job_id_t>& job_id,
     ID<data_id_t>& from_id, ID<data_id_t>& to_id,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    std::string& params) {
+    Parameter& params) {
   int num = 6;
   job_id_t job_id_elem;
   data_id_t data_id_elem;
   IDSet<job_id_t>::IDSetContainer job_id_set;
+  SerializedData ser_data;
+  IDSet<param_id_t> param_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -543,8 +566,13 @@ bool ParseSpawnCopyJobCommand(const std::string& input,
   }
 
   iter++;
-  params = *iter;
-  UnescapeString(&params);
+  if (ParseParameter(*iter, ser_data, param_id_set)) {
+    Parameter temp(ser_data, param_id_set);
+    params = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -554,11 +582,13 @@ bool ParseComputeJobCommand(const std::string& input,
     ID<job_id_t>& job_id,
     IDSet<data_id_t>& read, IDSet<data_id_t>& write,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    std::string& params) {
+    Parameter& params) {
   int num = 7;
   job_id_t job_id_elem;
   IDSet<job_id_t>::IDSetContainer job_id_set;
   IDSet<data_id_t>::IDSetContainer data_id_set;
+  SerializedData ser_data;
+  IDSet<param_id_t> param_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -626,8 +656,13 @@ bool ParseComputeJobCommand(const std::string& input,
   }
 
   iter++;
-  params = *iter;
-  UnescapeString(&params);
+  if (ParseParameter(*iter, ser_data, param_id_set)) {
+    Parameter temp(ser_data, param_id_set);
+    params = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
 
   return true;
 }
@@ -960,11 +995,13 @@ bool ParseDefineDataCommand(const std::string& input,
     ID<data_id_t>& data_id,
     ID<partition_t>& partition_id,
     IDSet<partition_t>& neighbor_partitions,
-    std::string& params) {
+    Parameter& params) {
   int num = 5;
   data_id_t data_id_elem;
   partition_t partition_id_elem;
   IDSet<partition_t>::IDSetContainer partition_id_set;
+  SerializedData ser_data;
+  IDSet<param_id_t> param_id_set;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -1014,8 +1051,13 @@ bool ParseDefineDataCommand(const std::string& input,
   }
 
   iter++;
-  params = *iter;
-  UnescapeString(&params);
+  if (ParseParameter(*iter, ser_data, param_id_set)) {
+    Parameter temp(ser_data, param_id_set);
+    params = temp;
+  } else {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
 
   return true;
 }

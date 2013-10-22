@@ -67,42 +67,42 @@ using boost::char_separator;
 class Main : public Job {
   public:
     explicit Main(Application* app);
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 
 class Init : public Job {
   public:
     Init();
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 
 class Print : public Job {
   public:
     Print();
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 
 class ApplyLeft : public Job {
   public:
     ApplyLeft();
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 
 class ApplyRight : public Job {
   public:
     ApplyRight();
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 
 class ForLoop : public Job {
   public:
     explicit ForLoop(Application* app);
-    virtual void Execute(std::string params, const DataArray& da);
+    virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
 

@@ -79,7 +79,7 @@ class Application {
       const IDSet<job_id_t>& before,
       const IDSet<job_id_t>& after,
       const JobType& type,
-      std::string params);
+      const Parameter& params);
 
   void SpawnComputeJob(const std::string& name,
       const job_id_t& id,
@@ -87,20 +87,20 @@ class Application {
       const IDSet<data_id_t>& write,
       const IDSet<job_id_t>& before,
       const IDSet<job_id_t>& after,
-      std::string params);
+      const Parameter& params);
 
   void SpawnCopyJob(const job_id_t& id,
       const data_id_t& from_id,
       const data_id_t& to_id,
       const IDSet<job_id_t>& before,
       const IDSet<job_id_t>& after,
-      std::string params);
+      const Parameter& params);
 
   void DefineData(const std::string& name,
       const data_id_t& id,
       const partition_t& partition_id,
       const IDSet<partition_t>& neighbor_partition,
-      std::string params);
+      const Parameter& params);
 
   Job* CloneJob(std::string name);
   Data* CloneData(std::string name);

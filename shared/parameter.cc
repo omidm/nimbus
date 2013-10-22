@@ -85,6 +85,8 @@ std::string Parameter::toString() {
 }
 
 Parameter& Parameter::operator= (const Parameter& right) {
+  ser_data_ = right.ser_data_;
+  idset_ = right.idset_;
   return *this;
 }
 

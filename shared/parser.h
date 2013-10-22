@@ -55,6 +55,7 @@
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
 #include "shared/escaper.h"
+#include "shared/parameter.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -101,27 +102,27 @@ bool ParseSpawnJobCommand(const std::string& input,
     IDSet<job_id_t>& job_id,
     IDSet<data_id_t>& read, IDSet<data_id_t>& write,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    JobType& job_type, std::string& params);
+    JobType& job_type, Parameter& params);
 
 bool ParseSpawnComputeJobCommand(const std::string& input,
     std::string& job_name,
     ID<job_id_t>& job_id,
     IDSet<data_id_t>& read, IDSet<data_id_t>& write,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    std::string& params);
+    Parameter& params);
 
 bool ParseSpawnCopyJobCommand(const std::string& input,
     ID<job_id_t>& job_id,
     ID<data_id_t>& from_id, ID<data_id_t>& to_id,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    std::string& params);
+    Parameter& params);
 
 bool ParseComputeJobCommand(const std::string& input,
     std::string& job_name,
     ID<job_id_t>& job_id,
     IDSet<data_id_t>& read, IDSet<data_id_t>& write,
     IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    std::string& params);
+    Parameter& params);
 
 bool ParseCreateDataCommand(const std::string& input,
     ID<job_id_t>& job_id,
@@ -154,7 +155,7 @@ bool ParseDefineDataCommand(const std::string& input,
     ID<data_id_t>& data_id,
     ID<partition_t>& partition_id,
     IDSet<partition_t>& neighbor_partitions,
-    std::string& params);
+    Parameter& params);
 
 bool ParseHandshakeCommand(const std::string& input,
     ID<worker_id_t>& worker_id,
@@ -163,7 +164,7 @@ bool ParseHandshakeCommand(const std::string& input,
 bool ParseJobDoneCommand(const std::string& input,
     ID<job_id_t>& job_id,
     IDSet<job_id_t>& after_set,
-    std::string& params);
+    Parameter& params);
 
 bool ParseIDSet(const std::string& input, IDSet<uint64_t>::IDSetContainer& set);
 

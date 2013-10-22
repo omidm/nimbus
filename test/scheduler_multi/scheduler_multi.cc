@@ -93,7 +93,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
   ID<job_id_t> id(j[0]);
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
-  std::string params;
+  Parameter params;
   ComputeJobCommand cm("main", id, read, write, before, after, params);
   std::cout << "Sending command: " << cm.toStringWTags() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), &cm);
