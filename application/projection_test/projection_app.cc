@@ -94,27 +94,32 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 	
 	// input data
 	T* residual = (T*) da[0];
-	SPARSE_MATRIX_FLAT_NXN<T>* AC_pid1 = (SPARSE_MATRIX_FLAT_NXN<T>*) da[1];
-	SPARSE_MATRIX_FLAT_NXN<T>* AC_pid2 = (SPARSE_MATRIX_FLAT_NXN<T>*) da[2];
+	SPARSE_MATRIX_FLAT_NXN<T>* A_pid1 = (SPARSE_MATRIX_FLAT_NXN<T>*) da[1];
+	SPARSE_MATRIX_FLAT_NXN<T>* A_pid2 = (SPARSE_MATRIX_FLAT_NXN<T>*) da[2];
 	VECTOR_ND<T>* b_interior_pid1 = (VECTOR_ND<T>*) da[3];
 	VECTOR_ND<T>* b_interior_pid2 = (VECTOR_ND<T>*) da[4];
 	VECTOR_ND<T>* z_interior_pid1 = (VECTOR_ND<T>*) da[5];
 	VECTOR_ND<T>* z_interior_pid2 = (VECTOR_ND<T>*) da[6];
 
 	// new data
-	GetNewDataID(&d, 7);
+	GetNewDataID(&d, 12);
 	DefineData("temp_interior_pid1", d[0], pid1, neighbor_partitions, par);
 	DefineData("temp_interior_pid2", d[1], pid2, neighbor_partitions, par);
-	DefineData("local_dot_prod_zb_pid1", d[2], pid1, neighbor_partitions, par);
-	DefineData("local_dot_prod_zb_pid2", d[3], pid2, neighbor_partitions, par);
-	DefineData("rho_old", d[4], pid0, neighbor_partitions, par);
+	DefineData("local_dot_prod_z_b_pid1", d[2], pid1, neighbor_partitions, par);
+	DefineData("local_dot_prod_z_b_pid2", d[3], pid2, neighbor_partitions, par);
+	DefineData("rho", d[4], pid0, neighbor_partitions, par);
 	DefineData("p_interior_pid1", d[5], pid1, neighbor_partitions, par);
 	DefineData("p_interior_pid2", d[6], pid2, neighbor_partitions, par);
+	DefineData("p_boundary_pid1", d[7], pid1, neighbor_partitions, par);
+	DefineData("p_boundary_pid2", d[8], pid2, neighbor_partitions, par);
+	DefineData("local_dot_prod_p_temp_pid1", d[9], pid1, neighbor_partitions, par);
+	DefineData("local_dot_prod_p_temp_pid2", d[10], pid2, neighbor_partitions, par);
+	DefineData("global_sum", d[11], pid0, neighbor_partitions, par);
 	
 	if(iteration == 1 || iteration < desired_iterations && residual> global_tolerance) {
 		// Project_Forloop_Part1, pid = 1
 		read.clear();
-		read.insert(da[1]); // AC_pid1
+		read.insert(da[1]); // A_pid1
 		read.insert(da[3]); // b_interior_pid1
 		read.insert(d[0]);  // tmp_interior_pid1
 		read.insert(da[5]);  // z_interior_pid1
@@ -129,7 +134,7 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 
 		// Project_Forloop_Part1, pid = 2
 		read.clear();
-		read.insert(da[2]); // AC_pid2
+		read.insert(da[2]); // A_pid2
 		read.insert(da[4]); // b_interior_pid2
 		read.insert(d[1]);  // tmp_interior_pid2
 		read.insert(da[6]);  // z_interior_pid2
@@ -146,9 +151,9 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		read.clear();
 		read.insert(d[2]); // local_dot_prod_zb_pid1
 		read.insert(d[3]); // local_dot_prod_zb_pid2
-		read.insert(d[4]); // rho_old
+		read.insert(d[11]); // global_sum
 		write.clear();
-		write.insert(d[4]); // rho_old
+		write.insert(d[11]); // global_sum
 		before.clear();
 		before.insert(j[0]); // Project_Forloop_Part1, pid = 1
 		before.insert(j[1]); // Project_Forloop_Part1, pid = 2
@@ -159,31 +164,86 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 
 		// Project_Forloop_Part2, pid = 1
 		read.clear();
-		read.insert(d[4]); // rho_old
+		read.insert(d[4]); // rho
+		read.insert(d[11]); // global_sum
 		read.insert(da[5]); // z_interior_pid1
 		read.insert(d[5]); // p_interior_pid1
+		read.insert(d[7]); // p_boundary_pid1
 		write.clear();
 		write.insert(d[5]); // p_interior_pid1
+		write.insert(d[7]); // p_boundary_pid1
 		before.clear();
 		before.insert(j[2]); // Global_Sum
 		after.clear();
-		after.insert(j[5]); // Fill_Ghost_Cells
+		after.insert(j[5]); // Project_Forloop_Part3
 		SpawnComputeJob("Project_Forloop_Part2", j[3], read, write, before, after, params);
 
-		// Project_Forloop_Part2, pid = 1
+		// Project_Forloop_Part2, pid = 2
 		read.clear();
-		read.insert(d[4]); // rho_old
-		read.insert(da[6]); // z_interior_pid1
-		read.insert(d[6]); // p_interior_pid1
+		read.insert(d[4]); // rho
+		read.insert(d[11]); // global_sum
+		read.insert(da[6]); // z_interior_pid2
+		read.insert(d[6]); // p_interior_pid2
+		read.insert(d[8]); // p_boundary_pid2
 		write.clear();
-		write.insert(d[6]); // p_interior_pid1
+		write.insert(d[6]); // p_interior_pid2
+		write.insert(d[8]); // p_boundary_pid2
 		before.clear();
 		before.insert(j[2]); // Global_Sum
 		after.clear();
-		after.insert(j[6]); // Fill_Ghost_Cells
+		after.insert(j[6]); // Project_Forloop_Part3
 		SpawnComputeJob("Project_Forloop_Part2", j[4], read, write, before, after, params);
 
-		//
+		// Project_Forloop_Part3, pid = 1
+		read.clear();
+		read.insert(da[1]); // A_pid1
+		read.insert(d[5]); // p_interior_pid1
+		read.insert(d[8]); // p_boundary_pid2
+		read.insert(d[0]); // tmp_interior_pid1
+		read.insert(d[9]); // local_dot_prod_p_temp_pid1
+		write.clear();
+		write.insert(d[9]); // local_dot_prod_p_temp_pid1
+		before.clear();
+		before.insert(j[3]);
+		before.insert(j[4]);
+		after.clear();
+		after.insert(j[7]);
+		SpawnComputeJob("Project_Forloop_Part3", j[5], read, write, before, after, par);
+
+		// Project_Forloop_Part3, pid = 2
+		read.clear();
+		read.insert(da[2]); // A_pid2
+		read.insert(d[6]); // p_interior_pid2
+		read.insert(d[7]); // p_boundary_pid1
+		read.insert(d[1]); // tmp_interior_pid2
+		read.insert(d[10]); // local_dot_prod_p_temp_pid2
+		write.clear();
+		write.insert(d[10]); // local_dot_prod_p_temp_pid2
+		before.clear();
+		before.insert(j[3]);
+		before.insert(j[4]);
+		after.clear();
+		after.insert(j[7]);
+		SpawnComputeJob("Project_Forloop_Part3", j[6], read, write, before, after, par);
+
+		// Global_Sum
+		read.clear();
+		read.insert(d[9]); // local_dot_prod_p_temp_pid1
+		read.insert(d[10]); // local_dot_prod_p_temp_pid2
+		read.insert(d[11]); // global_sum
+		write.clear();
+		write.insert(d[11]); // global_sum
+		before.clear();
+		before.insert(j[5]); // Project_Forloop_Part3, pid = 1
+		before.insert(j[6]); // Project_Forloop_Part3, pid = 2
+		after.clear();
+		after.insert(j[8]); // Project_Forloop_Part4, pid = 1
+		after.insert(j[9]); // Project_Forloop_Part4, pid = 2
+		SpawnComputeJob("Global_Sum", j[7], read, write, before, after, par);
+
+		// Project_Forloop_Part4, pid = 1
+		read.clear();
+		read.insert();
 	}
 	// TODO: Fill_Ghost_Cells(x);
 };
