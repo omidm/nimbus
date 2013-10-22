@@ -36,7 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "app_config.h"
+#include "app_utils.h"
 #include "data_face_arrays.h"
 #include "data_utils.h"
 #include "job_utils.h"

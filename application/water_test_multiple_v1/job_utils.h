@@ -43,7 +43,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 
-#include "app_config.h"
+#include "app_utils.h"
 #include "data_fwd_decl.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
@@ -88,6 +88,6 @@ namespace application {
             void GetJobDataTypes(std::string ntype_names[]);
     };
 
-} // namespace water_app_job
+} // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_

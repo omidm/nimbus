@@ -37,6 +37,7 @@
 
 #include "advection.h"
 #include "app_config.h"
+#include "app_utils.h"
 #include "assert.h"
 #include "data_face_arrays.h"
 #include "data_utils.h"

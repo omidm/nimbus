@@ -39,7 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 
-#include "app_config.h"
+#include "app_utils.h"
 #include "data_utils.h"
 #include "job_utils.h"
 #include "physbam_include.h"

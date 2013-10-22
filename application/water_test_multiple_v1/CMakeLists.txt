@@ -64,6 +64,7 @@ SET(${PROJECT_NAME}_cpp
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/advection.h
         ${PROJECT_SOURCE_DIR}/app_config.h
+        ${PROJECT_SOURCE_DIR}/app_utils.h
         ${PROJECT_SOURCE_DIR}/data_face_arrays.h
         ${PROJECT_SOURCE_DIR}/data_fwd_decl.h
         ${PROJECT_SOURCE_DIR}/data_utils.h
