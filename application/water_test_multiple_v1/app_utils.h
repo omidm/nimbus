@@ -42,36 +42,25 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_UTILS_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_UTILS_H_
 
-#include "app_utils.h"
-#include "job_utils.h"
+#include "data_fwd_decl.h"
+#include "physbam_include.h"
+#include <vector>
 
-// application configuration
-const int kAppLastFrame = 10;
-const int kMainAllSize = 100;
-const int kGhostSize = 3;
-const int kPartitions = 1;
+// applications are only 2 dimensional
+// 3d applications requires significant changes
+const int dimension = 2;
 
-// include job types here
-const ::application::JobRegion kAdvJobTypes[] = {
-    ::application::kJobAll
-};
-const int kAdvJobTypesNum = 1;
+// useful typedefs
+typedef float T;
+typedef ::PhysBAM::VECTOR<float, dimension> TV;
+typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
+typedef ::PhysBAM::ARRAY<T, ::PhysBAM::FACE_INDEX<TV::dimension> >
+T_FACE_ARRAY;
+typedef ::water_app_data::FaceArray<TV> FaceArray;
+typedef std::vector<FaceArray * > FaceArrayList;
+typedef std::vector<FaceArrayList * > ListFaceArrayList;
 
-const ::application::JobRegion kOtherJobTypes[] = {
-    ::application::kJobAll
-};
-const int kOtherJobTypesNum = 1;
-
-// number of corner and edge partitions
-// to calculcate how many dta chunks should be defined
-const int kCornerRegions = 1;
-const int kEdgeRegions = 0;
-
-// useful values from above constants
-const int kMainSize = kMainAllSize/kPartitions - 2*kGhostSize;
-const int kGhostNum = (dimension == 2)? 8 : 26; 
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_UTILS_H_

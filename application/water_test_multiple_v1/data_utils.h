@@ -45,7 +45,7 @@
 #include "PhysBAM_Tools/Vectors/VECTOR.h"
 #include "shared/nimbus.h"
 
-namespace water_app_data {
+namespace application {
 
     namespace {
         const int dimension = 2;
@@ -69,11 +69,12 @@ namespace water_app_data {
     };
     const int kCornerNum = 5;
     const int kEdgeNum = 3;
-    // this function depends on enum DataRegion, and should be changed if
-    // DataRegion is updated
+    // enumerate all data names in kDataRegionNames
+    extern std::string kDataRegionNames[kDataNum];
+    // enumaerate all data sizes in kDataRegionSizes
+    extern TV_INT kDataRegionSizes[kDataNum];
+
     void GetDataRegionNames(std::string names[]);
-    // this function depends on enum DataRegion, and should be changed if
-    // DataRegion is updated
     void GetDataRegionSizes(
             TV_INT sizes[],
             TV_INT part_center_size,
@@ -93,6 +94,6 @@ namespace water_app_data {
             }
     };
 
-} // namespace water_app_data
+} // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_

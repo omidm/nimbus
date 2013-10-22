@@ -43,12 +43,13 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_
 
-#include "app_config.h"
+#include "app_utils.h"
 #include "data_fwd_decl.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
+#include <vector>
 
-namespace water_app_job {
+namespace application {
 
     // job locations in a simulation :
     // TODO LATER - need to add jobs on other possible regions
@@ -71,11 +72,17 @@ namespace water_app_job {
         JobData();
     };
 
+    int GetJobDataNum(JobRegion region) __attribute__ ((deprecated));
+    void GetJobDataTypes(
+            JobRegion region,
+            std::vector<std::string> ntype_names);
+
     class SimJob : public Job {
         private:
             JobRegion region_;
         public:
-            SimJob() : region_(kJobAll) {}
+            SimJob();
+            SimJob(JobRegion region);
             JobRegion region() {
                 return region_;
             }
@@ -85,6 +92,6 @@ namespace water_app_job {
             void CollectData(const ::nimbus::DataArray& da, JobData& job_data);
     };
 
-} // namespace water_app_job
+} // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_JOB_UTILS_H_

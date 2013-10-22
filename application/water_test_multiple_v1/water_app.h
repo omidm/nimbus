@@ -39,7 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_WATER_APP_H_
 
-#include "app_config.h"
+#include "app_utils.h"
 #include "data_utils.h"
 #include "job_utils.h"
 #include "physbam_include.h"
@@ -56,12 +56,6 @@ using nimbus::Application;
 class WaterApp : public Application {
 
     private:
-        static const int data_types_num_ = ::water_app_data::kDataNum;
-        static const int extra_regions_num_ = kCornerRegions*0+kEdgeRegions*0;
-        static std::string data_region_names_[data_types_num_];
-        static TV_INT data_region_sizes_[data_types_num_];
-        static TV_INT tv_int_error;
-
         ::PhysBAM::ADVECTION_SEMI_LAGRANGIAN_UNIFORM< ::PhysBAM::GRID<TV>, T>
             *advection_scalar_;
         ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary_;
@@ -89,30 +83,6 @@ class WaterApp : public Application {
                 ::PhysBAM::BOUNDARY_UNIFORM< ::PhysBAM::GRID<TV>, T> *boundary) {
             boundary_ = boundary;
         }
-
-        static std::string data_region_name(const int index) {
-            if (index >= data_types_num_)
-                return "";
-            return data_region_names_[index];
-        }
-
-        static TV_INT &data_region_size(const int index) {
-            if (index >= data_types_num_)
-                return tv_int_error;
-            return data_region_sizes_[index];
-        }
-
-        static const int data_types_num() {
-            return data_types_num_;
-        }
-
-        static const int extra_regions_num() {
-            return extra_regions_num_;
-        }
-
-        static const int total_regions_num() {
-            return data_types_num_ * kWorkers - extra_regions_num_;
-        }
 };
 
 class Main : public Job {
@@ -122,42 +92,42 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
-class Init : public ::water_app_job::SimJob {
+class Init : public ::application::SimJob {
     public:
         Init(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Loop : public ::water_app_job::SimJob {
+class Loop : public ::application::SimJob {
     public:
         Loop(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class UptoAdvect : public ::water_app_job::SimJob {
+class UptoAdvect : public ::application::SimJob {
     public:
         UptoAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Advect : public ::water_app_job::SimJob {
+class Advect : public ::application::SimJob {
     public:
         Advect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class AfterAdvect : public ::water_app_job::SimJob {
+class AfterAdvect : public ::application::SimJob {
     public:
         AfterAdvect(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class WriteFrame : public ::water_app_job::SimJob {
+class WriteFrame : public ::application::SimJob {
     public:
         WriteFrame(Application *app);
         virtual void Execute(std::string params, const DataArray& da);

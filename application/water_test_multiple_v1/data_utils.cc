@@ -34,7 +34,7 @@
 
 #include "data_utils.h"
 
-namespace water_app_data {
+namespace application {
 
     void GetDataRegionNames(std::string names[]) {
         names[kDataInterior] = "DataInterior";
@@ -69,4 +69,4 @@ namespace water_app_data {
         sizes[kDataInLeft] = part_ghost_vert_size;
     }
 
-} // namespace water_app_data
+} // namespace application
