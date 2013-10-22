@@ -22,28 +22,28 @@ class Main : public Job {
 class Project_Forloop_Part1 : public Job {
     public:
     	Project_Forloop_Part1(Application *app);
-        virtual void Project_Forloop_Part1(std::string params, const DataArray& da);
+        virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part2 : public Job {
     public:
     	Project_Forloop_Part2(Application *app);
-        virtual void Project_Forloop_Part2(std::string params, const DataArray& da);
+        virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part3 : public Job {
     public:
     	Project_Forloop_Part3(Application *app);
-        virtual void Project_Forloop_Part3(std::string params, const DataArray& da);
+        virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part4 : public Job {
     public:
     	Project_Forloop_Part4(Application *app);
-        virtual void Project_Forloop_Part4(std::string params, const DataArray& da);
+        virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
 
