@@ -59,15 +59,16 @@ using nimbus::Application;
  * kFaceArray. */
 #define GetJobData()                                                        \
     WaterApp *water_app = (WaterApp *)application();                        \
-    ::application::JobData job_data;                                      \
+    ::application::JobData job_data;                                        \
     CollectData(da, job_data);                                              \
-    if (!water_app)              \
+    if (!water_app)                                                         \
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
 namespace application {
     std::string kDataRegionNames[kDataNum];
     TV_INT kDataRegionSizes[kDataNum];
+    std::string kJobRegionNames[kJobNum];
 } // namespace application
 
 WaterApp::WaterApp() {
@@ -85,6 +86,7 @@ void WaterApp::Load() {
             main_size,
             main_all_size,
             kGhostSize);
+    ::application::GetJobRegionNames(::application::kJobRegionNames);
 
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
@@ -107,7 +109,13 @@ void WaterApp::Load() {
     RegisterJob("init", new Init(this));
     RegisterJob("loop", new Loop(this));
     RegisterJob("uptoadvect", new UptoAdvect(this));
-    RegisterJob("advect", new Advect(this));
+    for (int i = 0; i < ::application::kJobNum; i++) {
+        std::string ntype_name = "advection_"+
+            ::application::kJobRegionNames[i];
+        RegisterJob(
+                ntype_name,
+                new Advect(this, (::application::JobRegion)i));
+    }
     RegisterJob("afteradvect", new AfterAdvect(this));
     RegisterJob("writeframe", new WriteFrame(this));
 
@@ -143,17 +151,14 @@ Job* Main::Clone() {
 };
 
 void Main::Execute(std::string params, const DataArray& da) {
-//    WaterApp *water_app = (WaterApp *)application();
     printf("Begin main\n");
-    std::vector<job_id_t> j;
-    std::vector<data_id_t> d;
-    IDSet<data_id_t> read, write;
-    IDSet<job_id_t> before, after;
-    std::string par;
 
     /* Define data as necessary for jobs here. */
+    std::string par_data;
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
+    // get number of data regions, and corresponding ids and type names for
+    // advection
     int data_num = 2;
     std::vector<data_id_t> adv_data_ids[kAdvJobTypesNum];
     std::vector<std::string> adv_data_types[kAdvJobTypesNum];
@@ -165,9 +170,18 @@ void Main::Execute(std::string params, const DataArray& da) {
         }
         data_num += num;
     }
+    std::vector<data_id_t> d;
     GetNewDataID(&d, data_num);
-    DefineData("water_driver", d[0], partition_id, neighbor_partitions, par);
-    DefineData("sim_data", d[1], partition_id, neighbor_partitions, par);
+    // water driver: non adv data
+    DefineData(
+            "water_driver",
+            d[0],
+            partition_id,
+            neighbor_partitions,
+            par_data);
+    // sim data: non adv data
+    DefineData("sim_data", d[1], partition_id, neighbor_partitions, par_data);
+    // adv data
     for (int i = 0; i < kAdvJobTypesNum; i++) {
         int num = adv_data_types[i].size();
         for (int j = 0; j < num; j++) {
@@ -176,12 +190,25 @@ void Main::Execute(std::string params, const DataArray& da) {
                     adv_data_ids[i][j],
                     partition_id,
                     neighbor_partitions,
-                    par
+                    par_data
                     );
         }
     }
 
-    GetNewJobID(&j, 2);
+    /* Spawn required jobs -- we have one init job for nonadvection data, and
+     * multiple init jobs for advection data; one loop job.
+     * Order:
+     * - common init
+     * - individual inits
+     * - loop
+     */
+    int job_num = 2 + kAdvJobTypesNum;
+    std::vector<job_id_t> j;
+    GetNewJobID(&j, job_num);
+    IDSet<data_id_t> read, write;
+    IDSet<job_id_t> before, after;
+    std::string par;
+    // common init
     before.clear();
     after.clear();
     read.clear();
@@ -267,13 +294,14 @@ void UptoAdvect::Execute(std::string params, const DataArray& da) {
             job_data.central_vels[0]->data());
 };
 
-Advect::Advect(Application *app) {
+Advect::Advect(Application *app, ::application::JobRegion region) {
     set_application(app);
+    set_region(region);
 };
 
 Job* Advect::Clone() {
     printf("Cloning advect job\n");
-    return new Advect(application());
+    return new Advect(application(), region());
 };
 
 void Advect::Execute(std::string params, const DataArray& da) {
