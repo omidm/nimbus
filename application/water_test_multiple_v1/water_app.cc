@@ -150,11 +150,11 @@ Job* Main::Clone() {
     return new Main(application());
 };
 
-void Main::Execute(std::string params, const DataArray& da) {
+void Main::Execute(Parameter params, const DataArray& da) {
     printf("Begin main\n");
 
     /* Define data as necessary for jobs here. */
-    std::string par_data;
+    Parameter par_data;
     IDSet<partition_t> neighbor_partitions;
     partition_t partition_id = 0;
     // get number of data regions, and corresponding ids and type names for
@@ -207,7 +207,7 @@ void Main::Execute(std::string params, const DataArray& da) {
     GetNewJobID(&j, job_num);
     IDSet<data_id_t> read, write;
     IDSet<job_id_t> before, after;
-    std::string par;
+    Parameter par;
     // common init
     before.clear();
     after.clear();
@@ -243,7 +243,7 @@ Job* Init::Clone() {
     return new Init(application());
 };
 
-void Init::Execute(std::string params, const DataArray& da) {
+void Init::Execute(Parameter params, const DataArray& da) {
     printf("Executing init job\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
@@ -280,7 +280,7 @@ Job* UptoAdvect::Clone() {
     return new UptoAdvect(application());
 };
 
-void UptoAdvect::Execute(std::string params, const DataArray& da) {
+void UptoAdvect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running upto advect\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
@@ -304,7 +304,7 @@ Job* Advect::Clone() {
     return new Advect(application(), region());
 };
 
-void Advect::Execute(std::string params, const DataArray& da) {
+void Advect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running advect\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
@@ -313,7 +313,9 @@ void Advect::Execute(std::string params, const DataArray& da) {
     }
     GetJobData();
     ::parameters::AdvVelPar adv_vel_par_pb;
-    adv_vel_par_pb.ParseFromString(params);
+    std::string str(params.ser_data().data_ptr_raw(),
+        params.ser_data().size());
+    adv_vel_par_pb.ParseFromString(str);
     T_FACE_ARRAY *face_vel_extended = 
         new T_FACE_ARRAY(*(job_data.central_vels[0]->grid()), kGhostSize);
     job_data.central_vels[0]->Extend_Array(
@@ -337,7 +339,7 @@ Job* AfterAdvect::Clone() {
     return new AfterAdvect(application());
 };
 
-void AfterAdvect::Execute(std::string params, const DataArray& da) {
+void AfterAdvect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running after advect\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
@@ -360,7 +362,7 @@ Job* Loop::Clone() {
     return new Loop(application());
 };
 
-void Loop::Execute(std::string params, const DataArray& da) {
+void Loop::Execute(Parameter params, const DataArray& da) {
     printf("Executing forloop job\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
@@ -381,12 +383,13 @@ void Loop::Execute(std::string params, const DataArray& da) {
         d.push_back(da[1]->id());
         d.push_back(da[2]->id());
         d.push_back(da[3]->id());
-        std::string par;
+        Parameter par;
+
         IDSet<job_id_t> before, after;
         IDSet<data_id_t> read, write;
         std::vector<job_id_t> j;
         GetNewJobID(&j, 5);
-        par = "";
+        par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
         after.insert(j[1]);
@@ -399,7 +402,9 @@ void Loop::Execute(std::string params, const DataArray& da) {
         ::parameters::AdvVelPar adv_vel_par_pb;
         adv_vel_par_pb.set_dt(job_data.driver->dt);
         adv_vel_par_pb.set_time(job_data.driver->time);
-        adv_vel_par_pb.SerializeToString(&par);
+        std::string str;
+        adv_vel_par_pb.SerializeToString(&str);
+        par.set_ser_data(SerializedData(str));
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
@@ -410,7 +415,7 @@ void Loop::Execute(std::string params, const DataArray& da) {
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
         printf("Spawned advect\n");
-        par = "";
+        par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[1]);
@@ -421,7 +426,7 @@ void Loop::Execute(std::string params, const DataArray& da) {
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
         printf("Spawned afteradvect\n");
-        par = "";
+        par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[2]);
@@ -432,7 +437,7 @@ void Loop::Execute(std::string params, const DataArray& da) {
         write.insert(d[2]); write.insert(d[3]);
         SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
         printf("Spawned afteradvect\n");
-        par = "";
+        par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[3]);
@@ -454,7 +459,7 @@ Job* WriteFrame::Clone() {
     return new WriteFrame(application());
 };
 
-void WriteFrame::Execute(std::string params, const DataArray& da) {
+void WriteFrame::Execute(Parameter params, const DataArray& da) {
     printf( "@@ Executing write frame job\n");
     std::vector<int> types_list;
     types_list.push_back(driver_id);
