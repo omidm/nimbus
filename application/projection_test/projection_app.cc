@@ -98,11 +98,11 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 	SPARSE_MATRIX_FLAT_NXN<T>* A_pid2 = (SPARSE_MATRIX_FLAT_NXN<T>*) da[2];
 	VECTOR_ND<T>* b_interior_pid1 = (VECTOR_ND<T>*) da[3];
 	VECTOR_ND<T>* b_interior_pid2 = (VECTOR_ND<T>*) da[4];
-	VECTOR_ND<T>* z_interior_pid1 = (VECTOR_ND<T>*) da[5];
-	VECTOR_ND<T>* z_interior_pid2 = (VECTOR_ND<T>*) da[6];
+	VECTOR_ND<T>* x_interior_pid1 = (VECTOR_ND<T>*) da[5];
+	VECTOR_ND<T>* x_interior_pid2 = (VECTOR_ND<T>*) da[6];
 
 	// new data
-	GetNewDataID(&d, 12);
+	GetNewDataID(&d, 16);
 	DefineData("temp_interior_pid1", d[0], pid1, neighbor_partitions, par);
 	DefineData("temp_interior_pid2", d[1], pid2, neighbor_partitions, par);
 	DefineData("local_dot_prod_z_b_pid1", d[2], pid1, neighbor_partitions, par);
@@ -115,18 +115,18 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 	DefineData("local_dot_prod_p_temp_pid1", d[9], pid1, neighbor_partitions, par);
 	DefineData("local_dot_prod_p_temp_pid2", d[10], pid2, neighbor_partitions, par);
 	DefineData("global_sum", d[11], pid0, neighbor_partitions, par);
+	DefineData("rho_old_pid1", d[12], pid1, neighbor_partitions, par);
+	DefineData("rho_old_pid2", d[13], pid2, neighbor_partitions, par);
+	DefineData("z_interior_pid1", d[14], pid1, neighbor_partitions, par);
+	DefineData("z_interior_pid1", d[15], pid2, neighbor_partitions, par);
 	
 	if(iteration == 1 || iteration < desired_iterations && residual> global_tolerance) {
 		// Project_Forloop_Part1, pid = 1
 		read.clear();
 		read.insert(da[1]); // A_pid1
 		read.insert(da[3]); // b_interior_pid1
-		read.insert(d[0]);  // tmp_interior_pid1
-		read.insert(da[5]);  // z_interior_pid1
-		read.insert(d[2]); // local_dot_prod_zb_pid1
 		write.clear();
-		write.insert(d[0]); // tmp_interior_pid1
-		write.insert(da[5]); //z_interior_pid1
+		write.insert(d[15]); //z_interior_pid1
 		write.insert(d[2]); // local_dot_prod_zb_pid1
 		before.clear();
 		after.clear(); after.insert(j[2]);
@@ -136,12 +136,8 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		read.clear();
 		read.insert(da[2]); // A_pid2
 		read.insert(da[4]); // b_interior_pid2
-		read.insert(d[1]);  // tmp_interior_pid2
-		read.insert(da[6]);  // z_interior_pid2
-		read.insert(d[3]); // local_dot_prod_zb_pid2
 		write.clear();
-		write.insert(d[1]); // tmp_interior_pid2
-		write.insert(da[6]); //z_interior_pid2
+		write.insert(d[16]); //z_interior_pid2
 		write.insert(d[3]); // local_dot_prod_zb_pid2
 		before.clear();
 		after.clear(); after.insert(j[2]);
@@ -151,9 +147,8 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		read.clear();
 		read.insert(d[2]); // local_dot_prod_zb_pid1
 		read.insert(d[3]); // local_dot_prod_zb_pid2
-		read.insert(d[11]); // global_sum
 		write.clear();
-		write.insert(d[11]); // global_sum
+		write.insert(d[4]); // rho
 		before.clear();
 		before.insert(j[0]); // Project_Forloop_Part1, pid = 1
 		before.insert(j[1]); // Project_Forloop_Part1, pid = 2
@@ -165,13 +160,11 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		// Project_Forloop_Part2, pid = 1
 		read.clear();
 		read.insert(d[4]); // rho
-		read.insert(d[11]); // global_sum
-		read.insert(da[5]); // z_interior_pid1
+		read.insert(d[12]); // rho_old_pid1
+		read.insert(d[15]); // z_interior_pid1
 		read.insert(d[5]); // p_interior_pid1
-		read.insert(d[7]); // p_boundary_pid1
 		write.clear();
 		write.insert(d[5]); // p_interior_pid1
-		write.insert(d[7]); // p_boundary_pid1
 		before.clear();
 		before.insert(j[2]); // Global_Sum
 		after.clear();
@@ -181,13 +174,11 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		// Project_Forloop_Part2, pid = 2
 		read.clear();
 		read.insert(d[4]); // rho
-		read.insert(d[11]); // global_sum
-		read.insert(da[6]); // z_interior_pid2
+		read.insert(d[13]); // rho_old_pid2
+		read.insert(d[16]); // z_interior_pid2
 		read.insert(d[6]); // p_interior_pid2
-		read.insert(d[8]); // p_boundary_pid2
 		write.clear();
 		write.insert(d[6]); // p_interior_pid2
-		write.insert(d[8]); // p_boundary_pid2
 		before.clear();
 		before.insert(j[2]); // Global_Sum
 		after.clear();
@@ -198,10 +189,9 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		read.clear();
 		read.insert(da[1]); // A_pid1
 		read.insert(d[5]); // p_interior_pid1
-		read.insert(d[8]); // p_boundary_pid2
-		read.insert(d[0]); // tmp_interior_pid1
-		read.insert(d[9]); // local_dot_prod_p_temp_pid1
+		read.insert(d[6]); // p_interior_pid2
 		write.clear();
+		write.insert(d[0]); // tmp_interior_pid1
 		write.insert(d[9]); // local_dot_prod_p_temp_pid1
 		before.clear();
 		before.insert(j[3]);
@@ -214,10 +204,9 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 		read.clear();
 		read.insert(da[2]); // A_pid2
 		read.insert(d[6]); // p_interior_pid2
-		read.insert(d[7]); // p_boundary_pid1
-		read.insert(d[1]); // tmp_interior_pid2
-		read.insert(d[10]); // local_dot_prod_p_temp_pid2
+		read.insert(d[5]); // p_interior_pid1
 		write.clear();
+		write.insert(d[1]); // tmp_interior_pid2
 		write.insert(d[10]); // local_dot_prod_p_temp_pid2
 		before.clear();
 		before.insert(j[3]);
@@ -243,7 +232,69 @@ void Project_Forloop_Condition::Execute(std::string params, const DataArray& da)
 
 		// Project_Forloop_Part4, pid = 1
 		read.clear();
-		read.insert();
+		read.insert(da[5]); // x_interior_pid1
+		read.insert(d[5]); // p_interior_pid1
+		read.insert(da[3]); // b_interior_pid1
+		read.insert(d[0]); // tmp_interior_pid1
+		write.clear();
+		write.insert(da[5]); // x_interior_pid1
+		write.insert(da[3]); // b_interior_pid1
+		before.clear();
+		before.insert(j[7]);
+		after.clear();
+		after.clear(j[10]);
+		SpawnComputeJob("Project_Forloop_Part4", j[8], read, write, before, after, par);
+
+		// Project_Forloop_Part4, pid = 2
+		read.clear();
+		read.insert(da[6]); // x_interior_pid2
+		read.insert(d[6]); // p_interior_pid2
+		read.insert(da[4]); // b_interior_pid2
+		read.insert(d[1]); // tmp_interior_pid2
+		write.clear();
+		write.insert(da[6]); // x_interior_pid2
+		write.insert(da[4]); // b_interior_pid2
+		before.clear();
+		before.insert(j[7]);
+		after.clear();
+		after.clear(j[10]);
+		SpawnComputeJob("Project_Forloop_Part4", j[9], read, write, before, after, par);
+
+		// Global_Max
+		read.clear();
+		read.insert(da[3]); // b_interior_pid1
+		read.insert(da[4]); // b_interior_pid2
+		write.clear();
+		write.insert(da[0]); // residual
+		before.clear();
+		before.insert(j[8]);
+		before.insert(j[9]);
+		after.clear();
+		after.insert(j[11]);
+		SpawnComputeJob("Global_Max", j[10], read, write, before, after, par);
+
+		// Project_Forloop_Condition
+		read.clear();
+		read.insert(da[0]);
+		read.insert(da[1]);
+		read.insert(da[2]);
+		read.insert(da[3]);
+		read.insert(da[4]);
+		read.insert(da[5]);
+		read.insert(da[6]);
+		write.clear();
+		read.insert(da[1]);
+		read.insert(da[2]);
+		read.insert(da[3]);
+		read.insert(da[4]);
+		read.insert(da[5]);
+		read.insert(da[6]);
+		before.clear();
+		before.insert(j[10]);
+		SpawnComputeJob("Project_Forloop_Condition", j[11], read, write, before, after, par);
+	}
+	else {
+
 	}
 	// TODO: Fill_Ghost_Cells(x);
 };
@@ -265,10 +316,66 @@ void Project_Forloop_Part1::Execute(std::string params, const DataArray& da) {
 	IDSet<job_id_t> before, after;
 	std::string par;
 
+
 	AC->Solve_Forward_Substitution(b_interior, temp_interior, true); // diagonal should be treated as the identity
 	AC->Solve_Backward_Substitution(temp_interior, z_interior, false, true); // diagonal is inverted to save on divides
-}
-;
+};
+
+Project_Forloop_Part2::Project_Forloop_Part2(Application* app) {
+	set_application(app);
+};
+
+Job * Project_Forloop_Part2::Clone() {
+	std::cout << "Cloning Project_Forloop_Part2 job!\n";
+	return new Project_Forloop_Part2(application());
+};
+
+void Project_Forloop_Part2::Execute(std::string params, const DataArray& da) {
+	std::cout << "Executing the Project_Forloop_Part2 job\n";
+	std::vector<job_id_t> j;
+	std::vector<data_id_t> d;
+	IDSet<data_id_t> read, write;
+	IDSet<job_id_t> before, after;
+	std::string par;
+
+};
+
+Project_Forloop_Part3::Project_Forloop_Part3(Application* app) {
+	set_application(app);
+};
+
+Job * Project_Forloop_Part3::Clone() {
+	std::cout << "Cloning Project_Forloop_Part3 job!\n";
+	return new Project_Forloop_Part3(application());
+};
+
+void Project_Forloop_Part3::Execute(std::string params, const DataArray& da) {
+	std::cout << "Executing the Project_Forloop_Part3 job\n";
+	std::vector<job_id_t> j;
+	std::vector<data_id_t> d;
+	IDSet<data_id_t> read, write;
+	IDSet<job_id_t> before, after;
+	std::string par;
+
+};
+
+Project_Forloop_Part4::Project_Forloop_Part4(Application* app) {
+	set_application(app);
+};
+
+Job * Project_Forloop_Part4::Clone() {
+	std::cout << "Cloning Project_Forloop_Part4 job!\n";
+	return new Project_Forloop_Part4(application());
+};
+
+void Project_Forloop_Part4::Execute(std::string params, const DataArray& da) {
+	std::cout << "Executing the Project_Forloop_Part4 job\n";
+	std::vector<job_id_t> j;
+	std::vector<data_id_t> d;
+	IDSet<data_id_t> read, write;
+	IDSet<job_id_t> before, after;
+	std::string par;
+};
 
 template<class T_GRID> void PCG_SPARSE_MPI<T_GRID>::Initialize_Datatypes() {
 	MPI_UTILITIES::Free_Elements_And_Clean_Memory(boundary_datatypes);
