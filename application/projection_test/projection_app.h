@@ -1,10 +1,15 @@
 #include "shared/nimbus.h"
 #include "physbam_include.h"
 #define float T
+#define LEN 4
+#define DESIRED_ITERATIONS 10
+#define GLOBAL_TOLERANCE 1e-3
 
-using nimbus::Data;
 using nimbus::Job;
+using nimbus::Data;
 using nimbus::Application;
+using boost::tokenizer;
+using boost::char_separator;
 
 class ProjectionApp : public Application {
     public:
@@ -15,6 +20,13 @@ class ProjectionApp : public Application {
 class Main : public Job {
     public:
         Main(Application *app);
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Project_Forloop_Condition : public Job {
+    public:
+    	Project_Forloop_Condition(Application *app);
         virtual void Execute(std::string params, const DataArray& da);
         virtual Job* Clone();
 };
@@ -47,6 +59,41 @@ class Project_Forloop_Part4 : public Job {
         virtual Job* Clone();
 };
 
+class Global_Sum : public Job {
+    public:
+		Global_Sum(Application *app);
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Global_Max : public Job {
+    public:
+		Global_Max(Application *app);
+        virtual void Execute(std::string params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Vec : public Data {
+  public:
+    explicit Vec(int size);
+    virtual ~Vec();
+
+    virtual void Create();
+    virtual void Destroy();
+    virtual Data * Clone();
+    virtual void Copy(Data* from);
+    virtual bool Serialize(SerializedData* ser_data);
+    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
+
+    int size();
+    int* arr();
+
+  private:
+    int size_;
+    int *arr_;
+};
+
+/*
 namespace PhysBAM{
 
 class SPARSE_MATRIX_PARTITION;
@@ -140,3 +187,4 @@ Parallel_Solve(SPARSE_MATRIX_FLAT_NXN<T>& A,VECTOR_ND<T>& x,VECTOR_ND<T>& b,cons
   
     Fill_Ghost_Cells(x);
 }
+*/
