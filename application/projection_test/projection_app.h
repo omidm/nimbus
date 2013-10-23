@@ -1,5 +1,13 @@
+#ifndef NIMBUS_APPLICATION_PROJECTION_TEST_PROJECTION_APP_H_
+#define NIMBUS_APPLICATION_PROJECTION_TEST_PROJECTION_APP_H_
 #include "shared/nimbus.h"
+#include "shared/parser.h"
+#include "shared/nimbus_types.h"
 #include "physbam_include.h"
+#include "worker/application.h"
+#include "worker/job.h"
+#include "worker/data.h"
+#include "protocol_buffer/vector_msg.pb.h"
 #define float T
 #define LEN 4
 #define DESIRED_ITERATIONS 10
@@ -8,8 +16,6 @@
 using nimbus::Job;
 using nimbus::Data;
 using nimbus::Application;
-using boost::tokenizer;
-using boost::char_separator;
 
 class ProjectionApp : public Application {
     public:
@@ -20,56 +26,56 @@ class ProjectionApp : public Application {
 class Main : public Job {
     public:
         Main(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Condition : public Job {
     public:
     	Project_Forloop_Condition(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part1 : public Job {
     public:
     	Project_Forloop_Part1(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part2 : public Job {
     public:
     	Project_Forloop_Part2(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part3 : public Job {
     public:
     	Project_Forloop_Part3(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Project_Forloop_Part4 : public Job {
     public:
     	Project_Forloop_Part4(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Global_Sum : public Job {
     public:
 		Global_Sum(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
 class Global_Max : public Job {
     public:
 		Global_Max(Application *app);
-        virtual void Execute(std::string params, const DataArray& da);
+        virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
@@ -86,12 +92,14 @@ class Vec : public Data {
     virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
     int size();
-    int* arr();
+    T* arr();
 
   private:
     int size_;
-    int *arr_;
+    T *arr_;
 };
+
+#endif
 
 /*
 namespace PhysBAM{

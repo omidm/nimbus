@@ -1,6 +1,5 @@
 #include "shared/nimbus.h"
 #include "projection_app.h"
-#define float T
 
 using nimbus::Data;
 using nimbus::Job;
@@ -21,7 +20,7 @@ Data * Vec::Clone() {
 };
 
 void Vec::Create() {
-  arr_ = new int[size_];
+  arr_ = new T[size_];
 };
 
 void Vec::Destroy() {
@@ -64,7 +63,7 @@ int Vec::size() {
   return size_;
 }
 
-int* Vec::arr() {
+T* Vec::arr() {
   return arr_;
 }
 
@@ -156,17 +155,19 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	IDSet<data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_t> neighbor_partitions;
-	partition_t pid0 = 0, pid1 = 1, pid2 = 2, pid3 = 3, pid4 = 4;
+	partition_t pid0 = 0, pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 	
-	// input data
+	// parameters
 	IDSet<param_id_t>::IDSetContainer::iterator it;
 	IDSet<param_id_t> temp_set = params.idset();
 	for (it = temp_set.begin(); it != temp_set.end(); it++) {
 		da.push_back(*it);
 	}
-	int iteration = da[7];
+
+	// input_data
+	Vec *d0 = reinterpret_cast<Vec*>(input_data[0]); // residual
 
 	// new data
 	GetNewDataID(&d, 16);
@@ -187,6 +188,9 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	DefineData("vector", d[14], pid1, neighbor_partitions, par); // z_interior_pid1
 	DefineData("vector", d[15], pid2, neighbor_partitions, par); // z_interior_pid2
 	
+	// executiong part
+	int iteration = da[7];
+	T residual = d0->arr()[0];
 	if(iteration == 1 || iteration < DESIRED_ITERATIONS && residual> GLOBAL_TOLERANCE) {
 
 		GetNewJobID(&j, 12);
@@ -317,7 +321,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		before.clear();
 		before.insert(j[7]);
 		after.clear();
-		after.clear(j[10]);
+		after.insert(j[10]);
 		SpawnComputeJob("Project_Forloop_Part4", j[8], read, write, before, after, par);
 
 		// Project_Forloop_Part4, pid = 2
@@ -334,7 +338,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		before.clear();
 		before.insert(j[7]);
 		after.clear();
-		after.clear(j[10]);
+		after.insert(j[10]);
 		SpawnComputeJob("Project_Forloop_Part4", j[9], read, write, before, after, par);
 
 		// Global_Max
@@ -352,6 +356,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 
 		// Project_Forloop_Condition
 		read.clear();
+		read.insert(da[0]);
 		write.clear();
 		before.clear();
 		before.insert(j[10]);
