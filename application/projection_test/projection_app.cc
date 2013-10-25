@@ -191,7 +191,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	// executiong part
 	int iteration = da[7];
 	T residual = d0->arr()[0];
-	if(iteration == 1 || iteration < DESIRED_ITERATIONS && residual> GLOBAL_TOLERANCE) {
+	if(iteration == 1 || (iteration < DESIRED_ITERATIONS && residual> GLOBAL_TOLERANCE)) {
 
 		GetNewJobID(&j, 12);
 
@@ -449,7 +449,7 @@ void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {
 	std::cout << "Executing the Project_Forloop_Part3 job\n";
 	Vec *d0 = reinterpret_cast<Vec*>(da[0]); // A
 	Vec *d1 = reinterpret_cast<Vec*>(da[1]); // p_interior_pid1
-	Vec *d2 = reinterpret_cast<Vec*>(da[2]); // p_interior_pid2
+	//Vec *d2 = reinterpret_cast<Vec*>(da[2]); // p_interior_pid2
 	Vec *d3 = reinterpret_cast<Vec*>(da[3]); // tmp_interior
 	Vec *d4 = reinterpret_cast<Vec*>(da[4]); // local_dot_prod_p_temp
 	SPARSE_MATRIX_FLAT_NXN<T> AC;
@@ -527,7 +527,7 @@ Job * Global_Max::Clone() {
 	return new Global_Max(application());
 };
 
-void Global_Sum::Execute(Parameter params, const DataArray& da) {
+void Global_Max::Execute(Parameter params, const DataArray& da) {
 	std::cout << "Executing the Global_Max job\n";
 	Vec *d0 = reinterpret_cast<Vec*>(da[0]); // part1
 	Vec *d1 = reinterpret_cast<Vec*>(da[1]); // part2
