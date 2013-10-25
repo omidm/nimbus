@@ -32,54 +32,53 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * A geometric region within a Nimbus simulation. Defined by integers in
+  * x,y,z and dx, dy, dz.
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_SHARED_GEOMETRIC_REGION_H_
+#define NIMBUS_SHARED_GEOMETRIC_REGION_H_
 
-#include <inttypes.h>
-#include "shared/address_book.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  typedef uint64_t param_id_t;
 
-  typedef uint64_t int_dimension_t;
-  typedef double   float_dimension_t;
+  class GeometricRegion {
+  public:
+    GeometricRegion(int_dimension_t x,
+                    int_dimension_t y,
+                    int_dimension_t z,
+                    int_dimension_t dx,
+                    int_dimension_t dy,
+                    int_dimension_t dz);
 
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
+    virtual ~GeometricRegion() {}
+
+
+    virtual bool intersects(GeometricRegion* region);
+
+    /* Returns whether this region covers (encompasses) the argument. */
+    virtual bool covers(GeometricRegion* region);
+    virtual bool adjacent(GeometricRegion* region);
+    virtual bool adjacentOrIntersects(GeometricRegion* region);
+
+    int_dimension_t x();
+    int_dimension_t y();
+    int_dimension_t z();
+
+    int_dimension_t dx();
+    int_dimension_t dy();
+    int_dimension_t dz();
+
+  private:
+    int_dimension_t x_;
+    int_dimension_t y_;
+    int_dimension_t z_;
+    int_dimension_t dx_;
+    int_dimension_t dy_;
+    int_dimension_t dz_;
   };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
-
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_SPAWN_COMPUTE_JOB,
-    COMMAND_SPAWN_COPY_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE,
-    COMMAND_JOB_DONE,
-    COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY_SEND,
-    COMMAND_REMOTE_COPY_RECEIVE,
-    COMMAND_LOCAL_COPY
-  };
-
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SHARED_GEOMETRIC_REGION_H_

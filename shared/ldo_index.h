@@ -32,54 +32,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
+  * Allows for quering which logical data objects cover what geometric
+  * regions.
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_SHARED_LDO_INDEX_H_
+#define NIMBUS_SHARED_LDO_INDEX_H_
 
-#include <inttypes.h>
-#include "shared/address_book.h"
+#include <map>
+#include <string>
+#include "shared/nimbus_types.h"
+#include "shared/logical_data_object.h"
+#include "shared/geometric_region.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_t;
-  typedef uint64_t param_id_t;
 
-  typedef uint64_t int_dimension_t;
-  typedef double   float_dimension_t;
+  class LdoIndex {
+  public:
+    LdoIndex();
+    virtual ~LdoIndex();
 
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
+    virtual void addObject(LogicalDataObject* object);
+    virtual LdoVector* intersectingObjects(std::string variable,
+                                           GeometricRegion* region);
+    virtual LdoVector* coveredObjects(std::string variable,
+                                      GeometricRegion* region);
+    virtual LdoVector* adjacentObjects(std::string variable,
+                                       GeometricRegion* region);
+
+  private:
+    std::map<std::string, LdoList*> index_;
   };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_SYNC
-  };
-
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_SPAWN_COMPUTE_JOB,
-    COMMAND_SPAWN_COPY_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE,
-    COMMAND_JOB_DONE,
-    COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY_SEND,
-    COMMAND_REMOTE_COPY_RECEIVE,
-    COMMAND_LOCAL_COPY
-  };
-
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SHARED_LDO_INDEX_H_
