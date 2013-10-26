@@ -8,7 +8,6 @@
 #include "worker/job.h"
 #include "worker/data.h"
 #include "protocol_buffer/vector_msg.pb.h"
-#define float T
 #define LEN 4
 #define DESIRED_ITERATIONS 10
 #define GLOBAL_TOLERANCE 1e-3
@@ -16,6 +15,8 @@
 using nimbus::Job;
 using nimbus::Data;
 using nimbus::Application;
+using namespace PhysBAM;
+typedef float T;
 
 class ProjectionApp : public Application {
     public:
