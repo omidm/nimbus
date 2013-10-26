@@ -109,12 +109,12 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	IDSet<data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_t> neighbor_partitions;
-	partition_t pid0 = 0, pid1 = 1, pid2 = 2;
+	partition_t pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
 	GetNewDataID(&d, 7);
-	DefineData("scalar", d[0], pid0, neighbor_partitions, par); // residual
+	DefineData("scalar", d[0], pid1, neighbor_partitions, par); // residual
 	DefineData("matrix", d[1], pid1, neighbor_partitions, par); // A_pid1
 	DefineData("matrix", d[2], pid2, neighbor_partitions, par); // A_pid2
 	DefineData("vector", d[3], pid1, neighbor_partitions, par); // b_interior_pid1
@@ -143,19 +143,19 @@ Project_Forloop_Condition::Project_Forloop_Condition(Application* app) {
 ;
 
 Job * Project_Forloop_Condition::Clone() {
-	std::cout << "Cloning Project_Forloop_Part1 job!\n";
-	return new Project_Forloop_Part1(application());
+	std::cout << "Cloning Project_Forloop_Condition job!\n";
+	return new Project_Forloop_Condition(application());
 }
 ;
 
 void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input_data) {
-	std::cout << "Executing the Project_Forloop_Part1 job\n";
+	std::cout << "Executing the Project_Forloop_Condition job\n";
 	std::vector<job_id_t> j;
 	std::vector<data_id_t> d, da;
 	IDSet<data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_t> neighbor_partitions;
-	partition_t pid0 = 0, pid1 = 1, pid2 = 2;
+	partition_t pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 	
@@ -175,14 +175,14 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	DefineData("vector", d[1], pid2, neighbor_partitions, par); // temp_interior_pid2
 	DefineData("vector", d[2], pid1, neighbor_partitions, par); // local_dot_prod_z_b_pid1
 	DefineData("vector", d[3], pid2, neighbor_partitions, par); // local_dot_prod_z_b_pid2
-	DefineData("scalar", d[4], pid0, neighbor_partitions, par); // rho
+	DefineData("scalar", d[4], pid1, neighbor_partitions, par); // rho
 	DefineData("vector", d[5], pid1, neighbor_partitions, par); // p_interior_pid1
 	DefineData("vector", d[6], pid2, neighbor_partitions, par); // p_interior_pid2
 	DefineData("vector", d[7], pid1, neighbor_partitions, par); // p_boundary_pid1
 	DefineData("vector", d[8], pid2, neighbor_partitions, par); // p_boundary_pid2
 	DefineData("vector", d[9], pid1, neighbor_partitions, par); // local_dot_prod_p_temp_pid1
 	DefineData("vector", d[10], pid2, neighbor_partitions, par); // local_dot_prod_p_temp_pid2
-	DefineData("scalar", d[11], pid0, neighbor_partitions, par); // global_sum
+	DefineData("scalar", d[11], pid1, neighbor_partitions, par); // global_sum
 	DefineData("scalar", d[12], pid1, neighbor_partitions, par); // rho_old_pid1
 	DefineData("scalar", d[13], pid2, neighbor_partitions, par); // rho_old_pid2
 	DefineData("vector", d[14], pid1, neighbor_partitions, par); // z_interior_pid1
@@ -386,10 +386,12 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	std::cout << "Executing the Project_Forloop_Part1 job\n";
 
 	Vec *d0 = reinterpret_cast<Vec*>(da[0]); // AC
+	printf("d1 = %ld\n", (long)da[1]);
 	Vec *d1 = reinterpret_cast<Vec*>(da[1]); // b_interior
 	Vec *d2 = reinterpret_cast<Vec*>(da[2]); // z_interior
 	Vec *d3 = reinterpret_cast<Vec*>(da[3]); // local_dot_prod_zb
 
+	printf("Begin SPARSE_MATRIX_FLAT_NXN\n");
 	SPARSE_MATRIX_FLAT_NXN<T> AC;
 	ARRAY<int> rows;rows.m = d1->size();
 	for (int i=1; i<=rows.m; i++) rows(i) = rows.m;
@@ -401,7 +403,8 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 		}
 	VECTOR_ND<T> b_interior(rows.m, false), temp_interior(rows.m, false), z_interior(rows.m, false);
 	for (int i=1; i<=rows.m; i++) b_interior(i) = d1->arr()[i-1];
-
+	
+	printf("Finish SPARSE_MATRIX_FLAT_NXN init.\n");
 	AC.Solve_Forward_Substitution(b_interior, temp_interior, true); // diagonal should be treated as the identity
 	AC.Solve_Backward_Substitution(temp_interior, z_interior, false, true); // diagonal is inverted to save on divides
 	for (int i=1; i<=rows.m; i++) d2->arr()[i-1] = z_interior(i);
