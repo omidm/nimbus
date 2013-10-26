@@ -50,9 +50,11 @@ using namespace nimbus; // NOLINT
 
 
 SchedulerCommand::SchedulerCommand() {
-  name_ = "no-op";
+  name_ = BASE_NAME;
+  type_ = BASE;
 }
 
+// TODO(omidm): remove this.
 SchedulerCommand::SchedulerCommand(std::string n,
     const CommandParameterList& p) {
   name_ = n;
@@ -61,6 +63,7 @@ SchedulerCommand::SchedulerCommand(std::string n,
     addParameter(iter->second);
 }
 
+// TODO(omidm): remove this.
 #include "shared/parser.h"
 SchedulerCommand::SchedulerCommand(std::string command) {
   std::vector<std::string> string_params;
@@ -74,6 +77,7 @@ SchedulerCommand::SchedulerCommand(std::string command) {
 
 SchedulerCommand::~SchedulerCommand() {}
 
+// TODO(omidm): remove this.
 void SchedulerCommand::addParameter(CommandParameter cm) {
   parameters_[cm.name()] = cm;
 }
