@@ -67,7 +67,7 @@ class SchedulerClient {
   virtual SchedulerCommand* receiveCommand();
   virtual void sendCommand(SchedulerCommand* command);
 
-  void set_scheduler_command_set(CommandSet* cms);
+  void set_scheduler_command_set(SchedulerCommand::TypeSet* cms);
 
  private:
   std::string scheduler_ip_;
@@ -76,7 +76,7 @@ class SchedulerClient {
   boost::asio::streambuf* read_buffer_;
   tcp::socket* socket_;
   int command_num_;
-  CommandSet* scheduler_command_set_;
+  SchedulerCommand::TypeSet* scheduler_command_set_;
 
   void createNewConnections();
 };

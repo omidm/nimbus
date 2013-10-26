@@ -124,7 +124,7 @@ void SchedulerClient::run() {
 }
 
 
-void SchedulerClient::set_scheduler_command_set(CommandSet* cms) {
+void SchedulerClient::set_scheduler_command_set(SchedulerCommand::TypeSet* cms) {
   scheduler_command_set_ = cms;
 }
 

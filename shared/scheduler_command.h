@@ -53,8 +53,6 @@
 #include <list>
 #include <map>
 #include <set>
-#include "worker/job.h"
-#include "shared/parser.h"
 #include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/escaper.h"
@@ -91,21 +89,54 @@ class SchedulerCommand {
                    const CommandParameterList& parameters);
   virtual ~SchedulerCommand();
 
+  enum Type {
+    BASE,
+    SPAWN_JOB,
+    SPAWN_COMPUTE_JOB,
+    SPAWN_COPY_JOB,
+    DEFINE_DATA,
+    HANDSHAKE,
+    JOB_DONE,
+    COMPUTE_JOB,
+    CREATE_DATA,
+    REMOTE_COPY_SEND,
+    REMOTE_COPY_RECEIVE,
+    LOCAL_COPY
+  };
+
+  typedef std::set<Type> TypeSet;
+
   virtual void addParameter(CommandParameter parameter);
   virtual std::string toString();
   virtual std::string toStringWTags();
   virtual std::string name();
+  virtual Type type();
   virtual CommandParameterList* parameters();
 
+  static std::string GetNameFromType(Type type);
   static bool GenerateSchedulerCommandChild(const std::string& input,
-      CommandSet* command_set,
+      TypeSet* command_set,
       SchedulerCommand*& ptr_generated_command);
+
 
   // virtual worker_id_t worker_id();
   // virtual void set_worker_id(worker_id_t id);
 
  protected:
+  Type type_;
   std::string name_;
+  static const std::string BASE_NAME;
+  static const std::string SPAWN_JOB_NAME;
+  static const std::string SPAWN_COMPUTE_JOB_NAME;
+  static const std::string SPAWN_COPY_JOB_NAME;
+  static const std::string DEFINE_DATA_NAME;
+  static const std::string HANDSHAKE_NAME;
+  static const std::string JOB_DONE_NAME;
+  static const std::string COMPUTE_JOB_NAME;
+  static const std::string CREATE_DATA_NAME;
+  static const std::string REMOTE_COPY_SEND_NAME;
+  static const std::string REMOTE_COPY_RECEIVE_NAME;
+  static const std::string LOCAL_COPY_NAME;
 
  private:
   CommandParameterList parameters_;

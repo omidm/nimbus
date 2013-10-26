@@ -41,6 +41,7 @@
 #define NIMBUS_SHARED_NIMBUS_TYPES_H_
 
 #include <inttypes.h>
+#include <string>
 #include "shared/address_book.h"
 
 namespace nimbus {
@@ -66,19 +67,6 @@ namespace nimbus {
     JOB_SYNC
   };
 
-  enum SchedulerCommandType {
-    COMMAND_SPAWN_JOB,
-    COMMAND_SPAWN_COMPUTE_JOB,
-    COMMAND_SPAWN_COPY_JOB,
-    COMMAND_DEFINE_DATA,
-    COMMAND_HANDSHAKE,
-    COMMAND_JOB_DONE,
-    COMMAND_COMPUTE_JOB,
-    COMMAND_CREATE_DATA,
-    COMMAND_REMOTE_COPY_SEND,
-    COMMAND_REMOTE_COPY_RECEIVE,
-    COMMAND_LOCAL_COPY
-  };
 
 }  // namespace nimbus
 

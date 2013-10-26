@@ -171,30 +171,38 @@ void Worker::ExecuteJob(Job* job) {
 
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
-  std::string command_name = cm->name();
-
-  if (command_name == "handshake") {
-    ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
-  } else if (command_name == "jobdone") {
-    ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
-  } else if (command_name == "computejob") {
-    ProcessComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(cm));
-  } else if (command_name == "createdata") {
-    ProcessCreateDataCommand(reinterpret_cast<CreateDataCommand*>(cm));
-  } else if (command_name == "remotecopysend") {
-    ProcessRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(cm));
-  } else if (command_name == "remotecopyreceive") {
-    ProcessRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(cm));
-  } else if (command_name == "localcopy") {
-    ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
-  } else if (command_name == "spawnjob") {
-    ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
-  } else if (command_name == "definedata") {
-    ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
-  } else {
-    std::cout << "ERROR: " << cm->toString() <<
-      " have not been implemented in ProcessSchedulerCommand yet." <<
-      std::endl;
+  switch (cm->type()) {
+    case SchedulerCommand::HANDSHAKE:
+      ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
+      break;
+    case SchedulerCommand::JOB_DONE:
+      ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
+      break;
+    case SchedulerCommand::COMPUTE_JOB:
+      ProcessComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(cm));
+      break;
+    case SchedulerCommand::CREATE_DATA:
+      ProcessCreateDataCommand(reinterpret_cast<CreateDataCommand*>(cm));
+      break;
+    case SchedulerCommand::REMOTE_COPY_SEND:
+      ProcessRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(cm));
+      break;
+    case SchedulerCommand::REMOTE_COPY_RECEIVE:
+      ProcessRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(cm));
+      break;
+    case SchedulerCommand::LOCAL_COPY:
+      ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
+      break;
+    case SchedulerCommand::SPAWN_JOB:
+      ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
+      break;
+    case SchedulerCommand::DEFINE_DATA:
+      ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
+      break;
+    default:
+      std::cout << "ERROR: " << cm->toString() <<
+        " have not been implemented in ProcessSchedulerCommand yet." <<
+        std::endl;
   }
 }
 
@@ -358,24 +366,15 @@ void Worker::SetupSchedulerInterface() {
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("jobdone"), COMMAND_JOB_DONE));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("computejob"), COMMAND_COMPUTE_JOB));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("createdata"), COMMAND_CREATE_DATA));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("remotecopysend"), COMMAND_REMOTE_COPY_SEND));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("remotecopyreceive"), COMMAND_REMOTE_COPY_RECEIVE));
-  scheduler_command_set_.insert(
-      std::make_pair(std::string("localcopy"), COMMAND_LOCAL_COPY));
+  scheduler_command_set_.insert(SchedulerCommand::SPAWN_JOB);
+  scheduler_command_set_.insert(SchedulerCommand::DEFINE_DATA);
+  scheduler_command_set_.insert(SchedulerCommand::HANDSHAKE);
+  scheduler_command_set_.insert(SchedulerCommand::JOB_DONE);
+  scheduler_command_set_.insert(SchedulerCommand::COMPUTE_JOB);
+  scheduler_command_set_.insert(SchedulerCommand::CREATE_DATA);
+  scheduler_command_set_.insert(SchedulerCommand::REMOTE_COPY_SEND);
+  scheduler_command_set_.insert(SchedulerCommand::REMOTE_COPY_RECEIVE);
+  scheduler_command_set_.insert(SchedulerCommand::LOCAL_COPY);
 }
 
 void Worker::AddData(Data* data) {
