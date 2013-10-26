@@ -54,13 +54,12 @@
 #include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
+#include "shared/scheduler_command.h"
 #include "shared/escaper.h"
 #include "shared/parameter.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
-
-typedef std::set<std::pair<std::string, SchedulerCommandType> > CommandSet;
 
 // TODO(omidm): remove obsolete functions, defs.
 
@@ -93,9 +92,9 @@ int countOccurence(std::string str, std::string substr);
 // ********************************************************
 
 bool ParseSchedulerCommand(const std::string& input,
-    CommandSet* command_set,
+    SchedulerCommand::TypeSet* command_set,
     std::string& name, std::string& param_segment,
-    SchedulerCommandType& command_type);
+    SchedulerCommand::Type& command_type);
 
 bool ParseSpawnJobCommand(const std::string& input,
     std::string& job_name,

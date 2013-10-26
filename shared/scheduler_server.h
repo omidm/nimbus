@@ -97,7 +97,7 @@ class SchedulerServer {
    *  therefore involves locks for thread safety. */
   SchedulerWorkerList* workers();
 
-  void set_worker_command_set(CommandSet* cms);
+  void set_worker_command_set(SchedulerCommand::TypeSet* cms);
 
  private:
   port_t listening_port_;
@@ -105,7 +105,7 @@ class SchedulerServer {
   SchedulerCommandList received_commands_;
   boost::mutex worker_mutex_;
   SchedulerWorkerList workers_;
-  CommandSet* worker_command_set_;
+  SchedulerCommand::TypeSet* worker_command_set_;
 
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;

@@ -166,9 +166,9 @@ bool isSet(const std::string& str) {
 // ********************************************************
 
 bool ParseSchedulerCommand(const std::string& input,
-    CommandSet* command_set,
+    SchedulerCommand::TypeSet* command_set,
     std::string& name, std::string& param_segment,
-    SchedulerCommandType& command_type) {
+    SchedulerCommand::Type& command_type) {
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
@@ -178,11 +178,11 @@ bool ParseSchedulerCommand(const std::string& input,
   }
   name = *iter;
   bool name_is_valid = false;
-  CommandSet::iterator itr = command_set->begin();
+  SchedulerCommand::TypeSet::iterator itr = command_set->begin();
   for (; itr != command_set->end(); itr++) {
-    if (name == itr->first) {
+    if (name == SchedulerCommand::GetNameFromType(*itr)) {
       name_is_valid = true;
-      command_type = itr->second;
+      command_type = *itr;
       break;
     }
   }
