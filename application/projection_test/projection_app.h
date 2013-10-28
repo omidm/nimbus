@@ -31,6 +31,13 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
+class Init : public Job {
+    public:
+    	Init(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
 class Project_Forloop_Condition : public Job {
     public:
     	Project_Forloop_Condition(Application *app);
