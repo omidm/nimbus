@@ -38,7 +38,7 @@
  *   DATE: Fri Oct 25 10:20:13 2013
  *  DESCR:
  ***********************************************************************/
-#include "shared/ldo_index.h"
+#include "application_utils/ldo_index.h"
 
 namespace nimbus {
 /**

@@ -33,52 +33,38 @@
  */
 
  /*
-  * A geometric region within a Nimbus simulation. Defined by integers in
-  * x,y,z and dx, dy, dz.
+  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
+  * Allows for quering which logical data objects cover what geometric
+  * regions.
   */
 
-#ifndef NIMBUS_SHARED_GEOMETRIC_REGION_H_
-#define NIMBUS_SHARED_GEOMETRIC_REGION_H_
+#ifndef NIMBUS_APPLICATION_UTILS_LDO_INDEX_H_
+#define NIMBUS_APPLICATION_UTILS_LDO_INDEX_H_
 
+#include <map>
+#include <string>
+#include "application_utils/logical_data_object.h"
+#include "application_utils/geometric_region.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-  class GeometricRegion {
+  class LdoIndex {
   public:
-    GeometricRegion(int_dimension_t x,
-                    int_dimension_t y,
-                    int_dimension_t z,
-                    int_dimension_t dx,
-                    int_dimension_t dy,
-                    int_dimension_t dz);
+    LdoIndex();
+    virtual ~LdoIndex();
 
-    virtual ~GeometricRegion() {}
-
-
-    virtual bool intersects(GeometricRegion* region);
-
-    /* Returns whether this region covers (encompasses) the argument. */
-    virtual bool covers(GeometricRegion* region);
-    virtual bool adjacent(GeometricRegion* region);
-    virtual bool adjacentOrIntersects(GeometricRegion* region);
-
-    int_dimension_t x();
-    int_dimension_t y();
-    int_dimension_t z();
-
-    int_dimension_t dx();
-    int_dimension_t dy();
-    int_dimension_t dz();
+    virtual void addObject(LogicalDataObject* object);
+    virtual LdoVector* intersectingObjects(std::string variable,
+                                           GeometricRegion* region);
+    virtual LdoVector* coveredObjects(std::string variable,
+                                      GeometricRegion* region);
+    virtual LdoVector* adjacentObjects(std::string variable,
+                                       GeometricRegion* region);
 
   private:
-    int_dimension_t x_;
-    int_dimension_t y_;
-    int_dimension_t z_;
-    int_dimension_t dx_;
-    int_dimension_t dy_;
-    int_dimension_t dz_;
+    std::map<std::string, LdoList*> index_;
   };
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_GEOMETRIC_REGION_H_
+#endif  // NIMBUS_APPLICATION_UTILS_LDO_INDEX_H_

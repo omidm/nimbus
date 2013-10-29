@@ -38,7 +38,7 @@
  *   DATE: Thu Oct 24 16:13:23 2013
  *  DESCR:
  ***********************************************************************/
-#include "shared/geometric_region.h"
+#include "application_utils/geometric_region.h"
 
 namespace nimbus {
 /**
