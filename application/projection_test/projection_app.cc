@@ -114,7 +114,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
-	GetNewDataID(&d, 7);
+	GetNewDataID(&d, NUM_OF_FORLOOP_INPUTS);
 	DefineData("scalar", d[0], pid1, neighbor_partitions, par); // residual
 	DefineData("matrix", d[1], pid1, neighbor_partitions, par); // A_pid1
 	DefineData("matrix", d[2], pid2, neighbor_partitions, par); // A_pid2
@@ -122,6 +122,9 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	DefineData("vector", d[4], pid2, neighbor_partitions, par); // b_interior_pid2
 	DefineData("vector", d[5], pid1, neighbor_partitions, par); // x_interior_pid1
 	DefineData("vector", d[6], pid2, neighbor_partitions, par); // x_interior_pid2
+	DefineData("scalar", d[7], pid1, neighbor_partitions, par); // rho_old_pid1
+	DefineData("scalar", d[8], pid2, neighbor_partitions, par); // rho_old_pid2
+	assert(8 == NUM_OF_FORLOOP_INPUTS -1);
 
 	GetNewJobID(&j, 3);
 	
@@ -156,7 +159,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	read.insert(d[0]);
 	write.clear();
 	param_idset.clear();
-	for (int i=0;i<7;i++) param_idset.insert(d[i]);
+	for (int i=0;i<NUM_OF_FORLOOP_INPUTS;i++) param_idset.insert(d[i]);
 	param_idset.insert(1); // insert iteration
 	par.set_idset(param_idset);
 	SpawnComputeJob("Project_Forloop_Condition", j[2], read, write, before, after, par);
@@ -185,7 +188,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
 	printf("d2->size() = %d\n", d2->size());
 	for (int i=0; i<d0->size(); i++) d0->arr()[i] = i;
 	printf("Checkpoint #2\n");
-	for (int i=0; i<d1->size(); i++) d1->arr()[i] = 0;
+	for (int i=0; i<d1->size(); i++) d1->arr()[i] = 1;
 	printf("Checkpoint #3\n");
 	for (int i=0; i<d2->size(); i++) d2->arr()[i] = 0;
 	printf("Completed Init\n");
@@ -252,7 +255,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	DefineData("vector", d[22], pid1, neighbor_partitions, par); // b_interior_pid2 => copy to pid1
 	
 	// executiong part
-	int iteration = da[7];
+	int iteration = da[NUM_OF_FORLOOP_INPUTS];
 	T residual = d0->arr()[0];
 	printf("Jia: forloop before check, iter = %d, res = %f\n", iteration, residual);
 	if(iteration == 1 || (iteration < DESIRED_ITERATIONS && residual> GLOBAL_TOLERANCE)) {
@@ -317,11 +320,12 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		// Project_Forloop_Part2, pid = 1
 		read.clear();
 		read.insert(d[4]); // rho
-		read.insert(d[12]); // rho_old_pid1
+		read.insert(da[7]); // rho_old_pid1
 		read.insert(d[14]); // z_interior_pid1
 		read.insert(d[5]); // p_interior_pid1
 		write.clear();
 		write.insert(d[5]); // p_interior_pid1
+		write.insert(da[7]); // rho_old_pid1
 		before.clear();
 		before.insert(j[2]); // Global_Sum
 		after.clear();
@@ -334,11 +338,12 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		// Project_Forloop_Part2, pid = 2
 		read.clear();
 		read.insert(d[17]); // rho, CopyJob instance
-		read.insert(d[13]); // rho_old_pid2
+		read.insert(da[8]); // rho_old_pid2
 		read.insert(d[15]); // z_interior_pid2
 		read.insert(d[6]); // p_interior_pid2
 		write.clear();
 		write.insert(d[6]); // p_interior_pid2
+		write.insert(da[8]); // rho_old_pid2
 		before.clear();
 		before.insert(j[2]); // Global_Sum
 		before.insert(j[13]); // SpawnCopyJob
@@ -491,7 +496,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		before.insert(j[10]);
 		after.clear();
 		param_idset.clear();
-		for (int i=0;i<7;i++) param_idset.insert(da[i]);
+		for (int i=0;i<NUM_OF_FORLOOP_INPUTS;i++) param_idset.insert(da[i]);
 		param_idset.insert(iteration+1);
 		par.set_idset(param_idset);
 		SpawnComputeJob("Project_Forloop_Condition", j[11], read, write, before, after, par);
@@ -538,8 +543,12 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	printf("Checkpoint #4\n");
 	//AC.Solve_Backward_Substitution(temp_interior, z_interior, false, true); // diagonal is inverted to save on divides
 	printf("Finish SPARSE_MATRIX_FLAT_NXN solve.\n");
+	
+	for (int i=1; i<=rows.m; i++) z_interior(i) = b_interior(i); // TODO: switch back to incomplete_cholesky in the future
 	for (int i=1; i<=rows.m; i++) d2->arr()[i-1] = z_interior(i);
 	for (int i=1; i<=rows.m; i++) d3->arr()[i-1] = z_interior(i) * b_interior(i);
+	printf("Jia: z(%f, %f, %f, %f)\n", z_interior(1), z_interior(2), z_interior(3), z_interior(4));
+	printf("Jia: zb(%f, %f, %f, %f)\n", d3->arr()[0], d3->arr()[1], d3->arr()[2], d3->arr()[3]);
 	std::cout << "Completed Project_Forloop_Part1 job\n";
 };
 
@@ -559,10 +568,12 @@ void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
 	Vec *d2 = reinterpret_cast<Vec*>(da[2]); // z_interior
 	Vec *d3 = reinterpret_cast<Vec*>(da[3]); // p_interior
 	Vec *d4 = reinterpret_cast<Vec*>(da[4]); // p_interior
+	Vec *d5 = reinterpret_cast<Vec*>(da[5]); // rho_old
 	printf("Checkpoint #1\n");
 	int interation = *(params.idset().begin());
 	printf("interation = %d\n", interation);
 	T rho = d0->arr()[0], rho_old = d1->arr()[0];
+	printf("Jia: rho = %f, rho_old = %f\n", rho, rho_old);
 	printf("d2->size() = %d\n", d2->size());
 	printf("d4->size() = %d\n", d4->size());
 	if (interation == 1 || rho_old == 0) {
@@ -572,7 +583,8 @@ void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
 		T beta = rho/rho_old;
 		for (int i=0;i<d2->size();i++) d4->arr()[i] = d3->arr()[i] * beta + d2->arr()[i];
 	}
-	d1->arr()[0] = rho;
+	d5->arr()[0] = rho;
+	printf("Jia: rho_old = %f\n", d5->arr()[0]);
 	std::cout << "Completed Project_Forloop_Part2 job\n";
 };
 
@@ -640,6 +652,7 @@ void Project_Forloop_Part4::Execute(Parameter params, const DataArray& da) {
 		d6->arr()[i] = d2->arr()[i] + alpha * d3->arr()[i];
 		d7->arr()[i] = d4->arr()[i] - alpha * d5->arr()[i];
 	}
+	printf("Jia: x(%f, %f, %f, %f)\n", d6->arr()[0], d6->arr()[1], d6->arr()[2], d6->arr()[3]);
 	std::cout << "Completed the Project_Forloop_Part4 job\n";
 };
 

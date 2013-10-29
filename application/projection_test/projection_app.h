@@ -9,8 +9,9 @@
 #include "worker/data.h"
 #include "protocol_buffer/vector_msg.pb.h"
 #define LEN 4
-#define DESIRED_ITERATIONS 10
+#define DESIRED_ITERATIONS 100
 #define GLOBAL_TOLERANCE 1e-3
+#define NUM_OF_FORLOOP_INPUTS 9
 
 using nimbus::Job;
 using nimbus::Data;
