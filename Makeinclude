@@ -37,6 +37,7 @@ endif
 
 # -I params for all cpp invocations
 IFLAGS   = -I/opt/local/include # Include MacPorts includes
+IFLAGS  += -I/usr/local/include # For protobufs
 IFLAGS  += -I${NIMBUS_ROOT}
 
 # -l params for linking invocation

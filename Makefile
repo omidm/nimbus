@@ -12,11 +12,12 @@ SCHED_CFILES  = $(wildcard scheduler/*.cc)
 WORKER_CFILES = $(wildcard worker/*.cc)
 DATA_CFILES   = $(wildcard data/*.cc)
 SHARED_CFILES = $(wildcard shared/*.cc)
-CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES)
+SHARED_BUF_CFILES = $(wildcard shared/protobufs/*.cc)
+CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES) $(SHARED_BUF_CFILES)
 
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
-LFLAGS += -lboost_thread-mt -lboost_system-mt
+LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf
 SHARED_FLAGS = -shared -fPIC
 
 ifdef OS_DARWIN

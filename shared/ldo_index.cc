@@ -46,24 +46,24 @@ namespace nimbus {
  * \brief Brief description.
  * \return
 */
-nimbus::LdoIndex::LdoIndex() {}
+LdoIndex::LdoIndex() {}
 
 
 /**
- * \fn nimbus::LdoIndex::~LdoIndex()
+ * \fn LdoIndex::~LdoIndex()
  * \brief Brief description.
  * \return
 */
-nimbus::LdoIndex::~LdoIndex() {}
+LdoIndex::~LdoIndex() {}
 
 
 /**
- * \fn void nimbus::LdoIndex::addObject(LogicalDataObject *object)
+ * \fn void LdoIndex::addObject(LogicalDataObject *object)
  * \brief Brief description.
  * \param object
  * \return
 */
-void nimbus::LdoIndex::addObject(LogicalDataObject *object) {
+void LdoIndex::addObject(LogicalDataObject *object) {
   std::string var = object->variable();
   LdoList* list;
   if (index_.find(var) == index_.end()) {
@@ -78,13 +78,13 @@ void nimbus::LdoIndex::addObject(LogicalDataObject *object) {
 
 
 /**
- * \fn LdoList * nimbus::LdoIndex::intersectingObjects(std::string variable,
+ * \fn LdoList * LdoIndex::intersectingObjects(std::string variable,
                                                        GeometricRegion *region)
  * \brief Brief description.
  * \param region
  * \return
 */
-LdoVector * nimbus::LdoIndex::intersectingObjects(std::string variable,
+LdoVector * LdoIndex::intersectingObjects(std::string variable,
                                                   GeometricRegion *region) {
   LdoVector* output = new LdoVector();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -104,13 +104,13 @@ LdoVector * nimbus::LdoIndex::intersectingObjects(std::string variable,
 
 
 /**
- * \fn LdoList * nimbus::LdoIndex::coveredObjects(std::string variable,
+ * \fn LdoList * LdoIndex::coveredObjects(std::string variable,
                                                   GeometricRegion *region)
  * \brief Brief description.
  * \param region
  * \return
 */
-LdoVector * nimbus::LdoIndex::coveredObjects(std::string variable,
+LdoVector * LdoIndex::coveredObjects(std::string variable,
                                              GeometricRegion *region) {
   LdoVector* output = new LdoVector();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -130,13 +130,13 @@ LdoVector * nimbus::LdoIndex::coveredObjects(std::string variable,
 
 
 /**
- * \fn LdoList * nimbus::LdoIndex::adjacentObjects(std::string variable,
+ * \fn LdoList * LdoIndex::adjacentObjects(std::string variable,
                                                    GeometricRegion *region)
  * \brief Brief description.
  * \param region
  * \return
 */
-LdoVector * nimbus::LdoIndex::adjacentObjects(std::string variable,
+LdoVector * LdoIndex::adjacentObjects(std::string variable,
                                               GeometricRegion *region) {
   LdoVector* output = new LdoVector();
   if (index_.find(variable) == index_.end()) {  // No such variable
