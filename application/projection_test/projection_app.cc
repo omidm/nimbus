@@ -130,26 +130,22 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	after.clear();
 	after.insert(j[2]);
 	read.clear();
-	read.insert(d[1]);
 	write.clear();
 	write.insert(d[1]);
-	param_idset.clear();
-	param_idset.insert(1);
-	par.set_idset(param_idset);
-	SpawnComputeJob("Init", j[0], before, after, read, write, par);
+	write.insert(d[3]);
+	write.insert(d[5]);
+	SpawnComputeJob("Init", j[0], read, write, before, after, par);
 	
 	// Init, pid = 2
 	before.clear();
 	after.clear();
 	after.insert(j[2]);
 	read.clear();
-	read.insert(d[2]);
 	write.clear();
 	write.insert(d[2]);
-	param_idset.clear();
-	param_idset.insert(1);
-	par.set_idset(param_idset);
-	SpawnComputeJob("Init", j[1], before, after, read, write, par);
+	write.insert(d[4]);
+	write.insert(d[6]);
+	SpawnComputeJob("Init", j[1], read, write, before, after, par);
 	
 	// Porject_Forloop_Condition
 	before.clear();
@@ -181,17 +177,17 @@ Job* Init::Clone() {
 void Init::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Init\n");
 	Vec *d0 = reinterpret_cast<Vec*>(da[0]); // AC
-	//Vec *d1 = reinterpret_cast<Vec*>(da[1]); // b_interior
-	//Vec *d2 = reinterpret_cast<Vec*>(da[2]); // x_interior
+	Vec *d1 = reinterpret_cast<Vec*>(da[1]); // b_interior
+	Vec *d2 = reinterpret_cast<Vec*>(da[2]); // x_interior
 	printf("Checkpoint #1\n");
 	printf("d0->size() = %d\n", d0->size());
-	//printf("d1->size() = %d\n", d1->size());
-	//printf("d2->size() = %d\n", d2->size());
+	printf("d1->size() = %d\n", d1->size());
+	printf("d2->size() = %d\n", d2->size());
 	for (int i=0; i<d0->size(); i++) d0->arr()[i] = i;
-	//printf("Checkpoint #2\n");
-	//for (int i=0; i<d1->size(); i++) d1->arr()[i] = 0;
-	//printf("Checkpoint #3\n");
-	//for (int i=0; i<d2->size(); i++) d2->arr()[i] = 0;
+	printf("Checkpoint #2\n");
+	for (int i=0; i<d1->size(); i++) d1->arr()[i] = 0;
+	printf("Checkpoint #3\n");
+	for (int i=0; i<d2->size(); i++) d2->arr()[i] = 0;
 	printf("Completed Init\n");
 };
 
