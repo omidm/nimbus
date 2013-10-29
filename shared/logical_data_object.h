@@ -33,52 +33,56 @@
  */
 
  /*
-  * A geometric region within a Nimbus simulation. Defined by integers in
-  * x,y,z and dx, dy, dz.
+  * A logical data object, which may have multiple physical copies throughout
+  * the system. Provides methods for finding its physical copies and
+  * its geometric regions. Every logical object has a variable associated
+  * with it. So, for example, a logical object represents the storage of
+  * velocity field of some subset of the simulation domain. The GeometricRegion
+  * object describes a conservative geometric region that encloses the
+  * associated data.
+  *
+  * Logical data objects can have one of three
+  * basic structures: partitions, hierarchies, and overlaps. Within a
+  * simulation, partition objects represent elements from a disjoint
+  * partitioning of the simulation domain. Hierarchy objects represent
+  * one node in a hierarchy of different scales, so they have parents
+  * and potentially children. Overlap objects are free-moving data objects
+  * that may overlap with one another.
   */
 
-#ifndef NIMBUS_APPLICATION_UTILS_GEOMETRIC_REGION_H_
-#define NIMBUS_APPLICATION_UTILS_GEOMETRIC_REGION_H_
+#ifndef NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
+#define NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 
+#include <list>
+#include <set>
+#include <string>
+#include <vector>
+#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-  class GeometricRegion {
+  class LogicalDataObject {
   public:
-    GeometricRegion(int_dimension_t x,
-                    int_dimension_t y,
-                    int_dimension_t z,
-                    int_dimension_t dx,
-                    int_dimension_t dy,
-                    int_dimension_t dz);
+    LogicalDataObject(data_id_t id,
+                      std::string variable,
+                      GeometricRegion* region) {}
+    virtual ~LogicalDataObject() {}
 
-    virtual ~GeometricRegion() {}
-
-
-    virtual bool intersects(GeometricRegion* region);
-
-    /* Returns whether this region covers (encompasses) the argument. */
-    virtual bool covers(GeometricRegion* region);
-    virtual bool adjacent(GeometricRegion* region);
-    virtual bool adjacentOrIntersects(GeometricRegion* region);
-
-    int_dimension_t x();
-    int_dimension_t y();
-    int_dimension_t z();
-
-    int_dimension_t dx();
-    int_dimension_t dy();
-    int_dimension_t dz();
+    virtual data_id_t id();
+    virtual std::string variable();
+    virtual GeometricRegion* region();
 
   private:
-    int_dimension_t x_;
-    int_dimension_t y_;
-    int_dimension_t z_;
-    int_dimension_t dx_;
-    int_dimension_t dy_;
-    int_dimension_t dz_;
+    data_id_t id_;
+    GeometricRegion* region_;
+    std::string variable_;
   };
+
+  typedef std::set<LogicalDataObject*> LdoSet;
+  typedef std::list<LogicalDataObject*> LdoList;
+  typedef std::vector<LogicalDataObject*> LdoVector;
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_UTILS_GEOMETRIC_REGION_H_
+#endif  // NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_

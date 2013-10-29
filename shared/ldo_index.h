@@ -33,56 +33,38 @@
  */
 
  /*
-  * A logical data object, which may have multiple physical copies throughout
-  * the system. Provides methods for finding its physical copies and
-  * its geometric regions. Every logical object has a variable associated
-  * with it. So, for example, a logical object represents the storage of
-  * velocity field of some subset of the simulation domain. The GeometricRegion
-  * object describes a conservative geometric region that encloses the
-  * associated data.
-  *
-  * Logical data objects can have one of three
-  * basic structures: partitions, hierarchies, and overlaps. Within a
-  * simulation, partition objects represent elements from a disjoint
-  * partitioning of the simulation domain. Hierarchy objects represent
-  * one node in a hierarchy of different scales, so they have parents
-  * and potentially children. Overlap objects are free-moving data objects
-  * that may overlap with one another.
+  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
+  * Allows for quering which logical data objects cover what geometric
+  * regions.
   */
 
-#ifndef NIMBUS_APPLICATION_UTILS_LOGICAL_DATA_OBJECT_H_
-#define NIMBUS_APPLICATION_UTILS_LOGICAL_DATA_OBJECT_H_
+#ifndef NIMBUS_SHARED_LDO_INDEX_H_
+#define NIMBUS_SHARED_LDO_INDEX_H_
 
-#include <list>
-#include <set>
+#include <map>
 #include <string>
-#include <vector>
-#include "application_utils/geometric_region.h"
+#include "shared/logical_data_object.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-  class LogicalDataObject {
+  class LdoIndex {
   public:
-    LogicalDataObject(data_id_t id,
-                      std::string variable,
-                      GeometricRegion* region) {}
-    virtual ~LogicalDataObject() {}
+    LdoIndex();
+    virtual ~LdoIndex();
 
-    virtual data_id_t id();
-    virtual std::string variable();
-    virtual GeometricRegion* region();
+    virtual void addObject(LogicalDataObject* object);
+    virtual LdoVector* intersectingObjects(std::string variable,
+                                           GeometricRegion* region);
+    virtual LdoVector* coveredObjects(std::string variable,
+                                      GeometricRegion* region);
+    virtual LdoVector* adjacentObjects(std::string variable,
+                                       GeometricRegion* region);
 
   private:
-    data_id_t id_;
-    GeometricRegion* region_;
-    std::string variable_;
+    std::map<std::string, LdoList*> index_;
   };
-
-  typedef std::set<LogicalDataObject*> LdoSet;
-  typedef std::list<LogicalDataObject*> LdoList;
-  typedef std::vector<LogicalDataObject*> LdoVector;
-
 }  // namespace nimbus
 
-#endif  // NIMBUS_APPLICATION_UTILS_LOGICAL_DATA_OBJECT_H_
+#endif  // NIMBUS_SHARED_LDO_INDEX_H_
