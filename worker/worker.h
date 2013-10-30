@@ -93,7 +93,7 @@ class Worker {
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
   IDMaker id_maker_;
-  CommandSet scheduler_command_set_;
+  SchedulerCommand::TypeSet scheduler_command_set_;
   worker_id_t id_;
   std::string scheduler_ip_;
   port_t scheduler_port_;

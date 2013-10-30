@@ -43,9 +43,9 @@
 
 #include <map>
 #include <string>
-#include "shared/nimbus_types.h"
 #include "shared/logical_data_object.h"
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 

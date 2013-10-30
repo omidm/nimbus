@@ -61,24 +61,29 @@ void Scheduler::SchedulerCoreProcessor() {
 }
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
-  std::string command_name = cm->name();
-
-  if (command_name == "spawnjob") {
-    ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
-  } else if (command_name == "spawncomputejob") {
-    ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
-  } else if (command_name == "spawncopyjob") {
-    ProcessSpawnCopyJobCommand(reinterpret_cast<SpawnCopyJobCommand*>(cm));
-  } else if (command_name == "definedata") {
-    ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
-  } else if (command_name == "handshake") {
-    ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
-  } else if (command_name == "jobdone") {
-    ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
-  } else {
-    std::cout << "ERROR: " << cm->toString() <<
-      " have not been implemented in ProcessSchedulerCommand yet." <<
-      std::endl;
+  switch (cm->type()) {
+    case SchedulerCommand::SPAWN_JOB:
+      ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
+      break;
+    case SchedulerCommand::SPAWN_COMPUTE_JOB:
+      ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
+      break;
+    case SchedulerCommand::SPAWN_COPY_JOB:
+      ProcessSpawnCopyJobCommand(reinterpret_cast<SpawnCopyJobCommand*>(cm));
+      break;
+    case SchedulerCommand::DEFINE_DATA:
+      ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
+      break;
+    case SchedulerCommand::HANDSHAKE:
+      ProcessHandshakeCommand(reinterpret_cast<HandshakeCommand*>(cm));
+      break;
+    case SchedulerCommand::JOB_DONE:
+      ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
+      break;
+    default:
+      std::cout << "ERROR: " << cm->toString() <<
+        " have not been implemented in ProcessSchedulerCommand yet." <<
+        std::endl;
   }
 }
 
@@ -124,18 +129,12 @@ void Scheduler::SetupWorkerInterface() {
 
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_set_.insert(
-      std::make_pair(std::string("spawnjob"), COMMAND_SPAWN_JOB));
-  worker_command_set_.insert(
-      std::make_pair(std::string("spawncomputejob"), COMMAND_SPAWN_COMPUTE_JOB));
-  worker_command_set_.insert(
-      std::make_pair(std::string("spawncopyjob"), COMMAND_SPAWN_COPY_JOB));
-  worker_command_set_.insert(
-      std::make_pair(std::string("definedata"), COMMAND_DEFINE_DATA));
-  worker_command_set_.insert(
-      std::make_pair(std::string("handshake"), COMMAND_HANDSHAKE));
-  worker_command_set_.insert(
-      std::make_pair(std::string("jobdone"), COMMAND_JOB_DONE));
+  worker_command_set_.insert(SchedulerCommand::SPAWN_JOB);
+  worker_command_set_.insert(SchedulerCommand::SPAWN_COMPUTE_JOB);
+  worker_command_set_.insert(SchedulerCommand::SPAWN_COPY_JOB);
+  worker_command_set_.insert(SchedulerCommand::DEFINE_DATA);
+  worker_command_set_.insert(SchedulerCommand::HANDSHAKE);
+  worker_command_set_.insert(SchedulerCommand::JOB_DONE);
 }
 
 void Scheduler::SetupUserInterface() {

@@ -257,7 +257,7 @@ SchedulerWorkerList* SchedulerServer::workers() {
   return &workers_;
 }
 
-void SchedulerServer::set_worker_command_set(CommandSet* cms) {
+void SchedulerServer::set_worker_command_set(SchedulerCommand::TypeSet* cms) {
   worker_command_set_ = cms;
 }
 

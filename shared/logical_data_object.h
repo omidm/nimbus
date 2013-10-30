@@ -53,12 +53,12 @@
 #ifndef NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 #define NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 
-#include <set>
 #include <list>
-#include <vector>
+#include <set>
 #include <string>
-#include "shared/nimbus_types.h"
+#include <vector>
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
