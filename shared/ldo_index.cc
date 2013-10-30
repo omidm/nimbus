@@ -63,7 +63,7 @@ LdoIndex::~LdoIndex() {}
  * \param object
  * \return
 */
-void LdoIndex::addObject(LogicalDataObject *object) {
+void LdoIndex::AddObject(LogicalDataObject *object) {
   std::string var = object->variable();
   LdoList* list;
   if (index_.find(var) == index_.end()) {
@@ -84,7 +84,7 @@ void LdoIndex::addObject(LogicalDataObject *object) {
  * \param region
  * \return
 */
-LdoVector * LdoIndex::intersectingObjects(std::string variable,
+LdoVector * LdoIndex::IntersectingObjects(std::string variable,
                                                   GeometricRegion *region) {
   LdoVector* output = new LdoVector();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -95,7 +95,7 @@ LdoVector * LdoIndex::intersectingObjects(std::string variable,
   LdoList::iterator iter = list->begin();
   for (; iter != list->end(); ++iter) {
     LogicalDataObject* object = *iter;
-    if (region->intersects(object->region())) {
+    if (region->Intersects(object->region())) {
       output->push_back(object);
     }
   }
@@ -110,7 +110,7 @@ LdoVector * LdoIndex::intersectingObjects(std::string variable,
  * \param region
  * \return
 */
-LdoVector * LdoIndex::coveredObjects(std::string variable,
+LdoVector * LdoIndex::CoveredObjects(std::string variable,
                                              GeometricRegion *region) {
   LdoVector* output = new LdoVector();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -121,7 +121,7 @@ LdoVector * LdoIndex::coveredObjects(std::string variable,
   LdoList::iterator iter = list->begin();
   for (; iter != list->end(); ++iter) {
     LogicalDataObject* object = *iter;
-    if (region->covers(object->region())) {
+    if (region->Covers(object->region())) {
       output->push_back(object);
     }
   }
@@ -136,7 +136,7 @@ LdoVector * LdoIndex::coveredObjects(std::string variable,
  * \param region
  * \return
 */
-LdoVector * LdoIndex::adjacentObjects(std::string variable,
+LdoVector * LdoIndex::AdjacentObjects(std::string variable,
                                               GeometricRegion *region) {
   LdoVector* output = new LdoVector();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -147,7 +147,7 @@ LdoVector * LdoIndex::adjacentObjects(std::string variable,
   LdoList::iterator iter = list->begin();
   for (; iter != list->end(); ++iter) {
     LogicalDataObject* object = *iter;
-    if (region->adjacent(object->region())) {
+    if (region->Adjacent(object->region())) {
       output->push_back(object);
     }
   }

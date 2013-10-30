@@ -54,12 +54,12 @@ namespace nimbus {
     LdoIndex();
     virtual ~LdoIndex();
 
-    virtual void addObject(LogicalDataObject* object);
-    virtual LdoVector* intersectingObjects(std::string variable,
+    virtual void AddObject(LogicalDataObject* object);
+    virtual LdoVector* IntersectingObjects(std::string variable,
                                            GeometricRegion* region);
-    virtual LdoVector* coveredObjects(std::string variable,
+    virtual LdoVector* CoveredObjects(std::string variable,
                                       GeometricRegion* region);
-    virtual LdoVector* adjacentObjects(std::string variable,
+    virtual LdoVector* AdjacentObjects(std::string variable,
                                        GeometricRegion* region);
 
   private:

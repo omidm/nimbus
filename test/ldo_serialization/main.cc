@@ -74,20 +74,20 @@ int main(int argc, char *argv[]) {
      Row E, column A, value C means that E covers A.
   */
 
-  nimbus::GeometricRegion regionA(10, 11, 12, 22, 29, 33);
-  nimbus::LogicalDataObject ldoA(56, "velocity", &regionA);
+  nimbus::GeometricRegion* regionA = new nimbus::GeometricRegion(10, 11, 12, 22, 29, 33);
+  nimbus::LogicalDataObject ldoA(56, "velocity", regionA);
 
-  nimbus::GeometricRegion regionB(20, 11, 12, 22, 29, 33);
-  nimbus::LogicalDataObject ldoB(12312, "velocity", &regionB);
+  nimbus::GeometricRegion* regionB = new nimbus::GeometricRegion(20, 11, 12, 22, 29, 33);
+  nimbus::LogicalDataObject ldoB(12312, "velocity", regionB);
 
-  nimbus::GeometricRegion regionC(1, 11, 12, 1, 29, 33);
-  nimbus::LogicalDataObject ldoC(37, "velocity", &regionC);
+  nimbus::GeometricRegion* regionC = new nimbus::GeometricRegion(1, 11, 12, 1, 29, 33);
+  nimbus::LogicalDataObject ldoC(37, "velocity", regionC);
 
-  nimbus::GeometricRegion regionD(9, 15, 12, 1, 29, 33);
-  nimbus::LogicalDataObject ldoD(51, "velocity", &regionD);
+  nimbus::GeometricRegion* regionD = new nimbus::GeometricRegion(9, 15, 12, 1, 29, 33);
+  nimbus::LogicalDataObject ldoD(51, "velocity", regionD);
 
-  nimbus::GeometricRegion regionE(2, 9, 10, 50, 50, 66);
-  nimbus::LogicalDataObject ldoE(56, "velocity", &regionE);
+  nimbus::GeometricRegion* regionE = new nimbus::GeometricRegion(2, 9, 10, 50, 50, 66);
+  nimbus::LogicalDataObject ldoE(56, "velocity", regionE);
 
   nimbus::LogicalDataObject* objects[5];
   objects[0] = &ldoA;
@@ -106,7 +106,25 @@ int main(int argc, char *argv[]) {
   printf("D |A  D  D  C  I\n");
   printf("E |C  C  A  C  C\n");
 
-  printf("Actual output:\n");
+  printf("\n\nActual output:\n");
+  printf("   A  B  C  D  E\n");
+  printf("  +-------------\n");
+  for (int i = 0; i < 5; i++) {
+    printf("%c |", static_cast<char>(('A' + i)));
+    for (int j = 0; j < 5; j++) {
+      printf("%c  ", relationship(objects[i]->region(), objects[j]->region()));
+    }
+    printf("\n");
+  }
+
+  std::string strBuf;
+  for (int i = 0; i < 5; i++) {
+    objects[i]->SerializeToString(&strBuf);
+    nimbus::LogicalDataObject* obj = new nimbus::LogicalDataObject(strBuf);
+    objects[i] = obj;
+  }
+
+  printf("\n\nActual output:\n");
   printf("   A  B  C  D  E\n");
   printf("  +-------------\n");
   for (int i = 0; i < 5; i++) {
@@ -117,4 +135,8 @@ int main(int argc, char *argv[]) {
     printf("\n");
   }
   printf("\n");
+
+  for (int i = 0; i < 5; i++) {
+    delete objects[i];
+  }
 }

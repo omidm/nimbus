@@ -67,6 +67,13 @@ LogicalDataObject::LogicalDataObject(std::istream* is) {
   region_ = new GeometricRegion(&msg.region());
 }
 
+LogicalDataObject::LogicalDataObject(const std::string& data) {
+  LdoMessage msg;
+  msg.ParseFromString(data);
+  id_ = msg.data_id();
+  variable_ = msg.variable();
+  region_ = new GeometricRegion(&msg.region());
+}
 
 /**
  * \fn nimbus::LogicalDataObject::~LogicalDataObject()
@@ -74,7 +81,7 @@ LogicalDataObject::LogicalDataObject(std::istream* is) {
  * \return
 */
 LogicalDataObject::~LogicalDataObject() {
-  //  delete region_;
+  delete region_;
 }
 
 
