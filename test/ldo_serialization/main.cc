@@ -57,6 +57,11 @@ char relationship(nimbus::GeometricRegion* r1, nimbus::GeometricRegion* r2) {
     return 'D';
   }
 }
+
+void printLdo(nimbus::LogicalDataObject* obj) {
+  printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());
+  printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
+}
 int main(int argc, char *argv[]) {
   // Correct relationships:
   /*
@@ -87,7 +92,7 @@ int main(int argc, char *argv[]) {
   nimbus::LogicalDataObject ldoD(51, "velocity", regionD);
 
   nimbus::GeometricRegion* regionE = new nimbus::GeometricRegion(2, 9, 10, 50, 50, 66);
-  nimbus::LogicalDataObject ldoE(56, "velocity", regionE);
+  nimbus::LogicalDataObject ldoE(43543821112342, "velocity", regionE);
 
   nimbus::LogicalDataObject* objects[5];
   objects[0] = &ldoA;
@@ -106,7 +111,7 @@ int main(int argc, char *argv[]) {
   printf("D |A  D  D  C  I\n");
   printf("E |C  C  A  C  C\n");
 
-  printf("\n\nActual output:\n");
+  printf("\n\nOutput:\n");
   printf("   A  B  C  D  E\n");
   printf("  +-------------\n");
   for (int i = 0; i < 5; i++) {
@@ -117,6 +122,9 @@ int main(int argc, char *argv[]) {
     printf("\n");
   }
 
+  for (int i = 0; i < 5; i++) {
+    printLdo(objects[i]);
+  }
   std::string strBuf;
   for (int i = 0; i < 5; i++) {
     objects[i]->SerializeToString(&strBuf);
@@ -124,7 +132,7 @@ int main(int argc, char *argv[]) {
     objects[i] = obj;
   }
 
-  printf("\n\nActual output:\n");
+  printf("\n\nOutput after serialization/deserialization:\n");
   printf("   A  B  C  D  E\n");
   printf("  +-------------\n");
   for (int i = 0; i < 5; i++) {
@@ -133,6 +141,9 @@ int main(int argc, char *argv[]) {
       printf("%c  ", relationship(objects[i]->region(), objects[j]->region()));
     }
     printf("\n");
+  }
+  for (int i = 0; i < 5; i++) {
+    printLdo(objects[i]);
   }
   printf("\n");
 
