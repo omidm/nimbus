@@ -33,38 +33,21 @@
  */
 
  /*
-  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
-  * Allows for quering which logical data objects cover what geometric
-  * regions.
+  * Protocol buffer messages for transmitting logical data objects.
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_LDO_INDEX_H_
-#define NIMBUS_SHARED_LDO_INDEX_H_
+message LdoMessage {
+  required uint64 data_id = 1;
+  required GeometricRegionMessage region = 2;
+  required string variable = 3;
+}
 
-#include <map>
-#include <string>
-#include "shared/logical_data_object.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
-
-namespace nimbus {
-
-  class LdoIndex {
-  public:
-    LdoIndex();
-    virtual ~LdoIndex();
-
-    virtual void AddObject(LogicalDataObject* object);
-    virtual LdoVector* IntersectingObjects(std::string variable,
-                                           GeometricRegion* region);
-    virtual LdoVector* CoveredObjects(std::string variable,
-                                      GeometricRegion* region);
-    virtual LdoVector* AdjacentObjects(std::string variable,
-                                       GeometricRegion* region);
-
-  private:
-    std::map<std::string, LdoList*> index_;
-  };
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_LDO_INDEX_H_
+message GeometricRegionMessage {
+  required uint64 x  = 1;
+  required uint64 y  = 2;
+  required uint64 z  = 3;
+  required uint64 dx = 4;
+  required uint64 dy = 5;
+  required uint64 dz = 6;
+}

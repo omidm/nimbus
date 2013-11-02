@@ -66,13 +66,19 @@ namespace nimbus {
   public:
     LogicalDataObject(data_id_t id,
                       std::string variable,
-                      GeometricRegion* region) {}
-    virtual ~LogicalDataObject() {}
+                      GeometricRegion* region);
+    explicit LogicalDataObject(std::istream* is);
+    explicit LogicalDataObject(const std::string& data);
+
+    virtual ~LogicalDataObject();
 
     virtual data_id_t id();
     virtual std::string variable();
     virtual GeometricRegion* region();
 
+    virtual void FillInMessage(LdoMessage* mg);
+    virtual bool Serialize(std::ostream* os);
+    virtual bool SerializeToString(std::string* output);
   private:
     data_id_t id_;
     GeometricRegion* region_;
