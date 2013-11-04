@@ -90,7 +90,7 @@ LogicalDataObject::~LogicalDataObject() {
  * \brief Brief description.
  * \return
 */
-data_id_t LogicalDataObject::id() {
+data_id_t LogicalDataObject::id() const {
   return id_;
 }
 
@@ -100,7 +100,7 @@ data_id_t LogicalDataObject::id() {
  * \brief Brief description.
  * \return
 */
-std::string LogicalDataObject::variable() {
+std::string LogicalDataObject::variable() const {
   return variable_;
 }
 
@@ -110,7 +110,7 @@ std::string LogicalDataObject::variable() {
  * \brief Brief description.
  * \return
 */
-GeometricRegion * LogicalDataObject::region() {
+GeometricRegion * LogicalDataObject::region() const {
   return region_;
 }
 

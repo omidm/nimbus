@@ -39,6 +39,7 @@
  *  DESCR:
  ***********************************************************************/
 #include "scheduler/data_manager.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -77,7 +78,9 @@ nimbus::DataManager::~DataManager() {
 bool nimbus::DataManager::AddLogicalObject(data_id_t id,
                                            std::string variable,
                                            GeometricRegion r) {
+  dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
   if (ldo_index_.HasObject(id)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing object %llu.\n", id); // NOLINT
     return false;
   } else {
     GeometricRegion* region = new GeometricRegion(r);
@@ -100,17 +103,12 @@ bool nimbus::DataManager::RemoveLogicalObject(data_id_t id) {
   if (!ldo_index_.HasObject(id)) {
     return false;
   } else {
-    std::map<data_id_t, LogicalDataObject*>::iterator it = ldo_map_.begin();
-    for (; it != ldo_map_.end(); ++it) {
-      LogicalDataObject* obj = (*it).second;
-      if (obj->id() == id) {
-        ldo_map_.erase(it);
-        data_map_.RemoveLogicalObject(id);
-        ldo_index_.RemoveObject(id);
-        return true;
-      }
-    }
-    return false;
+    LogicalDataObject* obj = ldo_map_[id];
+    ldo_map_.erase(id);
+    data_map_.RemoveLogicalObject(id);
+    ldo_index_.RemoveObject(id);
+    delete obj;
+    return true;
   }
 }
 
@@ -139,7 +137,7 @@ const LogicalDataObject * nimbus::DataManager::FindLogicalObject(data_id_t id) {
  * \return
 */
 int nimbus::DataManager::FindLogicalObjects(std::string variable,
-                                            CLdoVector *dest) {
+                                            CLdoVector* dest) {
   return ldo_index_.AllObjects(variable, dest);
 }
 

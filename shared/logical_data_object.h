@@ -72,9 +72,9 @@ namespace nimbus {
 
     virtual ~LogicalDataObject();
 
-    virtual data_id_t id();
-    virtual std::string variable();
-    virtual GeometricRegion* region();
+    virtual data_id_t id() const;
+    virtual std::string variable() const;
+    virtual GeometricRegion* region() const;
 
     virtual void FillInMessage(LdoMessage* mg);
     virtual bool Serialize(std::ostream* os);

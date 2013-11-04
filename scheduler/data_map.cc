@@ -39,6 +39,7 @@
  *  DESCR:
  ***********************************************************************/
 #include "scheduler/data_map.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -56,8 +57,9 @@ nimbus::DataMap::DataMap() {}
 */
 nimbus::DataMap::~DataMap() {
   DataMapType::iterator it = data_map_.begin();
-  while (it != data_map_.end()) {
+  for (; it != data_map_.end(); ++it) {
     std::pair<data_id_t, PhysicalDataVector*> pair = *it;
+    dbg(DBG_DATA_OBJECTS, "Freeing physical vector 0x%llx\n", pair.second);
     delete pair.second;
   }
 }
@@ -69,18 +71,28 @@ nimbus::DataMap::~DataMap() {
  * \param object
  * \return
 */
-void nimbus::DataMap::AddLogicalObject(LogicalDataObject *object) {
+bool nimbus::DataMap::AddLogicalObject(LogicalDataObject *object) {
   data_id_t id = object->id();
 
   // Does not exist, insert
   if (data_map_.find(id) == data_map_.end()) {
     PhysicalDataVector* v = new PhysicalDataVector();
+    dbg(DBG_DATA_OBJECTS, "Allocating physical vector 0x%llx\n", v);
     data_map_[id] = v;
+    return true;
   } else {   // Exists, error
+    return false;
   }
 }
 
-
+bool nimbus::DataMap::RemoveLogicalObject(data_id_t id) {
+  if (data_map_.find(id) == data_map_.end()) {  // Exists
+    return false;
+  } else {
+    data_map_.erase(id);
+    return true;
+  }
+}
 /**
  * \fn void nimbus::DataMap::AddPhysicalInstance(PhysicalData *instance)
  * \brief Brief description.

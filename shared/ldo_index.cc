@@ -39,6 +39,7 @@
  *  DESCR:
  ***********************************************************************/
 #include "shared/ldo_index.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -66,7 +67,9 @@ LdoIndex::~LdoIndex() {}
 bool LdoIndex::AddObject(LogicalDataObject *object) {
   // If the object already exists, reject it. Otherwise, insert
   // it into a list, creating a list if needed.
-  if (exists_.find(object->id()) == exists_.end()) {
+  dbg(DBG_DATA_OBJECTS, "LdoIndex: adding %llu as %s.\n", object->id(), object->variable().c_str());  // NOLINT
+  if (exists_.find(object->id()) != exists_.end()) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL LdoIndex: object %llu already in index.\n", object->id()); // NOLINT
     return false;
   } else {
     std::string var = object->variable();
@@ -137,7 +140,7 @@ int LdoIndex::AllObjects(std::string variable,
 }
 
 int LdoIndex::IntersectingObjects(std::string variable,
-                                  GeometricRegion *region
+                                  GeometricRegion *region,
                                   CLdoVector* dest) {
   if (index_.find(variable) == index_.end()) {  // No such variable
     return 0;
@@ -192,9 +195,9 @@ int LdoIndex::CoveredObjects(std::string variable,
  * \param region
  * \return
 */
-LdoVector * LdoIndex::AdjacentObjects(std::string variable,
-                                      GeometricRegion *region,
-                                      CLdoVector* dest) {
+int LdoIndex::AdjacentObjects(std::string variable,
+                              GeometricRegion *region,
+                              CLdoVector* dest) {
   if (index_.find(variable) == index_.end()) {  // No such variable
     return 0;
   }
@@ -205,7 +208,7 @@ LdoVector * LdoIndex::AdjacentObjects(std::string variable,
   for (; iter != list->end(); ++iter) {
     LogicalDataObject* object = *iter;
     if (region->Adjacent(object->region())) {
-      output->push_back(object);
+      dest->push_back(object);
       count++;
     }
   }
