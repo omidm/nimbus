@@ -33,47 +33,53 @@
  */
 
  /*
-  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
-  * Allows for quering which logical data objects cover what geometric
-  * regions.
+  * Data structure for maintaining and querying for the physical instances
+  * of each logical data object.
+  * 
   */
 
-#ifndef NIMBUS_SHARED_LDO_INDEX_H_
-#define NIMBUS_SHARED_LDO_INDEX_H_
+#ifndef NIMBUS_SCHEDULER_DATA_MAP_H_
+#define NIMBUS_SCHEDULER_DATA_MAP_H_
 
 #include <map>
 #include <string>
+#include <vector>
+#include <utility>
+#include "data/physical_data.h"
 #include "shared/logical_data_object.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 
+
 namespace nimbus {
 
-  class LdoIndex {
+  typedef std::map<data_id_t, PhysicalDataVector*> DataMapType;
+
+  class DataMap {
   public:
-    LdoIndex();
-    virtual ~LdoIndex();
+    DataMap();
+    virtual ~DataMap();
 
-    virtual bool AddObject(LogicalDataObject* object);
-    virtual bool HasObject(data_id_t id);
-    virtual bool RemoveObject(data_id_t id);
-    virtual bool RemoveObject(LogicalDataObject* object);
-    virtual int AllObjects(std::string variable,
-                           CLdoVector* dest);
-    virtual int IntersectingObjects(std::string variable,
-                                    GeometricRegion* region,
-                                    CLdoVector* dest);
-    virtual int CoveredObjects(std::string variable,
-                               GeometricRegion* region,
-                               CLdoVector* dest);
-    virtual int AdjacentObjects(std::string variable,
-                                GeometricRegion* region,
-                                CLdoVector* dest);
+    virtual bool AddLogicalObject(LogicalDataObject* object);
+    virtual bool RemoveLogicalObject(data_id_t id);
+    virtual bool AddPhysicalInstance(LogicalDataObject* object,
+                                     PhysicalData instance);
+    virtual bool RemovePhysicalInstance(LogicalDataObject* object,
+                                        PhysicalData instance);
 
+
+    virtual const PhysicalDataVector* AllInstances(LogicalDataObject* object);
+    virtual int AllInstances(LogicalDataObject* object,
+                             PhysicalDataVector* dest);
+    virtual int InstancesByWorker(LogicalDataObject* object,
+                                  worker_id_t worker,
+                                  PhysicalDataVector* dest);
+    virtual int InstancesByVersion(LogicalDataObject* object,
+                                   data_version_t version,
+                                   PhysicalDataVector* dest);
   private:
-    std::map<std::string, LdoList*> index_;
-    std::map<data_id_t, std::string> exists_;
+    DataMapType data_map_;
   };
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_LDO_INDEX_H_
+#endif  // NIMBUS_SCHEDULER_DATA_MAP_H_

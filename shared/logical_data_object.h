@@ -88,6 +88,7 @@ namespace nimbus {
   typedef std::set<LogicalDataObject*> LdoSet;
   typedef std::list<LogicalDataObject*> LdoList;
   typedef std::vector<LogicalDataObject*> LdoVector;
+  typedef std::vector<const LogicalDataObject*> CLdoVector;
 
 }  // namespace nimbus
 

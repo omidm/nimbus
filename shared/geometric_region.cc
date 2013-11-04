@@ -71,6 +71,15 @@ GeometricRegion::GeometricRegion(int_dimension_t x,
   dz_ = dz;
 }
 
+GeometricRegion::GeometricRegion(const GeometricRegion& r) {
+  x_ = r.x();
+  y_ = r.y();
+  z_ = r.z();
+  dx_ = r.dx();
+  dy_ = r.dy();
+  dz_ = r.dz();
+}
+
 GeometricRegion::GeometricRegion(const int_dimension_t* values) {
   fillInValues(values);
 }
@@ -163,7 +172,7 @@ bool GeometricRegion::Covers(GeometricRegion *region) {
  * \brief Brief description.
  * \return
 */
-int_dimension_t GeometricRegion::x() {
+int_dimension_t GeometricRegion::x() const {
   return x_;
 }
 
@@ -173,7 +182,7 @@ int_dimension_t GeometricRegion::x() {
  * \brief Brief description.
  * \return
 */
-int_dimension_t GeometricRegion::y() {
+int_dimension_t GeometricRegion::y() const {
   return y_;
 }
 
@@ -183,7 +192,7 @@ int_dimension_t GeometricRegion::y() {
  * \brief Brief description.
  * \return
 */
-int_dimension_t GeometricRegion::z() {
+int_dimension_t GeometricRegion::z() const {
   return z_;
 }
 
@@ -193,7 +202,7 @@ int_dimension_t GeometricRegion::z() {
  * \brief Brief description.
  * \return
 */
-int_dimension_t GeometricRegion::dx() {
+int_dimension_t GeometricRegion::dx() const {
   return dx_;
 }
 
@@ -203,7 +212,7 @@ int_dimension_t GeometricRegion::dx() {
  * \brief Brief description.
  * \return
 */
-int_dimension_t GeometricRegion::dy() {
+int_dimension_t GeometricRegion::dy() const {
   return dy_;
 }
 
@@ -213,7 +222,7 @@ int_dimension_t GeometricRegion::dy() {
  * \brief Brief description.
  * \return
 */
-int_dimension_t GeometricRegion::dz() {
+int_dimension_t GeometricRegion::dz() const {
   return dz_;
 }
 

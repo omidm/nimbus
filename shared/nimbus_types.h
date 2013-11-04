@@ -53,6 +53,7 @@ namespace nimbus {
   typedef uint64_t command_id_t;
   typedef uint64_t partition_t;
   typedef uint64_t param_id_t;
+  typedef uint64_t data_version_t;
 
   typedef uint64_t int_dimension_t;
   typedef double   float_dimension_t;
