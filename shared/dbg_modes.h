@@ -57,6 +57,7 @@ enum {
   DBG_WORKER =          DBG_MODE(5),    /* worker execution             */
   DBG_HOSTS =           DBG_MODE(6),    /* host map/state updates       */
   DBG_DATA_OBJECTS =    DBG_MODE(7),    /* data manager/objects         */
+  DBG_MEMORY =          DBG_MODE(8),    /* memory allocation            */
 /*====== For application use =========*/
   DBG_USR1 =            DBG_MODE(59),   /* User component 1             */
   DBG_USR2 =            DBG_MODE(60),   /* User component 2             */
@@ -78,6 +79,8 @@ enum {
         {"data",    DBG_DATA   | DBG_ERROR}, \
         {"worker",  DBG_WORKER | DBG_ERROR}, \
         {"hosts",   DBG_HOSTS  | DBG_ERROR}, \
+        {"dobjects", DBG_DATA_OBJECTS | DBG_ERROR},  \
+        {"memory",  DBG_MEMORY | DBG_ERROR},       \
 \
         {"usr1",    DBG_USR1 | DBG_ERROR}, \
         {"usr2",    DBG_USR2 | DBG_ERROR}, \

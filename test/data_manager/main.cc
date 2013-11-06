@@ -40,7 +40,7 @@
 
 #define DEBUG_MODE
 #define NOBJECTS 5
-#define LOBJECTS 5000873
+#define LOBJECTS 100
 #include <iostream> // NOLINT
 #include "shared/geometric_region.h"
 #include "shared/logical_data_object.h"
@@ -98,18 +98,23 @@ int main(int argc, char *argv[]) {
   */
 
   GeometricRegion* regionA = new GeometricRegion(10, 11, 12, 22, 29, 33);
+  dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", regionA);
   LogicalDataObject ldoA(0, "velocity", regionA);
 
   GeometricRegion* regionB = new GeometricRegion(20, 11, 12, 22, 29, 33);
+  dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", regionB);
   LogicalDataObject ldoB(1, "velocity", regionB);
 
   GeometricRegion* regionC = new GeometricRegion(1, 11, 12, 1, 29, 33);
+  dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", regionC);
   LogicalDataObject ldoC(2, "velocity", regionC);
 
   GeometricRegion* regionD = new GeometricRegion(9, 15, 12, 1, 29, 33);
+  dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", regionD);
   LogicalDataObject ldoD(3, "velocity", regionD);
 
   GeometricRegion* regionE = new GeometricRegion(2, 9, 10, 50, 50, 66);
+  dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", regionE);
   LogicalDataObject ldoE(4, "velocity", regionE);
 
   LogicalDataObject* objects[NOBJECTS];
@@ -158,20 +163,14 @@ int main(int argc, char *argv[]) {
     printLdo(obj);
   }
 
-  for (int i = 0; i < NOBJECTS; i++) {
-    mg.RemoveLogicalObject(i);
-  }
-
+  DataManager manager;
   //  LogicalDataObject* largeObjects[LOBJECTS];
   for (int i = 0; i < LOBJECTS; i++) {
-    GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
-                                                  lrand48(), lrand48(),
-                                                  lrand48(), lrand48());
-    LogicalDataObject* obj = new LogicalDataObject(i, "pressure", region);
-    mg.AddLogicalObject(obj->id(),
-                        obj->variable(),
-                        *(obj->region()));
-    mg.RemoveLogicalObject(obj->id());
-    delete obj;
+    GeometricRegion region(lrand48(), lrand48(),
+                           lrand48(), lrand48(),
+                           lrand48(), lrand48());
+    std::string str = "pressure";
+    manager.AddLogicalObject(i, str, region);
+    manager.RemoveLogicalObject(i);
   }
 }

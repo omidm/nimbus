@@ -33,50 +33,31 @@
  */
 
  /*
-  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
-  * Allows for quering which logical data objects cover what geometric
-  * regions.
+  * This file tests the data manager and its memory use.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_LDO_INDEX_H_
-#define NIMBUS_SHARED_LDO_INDEX_H_
-
-#include <map>
-#include <string>
-#include "shared/logical_data_object.h"
+#define DEBUG_MODE
+#define LOBJECTS 1
+#include <iostream> // NOLINT
 #include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
+#include "shared/logical_data_object.h"
+#include "scheduler/data_manager.h"
+#include "shared/dbg.h"
 
-namespace nimbus {
+using namespace nimbus;  // NOLINT
 
-  typedef std::map<std::string, LdoList*> LdoVariableIndex;
-  typedef std::map<data_id_t, LogicalDataObject*> LdoIdIndex;
+int main(int argc, char *argv[]) {
+  dbg_init();
 
-  class LdoIndex {
-  public:
-    LdoIndex();
-    virtual ~LdoIndex();
-
-    virtual bool AddObject(LogicalDataObject* object);
-    virtual bool HasObject(data_id_t id);
-    virtual bool RemoveObject(data_id_t id);
-    virtual bool RemoveObject(LogicalDataObject* object);
-    virtual int AllObjects(std::string variable,
-                           CLdoVector* dest);
-    virtual int IntersectingObjects(std::string variable,
-                                    GeometricRegion* region,
-                                    CLdoVector* dest);
-    virtual int CoveredObjects(std::string variable,
-                               GeometricRegion* region,
-                               CLdoVector* dest);
-    virtual int AdjacentObjects(std::string variable,
-                                GeometricRegion* region,
-                                CLdoVector* dest);
-
-  private:
-    LdoVariableIndex index_;
-    LdoIdIndex exists_;
-  };
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_LDO_INDEX_H_
+  DataManager manager;
+  for (int i = 0; i < LOBJECTS; i++) {
+    GeometricRegion region(lrand48(), lrand48(),
+                           lrand48(), lrand48(),
+                           lrand48(), lrand48());
+    std::string str = "pressure";
+    manager.AddLogicalObject(i, str, region);
+    manager.RemoveLogicalObject(i);
+  }
+}

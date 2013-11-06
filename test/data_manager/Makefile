@@ -1,5 +1,5 @@
 
-TARGET = data_manager_test
+TARGET = data_manager_test leak_test
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -17,8 +17,11 @@ LDFLAGS += -L.
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
+data_manager_test: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) main.o -o $@ $(LFLAGS)
+
+leak_test: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) leak.o -o $@ $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)

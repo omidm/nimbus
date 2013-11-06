@@ -60,8 +60,10 @@ nimbus::DataManager::~DataManager() {
   std::map<data_id_t, LogicalDataObject*>::iterator it = ldo_map_.begin();
   for (; it != ldo_map_.end(); ++it) {
     LogicalDataObject* o = (*it).second;
+    dbg(DBG_DATA_OBJECTS|DBG_MEMORY, "Invoking delete on object %llu.\n", o->id());
     delete o;
   }
+  ldo_map_.clear();
 }
 
 
@@ -84,10 +86,12 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
     return false;
   } else {
     GeometricRegion* region = new GeometricRegion(r);
+    dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", region);
     LogicalDataObject* ldo = new LogicalDataObject(id, variable, region);
+    dbg(DBG_MEMORY, "Allocated ldo 0x%x\n", ldo);
+    ldo_map_[id] = ldo;
     data_map_.AddLogicalObject(ldo);
     ldo_index_.AddObject(ldo);
-    ldo_map_[id] = ldo;
     return true;
   }
 }
@@ -101,8 +105,10 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
 */
 bool nimbus::DataManager::RemoveLogicalObject(data_id_t id) {
   if (!ldo_index_.HasObject(id)) {
+    dbg(DBG_ERROR, "  - FAIL DataManager: tried deleting non-existent object %llu.\n", id); // NOLINT
     return false;
   } else {
+    dbg(DBG_DATA_OBJECTS, "Removing logical object %llu from data manager.\n", id);
     LogicalDataObject* obj = ldo_map_[id];
     ldo_map_.erase(id);
     data_map_.RemoveLogicalObject(id);

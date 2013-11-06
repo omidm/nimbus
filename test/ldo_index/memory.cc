@@ -33,50 +33,33 @@
  */
 
  /*
-  * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
-  * Allows for quering which logical data objects cover what geometric
-  * regions.
+  * This file tests whether the Logical Data Object Index is working
+  * properly.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_LDO_INDEX_H_
-#define NIMBUS_SHARED_LDO_INDEX_H_
+#define DEBUG_MODE
 
-#include <map>
-#include <string>
-#include "shared/logical_data_object.h"
+#include <iostream> // NOLINT
 #include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
+#include "shared/logical_data_object.h"
+#include "shared/ldo_index.h"
 
-namespace nimbus {
+using namespace nimbus;  // NOLINT
 
-  typedef std::map<std::string, LdoList*> LdoVariableIndex;
-  typedef std::map<data_id_t, LogicalDataObject*> LdoIdIndex;
+int main(int argc, char *argv[]) {
+  LdoIndex index;
 
-  class LdoIndex {
-  public:
-    LdoIndex();
-    virtual ~LdoIndex();
+  for (int i = 0; i < 100; i++) {
+    std::string str = "pressure";
+    GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
+                                                 lrand48(), lrand48(),
+                                                 lrand48(), lrand48());
+    LogicalDataObject* obj = new LogicalDataObject(i, str, region);
 
-    virtual bool AddObject(LogicalDataObject* object);
-    virtual bool HasObject(data_id_t id);
-    virtual bool RemoveObject(data_id_t id);
-    virtual bool RemoveObject(LogicalDataObject* object);
-    virtual int AllObjects(std::string variable,
-                           CLdoVector* dest);
-    virtual int IntersectingObjects(std::string variable,
-                                    GeometricRegion* region,
-                                    CLdoVector* dest);
-    virtual int CoveredObjects(std::string variable,
-                               GeometricRegion* region,
-                               CLdoVector* dest);
-    virtual int AdjacentObjects(std::string variable,
-                                GeometricRegion* region,
-                                CLdoVector* dest);
-
-  private:
-    LdoVariableIndex index_;
-    LdoIdIndex exists_;
-  };
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_LDO_INDEX_H_
+    index.AddObject(obj);
+    index.RemoveObject(i);
+    delete obj;
+  }
+}

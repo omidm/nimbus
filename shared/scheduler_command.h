@@ -57,7 +57,9 @@
 #include "shared/idset.h"
 #include "shared/escaper.h"
 #include "shared/parameter.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
+
 
 namespace nimbus {
 
@@ -101,7 +103,8 @@ class SchedulerCommand {
     CREATE_DATA,
     REMOTE_COPY_SEND,
     REMOTE_COPY_RECEIVE,
-    LOCAL_COPY
+    LOCAL_COPY,
+    DEFINE_PARTITION
   };
 
   typedef std::set<Type> TypeSet;
@@ -137,6 +140,7 @@ class SchedulerCommand {
   static const std::string REMOTE_COPY_SEND_NAME;
   static const std::string REMOTE_COPY_RECEIVE_NAME;
   static const std::string LOCAL_COPY_NAME;
+  static const std::string DEFINE_PARTITION_NAME;
 
  private:
   CommandParameterList parameters_;
@@ -293,7 +297,7 @@ class ComputeJobCommand : public SchedulerCommand {
 class CreateDataCommand : public SchedulerCommand {
   public:
     CreateDataCommand();
-    CreateDataCommand(const ID<job_id_t>& jog_id,
+    CreateDataCommand(const ID<job_id_t>& job_id,
         const std::string& data_name, const ID<data_id_t>& data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~CreateDataCommand();
@@ -459,10 +463,10 @@ class DefineDataCommand : public SchedulerCommand {
   public:
     DefineDataCommand();
     DefineDataCommand(const std::string& data_name,
-    const ID<data_id_t>& data_id,
-    const ID<partition_t>& partition_id,
-    const IDSet<partition_t>& neighbor_partition,
-    const Parameter& params);
+                      const ID<data_id_t>& data_id,
+                      const ID<partition_t>& partition_id,
+                      const IDSet<partition_t>& neighbor_partition,
+                      const Parameter& params);
     ~DefineDataCommand();
 
     virtual std::string toString();
@@ -479,6 +483,26 @@ class DefineDataCommand : public SchedulerCommand {
     ID<partition_t> partition_id_;
     IDSet<partition_t> neighbor_partitions_;
     Parameter params_;
+};
+
+class DefinePartitionCommand : public SchedulerCommand {
+ public:
+  DefinePartitionCommand(const ID<partition_t>& partition_id,
+                         const GeometricRegion& r,
+                         const Parameter& params);
+  ~DefinePartitionCommand();
+
+  virtual std::string toString();
+  virtual std::string toStringWTags();
+
+  ID<partition_t> partition_id();
+  const GeometricRegion* region();
+  Parameter params();
+
+ private:
+  ID<partition_t> id_;
+  GeometricRegion region_;
+  Parameter params_;
 };
 
 /*

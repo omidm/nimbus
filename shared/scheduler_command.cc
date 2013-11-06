@@ -46,8 +46,7 @@
 #include "shared/scheduler_command.h"
 #include "shared/dbg.h"
 
-using namespace nimbus; // NOLINT
-
+using namespace nimbus;  // NOLINT
 
 SchedulerCommand::SchedulerCommand() {
   name_ = BASE_NAME;
@@ -173,6 +172,7 @@ const std::string SchedulerCommand::CREATE_DATA_NAME = "createdata";
 const std::string SchedulerCommand::REMOTE_COPY_SEND_NAME = "remotecopysend";
 const std::string SchedulerCommand::REMOTE_COPY_RECEIVE_NAME = "remotecopyreceive";
 const std::string SchedulerCommand::LOCAL_COPY_NAME = "localcopy";
+const std::string SchedulerCommand::DEFINE_PARTITION_NAME = "definepartition";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -212,6 +212,9 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case LOCAL_COPY:
       str = LOCAL_COPY_NAME;
+      break;
+    case DEFINE_PARTITION:
+      str = DEFINE_PARTITION_NAME;
       break;
   }
   return str;
@@ -1157,4 +1160,40 @@ Parameter JobDoneCommand::params() {
   return params_;
 }
 
+DefinePartitionCommand::DefinePartitionCommand(const ID<partition_t>& part,
+                                               const GeometricRegion& r,
+                                               const Parameter& params):
+  id_(part), region_(r), params_(params) {
+  name_ = DEFINE_PARTITION_NAME;
+  type_ = DEFINE_PARTITION;
+}
+DefinePartitionCommand::~DefinePartitionCommand() {}
 
+std::string DefinePartitionCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (id_.toString() + " ");
+  str += (region_.toString() + " ");
+  str += params_.toString();
+  return str;
+}
+std::string DefinePartitionCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("id:" + id_.toString() + " ");
+  str += ("region:" + region_.toString() + " ");
+  str += ("params:" + params_.toString());
+  return str;
+}
+
+ID<partition_t> DefinePartitionCommand::partition_id() {
+  return id_;
+}
+
+const GeometricRegion* DefinePartitionCommand::region() {
+  return &region_;
+}
+
+Parameter DefinePartitionCommand::params() {
+  return params_;
+}

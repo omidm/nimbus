@@ -55,7 +55,16 @@ LdoIndex::LdoIndex() {}
  * \brief Brief description.
  * \return
 */
-LdoIndex::~LdoIndex() {}
+LdoIndex::~LdoIndex() {
+  LdoVariableIndex::iterator it = index_.begin();
+  for (; it != index_.end(); ++it) {
+    LdoList* list = (*it).second;
+    dbg(DBG_MEMORY, "Deleting LdoList 0x%x\n", list);
+    delete list;
+  }
+  exists_.clear();
+  index_.clear();
+}
 
 
 /**
@@ -77,13 +86,14 @@ bool LdoIndex::AddObject(LogicalDataObject *object) {
 
     if (index_.find(var) == index_.end()) {
       list = new LdoList();
+      dbg(DBG_MEMORY, "Allocating LdoList 0x%x\n", list);
       index_[var] = list;
     } else {
       list = index_[var];
     }
 
     list->push_back(object);
-    exists_[object->id()] = object->variable();
+    exists_[object->id()] = object;
     return true;
   }
 }
@@ -93,15 +103,19 @@ bool LdoIndex::HasObject(data_id_t id) {
 }
 
 bool LdoIndex::RemoveObject(data_id_t id) {
+  dbg(DBG_TEMP, "Trying to remove object %llu.\n", id);
+
   if (HasObject(id)) {
-    std::string variable = exists_[id];
+    LogicalDataObject* obj = exists_[id];
+    std::string variable = obj->variable();
     LdoList* list = index_[variable];
     LdoList::iterator it = list->begin();
     for (; it != list->end(); ++it) {
       LogicalDataObject* ldo = *it;
       if (ldo->id() == id) {
         list->erase(it);
-        exists_.erase(id);
+        int cnt = exists_.erase(id);
+        dbg(DBG_TEMP, "Removing object %llu, removed %i elements from exists_.\n", id, cnt);
         return true;
       }
     }

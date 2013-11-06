@@ -84,6 +84,8 @@ namespace nimbus {
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
 
+    virtual std::string toString();
+
   private:
     int_dimension_t x_;
     int_dimension_t y_;

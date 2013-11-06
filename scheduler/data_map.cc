@@ -77,7 +77,7 @@ bool nimbus::DataMap::AddLogicalObject(LogicalDataObject *object) {
   // Does not exist, insert
   if (data_map_.find(id) == data_map_.end()) {
     PhysicalDataVector* v = new PhysicalDataVector();
-    dbg(DBG_DATA_OBJECTS, "Allocating physical vector 0x%llx\n", v);
+    dbg(DBG_MEMORY, "Allocating physical vector 0x%llx\n", v);
     data_map_[id] = v;
     return true;
   } else {   // Exists, error
@@ -89,6 +89,9 @@ bool nimbus::DataMap::RemoveLogicalObject(data_id_t id) {
   if (data_map_.find(id) == data_map_.end()) {  // Exists
     return false;
   } else {
+    PhysicalDataVector* v = data_map_[id];
+    dbg(DBG_MEMORY, "Freeing physical vector 0x%llx\n", v);
+    delete v;
     data_map_.erase(id);
     return true;
   }

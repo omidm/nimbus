@@ -1,5 +1,5 @@
 
-TARGET = ldo_index
+TARGET = ldo_index memory
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -17,8 +17,11 @@ LDFLAGS += -L.
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
+ldo_index: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) main.o -o $@ $(LFLAGS)
+
+memory: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) memory.o -o $@ $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)

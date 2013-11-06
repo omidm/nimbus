@@ -39,6 +39,7 @@
  *  DESCR:
  ***********************************************************************/
 #include "shared/logical_data_object.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -81,6 +82,7 @@ LogicalDataObject::LogicalDataObject(const std::string& data) {
  * \return
 */
 LogicalDataObject::~LogicalDataObject() {
+  dbg(DBG_DATA_OBJECTS|DBG_MEMORY, "Deleting geo region %llu: 0x%x\n", id_, region_);
   delete region_;
 }
 

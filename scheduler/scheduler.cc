@@ -95,6 +95,7 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
+  // Insert data into the LdoIndex
 }
 
 void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {

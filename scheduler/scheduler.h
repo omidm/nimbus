@@ -50,9 +50,10 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
-#include "shared/scheduler_server.h"
 #include "shared/cluster.h"
+#include "shared/ldo_index.h"
 #include "shared/parser.h"
+#include "shared/scheduler_server.h"
 
 namespace nimbus {
 class Scheduler {
@@ -95,9 +96,10 @@ class Scheduler {
     Computer host_;
     port_t listening_port_;
     app_id_t appId_;
-    // AppMap app_map_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;
+    LdoIndex ldo_index_;
+    DataMap data_map_;
 };
 
 }  // namespace nimbus

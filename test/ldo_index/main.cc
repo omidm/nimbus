@@ -58,15 +58,15 @@ char relationship(nimbus::GeometricRegion* r1, nimbus::GeometricRegion* r2) {
   }
 }
 
-void printLdo(nimbus::LogicalDataObject* obj) {
+void printLdo(const nimbus::LogicalDataObject* obj) {
   printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());
   printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
 }
 
-void printLdoVector(nimbus::LdoVector* v) {
-  nimbus::LdoVector::iterator iter = v->begin();
+void printLdoVector(nimbus::CLdoVector* v) {
+  nimbus::CLdoVector::iterator iter = v->begin();
   while (iter != v->end()) {
-    nimbus::LogicalDataObject* obj = *iter;
+    const nimbus::LogicalDataObject* obj = *iter;
     printLdo(obj);
     ++iter;
   }
@@ -132,22 +132,26 @@ int main(int argc, char *argv[]) {
   }
 
   // Test operations
-
+  nimbus::CLdoVector v1;
   printf("Objects intersecting A. Should be A, B, and E.\n");
-  nimbus::LdoVector* v = index.IntersectingObjects("velocity",
-                                                   ldoA.region());
-  printLdoVector(v);
-  delete v;
+  std::string velocity = "velocity";
+  std::string pressure = "pressure";
+  index.IntersectingObjects(velocity,
+                            ldoA.region(),
+                            &v1);
+  printLdoVector(&v1);
 
+  nimbus::CLdoVector v2;
   printf("Testing variable map. Should have no output.\n");
-  v = index.IntersectingObjects("pressure",
-                                ldoA.region());
-  printLdoVector(v);
-  delete v;
+  index.IntersectingObjects(pressure,
+                            ldoA.region(),
+                            &v2);
+  printLdoVector(&v2);
 
+  nimbus::CLdoVector v3;
   printf("Objects E covers. Should be A, B, D, E.\n");
-  v = index.CoveredObjects("velocity",
-                           ldoE.region());
-  printLdoVector(v);
-  delete v;
+  index.CoveredObjects(velocity,
+                       ldoE.region(),
+                       &v3);
+  printLdoVector(&v3);
 }
