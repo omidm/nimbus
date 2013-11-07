@@ -41,6 +41,11 @@
 #include "shared/geometric_region.h"
 
 namespace nimbus {
+
+  GeometricRegion::GeometricRegion() {
+    x_ = y_ = z_ = dx_ = dy_ = dz_ = -1;
+  }
+
 /**
  * \fn GeometricRegion::GeometricRegion(int_dimension_t x,
                                          int_dimension_t y,

@@ -49,6 +49,7 @@ namespace nimbus {
 
   class GeometricRegion {
   public:
+    GeometricRegion();
     GeometricRegion(int_dimension_t x,
                     int_dimension_t y,
                     int_dimension_t z,

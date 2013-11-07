@@ -116,8 +116,16 @@ bool nimbus::DataManager::HasPartition(partition_id_t id) {
   return partition_map_.find(id) != partition_map_.end();
 }
 
-
-
+/**
+ * \fn GeometricRegion nimbus::DataManager::FindPartition(partition_id_t id)
+ *
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+GeometricRegion nimbus::DataManager::FindPartition(partition_id_t id) {
+  return partition_map_[id];
+}
 
 /**
  * \fn bool nimbus::DataManager::AddLogicalObject(data_id_t id,
