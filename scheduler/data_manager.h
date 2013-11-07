@@ -49,7 +49,7 @@
 #include "shared/logical_data_object.h"
 #include "data/physical_data.h"
 #include "shared/ldo_index.h"
-#include "scheduler/data_map.h"
+#include "scheduler/physical_object_map.h"
 
 namespace nimbus {
 
@@ -101,7 +101,7 @@ namespace nimbus {
                            PhysicalDataVector* dest);
 
   private:
-    DataMap data_map_;
+    PhysicalObjectMap physical_object_map_;
     LdoIndex ldo_index_;
     std::map<data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;

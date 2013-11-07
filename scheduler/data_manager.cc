@@ -142,7 +142,7 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
     LogicalDataObject* ldo = new LogicalDataObject(id, variable, region);
     dbg(DBG_MEMORY, "Allocated ldo 0x%x\n", ldo);
     ldo_map_[id] = ldo;
-    data_map_.AddLogicalObject(ldo);
+    physical_object_map_.AddLogicalObject(ldo);
     ldo_index_.AddObject(ldo);
     return true;
   }
@@ -187,7 +187,7 @@ bool nimbus::DataManager::RemoveLogicalObject(data_id_t id) {
     dbg(DBG_DATA_OBJECTS, "Removing logical object %llu from data manager.\n", id);
     LogicalDataObject* obj = ldo_map_[id];
     ldo_map_.erase(id);
-    data_map_.RemoveLogicalObject(id);
+    physical_object_map_.RemoveLogicalObject(id);
     ldo_index_.RemoveObject(id);
     delete obj;
     return true;
@@ -285,7 +285,7 @@ int nimbus::DataManager::FindAdjacentLogicalObjects(std::string variable,
 */
 bool nimbus::DataManager::AddPhysicalInstance(LogicalDataObject *object,
                                               PhysicalData instance) {
-  return data_map_.AddPhysicalInstance(object, instance);
+  return physical_object_map_.AddPhysicalInstance(object, instance);
 }
 
 
@@ -299,7 +299,7 @@ bool nimbus::DataManager::AddPhysicalInstance(LogicalDataObject *object,
 */
 bool nimbus::DataManager::RemovePhysicalInstance(LogicalDataObject *object,
                                                  PhysicalData instance) {
-  return data_map_.RemovePhysicalInstance(object, instance);
+  return physical_object_map_.RemovePhysicalInstance(object, instance);
 }
 
 
@@ -310,7 +310,7 @@ bool nimbus::DataManager::RemovePhysicalInstance(LogicalDataObject *object,
  * \return
 */
 const PhysicalDataVector * nimbus::DataManager::AllInstances(LogicalDataObject *object) {
-  return data_map_.AllInstances(object);
+  return physical_object_map_.AllInstances(object);
 }
 
 
@@ -324,7 +324,7 @@ const PhysicalDataVector * nimbus::DataManager::AllInstances(LogicalDataObject *
 */
 int nimbus::DataManager::AllInstances(LogicalDataObject *object,
                                   PhysicalDataVector *dest) {
-  return data_map_.AllInstances(object, dest);
+  return physical_object_map_.AllInstances(object, dest);
 }
 
 
@@ -341,7 +341,7 @@ int nimbus::DataManager::AllInstances(LogicalDataObject *object,
 int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
                                           worker_id_t worker,
                                           PhysicalDataVector *dest) {
-  return data_map_.InstancesByWorker(object, worker, dest);
+  return physical_object_map_.InstancesByWorker(object, worker, dest);
 }
 /**
  * \fn int nimbus::DataManager::AllInstancesByVersion(LogicalDataObject *object,
@@ -356,7 +356,7 @@ int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
 int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
                                            data_version_t version,
                                            PhysicalDataVector *dest) {
-  return data_map_.InstancesByVersion(object, version, dest);
+  return physical_object_map_.InstancesByVersion(object, version, dest);
 }
 
 

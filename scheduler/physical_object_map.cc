@@ -34,29 +34,29 @@
 
 /***********************************************************************
  * AUTHOR: Philip Levis <pal>
- *   FILE: .//data_map.cc
+ *   FILE: .//physical_object_map.cc
  *   DATE: Fri Nov  1 12:44:48 2013
  *  DESCR:
  ***********************************************************************/
-#include "scheduler/data_map.h"
+#include "scheduler/physical_object_map.h"
 #include "shared/dbg.h"
 
 namespace nimbus {
 /**
- * \fn nimbus::DataMap::DataMap()
+ * \fn nimbus::PhysicalObjectMap::PhysicalObjectMap()
  * \brief Brief description.
  * \return
 */
-nimbus::DataMap::DataMap() {}
+nimbus::PhysicalObjectMap::PhysicalObjectMap() {}
 
 
 /**
- * \fn nimbus::DataMap::~DataMap()
+ * \fn nimbus::PhysicalObjectMap::~PhysicalObjectMap()
  * \brief Brief description.
  * \return
 */
-nimbus::DataMap::~DataMap() {
-  DataMapType::iterator it = data_map_.begin();
+nimbus::PhysicalObjectMap::~PhysicalObjectMap() {
+  PhysicalObjectMapType::iterator it = data_map_.begin();
   for (; it != data_map_.end(); ++it) {
     std::pair<data_id_t, PhysicalDataVector*> pair = *it;
     dbg(DBG_DATA_OBJECTS, "Freeing physical vector 0x%llx\n", pair.second);
@@ -66,12 +66,12 @@ nimbus::DataMap::~DataMap() {
 
 
 /**
- * \fn void nimbus::DataMap::AddLogicalObject(LogicalDataObject *object)
+ * \fn void nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object)
  * \brief Brief description.
  * \param object
  * \return
 */
-bool nimbus::DataMap::AddLogicalObject(LogicalDataObject *object) {
+bool nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object) {
   data_id_t id = object->id();
 
   // Does not exist, insert
@@ -85,7 +85,7 @@ bool nimbus::DataMap::AddLogicalObject(LogicalDataObject *object) {
   }
 }
 
-bool nimbus::DataMap::RemoveLogicalObject(data_id_t id) {
+bool nimbus::PhysicalObjectMap::RemoveLogicalObject(data_id_t id) {
   if (data_map_.find(id) == data_map_.end()) {  // Exists
     return false;
   } else {
@@ -97,12 +97,12 @@ bool nimbus::DataMap::RemoveLogicalObject(data_id_t id) {
   }
 }
 /**
- * \fn void nimbus::DataMap::AddPhysicalInstance(PhysicalData *instance)
+ * \fn void nimbus::PhysicalObjectMap::AddPhysicalInstance(PhysicalData *instance)
  * \brief Brief description.
  * \param instance
  * \return
 */
-bool nimbus::DataMap::AddPhysicalInstance(LogicalDataObject* obj,
+bool nimbus::PhysicalObjectMap::AddPhysicalInstance(LogicalDataObject* obj,
                                           PhysicalData instance) {
   if (data_map_.find(obj->id()) == data_map_.end()) {
     return false;
@@ -115,12 +115,12 @@ bool nimbus::DataMap::AddPhysicalInstance(LogicalDataObject* obj,
 
 
 /**
- * \fn void nimbus::DataMap::RemovePhysicalInstance(PhysicalData *instance)
+ * \fn void nimbus::PhysicalObjectMap::RemovePhysicalInstance(PhysicalData *instance)
  * \brief Brief description.
  * \param instance
  * \return
 */
-bool nimbus::DataMap::RemovePhysicalInstance(LogicalDataObject* obj,
+bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
                                              PhysicalData instance) {
   if (data_map_.find(obj->id()) == data_map_.end()) {
     return false;
@@ -140,12 +140,12 @@ bool nimbus::DataMap::RemovePhysicalInstance(LogicalDataObject* obj,
 
 
 /**
- * \fn const PhysicalDataVector * nimbus::DataMap::AllInstances(LogicalDataObject *object)
+ * \fn const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object)
  * \brief Brief description.
  * \param object
  * \return
 */
-const PhysicalDataVector * nimbus::DataMap::AllInstances(LogicalDataObject *object) {
+const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object) {
   if (data_map_.find(object->id()) == data_map_.end()) {
     return NULL;
   } else {
@@ -156,14 +156,14 @@ const PhysicalDataVector * nimbus::DataMap::AllInstances(LogicalDataObject *obje
 
 
 /**
- * \fn int nimbus::DataMap::AllInstances(LogicalDataObject *object,
+ * \fn int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
                               PhysicalDataVector *dest)
  * \brief Brief description.
  * \param object
  * \param dest
  * \return
 */
-int nimbus::DataMap::AllInstances(LogicalDataObject *object,
+int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
                                   PhysicalDataVector *dest) {
   if (data_map_.find(object->id()) == data_map_.end()) {
     return 0;
@@ -179,7 +179,7 @@ int nimbus::DataMap::AllInstances(LogicalDataObject *object,
 
 
 /**
- * \fn int nimbus::DataMap::InstancesByWorker(LogicalDataObject *object,
+ * \fn int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
                                    worker_id_t worker,
                                    PhysicalDataVector *dest)
  * \brief Brief description.
@@ -188,7 +188,7 @@ int nimbus::DataMap::AllInstances(LogicalDataObject *object,
  * \param dest
  * \return
 */
-int nimbus::DataMap::InstancesByWorker(LogicalDataObject *object,
+int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
                                    worker_id_t worker,
                                    PhysicalDataVector *dest) {
   if (data_map_.find(object->id()) == data_map_.end()) {
@@ -212,7 +212,7 @@ int nimbus::DataMap::InstancesByWorker(LogicalDataObject *object,
 
 
 /**
- * \fn int nimbus::DataMap::InstancesByVersion(LogicalDataObject *object,
+ * \fn int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
                                     data_version_t version,
                                     PhysicalDataVector *dest)
  * \brief Brief description.
@@ -221,7 +221,7 @@ int nimbus::DataMap::InstancesByWorker(LogicalDataObject *object,
  * \param dest
  * \return
 */
-int nimbus::DataMap::InstancesByVersion(LogicalDataObject *object,
+int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
                                         data_version_t version,
                                         PhysicalDataVector *dest) {
   if (data_map_.find(object->id()) == data_map_.end()) {

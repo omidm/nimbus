@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * Nimbus scheduler.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -51,9 +51,9 @@
 #include <set>
 #include "shared/nimbus_types.h"
 #include "shared/cluster.h"
-#include "shared/ldo_index.h"
 #include "shared/parser.h"
 #include "shared/scheduler_server.h"
+#include "scheduler/data_manager.h"
 
 namespace nimbus {
 class Scheduler {
@@ -69,6 +69,7 @@ class Scheduler {
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
+    virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
 
     // Will remove it later, just here so simple_scheduler will pass.
     virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm) {}
@@ -98,8 +99,7 @@ class Scheduler {
     app_id_t appId_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;
-    LdoIndex ldo_index_;
-    DataMap data_map_;
+    DataManager data_manager_;
 };
 
 }  // namespace nimbus

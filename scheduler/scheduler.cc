@@ -40,7 +40,7 @@
 
 #include "scheduler/scheduler.h"
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
@@ -80,6 +80,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::JOB_DONE:
       ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
       break;
+    case SchedulerCommand::DEFINE_PARTITION:
+      ProcessDefinePartitionCommand(reinterpret_cast<DefinePartitionCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->toString() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -95,7 +98,14 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
-  // Insert data into the LdoIndex
+  data_manager_.AddLogicalObject(cm->data_id().elem(),
+                                 cm->data_name(),
+                                 cm->partition_id().elem());
+}
+
+void Scheduler::ProcessDefinePartitionCommand(DefinePartitionCommand* cm) {
+  GeometricRegion r = *(cm->region());
+  data_manager_.AddPartition(cm->partition_id().elem(), r);
 }
 
 void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
@@ -169,3 +179,4 @@ void Scheduler::LoadUserCommands() {
 }
 
 
+}  // namespace nimbus

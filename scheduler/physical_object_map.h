@@ -38,8 +38,8 @@
   * 
   */
 
-#ifndef NIMBUS_SCHEDULER_DATA_MAP_H_
-#define NIMBUS_SCHEDULER_DATA_MAP_H_
+#ifndef NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
+#define NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
 
 #include <map>
 #include <string>
@@ -53,12 +53,12 @@
 
 namespace nimbus {
 
-  typedef std::map<data_id_t, PhysicalDataVector*> DataMapType;
+  typedef std::map<data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
 
-  class DataMap {
+  class PhysicalObjectMap {
   public:
-    DataMap();
-    virtual ~DataMap();
+    PhysicalObjectMap();
+    virtual ~PhysicalObjectMap();
 
     virtual bool AddLogicalObject(LogicalDataObject* object);
     virtual bool RemoveLogicalObject(data_id_t id);
@@ -78,8 +78,8 @@ namespace nimbus {
                                    data_version_t version,
                                    PhysicalDataVector* dest);
   private:
-    DataMapType data_map_;
+    PhysicalObjectMapType data_map_;
   };
 }  // namespace nimbus
 
-#endif  // NIMBUS_SCHEDULER_DATA_MAP_H_
+#endif  // NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
