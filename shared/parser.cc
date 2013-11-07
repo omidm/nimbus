@@ -993,13 +993,13 @@ bool ParseLocalCopyCommand(const std::string& input,
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     ID<data_id_t>& data_id,
-    ID<partition_t>& partition_id,
-    IDSet<partition_t>& neighbor_partitions,
+    ID<partition_id_t>& partition_id,
+    IDSet<partition_id_t>& neighbor_partitions,
     Parameter& params) {
   int num = 5;
   data_id_t data_id_elem;
-  partition_t partition_id_elem;
-  IDSet<partition_t>::IDSetContainer partition_id_set;
+  partition_id_t partition_id_elem;
+  IDSet<partition_id_t>::IDSetContainer partition_id_set;
   SerializedData ser_data;
   IDSet<param_id_t> param_id_set;
 

@@ -152,8 +152,8 @@ bool ParseLocalCopyCommand(const std::string& input,
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     ID<data_id_t>& data_id,
-    ID<partition_t>& partition_id,
-    IDSet<partition_t>& neighbor_partitions,
+    ID<partition_id_t>& partition_id,
+    IDSet<partition_id_t>& neighbor_partitions,
     Parameter& params);
 
 bool ParseHandshakeCommand(const std::string& input,

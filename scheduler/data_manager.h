@@ -58,10 +58,18 @@ namespace nimbus {
     DataManager();
     virtual ~DataManager();
 
+    bool AddPartition(partition_id_t id, GeometricRegion region);
+    bool RemovePartition(partition_id_t id);
+    bool HasPartition(partition_id_t id);
+    GeometricRegion FindPartition(partition_id_t id);
 
     bool AddLogicalObject(data_id_t id,
                           std::string variable,
                           GeometricRegion region);
+    bool AddLogicalObject(data_id_t id,
+                          std::string variable,
+                          partition_id_t partition);
+
     bool RemoveLogicalObject(data_id_t id);
 
     const LogicalDataObject* FindLogicalObject(data_id_t id);
@@ -96,6 +104,7 @@ namespace nimbus {
     DataMap data_map_;
     LdoIndex ldo_index_;
     std::map<data_id_t, LogicalDataObject*> ldo_map_;
+    std::map<partition_id_t, GeometricRegion> partition_map_;
   };
 }  // namespace nimbus
 

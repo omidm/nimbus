@@ -464,8 +464,8 @@ class DefineDataCommand : public SchedulerCommand {
     DefineDataCommand();
     DefineDataCommand(const std::string& data_name,
                       const ID<data_id_t>& data_id,
-                      const ID<partition_t>& partition_id,
-                      const IDSet<partition_t>& neighbor_partition,
+                      const ID<partition_id_t>& partition_id,
+                      const IDSet<partition_id_t>& neighbor_partition,
                       const Parameter& params);
     ~DefineDataCommand();
 
@@ -473,21 +473,21 @@ class DefineDataCommand : public SchedulerCommand {
     virtual std::string toStringWTags();
     std::string data_name();
     ID<data_id_t> data_id();
-    ID<partition_t> partition_id();
-    IDSet<partition_t> neighbor_partitions();
+    ID<partition_id_t> partition_id();
+    IDSet<partition_id_t> neighbor_partitions();
     Parameter params();
 
   private:
     std::string data_name_;
     ID<data_id_t> data_id_;
-    ID<partition_t> partition_id_;
-    IDSet<partition_t> neighbor_partitions_;
+    ID<partition_id_t> partition_id_;
+    IDSet<partition_id_t> neighbor_partitions_;
     Parameter params_;
 };
 
 class DefinePartitionCommand : public SchedulerCommand {
  public:
-  DefinePartitionCommand(const ID<partition_t>& partition_id,
+  DefinePartitionCommand(const ID<partition_id_t>& partition_id,
                          const GeometricRegion& r,
                          const Parameter& params);
   ~DefinePartitionCommand();
@@ -495,12 +495,12 @@ class DefinePartitionCommand : public SchedulerCommand {
   virtual std::string toString();
   virtual std::string toStringWTags();
 
-  ID<partition_t> partition_id();
+  ID<partition_id_t> partition_id();
   const GeometricRegion* region();
   Parameter params();
 
  private:
-  ID<partition_t> id_;
+  ID<partition_id_t> id_;
   GeometricRegion region_;
   Parameter params_;
 };

@@ -370,8 +370,8 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     } else if (type == DEFINE_DATA) {
       std::string data_name;
       ID<data_id_t> data_id;
-      ID<partition_t> partition_id;
-      IDSet<partition_t> neighbor_partitions;
+      ID<partition_id_t> partition_id;
+      IDSet<partition_id_t> neighbor_partitions;
       Parameter params;
 
       bool cond = ParseDefineDataCommand(param_segment, data_name,
@@ -1052,8 +1052,8 @@ DefineDataCommand::DefineDataCommand() {
 
 DefineDataCommand::DefineDataCommand(const std::string& data_name,
     const ID<data_id_t>& data_id,
-    const ID<partition_t>& partition_id,
-    const IDSet<partition_t>& neighbor_partitions,
+    const ID<partition_id_t>& partition_id,
+    const IDSet<partition_id_t>& neighbor_partitions,
     const Parameter& params)
 : data_name_(data_name), data_id_(data_id),
   partition_id_(partition_id),
@@ -1098,11 +1098,11 @@ ID<data_id_t> DefineDataCommand::data_id() {
   return data_id_;
 }
 
-ID<partition_t> DefineDataCommand::partition_id() {
+ID<partition_id_t> DefineDataCommand::partition_id() {
   return partition_id_;
 }
 
-IDSet<partition_t> DefineDataCommand::neighbor_partitions() {
+IDSet<partition_id_t> DefineDataCommand::neighbor_partitions() {
   return neighbor_partitions_;
 }
 
@@ -1160,7 +1160,7 @@ Parameter JobDoneCommand::params() {
   return params_;
 }
 
-DefinePartitionCommand::DefinePartitionCommand(const ID<partition_t>& part,
+DefinePartitionCommand::DefinePartitionCommand(const ID<partition_id_t>& part,
                                                const GeometricRegion& r,
                                                const Parameter& params):
   id_(part), region_(r), params_(params) {
@@ -1186,7 +1186,7 @@ std::string DefinePartitionCommand::toStringWTags() {
   return str;
 }
 
-ID<partition_t> DefinePartitionCommand::partition_id() {
+ID<partition_id_t> DefinePartitionCommand::partition_id() {
   return id_;
 }
 

@@ -93,8 +93,8 @@ class Job {
 
     bool DefineData(const std::string& name,
         const data_id_t& id,
-        const partition_t& partition_id,
-        const IDSet<partition_t>& neighbor_partition,
+        const partition_id_t& partition_id,
+        const IDSet<partition_id_t>& neighbor_partition,
         const Parameter& params);
 
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);

@@ -98,8 +98,8 @@ class Application {
 
   void DefineData(const std::string& name,
       const data_id_t& id,
-      const partition_t& partition_id,
-      const IDSet<partition_t>& neighbor_partition,
+      const partition_id_t& partition_id,
+      const IDSet<partition_id_t>& neighbor_partition,
       const Parameter& params);
 
   Job* CloneJob(std::string name);

@@ -64,7 +64,7 @@ namespace nimbus {
             // create uniform partitions and add all nodes and relation
             // information
             bool createUniformPartitions
-                (partition_t x, partition_t y, partition_t z);
+                (partition_id_t x, partition_id_t y, partition_id_t z);
 
         private:
             // range of grid, TODO(chinmayee): change these to Coord3d

@@ -83,7 +83,7 @@ class Data {
 
  private:
   data_id_t id_;
-  partition_t partition_id_;
+  partition_id_t partition_id_;
   bool advanceData_;
   Hosts hosts_;
 

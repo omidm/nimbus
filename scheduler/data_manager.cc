@@ -68,9 +68,61 @@ nimbus::DataManager::~DataManager() {
 
 
 /**
+ * \fn bool nimbus::DataManager::AddPartition(partition_id_t id,
+                                              GeometricRegion region)
+ * \brief Brief description.
+ * \param id
+ * \param region
+ * \return
+*/
+bool nimbus::DataManager::AddPartition(partition_id_t id,
+                                       GeometricRegion r) {
+  dbg(DBG_DATA_OBJECTS, "Adding %llu partition.\n", id);
+  if (HasPartition(id)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing partition %llu.\n", id); // NOLINT
+    return false;
+  } else {
+    partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
+    return true;
+  }
+}
+
+/**
+ * \fn bool nimbus::DataManager::RemovePartition(partition_id_t id)
+ *
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+bool nimbus::DataManager::RemovePartition(partition_id_t id) {
+  dbg(DBG_DATA_OBJECTS, "Removing partition %llu.\n", id);
+  if (!HasPartition(id)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried removing non-existent partition %llu.\n", id); // NOLINT
+    return false;
+  } else {
+    partition_map_.erase(id);
+    return true;
+  }
+}
+
+/**
+ * \fn bool nimbus::DataManager::HasPartition(partition_id_t id)
+ *
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+bool nimbus::DataManager::HasPartition(partition_id_t id) {
+  return partition_map_.find(id) != partition_map_.end();
+}
+
+
+
+
+/**
  * \fn bool nimbus::DataManager::AddLogicalObject(data_id_t id,
                                       std::string variable,
-                                      GeometricRegion *region)
+                                      GeometricRegion region)
  * \brief Brief description.
  * \param id
  * \param variable
@@ -93,6 +145,30 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
     data_map_.AddLogicalObject(ldo);
     ldo_index_.AddObject(ldo);
     return true;
+  }
+}
+
+
+/**
+ * \fn bool nimbus::DataManager::AddLogicalObject(data_id_t id,
+                                      std::string variable,
+                                      partition_id_t partition)
+ * \brief Brief description.
+ * \param id
+ * \param variable
+ * \param partition
+ * \return
+*/
+bool nimbus::DataManager::AddLogicalObject(data_id_t id,
+                                           std::string variable,
+                                           partition_id_t partition) {
+  dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
+  if (!HasPartition(partition)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding object %llu with invalid partition %llu.\n", id, partition); // NOLINT
+    return false;
+  } else {
+    GeometricRegion r = FindPartition(partition);
+    return AddLogicalObject(id, variable, r);
   }
 }
 
