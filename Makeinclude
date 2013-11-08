@@ -32,7 +32,7 @@ CFLAGS += -Wall -g -pg
 # optimizations under Darwin -pal
 ifdef OS_DARWIN
   CFLAGS  += -Wl,-no_implicit_dylibs
-  LDFLAGS += -Wl,-rpath /Users/pal/src/cloud/src/nimbus/
+  LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}
 endif
 
 # -I params for all cpp invocations
