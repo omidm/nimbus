@@ -90,8 +90,8 @@ void Main::Execute(Parameter params, const DataArray& da) {
   std::vector<data_id_t> d;
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
-  IDSet<partition_t> neighbor_partitions;
-  partition_t partition_id = 0;
+  IDSet<partition_id_t> neighbor_partitions;
+  partition_id_t partition_id = 0;
   Parameter par;
   IDSet<param_id_t> params_idset;
 
