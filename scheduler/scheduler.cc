@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * Nimbus scheduler.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -45,6 +45,13 @@ namespace nimbus {
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
   appId_ = 0;
+  data_manager_ = NULL;
+}
+
+Scheduler::~Scheduler() {
+  if (data_manager_ != NULL) {
+    delete data_manager_;
+  }
 }
 
 void Scheduler::Run() {
@@ -52,6 +59,7 @@ void Scheduler::Run() {
 
   SetupWorkerInterface();
   SetupUserInterface();
+  SetupDataManager();
   id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
@@ -98,14 +106,14 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
-  data_manager_.AddLogicalObject(cm->data_id().elem(),
+  data_manager_->AddLogicalObject(cm->data_id().elem(),
                                  cm->data_name(),
                                  cm->partition_id().elem());
 }
 
 void Scheduler::ProcessDefinePartitionCommand(DefinePartitionCommand* cm) {
   GeometricRegion r = *(cm->region());
-  data_manager_.AddPartition(cm->partition_id().elem(), r);
+  data_manager_->AddPartition(cm->partition_id().elem(), r);
 }
 
 void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
@@ -136,6 +144,10 @@ void Scheduler::SetupWorkerInterface() {
   server_ = new SchedulerServer(listening_port_);
   server_->set_worker_command_set(&worker_command_set_);
   worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+}
+
+void Scheduler::SetupDataManager() {
+  data_manager_ = new DataManager(server_);
 }
 
 void Scheduler::LoadWorkerCommands() {

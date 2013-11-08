@@ -92,6 +92,16 @@ class SchedulerServer {
   virtual void SendCommands(SchedulerWorker* destinationWorker,
                             SchedulerCommandList* commands);
 
+
+  /** Broadcast command to all workers. Returns immediately and processes
+   *  the send asynchronously. */
+  virtual void BroadcastCommand(SchedulerCommand* command);
+
+  /** Broadcast commands to all workers. Returns immediately and processes
+      the send asynchronously. */
+  virtual void BroadcastCommands(SchedulerCommandList* commands);
+
+
   /** Returns the current list of workers. Note that SchedulerServer
    *  may modify this list or the workers on it. Accessing the list
    *  therefore involves locks for thread safety. */

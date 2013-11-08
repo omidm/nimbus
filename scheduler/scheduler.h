@@ -59,7 +59,7 @@ namespace nimbus {
 class Scheduler {
   public:
     explicit Scheduler(port_t listening_port);
-    virtual ~Scheduler() {}
+    virtual ~Scheduler();
 
     virtual void Run();
     virtual void SchedulerCoreProcessor();
@@ -88,6 +88,7 @@ class Scheduler {
   private:
     virtual void SetupUserInterface();
     virtual void SetupWorkerInterface();
+    virtual void SetupDataManager();
     virtual void GetUserCommand();
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
@@ -99,7 +100,7 @@ class Scheduler {
     app_id_t appId_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;
-    DataManager data_manager_;
+    DataManager* data_manager_;
 };
 
 }  // namespace nimbus

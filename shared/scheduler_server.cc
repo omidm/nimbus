@@ -122,6 +122,22 @@ void SchedulerServer::SendCommands(SchedulerWorker* worker,
   }
 }
 
+void SchedulerServer::BroadcastCommand(SchedulerCommand* command) {
+  SchedulerWorkerList::iterator it = workers_.begin();
+  for (; it != workers_.end(); ++it) {
+    SchedulerWorker* w = *it;
+    SendCommand(w, command);
+  }
+}
+
+void SchedulerServer::BroadcastCommands(SchedulerCommandList* commands) {
+  SchedulerWorkerList::iterator it = workers_.begin();
+  for (; it != workers_.end(); ++it) {
+    SchedulerWorker* w = *it;
+    SendCommands(w, commands);
+  }
+}
+
 void SchedulerServer::ListenForNewConnections() {
   dbg(DBG_NET, "Scheduler server listening for new connections.\n");
   tcp::socket* socket = new tcp::socket(*io_service_);

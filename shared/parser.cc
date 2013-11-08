@@ -33,7 +33,7 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * Parser for Nimbus scheduler protocol.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -166,9 +166,10 @@ bool isSet(const std::string& str) {
 // ********************************************************
 
 bool ParseSchedulerCommand(const std::string& input,
-    SchedulerCommand::TypeSet* command_set,
-    std::string& name, std::string& param_segment,
-    SchedulerCommand::Type& command_type) {
+                           SchedulerCommand::TypeSet* command_set,
+                           std::string& name,
+                           std::string& param_segment,
+                           SchedulerCommand::Type& command_type) {
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
@@ -1235,4 +1236,3 @@ bool ParseParameter(const std::string& input,
 
 
 }  // namespace nimbus
-

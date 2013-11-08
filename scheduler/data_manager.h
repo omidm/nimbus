@@ -47,8 +47,9 @@
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/logical_data_object.h"
-#include "data/physical_data.h"
 #include "shared/ldo_index.h"
+#include "shared/scheduler_server.h"
+#include "data/physical_data.h"
 #include "scheduler/physical_object_map.h"
 
 namespace nimbus {
@@ -56,22 +57,23 @@ namespace nimbus {
   class DataManager {
   public:
     DataManager();
+    explicit DataManager(SchedulerServer* s);
     virtual ~DataManager();
 
+    /* Managing geometric partitions. */
     bool AddPartition(partition_id_t id, GeometricRegion region);
     bool RemovePartition(partition_id_t id);
     bool HasPartition(partition_id_t id);
     GeometricRegion FindPartition(partition_id_t id);
 
+    /* Managing logical objects. */
     bool AddLogicalObject(data_id_t id,
                           std::string variable,
                           GeometricRegion region);
     bool AddLogicalObject(data_id_t id,
                           std::string variable,
                           partition_id_t partition);
-
     bool RemoveLogicalObject(data_id_t id);
-
     const LogicalDataObject* FindLogicalObject(data_id_t id);
     int FindLogicalObjects(std::string variable,
                            CLdoVector* dest);
@@ -85,11 +87,11 @@ namespace nimbus {
                                    GeometricRegion* region,
                                    CLdoVector* dest);
 
+    /* Managing physical instances of logical objects. */
     bool AddPhysicalInstance(LogicalDataObject* object,
                              PhysicalData instance);
     bool RemovePhysicalInstance(LogicalDataObject* object,
                                 PhysicalData instance);
-
     const PhysicalDataVector* AllInstances(LogicalDataObject* object);
     int AllInstances(LogicalDataObject* object,
                      PhysicalDataVector* dest);
@@ -101,10 +103,14 @@ namespace nimbus {
                            PhysicalDataVector* dest);
 
   private:
+    bool SendLdoAddToWorkers(LogicalDataObject* ldo);
+    bool SendLdoRemoveToWorkers(LogicalDataObject* ldo);
+
     PhysicalObjectMap physical_object_map_;
     LdoIndex ldo_index_;
     std::map<data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
+    SchedulerServer* server_;
   };
 }  // namespace nimbus
 

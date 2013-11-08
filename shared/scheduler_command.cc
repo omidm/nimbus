@@ -221,10 +221,46 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
 }
 
 bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
-    SchedulerCommand::TypeSet* command_set,
-    SchedulerCommand*& generated) {
+                                                     SchedulerCommand::TypeSet* command_set,
+                                                     SchedulerCommand*& generated) {
   std::string name, param_segment;
   SchedulerCommand::Type type;
+
+  /* There is a much cleaner way to do this.
+
+     1) It is not clear why there is a command_set
+        parameter. Shouldn't this be a variable that the
+        object can access?
+     2) Whenever you have a big if-else like this, it's usually
+        a sign of a problem. There should either be a switch
+        statement on a variable (one jump, not N jumps) or a
+        name-driven hashtable approach using an object. In
+        this case I think the latter approach is better.
+
+     The way it looks like is this. First, there's a hashtable
+     of recognized commands based on their string (or integer)
+     identifier. You parse the name from the command, then look
+     up the prototype. You call clone on the prototype to obtain
+     an empty intance of it. This new object has a parse() method,
+     which takes the string of parameters and returns a bool.
+     For example, DefinePartitionCommand
+
+     SchedulerCommand* proto = prototype_lookup(name);
+     if (proto == NULL {
+       // no such command: return, clean up
+     }
+     SchedulerCommand* newCmd = proto->Clone();
+     if (newCmd->parse(params) == FALSE) {
+       // parse failed: return, clean up
+     }
+
+     with
+     
+     bool DefinePartitionCommand::Parse(std::string params) {
+        // Check that cmd is a DefinePartitionCommand                                        
+        // parse the parameters, check that they are OK.
+     }
+  */  
   if (!ParseSchedulerCommand(input, command_set, name, param_segment, type)) {
     std::cout << "ERROR: Could not detect valid scheduler command." << std::endl;
     return false;
@@ -400,7 +436,6 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       ID<job_id_t> job_id;
       IDSet<job_id_t> after_set;
       Parameter params;
-
       bool cond = ParseJobDoneCommand(param_segment, job_id, after_set, params);
 
       if (!cond) {

@@ -42,12 +42,24 @@
 #include "shared/dbg.h"
 
 namespace nimbus {
+
 /**
  * \fn nimbus::DataManager::DataManager()
  * \brief Brief description.
  * \return
 */
-nimbus::DataManager::DataManager() {}
+nimbus::DataManager::DataManager() {
+  server_ = NULL;
+}
+
+/**
+ * \fn nimbus::DataManager::DataManager(SchedulerServer* server)
+ * \brief Brief description.
+ * \return
+*/
+nimbus::DataManager::DataManager(SchedulerServer* server) {
+  server_ = server;
+}
 
 
 /**
@@ -145,6 +157,10 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
     dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing object %llu.\n", id); // NOLINT
     return false;
   } else {
+    // We can insert this logical object. Instantiate the necessary objects
+    // so the manager can be in charge of their allocation/deallocation.
+    // Insert the object into the index (id->ldo mapping), the physical
+    // map, and the LdoIndex for geometric queries.
     GeometricRegion* region = new GeometricRegion(r);
     dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", region);
     LogicalDataObject* ldo = new LogicalDataObject(id, variable, region);
@@ -152,6 +168,10 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
     ldo_map_[id] = ldo;
     physical_object_map_.AddLogicalObject(ldo);
     ldo_index_.AddObject(ldo);
+
+    // We've updated our local state, now tell the workers to add it too.
+    SendLdoAddToWorkers(ldo);
+
     return true;
   }
 }
@@ -197,6 +217,10 @@ bool nimbus::DataManager::RemoveLogicalObject(data_id_t id) {
     ldo_map_.erase(id);
     physical_object_map_.RemoveLogicalObject(id);
     ldo_index_.RemoveObject(id);
+
+    // We've cleared out local state, now tell the workers to do so too.
+    SendLdoRemoveToWorkers(obj);
+
     delete obj;
     return true;
   }
@@ -367,5 +391,20 @@ int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
   return physical_object_map_.InstancesByVersion(object, version, dest);
 }
 
+bool nimbus::DataManager::SendLdoAddToWorkers(LogicalDataObject* obj) {
+  if (server_ == NULL) {
+    return false;
+  }
+
+  return true;
+}
+
+bool nimbus::DataManager::SendLdoRemoveToWorkers(LogicalDataObject* obj) {
+  if (server_ == NULL) {
+    return false;
+  }
+
+  return true;
+}
 
 }  // namespace nimbus
