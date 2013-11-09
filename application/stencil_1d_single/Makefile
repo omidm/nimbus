@@ -11,7 +11,7 @@ CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
-LFLAGS += -lboost_thread-mt -lboost_system-mt
+LFLAGS += -lboost_thread-mt -lboost_system-mt -lnimbus
 SHARED_FLAGS = -shared -fPIC
 
 ifdef OS_DARWIN
