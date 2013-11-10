@@ -44,9 +44,11 @@
   */
 
 #include "shared/scheduler_command.h"
-#include "shared/dbg.h"
 
 using namespace nimbus;  // NOLINT
+using boost::tokenizer;
+using boost::char_separator;
+
 
 SchedulerCommand::SchedulerCommand() {
   name_ = BASE_NAME;
@@ -220,9 +222,49 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   return str;
 }
 
+SchedulerCommand* SchedulerCommand::Clone() {
+  std::cout << "WARNING: Base Scheduler Command Cloned." << std::endl;
+  return new SchedulerCommand();
+}
+
+bool SchedulerCommand::Parse(std::string param_segment) {
+  std::cout << "WARNING: Base Scheduler Command Parsed." << std::endl;
+  return false;
+}
+
+bool SchedulerCommand::ParseCommandType(const std::string& input,
+    SchedulerCommand::PrototypeTable* command_table,
+    SchedulerCommand*& generated_command,
+    std::string& param_segment) {
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  if (iter == tokens.end()) {
+    std::cout << "ERROR: Command is empty." << std::endl;
+    return false;
+  }
+  std::string name = *iter;
+  bool name_is_valid = false;
+  SchedulerCommand::PrototypeTable::iterator itr = command_table->begin();
+  for (; itr != command_table->end(); itr++) {
+    if (name == (*itr)->name()) {
+      name_is_valid = true;
+      generated_command = (*itr)->Clone();
+      break;
+    }
+  }
+  if (!name_is_valid) {
+    std::cout << "ERROR: Command name is unknown: " << name << std::endl;
+    return false;
+  }
+
+  param_segment = input.substr(name.length());
+  return true;
+}
+
 bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
-                                                     SchedulerCommand::TypeSet* command_set,
-                                                     SchedulerCommand*& generated) {
+    SchedulerCommand::PrototypeTable* command_table,
+    SchedulerCommand*& generated_command) {
   std::string name, param_segment;
   SchedulerCommand::Type type;
 
@@ -261,10 +303,15 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
         // parse the parameters, check that they are OK.
      }
   */  
-  if (!ParseSchedulerCommand(input, command_set, name, param_segment, type)) {
+  if (!ParseCommandType(input, command_table, generated_command, param_segment)) {
     std::cout << "ERROR: Could not detect valid scheduler command." << std::endl;
     return false;
   } else {
+    if (!generated_command->Parse(param_segment)) {
+    }
+
+/*
+
     if (type == SPAWN_JOB) {
       std::string job_name;
       IDSet<job_id_t> job_id;
@@ -448,6 +495,7 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
       std::cout << "ERROR: Unknown command." << std::endl;
       return false;
     }
+*/
     return true;
   }
 }

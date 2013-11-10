@@ -142,7 +142,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 void Scheduler::SetupWorkerInterface() {
   LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
-  server_->set_worker_command_set(&worker_command_set_);
+  server_->set_worker_command_table(&worker_command_table_);
   worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
 }
 
@@ -152,12 +152,12 @@ void Scheduler::SetupDataManager() {
 
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_set_.insert(SchedulerCommand::SPAWN_JOB);
-  worker_command_set_.insert(SchedulerCommand::SPAWN_COMPUTE_JOB);
-  worker_command_set_.insert(SchedulerCommand::SPAWN_COPY_JOB);
-  worker_command_set_.insert(SchedulerCommand::DEFINE_DATA);
-  worker_command_set_.insert(SchedulerCommand::HANDSHAKE);
-  worker_command_set_.insert(SchedulerCommand::JOB_DONE);
+  worker_command_table_.push_back(new SpawnJobCommand());
+  worker_command_table_.push_back(new SpawnComputeJobCommand());
+  worker_command_table_.push_back(new SpawnCopyJobCommand());
+  worker_command_table_.push_back(new DefineDataCommand());
+  worker_command_table_.push_back(new HandshakeCommand());
+  worker_command_table_.push_back(new JobDoneCommand());
 }
 
 void Scheduler::SetupUserInterface() {

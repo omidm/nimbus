@@ -88,7 +88,7 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
 
     SchedulerCommand* com = NULL;
     if (SchedulerCommand::GenerateSchedulerCommandChild(
-          command, scheduler_command_set_, com)) {
+          command, scheduler_command_table_, com)) {
       dbg(DBG_NET, "Scheduler client received command %s\n",
           com->toString().c_str());
     } else {
@@ -124,7 +124,8 @@ void SchedulerClient::run() {
 }
 
 
-void SchedulerClient::set_scheduler_command_set(SchedulerCommand::TypeSet* cms) {
-  scheduler_command_set_ = cms;
+void
+SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt) {
+  scheduler_command_table_ = cmt;
 }
 

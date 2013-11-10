@@ -83,7 +83,7 @@ class Scheduler {
     SchedulerServer* server_;
     IDMaker id_maker_;
     CmSet user_command_set_;
-    SchedulerCommand::TypeSet worker_command_set_;
+    SchedulerCommand::PrototypeTable worker_command_table_;
 
   private:
     virtual void SetupUserInterface();

@@ -47,6 +47,7 @@
 #define NIMBUS_SHARED_SCHEDULER_COMMAND_H_
 
 
+#include <boost/tokenizer.hpp>
 #include <sstream> // NOLINT
 #include <string>
 #include <vector>
@@ -55,6 +56,7 @@
 #include <set>
 #include "shared/id.h"
 #include "shared/idset.h"
+#include "shared/dbg.h"
 #include "shared/escaper.h"
 #include "shared/parameter.h"
 #include "shared/geometric_region.h"
@@ -108,8 +110,11 @@ class SchedulerCommand {
   };
 
   typedef std::set<Type> TypeSet;
+  typedef std::list<SchedulerCommand*> PrototypeTable;
 
   virtual void addParameter(CommandParameter parameter);
+  virtual SchedulerCommand* Clone();
+  virtual bool Parse(std::string param_segment);
   virtual std::string toString();
   virtual std::string toStringWTags();
   virtual std::string name();
@@ -118,8 +123,8 @@ class SchedulerCommand {
 
   static std::string GetNameFromType(Type type);
   static bool GenerateSchedulerCommandChild(const std::string& input,
-      TypeSet* command_set,
-      SchedulerCommand*& ptr_generated_command);
+      PrototypeTable* command_table,
+      SchedulerCommand*& generated_command);
 
 
   // virtual worker_id_t worker_id();
@@ -143,6 +148,11 @@ class SchedulerCommand {
   static const std::string DEFINE_PARTITION_NAME;
 
  private:
+  static bool ParseCommandType(const std::string& input,
+    SchedulerCommand::PrototypeTable* command_set,
+    SchedulerCommand*& generated_command,
+    std::string& param_segment);
+
   CommandParameterList parameters_;
   // worker_id_t worker_id_;
 };
