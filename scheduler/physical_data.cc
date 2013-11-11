@@ -38,7 +38,7 @@
  *   DATE: Fri Nov  1 10:41:39 2013
  *  DESCR:
  ***********************************************************************/
-#include "data/physical_data.h"
+#include "scheduler/physical_data.h"
 
 namespace nimbus {
 /**

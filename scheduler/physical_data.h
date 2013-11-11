@@ -37,8 +37,8 @@
   * a particular worker with a certain version number.
   */
 
-#ifndef NIMBUS_DATA_PHYSICAL_DATA_H_
-#define NIMBUS_DATA_PHYSICAL_DATA_H_
+#ifndef NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
+#define NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
 
 #include <vector>
 #include "shared/nimbus_types.h"
@@ -66,4 +66,4 @@ namespace nimbus {
   typedef std::vector<PhysicalData> PhysicalDataVector;
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PHYSICAL_DATA_H_
+#endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_

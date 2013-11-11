@@ -136,6 +136,14 @@ bool LdoIndex::RemoveObject(LogicalDataObject* object) {
 */
 
 
+LogicalDataObject* LdoIndex::SpecificObject(data_id_t id) {
+  if (!HasObject(id)) {
+    return NULL;
+  } else {
+    return exists_[id];
+  }
+}
+
 int LdoIndex::AllObjects(std::string variable,
                          CLdoVector* dest) {
   if (index_.find(variable) == index_.end()) {  // No such variable
