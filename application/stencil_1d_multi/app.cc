@@ -71,14 +71,23 @@ void Vec::Copy(Data* from) {
 
 bool Vec::Serialize(SerializedData* ser_data) {
   VectorMsg vec_msg;
-  for (int i = 0; i < size_; i++)
+  std::cout << "****NAVID1****\n";
+  for (int i = 0; i < size_; i++) {
+    std::cout << "****" << arr_[i] << std::endl;
     vec_msg.add_elem(arr_[i]);
+  }
+  std::cout << "****NAVID2****\n";
   std::string str;
   vec_msg.SerializeToString(&str);
+  std::cout << "****NAVID3****\n";
   char* ptr = new char[str.length()];
+  std::cout << "****NAVID4****\n";
   memcpy(ptr, str.c_str(), str.length());
+  std::cout << "****NAVID5****\n";
   ser_data->set_data_ptr(ptr);
+  std::cout << "****NAVID6****\n";
   ser_data->set_size(str.length());
+  std::cout << "****NAVID7****\n";
   return true;
 }
 
