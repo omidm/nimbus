@@ -207,10 +207,14 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 }
 
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
+  std::cout << "OMID1***********\n";
   SerializedData ser_data;
+  std::cout << "OMID2***********\n";
   da[0]->Serialize(&ser_data);
+  std::cout << "OMID3***********\n";
   data_exchanger_->SendSerializedData(receive_job_id().elem(), to_worker_id_.elem(), ser_data);
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
+  std::cout << "OMID4***********\n";
 }
 
 Job* RemoteCopySendJob::Clone() {
