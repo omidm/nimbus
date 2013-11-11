@@ -1,5 +1,5 @@
 
-TARGET = ldo_index memory
+TARGET = ldo_index memory speed
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -26,3 +26,5 @@ memory: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 clean: clean-files
 	\rm -f $(TARGET)
 
+speed:  $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) speed.o -o $@ $(LFLAGS)

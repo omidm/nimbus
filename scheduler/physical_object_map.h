@@ -45,7 +45,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include "data/physical_data.h"
+#include "scheduler/physical_data.h"
 #include "shared/logical_data_object.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"

@@ -49,7 +49,7 @@
 #include "shared/logical_data_object.h"
 #include "shared/ldo_index.h"
 #include "shared/scheduler_server.h"
-#include "data/physical_data.h"
+#include "scheduler/physical_data.h"
 #include "scheduler/physical_object_map.h"
 
 namespace nimbus {

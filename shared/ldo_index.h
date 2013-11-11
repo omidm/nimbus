@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SHARED_LDO_INDEX_H_
 #define NIMBUS_SHARED_LDO_INDEX_H_
 
+#include <unordered_map>
 #include <map>
 #include <string>
 #include "shared/logical_data_object.h"
@@ -49,8 +50,8 @@
 
 namespace nimbus {
 
-  typedef std::map<std::string, LdoList*> LdoVariableIndex;
-  typedef std::map<data_id_t, LogicalDataObject*> LdoIdIndex;
+  typedef std::unordered_map<std::string, LdoList*> LdoVariableIndex;
+  typedef std::unordered_map<data_id_t, LogicalDataObject*> LdoIdIndex;
 
   class LdoIndex {
   public:
@@ -61,6 +62,8 @@ namespace nimbus {
     virtual bool HasObject(data_id_t id);
     virtual bool RemoveObject(data_id_t id);
     virtual bool RemoveObject(LogicalDataObject* object);
+
+    virtual LogicalDataObject* SpecificObject(data_id_t id);
     virtual int AllObjects(std::string variable,
                            CLdoVector* dest);
     virtual int IntersectingObjects(std::string variable,

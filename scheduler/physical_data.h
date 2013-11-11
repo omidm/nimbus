@@ -33,40 +33,37 @@
  */
 
  /*
-  * Simple Nimbus scheduler that is supposed to run the application over a
-  * single worker. It is intended to check the command exchange interface, the
-  * mapping logics and generally the system abstraction soundness.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Class representing a physical instance of a data object, stored at
+  * a particular worker with a certain version number.
   */
 
-#ifndef NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
-#define NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+#ifndef NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
+#define NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
 
-#define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
 #include <vector>
-#include <map>
-#include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
+#include "shared/nimbus_types.h"
 
-class SimpleScheduler : public Scheduler {
+namespace nimbus {
+
+  class PhysicalData {
   public:
-    explicit SimpleScheduler(unsigned int listening_port);
+    PhysicalData(data_id_t id, worker_id_t worker);
+    PhysicalData(data_id_t id, worker_id_t worker, data_version_t version);
+    virtual ~PhysicalData();
 
-    virtual  void SchedulerCoreProcessor();
-    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm);
-    virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
-};
+    data_id_t id();
+    worker_id_t worker();
+    data_version_t version();
 
-#endif  // NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+    void set_version(data_version_t v);
+
+  private:
+    data_id_t id_;
+    worker_id_t worker_;
+    data_version_t version_;
+  };
+
+  typedef std::vector<PhysicalData> PhysicalDataVector;
+}  // namespace nimbus
+
+#endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
