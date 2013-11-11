@@ -114,7 +114,7 @@ class SchedulerCommand {
 
   virtual void addParameter(CommandParameter parameter);
   virtual SchedulerCommand* Clone();
-  virtual bool Parse(std::string param_segment);
+  virtual bool Parse(const std::string& param_segment);
   virtual std::string toString();
   virtual std::string toStringWTags();
   virtual std::string name();
@@ -169,6 +169,8 @@ class HandshakeCommand : public SchedulerCommand {
         const std::string& ip, const ID<port_t>& port);
     ~HandshakeCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<worker_id_t> worker_id();
@@ -192,6 +194,8 @@ class SpawnJobCommand : public SchedulerCommand {
         const JobType& job_type, const Parameter& params);
     ~SpawnJobCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string job_name();
@@ -225,6 +229,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
         const Parameter& params);
     ~SpawnComputeJobCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string job_name();
@@ -254,6 +260,8 @@ class SpawnCopyJobCommand : public SchedulerCommand {
         const Parameter& params);
     ~SpawnCopyJobCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -282,6 +290,8 @@ class ComputeJobCommand : public SchedulerCommand {
         const Parameter& params);
     ~ComputeJobCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string job_name();
@@ -312,6 +322,8 @@ class CreateDataCommand : public SchedulerCommand {
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~CreateDataCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -340,6 +352,8 @@ class RemoteCopySendCommand : public SchedulerCommand {
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~RemoteCopySendCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -370,6 +384,8 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~RemoteCopyReceiveCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -397,6 +413,8 @@ class LocalCopyCommand : public SchedulerCommand {
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~LocalCopyCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -424,6 +442,8 @@ class JobDoneCommand : public SchedulerCommand {
         const Parameter& params);
     ~JobDoneCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -443,6 +463,8 @@ class KillJobCommand : public SchedulerCommand {
     KillJobCommand(job_id_t job_id, Parameter params);
     ~KillJobCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     job_id_t job_id();
@@ -459,6 +481,8 @@ class PauseJobCommand : public SchedulerCommand {
     PauseJobCommand(job_id_t job_id, Parameter params);
     ~PauseJobCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     job_id_t job_id();
@@ -479,6 +503,8 @@ class DefineDataCommand : public SchedulerCommand {
                       const Parameter& params);
     ~DefineDataCommand();
 
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string data_name();
@@ -496,23 +522,26 @@ class DefineDataCommand : public SchedulerCommand {
 };
 
 class DefinePartitionCommand : public SchedulerCommand {
- public:
-  DefinePartitionCommand(const ID<partition_id_t>& partition_id,
-                         const GeometricRegion& r,
-                         const Parameter& params);
-  ~DefinePartitionCommand();
+  public:
+    DefinePartitionCommand();
+    DefinePartitionCommand(const ID<partition_id_t>& partition_id,
+        const GeometricRegion& r,
+        const Parameter& params);
+    ~DefinePartitionCommand();
 
-  virtual std::string toString();
-  virtual std::string toStringWTags();
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
 
-  ID<partition_id_t> partition_id();
-  const GeometricRegion* region();
-  Parameter params();
+    ID<partition_id_t> partition_id();
+    const GeometricRegion* region();
+    Parameter params();
 
- private:
-  ID<partition_id_t> id_;
-  GeometricRegion region_;
-  Parameter params_;
+  private:
+    ID<partition_id_t> id_;
+    GeometricRegion region_;
+    Parameter params_;
 };
 
 /*

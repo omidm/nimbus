@@ -227,7 +227,7 @@ SchedulerCommand* SchedulerCommand::Clone() {
   return new SchedulerCommand();
 }
 
-bool SchedulerCommand::Parse(std::string param_segment) {
+bool SchedulerCommand::Parse(const std::string& param_segment) {
   std::cout << "WARNING: Base Scheduler Command Parsed." << std::endl;
   return false;
 }
@@ -265,49 +265,16 @@ bool SchedulerCommand::ParseCommandType(const std::string& input,
 bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     SchedulerCommand::PrototypeTable* command_table,
     SchedulerCommand*& generated_command) {
-  std::string name, param_segment;
-  SchedulerCommand::Type type;
-
-  /* There is a much cleaner way to do this.
-
-     1) It is not clear why there is a command_set
-        parameter. Shouldn't this be a variable that the
-        object can access?
-     2) Whenever you have a big if-else like this, it's usually
-        a sign of a problem. There should either be a switch
-        statement on a variable (one jump, not N jumps) or a
-        name-driven hashtable approach using an object. In
-        this case I think the latter approach is better.
-
-     The way it looks like is this. First, there's a hashtable
-     of recognized commands based on their string (or integer)
-     identifier. You parse the name from the command, then look
-     up the prototype. You call clone on the prototype to obtain
-     an empty intance of it. This new object has a parse() method,
-     which takes the string of parameters and returns a bool.
-     For example, DefinePartitionCommand
-
-     SchedulerCommand* proto = prototype_lookup(name);
-     if (proto == NULL {
-       // no such command: return, clean up
-     }
-     SchedulerCommand* newCmd = proto->Clone();
-     if (newCmd->parse(params) == FALSE) {
-       // parse failed: return, clean up
-     }
-
-     with
-     
-     bool DefinePartitionCommand::Parse(std::string params) {
-        // Check that cmd is a DefinePartitionCommand                                        
-        // parse the parameters, check that they are OK.
-     }
-  */  
+  std::string param_segment;
   if (!ParseCommandType(input, command_table, generated_command, param_segment)) {
-    std::cout << "ERROR: Could not detect valid scheduler command." << std::endl;
+    std::cout << "ERROR: Could not detect valid scheduler command type." << std::endl;
     return false;
   } else {
     if (!generated_command->Parse(param_segment)) {
+      std::cout << "ERROR: Could not parse valid " << generated_command->name()
+        << "command" << std::endl;
+      delete generated_command;
+      return false;
     }
 
 /*
@@ -467,18 +434,6 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
             partition_id, neighbor_partitions, params);
       }
     } else if (type == HANDSHAKE) {
-      ID<worker_id_t> worker_id;
-      std::string ip;
-      ID<port_t> port;
-
-      bool cond = ParseHandshakeCommand(param_segment, worker_id, ip, port);
-
-      if (!cond) {
-        std::cout << "ERROR: Could not detect valid handshake." << std::endl;
-        return false;
-      } else {
-        generated = new HandshakeCommand(worker_id, ip, port);
-      }
     } else if (type == JOB_DONE) {
       ID<job_id_t> job_id;
       IDSet<job_id_t> after_set;
@@ -514,6 +469,48 @@ HandshakeCommand::HandshakeCommand(const ID<worker_id_t>& worker_id,
 }
 
 HandshakeCommand::~HandshakeCommand() {
+}
+
+SchedulerCommand* HandshakeCommand::Clone() {
+  return new HandshakeCommand();
+}
+
+bool HandshakeCommand::Parse(const std::string& params) {
+  int num = 3;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: HandshakeCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: HandshakeCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!worker_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid worker id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  ip_ = *iter;
+
+  iter++;
+  if (!port_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid port." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string HandshakeCommand::toString() {
@@ -569,6 +566,82 @@ SpawnJobCommand::SpawnJobCommand(const std::string& job_name,
 }
 
 SpawnJobCommand::~SpawnJobCommand() {
+}
+
+SchedulerCommand* SpawnJobCommand::Clone() {
+  return new SpawnJobCommand();
+}
+
+bool SpawnJobCommand::Parse(const std::string& params) {
+  int num = 8;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: SpawnJobCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: SpawnJobCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  job_name_ = *iter;
+
+  iter++;
+  if (job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!read_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid read set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!write_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid write set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (*iter == "COMP") {
+    job_type_ = JOB_COMP;
+  } else if (*iter == "SYNC") {
+    job_type_ = JOB_SYNC;
+  } else {
+    std::cout << "ERROR: Unknown job type." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string SpawnJobCommand::toString() {
@@ -659,6 +732,73 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
 SpawnComputeJobCommand::~SpawnComputeJobCommand() {
 }
 
+SchedulerCommand* SpawnComputeJobCommand::Clone() {
+  return new SpawnComputeJobCommand();
+}
+
+
+bool SpawnComputeJobCommand::Parse(const std::string& params) {
+  int num = 7;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: SpawnComputeJobCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: SpawnComputeJobCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  job_name_ = *iter;
+
+  iter++;
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!read_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid read set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!write_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid write set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 std::string SpawnComputeJobCommand::toString() {
   std::string str;
   str += (name_ + " ");
@@ -734,6 +874,70 @@ SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
 SpawnCopyJobCommand::~SpawnCopyJobCommand() {
 }
 
+SchedulerCommand* SpawnCopyJobCommand::Clone() {
+  return new SpawnCopyJobCommand();
+}
+
+bool SpawnCopyJobCommand::Parse(const std::string& params) {
+  int num = 6;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: SpawnCopyJobCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: SpawnCopyJobCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!from_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid from id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!to_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid to id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+
 std::string SpawnCopyJobCommand::toString() {
   std::string str;
   str += (name_ + " ");
@@ -801,6 +1005,72 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
 }
 
 ComputeJobCommand::~ComputeJobCommand() {
+}
+
+SchedulerCommand* ComputeJobCommand::Clone() {
+  return new ComputeJobCommand();
+}
+
+bool ComputeJobCommand::Parse(const std::string& params) {
+  int num = 7;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: ComputeJobCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: ComputeJobCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  job_name_ = *iter;
+
+  iter++;
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!read_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid read set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!write_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid write set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string ComputeJobCommand::toString() {
@@ -878,6 +1148,60 @@ CreateDataCommand::CreateDataCommand(const ID<job_id_t>& job_id,
 CreateDataCommand::~CreateDataCommand() {
 }
 
+SchedulerCommand* CreateDataCommand::Clone() {
+  return new CreateDataCommand();
+}
+
+bool CreateDataCommand::Parse(const std::string& params) {
+  int num = 5;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: CreateDataCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: CreateDataCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  data_name_ = *iter;
+
+  iter++;
+  if (!data_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 std::string CreateDataCommand::toString() {
   std::string str;
   str += (name_ + " ");
@@ -942,6 +1266,78 @@ RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
 }
 
 RemoteCopySendCommand::~RemoteCopySendCommand() {
+}
+
+SchedulerCommand* RemoteCopySendCommand::Clone() {
+  return new RemoteCopySendCommand();
+}
+
+bool RemoteCopySendCommand::Parse(const std::string& params) {
+  int num = 8;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: RemoteCopySendCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: RemoteCopySendCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (receive_job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid receive job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!from_data_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid from data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (to_worker_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid to worker id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  to_ip_ = *iter;
+
+  iter++;
+  if (!to_port_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid to port." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string RemoteCopySendCommand::toString() {
@@ -1024,6 +1420,57 @@ RemoteCopyReceiveCommand::RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
 RemoteCopyReceiveCommand::~RemoteCopyReceiveCommand() {
 }
 
+SchedulerCommand* RemoteCopyReceiveCommand::Clone() {
+  return new RemoteCopyReceiveCommand();
+}
+
+bool RemoteCopyReceiveCommand::Parse(const std::string& params) {
+  int num = 4;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: RemoteCopyReceiveCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: RemoteCopyReceiveCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!to_data_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid to data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 std::string RemoteCopyReceiveCommand::toString() {
   std::string str;
   str += (name_ + " ");
@@ -1079,6 +1526,63 @@ LocalCopyCommand::LocalCopyCommand(const ID<job_id_t>& job_id,
 }
 
 LocalCopyCommand::~LocalCopyCommand() {
+}
+
+SchedulerCommand* LocalCopyCommand::Clone() {
+  return new LocalCopyCommand();
+}
+
+bool LocalCopyCommand::Parse(const std::string& params) {
+  int num = 5;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: LocalCopyCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: LocalCopyCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!from_data_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid from data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!to_data_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid to data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!before_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid before set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string LocalCopyCommand::toString() {
@@ -1149,6 +1653,60 @@ DefineDataCommand::DefineDataCommand(const std::string& data_name,
 DefineDataCommand::~DefineDataCommand() {
 }
 
+SchedulerCommand* DefineDataCommand::Clone() {
+  return new DefineDataCommand();
+}
+
+bool DefineDataCommand::Parse(const std::string& params) {
+  int num = 5;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: DefineDataCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: DefineDataCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  data_name_ = *iter;
+
+  iter++;
+  if (!data_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid data id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!partition_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid partiiton id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!neighbor_partitions_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid partition neighbor set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 std::string DefineDataCommand::toString() {
   std::string str;
   str += (name_ + " ");
@@ -1212,6 +1770,51 @@ JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
 JobDoneCommand::~JobDoneCommand() {
 }
 
+SchedulerCommand* JobDoneCommand::Clone() {
+  return new JobDoneCommand();
+}
+
+bool JobDoneCommand::Parse(const std::string& params) {
+  int num = 3;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: JobDoneCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: JobDone has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!after_set_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid after set." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 std::string JobDoneCommand::toString() {
   std::string str;
   str += (name_ + " ");
@@ -1243,6 +1846,12 @@ Parameter JobDoneCommand::params() {
   return params_;
 }
 
+
+DefinePartitionCommand::DefinePartitionCommand() {
+  name_ = DEFINE_PARTITION_NAME;
+  type_ = DEFINE_PARTITION;
+}
+
 DefinePartitionCommand::DefinePartitionCommand(const ID<partition_id_t>& part,
                                                const GeometricRegion& r,
                                                const Parameter& params):
@@ -1250,7 +1859,17 @@ DefinePartitionCommand::DefinePartitionCommand(const ID<partition_id_t>& part,
   name_ = DEFINE_PARTITION_NAME;
   type_ = DEFINE_PARTITION;
 }
+
 DefinePartitionCommand::~DefinePartitionCommand() {}
+
+SchedulerCommand* DefinePartitionCommand::Clone() {
+  return new DefinePartitionCommand();
+}
+
+bool DefinePartitionCommand::Parse(const std::string& params) {
+  std::cout << "WARNING: Has not been built yet!" << std::endl;
+  return false;
+}
 
 std::string DefinePartitionCommand::toString() {
   std::string str;
