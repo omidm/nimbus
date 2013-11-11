@@ -35,7 +35,11 @@
  /*
   * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
   * Allows for quering which logical data objects cover what geometric
-  * regions.
+  * regions. Note that an LdoIndex does not manage memory for
+  * LogicalDataObject parameters. A LogicalDataObject passed in
+  * AddObject is assumed to be allocated and deleted externally, although
+  * the LdoIndex maintains a reference. The DataManager class provides
+  * for full-fledged memory management for a scheduler.
   */
 
 #ifndef NIMBUS_SHARED_LDO_INDEX_H_
@@ -64,6 +68,7 @@ namespace nimbus {
     virtual bool RemoveObject(LogicalDataObject* object);
 
     virtual LogicalDataObject* SpecificObject(data_id_t id);
+    virtual int AllObjects(CLdoVector* dest);
     virtual int AllObjects(std::string variable,
                            CLdoVector* dest);
     virtual int IntersectingObjects(std::string variable,
