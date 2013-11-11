@@ -144,6 +144,17 @@ LogicalDataObject* LdoIndex::SpecificObject(data_id_t id) {
   }
 }
 
+int LdoIndex::AllObjects(CLdoVector* dest) {
+  int count = 0;
+  LdoIdIndex::iterator it = exists_.begin();
+  for (; it != exists_.end(); ++it) {
+    LogicalDataObject* obj = (*it).second;
+    dest->push_back(obj);
+    count++;
+  }
+  return count;
+}
+
 int LdoIndex::AllObjects(std::string variable,
                          CLdoVector* dest) {
   if (index_.find(variable) == index_.end()) {  // No such variable
