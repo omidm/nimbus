@@ -62,6 +62,19 @@ template<typename T>
 ID<T>::~ID() {}
 
 template<typename T>
+bool ID<T>::Parse(const std::string& input) {
+  std::stringstream ss(input);
+  T num;
+  ss >> num;
+  if (ss.fail()) {
+    std::cout << "ERROR: wrong element as ID." << std::endl;
+    return false;
+  }
+  elem_ = num;
+  return true;
+}
+
+template<typename T>
 std::string ID<T>::toString() {
   std::ostringstream ss;
   ss << elem_;

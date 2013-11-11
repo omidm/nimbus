@@ -86,6 +86,15 @@ void SerializedData:: set_size(size_t size) {
   size_ = size;
 }
 
+bool SerializedData::Parse(const std::string& input) {
+  std::string str = input;
+  UnescapeString(&str);
+  size_ = str.length();
+  data_ptr_ = boost::shared_ptr<char>(new char[size_]);
+  memcpy(get_pointer(data_ptr_), str.c_str(), size_);
+  return true;
+}
+
 std::string SerializedData::toString() {
   if (size_ == 0) {
     std::string str = "empty";

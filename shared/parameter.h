@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SHARED_PARAMETER_H_
 #define NIMBUS_SHARED_PARAMETER_H_
 
+#include <boost/tokenizer.hpp>
 #include <string>
 #include "shared/nimbus_types.h"
 #include "shared/idset.h"
@@ -63,6 +64,7 @@ class Parameter {
     void set_ser_data(SerializedData ser_data);
     void set_idset(IDSet<param_id_t> idset);
 
+    bool Parse(const std::string& input);
     std::string toString();
     Parameter& operator= (const Parameter& right);
 

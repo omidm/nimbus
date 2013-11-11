@@ -41,6 +41,8 @@
 #include "shared/idset.h"
 
 using namespace nimbus; // NOLINT
+using boost::tokenizer;
+using boost::char_separator;
 
 // Following two functions are temporarily added, since we are in transition of
 // changing the parsers and constructors. Until then, these two would be used
@@ -106,6 +108,31 @@ IDSet<T>::IDSet(const IDSet<T>& other)
 
 template<typename T>
 IDSet<T>::~IDSet() {}
+
+template<typename T>
+bool IDSet<T>::Parse(const std::string& input) {
+  T num;
+  identifiers_.clear();
+  if (input[0] != '{' || input[input.length() - 1] != '}') {
+    std::cout << "ERROR: wrong format for IDSet." << std::endl;
+    return false;
+  }
+  std::string str = input.substr(1, input.length() - 2);
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (; iter != tokens.end(); ++iter) {
+    std::stringstream ss(*iter);
+    ss >> num;
+    if (ss.fail()) {
+      std::cout << "ERROR: wrong element in IDSet." << std::endl;
+      identifiers_.clear();
+      return false;
+    }
+    identifiers_.push_back(num);
+  }
+  return true;
+}
 
 template<typename T>
 std::string IDSet<T>::toString() {
