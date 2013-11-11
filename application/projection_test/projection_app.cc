@@ -109,8 +109,8 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	std::vector<data_id_t> d;
 	IDSet<data_id_t> read, write;
 	IDSet<job_id_t> before, after;
-	IDSet<partition_t> neighbor_partitions;
-	partition_t pid1 = 1, pid2 = 2;
+	IDSet<partition_id_t> neighbor_partitions;
+	partition_id_t pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
@@ -211,8 +211,8 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	std::vector<data_id_t> d, da;
 	IDSet<data_id_t> read, write;
 	IDSet<job_id_t> before, after;
-	IDSet<partition_t> neighbor_partitions;
-	partition_t pid1 = 1, pid2 = 2;
+	IDSet<partition_id_t> neighbor_partitions;
+	partition_id_t pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 	
