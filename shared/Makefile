@@ -14,6 +14,7 @@ PROTOFILES = $(subst .cc,.o,$(PROTOCFILES))
 shared_t: $(OBJFILES) $(HFILES) $(PROTOFILES)
 
 messages: 
+	mkdir -p protobufs
 	protoc --cpp_out=protobufs *.proto
 
 %.o: %.cc

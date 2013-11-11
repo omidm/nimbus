@@ -42,7 +42,7 @@ shared_t:
 application_utils_t:
 	cd application_utils; make; cd ..
 
-$(LIBRARY): scheduler_t worker_t data_t shared_t application_utils_t
+$(LIBRARY): shared_t scheduler_t worker_t data_t application_utils_t
 	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
 
 clean: clean-files

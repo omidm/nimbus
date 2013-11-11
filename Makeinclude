@@ -32,7 +32,6 @@ CFLAGS += -Wall -g -pg -O3 -std=c++11
 # optimizations under Darwin -pal
 ifdef OS_DARWIN
   CFLAGS  += -Wl,-no_implicit_dylibs
-  LDFLAGS += -Wl,-rpath /Users/pal/src/cloud/src/nimbus/
 endif
 
 # -I params for all cpp invocations
@@ -48,10 +47,8 @@ LDFLAGS += -L/opt/local/lib # Link with MacPorts libraries
 LDFLAGS += -L${NIMBUS_ROOT}/ # Link with Nimbus libraries
 
 # -rpath tells executable where to look for libraries; without it executables
-# do not find Nimbus libraries under Linux -pal
-ifdef OS_LINUX
-  LDFLAGS += -Wl,-rpath=${LDIR}
-endif
+# do not find Nimbus libraries. -pal
+LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}
 
 
 

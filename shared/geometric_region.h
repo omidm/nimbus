@@ -41,6 +41,7 @@
 #define NIMBUS_SHARED_GEOMETRIC_REGION_H_
 
 #include <boost/shared_ptr.hpp>
+#include <stdio.h>
 #include <string>
 #include "shared/nimbus_types.h"
 #include "shared/protobufs/ldomessage.pb.h"
