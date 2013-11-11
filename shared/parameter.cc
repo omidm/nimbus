@@ -40,6 +40,8 @@
 
 #include "shared/parameter.h"
 
+using boost::tokenizer;
+using boost::char_separator;
 
 
 namespace nimbus {
@@ -75,6 +77,41 @@ void Parameter::set_ser_data(SerializedData ser_data) {
 
 void Parameter::set_idset(IDSet<param_id_t> idset) {
   idset_ = idset;
+}
+
+bool Parameter::Parse(const std::string& input) {
+  int num = 2;
+
+  char_separator<char> separator(":");
+  tokenizer<char_separator<char> > tokens(input, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: Parameter has only " << i <<
+        " fields (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: Parameter has more than "<<
+      num << " fields." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!ser_data_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid serialized data." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!idset_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid idset." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string Parameter::toString() {

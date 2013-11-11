@@ -40,12 +40,17 @@
 #ifndef NIMBUS_SHARED_GEOMETRIC_REGION_H_
 #define NIMBUS_SHARED_GEOMETRIC_REGION_H_
 
+#include <boost/shared_ptr.hpp>
+#include <stdio.h>
+#include <string>
 #include "shared/nimbus_types.h"
+#include "shared/protobufs/ldomessage.pb.h"
 
 namespace nimbus {
 
   class GeometricRegion {
   public:
+    GeometricRegion();
     GeometricRegion(int_dimension_t x,
                     int_dimension_t y,
                     int_dimension_t z,
@@ -53,23 +58,35 @@ namespace nimbus {
                     int_dimension_t dy,
                     int_dimension_t dz);
 
+    GeometricRegion(const GeometricRegion& r);
+
+    // Argument is a pointer to an array of 6 int_dimension_t
+    explicit GeometricRegion(const int_dimension_t* values);
+    // Transform a protobuf GeometricRegionMessage into a GeometricRegion
+    explicit GeometricRegion(const GeometricRegionMessage* msg);
+    // Read in as a serialized GeometricRegionMessage from an istream
+    explicit GeometricRegion(std::istream* is);
+    // Read in as a serialized GeometricRegionMessage from a string
+    explicit GeometricRegion(const std::string& data);
+
     virtual ~GeometricRegion() {}
 
+    int_dimension_t x() const;
+    int_dimension_t y() const;
+    int_dimension_t z() const;
+    int_dimension_t dx() const;
+    int_dimension_t dy() const;
+    int_dimension_t dz() const;
 
-    virtual bool intersects(GeometricRegion* region);
+    /* Covers returns whether this region covers (encompasses) the argument. */
+    virtual bool Covers(GeometricRegion* region);
+    virtual bool Intersects(GeometricRegion* region);
+    virtual bool Adjacent(GeometricRegion* region);
+    virtual bool AdjacentOrIntersects(GeometricRegion* region);
 
-    /* Returns whether this region covers (encompasses) the argument. */
-    virtual bool covers(GeometricRegion* region);
-    virtual bool adjacent(GeometricRegion* region);
-    virtual bool adjacentOrIntersects(GeometricRegion* region);
+    virtual void FillInMessage(GeometricRegionMessage* msg);
 
-    int_dimension_t x();
-    int_dimension_t y();
-    int_dimension_t z();
-
-    int_dimension_t dx();
-    int_dimension_t dy();
-    int_dimension_t dz();
+    virtual std::string toString();
 
   private:
     int_dimension_t x_;
@@ -78,6 +95,9 @@ namespace nimbus {
     int_dimension_t dx_;
     int_dimension_t dy_;
     int_dimension_t dz_;
+
+    void fillInValues(const int_dimension_t* values);
+    void fillInValues(const GeometricRegionMessage* msg);
   };
 }  // namespace nimbus
 

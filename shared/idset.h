@@ -41,7 +41,9 @@
 #ifndef NIMBUS_SHARED_IDSET_H_
 #define NIMBUS_SHARED_IDSET_H_
 
+#include <boost/tokenizer.hpp>
 #include <sstream> // NOLINT
+#include <iostream> // NOLINT
 #include <string>
 #include <list>
 #include <set>
@@ -65,6 +67,7 @@ class IDSet {
   // TODO(omidm): remove this obsolete constructor.
   explicit IDSet(std::string s);
 
+  bool Parse(const std::string& input);
   virtual std::string toString();
   virtual void insert(T entry);
   virtual void remove(T entry);

@@ -41,8 +41,13 @@
 #include "shared/geometric_region.h"
 
 namespace nimbus {
+
+  GeometricRegion::GeometricRegion() {
+    x_ = y_ = z_ = dx_ = dy_ = dz_ = -1;
+  }
+
 /**
- * \fn nimbus::GeometricRegion::GeometricRegion(int_dimension_t x,
+ * \fn GeometricRegion::GeometricRegion(int_dimension_t x,
                                          int_dimension_t y,
                                          int_dimension_t z,
                                          int_dimension_t dx,
@@ -57,12 +62,12 @@ namespace nimbus {
  * \param dz
  * \return
 */
-nimbus::GeometricRegion::GeometricRegion(int_dimension_t x,
-                                         int_dimension_t y,
-                                         int_dimension_t z,
-                                         int_dimension_t dx,
-                                         int_dimension_t dy,
-                                         int_dimension_t dz) {
+GeometricRegion::GeometricRegion(int_dimension_t x,
+                                 int_dimension_t y,
+                                 int_dimension_t z,
+                                 int_dimension_t dx,
+                                 int_dimension_t dy,
+                                 int_dimension_t dz) {
   x_ = x;
   y_ = y;
   z_ = z;
@@ -71,13 +76,51 @@ nimbus::GeometricRegion::GeometricRegion(int_dimension_t x,
   dz_ = dz;
 }
 
+GeometricRegion::GeometricRegion(const GeometricRegion& r) {
+  x_ = r.x();
+  y_ = r.y();
+  z_ = r.z();
+  dx_ = r.dx();
+  dy_ = r.dy();
+  dz_ = r.dz();
+}
+
+GeometricRegion::GeometricRegion(const int_dimension_t* values) {
+  fillInValues(values);
+}
+
+GeometricRegion::GeometricRegion(const GeometricRegionMessage* msg) {
+  fillInValues(msg);
+}
+
+GeometricRegion::GeometricRegion(std::istream* is) {
+  GeometricRegionMessage msg;
+  msg.ParseFromIstream(is);
+  fillInValues(&msg);
+}
+
+GeometricRegion::GeometricRegion(const std::string& data) {
+  GeometricRegionMessage msg;
+  msg.ParseFromString(data);
+  fillInValues(&msg);
+}
+
+void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
+  msg->set_x(x_);
+  msg->set_y(y_);
+  msg->set_z(z_);
+  msg->set_dx(dx_);
+  msg->set_dy(dy_);
+  msg->set_dz(dz_);
+}
+
 /**
- * \fn bool nimbus::GeometricRegion::intersects(GeometricRegion *region)
+ * \fn bool GeometricRegion::intersects(GeometricRegion *region)
  * \brief Brief description.
  * \param region
  * \return
 */
-bool nimbus::GeometricRegion::adjacentOrIntersects(GeometricRegion *region) {
+bool GeometricRegion::AdjacentOrIntersects(GeometricRegion *region) {
   return !((x() + dx() < region->x()) ||
            (x() > region->x() + region->dx()) ||
            (y() + dy() < region->y()) ||
@@ -87,12 +130,12 @@ bool nimbus::GeometricRegion::adjacentOrIntersects(GeometricRegion *region) {
 }
 
 /**
- * \fn bool nimbus::GeometricRegion::intersects(GeometricRegion *region)
+ * \fn bool GeometricRegion::intersects(GeometricRegion *region)
  * \brief Brief description.
  * \param region
  * \return
 */
-bool nimbus::GeometricRegion::intersects(GeometricRegion *region) {
+bool GeometricRegion::Intersects(GeometricRegion *region) {
   return !((x() + dx() <= region->x()) ||
            (x() >= region->x() + region->dx()) ||
            (y() + dy() <= region->y()) ||
@@ -102,24 +145,24 @@ bool nimbus::GeometricRegion::intersects(GeometricRegion *region) {
 }
 
 /**
- * \fn bool nimbus::GeometricRegion::adjacent(GeometricRegion *region)
+ * \fn bool GeometricRegion::Adjacent(GeometricRegion *region)
  * \brief Brief description.
  * \param region
  * \return Whether the two regions share face surfaces.
 */
-bool nimbus::GeometricRegion::adjacent(GeometricRegion *region) {
-  return (adjacentOrIntersects(region) && !intersects(region));
+bool GeometricRegion::Adjacent(GeometricRegion *region) {
+  return (AdjacentOrIntersects(region) && !Intersects(region));
 }
 
 
 /**
- * \fn bool nimbus::GeometricRegion::covers(GeometricRegion *region)
+ * \fn bool GeometricRegion::Covers(GeometricRegion *region)
  * \brief Returns whether this region (encompasses) covers the region
           described by the argument.
  * \param region
  * \return
 */
-bool nimbus::GeometricRegion::covers(GeometricRegion *region) {
+bool GeometricRegion::Covers(GeometricRegion *region) {
   return ((x() <= region->x()) &&
           (x() + dx() >= region->x() + region->dx()) &&
           (y() <= region->y()) &&
@@ -130,62 +173,94 @@ bool nimbus::GeometricRegion::covers(GeometricRegion *region) {
 
 
 /**
- * \fn int_dimension_t nimbus::GeometricRegion::x()
+ * \fn int_dimension_t GeometricRegion::x()
  * \brief Brief description.
  * \return
 */
-int_dimension_t nimbus::GeometricRegion::x() {
+int_dimension_t GeometricRegion::x() const {
   return x_;
 }
 
 
 /**
- * \fn int_dimension_t nimbus::GeometricRegion::y()
+ * \fn int_dimension_t GeometricRegion::y()
  * \brief Brief description.
  * \return
 */
-int_dimension_t nimbus::GeometricRegion::y() {
+int_dimension_t GeometricRegion::y() const {
   return y_;
 }
 
 
 /**
- * \fn int_dimension_t nimbus::GeometricRegion::z()
+ * \fn int_dimension_t GeometricRegion::z()
  * \brief Brief description.
  * \return
 */
-int_dimension_t nimbus::GeometricRegion::z() {
+int_dimension_t GeometricRegion::z() const {
   return z_;
 }
 
 
 /**
- * \fn int_dimension_t nimbus::GeometricRegion::dx()
+ * \fn int_dimension_t GeometricRegion::dx()
  * \brief Brief description.
  * \return
 */
-int_dimension_t nimbus::GeometricRegion::dx() {
+int_dimension_t GeometricRegion::dx() const {
   return dx_;
 }
 
 
 /**
- * \fn int_dimension_t nimbus::GeometricRegion::dy()
+ * \fn int_dimension_t GeometricRegion::dy()
  * \brief Brief description.
  * \return
 */
-int_dimension_t nimbus::GeometricRegion::dy() {
+int_dimension_t GeometricRegion::dy() const {
   return dy_;
 }
 
 
 /**
- * \fn int_dimension_t nimbus::GeometricRegion::dz()
+ * \fn int_dimension_t GeometricRegion::dz()
  * \brief Brief description.
  * \return
 */
-int_dimension_t nimbus::GeometricRegion::dz() {
+int_dimension_t GeometricRegion::dz() const {
   return dz_;
+}
+
+/**
+ * \fn int_dimension_t GeometricRegion::fillInValues()
+ * \brief Fills in six parameters from array.
+ * \return
+*/
+void GeometricRegion::fillInValues(const int_dimension_t* values) {
+  x_  = values[0];
+  y_  = values[1];
+  z_  = values[2];
+  dx_ = values[3];
+  dy_ = values[4];
+  dz_ = values[5];
+}
+
+void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
+  x_ = msg->x();
+  y_ = msg->y();
+  z_ = msg->z();
+  dx_ = msg->dx();
+  dy_ = msg->dy();
+  dz_ = msg->dz();
+}
+
+std::string GeometricRegion::toString() {
+  std::string str;
+  char buf[2048];
+  snprintf(buf, sizeof(buf), "bbox:%llu,%llu,%llu,%llu,%llu,%llu",
+           x_, y_, z_, dx_, dy_, dz_);
+  str += buf;
+  return str;
 }
 
 }  // namespace nimbus

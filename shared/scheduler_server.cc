@@ -122,6 +122,22 @@ void SchedulerServer::SendCommands(SchedulerWorker* worker,
   }
 }
 
+void SchedulerServer::BroadcastCommand(SchedulerCommand* command) {
+  SchedulerWorkerList::iterator it = workers_.begin();
+  for (; it != workers_.end(); ++it) {
+    SchedulerWorker* w = *it;
+    SendCommand(w, command);
+  }
+}
+
+void SchedulerServer::BroadcastCommands(SchedulerCommandList* commands) {
+  SchedulerWorkerList::iterator it = workers_.begin();
+  for (; it != workers_.end(); ++it) {
+    SchedulerWorker* w = *it;
+    SendCommands(w, commands);
+  }
+}
+
 void SchedulerServer::ListenForNewConnections() {
   dbg(DBG_NET, "Scheduler server listening for new connections.\n");
   tcp::socket* socket = new tcp::socket(*io_service_);
@@ -174,7 +190,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
 
       SchedulerCommand* command;
       if (SchedulerCommand::GenerateSchedulerCommandChild(
-          input, worker_command_set_, command)) {
+          input, worker_command_table_, command)) {
         dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
         boost::mutex::scoped_lock lock(command_mutex_);
         received_commands_.push_back(command);
@@ -257,8 +273,9 @@ SchedulerWorkerList* SchedulerServer::workers() {
   return &workers_;
 }
 
-void SchedulerServer::set_worker_command_set(SchedulerCommand::TypeSet* cms) {
-  worker_command_set_ = cms;
+void
+SchedulerServer::set_worker_command_table(SchedulerCommand::PrototypeTable* cmt) {
+  worker_command_table_ = cmt;
 }
 
 SchedulerWorker* SchedulerServer::AddWorker(SchedulerServerConnection* connection) { //NOLINT

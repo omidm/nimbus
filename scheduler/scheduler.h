@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * Nimbus scheduler.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -50,15 +50,16 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
-#include "shared/scheduler_server.h"
 #include "shared/cluster.h"
 #include "shared/parser.h"
+#include "shared/scheduler_server.h"
+#include "scheduler/data_manager.h"
 
 namespace nimbus {
 class Scheduler {
   public:
     explicit Scheduler(port_t listening_port);
-    virtual ~Scheduler() {}
+    virtual ~Scheduler();
 
     virtual void Run();
     virtual void SchedulerCoreProcessor();
@@ -68,6 +69,7 @@ class Scheduler {
     virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
+    virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
 
     // Will remove it later, just here so simple_scheduler will pass.
     virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm) {}
@@ -81,11 +83,12 @@ class Scheduler {
     SchedulerServer* server_;
     IDMaker id_maker_;
     CmSet user_command_set_;
-    SchedulerCommand::TypeSet worker_command_set_;
+    SchedulerCommand::PrototypeTable worker_command_table_;
 
   private:
     virtual void SetupUserInterface();
     virtual void SetupWorkerInterface();
+    virtual void SetupDataManager();
     virtual void GetUserCommand();
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
@@ -95,9 +98,9 @@ class Scheduler {
     Computer host_;
     port_t listening_port_;
     app_id_t appId_;
-    // AppMap app_map_;
     WorkerMap worker_map_;
     ClusterMap cluster_map_;
+    DataManager* data_manager_;
 };
 
 }  // namespace nimbus

@@ -35,35 +35,55 @@
  /*
   * Maintains an index of all of the logical data objects (LDOs) in Nimbus.
   * Allows for quering which logical data objects cover what geometric
-  * regions.
+  * regions. Note that an LdoIndex does not manage memory for
+  * LogicalDataObject parameters. A LogicalDataObject passed in
+  * AddObject is assumed to be allocated and deleted externally, although
+  * the LdoIndex maintains a reference. The DataManager class provides
+  * for full-fledged memory management for a scheduler.
   */
 
 #ifndef NIMBUS_SHARED_LDO_INDEX_H_
 #define NIMBUS_SHARED_LDO_INDEX_H_
 
+#include <unordered_map>
 #include <map>
 #include <string>
-#include "shared/nimbus_types.h"
 #include "shared/logical_data_object.h"
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
+
+  typedef std::unordered_map<std::string, LdoList*> LdoVariableIndex;
+  typedef std::unordered_map<data_id_t, LogicalDataObject*> LdoIdIndex;
 
   class LdoIndex {
   public:
     LdoIndex();
     virtual ~LdoIndex();
 
-    virtual void addObject(LogicalDataObject* object);
-    virtual LdoVector* intersectingObjects(std::string variable,
-                                           GeometricRegion* region);
-    virtual LdoVector* coveredObjects(std::string variable,
-                                      GeometricRegion* region);
-    virtual LdoVector* adjacentObjects(std::string variable,
-                                       GeometricRegion* region);
+    virtual bool AddObject(LogicalDataObject* object);
+    virtual bool HasObject(data_id_t id);
+    virtual bool RemoveObject(data_id_t id);
+    virtual bool RemoveObject(LogicalDataObject* object);
+
+    virtual LogicalDataObject* SpecificObject(data_id_t id);
+    virtual int AllObjects(CLdoVector* dest);
+    virtual int AllObjects(std::string variable,
+                           CLdoVector* dest);
+    virtual int IntersectingObjects(std::string variable,
+                                    GeometricRegion* region,
+                                    CLdoVector* dest);
+    virtual int CoveredObjects(std::string variable,
+                               GeometricRegion* region,
+                               CLdoVector* dest);
+    virtual int AdjacentObjects(std::string variable,
+                                GeometricRegion* region,
+                                CLdoVector* dest);
 
   private:
-    std::map<std::string, LdoList*> index_;
+    LdoVariableIndex index_;
+    LdoIdIndex exists_;
   };
 }  // namespace nimbus
 

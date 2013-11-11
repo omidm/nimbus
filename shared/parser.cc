@@ -33,7 +33,7 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * Parser for Nimbus scheduler protocol.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -166,9 +166,10 @@ bool isSet(const std::string& str) {
 // ********************************************************
 
 bool ParseSchedulerCommand(const std::string& input,
-    SchedulerCommand::TypeSet* command_set,
-    std::string& name, std::string& param_segment,
-    SchedulerCommand::Type& command_type) {
+                           SchedulerCommand::TypeSet* command_set,
+                           std::string& name,
+                           std::string& param_segment,
+                           SchedulerCommand::Type& command_type) {
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
@@ -993,13 +994,13 @@ bool ParseLocalCopyCommand(const std::string& input,
 bool ParseDefineDataCommand(const std::string& input,
     std::string& data_name,
     ID<data_id_t>& data_id,
-    ID<partition_t>& partition_id,
-    IDSet<partition_t>& neighbor_partitions,
+    ID<partition_id_t>& partition_id,
+    IDSet<partition_id_t>& neighbor_partitions,
     Parameter& params) {
   int num = 5;
   data_id_t data_id_elem;
-  partition_t partition_id_elem;
-  IDSet<partition_t>::IDSetContainer partition_id_set;
+  partition_id_t partition_id_elem;
+  IDSet<partition_id_t>::IDSetContainer partition_id_set;
   SerializedData ser_data;
   IDSet<param_id_t> param_id_set;
 
@@ -1235,4 +1236,3 @@ bool ParseParameter(const std::string& input,
 
 
 }  // namespace nimbus
-

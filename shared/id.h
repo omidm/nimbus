@@ -42,6 +42,7 @@
 #define NIMBUS_SHARED_ID_H_
 
 #include <sstream> // NOLINT
+#include <iostream> // NOLINT
 #include <string>
 #include <vector>
 #include <map>
@@ -60,6 +61,7 @@ class ID {
   ID(const ID<T>& other);
   virtual ~ID();
 
+  bool Parse(const std::string& input);
   std::string toString();
   T elem();
   void set_elem(T elem);

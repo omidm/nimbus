@@ -358,7 +358,7 @@ void Worker::SetupDataExchangerInterface() {
 void Worker::SetupSchedulerInterface() {
   LoadSchedulerCommands();
   client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
-  client_->set_scheduler_command_set(&scheduler_command_set_);
+  client_->set_scheduler_command_table(&scheduler_command_table_);
   client_->run();
   // client_thread_ = new boost::thread(
   //     boost::bind(&SchedulerClient::run, client_));
@@ -366,15 +366,15 @@ void Worker::SetupSchedulerInterface() {
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  scheduler_command_set_.insert(SchedulerCommand::SPAWN_JOB);
-  scheduler_command_set_.insert(SchedulerCommand::DEFINE_DATA);
-  scheduler_command_set_.insert(SchedulerCommand::HANDSHAKE);
-  scheduler_command_set_.insert(SchedulerCommand::JOB_DONE);
-  scheduler_command_set_.insert(SchedulerCommand::COMPUTE_JOB);
-  scheduler_command_set_.insert(SchedulerCommand::CREATE_DATA);
-  scheduler_command_set_.insert(SchedulerCommand::REMOTE_COPY_SEND);
-  scheduler_command_set_.insert(SchedulerCommand::REMOTE_COPY_RECEIVE);
-  scheduler_command_set_.insert(SchedulerCommand::LOCAL_COPY);
+  scheduler_command_table_.push_back(new SpawnJobCommand());
+  scheduler_command_table_.push_back(new DefineDataCommand());
+  scheduler_command_table_.push_back(new HandshakeCommand());
+  scheduler_command_table_.push_back(new JobDoneCommand());
+  scheduler_command_table_.push_back(new ComputeJobCommand());
+  scheduler_command_table_.push_back(new CreateDataCommand);
+  scheduler_command_table_.push_back(new RemoteCopySendCommand());
+  scheduler_command_table_.push_back(new RemoteCopyReceiveCommand());
+  scheduler_command_table_.push_back(new LocalCopyCommand());
 }
 
 void Worker::AddData(Data* data) {

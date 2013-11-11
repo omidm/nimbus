@@ -82,8 +82,8 @@ void Main::Execute(std::string params, const DataArray& da) {
   std::vector<int> d;
   IDSet<data_id_t> read, write;
   IDSet<job_id_t> before, after;
-  IDSet<partition_t> neighbor_partitions;
-  partition_t partition_id = 0;
+  IDSet<partition_id_t> neighbor_partitions;
+  partition_id_t partition_id = 0;
   std::string par;
   
   application()->GetNewJobID(5, &j);

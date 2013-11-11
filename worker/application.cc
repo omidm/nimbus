@@ -106,11 +106,11 @@ void Application::SpawnCopyJob(const job_id_t& id,
 
 void Application::DefineData(const std::string& name,
     const data_id_t& id,
-    const partition_t& partition_id,
-    const IDSet<partition_t>& neighbor_partitions,
+    const partition_id_t& partition_id,
+    const IDSet<partition_id_t>& neighbor_partitions,
     const Parameter& params) {
   ID<data_id_t> id_made(id);
-  ID<partition_t> partition_id_made(partition_id);
+  ID<partition_id_t> partition_id_made(partition_id);
 
   DefineDataCommand cm(name, id_made, partition_id_made, neighbor_partitions, params);
   client_->sendCommand(&cm);

@@ -33,40 +33,21 @@
  */
 
  /*
-  * Simple Nimbus scheduler that is supposed to run the application over a
-  * single worker. It is intended to check the command exchange interface, the
-  * mapping logics and generally the system abstraction soundness.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Protocol buffer messages for transmitting logical data objects.
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
-#define NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+message LdoMessage {
+  required uint64 data_id = 1;
+  required GeometricRegionMessage region = 2;
+  required string variable = 3;
+}
 
-#define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
-
-class SimpleScheduler : public Scheduler {
-  public:
-    explicit SimpleScheduler(unsigned int listening_port);
-
-    virtual  void SchedulerCoreProcessor();
-    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm);
-    virtual void ProcessDefineDataCommand(DefineDataCommand* cm);
-};
-
-#endif  // NIMBUS_TEST_SIMPLE_SCHEDULER_SIMPLE_SCHEDULER_H_
+message GeometricRegionMessage {
+  required uint64 x  = 1;
+  required uint64 y  = 2;
+  required uint64 z  = 3;
+  required uint64 dx = 4;
+  required uint64 dy = 5;
+  required uint64 dz = 6;
+}

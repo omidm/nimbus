@@ -53,12 +53,12 @@
 #ifndef NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 #define NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 
-#include <set>
 #include <list>
-#include <vector>
+#include <set>
 #include <string>
-#include "shared/nimbus_types.h"
+#include <vector>
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
@@ -66,13 +66,19 @@ namespace nimbus {
   public:
     LogicalDataObject(data_id_t id,
                       std::string variable,
-                      GeometricRegion* region) {}
-    virtual ~LogicalDataObject() {}
+                      GeometricRegion* region);
+    explicit LogicalDataObject(std::istream* is);
+    explicit LogicalDataObject(const std::string& data);
 
-    virtual data_id_t id();
-    virtual std::string variable();
-    virtual GeometricRegion* region();
+    virtual ~LogicalDataObject();
 
+    virtual data_id_t id() const;
+    virtual std::string variable() const;
+    virtual GeometricRegion* region() const;
+
+    virtual void FillInMessage(LdoMessage* mg);
+    virtual bool Serialize(std::ostream* os);
+    virtual bool SerializeToString(std::string* output);
   private:
     data_id_t id_;
     GeometricRegion* region_;
@@ -82,6 +88,7 @@ namespace nimbus {
   typedef std::set<LogicalDataObject*> LdoSet;
   typedef std::list<LogicalDataObject*> LdoList;
   typedef std::vector<LogicalDataObject*> LdoVector;
+  typedef std::vector<const LogicalDataObject*> CLdoVector;
 
 }  // namespace nimbus
 

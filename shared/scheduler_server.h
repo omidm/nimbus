@@ -92,12 +92,22 @@ class SchedulerServer {
   virtual void SendCommands(SchedulerWorker* destinationWorker,
                             SchedulerCommandList* commands);
 
+
+  /** Broadcast command to all workers. Returns immediately and processes
+   *  the send asynchronously. */
+  virtual void BroadcastCommand(SchedulerCommand* command);
+
+  /** Broadcast commands to all workers. Returns immediately and processes
+      the send asynchronously. */
+  virtual void BroadcastCommands(SchedulerCommandList* commands);
+
+
   /** Returns the current list of workers. Note that SchedulerServer
    *  may modify this list or the workers on it. Accessing the list
    *  therefore involves locks for thread safety. */
   SchedulerWorkerList* workers();
 
-  void set_worker_command_set(SchedulerCommand::TypeSet* cms);
+  void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
 
  private:
   port_t listening_port_;
@@ -105,7 +115,7 @@ class SchedulerServer {
   SchedulerCommandList received_commands_;
   boost::mutex worker_mutex_;
   SchedulerWorkerList workers_;
-  SchedulerCommand::TypeSet* worker_command_set_;
+  SchedulerCommand::PrototypeTable* worker_command_table_;
 
   boost::asio::io_service* io_service_;
   tcp::acceptor* acceptor_;

@@ -33,18 +33,25 @@
  */
 
  /*
-  * Nimbus scheduler. 
+  * Nimbus scheduler.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
 #include "scheduler/scheduler.h"
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
   appId_ = 0;
+  data_manager_ = NULL;
+}
+
+Scheduler::~Scheduler() {
+  if (data_manager_ != NULL) {
+    delete data_manager_;
+  }
 }
 
 void Scheduler::Run() {
@@ -52,6 +59,7 @@ void Scheduler::Run() {
 
   SetupWorkerInterface();
   SetupUserInterface();
+  SetupDataManager();
   id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
@@ -80,6 +88,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::JOB_DONE:
       ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
       break;
+    case SchedulerCommand::DEFINE_PARTITION:
+      ProcessDefinePartitionCommand(reinterpret_cast<DefinePartitionCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->toString() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -95,6 +106,14 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
+  data_manager_->AddLogicalObject(cm->data_id().elem(),
+                                 cm->data_name(),
+                                 cm->partition_id().elem());
+}
+
+void Scheduler::ProcessDefinePartitionCommand(DefinePartitionCommand* cm) {
+  GeometricRegion r = *(cm->region());
+  data_manager_->AddPartition(cm->partition_id().elem(), r);
 }
 
 void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
@@ -123,18 +142,22 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 void Scheduler::SetupWorkerInterface() {
   LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
-  server_->set_worker_command_set(&worker_command_set_);
+  server_->set_worker_command_table(&worker_command_table_);
   worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+}
+
+void Scheduler::SetupDataManager() {
+  data_manager_ = new DataManager(server_);
 }
 
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_set_.insert(SchedulerCommand::SPAWN_JOB);
-  worker_command_set_.insert(SchedulerCommand::SPAWN_COMPUTE_JOB);
-  worker_command_set_.insert(SchedulerCommand::SPAWN_COPY_JOB);
-  worker_command_set_.insert(SchedulerCommand::DEFINE_DATA);
-  worker_command_set_.insert(SchedulerCommand::HANDSHAKE);
-  worker_command_set_.insert(SchedulerCommand::JOB_DONE);
+  worker_command_table_.push_back(new SpawnJobCommand());
+  worker_command_table_.push_back(new SpawnComputeJobCommand());
+  worker_command_table_.push_back(new SpawnCopyJobCommand());
+  worker_command_table_.push_back(new DefineDataCommand());
+  worker_command_table_.push_back(new HandshakeCommand());
+  worker_command_table_.push_back(new JobDoneCommand());
 }
 
 void Scheduler::SetupUserInterface() {
@@ -168,3 +191,4 @@ void Scheduler::LoadUserCommands() {
 }
 
 
+}  // namespace nimbus

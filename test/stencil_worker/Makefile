@@ -17,12 +17,12 @@ ADIR_MULTI = ${NIMBUS_ROOT}/application/stencil_1d_multi/
 LFLAGS_SINGLE = $(LFLAGS)
 LFLAGS_SINGLE += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_single -lprotobuf
 LDFLAGS_SINGLE = $(LDFLAGS)
-LDFLAGS_SINGLE += -L$(ADIR_SINGLE) -Wl,-rpath=$(ADIR_SINGLE)
+LDFLAGS_SINGLE += -L$(ADIR_SINGLE) -Wl,-rpath $(ADIR_SINGLE)
 
 LFLAGS_MULTI = $(LFLAGS)
 LFLAGS_MULTI += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d_multi -lprotobuf
 LDFLAGS_MULTI = $(LDFLAGS)
-LDFLAGS_MULTI += -L$(ADIR_MULTI) -Wl,-rpath=$(ADIR_MULTI)
+LDFLAGS_MULTI += -L$(ADIR_MULTI) -Wl,-rpath $(ADIR_MULTI)
 
 # Add the dependencies here
 %.o: %.cc
