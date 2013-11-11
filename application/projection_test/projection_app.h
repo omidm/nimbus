@@ -81,9 +81,9 @@ class Global_Sum : public Job {
         virtual Job* Clone();
 };
 
-class Global_Max : public Job {
+class Global_Max_Abs : public Job {
     public:
-		Global_Max(Application *app);
+    	Global_Max_Abs(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };

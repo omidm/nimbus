@@ -83,7 +83,7 @@ void ProjectionApp::Load() {
 	RegisterJob("Project_Forloop_Part3", new Project_Forloop_Part3(this));
 	RegisterJob("Project_Forloop_Part4", new Project_Forloop_Part4(this));
 	RegisterJob("Global_Sum", new Global_Sum(this));
-	RegisterJob("Global_Max", new Global_Max(this));
+	RegisterJob("Global_Max_Abs", new Global_Max_Abs(this));
 
 	RegisterData("vector", new Vec(LEN));
 	RegisterData("scalar", new Vec(1));
@@ -474,7 +474,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		after.insert(j[10]);
 		SpawnCopyJob(j[18], da[4], d[22], before, after, par);
 		
-		// Global_Max
+		// Global_Max_Abs
 		read.clear();
 		read.insert(da[3]); // b_interior_pid1
 		read.insert(d[22]); // b_interior_pid2, CopyJob instance
@@ -486,7 +486,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		before.insert(j[18]); // SpawnCopyJob
 		after.clear();
 		after.insert(j[11]);
-		SpawnComputeJob("Global_Max", j[10], read, write, before, after, par);
+		SpawnComputeJob("Global_Max_Abs", j[10], read, write, before, after, par);
 
 		// Project_Forloop_Condition
 		read.clear();
@@ -681,17 +681,17 @@ void Global_Sum::Execute(Parameter params, const DataArray& da) {
 	std::cout << "Completed Global_Sum job\n";
 };
 
-Global_Max::Global_Max(Application* app) {
+Global_Max_Abs::Global_Max_Abs(Application* app) {
 	set_application(app);
 };
 
-Job * Global_Max::Clone() {
-	std::cout << "Cloning Global_Max job!\n";
-	return new Global_Max(application());
+Job * Global_Max_Abs::Clone() {
+	std::cout << "Cloning Global_Max_Abs job!\n";
+	return new Global_Max_Abs(application());
 };
 
-void Global_Max::Execute(Parameter params, const DataArray& da) {
-	std::cout << "Executing the Global_Max job\n";
+void Global_Max_Abs::Execute(Parameter params, const DataArray& da) {
+	std::cout << "Executing the Global_Max_Abs job\n";
 	Vec *d0 = reinterpret_cast<Vec*>(da[0]); // part1
 	Vec *d1 = reinterpret_cast<Vec*>(da[1]); // part2
 	Vec *d2 = reinterpret_cast<Vec*>(da[2]); // max
@@ -704,7 +704,8 @@ void Global_Max::Execute(Parameter params, const DataArray& da) {
 	for (int i=0;i<d1->size();i++)
 		if (abs(d1->arr()[i]) > maxmum) maxmum = abs(d1->arr()[i]);
 	d2->arr()[0] = maxmum;
-	std::cout << "Completed Global_Max job\n";
+	printf("Jia: max = %f\n", d2->arr()[0]);
+	std::cout << "Completed Global_Max_Abs job\n";
 };
 
 
