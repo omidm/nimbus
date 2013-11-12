@@ -58,7 +58,7 @@ nimbus::PhysicalObjectMap::PhysicalObjectMap() {}
 nimbus::PhysicalObjectMap::~PhysicalObjectMap() {
   PhysicalObjectMapType::iterator it = data_map_.begin();
   for (; it != data_map_.end(); ++it) {
-    std::pair<data_id_t, PhysicalDataVector*> pair = *it;
+    std::pair<physical_data_id_t, PhysicalDataVector*> pair = *it;
     dbg(DBG_DATA_OBJECTS, "Freeing physical vector 0x%llx\n", pair.second);
     delete pair.second;
   }
@@ -72,7 +72,7 @@ nimbus::PhysicalObjectMap::~PhysicalObjectMap() {
  * \return
 */
 bool nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object) {
-  data_id_t id = object->id();
+  logical_data_id_t id = object->id();
 
   // Does not exist, insert
   if (data_map_.find(id) == data_map_.end()) {
@@ -85,7 +85,7 @@ bool nimbus::PhysicalObjectMap::AddLogicalObject(LogicalDataObject *object) {
   }
 }
 
-bool nimbus::PhysicalObjectMap::RemoveLogicalObject(data_id_t id) {
+bool nimbus::PhysicalObjectMap::RemoveLogicalObject(logical_data_id_t id) {
   if (data_map_.find(id) == data_map_.end()) {  // Exists
     return false;
   } else {

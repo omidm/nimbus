@@ -78,32 +78,32 @@ class Job {
 
     bool SpawnComputeJob(const std::string& name,
         const job_id_t& id,
-        const IDSet<data_id_t>& read,
-        const IDSet<data_id_t>& write,
+        const IDSet<logical_data_id_t>& read,
+        const IDSet<logical_data_id_t>& write,
         const IDSet<job_id_t>& before,
         const IDSet<job_id_t>& after,
         const Parameter& params);
 
     bool SpawnCopyJob(const job_id_t& id,
-        const data_id_t& from_id,
-        const data_id_t& to_id,
+        const logical_data_id_t& from_logical_id,
+        const logical_data_id_t& to_logical_id,
         const IDSet<job_id_t>& before,
         const IDSet<job_id_t>& after,
         const Parameter& params);
 
     bool DefineData(const std::string& name,
-        const data_id_t& id,
+        const logical_data_id_t& logical_data_id,
         const partition_id_t& partition_id,
         const IDSet<partition_id_t>& neighbor_partition,
         const Parameter& params);
 
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
-    bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
+    bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
 
     std::string name();
     ID<job_id_t> id();
-    IDSet<data_id_t> read_set();
-    IDSet<data_id_t> write_set();
+    IDSet<physical_data_id_t> read_set();
+    IDSet<physical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter parameters();
@@ -111,8 +111,8 @@ class Job {
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
-    void set_read_set(IDSet<data_id_t> read_set);
-    void set_write_set(IDSet<data_id_t> write_set);
+    void set_read_set(IDSet<physical_data_id_t> read_set);
+    void set_write_set(IDSet<physical_data_id_t> write_set);
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
     void set_parameters(Parameter parameters);
@@ -121,8 +121,8 @@ class Job {
   private:
     std::string name_;
     ID<job_id_t> id_;
-    IDSet<data_id_t> read_set_;
-    IDSet<data_id_t> write_set_;
+    IDSet<physical_data_id_t> read_set_;
+    IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     Parameter parameters_;

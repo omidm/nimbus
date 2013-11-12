@@ -69,7 +69,7 @@ nimbus::DataManager::DataManager(SchedulerServer* server) {
  * \return
 */
 nimbus::DataManager::~DataManager() {
-  std::map<data_id_t, LogicalDataObject*>::iterator it = ldo_map_.begin();
+  std::map<logical_data_id_t, LogicalDataObject*>::iterator it = ldo_map_.begin();
   for (; it != ldo_map_.end(); ++it) {
     LogicalDataObject* o = (*it).second;
     dbg(DBG_DATA_OBJECTS|DBG_MEMORY, "Invoking delete on object %llu.\n", o->id());
@@ -140,7 +140,7 @@ GeometricRegion nimbus::DataManager::FindPartition(partition_id_t id) {
 }
 
 /**
- * \fn bool nimbus::DataManager::AddLogicalObject(data_id_t id,
+ * \fn bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
                                       std::string variable,
                                       GeometricRegion region)
  * \brief Brief description.
@@ -149,7 +149,7 @@ GeometricRegion nimbus::DataManager::FindPartition(partition_id_t id) {
  * \param region
  * \return
 */
-bool nimbus::DataManager::AddLogicalObject(data_id_t id,
+bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
                                            std::string variable,
                                            GeometricRegion r) {
   dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
@@ -178,7 +178,7 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
 
 
 /**
- * \fn bool nimbus::DataManager::AddLogicalObject(data_id_t id,
+ * \fn bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
                                       std::string variable,
                                       partition_id_t partition)
  * \brief Brief description.
@@ -187,7 +187,7 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
  * \param partition
  * \return
 */
-bool nimbus::DataManager::AddLogicalObject(data_id_t id,
+bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
                                            std::string variable,
                                            partition_id_t partition) {
   dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
@@ -202,12 +202,12 @@ bool nimbus::DataManager::AddLogicalObject(data_id_t id,
 
 
 /**
- * \fn bool nimbus::DataManager::RemoveLogicalObject(data_id_t id)
+ * \fn bool nimbus::DataManager::RemoveLogicalObject(logical_data_id_t id)
  * \brief Brief description.
  * \param id
  * \return
 */
-bool nimbus::DataManager::RemoveLogicalObject(data_id_t id) {
+bool nimbus::DataManager::RemoveLogicalObject(logical_data_id_t id) {
   if (!ldo_index_.HasObject(id)) {
     dbg(DBG_ERROR, "  - FAIL DataManager: tried deleting non-existent object %llu.\n", id); // NOLINT
     return false;
@@ -228,12 +228,12 @@ bool nimbus::DataManager::RemoveLogicalObject(data_id_t id) {
 
 
 /**
- * \fn const LogicalDataObject * nimbus::DataManager::FindLogicalObject(data_id_t id)
+ * \fn const LogicalDataObject * nimbus::DataManager::FindLogicalObject(logical_data_id_t id)
  * \brief Brief description.
  * \param id
  * \return
 */
-const LogicalDataObject * nimbus::DataManager::FindLogicalObject(data_id_t id) {
+const LogicalDataObject * nimbus::DataManager::FindLogicalObject(logical_data_id_t id) {
   if (ldo_map_.find(id) == ldo_map_.end()) {
     return NULL;
   } else {

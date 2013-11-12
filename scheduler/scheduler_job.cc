@@ -42,10 +42,16 @@
 
 using namespace nimbus; // NOLINT
 
+SchedulerJob::SchedulerJob() {
+}
+
 SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
   id_ = id;
   type_ = type;
   app_id_ = app_id;
+}
+
+SchedulerJob::~SchedulerJob() {
 }
 
 uint64_t SchedulerJob::id() {

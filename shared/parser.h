@@ -72,115 +72,15 @@ void parseCommand(const std::string& string,
 int parseCommandFile(const std::string& fname,
                      CmSet& cs);
 
-/** Returns true if there was a valid command in the string,
-    false if no valid command. */
-bool parseCommandFromString(const std::string& input,
-    std::string& command,
-    std::vector<std::string>& parameters);
-
-void parseParameterFromString(const std::string& input, std::string& tag,
-    std::string& args, std::string& string_set);
-
-void parseIDSetFromString(const std::string& input, std::set<uint64_t>& set);
-
-void parseIDSetFromString(const std::string& input, std::set<uint32_t>& set);
-
 bool isSet(const std::string& tag);
 
 int countOccurence(std::string str, std::string substr);
 
 // ********************************************************
 
-bool ParseSchedulerCommand(const std::string& input,
-    SchedulerCommand::TypeSet* command_set,
-    std::string& name, std::string& param_segment,
-    SchedulerCommand::Type& command_type);
-
-bool ParseSpawnJobCommand(const std::string& input,
-    std::string& job_name,
-    IDSet<job_id_t>& job_id,
-    IDSet<data_id_t>& read, IDSet<data_id_t>& write,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    JobType& job_type, Parameter& params);
-
-bool ParseSpawnComputeJobCommand(const std::string& input,
-    std::string& job_name,
-    ID<job_id_t>& job_id,
-    IDSet<data_id_t>& read, IDSet<data_id_t>& write,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    Parameter& params);
-
-bool ParseSpawnCopyJobCommand(const std::string& input,
-    ID<job_id_t>& job_id,
-    ID<data_id_t>& from_id, ID<data_id_t>& to_id,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    Parameter& params);
-
-bool ParseComputeJobCommand(const std::string& input,
-    std::string& job_name,
-    ID<job_id_t>& job_id,
-    IDSet<data_id_t>& read, IDSet<data_id_t>& write,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after,
-    Parameter& params);
-
-bool ParseCreateDataCommand(const std::string& input,
-    ID<job_id_t>& job_id,
-    std::string& data_name, ID<data_id_t>& data_id,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
-
-bool ParseRemoteCopySendCommand(const std::string& input,
-    ID<job_id_t>& job_id,
-    ID<job_id_t>& receive_job_id,
-    ID<data_id_t>& from_data_id,
-    ID<worker_id_t>& to_worker_id,
-    std::string& to_ip,
-    ID<port_t>& to_port,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
-
-bool ParseRemoteCopyReceiveCommand(const std::string& input,
-    ID<job_id_t>& job_id,
-    ID<data_id_t>& to_data_id,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
-
-
-bool ParseLocalCopyCommand(const std::string& input,
-    ID<job_id_t>& job_id,
-    ID<data_id_t>& from_data_id,
-    ID<data_id_t>& to_data_id,
-    IDSet<job_id_t>& before, IDSet<job_id_t>& after);
-
-bool ParseDefineDataCommand(const std::string& input,
-    std::string& data_name,
-    ID<data_id_t>& data_id,
-    ID<partition_id_t>& partition_id,
-    IDSet<partition_id_t>& neighbor_partitions,
-    Parameter& params);
-
-bool ParseHandshakeCommand(const std::string& input,
-    ID<worker_id_t>& worker_id,
-    std::string& ip, ID<port_t>& port);
-
-bool ParseJobDoneCommand(const std::string& input,
-    ID<job_id_t>& job_id,
-    IDSet<job_id_t>& after_set,
-    Parameter& params);
-
-bool ParseIDSet(const std::string& input, IDSet<uint64_t>::IDSetContainer& set);
-
-bool ParseIDSet(const std::string& input, IDSet<uint32_t>::IDSetContainer& set);
-
-bool ParseID(const std::string& input, uint64_t& elem);
-
-bool ParseID(const std::string& input, uint32_t& elem);
 
 bool ParseWorkerDataHeader(const std::string& input,
     job_id_t& job_id, size_t& data_length);
-
-bool ParseSerializedData(const std::string& input,
-    boost::shared_ptr<char>& data_ptr, size_t& size);
-
-bool ParseParameter(const std::string& input,
-    SerializedData& ser_data, IDSet<param_id_t>& idset);
 
 
 }  // namespace nimbus

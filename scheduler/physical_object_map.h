@@ -53,7 +53,7 @@
 
 namespace nimbus {
 
-  typedef std::map<data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
+  typedef std::map<physical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
 
   class PhysicalObjectMap {
   public:
@@ -61,7 +61,7 @@ namespace nimbus {
     virtual ~PhysicalObjectMap();
 
     virtual bool AddLogicalObject(LogicalDataObject* object);
-    virtual bool RemoveLogicalObject(data_id_t id);
+    virtual bool RemoveLogicalObject(logical_data_id_t id);
     virtual bool AddPhysicalInstance(LogicalDataObject* object,
                                      PhysicalData instance);
     virtual bool RemovePhysicalInstance(LogicalDataObject* object,

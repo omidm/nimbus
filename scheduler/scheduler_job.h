@@ -59,8 +59,9 @@ typedef std::vector<Data*> DataArray;
 
 class SchedulerJob {
  public:
+  SchedulerJob();
   SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
-  virtual ~SchedulerJob() {}
+  virtual ~SchedulerJob();
 
   uint64_t id();
   void set_id(job_id_t id);
@@ -70,8 +71,8 @@ class SchedulerJob {
   job_id_t id_;
   app_id_t app_id_;
   JobType type_;
-  IDSet<data_id_t> read_set_;
-  IDSet<data_id_t> write_set_;
+  IDSet<physical_data_id_t> read_set_;
+  IDSet<physical_data_id_t> write_set_;
   IDSet<job_id_t> before_set_;
   IDSet<job_id_t> after_set_;
   std::string parameters_;

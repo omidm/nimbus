@@ -67,7 +67,7 @@ nimbus::WorkerLdoMap::~WorkerLdoMap() {
 
 
 /**
- * \fn bool nimbus::WorkerLdoMap::AddLogicalObject(data_id_t id,
+ * \fn bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                        std::string variable,
                                        GeometricRegion region)
  * \brief Brief description.
@@ -76,7 +76,7 @@ nimbus::WorkerLdoMap::~WorkerLdoMap() {
  * \param region
  * \return
 */
-bool nimbus::WorkerLdoMap::AddLogicalObject(data_id_t id,
+bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                             std::string variable,
                                             GeometricRegion region) {
   if (ldo_index_.HasObject(id)) {
@@ -90,12 +90,12 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(data_id_t id,
 
 
 /**
- * \fn bool nimbus::WorkerLdoMap::RemoveLogicalObject(data_id_t id)
+ * \fn bool nimbus::WorkerLdoMap::RemoveLogicalObject(logical_data_id_t id)
  * \brief Brief description.
  * \param id
  * \return
 */
-bool nimbus::WorkerLdoMap::RemoveLogicalObject(data_id_t id) {
+bool nimbus::WorkerLdoMap::RemoveLogicalObject(logical_data_id_t id) {
   if (!ldo_index_.HasObject(id)) {
     return false;
   } else {
@@ -108,12 +108,12 @@ bool nimbus::WorkerLdoMap::RemoveLogicalObject(data_id_t id) {
 
 
 /**
- * \fn const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(data_id_t id)
+ * \fn const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(logical_data_id_t id)
  * \brief Brief description.
  * \param id
  * \return
 */
-const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(data_id_t id) {
+const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(logical_data_id_t id) {
   return ldo_index_.SpecificObject(id);
 }
 

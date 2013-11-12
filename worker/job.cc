@@ -65,8 +65,8 @@ Job* Job::Clone() {
 
 bool Job::SpawnComputeJob(const std::string& name,
     const job_id_t& id,
-    const IDSet<data_id_t>& read,
-    const IDSet<data_id_t>& write,
+    const IDSet<logical_data_id_t>& read,
+    const IDSet<logical_data_id_t>& write,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
@@ -81,13 +81,13 @@ bool Job::SpawnComputeJob(const std::string& name,
 }
 
 bool Job::SpawnCopyJob(const job_id_t& id,
-    const data_id_t& from_id,
-    const data_id_t& to_id,
+    const logical_data_id_t& from_logical_id,
+    const logical_data_id_t& to_logical_id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
   if (app_is_set_) {
-    application_->SpawnCopyJob(id, from_id, to_id, before, after, params);
+    application_->SpawnCopyJob(id, from_logical_id, to_logical_id, before, after, params);
     return true;
   } else {
     std::cout << "ERROR: SpawnCopyJob, application has not been set." <<
@@ -97,12 +97,12 @@ bool Job::SpawnCopyJob(const job_id_t& id,
 }
 
 bool Job::DefineData(const std::string& name,
-    const data_id_t& id,
+    const logical_data_id_t& logical_data_id,
     const partition_id_t& partition_id,
     const IDSet<partition_id_t>& neighbor_partition,
     const Parameter& params) {
   if (app_is_set_) {
-    application_->DefineData(name, id, partition_id, neighbor_partition, params);
+    application_->DefineData(name, logical_data_id, partition_id, neighbor_partition, params);
     return true;
   } else {
     std::cout << "ERROR: DefineData, application has not been set." <<
@@ -121,9 +121,9 @@ bool Job::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   }
 }
 
-bool Job::GetNewDataID(std::vector<data_id_t>* result, size_t req_num) {
+bool Job::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num) {
   if (app_is_set_) {
-    return application_->GetNewDataID(result, req_num);
+    return application_->GetNewLogicalDataID(result, req_num);
   } else {
     std::cout << "ERROR: GetNewDataID, application has not been set." <<
       std::endl;
@@ -139,11 +139,11 @@ ID<job_id_t> Job::id() {
   return id_;
 }
 
-IDSet<data_id_t> Job::read_set() {
+IDSet<physical_data_id_t> Job::read_set() {
   return read_set_;
 }
 
-IDSet<data_id_t> Job::write_set() {
+IDSet<physical_data_id_t> Job::write_set() {
   return write_set_;
 }
 
@@ -171,11 +171,11 @@ void Job::set_id(ID<job_id_t> id) {
   id_ = id;
 }
 
-void Job::set_read_set(IDSet<data_id_t> read_set) {
+void Job::set_read_set(IDSet<physical_data_id_t> read_set) {
   read_set_ = read_set;
 }
 
-void Job::set_write_set(IDSet<data_id_t> write_set) {
+void Job::set_write_set(IDSet<physical_data_id_t> write_set) {
   write_set_ = write_set;
 }
 

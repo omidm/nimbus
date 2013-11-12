@@ -106,7 +106,7 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
-  data_manager_->AddLogicalObject(cm->data_id().elem(),
+  data_manager_->AddLogicalObject(cm->logical_data_id().elem(),
                                  cm->data_name(),
                                  cm->partition_id().elem());
 }

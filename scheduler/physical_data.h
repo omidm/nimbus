@@ -47,18 +47,18 @@ namespace nimbus {
 
   class PhysicalData {
   public:
-    PhysicalData(data_id_t id, worker_id_t worker);
-    PhysicalData(data_id_t id, worker_id_t worker, data_version_t version);
+    PhysicalData(physical_data_id_t id, worker_id_t worker);
+    PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
     virtual ~PhysicalData();
 
-    data_id_t id();
+    physical_data_id_t id();
     worker_id_t worker();
     data_version_t version();
 
     void set_version(data_version_t v);
 
   private:
-    data_id_t id_;
+    physical_data_id_t id_;
     worker_id_t worker_;
     data_version_t version_;
   };

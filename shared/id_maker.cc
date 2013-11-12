@@ -55,8 +55,10 @@ void IDMaker::Initialize(worker_id_t worker_id) {
   initialized_ = true;
   first_job_id_ = JOB_ID_BATCH * worker_id;
   last_job_id_ = first_job_id_;
-  first_data_id_ = DATA_ID_BATCH * worker_id;
-  last_data_id_ = first_data_id_;
+  first_physical_data_id_ = PHYSICAL_DATA_ID_BATCH * worker_id;
+  last_physical_data_id_ = first_physical_data_id_;
+  first_logical_data_id_ = LOGICAL_DATA_ID_BATCH * worker_id;
+  last_logical_data_id_ = first_logical_data_id_;
 }
 
 bool IDMaker::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
@@ -74,18 +76,33 @@ bool IDMaker::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   return true;
 }
 
-bool IDMaker::GetNewDataID(std::vector<data_id_t>* result, size_t req_num) {
+bool IDMaker::GetNewPhysicalDataID(std::vector<physical_data_id_t>* result, size_t req_num) {
   result->clear();
   if (!initialized_) {
     std::cout << "ERROR: IDMaker has not been initialized yet." << std::endl;
     return false;
   }
-  if ((last_data_id_ + req_num) >= (first_data_id_ + JOB_ID_BATCH)) {
-    std::cout << "ERROR: IDMaker ran out of data IDs." << std::endl;
+  if ((last_physical_data_id_ + req_num) >= (first_physical_data_id_ + PHYSICAL_DATA_ID_BATCH)) {
+    std::cout << "ERROR: IDMaker ran out of physical data IDs." << std::endl;
     return false;
   }
   for (size_t i = 0; i < req_num; i++)
-    result->push_back(++last_data_id_);
+    result->push_back(++last_physical_data_id_);
+  return true;
+}
+
+bool IDMaker::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num) {
+  result->clear();
+  if (!initialized_) {
+    std::cout << "ERROR: IDMaker has not been initialized yet." << std::endl;
+    return false;
+  }
+  if ((last_logical_data_id_ + req_num) >= (first_logical_data_id_ + LOGICAL_DATA_ID_BATCH)) {
+    std::cout << "ERROR: IDMaker ran out of logical data IDs." << std::endl;
+    return false;
+  }
+  for (size_t i = 0; i < req_num; i++)
+    result->push_back(++last_logical_data_id_);
   return true;
 }
 

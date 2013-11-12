@@ -43,7 +43,7 @@
 
 namespace nimbus {
 /**
- * \fn nimbus::LogicalDataObject::LogicalDataObject(data_id_t id,
+ * \fn nimbus::LogicalDataObject::LogicalDataObject(logical_data_id_t id,
                                              std::string variable,
                                              GeometricRegion *region)
  * \brief Brief description.
@@ -52,7 +52,7 @@ namespace nimbus {
  * \param region
  * \return
 */
-LogicalDataObject::LogicalDataObject(data_id_t id,
+LogicalDataObject::LogicalDataObject(logical_data_id_t id,
                                      std::string variable,
                                      GeometricRegion *region) {
   id_ = id;
@@ -88,11 +88,11 @@ LogicalDataObject::~LogicalDataObject() {
 
 
 /**
- * \fn data_id_t nimbus::LogicalDataObject::id()
+ * \fn logical_data_id_t nimbus::LogicalDataObject::id()
  * \brief Brief description.
  * \return
 */
-data_id_t LogicalDataObject::id() const {
+logical_data_id_t LogicalDataObject::id() const {
   return id_;
 }
 

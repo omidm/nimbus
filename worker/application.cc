@@ -41,8 +41,6 @@
 #include "worker/application.h"
 
 Application::Application() {
-  job_id_ = 1;
-  data_id_ = 1;
   app_data_ = NULL;
 }
 
@@ -65,25 +63,10 @@ void Application::RegisterData(std::string name, Data* d) {
   data_table_[name] = d;
 }
 
-void Application::SpawnJob(const std::string& name,
-    const job_id_t& id,
-    const IDSet<data_id_t>& read,
-    const IDSet<data_id_t>& write,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const JobType& type,
-    const Parameter& params) {
-  IDSet<job_id_t> id_set;
-  id_set.insert(id);
-
-  SpawnJobCommand cm(name, id_set, read, write, before, after, type, params);
-  client_->sendCommand(&cm);
-}
-
 void Application::SpawnComputeJob(const std::string& name,
     const job_id_t& id,
-    const IDSet<data_id_t>& read,
-    const IDSet<data_id_t>& write,
+    const IDSet<logical_data_id_t>& read,
+    const IDSet<logical_data_id_t>& write,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
@@ -93,26 +76,26 @@ void Application::SpawnComputeJob(const std::string& name,
 }
 
 void Application::SpawnCopyJob(const job_id_t& id,
-    const data_id_t& from_id,
-    const data_id_t& to_id,
+    const logical_data_id_t& from_logical_id,
+    const logical_data_id_t& to_logical_id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
 
-  SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<data_id_t>(from_id),
-      ID<data_id_t>(to_id), before, after, params);
+  SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<logical_data_id_t>(from_logical_id),
+      ID<logical_data_id_t>(to_logical_id), before, after, params);
   client_->sendCommand(&cm);
 }
 
 void Application::DefineData(const std::string& name,
-    const data_id_t& id,
+    const logical_data_id_t& logical_data_id,
     const partition_id_t& partition_id,
     const IDSet<partition_id_t>& neighbor_partitions,
     const Parameter& params) {
-  ID<data_id_t> id_made(id);
+  ID<logical_data_id_t> logical_id_made(logical_data_id);
   ID<partition_id_t> partition_id_made(partition_id);
 
-  DefineDataCommand cm(name, id_made, partition_id_made, neighbor_partitions, params);
+  DefineDataCommand cm(name, logical_id_made, partition_id_made, neighbor_partitions, params);
   client_->sendCommand(&cm);
 }
 
@@ -128,27 +111,9 @@ bool Application::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   return id_maker_->GetNewJobID(result, req_num);
 }
 
-bool Application::GetNewDataID(std::vector<data_id_t>* result, size_t req_num) {
-  return id_maker_->GetNewDataID(result, req_num);
+bool Application::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num) {
+  return id_maker_->GetNewLogicalDataID(result, req_num);
 }
-
-
-// TODO(omidm) remove both of them.
-void Application::GetNewJobID(int req_num, std::vector<int>* result) {
-  for (int i = 0; i < req_num; i++) {
-    result->push_back(job_id_);
-    job_id_++;
-  }
-}
-
-void Application::GetNewDataID(int req_num, std::vector<int>* result) {
-  for (int i = 0; i < req_num; i++) {
-    result->push_back(data_id_);
-    data_id_++;
-  }
-}
-
-
 
 void* Application::app_data() {
     return app_data_;

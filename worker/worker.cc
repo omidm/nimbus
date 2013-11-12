@@ -140,13 +140,13 @@ void Worker::GetJobsToRun(JobList* list, size_t max_num) {
 
 void Worker::ExecuteJob(Job* job) {
   DataArray da;
-  IDSet<data_id_t>::IDSetIter iter;
+  IDSet<physical_data_id_t>::IDSetIter iter;
 
-  IDSet<data_id_t> read = job->read_set();
+  IDSet<physical_data_id_t> read = job->read_set();
   for (iter = read.begin(); iter != read.end(); iter++)
     da.push_back(data_map_[*iter]);
 
-  IDSet<data_id_t> write = job->write_set();
+  IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++)
     da.push_back(data_map_[*iter]);
 
@@ -156,7 +156,7 @@ void Worker::ExecuteJob(Job* job) {
 
   char buff[MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff),
-      "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
+      "Execute Job, name: %25s  id: %4llu  length(ms): %6.3lf  time(s): %6.3lf",
       job->name().c_str(), job->id().elem(), 1000 * log.timer(), log.GetTime());
 
   log.writeToFile(std::string(buff), LOG_INFO);
@@ -192,12 +192,6 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     case SchedulerCommand::LOCAL_COPY:
       ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
-      break;
-    case SchedulerCommand::SPAWN_JOB:
-      ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
-      break;
-    case SchedulerCommand::DEFINE_DATA:
-      ProcessDefineDataCommand(reinterpret_cast<DefineDataCommand*>(cm));
       break;
     default:
       std::cout << "ERROR: " << cm->toString() <<
@@ -244,14 +238,15 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
 
 void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   Data * data = application_->CloneData(cm->data_name());
-  data->set_id(cm->data_id().elem());
+  data->set_logical_id(cm->logical_data_id().elem());
+  data->set_physical_id(cm->physical_data_id().elem());
   AddData(data);
 
   Job * job = new CreateDataJob();
   job->set_name("CreateData:" + cm->data_name());
   job->set_id(cm->job_id());
-  IDSet<data_id_t> write_set;
-  write_set.insert(cm->data_id().elem());
+  IDSet<physical_data_id_t> write_set;
+  write_set.insert(cm->physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
@@ -268,8 +263,8 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   job->set_to_worker_id(cm->to_worker_id());
   job->set_to_ip(cm->to_ip());
   job->set_to_port(cm->to_port());
-  IDSet<data_id_t> read_set;
-  read_set.insert(cm->from_data_id().elem());
+  IDSet<physical_data_id_t> read_set;
+  read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
@@ -280,8 +275,8 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   Job * job = new RemoteCopyReceiveJob();
   job->set_name("RemoteCopyReceive");
   job->set_id(cm->job_id());
-  IDSet<data_id_t> write_set;
-  write_set.insert(cm->to_data_id().elem());
+  IDSet<physical_data_id_t> write_set;
+  write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
@@ -292,62 +287,15 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob();
   job->set_name("LocalCopy");
   job->set_id(cm->job_id());
-  IDSet<data_id_t> read_set;
-  read_set.insert(cm->from_data_id().elem());
+  IDSet<physical_data_id_t> read_set;
+  read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
-  IDSet<data_id_t> write_set;
-  write_set.insert(cm->to_data_id().elem());
+  IDSet<physical_data_id_t> write_set;
+  write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
   blocked_jobs_.push_back(job);
-}
-
-void Worker::ProcessSpawnJobCommand(SpawnJobCommand* cm) {
-  Job * j = application_->CloneJob(cm->job_name());
-
-  std::vector<Data*> da;
-  IDSet<data_id_t>::IDSetIter iter;
-
-  IDSet<data_id_t> read = cm->read_set();
-  for (iter = read.begin(); iter != read.end(); iter++)
-    da.push_back(data_map_[*iter]);
-
-  IDSet<data_id_t> write = cm->write_set();
-  for (iter = write.begin(); iter != write.end(); iter++)
-    da.push_back(data_map_[*iter]);
-
-  job_id_t id = *(cm->job_id().begin());
-
-  log.StartTimer();
-  j->Execute(cm->params(), da);
-  log.StopTimer();
-
-  char buff[MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "Execute Job, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-      cm->job_name().c_str(), id, 1000 * log.timer(), log.GetTime());
-
-  log.writeToFile(std::string(buff), LOG_INFO);
-}
-
-void Worker::ProcessDefineDataCommand(DefineDataCommand* cm) {
-  Data * d = application_->CloneData(cm->data_name());
-
-  data_id_t id = cm->data_id().elem();
-
-  log.StartTimer();
-  d->Create();
-  d->set_id(id);
-  AddData(d);
-  log.StopTimer();
-
-  char buff[MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "Create Data, name: %25s  id: %4ld  length(ms): %6.3lf  time(s): %6.3lf",
-      cm->data_name().c_str(), id, 1000 * log.timer(), log.GetTime());
-
-  log.writeToFile(std::string(buff), LOG_INFO);
 }
 
 void Worker::SetupDataExchangerInterface() {
@@ -367,8 +315,6 @@ void Worker::SetupSchedulerInterface() {
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  scheduler_command_table_.push_back(new SpawnJobCommand());
-  scheduler_command_table_.push_back(new DefineDataCommand());
   scheduler_command_table_.push_back(new HandshakeCommand());
   scheduler_command_table_.push_back(new JobDoneCommand());
   scheduler_command_table_.push_back(new ComputeJobCommand());
@@ -379,11 +325,11 @@ void Worker::LoadSchedulerCommands() {
 }
 
 void Worker::AddData(Data* data) {
-  data_map_[data->id()] = data;
+  data_map_[data->physical_id()] = data;
 }
 
-void Worker::DeleteData(data_id_t data_id) {
-  data_map_.erase(data_id);
+void Worker::DeleteData(physical_data_id_t physical_data_id) {
+  data_map_.erase(physical_data_id);
 }
 
 worker_id_t Worker::id() {

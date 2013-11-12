@@ -65,32 +65,9 @@
 
 namespace nimbus {
 
-class CommandParameter {
- public:
-  CommandParameter();
-  explicit CommandParameter(std::string parameter);
-  CommandParameter(std::string name, std::string value, const IDSet<job_id_t>& set);
-  virtual ~CommandParameter();
-
-  virtual std::string toString();
-  virtual std::string name();
-  virtual std::string value();
-  virtual IDSet<job_id_t>* identifier_set();
-
- private:
-  std::string name_;
-  std::string value_;
-  IDSet<job_id_t> identifier_set_;
-};
-
-typedef std::map<std::string, CommandParameter> CommandParameterList;
-
 class SchedulerCommand {
  public:
   SchedulerCommand();
-  explicit SchedulerCommand(std::string command);
-  SchedulerCommand(std::string name,
-                   const CommandParameterList& parameters);
   virtual ~SchedulerCommand();
 
   enum Type {
@@ -112,14 +89,12 @@ class SchedulerCommand {
   typedef std::set<Type> TypeSet;
   typedef std::list<SchedulerCommand*> PrototypeTable;
 
-  virtual void addParameter(CommandParameter parameter);
   virtual SchedulerCommand* Clone();
   virtual bool Parse(const std::string& param_segment);
   virtual std::string toString();
   virtual std::string toStringWTags();
   virtual std::string name();
   virtual Type type();
-  virtual CommandParameterList* parameters();
 
   static std::string GetNameFromType(Type type);
   static bool GenerateSchedulerCommandChild(const std::string& input,
@@ -153,11 +128,9 @@ class SchedulerCommand {
     SchedulerCommand*& generated_command,
     std::string& param_segment);
 
-  CommandParameterList parameters_;
   // worker_id_t worker_id_;
 };
 
-// ************************************************
 
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
@@ -189,7 +162,7 @@ class SpawnJobCommand : public SchedulerCommand {
     SpawnJobCommand();
     SpawnJobCommand(const std::string& job_name,
         const IDSet<job_id_t>& job_id,
-        const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         const JobType& job_type, const Parameter& params);
     ~SpawnJobCommand();
@@ -201,8 +174,8 @@ class SpawnJobCommand : public SchedulerCommand {
     std::string job_name();
     JobType job_type();
     IDSet<job_id_t> job_id();
-    IDSet<data_id_t> read_set();
-    IDSet<data_id_t> write_set();
+    IDSet<logical_data_id_t> read_set();
+    IDSet<logical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter params();
@@ -210,8 +183,8 @@ class SpawnJobCommand : public SchedulerCommand {
   private:
     std::string job_name_;
     IDSet<job_id_t> job_id_;
-    IDSet<data_id_t> read_set_;
-    IDSet<data_id_t> write_set_;
+    IDSet<logical_data_id_t> read_set_;
+    IDSet<logical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     JobType job_type_;
@@ -224,7 +197,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     SpawnComputeJobCommand();
     SpawnComputeJobCommand(const std::string& job_name,
         const ID<job_id_t>& job_id,
-        const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         const Parameter& params);
     ~SpawnComputeJobCommand();
@@ -235,8 +208,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     virtual std::string toStringWTags();
     std::string job_name();
     ID<job_id_t> job_id();
-    IDSet<data_id_t> read_set();
-    IDSet<data_id_t> write_set();
+    IDSet<logical_data_id_t> read_set();
+    IDSet<logical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter params();
@@ -244,8 +217,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
   private:
     std::string job_name_;
     ID<job_id_t> job_id_;
-    IDSet<data_id_t> read_set_;
-    IDSet<data_id_t> write_set_;
+    IDSet<logical_data_id_t> read_set_;
+    IDSet<logical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     Parameter params_;
@@ -255,7 +228,8 @@ class SpawnCopyJobCommand : public SchedulerCommand {
   public:
     SpawnCopyJobCommand();
     SpawnCopyJobCommand(const ID<job_id_t>& job_id,
-        const ID<data_id_t>& from_id, const ID<data_id_t>& to_id,
+        const ID<logical_data_id_t>& from_logical_id,
+        const ID<logical_data_id_t>& to_logical_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         const Parameter& params);
     ~SpawnCopyJobCommand();
@@ -265,16 +239,16 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
-    ID<data_id_t> from_id();
-    ID<data_id_t> to_id();
+    ID<logical_data_id_t> from_id();
+    ID<logical_data_id_t> to_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter params();
 
   private:
     ID<job_id_t> job_id_;
-    ID<data_id_t> from_id_;
-    ID<data_id_t> to_id_;
+    ID<logical_data_id_t> from_logical_id_;
+    ID<logical_data_id_t> to_logical_id_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     Parameter params_;
@@ -285,7 +259,7 @@ class ComputeJobCommand : public SchedulerCommand {
     ComputeJobCommand();
     ComputeJobCommand(const std::string& job_name,
         const ID<job_id_t>& job_id,
-        const IDSet<data_id_t>& read, const IDSet<data_id_t>& write,
+        const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         const Parameter& params);
     ~ComputeJobCommand();
@@ -296,8 +270,8 @@ class ComputeJobCommand : public SchedulerCommand {
     virtual std::string toStringWTags();
     std::string job_name();
     ID<job_id_t> job_id();
-    IDSet<data_id_t> read_set();
-    IDSet<data_id_t> write_set();
+    IDSet<physical_data_id_t> read_set();
+    IDSet<physical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter params();
@@ -305,8 +279,8 @@ class ComputeJobCommand : public SchedulerCommand {
   private:
     std::string job_name_;
     ID<job_id_t> job_id_;
-    IDSet<data_id_t> read_set_;
-    IDSet<data_id_t> write_set_;
+    IDSet<physical_data_id_t> read_set_;
+    IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     Parameter params_;
@@ -318,7 +292,9 @@ class CreateDataCommand : public SchedulerCommand {
   public:
     CreateDataCommand();
     CreateDataCommand(const ID<job_id_t>& job_id,
-        const std::string& data_name, const ID<data_id_t>& data_id,
+        const std::string& data_name,
+        const ID<logical_data_id_t>& logical_data_id,
+        const ID<physical_data_id_t>& physical_data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~CreateDataCommand();
 
@@ -328,14 +304,16 @@ class CreateDataCommand : public SchedulerCommand {
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
     std::string data_name();
-    ID<data_id_t> data_id();
+    ID<logical_data_id_t> logical_data_id();
+    ID<physical_data_id_t> physical_data_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
     std::string data_name_;
-    ID<data_id_t> data_id_;
+    ID<logical_data_id_t> logical_data_id_;
+    ID<physical_data_id_t> physical_data_id_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
 };
@@ -346,7 +324,7 @@ class RemoteCopySendCommand : public SchedulerCommand {
     RemoteCopySendCommand();
     RemoteCopySendCommand(const ID<job_id_t>& job_id,
         const ID<job_id_t>& receive_job_id,
-        const ID<data_id_t>& from_data_id,
+        const ID<physical_data_id_t>& from_physical_data_id,
         const ID<worker_id_t>& to_worker_id,
         const std::string to_ip, const ID<port_t>& to_port,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
@@ -358,7 +336,7 @@ class RemoteCopySendCommand : public SchedulerCommand {
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
     ID<job_id_t> receive_job_id();
-    ID<data_id_t> from_data_id();
+    ID<physical_data_id_t> from_physical_data_id();
     ID<worker_id_t> to_worker_id();
     std::string to_ip();
     ID<port_t> to_port();
@@ -368,7 +346,7 @@ class RemoteCopySendCommand : public SchedulerCommand {
   private:
     ID<job_id_t> job_id_;
     ID<job_id_t> receive_job_id_;
-    ID<data_id_t> from_data_id_;
+    ID<physical_data_id_t> from_physical_data_id_;
     ID<worker_id_t> to_worker_id_;
     std::string to_ip_;
     ID<port_t> to_port_;
@@ -380,7 +358,7 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
   public:
     RemoteCopyReceiveCommand();
     RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
-        const ID<data_id_t>& to_data_id,
+        const ID<physical_data_id_t>& to_physical_data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~RemoteCopyReceiveCommand();
 
@@ -389,13 +367,13 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
-    ID<data_id_t> to_data_id();
+    ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
-    ID<data_id_t> to_data_id_;
+    ID<physical_data_id_t> to_physical_data_id_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
 };
@@ -408,8 +386,8 @@ class LocalCopyCommand : public SchedulerCommand {
   public:
     LocalCopyCommand();
     LocalCopyCommand(const ID<job_id_t>& jog_id,
-        const ID<data_id_t>& from_data_id,
-        const ID<data_id_t>& to_data_id,
+        const ID<physical_data_id_t>& from_physical_data_id,
+        const ID<physical_data_id_t>& to_physical_data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
     ~LocalCopyCommand();
 
@@ -418,15 +396,15 @@ class LocalCopyCommand : public SchedulerCommand {
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
-    ID<data_id_t> from_data_id();
-    ID<data_id_t> to_data_id();
+    ID<physical_data_id_t> from_physical_data_id();
+    ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
-    ID<data_id_t> from_data_id_;
-    ID<data_id_t> to_data_id_;
+    ID<physical_data_id_t> from_physical_data_id_;
+    ID<physical_data_id_t> to_physical_data_id_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
 };
@@ -497,7 +475,7 @@ class DefineDataCommand : public SchedulerCommand {
   public:
     DefineDataCommand();
     DefineDataCommand(const std::string& data_name,
-                      const ID<data_id_t>& data_id,
+                      const ID<logical_data_id_t>& logical_data_id,
                       const ID<partition_id_t>& partition_id,
                       const IDSet<partition_id_t>& neighbor_partition,
                       const Parameter& params);
@@ -508,14 +486,14 @@ class DefineDataCommand : public SchedulerCommand {
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string data_name();
-    ID<data_id_t> data_id();
+    ID<logical_data_id_t> logical_data_id();
     ID<partition_id_t> partition_id();
     IDSet<partition_id_t> neighbor_partitions();
     Parameter params();
 
   private:
     std::string data_name_;
-    ID<data_id_t> data_id_;
+    ID<logical_data_id_t> logical_data_id_;
     ID<partition_id_t> partition_id_;
     IDSet<partition_id_t> neighbor_partitions_;
     Parameter params_;

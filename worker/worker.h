@@ -82,10 +82,6 @@ class Worker {
   virtual void ProcessHandshakeCommand(HandshakeCommand* command);
   virtual void ProcessJobDoneCommand(JobDoneCommand* command);
 
-  // Will remove it later, they are here so the simple_worker would still work.
-  virtual void ProcessSpawnJobCommand(SpawnJobCommand* command);
-  virtual void ProcessDefineDataCommand(DefineDataCommand* command);
-
   worker_id_t id();
   void set_id(worker_id_t id);
 
@@ -104,7 +100,7 @@ class Worker {
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
-  DataMap data_map_;
+  PhysicalDataMap data_map_;
   JobList ready_jobs_;
   JobList blocked_jobs_;
   JobList pending_transfer_jobs_;
@@ -116,7 +112,7 @@ class Worker {
   virtual void SetupDataExchangerInterface();
 
   virtual void AddData(Data* data);
-  virtual void DeleteData(data_id_t data_id);
+  virtual void DeleteData(physical_data_id_t physical_data_id);
   virtual void LoadSchedulerCommands();
 };
 

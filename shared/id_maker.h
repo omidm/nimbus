@@ -56,17 +56,21 @@ class IDMaker {
 
     void Initialize(worker_id_t worker_id);
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
-    bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
+    bool GetNewPhysicalDataID(std::vector<physical_data_id_t>* result, size_t req_num);
+    bool GetNewLogicalDataID(std::vector<physical_data_id_t>* result, size_t req_num);
 
   private:
     bool initialized_;
     worker_id_t worker_id_;
     job_id_t first_job_id_;
     job_id_t last_job_id_;
-    data_id_t first_data_id_;
-    data_id_t last_data_id_;
+    physical_data_id_t first_physical_data_id_;
+    physical_data_id_t last_physical_data_id_;
+    logical_data_id_t first_logical_data_id_;
+    logical_data_id_t last_logical_data_id_;
     static const job_id_t JOB_ID_BATCH  = (1 << (sizeof(job_id_t)*3));
-    static const data_id_t DATA_ID_BATCH  = (1 << (sizeof(data_id_t)*3));
+    static const physical_data_id_t PHYSICAL_DATA_ID_BATCH  = (1 << (sizeof(physical_data_id_t)*3));
+    static const logical_data_id_t LOGICAL_DATA_ID_BATCH  = (1 << (sizeof(logical_data_id_t)*3));
 };
 
 
