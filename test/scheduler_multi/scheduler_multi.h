@@ -78,8 +78,8 @@ class SimpleScheduler : public Scheduler {
   private:
     SchedulerCommandList pending_compute_jobs_;
     SchedulerCommandList pending_copy_jobs_;
-    std::map<job_id_t, data_id_t> job_data_map_;
-    std::map<data_id_t, std::pair<worker_id_t, bool> > create_data_;
+    std::map<job_id_t, physical_data_id_t> job_data_map_;
+    std::map<physical_data_id_t, std::pair<worker_id_t, bool> > create_data_;
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_MULTI_SCHEDULER_MULTI_H_

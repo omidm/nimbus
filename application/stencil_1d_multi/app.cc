@@ -137,8 +137,8 @@ void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
 
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
   partition_id_t p_1 = 1;
@@ -147,7 +147,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<param_id_t> param_idset;
 
   GetNewJobID(&j, 7);
-  GetNewDataID(&d, 8);
+  GetNewLogicalDataID(&d, 8);
 
   DefineData("side", d[0], p_1, neighbor_partitions, par);
   DefineData("middle", d[1], p_1, neighbor_partitions, par);
@@ -233,8 +233,8 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
   IDSet<param_id_t> param_idset;

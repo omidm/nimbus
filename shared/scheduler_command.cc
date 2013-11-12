@@ -717,11 +717,11 @@ ID<job_id_t> SpawnCopyJobCommand::job_id() {
   return job_id_;
 }
 
-ID<logical_data_id_t> SpawnCopyJobCommand::from_id() {
+ID<logical_data_id_t> SpawnCopyJobCommand::from_logical_id() {
   return from_logical_id_;
 }
 
-ID<logical_data_id_t> SpawnCopyJobCommand::to_id() {
+ID<logical_data_id_t> SpawnCopyJobCommand::to_logical_id() {
   return to_logical_id_;
 }
 

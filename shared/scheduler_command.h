@@ -239,8 +239,8 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
-    ID<logical_data_id_t> from_id();
-    ID<logical_data_id_t> to_id();
+    ID<logical_data_id_t> from_logical_id();
+    ID<logical_data_id_t> to_logical_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter params();
