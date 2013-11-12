@@ -209,7 +209,8 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
 void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   ID<port_t> port(listening_port_);
   HandshakeCommand new_cm = HandshakeCommand(cm->worker_id(),
-      boost::asio::ip::host_name(), port);
+      // boost::asio::ip::host_name(), port);
+      "127.0.0.1", port);
   client_->sendCommand(&new_cm);
 
   id_ = cm->worker_id().elem();
