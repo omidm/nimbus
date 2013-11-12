@@ -43,9 +43,11 @@
 #include "data_utils.h"
 #include "physbam_include.h"
 #include "proto_files/adv_vel_par.pb.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 #include <vector>
 #include "water_app.h"
 #include "water_data_driver.h"
@@ -65,10 +67,30 @@ using nimbus::Application;
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
-namespace application {
-    std::string kDataRegionNames[kDataNum];
-    TV_INT kDataRegionSizes[kDataNum];
-    std::string kJobRegionNames[kJobNum];
+namespace {
+    const int knx[] = {
+        0,
+        kGhostSize,
+        kMainSize/2-kGhostSize,
+        kMainSize/2,
+        kMainSize/2+kGhostSize,
+        kMainSize-kGhostSize};
+    const int knly[] = {
+        0,
+        kGhostSize,
+        kMainSize-kGhostSize};
+    const int knd[] = {
+        kGhostSize,
+        kMainSize/2,
+        kGhostSize};
+    nimbus::GeometricRegion kwhole_region(
+            0, 0, 0,
+            kMainSize, kMainSize, 0);
+    ::std::vector < ::nimbus::GeometricRegion > kleft_regions;
+    ::std::vector < ::nimbus::GeometricRegion > kright_regions;
+    ::std::vector < ::std::string > kleft_adv_types;
+    ::std::vector < ::std::string > kright_adv_types;
+    const int pieces = 12; // pieces of velocity per partition
 } // namespace application
 
 WaterApp::WaterApp() {
@@ -77,31 +99,57 @@ WaterApp::WaterApp() {
 void WaterApp::Load() {
     printf("Worker beginning to load application\n");
 
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            kleft_regions.push_back(
+                    GeometricRegion(
+                        knx[i], knd[j], 0,
+                        knd[i], knd[j], 0));
+        }
+    }
+    for (int j = 0; j < 3; j++) {
+        kleft_regions.push_back(
+                GeometricRegion(
+                    knx[3], knd[j], 0,
+                    knd[0], knd[j], 0));
+    }
+    for (int j = 0; j < 3; j++) {
+        kright_regions.push_back(
+                GeometricRegion(
+                    knx[2], knd[j], 0,
+                    knd[2], knd[j], 0));
+    }
+    for (int i = 3; i < 6; i++) {
+        for (int j = 0; j < 3; j++) {
+            kright_regions.push_back(
+                    GeometricRegion(
+                        knx[i], knd[j], 0,
+                        knd[i%3], knd[j], 0));
+        }
+    }
+    for (int i = 0; i < pieces; i++) {
+        std::stringstream ss;
+        ss >> i;
+        kleft_adv_types.push_back("advection_left_"+ss.str());
+        kright_adv_types.push_back("advection_right_"+ss.str());
+    }
+
     /* Initialize application constants. */
     TV_INT main_size(kMainSize, kMainSize);
-    TV_INT main_all_size(kMainAllSize, kMainAllSize);
-    ::application::GetDataRegionNames(::application::kDataRegionNames);
-    ::application::GetDataRegionSizes(
-            ::application::kDataRegionSizes,
-            main_size,
-            main_all_size,
-            kGhostSize);
-    ::application::GetJobRegionNames(::application::kJobRegionNames);
 
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
     /* Declare data types. */
     RegisterData("water_driver", new WaterDriver<TV>( STREAM_TYPE(T()) ) );
-    RegisterData("sim_data", new NonAdvData<TV, T>(kMainAllSize));
+    RegisterData("sim_data", new NonAdvData<TV, T>(kMainSize));
     /* Declare velocity types. */
-    for (int i = 0; i < ::application::kDataNum; i++) {
-        std::string ntype_name = "velocities_"+
-            ::application::kDataRegionNames[i];
+    for (int i = 0; i < pieces; i++) {
         RegisterData(
-                ntype_name,
-                new FaceArray(
-                    ::application::kDataRegionSizes[i],
-                    (::application::DataRegion)i) );
+                kleft_adv_types[i],
+                new FaceArray(kleft_regions[i]));
+        RegisterData(
+                kright_adv_types[i],
+                new FaceArray(kright_regions[i]));
     }
 
     /* Declare job types. */
@@ -149,23 +197,10 @@ void Main::Execute(Parameter params, const DataArray& da) {
 
     /* Define data as necessary for jobs here. */
     Parameter par_data;
-    IDSet<partition_t> neighbor_partitions;
-    partition_t partition_id = 0;
-    // get number of data regions, and corresponding ids and type names for
-    // advection
-    int data_num = 2;
-    std::vector<data_id_t> adv_data_ids[kAdvJobTypesNum];
-    std::vector<std::string> adv_data_types[kAdvJobTypesNum];
-    for (int i = 0; i < kAdvJobTypesNum; i++) {
-        ::application::GetJobDataTypes(kAdvJobTypes[i], adv_data_types[i]);
-        int num = adv_data_types[i].size();
-        for (int j = 0; j < num; j++) {
-            adv_data_ids[i].push_back((data_id_t)(data_num+j));
-        }
-        data_num += num;
-    }
+    IDSet<partition_id_t> neighbor_partitions;
+    partition_id_t partition_id = 0;
     std::vector<data_id_t> d;
-    GetNewDataID(&d, data_num);
+    GetNewDataID(&d, pieces*2+2);
     // water driver: non adv data
     DefineData(
             "water_driver",
@@ -176,18 +211,21 @@ void Main::Execute(Parameter params, const DataArray& da) {
     // sim data: non adv data
     DefineData("sim_data", d[1], partition_id, neighbor_partitions, par_data);
     // adv data
-    for (int i = 0; i < kAdvJobTypesNum; i++) {
-        int num = adv_data_types[i].size();
-        partition_id = (partition_t)i;
-        for (int j = 0; j < num; j++) {
-            DefineData(
-                    adv_data_types[i][j],
-                    adv_data_ids[i][j],
-                    partition_id,
-                    neighbor_partitions,
-                    par_data
-                    );
-        }
+    for (int i = 0; i < pieces; i++) {
+        DefineData(
+                kleft_adv_types[i],
+                d[2+2*i],
+                partition_id,
+                neighbor_partitions,
+                par_data
+                );
+        DefineData(
+                kright_adv_types[i],
+                d[3+2*i],
+                partition_id+1,
+                neighbor_partitions,
+                par_data
+                );
     }
 
     /* Spawn required jobs -- we have one init job and one loop job here.
@@ -231,31 +269,31 @@ Job* Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
-    printf("Executing init job\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
-    for (int i = 0; i < 9; i++) {
-        types_list.push_back(face_array_id);
-    }
-    GetJobData();
-    int frame = 0;
-    T_FACE_ARRAY *fv = new T_FACE_ARRAY();
-    job_data.driver->face_velocities = job_data.central_vels[0]->data();
-    job_data.driver->sim_data = job_data.sim_data;
-    Add_Source(job_data.sim_data);
-    job_data.sim_data->incompressible->
-        Set_Custom_Boundary(*water_app->boundary());
-    job_data.sim_data->initialize(
-            job_data.driver,
-            job_data.central_vels[0]->data(),
-            frame);
-    job_data.sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    job_data.sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    delete(fv);
-    printf("Successfully completed init job\n");
+//    printf("Executing init job\n");
+//    std::vector<int> types_list;
+//    types_list.push_back(driver_id);
+//    types_list.push_back(non_adv_id);
+//    for (int i = 0; i < 9; i++) {
+//        types_list.push_back(face_array_id);
+//    }
+//    GetJobData();
+//    int frame = 0;
+//    T_FACE_ARRAY *fv = new T_FACE_ARRAY();
+//    job_data.driver->face_velocities = job_data.central_vels[0]->data();
+//    job_data.driver->sim_data = job_data.sim_data;
+//    Add_Source(job_data.sim_data);
+//    job_data.sim_data->incompressible->
+//        Set_Custom_Boundary(*water_app->boundary());
+//    job_data.sim_data->initialize(
+//            job_data.driver,
+//            job_data.central_vels[0]->data(),
+//            frame);
+//    job_data.sim_data->incompressible->
+//        Set_Custom_Advection(*(water_app->advection_scalar()));
+//    job_data.sim_data->particle_levelset_evolution->Levelset_Advection(1).
+//        Set_Custom_Advection(*(water_app->advection_scalar()));
+//    delete(fv);
+//    printf("Successfully completed init job\n");
 };
 
 UptoAdvect::UptoAdvect(Application *app) {
@@ -268,17 +306,17 @@ Job* UptoAdvect::Clone() {
 };
 
 void UptoAdvect::Execute(Parameter params, const DataArray& da) {
-    printf("@@ Running upto advect\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
-    for (int i = 0; i < 9; i++) {
-        types_list.push_back(face_array_id);
-    }
-    GetJobData();
-    job_data.sim_data->BeforeAdvection(
-            job_data.driver,
-            job_data.central_vels[0]->data());
+//    printf("@@ Running upto advect\n");
+//    std::vector<int> types_list;
+//    types_list.push_back(driver_id);
+//    types_list.push_back(non_adv_id);
+//    for (int i = 0; i < 9; i++) {
+//        types_list.push_back(face_array_id);
+//    }
+//    GetJobData();
+//    job_data.sim_data->BeforeAdvection(
+//            job_data.driver,
+//            job_data.central_vels[0]->data());
 };
 
 Advect::Advect(Application *app) {
@@ -291,29 +329,29 @@ Job* Advect::Clone() {
 };
 
 void Advect::Execute(Parameter params, const DataArray& da) {
-    printf("@@ Running advect\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    for (int i = 0; i < 9; i++) {
-        types_list.push_back(face_array_id);
-    }
-    GetJobData();
-    ::parameters::AdvVelPar adv_vel_par_pb;
-    std::string str(params.ser_data().data_ptr_raw(),
-        params.ser_data().size());
-    adv_vel_par_pb.ParseFromString(str);
-    T_FACE_ARRAY *face_vel_extended = 
-        new T_FACE_ARRAY(*(job_data.central_vels[0]->grid()), kGhostSize);
-    job_data.central_vels[0]->Extend_Array(
-            job_data.central_vels[0]->data(),
-            face_vel_extended,
-            water_app->boundary(),
-            kGhostSize,
-            job_data.driver->dt + job_data.driver->time,
-            true);
-    Advect_Velocities(job_data.central_vels[0], face_vel_extended, water_app,
-            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
-    delete(face_vel_extended);
+//    printf("@@ Running advect\n");
+//    std::vector<int> types_list;
+//    types_list.push_back(driver_id);
+//    for (int i = 0; i < 9; i++) {
+//        types_list.push_back(face_array_id);
+//    }
+//    GetJobData();
+//    ::parameters::AdvVelPar adv_vel_par_pb;
+//    std::string str(params.ser_data().data_ptr_raw(),
+//        params.ser_data().size());
+//    adv_vel_par_pb.ParseFromString(str);
+//    T_FACE_ARRAY *face_vel_extended = 
+//        new T_FACE_ARRAY(*(job_data.central_vels[0]->grid()), kGhostSize);
+//    job_data.central_vels[0]->Extend_Array(
+//            job_data.central_vels[0]->data(),
+//            face_vel_extended,
+//            water_app->boundary(),
+//            kGhostSize,
+//            job_data.driver->dt + job_data.driver->time,
+//            true);
+//    Advect_Velocities(job_data.central_vels[0], face_vel_extended, water_app,
+//            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+//    delete(face_vel_extended);
 };
 
 AfterAdvect::AfterAdvect(Application *app) {
@@ -326,17 +364,17 @@ Job* AfterAdvect::Clone() {
 };
 
 void AfterAdvect::Execute(Parameter params, const DataArray& da) {
-    printf("@@ Running after advect\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
-    for (int i = 0; i < 9; i++) {
-        types_list.push_back(face_array_id);
-    }
-    GetJobData();
-    job_data.sim_data->AfterAdvection(
-            job_data.driver,
-            job_data.central_vels[0]->data());
+//    printf("@@ Running after advect\n");
+//    std::vector<int> types_list;
+//    types_list.push_back(driver_id);
+//    types_list.push_back(non_adv_id);
+//    for (int i = 0; i < 9; i++) {
+//        types_list.push_back(face_array_id);
+//    }
+//    GetJobData();
+//    job_data.sim_data->AfterAdvection(
+//            job_data.driver,
+//            job_data.central_vels[0]->data());
 };
 
 Loop::Loop(Application *app) {
@@ -349,91 +387,91 @@ Job* Loop::Clone() {
 };
 
 void Loop::Execute(Parameter params, const DataArray& da) {
-    printf("Executing forloop job\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
-    for (int i = 0; i < 9; i++) {
-        types_list.push_back(face_array_id);
-    }
-    GetJobData();
-    job_data.driver->IncreaseTime();
-    if (!job_data.driver->CheckProceed()) {
-        printf("... Simulation completed ...\n");
-    }
-    else {
-        printf("Spawning new simulation jobs ...\n");
-
-        std::vector<data_id_t> d;
-        d.push_back(da[0]->id());
-        d.push_back(da[1]->id());
-        d.push_back(da[2]->id());
-        d.push_back(da[3]->id());
-        Parameter par;
-
-        IDSet<job_id_t> before, after;
-        IDSet<data_id_t> read, write;
-        std::vector<job_id_t> j;
-        GetNewJobID(&j, 5);
-        par.set_ser_data(SerializedData(""));
-        before.clear(); after.clear();
-        read.clear(); write.clear();
-        after.insert(j[1]);
-        read.insert(d[0]); read.insert(d[1]);
-        read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]); write.insert(d[1]);
-        write.insert(d[2]); write.insert(d[3]);
-        SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
-        printf("Spawned upto advect\n");
-        ::parameters::AdvVelPar adv_vel_par_pb;
-        adv_vel_par_pb.set_dt(job_data.driver->dt);
-        adv_vel_par_pb.set_time(job_data.driver->time);
-        std::string str;
-        adv_vel_par_pb.SerializeToString(&str);
-        par.set_ser_data(SerializedData(str));
-        before.clear(); after.clear();
-        read.clear(); write.clear();
-        before.insert(j[0]);
-        after.insert(j[2]);
-        read.insert(d[0]);
-        read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]);
-        write.insert(d[2]); write.insert(d[3]);
-        SpawnComputeJob("advect", j[1], read, write, before, after, par);
-        printf("Spawned advect\n");
-        par.set_ser_data(SerializedData(""));
-        before.clear(); after.clear();
-        read.clear(); write.clear();
-        before.insert(j[1]);
-        after.insert(j[3]);
-        read.insert(d[0]); read.insert(d[1]);
-        read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]); write.insert(d[1]);
-        write.insert(d[2]); write.insert(d[3]);
-        SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
-        printf("Spawned afteradvect\n");
-        par.set_ser_data(SerializedData(""));
-        before.clear(); after.clear();
-        read.clear(); write.clear();
-        before.insert(j[2]);
-        after.insert(j[4]);
-        read.insert(d[0]); read.insert(d[1]);
-        read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]); write.insert(d[1]);
-        write.insert(d[2]); write.insert(d[3]);
-        SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
-        printf("Spawned afteradvect\n");
-        par.set_ser_data(SerializedData(""));
-        before.clear(); after.clear();
-        read.clear(); write.clear();
-        before.insert(j[3]);
-        read.insert(d[0]); read.insert(d[1]);
-        read.insert(d[2]); read.insert(d[3]);
-        write.insert(d[0]); write.insert(d[1]);
-        write.insert(d[2]); write.insert(d[3]);
-        SpawnComputeJob("loop", j[4], read, write, before, after, par);
-        printf("Spawned loop\n");
-    }
+//    printf("Executing forloop job\n");
+//    std::vector<int> types_list;
+//    types_list.push_back(driver_id);
+//    types_list.push_back(non_adv_id);
+//    for (int i = 0; i < 9; i++) {
+//        types_list.push_back(face_array_id);
+//    }
+//    GetJobData();
+//    job_data.driver->IncreaseTime();
+//    if (!job_data.driver->CheckProceed()) {
+//        printf("... Simulation completed ...\n");
+//    }
+//    else {
+//        printf("Spawning new simulation jobs ...\n");
+//
+//        std::vector<data_id_t> d;
+//        d.push_back(da[0]->id());
+//        d.push_back(da[1]->id());
+//        d.push_back(da[2]->id());
+//        d.push_back(da[3]->id());
+//        Parameter par;
+//
+//        IDSet<job_id_t> before, after;
+//        IDSet<data_id_t> read, write;
+//        std::vector<job_id_t> j;
+//        GetNewJobID(&j, 5);
+//        par.set_ser_data(SerializedData(""));
+//        before.clear(); after.clear();
+//        read.clear(); write.clear();
+//        after.insert(j[1]);
+//        read.insert(d[0]); read.insert(d[1]);
+//        read.insert(d[2]); read.insert(d[3]);
+//        write.insert(d[0]); write.insert(d[1]);
+//        write.insert(d[2]); write.insert(d[3]);
+//        SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
+//        printf("Spawned upto advect\n");
+//        ::parameters::AdvVelPar adv_vel_par_pb;
+//        adv_vel_par_pb.set_dt(job_data.driver->dt);
+//        adv_vel_par_pb.set_time(job_data.driver->time);
+//        std::string str;
+//        adv_vel_par_pb.SerializeToString(&str);
+//        par.set_ser_data(SerializedData(str));
+//        before.clear(); after.clear();
+//        read.clear(); write.clear();
+//        before.insert(j[0]);
+//        after.insert(j[2]);
+//        read.insert(d[0]);
+//        read.insert(d[2]); read.insert(d[3]);
+//        write.insert(d[0]);
+//        write.insert(d[2]); write.insert(d[3]);
+//        SpawnComputeJob("advect", j[1], read, write, before, after, par);
+//        printf("Spawned advect\n");
+//        par.set_ser_data(SerializedData(""));
+//        before.clear(); after.clear();
+//        read.clear(); write.clear();
+//        before.insert(j[1]);
+//        after.insert(j[3]);
+//        read.insert(d[0]); read.insert(d[1]);
+//        read.insert(d[2]); read.insert(d[3]);
+//        write.insert(d[0]); write.insert(d[1]);
+//        write.insert(d[2]); write.insert(d[3]);
+//        SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
+//        printf("Spawned afteradvect\n");
+//        par.set_ser_data(SerializedData(""));
+//        before.clear(); after.clear();
+//        read.clear(); write.clear();
+//        before.insert(j[2]);
+//        after.insert(j[4]);
+//        read.insert(d[0]); read.insert(d[1]);
+//        read.insert(d[2]); read.insert(d[3]);
+//        write.insert(d[0]); write.insert(d[1]);
+//        write.insert(d[2]); write.insert(d[3]);
+//        SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
+//        printf("Spawned afteradvect\n");
+//        par.set_ser_data(SerializedData(""));
+//        before.clear(); after.clear();
+//        read.clear(); write.clear();
+//        before.insert(j[3]);
+//        read.insert(d[0]); read.insert(d[1]);
+//        read.insert(d[2]); read.insert(d[3]);
+//        write.insert(d[0]); write.insert(d[1]);
+//        write.insert(d[2]); write.insert(d[3]);
+//        SpawnComputeJob("loop", j[4], read, write, before, after, par);
+//        printf("Spawned loop\n");
+//    }
 };
 
 WriteFrame::WriteFrame(Application *app) {
@@ -446,15 +484,15 @@ Job* WriteFrame::Clone() {
 };
 
 void WriteFrame::Execute(Parameter params, const DataArray& da) {
-    printf( "@@ Executing write frame job\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
-    for (int i = 0; i < 9; i++) {
-        types_list.push_back(face_array_id);
-    }
-    GetJobData();
-    if (job_data.driver->IsFrameDone()) {
-        job_data.driver->Write_Output_Files(job_data.driver->current_frame);
-    }
+//    printf( "@@ Executing write frame job\n");
+//    std::vector<int> types_list;
+//    types_list.push_back(driver_id);
+//    types_list.push_back(non_adv_id);
+//    for (int i = 0; i < 9; i++) {
+//        types_list.push_back(face_array_id);
+//    }
+//    GetJobData();
+//    if (job_data.driver->IsFrameDone()) {
+//        job_data.driver->Write_Output_Files(job_data.driver->current_frame);
+//    }
 }

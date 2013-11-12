@@ -43,57 +43,33 @@
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_
 
 #include "PhysBAM_Tools/Vectors/VECTOR.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
-namespace application {
+namespace water_app_data {
 
     namespace {
         const int dimension = 2;
         typedef ::PhysBAM::VECTOR<int, dimension> TV_INT;
     }
 
-    // data locations for a partition
-    // update GetDataRegionNames and GetDataRegionSizes
-    // when you update DataRegion
-    enum DataRegion {
-        kDataInterior,
-        kDataInUpperLeft,
-        kDataInUpper,
-        kDataInUpperRight,
-        kDataInRight,
-        kDataInBottomRight,
-        kDataInBottom,
-        kDataInBottomLeft,
-        kDataInLeft,
-        kDataNum
-    };
-    const int kCornerNum = 5;
-    const int kEdgeNum = 3;
-    // enumerate all data region names in kDataRegionNames
-    extern std::string kDataRegionNames[kDataNum];
-    // enumaerate all data region sizes in kDataRegionSizes
-    extern TV_INT kDataRegionSizes[kDataNum];
-
-    void GetDataRegionNames(std::string names[]);
-    void GetDataRegionSizes(
-            TV_INT sizes[],
-            TV_INT part_center_size,
-            TV_INT sim_center_size,
-            int ghost_band);
-
     class SimData : public ::nimbus::Data {
         private:
-            DataRegion region_;
+            ::nimbus::GeometricRegion *region_;
         public:
-            SimData() : region_(kDataInterior) {}
-            DataRegion region() {
-                return region_;
-            }
-            void set_region(DataRegion region) {
-                region_ = region;
-            }
+            SimData() : region_(new ::nimbus::GeometricRegion()) {};
+            SimData(::nimbus::GeometricRegion &region) :
+                region_(new ::nimbus::GeometricRegion(region)) {};
+            ~SimData() {
+                delete region_;
+            };
+            virtual void Create();
+            virtual ::nimbus::Data* Clone();
+            virtual void Destroy();
+            ::nimbus::GeometricRegion* region();
+            void set_region(::nimbus::GeometricRegion &region);
     };
 
-} // namespace application
+} // namespace water_app_data
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_DATA_UTILS_H_

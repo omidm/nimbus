@@ -52,7 +52,6 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/advection.cc
         ${PROJECT_SOURCE_DIR}/data_face_arrays.cc
         ${PROJECT_SOURCE_DIR}/data_utils.cc
-        ${PROJECT_SOURCE_DIR}/job_utils.cc
         ${PROJECT_SOURCE_DIR}/water_app.cc
         ${PROJECT_SOURCE_DIR}/water_data_driver.cc
         ${PROJECT_SOURCE_DIR}/water_driver.cc
@@ -68,7 +67,6 @@ SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/data_face_arrays.h
         ${PROJECT_SOURCE_DIR}/data_fwd_decl.h
         ${PROJECT_SOURCE_DIR}/data_utils.h
-        ${PROJECT_SOURCE_DIR}/job_utils.h
         ${PROJECT_SOURCE_DIR}/physbam_include.h
         ${PROJECT_SOURCE_DIR}/water_app.h
         ${PROJECT_SOURCE_DIR}/water_data_driver.h

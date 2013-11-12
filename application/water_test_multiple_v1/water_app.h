@@ -41,7 +41,6 @@
 
 #include "app_utils.h"
 #include "data_utils.h"
-#include "job_utils.h"
 #include "physbam_include.h"
 #include "shared/nimbus.h"
 
@@ -92,42 +91,42 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
-class Init : public ::application::SimJob {
+class Init : public ::nimbus::Job {
     public:
         Init(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Loop : public ::application::SimJob {
+class Loop : public ::nimbus::Job {
     public:
         Loop(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class UptoAdvect : public ::application::SimJob {
+class UptoAdvect : public ::nimbus::Job {
     public:
         UptoAdvect(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Advect : public ::application::SimJob {
+class Advect : public ::nimbus::Job {
     public:
         Advect(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class AfterAdvect : public ::application::SimJob {
+class AfterAdvect : public ::nimbus::Job {
     public:
         AfterAdvect(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class WriteFrame : public ::application::SimJob {
+class WriteFrame : public ::nimbus::Job {
     public:
         WriteFrame(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);

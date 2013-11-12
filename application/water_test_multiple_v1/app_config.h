@@ -46,32 +46,11 @@
 #define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
 
 #include "app_utils.h"
-#include "job_utils.h"
+#include "shared/geometric_region.h"
 
 // application configuration
 const int kAppLastFrame = 10;
-const int kMainAllSize = 100;
 const int kGhostSize = 3;
-const int kPartitions = 1;
-
-// include job types here
-const ::application::JobRegion kAdvJobTypes[] = {
-    ::application::kJobAll
-};
-const int kAdvJobTypesNum = 1;
-
-const ::application::JobRegion kOtherJobTypes[] = {
-    ::application::kJobAll
-};
-const int kOtherJobTypesNum = 1;
-
-// number of corner and edge partitions
-// to calculcate how many dta chunks should be defined
-const int kCornerRegions = 1;
-const int kEdgeRegions = 0;
-
-// useful values from above constants
-const int kMainSize = kMainAllSize/kPartitions - 2*kGhostSize;
-const int kGhostNum = (dimension == 2)? 8 : 26; 
+const int kMainSize = 100;
 
 #endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_APP_CONFIG_H_
