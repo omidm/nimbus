@@ -48,24 +48,47 @@ using vector_msg::VectorMsg;
 bool Serialize() {
   VectorMsg vec_msg;
   int size_ = 1;
-  std::cout << "****NAVID1****\n";
+
   for (int i = 0; i < size_; i++) {
     std::cout << "****" << i << std::endl;
     vec_msg.add_elem(i);
   }
-  std::cout << "****NAVID2****\n";
-  std::string str;
-  std::cout << "****NAVIDx****\n";
-  vec_msg.SerializeToString(&str);
-  std::cout << "****NAVID3****\n";
-//  char* ptr = new char[str.length()];
-//  std::cout << "****NAVID4****\n";
-//  memcpy(ptr, str.c_str(), str.length());
-//  std::cout << "****NAVID5****\n";
-//  ser_data->set_data_ptr(ptr);
-//  std::cout << "****NAVID6****\n";
-//  ser_data->set_size(str.length());
-//  std::cout << "****NAVID7****\n";
+
+  // Preliminary string test
+  printf("Testing static allocation.\n");
+  std::string staticStr;
+  bool result = vec_msg.SerializeToString(&staticStr);
+  
+  printf("Testing dynamic allocation.\n");
+  char* testArray = new char[128];
+  //  strncpy(testArray, "test text", 10);
+  testArray[0] = 0;
+  std::string* prelim = new std::string(testArray);
+  prelim->clear();
+  prelim->resize(10);
+  
+
+
+  printf("Vector message string test.\n");
+  //std::string str = "test";
+  //  str = str + " test ";
+  std::string* str = new std::string(testArray);
+  result = vec_msg.SerializeToString(str);
+
+  testArray[0] = 0;
+  str = new std::string(testArray);
+  result = vec_msg.SerializeToString(str);
+  if (result) {
+    printf("Serialzed to string correctly.\n");
+    const char* ptr = str->c_str();
+    printf("\t");
+    for (uint32_t i = 0; i < str->length(); i++) {
+      printf("%02hx ", ptr[i]);
+    }
+    printf("\n");
+  } else {
+    printf("Serialized to string incorrectly.\n");
+  }
   return true;
 }
 
