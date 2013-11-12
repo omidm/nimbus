@@ -48,7 +48,8 @@ namespace nimbus {
   typedef uint32_t port_t;
   typedef uint32_t worker_id_t;
   typedef uint32_t app_id_t;
-  typedef uint64_t data_id_t;
+  typedef uint64_t physical_data_id_t;
+  typedef uint64_t logical_data_id_t;
   typedef uint64_t job_id_t;
   typedef uint64_t command_id_t;
   typedef uint64_t partition_id_t;

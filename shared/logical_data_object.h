@@ -64,7 +64,7 @@ namespace nimbus {
 
   class LogicalDataObject {
   public:
-    LogicalDataObject(data_id_t id,
+    LogicalDataObject(logical_data_id_t id,
                       std::string variable,
                       GeometricRegion* region);
     explicit LogicalDataObject(std::istream* is);
@@ -72,7 +72,7 @@ namespace nimbus {
 
     virtual ~LogicalDataObject();
 
-    virtual data_id_t id() const;
+    virtual logical_data_id_t id() const;
     virtual std::string variable() const;
     virtual GeometricRegion* region() const;
 
@@ -80,7 +80,7 @@ namespace nimbus {
     virtual bool Serialize(std::ostream* os);
     virtual bool SerializeToString(std::string* output);
   private:
-    data_id_t id_;
+    logical_data_id_t id_;
     GeometricRegion* region_;
     std::string variable_;
   };

@@ -98,11 +98,11 @@ bool LdoIndex::AddObject(LogicalDataObject *object) {
   }
 }
 
-bool LdoIndex::HasObject(data_id_t id) {
+bool LdoIndex::HasObject(logical_data_id_t id) {
   return (exists_.find(id) != exists_.end());
 }
 
-bool LdoIndex::RemoveObject(data_id_t id) {
+bool LdoIndex::RemoveObject(logical_data_id_t id) {
   dbg(DBG_TEMP, "Trying to remove object %llu.\n", id);
 
   if (HasObject(id)) {
@@ -136,7 +136,7 @@ bool LdoIndex::RemoveObject(LogicalDataObject* object) {
 */
 
 
-LogicalDataObject* LdoIndex::SpecificObject(data_id_t id) {
+LogicalDataObject* LdoIndex::SpecificObject(logical_data_id_t id) {
   if (!HasObject(id)) {
     return NULL;
   } else {

@@ -57,12 +57,12 @@ class WorkerLdoMap {
     virtual ~WorkerLdoMap();
 
     /* Managing logical objects. */
-    bool AddLogicalObject(data_id_t id,
+    bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
                           GeometricRegion region);
-    bool RemoveLogicalObject(data_id_t id);
+    bool RemoveLogicalObject(logical_data_id_t id);
 
-    const LogicalDataObject* FindLogicalObject(data_id_t id);
+    const LogicalDataObject* FindLogicalObject(logical_data_id_t id);
     int FindLogicalObjects(std::string variable,
                            CLdoVector* dest);
     int FindIntersectingLogicalObjects(std::string variable,

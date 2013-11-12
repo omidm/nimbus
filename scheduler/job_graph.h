@@ -33,53 +33,39 @@
  */
 
  /*
-  * Data structure for maintaining and querying for the physical instances
-  * of each logical data object.
-  * 
+  * Scheduler Job Graph object. This module serves the job manager by keeping track
+  * of the job dependencies (before/after) set relations in the application.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
-#define NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
+#ifndef NIMBUS_SCHEDULER_JOB_GRAPH_H_
+#define NIMBUS_SCHEDULER_JOB_GRAPH_H_
 
-#include <map>
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
 #include <string>
 #include <vector>
-#include <utility>
-#include "scheduler/physical_data.h"
-#include "shared/logical_data_object.h"
-#include "shared/geometric_region.h"
+#include <map>
+#include <set>
 #include "shared/nimbus_types.h"
-
+#include "scheduler/scheduler_job.h"
 
 namespace nimbus {
-
-  typedef std::map<physical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
-
-  class PhysicalObjectMap {
+class JobGraph {
   public:
-    PhysicalObjectMap();
-    virtual ~PhysicalObjectMap();
+    explicit JobGraph();
+    virtual ~JobGraph();
 
-    virtual bool AddLogicalObject(LogicalDataObject* object);
-    virtual bool RemoveLogicalObject(logical_data_id_t id);
-    virtual bool AddPhysicalInstance(LogicalDataObject* object,
-                                     PhysicalData instance);
-    virtual bool RemovePhysicalInstance(LogicalDataObject* object,
-                                        PhysicalData instance);
+    void AddJob(SchedulerJob* job) {}
 
+    void RemoveJob(SchedulerJob* job) {}
 
-    virtual const PhysicalDataVector* AllInstances(LogicalDataObject* object);
-    virtual int AllInstances(LogicalDataObject* object,
-                             PhysicalDataVector* dest);
-    virtual int InstancesByWorker(LogicalDataObject* object,
-                                  worker_id_t worker,
-                                  PhysicalDataVector* dest);
-    virtual int InstancesByVersion(LogicalDataObject* object,
-                                   data_version_t version,
-                                   PhysicalDataVector* dest);
   private:
-    PhysicalObjectMapType data_map_;
-  };
-}  // namespace nimbus
+    SchedulerJobMap job_map_;
+};
 
-#endif  // NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_JOB_GRAPH_H_

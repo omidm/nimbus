@@ -87,8 +87,8 @@ Job * Main::Clone() {
 void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
   partition_id_t partition_id = 0;
@@ -96,7 +96,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<param_id_t> params_idset;
 
   GetNewJobID(&j, 7);
-  GetNewDataID(&d, 4);
+  GetNewLogicalDataID(&d, 4);
 
   DefineData("main", d[0], partition_id, neighbor_partitions, par);
   DefineData("main", d[1], partition_id, neighbor_partitions, par);
@@ -151,14 +151,14 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
   IDSet<param_id_t> params_idset;
 
 
-  IDSet<data_id_t>::IDSetContainer::iterator it;
+  IDSet<logical_data_id_t>::IDSetContainer::iterator it;
   IDSet<param_id_t> temp_set = params.idset();
   for (it = temp_set.begin(); it != temp_set.end(); it++) {
     d.push_back(*it);

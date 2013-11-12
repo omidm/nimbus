@@ -50,14 +50,21 @@ Data* Data::Clone() {
   return d;
 }
 
-uint64_t Data::id() {
-  return id_;
+uint64_t Data::logical_id() {
+  return logical_id_;
 }
 
-void Data::set_id(uint64_t id) {
-  id_ = id;
+uint64_t Data::physical_id() {
+  return physical_id_;
 }
 
+void Data::set_logical_id(logical_data_id_t logical_id) {
+  logical_id_ = logical_id;
+}
+
+void Data::set_physical_id(physical_data_id_t physical_id) {
+  physical_id_ = physical_id;
+}
 int Data::get_debug_info() {
     return -1;
 }

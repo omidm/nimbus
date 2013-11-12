@@ -55,7 +55,7 @@
 namespace nimbus {
 
   typedef std::unordered_map<std::string, LdoList*> LdoVariableIndex;
-  typedef std::unordered_map<data_id_t, LogicalDataObject*> LdoIdIndex;
+  typedef std::unordered_map<logical_data_id_t, LogicalDataObject*> LdoIdIndex;
 
   class LdoIndex {
   public:
@@ -63,11 +63,11 @@ namespace nimbus {
     virtual ~LdoIndex();
 
     virtual bool AddObject(LogicalDataObject* object);
-    virtual bool HasObject(data_id_t id);
-    virtual bool RemoveObject(data_id_t id);
+    virtual bool HasObject(logical_data_id_t id);
+    virtual bool RemoveObject(logical_data_id_t id);
     virtual bool RemoveObject(LogicalDataObject* object);
 
-    virtual LogicalDataObject* SpecificObject(data_id_t id);
+    virtual LogicalDataObject* SpecificObject(logical_data_id_t id);
     virtual int AllObjects(CLdoVector* dest);
     virtual int AllObjects(std::string variable,
                            CLdoVector* dest);

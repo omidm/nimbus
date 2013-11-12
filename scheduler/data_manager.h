@@ -67,14 +67,14 @@ namespace nimbus {
     GeometricRegion FindPartition(partition_id_t id);
 
     /* Managing logical objects. */
-    bool AddLogicalObject(data_id_t id,
+    bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
                           GeometricRegion region);
-    bool AddLogicalObject(data_id_t id,
+    bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
                           partition_id_t partition);
-    bool RemoveLogicalObject(data_id_t id);
-    const LogicalDataObject* FindLogicalObject(data_id_t id);
+    bool RemoveLogicalObject(logical_data_id_t id);
+    const LogicalDataObject* FindLogicalObject(logical_data_id_t id);
     int FindLogicalObjects(std::string variable,
                            CLdoVector* dest);
     int FindIntersectingLogicalObjects(std::string variable,
@@ -108,7 +108,7 @@ namespace nimbus {
 
     PhysicalObjectMap physical_object_map_;
     LdoIndex ldo_index_;
-    std::map<data_id_t, LogicalDataObject*> ldo_map_;
+    std::map<logical_data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
     SchedulerServer* server_;
   };

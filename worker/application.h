@@ -71,33 +71,23 @@ class Application {
   void RegisterJob(std::string name, Job* job);
   void RegisterData(std::string name, Data* data);
 
-  // TODO(omidm) remove later.
-  void SpawnJob(const std::string& name,
-      const job_id_t& id,
-      const IDSet<data_id_t>& read,
-      const IDSet<data_id_t>& write,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      const JobType& type,
-      const Parameter& params);
-
   void SpawnComputeJob(const std::string& name,
       const job_id_t& id,
-      const IDSet<data_id_t>& read,
-      const IDSet<data_id_t>& write,
+      const IDSet<logical_data_id_t>& read,
+      const IDSet<logical_data_id_t>& write,
       const IDSet<job_id_t>& before,
       const IDSet<job_id_t>& after,
       const Parameter& params);
 
   void SpawnCopyJob(const job_id_t& id,
-      const data_id_t& from_id,
-      const data_id_t& to_id,
+      const logical_data_id_t& from_logical_id,
+      const logical_data_id_t& to_logical_id,
       const IDSet<job_id_t>& before,
       const IDSet<job_id_t>& after,
       const Parameter& params);
 
   void DefineData(const std::string& name,
-      const data_id_t& id,
+      const logical_data_id_t& logical_data_id,
       const partition_id_t& partition_id,
       const IDSet<partition_id_t>& neighbor_partition,
       const Parameter& params);
@@ -105,13 +95,9 @@ class Application {
   Job* CloneJob(std::string name);
   Data* CloneData(std::string name);
   bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
-  bool GetNewDataID(std::vector<data_id_t>* result, size_t req_num);
+  bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
   void* app_data();
   void set_app_data(void* data);
-
-  // TODO(omidm) remove both of them.
-  void GetNewJobID(int req_num, std::vector<int>* result);
-  void GetNewDataID(int req_num, std::vector<int>* result);
 
  private:
   app_id_t id_;
@@ -121,10 +107,6 @@ class Application {
   SchedulerClient* client_;
   IDMaker* id_maker_;
   void* app_data_;
-
-  // TODO(omidm) remove both of them.
-  uint64_t job_id_;
-  uint64_t data_id_;
 };
 
 }  //  namespace nimbus

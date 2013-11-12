@@ -1,0 +1,93 @@
+/*
+ * Copyright 2013 Stanford University.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * - Neither the name of the copyright holders nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+ /*
+  * Protocol buffer messages for transmitting the worker graph,
+  * describing the worker hardware resources and interconnects.
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
+
+message WorkerGraphMessage {
+  enum Type {
+    INVALID         = 0;
+    WORKER_REGISTER = 1;
+    SWITCH_REGISTER = 2;
+    WORKER_LINK     = 3;
+    SWITCH_LINK     = 4;
+    UPDATE          = 5;
+  }
+
+  required Type type = 1  [default = INVALID];
+  optional WorkerRegisterMessage worker_register = 2;
+  optional SwitchRegisterMessage switch_register = 3;
+  optional WorkerLinkMessage     worker_link     = 4;
+  optional SwitchLinkMessage     switch_link     = 5;
+  optional UpdateMessage         update          = 6;
+}
+
+message WorkerRegisterMessage {
+  required fixed32 ipv4      = 1;
+  required uint32 worker_id  = 2;
+  required uint32 cores      = 3 [default = 0];
+  required uint32 core_clock = 4 [default = 0];
+  required uint64 memory     = 5 [default = 0];
+  required uint32 mbps       = 6 [default = 0];
+}
+
+message SwitchRegisterMessage {
+  required uint32 switch_id  = 1;
+  required uint32 ports      = 2 [default = 0];
+  required uint32 mbps       = 3 [default = 0];
+  required uint32 nsdelay    = 4 [default = 0];
+  optional fixed32 ipv4      = 5;  // Some switches have IP addresses
+}
+
+message WorkerLinkMessage {
+  required uint32 worker_id  = 1;
+  required uint32 switch_id  = 2;
+  required uint32 mbps       = 3 [default = 0];
+}
+
+message SwitchLinkMessage {
+  required uint32 switch_id1 = 1;
+  required uint32 switch_id2 = 2;
+  required uint32 mbps       = 3 [default = 0];
+}
+
+message UpdateMessage {
+  required uint32 source_worker = 1;
+  required uint32 dest_worker   = 2;
+  required uint32 observed_mbps = 3 [default = 0];
+  required uint32 latency_us    = 4 [default = 1000000];
+}

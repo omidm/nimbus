@@ -42,14 +42,14 @@
 
 namespace nimbus {
 /**
- * \fn nimbus::PhysicalData::PhysicalData(data_id_t id,
+ * \fn nimbus::PhysicalData::PhysicalData(physical_data_id_t id,
                                    worker_id_t worker)
  * \brief Brief description.
  * \param id
  * \param worker
  * \return
 */
-nimbus::PhysicalData::PhysicalData(data_id_t i,
+nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
                                    worker_id_t w) {
   id_ = i;
   worker_ = w;
@@ -58,7 +58,7 @@ nimbus::PhysicalData::PhysicalData(data_id_t i,
 
 
 /**
- * \fn nimbus::PhysicalData::PhysicalData(data_id_t id,
+ * \fn nimbus::PhysicalData::PhysicalData(physical_data_id_t id,
                                    worker_id_t worker,
                                    data_version_t version)
  * \brief Brief description.
@@ -67,7 +67,7 @@ nimbus::PhysicalData::PhysicalData(data_id_t i,
  * \param version
  * \return
 */
-nimbus::PhysicalData::PhysicalData(data_id_t i,
+nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
                                    worker_id_t w,
                                    data_version_t v) {
   id_ = i;
@@ -85,11 +85,11 @@ nimbus::PhysicalData::~PhysicalData() {}
 
 
 /**
- * \fn data_id_t nimbus::PhysicalData::id()
+ * \fn physical_data_id_t nimbus::PhysicalData::id()
  * \brief Brief description.
  * \return
 */
-data_id_t nimbus::PhysicalData::id() {
+physical_data_id_t nimbus::PhysicalData::id() {
   return id_;
 }
 

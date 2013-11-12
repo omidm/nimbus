@@ -57,7 +57,7 @@
 namespace nimbus {
     class Vertex;
     typedef std::set<Vertex> Vertices;
-    typedef std::set<data_id_t> DataSet;
+    typedef std::set<logical_data_id_t> DataSet;
     typedef std::map<Vertex, DataSet*> VertexDataSetMap;
     typedef std::map<Vertex, Vertices*> VertexVerticesMap;
 

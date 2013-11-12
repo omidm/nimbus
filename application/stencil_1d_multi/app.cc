@@ -71,23 +71,16 @@ void Vec::Copy(Data* from) {
 
 bool Vec::Serialize(SerializedData* ser_data) {
   VectorMsg vec_msg;
-  std::cout << "****NAVID1****\n";
   for (int i = 0; i < size_; i++) {
     std::cout << "****" << arr_[i] << std::endl;
     vec_msg.add_elem(arr_[i]);
   }
-  std::cout << "****NAVID2****\n";
   std::string str;
   vec_msg.SerializeToString(&str);
-  std::cout << "****NAVID3****\n";
   char* ptr = new char[str.length()];
-  std::cout << "****NAVID4****\n";
   memcpy(ptr, str.c_str(), str.length());
-  std::cout << "****NAVID5****\n";
   ser_data->set_data_ptr(ptr);
-  std::cout << "****NAVID6****\n";
   ser_data->set_size(str.length());
-  std::cout << "****NAVID7****\n";
   return true;
 }
 
@@ -144,8 +137,8 @@ void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
 
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
   partition_id_t p_1 = 1;
@@ -154,7 +147,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<param_id_t> param_idset;
 
   GetNewJobID(&j, 7);
-  GetNewDataID(&d, 8);
+  GetNewLogicalDataID(&d, 8);
 
   DefineData("side", d[0], p_1, neighbor_partitions, par);
   DefineData("middle", d[1], p_1, neighbor_partitions, par);
@@ -240,8 +233,8 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
   IDSet<param_id_t> param_idset;

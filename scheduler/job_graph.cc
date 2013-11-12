@@ -33,31 +33,20 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Scheduler Job Graph object. This module serves the job manager by keeping track
+  * of the job dependencies (before/after) set relations in the application.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_job.h"
+#include "scheduler/job_graph.h"
 
 using namespace nimbus; // NOLINT
 
-SchedulerJob::SchedulerJob() {
+JobGraph::JobGraph() {
 }
 
-SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
-  id_ = id;
-  type_ = type;
-  app_id_ = app_id;
+JobGraph::~JobGraph() {
 }
 
-SchedulerJob::~SchedulerJob() {
-}
 
-uint64_t SchedulerJob::id() {
-  return id_;
-}
-
-void SchedulerJob::set_id(job_id_t id) {
-  id_ = id;
-}

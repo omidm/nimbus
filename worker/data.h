@@ -52,7 +52,8 @@
 namespace nimbus {
 class Data;
 typedef std::set<Data*> Neighbors;
-typedef std::map<data_id_t, Data*> DataMap;
+typedef std::map<logical_data_id_t, Data*> LogicalDataMap;
+typedef std::map<physical_data_id_t, Data*> PhysicalDataMap;
 typedef std::map<std::string, Data*> DataTable;
 
 class Data {
@@ -76,22 +77,25 @@ class Data {
 
   virtual int get_debug_info();
 
-  data_id_t id();
-  void set_id(data_id_t id);
+  logical_data_id_t logical_id();
+  physical_data_id_t physical_id();
+  void set_logical_id(logical_data_id_t logical_id);
+  void set_physical_id(physical_data_id_t physical_id);
   std::string name();
   void set_name(std::string name);
 
  private:
-  data_id_t id_;
+  logical_data_id_t logical_id_;
+  physical_data_id_t physical_id_;
   partition_id_t partition_id_;
   bool advanceData_;
   Hosts hosts_;
 
   // Set of data ids that could be involved in SYNC jobs with this data.
-  IDSet<data_id_t> neighbors_;
+  IDSet<logical_data_id_t> neighbors_;
 
   // Set of partition ids neighbor to this partition.
-  IDSet<data_id_t> neighbor_partitions_;
+  IDSet<partition_id_t> neighbor_partitions_;
 
   // data name
   std::string name_;

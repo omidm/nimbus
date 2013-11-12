@@ -33,31 +33,20 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Scheduler Job Manager object. This module serves the scheduler by providing
+  * facilities about jobs ready to be maped, and their dependencies.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_job.h"
+#include "scheduler/job_manager.h"
 
 using namespace nimbus; // NOLINT
 
-SchedulerJob::SchedulerJob() {
+JobManager::JobManager() {
 }
 
-SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
-  id_ = id;
-  type_ = type;
-  app_id_ = app_id;
+JobManager::~JobManager() {
 }
 
-SchedulerJob::~SchedulerJob() {
-}
 
-uint64_t SchedulerJob::id() {
-  return id_;
-}
-
-void SchedulerJob::set_id(job_id_t id) {
-  id_ = id;
-}

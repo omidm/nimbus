@@ -33,53 +33,56 @@
  */
 
  /*
-  * Data structure for maintaining and querying for the physical instances
-  * of each logical data object.
-  * 
+  * Scheduler data structure for monitoring computational resources and
+  * their capabilities.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
-#define NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
 
-#include <map>
+#ifndef NIMBUS_SCHEDULER_WORKER_GRAPH_H_
+#define NIMBUS_SCHEDULER_WORKER_GRAPH_H_
+
+#include <unordered_map>
 #include <string>
 #include <vector>
-#include <utility>
-#include "scheduler/physical_data.h"
-#include "shared/logical_data_object.h"
-#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
-
+#include "shared/cluster.h"
+#include "shared/protobufs/workergraphmessage.pb.h"
+#include "scheduler/scheduler_worker.h"
 
 namespace nimbus {
 
-  typedef std::map<physical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
+  typedef std::vector<worker_id_t> WorkerIdVector;
+  typedef std::vector<SchedulerWorker*> SchedulerWorkerVector;
+  typedef std::unordered_map<worker_id_t, SchedulerWorker*> SchedulerWorkerTable;
+  typedef std::unordered_map<worker_id_t, Computer*> ComputerTable;
 
-  class PhysicalObjectMap {
+  class WorkerGraph {
   public:
-    PhysicalObjectMap();
-    virtual ~PhysicalObjectMap();
+    WorkerGraph();
+    virtual ~WorkerGraph();
 
-    virtual bool AddLogicalObject(LogicalDataObject* object);
-    virtual bool RemoveLogicalObject(logical_data_id_t id);
-    virtual bool AddPhysicalInstance(LogicalDataObject* object,
-                                     PhysicalData instance);
-    virtual bool RemovePhysicalInstance(LogicalDataObject* object,
-                                        PhysicalData instance);
+    // The WorkerGraph does not take responsibility
+    // for managing SchedulerWorker objects.
+    bool AddWorker(SchedulerWorker* worker);
+    bool RemoveWorker(SchedulerWorker* worker);
+    int AllWorkers(WorkerIdVector* dest);
 
+    // Assumes the WorkerGraphMessage* will be freed
+    // elsewhere
 
-    virtual const PhysicalDataVector* AllInstances(LogicalDataObject* object);
-    virtual int AllInstances(LogicalDataObject* object,
-                             PhysicalDataVector* dest);
-    virtual int InstancesByWorker(LogicalDataObject* object,
-                                  worker_id_t worker,
-                                  PhysicalDataVector* dest);
-    virtual int InstancesByVersion(LogicalDataObject* object,
-                                   data_version_t version,
-                                   PhysicalDataVector* dest);
+    bool ProcessMessage(WorkerGraphMessage* message);
+    const SchedulerWorker* WorkerById(worker_id_t id);
+    const Computer* ComputerById(worker_id_t id);
+    uint32_t InterComputerMbps(worker_id_t src, worker_id_t dest);
+    uint32_t InterComputerMicroSec(worker_id_t src, worker_id_t dest);
+
   private:
-    PhysicalObjectMapType data_map_;
+    ClusterMap cluster_map_;
+    SchedulerWorkerTable worker_table_;
+    ComputerTable computer_table_;
   };
-}  // namespace nimbus
 
-#endif  // NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_WORKER_GRAPH_H_

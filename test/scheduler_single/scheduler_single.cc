@@ -87,7 +87,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   ID<job_id_t> id(j[0]);
-  IDSet<data_id_t> read, write;
+  IDSet<physical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter params;
   ComputeJobCommand cm("main", id, read, write, before, after, params);
@@ -111,8 +111,8 @@ void SimpleScheduler::SchedulerCoreProcessor() {
         iter != pending_compute_jobs_.end();) {
       ComputeJobCommand* comm = reinterpret_cast<ComputeJobCommand*>(*iter);
       bool data_created = true;
-      IDSet<data_id_t>::IDSetIter it;
-      IDSet<data_id_t> read = comm->read_set();
+      IDSet<physical_data_id_t>::IDSetIter it;
+      IDSet<physical_data_id_t> read = comm->read_set();
       for (it = read.begin(); it != read.end(); it++) {
         if (create_data_.count(*it) == 0) {
           data_created = false;
@@ -122,7 +122,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
           break;
         }
       }
-      IDSet<data_id_t> write = comm->write_set();
+      IDSet<physical_data_id_t> write = comm->write_set();
       for (it = write.begin(); it != write.end(); it++) {
         if (create_data_.count(*it) == 0) {
           data_created = false;
@@ -158,9 +158,9 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
   ID<job_id_t> id(j[0]);
   IDSet<job_id_t> before, after;
   SchedulerCommand* comm = new CreateDataCommand(id, cm->data_name(),
-      cm->data_id(), before, after);
-  job_data_map_[id.elem()] = cm->data_id().elem();
-  create_data_[cm->data_id().elem()] = false;
+      cm->logical_data_id(), cm->logical_data_id(), before, after);
+  job_data_map_[id.elem()] = cm->logical_data_id().elem();
+  create_data_[cm->logical_data_id().elem()] = false;
   std::cout << "Sending command: " << comm->toStringWTags() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), comm);
   delete comm;
