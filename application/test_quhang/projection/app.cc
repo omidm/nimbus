@@ -1,10 +1,79 @@
+#include <PhysBAM_Tools/Parallel_Computation/MPI_WORLD.h>
+#include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
 #include "projection_driver.h"
 #include "projection_example.h"
-#include "init_main.h"
+#include "job_impl.h"
 #include "app.h"
 
 typedef float T;
 
+void App::Load() {
+  std::cout << "Start application loading!" << std::endl;
+  RegisterJob("main", new Main(this));
+  RegisterJob("initialization", new Initialization(this));
+  RegisterJob("spawn_one_iteration_if_needed", new SpawnOneIterationIfNeeded(this));
+  RegisterJob("one_iteration", new OneIteration(this));
+  RegisterJob("finish", new Finish(this));
+  // [TODO] Only dumb data for now.
+  RegisterData("region", new ProfileData);
+
+  // Simulates parameter passing mechanism.
+  // [TODO] Revise or delete.
+  char a[] = "multiple_projection"; 
+  char* temp[2];
+  temp[0] = a;
+  temp[1] = NULL;
+  InitMain(1, temp);
+
+  app_driver->PrepareForProjection();
+  app_driver->PrepareForOneRegion();
+  std::cout << "Finish application loading!" << std::endl;
+}
+
+void App::InitMain(int argc,char* argv[]) {
+  using namespace PhysBAM;
+  typedef float T;
+  typedef float RW;
+  STREAM_TYPE *stream_type = new STREAM_TYPE((RW()));
+
+  PARSE_ARGS parse_args;
+  parse_args.Add_Integer_Argument("-restart",0,"restart frame");
+  parse_args.Add_Integer_Argument("-scale",64,"fine scale grid resolution");
+  parse_args.Add_Integer_Argument("-substep",-1,"output-substep level");
+  parse_args.Add_Integer_Argument("-threads",1,"number of threads");
+  parse_args.Add_Option_Argument("-3d","run in 3 dimensions");
+
+  LOG::Initialize_Logging(false,false,1<<30,true,parse_args.Get_Integer_Value("-threads"));
+  app_mpi_world = new MPI_WORLD(argc,argv);
+
+  parse_args.Parse(argc,argv);
+  parse_args.Print_Arguments(argc,argv);
+   
+  typedef VECTOR<T,2> TV;
+  typedef VECTOR<int,TV::dimension> TV_INT;
+  
+  PROJECTION_EXAMPLE<TV>* example=new PROJECTION_EXAMPLE<TV>(*stream_type,parse_args.Get_Integer_Value("-threads"));
+
+  int scale=parse_args.Get_Integer_Value("-scale");
+  RANGE<TV> range(TV(),TV::All_Ones_Vector()*0.5);range.max_corner(2)=1;TV_INT counts=TV_INT::All_Ones_Vector()*scale/2;counts(2)=scale;
+  example->Initialize_Grid(counts,range);
+  example->restart=parse_args.Get_Integer_Value("-restart");
+  example->write_substeps_level=parse_args.Get_Integer_Value("-substep");
+
+  if(app_mpi_world->initialized){
+      example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3);
+      if(example->mpi_grid->Number_Of_Processors()>1) example->output_directory+=STRING_UTILITIES::string_sprintf("_NP%d/%d",example->mpi_grid->Number_Of_Processors(),(app_mpi_world->rank+1));}
+
+  FILE_UTILITIES::Create_Directory(example->output_directory+"/common");
+  LOG::Instance()->Copy_Log_To_File(example->output_directory+"/common/log.txt",false);
+  
+  app_driver = new PhysBAM::PROJECTION_DRIVER<TV>(*example);
+}
+
+void App::FinishMain() {
+  delete app_driver;
+  delete app_mpi_world;
+}
 /*
   // The workflow for projection.
   PROJECTION_DRIVER<TV> &driver;
@@ -34,159 +103,3 @@ typedef float T;
   driver.ApplyPressureAndFinish();
 */
 
-// "driver" is a global pointer to PROJECTION_DRIVER.
-// [TODO] Figure out a better way.
-using PhysBAM::driver;
-
-void App::Load() {
-  std::cout << "Start application loading!" << std::endl;
-  RegisterJob("main", new Main(this));
-  RegisterJob("initialization", new Initialization(this));
-  RegisterJob("spawn_one_iteration_if_needed", new SpawnOneIterationIfNeeded(this));
-  RegisterJob("one_iteration", new OneIteration(this));
-  RegisterJob("finish", new Finish(this));
-  // [TODO] Only dumb data for now.
-  RegisterData("region", new ProfileData);
-
-  // Simulates parameter passing mechanism.
-  // [TODO] Revise or delete.
-  char a[] = "multiple_projection"; 
-  char* temp[2];
-  temp[0] = a;
-  temp[1] = NULL;
-  InitMain(1, temp);
-
-  driver->PrepareForProjection();
-  driver->PrepareForOneRegion();
-  std::cout << "Finish application loading!" << std::endl;
-}
-
-Main::Main(Application* app) {
-  set_application(app);
-}
-
-void Main::Execute(Parameter params, const DataArray& da) {
-  std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
-  IDSet<job_id_t> before, after;
-  IDSet<partition_id_t> neighbor_partitions;  // Don't use.
-  partition_id_t partition_id1 = 1;
-  partition_id_t partition_id2 = 2;
-  Parameter par;
-  GetNewDataID(&d, 2);
-  GetNewJobID(&j, 2);
-  DefineData("region", d[0], partition_id1, neighbor_partitions, par); 
-  DefineData("region", d[1], partition_id2, neighbor_partitions, par);
-  // Initializes on each partition.
-  read.clear(); read.insert(d[0]); write.clear();
-  before.clear(); after.clear();
-  SpawnComputeJob("initialization", j[0], read, write, before, after, par);
-  read.clear(); read.insert(d[1]); write.clear();
-  before.clear(); after.clear(); 
-  SpawnComputeJob("initialization", j[1], read, write, before, after, par);
-}
-
-Job* Main::Clone() {
-  return new Main(application());
-}
-
-Initialization::Initialization(Application* app) {
-  set_application(app);
-}
-
-// Each initialization job will spawn corresponding jobs on that partition.
-// [TODO] Change it.
-void Initialization::Execute(Parameter params, const DataArray& da) {
-  std::vector<job_id_t> j;
-  IDSet<data_id_t> read, write;
-  IDSet<job_id_t> before, after;
-  IDSet<partition_id_t> neighbor_partitions;  // Don't use.
-  Parameter par;
-  GetNewJobID(&j, 1);
-  job_id_t temp_d = *read_set().begin();
-  driver->pcg_mpi->ExchangePressure(driver->projection_internal_data, driver->projection_data);
-  driver->pcg_mpi->InitializeResidual(driver->projection_internal_data, driver->projection_data);
-  driver->pcg_mpi->SpawnFirstIteration(driver->projection_internal_data, driver->projection_data);
-  if (driver->projection_internal_data->move_on) {
-    driver->projection_internal_data->iteration=0;
-    read.clear(); read.insert(temp_d); write.clear(); 
-    before.clear(); after.clear();
-    SpawnComputeJob("spawn_one_iteration_if_needed", j[0], read, write, before, after, par);
-  } else {
-    read.clear(); read.insert(temp_d); write.clear(); 
-    before.clear(); after.clear();
-    SpawnComputeJob("finish", j[0], read, write, before, after, par);
-  }
-}
-
-Job* Initialization::Clone() {
-  return new Initialization(application());
-}
-
-SpawnOneIterationIfNeeded::SpawnOneIterationIfNeeded(Application* app) {
-  set_application(app);
-}
-
-void SpawnOneIterationIfNeeded::Execute(Parameter params, const DataArray& da) {
-  std::vector<job_id_t> j;
-  IDSet<data_id_t> read, write;
-  IDSet<job_id_t> before, after;
-  Parameter par;
-  job_id_t temp_d = *read_set().begin();
-  // [TODO] This is clearly not the right way to spawn loops.
-  if (driver->projection_internal_data->move_on) {
-    GetNewJobID(&j, 2);
-    driver->projection_internal_data->iteration++;
-    read.clear(); read.insert(temp_d); write.clear(); 
-    before.clear(); after.clear(); after.insert(j[1]);
-    SpawnComputeJob("one_iteration", j[0], read, write, before, after, par);
-    read.clear(); read.insert(temp_d); write.clear(); 
-    before.clear(); before.insert(j[0]); after.clear();
-    SpawnComputeJob("spawn_one_iteration_if_needed", j[1], read, write, before, after, par);
-  } else {
-    GetNewJobID(&j, 1);
-    read.clear(); read.insert(temp_d); write.clear(); 
-    before.clear(); after.clear();
-    SpawnComputeJob("finish", j[0], read, write, before, after, par);
-  }
-}
-
-Job* SpawnOneIterationIfNeeded::Clone() {
-  return new SpawnOneIterationIfNeeded(application());
-}
-
-OneIteration::OneIteration(Application *app) {
-  set_application(app);
-}
-
-void OneIteration::Execute(Parameter params, const DataArray& da) {
-    driver->pcg_mpi->DoPrecondition(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->CalculateBeta(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->UpdateSearchVector(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->ExchangeSearchVector(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->UpdateTempVector(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->CalculateAlpha(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->UpdateOtherVectors(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->CalculateResidual(driver->projection_internal_data, driver->projection_data);
-    driver->pcg_mpi->DecideToSpawnNextIteration(driver->projection_internal_data, driver->projection_data);
-}
-
-Job* OneIteration::Clone() {
-  return new OneIteration(application());
-}
-
-Finish::Finish(Application* app) {
-  set_application(app);
-}
-void Finish::Execute(Parameter params, const DataArray& da) {
-  driver->pcg_mpi->ExchangePressure(driver->projection_internal_data, driver->projection_data);
-  driver->WindUpForOneRegion();
-  driver->ApplyPressureAndFinish();
-  FinishMain();
-  printf("All is over!!! Nimbus can do projection!!!\n");
-}
-
-Job* Finish::Clone() {
-  return new Finish(application());
-}
