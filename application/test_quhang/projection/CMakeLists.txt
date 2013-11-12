@@ -17,14 +17,14 @@ include_directories(${NIMBUS_ROOT})
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/app.cc
-        ${PROJECT_SOURCE_DIR}/init_main.cc
+        ${PROJECT_SOURCE_DIR}/job_impl.cc
         ${PROJECT_SOURCE_DIR}/projection_driver.cc
         ${PROJECT_SOURCE_DIR}/projection_example.cc
         ${PROJECT_SOURCE_DIR}/projection_data.cc
         ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.cc)
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/app.h
-        ${PROJECT_SOURCE_DIR}/init_main.h
+        ${PROJECT_SOURCE_DIR}/job_impl.h
         ${PROJECT_SOURCE_DIR}/projection_driver.h
         ${PROJECT_SOURCE_DIR}/projection_example.h
         ${PROJECT_SOURCE_DIR}/projection_data.h
