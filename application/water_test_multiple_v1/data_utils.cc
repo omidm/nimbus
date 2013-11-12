@@ -33,40 +33,30 @@
  */
 
 #include "data_utils.h"
+#include "stdio.h"
 
-namespace application {
+namespace water_app_data {
 
-    void GetDataRegionNames(std::string names[]) {
-        names[kDataInterior] = "DataInterior";
-        names[kDataInUpperLeft] = "DataInUpperLeft";
-        names[kDataInUpper] = "DataInUpper";
-        names[kDataInUpperRight] = "DataInUpperRight";
-        names[kDataInRight] = "DataInRight";
-        names[kDataInBottomRight] = "DataInBottomRight";
-        names[kDataInBottom] = "DataInBottom";
-        names[kDataInBottomLeft] = "DataInBottomLeft";
-        names[kDataInLeft] = "DataInLeft";
+    void SimData::Create() {
+        printf("WARNING: using simdata create\n");
     }
 
-    void GetDataRegionSizes(
-            TV_INT sizes[],
-            TV_INT part_center_size,
-            TV_INT sim_center_size,
-            int ghost_band) {
-        TV_INT part_ghost_corner_size(ghost_band, ghost_band);
-        TV_INT part_ghost_vert_size = part_center_size;
-        TV_INT part_ghost_horiz_size = part_center_size;
-        part_ghost_vert_size(0) = ghost_band;
-        part_ghost_horiz_size(1) = ghost_band;
-        sizes[kDataInterior] = sim_center_size;
-        sizes[kDataInUpperLeft] = part_ghost_corner_size;
-        sizes[kDataInUpper] = part_ghost_horiz_size;
-        sizes[kDataInUpperRight] = part_ghost_corner_size;
-        sizes[kDataInRight] = part_ghost_vert_size;
-        sizes[kDataInBottomRight] = part_ghost_corner_size;
-        sizes[kDataInBottom] = part_ghost_horiz_size;
-        sizes[kDataInBottomLeft] = part_ghost_corner_size;
-        sizes[kDataInLeft] = part_ghost_vert_size;
+    ::nimbus::Data* SimData::Clone() {
+        printf("WARNING: using simdata clone\n");
+        return NULL;
     }
 
-} // namespace application
+    void SimData::Destroy() {
+        delete region_;
+    }
+
+    ::nimbus::GeometricRegion* SimData::region() {
+        return region_;
+    }
+
+    void SimData::set_region(::nimbus::GeometricRegion &region) {
+        delete region_;
+        region_ = new ::nimbus::GeometricRegion(region);
+    }
+
+} // namespace water_app_data

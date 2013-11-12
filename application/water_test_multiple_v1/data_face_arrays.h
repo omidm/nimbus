@@ -41,6 +41,7 @@
 
 #include "data_utils.h"
 #include "physbam_include.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
 #define face_array_id 20
@@ -52,7 +53,7 @@ namespace water_app_data {
     /* Face array for storing quantities like face velocities.
     */
     template <class TV>
-        class FaceArray : public ::application::SimData {
+        class FaceArray : public SimData {
 
             private:
                 typedef typename TV::SCALAR T;
@@ -66,16 +67,16 @@ namespace water_app_data {
                     < ::PhysBAM::GRID<TV>, T> T_BOUNDARY;
                 typedef ::PhysBAM::RANGE<TV_INT> T_BOX;
 
-                TV_INT size_;
                 T_GRID *grid_;
                 T_FACE_ARRAY *data_;
+                TV_INT size_;
 
                 void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX *box);
                 void Update_Face_Array(T_FACE_ARRAY* from, T_BOX *box);
 
             public:
 
-                FaceArray(TV_INT size, ::application::DataRegion region);
+                FaceArray(::nimbus::GeometricRegion &region);
                 virtual void Create();
                 virtual void Destroy();
                 virtual ::nimbus::Data* Clone();
