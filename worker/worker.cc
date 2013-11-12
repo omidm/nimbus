@@ -258,6 +258,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
 }
 
 void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
+  std::cout << "************OMIDOMID**************\n";
   RemoteCopySendJob * job = new RemoteCopySendJob(data_exchanger_);
   data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
       cm->to_ip(), cm->to_port().elem());
@@ -273,6 +274,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
   blocked_jobs_.push_back(job);
+  std::cout << "************OMID**************\n";
 }
 
 void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {

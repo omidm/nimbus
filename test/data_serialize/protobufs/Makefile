@@ -6,7 +6,7 @@ TARGET = all
 NIMBUS_ROOT = ../../..
 include $(NIMBUS_ROOT)/Makeinclude
 
-# iCPP = g++
+# CPP = g++
 # CFLAGS = -Wall -g -pg -fPIC
 # IFLAGS = -I/usr/local/include # For protobufs
 

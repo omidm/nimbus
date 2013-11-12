@@ -1299,7 +1299,7 @@ bool RemoteCopySendCommand::Parse(const std::string& params) {
   }
 
   iter++;
-  if (receive_job_id_.Parse(*iter)) {
+  if (!receive_job_id_.Parse(*iter)) {
     std::cout << "ERROR: Could not detect valid receive job id." << std::endl;
     return false;
   }
@@ -1311,7 +1311,7 @@ bool RemoteCopySendCommand::Parse(const std::string& params) {
   }
 
   iter++;
-  if (to_worker_id_.Parse(*iter)) {
+  if (!to_worker_id_.Parse(*iter)) {
     std::cout << "ERROR: Could not detect valid to worker id." << std::endl;
     return false;
   }
