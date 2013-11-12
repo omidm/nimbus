@@ -61,13 +61,35 @@ using nimbus::Application;
  * kFaceArray. */
 #define GetJobData()                                                        \
     WaterApp *water_app = (WaterApp *)application();                        \
-    ::application::JobData job_data;                                        \
-    CollectData(da, job_data);                                              \
+    WaterDriver<TV> *driver = NULL;                                         \
+    NonAdvData<TV, T> *sim_data = NULL;                                     \
+    FaceArrayList fvleft;                                                   \
+    FaceArrayList fvright;                                                  \
+    for (unsigned int i = 0; i < da.size(); i++) {                          \
+        switch (da[i]->get_debug_info()) {                                  \
+            case driver_id:                                                 \
+                driver = (WaterDriver<TV> *)da[i];                          \
+                break;                                                      \
+            case non_adv_id:                                                \
+                sim_data = (NonAdvData<TV, T> *)da[i];                      \
+                break;                                                      \
+            case face_array_id:                                             \
+                FaceArray *temp = (FaceArray *)da[i];                       \
+                if (temp->left_or_right == 0)                               \
+                    fvleft.push_back(temp);                                 \
+                else                                                        \
+                    fvright.push_back(temp);                                \
+                break;                                                      \
+        }                                                                   \
+    }                                                                       \
     if (!water_app)                                                         \
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
 namespace {
+    /* Initialize/ declare application constants. */
+    TV_INT main_size(kMainSize, kMainSize);
+
     const int knx[] = {
         0,
         kGhostSize,
@@ -86,11 +108,24 @@ namespace {
     nimbus::GeometricRegion kwhole_region(
             0, 0, 0,
             kMainSize, kMainSize, 0);
+    nimbus::GeometricRegion kleft_region(
+            0, 0, 0,
+            kMainSize/2, kMainSize/2, 0);
+    nimbus::GeometricRegion kright_region(
+            kMainSize/2, kMainSize/2, 0,
+            kMainSize/2, kMainSize/2, 0);
+    nimbus::GeometricRegion kleft_ghost_region(
+            -kGhostSize, -kGhostSize, 0,
+            kMainSize/2+2*kGhostSize, kMainSize/2+2*kGhostSize, 0);
+    nimbus::GeometricRegion kright_ghost_region(
+            kMainSize/2-kGhostSize, kMainSize/2-kGhostSize, 0,
+            kMainSize/2+2*kGhostSize, kMainSize/2+2*kGhostSize, 0);
     ::std::vector < ::nimbus::GeometricRegion > kleft_regions;
     ::std::vector < ::nimbus::GeometricRegion > kright_regions;
     ::std::vector < ::std::string > kleft_adv_types;
     ::std::vector < ::std::string > kright_adv_types;
-    const int pieces = 12; // pieces of velocity per partition
+    const int pieces = 12; // pieces of velocity per worker
+    const int workers = 2; // number of workers
 } // namespace application
 
 WaterApp::WaterApp() {
@@ -99,6 +134,7 @@ WaterApp::WaterApp() {
 void WaterApp::Load() {
     printf("Worker beginning to load application\n");
 
+    /* Initialize application constants. */
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             kleft_regions.push_back(
@@ -134,9 +170,6 @@ void WaterApp::Load() {
         kright_adv_types.push_back("advection_right_"+ss.str());
     }
 
-    /* Initialize application constants. */
-    TV_INT main_size(kMainSize, kMainSize);
-
     LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
     /* Declare data types. */
@@ -146,10 +179,10 @@ void WaterApp::Load() {
     for (int i = 0; i < pieces; i++) {
         RegisterData(
                 kleft_adv_types[i],
-                new FaceArray(kleft_regions[i]));
+                new FaceArray(kleft_regions[i], 0));
         RegisterData(
                 kright_adv_types[i],
-                new FaceArray(kright_regions[i]));
+                new FaceArray(kright_regions[i], 1));
     }
 
     /* Declare job types. */
@@ -269,31 +302,34 @@ Job* Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
-//    printf("Executing init job\n");
-//    std::vector<int> types_list;
-//    types_list.push_back(driver_id);
-//    types_list.push_back(non_adv_id);
-//    for (int i = 0; i < 9; i++) {
-//        types_list.push_back(face_array_id);
-//    }
-//    GetJobData();
-//    int frame = 0;
-//    T_FACE_ARRAY *fv = new T_FACE_ARRAY();
-//    job_data.driver->face_velocities = job_data.central_vels[0]->data();
-//    job_data.driver->sim_data = job_data.sim_data;
-//    Add_Source(job_data.sim_data);
-//    job_data.sim_data->incompressible->
-//        Set_Custom_Boundary(*water_app->boundary());
-//    job_data.sim_data->initialize(
-//            job_data.driver,
-//            job_data.central_vels[0]->data(),
-//            frame);
-//    job_data.sim_data->incompressible->
-//        Set_Custom_Advection(*(water_app->advection_scalar()));
-//    job_data.sim_data->particle_levelset_evolution->Levelset_Advection(1).
-//        Set_Custom_Advection(*(water_app->advection_scalar()));
-//    delete(fv);
-//    printf("Successfully completed init job\n");
+    typedef ::PhysBAM::GRID<TV> T_GRID;
+    typedef ::PhysBAM::RANGE<TV> T_RANGE;
+    printf("Executing init job\n");
+    std::vector<int> types_list;
+    types_list.push_back(driver_id);
+    types_list.push_back(non_adv_id);
+    for (int i = 0; i < workers*pieces; i++) {
+        types_list.push_back(face_array_id);
+    }
+    GetJobData();
+    int frame = 0;
+    T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
+    T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
+    driver->face_velocities = fv;
+    driver->sim_data = sim_data;
+    Add_Source(sim_data);
+    sim_data->incompressible->
+        Set_Custom_Boundary(*water_app->boundary());
+    sim_data->initialize(
+            driver,
+            fv,
+            frame);
+    sim_data->incompressible->
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    sim_data->particle_levelset_evolution->Levelset_Advection(1).
+        Set_Custom_Advection(*(water_app->advection_scalar()));
+    delete(fv);
+    printf("Successfully completed init job\n");
 };
 
 UptoAdvect::UptoAdvect(Application *app) {

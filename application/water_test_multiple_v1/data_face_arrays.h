@@ -71,12 +71,12 @@ namespace water_app_data {
                 T_FACE_ARRAY *data_;
                 TV_INT size_;
 
-                void Glue_Face_Array(T_FACE_ARRAY *from, T_BOX *box);
+                void Glue_Face_Array(T_FACE_ARRAY *result, T_BOX *box);
                 void Update_Face_Array(T_FACE_ARRAY* from, T_BOX *box);
 
             public:
 
-                FaceArray(::nimbus::GeometricRegion &region);
+                FaceArray(::nimbus::GeometricRegion &region, bool lor);
                 virtual void Create();
                 virtual void Destroy();
                 virtual ::nimbus::Data* Clone();
@@ -92,19 +92,26 @@ namespace water_app_data {
                         TF time,
                         bool extrapolate);
 
-                /* This needs the center region right now due to the way it is
-                 * implemented. */
+                /* Region is the geometric region we are interested in.
+                 * o_x is the x offset we need to shift by when gluing into
+                 * result, or the x offset we need to start from when updating
+                 * from updated.
+                 * o_y is similar.
+                 * ... o_x and o_y may not be needed because of the way physbam
+                 * expects the array construction in advection code. Each
+                 * worker sees indices 0 to 50 but regions go from 0 to 100.
+                 * (excluding ghost regions). */
                 static void Glue_Regions(
                         T_FACE_ARRAY* result,
-                        std::vector<FaceArray* > *parts,
-                        int bandwidth,
-                        int offset);
+                        std::vector<FaceArray* > &parts,
+                        ::nimbus::GeometricRegion &region,
+                        int o_x, int o_y);
 
                 static void Update_Regions(
                         T_FACE_ARRAY *updated,
-                        std::vector<FaceArray* > *parts,
-                        int bandwidth,
-                        int offset);
+                        std::vector<FaceArray* > &parts,
+                        ::nimbus::GeometricRegion &region,
+                        int o_x, int o_y);
 
                 T_GRID *grid() {
                     return grid_;
@@ -121,6 +128,10 @@ namespace water_app_data {
                 void set_data(T_FACE_ARRAY *data) {
                     data_ = data;
                 }
+                
+                // temporary hack to distinguish between left and right worker
+                // pieces
+                partition_id_t left_or_right;
         };
 
 } // namespace water_app_data
