@@ -3,20 +3,21 @@
 #include "app.h"
 #include "job_impl.h"
 
+
 Main::Main(Application* app) {
   set_application(app);
 }
 
 void Main::Execute(Parameter params, const DataArray& da) {
   std::vector<job_id_t> j;
-  std::vector<data_id_t> d;
-  IDSet<data_id_t> read, write;
+  std::vector<logical_data_id_t> d;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;  // Don't use.
   partition_id_t partition_id1 = 1;
   partition_id_t partition_id2 = 2;
   Parameter par;
-  GetNewDataID(&d, 2);
+  GetNewLogicalDataID(&d, 2);
   GetNewJobID(&j, 2);
   DefineData("region", d[0], partition_id1, neighbor_partitions, par); 
   DefineData("region", d[1], partition_id2, neighbor_partitions, par);
@@ -43,7 +44,7 @@ void Initialization::Execute(Parameter params, const DataArray& da) {
   App* projection_app = dynamic_cast<App*>(application());
   PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
   std::vector<job_id_t> j;
-  IDSet<data_id_t> read, write;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;  // Don't use.
   Parameter par;
@@ -79,7 +80,7 @@ void SpawnOneIterationIfNeeded::Execute(Parameter params, const DataArray& da) {
   App* projection_app = dynamic_cast<App*>(application());
   PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
   std::vector<job_id_t> j;
-  IDSet<data_id_t> read, write;
+  IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
   job_id_t temp_d = *read_set().begin();
