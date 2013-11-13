@@ -6,6 +6,8 @@ TARGET = protobuf
 NIMBUS_ROOT = ../../
 include $(NIMBUS_ROOT)/Makeinclude
 
+CFLAGS += -fPIC
+
 PDIR_SOURCE = ../protobuf_source/
 PDIR_COMPILED = ../protobuf_compiled/
 PROTO_FILES = $(wildcard $(PDIR_SOURCE)*.proto)
