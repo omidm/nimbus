@@ -20,6 +20,7 @@ ENDIF(MSVC)
 
 #Flags for g++ (GNU C++ Compiler)
 IF(CMAKE_COMPILER_IS_GNUCXX)
+   ADD_DEFINITIONS (-Werror)
    ADD_DEFINITIONS (-Wall)
    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -funroll-loops")
    #TODO: Detect architecture and set SSE/AVX capabilities accordingly
