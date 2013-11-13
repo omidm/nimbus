@@ -33,66 +33,16 @@
  */
 
  /*
-  * This file tests whether the Logical Data Object Index is working
-  * properly.
+  * This program tests how fast the ClusterMap is.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #define DEBUG_MODE
 
-#include <sys/time.h>
-#include <iostream> // NOLINT
+#include "shared/cluster.h"
+#include "shared/gdb.h"
+
+int main(int argc, char *argv[]) {}
 
 
-#include "shared/geometric_region.h"
-#include "shared/logical_data_object.h"
-#include "shared/ldo_index.h"
-
-#define NUM_LDOS 1000000
-
-using namespace nimbus;  // NOLINT
-
-int main(int argc, char *argv[]) {
-  LdoIndex index;
-  struct timeval start, end;
-  gettimeofday(&start, NULL);
-  for (int i = 0; i < NUM_LDOS; i++) {
-    std::string str = "pressure";
-    GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
-                                                 lrand48(), lrand48(),
-                                                 lrand48(), lrand48());
-    LogicalDataObject* obj = new LogicalDataObject(i, str, region);
-
-    index.AddObject(obj);
-  }
-  gettimeofday(&end, NULL);
-  int64_t time = (end.tv_sec - start.tv_sec) * 1000000;
-  time += (end.tv_usec - start.tv_usec);
-  double dtime = static_cast<double>(time);
-  dtime /= 1000000.0;
-  printf("Inserting %i LDOs took %f seconds (%f usec/LDO).\n",
-         NUM_LDOS,
-         dtime,
-         ((dtime * 1000000.0) / static_cast<double>(NUM_LDOS)));
-
-  gettimeofday(&start, NULL);
-  for (int i = 0; i < NUM_LDOS; i++) {
-    LogicalDataObject* obj = index.SpecificObject(i);
-    if (obj == NULL) {
-      fprintf(stderr, "Trying to delete object %i fails because index has no such object.\n", i);
-    } else {
-      index.RemoveObject(i);
-    }
-    delete obj;
-  }
-  gettimeofday(&end, NULL);
-  time = (end.tv_sec - start.tv_sec) * 1000000;
-  time += (end.tv_usec - start.tv_usec);
-  dtime = static_cast<double>(time);
-  dtime /= 1000000.0;
-  printf("Deleting %i LDOs took %f seconds (%f usec/LDO).\n",
-         NUM_LDOS,
-         dtime,
-         (dtime * 1000000.0) / static_cast<double>(NUM_LDOS));
-}

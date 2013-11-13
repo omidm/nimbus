@@ -33,33 +33,17 @@
  */
 
  /*
-  * This file tests whether the Logical Data Object Index is working
-  * properly.
+  * This program tests the memory use (and potential memory leaks) of
+  * the ClusterMap.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #define DEBUG_MODE
 
-#include <iostream> // NOLINT
-#include "shared/geometric_region.h"
-#include "shared/logical_data_object.h"
-#include "shared/ldo_index.h"
+#include "shared/cluster.h"
+#include "shared/gdb.h"
 
-using namespace nimbus;  // NOLINT
+int main(int argc, char *argv[]) {}
 
-int main(int argc, char *argv[]) {
-  LdoIndex index;
 
-  for (int i = 0; i < 100; i++) {
-    std::string str = "pressure";
-    GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
-                                                 lrand48(), lrand48(),
-                                                 lrand48(), lrand48());
-    LogicalDataObject* obj = new LogicalDataObject(i, str, region);
-
-    index.AddObject(obj);
-    index.RemoveObject(i);
-    delete obj;
-  }
-}
