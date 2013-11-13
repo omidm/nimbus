@@ -54,6 +54,7 @@
 #include "shared/parser.h"
 #include "shared/scheduler_server.h"
 #include "scheduler/data_manager.h"
+#include "shared/id_maker.h"
 
 namespace nimbus {
 class Scheduler {
@@ -75,9 +76,11 @@ class Scheduler {
     virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm) {}
 
     virtual void LoadClusterMap(std::string) {}
-    virtual void DeleteWorker(Worker * worker) {}
-    virtual void AddWorker(Worker * worker) {}
-    virtual Worker* GetWorker(int workerId) {return worker_map_[workerId];}
+    virtual void DeleteWorker(SchedulerWorker * worker) {}
+    virtual void AddWorker(SchedulerWorker * worker) {}
+    virtual SchedulerWorker* GetWorker(int workerId) {
+      return NULL;
+    }
 
   protected:
     SchedulerServer* server_;
@@ -98,7 +101,6 @@ class Scheduler {
     Computer host_;
     port_t listening_port_;
     app_id_t appId_;
-    WorkerMap worker_map_;
     ClusterMap cluster_map_;
     DataManager* data_manager_;
 };

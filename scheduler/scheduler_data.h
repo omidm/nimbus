@@ -63,7 +63,6 @@ class SchedulerData {
  private:
   uint64_t id_;
   bool advanceData_;
-  Hosts hosts_;
   Neighbors neighbors_;
 };
 

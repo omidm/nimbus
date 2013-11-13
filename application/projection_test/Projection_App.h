@@ -1,5 +1,4 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,45 +31,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * The abstraction of a connection from a scheduler to
-  * a worker.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  */
+/*
+ * Author: Zhihao Jia <zhihao@stanford.edu>
+ */
 
-
-#ifndef NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
-#define NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
-
-#include <boost/thread.hpp>
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <map>
-#include <string>
-#include "shared/nimbus_types.h"
+#ifndef NIMBUS_APPLICATION_PROJECTION_TEST_PROJECTION_APP_H_
+#define NIMBUS_APPLICATION_PROJECTION_TEST_PROJECTION_APP_H_
+#include "shared/nimbus.h"
 #include "shared/parser.h"
-#include "shared/scheduler_command.h"
+#include "shared/nimbus_types.h"
+#include "physbam_include.h"
+#include "worker/application.h"
+#include "worker/job.h"
+#include "worker/data.h"
+#include "protocol_buffer/vector_msg.pb.h"
+#include "PCG_Sparse_Solver.h"
 
-namespace nimbus {
+using nimbus::Job;
+using nimbus::Data;
+using nimbus::Application;
+using namespace PhysBAM;
+typedef float T;
 
-class SchedulerServerConnection {
- public:
-  explicit SchedulerServerConnection(boost::asio::ip::tcp::socket* sock);
-  virtual ~SchedulerServerConnection();
-
-  virtual boost::asio::streambuf* read_buffer();
-  virtual boost::asio::ip::tcp::socket* socket();
-  virtual int command_num();
-  virtual void set_command_num(int n);
-
- private:
-  boost::asio::streambuf* read_buffer_;
-  boost::asio::ip::tcp::socket* socket_;
-  int command_num_;
+class ProjectionApp : public Application {
+    public:
+    	ProjectionApp();
+        virtual void Load();
 };
 
-}  // namespace nimbus
+class Main : public Job {
+    public:
+        Main(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
 
-#endif  // NIMBUS_SHARED_SCHEDULER_SERVER_CONNECTION_H_
+#endif

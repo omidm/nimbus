@@ -82,6 +82,12 @@ namespace nimbus {
     ClusterMap cluster_map_;
     SchedulerWorkerTable worker_table_;
     ComputerTable computer_table_;
+
+    bool ProcessWorkerRegisterMessage(const WorkerRegisterMessage& msg);
+    bool ProcessSwitchRegisterMessage(const SwitchRegisterMessage& msg);
+    bool ProcessWorkerLinkMessage(const WorkerLinkMessage& msg);
+    bool ProcessSwitchLinkMessage(const SwitchLinkMessage& msg);
+    bool ProcessUpdateMessage(const UpdateMessage& msg);
   };
 
 }  // namespace nimbus

@@ -32,63 +32,48 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Scheduler abstraction of a worker.
-  *
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/* 
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#include "app_face_array_2d.pb.h"
+#include "physbam_data_include.h"
+#include "physbam_serialize_data_arrays_2d.h"
+#include "physbam_deserialize_data_arrays_2d.h"
+#include "shared/geometric_region.h"
 
-#include <list>
-#include <string>
-#include "shared/scheduler_server_connection.h"
+namespace water_app_data {
 
-namespace nimbus {
+    // serialize
+    void make_pb_object(
+            ::physbam_pb::FaceArray2 *fa,
+            ::nimbus::GeometricRegion *region,
+            ::communication::AppFaceArray2d *app_fa) {
+        assert(fa);
+        assert(region);
+        assert(app_fa);
+        ::communication::PhysbamFaceArray2d *pb_fa = app_fa->mutable_data();
+        ::communication::GeometricRegionMessage *pb_region
+            = app_fa->mutable_region();
+        ::physbam_pb::make_pb_object(fa, pb_fa);
+        pb_region->set_x(region->x());
+        pb_region->set_y(region->y());
+        pb_region->set_z(region->z());
+        pb_region->set_dx(region->dx());
+        pb_region->set_dy(region->dy());
+        pb_region->set_dz(region->dz());
+    }
 
-class Application;
+    // deserialize
+    void make_app_object(
+            ::physbam_pb::FaceArray2 *fa,
+            ::nimbus::GeometricRegion *region,
+            const ::communication::AppFaceArray2d &app_fa) {
+        ::communication::PhysbamFaceArray2d pb_fa = app_fa.data();
+        ::communication::GeometricRegionMessage r
+            = app_fa.region();
+        ::physbam_pb::make_physbam_object(fa, pb_fa);
+        region->Rebuild(r.x(), r.y(), r.z(), r.dx(), r.dy(), r.dz());
+    }
 
-class SchedulerWorker {
- public:
-  SchedulerWorker(worker_id_t id,
-                  SchedulerServerConnection* conn,
-                  Application* app);
-  virtual ~SchedulerWorker();
-
-  virtual worker_id_t worker_id();
-  virtual std::string ip();
-  virtual void set_ip(std::string ip);
-  virtual port_t port();
-  virtual void set_port(port_t port);
-  virtual SchedulerServerConnection* connection();
-  virtual Application* application();
-  virtual bool is_alive();
-  virtual bool handshake_done();
-  virtual void set_handshake_done(bool flag);
-  virtual void MarkDead();
-  virtual char* read_buffer();
-  virtual uint32_t existing_bytes();
-  virtual void set_existing_bytes(uint32_t bytes);
-  virtual uint32_t read_buffer_length();
-
- private:
-  worker_id_t worker_id_;
-  std::string ip_;
-  port_t port_;
-  SchedulerServerConnection* connection_;
-  Application* application_;
-  bool is_alive_;
-  bool handshake_done_;
-  char* read_buffer_;
-  // How many bytes in the read buffer are valid before
-  // a read.
-  uint32_t existing_bytes_;
-};
-
-typedef std::list<SchedulerWorker*> SchedulerWorkerList;
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+} // namespace physbam_pb

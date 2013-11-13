@@ -38,10 +38,7 @@
 
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "proto_files/physbam_serialize_data_arrays_2d.h"
-#include "proto_files/physbam_serialize_data_common_2d.h"
-#include "proto_files/physbam_deserialize_data_arrays_2d.h"
-#include "proto_files/physbam_deserialize_data_common_2d.h"
+#include "proto_files/app_messages_2d.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "string.h"
@@ -93,16 +90,20 @@ namespace water_app_data {
             return face_array_id;
         }
 
+    /* We need to serialize only region and data. Information from these is
+     * sufficient to reconstruct the object.
+     */
     template <class TV> bool FaceArray<TV>::
         Serialize(SerializedData *ser_data) {
             assert(ser_data);
-            ::communication::PhysbamFaceArray2d pb_fa;
-            ::physbam_pb::make_pb_object(data(), &pb_fa);
+            ::communication::AppFaceArray2d pb_fa;
+            make_pb_object(data(), region(), &pb_fa);
             return true;
         }
 
     /* DeSerialize should be called only after Create has been called. Create
-       ensures that required memory has been allocated. */
+       ensures that required memory has been allocated, and grid and size have
+       been initialized correctly. We need to update only region and data. */
     template <class TV> bool FaceArray<TV>::
         DeSerialize(const SerializedData &ser_data, Data **result) {
             assert(result);
@@ -111,10 +112,10 @@ namespace water_app_data {
             if (buff_size <= 0)
                 return false;
             assert(buffer);
-            ::communication::PhysbamFaceArray2d pb_fa;
+            ::communication::AppFaceArray2d pb_fa;
             pb_fa.ParseFromString((std::string)buffer);
             FaceArray<TV> *des = (FaceArray<TV> *)(*result);
-            ::physbam_pb::make_physbam_object(des->data(), pb_fa);
+            make_app_object(des->data(), des->region(), pb_fa);
             return true;
         }
 

@@ -35,6 +35,7 @@ class ProjectionInternalData {
   int iteration;
   T residual;
   bool move_on;
+  double partial_norm;
 };
 }  // namespace PhysBAM
 

@@ -32,63 +32,31 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Scheduler abstraction of a worker.
-  *
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/* 
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
+#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
 
-#include <list>
-#include <string>
-#include "shared/scheduler_server_connection.h"
+#include "app_face_array_2d.pb.h"
+#include "physbam_data_include.h"
+#include "shared/geometric_region.h"
 
-namespace nimbus {
+namespace water_app_data {
 
-class Application;
+    // serialize
+    void make_pb_object(
+            ::physbam_pb::FaceArray2 *fa,
+            ::nimbus::GeometricRegion *region,
+            ::communication::AppFaceArray2d *app_fa);
 
-class SchedulerWorker {
- public:
-  SchedulerWorker(worker_id_t id,
-                  SchedulerServerConnection* conn,
-                  Application* app);
-  virtual ~SchedulerWorker();
+    // deserialize
+    void make_app_object(
+            ::physbam_pb::FaceArray2 *fa,
+            ::nimbus::GeometricRegion *region,
+            const ::communication::AppFaceArray2d &app_fa);
 
-  virtual worker_id_t worker_id();
-  virtual std::string ip();
-  virtual void set_ip(std::string ip);
-  virtual port_t port();
-  virtual void set_port(port_t port);
-  virtual SchedulerServerConnection* connection();
-  virtual Application* application();
-  virtual bool is_alive();
-  virtual bool handshake_done();
-  virtual void set_handshake_done(bool flag);
-  virtual void MarkDead();
-  virtual char* read_buffer();
-  virtual uint32_t existing_bytes();
-  virtual void set_existing_bytes(uint32_t bytes);
-  virtual uint32_t read_buffer_length();
+} // namespace physbam_pb
 
- private:
-  worker_id_t worker_id_;
-  std::string ip_;
-  port_t port_;
-  SchedulerServerConnection* connection_;
-  Application* application_;
-  bool is_alive_;
-  bool handshake_done_;
-  char* read_buffer_;
-  // How many bytes in the read buffer are valid before
-  // a read.
-  uint32_t existing_bytes_;
-};
-
-typedef std::list<SchedulerWorker*> SchedulerWorkerList;
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
