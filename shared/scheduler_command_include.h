@@ -32,63 +32,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Scheduler abstraction of a worker.
-  *
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Global declaration of Nimbus-wide types.
+ * Author: Philip Levis <pal@cs.stanford.edu>
+ */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
 
-#include <list>
-#include <string>
-#include "shared/scheduler_server_connection.h"
+#include "shared/scheduler_command.h"
+#include "shared/handshake_command.h"
+#include "shared/spawn_job_command.h"
+#include "shared/spawn_compute_job_command.h"
+#include "shared/spawn_copy_job_command.h"
+#include "shared/compute_job_command.h"
+#include "shared/create_data_command.h"
+#include "shared/remote_copy_send_command.h"
+#include "shared/remote_copy_receive_command.h"
+#include "shared/local_copy_command.h"
+#include "shared/job_done_command.h"
+#include "shared/define_data_command.h"
+#include "shared/define_partition_command.h"
 
-namespace nimbus {
 
-class Application;
-
-class SchedulerWorker {
- public:
-  SchedulerWorker(worker_id_t id,
-                  SchedulerServerConnection* conn,
-                  Application* app);
-  virtual ~SchedulerWorker();
-
-  virtual worker_id_t worker_id();
-  virtual std::string ip();
-  virtual void set_ip(std::string ip);
-  virtual port_t port();
-  virtual void set_port(port_t port);
-  virtual SchedulerServerConnection* connection();
-  virtual Application* application();
-  virtual bool is_alive();
-  virtual bool handshake_done();
-  virtual void set_handshake_done(bool flag);
-  virtual void MarkDead();
-  virtual char* read_buffer();
-  virtual uint32_t existing_bytes();
-  virtual void set_existing_bytes(uint32_t bytes);
-  virtual uint32_t read_buffer_length();
-
- private:
-  worker_id_t worker_id_;
-  std::string ip_;
-  port_t port_;
-  SchedulerServerConnection* connection_;
-  Application* application_;
-  bool is_alive_;
-  bool handshake_done_;
-  char* read_buffer_;
-  // How many bytes in the read buffer are valid before
-  // a read.
-  uint32_t existing_bytes_;
-};
-
-typedef std::list<SchedulerWorker*> SchedulerWorkerList;
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_

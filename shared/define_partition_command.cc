@@ -33,94 +33,67 @@
  */
 
  /*
-  * A Nimbus scheduler's abstraction of a worker.
+  * Define partition command to define a geometrical region from application
+  * point of view.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_worker.h"
-#include "shared/dbg.h"
+#include "shared/define_partition_command.h"
 
-namespace nimbus {
+using namespace nimbus;  // NOLINT
+using boost::tokenizer;
+using boost::char_separator;
 
-#define WORKER_BUFSIZE 10240
-
-SchedulerWorker::SchedulerWorker(worker_id_t id,
-                                   SchedulerServerConnection* conn,
-                                   Application* app) {
-  worker_id_ = id;
-  connection_ = conn;
-  application_ = app;
-  is_alive_ = true;
-  handshake_done_ = false;
-  existing_bytes_ = 0;
-  read_buffer_ = new char[WORKER_BUFSIZE];
+DefinePartitionCommand::DefinePartitionCommand() {
+  name_ = DEFINE_PARTITION_NAME;
+  type_ = DEFINE_PARTITION;
 }
 
-SchedulerWorker::~SchedulerWorker() {
-  delete connection_;
-  delete read_buffer_;
+DefinePartitionCommand::DefinePartitionCommand(const ID<partition_id_t>& part,
+                                               const GeometricRegion& r,
+                                               const Parameter& params):
+  id_(part), region_(r), params_(params) {
+  name_ = DEFINE_PARTITION_NAME;
+  type_ = DEFINE_PARTITION;
 }
 
-worker_id_t SchedulerWorker::worker_id() {
-  return worker_id_;
+DefinePartitionCommand::~DefinePartitionCommand() {}
+
+SchedulerCommand* DefinePartitionCommand::Clone() {
+  return new DefinePartitionCommand();
 }
 
-std::string SchedulerWorker::ip() {
-  return ip_;
+bool DefinePartitionCommand::Parse(const std::string& params) {
+  std::cout << "WARNING: Has not been built yet!" << std::endl;
+  return false;
 }
 
-void SchedulerWorker::set_ip(std::string ip) {
-  ip_ = ip;
+std::string DefinePartitionCommand::toString() {
+  std::string str;
+  str += (name_ + " ");
+  str += (id_.toString() + " ");
+  str += (region_.toString() + " ");
+  str += params_.toString();
+  return str;
+}
+std::string DefinePartitionCommand::toStringWTags() {
+  std::string str;
+  str += (name_ + " ");
+  str += ("id:" + id_.toString() + " ");
+  str += ("region:" + region_.toString() + " ");
+  str += ("params:" + params_.toString());
+  return str;
 }
 
-port_t SchedulerWorker::port() {
-  return port_;
+ID<partition_id_t> DefinePartitionCommand::partition_id() {
+  return id_;
 }
 
-void SchedulerWorker::set_port(port_t port) {
-  port_ = port;
+const GeometricRegion* DefinePartitionCommand::region() {
+  return &region_;
 }
 
-SchedulerServerConnection* SchedulerWorker::connection() {
-  return connection_;
+Parameter DefinePartitionCommand::params() {
+  return params_;
 }
-
-Application* SchedulerWorker::application() {
-  return application_;
-}
-
-bool SchedulerWorker::is_alive() {
-  return is_alive_;
-}
-
-bool SchedulerWorker::handshake_done() {
-  return handshake_done_;
-}
-
-void SchedulerWorker::set_handshake_done(bool flag) {
-  handshake_done_ = flag;
-}
-
-void SchedulerWorker::MarkDead() {
-  is_alive_ = false;
-}
-
-char* SchedulerWorker::read_buffer() {
-  return read_buffer_;
-}
-
-uint32_t SchedulerWorker::existing_bytes() {
-  return existing_bytes_;
-}
-
-void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
-  existing_bytes_ = bytes;
-}
-
-uint32_t SchedulerWorker::read_buffer_length() {
-  return WORKER_BUFSIZE;
-}
-
-}  // namespace nimbus

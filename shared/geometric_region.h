@@ -44,7 +44,7 @@
 #include <stdio.h>
 #include <string>
 #include "shared/nimbus_types.h"
-#include "shared/protobufs/ldomessage.pb.h"
+#include "shared/protobuf_compiled/ldomessage.pb.h"
 
 namespace nimbus {
 

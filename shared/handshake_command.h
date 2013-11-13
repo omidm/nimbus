@@ -33,94 +33,43 @@
  */
 
  /*
-  * A Nimbus scheduler's abstraction of a worker.
+  * Handshake command used to stablish connection between scheduler and worker
+  * when worker initially joins the network. Scheduler registers the worker and
+  * assigns unique worker id to the worker.
   *
-  * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_worker.h"
-#include "shared/dbg.h"
+#ifndef NIMBUS_SHARED_HANDSHAKE_COMMAND_H_
+#define NIMBUS_SHARED_HANDSHAKE_COMMAND_H_
+
+
+#include <string>
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
+class HandshakeCommand : public SchedulerCommand {
+  public:
+    HandshakeCommand();
+    explicit HandshakeCommand(const ID<worker_id_t>& worker_id,
+        const std::string& ip, const ID<port_t>& port);
+    ~HandshakeCommand();
 
-#define WORKER_BUFSIZE 10240
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<worker_id_t> worker_id();
+    std::string ip();
+    ID<port_t> port();
 
-SchedulerWorker::SchedulerWorker(worker_id_t id,
-                                   SchedulerServerConnection* conn,
-                                   Application* app) {
-  worker_id_ = id;
-  connection_ = conn;
-  application_ = app;
-  is_alive_ = true;
-  handshake_done_ = false;
-  existing_bytes_ = 0;
-  read_buffer_ = new char[WORKER_BUFSIZE];
-}
+  private:
+    ID<worker_id_t> worker_id_;
+    std::string ip_;
+    ID<port_t> port_;
+};
 
-SchedulerWorker::~SchedulerWorker() {
-  delete connection_;
-  delete read_buffer_;
-}
-
-worker_id_t SchedulerWorker::worker_id() {
-  return worker_id_;
-}
-
-std::string SchedulerWorker::ip() {
-  return ip_;
-}
-
-void SchedulerWorker::set_ip(std::string ip) {
-  ip_ = ip;
-}
-
-port_t SchedulerWorker::port() {
-  return port_;
-}
-
-void SchedulerWorker::set_port(port_t port) {
-  port_ = port;
-}
-
-SchedulerServerConnection* SchedulerWorker::connection() {
-  return connection_;
-}
-
-Application* SchedulerWorker::application() {
-  return application_;
-}
-
-bool SchedulerWorker::is_alive() {
-  return is_alive_;
-}
-
-bool SchedulerWorker::handshake_done() {
-  return handshake_done_;
-}
-
-void SchedulerWorker::set_handshake_done(bool flag) {
-  handshake_done_ = flag;
-}
-
-void SchedulerWorker::MarkDead() {
-  is_alive_ = false;
-}
-
-char* SchedulerWorker::read_buffer() {
-  return read_buffer_;
-}
-
-uint32_t SchedulerWorker::existing_bytes() {
-  return existing_bytes_;
-}
-
-void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
-  existing_bytes_ = bytes;
-}
-
-uint32_t SchedulerWorker::read_buffer_length() {
-  return WORKER_BUFSIZE;
-}
 
 }  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_HANDSHAKE_COMMAND_H_

@@ -1,5 +1,5 @@
 
-all: check messages shared_t 
+all: check proto_t shared_t 
 
 NIMBUS_ROOT = ..
 include $(NIMBUS_ROOT)/Makeinclude
@@ -8,18 +8,21 @@ CFLAGS += -fPIC
 CFILES = $(wildcard *.cc) 
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
-PROTOCFILES = $(wildcard protobufs/*.cc)
-PROTOFILES = $(subst .cc,.o,$(PROTOCFILES))
 
-shared_t: $(OBJFILES) $(HFILES) $(PROTOFILES)
+PDIR_SOURCE = protobuf_source/
+PDIR_COMPILED = protobuf_compiled/
+PROTO_FILES = $(wildcard $(PDIR_SOURCE)*.proto)
+TEMP_OBJECT_FILES = $(subst .proto,.pb.o,$(PROTO_FILES))
+PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJECT_FILES))
 
-messages: 
-	mkdir -p protobufs
-	protoc --cpp_out=protobufs *.proto
+shared_t: $(OBJFILES) $(HFILES) $(PROTO_OBJECT_FILES)
+
+proto_t: 
+	cd $(PDIR_SOURCE); make; cd ..
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	\rm protobufs/*.pb.*
+	\rm -f $(PDIR_COMPILED)*.pb.*
 

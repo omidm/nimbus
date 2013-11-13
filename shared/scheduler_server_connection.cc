@@ -41,6 +41,7 @@
   */
 
 #include "shared/scheduler_server_connection.h"
+#include "shared/dbg.h"
 
 using boost::asio::ip::tcp;
 

@@ -44,7 +44,7 @@
 #include "./scheduler_single.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
-#include "shared/scheduler_command.h"
+#include "shared/scheduler_command_include.h"
 #include "shared/parser.h"
 
 int main(int argc, char *argv[]) {
