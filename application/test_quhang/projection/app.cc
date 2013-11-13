@@ -2,6 +2,7 @@
 #include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
 #include "projection_driver.h"
 #include "projection_example.h"
+#include "data_impl.h"
 #include "job_impl.h"
 #include "app.h"
 
@@ -16,6 +17,7 @@ void App::Load() {
   RegisterJob("finish", new Finish(this));
   // [TODO] Only dumb data for now.
   RegisterData("region", new ProfileData);
+  RegisterData("partial_norm", new PartialNorm(0));
 
   // Simulates parameter passing mechanism.
   // [TODO] Revise or delete.

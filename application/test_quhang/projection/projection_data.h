@@ -20,6 +20,7 @@ class ProjectionData {
   T tolerance;
 };
 
+// All data needed to run PCG.
 template<class TV>
 class ProjectionInternalData {
  private:
@@ -34,6 +35,7 @@ class ProjectionInternalData {
   int iteration;
   T residual;
   bool move_on;
+  double partial_norm;
 };
 }  // namespace PhysBAM
 
