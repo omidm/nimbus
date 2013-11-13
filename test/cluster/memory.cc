@@ -42,7 +42,7 @@
 #define DEBUG_MODE
 
 #include "shared/cluster.h"
-#include "shared/gdb.h"
+#include "shared/dbg.h"
 
 int main(int argc, char *argv[]) {}
 
