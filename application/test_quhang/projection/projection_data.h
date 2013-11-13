@@ -20,6 +20,7 @@ class ProjectionData {
   T tolerance;
 };
 
+// All data needed to run PCG.
 template<class TV>
 class ProjectionInternalData {
  private:

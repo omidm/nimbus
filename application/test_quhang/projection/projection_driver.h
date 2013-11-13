@@ -14,8 +14,7 @@ template<class TV> class PROJECTION_EXAMPLE;
 template<class T_GRID> class NIMBUS_PCG_SPARSE_MPI;
 
 template<class TV>
-class PROJECTION_DRIVER
-{
+class PROJECTION_DRIVER {
  public:
   typedef typename TV::SCALAR T;
   typedef typename TV::template REBIND<int>::TYPE TV_INT;

@@ -53,11 +53,12 @@ namespace water_app_data {
     } // namespace
 
     template <class TV> FaceArray<TV>::
-        FaceArray(::nimbus::GeometricRegion &region) :
+        FaceArray(::nimbus::GeometricRegion &region, bool lor) :
             SimData(region),
             grid_(0),
             data_(0),
-            size_(region.dx(), region.dy()) {};
+            size_(region.dx(), region.dy()),
+            left_or_right(lor){};
 
     template <class TV> void FaceArray<TV>::
         Create() {
@@ -84,7 +85,7 @@ namespace water_app_data {
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         Clone() {
             std::cout << "Cloning facearray\n";
-            return new FaceArray<TV>(*region());
+            return (new FaceArray<TV>(*region(), left_or_right));
         }
 
     template <class TV> int FaceArray<TV>::
@@ -147,7 +148,7 @@ namespace water_app_data {
 
     template <class TV> void FaceArray<TV>::
         Glue_Face_Array(
-                T_FACE_ARRAY* from,
+                T_FACE_ARRAY* result,
                 T_BOX *box) {
             TV_INT i, j;
             for (int axis = 1; axis <= 2; axis++) {
@@ -157,72 +158,35 @@ namespace water_app_data {
                         i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
                     for(j.y = 1, i.y = box->min_corner.y;
                             i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
-                        (*(data_))(axis, i) = (*(from))(axis, j);
+                        (*(result))(axis, i) = (*(data_))(axis, j);
                     }
                 }
             }
         }
 
-    /* This needs the center region right now due to the way it is
-     * implemented. */
     template <class TV> void FaceArray<TV>::
         Glue_Regions(
                 T_FACE_ARRAY* result,
-                std::vector<FaceArray * > *parts,
-                int bandwidth,
-                int offset = 0) {
-//            TV_INT min_corner, max_corner;
-//            T_BOX box;
-//            TV_INT max_d = result->domain_indices.Maximum_Corner() - offset;
-//            TV_INT min_d = result->domain_indices.Minimum_Corner() + offset;
-//            int len_x = max_d.x - min_d.x + 1;
-//            int len_y = max_d.y - min_d.y + 1;
-//            unsigned int parts_num = parts->size();
-//            for (unsigned int i = 0; i < parts_num; i++)
-//            {
-//                FaceArray *part = (*parts)[i];
-//                switch(part->region())
-//                {
-//                    case ::application::kDataInBottomLeft:
-//                        box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-//                        break;
-//                    case ::application::kDataInBottomRight:
-//                        box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-//                        break;
-//                    case ::application::kDataInUpperLeft:
-//                        box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-//                        break;
-//                    case ::application::kDataInUpperRight:
-//                        box = T_BOX(
-//                                len_x+1,
-//                                len_x+bandwidth,
-//                                len_y+1,
-//                                len_y+bandwidth);
-//                        break;
-//                    case ::application::kDataInBottom:
-//                        box = T_BOX(1, len_x, 1-bandwidth, 0);
-//                        break;
-//                    case ::application::kDataInLeft:
-//                        box = T_BOX(1-bandwidth, 0, 1, len_y);
-//                        break;
-//                    case ::application::kDataInRight:
-//                        box = T_BOX(
-//                                len_x+1,
-//                                len_x+bandwidth,
-//                                1,
-//                                len_y);
-//                        break;
-//                    case ::application::kDataInUpper:
-//                        box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
-//                        break;
-//                    case ::application::kDataInterior:
-//                        box = T_BOX(1, len_x, 1, len_y);
-//                        break;
-//                    default:
-//                        break;
-//                }
-//                part->Glue_Face_Array(result, &box);
-//            }
+                std::vector<FaceArray * > &parts,
+                ::nimbus::GeometricRegion &region,
+                int o_x = 0,
+                int o_y = 0) {
+            T_BOX box;
+            unsigned int parts_num = parts.size();
+            for (unsigned int i = 0; i < parts_num; i++)
+            {
+                FaceArray *part = parts[i];
+                ::nimbus::GeometricRegion *r = part->region();
+                // allow copy from only covered regions
+                if (region.Covers(r)) {
+                    box = T_BOX(
+                            r->x() + o_x,
+                            r->x()+r->dx()-1 + o_x,
+                            r->y() + o_y,
+                            r->y()+r->dy()-1 + o_y);
+                    part->Glue_Face_Array(result, &box);
+                }
+            }
         }
 
     template <class TV> void FaceArray<TV>::
@@ -235,72 +199,35 @@ namespace water_app_data {
                         i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
                     for(j.y = 1, i.y = box->min_corner.y;
                             i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
-                        (*(data_))(axis, j) = (*(from))(axis, j);
+                        (*(data_))(axis, j) = (*(from))(axis, i);
                     }
                 }
             }
         }
 
-    /* This needs the center region right now due to the way it is
-     * implemented. */
     template <class TV> void FaceArray<TV>::
         Update_Regions(
                 T_FACE_ARRAY* updated,
-                std::vector<FaceArray* > *parts,
-                int bandwidth,
-                int offset = 0) {
-//            TV_INT min_corner, max_corner;
-//            T_BOX box;
-//            TV_INT max_d = updated->domain_indices.Maximum_Corner() - offset;
-//            TV_INT min_d = updated->domain_indices.Minimum_Corner() + offset;
-//            int len_x = max_d.x - min_d.x + 1;
-//            int len_y = max_d.y - min_d.y + 1;
-//            unsigned int parts_num = parts->size();
-//            for (unsigned int i = 0; i < parts_num; i++)
-//            {
-//                FaceArray *part = (*parts)[i];
-//                switch(part->region())
-//                {
-//                    case ::application::kDataInBottomLeft:
-//                        box = T_BOX(1-bandwidth, 0, 1-bandwidth, 0);
-//                        break;
-//                    case ::application::kDataInBottomRight:
-//                        box = T_BOX(len_x+1, len_x+bandwidth, 1-bandwidth, 0);
-//                        break;
-//                    case ::application::kDataInUpperLeft:
-//                        box = T_BOX(1-bandwidth, 0, len_y+1, len_y+bandwidth);
-//                        break;
-//                    case ::application::kDataInUpperRight:
-//                        box = T_BOX(
-//                                len_x+1,
-//                                len_x+bandwidth,
-//                                len_y+1,
-//                                len_y+bandwidth);
-//                        break;
-//                    case ::application::kDataInBottom:
-//                        box = T_BOX(1, len_x, 1-bandwidth, 0);
-//                        break;
-//                    case ::application::kDataInLeft:
-//                        box = T_BOX(1-bandwidth, 0, 1, len_y);
-//                        break;
-//                    case ::application::kDataInRight:
-//                        box = T_BOX(
-//                                len_x+1,
-//                                len_x+bandwidth,
-//                                1,
-//                                len_y);
-//                        break;
-//                    case ::application::kDataInUpper:
-//                        box = T_BOX(1, len_x, len_y+1, len_y+bandwidth);
-//                        break;
-//                    case ::application::kDataInterior:
-//                        box = T_BOX(1, len_x, 1, len_y);
-//                        break;
-//                    default:
-//                        break;
-//                }
-//                part->Update_Face_Array(updated, &box);
-//            }
+                std::vector<FaceArray* > &parts,
+                ::nimbus::GeometricRegion &region,
+                int o_x = 0,
+                int o_y = 0) {
+            T_BOX box;
+            unsigned int parts_num = parts.size();
+            for (unsigned int i = 0; i < parts_num; i++)
+            {
+                FaceArray *part = parts[i];
+                ::nimbus::GeometricRegion *r = part->region();
+                // allow update to only covered regions
+                if (region.Covers(r)) {
+                    box = T_BOX(
+                            r->x() + o_x,
+                            r->x()+r->dx()-1 + o_x,
+                            r->y() + o_y,
+                            r->y()+r->dy()-1 + o_y);
+                    part->Update_Face_Array(updated, &box);
+                }
+            }
         }
 
     template class ::water_app_data::FaceArray<TVF2>;
