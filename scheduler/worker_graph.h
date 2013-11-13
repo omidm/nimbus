@@ -48,7 +48,7 @@
 #include <vector>
 #include "shared/nimbus_types.h"
 #include "shared/cluster.h"
-#include "shared/protobufs/workergraphmessage.pb.h"
+#include "shared/protobuf_compiled/workergraphmessage.pb.h"
 #include "scheduler/scheduler_worker.h"
 
 namespace nimbus {

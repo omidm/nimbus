@@ -12,11 +12,18 @@ SCHED_CFILES  = $(wildcard scheduler/*.cc)
 WORKER_CFILES = $(wildcard worker/*.cc)
 DATA_CFILES   = $(wildcard data/*.cc)
 SHARED_CFILES = $(wildcard shared/*.cc)
-SHARED_BUF_CFILES = $(wildcard shared/protobufs/*.cc)
-CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES) $(SHARED_BUF_CFILES)
 
+CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES) $(SHARED_BUF_CFILES)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
+
+
+SHARED_PROTO_FILES = $(wildcard shared/protobuf_source/*.proto)
+TEMP = $(subst .proto,.pb.o,$(SHARED_PROTO_FILES))
+SHARED_PROTO_OBJECT_FILES = $(subst shared/protobuf_source,shared/protobuf_compiled,$(TEMP))
+OBJFILES += $(SHARED_PROTO_OBJECT_FILES)
+
+
 LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf
 SHARED_FLAGS = -shared -fPIC
 
