@@ -40,6 +40,7 @@
   */
 
 #include "scheduler/scheduler_worker.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 

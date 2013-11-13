@@ -44,8 +44,6 @@
 
 #include <list>
 #include <string>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
 #include "shared/scheduler_server_connection.h"
 
 namespace nimbus {

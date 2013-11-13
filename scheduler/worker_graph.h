@@ -48,7 +48,7 @@
 #include <vector>
 #include "shared/nimbus_types.h"
 #include "shared/cluster.h"
-#include "shared/protobufs/workergraphmessage.pb.h"
+#include "shared/protobuf_compiled/workergraphmessage.pb.h"
 #include "scheduler/scheduler_worker.h"
 
 namespace nimbus {
@@ -82,6 +82,12 @@ namespace nimbus {
     ClusterMap cluster_map_;
     SchedulerWorkerTable worker_table_;
     ComputerTable computer_table_;
+
+    bool ProcessWorkerRegisterMessage(const WorkerRegisterMessage& msg);
+    bool ProcessSwitchRegisterMessage(const SwitchRegisterMessage& msg);
+    bool ProcessWorkerLinkMessage(const WorkerLinkMessage& msg);
+    bool ProcessSwitchLinkMessage(const SwitchLinkMessage& msg);
+    bool ProcessUpdateMessage(const UpdateMessage& msg);
   };
 
 }  // namespace nimbus
