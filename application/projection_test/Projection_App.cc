@@ -35,6 +35,8 @@
  * Author: Zhihao Jia <zhihao@stanford.edu>
  */
 
+#include "Projection_App.h"
+
 ProjectionApp::ProjectionApp() {
 };
 
@@ -62,27 +64,129 @@ void ProjectionApp::Load() {
 
 Main::Main(Application *app) {
 	set_application(app);
-}
-;
+};
 
 Job* Main::Clone() {
 	printf("Cloning main job\n");
 	return new Main(application());
-}
-;
+};
 
 void Main::Execute(Parameter params, const DataArray& da) {
 	printf("Begin main\n");
 	std::vector<job_id_t> j;
-	std::vector<data_id_t> d;
-	IDSet<data_id_t> read, write;
+	std::vector<logical_data_id_t> d;
+	IDSet<logical_data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	partition_id_t pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
-	GetNewDataID(&d, NUM_OF_FORLOOP_INPUTS);
+	GetNewLogicalDataID(&d, NUM_OF_FORLOOP_INPUTS);
+
+	GetNewJobID(&j, 3);
+	
+	// Proj_Initialize, pid = 1
+	before.clear();
+	after.clear();
+	after.insert(j[1]);
+	read.clear();
+	write.clear();
+	SpawnComputeJob("Proj_Initialize", j[0], read, write, before, after, par);
+
+    for (int i = 1; i <= example.last_frame; i++) {
+        before.clear();
+        before.insert(j[i-1]);
+        after.clear();
+        after.insert(j[i+1]);
+        read.clear();
+        write.clear();
+        SpwanComputeJob("Proj_AdvanceOneTime", j[i], read, write, before, after, par);
+    }
+
+	printf("Completed main\n");
+};
+
+Proj_Initialize::Proj_Initialize(Application *app) {
+	set_application(app);
+};
+
+Job* Proj_Initialize::Clone() {
+	printf("Cloning Proj_Initialize job\n");
+	return new Proj_Initialize(application());
+};
+
+void Proj_Initialize::Execute(Parameter params, const DataArray& da) {
+	printf("Begin Proj_Initialize\n");
+
+    // setup time
+    if(example.restart) current_frame=example.restart;else current_frame=example.first_frame;
+    time=example.Time_At_Frame(current_frame);
+
+    // will map mpi_grid into Nimbus job dependency
+    if(example.mpi_grid) example.mpi_grid->Initialize(example.domain_boundary);
+    example.projection.elliptic_solver->mpi_grid=example.mpi_grid;
+    if(example.mpi_grid) example.boundary=new BOUNDARY_MPI<GRID<TV>,T>(example.mpi_grid,example.boundary_scalar);
+    else example.boundary=&example.boundary_scalar;
+
+    // setup grids and velocities
+    example.projection.Initialize_Grid(example.mac_grid);
+    example.face_velocities.Resize(example.mac_grid);
+    example.Initialize_Fields();
+
+    // setup laplace
+    example.projection.elliptic_solver->Set_Relative_Tolerance(1e-11);
+    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(200);
+    example.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
+    example.projection.elliptic_solver->pcg.cg_restart_iterations=40;
+
+    if(example.restart) example.Read_Output_Files(example.restart);
+
+    // setup domain boundaries
+    VECTOR<VECTOR<bool,2>,TV::dimension> constant_extrapolation;constant_extrapolation.Fill(VECTOR<bool,2>::Constant_Vector(true));
+    example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
+    example.Set_Boundary_Conditions(time); // get so CFL is correct
+
+	printf("Completed Proj_Initialize\n");
+};
+
+Proj_AdvanceOnTime::Proj_AdvanceOnTime(Application *app) {
+	set_application(app);
+};
+
+Job* Proj_AdvanceOnTime::Clone() {
+	printf("Cloning Proj_AdvanceOnTime job\n");
+	return new Proj_AdvanceOnTime(application());
+};
+
+void Proj_AdvanceOnTime::Execute(Parameter params, const DataArray& da) {
+	printf("Begin Proj_AdvanceOnTime\n");
+
+
+	printf("Completed Proj_AdvanceOnTime\n");
+};
+
+Proj_MainProjection::Proj_MainProjection(Application *app) {
+	set_application(app);
+};
+
+Job* Proj_MainProjection::Clone() {
+	printf("Cloning Proj_MainProjection job\n");
+	return new Proj_MainProjection(application());
+};
+
+void Proj_MainProjection::Execute(Parameter params, const DataArray& da) {
+	printf("Begin Proj_MainProjection\n");
+	std::vector<job_id_t> j;
+	std::vector<logical_data_id_t> d;
+	IDSet<logical_data_id_t> read, write;
+	IDSet<job_id_t> before, after;
+	IDSet<partition_id_t> neighbor_partitions;
+	partition_id_t pid1 = 1, pid2 = 2;
+	Parameter par;
+	IDSet<param_id_t> param_idset;
+
+	GetNewLogicalDataID(&d, NUM_OF_FORLOOP_INPUTS);
 	DefineData("scalar", d[0], pid1, neighbor_partitions, par); // residual
 	DefineData("matrix", d[1], pid1, neighbor_partitions, par); // A_pid1
 	DefineData("matrix", d[2], pid2, neighbor_partitions, par); // A_pid2
@@ -95,7 +199,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	assert(8 == NUM_OF_FORLOOP_INPUTS -1);
 
 	GetNewJobID(&j, 3);
-	
+
 	// Init, pid = 1
 	before.clear();
 	after.clear();
@@ -106,7 +210,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	write.insert(d[3]);
 	write.insert(d[5]);
 	SpawnComputeJob("Init", j[0], read, write, before, after, par);
-	
+
 	// Init, pid = 2
 	before.clear();
 	after.clear();
@@ -117,7 +221,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	write.insert(d[4]);
 	write.insert(d[6]);
 	SpawnComputeJob("Init", j[1], read, write, before, after, par);
-	
+
 	// Porject_Forloop_Condition
 	before.clear();
 	before.insert(j[0]);
@@ -132,5 +236,5 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	par.set_idset(param_idset);
 	SpawnComputeJob("Project_Forloop_Condition", j[2], read, write, before, after, par);
 
-	printf("Completed main\n");
+	printf("Completed Proj_MainProjection\n");
 };
