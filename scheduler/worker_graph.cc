@@ -40,6 +40,7 @@
  ***********************************************************************/
 #include "scheduler/worker_graph.h"
 
+namespace nimbus {
 /**
  * \fn nimbus::WorkerGraph::WorkerGraph()
  * \brief Brief description.
@@ -121,7 +122,62 @@ int nimbus::WorkerGraph::AllWorkers(WorkerIdVector *dest) {
  * \return
 */
 bool nimbus::WorkerGraph::ProcessMessage(WorkerGraphMessage *message) {
-  return true;
+  switch (message->type()) {
+  case WorkerGraphMessage::WORKER_REGISTER:
+    if (!message->has_worker_register()) {
+      dbg(DBG_ERROR, "Malformed worker graph message received: WORKER_REGISTER message with no worker_register field.\n");  // NOLINT
+      return false;
+    } else {
+      const WorkerRegisterMessage& msg = message->worker_register();
+      return ProcessWorkerRegisterMessage(msg);
+    }
+
+  case WorkerGraphMessage::SWITCH_REGISTER:
+    if (!message->has_switch_register()) {
+      dbg(DBG_ERROR, "Malformed worker graph message received: SWITCH_REGISTER message with no switch_register field.\n");  // NOLINT
+      return false;
+    } else {
+      const SwitchRegisterMessage& msg = message->switch_register();
+      return ProcessSwitchRegisterMessage(msg);
+    }
+
+  case WorkerGraphMessage::WORKER_LINK:
+    if (!message->has_worker_link()) {
+      dbg(DBG_ERROR, "Malformed worker graph message received: WORKER_LINK message with no worker_link field.\n");  // NOLINT
+      return false;
+    } else {
+      const WorkerLinkMessage& msg = message->worker_link();
+      return ProcessWorkerLinkMessage(msg);
+    }
+
+  case WorkerGraphMessage::SWITCH_LINK:
+    if (!message->has_switch_link()) {
+      dbg(DBG_ERROR, "Malformed worker graph message received: SWITCH_LINK message with no switch_link field.\n");  // NOLINT
+      return false;
+    } else {
+      const SwitchLinkMessage& msg = message->switch_link();
+      return ProcessSwitchLinkMessage(msg);
+    }
+
+    break;
+  case WorkerGraphMessage::UPDATE:
+    if (!message->has_update()) {
+      dbg(DBG_ERROR, "Malformed worker graph message received: UPDATE message with no update field.\n");  // NOLINT
+      return false;
+    } else {
+      const UpdateMessage& msg = message->update();
+      return ProcessUpdateMessage(msg);
+    }
+
+  case WorkerGraphMessage::INVALID:
+    dbg(DBG_ERROR, "Malformed worker graph message received: INVALID type.\n");
+    return false;
+
+  default:
+    dbg(DBG_ERROR, "Malformed worker graph message received: unrecognized type %i.\n", (int)message->type());  // NOLINT
+    return false;
+  }
+  return false;
 }
 
 
@@ -178,6 +234,71 @@ uint32_t nimbus::WorkerGraph::InterComputerMbps(worker_id_t src,
  * \return
 */
 uint32_t nimbus::WorkerGraph::InterComputerMicroSec(worker_id_t src,
-                                           worker_id_t dest) {
+                                                    worker_id_t dest) {
   return 0;
 }
+/**
+ * \fn bool nimbus::WorkerGraph::ProcessWorkerRegisterMessage(WorkerRegisterMessage &msg)
+ * \brief Brief description.
+ * \param msg
+ * \return
+ message WorkerRegisterMessage {
+  required fixed32 ipv4      = 1;
+  required uint32 worker_id  = 2;
+  required uint32 cores      = 3 [default = 0];
+  required uint32 core_clock = 4 [default = 0];
+  required uint64 memory     = 5 [default = 0];
+  required uint32 mbps       = 6 [default = 0];
+}
+*/
+bool nimbus::WorkerGraph::ProcessWorkerRegisterMessage(const WorkerRegisterMessage& msg) {
+  return true;
+}
+
+
+/**
+ * \fn bool nimbus::WorkerGraph::ProcessSwitchRegisterMessage(SwitchRegisterMessage &msg)
+ * \brief Brief description.
+ * \param msg
+ * \return
+*/
+bool nimbus::WorkerGraph::ProcessSwitchRegisterMessage(const SwitchRegisterMessage& msg) {
+  return true;
+}
+
+
+
+/**
+ * \fn bool nimbus::WorkerGraph::ProcessWorkerLinkMessage(WorkerLinkMessage &msg)
+ * \brief Brief description.
+ * \param msg
+ * \return
+*/
+bool nimbus::WorkerGraph::ProcessWorkerLinkMessage(const WorkerLinkMessage& msg) {
+  return true;
+}
+
+
+/**
+ * \fn bool nimbus::WorkerGraph::ProcessSwitchLinkMessage(SwitchLinkMessage &msg)
+ * \brief Brief description.
+ * \param msg
+ * \return
+*/
+bool nimbus::WorkerGraph::ProcessSwitchLinkMessage(const SwitchLinkMessage& msg) {
+  return true;
+}
+
+
+/**
+ * \fn bool nimbus::WorkerGraph::ProcessUpdateMessage(UpdateMessage &msg)
+ * \brief Brief description.
+ * \param msg
+ * \return
+*/
+bool nimbus::WorkerGraph::ProcessUpdateMessage(const UpdateMessage& msg) {
+  return true;
+}
+
+
+}  // namespace nimbus

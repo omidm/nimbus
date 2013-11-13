@@ -33,62 +33,33 @@
  */
 
  /*
-  * Scheduler abstraction of a worker.
+  * This file tests whether the Logical Data Object Index is working
+  * properly.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+#define DEBUG_MODE
 
-#include <list>
-#include <string>
-#include "shared/scheduler_server_connection.h"
+#include <iostream> // NOLINT
+#include "shared/geometric_region.h"
+#include "shared/logical_data_object.h"
+#include "shared/ldo_index.h"
 
-namespace nimbus {
+using namespace nimbus;  // NOLINT
 
-class Application;
+int main(int argc, char *argv[]) {
+  LdoIndex index;
 
-class SchedulerWorker {
- public:
-  SchedulerWorker(worker_id_t id,
-                  SchedulerServerConnection* conn,
-                  Application* app);
-  virtual ~SchedulerWorker();
+  for (int i = 0; i < 100; i++) {
+    std::string str = "pressure";
+    GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
+                                                 lrand48(), lrand48(),
+                                                 lrand48(), lrand48());
+    LogicalDataObject* obj = new LogicalDataObject(i, str, region);
 
-  virtual worker_id_t worker_id();
-  virtual std::string ip();
-  virtual void set_ip(std::string ip);
-  virtual port_t port();
-  virtual void set_port(port_t port);
-  virtual SchedulerServerConnection* connection();
-  virtual Application* application();
-  virtual bool is_alive();
-  virtual bool handshake_done();
-  virtual void set_handshake_done(bool flag);
-  virtual void MarkDead();
-  virtual char* read_buffer();
-  virtual uint32_t existing_bytes();
-  virtual void set_existing_bytes(uint32_t bytes);
-  virtual uint32_t read_buffer_length();
-
- private:
-  worker_id_t worker_id_;
-  std::string ip_;
-  port_t port_;
-  SchedulerServerConnection* connection_;
-  Application* application_;
-  bool is_alive_;
-  bool handshake_done_;
-  char* read_buffer_;
-  // How many bytes in the read buffer are valid before
-  // a read.
-  uint32_t existing_bytes_;
-};
-
-typedef std::list<SchedulerWorker*> SchedulerWorkerList;
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_WORKER_H_
+    index.AddObject(obj);
+    index.RemoveObject(i);
+    delete obj;
+  }
+}

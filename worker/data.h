@@ -89,7 +89,6 @@ class Data {
   physical_data_id_t physical_id_;
   partition_id_t partition_id_;
   bool advanceData_;
-  Hosts hosts_;
 
   // Set of data ids that could be involved in SYNC jobs with this data.
   IDSet<logical_data_id_t> neighbors_;
