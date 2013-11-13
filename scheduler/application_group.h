@@ -33,94 +33,21 @@
  */
 
  /*
-  * A Nimbus scheduler's abstraction of a worker.
+  * Applicationgroup seen from scheduler point of view, used to relate the
+  * workers from the same application.
   *
-  * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_worker.h"
-#include "shared/dbg.h"
+#ifndef NIMBUS_SCHEDULER_APPLICATION_GROUP_H_
+#define NIMBUS_SCHEDULER_APPLICATION_GROUP_H_
 
 namespace nimbus {
-
-#define WORKER_BUFSIZE 10240
-
-SchedulerWorker::SchedulerWorker(worker_id_t id,
-                                   SchedulerServerConnection* conn,
-                                   ApplicationGroup* app) {
-  worker_id_ = id;
-  connection_ = conn;
-  application_ = app;
-  is_alive_ = true;
-  handshake_done_ = false;
-  existing_bytes_ = 0;
-  read_buffer_ = new char[WORKER_BUFSIZE];
-}
-
-SchedulerWorker::~SchedulerWorker() {
-  delete connection_;
-  delete read_buffer_;
-}
-
-worker_id_t SchedulerWorker::worker_id() {
-  return worker_id_;
-}
-
-std::string SchedulerWorker::ip() {
-  return ip_;
-}
-
-void SchedulerWorker::set_ip(std::string ip) {
-  ip_ = ip;
-}
-
-port_t SchedulerWorker::port() {
-  return port_;
-}
-
-void SchedulerWorker::set_port(port_t port) {
-  port_ = port;
-}
-
-SchedulerServerConnection* SchedulerWorker::connection() {
-  return connection_;
-}
-
-ApplicationGroup* SchedulerWorker::application() {
-  return application_;
-}
-
-bool SchedulerWorker::is_alive() {
-  return is_alive_;
-}
-
-bool SchedulerWorker::handshake_done() {
-  return handshake_done_;
-}
-
-void SchedulerWorker::set_handshake_done(bool flag) {
-  handshake_done_ = flag;
-}
-
-void SchedulerWorker::MarkDead() {
-  is_alive_ = false;
-}
-
-char* SchedulerWorker::read_buffer() {
-  return read_buffer_;
-}
-
-uint32_t SchedulerWorker::existing_bytes() {
-  return existing_bytes_;
-}
-
-void SchedulerWorker::set_existing_bytes(uint32_t bytes) {
-  existing_bytes_ = bytes;
-}
-
-uint32_t SchedulerWorker::read_buffer_length() {
-  return WORKER_BUFSIZE;
-}
+class ApplicationGroup {
+  public:
+    ApplicationGroup();
+    virtual ~ApplicationGroup();
+};
 
 }  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_APPLICATION_GROUP_H_
