@@ -105,6 +105,20 @@ GeometricRegion::GeometricRegion(const std::string& data) {
   fillInValues(&msg);
 }
 
+void GeometricRegion::Rebuild(int_dimension_t x,
+                                 int_dimension_t y,
+                                 int_dimension_t z,
+                                 int_dimension_t dx,
+                                 int_dimension_t dy,
+                                 int_dimension_t dz) {
+  x_ = x;
+  y_ = y;
+  z_ = z;
+  dx_ = dx;
+  dy_ = dy;
+  dz_ = dz;
+}
+
 void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
   msg->set_x(x_);
   msg->set_y(y_);

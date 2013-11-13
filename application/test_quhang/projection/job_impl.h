@@ -2,6 +2,7 @@
 #define __JOB_IMPL__
 
 #include "shared/nimbus.h"
+using nimbus::Application;
 using nimbus::Data;
 using nimbus::Job;
 
