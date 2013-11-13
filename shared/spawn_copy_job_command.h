@@ -32,27 +32,50 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Spawn copy job command used to send copy jobs to the scheduler from worker.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_SPAWN_COPY_JOB_COMMAND_H_
+#define NIMBUS_SHARED_SPAWN_COPY_JOB_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
 
+namespace nimbus {
+class SpawnCopyJobCommand : public SchedulerCommand {
+  public:
+    SpawnCopyJobCommand();
+    SpawnCopyJobCommand(const ID<job_id_t>& job_id,
+        const ID<logical_data_id_t>& from_logical_id,
+        const ID<logical_data_id_t>& to_logical_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        const Parameter& params);
+    ~SpawnCopyJobCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
+    ID<logical_data_id_t> from_logical_id();
+    ID<logical_data_id_t> to_logical_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+    Parameter params();
+
+  private:
+    ID<job_id_t> job_id_;
+    ID<logical_data_id_t> from_logical_id_;
+    ID<logical_data_id_t> to_logical_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    Parameter params_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_SPAWN_COPY_JOB_COMMAND_H_

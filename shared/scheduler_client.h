@@ -50,7 +50,7 @@
 #include <iostream>  // NOLINT
 #include "shared/dbg.h"
 #include "shared/parser.h"
-#include "shared/scheduler_command.h"
+#include "shared/scheduler_command_include.h"
 
 namespace nimbus {
 

@@ -32,27 +32,51 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Create data command to create physical instances of logical data on the
+  * worker.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_CREATE_DATA_COMMAND_H_
+#define NIMBUS_SHARED_CREATE_DATA_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
 
+namespace nimbus {
+class CreateDataCommand : public SchedulerCommand {
+  public:
+    CreateDataCommand();
+    CreateDataCommand(const ID<job_id_t>& job_id,
+        const std::string& data_name,
+        const ID<logical_data_id_t>& logical_data_id,
+        const ID<physical_data_id_t>& physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+    ~CreateDataCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<job_id_t> job_id();
+    std::string data_name();
+    ID<logical_data_id_t> logical_data_id();
+    ID<physical_data_id_t> physical_data_id();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+
+  private:
+    ID<job_id_t> job_id_;
+    std::string data_name_;
+    ID<logical_data_id_t> logical_data_id_;
+    ID<physical_data_id_t> physical_data_id_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_CREATE_DATA_COMMAND_H_

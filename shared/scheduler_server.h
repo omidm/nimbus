@@ -49,7 +49,7 @@
 #include <map>
 #include "shared/nimbus_types.h"
 #include "shared/parser.h"
-#include "shared/scheduler_command.h"
+#include "shared/scheduler_command_include.h"
 #include "shared/scheduler_server_connection.h"
 #include "scheduler/scheduler_worker.h"
 

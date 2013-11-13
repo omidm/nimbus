@@ -32,27 +32,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Define partition command to define a geometrical region from application
+  * point of view.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_DEFINE_PARTITION_COMMAND_H_
+#define NIMBUS_SHARED_DEFINE_PARTITION_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
 
+namespace nimbus {
+class DefinePartitionCommand : public SchedulerCommand {
+  public:
+    DefinePartitionCommand();
+    DefinePartitionCommand(const ID<partition_id_t>& partition_id,
+        const GeometricRegion& r,
+        const Parameter& params);
+    ~DefinePartitionCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+
+    ID<partition_id_t> partition_id();
+    const GeometricRegion* region();
+    Parameter params();
+
+  private:
+    ID<partition_id_t> id_;
+    GeometricRegion region_;
+    Parameter params_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_DEFINE_PARTITION_COMMAND_H_

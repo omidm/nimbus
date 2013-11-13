@@ -32,27 +32,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Handshake command used to stablish connection between scheduler and worker
+  * when worker initially joins the network. Scheduler registers the worker and
+  * assigns unique worker id to the worker.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_HANDSHAKE_COMMAND_H_
+#define NIMBUS_SHARED_HANDSHAKE_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
+
+namespace nimbus {
+class HandshakeCommand : public SchedulerCommand {
+  public:
+    HandshakeCommand();
+    explicit HandshakeCommand(const ID<worker_id_t>& worker_id,
+        const std::string& ip, const ID<port_t>& port);
+    ~HandshakeCommand();
+
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<worker_id_t> worker_id();
+    std::string ip();
+    ID<port_t> port();
+
+  private:
+    ID<worker_id_t> worker_id_;
+    std::string ip_;
+    ID<port_t> port_;
+};
 
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_HANDSHAKE_COMMAND_H_

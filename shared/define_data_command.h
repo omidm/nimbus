@@ -32,27 +32,51 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Define data command to define a logical region from the application point
+  * of view.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_
+#define NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
+
+namespace nimbus {
+
+class DefineDataCommand : public SchedulerCommand {
+  public:
+    DefineDataCommand();
+    DefineDataCommand(const std::string& data_name,
+                      const ID<logical_data_id_t>& logical_data_id,
+                      const ID<partition_id_t>& partition_id,
+                      const IDSet<partition_id_t>& neighbor_partition,
+                      const Parameter& params);
+    ~DefineDataCommand();
+
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    std::string data_name();
+    ID<logical_data_id_t> logical_data_id();
+    ID<partition_id_t> partition_id();
+    IDSet<partition_id_t> neighbor_partitions();
+    Parameter params();
+
+  private:
+    std::string data_name_;
+    ID<logical_data_id_t> logical_data_id_;
+    ID<partition_id_t> partition_id_;
+    IDSet<partition_id_t> neighbor_partitions_;
+    Parameter params_;
+};
 
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_

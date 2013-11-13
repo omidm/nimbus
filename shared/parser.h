@@ -54,7 +54,7 @@
 #include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
-#include "shared/scheduler_command.h"
+#include "shared/scheduler_command_include.h"
 #include "shared/escaper.h"
 #include "shared/parameter.h"
 #include "shared/nimbus_types.h"
