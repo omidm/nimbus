@@ -265,7 +265,7 @@ void SimpleScheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) 
 void SimpleScheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
   SchedulerCommand* comm = new SpawnCopyJobCommand(cm->job_id(),
       cm->from_logical_id(), cm->to_logical_id(), cm->before_set(), cm->after_set(),
-      cm->params());
+      cm->parent_job_id(), cm->params());
   pending_copy_jobs_.push_back(comm);
 }
 
