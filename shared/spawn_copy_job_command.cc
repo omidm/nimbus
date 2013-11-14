@@ -53,11 +53,13 @@ SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
     const ID<logical_data_id_t>& from_logical_id,
     const ID<logical_data_id_t>& to_logical_id,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    const ID<job_id_t>& parent_job_id,
     const Parameter& params)
 : job_id_(job_id),
   from_logical_id_(from_logical_id),
   to_logical_id_(to_logical_id),
   before_set_(before), after_set_(after),
+  parent_job_id_(parent_job_id),
   params_(params) {
   name_ = SPAWN_COPY_JOB_NAME;
   type_ = SPAWN_COPY_JOB;
@@ -71,7 +73,7 @@ SchedulerCommand* SpawnCopyJobCommand::Clone() {
 }
 
 bool SpawnCopyJobCommand::Parse(const std::string& params) {
-  int num = 6;
+  int num = 7;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -121,6 +123,12 @@ bool SpawnCopyJobCommand::Parse(const std::string& params) {
   }
 
   iter++;
+  if (!parent_job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
+    return false;
+  }
+
+  iter++;
   if (!params_.Parse(*iter)) {
     std::cout << "ERROR: Could not detect valid parameter." << std::endl;
     return false;
@@ -138,6 +146,7 @@ std::string SpawnCopyJobCommand::toString() {
   str += (to_logical_id_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
+  str += (parent_job_id_.toString() + " ");
   str += params_.toString();
 
   return str;
@@ -151,12 +160,17 @@ std::string SpawnCopyJobCommand::toStringWTags() {
   str += ("to-logical:" + to_logical_id_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
+  str += ("parent-id:" + parent_job_id_.toString() + " ");
   str += ("params:" + params_.toString());
   return str;
 }
 
 ID<job_id_t> SpawnCopyJobCommand::job_id() {
   return job_id_;
+}
+
+ID<job_id_t> SpawnCopyJobCommand::parent_job_id() {
+  return parent_job_id_;
 }
 
 ID<logical_data_id_t> SpawnCopyJobCommand::from_logical_id() {

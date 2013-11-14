@@ -33,53 +33,19 @@
  */
 
  /*
-  * Define data command to define a logical region from the application point
-  * of view.
+  * Applicationgroup seen from scheduler point of view, used to relate the
+  * workers from the same application.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_
-#define NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_
+#include "scheduler/application_group.h"
 
+using namespace nimbus; // NOLINT
 
-#include <string>
-#include "shared/scheduler_command.h"
+ApplicationGroup::ApplicationGroup() {
+}
 
-namespace nimbus {
+ApplicationGroup::~ApplicationGroup() {
+}
 
-class DefineDataCommand : public SchedulerCommand {
-  public:
-    DefineDataCommand();
-    DefineDataCommand(const std::string& data_name,
-                      const ID<logical_data_id_t>& logical_data_id,
-                      const ID<partition_id_t>& partition_id,
-                      const IDSet<partition_id_t>& neighbor_partition,
-                      const ID<job_id_t>& parent_job_id,
-                      const Parameter& params);
-    ~DefineDataCommand();
-
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    std::string data_name();
-    ID<logical_data_id_t> logical_data_id();
-    ID<partition_id_t> partition_id();
-    IDSet<partition_id_t> neighbor_partitions();
-    ID<job_id_t> parent_job_id();
-    Parameter params();
-
-  private:
-    std::string data_name_;
-    ID<logical_data_id_t> logical_data_id_;
-    ID<partition_id_t> partition_id_;
-    IDSet<partition_id_t> neighbor_partitions_;
-    ID<job_id_t> parent_job_id_;
-    Parameter params_;
-};
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_

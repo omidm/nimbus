@@ -54,10 +54,12 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
     const ID<job_id_t>& job_id,
     const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    const ID<job_id_t>& parent_job_id,
     const Parameter& params)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
+  parent_job_id_(parent_job_id),
   params_(params) {
   name_ = SPAWN_COMPUTE_JOB_NAME;
   type_ = SPAWN_COMPUTE_JOB;
@@ -72,7 +74,7 @@ SchedulerCommand* SpawnComputeJobCommand::Clone() {
 
 
 bool SpawnComputeJobCommand::Parse(const std::string& params) {
-  int num = 7;
+  int num = 8;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -125,6 +127,12 @@ bool SpawnComputeJobCommand::Parse(const std::string& params) {
   }
 
   iter++;
+  if (!parent_job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
+    return false;
+  }
+
+  iter++;
   if (!params_.Parse(*iter)) {
     std::cout << "ERROR: Could not detect valid parameter." << std::endl;
     return false;
@@ -142,6 +150,7 @@ std::string SpawnComputeJobCommand::toString() {
   str += (write_set_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
+  str += (parent_job_id_.toString() + " ");
   str += params_.toString();
 
   return str;
@@ -156,6 +165,7 @@ std::string SpawnComputeJobCommand::toStringWTags() {
   str += ("write:" + write_set_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
+  str += ("parent-id:" + parent_job_id_.toString() + " ");
   str += ("params:" + params_.toString());
   return str;
 }
@@ -166,6 +176,10 @@ std::string SpawnComputeJobCommand::job_name() {
 
 ID<job_id_t> SpawnComputeJobCommand::job_id() {
   return job_id_;
+}
+
+ID<job_id_t> SpawnComputeJobCommand::parent_job_id() {
+  return parent_job_id_;
 }
 
 IDSet<logical_data_id_t> SpawnComputeJobCommand::read_set() {

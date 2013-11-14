@@ -48,7 +48,7 @@ namespace nimbus {
 
 SchedulerWorker::SchedulerWorker(worker_id_t id,
                                    SchedulerServerConnection* conn,
-                                   Application* app) {
+                                   ApplicationGroup* app) {
   worker_id_ = id;
   connection_ = conn;
   application_ = app;
@@ -87,7 +87,7 @@ SchedulerServerConnection* SchedulerWorker::connection() {
   return connection_;
 }
 
-Application* SchedulerWorker::application() {
+ApplicationGroup* SchedulerWorker::application() {
   return application_;
 }
 
