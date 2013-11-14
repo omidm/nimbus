@@ -73,16 +73,16 @@ class Proj_Initialize : public Job {
         virtual Job* Clone();
 };
 
-class Proj_AdvanceOnTime : public Job {
+class Proj_PrepareForProj : public Job {
     public:
-	Proj_AdvanceOnTime(Application *app);
+	Proj_PrepareForProj(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
 
-class Proj_SetBound : public Job {
+class Proj_AfterProj : public Job {
     public:
-	Proj_SetBound(Application *app);
+	Proj_AfterProj(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };

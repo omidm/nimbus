@@ -38,7 +38,8 @@
 #include "Projection_App.h"
 
 ProjectionApp::ProjectionApp() {
-};
+}
+;
 
 void ProjectionApp::Load() {
 	printf("Worker beginning to load application\n");
@@ -47,7 +48,8 @@ void ProjectionApp::Load() {
 
 	RegisterJob("main", new Main(this));
 	RegisterJob("Init", new Init(this));
-	RegisterJob("Project_Forloop_Condition", new Project_Forloop_Condition(this));
+	RegisterJob("Project_Forloop_Condition",
+			new Project_Forloop_Condition(this));
 	RegisterJob("Project_Forloop_Part1", new Project_Forloop_Part1(this));
 	RegisterJob("Project_Forloop_Part2", new Project_Forloop_Part2(this));
 	RegisterJob("Project_Forloop_Part3", new Project_Forloop_Part3(this));
@@ -57,25 +59,27 @@ void ProjectionApp::Load() {
 
 	RegisterData("vector", new Vec(LEN));
 	RegisterData("scalar", new Vec(1));
-	RegisterData("matrix", new Vec((LEN*LEN)));
+	RegisterData("matrix", new Vec((LEN * LEN)));
 
 	printf("Finished creating job and data definitions\n");
 }
 
 Main::Main(Application *app) {
 	set_application(app);
-};
+}
+;
 
 Job* Main::Clone() {
 	printf("Cloning main job\n");
 	return new Main(application());
-};
+}
+;
 
 void Main::Execute(Parameter params, const DataArray& da) {
 	printf("Begin main\n");
 	std::vector<job_id_t> j;
 	std::vector<logical_data_id_t> d;
-	IDSet<logical_data_id_t> read, write;
+	IDSet < logical_data_id_t > read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	partition_id_t pid1 = 1, pid2 = 2;
@@ -85,7 +89,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	GetNewLogicalDataID(&d, NUM_OF_FORLOOP_INPUTS);
 
 	GetNewJobID(&j, 3);
-	
+
 	// Proj_Initialize, pid = 1
 	before.clear();
 	after.clear();
@@ -94,92 +98,207 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	write.clear();
 	SpawnComputeJob("Proj_Initialize", j[0], read, write, before, after, par);
 
-    for (int i = 1; i <= example.last_frame; i++) {
-        before.clear();
-        before.insert(j[i-1]);
-        after.clear();
-        after.insert(j[i+1]);
-        read.clear();
-        write.clear();
-        SpwanComputeJob("Proj_AdvanceOneTime", j[i], read, write, before, after, par);
-    }
+	for (int i = 1; i <= example.last_frame; i++) {
+		before.clear();
+		before.insert(j[i - 1]);
+		after.clear();
+		after.insert(j[i + 1]);
+		read.clear();
+		write.clear();
+		SpwanComputeJob("Proj_AdvanceOneTime", j[i], read, write, before,
+				after, par);
+	}
 
 	printf("Completed main\n");
-};
+}
+;
 
 Proj_Initialize::Proj_Initialize(Application *app) {
 	set_application(app);
-};
+}
+;
 
 Job* Proj_Initialize::Clone() {
 	printf("Cloning Proj_Initialize job\n");
 	return new Proj_Initialize(application());
-};
+}
+;
 
 void Proj_Initialize::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Proj_Initialize\n");
 
-    // setup time
-    if(example.restart) current_frame=example.restart;else current_frame=example.first_frame;
-    time=example.Time_At_Frame(current_frame);
+	// setup time
+	if (example.restart)
+		current_frame = example.restart;
+	else
+		current_frame = example.first_frame;
+	time = example.Time_At_Frame(current_frame);
 
-    // will map mpi_grid into Nimbus job dependency
-    if(example.mpi_grid) example.mpi_grid->Initialize(example.domain_boundary);
-    example.projection.elliptic_solver->mpi_grid=example.mpi_grid;
-    if(example.mpi_grid) example.boundary=new BOUNDARY_MPI<GRID<TV>,T>(example.mpi_grid,example.boundary_scalar);
-    else example.boundary=&example.boundary_scalar;
+	// will map mpi_grid into Nimbus job dependency
+	if (example.mpi_grid)
+		example.mpi_grid->Initialize(example.domain_boundary);
+	example.projection.elliptic_solver->mpi_grid = example.mpi_grid;
+	if (example.mpi_grid)
+		example.boundary = new BOUNDARY_MPI<GRID<TV> , T> (example.mpi_grid,
+				example.boundary_scalar);
+	else
+		example.boundary = &example.boundary_scalar;
 
-    // setup grids and velocities
-    example.projection.Initialize_Grid(example.mac_grid);
-    example.face_velocities.Resize(example.mac_grid);
-    example.Initialize_Fields();
+	// setup grids and velocities
+	example.projection.Initialize_Grid(example.mac_grid);
+	example.face_velocities.Resize(example.mac_grid);
+	example.Initialize_Fields();
 
-    // setup laplace
-    example.projection.elliptic_solver->Set_Relative_Tolerance(1e-11);
-    example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(200);
-    example.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
-    example.projection.elliptic_solver->pcg.cg_restart_iterations=40;
+	// setup laplace
+	example.projection.elliptic_solver->Set_Relative_Tolerance(1e-11);
+	example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(200);
+	example.projection.elliptic_solver->pcg.evolution_solver_type
+			= krylov_solver_cg;
+	example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
-    if(example.restart) example.Read_Output_Files(example.restart);
+	if (example.restart)
+		example.Read_Output_Files(example.restart);
 
-    // setup domain boundaries
-    VECTOR<VECTOR<bool,2>,TV::dimension> constant_extrapolation;constant_extrapolation.Fill(VECTOR<bool,2>::Constant_Vector(true));
-    example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
-    example.Set_Boundary_Conditions(time); // get so CFL is correct
+	// setup domain boundaries
+	VECTOR<VECTOR<bool, 2> , TV::dimension> constant_extrapolation;
+	constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
+	example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
+	example.Set_Boundary_Conditions(time); // get so CFL is correct
 
 	printf("Completed Proj_Initialize\n");
-};
+}
+;
 
-Proj_AdvanceOnTime::Proj_AdvanceOnTime(Application *app) {
+Proj_PrepareForProj::Proj_PrepareForProj(Application *app) {
 	set_application(app);
-};
+}
+;
 
-Job* Proj_AdvanceOnTime::Clone() {
-	printf("Cloning Proj_AdvanceOnTime job\n");
-	return new Proj_AdvanceOnTime(application());
-};
+Job* Proj_PrepareForProj::Clone() {
+	printf("Cloning Proj_PrepareForProj job\n");
+	return new Proj_PrepareForProj(application());
+}
+;
 
-void Proj_AdvanceOnTime::Execute(Parameter params, const DataArray& da) {
-	printf("Begin Proj_AdvanceOnTime\n");
+// read set: current_frame, time
+// write set: time
+void Proj_PrepareForProj::Execute(Parameter params, const DataArray& da) {
+	printf("Begin Proj_PrepareForProj\n");
+	T target_time = example.Time_At_Frame(current_frame + 1);
+	T dt = target_time - time;
+	example.Set_Boundary_Conditions(time + dt);
+	example.projection.p *= dt; // rescale pressure for guess
+	example.projection.Compute_Divergence(typename INTERPOLATION_POLICY<
+			GRID<TV> >::FACE_LOOKUP(example.face_velocities),
+			example.projection.elliptic_solver); // find f - divergence of the velocity
+
+	LAPLACE_UNIFORM<GRID<TV> >* laplace = example.projection.elliptic_solver;
+	  laplace->Find_Solution_Regions(); // flood fill
+	  typedef typename GRID_ARRAYS_POLICY<GRID<TV> >::ARRAYS_SCALAR T_ARRAYS_SCALAR;
+	  typedef typename T_ARRAYS_SCALAR::template REBIND<int>::TYPE T_ARRAYS_INT;
+	  typedef typename GRID<TV>::CELL_ITERATOR CELL_ITERATOR;
+	  typedef typename GRID<TV>::VECTOR_INT TV_INT;
+
+	  //ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array(laplace->number_of_regions);
+	  projection_data->matrix_index_to_cell_index_array =
+	    new ARRAY<ARRAY<TV_INT> >(laplace->number_of_regions);
+	  ARRAY<ARRAY<TV_INT> > &matrix_index_to_cell_index_array =
+	    *(projection_data->matrix_index_to_cell_index_array);
 
 
-	printf("Completed Proj_AdvanceOnTime\n");
-};
+	  T_ARRAYS_INT cell_index_to_matrix_index(laplace->grid.Domain_Indices(1));
+	  ARRAY<int,VECTOR<int,1> > filled_region_cell_count(-1,laplace->number_of_regions);
+
+	  //ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array(laplace->number_of_regions);
+	  projection_data->A_array =
+	    new ARRAY<SPARSE_MATRIX_FLAT_NXN<T> >(laplace->number_of_regions);
+	  ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > &A_array =
+	    *(projection_data->A_array);
+
+
+	  // ARRAY<VECTOR_ND<T> > b_array(laplace->number_of_regions);
+	  projection_data->b_array =
+	    new ARRAY<VECTOR_ND<T> >(laplace->number_of_regions);
+	  ARRAY<VECTOR_ND<T> > &b_array =
+	    *(projection_data->b_array);
+
+	  for(CELL_ITERATOR iterator(laplace->grid,1);iterator.Valid();iterator.Next())
+	    filled_region_cell_count(laplace->filled_region_colors(iterator.Cell_Index()))++;
+	  for(int color=1;color<=laplace->number_of_regions;color++)
+	    if(laplace->filled_region_touches_dirichlet(color)||laplace->solve_neumann_regions){
+	        matrix_index_to_cell_index_array(color).Resize(filled_region_cell_count(color));
+	      }
+	    filled_region_cell_count.Fill(0); // reusing this array in order to make the indirection arrays
+	    DOMAIN_ITERATOR_THREADED_ALPHA<LAPLACE_UNIFORM<GRID<TV> >,TV> threaded_iterator(
+	        laplace->grid.Domain_Indices(1),laplace->thread_queue,1,1,2,1);
+
+	    // ARRAY<int,TV_INT> domain_index(laplace->grid.Domain_Indices(1),false);
+	    projection_data->domain_index = new ARRAY<int, TV_INT>(laplace->grid.Domain_Indices(1), false);
+	    ARRAY<int,TV_INT> &domain_index =
+	      *(projection_data->domain_index);
+
+	    for(int i=1;i<=threaded_iterator.domains.m;i++){
+	        RANGE<TV_INT> interior_domain(threaded_iterator.domains(i));
+	        interior_domain.max_corner-=TV_INT::All_Ones_Vector();interior_domain.min_corner+=TV_INT::All_Ones_Vector();
+	        for(CELL_ITERATOR iterator(laplace->grid,interior_domain);iterator.Valid();iterator.Next())
+	          domain_index(iterator.Cell_Index())=i;
+	    }
+	    ARRAY<ARRAY<INTERVAL<int> > > interior_indices(laplace->number_of_regions);
+	    ARRAY<ARRAY<ARRAY<INTERVAL<int> > > > ghost_indices(laplace->number_of_regions);
+	    for(int color=1;color<=laplace->number_of_regions;color++){
+	        interior_indices(color).Resize(threaded_iterator.number_of_domains);
+	        ghost_indices(color).Resize(threaded_iterator.number_of_domains);
+	        for(int i=1;i<=threaded_iterator.domains.m;i++)
+	          ghost_indices(color)(i).Resize(2*TV::dimension);
+	    }
+	    laplace->laplace_mpi->Find_Matrix_Indices(filled_region_cell_count,cell_index_to_matrix_index,matrix_index_to_cell_index_array);
+	    RANGE<TV_INT> domain=laplace->grid.Domain_Indices(1);
+	    laplace->Find_A(domain,A_array,b_array,filled_region_cell_count,cell_index_to_matrix_index);
+
+	printf("Completed Proj_PrepareForProj\n");
+}
+;
+
+Prof_AfterProj::Prof_AfterProj(Application *app) {
+	set_application(app);
+}
+;
+
+Job* Prof_AfterProj::Clone() {
+	printf("Cloning Prof_AfterProj job\n");
+	return new Prof_AfterProj(application());
+}
+;
+
+// read set: example, dt, time
+// write set:
+void Prof_AfterProj::Execute(Parameter params, const DataArray& da) {
+	printf("Begin Prof_AfterProj\n");
+	example.boundary_scalar.Apply_Boundary_Condition_Face(example.mac_grid,
+			example.face_velocities, time + dt);
+
+	example.projection.p *= (1 / dt); // unscale pressure
+	time += dt;
+	printf("Completed Prof_AfterProj\n");
+}
+;
 
 Proj_MainProjection::Proj_MainProjection(Application *app) {
 	set_application(app);
-};
+}
+;
 
 Job* Proj_MainProjection::Clone() {
 	printf("Cloning Proj_MainProjection job\n");
 	return new Proj_MainProjection(application());
-};
+}
+;
 
 void Proj_MainProjection::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Proj_MainProjection\n");
 	std::vector<job_id_t> j;
 	std::vector<logical_data_id_t> d;
-	IDSet<logical_data_id_t> read, write;
+	IDSet < logical_data_id_t > read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	partition_id_t pid1 = 1, pid2 = 2;
@@ -231,10 +350,13 @@ void Proj_MainProjection::Execute(Parameter params, const DataArray& da) {
 	read.insert(d[0]);
 	write.clear();
 	param_idset.clear();
-	for (int i=0;i<NUM_OF_FORLOOP_INPUTS;i++) param_idset.insert(d[i]);
+	for (int i = 0; i < NUM_OF_FORLOOP_INPUTS; i++)
+		param_idset.insert(d[i]);
 	param_idset.insert(1); // insert iteration
 	par.set_idset(param_idset);
-	SpawnComputeJob("Project_Forloop_Condition", j[2], read, write, before, after, par);
+	SpawnComputeJob("Project_Forloop_Condition", j[2], read, write, before,
+			after, par);
 
 	printf("Completed Proj_MainProjection\n");
-};
+}
+;
