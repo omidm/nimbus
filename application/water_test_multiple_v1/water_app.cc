@@ -88,6 +88,10 @@ using nimbus::Application;
 
 namespace {
     /* Initialize/ declare application constants. */
+
+    typedef ::PhysBAM::GRID<TV> T_GRID;
+    typedef ::PhysBAM::RANGE<TV> T_RANGE;
+
     TV_INT main_size(kMainSize, kMainSize);
 
     const int knx[] = {
@@ -285,7 +289,9 @@ void Main::Execute(Parameter params, const DataArray& da) {
     printf("Spawned init\n");
     before.clear(); after.clear();
     before.insert(j[0]);
-    read.clear(); write.clear();
+    // TODO: since compute dt is not a separate job right now, insering all
+    // data into for loop job. this should be fixed later on -- need to
+    // restructure the decomposition.
     par_job.set_idset(alldata);
     SpawnComputeJob("loop", j[1], read, write, before, after, par_job);
     printf("Spawned loop\n");
@@ -302,17 +308,8 @@ Job* Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
-    typedef ::PhysBAM::GRID<TV> T_GRID;
-    typedef ::PhysBAM::RANGE<TV> T_RANGE;
     printf("Executing init job\n");
-    std::vector<int> types_list;
-    types_list.push_back(driver_id);
-    types_list.push_back(non_adv_id);
-    for (int i = 0; i < workers*pieces; i++) {
-        types_list.push_back(face_array_id);
-    }
     GetJobData();
-    int frame = 0;
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
     driver->face_velocities = fv;
@@ -320,6 +317,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
     Add_Source(sim_data);
     sim_data->incompressible->
         Set_Custom_Boundary(*water_app->boundary());
+    int frame = 0;
     sim_data->initialize(
             driver,
             fv,
@@ -328,6 +326,18 @@ void Init::Execute(Parameter params, const DataArray& da) {
         Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->particle_levelset_evolution->Levelset_Advection(1).
         Set_Custom_Advection(*(water_app->advection_scalar()));
+    FaceArray::Update_Regions(
+            fv,
+            fvleft,
+            kleft_region,
+            0,
+            0);
+    FaceArray::Update_Regions(
+            fv,
+            fvright,
+            kright_region,
+            kMainSize/2,
+            0);
     delete(fv);
     printf("Successfully completed init job\n");
 };
@@ -423,32 +433,37 @@ Job* Loop::Clone() {
 };
 
 void Loop::Execute(Parameter params, const DataArray& da) {
-//    printf("Executing forloop job\n");
-//    std::vector<int> types_list;
-//    types_list.push_back(driver_id);
-//    types_list.push_back(non_adv_id);
-//    for (int i = 0; i < 9; i++) {
-//        types_list.push_back(face_array_id);
-//    }
-//    GetJobData();
-//    job_data.driver->IncreaseTime();
-//    if (!job_data.driver->CheckProceed()) {
-//        printf("... Simulation completed ...\n");
-//    }
-//    else {
-//        printf("Spawning new simulation jobs ...\n");
-//
-//        std::vector<data_id_t> d;
-//        d.push_back(da[0]->id());
-//        d.push_back(da[1]->id());
-//        d.push_back(da[2]->id());
-//        d.push_back(da[3]->id());
-//        Parameter par;
-//
-//        IDSet<job_id_t> before, after;
-//        IDSet<data_id_t> read, write;
-//        std::vector<job_id_t> j;
-//        GetNewJobID(&j, 5);
+    printf("Executing forloop job\n");
+    GetJobData();
+    T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
+    T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
+    FaceArray::Glue_Regions(
+            fv,
+            fvleft,
+            kleft_region,
+            0,
+            0);
+    FaceArray::Glue_Regions(
+            fv,
+            fvright,
+            kright_region,
+            kMainSize/2,
+            0);
+    driver->face_velocities = fv;
+    driver->sim_data = sim_data;
+    driver->IncreaseTime();
+    if (!driver->CheckProceed()) {
+        printf("... Simulation completed ...\n");
+    }
+    else {
+        printf("Spawning new simulation jobs ...\n");
+
+        Parameter par;
+        IDSet<job_id_t> before, after;
+        IDSet<data_id_t> read, write;
+        std::vector<job_id_t> j;
+        GetNewJobID(&j, 5);
+            
 //        par.set_ser_data(SerializedData(""));
 //        before.clear(); after.clear();
 //        read.clear(); write.clear();
@@ -486,17 +501,15 @@ void Loop::Execute(Parameter params, const DataArray& da) {
 //        write.insert(d[2]); write.insert(d[3]);
 //        SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
 //        printf("Spawned afteradvect\n");
-//        par.set_ser_data(SerializedData(""));
-//        before.clear(); after.clear();
-//        read.clear(); write.clear();
+        par.set_ser_data(SerializedData(""));
+        before.clear(); after.clear();
+        read.clear(); write.clear();
 //        before.insert(j[2]);
 //        after.insert(j[4]);
-//        read.insert(d[0]); read.insert(d[1]);
-//        read.insert(d[2]); read.insert(d[3]);
-//        write.insert(d[0]); write.insert(d[1]);
-//        write.insert(d[2]); write.insert(d[3]);
-//        SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
-//        printf("Spawned afteradvect\n");
+        for (unsigned int i = 0; i < da.size(); i++)
+            write.insert(da[i]->id());
+        SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
+        printf("Spawned afteradvect\n");
 //        par.set_ser_data(SerializedData(""));
 //        before.clear(); after.clear();
 //        read.clear(); write.clear();
@@ -507,7 +520,7 @@ void Loop::Execute(Parameter params, const DataArray& da) {
 //        write.insert(d[2]); write.insert(d[3]);
 //        SpawnComputeJob("loop", j[4], read, write, before, after, par);
 //        printf("Spawned loop\n");
-//    }
+    }
 };
 
 WriteFrame::WriteFrame(Application *app) {
@@ -520,15 +533,26 @@ Job* WriteFrame::Clone() {
 };
 
 void WriteFrame::Execute(Parameter params, const DataArray& da) {
-//    printf( "@@ Executing write frame job\n");
-//    std::vector<int> types_list;
-//    types_list.push_back(driver_id);
-//    types_list.push_back(non_adv_id);
-//    for (int i = 0; i < 9; i++) {
-//        types_list.push_back(face_array_id);
-//    }
-//    GetJobData();
-//    if (job_data.driver->IsFrameDone()) {
-//        job_data.driver->Write_Output_Files(job_data.driver->current_frame);
-//    }
+    printf( "@@ Executing write frame job\n");
+    GetJobData();
+    T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
+    T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
+    FaceArray::Glue_Regions(
+            fv,
+            fvleft,
+            kleft_region,
+            0,
+            0);
+    FaceArray::Glue_Regions(
+            fv,
+            fvright,
+            kright_region,
+            kMainSize/2,
+            0);
+    driver->face_velocities = fv;
+    driver->sim_data = sim_data;
+    if (driver->IsFrameDone()) {
+        driver->Write_Output_Files(driver->current_frame);
+    }
+    delete(fv);
 }
