@@ -54,6 +54,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
         const ID<job_id_t>& job_id,
         const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        const ID<job_id_t>& parent_job_id,
         const Parameter& params);
     ~SpawnComputeJobCommand();
 
@@ -67,6 +68,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<logical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
+    ID<job_id_t> parent_job_id();
     Parameter params();
 
   private:
@@ -76,6 +78,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<logical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
+    ID<job_id_t> parent_job_id_;
     Parameter params_;
 };
 

@@ -55,6 +55,7 @@ class DefineDataCommand : public SchedulerCommand {
                       const ID<logical_data_id_t>& logical_data_id,
                       const ID<partition_id_t>& partition_id,
                       const IDSet<partition_id_t>& neighbor_partition,
+                      const ID<job_id_t>& parent_job_id,
                       const Parameter& params);
     ~DefineDataCommand();
 
@@ -66,6 +67,7 @@ class DefineDataCommand : public SchedulerCommand {
     ID<logical_data_id_t> logical_data_id();
     ID<partition_id_t> partition_id();
     IDSet<partition_id_t> neighbor_partitions();
+    ID<job_id_t> parent_job_id();
     Parameter params();
 
   private:
@@ -73,6 +75,7 @@ class DefineDataCommand : public SchedulerCommand {
     ID<logical_data_id_t> logical_data_id_;
     ID<partition_id_t> partition_id_;
     IDSet<partition_id_t> neighbor_partitions_;
+    ID<job_id_t> parent_job_id_;
     Parameter params_;
 };
 
