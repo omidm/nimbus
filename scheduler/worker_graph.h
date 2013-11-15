@@ -43,7 +43,7 @@
 #ifndef NIMBUS_SCHEDULER_WORKER_GRAPH_H_
 #define NIMBUS_SCHEDULER_WORKER_GRAPH_H_
 
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <vector>
 #include "shared/nimbus_types.h"
@@ -55,8 +55,8 @@ namespace nimbus {
 
   typedef std::vector<worker_id_t> WorkerIdVector;
   typedef std::vector<SchedulerWorker*> SchedulerWorkerVector;
-  typedef std::unordered_map<worker_id_t, SchedulerWorker*> SchedulerWorkerTable;
-  typedef std::unordered_map<worker_id_t, Computer*> ComputerTable;
+  typedef std::map<worker_id_t, SchedulerWorker*> SchedulerWorkerTable;
+  typedef std::map<worker_id_t, Computer*> ComputerTable;
 
   class WorkerGraph {
   public:
