@@ -45,7 +45,7 @@
 #ifndef NIMBUS_SHARED_LDO_INDEX_H_
 #define NIMBUS_SHARED_LDO_INDEX_H_
 
-#include <unordered_map>
+#include <boost/unordered_map.hpp>
 #include <map>
 #include <string>
 #include "shared/logical_data_object.h"
@@ -54,8 +54,8 @@
 
 namespace nimbus {
 
-  typedef std::unordered_map<std::string, LdoList*> LdoVariableIndex;
-  typedef std::unordered_map<logical_data_id_t, LogicalDataObject*> LdoIdIndex;
+  typedef boost::unordered_map<std::string, LdoList*> LdoVariableIndex;
+  typedef boost::unordered_map<logical_data_id_t, LogicalDataObject*> LdoIdIndex;
 
   class LdoIndex {
   public:
