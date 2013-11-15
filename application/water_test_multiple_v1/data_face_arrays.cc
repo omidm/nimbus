@@ -36,7 +36,6 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include <iostream>
 #include "data_face_arrays.h"
 #include "physbam_include.h"
 #include "proto_files/app_messages_2d.h"
@@ -98,7 +97,6 @@ namespace water_app_data {
         Serialize(SerializedData *ser_data) {
             assert(ser_data);
             ::communication::AppFaceArray2d pb_fa;
-            std::cout << "!!! Geometric region " << region()->toString() << std::endl;
             make_pb_object(data(), region(), &pb_fa);
             std::string ser;
             bool success = pb_fa.SerializeToString(&ser);
@@ -115,7 +113,6 @@ namespace water_app_data {
        been initialized correctly. We need to update only region and data. */
     template <class TV> bool FaceArray<TV>::
         DeSerialize(const SerializedData &ser_data, Data **result) {
-            std::cout<<"Deserializing face array!!\n";
             assert(result);
             const char *buffer = ser_data.data_ptr_raw();
             const int buff_size = ser_data.size();
