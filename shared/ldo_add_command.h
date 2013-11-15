@@ -51,7 +51,7 @@ class LdoAddCommand : public SchedulerCommand {
   public:
     LdoAddCommand();
     explicit LdoAddCommand(LogicalDataObject* obj);
-    ~LdoAddCommand();
+    virtual ~LdoAddCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);

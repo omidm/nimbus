@@ -51,7 +51,8 @@ class LdoRemoveCommand : public SchedulerCommand {
   public:
     LdoRemoveCommand();
     explicit LdoRemoveCommand(LogicalDataObject* obj);
-    ~LdoRemoveCommand();
+
+    virtual ~LdoRemoveCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
