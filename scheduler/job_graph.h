@@ -51,7 +51,7 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
-#include "scheduler/scheduler_job.h"
+#include "scheduler/job_entry.h"
 
 namespace nimbus {
 class JobGraph {
@@ -59,12 +59,12 @@ class JobGraph {
     explicit JobGraph();
     virtual ~JobGraph();
 
-    void AddJob(SchedulerJob* job) {}
+    void AddJob(JobEntry* job) {}
 
-    void RemoveJob(SchedulerJob* job) {}
+    void RemoveJob(JobEntry* job) {}
 
   private:
-    SchedulerJobMap job_map_;
+    JobEntryMap job_map_;
 };
 
 }  // namespace nimbus
