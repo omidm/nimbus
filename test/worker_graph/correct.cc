@@ -33,34 +33,15 @@
  */
 
  /*
-  * This file tests whether the Logical Data Object Index is working
-  * properly.
+  * This program tests whether the worker graph is working properly.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#define DEBUG_MODE
+#define NUM_COMPUTERS 50
+#define SWITCH_ID 6505
 
-#include <iostream> // NOLINT
-#include "shared/cluster.h"
-#include "shared/geometric_region.h"
-#include "shared/logical_data_object.h"
-#include "shared/ldo_index.h"
+#include "scheduler/worker_graph.h"
+#include "shared/dbg.h"
 
-using namespace nimbus;  // NOLINT
-
-int main(int argc, char *argv[]) {
-  LdoIndex index;
-
-  for (int i = 0; i < 100; i++) {
-    std::string str = "pressure";
-    GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
-                                                 lrand48(), lrand48(),
-                                                 lrand48(), lrand48());
-    LogicalDataObject* obj = new LogicalDataObject(i, str, region);
-
-    index.AddObject(obj);
-    index.RemoveObject(i);
-    delete obj;
-  }
-}
+int main(int argc, char *argv[]) {}
