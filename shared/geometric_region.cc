@@ -105,6 +105,20 @@ GeometricRegion::GeometricRegion(const std::string& data) {
   fillInValues(&msg);
 }
 
+void GeometricRegion::Rebuild(int_dimension_t x,
+                                 int_dimension_t y,
+                                 int_dimension_t z,
+                                 int_dimension_t dx,
+                                 int_dimension_t dy,
+                                 int_dimension_t dz) {
+  x_ = x;
+  y_ = y;
+  z_ = z;
+  dx_ = dx;
+  dy_ = dy;
+  dz_ = dz;
+}
+
 void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
   msg->set_x(x_);
   msg->set_y(y_);
@@ -257,7 +271,7 @@ void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
 std::string GeometricRegion::toString() {
   std::string str;
   char buf[2048];
-  snprintf(buf, sizeof(buf), "bbox:%llu,%llu,%llu,%llu,%llu,%llu",
+  snprintf(buf, sizeof(buf), "bbox:%lld,%lld,%lld,%lld,%lld,%lld",
            x_, y_, z_, dx_, dy_, dz_);
   str += buf;
   return str;

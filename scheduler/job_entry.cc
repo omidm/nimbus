@@ -33,52 +33,82 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Job entry in the job table of the job manager. Each entry holds the
+  * meta data of the compute and copy jobs received by the scheduler.   
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+#include "scheduler/job_entry.h"
 
-#include <vector>
-#include <string>
-#include <set>
-#include <list>
-#include <map>
-#include "worker/data.h"
-#include "shared/idset.h"
-#include "shared/nimbus_types.h"
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+JobEntry::JobEntry() {
+}
 
-class SchedulerJob;
-typedef std::map<int, SchedulerJob*> SchedulerJobMap;
-typedef std::list<SchedulerJob*> SchedulerJobList;
-typedef std::vector<Data*> DataArray;
-
-class SchedulerJob {
- public:
-  SchedulerJob();
-  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
-  virtual ~SchedulerJob();
-
-  uint64_t id();
-  void set_id(job_id_t id);
+JobEntry::JobEntry(const JobType& job_type,
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set,
+    const IDSet<logical_data_id_t>& write_set,
+    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& after_set,
+    const job_id_t& parent_job_id,
+    const Parameter& params)
+  : job_type_(job_type),
+  job_name_(job_name), job_id_(job_id),
+  read_set_(read_set), write_set_(write_set),
+  before_set_(before_set), after_set_(after_set),
+  parent_job_id_(parent_job_id), params_(params) {
+    versioned = false;
+    assigned = false;
+    done = false;
+}
 
 
- private:
-  job_id_t id_;
-  app_id_t app_id_;
-  JobType type_;
-  IDSet<physical_data_id_t> read_set_;
-  IDSet<physical_data_id_t> write_set_;
-  IDSet<job_id_t> before_set_;
-  IDSet<job_id_t> after_set_;
-  std::string parameters_;
-};
 
-}  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+JobEntry::~JobEntry() {
+}
+
+JobType JobEntry::job_type() {
+  return job_type_;
+}
+
+std::string JobEntry::job_name() {
+  return job_name_;
+}
+
+job_id_t JobEntry::job_id() {
+  return job_id_;
+}
+
+IDSet<logical_data_id_t> JobEntry::read_set() {
+  return read_set_;
+}
+
+IDSet<logical_data_id_t> JobEntry::write_set() {
+  return write_set_;
+}
+
+IDSet<job_id_t> JobEntry::before_set() {
+  return before_set_;
+}
+
+IDSet<job_id_t> JobEntry::after_set() {
+  return after_set_;
+}
+
+job_id_t JobEntry::parent_job_id() {
+  return parent_job_id_;
+}
+
+Parameter JobEntry::params() {
+  return params_;
+}
+
+JobEntry::VersionTable JobEntry::version_table() {
+  return version_table_;
+}
+
 
 

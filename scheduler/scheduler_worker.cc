@@ -40,14 +40,15 @@
   */
 
 #include "scheduler/scheduler_worker.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 
 #define WORKER_BUFSIZE 10240
 
 SchedulerWorker::SchedulerWorker(worker_id_t id,
-                                   SchedulerServerConnection* conn,
-                                   Application* app) {
+                                 SchedulerServerConnection* conn,
+                                 ApplicationGroup* app) {
   worker_id_ = id;
   connection_ = conn;
   application_ = app;
@@ -86,7 +87,7 @@ SchedulerServerConnection* SchedulerWorker::connection() {
   return connection_;
 }
 
-Application* SchedulerWorker::application() {
+ApplicationGroup* SchedulerWorker::application() {
   return application_;
 }
 

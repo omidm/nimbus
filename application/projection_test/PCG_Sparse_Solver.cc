@@ -144,8 +144,8 @@ Job * Project_Forloop_Condition::Clone() {
 void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input_data) {
 	std::cout << "Executing the Project_Forloop_Condition job\n";
 	std::vector<job_id_t> j;
-	std::vector<data_id_t> d, da;
-	IDSet<data_id_t> read, write;
+	std::vector<logical_data_id_t> d, da;
+	IDSet<logical_data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	partition_id_t pid1 = 1, pid2 = 2;
@@ -163,7 +163,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 	Vec *d0 = reinterpret_cast<Vec*>(input_data[0]); // residual
 
 	// new data
-	GetNewDataID(&d, 23);
+	GetNewLogicalDataID(&d, 23);
 	DefineData("vector", d[0], pid1, neighbor_partitions, par); // temp_interior_pid1
 	DefineData("vector", d[1], pid2, neighbor_partitions, par); // temp_interior_pid2
 	DefineData("vector", d[2], pid1, neighbor_partitions, par); // local_dot_prod_z_b_pid1

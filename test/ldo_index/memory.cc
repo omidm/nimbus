@@ -42,6 +42,7 @@
 #define DEBUG_MODE
 
 #include <iostream> // NOLINT
+#include "shared/cluster.h"
 #include "shared/geometric_region.h"
 #include "shared/logical_data_object.h"
 #include "shared/ldo_index.h"

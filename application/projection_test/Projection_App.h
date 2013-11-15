@@ -66,4 +66,39 @@ class Main : public Job {
         virtual Job* Clone();
 };
 
+class Proj_Initialize : public Job {
+    public:
+	Proj_Initialize(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Proj_PrepareForProj : public Job {
+    public:
+	Proj_PrepareForProj(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Proj_PrepareForOneRegion : public Job {
+    public:
+	Proj_PrepareForOneRegion(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Proj_AfterProj : public Job {
+    public:
+	Proj_AfterProj(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Proj_MainProjection: public Job {
+    public:
+	Proj_MainProjection(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
 #endif

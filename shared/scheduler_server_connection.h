@@ -49,8 +49,7 @@
 #include <boost/bind.hpp>
 #include <map>
 #include <string>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "shared/parser.h"
 #include "shared/scheduler_command.h"
 
@@ -58,17 +57,17 @@ namespace nimbus {
 
 class SchedulerServerConnection {
  public:
-  explicit SchedulerServerConnection(tcp::socket* sock);
+  explicit SchedulerServerConnection(boost::asio::ip::tcp::socket* sock);
   virtual ~SchedulerServerConnection();
 
   virtual boost::asio::streambuf* read_buffer();
-  virtual tcp::socket* socket();
+  virtual boost::asio::ip::tcp::socket* socket();
   virtual int command_num();
   virtual void set_command_num(int n);
 
  private:
   boost::asio::streambuf* read_buffer_;
-  tcp::socket* socket_;
+  boost::asio::ip::tcp::socket* socket_;
   int command_num_;
 };
 

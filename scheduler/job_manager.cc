@@ -49,4 +49,38 @@ JobManager::JobManager() {
 JobManager::~JobManager() {
 }
 
+bool JobManager::AddJobEntry(const JobType& job_type,
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set,
+    const IDSet<logical_data_id_t>& write_set,
+    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& after_set,
+    const job_id_t& parent_job_id,
+    const Parameter& params) {
+  return false;
+}
+
+bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
+  return false;
+}
+
+bool JobManager::RemoveJobEntry(job_id_t job_id) {
+  return false;
+}
+
+size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
+  return 0;
+}
+
+size_t JobManager::RemoveObsoleteJobEntries() {
+  return 0;
+}
+
+void JobManager::JobDone(job_id_t job_id) {
+}
+
+void JobManager::RemoveExistingJobEntry(job_id_t job_id) {
+}
+
 

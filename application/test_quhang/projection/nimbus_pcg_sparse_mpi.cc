@@ -120,11 +120,13 @@ SpawnFirstIteration(
   SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data->A_array)(color);
   const bool recompute_preconditioner = true;
   VECTOR_ND<T>& b_interior = (*projection_internal_data->b_interior);
-  T global_tolerance = projection_internal_data->global_tolerance;
-  if(Global_Max(b_interior.Max_Abs())<=global_tolerance) {
-    projection_internal_data->move_on = false;
-    return;
-  }
+  // T global_tolerance = projection_internal_data->global_tolerance;
+  projection_internal_data->partial_norm = b_interior.Max_Abs();
+  // TODO fine-grained control flow for this.
+  //if(Global_Max(b_interior.Max_Abs())<=global_tolerance) {
+  //  projection_internal_data->move_on = false;
+  //  return;
+  //}
   // find an incomplete cholesky preconditioner - actually an LU that saves square roots, and an inverted diagonal to save on divides
   if(pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)){
       delete A.C;A.C=A.Create_Submatrix(partition.interior_indices);
@@ -221,7 +223,8 @@ CalculateResidual(
     ProjectionInternalData<TV>* projection_internal_data,
     ProjectionData<TV>* projection_data) {
   VECTOR_ND<T>& b_interior = (*projection_internal_data->b_interior);
-  projection_internal_data->residual=Global_Max(b_interior.Max_Abs());
+  // projection_internal_data->residual=Global_Max(b_interior.Max_Abs());
+  projection_internal_data->partial_norm=b_interior.Max_Abs();
 }
 
 template<class T_GRID> void NIMBUS_PCG_SPARSE_MPI<T_GRID>::

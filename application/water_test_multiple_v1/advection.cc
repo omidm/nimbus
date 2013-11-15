@@ -42,19 +42,26 @@
 #include "app_config.h"
 #include "data_face_arrays.h"
 #include "physbam_include.h"
+#include "shared/geometric_region.h"
 #include "water_app.h"
 #include "water_data_driver.h"
 
 void Advect_Velocities (
-        ::water_app_data::FaceArray<TV> *face_velocities,
+        ::nimbus::GeometricRegion region,
+        T_FACE_ARRAY *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,
         T dt,
         T time) {
 
+    typedef ::PhysBAM::GRID<TV> T_GRID;
+    typedef ::PhysBAM::RANGE<TV> T_RANGE;
+
+    TV_INT size(region.dx(), region.dy());
+    T_GRID grid(size, T_RANGE::Unit_Box(), true);
     water_app->advection_scalar()->Update_Advection_Equation_Face(
-            *face_velocities->grid(),
-            *face_velocities->data(),
+            grid,
+            *face_velocities,
             *face_vel_extended,
             *face_vel_extended,
             *water_app->boundary(),

@@ -38,10 +38,7 @@
 
 #include "data_face_arrays.h"
 #include "physbam_include.h"
-#include "proto_files/physbam_serialize_data_arrays_2d.h"
-#include "proto_files/physbam_serialize_data_common_2d.h"
-#include "proto_files/physbam_deserialize_data_arrays_2d.h"
-#include "proto_files/physbam_deserialize_data_common_2d.h"
+#include "proto_files/app_messages_2d.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "string.h"
@@ -84,7 +81,7 @@ namespace water_app_data {
 
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         Clone() {
-            std::cout << "Cloning facearray\n";
+            std::cout << "Cloning facearray with region "<<region()->toString()<<std::endl;
             return (new FaceArray<TV>(*region(), left_or_right));
         }
 
@@ -93,16 +90,27 @@ namespace water_app_data {
             return face_array_id;
         }
 
+    /* We need to serialize only region and data. Information from these is
+     * sufficient to reconstruct the object.
+     */
     template <class TV> bool FaceArray<TV>::
         Serialize(SerializedData *ser_data) {
             assert(ser_data);
-            ::communication::PhysbamFaceArray2d pb_fa;
-            ::physbam_pb::make_pb_object(data(), &pb_fa);
-            return true;
+            ::communication::AppFaceArray2d pb_fa;
+            make_pb_object(data(), region(), &pb_fa);
+            std::string ser;
+            bool success = pb_fa.SerializeToString(&ser);
+            char *buf = new char[ser.length()];
+            memcpy(buf, ser.c_str(), sizeof(char) * (ser.length()+1));
+            if (success)
+                ser_data->set_data_ptr(buf);
+            ser_data->set_size(sizeof(char) * (ser.length()+1));
+            return success;
         }
 
     /* DeSerialize should be called only after Create has been called. Create
-       ensures that required memory has been allocated. */
+       ensures that required memory has been allocated, and grid and size have
+       been initialized correctly. We need to update only region and data. */
     template <class TV> bool FaceArray<TV>::
         DeSerialize(const SerializedData &ser_data, Data **result) {
             assert(result);
@@ -111,10 +119,11 @@ namespace water_app_data {
             if (buff_size <= 0)
                 return false;
             assert(buffer);
-            ::communication::PhysbamFaceArray2d pb_fa;
-            pb_fa.ParseFromString((std::string)buffer);
+            ::communication::AppFaceArray2d pb_fa;
+            std::string temp(buffer, buff_size/sizeof(char)-1);
+            pb_fa.ParseFromString(temp);
             FaceArray<TV> *des = (FaceArray<TV> *)(*result);
-            ::physbam_pb::make_physbam_object(des->data(), pb_fa);
+            make_app_object(des->data(), des->region(), pb_fa);
             return true;
         }
 
@@ -181,9 +190,9 @@ namespace water_app_data {
                 if (region.Covers(r)) {
                     box = T_BOX(
                             r->x() + o_x,
-                            r->x()+r->dx()-1 + o_x,
+                            r->x()+r->dx() + o_x -1,
                             r->y() + o_y,
-                            r->y()+r->dy()-1 + o_y);
+                            r->y()+r->dy() + o_y -1);
                     part->Glue_Face_Array(result, &box);
                 }
             }
@@ -222,9 +231,9 @@ namespace water_app_data {
                 if (region.Covers(r)) {
                     box = T_BOX(
                             r->x() + o_x,
-                            r->x()+r->dx()-1 + o_x,
+                            r->x()+r->dx() + o_x -1,
                             r->y() + o_y,
-                            r->y()+r->dy()-1 + o_y);
+                            r->y()+r->dy() + o_y -1);
                     part->Update_Face_Array(updated, &box);
                 }
             }

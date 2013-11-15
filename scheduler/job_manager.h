@@ -52,7 +52,7 @@
 #include <set>
 #include "shared/nimbus_types.h"
 #include "scheduler/job_graph.h"
-#include "scheduler/scheduler_job.h"
+#include "scheduler/job_entry.h"
 
 namespace nimbus {
 class JobManager {
@@ -60,18 +60,31 @@ class JobManager {
     explicit JobManager();
     virtual ~JobManager();
 
-    void GetJobsReadytoMap(SchedulerJobList* list, size_t num) {}
+    bool AddJobEntry(const JobType& job_type,
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const IDSet<logical_data_id_t>& read_set,
+        const IDSet<logical_data_id_t>& write_set,
+        const IDSet<job_id_t>& before_set,
+        const IDSet<job_id_t>& after_set,
+        const job_id_t& parent_job_id,
+        const Parameter& params);
 
-    SchedulerJob* GetJobByJobID(job_id_t job_id) {return new SchedulerJob();}
+    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
-    void JobMapped(job_id_t job_id) {}
+    bool RemoveJobEntry(job_id_t job_id);
 
-    void AddJob(SchedulerJob* job) {}
+    size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
 
-    void RemoveJobJob(job_id_t job_id) {}
+    size_t RemoveObsoleteJobEntries();
+
+    void JobDone(job_id_t job_id);
+
 
   private:
     JobGraph job_graph_;
+
+    void RemoveExistingJobEntry(job_id_t job_id);
 };
 
 }  // namespace nimbus

@@ -33,31 +33,21 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Applicationgroup seen from scheduler point of view, used to relate the
+  * workers from the same application.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_job.h"
+#ifndef NIMBUS_SCHEDULER_APPLICATION_GROUP_H_
+#define NIMBUS_SCHEDULER_APPLICATION_GROUP_H_
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
+class ApplicationGroup {
+  public:
+    ApplicationGroup();
+    virtual ~ApplicationGroup();
+};
 
-SchedulerJob::SchedulerJob() {
-}
-
-SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
-  id_ = id;
-  type_ = type;
-  app_id_ = app_id;
-}
-
-SchedulerJob::~SchedulerJob() {
-}
-
-uint64_t SchedulerJob::id() {
-  return id_;
-}
-
-void SchedulerJob::set_id(job_id_t id) {
-  id_ = id;
-}
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_APPLICATION_GROUP_H_

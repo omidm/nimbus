@@ -71,7 +71,8 @@ bool Job::SpawnComputeJob(const std::string& name,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
   if (app_is_set_) {
-    application_->SpawnComputeJob(name, id, read, write, before, after, params);
+    application_->SpawnComputeJob(name, id, read, write, before, after,
+        id_.elem(), params);
     return true;
   } else {
     std::cout << "ERROR: SpawnComputeJob, application has not been set." <<
@@ -87,7 +88,8 @@ bool Job::SpawnCopyJob(const job_id_t& id,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
   if (app_is_set_) {
-    application_->SpawnCopyJob(id, from_logical_id, to_logical_id, before, after, params);
+    application_->SpawnCopyJob(id, from_logical_id, to_logical_id, before,
+        after, id_.elem(), params);
     return true;
   } else {
     std::cout << "ERROR: SpawnCopyJob, application has not been set." <<
@@ -102,7 +104,8 @@ bool Job::DefineData(const std::string& name,
     const IDSet<partition_id_t>& neighbor_partition,
     const Parameter& params) {
   if (app_is_set_) {
-    application_->DefineData(name, logical_data_id, partition_id, neighbor_partition, params);
+    application_->DefineData(name, logical_data_id, partition_id,
+        neighbor_partition, id_.elem(), params);
     return true;
   } else {
     std::cout << "ERROR: DefineData, application has not been set." <<
