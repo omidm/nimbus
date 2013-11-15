@@ -97,6 +97,8 @@ const std::string SchedulerCommand::REMOTE_COPY_SEND_NAME = "remotecopysend";
 const std::string SchedulerCommand::REMOTE_COPY_RECEIVE_NAME = "remotecopyreceive";
 const std::string SchedulerCommand::LOCAL_COPY_NAME = "localcopy";
 const std::string SchedulerCommand::DEFINE_PARTITION_NAME = "definepartition";
+const std::string SchedulerCommand::LDO_ADD_NAME = "ldoadd";
+const std::string SchedulerCommand::LDO_REMOVE_NAME = "ldoremove";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -139,6 +141,12 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case DEFINE_PARTITION:
       str = DEFINE_PARTITION_NAME;
+      break;
+    case LDO_ADD:
+      str = LDO_ADD_NAME;
+      break;
+    case LDO_REMOVE:
+      str = LDO_REMOVE_NAME;
       break;
   }
   return str;
@@ -202,7 +210,3 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     return true;
   }
 }
-
-
-
-
