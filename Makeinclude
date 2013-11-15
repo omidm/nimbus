@@ -24,9 +24,16 @@ LDIR = ${NIMBUS_ROOT}
 
 CPP = g++
 # Flags for all cpp invocations
-CFLAGS += -Wall -g -pg -O0 -std=c++11
+CFLAGS = -Wall -g -pg -O0
 # CFLAGS += -D_NIMBUS_NO_DBG
 
+
+GCCVERSIONGTEQ4 := $(shell expr `gcc -dumpversion | cut -f2 -d.` \>= 7)
+ifeq "$(GCCVERSIONGTEQ4)" "1"
+    CFLAGS += -std=c++11
+else
+    CFLAGS += -std=c++0x
+endif
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal

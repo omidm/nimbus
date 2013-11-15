@@ -54,10 +54,12 @@ DefineDataCommand::DefineDataCommand(const std::string& data_name,
     const ID<logical_data_id_t>& logical_data_id,
     const ID<partition_id_t>& partition_id,
     const IDSet<partition_id_t>& neighbor_partitions,
+    const ID<job_id_t>& parent_job_id,
     const Parameter& params)
 : data_name_(data_name), logical_data_id_(logical_data_id),
   partition_id_(partition_id),
   neighbor_partitions_(neighbor_partitions),
+  parent_job_id_(parent_job_id),
   params_(params) {
   name_ = DEFINE_DATA_NAME;
   type_ = DEFINE_DATA;
@@ -71,7 +73,7 @@ SchedulerCommand* DefineDataCommand::Clone() {
 }
 
 bool DefineDataCommand::Parse(const std::string& params) {
-  int num = 5;
+  int num = 6;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -112,6 +114,12 @@ bool DefineDataCommand::Parse(const std::string& params) {
   }
 
   iter++;
+  if (!parent_job_id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
+    return false;
+  }
+
+  iter++;
   if (!params_.Parse(*iter)) {
     std::cout << "ERROR: Could not detect valid parameter." << std::endl;
     return false;
@@ -127,6 +135,7 @@ std::string DefineDataCommand::toString() {
   str += (logical_data_id_.toString() + " ");
   str += (partition_id_.toString() + " ");
   str += (neighbor_partitions_.toString() + " ");
+  str += (parent_job_id_.toString() + " ");
   str += params_.toString();
 
   return str;
@@ -139,6 +148,7 @@ std::string DefineDataCommand::toStringWTags() {
   str += ("logical-id:" + logical_data_id_.toString() + " ");
   str += ("partition-id:" + partition_id_.toString() + " ");
   str += ("neighbor-partitions:" + neighbor_partitions_.toString() + " ");
+  str += ("parent-id:" + parent_job_id_.toString() + " ");
   str += ("params:" + params_.toString());
   return str;
 }
@@ -147,6 +157,9 @@ std::string DefineDataCommand::data_name() {
   return data_name_;
 }
 
+ID<job_id_t> DefineDataCommand::parent_job_id() {
+  return parent_job_id_;
+}
 
 ID<logical_data_id_t> DefineDataCommand::logical_data_id() {
   return logical_data_id_;

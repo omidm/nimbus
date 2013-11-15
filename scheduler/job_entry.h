@@ -33,57 +33,83 @@
  */
 
  /*
-  * Spawn compute job command used to spawn compute jobs from worker to
-  * scheduler.
+  * Job entry in the job table of the job manager. Each entry holds the
+  * meta data of the compute and copy jobs received by the scheduler.   
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_SPAWN_COMPUTE_JOB_COMMAND_H_
-#define NIMBUS_SHARED_SPAWN_COMPUTE_JOB_COMMAND_H_
+#ifndef NIMBUS_SCHEDULER_JOB_ENTRY_H_
+#define NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
-
+#include <vector>
 #include <string>
-#include "shared/scheduler_command.h"
+#include <set>
+#include <list>
+#include <utility>
+#include <map>
+#include "worker/data.h"
+#include "shared/idset.h"
+#include "shared/parameter.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
-class SpawnComputeJobCommand : public SchedulerCommand {
-  public:
-    SpawnComputeJobCommand();
-    SpawnComputeJobCommand(const std::string& job_name,
-        const ID<job_id_t>& job_id,
-        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const ID<job_id_t>& parent_job_id,
-        const Parameter& params);
-    ~SpawnComputeJobCommand();
 
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+class JobEntry;
+typedef std::map<job_id_t, JobEntry*> JobEntryMap;
+typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+typedef std::list<JobEntry*> JobEntryList;
+typedef std::vector<Data*> DataArray;
+
+class JobEntry {
+  public:
+    typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
+    typedef std::map<logical_data_id_t, VersionedLogicalData> VersionTable;
+
+    JobEntry();
+    JobEntry(const JobType& job_type,
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const IDSet<logical_data_id_t>& read_set,
+        const IDSet<logical_data_id_t>& write_set,
+        const IDSet<job_id_t>& before_set,
+        const IDSet<job_id_t>& after_set,
+        const job_id_t& parent_job_id,
+        const Parameter& params);
+    virtual ~JobEntry();
+
+    JobType job_type();
     std::string job_name();
-    ID<job_id_t> job_id();
+    job_id_t job_id();
     IDSet<logical_data_id_t> read_set();
     IDSet<logical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
-    ID<job_id_t> parent_job_id();
+    job_id_t parent_job_id();
     Parameter params();
+    VersionTable version_table();
 
   private:
+    JobType job_type_;
     std::string job_name_;
-    ID<job_id_t> job_id_;
-    IDSet<logical_data_id_t> read_set_;
-    IDSet<logical_data_id_t> write_set_;
+    job_id_t job_id_;
+    IDSet<physical_data_id_t> read_set_;
+    IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
-    ID<job_id_t> parent_job_id_;
+    job_id_t parent_job_id_;
     Parameter params_;
+
+    VersionTable version_table_;
+
+    bool versioned;
+    bool assigned;
+    bool done;
 };
 
-
+typedef std::map<job_id_t, JobEntry*> JobEntryTable;
 
 }  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
-#endif  // NIMBUS_SHARED_SPAWN_COMPUTE_JOB_COMMAND_H_
+

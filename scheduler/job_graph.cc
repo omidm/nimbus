@@ -49,4 +49,25 @@ JobGraph::JobGraph() {
 JobGraph::~JobGraph() {
 }
 
+void JobGraph::Clean() {}
+
+void JobGraph::AddJobEntry(JobEntry* job) {}
+
+void JobGraph::RemoveJobEntry(JobEntry* job) {}
+
+void JobGraph::RemoveJobEntry(job_id_t job_id) {}
+
+bool JobGraph::JobEntryExist(job_id_t job_id) {return false;}
+
+JobEntry* GetJobEntry(job_id_t job_id) {return new JobEntry();}
+
+JobGraph::Iter JobGraph::Begin() {
+  return job_table_.begin();
+}
+
+JobGraph::Iter JobGraph::End() {
+  return job_table_.end();
+}
+
+
 

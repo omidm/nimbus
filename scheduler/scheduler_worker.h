@@ -45,16 +45,16 @@
 #include <list>
 #include <string>
 #include "shared/scheduler_server_connection.h"
+#include "scheduler/application_group.h"
 
 namespace nimbus {
 
-class Application;
 
 class SchedulerWorker {
  public:
   SchedulerWorker(worker_id_t id,
                   SchedulerServerConnection* conn,
-                  Application* app);
+                  ApplicationGroup* app);
   virtual ~SchedulerWorker();
 
   virtual worker_id_t worker_id();
@@ -63,7 +63,7 @@ class SchedulerWorker {
   virtual port_t port();
   virtual void set_port(port_t port);
   virtual SchedulerServerConnection* connection();
-  virtual Application* application();
+  virtual ApplicationGroup* application();
   virtual bool is_alive();
   virtual bool handshake_done();
   virtual void set_handshake_done(bool flag);
@@ -78,7 +78,7 @@ class SchedulerWorker {
   std::string ip_;
   port_t port_;
   SchedulerServerConnection* connection_;
-  Application* application_;
+  ApplicationGroup* application_;
   bool is_alive_;
   bool handshake_done_;
   char* read_buffer_;

@@ -53,6 +53,7 @@ class SpawnCopyJobCommand : public SchedulerCommand {
         const ID<logical_data_id_t>& from_logical_id,
         const ID<logical_data_id_t>& to_logical_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        const ID<job_id_t>& parent_job_id,
         const Parameter& params);
     ~SpawnCopyJobCommand();
 
@@ -65,6 +66,7 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     ID<logical_data_id_t> to_logical_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
+    ID<job_id_t> parent_job_id();
     Parameter params();
 
   private:
@@ -73,6 +75,7 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     ID<logical_data_id_t> to_logical_id_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
+    ID<job_id_t> parent_job_id_;
     Parameter params_;
 };
 

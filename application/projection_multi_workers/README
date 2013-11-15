@@ -1,0 +1,49 @@
+------------------------------------------------------------------------------
+AUTHORS
+
+Zhihao Jia (zhihao@stanford.edu)
+Hang Qu (quhang@stanford.edu)
+
+------------------------------------------------------------------------------
+DESCRIPTION
+
+This application implements a PhysBAM projection example on top of Nimbus. 
+Taken velocity field V specified by some functions, projection_multi_workers 
+will make the result divergence free, and dump the output into a directory 
+named output.
+
+------------------------------------------------------------------------------
+WORKFLOW
+
+The workflow of projection is as follows:
+(1) Initialize velocity fields.
+(2) Calculate A and b, and other parameters.
+(3) Do projection, and solve the pressure.
+(4) Use the pressure to update velocity.
+(5) Write out velocity.
+
+------------------------------------------------------------------------------
+BUILD THE CODE
+
+- Compile physbam-lib/Public_Library by following the instructions at physbam-lib/README
+
+- Make & change directory to Build/Release within this folder. Use the following command to generate Makefile
+  ccmake ../..
+
+- Use this Makefile to build the code
+  make
+
+------------------------------------------------------------------------------
+HOW TO RUN
+
+- Compile src/nimbus/test/scheduler_multi to get binaries for scheduler.
+
+- Compile src/nimbus/test/projection_worker to get binaries for workers.
+
+- Run scheduler on one machines.
+  ./ scheduler_multi
+
+- Run two workers on one/two machines.
+  ./ projection_worker 1
+  ./ projection_worker 2 
+

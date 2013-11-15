@@ -32,47 +32,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Applicationgroup seen from scheduler point of view, used to relate the
+  * workers from the same application.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include "assert.h"
-#include "physbam_deserialize_data_arrays_2d.h"
-#include "physbam_deserialize_data_common_2d.h"
+#include "scheduler/application_group.h"
 
-namespace physbam_pb {
+using namespace nimbus; // NOLINT
 
-    void make_physbam_object(FaceArray2 *phys_fa,
-            const ::communication::PhysbamFaceArray2d &pb_fa) {
+ApplicationGroup::ApplicationGroup() {
+}
 
-        assert(phys_fa);
-        assert(phys_fa->buffer_size == pb_fa.buffer_size());
-        assert(pb_fa.buffer_size() == pb_fa.values_size());
-        
-        make_physbam_object(
-                &phys_fa->domain_indices,
-                pb_fa.domain_indices());
-        phys_fa->buffer_size = pb_fa.buffer_size();
-        float *buff_values = phys_fa->base_pointer;
-        RangeI2 range = phys_fa->domain_indices;
-        VI2 i;
-        int j = 0;
-        for (int axis = 1; axis <= 2; axis++) {
-            int dx = axis == 1? 1 : 0;
-            int dy = axis == 2? 1 : 0;
-            for(i.x = 1, i.x = range.min_corner.x;
-                    i.x <= (range.max_corner.x + dx);
-                    i.x++) {
-                for(i.y = range.min_corner.y;
-                        i.y <= (range.max_corner.y + dy); i.y++) {
-                    (*(phys_fa))(axis, i) = buff_values[j];
-                    j++;
-                }
-            }
-        }
-        for (int i = 0; i < pb_fa.values_size(); i++) {
-            buff_values[i] = pb_fa.values(i);
-        }
-    }
+ApplicationGroup::~ApplicationGroup() {
+}
 
-} // namespace physbam_pb

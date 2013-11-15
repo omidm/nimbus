@@ -69,9 +69,11 @@ void Application::SpawnComputeJob(const std::string& name,
     const IDSet<logical_data_id_t>& write,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
+    const job_id_t& parent_id,
     const Parameter& params) {
 
-  SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after, params);
+  SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after,
+      ID<job_id_t>(parent_id), params);
   client_->sendCommand(&cm);
 }
 
@@ -80,10 +82,11 @@ void Application::SpawnCopyJob(const job_id_t& id,
     const logical_data_id_t& to_logical_id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
+    const job_id_t& parent_id,
     const Parameter& params) {
 
   SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<logical_data_id_t>(from_logical_id),
-      ID<logical_data_id_t>(to_logical_id), before, after, params);
+      ID<logical_data_id_t>(to_logical_id), before, after, ID<job_id_t>(parent_id), params);
   client_->sendCommand(&cm);
 }
 
@@ -91,11 +94,14 @@ void Application::DefineData(const std::string& name,
     const logical_data_id_t& logical_data_id,
     const partition_id_t& partition_id,
     const IDSet<partition_id_t>& neighbor_partitions,
+    const job_id_t& parent_id,
     const Parameter& params) {
   ID<logical_data_id_t> logical_id_made(logical_data_id);
   ID<partition_id_t> partition_id_made(partition_id);
+  ID<job_id_t> parent_id_made(parent_id);
 
-  DefineDataCommand cm(name, logical_id_made, partition_id_made, neighbor_partitions, params);
+  DefineDataCommand cm(name, logical_id_made, partition_id_made,
+      neighbor_partitions, parent_id_made, params);
   client_->sendCommand(&cm);
 }
 

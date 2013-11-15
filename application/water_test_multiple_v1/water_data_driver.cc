@@ -216,15 +216,10 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 
     std::cout << "Initialized phi ...\n";
 
-    std::cout << "1\n";
     particle_levelset_evolution->Make_Signed_Distance();
-    std::cout << "2\n";
     particle_levelset_evolution->Set_Seed(2606);
-    std::cout << "3\n";
     particle_levelset_evolution->Seed_Particles(time);
-    std::cout << "4\n";
     particle_levelset_evolution->Delete_Particles_Outside_Grid();
-    std::cout << "5\n";
 
     std::cout << "Extrapolate etc ...\n";
 
@@ -241,10 +236,15 @@ template <class TV, class T> bool NonAdvData<TV, T>::
 
     Set_Boundary_Conditions(driver, time, face_velocities); // get so CFL is correct
 
+    TV_INT i;
+    for (int axis = 1; axis <= 2; axis++)
+        for (i.x = 2; i.x < 98; i.x++)
+            for (i.y = 2; i.y <98; i.y++)
+                (*face_velocities)(axis, i) = 2;
     driver->Write_Output_Files(driver->first_frame);
 
     std::cout << "Successfully initialized non advection data\n";
-    return false;
+    return true;
 }
 
 template <class TV, class T> void NonAdvData<TV, T>::
