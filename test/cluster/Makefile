@@ -28,3 +28,6 @@ speed:  $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 clean: clean-files
 	\rm -f $(TARGET)
 
+test:
+	valgrind --leak-check=full --show-leak-kinds=definite ./memory
+

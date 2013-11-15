@@ -39,6 +39,7 @@
  *  DESCR:
  ***********************************************************************/
 #include "shared/cluster.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -64,14 +65,17 @@ nimbus::Node::Node(uint32_t addr,
  * \return
 */
 nimbus::Node::~Node() {
-  LinkPtrSet::iterator it = in_links_.begin();
-  for (; it != in_links_.end(); ++it) {
+  LinkPtrSet::iterator it;
+  for (it = in_links_.begin();
+       it != in_links_.end();
+       it = in_links_.begin()) {
     Link* link = *it;
     delete link;
   }
 
-  it = out_links_.begin();
-  for (; it != out_links_.end(); ++it) {
+  for (it = out_links_.begin();
+       it != out_links_.end();
+       it = out_links_.begin()) {
     Link* link = *it;
     delete link;
   }
@@ -131,6 +135,12 @@ nimbus::ClusterMap::ClusterMap() {
  * \return
 */
 nimbus::ClusterMap::~ClusterMap() {
+  NodeMap::iterator it = node_map_.begin();
+  for (; it != node_map_.end(); ++it) {
+    Node* n = (*it).second;
+    dbg(DBG_MEMORY, "Deleting node %i 0x%p\n", (*it).first, n);
+    delete n;
+  }
 }
 
 
@@ -158,7 +168,7 @@ cluster_map_id_t nimbus::ClusterMap::CreateComputer(SchedulerWorker *work,
                                                     uint32_t ipv4) {
   Computer* computer = new Computer(ipv4, id_);
   id_++;
-
+  dbg(DBG_MEMORY, "Allocating computer %i: 0x%p\n", computer->id(), computer);
   computer->set_memory(memory);
   computer->set_cores(cores);
   computer->set_freq_MHz(MHz);
@@ -166,8 +176,8 @@ cluster_map_id_t nimbus::ClusterMap::CreateComputer(SchedulerWorker *work,
   computer->set_ipv4(ipv4);
   computer->set_worker(work);
 
-  node_set_.insert(computer);
   computer_map_[work->worker_id()] = computer;
+  node_map_[computer->id()] = computer;
   return computer->id();
 }
 
@@ -192,6 +202,7 @@ cluster_map_id_t nimbus::ClusterMap::CreateSwitch(switch_id_t id,
                                                   uint32_t nsdelay,
                                                   uint32_t ipv4) {
   Switch* swich = new Switch(ipv4, id_);
+  dbg(DBG_MEMORY, "Allocating switch %i: 0x%p\n", swich->id(), swich);
   id_++;
 
   swich->set_ports(ports);
@@ -200,8 +211,8 @@ cluster_map_id_t nimbus::ClusterMap::CreateSwitch(switch_id_t id,
   swich->set_ipv4(ipv4);
   swich->set_switch_id(id);
 
-  node_set_.insert(swich);
   switch_map_[id] = swich;
+  node_map_[swich->id()] = swich;
   return swich->id();
 }
 
@@ -256,6 +267,7 @@ bool nimbus::ClusterMap::Delete(cluster_map_id_t id) {
      }
     // Deleting the node will delete all of its links.
     // Each link delete will remove it from both nodes.
+    printf("Deleting node %i 0x%p\n", id, node);
     delete node;
     return true;
   }
@@ -322,6 +334,15 @@ Switch * nimbus::ClusterMap::LookupSwitch(cluster_map_id_t id) {
   } else {
     Node* n = node_map_[id];
     return static_cast<Switch*>(n);
+  }
+}
+
+Node* nimbus::ClusterMap::LookupNode(cluster_map_id_t id) {
+  if (node_map_.find(id) == node_map_.end()) {
+    return NULL;
+  } else {
+    Node* n = node_map_[id];
+    return n;
   }
 }
 

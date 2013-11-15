@@ -24,9 +24,9 @@ LDIR = ${NIMBUS_ROOT}
 
 CPP = g++
 # Flags for all cpp invocations
-CFLAGS =
-# CFLAGS += -D_NIMBUS_NO_DBG
 CFLAGS += -Wall -g -pg -O0 -std=c++11
+# CFLAGS += -D_NIMBUS_NO_DBG
+
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal
