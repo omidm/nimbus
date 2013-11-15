@@ -33,52 +33,83 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Job entry in the job table of the job manager. Each entry holds the
+  * meta data of the compute and copy jobs received by the scheduler.   
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+#ifndef NIMBUS_SCHEDULER_JOB_ENTRY_H_
+#define NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
 #include <vector>
 #include <string>
 #include <set>
 #include <list>
+#include <utility>
 #include <map>
 #include "worker/data.h"
 #include "shared/idset.h"
+#include "shared/parameter.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-class SchedulerJob;
-typedef std::map<int, SchedulerJob*> SchedulerJobMap;
-typedef std::list<SchedulerJob*> SchedulerJobList;
+class JobEntry;
+typedef std::map<job_id_t, JobEntry*> JobEntryMap;
+typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+typedef std::list<JobEntry*> JobEntryList;
 typedef std::vector<Data*> DataArray;
 
-class SchedulerJob {
- public:
-  SchedulerJob();
-  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
-  virtual ~SchedulerJob();
+class JobEntry {
+  public:
+    typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
+    typedef std::map<logical_data_id_t, VersionedLogicalData> VersionTable;
 
-  uint64_t id();
-  void set_id(job_id_t id);
+    JobEntry();
+    JobEntry(const JobType& job_type,
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const IDSet<logical_data_id_t>& read_set,
+        const IDSet<logical_data_id_t>& write_set,
+        const IDSet<job_id_t>& before_set,
+        const IDSet<job_id_t>& after_set,
+        const job_id_t& parent_job_id,
+        const Parameter& params);
+    virtual ~JobEntry();
 
+    JobType job_type();
+    std::string job_name();
+    job_id_t job_id();
+    IDSet<logical_data_id_t> read_set();
+    IDSet<logical_data_id_t> write_set();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+    job_id_t parent_job_id();
+    Parameter params();
+    VersionTable version_table();
 
- private:
-  job_id_t id_;
-  app_id_t app_id_;
-  JobType type_;
-  IDSet<physical_data_id_t> read_set_;
-  IDSet<physical_data_id_t> write_set_;
-  IDSet<job_id_t> before_set_;
-  IDSet<job_id_t> after_set_;
-  std::string parameters_;
+  private:
+    JobType job_type_;
+    std::string job_name_;
+    job_id_t job_id_;
+    IDSet<physical_data_id_t> read_set_;
+    IDSet<physical_data_id_t> write_set_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    job_id_t parent_job_id_;
+    Parameter params_;
+
+    VersionTable version_table_;
+
+    bool versioned;
+    bool assigned;
+    bool done;
 };
 
+typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+#endif  // NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
 
