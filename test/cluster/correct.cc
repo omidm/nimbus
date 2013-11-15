@@ -38,11 +38,68 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#define DEBUG_MODE
+#define NUM_COMPUTERS 50
+#define SWITCH_ID 6505
 
 #include "shared/cluster.h"
 #include "shared/dbg.h"
 
-int main(int argc, char *argv[]) {}
+int main(int argc, char *argv[]) {
+  nimbus::cluster_map_id_t computers[NUM_COMPUTERS];
+  nimbus::cluster_map_id_t links[NUM_COMPUTERS];
+  nimbus::cluster_map_id_t swich;
 
+  nimbus::ClusterMap* cm = new nimbus::ClusterMap();
 
+  for (int i = 0; i < NUM_COMPUTERS; i++) {
+    nimbus::SchedulerWorker* sw = new nimbus::SchedulerWorker(i, NULL, NULL);
+    computers[i] = cm->CreateComputer(sw,
+                                      (lrand48() % 64) + 1,  // mem
+                                      (lrand48() % 20) + 1,  // cores
+                                      ((lrand48() % 30) + 1) * 100,  // mhz
+                                      lrand48() % 30,  // mbps
+                                      i);  // ip
+  }
+
+  printf("Testing computer insertion.\n");
+  for (int i = 0; i < NUM_COMPUTERS; i++) {
+    nimbus::cluster_map_id_t cmid = cm->LookupWorkerId(i);
+    if (cmid != computers[i] || true) {
+      printf("Worker id %i has cluster map id %i: %s.\n",
+             i, cmid, (cmid == computers[i])? "CORRECT":"WRONG");
+    }
+    nimbus::Computer* comp = cm->LookupComputer(cmid);
+    nimbus::Node* comp2 = cm->LookupNode(cmid);
+    if (comp != comp2 || true) {
+      printf("Looking up node and computer by cmid %i: %s\n",
+             cmid, (comp == comp2)? "MATCH":"FAIL");
+    }
+  }
+
+  swich = cm->CreateSwitch(SWITCH_ID,
+                           NUM_COMPUTERS,
+                           1000,
+                           10000,
+                           0x7f000001);
+
+  printf("Testing links.\n");
+  for (int i = 0; i < NUM_COMPUTERS; i++) {
+    links[i] = cm->AddLink(computers[i], swich, 100);
+    links[i] = cm->AddLink(swich, computers[i], 100);
+  }
+
+  for (int i = 0; i < NUM_COMPUTERS; i++) {
+    nimbus::Computer* comp = cm->LookupComputer(computers[i]);
+    nimbus::LinkPtrSet* out = comp->out_links();
+    nimbus::LinkPtrSet::iterator it = out->begin();
+    for (; it != out->end(); ++it) {
+      nimbus::Link* link = *it;
+      nimbus::Node* dest = link->destination();
+      if (dest->type() != nimbus::CLUSTER_SWITCH ||
+          dest->id() != swich) {
+        printf("Destination of edge from computer %i is incorrect. It should be to a switch but isn't.\n", i);  // NOLINT
+      }
+    }
+    cm->Delete(computers[i]);
+  }
+}

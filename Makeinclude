@@ -24,9 +24,9 @@ LDIR = ${NIMBUS_ROOT}
 
 CPP = g++
 # Flags for all cpp invocations
-CFLAGS =
+CFLAGS = -Wall -g -pg -O0
 # CFLAGS += -D_NIMBUS_NO_DBG
-CFLAGS += -Wall -g -pg -O0
+
 
 GCCVERSIONGTEQ4 := $(shell expr `gcc -dumpversion | cut -f2 -d.` \>= 7)
 ifeq "$(GCCVERSIONGTEQ4)" "1"

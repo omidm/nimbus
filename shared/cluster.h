@@ -199,7 +199,6 @@ class ClusterMap {
 
  private:
   LinkPtrSet link_set_;
-  NodeSet node_set_;
   ComputerMap computer_map_;
   SwitchMap switch_map_;
   NodeMap node_map_;
