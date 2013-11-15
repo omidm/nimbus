@@ -46,12 +46,14 @@
 #include <set>
 #include <map>
 #include <list>
+#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
-#include "worker/data.h"
 #include "shared/id.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
+#include "worker/data.h"
+#include "worker/worker_ldo_map.h"
 
 namespace nimbus {
 
@@ -97,8 +99,18 @@ class Job {
         const IDSet<partition_id_t>& neighbor_partition,
         const Parameter& params);
 
+    bool DefinePartition(const ID<partition_id_t>& partition_id,
+         const GeometricRegion& r,
+         const Parameter& params);
+
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
+    int GetCoveredLogicalObjects(CLdoVector* result,
+         std::string& variable,
+         GeometricRegion* r);
+    int GetAdjacentLogicalObjects(CLdoVector* result,
+         std::string& variable,
+         GeometricRegion* r);
 
     std::string name();
     ID<job_id_t> id();
