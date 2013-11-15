@@ -1,11 +1,11 @@
 package parameters;
 
 message AdvVelPar {
-    optional float dt = 1;
-    optional float time = 2;
+    required float dt = 1;
+    required float time = 2;
 }
 
 message Param {
-    required uint64 read_ofs = 1;
+    optional uint64 write_ofs = 1;
     optional AdvVelPar adv_par = 2;
 }

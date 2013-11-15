@@ -49,17 +49,61 @@ JobGraph::JobGraph() {
 JobGraph::~JobGraph() {
 }
 
-void JobGraph::Clean() {}
+void JobGraph::CleanAll() {
+  job_table_.clear();
+}
 
-void JobGraph::AddJobEntry(JobEntry* job) {}
+bool JobGraph::AddJobEntry(JobEntry* job) {
+  job_id_t id = job->job_id();
+  if (job_table_.count(id) != 0) {
+    std::cout << "WARNING: job entry with the same job id (" << id
+      << ") already exist. Nothing added to the graph." << std::endl;
+    return false;
+  } else {
+    job_table_[id] = job;
+    return true;
+  }
+}
 
-void JobGraph::RemoveJobEntry(JobEntry* job) {}
+bool JobGraph::RemoveJobEntry(JobEntry* job) {
+  job_id_t id = job->job_id();
+  if (job_table_.count(id) == 0) {
+    std::cout << "WARNING: job entry with the job id (" << id
+      << ") does not exist. Nothing removed from the graph." << std::endl;
+    return false;
+  } else {
+    job_table_.erase(id);
+    return true;
+  }
+}
 
-void JobGraph::RemoveJobEntry(job_id_t job_id) {}
+bool JobGraph::RemoveJobEntry(job_id_t id) {
+  if (job_table_.count(id) == 0) {
+    std::cout << "WARNING: job entry with the job id (" << id
+      << ") does not exist. Nothing removed from the graph." << std::endl;
+    return false;
+  } else {
+    job_table_.erase(id);
+    return true;
+  }
+}
 
-bool JobGraph::JobEntryExist(job_id_t job_id) {return false;}
+bool JobGraph::JobEntryExist(job_id_t id) {
+  if (job_table_.count(id) == 0) {
+    return false;
+  } else {
+    return true;
+  }
+}
 
-JobEntry* GetJobEntry(job_id_t job_id) {return new JobEntry();}
+bool JobGraph::GetJobEntry(job_id_t id, JobEntry*& job) {
+  if (job_table_.count(id) == 0) {
+    return false;
+  } else {
+    job = job_table_[id];
+    return true;
+  }
+}
 
 JobGraph::Iter JobGraph::Begin() {
   return job_table_.begin();

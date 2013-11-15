@@ -54,22 +54,6 @@ namespace physbam_pb {
                 pb_fa.domain_indices());
         phys_fa->buffer_size = pb_fa.buffer_size();
         float *buff_values = phys_fa->base_pointer;
-        RangeI2 range = phys_fa->domain_indices;
-        VI2 i;
-        int j = 0;
-        for (int axis = 1; axis <= 2; axis++) {
-            int dx = axis == 1? 1 : 0;
-            int dy = axis == 2? 1 : 0;
-            for(i.x = 1, i.x = range.min_corner.x;
-                    i.x <= (range.max_corner.x + dx);
-                    i.x++) {
-                for(i.y = range.min_corner.y;
-                        i.y <= (range.max_corner.y + dy); i.y++) {
-                    (*(phys_fa))(axis, i) = buff_values[j];
-                    j++;
-                }
-            }
-        }
         for (int i = 0; i < pb_fa.values_size(); i++) {
             buff_values[i] = pb_fa.values(i);
         }

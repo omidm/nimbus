@@ -44,10 +44,12 @@
 #include "app_config.h"
 #include "data_fwd_decl.h"
 #include "physbam_include.h"
+#include "shared/geometric_region.h"
 #include "water_app.h"
 
 void Advect_Velocities (
-        ::water_app_data::FaceArray<TV> *face_velocities,
+        ::nimbus::GeometricRegion region,
+        T_FACE_ARRAY *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,
         T dt,
