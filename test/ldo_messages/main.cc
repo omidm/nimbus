@@ -33,21 +33,18 @@
  */
 
  /*
-  * Protocol buffer messages for transmitting logical data objects.
+  * This file tests whether LogicalDataObjects are being serialized
+  * and deserialized correctly.
+  *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-message LdoMessage {
-  required uint64 data_id = 1;
-  required GeometricRegionMessage region = 2;
-  required string variable = 3;
-}
 
-message GeometricRegionMessage {
-  required int64 x  = 1;
-  required int64 y  = 2;
-  required int64 z  = 3;
-  required int64 dx = 4;
-  required int64 dy = 5;
-  required int64 dz = 6;
-}
+#include "shared/geometric_region.h"
+#include "shared/logical_data_object.h"
+#include "dbg.h"
+#include "shared/ldo_add_message.h"
+#include "shared/ldo_remove_message.h"
+
+int main(int argc, char *argv[]) {}
+

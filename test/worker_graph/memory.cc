@@ -33,21 +33,17 @@
  */
 
  /*
-  * Protocol buffer messages for transmitting logical data objects.
+  * This program tests the memory use (and potential memory leaks) of
+  * the WorkerGraph.
+  *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-message LdoMessage {
-  required uint64 data_id = 1;
-  required GeometricRegionMessage region = 2;
-  required string variable = 3;
-}
+#define NUM_COMPUTERS 39
+#define NUM_SWITCHES 17
 
-message GeometricRegionMessage {
-  required int64 x  = 1;
-  required int64 y  = 2;
-  required int64 z  = 3;
-  required int64 dx = 4;
-  required int64 dy = 5;
-  required int64 dz = 6;
-}
+
+#include "scheduler/worker_graph.h"
+#include "shared/dbg.h"
+
+int main(int argc, char *argv[]) {}

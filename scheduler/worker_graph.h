@@ -73,7 +73,7 @@ namespace nimbus {
     // elsewhere
 
     bool ProcessMessage(WorkerGraphMessage* message);
-    const SchedulerWorker* WorkerById(worker_id_t id);
+    SchedulerWorker* WorkerById(worker_id_t id);
     const Computer* ComputerById(worker_id_t id);
     uint32_t InterComputerMbps(worker_id_t src, worker_id_t dest);
     uint32_t InterComputerMicroSec(worker_id_t src, worker_id_t dest);

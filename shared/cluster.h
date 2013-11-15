@@ -36,6 +36,7 @@
   * Nimbus abstraction of computational resources.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 

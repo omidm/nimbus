@@ -33,21 +33,40 @@
  */
 
  /*
-  * Protocol buffer messages for transmitting logical data objects.
-  * Author: Philip Levis <pal@cs.stanford.edu>
+  * Compute job command used to send compute jobs from scheduler to workers.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-message LdoMessage {
-  required uint64 data_id = 1;
-  required GeometricRegionMessage region = 2;
-  required string variable = 3;
-}
+#ifndef NIMBUS_SHARED_LDO_ADD_COMMAND_H_
+#define NIMBUS_SHARED_LDO_ADD_COMMAND_H_
 
-message GeometricRegionMessage {
-  required int64 x  = 1;
-  required int64 y  = 2;
-  required int64 z  = 3;
-  required int64 dx = 4;
-  required int64 dy = 5;
-  required int64 dz = 6;
-}
+
+#include <string>
+#include "shared/scheduler_command.h"
+#include "shared/logical_data_object.h"
+
+namespace nimbus {
+class LdoAddCommand : public SchedulerCommand {
+  public:
+    LdoAddCommand();
+    explicit LdoAddCommand(LogicalDataObject* obj);
+    virtual ~LdoAddCommand();
+
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+
+    virtual LogicalDataObject* object();
+
+  private:
+    GeometricRegion* region_;
+    LogicalDataObject* object_;
+};
+
+
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_LDO_ADD_COMMAND_H_
