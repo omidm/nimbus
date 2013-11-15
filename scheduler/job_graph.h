@@ -61,12 +61,12 @@ class JobGraph {
     explicit JobGraph();
     virtual ~JobGraph();
 
-    void Clean();
-    void AddJobEntry(JobEntry* job);
-    void RemoveJobEntry(JobEntry* job);
-    void RemoveJobEntry(job_id_t job_id);
+    void CleanAll();
+    bool AddJobEntry(JobEntry* job);
+    bool RemoveJobEntry(JobEntry* job);
+    bool RemoveJobEntry(job_id_t job_id);
     bool JobEntryExist(job_id_t job_id);
-    JobEntry* GetJobEntry(job_id_t job_id);
+    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
     Iter Begin();
     Iter End();
