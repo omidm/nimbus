@@ -56,15 +56,23 @@
 namespace nimbus {
 class JobGraph {
   public:
+    typedef JobEntryTable::iterator Iter;
+
     explicit JobGraph();
     virtual ~JobGraph();
 
-    void AddJob(JobEntry* job) {}
+    void Clean();
+    void AddJobEntry(JobEntry* job);
+    void RemoveJobEntry(JobEntry* job);
+    void RemoveJobEntry(job_id_t job_id);
+    bool JobEntryExist(job_id_t job_id);
+    JobEntry* GetJobEntry(job_id_t job_id);
 
-    void RemoveJob(JobEntry* job) {}
+    Iter Begin();
+    Iter End();
 
   private:
-    JobEntryMap job_map_;
+    JobEntryTable job_table_;
 };
 
 }  // namespace nimbus
