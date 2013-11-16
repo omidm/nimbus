@@ -88,7 +88,6 @@ SchedulerCommand * nimbus::LdoAddCommand::Clone() {
  * \return
 */
 bool nimbus::LdoAddCommand::Parse(const std::string &param_segment) {
-  printf("Parsing LdoAddCommand.\n");
   std::string strCopy = param_segment;
   object_ = new LogicalDataObject();
   UnescapeString(&strCopy);
