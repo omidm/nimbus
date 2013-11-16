@@ -182,12 +182,12 @@ bool nimbus::WorkerGraph::ProcessMessage(WorkerGraphMessage *message) {
 
 
 /**
- * \fn const SchedulerWorker * nimbus::WorkerGraph::WorkerById(worker_id_t id)
+ * \fn SchedulerWorker * nimbus::WorkerGraph::WorkerById(worker_id_t id)
  * \brief Brief description.
  * \param id
  * \return
 */
-const SchedulerWorker * nimbus::WorkerGraph::WorkerById(worker_id_t id) {
+SchedulerWorker * nimbus::WorkerGraph::WorkerById(worker_id_t id) {
   if (worker_table_.find(id) == worker_table_.end()) {
     return NULL;
   } else {
@@ -252,7 +252,13 @@ uint32_t nimbus::WorkerGraph::InterComputerMicroSec(worker_id_t src,
 }
 */
 bool nimbus::WorkerGraph::ProcessWorkerRegisterMessage(const WorkerRegisterMessage& msg) {
-  return true;
+  SchedulerWorker* worker = WorkerById(msg.worker_id());
+  return cluster_map_.CreateComputer(worker,
+                                     msg.memory(),
+                                     msg.cores(),
+                                     msg.core_clock(),
+                                     msg.mbps(),
+                                     msg.ipv4());
 }
 
 
@@ -263,7 +269,11 @@ bool nimbus::WorkerGraph::ProcessWorkerRegisterMessage(const WorkerRegisterMessa
  * \return
 */
 bool nimbus::WorkerGraph::ProcessSwitchRegisterMessage(const SwitchRegisterMessage& msg) {
-  return true;
+  return cluster_map_.CreateSwitch(msg.switch_id(),
+                                   msg.ports(),
+                                   msg.mbps(),
+                                   msg.nsdelay(),
+                                   msg.ipv4());
 }
 
 
@@ -275,7 +285,9 @@ bool nimbus::WorkerGraph::ProcessSwitchRegisterMessage(const SwitchRegisterMessa
  * \return
 */
 bool nimbus::WorkerGraph::ProcessWorkerLinkMessage(const WorkerLinkMessage& msg) {
-  return true;
+  cluster_map_id_t worker = cluster_map_.LookupWorkerId(msg.worker_id());
+  cluster_map_id_t swich = cluster_map_.LookupSwitchId(msg.switch_id());
+  return cluster_map_.AddLink(worker, swich, msg.mbps());
 }
 
 
@@ -286,7 +298,9 @@ bool nimbus::WorkerGraph::ProcessWorkerLinkMessage(const WorkerLinkMessage& msg)
  * \return
 */
 bool nimbus::WorkerGraph::ProcessSwitchLinkMessage(const SwitchLinkMessage& msg) {
-  return true;
+  cluster_map_id_t swich1 = cluster_map_.LookupSwitchId(msg.switch_id1());
+  cluster_map_id_t swich2 = cluster_map_.LookupSwitchId(msg.switch_id2());
+  return cluster_map_.AddLink(swich1, swich2, msg.mbps());
 }
 
 
@@ -297,6 +311,7 @@ bool nimbus::WorkerGraph::ProcessSwitchLinkMessage(const SwitchLinkMessage& msg)
  * \return
 */
 bool nimbus::WorkerGraph::ProcessUpdateMessage(const UpdateMessage& msg) {
+  // Currently do not process real-time updates
   return true;
 }
 

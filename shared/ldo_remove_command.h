@@ -33,52 +33,40 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Compute job command used to send compute jobs from scheduler to workers.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
-#define NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
+#ifndef NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_
+#define NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_
 
-#include <vector>
+
 #include <string>
-#include <set>
-#include <list>
-#include <map>
-#include "worker/data.h"
-#include "shared/idset.h"
-#include "shared/nimbus_types.h"
+#include "shared/scheduler_command.h"
+#include "shared/logical_data_object.h"
 
 namespace nimbus {
+class LdoRemoveCommand : public SchedulerCommand {
+  public:
+    LdoRemoveCommand();
+    explicit LdoRemoveCommand(LogicalDataObject* obj);
 
-class SchedulerJob;
-typedef std::map<int, SchedulerJob*> SchedulerJobMap;
-typedef std::list<SchedulerJob*> SchedulerJobList;
-typedef std::vector<Data*> DataArray;
+    virtual ~LdoRemoveCommand();
 
-class SchedulerJob {
- public:
-  SchedulerJob();
-  SchedulerJob(job_id_t id, app_id_t app_id, JobType type);
-  virtual ~SchedulerJob();
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    virtual LogicalDataObject* object();
 
-  uint64_t id();
-  void set_id(job_id_t id);
-
-
- private:
-  job_id_t id_;
-  app_id_t app_id_;
-  JobType type_;
-  IDSet<physical_data_id_t> read_set_;
-  IDSet<physical_data_id_t> write_set_;
-  IDSet<job_id_t> before_set_;
-  IDSet<job_id_t> after_set_;
-  std::string parameters_;
+  private:
+    GeometricRegion* region_;
+    LogicalDataObject* object_;
 };
 
+
+
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_SCHEDULER_JOB_H_
 
-
+#endif  // NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_

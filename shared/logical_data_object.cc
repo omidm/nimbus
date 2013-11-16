@@ -42,6 +42,12 @@
 #include "shared/dbg.h"
 
 namespace nimbus {
+
+LogicalDataObject::LogicalDataObject() {
+  id_ = 0;
+  region_ = NULL;
+}
+
 /**
  * \fn nimbus::LogicalDataObject::LogicalDataObject(logical_data_id_t id,
                                              std::string variable,
@@ -60,20 +66,22 @@ LogicalDataObject::LogicalDataObject(logical_data_id_t id,
   region_ = region;
 }
 
-LogicalDataObject::LogicalDataObject(std::istream* is) {
+bool LogicalDataObject::Parse(std::istream* is) {
   LdoMessage msg;
   msg.ParseFromIstream(is);
   id_ = msg.data_id();
   variable_ = msg.variable();
   region_ = new GeometricRegion(&msg.region());
+  return true;
 }
 
-LogicalDataObject::LogicalDataObject(const std::string& data) {
+bool LogicalDataObject::Parse(const std::string& data) {
   LdoMessage msg;
   msg.ParseFromString(data);
   id_ = msg.data_id();
   variable_ = msg.variable();
   region_ = new GeometricRegion(&msg.region());
+  return true;
 }
 
 /**

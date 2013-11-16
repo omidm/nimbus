@@ -53,7 +53,7 @@
 
 namespace nimbus {
 
-  typedef std::map<physical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
+  typedef std::map<logical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
 
   class PhysicalObjectMap {
   public:

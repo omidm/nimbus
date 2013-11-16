@@ -43,7 +43,7 @@
 #ifndef NIMBUS_SCHEDULER_WORKER_GRAPH_H_
 #define NIMBUS_SCHEDULER_WORKER_GRAPH_H_
 
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <vector>
 #include "shared/nimbus_types.h"
@@ -55,8 +55,8 @@ namespace nimbus {
 
   typedef std::vector<worker_id_t> WorkerIdVector;
   typedef std::vector<SchedulerWorker*> SchedulerWorkerVector;
-  typedef std::unordered_map<worker_id_t, SchedulerWorker*> SchedulerWorkerTable;
-  typedef std::unordered_map<worker_id_t, Computer*> ComputerTable;
+  typedef std::map<worker_id_t, SchedulerWorker*> SchedulerWorkerTable;
+  typedef std::map<worker_id_t, Computer*> ComputerTable;
 
   class WorkerGraph {
   public:
@@ -73,7 +73,7 @@ namespace nimbus {
     // elsewhere
 
     bool ProcessMessage(WorkerGraphMessage* message);
-    const SchedulerWorker* WorkerById(worker_id_t id);
+    SchedulerWorker* WorkerById(worker_id_t id);
     const Computer* ComputerById(worker_id_t id);
     uint32_t InterComputerMbps(worker_id_t src, worker_id_t dest);
     uint32_t InterComputerMicroSec(worker_id_t src, worker_id_t dest);

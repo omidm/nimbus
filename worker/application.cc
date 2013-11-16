@@ -48,10 +48,13 @@ void Application::Load() {
   std::cout << "Loaded Nimbus base application." << std::endl;
 }
 
-void Application::Start(SchedulerClient* client, IDMaker* id_maker) {
+void Application::Start(SchedulerClient* client,
+    IDMaker* id_maker,
+    WorkerLdoMap* ldo_map) {
   std::cout << "Running Nimbus application: " << id_ << std::endl;
   client_ = client;
   id_maker_ = id_maker;
+  ldo_map_ = ldo_map;
   Load();
 }
 
@@ -105,6 +108,13 @@ void Application::DefineData(const std::string& name,
   client_->sendCommand(&cm);
 }
 
+void Application::DefinePartition(const ID<partition_id_t>& partition_id,
+     const GeometricRegion& r,
+     const Parameter& params) {
+  DefinePartitionCommand cm(partition_id, r, params);
+  client_->sendCommand(&cm);
+}
+
 Job* Application::CloneJob(std::string name) {
   return job_table_[name]->Clone();
 }
@@ -119,6 +129,26 @@ bool Application::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
 
 bool Application::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num) {
   return id_maker_->GetNewLogicalDataID(result, req_num);
+}
+
+int Application::GetCoveredLogicalObjects(CLdoVector* result,
+     std::string& variable,
+     GeometricRegion* r) {
+  if (ldo_map_ == NULL) {
+    return false;
+  } else {
+    return ldo_map_->FindCoveredLogicalObjects(variable, r, result);
+  }
+}
+
+int Application::GetAdjacentLogicalObjects(CLdoVector* result,
+     std::string& variable,
+     GeometricRegion* r) {
+  if (ldo_map_ == NULL) {
+    return false;
+  } else {
+    return ldo_map_->FindAdjacentLogicalObjects(variable, r, result);
+  }
 }
 
 void* Application::app_data() {

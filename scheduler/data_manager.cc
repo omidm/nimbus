@@ -395,7 +395,8 @@ bool nimbus::DataManager::SendLdoAddToWorkers(LogicalDataObject* obj) {
   if (server_ == NULL) {
     return false;
   }
-
+  SchedulerCommand* command = new LdoAddCommand(obj);
+  server_->BroadcastCommand(command);
   return true;
 }
 
@@ -403,7 +404,8 @@ bool nimbus::DataManager::SendLdoRemoveToWorkers(LogicalDataObject* obj) {
   if (server_ == NULL) {
     return false;
   }
-
+  SchedulerCommand* command = new LdoRemoveCommand(obj);
+  server_->BroadcastCommand(command);
   return true;
 }
 

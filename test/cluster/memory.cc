@@ -39,11 +39,58 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#define DEBUG_MODE
+#define NUM_COMPUTERS 39
+#define NUM_SWITCHES 17
+
 
 #include "shared/cluster.h"
 #include "shared/dbg.h"
 
-int main(int argc, char *argv[]) {}
+int main(int argc, char *argv[]) {
+  nimbus::SchedulerWorker* workers[NUM_COMPUTERS];
+  nimbus::cluster_map_id_t computers[NUM_COMPUTERS];
+  nimbus::cluster_map_id_t switches[NUM_SWITCHES];
+  nimbus::cluster_map_id_t links[NUM_COMPUTERS * NUM_SWITCHES];
+  nimbus::cluster_map_id_t swich;
 
+  nimbus::ClusterMap* cm = new nimbus::ClusterMap();
 
+  dbg_init();
+
+  printf("Inserting computers.\n");
+  for (int i = 0; i < NUM_COMPUTERS; i++) {
+    nimbus::SchedulerWorker* sw = new nimbus::SchedulerWorker(i, NULL, NULL);
+    workers[i] = sw;
+    computers[i] = cm->CreateComputer(sw,
+                                      (lrand48() % 64) + 1,  // mem
+                                      (lrand48() % 20) + 1,  // cores
+                                      ((lrand48() % 30) + 1) * 100,  // mhz
+                                      lrand48() % 30,  // mbps
+                                      i);  // ip
+  }
+  printf("Inserting switches and links.\n");
+  for (int i = 0; i < NUM_SWITCHES; i++) {
+    swich = cm->CreateSwitch(i,
+                             NUM_COMPUTERS,
+                             1000,
+                             10000,
+                             0x7f000001);
+    for (int j = 0; j < NUM_COMPUTERS; j++) {
+      if (j & 0x1) {
+        cm->AddLink(swich, computers[j], 37);
+      }
+      if (j & 0x02) {
+        cm->AddLink(computers[j], swich, 68);
+      }
+    }
+  }
+
+  printf("Deleting computers.\n");
+  for (int i = 0; i < NUM_COMPUTERS; i++) {
+    cm->Delete(computers[i]);
+    delete(workers[i]);
+  }
+  printf("Leaving switches for destructor.\n");
+
+  delete cm;
+}

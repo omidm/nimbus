@@ -88,6 +88,7 @@ class Worker {
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
+  WorkerLdoMap* ldo_map_;
   IDMaker id_maker_;
   SchedulerCommand::PrototypeTable scheduler_command_table_;
   worker_id_t id_;

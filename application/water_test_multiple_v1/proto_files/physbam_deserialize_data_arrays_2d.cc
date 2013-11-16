@@ -39,7 +39,6 @@
 #include "assert.h"
 #include "physbam_deserialize_data_arrays_2d.h"
 #include "physbam_deserialize_data_common_2d.h"
-#define INITIALIZATION_VALUE 0
 
 namespace physbam_pb {
 
@@ -47,7 +46,7 @@ namespace physbam_pb {
             const ::communication::PhysbamFaceArray2d &pb_fa) {
 
         assert(phys_fa);
-        assert(phys_fa->buffer_size() == pb_fa.buffer_size());
+        assert(phys_fa->buffer_size == pb_fa.buffer_size());
         assert(pb_fa.buffer_size() == pb_fa.values_size());
         
         make_physbam_object(

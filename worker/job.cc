@@ -114,6 +114,19 @@ bool Job::DefineData(const std::string& name,
   }
 }
 
+bool Job::DefinePartition(const ID<partition_id_t>& partition_id,
+    const GeometricRegion& r,
+    const Parameter& params) {
+    if (app_is_set_) {
+        application_->DefinePartition(partition_id, r, params);
+        return true;
+    } else {
+        std::cout << "ERROR: DefinePartition, application has not been set." <<
+            std::endl;
+        return false;
+    }
+}
+
 bool Job::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   if (app_is_set_) {
     return application_->GetNewJobID(result, req_num);
@@ -131,6 +144,28 @@ bool Job::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req
     std::cout << "ERROR: GetNewDataID, application has not been set." <<
       std::endl;
     return false;
+  }
+}
+
+int Job::GetCoveredLogicalObjects(CLdoVector* result,
+    std::string& variable,
+    GeometricRegion* r) {
+  if (app_is_set_) {
+      return application_->GetCoveredLogicalObjects(result, variable, r);
+  } else {
+      std::cout << "Error: GetCoveredLogicalObjects, application has not been set." << std::endl;
+      return -1;
+  }
+}
+
+int Job::GetAdjacentLogicalObjects(CLdoVector* result,
+    std::string& variable,
+    GeometricRegion* r) {
+  if (app_is_set_) {
+      return application_->GetAdjacentLogicalObjects(result, variable, r);
+  } else {
+      std::cout << "Error: GetAdjacentLogicalObjects, application has not been set." << std::endl;
+      return -1;
   }
 }
 

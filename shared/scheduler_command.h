@@ -83,7 +83,9 @@ class SchedulerCommand {
     REMOTE_COPY_SEND,
     REMOTE_COPY_RECEIVE,
     LOCAL_COPY,
-    DEFINE_PARTITION
+    DEFINE_PARTITION,
+    LDO_ADD,
+    LDO_REMOVE
   };
 
   typedef std::set<Type> TypeSet;
@@ -121,6 +123,8 @@ class SchedulerCommand {
   static const std::string REMOTE_COPY_RECEIVE_NAME;
   static const std::string LOCAL_COPY_NAME;
   static const std::string DEFINE_PARTITION_NAME;
+  static const std::string LDO_ADD_NAME;
+  static const std::string LDO_REMOVE_NAME;
 
  private:
   static bool ParseCommandType(const std::string& input,

@@ -81,7 +81,7 @@ namespace water_app_data {
 
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         Clone() {
-            std::cout << "Cloning facearray\n";
+            std::cout << "Cloning facearray with region "<<region()->toString()<<std::endl;
             return (new FaceArray<TV>(*region(), left_or_right));
         }
 
@@ -98,7 +98,14 @@ namespace water_app_data {
             assert(ser_data);
             ::communication::AppFaceArray2d pb_fa;
             make_pb_object(data(), region(), &pb_fa);
-            return true;
+            std::string ser;
+            bool success = pb_fa.SerializeToString(&ser);
+            char *buf = new char[ser.length()];
+            memcpy(buf, ser.c_str(), sizeof(char) * (ser.length()+1));
+            if (success)
+                ser_data->set_data_ptr(buf);
+            ser_data->set_size(sizeof(char) * (ser.length()+1));
+            return success;
         }
 
     /* DeSerialize should be called only after Create has been called. Create
@@ -113,7 +120,8 @@ namespace water_app_data {
                 return false;
             assert(buffer);
             ::communication::AppFaceArray2d pb_fa;
-            pb_fa.ParseFromString((std::string)buffer);
+            std::string temp(buffer, buff_size/sizeof(char)-1);
+            pb_fa.ParseFromString(temp);
             FaceArray<TV> *des = (FaceArray<TV> *)(*result);
             make_app_object(des->data(), des->region(), pb_fa);
             return true;
@@ -182,9 +190,9 @@ namespace water_app_data {
                 if (region.Covers(r)) {
                     box = T_BOX(
                             r->x() + o_x,
-                            r->x()+r->dx()-1 + o_x,
+                            r->x()+r->dx() + o_x -1,
                             r->y() + o_y,
-                            r->y()+r->dy()-1 + o_y);
+                            r->y()+r->dy() + o_y -1);
                     part->Glue_Face_Array(result, &box);
                 }
             }
@@ -223,9 +231,9 @@ namespace water_app_data {
                 if (region.Covers(r)) {
                     box = T_BOX(
                             r->x() + o_x,
-                            r->x()+r->dx()-1 + o_x,
+                            r->x()+r->dx() + o_x -1,
                             r->y() + o_y,
-                            r->y()+r->dy()-1 + o_y);
+                            r->y()+r->dy() + o_y -1);
                     part->Update_Face_Array(updated, &box);
                 }
             }

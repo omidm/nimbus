@@ -33,31 +33,82 @@
  */
 
  /*
-  * Nimbus job abstraction from scheduler point of view. 
+  * Job entry in the job table of the job manager. Each entry holds the
+  * meta data of the compute and copy jobs received by the scheduler.   
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/scheduler_job.h"
+#include "scheduler/job_entry.h"
 
 using namespace nimbus; // NOLINT
 
-SchedulerJob::SchedulerJob() {
+JobEntry::JobEntry() {
 }
 
-SchedulerJob::SchedulerJob(job_id_t id, app_id_t app_id, JobType type) {
-  id_ = id;
-  type_ = type;
-  app_id_ = app_id;
+JobEntry::JobEntry(const JobType& job_type,
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set,
+    const IDSet<logical_data_id_t>& write_set,
+    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& after_set,
+    const job_id_t& parent_job_id,
+    const Parameter& params)
+  : job_type_(job_type),
+  job_name_(job_name), job_id_(job_id),
+  read_set_(read_set), write_set_(write_set),
+  before_set_(before_set), after_set_(after_set),
+  parent_job_id_(parent_job_id), params_(params) {
+    versioned = false;
+    assigned = false;
+    done = false;
 }
 
-SchedulerJob::~SchedulerJob() {
+
+
+JobEntry::~JobEntry() {
 }
 
-uint64_t SchedulerJob::id() {
-  return id_;
+JobType JobEntry::job_type() {
+  return job_type_;
 }
 
-void SchedulerJob::set_id(job_id_t id) {
-  id_ = id;
+std::string JobEntry::job_name() {
+  return job_name_;
 }
+
+job_id_t JobEntry::job_id() {
+  return job_id_;
+}
+
+IDSet<logical_data_id_t> JobEntry::read_set() {
+  return read_set_;
+}
+
+IDSet<logical_data_id_t> JobEntry::write_set() {
+  return write_set_;
+}
+
+IDSet<job_id_t> JobEntry::before_set() {
+  return before_set_;
+}
+
+IDSet<job_id_t> JobEntry::after_set() {
+  return after_set_;
+}
+
+job_id_t JobEntry::parent_job_id() {
+  return parent_job_id_;
+}
+
+Parameter JobEntry::params() {
+  return params_;
+}
+
+JobEntry::VersionTable JobEntry::version_table() {
+  return version_table_;
+}
+
+
+

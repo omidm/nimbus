@@ -33,34 +33,41 @@
  */
 
  /*
-  * Scheduler Job Manager object. This module serves the scheduler by providing
-  * facilities about jobs ready to be maped, and their dependencies.
+  * Job entry in the job table of the job manager. Each entry holds the
+  * meta data of the compute and copy jobs received by the scheduler.   
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_JOB_MANAGER_H_
-#define NIMBUS_SCHEDULER_JOB_MANAGER_H_
+#ifndef NIMBUS_SCHEDULER_JOB_ENTRY_H_
+#define NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
 #include <vector>
-#include <map>
+#include <string>
 #include <set>
+#include <list>
+#include <utility>
+#include <map>
+#include "worker/data.h"
+#include "shared/idset.h"
+#include "shared/parameter.h"
 #include "shared/nimbus_types.h"
-#include "scheduler/job_graph.h"
-#include "scheduler/job_entry.h"
 
 namespace nimbus {
-class JobManager {
-  public:
-    explicit JobManager();
-    virtual ~JobManager();
 
-    bool AddJobEntry(const JobType& job_type,
+class JobEntry;
+typedef std::map<job_id_t, JobEntry*> JobEntryMap;
+typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+typedef std::list<JobEntry*> JobEntryList;
+typedef std::vector<Data*> DataArray;
+
+class JobEntry {
+  public:
+    typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
+    typedef std::map<logical_data_id_t, VersionedLogicalData> VersionTable;
+
+    JobEntry();
+    JobEntry(const JobType& job_type,
         const std::string& job_name,
         const job_id_t& job_id,
         const IDSet<logical_data_id_t>& read_set,
@@ -69,23 +76,40 @@ class JobManager {
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
         const Parameter& params);
+    virtual ~JobEntry();
 
-    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
-
-    bool RemoveJobEntry(job_id_t job_id);
-
-    size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
-
-    size_t RemoveObsoleteJobEntries();
-
-    void JobDone(job_id_t job_id);
-
+    JobType job_type();
+    std::string job_name();
+    job_id_t job_id();
+    IDSet<logical_data_id_t> read_set();
+    IDSet<logical_data_id_t> write_set();
+    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> after_set();
+    job_id_t parent_job_id();
+    Parameter params();
+    VersionTable version_table();
 
   private:
-    JobGraph job_graph_;
+    JobType job_type_;
+    std::string job_name_;
+    job_id_t job_id_;
+    IDSet<physical_data_id_t> read_set_;
+    IDSet<physical_data_id_t> write_set_;
+    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> after_set_;
+    job_id_t parent_job_id_;
+    Parameter params_;
 
-    void RemoveExistingJobEntry(job_id_t job_id);
+    VersionTable version_table_;
+
+    bool versioned;
+    bool assigned;
+    bool done;
 };
 
+typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_JOB_MANAGER_H_
+#endif  // NIMBUS_SCHEDULER_JOB_ENTRY_H_
+
+

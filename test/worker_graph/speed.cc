@@ -32,39 +32,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Methods used in advection in water application.
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * This program tests how fast the WorkerGraph is.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
 
-#include "advection.h"
-#include "app_config.h"
-#include "data_face_arrays.h"
-#include "physbam_include.h"
-#include "shared/geometric_region.h"
-#include "water_app.h"
-#include "water_data_driver.h"
+#include "scheduler/worker_graph.h"
+#include "shared/dbg.h"
 
-void Advect_Velocities (
-        ::nimbus::GeometricRegion region,
-        T_FACE_ARRAY *face_velocities,
-        T_FACE_ARRAY *face_vel_extended,
-        WaterApp *water_app,
-        T dt,
-        T time) {
-
-    typedef ::PhysBAM::GRID<TV> T_GRID;
-    typedef ::PhysBAM::RANGE<TV> T_RANGE;
-
-    TV_INT size(region.dx(), region.dy());
-    T_GRID grid(size, T_RANGE::Unit_Box(), true);
-    water_app->advection_scalar()->Update_Advection_Equation_Face(
-            grid,
-            *face_velocities,
-            *face_vel_extended,
-            *face_vel_extended,
-            *water_app->boundary(),
-            dt,
-            time);
-}
+int main(int argc, char *argv[]) {}

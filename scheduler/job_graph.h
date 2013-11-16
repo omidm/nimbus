@@ -51,20 +51,28 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
-#include "scheduler/scheduler_job.h"
+#include "scheduler/job_entry.h"
 
 namespace nimbus {
 class JobGraph {
   public:
+    typedef JobEntryTable::iterator Iter;
+
     explicit JobGraph();
     virtual ~JobGraph();
 
-    void AddJob(SchedulerJob* job) {}
+    void CleanAll();
+    bool AddJobEntry(JobEntry* job);
+    bool RemoveJobEntry(JobEntry* job);
+    bool RemoveJobEntry(job_id_t job_id);
+    bool JobEntryExist(job_id_t job_id);
+    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
-    void RemoveJob(SchedulerJob* job) {}
+    Iter Begin();
+    Iter End();
 
   private:
-    SchedulerJobMap job_map_;
+    JobEntryTable job_table_;
 };
 
 }  // namespace nimbus

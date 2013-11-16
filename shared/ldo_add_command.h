@@ -32,39 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Methods used in advection in water application.
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Compute job command used to send compute jobs from scheduler to workers.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include "advection.h"
-#include "app_config.h"
-#include "data_face_arrays.h"
-#include "physbam_include.h"
-#include "shared/geometric_region.h"
-#include "water_app.h"
-#include "water_data_driver.h"
+#ifndef NIMBUS_SHARED_LDO_ADD_COMMAND_H_
+#define NIMBUS_SHARED_LDO_ADD_COMMAND_H_
 
-void Advect_Velocities (
-        ::nimbus::GeometricRegion region,
-        T_FACE_ARRAY *face_velocities,
-        T_FACE_ARRAY *face_vel_extended,
-        WaterApp *water_app,
-        T dt,
-        T time) {
 
-    typedef ::PhysBAM::GRID<TV> T_GRID;
-    typedef ::PhysBAM::RANGE<TV> T_RANGE;
+#include <string>
+#include "shared/scheduler_command.h"
+#include "shared/logical_data_object.h"
 
-    TV_INT size(region.dx(), region.dy());
-    T_GRID grid(size, T_RANGE::Unit_Box(), true);
-    water_app->advection_scalar()->Update_Advection_Equation_Face(
-            grid,
-            *face_velocities,
-            *face_vel_extended,
-            *face_vel_extended,
-            *water_app->boundary(),
-            dt,
-            time);
-}
+namespace nimbus {
+class LdoAddCommand : public SchedulerCommand {
+  public:
+    LdoAddCommand();
+    explicit LdoAddCommand(LogicalDataObject* obj);
+    virtual ~LdoAddCommand();
+
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+
+    virtual LogicalDataObject* object();
+
+  private:
+    GeometricRegion* region_;
+    LogicalDataObject* object_;
+};
+
+
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_LDO_ADD_COMMAND_H_

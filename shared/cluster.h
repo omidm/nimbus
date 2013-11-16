@@ -36,13 +36,14 @@
   * Nimbus abstraction of computational resources.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 
 #ifndef NIMBUS_SHARED_CLUSTER_H_
 #define NIMBUS_SHARED_CLUSTER_H_
 
-#include <unordered_map>
+#include <map>
 #include <set>
 #include <string>
 #include "shared/nimbus_types.h"
@@ -81,9 +82,9 @@ class Switch;
 typedef std::set<Node*> NodeSet;
 typedef std::set<Link> LinkSet;
 typedef std::set<Link*> LinkPtrSet;
-typedef std::unordered_map<worker_id_t, Computer*> ComputerMap;
-typedef std::unordered_map<switch_id_t, Switch*> SwitchMap;
-typedef std::unordered_map<cluster_map_id_t, Node*> NodeMap;
+typedef std::map<worker_id_t, Computer*> ComputerMap;
+typedef std::map<switch_id_t, Switch*> SwitchMap;
+typedef std::map<cluster_map_id_t, Node*> NodeMap;
 
 enum NodeType {CLUSTER_COMPUTER, CLUSTER_SWITCH};
 
@@ -199,7 +200,6 @@ class ClusterMap {
 
  private:
   LinkPtrSet link_set_;
-  NodeSet node_set_;
   ComputerMap computer_map_;
   SwitchMap switch_map_;
   NodeMap node_map_;

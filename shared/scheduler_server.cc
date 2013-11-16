@@ -181,12 +181,12 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
   dbg(DBG_NET, "Read string %s from worker.\n", buffer);
 
   char* start_pointer = buffer;
+  size_t string_len = 0;
   for (size_t i = 0; i < size; i++) {
-    // When we find a semicolon, replace it with a string terminator \0.
-    // Then when we pass start_pointer to the constructor it will terminate.
     if (buffer[i] == ';') {
+      // There could be null character (\0) in the string before semicolon.
       buffer[i] = '\0';
-      std::string input(start_pointer);
+      std::string input(start_pointer, string_len);
 
       SchedulerCommand* command;
       if (SchedulerCommand::GenerateSchedulerCommandChild(
@@ -199,6 +199,9 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       }
       // Next string starts after the semicolon
       start_pointer = buffer + i + 1;
+      string_len = 0;
+    } else {
+      ++string_len;
     }
   }
   // We've read this many bytes successfully into
