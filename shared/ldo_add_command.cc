@@ -61,6 +61,8 @@ nimbus::LdoAddCommand::LdoAddCommand() {
  * \return
 */
 nimbus::LdoAddCommand::LdoAddCommand(LogicalDataObject* obj) {
+  name_ = LDO_ADD_NAME;
+  type_ = LDO_ADD;
   region_ = new GeometricRegion(*obj->region());
   object_ = new LogicalDataObject(obj->id(), obj->variable(), region_);
 }
@@ -86,6 +88,7 @@ SchedulerCommand * nimbus::LdoAddCommand::Clone() {
  * \return
 */
 bool nimbus::LdoAddCommand::Parse(const std::string &param_segment) {
+  printf("Parsing LdoAddCommand.\n");
   std::string strCopy = param_segment;
   object_ = new LogicalDataObject();
   UnescapeString(&strCopy);
@@ -102,10 +105,12 @@ bool nimbus::LdoAddCommand::Parse(const std::string &param_segment) {
 std::string nimbus::LdoAddCommand::toString() {
   std::string str;
   std::string payload;
+
   str += (name_ + " ");
   object_->SerializeToString(&payload);
   str += payload;
   EscapeString(&str);
+
   return str;
 }
 
@@ -118,10 +123,12 @@ std::string nimbus::LdoAddCommand::toString() {
 std::string nimbus::LdoAddCommand::toStringWTags() {
   std::string str;
   std::string payload;
+
   str += (name_ + " ");
   object_->SerializeToString(&payload);
   str += ("object:" + payload);
   EscapeString(&str);
+
   return str;
 }
 

@@ -53,25 +53,25 @@ bool IsEmptyString(std::string str) {
 void EscapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%", "%0");
   boost::algorithm::replace_all(*input, ";", "%1");
-  boost::algorithm::replace_all(*input, " ", "%2");
+  //  boost::algorithm::replace_all(*input, " ", "%2");
   boost::algorithm::replace_all(*input, "\n", "%3");
   boost::algorithm::replace_all(*input, "\t", "%4");
   boost::algorithm::replace_all(*input, "\r", "%5");
   boost::algorithm::replace_all(*input, ",", "%6");
   boost::algorithm::replace_all(*input, ":", "%7");
+  boost::algorithm::replace_all(*input, "\b", "%8");
 }
 
 void UnescapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%1", ";");
-  boost::algorithm::replace_all(*input, "%2", " ");
+  //  boost::algorithm::replace_all(*input, "%2", " ");
   boost::algorithm::replace_all(*input, "%3", "\n");
   boost::algorithm::replace_all(*input, "%4", "\t");
   boost::algorithm::replace_all(*input, "%5", "\r");
   boost::algorithm::replace_all(*input, "%6", ",");
   boost::algorithm::replace_all(*input, "%7", ":");
   boost::algorithm::replace_all(*input, "%0", "%");
+  boost::algorithm::replace_all(*input, "%8", "\b");
 }
 
 }  // namespace nimbus
-
-
