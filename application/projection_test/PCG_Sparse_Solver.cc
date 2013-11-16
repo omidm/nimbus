@@ -480,7 +480,7 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	AC.Solve_Backward_Substitution(temp_interior, z_interior, false, true); // diagonal is inverted to save on divides
 	//printf("Finish SPARSE_MATRIX_FLAT_NXN solve.\n");
 	
-	// for (int i=1; i<=rows.m; i++) d2->arr()[i-1] = z_interior(i); // Only used in no preconditioner case
+	for (int i=1; i<=rows.m; i++) d2->arr()[i-1] = z_interior(i);
 	for (int i=1; i<=rows.m; i++) d3->arr()[i-1] = z_interior(i) * b_interior(i);
 	printf("Jia: z(%f, %f, %f, %f)\n", z_interior(1), z_interior(2), z_interior(3), z_interior(4));
 	printf("Jia: zb(%f, %f, %f, %f)\n", d3->arr()[0], d3->arr()[1], d3->arr()[2], d3->arr()[3]);
