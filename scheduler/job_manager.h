@@ -51,6 +51,7 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
+#include "shared/dbg.h"
 #include "scheduler/job_graph.h"
 #include "scheduler/job_entry.h"
 
