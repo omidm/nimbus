@@ -58,15 +58,26 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     const IDSet<job_id_t>& after_set,
     const job_id_t& parent_job_id,
     const Parameter& params) {
-  return false;
+  JobEntry* job = new JobEntry(job_type, job_name, job_id, read_set, write_set,
+      before_set, after_set, parent_job_id, params);
+  if (job_graph_.AddJobEntry(job)) {
+    return true;
+  } else {
+    delete job;
+    return false;
+  }
 }
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
-  return false;
+  return job_graph_.GetJobEntry(job_id, job);
+}
+
+bool JobManager::RemoveJobEntry(JobEntry* job) {
+  return job_graph_.RemoveJobEntry(job);
 }
 
 bool JobManager::RemoveJobEntry(job_id_t job_id) {
-  return false;
+  return job_graph_.RemoveJobEntry(job_id);
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
@@ -78,9 +89,13 @@ size_t JobManager::RemoveObsoleteJobEntries() {
 }
 
 void JobManager::JobDone(job_id_t job_id) {
-}
-
-void JobManager::RemoveExistingJobEntry(job_id_t job_id) {
+  JobEntry* job;
+  if (GetJobEntry(job_id, job)) {
+    job->set_done(true);
+  } else {
+    std::cout << "WARNING: job id " << job_id << "is not in the graph." <<
+      std::endl;
+  }
 }
 
 

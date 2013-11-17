@@ -72,7 +72,7 @@ bool JobGraph::RemoveJobEntry(JobEntry* job) {
       << ") does not exist. Nothing removed from the graph." << std::endl;
     return false;
   } else {
-    job_table_.erase(id);
+    RemoveExistingJobEntry(id);
     return true;
   }
 }
@@ -83,7 +83,7 @@ bool JobGraph::RemoveJobEntry(job_id_t id) {
       << ") does not exist. Nothing removed from the graph." << std::endl;
     return false;
   } else {
-    job_table_.erase(id);
+    RemoveExistingJobEntry(id);
     return true;
   }
 }
@@ -113,5 +113,8 @@ JobGraph::Iter JobGraph::End() {
   return job_table_.end();
 }
 
+void JobGraph::RemoveExistingJobEntry(job_id_t job_id) {
+  job_table_.erase(job_id);
+}
 
 

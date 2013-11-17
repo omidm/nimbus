@@ -72,6 +72,8 @@ class JobManager {
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
+    bool RemoveJobEntry(JobEntry* job);
+
     bool RemoveJobEntry(job_id_t job_id);
 
     size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
@@ -83,8 +85,6 @@ class JobManager {
 
   private:
     JobGraph job_graph_;
-
-    void RemoveExistingJobEntry(job_id_t job_id);
 };
 
 }  // namespace nimbus

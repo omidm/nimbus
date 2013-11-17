@@ -73,6 +73,7 @@ class JobGraph {
 
   private:
     JobEntryTable job_table_;
+    void RemoveExistingJobEntry(job_id_t job_id);
 };
 
 }  // namespace nimbus

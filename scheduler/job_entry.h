@@ -88,6 +88,16 @@ class JobEntry {
     job_id_t parent_job_id();
     Parameter params();
     VersionTable version_table();
+    bool versioned();
+    bool assigned();
+    bool done();
+
+    void set_before_set(IDSet<logical_data_id_t> before_set);
+    void set_after_set(IDSet<logical_data_id_t> after_set);
+    void set_version_table(VersionTable version_table);
+    void set_versioned(bool flag);
+    void set_asigned(bool flag);
+    void set_done(bool flag);
 
   private:
     JobType job_type_;
@@ -99,12 +109,10 @@ class JobEntry {
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;
     Parameter params_;
-
     VersionTable version_table_;
-
-    bool versioned;
-    bool assigned;
-    bool done;
+    bool versioned_;
+    bool assigned_;
+    bool done_;
 };
 
 typedef std::map<job_id_t, JobEntry*> JobEntryTable;
