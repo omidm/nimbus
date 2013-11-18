@@ -97,4 +97,93 @@ void JobManager::JobDone(job_id_t job_id) {
   }
 }
 
+bool JobManager::ResolveJobDataVersions(JobEntry* job) {
+  JobEntry* j;
+  JobEntry::VersionTable version_table, vt;
+
+  job_id_t parent_id = job->parent_job_id();
+  if (GetJobEntry(parent_id, j)) {
+    if (j->versioned()) {
+      vt = j->version_table();
+      JobEntry::VTIter iter = vt.begin();
+      for (; iter != vt.end(); ++iter) {
+        if (j->write_set().contains(iter->first)) {
+          version_table[iter->first] =  ++(iter->second);
+        } else {
+          version_table[iter->first] =  (iter->second);
+        }
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not versioned yet.", parent_id);
+      return false;
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not in job graph.", parent_id);
+    return false;
+  }
+
+  IDSet<job_id_t>::IDSetIter iter;
+
+  IDSet<job_id_t> before_set = job->before_set();
+  for (iter = before_set.begin(); iter != before_set.end(); ++iter) {
+    job_id_t id = (*iter);
+    if (GetJobEntry(id, j)) {
+      if (j->versioned()) {
+        vt = j->version_table();
+        JobEntry::VTIter it = vt.begin();
+        for (; it != vt.end(); ++it) {
+          if (version_table.count(it->first) == 0) {
+            if (j->write_set().contains(it->first)) {
+              version_table[it->first] =  ++(it->second);
+            } else {
+              version_table[it->first] =  (it->second);
+            }
+          } else {
+            if (j->write_set().contains(it->first)) {
+              version_table[it->first] =
+                std::max(++(it->second), version_table[it->first]);
+            } else {
+              version_table[it->first] =
+                std::max((it->second), version_table[it->first]);
+            }
+          }
+        }
+      } else {
+        dbg(DBG_SCHED, "Job in befor set (id: %lu) is not versioned yet.", id);
+        return false;
+      }
+    } else {
+      dbg(DBG_SCHED, "Job in befor set (id: %lu) is not in the graph.", id);
+      return false;
+    }
+  }
+
+  IDSet<logical_data_id_t> read_set = job->read_set();
+  for (iter = read_set.begin(); iter != read_set.end(); ++iter) {
+    if (version_table.count(*iter)) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.", *iter);
+      return false;
+    }
+  }
+  IDSet<logical_data_id_t> write_set = job->write_set();
+  for (iter = write_set.begin(); iter != write_set.end(); ++iter) {
+    if (version_table.count(*iter)) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.", *iter);
+      return false;
+    }
+  }
+
+  job->set_versioned(true);
+  job->set_version_table(version_table);
+  return true;
+}
+
+size_t JobManager::ResolveVersions() {
+  size_t num_new_versioned = 0;
+  // JobGraph::Iter iter = job_graph_.Begin();
+  // for ()
+
+  return num_new_versioned;
+}
+
 

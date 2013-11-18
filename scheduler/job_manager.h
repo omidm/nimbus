@@ -48,6 +48,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
@@ -86,6 +87,9 @@ class JobManager {
 
   private:
     JobGraph job_graph_;
+
+    bool ResolveJobDataVersions(JobEntry* job);
+    size_t ResolveVersions();
 };
 
 }  // namespace nimbus
