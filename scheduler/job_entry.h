@@ -97,7 +97,7 @@ class JobEntry {
     void set_after_set(IDSet<logical_data_id_t> after_set);
     void set_version_table(VersionTable version_table);
     void set_versioned(bool flag);
-    void set_asigned(bool flag);
+    void set_assigned(bool flag);
     void set_done(bool flag);
 
   private:
