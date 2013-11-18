@@ -167,7 +167,7 @@ namespace water_app_data {
                         i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
                     for(j.y = 1, i.y = box->min_corner.y;
                             i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
-                        (*(result))(axis, i) = (*(data_))(axis, j);
+                        result->Component(axis)(i) = data()->Component(axis)(j);
                     }
                 }
             }
@@ -208,7 +208,7 @@ namespace water_app_data {
                         i.x <= (box->max_corner.x + dx); i.x++, j.x++) {
                     for(j.y = 1, i.y = box->min_corner.y;
                             i.y <= (box->max_corner.y + dy); i.y++, j.y++) {
-                        (*(data_))(axis, j) = (*(from))(axis, i);
+                        data()->Component(axis)(j) = from->Component(axis)(i);
                     }
                 }
             }

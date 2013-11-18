@@ -407,6 +407,7 @@ void UptoAdvect::Execute(Parameter params, const DataArray& da) {
             0,
             0);
     driver->face_velocities = fv;
+    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
     driver->sim_data = sim_data;
 //    sim_data->incompressible->
 //        Set_Custom_Boundary(*water_app->boundary());
@@ -414,8 +415,19 @@ void UptoAdvect::Execute(Parameter params, const DataArray& da) {
 //        Set_Custom_Advection(*(water_app->advection_scalar()));
 //    sim_data->particle_levelset_evolution->Levelset_Advection(1).
 //        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
     sim_data->BeforeAdvection(driver, fv);
+    FaceArray::Update_Regions(
+            fv,
+            fvleft,
+            kleft_region,
+            0,
+            0);
+    FaceArray::Update_Regions(
+            fv,
+            fvright,
+            kright_region,
+            0,
+            0);
     delete(fv);
     printf("@@ Completed upto advect\n");
 };
@@ -447,6 +459,7 @@ void Advect::Execute(Parameter params, const DataArray& da) {
             0,
             0);
     driver->face_velocities = fv;
+    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
     driver->sim_data = sim_data;
 //    sim_data->incompressible->
 //        Set_Custom_Boundary(*water_app->boundary());
@@ -462,13 +475,24 @@ void Advect::Execute(Parameter params, const DataArray& da) {
     FaceArray::Extend_Array(
             fv,
             fv_extended,
-//            water_app->boundary(),
             sim_data->boundary,
             kGhostSize,
             driver->dt + driver->time,
             true);
     Advect_Velocities(kwhole_region, fv, fv_extended, water_app,
             adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+    FaceArray::Update_Regions(
+            fv,
+            fvleft,
+            kleft_region,
+            0,
+            0);
+    FaceArray::Update_Regions(
+            fv,
+            fvright,
+            kright_region,
+            0,
+            0);
     delete(fv);
     delete(fv_extended);
     printf("@@ Completed advect\n");
@@ -501,6 +525,7 @@ void AfterAdvect::Execute(Parameter params, const DataArray& da) {
             0,
             0);
     driver->face_velocities = fv;
+    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
     driver->sim_data = sim_data;
 //    sim_data->incompressible->
 //        Set_Custom_Boundary(*water_app->boundary());
@@ -509,6 +534,18 @@ void AfterAdvect::Execute(Parameter params, const DataArray& da) {
 //    sim_data->particle_levelset_evolution->Levelset_Advection(1).
 //        Set_Custom_Advection(*(water_app->advection_scalar()));
     sim_data->AfterAdvection(driver, fv);
+    FaceArray::Update_Regions(
+            fv,
+            fvleft,
+            kleft_region,
+            0,
+            0);
+    FaceArray::Update_Regions(
+            fv,
+            fvright,
+            kright_region,
+            0,
+            0);
     delete(fv);
     printf("@@ Completed after advect\n");
 };
@@ -524,6 +561,9 @@ Job* Loop::Clone() {
 
 void Loop::Execute(Parameter params, const DataArray& da) {
     printf("@@ Executing forloop job\n");
+
+//    return;
+
     GetJobData();
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
@@ -540,10 +580,13 @@ void Loop::Execute(Parameter params, const DataArray& da) {
             0,
             0);
     driver->face_velocities = fv;
+    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
     driver->sim_data = sim_data;
     driver->IncreaseTime();
     if (!driver->CheckProceed()) {
         printf("... Simulation completed ...\n");
+        delete(fv);
+        return;
     }
     else {
         printf("Spawning new simulation jobs ...\n");
@@ -685,6 +728,7 @@ void WriteFrame::Execute(Parameter params, const DataArray& da) {
             0,
             0);
     driver->face_velocities = fv;
+    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
     driver->sim_data = sim_data;
 //    sim_data->incompressible->
 //        Set_Custom_Boundary(*water_app->boundary());

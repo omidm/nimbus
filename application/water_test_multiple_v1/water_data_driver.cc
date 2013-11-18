@@ -365,11 +365,11 @@ AfterAdvection
 
     //Delete Particles 12.5 (Parallelized)
     LOG::Time("Delete Particles");
-    particle_levelset_evolution->Delete_Particles_Outside_Grid();                                                        //0.1%
+    particle_levelset_evolution->Delete_Particles_Outside_Grid();               //0.1%
     particle_levelset_evolution->particle_levelset.
-        Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
+        Delete_Particles_In_Local_Maximum_Phi_Cells(1);                         //4.9%
     particle_levelset_evolution->particle_levelset.
-        Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
+        Delete_Particles_Far_From_Interface(); // uses visibility               //7.6%
     particle_levelset_evolution->particle_levelset.
         Identify_And_Remove_Escaped_Particles
         (face_velocities_ghost, 1.5, time + dt); //2.4%
