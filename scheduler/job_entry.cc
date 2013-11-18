@@ -60,9 +60,9 @@ JobEntry::JobEntry(const JobType& job_type,
   read_set_(read_set), write_set_(write_set),
   before_set_(before_set), after_set_(after_set),
   parent_job_id_(parent_job_id), params_(params) {
-    versioned = false;
-    assigned = false;
-    done = false;
+    versioned_ = false;
+    assigned_ = false;
+    done_ = false;
 }
 
 
@@ -109,6 +109,40 @@ Parameter JobEntry::params() {
 JobEntry::VersionTable JobEntry::version_table() {
   return version_table_;
 }
+bool JobEntry::versioned() {
+  return versioned_;
+}
 
+bool JobEntry::assigned() {
+  return assigned_;
+}
+
+bool JobEntry::done() {
+  return done_;
+}
+
+void JobEntry::set_before_set(IDSet<logical_data_id_t> before_set) {
+  before_set_ = before_set;
+}
+
+void JobEntry::set_after_set(IDSet<logical_data_id_t> after_set) {
+  after_set_ = after_set;
+}
+
+void JobEntry::set_version_table(VersionTable version_table) {
+  version_table_ = version_table;
+}
+
+void JobEntry::set_versioned(bool flag) {
+  versioned_ = flag;
+}
+
+void JobEntry::set_assigned(bool flag) {
+  assigned_ = flag;
+}
+
+void JobEntry::set_done(bool flag) {
+  done_ = flag;
+}
 
 

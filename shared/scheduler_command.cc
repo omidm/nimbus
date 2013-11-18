@@ -97,6 +97,8 @@ const std::string SchedulerCommand::REMOTE_COPY_SEND_NAME = "remotecopysend";
 const std::string SchedulerCommand::REMOTE_COPY_RECEIVE_NAME = "remotecopyreceive";
 const std::string SchedulerCommand::LOCAL_COPY_NAME = "localcopy";
 const std::string SchedulerCommand::DEFINE_PARTITION_NAME = "definepartition";
+const std::string SchedulerCommand::LDO_ADD_NAME = "ldoadd";
+const std::string SchedulerCommand::LDO_REMOVE_NAME = "ldoremove";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -140,6 +142,12 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
     case DEFINE_PARTITION:
       str = DEFINE_PARTITION_NAME;
       break;
+    case LDO_ADD:
+      str = LDO_ADD_NAME;
+      break;
+    case LDO_REMOVE:
+      str = LDO_REMOVE_NAME;
+      break;
   }
   return str;
 }
@@ -167,11 +175,11 @@ bool SchedulerCommand::ParseCommandType(const std::string& input,
   }
   std::string name = *iter;
   bool name_is_valid = false;
-  SchedulerCommand::PrototypeTable::iterator itr = command_table->begin();
-  for (; itr != command_table->end(); itr++) {
-    if (name == (*itr)->name()) {
+  SchedulerCommand::PrototypeTable::iterator table_iter = command_table->begin();
+  for (; table_iter != command_table->end(); ++table_iter) {
+    if (name == (*table_iter)->name()) {
       name_is_valid = true;
-      generated_command = (*itr)->Clone();
+      generated_command = (*table_iter)->Clone();
       break;
     }
   }
@@ -180,7 +188,8 @@ bool SchedulerCommand::ParseCommandType(const std::string& input,
     return false;
   }
 
-  param_segment = input.substr(name.length());
+  // Add 1 for the space after the name.
+  param_segment = input.substr(name.length() + 1);
   return true;
 }
 
@@ -202,7 +211,3 @@ bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
     return true;
   }
 }
-
-
-
-

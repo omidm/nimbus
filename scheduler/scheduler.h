@@ -50,6 +50,7 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
+#include "shared/log.h"
 #include "shared/cluster.h"
 #include "shared/parser.h"
 #include "shared/scheduler_server.h"

@@ -33,49 +33,40 @@
  */
 
  /*
-  * Scheduler Job Graph object. This module serves the job manager by keeping track
-  * of the job dependencies (before/after) set relations in the application.
+  * Compute job command used to send compute jobs from scheduler to workers.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_JOB_GRAPH_H_
-#define NIMBUS_SCHEDULER_JOB_GRAPH_H_
+#ifndef NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_
+#define NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_
 
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
+
 #include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus_types.h"
-#include "scheduler/job_entry.h"
+#include "shared/scheduler_command.h"
+#include "shared/logical_data_object.h"
 
 namespace nimbus {
-class JobGraph {
+class LdoRemoveCommand : public SchedulerCommand {
   public:
-    typedef JobEntryTable::iterator Iter;
+    LdoRemoveCommand();
+    explicit LdoRemoveCommand(LogicalDataObject* obj);
 
-    explicit JobGraph();
-    virtual ~JobGraph();
+    virtual ~LdoRemoveCommand();
 
-    void CleanAll();
-    bool AddJobEntry(JobEntry* job);
-    bool RemoveJobEntry(JobEntry* job);
-    bool RemoveJobEntry(job_id_t job_id);
-    bool JobEntryExist(job_id_t job_id);
-    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
-
-    Iter Begin();
-    Iter End();
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    virtual LogicalDataObject* object();
 
   private:
-    JobEntryTable job_table_;
-    void RemoveExistingJobEntry(job_id_t job_id);
+    GeometricRegion* region_;
+    LogicalDataObject* object_;
 };
 
+
+
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_JOB_GRAPH_H_
+
+#endif  // NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_

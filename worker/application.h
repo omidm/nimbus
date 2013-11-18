@@ -46,12 +46,14 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "worker/job.h"
-#include "worker/data.h"
-#include "shared/nimbus_types.h"
 #include "shared/id_maker.h"
+#include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command_include.h"
+#include "worker/job.h"
+#include "worker/data.h"
+#include "worker/worker_ldo_map.h"
 
 using namespace nimbus; // NOLINT
 
@@ -66,7 +68,7 @@ class Application {
   ~Application() {}
 
   virtual void Load();
-  virtual void Start(SchedulerClient* client, IDMaker* id_maker);
+  virtual void Start(SchedulerClient* client, IDMaker* id_maker, WorkerLdoMap* ldo_map);
 
   void RegisterJob(std::string name, Job* job);
   void RegisterData(std::string name, Data* data);
@@ -95,10 +97,22 @@ class Application {
       const job_id_t& parent_id,
       const Parameter& params);
 
+  void DefinePartition(const ID<partition_id_t>& partition_id,
+       const GeometricRegion& r,
+       const Parameter& params);
+
   Job* CloneJob(std::string name);
   Data* CloneData(std::string name);
+
   bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
   bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
+  int GetCoveredLogicalObjects(CLdoVector* result,
+       std::string& variable,
+       GeometricRegion* r);
+  int GetAdjacentLogicalObjects(CLdoVector* result,
+       std::string& variable,
+       GeometricRegion* r);
+
   void* app_data();
   void set_app_data(void* data);
 
@@ -109,6 +123,7 @@ class Application {
   DataTable data_table_;
   SchedulerClient* client_;
   IDMaker* id_maker_;
+  WorkerLdoMap* ldo_map_;
   void* app_data_;
 };
 

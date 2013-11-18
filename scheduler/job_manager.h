@@ -48,9 +48,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
+#include "shared/dbg.h"
 #include "scheduler/job_graph.h"
 #include "scheduler/job_entry.h"
 
@@ -72,6 +74,8 @@ class JobManager {
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
+    bool RemoveJobEntry(JobEntry* job);
+
     bool RemoveJobEntry(job_id_t job_id);
 
     size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
@@ -84,7 +88,8 @@ class JobManager {
   private:
     JobGraph job_graph_;
 
-    void RemoveExistingJobEntry(job_id_t job_id);
+    bool ResolveJobDataVersions(JobEntry* job);
+    size_t ResolveVersions();
 };
 
 }  // namespace nimbus

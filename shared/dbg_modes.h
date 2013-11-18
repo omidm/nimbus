@@ -59,11 +59,12 @@ enum {
   DBG_DATA_OBJECTS =    DBG_MODE(7),    /* data manager/objects         */
   DBG_MEMORY =          DBG_MODE(8),    /* memory allocation            */
 /*====== For application use =========*/
-  DBG_USR1 =            DBG_MODE(59),   /* User component 1             */
-  DBG_USR2 =            DBG_MODE(60),   /* User component 2             */
-  DBG_USR3 =            DBG_MODE(61),   /* User component 3             */
-  DBG_TEMP =            DBG_MODE(62),   /* Temorpary testing use        */
+  DBG_USR1 =            DBG_MODE(58),   /* User component 1             */
+  DBG_USR2 =            DBG_MODE(59),   /* User component 2             */
+  DBG_USR3 =            DBG_MODE(60),   /* User component 3             */
+  DBG_TEMP =            DBG_MODE(61),   /* Temorpary testing use        */
 
+  DBG_WARN =           DBG_MODE(62),   /* Warning condition              */
   DBG_ERROR =           DBG_MODE(63),   /* Error condition              */
   DBG_NONE =            0,              /* Nothing                      */
 
@@ -72,20 +73,21 @@ enum {
 
 #define DBG_NAMETAB \
         {"all",     DBG_ALL}, \
-        {"boot",    DBG_BOOT   | DBG_ERROR}, \
-        {"net",     DBG_NET    | DBG_ERROR}, \
-        {"parse",   DBG_PARSE  | DBG_ERROR}, \
-        {"sched",   DBG_SCHED  | DBG_ERROR}, \
-        {"data",    DBG_DATA   | DBG_ERROR}, \
-        {"worker",  DBG_WORKER | DBG_ERROR}, \
-        {"hosts",   DBG_HOSTS  | DBG_ERROR}, \
-        {"dobjects", DBG_DATA_OBJECTS | DBG_ERROR},  \
-        {"memory",  DBG_MEMORY | DBG_ERROR},       \
+        {"boot",    DBG_BOOT   | DBG_ERROR | DBG_WARN}, \
+        {"net",     DBG_NET    | DBG_ERROR | DBG_WARN}, \
+        {"parse",   DBG_PARSE  | DBG_ERROR | DBG_WARN}, \
+        {"sched",   DBG_SCHED  | DBG_ERROR | DBG_WARN}, \
+        {"data",    DBG_DATA   | DBG_ERROR | DBG_WARN}, \
+        {"worker",  DBG_WORKER | DBG_ERROR | DBG_WARN}, \
+        {"hosts",   DBG_HOSTS  | DBG_ERROR | DBG_WARN}, \
+        {"dobjects", DBG_DATA_OBJECTS | DBG_ERROR | DBG_WARN},  \
+        {"memory",  DBG_MEMORY | DBG_ERROR | DBG_WARN},       \
 \
-        {"usr1",    DBG_USR1 | DBG_ERROR}, \
-        {"usr2",    DBG_USR2 | DBG_ERROR}, \
-        {"usr3",    DBG_USR3 | DBG_ERROR}, \
-        {"temp",    DBG_TEMP | DBG_ERROR}, \
+        {"usr1",    DBG_USR1 | DBG_ERROR | DBG_WARN}, \
+        {"usr2",    DBG_USR2 | DBG_ERROR | DBG_WARN}, \
+        {"usr3",    DBG_USR3 | DBG_ERROR | DBG_WARN}, \
+        {"temp",    DBG_TEMP | DBG_ERROR | DBG_WARN}, \
+        {"warn",    DBG_WARN | DBG_ERROR}, \
         {"error",   DBG_ERROR}, \
 \
         {"none", DBG_NONE}, \

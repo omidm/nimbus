@@ -40,6 +40,8 @@
  ***********************************************************************/
 #include "scheduler/data_manager.h"
 #include "shared/dbg.h"
+#include "shared/ldo_add_command.h"
+#include "shared/ldo_remove_command.h"
 
 namespace nimbus {
 
@@ -395,7 +397,8 @@ bool nimbus::DataManager::SendLdoAddToWorkers(LogicalDataObject* obj) {
   if (server_ == NULL) {
     return false;
   }
-
+  SchedulerCommand* command = new LdoAddCommand(obj);
+  server_->BroadcastCommand(command);
   return true;
 }
 
@@ -403,7 +406,8 @@ bool nimbus::DataManager::SendLdoRemoveToWorkers(LogicalDataObject* obj) {
   if (server_ == NULL) {
     return false;
   }
-
+  SchedulerCommand* command = new LdoRemoveCommand(obj);
+  server_->BroadcastCommand(command);
   return true;
 }
 
