@@ -67,8 +67,6 @@ NonAdvData(int size)
 
     grid = NULL;
 
-    boundary_scalar = NULL;
-    boundary = NULL;
     phi_boundary = NULL;
     phi_boundary_water = NULL;
     domain_boundary = NULL;
@@ -76,7 +74,6 @@ NonAdvData(int size)
     sources = NULL;
 
     particle_levelset_evolution = NULL;
-    advection_scalar = NULL;
 
     collision_bodies_affecting_fluid = NULL;
 
@@ -94,7 +91,6 @@ Create()
             RANGE<TV>::Unit_Box(), true);
     assert(grid);
 
-    boundary_scalar = new BOUNDARY_UNIFORM<GRID<TV>, T>();
     phi_boundary_water = new
         typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
         BOUNDARY_PHI_WATER();
@@ -105,7 +101,6 @@ Create()
     particle_levelset_evolution = new
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >
         (*grid, number_of_ghost_cells);
-    advection_scalar = new ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>,T>();
 
     collision_bodies_affecting_fluid = new
         typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
@@ -159,14 +154,10 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     phi_boundary = phi_boundary_water;
     phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-    boundary = boundary_scalar;
-    boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
     std::cout << "Moving to incompressible ...\n";
 
     incompressible->Initialize_Grids(*grid);
-    incompressible->Set_Custom_Advection(*advection_scalar);
-    incompressible->Set_Custom_Boundary(*boundary);
     incompressible->projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     incompressible->projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
     incompressible->projection.elliptic_solver->pcg.evolution_solver_type =
@@ -205,8 +196,6 @@ template <class TV, class T> bool NonAdvData<TV, T>::
     particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
     particle_levelset_evolution->Set_Time(time);
     particle_levelset_evolution->Set_CFL_Number((T).9);
-    particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*advection_scalar);
     particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
     particle_levelset_evolution->Set_Levelset_Callbacks(*driver);
     particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
@@ -277,13 +266,9 @@ BeforeAdvection
 
     //Advect Phi 3.6% (Parallelized)
     LOG::Time("Advect Phi");
-    std::cout<<"*** 1\n";
     phi_boundary_water->Use_Extrapolation_Mode(false);
-    std::cout<<"*** 2\n";
     particle_levelset_evolution->Advance_Levelset(dt);
-    std::cout<<"*** 3\n";
     phi_boundary_water->Use_Extrapolation_Mode(true);
-    std::cout<<"*** 4\n";
 
     //Advect Particles 12.1% (Parallelized)
     LOG::Time("Step Particles");

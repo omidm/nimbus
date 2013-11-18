@@ -201,25 +201,18 @@ CheckProceed()
     }
 
     LOG::Time("Calculate Dt");
-    std::cout<< "***1\n";
     sd->particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
-    std::cout<< "***2\n";
     dt = cfl * sd->incompressible->CFL(*face_velocities);
-    std::cout<< "***3\n";
     dt = min(dt, sd->particle_levelset_evolution->CFL(false, false));
-    std::cout<< "***4\n";
     if ( time + dt >= target_time)
     {
-    std::cout<< "***5a\n";
         dt = target_time-time;
         frame_done=true;
     }
     else if (time + 2*dt >= target_time)
     {
-    std::cout<< "***5b\n";
         dt = .5*(target_time - time);
     }
-    std::cout<< "***6\n";
 
     sd->dt = dt;
     return true;
