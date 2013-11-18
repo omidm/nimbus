@@ -474,14 +474,13 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	VECTOR_ND<T> b_interior(rows.m, false), temp_interior(rows.m, false), z_interior(rows.m, false);
 	for (int i=1; i<=rows.m; i++) b_interior(i) = d1->arr()[i-1];
 	
-	printf("Finish SPARSE_MATRIX_FLAT_NXN init.\n");
-	//AC.Solve_Forward_Substitution(b_interior, temp_interior, true); // diagonal should be treated as the identity
-	printf("Checkpoint #4\n");
-	//AC.Solve_Backward_Substitution(temp_interior, z_interior, false, true); // diagonal is inverted to save on divides
-	printf("Finish SPARSE_MATRIX_FLAT_NXN solve.\n");
+	//printf("Finish SPARSE_MATRIX_FLAT_NXN init.\n");
+	AC.Solve_Forward_Substitution(b_interior, temp_interior, true); // diagonal should be treated as the identity
+	//printf("Checkpoint #4\n");
+	AC.Solve_Backward_Substitution(temp_interior, z_interior, false, true); // diagonal is inverted to save on divides
+	//printf("Finish SPARSE_MATRIX_FLAT_NXN solve.\n");
 	
-	for (int i=1; i<=rows.m; i++) z_interior(i) = b_interior(i); // TODO: switch back to incomplete_cholesky in the future
-	for (int i=1; i<=rows.m; i++) d2->arr()[i-1] = z_interior(i);
+	// for (int i=1; i<=rows.m; i++) d2->arr()[i-1] = z_interior(i); // Only used in no preconditioner case
 	for (int i=1; i<=rows.m; i++) d3->arr()[i-1] = z_interior(i) * b_interior(i);
 	printf("Jia: z(%f, %f, %f, %f)\n", z_interior(1), z_interior(2), z_interior(3), z_interior(4));
 	printf("Jia: zb(%f, %f, %f, %f)\n", d3->arr()[0], d3->arr()[1], d3->arr()[2], d3->arr()[3]);

@@ -61,6 +61,8 @@ namespace nimbus {
  * \return
 */
 nimbus::LdoRemoveCommand::LdoRemoveCommand(LogicalDataObject* obj) {
+  name_ = LDO_REMOVE_NAME;
+  type_ = LDO_REMOVE;
   region_ = new GeometricRegion(*obj->region());
   object_ = new LogicalDataObject(obj->id(), obj->variable(), region_);
 }

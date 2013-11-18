@@ -33,7 +33,8 @@
  */
 
  /*
-  * Nimbus log interface. 
+  * Nimbus log interface. Inoredr to exclude all the log command from the
+  * binary file compile with -D_NIMBUS_NO_LOG flag.  
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -49,7 +50,7 @@
 
 #define MAX_BUFF_SIZE  256
 
-#ifdef DEBUG_MODE
+#ifndef _NIMBUS_NO_LOG
 #define dbg_print(...) print(__VA_ARGS__)
 #define dbg_printLine(...) printLine(__VA_ARGS__)
 #define dbg_writeToFile(...) writeToFile(__VA_ARGS__)

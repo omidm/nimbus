@@ -50,6 +50,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "shared/dbg.h"
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
 
@@ -73,6 +74,7 @@ class JobGraph {
 
   private:
     JobEntryTable job_table_;
+    void RemoveExistingJobEntry(job_id_t job_id);
 };
 
 }  // namespace nimbus
