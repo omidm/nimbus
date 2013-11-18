@@ -56,8 +56,8 @@ void JobGraph::CleanAll() {
 bool JobGraph::AddJobEntry(JobEntry* job) {
   job_id_t id = job->job_id();
   if (job_table_.count(id) != 0) {
-    std::cout << "WARNING: job entry with the same job id (" << id
-      << ") already exist. Nothing added to the graph." << std::endl;
+    dbg(DBG_WARN, "WARNING: job entry with the same job id (%lu) already exist.\n", id);
+    dbg(DBG_WARN, "Nothing added to the job graph.\n");
     return false;
   } else {
     job_table_[id] = job;
@@ -68,8 +68,8 @@ bool JobGraph::AddJobEntry(JobEntry* job) {
 bool JobGraph::RemoveJobEntry(JobEntry* job) {
   job_id_t id = job->job_id();
   if (job_table_.count(id) == 0) {
-    std::cout << "WARNING: job entry with the job id (" << id
-      << ") does not exist. Nothing removed from the graph." << std::endl;
+    dbg(DBG_WARN, "WARNING: job entry with the job id (%lu) does not exist.\n", id);
+    dbg(DBG_WARN, "Nothing removed from the job graph.\n");
     return false;
   } else {
     RemoveExistingJobEntry(id);
@@ -79,8 +79,8 @@ bool JobGraph::RemoveJobEntry(JobEntry* job) {
 
 bool JobGraph::RemoveJobEntry(job_id_t id) {
   if (job_table_.count(id) == 0) {
-    std::cout << "WARNING: job entry with the job id (" << id
-      << ") does not exist. Nothing removed from the graph." << std::endl;
+    dbg(DBG_WARN, "WARNING: job entry with the job id (%lu) does not exist.\n", id);
+    dbg(DBG_WARN, "Nothing removed from the job graph.\n");
     return false;
   } else {
     RemoveExistingJobEntry(id);

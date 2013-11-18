@@ -50,6 +50,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "shared/dbg.h"
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
 

@@ -93,7 +93,7 @@ void JobManager::JobDone(job_id_t job_id) {
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
   } else {
-    dbg(DBG_WARN, "WARNING: job id %lu is not in the graph.", job_id);
+    dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
 }
 
