@@ -55,9 +55,9 @@ void JobGraph::CleanAll() {
 
 bool JobGraph::AddJobEntry(JobEntry* job) {
   job_id_t id = job->job_id();
-  if (job_table_.count(id) != 0) {
-    std::cout << "WARNING: job entry with the same job id (" << id
-      << ") already exist. Nothing added to the graph." << std::endl;
+  if (JobEntryExist(id)) {
+    dbg(DBG_WARN, "WARNING: job entry with the same job id (%lu) already exist.\n", id);
+    dbg(DBG_WARN, "Nothing added to the job graph.\n");
     return false;
   } else {
     job_table_[id] = job;
@@ -67,23 +67,23 @@ bool JobGraph::AddJobEntry(JobEntry* job) {
 
 bool JobGraph::RemoveJobEntry(JobEntry* job) {
   job_id_t id = job->job_id();
-  if (job_table_.count(id) == 0) {
-    std::cout << "WARNING: job entry with the job id (" << id
-      << ") does not exist. Nothing removed from the graph." << std::endl;
+  if (!JobEntryExist(id)) {
+    dbg(DBG_WARN, "WARNING: job entry with the job id (%lu) does not exist.\n", id);
+    dbg(DBG_WARN, "Nothing removed from the job graph.\n");
     return false;
   } else {
-    job_table_.erase(id);
+    RemoveExistingJobEntry(id);
     return true;
   }
 }
 
 bool JobGraph::RemoveJobEntry(job_id_t id) {
-  if (job_table_.count(id) == 0) {
-    std::cout << "WARNING: job entry with the job id (" << id
-      << ") does not exist. Nothing removed from the graph." << std::endl;
+  if (!JobEntryExist(id)) {
+    dbg(DBG_WARN, "WARNING: job entry with the job id (%lu) does not exist.\n", id);
+    dbg(DBG_WARN, "Nothing removed from the job graph.\n");
     return false;
   } else {
-    job_table_.erase(id);
+    RemoveExistingJobEntry(id);
     return true;
   }
 }
@@ -97,7 +97,7 @@ bool JobGraph::JobEntryExist(job_id_t id) {
 }
 
 bool JobGraph::GetJobEntry(job_id_t id, JobEntry*& job) {
-  if (job_table_.count(id) == 0) {
+  if (!JobEntryExist(id)) {
     return false;
   } else {
     job = job_table_[id];
@@ -113,5 +113,8 @@ JobGraph::Iter JobGraph::End() {
   return job_table_.end();
 }
 
+void JobGraph::RemoveExistingJobEntry(job_id_t job_id) {
+  job_table_.erase(job_id);
+}
 
 

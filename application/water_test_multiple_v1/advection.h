@@ -48,7 +48,7 @@
 #include "water_app.h"
 
 void Advect_Velocities (
-        ::nimbus::GeometricRegion region,
+        ::nimbus::GeometricRegion &region,
         T_FACE_ARRAY *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,

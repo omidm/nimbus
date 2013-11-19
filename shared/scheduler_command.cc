@@ -175,11 +175,11 @@ bool SchedulerCommand::ParseCommandType(const std::string& input,
   }
   std::string name = *iter;
   bool name_is_valid = false;
-  SchedulerCommand::PrototypeTable::iterator itr = command_table->begin();
-  for (; itr != command_table->end(); itr++) {
-    if (name == (*itr)->name()) {
+  SchedulerCommand::PrototypeTable::iterator table_iter = command_table->begin();
+  for (; table_iter != command_table->end(); ++table_iter) {
+    if (name == (*table_iter)->name()) {
       name_is_valid = true;
-      generated_command = (*itr)->Clone();
+      generated_command = (*table_iter)->Clone();
       break;
     }
   }
@@ -188,7 +188,8 @@ bool SchedulerCommand::ParseCommandType(const std::string& input,
     return false;
   }
 
-  param_segment = input.substr(name.length());
+  // Add 1 for the space after the name.
+  param_segment = input.substr(name.length() + 1);
   return true;
 }
 

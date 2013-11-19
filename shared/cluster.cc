@@ -267,7 +267,7 @@ bool nimbus::ClusterMap::Delete(cluster_map_id_t id) {
      }
     // Deleting the node will delete all of its links.
     // Each link delete will remove it from both nodes.
-    printf("Deleting node %i 0x%p\n", id, node);
+    dbg(DBG_MEMORY, "Deleting node %i 0x%p\n", id, node);
     delete node;
     return true;
   }

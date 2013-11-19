@@ -45,7 +45,9 @@ namespace nimbus {
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
   appId_ = 0;
+  registered_worker_num_ = 0;
   data_manager_ = NULL;
+  job_manager_ = NULL;
 }
 
 Scheduler::~Scheduler() {
@@ -60,6 +62,7 @@ void Scheduler::Run() {
   SetupWorkerInterface();
   SetupUserInterface();
   SetupDataManager();
+  SetupJobManager();
   id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
@@ -70,9 +73,6 @@ void Scheduler::SchedulerCoreProcessor() {
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {
-    case SchedulerCommand::SPAWN_JOB:
-      ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
-      break;
     case SchedulerCommand::SPAWN_COMPUTE_JOB:
       ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
       break;
@@ -100,9 +100,25 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
+  job_manager_->AddJobEntry(JOB_COMP,
+        cm->job_name(), cm->job_id().elem(),
+        cm->read_set(), cm->write_set(),
+        cm->before_set(), cm->after_set(),
+        cm->parent_job_id().elem(), cm->params());
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
+  std::string job_name = "copyjob";
+  IDSet<logical_data_id_t> read_set;
+  read_set.insert(cm->from_logical_id().elem());
+  IDSet<logical_data_id_t> write_set;
+  write_set.insert(cm->to_logical_id().elem());
+
+  job_manager_->AddJobEntry(JOB_COPY,
+        job_name, cm->job_id().elem(),
+        read_set, write_set,
+        cm->before_set(), cm->after_set(),
+        cm->parent_job_id().elem(), cm->params());
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
@@ -120,13 +136,19 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
   for (; iter != server_->workers()->end(); iter++) {
     if ((*iter)->worker_id() == cm->worker_id().elem()) {
-      // std::string ip =
-      //   (*iter)->connection()->socket()->remote_endpoint().address().to_string();
-      (*iter)->set_ip(cm->ip());
-      (*iter)->set_port(cm->port().elem());
-      (*iter)->set_handshake_done(true);
-      std::cout << "Registered worker, id: " << (*iter)->worker_id() <<
-        " IP: " << (*iter)->ip() << " port: " << (*iter)->port() << std::endl;
+      if ((*iter)->handshake_done()) {
+        dbg(DBG_SCHED, "Worker already registered, id: %lu IP: %s port: %lu.\n",
+            (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port());
+      } else {
+        // std::string ip =
+        //   (*iter)->connection()->socket()->remote_endpoint().address().to_string();
+        (*iter)->set_ip(cm->ip());
+        (*iter)->set_port(cm->port().elem());
+        (*iter)->set_handshake_done(true);
+        ++registered_worker_num_;
+        dbg(DBG_SCHED, "Registered new worker, id: %lu IP: %s port: %lu.\n",
+            (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port());
+      }
       break;
     }
   }
@@ -139,6 +161,25 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   }
 }
 
+size_t Scheduler::RegisterPendingWorkers() {
+  size_t registered_num = 0;
+  SchedulerWorkerList::iterator iter;
+  for (iter = server_->workers()->begin();
+      iter != server_->workers()->end(); iter++) {
+    if (!(*iter)->handshake_done()) {
+      ++registered_num;
+      ID<worker_id_t> worker_id((*iter)->worker_id());
+      std::string ip("you-know");
+      ID<port_t> port(0);
+      HandshakeCommand cm(worker_id, ip, port);
+      dbg(DBG_SCHED, "Sending command: %s.\n", cm.toStringWTags().c_str());
+      server_->SendCommand(*iter, &cm);
+    }
+  }
+  return registered_num;
+}
+
+
 void Scheduler::SetupWorkerInterface() {
   LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
@@ -150,9 +191,12 @@ void Scheduler::SetupDataManager() {
   data_manager_ = new DataManager(server_);
 }
 
+void Scheduler::SetupJobManager() {
+  job_manager_ = new JobManager();
+}
+
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_table_.push_back(new SpawnJobCommand());
   worker_command_table_.push_back(new SpawnComputeJobCommand());
   worker_command_table_.push_back(new SpawnCopyJobCommand());
   worker_command_table_.push_back(new DefineDataCommand());

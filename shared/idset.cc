@@ -188,6 +188,16 @@ void IDSet<T>::clear() {
 }
 
 template<typename T>
+bool IDSet<T>::contains(T n) {
+  IDSetIter iter =  identifiers_.begin();
+  for (; iter !=  identifiers_.end(); ++iter) {
+    if (*iter == n)
+      return true;
+  }
+  return false;
+}
+
+template<typename T>
 int IDSet<T>::size() {
   return identifiers_.size();
 }

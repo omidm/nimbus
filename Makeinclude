@@ -26,6 +26,7 @@ CPP = g++
 # Flags for all cpp invocations
 CFLAGS = -Wall -g -pg -O0
 # CFLAGS += -D_NIMBUS_NO_DBG
+# CFLAGS += -D_NIMBUS_NO_LOG
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal

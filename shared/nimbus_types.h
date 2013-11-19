@@ -68,7 +68,7 @@ namespace nimbus {
 
   enum JobType {
     JOB_COMP,
-    JOB_SYNC
+    JOB_COPY
   };
 
 

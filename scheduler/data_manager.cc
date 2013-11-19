@@ -40,6 +40,8 @@
  ***********************************************************************/
 #include "scheduler/data_manager.h"
 #include "shared/dbg.h"
+#include "shared/ldo_add_command.h"
+#include "shared/ldo_remove_command.h"
 
 namespace nimbus {
 

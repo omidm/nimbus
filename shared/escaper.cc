@@ -59,6 +59,7 @@ void EscapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "\r", "%5");
   boost::algorithm::replace_all(*input, ",", "%6");
   boost::algorithm::replace_all(*input, ":", "%7");
+  boost::algorithm::replace_all(*input, "\b", "%8");
 }
 
 void UnescapeString(std::string* input) {
@@ -70,8 +71,7 @@ void UnescapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%6", ",");
   boost::algorithm::replace_all(*input, "%7", ":");
   boost::algorithm::replace_all(*input, "%0", "%");
+  boost::algorithm::replace_all(*input, "%8", "\b");
 }
 
 }  // namespace nimbus
-
-

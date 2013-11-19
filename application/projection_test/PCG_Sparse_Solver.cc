@@ -609,7 +609,7 @@ void Global_Sum::Execute(Parameter params, const DataArray& da) {
 	assert(d0);assert(d1);assert(d2);
 	printf("Jia: d0->arr(%f, %f, %f, %f)\n", d0->arr()[0], d0->arr()[1], d0->arr()[2], d0->arr()[3]);
 	printf("Jia: d1->arr(%f, %f, %f, %f)\n", d1->arr()[0], d1->arr()[1], d1->arr()[2], d1->arr()[3]);
-	T sum = 0;	
+	T sum = 0;
 	for (int i=0;i<d0->size();i++) sum += d0->arr()[i];
 	for (int i=0;i<d1->size();i++) sum += d1->arr()[i];
 	d2->arr()[0] = sum;

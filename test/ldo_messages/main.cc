@@ -42,9 +42,59 @@
 
 #include "shared/geometric_region.h"
 #include "shared/logical_data_object.h"
-#include "dbg.h"
-#include "shared/ldo_add_message.h"
-#include "shared/ldo_remove_message.h"
+#include "shared/scheduler_command.h"
+#include "shared/ldo_add_command.h"
+#include "shared/ldo_remove_command.h"
+#include "shared/dbg.h"
 
-int main(int argc, char *argv[]) {}
+using namespace nimbus;  // NOLINT
 
+void printLdo(nimbus::LogicalDataObject* obj) {
+  printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());
+  printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
+}
+
+int main(int argc, char *argv[]) {
+  std::string variable = "pressure";
+  GeometricRegion* region = new GeometricRegion(lrand48(), lrand48(),
+                                                lrand48(), lrand48(),
+                                                lrand48(), lrand48());
+  LogicalDataObject* obj = new LogicalDataObject(4399, variable, region);
+
+  LdoAddCommand* addStart = new LdoAddCommand(obj);
+  std::string strVal = addStart->toString();
+  std::string params;
+
+  SchedulerCommand* command = new SchedulerCommand();
+  SchedulerCommand::PrototypeTable* table = new SchedulerCommand::PrototypeTable();
+  table->push_back(new LdoAddCommand());
+
+  SchedulerCommand* c;
+  bool result = command->GenerateSchedulerCommandChild(strVal,
+                                                       table,
+                                                       c);
+  if (result == false) {
+    printf("Failed to parse command type %s\n", strVal.c_str());
+    return -1;
+  }
+
+  LdoAddCommand* addEnd = static_cast<LdoAddCommand*>(c);
+  printf("Testing add command.\n");
+  printf("Before: ");
+  printLdo(obj);
+  printf("After:  ");
+  printLdo(addEnd->object());
+
+  LdoRemoveCommand* removeStart = new LdoRemoveCommand(obj);
+  strVal = removeStart->toString();
+
+  table->push_back(new LdoRemoveCommand());
+
+  result = command->GenerateSchedulerCommandChild(strVal, table, c);
+  LdoRemoveCommand* removeEnd = static_cast<LdoRemoveCommand*>(c);
+  printf("Testing remove command.\n");
+  printf("Before: ");
+  printLdo(obj);
+  printf("After:  ");
+  printLdo(removeEnd->object());
+}

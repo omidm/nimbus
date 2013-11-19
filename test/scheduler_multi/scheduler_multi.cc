@@ -142,21 +142,15 @@ void SimpleScheduler::SchedulerCoreProcessor() {
           worker = *(server_->workers()->begin());
         } else if (read.size() != 0) {
           worker_id_t worker_id = create_data_[*(read.begin())].first;
-          SchedulerWorkerList::iterator it = server_->workers()->begin();
-          for (; it != server_->workers()->end(); it++) {
-            if ((*it)->worker_id() == worker_id) {
-              worker = *it;
-              break;
-            }
+          if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
+            exit(-1);
           }
         } else {
           worker_id_t worker_id = create_data_[*(write.begin())].first;
-          SchedulerWorkerList::iterator it = server_->workers()->begin();
-          for (; it != server_->workers()->end(); it++) {
-            if ((*it)->worker_id() == worker_id) {
-              worker = *it;
-              break;
-            }
+          if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
+            exit(-1);
           }
         }
 
@@ -193,12 +187,9 @@ void SimpleScheduler::SchedulerCoreProcessor() {
 
         if (sender_id == receiver_id) {
           SchedulerWorker* worker;
-          SchedulerWorkerList::iterator it = server_->workers()->begin();
-          for (; it != server_->workers()->end(); it++) {
-            if ((*it)->worker_id() == sender_id) {
-              worker = *it;
-              break;
-            }
+          if (!server_->GetSchedulerWorkerById(worker, sender_id)) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
+            exit(-1);
           }
           LocalCopyCommand* cm = new LocalCopyCommand(comm->job_id(),
               comm->from_logical_id(), comm->to_logical_id(),
@@ -209,20 +200,14 @@ void SimpleScheduler::SchedulerCoreProcessor() {
           delete cm;
         } else {
           SchedulerWorker* worker_sender;
-          SchedulerWorkerList::iterator it = server_->workers()->begin();
-          for (; it != server_->workers()->end(); it++) {
-            if ((*it)->worker_id() == sender_id) {
-              worker_sender = *it;
-              break;
-            }
+          if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
+            exit(-1);
           }
           SchedulerWorker* worker_receiver;
-          it = server_->workers()->begin();
-          for (; it != server_->workers()->end(); it++) {
-            if ((*it)->worker_id() == receiver_id) {
-              worker_receiver = *it;
-              break;
-            }
+          if (!server_->GetSchedulerWorkerById(worker_receiver, receiver_id)) {
+            dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", receiver_id);
+            exit(-1);
           }
 
           std::vector<job_id_t> j;
@@ -281,12 +266,9 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
   SchedulerWorker* worker = NULL;
   // TODO(omidm): do somthing smarter!!
   worker_id_t worker_id = (worker_id_t)cm->partition_id().elem();
-  SchedulerWorkerList::iterator it = server_->workers()->begin();
-  for (; it != server_->workers()->end(); it++) {
-    if ((*it)->worker_id() == worker_id) {
-      worker = *it;
-      break;
-    }
+  if (!server_->GetSchedulerWorkerById(worker, worker_id)) {
+    dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", worker_id);
+    exit(-1);
   }
 
   create_data_[cm->logical_data_id().elem()] = std::make_pair(worker_id, false);
