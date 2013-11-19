@@ -79,7 +79,7 @@ class SchedulerServer {
    *  maxCommands into storage, returning true if it placed one or more.
    *  Returns false if no commands were placed in storage. */
   virtual bool ReceiveCommands(SchedulerCommandList* storage,
-                               uint32_t maxCommands);
+                               size_t maxCommands);
 
   /** Send command to destinationWorker. Returns immediately and
    *   processes the send asynchronously.*/

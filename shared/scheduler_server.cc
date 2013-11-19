@@ -82,7 +82,7 @@ bool SchedulerServer::Initialize() {
 }
 
 bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
-                                      uint32_t maxCommands) {
+                                      size_t maxCommands) {
   boost::mutex::scoped_lock(command_mutex_);
   uint32_t pending = received_commands_.size();
   if (pending == 0) {

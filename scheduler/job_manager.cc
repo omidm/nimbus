@@ -61,6 +61,8 @@ bool JobManager::AddJobEntry(const JobType& job_type,
   JobEntry* job = new JobEntry(job_type, job_name, job_id, read_set, write_set,
       before_set, after_set, parent_job_id, params);
   if (job_graph_.AddJobEntry(job)) {
+    if (job_name == "main")
+      job->set_versioned(true);
     return true;
   } else {
     delete job;
@@ -168,6 +170,9 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 }
 
 bool JobManager::ResolveJobDataVersions(JobEntry* job) {
+  if (job->versioned())
+    return true;
+
   JobEntry* j;
   JobEntry::VersionTable version_table, vt;
 
@@ -252,8 +257,10 @@ size_t JobManager::ResolveVersions() {
   size_t num_new_versioned = 0;
   JobGraph::Iter iter = job_graph_.Begin();
   for (; iter != job_graph_.End(); ++iter) {
-    if (ResolveJobDataVersions(iter->second))
-      ++num_new_versioned;
+    if (!iter->second->versioned()) {
+      if (ResolveJobDataVersions(iter->second))
+        ++num_new_versioned;
+    }
   }
   return num_new_versioned;
 }

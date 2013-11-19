@@ -59,6 +59,10 @@
 #include "shared/id_maker.h"
 
 namespace nimbus {
+
+#define MAX_BATCH_COMMAND_NUM 10
+#define MIN_WORKERS_TO_JOIN 2
+
 class Scheduler {
   public:
     explicit Scheduler(port_t listening_port);
@@ -66,6 +70,7 @@ class Scheduler {
 
     virtual void Run();
     virtual void SchedulerCoreProcessor();
+    virtual void ProcessQueuedSchedulerCommands(size_t max_num);
     virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
     virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
     virtual void ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm);
@@ -73,7 +78,9 @@ class Scheduler {
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
+    virtual void RegisterInitialWorkers(size_t min_to_join);
     virtual size_t RegisterPendingWorkers();
+    virtual size_t AssignJobsToWorkers();
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}

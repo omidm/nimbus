@@ -69,6 +69,38 @@ void Scheduler::Run() {
 }
 
 void Scheduler::SchedulerCoreProcessor() {
+  // Worker registration phase before starting the main job.
+  RegisterInitialWorkers(MIN_WORKERS_TO_JOIN);
+
+  // Adding main job to the job manager.
+  IDSet<job_id_t> job_id_set;
+  IDSet<logical_data_id_t> logical_data_id_set;
+  Parameter params;
+  job_manager_->AddJobEntry(JOB_COMP,
+        "main", (job_id_t)(0),
+        logical_data_id_set, logical_data_id_set,
+        job_id_set, job_id_set,
+        (job_id_t)(0), params);
+
+  // Main Loop of the scheduler.
+  while (true) {
+    RegisterPendingWorkers();
+    ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
+    AssignJobsToWorkers();
+  }
+}
+
+void Scheduler::ProcessQueuedSchedulerCommands(size_t max_num) {
+  SchedulerCommandList storage;
+  if (server_->ReceiveCommands(&storage, max_num)) {
+    SchedulerCommandList::iterator iter = storage.begin();
+    for (; iter != storage.end(); iter++) {
+      SchedulerCommand* comm = *iter;
+      dbg(DBG_SCHED, "Processing command: %s.\n", comm->toStringWTags().c_str());
+      ProcessSchedulerCommand(comm);
+      delete comm;
+    }
+  }
 }
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
@@ -92,12 +124,10 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
       ProcessDefinePartitionCommand(reinterpret_cast<DefinePartitionCommand*>(cm));
       break;
     default:
-      std::cout << "ERROR: " << cm->toString() <<
-        " have not been implemented in ProcessSchedulerCommand yet." <<
-        std::endl;
+      dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
+          cm->toString().c_str());
   }
 }
-
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
   job_manager_->AddJobEntry(JOB_COMP,
@@ -125,6 +155,8 @@ void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
   data_manager_->AddLogicalObject(cm->logical_data_id().elem(),
                                  cm->data_name(),
                                  cm->partition_id().elem());
+  job_manager_->DefineData(cm->parent_job_id().elem(),
+                          cm->logical_data_id().elem());
 }
 
 void Scheduler::ProcessDefinePartitionCommand(DefinePartitionCommand* cm) {
@@ -155,9 +187,25 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
+  job_manager_->JobDone(cm->job_id().elem());
+
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
   for (; iter != server_->workers()->end(); iter++) {
     server_->SendCommand(*iter, cm);
+  }
+}
+
+size_t Scheduler::AssignJobsToWorkers() {
+  return 0;
+}
+
+void Scheduler::RegisterInitialWorkers(size_t min_to_join) {
+  while (registered_worker_num_ < min_to_join) {
+    dbg(DBG_SCHED, "%d worker(s) are registered, waiting for %d more workers to join ...",
+        registered_worker_num_, min_to_join - registered_worker_num_);
+    ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
+    RegisterPendingWorkers();
+    sleep(1);
   }
 }
 
@@ -179,12 +227,17 @@ size_t Scheduler::RegisterPendingWorkers() {
   return registered_num;
 }
 
-
 void Scheduler::SetupWorkerInterface() {
   LoadWorkerCommands();
   server_ = new SchedulerServer(listening_port_);
   server_->set_worker_command_table(&worker_command_table_);
   worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+}
+
+void Scheduler::SetupUserInterface() {
+  LoadUserCommands();
+  user_interface_thread_ = new boost::thread(
+      boost::bind(&Scheduler::GetUserCommand, this));
 }
 
 void Scheduler::SetupDataManager() {
@@ -202,24 +255,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_.push_back(new DefineDataCommand());
   worker_command_table_.push_back(new HandshakeCommand());
   worker_command_table_.push_back(new JobDoneCommand());
-}
-
-void Scheduler::SetupUserInterface() {
-  LoadUserCommands();
-  user_interface_thread_ = new boost::thread(
-      boost::bind(&Scheduler::GetUserCommand, this));
-}
-
-void Scheduler::GetUserCommand() {
-  while (true) {
-    std::cout << "command: " << std::endl;
-    std::string token("runapp");
-    std::string str, cm;
-    std::vector<int> args;
-    getline(std::cin, str);
-    parseCommand(str, user_command_set_, cm, args);
-    std::cout << "you typed: " << cm << std::endl;
-  }
+  worker_command_table_.push_back(new DefinePartitionCommand());
 }
 
 void Scheduler::LoadUserCommands() {
@@ -234,5 +270,16 @@ void Scheduler::LoadUserCommands() {
   }
 }
 
+void Scheduler::GetUserCommand() {
+  while (true) {
+    std::cout << "command: " << std::endl;
+    std::string token("runapp");
+    std::string str, cm;
+    std::vector<int> args;
+    getline(std::cin, str);
+    parseCommand(str, user_command_set_, cm, args);
+    std::cout << "you typed: " << cm << std::endl;
+  }
+}
 
 }  // namespace nimbus
