@@ -60,6 +60,7 @@ void Scheduler::Run() {
   SetupWorkerInterface();
   SetupUserInterface();
   SetupDataManager();
+  SetupJobManager();
   id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
@@ -70,9 +71,6 @@ void Scheduler::SchedulerCoreProcessor() {
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {
-    case SchedulerCommand::SPAWN_JOB:
-      ProcessSpawnJobCommand(reinterpret_cast<SpawnJobCommand*>(cm));
-      break;
     case SchedulerCommand::SPAWN_COMPUTE_JOB:
       ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
       break;
@@ -150,9 +148,12 @@ void Scheduler::SetupDataManager() {
   data_manager_ = new DataManager(server_);
 }
 
+void Scheduler::SetupJobManager() {
+  job_manager_ = new JobManager();
+}
+
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_table_.push_back(new SpawnJobCommand());
   worker_command_table_.push_back(new SpawnComputeJobCommand());
   worker_command_table_.push_back(new SpawnCopyJobCommand());
   worker_command_table_.push_back(new DefineDataCommand());
