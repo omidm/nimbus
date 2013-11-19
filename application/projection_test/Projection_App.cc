@@ -105,7 +105,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 		after.insert(j[i + 1]);
 		read.clear();
 		write.clear();
-		SpwanComputeJob("Proj_AdvanceOneTime", j[i], read, write, before,
+		SpwanComputeJob("Proj_PrepareForProj", j[i], read, write, before,
 				after, par);
 	}
 
@@ -193,6 +193,15 @@ Job* Proj_PrepareForProj::Clone() {
 // read set: current_frame, time
 // write set: time
 void Proj_PrepareForProj::Execute(Parameter params, const DataArray& da) {
+	std::vector<job_id_t> j;
+	std::vector<logical_data_id_t> d;
+	IDSet < logical_data_id_t > read, write;
+	IDSet<job_id_t> before, after;
+	IDSet<partition_id_t> neighbor_partitions;
+	partition_id_t pid1 = 1, pid2 = 2;
+	Parameter par;
+	IDSet<param_id_t> param_idset;
+
 	printf("Begin Proj_PrepareForProj\n");
 	T target_time = example->Time_At_Frame(current_frame + 1);
 	T dt = target_time - time;
@@ -255,6 +264,18 @@ void Proj_PrepareForProj::Execute(Parameter params, const DataArray& da) {
 	laplace->Find_A(domain, A_array, b_array, filled_region_cell_count,
 			cell_index_to_matrix_index);
 
+	GetNewJobID(&j, number_of_regions);
+	for (int color = 1; color <= number_of_regions; color++)
+		if (filled_region_cell_count(color) > 0
+			&& (filled_region_touches_dirichlet(color)
+				|| solve_neumann_regions)) {
+			//Solve_Subregion(interior_indices(color), ghost_indices(color), matrix_index_to_cell_index_array(color), A_array(color), b_array(color), color, &domain_index);
+			before.clear();
+			after.clear();
+			read.clear();
+			write.clear();
+			SpawnComputeJob("Prof_PrepareForOneRegion", j[color], read, write, before, after, par);
+		}
 	printf("Completed Proj_PrepareForProj\n");
 }
 ;
@@ -280,8 +301,7 @@ void Prof_PrepareForOneRegion::Execute(Parameter params, const DataArray& da) {
 	VECTOR_ND<T> x(number_of_unknowns), q, s, r, k, z;
 	for (int i = 1; i <= number_of_unknowns; i++)
 		x(i) = u(matrix_index_to_cell_index(i));
-	Find_Tolerance(b); // needs to happen after b is completely set up
-	static const int min_unknowns_for_threading = 100;
+	laplace->Find_Tolerance(b); // needs to happen after b is completely set up
 
 	laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
 
