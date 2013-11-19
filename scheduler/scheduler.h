@@ -73,6 +73,7 @@ class Scheduler {
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
+    virtual size_t RegisterPendingWorkers();
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}
@@ -104,6 +105,7 @@ class Scheduler {
     ClusterMap cluster_map_;
     DataManager* data_manager_;
     JobManager* job_manager_;
+    size_t registered_worker_num_;
 };
 
 }  // namespace nimbus

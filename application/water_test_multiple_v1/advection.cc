@@ -47,7 +47,7 @@
 #include "water_data_driver.h"
 
 void Advect_Velocities (
-        ::nimbus::GeometricRegion region,
+        ::nimbus::GeometricRegion &region,
         T_FACE_ARRAY *face_velocities,
         T_FACE_ARRAY *face_vel_extended,
         WaterApp *water_app,
@@ -58,7 +58,13 @@ void Advect_Velocities (
     typedef ::PhysBAM::RANGE<TV> T_RANGE;
 
     TV_INT size(region.dx(), region.dy());
-    T_GRID grid(size, T_RANGE::Unit_Box(), true);
+    T_RANGE box = T_RANGE::Unit_Box();
+    if (region.dx() < region.dy())
+        box.max_corner.x = ((float) region.dx()) / ((float) region.dy());
+    else
+        box.max_corner.y = ((float) region.dy()) / ((float) region.dx());
+    T_GRID grid(size, box, true);
+
     water_app->advection_scalar()->Update_Advection_Equation_Face(
             grid,
             *face_velocities,

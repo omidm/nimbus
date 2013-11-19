@@ -105,10 +105,7 @@ class NonAdvData : public Data {
         GRID<TV> *grid;
 
         // boundary information
-        BOUNDARY_UNIFORM<GRID<TV>, T>
-            *boundary_scalar,
-            *boundary,
-            *phi_boundary;
+        BOUNDARY_UNIFORM<GRID<TV>, T> *phi_boundary;
         typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::
             BOUNDARY_PHI_WATER *phi_boundary_water;
         VECTOR<VECTOR<bool, 2>, TV::dimension> *domain_boundary;
@@ -118,7 +115,6 @@ class NonAdvData : public Data {
 
         // fluid data
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *particle_levelset_evolution;
-        ADVECTION_SEMI_LAGRANGIAN_UNIFORM<GRID<TV>, T> *advection_scalar;
 
         // collision geometry
         typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::
