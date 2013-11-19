@@ -52,6 +52,11 @@ using nimbus::Data;
 using nimbus::Application;
 using namespace PhysBAM;
 typedef float T;
+typedef VECTOR<T,2> TV;
+typedef VECTOR<int,TV::dimension> TV_INT;
+
+#define SCALE_VAL 100
+#define RESTART_VAL 0
 
 class ProjectionApp : public Application {
     public:
