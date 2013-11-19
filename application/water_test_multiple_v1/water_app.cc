@@ -462,166 +462,108 @@ void Advect::Execute(Parameter params, const DataArray& da) {
 
     ::parameters::AdvVelPar adv_vel_par_pb;
     std::string str(params.ser_data().data_ptr_raw(),
-        params.ser_data().size());
+            params.ser_data().size());
     adv_vel_par_pb.ParseFromString(str);
-
-//    T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
-//    T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
-//    FaceArray::Glue_Regions(
-//            fv,
-//            fvleft,
-//            kleft_region,
-//            0,
-//            0);
-//    FaceArray::Glue_Regions(
-//            fv,
-//            fvright,
-//            kright_region,
-//            0,
-//            0);
-//
-//    driver->face_velocities = fv;
-//    driver->sim_data = sim_data;
-//    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fv);
-//    sim_data->incompressible->
-//        Set_Custom_Boundary(*water_app->boundary());
-//    sim_data->incompressible->
-//        Set_Custom_Advection(*(water_app->advection_scalar()));
-//    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-//        Set_Custom_Advection(*(water_app->advection_scalar()));
-//
-//    T_FACE_ARRAY *fv_extended = new T_FACE_ARRAY();
-//    FaceArray::Extend_Array(
-//            fv,
-//            fv_extended,
-//            water_app->boundary(),
-//            kGhostSize,
-//            adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
-//            true);
-//    Advect_Velocities(kwhole_region, fv, fv_extended, water_app,
-//            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
-//
-//    FaceArray::Update_Regions(
-//            fv,
-//            fvleft,
-//            kleft_region,
-//            0,
-//            0);
-//    FaceArray::Update_Regions(
-//            fv,
-//            fvright,
-//            kright_region,
-//            0,
-//            0);
-//    delete(fv);
-//    delete(fv_extended);
 
     T_RANGE box = T_RANGE::Unit_Box();
     box.max_corner.x = box.max_corner.x/2.0;
     T_GRID grid(part_size, box, true);
-    T_FACE_ARRAY *fvl = new  T_FACE_ARRAY(grid);
-    FaceArray::Glue_Regions(
-            fvl,
-            fvleft,
-            kleft_region,
-            0,
-            0);
 
-    driver->face_velocities = fvl;
-    driver->sim_data = sim_data;
-    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fvl);
-    sim_data->incompressible->
-        Set_Custom_Boundary(*water_app->boundary());
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
+//    if (adv_vel_par_pb.left_or_right() == 0) {
+        T_FACE_ARRAY *fvl = new  T_FACE_ARRAY(grid);
+        FaceArray::Glue_Regions(
+                fvl,
+                fvleft,
+                kleft_region,
+                0,
+                0);
 
-    T_FACE_ARRAY *fvl_extended = new T_FACE_ARRAY();
-    FaceArray::Extend_Array(
-            fvl,
-            fvl_extended,
-            water_app->boundary(),
-            kGhostSize,
-            adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
-            true);
-    FaceArray::Glue_Regions(
-            fvl_extended,
-            fvleft,
-            kleft_extended_region,
-            0,
-            0);
+        driver->face_velocities = fvl;
+        driver->sim_data = sim_data;
+        sim_data->phi_boundary_water->Set_Velocity_Pointer(*fvl);
+        sim_data->incompressible->
+            Set_Custom_Boundary(*water_app->boundary());
+        sim_data->incompressible->
+            Set_Custom_Advection(*(water_app->advection_scalar()));
+        sim_data->particle_levelset_evolution->Levelset_Advection(1).
+            Set_Custom_Advection(*(water_app->advection_scalar()));
 
-    Advect_Velocities(kleft_region, fvl, fvl_extended, water_app,
-            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+        T_FACE_ARRAY *fvl_extended = new T_FACE_ARRAY();
+        FaceArray::Extend_Array(
+                fvl,
+                fvl_extended,
+                water_app->boundary(),
+                kGhostSize,
+                adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
+                true);
+        FaceArray::Glue_Regions(
+                fvl_extended,
+                fvleft,
+                kleft_extended_region,
+                0,
+                0);
 
+        Advect_Velocities(kleft_region, fvl, fvl_extended, water_app,
+                adv_vel_par_pb.dt(), adv_vel_par_pb.time());
 
-    T_FACE_ARRAY *fvr = new  T_FACE_ARRAY(grid);
-    FaceArray::Glue_Regions(
-            fvr,
-            fvright,
-            kright_region,
-            -kright_region.x() + 1,
-            0);
+        FaceArray::Update_Regions(
+                fvl,
+                fvleft,
+                kleft_region,
+                0,
+                0);
 
-    driver->face_velocities = fvr;
-    driver->sim_data = sim_data;
-    sim_data->phi_boundary_water->Set_Velocity_Pointer(*fvr);
-    sim_data->incompressible->
-        Set_Custom_Boundary(*water_app->boundary());
-    sim_data->incompressible->
-        Set_Custom_Advection(*(water_app->advection_scalar()));
-    sim_data->particle_levelset_evolution->Levelset_Advection(1).
-        Set_Custom_Advection(*(water_app->advection_scalar()));
+        delete(fvl);
+        delete(fvl_extended);
 
-    T_FACE_ARRAY *fvr_extended = new T_FACE_ARRAY();
-    FaceArray::Extend_Array(
-            fvr,
-            fvr_extended,
-            water_app->boundary(),
-            kGhostSize,
-            adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
-            true);
-    FaceArray::Glue_Regions(
-            fvr_extended,
-            fvright,
-            kright_extended_region,
-            -kright_region.x() + 1,
-            0);
+//    } else {
+        T_FACE_ARRAY *fvr = new  T_FACE_ARRAY(grid);
+        FaceArray::Glue_Regions(
+                fvr,
+                fvright,
+                kright_region,
+                -kright_region.x() + 1,
+                0);
 
-    Advect_Velocities(kright_region, fvr, fvr_extended, water_app,
-            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+        driver->face_velocities = fvr;
+        driver->sim_data = sim_data;
+        sim_data->phi_boundary_water->Set_Velocity_Pointer(*fvr);
+        sim_data->incompressible->
+            Set_Custom_Boundary(*water_app->boundary());
+        sim_data->incompressible->
+            Set_Custom_Advection(*(water_app->advection_scalar()));
+        sim_data->particle_levelset_evolution->Levelset_Advection(1).
+            Set_Custom_Advection(*(water_app->advection_scalar()));
 
+        T_FACE_ARRAY *fvr_extended = new T_FACE_ARRAY();
+        FaceArray::Extend_Array(
+                fvr,
+                fvr_extended,
+                water_app->boundary(),
+                kGhostSize,
+                adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
+                true);
+        FaceArray::Glue_Regions(
+                fvr_extended,
+                fvright,
+                kright_extended_region,
+                -kright_region.x() + 1,
+                0);
 
-    FaceArray::Update_Regions(
-            fvl,
-            fvleft,
-            kleft_region,
-            0,
-            0);
-    FaceArray::Update_Regions(
-            fvr,
-            fvright,
-            kright_region,
-            -kright_region.x() + 1,
-            0);
-    FaceArray::Update_Regions(
-            fvl,
-            fvright,
-            kright_shared_region,
-            0,
-            0);
-    FaceArray::Update_Regions(
-            fvr,
-            fvleft,
-            kleft_shared_region,
-            -kleft_shared_region.x() + 1,
-            0);
+        Advect_Velocities(kright_region, fvr, fvr_extended, water_app,
+                adv_vel_par_pb.dt(), adv_vel_par_pb.time());
 
-    delete(fvl);
-    delete(fvl_extended);
-    delete(fvr);
-    delete(fvr_extended);
+        FaceArray::Update_Regions(
+                fvr,
+                fvright,
+                kright_region,
+                -kright_region.x() + 1,
+                0);
+
+        delete(fvr);
+        delete(fvr_extended);
+
+//    }
 
     printf("@@ Completed advect\n");
 }
@@ -726,7 +668,7 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         IDSet<logical_data_id_t> read, write;
         std::vector<job_id_t> j;
         GetNewJobID(&j, 5);
-            
+
         par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -749,6 +691,7 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         ::parameters::AdvVelPar adv_vel_par_pb;
         adv_vel_par_pb.set_dt(driver->dt);
         adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb.set_left_or_right(0);
         std::string str;
         adv_vel_par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));

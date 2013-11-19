@@ -1,6 +1,0 @@
-package parameters;
-
-message AdvVelPar {
-    required float dt = 1;
-    optional float time = 2;
-}
