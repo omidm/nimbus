@@ -73,15 +73,29 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
-  return job_graph_.RemoveJobEntry(job);
+  if (job_graph_.RemoveJobEntry(job)) {
+    delete job;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool JobManager::RemoveJobEntry(job_id_t job_id) {
-  return job_graph_.RemoveJobEntry(job_id);
+  JobEntry* job;
+  if (GetJobEntry(job_id, job)) {
+    job_graph_.RemoveJobEntry(job);
+    delete job;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
-  while (ResolveVersions() > 0) {}
+  while (ResolveVersions() > 0) {
+    continue;
+  }
 
   size_t num = 0;
   list->clear();
@@ -102,7 +116,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
             break;
           }
         } else {
-          dbg(DBG_SCHED, "Job in befor set (id: %lu) is not in the graph.", id);
+          dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.", id);
           before_set_assigned = false;
           break;
         }
@@ -127,6 +141,29 @@ void JobManager::JobDone(job_id_t job_id) {
     job->set_done(true);
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
+  }
+}
+
+void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
+  JobEntry* job;
+  if (GetJobEntry(job_id, job)) {
+    JobEntry::VersionTable vt;
+    vt = job->version_table();
+    JobEntry::VTIter it = vt.begin();
+    bool new_logical_data = true;
+    for (; it != vt.end(); ++it) {
+      if (it->first == ldid) {
+        new_logical_data = false;
+        dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+        break;
+      }
+    }
+    if (new_logical_data) {
+      vt[ldid] = (data_version_t)(0);
+      job->set_version_table(vt);
+    }
+  } else {
+    dbg(DBG_WARN, "WARNING: parent of define data with job id %lu is not in the graph.\n", job_id);
   }
 }
 

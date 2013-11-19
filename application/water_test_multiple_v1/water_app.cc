@@ -579,9 +579,6 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         std::string str;
         adv_vel_par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
-        std::string strg = par.toString();
-        for (unsigned int i = 0; i < strg.length(); i++)
-            printf("%c\n", strg[i]);
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
