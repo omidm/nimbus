@@ -276,6 +276,17 @@ SchedulerWorkerList* SchedulerServer::workers() {
   return &workers_;
 }
 
+bool SchedulerServer::GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id_t w_id) {
+  SchedulerWorkerList::iterator iter = workers_.begin();
+  for (; iter != workers_.end(); ++iter) {
+    if ((*iter)->worker_id() == w_id) {
+      worker = *iter;
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 SchedulerServer::set_worker_command_table(SchedulerCommand::PrototypeTable* cmt) {
   worker_command_table_ = cmt;

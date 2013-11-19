@@ -107,6 +107,8 @@ class SchedulerServer {
    *  therefore involves locks for thread safety. */
   SchedulerWorkerList* workers();
 
+  bool GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id_t w_id);
+
   void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
 
  private:
