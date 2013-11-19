@@ -125,8 +125,8 @@ bool SpawnJobCommand::Parse(const std::string& params) {
   iter++;
   if (*iter == "COMP") {
     job_type_ = JOB_COMP;
-  } else if (*iter == "SYNC") {
-    job_type_ = JOB_SYNC;
+  } else if (*iter == "COPY") {
+    job_type_ = JOB_COPY;
   } else {
     std::cout << "ERROR: Unknown job type." << std::endl;
     return false;
@@ -153,7 +153,7 @@ std::string SpawnJobCommand::toString() {
   if (job_type_ == JOB_COMP)
     str += "COMP ";
   else
-    str += "SYNC ";
+    str += "COPY ";
   str += params_.toString();
 
   return str;
@@ -171,7 +171,7 @@ std::string SpawnJobCommand::toStringWTags() {
   if (job_type_ == JOB_COMP)
     str += "type:COMP ";
   else
-    str += "type:SYNC ";
+    str += "type:COPY ";
   str += ("params:" + params_.toString());
   return str;
 }
