@@ -469,7 +469,7 @@ void Advect::Execute(Parameter params, const DataArray& da) {
     box.max_corner.x = box.max_corner.x/2.0;
     T_GRID grid(part_size, box, true);
 
-//    if (adv_vel_par_pb.left_or_right() == 0) {
+    if (adv_vel_par_pb.left_or_right() == 0) {
         T_FACE_ARRAY *fvl = new  T_FACE_ARRAY(grid);
         FaceArray::Glue_Regions(
                 fvl,
@@ -516,7 +516,7 @@ void Advect::Execute(Parameter params, const DataArray& da) {
         delete(fvl);
         delete(fvl_extended);
 
-//    } else {
+    } else {
         T_FACE_ARRAY *fvr = new  T_FACE_ARRAY(grid);
         FaceArray::Glue_Regions(
                 fvr,
@@ -563,9 +563,9 @@ void Advect::Execute(Parameter params, const DataArray& da) {
         delete(fvr);
         delete(fvr_extended);
 
-//    }
+    }
 
-    printf("@@ Completed advect\n");
+    printf("@@ Completed advect %i\n", (int) adv_vel_par_pb.left_or_right());
 }
 
 AfterAdvect::AfterAdvect(Application *app) {
@@ -667,12 +667,13 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         IDSet<job_id_t> before, after;
         IDSet<logical_data_id_t> read, write;
         std::vector<job_id_t> j;
-        GetNewJobID(&j, 5);
+        GetNewJobID(&j, 6);
 
         par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
         after.insert(j[1]);
+        after.insert(j[2]);
         read.insert(driver->logical_id());
         read.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvleft.size(); i++)
@@ -689,55 +690,52 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         printf("Spawned upto advect\n");
 
         ::parameters::AdvVelPar adv_vel_par_pb;
+        std::string str;
         adv_vel_par_pb.set_dt(driver->dt);
         adv_vel_par_pb.set_time(driver->time);
+
+        str="";
         adv_vel_par_pb.set_left_or_right(0);
-        std::string str;
         adv_vel_par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
-        std::string strg = par.toString();
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[0]);
-        after.insert(j[2]);
-        read.insert(driver->logical_id());
-        read.insert(sim_data->logical_id());
-        for (unsigned int i = 0; i < fvleft.size(); i++)
-            read.insert(fvleft[i]->logical_id());
-        for (unsigned int i = 0; i < fvright.size(); i++)
-            read.insert(fvright[i]->logical_id());
-        write.insert(driver->logical_id());
-        write.insert(sim_data->logical_id());
-        for (unsigned int i = 0; i < fvleft.size(); i++)
-            write.insert(fvleft[i]->logical_id());
-        for (unsigned int i = 0; i < fvright.size(); i++)
-            write.insert(fvright[i]->logical_id());
-        SpawnComputeJob("advect", j[1], read, write, before, after, par);
-        printf("Spawned advect\n");
-
-        par.set_ser_data(SerializedData(""));
-        before.clear(); after.clear();
-        read.clear(); write.clear();
-        before.insert(j[1]);
         after.insert(j[3]);
         read.insert(driver->logical_id());
         read.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvleft.size(); i++)
             read.insert(fvleft[i]->logical_id());
-        for (unsigned int i = 0; i < fvright.size(); i++)
-            read.insert(fvright[i]->logical_id());
         write.insert(driver->logical_id());
         write.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvleft.size(); i++)
             write.insert(fvleft[i]->logical_id());
+        SpawnComputeJob("advect", j[1], read, write, before, after, par);
+        printf("Spawned advect 0\n");
+
+        str="";
+        adv_vel_par_pb.set_left_or_right(1);
+        adv_vel_par_pb.SerializeToString(&str);
+        par.set_ser_data(SerializedData(str));
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        before.insert(j[0]);
+        after.insert(j[3]);
+        read.insert(driver->logical_id());
+        read.insert(sim_data->logical_id());
+        for (unsigned int i = 0; i < fvright.size(); i++)
+            read.insert(fvright[i]->logical_id());
+        write.insert(driver->logical_id());
+        write.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvright.size(); i++)
             write.insert(fvright[i]->logical_id());
-        SpawnComputeJob("afteradvect", j[2], read, write, before, after, par);
-        printf("Spawned afteradvect\n");
+        SpawnComputeJob("advect", j[2], read, write, before, after, par);
+        printf("Spawned advect 1\n");
 
         par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
+        before.insert(j[1]);
         before.insert(j[2]);
         after.insert(j[4]);
         read.insert(driver->logical_id());
@@ -746,13 +744,33 @@ void Loop::Execute(Parameter params, const DataArray& da) {
             read.insert(fvleft[i]->logical_id());
         for (unsigned int i = 0; i < fvright.size(); i++)
             read.insert(fvright[i]->logical_id());
-        SpawnComputeJob("writeframe", j[3], read, write, before, after, par);
-        printf("Spawned writeframe\n");
+        write.insert(driver->logical_id());
+        write.insert(sim_data->logical_id());
+        for (unsigned int i = 0; i < fvleft.size(); i++)
+            write.insert(fvleft[i]->logical_id());
+        for (unsigned int i = 0; i < fvright.size(); i++)
+            write.insert(fvright[i]->logical_id());
+        SpawnComputeJob("afteradvect", j[3], read, write, before, after, par);
+        printf("Spawned afteradvect\n");
 
         par.set_ser_data(SerializedData(""));
         before.clear(); after.clear();
         read.clear(); write.clear();
         before.insert(j[3]);
+        after.insert(j[5]);
+        read.insert(driver->logical_id());
+        read.insert(sim_data->logical_id());
+        for (unsigned int i = 0; i < fvleft.size(); i++)
+            read.insert(fvleft[i]->logical_id());
+        for (unsigned int i = 0; i < fvright.size(); i++)
+            read.insert(fvright[i]->logical_id());
+        SpawnComputeJob("writeframe", j[4], read, write, before, after, par);
+        printf("Spawned writeframe\n");
+
+        par.set_ser_data(SerializedData(""));
+        before.clear(); after.clear();
+        read.clear(); write.clear();
+        before.insert(j[4]);
         read.insert(driver->logical_id());
         read.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvleft.size(); i++)
@@ -765,7 +783,7 @@ void Loop::Execute(Parameter params, const DataArray& da) {
             write.insert(fvleft[i]->logical_id());
         for (unsigned int i = 0; i < fvright.size(); i++)
             write.insert(fvright[i]->logical_id());
-        SpawnComputeJob("loop", j[4], read, write, before, after, par);
+        SpawnComputeJob("loop", j[5], read, write, before, after, par);
         printf("Spawned loop\n");
     }
     delete(fv);
