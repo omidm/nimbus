@@ -137,7 +137,7 @@ void JobEntry::set_versioned(bool flag) {
   versioned_ = flag;
 }
 
-void JobEntry::set_asigned(bool flag) {
+void JobEntry::set_assigned(bool flag) {
   assigned_ = flag;
 }
 

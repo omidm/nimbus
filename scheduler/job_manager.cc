@@ -73,15 +73,62 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
-  return job_graph_.RemoveJobEntry(job);
+  if (job_graph_.RemoveJobEntry(job)) {
+    delete job;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool JobManager::RemoveJobEntry(job_id_t job_id) {
-  return job_graph_.RemoveJobEntry(job_id);
+  JobEntry* job;
+  if (GetJobEntry(job_id, job)) {
+    job_graph_.RemoveJobEntry(job);
+    delete job;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
-  return 0;
+  while (ResolveVersions() > 0) {
+    continue;
+  }
+
+  size_t num = 0;
+  list->clear();
+  JobGraph::Iter iter = job_graph_.Begin();
+  for (; (iter != job_graph_.End()) && (num < max_num); ++iter) {
+    JobEntry* job = iter->second;
+    if (job->versioned() && !job->assigned()) {
+      bool before_set_assigned = true;
+      IDSet<job_id_t>::IDSetIter it;
+      IDSet<job_id_t> before_set = job->before_set();
+      for (it = before_set.begin(); it != before_set.end(); ++it) {
+        JobEntry* j;
+        job_id_t id = *it;
+        if (GetJobEntry(id, j)) {
+          if (!(j->assigned())) {
+            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not assigned yet.", id);
+            before_set_assigned = false;
+            break;
+          }
+        } else {
+          dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.", id);
+          before_set_assigned = false;
+          break;
+        }
+      }
+      if (before_set_assigned) {
+        job->set_assigned(true);
+        list->push_back(job);
+        ++num;
+      }
+    }
+  }
+  return num;
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
@@ -97,6 +144,29 @@ void JobManager::JobDone(job_id_t job_id) {
   }
 }
 
+void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
+  JobEntry* job;
+  if (GetJobEntry(job_id, job)) {
+    JobEntry::VersionTable vt;
+    vt = job->version_table();
+    JobEntry::VTIter it = vt.begin();
+    bool new_logical_data = true;
+    for (; it != vt.end(); ++it) {
+      if (it->first == ldid) {
+        new_logical_data = false;
+        dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+        break;
+      }
+    }
+    if (new_logical_data) {
+      vt[ldid] = (data_version_t)(0);
+      job->set_version_table(vt);
+    }
+  } else {
+    dbg(DBG_WARN, "WARNING: parent of define data with job id %lu is not in the graph.\n", job_id);
+  }
+}
+
 bool JobManager::ResolveJobDataVersions(JobEntry* job) {
   JobEntry* j;
   JobEntry::VersionTable version_table, vt;
@@ -105,12 +175,12 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
   if (GetJobEntry(parent_id, j)) {
     if (j->versioned()) {
       vt = j->version_table();
-      JobEntry::VTIter iter = vt.begin();
-      for (; iter != vt.end(); ++iter) {
-        if (j->write_set().contains(iter->first)) {
-          version_table[iter->first] =  ++(iter->second);
+      JobEntry::VTIter it = vt.begin();
+      for (; it != vt.end(); ++it) {
+        if (j->write_set().contains(it->first)) {
+          version_table[it->first] =  ++(it->second);
         } else {
-          version_table[iter->first] =  (iter->second);
+          version_table[it->first] =  (it->second);
         }
       }
     } else {
@@ -180,9 +250,11 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
 
 size_t JobManager::ResolveVersions() {
   size_t num_new_versioned = 0;
-  // JobGraph::Iter iter = job_graph_.Begin();
-  // for ()
-
+  JobGraph::Iter iter = job_graph_.Begin();
+  for (; iter != job_graph_.End(); ++iter) {
+    if (ResolveJobDataVersions(iter->second))
+      ++num_new_versioned;
+  }
   return num_new_versioned;
 }
 

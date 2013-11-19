@@ -55,6 +55,7 @@
 #include "shared/parser.h"
 #include "shared/scheduler_server.h"
 #include "scheduler/data_manager.h"
+#include "scheduler/job_manager.h"
 #include "shared/id_maker.h"
 
 namespace nimbus {
@@ -72,9 +73,7 @@ class Scheduler {
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
-
-    // Will remove it later, just here so simple_scheduler will pass.
-    virtual void ProcessSpawnJobCommand(SpawnJobCommand* cm) {}
+    virtual size_t RegisterPendingWorkers();
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}
@@ -93,6 +92,7 @@ class Scheduler {
     virtual void SetupUserInterface();
     virtual void SetupWorkerInterface();
     virtual void SetupDataManager();
+    virtual void SetupJobManager();
     virtual void GetUserCommand();
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
@@ -104,6 +104,8 @@ class Scheduler {
     app_id_t appId_;
     ClusterMap cluster_map_;
     DataManager* data_manager_;
+    JobManager* job_manager_;
+    size_t registered_worker_num_;
 };
 
 }  // namespace nimbus
