@@ -56,7 +56,7 @@ template<class TV> PROJECTION_EXAMPLE<TV>::PROJECTION_EXAMPLE():
 }
 
 template<class TV> PROJECTION_EXAMPLE<TV>::~PROJECTION_EXAMPLE() {	
-		delete boundary;
+	delete boundary;
 }
 
 template<class TV> void PROJECTION_EXAMPLE<TV>::Set_Boundary_Conditions(const T time) {
