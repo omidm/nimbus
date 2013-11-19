@@ -48,7 +48,8 @@ void ProjectionApp::Load() {
 
 	RegisterJob("main", new Main(this));
 	RegisterJob("Init", new Init(this));
-	RegisterJob("Project_Forloop_Condition", new Project_Forloop_Condition(this));
+	RegisterJob("Project_Forloop_Condition",
+			new Project_Forloop_Condition(this));
 	RegisterJob("Project_Forloop_Part1", new Project_Forloop_Part1(this));
 	RegisterJob("Project_Forloop_Part2", new Project_Forloop_Part2(this));
 	RegisterJob("Project_Forloop_Part3", new Project_Forloop_Part3(this));
@@ -78,7 +79,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	printf("Begin main\n");
 	std::vector<job_id_t> j;
 	std::vector<logical_data_id_t> d;
-	IDSet < logical_data_id_t> read, write;
+	IDSet < logical_data_id_t > read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	partition_id_t pid1 = 1, pid2 = 2;
@@ -104,7 +105,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 		after.insert(j[i + 1]);
 		read.clear();
 		write.clear();
-		SpwanComputeJob("Proj_AdvanceOneTime", j[i], read, write, before,
+		SpwanComputeJob("Proj_PrepareForProj", j[i], read, write, before,
 				after, par);
 	}
 
@@ -126,15 +127,15 @@ Job* Proj_Initialize::Clone() {
 void Proj_Initialize::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Proj_Initialize\n");
 	printf("Initialize example\n");
-	PROJECTION_EXAMPLE<TV>* example=new PROJECTION_EXAMPLE<TV>();
-	int scale= SCALE_VAL;
-	RANGE<TV> range(TV(), TV::All_Ones_Vector()*0.5);
-	range.max_corner(2)=1;
-	TV_INT counts=TV_INT::All_Ones_Vector()*scale/2;
-	counts(2)=scale;
+	PROJECTION_EXAMPLE<TV>* example = new PROJECTION_EXAMPLE<TV> ();
+	int scale = SCALE_VAL;
+	RANGE<TV> range(TV(), TV::All_Ones_Vector() * 0.5);
+	range.max_corner(2) = 1;
+	TV_INT counts = TV_INT::All_Ones_Vector() * scale / 2;
+	counts(2) = scale;
 	example->Initialize_Grid(counts, range);
-	example->restart=RESTART_VAL;
-	example->last_frame=100;
+	example->restart = RESTART_VAL;
+	example->last_frame = 100;
 
 	printf("Initialize driver\n");
 	// setup time
@@ -192,12 +193,23 @@ Job* Proj_PrepareForProj::Clone() {
 // read set: current_frame, time
 // write set: time
 void Proj_PrepareForProj::Execute(Parameter params, const DataArray& da) {
+	std::vector<job_id_t> j;
+	std::vector<logical_data_id_t> d;
+	IDSet < logical_data_id_t > read, write;
+	IDSet<job_id_t> before, after;
+	IDSet<partition_id_t> neighbor_partitions;
+	partition_id_t pid1 = 1, pid2 = 2;
+	Parameter par;
+	IDSet<param_id_t> param_idset;
+
 	printf("Begin Proj_PrepareForProj\n");
 	T target_time = example->Time_At_Frame(current_frame + 1);
 	T dt = target_time - time;
 	example->Set_Boundary_Conditions(time + dt);
 	example->projection.p *= dt; // rescale pressure for guess
-	example->projection.Compute_Divergence(typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP(example->face_velocities),example->projection.elliptic_solver); // find f - divergence of the velocity
+	example->projection.Compute_Divergence(typename INTERPOLATION_POLICY<GRID<
+			TV> >::FACE_LOOKUP(example->face_velocities),
+			example->projection.elliptic_solver); // find f - divergence of the velocity
 
 	LAPLACE_UNIFORM<GRID<TV> >* laplace = example->projection.elliptic_solver;
 	laplace->Find_Solution_Regions(); // flood fill
@@ -207,64 +219,66 @@ void Proj_PrepareForProj::Execute(Parameter params, const DataArray& da) {
 	typedef typename GRID<TV>::CELL_ITERATOR CELL_ITERATOR;
 	typedef typename GRID<TV>::VECTOR_INT TV_INT;
 
-	//ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array(laplace->number_of_regions);
-	projection_data->matrix_index_to_cell_index_array
-			= new ARRAY<ARRAY<TV_INT> >(laplace->number_of_regions);
-	ARRAY<ARRAY<TV_INT> > &matrix_index_to_cell_index_array =
-			*(projection_data->matrix_index_to_cell_index_array);
-
-	T_ARRAYS_INT cell_index_to_matrix_index(laplace->grid.Domain_Indices(1));
-	ARRAY<int,VECTOR<int,1> > filled_region_cell_count(-1,
+	ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array(
 			laplace->number_of_regions);
-
-	//ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array(laplace->number_of_regions);
-	projection_data->A_array = new ARRAY<SPARSE_MATRIX_FLAT_NXN<T> >(laplace->number_of_regions);
-	ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > &A_array = *(projection_data->A_array);
-
-	// ARRAY<VECTOR_ND<T> > b_array(laplace->number_of_regions);
-	projection_data->b_array = new ARRAY<VECTOR_ND<T> >(laplace->number_of_regions);
-	ARRAY<VECTOR_ND<T> > &b_array = *(projection_data->b_array);
-
+	T_ARRAYS_INT cell_index_to_matrix_index(laplace->grid.Domain_Indices(1));
+	ARRAY<int, VECTOR<int, 1> > filled_region_cell_count(-1,
+			laplace->number_of_regions);
+	ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array(laplace->number_of_regions);
+	ARRAY<VECTOR_ND<T> > b_array(laplace->number_of_regions);
 	for (CELL_ITERATOR iterator(laplace->grid, 1); iterator.Valid(); iterator.Next())
-		filled_region_cell_count(laplace->filled_region_colors(iterator.Cell_Index()))++;
-	for (int color=1; color<=laplace->number_of_regions; color++)
+		filled_region_cell_count(laplace->filled_region_colors(
+				iterator.Cell_Index()))++;
+	for (int color = 1; color <= laplace->number_of_regions; color++)
 		if (laplace->filled_region_touches_dirichlet(color)
-				||laplace->solve_neumann_regions) {
-			matrix_index_to_cell_index_array(color).Resize(filled_region_cell_count(color));
+				|| laplace->solve_neumann_regions) {
+			matrix_index_to_cell_index_array(color).Resize(
+					filled_region_cell_count(color));
 		}
 	filled_region_cell_count.Fill(0); // reusing this array in order to make the indirection arrays
-	DOMAIN_ITERATOR_THREADED_ALPHA<LAPLACE_UNIFORM<GRID<TV> >,TV>
+	DOMAIN_ITERATOR_THREADED_ALPHA<LAPLACE_UNIFORM<GRID<TV> > , TV>
 			threaded_iterator(laplace->grid.Domain_Indices(1),
 					laplace->thread_queue, 1, 1, 2, 1);
 
-	// ARRAY<int,TV_INT> domain_index(laplace->grid.Domain_Indices(1),false);
-	projection_data->domain_index = new ARRAY<int, TV_INT>(laplace->grid.Domain_Indices(1), false);
-	ARRAY<int,TV_INT> &domain_index = *(projection_data->domain_index);
+	ARRAY<int, TV_INT> domain_index(laplace->grid.Domain_Indices(1), false);
 
-	for (int i=1; i<=threaded_iterator.domains.m; i++) {
+	for (int i = 1; i <= threaded_iterator.domains.m; i++) {
 		RANGE<TV_INT> interior_domain(threaded_iterator.domains(i));
-		interior_domain.max_corner-=TV_INT::All_Ones_Vector();
-		interior_domain.min_corner+=TV_INT::All_Ones_Vector();
+		interior_domain.max_corner -= TV_INT::All_Ones_Vector();
+		interior_domain.min_corner += TV_INT::All_Ones_Vector();
 		for (CELL_ITERATOR iterator(laplace->grid, interior_domain); iterator.Valid(); iterator.Next())
-			domain_index(iterator.Cell_Index())=i;
+			domain_index(iterator.Cell_Index()) = i;
 	}
 	ARRAY<ARRAY<INTERVAL<int> > > interior_indices(laplace->number_of_regions);
-	ARRAY<ARRAY<ARRAY<INTERVAL<int> > > >
-			ghost_indices(laplace->number_of_regions);
-	for (int color=1; color<=laplace->number_of_regions; color++) {
+	ARRAY<ARRAY<ARRAY<INTERVAL<int> > > > ghost_indices(
+			laplace->number_of_regions);
+	for (int color = 1; color <= laplace->number_of_regions; color++) {
 		interior_indices(color).Resize(threaded_iterator.number_of_domains);
 		ghost_indices(color).Resize(threaded_iterator.number_of_domains);
-		for (int i=1; i<=threaded_iterator.domains.m; i++)
-			ghost_indices(color)(i).Resize(2*TV::dimension);
+		for (int i = 1; i <= threaded_iterator.domains.m; i++)
+			ghost_indices(color)(i).Resize(2 * TV::dimension);
 	}
-	laplace->laplace_mpi->Find_Matrix_Indices(filled_region_cell_count,
-			cell_index_to_matrix_index, matrix_index_to_cell_index_array);
-	RANGE<TV_INT> domain=laplace->grid.Domain_Indices(1);
+	//Begin laplace->laplace_mpi->Find_Matrix_Indices(filled_region_cell_count, cell_index_to_matrix_index, matrix_index_to_cell_index_array);
+
+	RANGE<TV_INT> domain = laplace->grid.Domain_Indices(1);
 	laplace->Find_A(domain, A_array, b_array, filled_region_cell_count,
 			cell_index_to_matrix_index);
 
+	GetNewJobID(&j, number_of_regions);
+	for (int color = 1; color <= number_of_regions; color++)
+		if (filled_region_cell_count(color) > 0
+			&& (filled_region_touches_dirichlet(color)
+				|| solve_neumann_regions)) {
+			//Solve_Subregion(interior_indices(color), ghost_indices(color), matrix_index_to_cell_index_array(color), A_array(color), b_array(color), color, &domain_index);
+			before.clear();
+			after.clear();
+			read.clear();
+			write.clear();
+			SpawnComputeJob("Prof_PrepareForOneRegion", j[color], read, write, before, after, par);
+		}
 	printf("Completed Proj_PrepareForProj\n");
-};
+}
+;
 
 Prof_PrepareForOneRegion::Prof_PrepareForOneRegion(Application *app) {
 	set_application(app);
@@ -277,42 +291,23 @@ Job* Prof_PrepareForOneRegion::Clone() {
 }
 ;
 
-// read set:
+// read set:interior_indices, ghost_indices, matrix_index_to_cell_index, A, b, color, domain_index
 // write set:
 void Prof_PrepareForOneRegion::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Prof_PrepareForOneRegion\n");
-	laplace->laplace_mpi->Find_Matrix_Indices(filled_region_cell_count,
-			cell_index_to_matrix_index, matrix_index_to_cell_index_array);
-	RANGE < TV_INT> domain = laplace->grid.Domain_Indices(1);
-	laplace->Find_A(domain, A_array, b_array, filled_region_cell_count,
-			cell_index_to_matrix_index);
-	int color = 1;
-	LAPLACE_UNIFORM < GRID<TV> > *laplace = example.projection.elliptic_solver;
-	laplace->pcg.Enforce_Compatibility( !laplace->filled_region_touches_dirichlet(color)
-			&& laplace->enforce_compatibility);
-	// Context.
-	ARRAY < TV_INT> &matrix_index_to_cell_index =
-			(*(projection_data->matrix_index_to_cell_index_array))(color);
 	int number_of_unknowns = matrix_index_to_cell_index.m;
-	SPARSE_MATRIX_FLAT_NXN < T> &A = (*(projection_data->A_array))(color);
 	A.Negate();
-	VECTOR_ND < T> &b = (*(projection_data->b_array))(color);
 	b *= (T) - 1;
-	projection_data->x = new VECTOR_ND<T> (number_of_unknowns);
-	VECTOR_ND < T> &x = *(projection_data->x);
-	// Context done.
-	VECTOR_ND<T> q, s, r, k, z;
+	VECTOR_ND<T> x(number_of_unknowns), q, s, r, k, z;
 	for (int i = 1; i <= number_of_unknowns; i++)
-		x(i) = laplace->u(matrix_index_to_cell_index(i));
+		x(i) = u(matrix_index_to_cell_index(i));
 	laplace->Find_Tolerance(b); // needs to happen after b is completely set up
-	DOMAIN_ITERATOR_THREADED_ALPHA < PCG_SPARSE_THREADED<TV> , TV>
-			threaded_iterator(laplace->grid.Domain_Indices(1),
-					laplace->thread_queue, 1, 1, 2, 1);
-	if (color > laplace->laplace_mpi->filled_region_ranks.m) {
-		laplace->laplace_mpi->local_pcg.Solve(A, x, b, q, s, r, k, z,
-				laplace->tolerance);
-	} else {
 
+	laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
+
+	for (int i = 1; i <= number_of_unknowns; i++) {
+		TV_INT cell_index = matrix_index_to_cell_index(i);
+		u(cell_index) = x(i);
 	}
 	printf("Completed Prof_PrepareForOneRegion\n");
 }
@@ -357,7 +352,7 @@ void Proj_MainProjection::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Proj_MainProjection\n");
 	std::vector<job_id_t> j;
 	std::vector<logical_data_id_t> d;
-	IDSet < logical_data_id_t> read, write;
+	IDSet < logical_data_id_t > read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	partition_id_t pid1 = 1, pid2 = 2;
