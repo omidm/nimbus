@@ -52,6 +52,7 @@ namespace nimbus {
 */
 nimbus::DataManager::DataManager() {
   server_ = NULL;
+  max_defined_partition_ = (partition_id_t)(0);
 }
 
 /**
@@ -61,6 +62,7 @@ nimbus::DataManager::DataManager() {
 */
 nimbus::DataManager::DataManager(SchedulerServer* server) {
   server_ = server;
+  max_defined_partition_ = (partition_id_t)(0);
 }
 
 
@@ -97,6 +99,7 @@ bool nimbus::DataManager::AddPartition(partition_id_t id,
     return false;
   } else {
     partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
+    max_defined_partition_ = std::max(id, max_defined_partition_);
     return true;
   }
 }

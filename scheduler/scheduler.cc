@@ -201,10 +201,40 @@ void Scheduler::AddMainJob() {
       (job_id_t)(0), params);
 }
 
-bool Scheduler::GetWorkerToAssignJob(JobEntry* job, worker_id_t* w_id) {
-  // IDSet<logical_data_id>
+bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  IDSet<logical_data_id_t> read_set = job->read_set();
+  IDSet<logical_data_id_t> write_set = job->write_set();
+  IDSet<logical_data_id_t> agg_set;
   IDSet<logical_data_id_t>::IDSetIter iter;
-  return false;
+  for (iter = read_set.begin(); iter != read_set.end(); iter++) {
+    agg_set.insert(*iter);
+  }
+  for (iter = write_set.begin(); iter != write_set.end(); iter++) {
+    agg_set.insert(*iter);
+  }
+
+  // Assumption is that partition Ids start from 0, and incrementally go up.
+  size_t worker_num = server_->worker_num();
+  size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
+  std::vector<int> workers_rank(worker_num, 0);
+  for (iter = agg_set.begin(); iter != agg_set.end(); ++iter) {
+    const LogicalDataObject* ldo;
+    ldo = data_manager_->FindLogicalObject(*iter);
+    size_t poll = std::min(ldo->partition() / chunk, worker_num - 1);
+    workers_rank[poll] = workers_rank[poll] + 1;
+  }
+
+  // find the worker that wins the poll. 
+  worker_id_t w_id = 1;
+  int count = workers_rank[0];
+  for (size_t i = 1; i < worker_num; ++i) {
+    if (count < workers_rank[i]) {
+      count = workers_rank[i];
+      w_id = i + 1;
+    }
+  }
+
+  return GetSchedulerWorkerById(worker, w_id);
 }
 
 size_t Scheduler::AssignJobsToWorkers() {

@@ -287,6 +287,10 @@ bool SchedulerServer::GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id
   return false;
 }
 
+size_t SchedulerServer::worker_num() {
+  return workers_.size();
+}
+
 void
 SchedulerServer::set_worker_command_table(SchedulerCommand::PrototypeTable* cmt) {
   worker_command_table_ = cmt;

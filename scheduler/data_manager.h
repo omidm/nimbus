@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/logical_data_object.h"
 #include "shared/ldo_index.h"
@@ -106,6 +107,8 @@ namespace nimbus {
                            data_version_t version,
                            PhysicalDataVector* dest);
 
+    partition_id_t max_defined_partition();
+
   private:
     bool SendLdoAddToWorkers(LogicalDataObject* ldo);
     bool SendLdoRemoveToWorkers(LogicalDataObject* ldo);
@@ -115,6 +118,7 @@ namespace nimbus {
     std::map<logical_data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
     SchedulerServer* server_;
+    partition_id_t max_defined_partition_;
   };
 }  // namespace nimbus
 
