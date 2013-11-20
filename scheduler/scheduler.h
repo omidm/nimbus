@@ -80,7 +80,9 @@ class Scheduler {
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
     virtual void RegisterInitialWorkers(size_t min_to_join);
     virtual size_t RegisterPendingWorkers();
+    virtual void AddMainJob();
     virtual size_t AssignJobsToWorkers();
+    virtual bool GetWorkerToAssignJob(JobEntry* job, worker_id_t* w_id);
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}

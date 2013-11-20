@@ -73,14 +73,7 @@ void Scheduler::SchedulerCoreProcessor() {
   RegisterInitialWorkers(MIN_WORKERS_TO_JOIN);
 
   // Adding main job to the job manager.
-  IDSet<job_id_t> job_id_set;
-  IDSet<logical_data_id_t> logical_data_id_set;
-  Parameter params;
-  job_manager_->AddJobEntry(JOB_COMP,
-        "main", (job_id_t)(0),
-        logical_data_id_set, logical_data_id_set,
-        job_id_set, job_id_set,
-        (job_id_t)(0), params);
+  AddMainJob();
 
   // Main Loop of the scheduler.
   while (true) {
@@ -195,7 +188,32 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   }
 }
 
+void Scheduler::AddMainJob() {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  IDSet<job_id_t> job_id_set;
+  IDSet<logical_data_id_t> logical_data_id_set;
+  Parameter params;
+  job_manager_->AddJobEntry(JOB_COMP,
+      "main", j[0],
+      logical_data_id_set, logical_data_id_set,
+      job_id_set, job_id_set,
+      (job_id_t)(0), params);
+}
+
+bool Scheduler::GetWorkerToAssignJob(JobEntry* job, worker_id_t* w_id) {
+  // IDSet<logical_data_id>
+  IDSet<logical_data_id_t>::IDSetIter iter;
+  return false;
+}
+
 size_t Scheduler::AssignJobsToWorkers() {
+  // under implementation
+
+
+
+
+
   return 0;
 }
 

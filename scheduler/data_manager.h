@@ -72,6 +72,10 @@ namespace nimbus {
                           GeometricRegion region);
     bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
+                          GeometricRegion region,
+                          partition_id_t partition);
+    bool AddLogicalObject(logical_data_id_t id,
+                          std::string variable,
                           partition_id_t partition);
     bool RemoveLogicalObject(logical_data_id_t id);
     const LogicalDataObject* FindLogicalObject(logical_data_id_t id);

@@ -45,6 +45,7 @@ namespace nimbus {
 
 LogicalDataObject::LogicalDataObject() {
   id_ = 0;
+  partition_ = 0;
   region_ = NULL;
 }
 
@@ -64,6 +65,28 @@ LogicalDataObject::LogicalDataObject(logical_data_id_t id,
   id_ = id;
   variable_ = variable;
   region_ = region;
+  partition_ = 0;
+}
+
+/**
+ * \fn nimbus::LogicalDataObject::LogicalDataObject(logical_data_id_t id,
+                                             std::string variable,
+                                             GeometricRegion *region)
+ * \brief Brief description.
+ * \param id
+ * \param variable
+ * \param region
+ * \param partition
+ * \return
+*/
+LogicalDataObject::LogicalDataObject(logical_data_id_t id,
+                                     std::string variable,
+                                     GeometricRegion *region,
+                                     partition_id_t partition) {
+  id_ = id;
+  variable_ = variable;
+  region_ = region;
+  partition_ = partition;
 }
 
 bool LogicalDataObject::Parse(std::istream* is) {
@@ -123,6 +146,16 @@ std::string LogicalDataObject::variable() const {
 GeometricRegion * LogicalDataObject::region() const {
   return region_;
 }
+
+/**
+ * \fn partition_id_t nimbus::LogicalDataObject::partition()
+ * \brief Brief description.
+ * \return
+*/
+partition_id_t LogicalDataObject::partition() const {
+  return partition_;
+}
+
 
 bool LogicalDataObject::Serialize(std::ostream* os) {
   LdoMessage m;
