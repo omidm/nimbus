@@ -105,26 +105,26 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   for (; (iter != job_graph_.End()) && (num < max_num); ++iter) {
     JobEntry* job = iter->second;
     if (job->versioned() && !job->assigned()) {
-      bool before_set_assigned = true;
+      bool before_set_done = true;
       IDSet<job_id_t>::IDSetIter it;
       IDSet<job_id_t> before_set = job->before_set();
       for (it = before_set.begin(); it != before_set.end(); ++it) {
         JobEntry* j;
         job_id_t id = *it;
         if (GetJobEntry(id, j)) {
-          if (!(j->assigned())) {
-            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not assigned yet.", id);
-            before_set_assigned = false;
+          if (!(j->done())) {
+            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.", id);
+            before_set_done = false;
             break;
           }
         } else {
           dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.", id);
-          before_set_assigned = false;
+          before_set_done = false;
           break;
         }
       }
-      if (before_set_assigned) {
-        job->set_assigned(true);
+      if (before_set_done) {
+        // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
         list->push_back(job);
         ++num;
       }
