@@ -213,7 +213,7 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   for (iter = agg_set.begin(); iter != agg_set.end(); ++iter) {
     const LogicalDataObject* ldo;
     ldo = data_manager_->FindLogicalObject(*iter);
-    size_t poll = std::min(ldo->partition() / chunk, worker_num - 1);
+    size_t poll = std::min((size_t)(ldo->partition()) / chunk, worker_num - 1);
     workers_rank[poll] = workers_rank[poll] + 1;
   }
 

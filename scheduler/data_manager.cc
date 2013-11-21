@@ -455,4 +455,8 @@ bool nimbus::DataManager::SendLdoRemoveToWorkers(LogicalDataObject* obj) {
   return true;
 }
 
+partition_id_t DataManager::max_defined_partition() {
+  return max_defined_partition_;
+}
+
 }  // namespace nimbus
