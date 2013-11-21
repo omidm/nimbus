@@ -1,0 +1,3 @@
+Hang Qu <quhang@stanford.edu>
+Worker for projection. Most code is copied from water worker.
+Make it a separate dicrectory for testing.
