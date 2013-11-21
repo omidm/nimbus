@@ -1,7 +1,15 @@
+/*
+ * The application specification of PhysBAM projection.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #ifndef __PROJECTION_MAIN__ 
 #define __PROJECTION_MAIN__
 
 #include "shared/nimbus.h"
+
+// TODO: Use clause is not allowed in header file.
 using nimbus::Data;
 using nimbus::Application;
 
@@ -27,12 +35,12 @@ class App : public Application {
   PhysBAM::MPI_WORLD* app_mpi_world;
 };
 
-// "ProfileData" is a dump data to enforce worker placement for now.
+// "ProfileData" contains nothing for now.
 class ProfileData : public Data {
  public:
   ProfileData() {}
   virtual void Create() {}
-  virtual Data * Clone() {return new ProfileData;}
+  virtual Data * Clone() { return new ProfileData; }
 };
 
 #endif

@@ -1,21 +1,30 @@
+/*
+ * The application specification of PhysBAM projection.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #include <PhysBAM_Tools/Parallel_Computation/MPI_WORLD.h>
 #include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
 #include "projection_driver.h"
 #include "projection_example.h"
+
 #include "data_impl.h"
 #include "job_impl.h"
+
 #include "app.h"
 
 typedef float T;
 
 void App::Load() {
-  std::cout << "Start application loading!" << std::endl;
+  dbg_add_mode("proj");
+  dbg(DBG_PROJ, "Starts to load projection application.\n");
   RegisterJob("main", new Main(this));
   RegisterJob("initialization", new Initialization(this));
+  // TODO(quhang): job name is confusing.
   RegisterJob("spawn_one_iteration_if_needed", new SpawnOneIterationIfNeeded(this));
   RegisterJob("one_iteration", new OneIteration(this));
   RegisterJob("finish", new Finish(this));
-  // [TODO] Only dumb data for now.
   RegisterData("region", new ProfileData);
   RegisterData("partial_norm", new PartialNorm(0));
 
@@ -26,12 +35,12 @@ void App::Load() {
   temp[0] = a;
   temp[1] = NULL;
   InitMain(1, temp);
-
   app_driver->PrepareForProjection();
   app_driver->PrepareForOneRegion();
-  std::cout << "Finish application loading!" << std::endl;
+  dbg(DBG_PROJ, "Starts to load projection application.\n");
 }
 
+// Create driver and example. Expected to be changed in the future.
 void App::InitMain(int argc,char* argv[]) {
   using namespace PhysBAM;
   typedef float T;
@@ -57,7 +66,9 @@ void App::InitMain(int argc,char* argv[]) {
   PROJECTION_EXAMPLE<TV>* example=new PROJECTION_EXAMPLE<TV>(*stream_type,parse_args.Get_Integer_Value("-threads"));
 
   int scale=parse_args.Get_Integer_Value("-scale");
-  RANGE<TV> range(TV(),TV::All_Ones_Vector()*0.5);range.max_corner(2)=1;TV_INT counts=TV_INT::All_Ones_Vector()*scale/2;counts(2)=scale;
+  RANGE<TV> range(TV(),TV::All_Ones_Vector()*0.5);
+  range.max_corner(2)=1;
+  TV_INT counts=TV_INT::All_Ones_Vector()*scale/2;counts(2)=scale;
   example->Initialize_Grid(counts,range);
   example->restart=parse_args.Get_Integer_Value("-restart");
   example->write_substeps_level=parse_args.Get_Integer_Value("-substep");
@@ -76,6 +87,7 @@ void App::FinishMain() {
   delete app_driver;
   delete app_mpi_world;
 }
+
 /*
   // The workflow for projection.
   PROJECTION_DRIVER<TV> &driver;

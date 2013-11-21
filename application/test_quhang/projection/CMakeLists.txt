@@ -19,6 +19,7 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/app.cc
         ${PROJECT_SOURCE_DIR}/data_impl.cc
         ${PROJECT_SOURCE_DIR}/job_impl.cc
+        ${PROJECT_SOURCE_DIR}/job_impl_internal.cc
         ${PROJECT_SOURCE_DIR}/projection_driver.cc
         ${PROJECT_SOURCE_DIR}/projection_example.cc
         ${PROJECT_SOURCE_DIR}/projection_data.cc
@@ -40,4 +41,4 @@ SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
         
 #INCLUDE(${PROJECT_SOURCE_DIR}/../../Scripts/CMake/Project.cmake)
-INCLUDE(${PROJECT_SOURCE_DIR}/../../physbam-new-lib/Scripts/CMake/Nimbus_Application_Library.cmake)
+INCLUDE(${PROJECT_SOURCE_DIR}/../../physbam-lib/Scripts/CMake/Nimbus_Application_Library_2.cmake)
