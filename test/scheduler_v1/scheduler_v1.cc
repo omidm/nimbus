@@ -47,22 +47,29 @@ void SchedulerV1::SchedulerCoreProcessor() {
   while (true) {
     std::cout << "OMID" << std::endl;
     GeometricRegion r;
-    PhysicalData p(0, 1);
+    PhysicalData p1(0, 1);
+    PhysicalData p2(0, 2);
     data_manager_->AddPartition(0, r);
     data_manager_->AddLogicalObject(0, "omid", 0);
     LogicalDataObject* ldo =
       const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(0));
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p1);
+    data_manager_->AddPhysicalInstance(ldo, p1);
+    data_manager_->AddPhysicalInstance(ldo, p1);
+    data_manager_->AddPhysicalInstance(ldo, p1);
+    data_manager_->AddPhysicalInstance(ldo, p2);
+    data_manager_->AddPhysicalInstance(ldo, p2);
+    data_manager_->AddPhysicalInstance(ldo, p2);
+    data_manager_->AddPhysicalInstance(ldo, p2);
     PhysicalDataVector pv;
     data_manager_->AllInstances(ldo, &pv);
-
+    std::cout << pv.size() << std::endl;
+    data_manager_->InstancesByWorker(ldo, 1, &pv);
+    std::cout << pv.size() << std::endl;
+    data_manager_->InstancesByWorker(ldo, 2, &pv);
+    std::cout << pv.size() << std::endl;
+    data_manager_->InstancesByWorker(ldo, 3, &pv);
+    std::cout << pv.size() << std::endl;
 
 
 
