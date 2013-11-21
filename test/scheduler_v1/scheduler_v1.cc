@@ -43,5 +43,31 @@ SchedulerV1::SchedulerV1(unsigned int p)
 : Scheduler(p) {
 }
 
+void SchedulerV1::SchedulerCoreProcessor() {
+  while (true) {
+    std::cout << "OMID" << std::endl;
+    GeometricRegion r;
+    PhysicalData p(0, 1);
+    data_manager_->AddPartition(0, r);
+    data_manager_->AddLogicalObject(0, "omid", 0);
+    LogicalDataObject* ldo =
+      const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(0));
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    PhysicalDataVector pv;
+    data_manager_->AllInstances(ldo, &pv);
 
+
+
+
+
+    sleep(10);
+  }
+}
 

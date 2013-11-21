@@ -238,7 +238,21 @@ size_t Scheduler::AssignJobsToWorkers() {
     JobEntry* job = *iter;
     SchedulerWorker* worker;
     GetWorkerToAssignJob(job, worker);
-    // under implementation.
+
+    IDSet<logical_data_id_t> read_set = job->read_set();
+    IDSet<logical_data_id_t> write_set = job->write_set();
+    IDSet<logical_data_id_t> agg_set;
+    IDSet<logical_data_id_t>::IDSetIter it;
+    for (it = read_set.begin(); it != read_set.end(); it++) {
+      agg_set.insert(*it);
+    }
+    for (it = write_set.begin(); it != write_set.end(); it++) {
+      agg_set.insert(*it);
+    }
+    for (it = agg_set.begin(); it != agg_set.end(); ++it) {
+      const LogicalDataObject* ldo;
+      ldo = data_manager_->FindLogicalObject(*it);
+    }
   }
   return 0;
 }
