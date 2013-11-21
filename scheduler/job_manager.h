@@ -72,6 +72,12 @@ class JobManager {
         const job_id_t& parent_job_id,
         const Parameter& params);
 
+    bool AddJobEntry(const JobType& job_type,
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const job_id_t& parent_job_id);
+
+
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
     bool RemoveJobEntry(JobEntry* job);

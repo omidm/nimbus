@@ -69,11 +69,17 @@ namespace nimbus {
                       std::string variable,
                       GeometricRegion* region);
 
+    LogicalDataObject(logical_data_id_t id,
+                      std::string variable,
+                      GeometricRegion* region,
+                      partition_id_t partition);
+
     virtual ~LogicalDataObject();
 
     virtual logical_data_id_t id() const;
     virtual std::string variable() const;
     virtual GeometricRegion* region() const;
+    virtual partition_id_t partition() const;
 
     virtual void FillInMessage(LdoMessage* mg);
 
@@ -81,10 +87,12 @@ namespace nimbus {
     virtual bool Parse(const std::string& data);
     virtual bool Serialize(std::ostream* os);
     virtual bool SerializeToString(std::string* output);
+
   private:
     logical_data_id_t id_;
     GeometricRegion* region_;
     std::string variable_;
+    partition_id_t partition_;
   };
 
   typedef std::set<LogicalDataObject*> LdoSet;

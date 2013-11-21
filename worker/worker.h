@@ -81,6 +81,8 @@ class Worker {
   virtual void ProcessLocalCopyCommand(LocalCopyCommand* command);
   virtual void ProcessHandshakeCommand(HandshakeCommand* command);
   virtual void ProcessJobDoneCommand(JobDoneCommand* command);
+  virtual void ProcessLdoAddCommand(LdoAddCommand* command);
+  virtual void ProcessLdoRemoveCommand(LdoRemoveCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);

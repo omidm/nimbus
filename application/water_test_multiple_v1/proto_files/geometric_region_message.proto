@@ -1,0 +1,10 @@
+package communication;
+
+message GeometricRegionMessage {
+  required uint64 x  = 1;
+  required uint64 y  = 2;
+  required uint64 z  = 3;
+  required uint64 dx = 4;
+  required uint64 dy = 5;
+  required uint64 dz = 6;
+}

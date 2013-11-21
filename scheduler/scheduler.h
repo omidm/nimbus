@@ -49,6 +49,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/log.h"
 #include "shared/cluster.h"
@@ -62,6 +63,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10
 #define MIN_WORKERS_TO_JOIN 2
+#define MAX_JOB_TO_ASSIGN 10
 
 class Scheduler {
   public:
@@ -80,7 +82,9 @@ class Scheduler {
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
     virtual void RegisterInitialWorkers(size_t min_to_join);
     virtual size_t RegisterPendingWorkers();
+    virtual void AddMainJob();
     virtual size_t AssignJobsToWorkers();
+    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}

@@ -73,14 +73,7 @@ void Scheduler::SchedulerCoreProcessor() {
   RegisterInitialWorkers(MIN_WORKERS_TO_JOIN);
 
   // Adding main job to the job manager.
-  IDSet<job_id_t> job_id_set;
-  IDSet<logical_data_id_t> logical_data_id_set;
-  Parameter params;
-  job_manager_->AddJobEntry(JOB_COMP,
-        "main", (job_id_t)(0),
-        logical_data_id_set, logical_data_id_set,
-        job_id_set, job_id_set,
-        (job_id_t)(0), params);
+  AddMainJob();
 
   // Main Loop of the scheduler.
   while (true) {
@@ -195,7 +188,58 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   }
 }
 
+void Scheduler::AddMainJob() {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  job_manager_->AddJobEntry(JOB_COMP, "main", j[0], (job_id_t)(0));
+}
+
+bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  IDSet<logical_data_id_t> read_set = job->read_set();
+  IDSet<logical_data_id_t> write_set = job->write_set();
+  IDSet<logical_data_id_t> agg_set;
+  IDSet<logical_data_id_t>::IDSetIter iter;
+  for (iter = read_set.begin(); iter != read_set.end(); iter++) {
+    agg_set.insert(*iter);
+  }
+  for (iter = write_set.begin(); iter != write_set.end(); iter++) {
+    agg_set.insert(*iter);
+  }
+
+  // Assumption is that partition Ids start from 0, and incrementally go up.
+  size_t worker_num = server_->worker_num();
+  size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
+  std::vector<int> workers_rank(worker_num, 0);
+  for (iter = agg_set.begin(); iter != agg_set.end(); ++iter) {
+    const LogicalDataObject* ldo;
+    ldo = data_manager_->FindLogicalObject(*iter);
+    size_t poll = std::min(ldo->partition() / chunk, worker_num - 1);
+    workers_rank[poll] = workers_rank[poll] + 1;
+  }
+
+  // find the worker that wins the poll.
+  worker_id_t w_id = 1;
+  int count = workers_rank[0];
+  for (size_t i = 1; i < worker_num; ++i) {
+    if (count < workers_rank[i]) {
+      count = workers_rank[i];
+      w_id = i + 1;
+    }
+  }
+
+  return server_->GetSchedulerWorkerById(worker, w_id);
+}
+
 size_t Scheduler::AssignJobsToWorkers() {
+  JobEntryList list;
+  job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
+  JobEntryList::iterator iter;
+  for (iter = list.begin(); iter != list.end(); ++iter) {
+    JobEntry* job = *iter;
+    SchedulerWorker* worker;
+    GetWorkerToAssignJob(job, worker);
+    // under implementation.
+  }
   return 0;
 }
 

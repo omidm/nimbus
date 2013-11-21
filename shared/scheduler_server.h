@@ -109,6 +109,8 @@ class SchedulerServer {
 
   bool GetSchedulerWorkerById(SchedulerWorker*& worker, worker_id_t w_id);
 
+  size_t worker_num();
+
   void set_worker_command_table(SchedulerCommand::PrototypeTable* cmt);
 
  private:

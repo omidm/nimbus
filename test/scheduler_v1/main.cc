@@ -32,38 +32,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * This file has the main function that launches Nimbus scheduler.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
+#define DEBUG_MODE
 
-#include "app_face_array_2d.pb.h"
-#include "physbam_data_include.h"
-#include "shared/geometric_region.h"
+#include <iostream> // NOLINT
+#include "./scheduler_v1.h"
+#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
+#include "shared/scheduler_command.h"
+#include "shared/parser.h"
 
-namespace water_app_data {
+int main(int argc, char *argv[]) {
+  nimbus::nimbus_initialize();
 
-    // serialize
-    void make_pb_object(
-            ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage *rm);
-    void make_pb_object(
-            ::physbam_pb::FaceArray2 *fa,
-            ::nimbus::GeometricRegion *region,
-            ::communication::AppFaceArray2d *app_fa);
+  SchedulerV1 * s = new SchedulerV1(NIMBUS_SCHEDULER_PORT);
+  s->Run();
+}
 
-    // deserialize
-    void make_app_object(
-            ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage &rm);
-    void make_app_object(
-            ::physbam_pb::FaceArray2 *fa,
-            ::nimbus::GeometricRegion *region,
-            const ::communication::AppFaceArray2d &app_fa);
-
-
-} // namespace physbam_pb
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_

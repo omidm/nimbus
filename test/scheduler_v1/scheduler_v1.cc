@@ -32,38 +32,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
+#include "./scheduler_v1.h"
+#define WORKER_NUM 2
 
-#include "app_face_array_2d.pb.h"
-#include "physbam_data_include.h"
-#include "shared/geometric_region.h"
-
-namespace water_app_data {
-
-    // serialize
-    void make_pb_object(
-            ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage *rm);
-    void make_pb_object(
-            ::physbam_pb::FaceArray2 *fa,
-            ::nimbus::GeometricRegion *region,
-            ::communication::AppFaceArray2d *app_fa);
-
-    // deserialize
-    void make_app_object(
-            ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage &rm);
-    void make_app_object(
-            ::physbam_pb::FaceArray2 *fa,
-            ::nimbus::GeometricRegion *region,
-            const ::communication::AppFaceArray2d &app_fa);
+SchedulerV1::SchedulerV1(unsigned int p)
+: Scheduler(p) {
+}
 
 
-} // namespace physbam_pb
 
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_

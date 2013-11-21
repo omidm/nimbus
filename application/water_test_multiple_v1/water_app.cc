@@ -42,6 +42,7 @@
 #include "data_face_arrays.h"
 #include "data_utils.h"
 #include "physbam_include.h"
+#include "proto_files/app_messages_2d.h"
 #include "proto_files/params.pb.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
@@ -70,6 +71,35 @@ namespace {
 
 /* Assumption: types_list contains a maximum of one kWaterDriver and one
  * kFaceArray. */
+#define GetJobAllData()                                                     \
+    WaterApp *water_app = (WaterApp *)application();                        \
+    WaterDriver<TV> *driver = NULL;                                         \
+    NonAdvData<TV, T> *sim_data = NULL;                                     \
+    FaceArrayList fvleft;                                                   \
+    FaceArrayList fvright;                                                  \
+    for (unsigned int i = 0; i < da.size(); i++) {                          \
+        switch (da[i]->get_debug_info()) {                                  \
+            case driver_id:                                                 \
+                if (driver == NULL)                                         \
+                    driver = (WaterDriver<TV> *)da[i];                      \
+                break;                                                      \
+            case non_adv_id:                                                \
+                if (sim_data == NULL)                                       \
+                sim_data = (NonAdvData<TV, T> *)da[i];                      \
+                break;                                                      \
+            case face_array_id:                                             \
+                FaceArray *temp = (FaceArray *)da[i];                       \
+                if (temp->left_or_right == 0 && !PointerExists(temp, fvleft))   \
+                    fvleft.push_back(temp);                                 \
+                else if (!PointerExists(temp, fvright))                         \
+                    fvright.push_back(temp);                                \
+                break;                                                      \
+        }                                                                   \
+    }                                                                       \
+    if (!water_app)                                                         \
+        asm volatile("" : : : "memory");
+    // asm is just a barrier to allow code to compile with unused variables    
+
 #define GetJobData()                                                        \
     WaterApp *water_app = (WaterApp *)application();                        \
     WaterDriver<TV> *driver = NULL;                                         \
@@ -322,7 +352,7 @@ Job* Init::Clone() {
 
 void Init::Execute(Parameter params, const DataArray& da) {
     printf("@@ Executing init job\n");
-    GetJobData();
+    GetJobAllData();
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
 
@@ -403,7 +433,7 @@ Job* UptoAdvect::Clone() {
 
 void UptoAdvect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running upto advect\n");
-    GetJobData();
+    GetJobAllData();
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
     FaceArray::Glue_Regions(
@@ -458,12 +488,33 @@ Job* Advect::Clone() {
 
 void Advect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running advect\n");
-    GetJobData();
+    GetJobAllData();
 
-    ::parameters::AdvVelPar adv_vel_par_pb;
     std::string str(params.ser_data().data_ptr_raw(),
             params.ser_data().size());
-    adv_vel_par_pb.ParseFromString(str);
+    ::communication::Param par_pb;
+    printf("Beginning parsing\n");
+    par_pb.ParseFromString(str);
+
+    printf("Completed parsing\n");
+
+    ::communication::AdvVelPar adv_vel_par_pb;
+    if (par_pb.has_adv_par()) {
+        adv_vel_par_pb = par_pb.adv_par();
+    } else {
+        printf("ERROR: Could not find advection parameter inside parameter\n");
+        return;
+    };
+    ::communication::GeometricRegionMessage gm;
+    if (par_pb.has_region()) {
+        adv_vel_par_pb = par_pb.region();
+    } else {
+        printf("ERROR: Could not find region inside job parameter\n");
+        return;
+    };
+
+    ::nimbus::GeometricRegion region;
+    ::water_app_data::make_app_object(&region, gm);
 
     T_RANGE box = T_RANGE::Unit_Box();
     box.max_corner.x = box.max_corner.x/2.0;
@@ -579,7 +630,7 @@ Job* AfterAdvect::Clone() {
 
 void AfterAdvect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running after advect\n");
-    GetJobData();
+    GetJobAllData();
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
     FaceArray::Glue_Regions(
@@ -634,7 +685,7 @@ Job* Loop::Clone() {
 void Loop::Execute(Parameter params, const DataArray& da) {
     printf("@@ Executing forloop job\n");
 
-    GetJobData();
+    GetJobAllData();
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
     FaceArray::Glue_Regions(
@@ -689,14 +740,17 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
 
-        ::parameters::AdvVelPar adv_vel_par_pb;
+        ::communication::Param par_pb;
+        ::communication::AdvVelPar *adv_vel_par_pb = par_pb.mutable_adv_par();
+        ::communication::GeometricRegionMessage *gm = par_pb.mutable_region();
         std::string str;
-        adv_vel_par_pb.set_dt(driver->dt);
-        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb->set_dt(driver->dt);
+        adv_vel_par_pb->set_time(driver->time);
 
         str="";
-        adv_vel_par_pb.set_left_or_right(0);
-        adv_vel_par_pb.SerializeToString(&str);
+        adv_vel_par_pb->set_left_or_right(0);
+        ::water_app_data::make_pb_object(&kleft_region, gm);
+        par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -714,8 +768,9 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         printf("Spawned advect 0\n");
 
         str="";
-        adv_vel_par_pb.set_left_or_right(1);
-        adv_vel_par_pb.SerializeToString(&str);
+        adv_vel_par_pb->set_left_or_right(1);
+        ::water_app_data::make_pb_object(&kleft_region, gm);
+        par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -801,7 +856,7 @@ Job* WriteFrame::Clone() {
 
 void WriteFrame::Execute(Parameter params, const DataArray& da) {
     printf( "@@ Executing write frame job\n");
-    GetJobData();
+    GetJobAllData();
     T_GRID grid(main_size, T_RANGE::Unit_Box(), true);
     T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
     FaceArray::Glue_Regions(

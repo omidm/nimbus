@@ -44,9 +44,23 @@
 using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
+  // Add the SCHED job which is the parent of main, create and copy jobs that
+  // are spawned by the scheduler.
+  IDSet<job_id_t> job_id_set;
+  IDSet<logical_data_id_t> logical_data_id_set;
+  Parameter params;
+  JobEntry* job = new JobEntry(JOB_SCHED, "kernel", (job_id_t)(0), (job_id_t)(0));
+  if (!job_graph_.AddJobEntry(job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.");
+  }
 }
 
 JobManager::~JobManager() {
+  JobEntry* job;
+  if (JobManager::GetJobEntry((job_id_t)(0), job)) {
+    delete job;
+  }
 }
 
 bool JobManager::AddJobEntry(const JobType& job_type,
@@ -61,11 +75,24 @@ bool JobManager::AddJobEntry(const JobType& job_type,
   JobEntry* job = new JobEntry(job_type, job_name, job_id, read_set, write_set,
       before_set, after_set, parent_job_id, params);
   if (job_graph_.AddJobEntry(job)) {
-    if (job_name == "main")
-      job->set_versioned(true);
     return true;
   } else {
     delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.", job_id);
+    return false;
+  }
+}
+
+bool JobManager::AddJobEntry(const JobType& job_type,
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const job_id_t& parent_job_id) {
+  JobEntry* job = new JobEntry(job_type, job_name, job_id, parent_job_id);
+  if (job_graph_.AddJobEntry(job)) {
+    return true;
+  } else {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.", job_id);
     return false;
   }
 }
@@ -105,26 +132,26 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   for (; (iter != job_graph_.End()) && (num < max_num); ++iter) {
     JobEntry* job = iter->second;
     if (job->versioned() && !job->assigned()) {
-      bool before_set_assigned = true;
+      bool before_set_done = true;
       IDSet<job_id_t>::IDSetIter it;
       IDSet<job_id_t> before_set = job->before_set();
       for (it = before_set.begin(); it != before_set.end(); ++it) {
         JobEntry* j;
         job_id_t id = *it;
         if (GetJobEntry(id, j)) {
-          if (!(j->assigned())) {
-            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not assigned yet.", id);
-            before_set_assigned = false;
+          if (!(j->done())) {
+            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.", id);
+            before_set_done = false;
             break;
           }
         } else {
           dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.", id);
-          before_set_assigned = false;
+          before_set_done = false;
           break;
         }
       }
-      if (before_set_assigned) {
-        job->set_assigned(true);
+      if (before_set_done) {
+        // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
         list->push_back(job);
         ++num;
       }

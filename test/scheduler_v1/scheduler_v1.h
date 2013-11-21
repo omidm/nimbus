@@ -32,38 +32,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* 
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
-#define NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
+#ifndef NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_
+#define NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_
 
-#include "app_face_array_2d.pb.h"
-#include "physbam_data_include.h"
-#include "shared/geometric_region.h"
+#define DEBUG_MODE
 
-namespace water_app_data {
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server.h"
+#include "shared/cluster.h"
+#include "shared/parser.h"
+#include "scheduler/scheduler.h"
 
-    // serialize
-    void make_pb_object(
-            ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage *rm);
-    void make_pb_object(
-            ::physbam_pb::FaceArray2 *fa,
-            ::nimbus::GeometricRegion *region,
-            ::communication::AppFaceArray2d *app_fa);
+class SchedulerV1 : public Scheduler {
+  public:
+    explicit SchedulerV1(unsigned int listening_port);
+};
 
-    // deserialize
-    void make_app_object(
-            ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage &rm);
-    void make_app_object(
-            ::physbam_pb::FaceArray2 *fa,
-            ::nimbus::GeometricRegion *region,
-            const ::communication::AppFaceArray2d &app_fa);
-
-
-} // namespace physbam_pb
-
-#endif // NIMBUS_APPLICATION_WATER_TEST_MULTIPLE_V1_PROTO_FILES_APP_MESSAGES_2D_H_
+#endif  // NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_

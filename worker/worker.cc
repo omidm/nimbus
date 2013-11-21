@@ -39,6 +39,7 @@
   */
 
 #include "worker/worker.h"
+#include "worker/worker_ldo_map.h"
 
 #define MAX_PARALLEL_JOB 10
 
@@ -195,6 +196,10 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::LOCAL_COPY:
       ProcessLocalCopyCommand(reinterpret_cast<LocalCopyCommand*>(cm));
       break;
+    case SchedulerCommand::LDO_ADD:
+      ProcessLdoAddCommand(reinterpret_cast<LdoAddCommand*>(cm));
+    case SchedulerCommand::LDO_REMOVE:
+      ProcessLdoRemoveCommand(reinterpret_cast<LdoRemoveCommand*>(cm));
     default:
       std::cout << "ERROR: " << cm->toString() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -298,6 +303,18 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
   blocked_jobs_.push_back(job);
+}
+
+void Worker::ProcessLdoAddCommand(LdoAddCommand* cm) {
+    const LogicalDataObject* ldo = cm->object();
+    if (!ldo_map_->AddLogicalObject(ldo->id(), ldo->variable(), *(ldo->region()) ) )
+        dbg(DBG_ERROR, "Worker could not add logical object %i to ldo map\n", (ldo->id()));
+}
+
+void Worker::ProcessLdoRemoveCommand(LdoRemoveCommand* cm) {
+    const LogicalDataObject* ldo = cm->object();
+    if (!ldo_map_->RemoveLogicalObject(ldo->id()))
+        dbg(DBG_ERROR, "Worker could not remove logical object %i to ldo map\n", (ldo->id()));
 }
 
 void Worker::SetupDataExchangerInterface() {

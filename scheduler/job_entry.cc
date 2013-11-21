@@ -65,7 +65,17 @@ JobEntry::JobEntry(const JobType& job_type,
     done_ = false;
 }
 
-
+JobEntry::JobEntry(const JobType& job_type,
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const job_id_t& parent_job_id)
+  : job_type_(job_type),
+  job_name_(job_name), job_id_(job_id),
+  parent_job_id_(parent_job_id) {
+    versioned_ = false;
+    assigned_ = false;
+    done_ = false;
+}
 
 JobEntry::~JobEntry() {
 }
