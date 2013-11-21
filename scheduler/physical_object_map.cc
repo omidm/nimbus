@@ -33,7 +33,8 @@
   */
 
 /***********************************************************************
- * AUTHOR: Philip Levis <pal>
+ * AUTHOR: Philip Levis <pal@cs.stanford.edu>
+ * AUTHOR: Omid Mashayekhi <omidm@stanford.edu>
  *   FILE: .//physical_object_map.cc
  *   DATE: Fri Nov  1 12:44:48 2013
  *  DESCR:
@@ -243,5 +244,47 @@ int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
     return count;
   }
 }
+
+/**
+ * \fn int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *object,
+                                   worker_id_t worker,
+                                   data_version_t version,
+                                   PhysicalDataVector *dest)
+ * \brief Brief description.
+ * \param object
+ * \param worker
+ * \param version
+ * \param dest
+ * \return
+*/
+int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *object,
+                                   worker_id_t worker,
+                                   data_version_t version,
+                                   PhysicalDataVector *dest) {
+  dest->clear();
+  if (data_map_.find(object->id()) == data_map_.end()) {
+    return 0;
+  } else {
+    PhysicalDataVector* v = data_map_[object->id()];
+    PhysicalDataVector::iterator it = v->begin();
+    int count = 0;
+
+    for (; it != v->end(); ++it) {
+      PhysicalData pd = *it;
+      if ((pd.worker() == worker) && (pd.version() == version)) {
+        dest->push_back(pd);
+        count++;
+      }
+    }
+
+    return count;
+  }
+}
+
+
+
+
+
+
 
 }  // namespace nimbus

@@ -100,6 +100,19 @@ IDSet<logical_data_id_t> JobEntry::write_set() {
   return write_set_;
 }
 
+IDSet<logical_data_id_t> JobEntry::union_set() {
+  IDSet<logical_data_id_t> union_set;
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = read_set_.begin(); it != read_set_.end(); ++it) {
+    union_set.insert(*it);
+  }
+  for (it = write_set_.begin(); it != write_set_.end(); ++it) {
+    union_set.insert(*it);
+  }
+
+  return union_set;
+}
+
 IDSet<job_id_t> JobEntry::before_set() {
   return before_set_;
 }
@@ -119,6 +132,11 @@ Parameter JobEntry::params() {
 JobEntry::VersionTable JobEntry::version_table() {
   return version_table_;
 }
+
+JobEntry::PhysicalTable JobEntry::physical_table() {
+  return physical_table_;
+}
+
 bool JobEntry::versioned() {
   return versioned_;
 }
@@ -143,6 +161,10 @@ void JobEntry::set_version_table(VersionTable version_table) {
   version_table_ = version_table;
 }
 
+void JobEntry::set_physical_table(PhysicalTable physical_table) {
+  physical_table_ = physical_table;
+}
+
 void JobEntry::set_versioned(bool flag) {
   versioned_ = flag;
 }
@@ -154,5 +176,29 @@ void JobEntry::set_assigned(bool flag) {
 void JobEntry::set_done(bool flag) {
   done_ = flag;
 }
+
+bool JobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = read_set_.begin(); it != read_set_.end(); ++it) {
+    if (physical_table_.count(*it) == 0)
+      return false;
+    set->insert(physical_table_[*it]);
+  }
+  return true;
+}
+
+bool JobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
+  set->clear();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = write_set_.begin(); it != write_set_.end(); ++it) {
+    if (physical_table_.count(*it) == 0)
+      return false;
+    set->insert(physical_table_[*it]);
+  }
+  return true;
+}
+
+
 
 

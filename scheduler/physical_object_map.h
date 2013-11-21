@@ -77,6 +77,11 @@ namespace nimbus {
     virtual int InstancesByVersion(LogicalDataObject* object,
                                    data_version_t version,
                                    PhysicalDataVector* dest);
+    virtual int InstancesByWorkerAndVersion(LogicalDataObject* object,
+                                  worker_id_t worker,
+                                  data_version_t version,
+                                  PhysicalDataVector* dest);
+
   private:
     PhysicalObjectMapType data_map_;
   };

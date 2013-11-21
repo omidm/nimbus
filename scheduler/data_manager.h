@@ -106,6 +106,10 @@ namespace nimbus {
     int InstancesByVersion(LogicalDataObject* object,
                            data_version_t version,
                            PhysicalDataVector* dest);
+    int InstancesByWorkerAndVersion(LogicalDataObject* object,
+                          worker_id_t worker,
+                          data_version_t version,
+                          PhysicalDataVector* dest);
 
     partition_id_t max_defined_partition();
 
