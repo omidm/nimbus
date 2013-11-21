@@ -80,13 +80,13 @@ namespace water_app_data {
         ::communication::GeometricRegionMessage r
             = app_fa.region();
         ::physbam_pb::make_physbam_object(fa, pb_fa);
-        make_app_object(region, &r);
+        make_app_object(region, r);
     }
 
     void make_app_object(
             ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage *rm) {
-        region->Rebuild(rm->x(), rm->y(), rm->z(), rm->dx(), rm->dy(), rm->dz());
+            ::communication::GeometricRegionMessage &rm) {
+        region->Rebuild(rm.x(), rm.y(), rm.z(), rm.dx(), rm.dy(), rm.dz());
     }
 
 } // namespace physbam_pb

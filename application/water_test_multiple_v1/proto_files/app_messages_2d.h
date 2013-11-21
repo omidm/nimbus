@@ -57,7 +57,7 @@ namespace water_app_data {
     // deserialize
     void make_app_object(
             ::nimbus::GeometricRegion *region,
-            ::communication::GeometricRegionMessage *rm);
+            ::communication::GeometricRegionMessage &rm);
     void make_app_object(
             ::physbam_pb::FaceArray2 *fa,
             ::nimbus::GeometricRegion *region,
