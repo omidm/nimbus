@@ -1,4 +1,5 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,68 +32,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Zhihao Jia <zhihao@stanford.edu>
- */
-#ifndef PROTOBUF_TEST
-#define PROTOBUF_TEST
+ /*
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include "shared/nimbus.h"
-#include "shared/parser.h"
-#include "shared/nimbus_types.h"
-#include "worker/application.h"
-#include "worker/job.h"
-#include "worker/data.h"
-#include "../protocol_buffer/Sparse_Matrix_Float.pb.h"
-#include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
-#include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
+#include "./simple_worker.h"
 
-using nimbus::Job;
-using nimbus::Data;
-using nimbus::Application;
-using namespace PhysBAM;
+SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
+        port_t listening_port, Application * a)
+: Worker(scheduler_ip, scheduler_port, listening_port, a) {
+}
 
-class App : public Application {
-public:
-	App();
-	virtual void Load();
-};
-
-class Main : public Job {
-public:
-	Main(Application *app);
-	virtual void Execute(Parameter params, const DataArray& da);
-	virtual Job* Clone();
-};
-
-class Initialize : public Job {
-public:
-	Initialize(Application *app);
-	virtual void Execute(Parameter params, const DataArray& da);
-	virtual Job* Clone();
-};
-
-class Verification : public Job {
-public:
-	Verification(Application *app);
-	virtual void Execute(Parameter params, const DataArray& da);
-	virtual Job* Clone();
-};
-
-class Sparse_Matrix : public Data {
-public:
-	explicit Sparse_Matrix(SPARSE_MATRIX_FLAT_NXN matrix);
-	virtual ~Sparse_Matrix();
-
-	virtual void Create();
-	virtual void Destroy();
-	virtual Data * Clone();
-	virtual void Copy(Data* from);
-	virtual bool Serialize(SerializedData* ser_data);
-	virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
-
-private:
-	SPARSE_MATRIX_FLAT_NXN* matrix_;
-};
-
-#endif

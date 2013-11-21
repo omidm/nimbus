@@ -1,3 +1,8 @@
+/*
+ * Minor change from original PhysBAM code "PROJECTION_EXAMPLE.cpp".
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform/READ_WRITE_GRID.h>
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform_Arrays/READ_WRITE_FACE_ARRAYS.h>
 #include "projection_example.h"

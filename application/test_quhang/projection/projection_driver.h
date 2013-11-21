@@ -1,3 +1,12 @@
+/*
+ * Refactor the functions of original PhysBAM code "PROJECTION_DRIVER.cpp".
+ * I think this class is expected to maintain no state in the future.
+ * Even if state is required, it should be passed and filled by Nimbus.
+ * It should be a container for functions.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #ifndef __PROJECTION_DRIVER__
 #define __PROJECTION_DRIVER__
 

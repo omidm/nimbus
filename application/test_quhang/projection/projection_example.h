@@ -1,3 +1,12 @@
+/*
+ * Minor change from original PhysBAM code "PROJECTION_EXAMPLE.h".
+ * I think these data structures should have relatively small size in future,
+ * only containing metadata such as time step and grid size.
+ * It is expected to be in the profile data abstraction.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #ifndef __PROJECTION_EXAMPLE__
 #define __PROJECTION_EXAMPLE__
 

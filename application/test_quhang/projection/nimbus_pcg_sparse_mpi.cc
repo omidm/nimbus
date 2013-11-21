@@ -29,6 +29,10 @@ template<class T_GRID> void NIMBUS_PCG_SPARSE_MPI<T_GRID>::Initialize(
   projection_internal_data->p_interior->Set_Subvector_View(*projection_internal_data->p,partition.interior_indices);
   projection_internal_data->temp_interior = new VECTOR_ND<T>;
   projection_internal_data->temp_interior->Set_Subvector_View(*projection_internal_data->temp,partition.interior_indices);
+  projection_internal_data->rho=0;
+  projection_internal_data->rho_old=0;
+  projection_internal_data->alpha=0;
+  projection_internal_data->beta=0;
 }
 
 template<class T_GRID> void NIMBUS_PCG_SPARSE_MPI<T_GRID>::

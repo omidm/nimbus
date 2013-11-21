@@ -1,3 +1,10 @@
+/*
+ * The job specification of PhysBAM projection.
+ * The inner loop workflow is not specified in correct Nimbus abstraction.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #ifndef __JOB_IMPL__ 
 #define __JOB_IMPL__
 

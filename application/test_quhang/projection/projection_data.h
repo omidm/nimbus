@@ -1,3 +1,11 @@
+/*
+ * The internal data structures of PhysBAM projection.
+ * These data structures should not be here in future.
+ * It should either be passed by Nimbus, or be config constantants.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #ifndef __PROJECTION_DATA__
 #define __PROJECTION_DATA__
 
