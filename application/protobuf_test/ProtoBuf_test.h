@@ -51,10 +51,11 @@ using nimbus::Job;
 using nimbus::Data;
 using nimbus::Application;
 using namespace PhysBAM;
+#define ARRAY_SIZE 10
 
-class App : public Application {
+class TestApp : public Application {
 public:
-	App();
+	TestApp();
 	virtual void Load();
 };
 
@@ -65,9 +66,9 @@ public:
 	virtual Job* Clone();
 };
 
-class Initialize : public Job {
+class Initialization : public Job {
 public:
-	Initialize(Application *app);
+	Initialization(Application *app);
 	virtual void Execute(Parameter params, const DataArray& da);
 	virtual Job* Clone();
 };
