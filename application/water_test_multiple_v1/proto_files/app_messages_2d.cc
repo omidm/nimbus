@@ -37,6 +37,7 @@
  */
 
 #include "app_face_array_2d.pb.h"
+#include "app_messages_2d.h"
 #include "physbam_data_include.h"
 #include "physbam_serialize_data_arrays_2d.h"
 #include "physbam_deserialize_data_arrays_2d.h"
@@ -56,12 +57,18 @@ namespace water_app_data {
         ::communication::GeometricRegionMessage *pb_region
             = app_fa->mutable_region();
         ::physbam_pb::make_pb_object(fa, pb_fa);
-        pb_region->set_x(region->x());
-        pb_region->set_y(region->y());
-        pb_region->set_z(region->z());
-        pb_region->set_dx(region->dx());
-        pb_region->set_dy(region->dy());
-        pb_region->set_dz(region->dz());
+        make_pb_object(region, pb_region);
+    }
+
+    void make_pb_object(
+            ::nimbus::GeometricRegion *region,
+            ::communication::GeometricRegionMessage *rm) {
+        rm->set_x(region->x());
+        rm->set_y(region->y());
+        rm->set_z(region->z());
+        rm->set_dx(region->dx());
+        rm->set_dy(region->dy());
+        rm->set_dz(region->dz());
     }
 
     // deserialize
@@ -73,7 +80,13 @@ namespace water_app_data {
         ::communication::GeometricRegionMessage r
             = app_fa.region();
         ::physbam_pb::make_physbam_object(fa, pb_fa);
-        region->Rebuild(r.x(), r.y(), r.z(), r.dx(), r.dy(), r.dz());
+        make_app_object(region, &r);
+    }
+
+    void make_app_object(
+            ::nimbus::GeometricRegion *region,
+            ::communication::GeometricRegionMessage *rm) {
+        region->Rebuild(rm->x(), rm->y(), rm->z(), rm->dx(), rm->dy(), rm->dz());
     }
 
 } // namespace physbam_pb

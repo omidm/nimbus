@@ -47,15 +47,22 @@ namespace water_app_data {
 
     // serialize
     void make_pb_object(
+            ::nimbus::GeometricRegion *region,
+            ::communication::GeometricRegionMessage *rm);
+    void make_pb_object(
             ::physbam_pb::FaceArray2 *fa,
             ::nimbus::GeometricRegion *region,
             ::communication::AppFaceArray2d *app_fa);
 
     // deserialize
     void make_app_object(
+            ::nimbus::GeometricRegion *region,
+            ::communication::GeometricRegionMessage *rm);
+    void make_app_object(
             ::physbam_pb::FaceArray2 *fa,
             ::nimbus::GeometricRegion *region,
             const ::communication::AppFaceArray2d &app_fa);
+
 
 } // namespace physbam_pb
 
