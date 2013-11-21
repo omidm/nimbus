@@ -460,10 +460,21 @@ void Advect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running advect\n");
     GetJobData();
 
-    ::parameters::AdvVelPar adv_vel_par_pb;
     std::string str(params.ser_data().data_ptr_raw(),
             params.ser_data().size());
-    adv_vel_par_pb.ParseFromString(str);
+    ::communication::Param par_pb;
+    printf("Beginning parsing\n");
+    par_pb.ParseFromString(str);
+
+    printf("Completed parsing\n");
+
+    ::communication::AdvVelPar adv_vel_par_pb;
+    if (par_pb.has_adv_par()) {
+        adv_vel_par_pb = par_pb.adv_par();
+    } else {
+        printf("ERROR: Could not find advection parameter inside parameter\n");
+        return;
+    };
 
     T_RANGE box = T_RANGE::Unit_Box();
     box.max_corner.x = box.max_corner.x/2.0;
@@ -689,14 +700,15 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         SpawnComputeJob("uptoadvect", j[0], read, write, before, after, par);
         printf("Spawned upto advect\n");
 
-        ::parameters::AdvVelPar adv_vel_par_pb;
+        ::communication::Param par_pb;
+        ::communication::AdvVelPar *adv_vel_par_pb = par_pb.mutable_adv_par();
         std::string str;
-        adv_vel_par_pb.set_dt(driver->dt);
-        adv_vel_par_pb.set_time(driver->time);
+        adv_vel_par_pb->set_dt(driver->dt);
+        adv_vel_par_pb->set_time(driver->time);
 
         str="";
-        adv_vel_par_pb.set_left_or_right(0);
-        adv_vel_par_pb.SerializeToString(&str);
+        adv_vel_par_pb->set_left_or_right(0);
+        par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
         before.clear(); after.clear();
         read.clear(); write.clear();
@@ -714,8 +726,8 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         printf("Spawned advect 0\n");
 
         str="";
-        adv_vel_par_pb.set_left_or_right(1);
-        adv_vel_par_pb.SerializeToString(&str);
+        adv_vel_par_pb->set_left_or_right(1);
+        par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
         before.clear(); after.clear();
         read.clear(); write.clear();
