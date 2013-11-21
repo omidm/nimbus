@@ -33,43 +33,40 @@
  */
 
  /*
-  * Class representing a physical instance of a data object, stored at
-  * a particular worker with a certain version number.
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
-#define NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
+#ifndef NIMBUS_TEST_SIMPLE_WORKER_STENCIL_WORKER_H_
+#define NIMBUS_TEST_SIMPLE_WORKER_STENCIL_WORKER_H_
 
+// #define DEBUG_MODE
+
+#include <boost/thread.hpp>
+#include <string>
 #include <vector>
-#include "shared/nimbus_types.h"
+#include <map>
+#include "shared/scheduler_client.h"
+#include "shared/serialized_data.h"
+#include "shared/cluster.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "shared/parser.h"
+#include "shared/log.h"
+#include "worker/worker.h"
 
-namespace nimbus {
 
-  class PhysicalData {
+class SimpleWorker : public Worker {
   public:
-    PhysicalData(physical_data_id_t id, worker_id_t worker);
-    PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
-    virtual ~PhysicalData();
+    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
+        port_t listening_port, Application * a);
+};
 
-    physical_data_id_t id();
-    worker_id_t worker();
-    data_version_t version();
-    job_id_t last_job_read();
-    job_id_t last_job_write();
 
-    void set_version(data_version_t v);
-    void set_last_job_read(job_id_t id);
-    void set_last_job_write(job_id_t id);
 
-  private:
-    physical_data_id_t id_;
-    worker_id_t worker_;
-    data_version_t version_;
-    job_id_t last_job_read_;
-    job_id_t last_job_write_;
-  };
 
-  typedef std::vector<PhysicalData> PhysicalDataVector;
-}  // namespace nimbus
 
-#endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
+#endif  // NIMBUS_TEST_SIMPLE_WORKER_STENCIL_WORKER_H_

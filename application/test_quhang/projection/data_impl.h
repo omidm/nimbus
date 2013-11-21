@@ -27,7 +27,7 @@ class PartialNorm : public Data {
     *buffer = norm_;
     ser_data->set_data_ptr((char*)buffer);
     ser_data->set_size(sizeof(*buffer));
-    printf("[QUH] Serialization end.\n");
+    printf("[QUH] Serialization end%f.\n", norm_);
     return true;
   }
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result) {
@@ -35,7 +35,7 @@ class PartialNorm : public Data {
     double temp =  *(reinterpret_cast<double*>(ser_data.data_ptr_raw()));
     PartialNorm* partial_norm = new PartialNorm(temp);
     *result = partial_norm;
-    printf("[QUH] DeSerialization end.\n");
+    printf("[QUH] DeSerialization end%f.\n", temp);
     return true;
   }
   // TODO moved to private member.

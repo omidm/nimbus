@@ -33,43 +33,16 @@
  */
 
  /*
-  * Class representing a physical instance of a data object, stored at
-  * a particular worker with a certain version number.
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
-#define NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
+#include "./simple_worker.h"
 
-#include <vector>
-#include "shared/nimbus_types.h"
+SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
+        port_t listening_port, Application * a)
+: Worker(scheduler_ip, scheduler_port, listening_port, a) {
+}
 
-namespace nimbus {
-
-  class PhysicalData {
-  public:
-    PhysicalData(physical_data_id_t id, worker_id_t worker);
-    PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
-    virtual ~PhysicalData();
-
-    physical_data_id_t id();
-    worker_id_t worker();
-    data_version_t version();
-    job_id_t last_job_read();
-    job_id_t last_job_write();
-
-    void set_version(data_version_t v);
-    void set_last_job_read(job_id_t id);
-    void set_last_job_write(job_id_t id);
-
-  private:
-    physical_data_id_t id_;
-    worker_id_t worker_;
-    data_version_t version_;
-    job_id_t last_job_read_;
-    job_id_t last_job_write_;
-  };
-
-  typedef std::vector<PhysicalData> PhysicalDataVector;
-}  // namespace nimbus
-
-#endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_

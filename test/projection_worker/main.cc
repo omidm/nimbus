@@ -32,44 +32,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Class representing a physical instance of a data object, stored at
-  * a particular worker with a certain version number.
-  */
+#include <pthread.h>
+#include <iostream>  // NOLINT
 
-#ifndef NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
-#define NIMBUS_SCHEDULER_PHYSICAL_DATA_H_
-
-#include <vector>
+#include "simple_worker.h"
+#include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
+#include "worker/application.h"
 
-namespace nimbus {
+#include "application/test_quhang/projection/app.h"
 
-  class PhysicalData {
-  public:
-    PhysicalData(physical_data_id_t id, worker_id_t worker);
-    PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
-    virtual ~PhysicalData();
+int main(int argc, char *argv[]) {
+  port_t listening_port;
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  if (*argv[1] == '1') {
+    std::cout << "1" << std::endl;
+    listening_port = WORKER_PORT_1;
+  } else if (*argv[1] == '2') {
+    std::cout << "2" << std::endl;
+    listening_port = WORKER_PORT_2;
+  } else if (*argv[1] == '3') {
+    listening_port = WORKER_PORT_3;
+  } else if (*argv[1] == '4') {
+    listening_port = WORKER_PORT_4;
+  } else {
+    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  nimbus_initialize();
+  std::cout << "Simple Worker is up!" << std::endl;
+  App *app = new App();
+  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
+      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  w->Run();
+}
 
-    physical_data_id_t id();
-    worker_id_t worker();
-    data_version_t version();
-    job_id_t last_job_read();
-    job_id_t last_job_write();
 
-    void set_version(data_version_t v);
-    void set_last_job_read(job_id_t id);
-    void set_last_job_write(job_id_t id);
-
-  private:
-    physical_data_id_t id_;
-    worker_id_t worker_;
-    data_version_t version_;
-    job_id_t last_job_read_;
-    job_id_t last_job_write_;
-  };
-
-  typedef std::vector<PhysicalData> PhysicalDataVector;
-}  // namespace nimbus
-
-#endif  // NIMBUS_SCHEDULER_PHYSICAL_DATA_H_

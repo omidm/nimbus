@@ -95,6 +95,8 @@ class Scheduler {
 
   protected:
     SchedulerServer* server_;
+    DataManager* data_manager_;
+    JobManager* job_manager_;
     IDMaker id_maker_;
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;
@@ -114,8 +116,6 @@ class Scheduler {
     port_t listening_port_;
     app_id_t appId_;
     ClusterMap cluster_map_;
-    DataManager* data_manager_;
-    JobManager* job_manager_;
     size_t registered_worker_num_;
 };
 
