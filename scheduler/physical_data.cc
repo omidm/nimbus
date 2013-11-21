@@ -33,7 +33,8 @@
   */
 
 /***********************************************************************
- * AUTHOR: Philip Levis <pal>
+ * AUTHOR: Philip Levis <pal@cs.stanford.edu>
+ * AUTHOR: Omid Mashayekhi <omidm@stanford.edu>
  *   FILE: .//physical_data.cc
  *   DATE: Fri Nov  1 10:41:39 2013
  *  DESCR:
@@ -54,6 +55,8 @@ nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
   id_ = i;
   worker_ = w;
   version_ = 0;
+  last_job_read_ = 0;
+  last_job_write_ = 0;
 }
 
 
@@ -73,6 +76,8 @@ nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
   id_ = i;
   worker_ = w;
   version_ = v;
+  last_job_read_ = 0;
+  last_job_write_ = 0;
 }
 
 
@@ -113,6 +118,23 @@ data_version_t nimbus::PhysicalData::version() {
   return version_;
 }
 
+/**
+ * \fn job_id_t nimbus::PhysicalData::last_job_read()
+ * \brief Brief description.
+ * \return
+*/
+job_id_t nimbus::PhysicalData::last_job_read() {
+  return last_job_read_;
+}
+
+/**
+ * \fn job_id_t nimbus::PhysicalData::last_job_write()
+ * \brief Brief description.
+ * \return
+*/
+job_id_t nimbus::PhysicalData::last_job_write() {
+  return last_job_write_;
+}
 
 /**
  * \fn void nimbus::PhysicalData::set_version(data_version_t v)
@@ -122,6 +144,26 @@ data_version_t nimbus::PhysicalData::version() {
 */
 void nimbus::PhysicalData::set_version(data_version_t v) {
   version_ = v;
+}
+
+/**
+ * \fn void nimbus::PhysicalData::set_last_job_read(job_id_t id)
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+void nimbus::PhysicalData::set_last_job_read(job_id_t id) {
+  last_job_read_ = id;
+}
+
+/**
+ * \fn void nimbus::PhysicalData::set_last_job_write(job_id_t id)
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+void nimbus::PhysicalData::set_last_job_write(job_id_t id) {
+  last_job_write_ = id;
 }
 
 }  // namespace nimbus

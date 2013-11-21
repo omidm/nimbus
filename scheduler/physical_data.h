@@ -54,13 +54,19 @@ namespace nimbus {
     physical_data_id_t id();
     worker_id_t worker();
     data_version_t version();
+    job_id_t last_job_read();
+    job_id_t last_job_write();
 
     void set_version(data_version_t v);
+    void set_last_job_read(job_id_t id);
+    void set_last_job_write(job_id_t id);
 
   private:
     physical_data_id_t id_;
     worker_id_t worker_;
     data_version_t version_;
+    job_id_t last_job_read_;
+    job_id_t last_job_write_;
   };
 
   typedef std::vector<PhysicalData> PhysicalDataVector;
