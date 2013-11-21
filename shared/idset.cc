@@ -158,8 +158,6 @@ void IDSet<T>::insert(T n) {
   IDSetIter iter =  identifiers_.begin();
   for (; iter !=  identifiers_.end(); ++iter) {
     if (*iter == n) {
-      std::cout << "WARNING: The IDSet already has " << n
-        << ", nothing was added to the container." << std::endl;
       return;
     }
   }

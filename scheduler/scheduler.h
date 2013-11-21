@@ -49,6 +49,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/log.h"
 #include "shared/cluster.h"
@@ -82,7 +83,7 @@ class Scheduler {
     virtual size_t RegisterPendingWorkers();
     virtual void AddMainJob();
     virtual size_t AssignJobsToWorkers();
-    virtual bool GetWorkerToAssignJob(JobEntry* job, worker_id_t* w_id);
+    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}
