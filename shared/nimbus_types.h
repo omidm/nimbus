@@ -68,7 +68,9 @@ namespace nimbus {
 
   enum JobType {
     JOB_COMP,
-    JOB_COPY
+    JOB_COPY,
+    JOB_CREATE,
+    JOB_SCHED
   };
 
 

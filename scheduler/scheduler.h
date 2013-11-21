@@ -63,6 +63,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10
 #define MIN_WORKERS_TO_JOIN 2
+#define MAX_JOB_TO_ASSIGN 10
 
 class Scheduler {
   public:

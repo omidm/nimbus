@@ -77,6 +77,12 @@ class JobEntry {
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
         const Parameter& params);
+
+    JobEntry(const JobType& job_type,
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const job_id_t& parent_job_id);
+
     virtual ~JobEntry();
 
     JobType job_type();

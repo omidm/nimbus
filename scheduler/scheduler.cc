@@ -191,14 +191,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
-  IDSet<job_id_t> job_id_set;
-  IDSet<logical_data_id_t> logical_data_id_set;
-  Parameter params;
-  job_manager_->AddJobEntry(JOB_COMP,
-      "main", j[0],
-      logical_data_id_set, logical_data_id_set,
-      job_id_set, job_id_set,
-      (job_id_t)(0), params);
+  job_manager_->AddJobEntry(JOB_COMP, "main", j[0], (job_id_t)(0));
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
@@ -224,7 +217,7 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
     workers_rank[poll] = workers_rank[poll] + 1;
   }
 
-  // find the worker that wins the poll. 
+  // find the worker that wins the poll.
   worker_id_t w_id = 1;
   int count = workers_rank[0];
   for (size_t i = 1; i < worker_num; ++i) {
@@ -234,16 +227,19 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
     }
   }
 
-  return GetSchedulerWorkerById(worker, w_id);
+  return server_->GetSchedulerWorkerById(worker, w_id);
 }
 
 size_t Scheduler::AssignJobsToWorkers() {
-  // under implementation
-
-
-
-
-
+  JobEntryList list;
+  job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
+  JobEntryList::iterator iter;
+  for (iter = list.begin(); iter != list.end(); ++iter) {
+    JobEntry* job = *iter;
+    SchedulerWorker* worker;
+    GetWorkerToAssignJob(job, worker);
+    // under implementation.
+  }
   return 0;
 }
 
