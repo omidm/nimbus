@@ -80,6 +80,31 @@ nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
   last_job_write_ = 0;
 }
 
+/**
+ * \fn nimbus::PhysicalData::PhysicalData(physical_data_id_t id,
+                                   worker_id_t worker,
+                                   data_version_t version,
+                                   job_id_t last_job_read,
+                                   job_id_t last_job_write)
+ * \brief Brief description.
+ * \param id
+ * \param worker
+ * \param version
+ * \param last_job_read
+ * \param last_job_write
+ * \return
+*/
+nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
+                                   worker_id_t w,
+                                   data_version_t v,
+                                   job_id_t last_job_read,
+                                   job_id_t last_job_write) {
+  id_ = i;
+  worker_ = w;
+  version_ = v;
+  last_job_read_ = last_job_read;
+  last_job_write_ = last_job_write;
+}
 
 /**
  * \fn nimbus::PhysicalData::~PhysicalData()
