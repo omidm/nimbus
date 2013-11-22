@@ -463,8 +463,8 @@ void Advect::Execute(Parameter params, const DataArray& da) {
     WaterApp *water_app = (WaterApp *)application();
     FaceArrayList fvs;
     for (size_t i = 0; i < da.size(); i++) {
-        if (da[i]->get_debug_info() == face_array_id) {
-            FaceArray *temp = (FaceArray *)da[i];
+        FaceArray *temp = dynamic_cast<FaceArray *>(da[i]);
+        if (temp != NULL) {
             fvs.push_back(temp);
         }
     }
@@ -538,7 +538,7 @@ void Advect::Execute(Parameter params, const DataArray& da) {
     delete(fv);
     delete(fv_extended);
 
-    printf("@@ Completed advect %i\n", (int) adv_vel_par_pb.left_or_right());
+    printf("@@ Completed advect\n");
 }
 
 AfterAdvect::AfterAdvect(Application *app) {
@@ -670,7 +670,6 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         adv_vel_par_pb->set_time(driver->time);
 
         str="";
-        adv_vel_par_pb->set_left_or_right(0);
         ::water_app_data::make_pb_object(&kleft_region, gm);
         par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
@@ -678,19 +677,14 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         read.clear(); write.clear();
         before.insert(j[0]);
         after.insert(j[3]);
-        read.insert(driver->logical_id());
-        read.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvleft.size(); i++)
             read.insert(fvleft[i]->logical_id());
-        write.insert(driver->logical_id());
-        write.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvleft.size(); i++)
             write.insert(fvleft[i]->logical_id());
         SpawnComputeJob("advect", j[1], read, write, before, after, par);
         printf("Spawned advect 0\n");
 
         str="";
-        adv_vel_par_pb->set_left_or_right(1);
         ::water_app_data::make_pb_object(&kright_region, gm);
         par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
@@ -698,12 +692,8 @@ void Loop::Execute(Parameter params, const DataArray& da) {
         read.clear(); write.clear();
         before.insert(j[0]);
         after.insert(j[3]);
-        read.insert(driver->logical_id());
-        read.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvright.size(); i++)
             read.insert(fvright[i]->logical_id());
-        write.insert(driver->logical_id());
-        write.insert(sim_data->logical_id());
         for (unsigned int i = 0; i < fvright.size(); i++)
             write.insert(fvright[i]->logical_id());
         SpawnComputeJob("advect", j[2], read, write, before, after, par);

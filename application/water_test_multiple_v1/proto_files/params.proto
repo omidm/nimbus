@@ -5,7 +5,6 @@ import "geometric_region_message.proto";
 message AdvVelPar {
     required float dt = 1;
     required float time = 2;
-    required bool left_or_right = 3;
 }
 
 message Param {
