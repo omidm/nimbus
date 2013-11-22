@@ -407,7 +407,7 @@ int nimbus::DataManager::AllInstances(LogicalDataObject *object,
 
 
 /**
- * \fn int nimbus::DataManager::AllInstancesByWorker(LogicalDataObject *object,
+ * \fn int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
                                           worker_id_t worker,
                                           PhysicalDataVector *dest)
  * \brief Brief description.
@@ -421,8 +421,9 @@ int nimbus::DataManager::InstancesByWorker(LogicalDataObject *object,
                                           PhysicalDataVector *dest) {
   return physical_object_map_.InstancesByWorker(object, worker, dest);
 }
+
 /**
- * \fn int nimbus::DataManager::AllInstancesByVersion(LogicalDataObject *object,
+ * \fn int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
                                            data_version_t version,
                                            PhysicalDataVector *dest)
  * \brief Brief description.
@@ -436,6 +437,27 @@ int nimbus::DataManager::InstancesByVersion(LogicalDataObject *object,
                                            PhysicalDataVector *dest) {
   return physical_object_map_.InstancesByVersion(object, version, dest);
 }
+
+/**
+ * \fn int nimbus::DataManager::InstancesByWorkerAndVersion(LogicalDataObject *object,
+                                          worker_id_t worker,
+                                          data_version_t version,
+                                          PhysicalDataVector *dest)
+ * \brief Brief description.
+ * \param object
+ * \param worker
+ * \param version
+ * \param dest
+ * \return
+*/
+int nimbus::DataManager::InstancesByWorkerAndVersion(LogicalDataObject *object,
+                                          worker_id_t worker,
+                                          data_version_t version,
+                                          PhysicalDataVector *dest) {
+  return physical_object_map_.InstancesByWorkerAndVersion(object, worker, version, dest);
+}
+
+
 
 bool nimbus::DataManager::SendLdoAddToWorkers(LogicalDataObject* obj) {
   if (server_ == NULL) {

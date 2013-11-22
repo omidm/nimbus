@@ -65,6 +65,7 @@ class JobEntry {
   public:
     typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
     typedef std::map<logical_data_id_t, data_version_t> VersionTable;
+    typedef std::map<logical_data_id_t, physical_data_id_t> PhysicalTable;
     typedef VersionTable::iterator VTIter;
 
     JobEntry();
@@ -90,11 +91,13 @@ class JobEntry {
     job_id_t job_id();
     IDSet<logical_data_id_t> read_set();
     IDSet<logical_data_id_t> write_set();
+    IDSet<logical_data_id_t> union_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     job_id_t parent_job_id();
     Parameter params();
     VersionTable version_table();
+    PhysicalTable physical_table();
     bool versioned();
     bool assigned();
     bool done();
@@ -102,9 +105,13 @@ class JobEntry {
     void set_before_set(IDSet<logical_data_id_t> before_set);
     void set_after_set(IDSet<logical_data_id_t> after_set);
     void set_version_table(VersionTable version_table);
+    void set_physical_table(PhysicalTable physical_table);
     void set_versioned(bool flag);
     void set_assigned(bool flag);
     void set_done(bool flag);
+
+    bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
+    bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
 
   private:
     JobType job_type_;
@@ -117,6 +124,7 @@ class JobEntry {
     job_id_t parent_job_id_;
     Parameter params_;
     VersionTable version_table_;
+    PhysicalTable physical_table_;
     bool versioned_;
     bool assigned_;
     bool done_;

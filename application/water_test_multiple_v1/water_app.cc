@@ -100,35 +100,6 @@ namespace {
         asm volatile("" : : : "memory");
     // asm is just a barrier to allow code to compile with unused variables    
 
-#define GetJobData()                                                        \
-    WaterApp *water_app = (WaterApp *)application();                        \
-    WaterDriver<TV> *driver = NULL;                                         \
-    NonAdvData<TV, T> *sim_data = NULL;                                     \
-    FaceArrayList fvleft;                                                   \
-    FaceArrayList fvright;                                                  \
-    for (unsigned int i = 0; i < da.size(); i++) {                          \
-        switch (da[i]->get_debug_info()) {                                  \
-            case driver_id:                                                 \
-                if (driver == NULL)                                         \
-                    driver = (WaterDriver<TV> *)da[i];                      \
-                break;                                                      \
-            case non_adv_id:                                                \
-                if (sim_data == NULL)                                       \
-                sim_data = (NonAdvData<TV, T> *)da[i];                      \
-                break;                                                      \
-            case face_array_id:                                             \
-                FaceArray *temp = (FaceArray *)da[i];                       \
-                if (temp->left_or_right == 0 && !PointerExists(temp, fvleft))   \
-                    fvleft.push_back(temp);                                 \
-                else if (!PointerExists(temp, fvright))                         \
-                    fvright.push_back(temp);                                \
-                break;                                                      \
-        }                                                                   \
-    }                                                                       \
-    if (!water_app)                                                         \
-        asm volatile("" : : : "memory");
-    // asm is just a barrier to allow code to compile with unused variables    
-
 namespace {
     /* Initialize/ declare application constants. */
 
@@ -488,16 +459,20 @@ Job* Advect::Clone() {
 
 void Advect::Execute(Parameter params, const DataArray& da) {
     printf("@@ Running advect\n");
-    GetJobAllData();
+
+    WaterApp *water_app = (WaterApp *)application();
+    FaceArrayList fvs;
+    for (size_t i = 0; i < da.size(); i++) {
+        if (da[i]->get_debug_info() == face_array_id) {
+            FaceArray *temp = (FaceArray *)da[i];
+            fvs.push_back(temp);
+        }
+    }
 
     std::string str(params.ser_data().data_ptr_raw(),
             params.ser_data().size());
     ::communication::Param par_pb;
-    printf("Beginning parsing\n");
     par_pb.ParseFromString(str);
-
-    printf("Completed parsing\n");
-
     ::communication::AdvVelPar adv_vel_par_pb;
     if (par_pb.has_adv_par()) {
         adv_vel_par_pb = par_pb.adv_par();
@@ -507,7 +482,7 @@ void Advect::Execute(Parameter params, const DataArray& da) {
     };
     ::communication::GeometricRegionMessage gm;
     if (par_pb.has_region()) {
-        adv_vel_par_pb = par_pb.region();
+        gm = par_pb.region();
     } else {
         printf("ERROR: Could not find region inside job parameter\n");
         return;
@@ -515,106 +490,53 @@ void Advect::Execute(Parameter params, const DataArray& da) {
 
     ::nimbus::GeometricRegion region;
     ::water_app_data::make_app_object(&region, gm);
+    ::nimbus::GeometricRegion region_extended(
+            region.x() - kGhostSize,
+            region.y() - kGhostSize,
+            region.z(),
+            region.dx() + 2*kGhostSize,
+            region.dy() + 2*kGhostSize,
+            region.dz());
 
     T_RANGE box = T_RANGE::Unit_Box();
     box.max_corner.x = box.max_corner.x/2.0;
     T_GRID grid(part_size, box, true);
 
-    if (adv_vel_par_pb.left_or_right() == 0) {
-        T_FACE_ARRAY *fvl = new  T_FACE_ARRAY(grid);
-        FaceArray::Glue_Regions(
-                fvl,
-                fvleft,
-                kleft_region,
-                0,
-                0);
+    T_FACE_ARRAY *fv = new  T_FACE_ARRAY(grid);
+    FaceArray::Glue_Regions(
+            fv,
+            fvs,
+            region,
+            -region.x() + 1,
+            0);
 
-        driver->face_velocities = fvl;
-        driver->sim_data = sim_data;
-        sim_data->phi_boundary_water->Set_Velocity_Pointer(*fvl);
-        sim_data->incompressible->
-            Set_Custom_Boundary(*water_app->boundary());
-        sim_data->incompressible->
-            Set_Custom_Advection(*(water_app->advection_scalar()));
-        sim_data->particle_levelset_evolution->Levelset_Advection(1).
-            Set_Custom_Advection(*(water_app->advection_scalar()));
+    T_FACE_ARRAY *fv_extended = new T_FACE_ARRAY();
+    FaceArray::Extend_Array(
+            fv,
+            fv_extended,
+            water_app->boundary(),
+            kGhostSize,
+            adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
+            true);
+    FaceArray::Glue_Regions(
+            fv_extended,
+            fvs,
+            region_extended,
+            -region.x() + 1,
+            0);
 
-        T_FACE_ARRAY *fvl_extended = new T_FACE_ARRAY();
-        FaceArray::Extend_Array(
-                fvl,
-                fvl_extended,
-                water_app->boundary(),
-                kGhostSize,
-                adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
-                true);
-        FaceArray::Glue_Regions(
-                fvl_extended,
-                fvleft,
-                kleft_extended_region,
-                0,
-                0);
+    Advect_Velocities(region, fv, fv_extended, water_app,
+            adv_vel_par_pb.dt(), adv_vel_par_pb.time());
 
-        Advect_Velocities(kleft_region, fvl, fvl_extended, water_app,
-                adv_vel_par_pb.dt(), adv_vel_par_pb.time());
+    FaceArray::Update_Regions(
+            fv,
+            fvs,
+            region,
+            -region.x() + 1,
+            0);
 
-        FaceArray::Update_Regions(
-                fvl,
-                fvleft,
-                kleft_region,
-                0,
-                0);
-
-        delete(fvl);
-        delete(fvl_extended);
-
-    } else {
-        T_FACE_ARRAY *fvr = new  T_FACE_ARRAY(grid);
-        FaceArray::Glue_Regions(
-                fvr,
-                fvright,
-                kright_region,
-                -kright_region.x() + 1,
-                0);
-
-        driver->face_velocities = fvr;
-        driver->sim_data = sim_data;
-        sim_data->phi_boundary_water->Set_Velocity_Pointer(*fvr);
-        sim_data->incompressible->
-            Set_Custom_Boundary(*water_app->boundary());
-        sim_data->incompressible->
-            Set_Custom_Advection(*(water_app->advection_scalar()));
-        sim_data->particle_levelset_evolution->Levelset_Advection(1).
-            Set_Custom_Advection(*(water_app->advection_scalar()));
-
-        T_FACE_ARRAY *fvr_extended = new T_FACE_ARRAY();
-        FaceArray::Extend_Array(
-                fvr,
-                fvr_extended,
-                water_app->boundary(),
-                kGhostSize,
-                adv_vel_par_pb.dt() + adv_vel_par_pb.time(),
-                true);
-        FaceArray::Glue_Regions(
-                fvr_extended,
-                fvright,
-                kright_extended_region,
-                -kright_region.x() + 1,
-                0);
-
-        Advect_Velocities(kright_region, fvr, fvr_extended, water_app,
-                adv_vel_par_pb.dt(), adv_vel_par_pb.time());
-
-        FaceArray::Update_Regions(
-                fvr,
-                fvright,
-                kright_region,
-                -kright_region.x() + 1,
-                0);
-
-        delete(fvr);
-        delete(fvr_extended);
-
-    }
+    delete(fv);
+    delete(fv_extended);
 
     printf("@@ Completed advect %i\n", (int) adv_vel_par_pb.left_or_right());
 }
@@ -769,7 +691,7 @@ void Loop::Execute(Parameter params, const DataArray& da) {
 
         str="";
         adv_vel_par_pb->set_left_or_right(1);
-        ::water_app_data::make_pb_object(&kleft_region, gm);
+        ::water_app_data::make_pb_object(&kright_region, gm);
         par_pb.SerializeToString(&str);
         par.set_ser_data(SerializedData(str));
         before.clear(); after.clear();

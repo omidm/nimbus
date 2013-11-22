@@ -1,3 +1,9 @@
+/*
+ * The internal data structures of PhysBAM projection.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #include "projection_data.h"
 
 namespace PhysBAM {

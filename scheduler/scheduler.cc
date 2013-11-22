@@ -79,7 +79,7 @@ void Scheduler::SchedulerCoreProcessor() {
   while (true) {
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
-    AssignJobsToWorkers();
+    AssignReadyJobs();
   }
 }
 
@@ -195,22 +195,14 @@ void Scheduler::AddMainJob() {
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  IDSet<logical_data_id_t> read_set = job->read_set();
-  IDSet<logical_data_id_t> write_set = job->write_set();
-  IDSet<logical_data_id_t> agg_set;
-  IDSet<logical_data_id_t>::IDSetIter iter;
-  for (iter = read_set.begin(); iter != read_set.end(); iter++) {
-    agg_set.insert(*iter);
-  }
-  for (iter = write_set.begin(); iter != write_set.end(); iter++) {
-    agg_set.insert(*iter);
-  }
-
   // Assumption is that partition Ids start from 0, and incrementally go up.
   size_t worker_num = server_->worker_num();
   size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
   std::vector<int> workers_rank(worker_num, 0);
-  for (iter = agg_set.begin(); iter != agg_set.end(); ++iter) {
+
+  IDSet<logical_data_id_t> union_set = job->union_set();
+  IDSet<logical_data_id_t>::IDSetIter iter;
+  for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
     const LogicalDataObject* ldo;
     ldo = data_manager_->FindLogicalObject(*iter);
     size_t poll = std::min((size_t)(ldo->partition()) / chunk, worker_num - 1);
@@ -230,29 +222,79 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   return server_->GetSchedulerWorkerById(worker, w_id);
 }
 
-size_t Scheduler::AssignJobsToWorkers() {
+bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
+    SchedulerWorker* worker, logical_data_id_t l_id) {
+  LogicalDataObject* ldo =
+    const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
+  JobEntry::VersionTable vt = job->version_table();
+  JobEntry::PhysicalTable pt;
+  PhysicalDataVector pv;
+  data_manager_->InstancesByWorkerAndVersion(ldo, worker->worker_id(), vt[l_id], &pv);
+  if (pv.size() > 1) {
+    PhysicalData p = pv[0];
+    data_manager_->RemovePhysicalInstance(ldo, p);
+    p.set_version(p.version() + 1);
+    if (job->read_set().contains(l_id))
+      p.set_last_job_read(job->job_id());
+    if (job->write_set().contains(l_id))
+      p.set_last_job_write(job->job_id());
+    data_manager_->AddPhysicalInstance(ldo, pv[0]);
+    pt[l_id] = p.id();
+  } else if (pv.size() == 1) {
+    // TODO(omidm): under progress.
+    // ...
+    // ...
+  } else {
+    // TODO(omidm): under progress.
+    // ...
+    // ...
+  }
+
+  // TODO(omidm): under progress.
+  return false;
+}
+
+void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
+  if (job->job_type() == JOB_COMP) {
+    ID<job_id_t> id(job->job_id());
+    IDSet<physical_data_id_t> read_set, write_set;
+    // TODO(omidm): check the return value of the following methods.
+    job->GetPhysicalReadSet(&read_set);
+    job->GetPhysicalWriteSet(&write_set);
+    ComputeJobCommand cm(job->job_name(), id,
+        read_set, write_set, job->before_set(), job->after_set(), job->params());
+    dbg(DBG_SCHED, "Sending job %lu to worker %lu: ", job->job_id(), worker->worker_id());
+    server_->SendCommand(*(server_->workers()->begin()), &cm);
+  } else {
+    // TODO(omidm): under progress.
+    // ...
+    // ...
+  }
+}
+
+bool Scheduler::AssignJob(JobEntry* job) {
+  SchedulerWorker* worker;
+  GetWorkerToAssignJob(job, worker);
+
+  IDSet<logical_data_id_t> union_set = job->union_set();
+  IDSet<logical_data_id_t>::IDSetIter it;
+  for (it = union_set.begin(); it != union_set.end(); ++it) {
+    logical_data_id_t id = *it;
+    PrepareDataForJobAtWorker(job, worker, id);
+    SendJobToWorker(job, worker);
+  }
+  return false;
+}
+
+size_t Scheduler::AssignReadyJobs() {
+  size_t count = 0;
   JobEntryList list;
   job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
-    SchedulerWorker* worker;
-    GetWorkerToAssignJob(job, worker);
-
-    IDSet<logical_data_id_t> read_set = job->read_set();
-    IDSet<logical_data_id_t> write_set = job->write_set();
-    IDSet<logical_data_id_t> agg_set;
-    IDSet<logical_data_id_t>::IDSetIter it;
-    for (it = read_set.begin(); it != read_set.end(); it++) {
-      agg_set.insert(*it);
-    }
-    for (it = write_set.begin(); it != write_set.end(); it++) {
-      agg_set.insert(*it);
-    }
-    for (it = agg_set.begin(); it != agg_set.end(); ++it) {
-      const LogicalDataObject* ldo;
-      ldo = data_manager_->FindLogicalObject(*it);
-    }
+    if (AssignJob(job))
+      ++count;
   }
   return 0;
 }

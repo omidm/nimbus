@@ -83,8 +83,12 @@ class Scheduler {
     virtual void RegisterInitialWorkers(size_t min_to_join);
     virtual size_t RegisterPendingWorkers();
     virtual void AddMainJob();
-    virtual size_t AssignJobsToWorkers();
+    virtual void SendJobToWorker(JobEntry* job, SchedulerWorker* worker);
+    virtual size_t AssignReadyJobs();
+    virtual bool AssignJob(JobEntry* job);
     virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+    virtual bool PrepareDataForJobAtWorker(JobEntry* job,
+                                SchedulerWorker* worker, logical_data_id_t l_id);
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}

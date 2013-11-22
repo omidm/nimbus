@@ -1,3 +1,9 @@
+/*
+ * Refactor the functions of original PhysBAM code "PROJECTION_DRIVER.cpp".
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
+
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Parallel_Computation/BOUNDARY_MPI.h>
