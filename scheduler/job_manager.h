@@ -92,6 +92,9 @@ class JobManager {
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
 
+    size_t GetJobsNeedDataVersion(JobEntryList* list,
+        JobEntry::VersionedLogicalData vld);
+
 
   private:
     JobGraph job_graph_;

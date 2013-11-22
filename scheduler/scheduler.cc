@@ -224,34 +224,67 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
+  JobEntry::VersionTable version_table = job->version_table();
+  JobEntry::PhysicalTable physical_table = job->physical_table();
+  IDSet<job_id_t> before_set = job->before_set();
+
+  PhysicalDataVector pv;
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  JobEntry::VersionTable vt = job->version_table();
-  JobEntry::PhysicalTable pt;
-  PhysicalDataVector pv;
-  data_manager_->InstancesByWorkerAndVersion(ldo, worker->worker_id(), vt[l_id], &pv);
+  data_version_t version = version_table[l_id];
+  data_manager_->InstancesByWorkerAndVersion(ldo, worker->worker_id(), version, &pv);
+
   if (pv.size() > 1) {
+    assert(pv[0].version() == version);
     PhysicalData p = pv[0];
-    data_manager_->RemovePhysicalInstance(ldo, p);
-    p.set_version(p.version() + 1);
-    if (job->read_set().contains(l_id))
+    before_set.insert(pv[0].last_job_write());
+    if (job->read_set().contains(l_id)) {
       p.set_last_job_read(job->job_id());
-    if (job->write_set().contains(l_id))
+    }
+    if (job->write_set().contains(l_id)) {
       p.set_last_job_write(job->job_id());
-    data_manager_->AddPhysicalInstance(ldo, pv[0]);
-    pt[l_id] = p.id();
+      p.set_version(version + 1);
+      before_set.insert(pv[0].last_job_read());
+    }
+    data_manager_->RemovePhysicalInstance(ldo, pv[0]);
+    data_manager_->AddPhysicalInstance(ldo, p);
+    physical_table[l_id] = pv[0].id();
   } else if (pv.size() == 1) {
-    // TODO(omidm): under progress.
-    // ...
-    // ...
+    JobEntryList list;
+    JobEntry::VersionedLogicalData vld(l_id, version);
+    job_manager_->GetJobsNeedDataVersion(&list, vld);
+    assert(list.size() >= 1);
+    if (list.size() == 1) {
+      assert(pv[0].version() == version);
+      PhysicalData p = pv[0];
+      before_set.insert(pv[0].last_job_write());
+      if (job->read_set().contains(l_id)) {
+        p.set_last_job_read(job->job_id());
+      }
+      if (job->write_set().contains(l_id)) {
+        p.set_last_job_write(job->job_id());
+        p.set_version(version + 1);
+        before_set.insert(pv[0].last_job_read());
+      }
+      data_manager_->RemovePhysicalInstance(ldo, pv[0]);
+      data_manager_->AddPhysicalInstance(ldo, p);
+      physical_table[l_id] = pv[0].id();
+
+    } else {
+      // TODO(omidm): under progress.
+      // ...
+      // ...
+    }
   } else {
+    assert(version == 0);
     // TODO(omidm): under progress.
     // ...
     // ...
   }
 
-  // TODO(omidm): under progress.
-  return false;
+  job->set_before_set(before_set);
+  job->set_physical_table(physical_table);
+  return true;
 }
 
 void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
@@ -279,10 +312,9 @@ bool Scheduler::AssignJob(JobEntry* job) {
   IDSet<logical_data_id_t> union_set = job->union_set();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = union_set.begin(); it != union_set.end(); ++it) {
-    logical_data_id_t id = *it;
-    PrepareDataForJobAtWorker(job, worker, id);
-    SendJobToWorker(job, worker);
+    PrepareDataForJobAtWorker(job, worker, *it);
   }
+  SendJobToWorker(job, worker);
   return false;
 }
 

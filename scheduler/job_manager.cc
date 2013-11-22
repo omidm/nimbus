@@ -293,3 +293,26 @@ size_t JobManager::ResolveVersions() {
 }
 
 
+size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
+    JobEntry::VersionedLogicalData vld) {
+  size_t num = 0;
+  list->clear();
+  JobGraph::Iter iter = job_graph_.Begin();
+  for (; iter != job_graph_.End(); ++iter) {
+    JobEntry* job = iter->second;
+    if (job->versioned() && !job->assigned()) {
+      JobEntry::VersionTable version_table = job->version_table();
+      if (version_table.count(vld.first) != 0) {
+        if (version_table[vld.first] == vld.second) {
+          list->push_back(job);
+          ++num;
+        }
+      }
+    }
+  }
+  return num;
+}
+
+
+
+
