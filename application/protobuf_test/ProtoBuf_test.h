@@ -82,7 +82,7 @@ public:
 
 class Sparse_Matrix : public Data {
 public:
-	explicit Sparse_Matrix(SPARSE_MATRIX_FLAT_NXN matrix);
+	explicit Sparse_Matrix();
 	virtual ~Sparse_Matrix();
 
 	virtual void Create();
@@ -92,8 +92,8 @@ public:
 	virtual bool Serialize(SerializedData* ser_data);
 	virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-private:
-	SPARSE_MATRIX_FLAT_NXN* matrix_;
+public:
+	SPARSE_MATRIX_FLAT_NXN<float>* matrix_;
 };
 
 #endif

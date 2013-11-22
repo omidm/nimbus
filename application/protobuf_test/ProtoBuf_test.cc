@@ -37,7 +37,10 @@
 
 #include "ProtoBuf_test.h"
 
-using Sparse_Matrix::Sparse_Matrix_Float;
+using PhysBAM_Protocol::Sparse_Matrix_Float;
+using PhysBAM_Protocol::Int_Array;
+using PhysBAM_Protocol::Sparse_Matrix_Entry_Float_Array;
+using PhysBAM_Protocol::Sparse_Matrix_Entry_Float;
 
 Sparse_Matrix::Sparse_Matrix() {
 	//matrix_ = matrix;
@@ -48,11 +51,11 @@ Sparse_Matrix::~Sparse_Matrix() {
 
 Data * Sparse_Matrix::Clone() {
 	std::cout << "Cloning Sparse_Matrix data!\n";
-	return new Sparse_Matrix(matrix_);
+	return new Sparse_Matrix();
 };
 
 void Sparse_Matrix::Create() {
-	matrix_ = new SPARSE_MATRIX_FLAT_NXN();
+	matrix_ = new SPARSE_MATRIX_FLAT_NXN<float>();
 };
 
 void Sparse_Matrix::Destroy() {
@@ -60,24 +63,40 @@ void Sparse_Matrix::Destroy() {
 };
 
 void Sparse_Matrix::Copy(Data* from) {
-	Sparse_Matrix_Float *d = reinterpret_cast<Sparse_Matrix_Float*>(from);
-	matrix_->n = d->n;
-	matrix_->offsets = new ARRAY<int>(d->offsets.m);
+	Sparse_Matrix_Float *d = reinterpret_cast<Sparse_Matrix_Float*>(from);	
+	matrix_->n = d->n();
+	matrix_->offsets = ARRAY<int>(d->offsets().m());
 	for (int i = 1; i <= matrix_->offsets.m; i++) 
-		matrix_->offsets(i) = d->offsets(i); 
-	matrix_->A = new ARRAY<SPARSE_MATRIX_ENTRY<float>>(d->A.m);
-	for (int i = 1; i <= matrix_->A.m; i++)
-		matrix_->A(i) = d->A(i);
+		matrix_->offsets(i) = d->offsets().elem(i); 
+	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->a().m());
+	for (int i = 1; i <= matrix_->A.m; i++) {
+		matrix_->A(i).j = d->a().elem(i).j();
+		matrix_->A(i).a = d->a().elem(i).a();
+	}
 };
 
 bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
-	Sparse_Matrix_Float matrix_msg;
-	matrix_msg.add_n(matrix_->n);
-	matrix_msg.set_allocated_offsets(matrix_->offsets);
-	matrix_msg.set_allocated_a(matrix_->a);
+	Sparse_Matrix_Float msg_SparseMatrix;
+	msg_SparseMatrix.set_n(matrix_->n);
+	
+	Int_Array msg_IntArray;
+	msg_IntArray.set_m(matrix_->offsets.m);
+	for (int i = 1;i <= matrix_->offsets.m; i++) {
+		msg_IntArray.add_elem(matrix_->offsets(i));
+	}
+	msg_SparseMatrix.set_allocated_offsets(&msg_IntArray);
+	
+	Sparse_Matrix_Entry_Float_Array msg_EntryArray;
+	msg_EntryArray.set_m(matrix_->A.m);
+	for (int i = 1; i <= matrix_->A.m; i++) {
+		Sparse_Matrix_Entry_Float* entry = msg_EntryArray.add_elem();		
+		entry->set_j(matrix_->A(i).j);
+		entry->set_a(matrix_->A(i).a);
+	}
+	msg_SparseMatrix.set_allocated_a(&msg_EntryArray);
 	
 	std::string str;
-	matrix_msg.SerializeToString(&str);
+	msg_SparseMatrix.SerializeToString(&str);
 	char* ptr = new char[str.length()];
 	memcpy(ptr, str.c_str(), str.length());
 	ser_data->set_data_ptr(ptr);
@@ -86,28 +105,30 @@ bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
 };
 
 bool Sparse_Matrix::DeSerialize(const SerializedData& ser_data, Data** result) {
-	Sparse_Matrix_Float matrix_msg;
+	Sparse_Matrix_Float msg_SparseMatrix;
 	std::string str(ser_data.data_ptr_raw(), ser_data.size());
-	matrix_msg.ParseFromString(str);
+	msg_SparseMatrix.ParseFromString(str);
 	Sparse_Matrix* sparseM = new Sparse_Matrix();
 	sparseM->Create();
-	sparseM->matrix_->n = matrix_msg.n();
+	sparseM->matrix_->n = msg_SparseMatrix.n();
 	int _size;
-	if (matrix_msg.offsets())
-		_size = matrix_msg.offsets()->m();
+	if (msg_SparseMatrix.has_offsets())
+		_size = msg_SparseMatrix.offsets().m();
 	else
 		_size = 0;
-	sparseM->matrix_->offsets = new ARRAY<int>(_size);
+	sparseM->matrix_->offsets = ARRAY<int>(_size);
 	for (int i = 1; i <= _size; i++)
-		sparseM->matrix_->offsets(i) = matrix_msg.offsets().elem(i-1);
+		sparseM->matrix_->offsets(i) = msg_SparseMatrix.offsets().elem(i-1);
 	
-	if (matrix_msg.a())
-		_size = matrix_msg.a()->m();
+	if (msg_SparseMatrix.has_a())
+		_size = msg_SparseMatrix.a().m();
 	else
 		_size = 0;
-	sparseM->matrix_->a = new ARRAY<SPARSE_MATRIX_ENTRY<float>>(_size);
-	for (int i = 1; i <= _size; i++)
-		sparseM->matrix_->a(i) = matrix_msg.a().elem(i-1);
+	sparseM->matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(_size);
+	for (int i = 1; i <= _size; i++) {
+		sparseM->matrix_->A(i).j = msg_SparseMatrix.a().elem(i-1).j();
+		sparseM->matrix_->A(i).a = msg_SparseMatrix.a().elem(i-1).a();
+	}
 
 	*result = sparseM;
 	return true;
@@ -123,8 +144,8 @@ void TestApp::Load() {
 	/* Declare and initialize data, jobs and policies. */
 
 	RegisterJob("main", new Main(this));
-	RegisterJob("init", new Init(this));
-	RegisterJob("verify",	new Project_Forloop_Condition(this));	
+	RegisterJob("init", new Initialization(this));
+	RegisterJob("verify", new Verification(this));	
 
 	RegisterData("matrix", new Sparse_Matrix());
 
@@ -170,7 +191,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	
 	read.clear();read.insert(d[1]);
 	write.clear();
-	before.clear();before.clear(j[1]);
+	before.clear();before.insert(j[1]);
 	after.clear();
 	SpawnComputeJob("verify", j[2], read, write, before, after, par);
 	printf("Completed Main\n");
@@ -187,14 +208,14 @@ Job* Initialization::Clone() {
 
 void Initialization::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Initialization\n");
-	SparseMatrix *d = reinterpret_cast<SparseMatrix*>(da[0]);
+	Sparse_Matrix *d = reinterpret_cast<Sparse_Matrix*>(da[0]);
 	d->matrix_->n = ARRAY_SIZE;
-	d->matrix_->offsets = new ARRAY<int>(ARRAY_SIZE);
+	d->matrix_->offsets = ARRAY<int>(ARRAY_SIZE);
 	for (int i = 1; i <= ARRAY_SIZE; i++)
 		d->matrix_->offsets(i) = i;
-	d->matrix_->a = new ARRAY<SPARSE_MATRIX_ENTRY<float>>(ARRAY_SIZE);
+	d->matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(ARRAY_SIZE);
 	for (int i = 1; i <= ARRAY_SIZE; i++)
-		d->matrix_->a(i) = new SPARSE_MATRIX_ENTRY(i, i+0.5);		
+		d->matrix_->A(i) = SPARSE_MATRIX_ENTRY<float>(i, i+0.5);		
 	printf("Completed Initialization\n");
 };
 
@@ -209,15 +230,15 @@ Job* Verification::Clone() {
 
 void Verification::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Verification\n");
-	SparseMatrix *d = reinterpret_cast<SparseMatrix*>(da[0]);
+	Sparse_Matrix *d = reinterpret_cast<Sparse_Matrix*>(da[0]);
 	printf("n = %d\n", d->matrix_->n);
 	printf("offsets.m = %d\n", d->matrix_->offsets.m);
 	for (int i = 1; i <= d->matrix_->offsets.m; i++)
 		printf("offsets(%d) = %d\n", i, d->matrix_->offsets(i));
 	
-	printf("a.m = %d\n", d->matrix_->a.m);
-	for (int i = 1; i <= d->matrix_->a.m)
-		printf("a(%d) = (%d, %f)\n", i, d->matrix_->a(i).j, d->matrix_->a(i).a);
+	printf("a.m = %d\n", d->matrix_->A.m);
+	for (int i = 1; i <= d->matrix_->A.m; i++)
+		printf("a(%d) = (%d, %f)\n", i, d->matrix_->A(i).j, d->matrix_->A(i).a);
 	
 	printf("Completed Verification\n");
 };
