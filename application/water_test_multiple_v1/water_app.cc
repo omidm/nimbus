@@ -133,18 +133,6 @@ namespace {
     nimbus::GeometricRegion kright_region(
             kMainSize/2+1, 1, 0,
             kMainSize/2, kMainSize, 0);
-    nimbus::GeometricRegion kleft_extended_region(
-            1, 1, 0,
-            kMainSize/2+kGhostSize, kMainSize, 0);
-    nimbus::GeometricRegion kright_extended_region(
-            kMainSize/2-kGhostSize+1, -kGhostSize+1, 0,
-            kMainSize/2+kGhostSize, kMainSize, 0);
-    nimbus::GeometricRegion kleft_shared_region(
-            kMainSize/2+1, 1, 0,
-            kGhostSize, kMainSize, 0);
-    nimbus::GeometricRegion kright_shared_region(
-            kMainSize/2-kGhostSize+1, 1, 0,
-            kGhostSize, kMainSize, 0);
     ::std::vector < ::nimbus::GeometricRegion > kleft_regions;
     ::std::vector < ::nimbus::GeometricRegion > kright_regions;
     ::std::vector < ::std::string > kleft_adv_types;

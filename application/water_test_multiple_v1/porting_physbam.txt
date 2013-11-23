@@ -11,46 +11,74 @@ data items). Quantities that vary for different partitions may go into data (rea
 set) or parameters for the corresponding job.
 
 I had broken the task advection of velocities as follows:
+
 - Register data and job types. Right now, I have a different data type for different
-partitions (6 data types for velocity advection on 2 workers). We will be changing this to
-register a data with some region. Before starting a job, the worker will have to set the
-region for the data. I suggest this should be done after clone and before create, since
-the region information (bounding box) can be used to determine size and any other
-allocation/ initialization parameters when create is called.
+partitions (6 data types for velocity advection on 2 workers). Look at the code
+the fills in kleft_regions and kright_regions in WaterApp::Load() in
+water_app.cc. Once each type is registered in Load, I call define for each type
+in Main::Execute() in water_app.cc. 
+We will be changing this to not tying data type with region, but specifying
+region during or after DefineData (this will cause some code restructuring).
+Before starting a job, the worker will have to set the region for the data.
+I suggest this should be done after clone and before create, since the region information
+(bounding box) can be used to determine size and any other allocation/ initialization
+parameters when create is called.
+
 - Spawn jobs and set dependencies and read/ write sets. Set parameters.
+Loop::Execute() is the most important part here, since VeforeAdvect, Advect
+and AfterAdvect get spawned in the loop job (in water_app.cc).
+
 - Implement data classes (data_face_arrays) that are a wrapper around Physbam data
 structures, and something that Nimbus understands. These classes implement create/ clone/
 serialize/ deserialize that Nimbus scheduler can call. Data also contains a region
-attribute that is useful during gluing/ updating.
+attribute that is useful during gluing/ updating. The code for data_face_arrays
+is in data_face_arrays.[cc|h].
+
 - I had added a get_debug_info() method to Nimbus data. This method returns a debug_id for
 the class right now, which I used to check what the data in the read/ write set
 corresponds to. However, I think we should be able to change this to a check on
 dynamic_cast. I need this because I found relying on order in read and write sets to be
 very tedious. So I encode type & region information within the data itself, and then
-gather data within a job.
+gather data within a job. (Look at GetJobAllData() macro in water_app.cc.)
+
 - Implement serialization/ deserialization for physbam data, that the Nimbus data
-sub-class wraps, in proto_files.
+sub-class wraps, in proto_files. There are separate protocol buffer files for
+vector, arrays, range etc. And there are
+physbam_[serialize|deserialize]_data_[arrays|common]_2d.[cc|h] files in the
+proto_files directory that use the protocol buffer generated code to serialize
+and deserialize physbam structures, and provide functions that can be called
+from application code instead of directly using the protocol buffer interface.
+
 - Write out a Param class (protocol buffer) and a class for advection specific parameters.
+(See proto_files/params.proto.)
 Param contains the region of data that a job is being spawned over. Advection parameter
 contains other information like dt, t. Fields in Param are optional.
-- Initialize all constant policies when application is loaded as application data.
+
+- Initialize all constant policies when application is loaded as application
+  data (water_app.cc).
+
 - Within a job, if the data that the job operates on expects some pointers, but they are
 not initialized correctly since we moved the data to application policies (this happens in
-all jobs except advection of velocities right now), then set those pointers correctly.
+all jobs except advection of velocities right now), then set those pointers
+correctly (BeforeAdvect, Advect, AfterAdvect, Loop and WriteFrame jobs in
+water_app.cc).
+
 - Within a job, glue all data (velocity data on different partitions) for Physbam to
 operate on, using region from parameters. Then either directly call into Physbam methods,
 or wrapper functions. Update write set data using update data at the end of the job. We
 need to implement glue and update methods for all data except velocities (face arrays)
-right now.
-- Right now, my advection job is not how it should stay -- it checks if it is supposed to
-operate on left region or right region and executes the corresponding code. I’ll fix this
-code soon. In the final version, my advection job will not need to execute different code
-for different regions (I have to remove the branch statement, rename some variables, and
-remove the usage of some global variables).
+right now. (water_app.cc)
 
 We will need to restructure the wrapper methods that I have written as we implement the
-remaining jobs. I feel water_driver should eventually be broken into a set of methods that
+remaining jobs.
+
+I feel water_driver should eventually be broken into a set of methods that
 are partition independent, and a separate partition specific class. The partition specific
 class will mostly contain pointers that need to be set correctly, during level-set
 computation (and possibly other computation like particle computation) due to callbacks.
-I am unsure about what pointers need to be set where for different methods right now.
+I am unsure about what pointers need to be set where for different methods
+right now.
+
+We may also have to modify initialization code as we change Nimbus
+wrappers for Physbam data structures, and move some data to parameters/
+application data.
