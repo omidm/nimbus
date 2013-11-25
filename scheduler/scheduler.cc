@@ -277,9 +277,33 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     }
   } else {
     assert(version == 0);
-    // TODO(omidm): under progress.
-    // ...
-    // ...
+    std::vector<job_id_t> j;
+    id_maker_.GetNewJobID(&j, 1);
+    std::vector<physical_data_id_t> d;
+    id_maker_.GetNewPhysicalDataID(&d, 1);
+    IDSet<job_id_t> before, after;
+    after.insert(j[0]);
+
+    // Update before_set and physical_table
+    before_set.insert(j[0]);
+    physical_table[l_id] = d[0];
+
+    // Update the job table.
+    // job_manager_->AddJobEntry(JOB_CREATE, ...
+
+    // Move this to SendJobToWorker
+    CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
+        ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
+    server_->SendCommand(worker, &cm);
+
+    // Update data table.
+    data_version_t new_version = version;
+    if (job->write_set().contains(l_id)) {
+      ++new_version;
+    }
+    PhysicalData p(d[0], worker->worker_id(), new_version,
+        job->job_id(), job->job_id());
+    data_manager_->AddPhysicalInstance(ldo, p);
   }
 
   job->set_before_set(before_set);
