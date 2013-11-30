@@ -163,6 +163,8 @@ void Main::Execute(Parameter params, const DataArray& da) {
   DefinePartition(p_1, r_1, par);
   DefinePartition(p_2, r_2, par);
   DefinePartition(p_3, r_3, par);
+  DefinePartition(p_4, r_4, par);
+  DefinePartition(p_5, r_5, par);
 
   DefineData("side", d[0], p_0.elem(), neighbor_partitions, par);
   DefineData("middle", d[1], p_1.elem(), neighbor_partitions, par);

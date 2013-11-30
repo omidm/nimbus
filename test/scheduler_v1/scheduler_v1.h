@@ -60,7 +60,7 @@ class SchedulerV1 : public Scheduler {
   public:
     explicit SchedulerV1(unsigned int listening_port);
 
-    virtual void SchedulerCoreProcessor();
+    // virtual void SchedulerCoreProcessor();
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_

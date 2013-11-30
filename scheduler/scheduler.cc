@@ -297,7 +297,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       LocalCopyCommand cm_c(ID<job_id_t>(j[1]),
           ID<physical_data_id_t>(pv[0].id()),
           ID<physical_data_id_t>(d[0]), before, after);
-      dbg(DBG_SCHED, "Sending local copy command to worker %lu.", worker->worker_id());
+      dbg(DBG_SCHED, "Sending local copy command to worker %lu.\n", worker->worker_id());
       server_->SendCommand(worker, &cm_c);
 
       // Update data table. Q?
@@ -357,7 +357,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       PhysicalDataVector pvv;
       data_manager_->InstancesByVersion(ldo, version, &pvv);
       if (pvv.size() == 0) {
-        dbg(DBG_ERROR, "ERROR: the version (%lu) neded for job (%lu) does not exist.", version, job->job_id()); // NOLINT
+        dbg(DBG_ERROR, "ERROR: the version (%lu) neded for job (%lu) does not exist.\n", version, job->job_id()); // NOLINT
         return false;
       } else {
         // TODO(omidm): do something smarter!
@@ -390,7 +390,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
         before.insert(j[0]);
         RemoteCopyReceiveCommand cm_r(ID<job_id_t>(j[1]),
             ID<physical_data_id_t>(d[0]), before, after);
-        dbg(DBG_SCHED, "Sending remote copy command to worker %lu.", worker->worker_id());
+        dbg(DBG_SCHED, "Sending remote copy command to worker %lu.\n", worker->worker_id());
         server_->SendCommand(worker, &cm_r);
 
         // Update data table. Q?
@@ -411,7 +411,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
             ID<worker_id_t>(worker->worker_id()),
             worker->ip(), ID<port_t>(worker->port()),
             before, after);
-        dbg(DBG_SCHED, "Sending remote copy command to worker %lu.", worker_sender->worker_id());
+        dbg(DBG_SCHED, "Sending remote copy command to worker %lu.\n", worker_sender->worker_id());
         server_->SendCommand(worker_sender, &cm_s);
 
         // Update data table.
@@ -441,8 +441,8 @@ void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
     job->GetPhysicalWriteSet(&write_set);
     ComputeJobCommand cm(job->job_name(), id,
         read_set, write_set, job->before_set(), job->after_set(), job->params());
-    dbg(DBG_SCHED, "Sending job %lu to worker %lu: ", job->job_id(), worker->worker_id());
-    server_->SendCommand(*(server_->workers()->begin()), &cm);
+    dbg(DBG_SCHED, "Sending job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
+    server_->SendCommand(worker, &cm);
   } else {
     // TODO(omidm): under progress.
     // ...
@@ -460,7 +460,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
     PrepareDataForJobAtWorker(job, worker, *it);
   }
   SendJobToWorker(job, worker);
-  return false;
+  return true;
 }
 
 size_t Scheduler::AssignReadyJobs() {
@@ -470,15 +470,17 @@ size_t Scheduler::AssignReadyJobs() {
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
-    if (AssignJob(job))
+    if (AssignJob(job)) {
       ++count;
+      job->set_assigned(true);
+    }
   }
-  return 0;
+  return count;
 }
 
 void Scheduler::RegisterInitialWorkers(size_t min_to_join) {
   while (registered_worker_num_ < min_to_join) {
-    dbg(DBG_SCHED, "%d worker(s) are registered, waiting for %d more workers to join ...",
+    dbg(DBG_SCHED, "%d worker(s) are registered, waiting for %d more workers to join ...\n",
         registered_worker_num_, min_to_join - registered_worker_num_);
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     RegisterPendingWorkers();

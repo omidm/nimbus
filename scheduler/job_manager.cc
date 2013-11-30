@@ -52,7 +52,10 @@ JobManager::JobManager() {
   JobEntry* job = new JobEntry(JOB_SCHED, "kernel", (job_id_t)(0), (job_id_t)(0));
   if (!job_graph_.AddJobEntry(job)) {
     delete job;
-    dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.");
+    dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.\n");
+  } else {
+    job->set_versioned(true);
+    job->set_assigned(true);
   }
 }
 
@@ -78,7 +81,7 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     return true;
   } else {
     delete job;
-    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.", job_id);
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     return false;
   }
 }
@@ -92,7 +95,7 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     return true;
   } else {
     delete job;
-    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.", job_id);
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     return false;
   }
 }
@@ -140,12 +143,12 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
         job_id_t id = *it;
         if (GetJobEntry(id, j)) {
           if (!(j->done())) {
-            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.", id);
+            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.\n", id);
             before_set_done = false;
             break;
           }
         } else {
-          dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.", id);
+          dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.\n", id);
           before_set_done = false;
           break;
         }
@@ -216,11 +219,11 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
         }
       }
     } else {
-      dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not versioned yet.", parent_id);
+      dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not versioned yet.\n", parent_id);
       return false;
     }
   } else {
-    dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not in job graph.", parent_id);
+    dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not in job graph.\n", parent_id);
     return false;
   }
 
@@ -251,26 +254,26 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
           }
         }
       } else {
-        dbg(DBG_SCHED, "Job in befor set (id: %lu) is not versioned yet.", id);
+        dbg(DBG_SCHED, "Job in befor set (id: %lu) is not versioned yet.\n", id);
         return false;
       }
     } else {
-      dbg(DBG_SCHED, "Job in befor set (id: %lu) is not in the graph.", id);
+      dbg(DBG_SCHED, "Job in befor set (id: %lu) is not in the graph.\n", id);
       return false;
     }
   }
 
   IDSet<logical_data_id_t> read_set = job->read_set();
   for (iter = read_set.begin(); iter != read_set.end(); ++iter) {
-    if (version_table.count(*iter)) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.", *iter);
+    if (version_table.count(*iter) == 0) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter);
       return false;
     }
   }
   IDSet<logical_data_id_t> write_set = job->write_set();
   for (iter = write_set.begin(); iter != write_set.end(); ++iter) {
-    if (version_table.count(*iter)) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.", *iter);
+    if (version_table.count(*iter) == 0) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter);
       return false;
     }
   }
