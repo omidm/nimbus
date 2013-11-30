@@ -68,9 +68,14 @@ class IDMaker {
     physical_data_id_t last_physical_data_id_;
     logical_data_id_t first_logical_data_id_;
     logical_data_id_t last_logical_data_id_;
+    /*
     static const job_id_t JOB_ID_BATCH  = (1 << (sizeof(job_id_t)*3));
     static const physical_data_id_t PHYSICAL_DATA_ID_BATCH  = (1 << (sizeof(physical_data_id_t)*3));
     static const logical_data_id_t LOGICAL_DATA_ID_BATCH  = (1 << (sizeof(logical_data_id_t)*3));
+    */
+    static const job_id_t JOB_ID_BATCH  = 100000;
+    static const physical_data_id_t PHYSICAL_DATA_ID_BATCH  = 100000;
+    static const logical_data_id_t LOGICAL_DATA_ID_BATCH  = 100000;
 };
 
 

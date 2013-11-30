@@ -40,8 +40,10 @@
 #ifndef NIMBUS_SHARED_GEOMETRIC_REGION_H_
 #define NIMBUS_SHARED_GEOMETRIC_REGION_H_
 
+#include <boost/tokenizer.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdio.h>
+#include <sstream> // NOLINT
 #include <string>
 #include "shared/nimbus_types.h"
 #include "shared/protobuf_compiled/ldomessage.pb.h"
@@ -95,6 +97,8 @@ namespace nimbus {
     virtual void FillInMessage(GeometricRegionMessage* msg);
 
     virtual std::string toString();
+
+    virtual bool Parse(const std::string& input);
 
   private:
     int_dimension_t x_;
