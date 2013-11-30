@@ -106,8 +106,9 @@ std::string nimbus::LdoRemoveCommand::toString() {
   std::string payload;
   str += (name_ + " ");
   object_->SerializeToString(&payload);
+  // Only escape the payload part, we need the space between name and payload.
+  EscapeString(&payload);
   str += payload;
-  EscapeString(&str);
   return str;
 }
 
@@ -122,8 +123,9 @@ std::string nimbus::LdoRemoveCommand::toStringWTags() {
   std::string payload;
   str += (name_ + " ");
   object_->SerializeToString(&payload);
+  // Only escape the payload part, we need the space between name and payload.
+  EscapeString(&payload);
   str += ("object:" + payload);
-  EscapeString(&str);
   return str;
 }
 
