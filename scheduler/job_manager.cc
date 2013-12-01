@@ -89,9 +89,13 @@ bool JobManager::AddJobEntry(const JobType& job_type,
 bool JobManager::AddJobEntry(const JobType& job_type,
     const std::string& job_name,
     const job_id_t& job_id,
-    const job_id_t& parent_job_id) {
+    const job_id_t& parent_job_id,
+    const bool& versioned,
+    const bool& assigned) {
   JobEntry* job = new JobEntry(job_type, job_name, job_id, parent_job_id);
   if (job_graph_.AddJobEntry(job)) {
+    job->set_versioned(versioned);
+    job->set_assigned(assigned);
     return true;
   } else {
     delete job;
@@ -316,6 +320,28 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
   return num;
 }
 
+void JobManager::UpdateJobBeforeSet(JobEntry* job) {
+  IDSet<job_id_t> before_set = job->before_set();
+  UpdateBeforeSet(&before_set);
+  job->set_before_set(before_set);
+}
+
+void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
+  IDSet<job_id_t>::IDSetIter it;
+  for (it = before_set->begin(); it != before_set->end();) {
+    JobEntry* j;
+    job_id_t id = *it;
+    if (GetJobEntry(id, j)) {
+      if (j->done()) {
+        before_set->remove(it++);
+      } else {
+        ++it;
+      }
+    } else {
+      ++it;
+    }
+  }
+}
 
 
 

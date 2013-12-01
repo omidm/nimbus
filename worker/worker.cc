@@ -225,11 +225,12 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   for (iter = done_jobs_.begin(); iter != done_jobs_.end();) {
     iter->second.remove(cm->job_id().elem());
     if (iter->second.size() == 0)
-      done_jobs_.erase(iter++);
+      // done_jobs_.erase(iter++);
+      ++iter;
     else
       ++iter;
   }
-  if (cm->after_set().size() != 0)
+  // if (cm->after_set().size() != 0)
     done_jobs_[cm->job_id().elem()] = cm->after_set();
 }
 

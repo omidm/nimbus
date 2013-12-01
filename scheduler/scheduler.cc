@@ -281,24 +281,28 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       id_maker_.GetNewPhysicalDataID(&d, 1);
       IDSet<job_id_t> before, after;
 
-      // Update the job table.
-      // job_manager_->AddJobEntry(JOB_CREATE, ...
-      // job_manager_->AddJobEntry(JOB_COPY, ...
-
       after.insert(j[1]);
+      job_manager_->UpdateBeforeSet(&before);
       CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
           ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
       server_->SendCommand(worker, &cm);
+
+      // Update the job table.
+      job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
 
       after.clear();
       after.insert(job->job_id());
       before.insert(j[0]);
       before.insert(pv[0].last_job_write());
+      job_manager_->UpdateBeforeSet(&before);
       LocalCopyCommand cm_c(ID<job_id_t>(j[1]),
           ID<physical_data_id_t>(pv[0].id()),
           ID<physical_data_id_t>(d[0]), before, after);
       dbg(DBG_SCHED, "Sending local copy command to worker %lu.\n", worker->worker_id());
       server_->SendCommand(worker, &cm_c);
+
+      // Update the job table.
+      job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[1], (job_id_t)(0), true, true);
 
       // Update data table. Q?
       PhysicalData p_c(d[0], worker->worker_id(), version,
@@ -332,14 +336,15 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       id_maker_.GetNewPhysicalDataID(&d, 1);
       IDSet<job_id_t> before, after;
 
-      // Update the job table.
-      // job_manager_->AddJobEntry(JOB_CREATE, ...
-
       // Move this to SendJobToWorker
       after.insert(job->job_id());
+      job_manager_->UpdateBeforeSet(&before);
       CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
           ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
       server_->SendCommand(worker, &cm);
+
+      // Update the job table.
+      job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
 
       // Update data table. Q?
       data_version_t new_version = version;
@@ -381,17 +386,25 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
         // Receive part
         after.insert(j[1]);
+        job_manager_->UpdateBeforeSet(&before);
         CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
             ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
         server_->SendCommand(worker, &cm);
 
+        // Update the job table.
+        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+
         after.clear();
         after.insert(job->job_id());
         before.insert(j[0]);
+        job_manager_->UpdateBeforeSet(&before);
         RemoteCopyReceiveCommand cm_r(ID<job_id_t>(j[1]),
             ID<physical_data_id_t>(d[0]), before, after);
         dbg(DBG_SCHED, "Sending remote copy command to worker %lu.\n", worker->worker_id());
         server_->SendCommand(worker, &cm_r);
+
+        // Update the job table.
+        job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", j[1], (job_id_t)(0), true, true);
 
         // Update data table. Q?
         data_version_t new_version = version;
@@ -406,6 +419,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
         after.clear();
         before.clear();
         before.insert(pvv[0].last_job_write());
+        job_manager_->UpdateBeforeSet(&before);
         RemoteCopySendCommand cm_s(ID<job_id_t>(j[2]),
             ID<job_id_t>(d[1]), ID<physical_data_id_t>(pvv[0].id()),
             ID<worker_id_t>(worker->worker_id()),
@@ -413,6 +427,9 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
             before, after);
         dbg(DBG_SCHED, "Sending remote copy command to worker %lu.\n", worker_sender->worker_id());
         server_->SendCommand(worker_sender, &cm_s);
+
+        // Update the job table.
+        job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[2], (job_id_t)(0), true, true);
 
         // Update data table.
         PhysicalData p_s = pvv[0];
@@ -459,7 +476,9 @@ bool Scheduler::AssignJob(JobEntry* job) {
   for (it = union_set.begin(); it != union_set.end(); ++it) {
     PrepareDataForJobAtWorker(job, worker, *it);
   }
+  job_manager_->UpdateJobBeforeSet(job);
   SendJobToWorker(job, worker);
+  job->set_assigned(true);
   return true;
 }
 
@@ -472,7 +491,6 @@ size_t Scheduler::AssignReadyJobs() {
     JobEntry* job = *iter;
     if (AssignJob(job)) {
       ++count;
-      job->set_assigned(true);
     }
   }
   return count;
