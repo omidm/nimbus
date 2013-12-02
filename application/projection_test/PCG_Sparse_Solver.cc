@@ -185,14 +185,12 @@ void Init::Execute(Parameter params, const DataArray& da) {
 
 Project_Forloop_Condition::Project_Forloop_Condition(Application* app) {
 	set_application(app);
-}
-;
+};
 
 Job * Project_Forloop_Condition::Clone() {
 	std::cout << "Cloning Project_Forloop_Condition job!\n";
 	return new Project_Forloop_Condition(application());
-}
-;
+};
 
 void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input_data) {
 	std::cout << "Executing the Project_Forloop_Condition job\n";

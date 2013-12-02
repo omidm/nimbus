@@ -18,10 +18,12 @@ include_directories(${PROTO_DIR})
 
 SET(PROTO_FILES_h
         ${PROTO_DIR}/Sparse_Matrix_Float.pb.h
+	${PROTO_DIR}/Vector_Float.pb.h
    )
 
 SET(PROTO_FILES_cc
         ${PROTO_DIR}/Sparse_Matrix_Float.pb.cc
+	${PROTO_DIR}/Vector_Float.pb.cc
    )
 
 SET(PROTO_HELPER_h
