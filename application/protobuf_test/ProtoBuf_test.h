@@ -43,7 +43,7 @@
 #include "worker/application.h"
 #include "worker/job.h"
 #include "worker/data.h"
-#include "../protocol_buffer/Sparse_Matrix_Float.pb.h"
+#include "protocol_buffer/Sparse_Matrix_Float.pb.h"
 #include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
 
@@ -88,7 +88,7 @@ public:
 	virtual void Create();
 	virtual void Destroy();
 	virtual Data * Clone();
-	virtual void Copy(Data* from);
+	//virtual void Copy(Data* from);
 	virtual bool Serialize(SerializedData* ser_data);
 	virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 

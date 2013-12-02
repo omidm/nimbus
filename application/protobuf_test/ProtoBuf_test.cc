@@ -62,45 +62,68 @@ void Sparse_Matrix::Destroy() {
 	delete matrix_;
 };
 
+/*
 void Sparse_Matrix::Copy(Data* from) {
 	Sparse_Matrix_Float *d = reinterpret_cast<Sparse_Matrix_Float*>(from);	
+	printf("Checkpoint #1\n");
 	matrix_->n = d->n();
+	printf("Checkpoint #2, n = %d\n", d->n());
 	matrix_->offsets = ARRAY<int>(d->offsets().m());
+	printf("Checkpoint #3\n");
 	for (int i = 1; i <= matrix_->offsets.m; i++) 
 		matrix_->offsets(i) = d->offsets().elem(i); 
+	printf("Checkpoint #4\n");
 	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->a().m());
+	printf("Checkpoint #5\n");
 	for (int i = 1; i <= matrix_->A.m; i++) {
 		matrix_->A(i).j = d->a().elem(i).j();
 		matrix_->A(i).a = d->a().elem(i).a();
 	}
+	printf("Checkpoint #6\n");
 };
+*/
 
 bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
 	Sparse_Matrix_Float msg_SparseMatrix;
+	printf("Checkpoint #1\n");
 	msg_SparseMatrix.set_n(matrix_->n);
-	
-	Int_Array msg_IntArray;
-	msg_IntArray.set_m(matrix_->offsets.m);
+	printf("Checkpoint #2, n = %d\n", matrix_->n);
+	Int_Array* msg_IntArray = msg_SparseMatrix.mutable_offsets();
+	printf("Checkpoint #3\n");
+	msg_IntArray->set_m(matrix_->offsets.m);
+	printf("Checkpoint #4, offsets.m = %d\n", matrix_->offsets.m);
 	for (int i = 1;i <= matrix_->offsets.m; i++) {
-		msg_IntArray.add_elem(matrix_->offsets(i));
+		msg_IntArray->add_elem(matrix_->offsets(i));
+		printf("Checkpoint #5, offsets(%d) = %d\n", i, matrix_->offsets(i));
 	}
-	msg_SparseMatrix.set_allocated_offsets(&msg_IntArray);
-	
-	Sparse_Matrix_Entry_Float_Array msg_EntryArray;
-	msg_EntryArray.set_m(matrix_->A.m);
+	//msg_SparseMatrix.set_allocated_offsets(&msg_IntArray);
+	printf("Checkpoint #6\n");
+	Sparse_Matrix_Entry_Float_Array* msg_EntryArray = msg_SparseMatrix.mutable_a();
+	printf("Checkpoint #7\n");
+	msg_EntryArray->set_m(matrix_->A.m);
+	printf("Checkpoint #8, A.m = %d\n", matrix_->A.m);
 	for (int i = 1; i <= matrix_->A.m; i++) {
-		Sparse_Matrix_Entry_Float* entry = msg_EntryArray.add_elem();		
+		Sparse_Matrix_Entry_Float* entry = msg_EntryArray->add_elem();		
 		entry->set_j(matrix_->A(i).j);
 		entry->set_a(matrix_->A(i).a);
+		printf("Checkpoint #9, A(%d).j = %d, a = %f\n", i, matrix_->A(i).j, matrix_->A(i).a);
 	}
-	msg_SparseMatrix.set_allocated_a(&msg_EntryArray);
-	
+	printf("Checkpoint #10\n");
+	//msg_SparseMatrix.set_allocated_a(&msg_EntryArray);
+	printf("Checkpoint #11\n");
 	std::string str;
 	msg_SparseMatrix.SerializeToString(&str);
+	printf("Checkpoint #12\n");
 	char* ptr = new char[str.length()];
 	memcpy(ptr, str.c_str(), str.length());
+	printf("Checkpoint #13, str.len = %lu\n", str.length());
 	ser_data->set_data_ptr(ptr);
+	printf("Checkpoint #14\n");
 	ser_data->set_size(str.length());
+	printf("Checkpoint #15\n");
+	//msg_SparseMatrix.clear_offsets();
+	//msg_SparseMatrix.clear_a();
+	//google::protobuf::ShutdownProtobufLibrary();
 	return true;
 };
 
