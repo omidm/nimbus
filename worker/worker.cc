@@ -198,8 +198,10 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     case SchedulerCommand::LDO_ADD:
       ProcessLdoAddCommand(reinterpret_cast<LdoAddCommand*>(cm));
+      break;
     case SchedulerCommand::LDO_REMOVE:
       ProcessLdoRemoveCommand(reinterpret_cast<LdoRemoveCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->toString() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -223,11 +225,12 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   for (iter = done_jobs_.begin(); iter != done_jobs_.end();) {
     iter->second.remove(cm->job_id().elem());
     if (iter->second.size() == 0)
-      done_jobs_.erase(iter++);
+      // done_jobs_.erase(iter++);
+      ++iter;
     else
       ++iter;
   }
-  if (cm->after_set().size() != 0)
+  // if (cm->after_set().size() != 0)
     done_jobs_[cm->job_id().elem()] = cm->after_set();
 }
 
@@ -341,6 +344,8 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_.push_back(new RemoteCopySendCommand());
   scheduler_command_table_.push_back(new RemoteCopyReceiveCommand());
   scheduler_command_table_.push_back(new LocalCopyCommand());
+  scheduler_command_table_.push_back(new LdoAddCommand());
+  scheduler_command_table_.push_back(new LdoRemoveCommand());
 }
 
 void Worker::AddData(Data* data) {

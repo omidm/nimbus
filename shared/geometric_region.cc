@@ -40,6 +40,9 @@
  ***********************************************************************/
 #include "shared/geometric_region.h"
 
+using boost::tokenizer;
+using boost::char_separator;
+
 namespace nimbus {
 
   GeometricRegion::GeometricRegion() {
@@ -275,6 +278,92 @@ std::string GeometricRegion::toString() {
            x_, y_, z_, dx_, dy_, dz_);
   str += buf;
   return str;
+}
+
+bool GeometricRegion::Parse(const std::string& input) {
+  std::string header = "bbox:";
+  if (input.substr(0, header.size()) != header) {
+    std::cout << "ERROR: wrong format for GeometricRegion" << std::endl;
+    return false;
+  }
+
+  int num = 6;
+  std::string str = input.substr(header.size());
+  char_separator<char> separator(",");
+  tokenizer<char_separator<char> > tokens(str, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: GeometricRegion has only " << i <<
+        " fields (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: GeometricRegion has more than "<<
+      num << " fields." << std::endl;
+    return false;
+  }
+
+  int_dimension_t dim;
+
+  iter = tokens.begin();
+  std::stringstream ss_x(*iter);
+  ss_x >> dim;
+  if (ss_x.fail()) {
+    std::cout << "ERROR: wrong element in bbox." << std::endl;
+    return false;
+  }
+  x_ = dim;
+
+  iter++;
+  std::stringstream ss_y(*iter);
+  ss_y >> dim;
+  if (ss_y.fail()) {
+    std::cout << "ERROR: wrong element in bbox." << std::endl;
+    return false;
+  }
+  y_ = dim;
+
+  iter++;
+  std::stringstream ss_z(*iter);
+  ss_z >> dim;
+  if (ss_z.fail()) {
+    std::cout << "ERROR: wrong element in bbox." << std::endl;
+    return false;
+  }
+  z_ = dim;
+
+  iter++;
+  std::stringstream ss_dx(*iter);
+  ss_dx >> dim;
+  if (ss_dx.fail()) {
+    std::cout << "ERROR: wrong element in bbox." << std::endl;
+    return false;
+  }
+  dx_ = dim;
+
+  iter++;
+  std::stringstream ss_dy(*iter);
+  ss_dy >> dim;
+  if (ss_dy.fail()) {
+    std::cout << "ERROR: wrong element in bbox." << std::endl;
+    return false;
+  }
+  dy_ = dim;
+
+  iter++;
+  std::stringstream ss_dz(*iter);
+  ss_dz >> dim;
+  if (ss_dz.fail()) {
+    std::cout << "ERROR: wrong element in bbox." << std::endl;
+    return false;
+  }
+  dz_ = dim;
+
+  return true;
 }
 
 }  // namespace nimbus

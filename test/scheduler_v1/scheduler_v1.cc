@@ -43,6 +43,7 @@ SchedulerV1::SchedulerV1(unsigned int p)
 : Scheduler(p) {
 }
 
+/*
 void SchedulerV1::SchedulerCoreProcessor() {
   while (true) {
     std::cout << "OMID" << std::endl;
@@ -71,10 +72,8 @@ void SchedulerV1::SchedulerCoreProcessor() {
     data_manager_->InstancesByWorker(ldo, 3, &pv);
     std::cout << pv.size() << std::endl;
 
-
-
-
     sleep(10);
   }
 }
+*/
 

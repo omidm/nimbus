@@ -65,8 +65,44 @@ SchedulerCommand* DefinePartitionCommand::Clone() {
 }
 
 bool DefinePartitionCommand::Parse(const std::string& params) {
-  std::cout << "WARNING: Has not been built yet!" << std::endl;
-  return false;
+  int num = 3;
+
+  char_separator<char> separator(" \n\t\r");
+  tokenizer<char_separator<char> > tokens(params, separator);
+  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+  for (int i = 0; i < num; i++) {
+    if (iter == tokens.end()) {
+      std::cout << "ERROR: DefinePartitionCommand has only " << i <<
+        " parameters (expected " << num << ")." << std::endl;
+      return false;
+    }
+    iter++;
+  }
+  if (iter != tokens.end()) {
+    std::cout << "ERROR: DefinePartitionCommand has more than "<<
+      num << " parameters." << std::endl;
+    return false;
+  }
+
+  iter = tokens.begin();
+  if (!id_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid partition id." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!region_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid region." << std::endl;
+    return false;
+  }
+
+  iter++;
+  if (!params_.Parse(*iter)) {
+    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
+    return false;
+  }
+
+  return true;
 }
 
 std::string DefinePartitionCommand::toString() {
