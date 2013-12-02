@@ -44,7 +44,7 @@
 #include "worker/application.h"
 #include "worker/job.h"
 #include "worker/data.h"
-#include "protocol_buffer/vector_msg.pb.h"
+#include "protocol_buffer/Sparse_Matrix_Float.pb.h"
 #define LEN 4
 #define DESIRED_ITERATIONS 100
 #define GLOBAL_TOLERANCE 1e-3
@@ -112,24 +112,20 @@ class Global_Max_Abs : public Job {
         virtual Job* Clone();
 };
 
-class Vec : public Data {
-  public:
-    explicit Vec(int size);
-    virtual ~Vec();
+class Sparse_Matrix : public Data {
+public:
+	explicit Sparse_Matrix();
+	virtual ~Sparse_Matrix();
 
-    virtual void Create();
-    virtual void Destroy();
-    virtual Data * Clone();
-    virtual void Copy(Data* from);
-    virtual bool Serialize(SerializedData* ser_data);
-    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
+	virtual void Create();
+	virtual void Destroy();
+	virtual Data * Clone();
+	virtual void Copy(Data* from);
+	virtual bool Serialize(SerializedData* ser_data);
+	virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-    int size();
-    T* arr();
-
-  private:
-    int size_;
-    T *arr_;
+public:
+	SPARSE_MATRIX_FLAT_NXN<float>* matrix_;
 };
 
 #endif
