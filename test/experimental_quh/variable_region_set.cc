@@ -157,7 +157,9 @@ bool VariableRegionSet::IntersectsImpl(
     const VariableRegionSet& vrs, bool remove_mode) {
   bool result = false;
   VarRegionList::iterator origin = _var_region_list.begin();
+  bool flag;
   while (origin != _var_region_list.end()) {
+    flag = true;
     for (VarRegionList::iterator target
             = (const_cast<VariableRegionSet*> (&vrs))->_var_region_list.begin();
          target != vrs._var_region_list.end();
@@ -169,12 +171,13 @@ bool VariableRegionSet::IntersectsImpl(
         if (!target->second.Covers(&origin->second)) {
           AddRegionHelper(origin->first, origin->second, target->second);
         }
-        VarRegionList::iterator temp = origin;
-        origin++;
-        _var_region_list.erase(temp);
-        continue;
+        origin = _var_region_list.erase(origin);
+        flag = false;
+        break;
       }  // end if
-    origin++;
+    if (flag) {
+      origin++;
+    }
   }  // end while
   return result;
 }

@@ -38,8 +38,8 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef QUERY_TEST_ENGINE_H_
-#define QUERY_TEST_ENGINE_H_
+#ifndef QUERY_TEST_ENGINE_H_  // NOLINT
+#define QUERY_TEST_ENGINE_H_  // NOLINT
 
 #include <list>
 #include <string>
@@ -101,4 +101,4 @@ class QueryTestEngine {
 
 }  // namespace nimbus
 
-#endif  // QUERY_TEST_ENGINE_H_
+#endif  // QUERY_TEST_ENGINE_H_  // NOLINT

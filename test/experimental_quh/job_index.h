@@ -45,8 +45,8 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef JOB_INDEX_H_
-#define JOB_INDEX_H_
+#ifndef JOB_INDEX_H_  // NOLINT
+#define JOB_INDEX_H_  // NOLINT
 
 #include <list>
 #include "shared/idset.h"
@@ -86,4 +86,4 @@ class JobIndex {
 
 }  // namespace nimbus
 
-#endif  // JOB_INDEX_H_
+#endif  // JOB_INDEX_H_  // NOLINT

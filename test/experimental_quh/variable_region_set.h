@@ -43,8 +43,8 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef VARIABLE_REGION_SET_H_
-#define VARIABLE_REGION_SET_H_
+#ifndef VARIABLE_REGION_SET_H_  // NOLINT
+#define VARIABLE_REGION_SET_H_  // NOLINT
 
 #include <list>
 #include <string>
@@ -98,4 +98,4 @@ VariableRegionSet operator+(
     const VariableRegionSet& right_vrs);
 
 }  // namespace nimbus
-#endif  // VARIABLE_REGION_SET_H_
+#endif  // VARIABLE_REGION_SET_H_  // NOLINT
