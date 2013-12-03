@@ -1,0 +1,39 @@
+digraph Workflow {
+	node1000 [label="Calc rho: 0"];
+	node1001 [label="Calc rho: 1"];
+	node1002 [label="Calc rho: 2"];
+	node1003 [label="Collect rho: 9"];
+	node1002->node1003
+	node1001->node1003
+	node1000->node1003
+	node1004 [label="Update vec: 0"];
+	node1003->node1004
+	node1005 [label="Update vec: 1"];
+	node1003->node1005
+	node1006 [label="Update vec: 2"];
+	node1003->node1006
+	node1007 [label="Calc tao: 0"];
+	node1005->node1007
+	node1004->node1007
+	node1008 [label="Calc tao: 1"];
+	node1006->node1008
+	node1005->node1008
+	node1004->node1008
+	node1009 [label="Calc tao: 2"];
+	node1006->node1009
+	node1005->node1009
+	node1010 [label="Collect tao: 9"];
+	node1009->node1010
+	node1008->node1010
+	node1007->node1010
+	node1011 [label="Calc norm: 0"];
+	node1010->node1011
+	node1012 [label="Calc norm: 1"];
+	node1010->node1012
+	node1013 [label="Calc norm: 2"];
+	node1010->node1013
+	node1014 [label="Collect norm: 9"];
+	node1013->node1014
+	node1012->node1014
+	node1011->node1014
+}
