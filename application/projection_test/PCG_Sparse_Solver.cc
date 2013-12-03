@@ -46,6 +46,7 @@ using PhysBAM_Protocol::Sparse_Matrix_Float;
 using PhysBAM_Protocol::Int_Array;
 using PhysBAM_Protocol::Sparse_Matrix_Entry_Float_Array;
 using PhysBAM_Protocol::Sparse_Matrix_Entry_Float;
+using PhysBAM_Protocol::Vector_Float;
 
 Sparse_Matrix::Sparse_Matrix() {
 	//matrix_ = matrix;
@@ -68,35 +69,18 @@ void Sparse_Matrix::Destroy() {
 };
 
 void Sparse_Matrix::Copy(Data* from) {
+	printf("Copying Sparse_Matrix data!\n");
 	Sparse_Matrix *d = reinterpret_cast<Sparse_Matrix*>(from);	
 	matrix_->n = d->matrix_->n;
 	matrix_->offsets = ARRAY<int>(d->matrix_->offsets.m);
 	for (int i = 1; i <= matrix_->offsets.m; i++) {
 		matrix_->offsets(i) = d->matrix_->offsets(i);
-		printf("Checkpoint #3, offsets(%d) = %d\n", i, d->matrix_->offsets(i));
 	}
 	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->matrix_->A.m);
 	for (int i = 1; i <= matrix_->A.m; i++) {
 		matrix_->A(i).j = d->matrix_->A(i).j;
 		matrix_->A(i).a = d->matrix_->A(i).a;
 	}
-	/*
-	printf("Checkpoint #1\n");
-	matrix_->n = d->n();
-	printf("Checkpoint #2, n = %d\n", d->n());
-	matrix_->offsets = ARRAY<int>(d->offsets().m());
-	printf("Checkpoint #3\n");
-	for (int i = 1; i <= matrix_->offsets.m; i++) 
-		matrix_->offsets(i) = d->offsets().elem(i); 
-	printf("Checkpoint #4\n");
-	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->a().m());
-	printf("Checkpoint #5\n");
-	for (int i = 1; i <= matrix_->A.m; i++) {
-		matrix_->A(i).j = d->a().elem(i).j();
-		matrix_->A(i).a = d->a().elem(i).a();
-	}
-	printf("Checkpoint #6\n");
-	*/
 };
 
 bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
@@ -117,7 +101,6 @@ bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
 	std::string str;
 	msg_SparseMatrix.SerializeToString(&str);
 	char* ptr = new char[str.length()];
-	for (unsigned i = 0; i < str.length(); i++) printf("str[%u] = %u\n", i, (unsigned) str[i]);
 	memcpy(ptr, str.c_str(), str.length());
 	ser_data->set_data_ptr(ptr);
 	ser_data->set_size(str.length());
@@ -156,6 +139,65 @@ bool Sparse_Matrix::DeSerialize(const SerializedData& ser_data, Data** result) {
 	return true;
 };
 
+PCG_Vector::PCG_Vector() {	
+};
+
+PCG_Vector::~PCG_Vector() {
+};
+
+Data * PCG_Vector::Clone() {
+	std::cout << "Cloning Vector data!\n";
+	return new PCG_Vector();
+};
+
+void PCG_Vector::Create() {
+	vec_ = new VECTOR_ND<float>();
+};
+
+void PCG_Vector::Destroy() {
+	delete vec_;
+};
+
+void PCG_Vector::Copy(Data* from) {
+	printf("Copying Vector data!\n");
+	PCG_Vector *d = reinterpret_cast<PCG_Vector*>(from);	
+	vec_ = new VECTOR_ND<float>(d->vec_->n);
+	for (int i = 1; i <= d->vec_->n; i++) {
+		vec_->x[i-1] = d->vec_->x[i-1];
+	}
+};
+
+bool PCG_Vector::Serialize(SerializedData* ser_data) {
+	Vector_Float msg_Vector;
+	msg_Vector.set_n(vec_->n);
+	for (int i = 1; i <= vec_->n; i++) {
+		msg_Vector.add_elem(vec_->x[i-1]);
+	}
+	std::string str;
+	msg_Vector.SerializeToString(&str);
+	char* ptr = new char[str.length()];
+	memcpy(ptr, str.c_str(), str.length());
+	ser_data->set_data_ptr(ptr);
+	ser_data->set_size(str.length());
+	Sparse_Matrix_Float msg;
+	msg.ParseFromString(str);
+	return true;
+};
+
+bool PCG_Vector::DeSerialize(const SerializedData& ser_data, Data** result) {
+	Vector_Float msg_Vector;
+	std::string str(ser_data.data_ptr_raw(), ser_data.size());
+	msg_Vector.ParseFromString(str);
+	PCG_Vector* vector = new PCG_Vector();
+	vector->Create();
+	vector->vec_ = new VECTOR_ND<float>(msg_Vector.n());
+	for (int i = 1; i <= msg_Vector.n(); i++) {
+		vector->vec_->x[i-1] = msg_Vector.elem(i-1);
+	}
+
+	*result = vector;
+	return true;
+};
 
 Init::Init(Application *app) {
 	set_application(app);
