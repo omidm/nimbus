@@ -45,6 +45,7 @@
 #include "worker/job.h"
 #include "worker/data.h"
 #include "protocol_buffer/Sparse_Matrix_Float.pb.h"
+#include "protocol_buffer/Vector_Float.pb.h"
 #define LEN 4
 #define DESIRED_ITERATIONS 100
 #define GLOBAL_TOLERANCE 1e-3
