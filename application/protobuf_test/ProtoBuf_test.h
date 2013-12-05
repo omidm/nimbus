@@ -43,7 +43,8 @@
 #include "worker/application.h"
 #include "worker/job.h"
 #include "worker/data.h"
-#include "../protocol_buffer/Sparse_Matrix_Float.pb.h"
+#include "protocol_buffer/Sparse_Matrix_Float.pb.h"
+#include "protocol_buffer/Vector_Float.pb.h"
 #include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
 
@@ -94,6 +95,22 @@ public:
 
 public:
 	SPARSE_MATRIX_FLAT_NXN<float>* matrix_;
+};
+
+class PCG_Vector : public Data {
+public:
+	explicit PCG_Vector();
+	virtual ~PCG_Vector();
+
+	virtual void Create();
+	virtual void Destroy();
+	virtual Data * Clone();
+	virtual void Copy(Data* from);
+	virtual bool Serialize(SerializedData* ser_data);
+	virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
+
+public:
+	VECTOR_ND<float>* vec_;
 };
 
 #endif

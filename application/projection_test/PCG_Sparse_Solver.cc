@@ -36,73 +36,168 @@
  */
 
 #include "shared/nimbus.h"
-#include "projection_app.h"
+#include "PCG_Sparse_Solver.h"
 
 using nimbus::Data;
 using nimbus::Job;
 using nimbus::Application;
 
-using vector_msg::VectorMsg;
+using PhysBAM_Protocol::Sparse_Matrix_Float;
+using PhysBAM_Protocol::Int_Array;
+using PhysBAM_Protocol::Sparse_Matrix_Entry_Float_Array;
+using PhysBAM_Protocol::Sparse_Matrix_Entry_Float;
+using PhysBAM_Protocol::Vector_Float;
 
-Vec::Vec(int size) {
-  size_ = size;
+Sparse_Matrix::Sparse_Matrix() {
+	//matrix_ = matrix;
 };
 
-Vec::~Vec() {
+Sparse_Matrix::~Sparse_Matrix() {
 };
 
-Data * Vec::Clone() {
-  std::cout << "Cloning Vec data!\n";
-  return new Vec(size_);
+Data * Sparse_Matrix::Clone() {
+	std::cout << "Cloning Sparse_Matrix data!\n";
+	return new Sparse_Matrix();
 };
 
-void Vec::Create() {
-  arr_ = new T[size_];
+void Sparse_Matrix::Create() {
+	matrix_ = new SPARSE_MATRIX_FLAT_NXN<float>();
 };
 
-void Vec::Destroy() {
-  delete arr_;
+void Sparse_Matrix::Destroy() {
+	delete matrix_;
 };
 
-void Vec::Copy(Data* from) {
-  Vec *d = reinterpret_cast<Vec*>(from);
-  for (int i = 0; i < size_; i++)
-    arr_[i] = d->arr()[i];
-}
+void Sparse_Matrix::Copy(Data* from) {
+	printf("Copying Sparse_Matrix data!\n");
+	Sparse_Matrix *d = reinterpret_cast<Sparse_Matrix*>(from);	
+	matrix_->n = d->matrix_->n;
+	matrix_->offsets = ARRAY<int>(d->matrix_->offsets.m);
+	for (int i = 1; i <= matrix_->offsets.m; i++) {
+		matrix_->offsets(i) = d->matrix_->offsets(i);
+	}
+	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->matrix_->A.m);
+	for (int i = 1; i <= matrix_->A.m; i++) {
+		matrix_->A(i).j = d->matrix_->A(i).j;
+		matrix_->A(i).a = d->matrix_->A(i).a;
+	}
+};
 
-bool Vec::Serialize(SerializedData* ser_data) {
-  VectorMsg vec_msg;
-  for (int i = 0; i < size_; i++)
-    vec_msg.add_elem(arr_[i]);
-  std::string str;
-  vec_msg.SerializeToString(&str);
-  char* ptr = new char[str.length()];
-  memcpy(ptr, str.c_str(), str.length());
-  ser_data->set_data_ptr(ptr);
-  ser_data->set_size(str.length());
-  return true;
-}
+bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
+	Sparse_Matrix_Float msg_SparseMatrix;
+	msg_SparseMatrix.set_n(matrix_->n);
+	Int_Array* msg_IntArray = msg_SparseMatrix.mutable_offsets();
+	msg_IntArray->set_m(matrix_->offsets.m);
+	for (int i = 1;i <= matrix_->offsets.m; i++) {
+		msg_IntArray->add_elem(matrix_->offsets(i));
+	}
+	Sparse_Matrix_Entry_Float_Array* msg_EntryArray = msg_SparseMatrix.mutable_a();
+	msg_EntryArray->set_m(matrix_->A.m);
+	for (int i = 1; i <= matrix_->A.m; i++) {
+		Sparse_Matrix_Entry_Float* entry = msg_EntryArray->add_elem();		
+		entry->set_j(matrix_->A(i).j);
+		entry->set_a(matrix_->A(i).a);
+	}
+	std::string str;
+	msg_SparseMatrix.SerializeToString(&str);
+	char* ptr = new char[str.length()];
+	memcpy(ptr, str.c_str(), str.length());
+	ser_data->set_data_ptr(ptr);
+	ser_data->set_size(str.length());
+	Sparse_Matrix_Float msg;
+	msg.ParseFromString(str);
+	return true;
+};
 
-bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
-  VectorMsg vec_msg;
-  std::string str(ser_data.data_ptr_raw(), ser_data.size());
-  vec_msg.ParseFromString(str);
-  Vec* vec = new Vec(size_);
-  vec->Create();
-  for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
-     vec->arr()[i] = vec_msg.elem(i);
+bool Sparse_Matrix::DeSerialize(const SerializedData& ser_data, Data** result) {
+	Sparse_Matrix_Float msg_SparseMatrix;
+	std::string str(ser_data.data_ptr_raw(), ser_data.size());
+	msg_SparseMatrix.ParseFromString(str);
+	Sparse_Matrix* sparseM = new Sparse_Matrix();
+	sparseM->Create();
+	sparseM->matrix_->n = msg_SparseMatrix.n();
+	int _size;
+	if (msg_SparseMatrix.has_offsets())
+		_size = msg_SparseMatrix.offsets().m();
+	else
+		_size = 0;
+	sparseM->matrix_->offsets = ARRAY<int>(_size);
+	for (int i = 1; i <= _size; i++)
+		sparseM->matrix_->offsets(i) = msg_SparseMatrix.offsets().elem(i-1);
+	
+	if (msg_SparseMatrix.has_a())
+		_size = msg_SparseMatrix.a().m();
+	else
+		_size = 0;
+	sparseM->matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(_size);
+	for (int i = 1; i <= _size; i++) {
+		sparseM->matrix_->A(i).j = msg_SparseMatrix.a().elem(i-1).j();
+		sparseM->matrix_->A(i).a = msg_SparseMatrix.a().elem(i-1).a();
+	}
 
-  *result = vec;
-  return true;
-}
+	*result = sparseM;
+	return true;
+};
 
-int Vec::size() {
-  return size_;
-}
+PCG_Vector::PCG_Vector() {	
+};
 
-T* Vec::arr() {
-  return arr_;
-}
+PCG_Vector::~PCG_Vector() {
+};
+
+Data * PCG_Vector::Clone() {
+	std::cout << "Cloning Vector data!\n";
+	return new PCG_Vector();
+};
+
+void PCG_Vector::Create() {
+	vec_ = new VECTOR_ND<float>();
+};
+
+void PCG_Vector::Destroy() {
+	delete vec_;
+};
+
+void PCG_Vector::Copy(Data* from) {
+	printf("Copying Vector data!\n");
+	PCG_Vector *d = reinterpret_cast<PCG_Vector*>(from);	
+	vec_ = new VECTOR_ND<float>(d->vec_->n);
+	for (int i = 1; i <= d->vec_->n; i++) {
+		vec_->x[i-1] = d->vec_->x[i-1];
+	}
+};
+
+bool PCG_Vector::Serialize(SerializedData* ser_data) {
+	Vector_Float msg_Vector;
+	msg_Vector.set_n(vec_->n);
+	for (int i = 1; i <= vec_->n; i++) {
+		msg_Vector.add_elem(vec_->x[i-1]);
+	}
+	std::string str;
+	msg_Vector.SerializeToString(&str);
+	char* ptr = new char[str.length()];
+	memcpy(ptr, str.c_str(), str.length());
+	ser_data->set_data_ptr(ptr);
+	ser_data->set_size(str.length());
+	Sparse_Matrix_Float msg;
+	msg.ParseFromString(str);
+	return true;
+};
+
+bool PCG_Vector::DeSerialize(const SerializedData& ser_data, Data** result) {
+	Vector_Float msg_Vector;
+	std::string str(ser_data.data_ptr_raw(), ser_data.size());
+	msg_Vector.ParseFromString(str);
+	PCG_Vector* vector = new PCG_Vector();
+	vector->Create();
+	vector->vec_ = new VECTOR_ND<float>(msg_Vector.n());
+	for (int i = 1; i <= msg_Vector.n(); i++) {
+		vector->vec_->x[i-1] = msg_Vector.elem(i-1);
+	}
+
+	*result = vector;
+	return true;
+};
 
 Init::Init(Application *app) {
 	set_application(app);
@@ -132,14 +227,12 @@ void Init::Execute(Parameter params, const DataArray& da) {
 
 Project_Forloop_Condition::Project_Forloop_Condition(Application* app) {
 	set_application(app);
-}
-;
+};
 
 Job * Project_Forloop_Condition::Clone() {
 	std::cout << "Cloning Project_Forloop_Condition job!\n";
 	return new Project_Forloop_Condition(application());
-}
-;
+};
 
 void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input_data) {
 	std::cout << "Executing the Project_Forloop_Condition job\n";

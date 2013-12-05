@@ -310,7 +310,8 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     if (job->versioned() && !job->assigned()) {
       JobEntry::VersionTable version_table = job->version_table();
       if (version_table.count(vld.first) != 0) {
-        if (version_table[vld.first] == vld.second) {
+        if ((version_table[vld.first] == vld.second) &&
+            (job->union_set().contains(vld.first))) {
           list->push_back(job);
           ++num;
         }

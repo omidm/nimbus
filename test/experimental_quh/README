@@ -1,0 +1,10 @@
+Author: Hang Qu <quhang@stanford.edu>
+
+Experimental code to test the idea of job query.
+The indexing database is built up by job_index.cc[h] and variable_region_set.cc[h].
+Other classes are mostly for experimenting.
+
+Now the code can dump a graph for the job workflow of projection inner loop:
+
+>> sudo apt-get install graphviz
+>> ./draw.sh

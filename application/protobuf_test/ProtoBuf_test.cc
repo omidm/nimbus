@@ -41,6 +41,7 @@ using PhysBAM_Protocol::Sparse_Matrix_Float;
 using PhysBAM_Protocol::Int_Array;
 using PhysBAM_Protocol::Sparse_Matrix_Entry_Float_Array;
 using PhysBAM_Protocol::Sparse_Matrix_Entry_Float;
+using PhysBAM_Protocol::Vector_Float;
 
 Sparse_Matrix::Sparse_Matrix() {
 	//matrix_ = matrix;
@@ -63,44 +64,61 @@ void Sparse_Matrix::Destroy() {
 };
 
 void Sparse_Matrix::Copy(Data* from) {
-	Sparse_Matrix_Float *d = reinterpret_cast<Sparse_Matrix_Float*>(from);	
+	printf("Copying Sparse_Matrix data!\n");
+	Sparse_Matrix *d = reinterpret_cast<Sparse_Matrix*>(from);	
+	matrix_->n = d->matrix_->n;
+	matrix_->offsets = ARRAY<int>(d->matrix_->offsets.m);
+	for (int i = 1; i <= matrix_->offsets.m; i++) {
+		matrix_->offsets(i) = d->matrix_->offsets(i);
+		printf("Checkpoint #3, offsets(%d) = %d\n", i, d->matrix_->offsets(i));
+	}
+	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->matrix_->A.m);
+	for (int i = 1; i <= matrix_->A.m; i++) {
+		matrix_->A(i).j = d->matrix_->A(i).j;
+		matrix_->A(i).a = d->matrix_->A(i).a;
+	}
+	/*
+	printf("Checkpoint #1\n");
 	matrix_->n = d->n();
+	printf("Checkpoint #2, n = %d\n", d->n());
 	matrix_->offsets = ARRAY<int>(d->offsets().m());
+	printf("Checkpoint #3\n");
 	for (int i = 1; i <= matrix_->offsets.m; i++) 
 		matrix_->offsets(i) = d->offsets().elem(i); 
+	printf("Checkpoint #4\n");
 	matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(d->a().m());
+	printf("Checkpoint #5\n");
 	for (int i = 1; i <= matrix_->A.m; i++) {
 		matrix_->A(i).j = d->a().elem(i).j();
 		matrix_->A(i).a = d->a().elem(i).a();
 	}
+	printf("Checkpoint #6\n");
+	*/
 };
 
 bool Sparse_Matrix::Serialize(SerializedData* ser_data) {
 	Sparse_Matrix_Float msg_SparseMatrix;
 	msg_SparseMatrix.set_n(matrix_->n);
-	
-	Int_Array msg_IntArray;
-	msg_IntArray.set_m(matrix_->offsets.m);
+	Int_Array* msg_IntArray = msg_SparseMatrix.mutable_offsets();
+	msg_IntArray->set_m(matrix_->offsets.m);
 	for (int i = 1;i <= matrix_->offsets.m; i++) {
-		msg_IntArray.add_elem(matrix_->offsets(i));
+		msg_IntArray->add_elem(matrix_->offsets(i));
 	}
-	msg_SparseMatrix.set_allocated_offsets(&msg_IntArray);
-	
-	Sparse_Matrix_Entry_Float_Array msg_EntryArray;
-	msg_EntryArray.set_m(matrix_->A.m);
+	Sparse_Matrix_Entry_Float_Array* msg_EntryArray = msg_SparseMatrix.mutable_a();
+	msg_EntryArray->set_m(matrix_->A.m);
 	for (int i = 1; i <= matrix_->A.m; i++) {
-		Sparse_Matrix_Entry_Float* entry = msg_EntryArray.add_elem();		
+		Sparse_Matrix_Entry_Float* entry = msg_EntryArray->add_elem();		
 		entry->set_j(matrix_->A(i).j);
 		entry->set_a(matrix_->A(i).a);
 	}
-	msg_SparseMatrix.set_allocated_a(&msg_EntryArray);
-	
 	std::string str;
 	msg_SparseMatrix.SerializeToString(&str);
 	char* ptr = new char[str.length()];
 	memcpy(ptr, str.c_str(), str.length());
 	ser_data->set_data_ptr(ptr);
 	ser_data->set_size(str.length());
+	Sparse_Matrix_Float msg;
+	msg.ParseFromString(str);
 	return true;
 };
 
@@ -134,6 +152,66 @@ bool Sparse_Matrix::DeSerialize(const SerializedData& ser_data, Data** result) {
 	return true;
 };
 
+PCG_Vector::PCG_Vector() {	
+};
+
+PCG_Vector::~PCG_Vector() {
+};
+
+Data * PCG_Vector::Clone() {
+	std::cout << "Cloning Vector data!\n";
+	return new PCG_Vector();
+};
+
+void PCG_Vector::Create() {
+	vec_ = new VECTOR_ND<float>();
+};
+
+void PCG_Vector::Destroy() {
+	delete vec_;
+};
+
+void PCG_Vector::Copy(Data* from) {
+	printf("Copying Vector data!\n");
+	PCG_Vector *d = reinterpret_cast<PCG_Vector*>(from);	
+	vec_ = new VECTOR_ND<float>(d->vec_->n);
+	for (int i = 1; i <= d->vec_->n; i++) {
+		vec_->x[i-1] = d->vec_->x[i-1];
+	}
+};
+
+bool PCG_Vector::Serialize(SerializedData* ser_data) {
+	Vector_Float msg_Vector;
+	msg_Vector.set_n(vec_->n);
+	for (int i = 1; i <= vec_->n; i++) {
+		msg_Vector.add_elem(vec_->x[i-1]);
+	}
+	std::string str;
+	msg_Vector.SerializeToString(&str);
+	char* ptr = new char[str.length()];
+	memcpy(ptr, str.c_str(), str.length());
+	ser_data->set_data_ptr(ptr);
+	ser_data->set_size(str.length());
+	Sparse_Matrix_Float msg;
+	msg.ParseFromString(str);
+	return true;
+};
+
+bool PCG_Vector::DeSerialize(const SerializedData& ser_data, Data** result) {
+	Vector_Float msg_Vector;
+	std::string str(ser_data.data_ptr_raw(), ser_data.size());
+	msg_Vector.ParseFromString(str);
+	PCG_Vector* vector = new PCG_Vector();
+	vector->Create();
+	vector->vec_ = new VECTOR_ND<float>(msg_Vector.n());
+	for (int i = 1; i <= msg_Vector.n(); i++) {
+		vector->vec_->x[i-1] = msg_Vector.elem(i-1);
+	}
+
+	*result = vector;
+	return true;
+};
+
 TestApp::TestApp() {
 }
 ;
@@ -148,6 +226,7 @@ void TestApp::Load() {
 	RegisterJob("verify", new Verification(this));	
 
 	RegisterData("matrix", new Sparse_Matrix());
+	RegisterData("vector", new PCG_Vector());
 
 	printf("Finished creating job and data definitions\n");
 }
@@ -173,27 +252,33 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
-	GetNewJobID(&j, 3);
-	GetNewLogicalDataID(&d, 2);
+	GetNewJobID(&j, 4);
+	GetNewLogicalDataID(&d, 4);
 	
 	DefineData("matrix", d[0], p_1, neighbor_partitions, par);
 	DefineData("matrix", d[1], p_2, neighbor_partitions, par);
+	DefineData("vector", d[2], p_1, neighbor_partitions, par);
+	DefineData("vector", d[3], p_2, neighbor_partitions, par);
 	
 	read.clear();
-	write.clear();write.insert(d[0]);
+	write.clear();write.insert(d[0]);write.insert(d[2]);
 	before.clear();
-	after.clear();after.insert(j[1]);
+	after.clear();after.insert(j[1]);after.insert(j[2]);
 	SpawnComputeJob("init", j[0], read, write, before, after, par);
 	
 	before.clear();before.insert(j[0]);
-	after.clear();after.insert(j[2]);
+	after.clear();after.insert(j[3]);
 	SpawnCopyJob(j[1], d[0], d[1], before, after, par);
 	
-	read.clear();read.insert(d[1]);
+	before.clear();before.insert(j[0]);
+	after.clear();after.insert(j[3]);
+	SpawnCopyJob(j[2], d[2], d[3], before, after, par);
+	
+	read.clear();read.insert(d[1]);read.insert(d[3]);
 	write.clear();
-	before.clear();before.insert(j[1]);
+	before.clear();before.insert(j[1]);before.insert(j[2]);
 	after.clear();
-	SpawnComputeJob("verify", j[2], read, write, before, after, par);
+	SpawnComputeJob("verify", j[3], read, write, before, after, par);
 	printf("Completed Main\n");
 };
 
@@ -215,7 +300,12 @@ void Initialization::Execute(Parameter params, const DataArray& da) {
 		d->matrix_->offsets(i) = i;
 	d->matrix_->A = ARRAY<SPARSE_MATRIX_ENTRY<float> >(ARRAY_SIZE);
 	for (int i = 1; i <= ARRAY_SIZE; i++)
-		d->matrix_->A(i) = SPARSE_MATRIX_ENTRY<float>(i, i+0.5);		
+		d->matrix_->A(i) = SPARSE_MATRIX_ENTRY<float>(i, i+0.5);
+		
+	PCG_Vector *v = reinterpret_cast<PCG_Vector*>(da[1]);
+	v->vec_ = new VECTOR_ND<float>(ARRAY_SIZE);
+	for (int i = 1; i <= ARRAY_SIZE; i++)
+		v->vec_->x[i-1] =  2 * i;
 	printf("Completed Initialization\n");
 };
 
@@ -239,6 +329,12 @@ void Verification::Execute(Parameter params, const DataArray& da) {
 	printf("a.m = %d\n", d->matrix_->A.m);
 	for (int i = 1; i <= d->matrix_->A.m; i++)
 		printf("a(%d) = (%d, %f)\n", i, d->matrix_->A(i).j, d->matrix_->A(i).a);
+	
+	printf("========== Vector ==========\n");
+	PCG_Vector *v = reinterpret_cast<PCG_Vector*>(da[1]);
+	printf("n = %d\n", v->vec_->n);
+	for (int i = 1; i <= v->vec_->n; i++)
+		printf("vec(%d) = %f\n", i, v->vec_->x[i-1]);
 	
 	printf("Completed Verification\n");
 };
