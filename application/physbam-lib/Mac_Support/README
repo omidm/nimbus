@@ -1,0 +1,77 @@
+Author: Hang Qu <quhang@stanford.edu>
+
+Following the following steps, you can run PhysBAM water simulation and open2d/open3d viewer on OS X (10.8.5).
+
+
+1. Install packages.
+
+I use Homebrew "http://brew.sh/" for package installation.
+
+1.1. Install gcc 4.5
+
+You need to install gcc4.5:
+
+$ brew install gcc45.
+
+Notice: Homebrew will not change your default c++ compiler after installation. All the binaries, include files, and libraries will be stored user /usr/local/.
+
+1.2. Install external libraries.
+
+You need to install the following packages:
+
+$ brew install jpeg libpng fltk freeglut
+
+These are all libraries originally stored in External_Libraries/ directory. I use Homebrew to install them rather than compile them in External_Libraries/.
+
+1.3. Install other libraries.
+
+The following packages are also needed: x11, cmake, opemmpi. You might also use Homebrew to install it if you don't have them. Use brew search to find your missing packages.
+
+
+2. Change files.
+
+You need to overwrite several files using the ones in this directory. You can use this shell script.
+
+$ bash overwrite.sh
+
+The following files will be overwritten. The source code files are rewritten due to some incompatible reasons. And the CMake file is mostly changed to direct PhysBAM to find external libraries from Homebrew installation. After the change, the External_Libraries/ directory can be deleted if you want. You no more need them.
+
+#	modified:   ../physbam-app/opengl_2d/main.cpp
+#	modified:   Public_Library/CMakeLists.txt
+#	modified:   Public_Library/PhysBAM_Rendering/PhysBAM_OpenGL/OpenGL/OPENGL_AGL_PBUFFER.cpp
+#	modified:   Public_Library/PhysBAM_Rendering/PhysBAM_Ray_Tracing/Rendering/PHOTON_MAP.cpp
+#	modified:   Public_Library/PhysBAM_Solids/PhysBAM_Rigids/Parallel_Computation/THREADED_RIGIDS.h
+#	modified:   Public_Library/PhysBAM_Tools/Math_Tools/Is_NaN.h
+#	modified:   Public_Library/PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.cpp
+#	modified:   Scripts/CMake/Public_Library.cmake
+
+3. Build.
+
+After the changes, you can build PhysBAM library as normal. The BUILD_EXTERNAL_LIBRARIES option no more matters. External libraries will not be build any way.
+
+And when you build your own water application and opengl_2d/opengl_3d, you need to add these two lines to the very first of your CMakeList.txt to specify compiler.
+
+SET(CMAKE_C_COMPILER /usr/local/bin/gcc-4.5)
+SET(CMAKE_CXX_COMPILER /usr/local/bin/g++-4.5)
+
+You can add Public_Library to you .gitignore file in case Git complains that you made changes to the directory.
+
+4. Test.
+
+You can test whether your executable links the correct dynamic libraries. Here is the linking information of opengl_2d on my machine.
+
+$ dyldinfo -dylibs opengl_2d 
+attributes     dependent dylibs
+                /usr/local/lib/libpng15.15.dylib
+                /usr/local/lib/libmpi_cxx.1.dylib
+                /usr/lib/libz.1.dylib
+                /usr/local/lib/libmpi.1.dylib
+                /usr/lib/libSystem.B.dylib
+                /System/Library/Frameworks/AGL.framework/Versions/A/AGL
+                /System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL
+                /System/Library/Frameworks/GLUT.framework/Versions/A/GLUT
+                /usr/local/lib/gcc/x86_64-apple-darwin12.5.0/4.5.4/libstdc++.6.dylib
+                /usr/lib/libgcc_s.1.dylib
+                /usr/local/Cellar/gcc45/4.5.4/lib/gcc/x86_64-apple-darwin12.5.0/4.5.4/libgcc_s.1.dylib
+
+Feel free to ask me if you cannot make it run.
