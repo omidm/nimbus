@@ -219,8 +219,8 @@ PrepareForOneRegion() {
     comm=&(*laplace->laplace_mpi->communicators)(color);
     pcg_mpi = new NIMBUS_PCG_SPARSE_MPI<GRID<TV> >(
 	laplace->laplace_mpi->local_pcg,*comm,laplace->laplace_mpi->partitions(color));
-    pcg_mpi->thread_grid=laplace->mpi_grid->threaded_grid;
-    pcg_mpi->mpi_threaded_grid=laplace->mpi_grid->mpi_threaded_grid;
+    //pcg_mpi->thread_grid=laplace->mpi_grid->threaded_grid;
+    //pcg_mpi->mpi_threaded_grid=laplace->mpi_grid->mpi_threaded_grid;
 
     // pcg_mpi.Parallel_Solve(A,x,b,laplace->tolerance);
     projection_data->tolerance = laplace->tolerance;

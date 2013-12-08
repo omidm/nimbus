@@ -40,24 +40,29 @@
 #include "shared/nimbus_types.h"
 #include "worker/application.h"
 
-#include "application/test_quhang/projection/app.h"
+#include "application/projection-two-worker/app.h"
 
 int main(int argc, char *argv[]) {
   port_t listening_port;
+  int rankID = 0;
   if (argc < 2) {
     std::cout << "ERROR: provide an integer (1 to 4)." <<
       std::endl;
     exit(-1);
   }
   if (*argv[1] == '1') {
+    rankID = 1;
     std::cout << "1" << std::endl;
     listening_port = WORKER_PORT_1;
   } else if (*argv[1] == '2') {
+    rankID = 2;
     std::cout << "2" << std::endl;
     listening_port = WORKER_PORT_2;
   } else if (*argv[1] == '3') {
+    rankID = 3;
     listening_port = WORKER_PORT_3;
   } else if (*argv[1] == '4') {
+    rankID = 4;
     listening_port = WORKER_PORT_4;
   } else {
     std::cout << "ERROR: argument should be an integer (1 to 4)." <<
@@ -66,7 +71,7 @@ int main(int argc, char *argv[]) {
   }
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
-  App *app = new App();
+  App *app = new App(rankID);
   SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
       NIMBUS_SCHEDULER_PORT, listening_port, app);
   w->Run();
