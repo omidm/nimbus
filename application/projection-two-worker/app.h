@@ -32,8 +32,7 @@ class App : public Application {
   PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver;
   // The PhysBAM mpi handler for communication, expected to be removed in 
   // the future.
-  int _rankID;
-  PhysBAM::MPI_WORLD* app_mpi_world;
+  int _rankID;  
 };
 
 // "ProfileData" contains nothing for now.

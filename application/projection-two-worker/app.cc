@@ -56,7 +56,7 @@ void App::InitMain(int argc, char* argv[]) {
 
 	LOG::Initialize_Logging(false, false, 1<<30, true,
 			parse_args.Get_Integer_Value("-threads"));
-	app_mpi_world = new MPI_WORLD(argc, argv);
+	new MPI_WORLD(argc, argv);
 
 	parse_args.Parse(argc, argv);
 	parse_args.Print_Arguments(argc, argv);
@@ -75,13 +75,13 @@ void App::InitMain(int argc, char* argv[]) {
 	example->restart=parse_args.Get_Integer_Value("-restart");
 	example->write_substeps_level=parse_args.Get_Integer_Value("-substep");
 
-//	if (app_mpi_world->initialized) {
-		example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3);
-		if (example->mpi_grid->Number_Of_Processors()>1)
-			example->output_directory+=STRING_UTILITIES::string_sprintf(
-					"_NP%d/%d", example->mpi_grid->Number_Of_Processors(),
-					_rankID);
-//	}
+
+	example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3);
+	if (example->mpi_grid->Number_Of_Processors()>1)
+		example->output_directory+=STRING_UTILITIES::string_sprintf(
+				"_NP%d/%d", example->mpi_grid->Number_Of_Processors(),
+				_rankID);
+
 
 	FILE_UTILITIES::Create_Directory(example->output_directory+"/common");
 	LOG::Instance()->Copy_Log_To_File(example->output_directory+"/common/log.txt",
@@ -91,8 +91,7 @@ void App::InitMain(int argc, char* argv[]) {
 }
 
 void App::FinishMain() {
-	delete app_driver;
-	delete app_mpi_world;
+	delete app_driver;	
 }
 
 /*
