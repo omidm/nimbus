@@ -31,6 +31,9 @@ void App::Load() {
 	RegisterJob("Finish", new Finish(this));
 	
 	RegisterData("partial_norm", new PartialNorm(0));
+	RegisterData("scalar", new PartialNorm(0));
+	RegisterData("vector", new PCG_Vector());
+	RegisterData("matrix", new Sparse_Matrix());
 
 	// Simulates parameter passing mechanism.
 	// [TODO] Revise or delete.

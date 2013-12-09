@@ -123,7 +123,8 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	std::vector<logical_data_id_t> d, da;
 	IDSet<logical_data_id_t> read, write;
 	IDSet<job_id_t> before, after;
-	IDSet<partition_id_t> neighbor_partitions;	
+	IDSet<partition_id_t> neighbor_partitions;
+	partition_id_t pid1 = 1, pid2 = 2;
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
@@ -134,13 +135,48 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		da.push_back(*it);
 	}
 
-	// input_data	
+	// input_data
+	GetNewLogicalDataID(&d, 30);
+	GetNewLogicalDataID(&da, 30);
+	DefineData("vector", d[0], pid1, neighbor_partitions, par); // temp_interior_pid1
+	DefineData("vector", d[1], pid2, neighbor_partitions, par); // temp_interior_pid2
+	DefineData("vector", d[2], pid1, neighbor_partitions, par); // local_dot_prod_z_b_pid1
+	DefineData("vector", d[3], pid2, neighbor_partitions, par); // local_dot_prod_z_b_pid2
+	DefineData("scalar", d[4], pid1, neighbor_partitions, par); // rho
+	DefineData("vector", d[5], pid1, neighbor_partitions, par); // p_interior_pid1
+	DefineData("vector", d[6], pid2, neighbor_partitions, par); // p_interior_pid2
+	DefineData("vector", d[7], pid1, neighbor_partitions, par); // p_boundary_pid1
+	DefineData("vector", d[8], pid2, neighbor_partitions, par); // p_boundary_pid2
+	DefineData("vector", d[9], pid1, neighbor_partitions, par); // local_dot_prod_p_temp_pid1
+	DefineData("vector", d[10], pid2, neighbor_partitions, par); // local_dot_prod_p_temp_pid2
+	DefineData("scalar", d[11], pid1, neighbor_partitions, par); // global_sum
+	DefineData("scalar", d[12], pid1, neighbor_partitions, par); // rho_old_pid1
+	DefineData("scalar", d[13], pid2, neighbor_partitions, par); // rho_old_pid2
+	DefineData("vector", d[14], pid1, neighbor_partitions, par); // z_interior_pid1
+	DefineData("vector", d[15], pid2, neighbor_partitions, par); // z_interior_pid2
+	
+	// copy related data
+	DefineData("vector", d[16], pid1, neighbor_partitions, par); // local_dot_prod_z_b_pid2 => copy to pid1
+	DefineData("vector", d[17], pid2, neighbor_partitions, par); // rho => copy to pid2
+	DefineData("vector", d[18], pid1, neighbor_partitions, par); // p_interior_pid2 => copy to pid1
+	DefineData("vector", d[19], pid2, neighbor_partitions, par); // p_interior_pid1 => copy to pid2
+	DefineData("vector", d[20], pid1, neighbor_partitions, par); // local_dot_prod_p_temp_pid2 => copy to pid1
+	DefineData("vector", d[21], pid2, neighbor_partitions, par); // global_sum => copy to pid2
+	DefineData("vector", d[22], pid1, neighbor_partitions, par); // b_interior_pid2 => copy to pid1
+	
+	DefineData("scalar", da[0], pid1, neighbor_partitions, par); // residual
+	DefineData("matrix", da[1], pid1, neighbor_partitions, par); // A_pid1
+	DefineData("matrix", da[2], pid2, neighbor_partitions, par); // A_pid2
+	DefineData("vector", da[3], pid1, neighbor_partitions, par); // b_interior_pid1
+	DefineData("vector", da[4], pid2, neighbor_partitions, par); // b_interior_pid2
+	DefineData("vector", da[5], pid1, neighbor_partitions, par); // x_interior_pid1
+	DefineData("vector", da[6], pid2, neighbor_partitions, par); // x_interior_pid2
+	DefineData("scalar", da[7], pid1, neighbor_partitions, par); // rho_old_pid1
+	DefineData("scalar", da[8], pid2, neighbor_partitions, par); // rho_old_pid2
 	
 	// execution	
 	if(internal->iteration == 1 || (internal->iteration < internal->desired_iterations && internal->residual > internal->global_tolerance)) {
-		printf("Jia: forloop check passed, iter = %d, res = %f\n", internal->iteration, internal->residual);
-		GetNewLogicalDataID(&d, 20);
-		GetNewLogicalDataID(&da, 20);
+		printf("Jia: forloop check passed, iter = %d, res = %f\n", internal->iteration, internal->residual);		
 		GetNewJobID(&j, 19);
 
 		// Project_Forloop_Part1, pid = 1
@@ -199,8 +235,8 @@ void Project_Forloop_Condition::Execute(Parameter params,
 
 		// Project_Forloop_Part2, pid = 1
 		read.clear();
-		read.insert(d[4]); // rho
-		read.insert(da[7]); // rho_old_pid1
+		//read.insert(d[4]); // rho
+		//read.insert(da[7]); // rho_old_pid1
 		read.insert(d[14]); // z_interior_pid1
 		read.insert(d[5]); // p_interior_pid1
 		write.clear();
@@ -217,8 +253,8 @@ void Project_Forloop_Condition::Execute(Parameter params,
 
 		// Project_Forloop_Part2, pid = 2
 		read.clear();
-		read.insert(d[17]); // rho, CopyJob instance
-		read.insert(da[8]); // rho_old_pid2
+		//read.insert(d[17]); // rho, CopyJob instance
+		//read.insert(da[8]); // rho_old_pid2
 		read.insert(d[15]); // z_interior_pid2
 		read.insert(d[6]); // p_interior_pid2
 		write.clear();
@@ -434,10 +470,10 @@ Job * Project_Forloop_Part2::Clone() {
 	return new Project_Forloop_Part2(application());
 };
 
-void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
-	std::cout << "Executing the Project_Forloop_Part2 job\n";
+void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {	
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Forloop_Part2 job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
@@ -450,6 +486,7 @@ void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
 	internal->rho_old = internal->rho;
 	internal->rho = app_driver->pcg_mpi->Global_Sum(VECTOR_ND<float>::Dot_Product_Double_Precision(z_interior, b_interior));	
 	float beta = 0;
+	dbg(DBG_PROJ, "||Jia: iteration = %d.\n", iteration);
 	if (iteration == 1) {
 		p_interior = z_interior;
 	} else {
@@ -457,7 +494,7 @@ void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
 		for(int i=1;i<=internal->interior_n;i++)
 			p_interior(i) = z_interior(i) + beta * p_interior(i);
 	}
-	std::cout << "Completed Project_Forloop_Part2 job\n";
+	dbg(DBG_PROJ, "||Forloop_Part2 job finishes on worker %d.\n", projection_app->_rankID);
 };
 
 Project_Forloop_Part3::Project_Forloop_Part3(Application* app) {
@@ -469,10 +506,10 @@ Job * Project_Forloop_Part3::Clone() {
 	return new Project_Forloop_Part3(application());
 };
 
-void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {
-	std::cout << "Executing the Project_Forloop_Part3 job\n";
+void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {	
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Forloop_Part3 job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
@@ -484,7 +521,7 @@ void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {
 	VECTOR_ND<float>& temp = (*internal->temp);	
 	A.Times(p, temp);
 	
-	std::cout << "Completed Project_Forloop_Part3 job\n";
+	dbg(DBG_PROJ, "||Forloop_Part3 job finishes on worker %d.\n", projection_app->_rankID);
 };
 
 Project_Forloop_Part4::Project_Forloop_Part4(Application* app) {
@@ -496,10 +533,10 @@ Job * Project_Forloop_Part4::Clone() {
 	return new Project_Forloop_Part4(application());
 };
 
-void Project_Forloop_Part4::Execute(Parameter params, const DataArray& da) {
-	std::cout << "Executing the Project_Forloop_Part4 job\n";
+void Project_Forloop_Part4::Execute(Parameter params, const DataArray& da) {	
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Forloop_Part4 job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
@@ -515,7 +552,7 @@ void Project_Forloop_Part4::Execute(Parameter params, const DataArray& da) {
 		b_interior(i) -= alpha * temp_interior(i);
 	}	
 	internal->residual = app_driver->pcg_mpi->Global_Max(b_interior.Max_Abs());
-	std::cout << "Completed the Project_Forloop_Part4 job\n";
+	dbg(DBG_PROJ, "||Forloop_Part4 job finishes on worker %d.\n", projection_app->_rankID);
 };
 
 Global_Sum::Global_Sum(Application* app) {
@@ -570,5 +607,3 @@ void Finish::Execute(Parameter params, const DataArray& da) {
 Job* Finish::Clone() {
 	return new Finish(application());
 }
-
-
