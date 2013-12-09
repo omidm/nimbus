@@ -1,0 +1,22 @@
+package PhysBAM_Protocol;
+
+message Sparse_Matrix_Entry_Float {
+	optional int32 j = 1;
+	optional float a = 2;
+}
+
+message Sparse_Matrix_Entry_Float_Array {
+	optional int32 m = 1; 
+	repeated Sparse_Matrix_Entry_Float elem = 2;
+} 
+
+message Int_Array {
+	optional int32 m = 1;
+	repeated int32 elem = 2;
+}
+
+message Sparse_Matrix_Float {
+	optional int32 n = 1;
+	optional Int_Array offsets = 2;
+	optional Sparse_Matrix_Entry_Float_Array A = 3;
+}
