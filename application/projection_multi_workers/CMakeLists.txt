@@ -36,7 +36,8 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/projection_example.cc
         ${PROJECT_SOURCE_DIR}/projection_data.cc
         ${PROJECT_SOURCE_DIR}/PCG_Sparse_Solver.cc
-        ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.cc)
+        ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.cc
+        ${PROTO_FILES_cc})
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/app.h
         ${PROJECT_SOURCE_DIR}/data_impl.h
@@ -44,8 +45,9 @@ SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/projection_driver.h
         ${PROJECT_SOURCE_DIR}/projection_example.h
         ${PROJECT_SOURCE_DIR}/projection_data.h
-        ${PROJECT_SOURCE_DIR}/PCG_Sparse_Solver.cc
-        ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.h)
+        ${PROJECT_SOURCE_DIR}/PCG_Sparse_Solver.h
+        ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.h
+        ${PROTO_FILES_h})
         
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones

@@ -29,6 +29,8 @@ void App::Load() {
 	RegisterJob("Global_Sum", new Global_Sum(this));
 	RegisterJob("Global_Max_Abs", new Global_Max_Abs(this));
 	RegisterJob("Finish", new Finish(this));
+	
+	RegisterData("partial_norm", new PartialNorm(0));
 
 	// Simulates parameter passing mechanism.
 	// [TODO] Revise or delete.

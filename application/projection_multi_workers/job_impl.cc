@@ -53,16 +53,22 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	IDSet<logical_data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
-	//partition_id_t partition_id1 = 1;
-	//partition_id_t partition_id2 = 2;
+	partition_id_t partition_id1 = 1;
+	partition_id_t partition_id2 = 2;
 	Parameter par;
-	GetNewJobID(&j, 3);
-	READ_2(d[0], d[2]);
+	GetNewLogicalDataID(&d, 5);
+	GetNewJobID(&j, 5);	
+	DefineData("partial_norm", d[2], partition_id1, neighbor_partitions, par);
+	DefineData("partial_norm", d[3], partition_id2, neighbor_partitions, par);
+	DefineData("partial_norm", d[4], partition_id1, neighbor_partitions, par);
+	// Initializes on each partition,
+	// and calculates the partial norm on each part.
+	READ_1(d[2]);
 	WRITE_1(d[2]);
 	BEFORE_0();
 	AFTER_1(j[3]);
 	SpawnComputeJob("Init", j[0], read, write, before, after, par);
-	READ_2(d[1], d[3]);
+	READ_1(d[3]);
 	WRITE_1(d[3]);
 	BEFORE_0();
 	AFTER_1(j[2]);
@@ -70,13 +76,14 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	BEFORE_1(j[1]);
 	AFTER_1(j[3]);
 	SpawnCopyJob(j[2], d[3], d[4], before, after, par);
-	READ_5(d[0], d[1], d[2], d[3], d[4]);
+	READ_2(d[2], d[4]);
 	WRITE_0();
 	BEFORE_2(j[0], j[2]);
-	AFTER_0();	
+	AFTER_0();
 	SpawnComputeJob("Project_Forloop_Condition", j[3], read, write, before,	after, par);
 	dbg(DBG_PROJ, "||Main job finishes on worker %d.\n", projection_app->_rankID);
 }
+
 /*
 
 Main::Main(Application* app) {

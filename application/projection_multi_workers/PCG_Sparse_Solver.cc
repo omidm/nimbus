@@ -57,9 +57,9 @@ Job* Init::Clone() {
 	return new Init(application());
 };
 
-void Init::Execute(Parameter params, const DataArray& da) {
-	printf("Begin Init\n");
+void Init::Execute(Parameter params, const DataArray& da) {	
 	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Init job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 		
@@ -84,6 +84,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
 	internal->global_tolerance = app_driver->pcg_mpi->Global_Max(app_driver->projection_data->tolerance);
 	internal->desired_iterations=internal->global_n;
 	internal->desired_iterations = app_driver->pcg_mpi->pcg.maximum_iterations; // HERE we set desired_iterations = pcg.maximum_iterations, since global_n >> pcg.maximum_iterations
+	internal->iteration = 1;
 
 	VECTOR_ND<float>& x = (*app_driver->projection_data->x); 
 	VECTOR_ND<float>& temp = (*app_driver->projection_internal_data->temp);
@@ -98,7 +99,7 @@ void Init::Execute(Parameter params, const DataArray& da) {
 			app_driver->pcg_mpi->pcg.modified_incomplete_cholesky_coefficient, 
 			app_driver->pcg_mpi->pcg.preconditioner_zero_tolerance,
 			app_driver->pcg_mpi->pcg.preconditioner_zero_replacement);
-	printf("Completed Init\n");
+	dbg(DBG_PROJ, "||Init job finishes on worker %d.\n", projection_app->_rankID);
 };
 
 Project_Forloop_Condition::Project_Forloop_Condition(Application* app) {
@@ -106,13 +107,18 @@ Project_Forloop_Condition::Project_Forloop_Condition(Application* app) {
 };
 
 Job * Project_Forloop_Condition::Clone() {
-	std::cout << "Cloning Project_Forloop_Condition job!\n";
+	
 	return new Project_Forloop_Condition(application());
 };
 
 void Project_Forloop_Condition::Execute(Parameter params,
 		const DataArray& input_data) {
-	std::cout << "Executing the Project_Forloop_Condition job\n";
+	// load driver
+	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Forloop_Condition job starts on worker %d.\n", projection_app->_rankID);
+	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
+	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
+	
 	std::vector<job_id_t> j;
 	std::vector<logical_data_id_t> d, da;
 	IDSet<logical_data_id_t> read, write;
@@ -129,17 +135,12 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	}
 
 	// input_data	
-
-	// load driver
-	App* projection_app = dynamic_cast<App*>(application());
-	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
-	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
-	// execution
-	VECTOR_ND<float>& b_interior = (*internal->b_interior);
-	internal->residual = app_driver->pcg_mpi->Global_Max(b_interior.Max_Abs());
+	// execution	
 	if(internal->iteration == 1 || (internal->iteration < internal->desired_iterations && internal->residual > internal->global_tolerance)) {
 		printf("Jia: forloop check passed, iter = %d, res = %f\n", internal->iteration, internal->residual);
+		GetNewLogicalDataID(&d, 20);
+		GetNewLogicalDataID(&da, 20);
 		GetNewJobID(&j, 19);
 
 		// Project_Forloop_Part1, pid = 1
@@ -386,13 +387,14 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		write.clear();
 		before.clear();
 		after.clear();
-		SpawnComputeJob("finish", j[0], read, write, before, after, par);
+		SpawnComputeJob("Finish", j[0], read, write, before, after, par);
 		read.clear();
 		write.clear();
 		before.clear();
 		after.clear();
-		SpawnComputeJob("finish", j[1], read, write, before, after, par);		
+		SpawnComputeJob("Finish", j[1], read, write, before, after, par);		
 	}	
+	dbg(DBG_PROJ, "||Forloop_Condition job finishes on worker %d.\n", projection_app->_rankID);
 };
 
 Project_Forloop_Part1::Project_Forloop_Part1(Application* app) {
@@ -404,11 +406,11 @@ Job * Project_Forloop_Part1::Clone() {
 	return new Project_Forloop_Part1(application());
 };
 
-void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
-	std::cout << "Executing the Project_Forloop_Part1 job\n";
+void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {	
 	
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Forloop_Part1 job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;	
 	
 	//execution
@@ -420,7 +422,7 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	A.C->Solve_Forward_Substitution(b_interior,temp_interior,true); // diagonal should be treated as the identity
 	A.C->Solve_Backward_Substitution(temp_interior,z_interior,false,true); // diagonal is inverted to save on divides
 
-	std::cout << "Completed Project_Forloop_Part1 job\n";
+	dbg(DBG_PROJ, "||Forloop_Part1 job finishes on worker %d.\n", projection_app->_rankID);
 };
 
 Project_Forloop_Part2::Project_Forloop_Part2(Application* app) {
@@ -511,7 +513,8 @@ void Project_Forloop_Part4::Execute(Parameter params, const DataArray& da) {
 	for(int i=1;i<=internal->interior_n;i++) {
 		x_interior(i) += alpha * p_interior(i);
 		b_interior(i) -= alpha * temp_interior(i);
-	}
+	}	
+	internal->residual = app_driver->pcg_mpi->Global_Max(b_interior.Max_Abs());
 	std::cout << "Completed the Project_Forloop_Part4 job\n";
 };
 
