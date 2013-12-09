@@ -40,7 +40,7 @@
 #include "shared/nimbus_types.h"
 #include "worker/application.h"
 
-#include "application/projection-two-worker/app.h"
+#include "application/projection_multi_workers/app.h"
 
 int main(int argc, char *argv[]) {
   port_t listening_port;

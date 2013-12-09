@@ -273,7 +273,7 @@ template<class TV> void PROJECTION_DRIVER<TV>::Write_Output_Files(
 				+"/common/first_frame", frame, "\n");
 	example.Write_Output_Files(frame);
 	FILE_UTILITIES::Write_To_Text_File(example.output_directory
-			+"/common/last_frame", frame, "\n");CommunicateConfig
+			+"/common/last_frame", frame, "\n");
 }
 
 template class PROJECTION_DRIVER<VECTOR<float,2> >;
