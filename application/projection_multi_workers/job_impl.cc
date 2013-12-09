@@ -14,6 +14,7 @@
 #include "app.h"
 #include "data_impl.h"
 #include "job_impl.h"
+#include "PCG_Sparse_Solver.h"
 
 // TODO The idset implementation should offer the helper function.
 #define READ_0() read.clear()
@@ -34,6 +35,20 @@
 #define AFTER_1(x) after.clear(); after.insert(x)
 #define AFTER_2(x,y) AFTER_1(x); after.insert(y)
 #define AFTER_3(x,y,z) AFTER_2(x,y); after.insert(z)
+
+Main::Main(Application* app) {
+	set_application(app);
+}
+
+Job* Main::Clone() {
+	printf("Cloning Main job\n");
+	return new Main(application());
+}
+
+void Main::Execute(Parameter params, const DataArray& da) {	
+	
+}
+/*
 
 Main::Main(Application* app) {
 	set_application(app);
@@ -219,6 +234,8 @@ void Finish::Execute(Parameter params, const DataArray& da) {
 			projection_app->app_driver;
 	app_driver->pcg_mpi->ExchangePressure(app_driver->projection_internal_data,
 			app_driver->projection_data);
+	
+	//=============================== the below code MUST be executed after PCG_SPARSE_MPI::Parellel_Solve ===================
 	app_driver->WindUpForOneRegion();
 	app_driver->ApplyPressureAndFinish();
 	projection_app->FinishMain();
@@ -229,3 +246,6 @@ void Finish::Execute(Parameter params, const DataArray& da) {
 Job* Finish::Clone() {
 	return new Finish(application());
 }
+
+
+*/

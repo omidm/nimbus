@@ -10,9 +10,21 @@ PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root and prtobuf files directory
 SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../..)
+SET(PROTO_DIR ${PROJECT_SOURCE_DIR}/protocol_buffer)
 
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${NIMBUS_ROOT})
+include_directories(${PROTO_DIR})
+
+SET(PROTO_FILES_h
+        ${PROTO_DIR}/Sparse_Matrix_Float.pb.h
+	    ${PROTO_DIR}/Vector_Float.pb.h
+   )
+
+SET(PROTO_FILES_cc
+        ${PROTO_DIR}/Sparse_Matrix_Float.pb.cc
+    	${PROTO_DIR}/Vector_Float.pb.cc
+   )
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
@@ -23,6 +35,7 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/projection_driver.cc
         ${PROJECT_SOURCE_DIR}/projection_example.cc
         ${PROJECT_SOURCE_DIR}/projection_data.cc
+        ${PROJECT_SOURCE_DIR}/PCG_Sparse_Solver.cc
         ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.cc)
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/app.h
@@ -31,6 +44,7 @@ SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/projection_driver.h
         ${PROJECT_SOURCE_DIR}/projection_example.h
         ${PROJECT_SOURCE_DIR}/projection_data.h
+        ${PROJECT_SOURCE_DIR}/PCG_Sparse_Solver.cc
         ${PROJECT_SOURCE_DIR}/nimbus_pcg_sparse_mpi.h)
         
 #List the libraries you want to link against - including a higher-level

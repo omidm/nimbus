@@ -40,16 +40,14 @@
 #include "shared/nimbus.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
-#include "physbam_include.h"
 #include "worker/application.h"
 #include "worker/job.h"
 #include "worker/data.h"
 #include "protocol_buffer/Sparse_Matrix_Float.pb.h"
 #include "protocol_buffer/Vector_Float.pb.h"
-#define LEN 4
-#define DESIRED_ITERATIONS 100
-#define GLOBAL_TOLERANCE 1e-3
-#define NUM_OF_FORLOOP_INPUTS 9
+
+#include "nimbus_pcg_sparse_mpi.h"
+#define DESIRED_INTERATIONS 200
 
 using nimbus::Job;
 using nimbus::Data;
@@ -109,6 +107,13 @@ class Global_Sum : public Job {
 class Global_Max_Abs : public Job {
     public:
     	Global_Max_Abs(Application *app);
+        virtual void Execute(Parameter params, const DataArray& da);
+        virtual Job* Clone();
+};
+
+class Finish : public Job {
+    public:
+    	Finish(Application *app);
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
