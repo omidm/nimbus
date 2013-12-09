@@ -117,3 +117,5 @@ class Finish : public Job {
         virtual void Execute(Parameter params, const DataArray& da);
         virtual Job* Clone();
 };
+
+#endif
