@@ -38,7 +38,8 @@ class ProjectionInternalData {
   VECTOR_ND<T> *temp, *p, *z_interior, *x_interior, *b_interior, *p_interior, *temp_interior;
   int global_n;
   T global_tolerance;
-  double rho, rho_old;  
+  double rho, rho_old;
+  T beta, alpha;
   int iteration, desired_iterations, interior_n;
   T residual;
   bool move_on;

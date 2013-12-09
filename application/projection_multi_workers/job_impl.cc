@@ -46,7 +46,36 @@ Job* Main::Clone() {
 }
 
 void Main::Execute(Parameter params, const DataArray& da) {	
-	
+	App* projection_app = dynamic_cast<App*>(application());
+	dbg(DBG_PROJ, "||Main job starts on worker %d.\n", projection_app->_rankID);
+	std::vector<job_id_t> j;
+	std::vector<logical_data_id_t> d;
+	IDSet<logical_data_id_t> read, write;
+	IDSet<job_id_t> before, after;
+	IDSet<partition_id_t> neighbor_partitions;
+	//partition_id_t partition_id1 = 1;
+	//partition_id_t partition_id2 = 2;
+	Parameter par;
+	GetNewJobID(&j, 3);
+	READ_2(d[0], d[2]);
+	WRITE_1(d[2]);
+	BEFORE_0();
+	AFTER_1(j[3]);
+	SpawnComputeJob("Init", j[0], read, write, before, after, par);
+	READ_2(d[1], d[3]);
+	WRITE_1(d[3]);
+	BEFORE_0();
+	AFTER_1(j[2]);
+	SpawnComputeJob("Init", j[1], read, write, before, after, par);
+	BEFORE_1(j[1]);
+	AFTER_1(j[3]);
+	SpawnCopyJob(j[2], d[3], d[4], before, after, par);
+	READ_5(d[0], d[1], d[2], d[3], d[4]);
+	WRITE_0();
+	BEFORE_2(j[0], j[2]);
+	AFTER_0();	
+	SpawnComputeJob("Project_Forloop_Condition", j[3], read, write, before,	after, par);
+	dbg(DBG_PROJ, "||Main job finishes on worker %d.\n", projection_app->_rankID);
 }
 /*
 

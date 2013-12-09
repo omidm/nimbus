@@ -20,13 +20,15 @@ void App::Load() {
 	dbg_add_mode("proj");
 	dbg(DBG_PROJ, "Starts to load projection application.\n");
 	RegisterJob("main", new Main(this));
-	RegisterJob("initialization", new Initialization(this));
-	// TODO(quhang): job name is confusing.
-	RegisterJob("spawn_one_iteration_if_needed", new SpawnOneIterationIfNeeded(this));
-	RegisterJob("one_iteration", new OneIteration(this));
-	RegisterJob("finish", new Finish(this));
-	RegisterData("region", new ProfileData);
-	RegisterData("partial_norm", new PartialNorm(0));
+	RegisterJob("Init", new Init(this));
+	RegisterJob("Project_Forloop_Condition", new Project_Forloop_Condition(this));
+	RegisterJob("Project_Forloop_Part1", new Project_Forloop_Part1(this));
+	RegisterJob("Project_Forloop_Part2", new Project_Forloop_Part2(this));
+	RegisterJob("Project_Forloop_Part3", new Project_Forloop_Part3(this));
+	RegisterJob("Project_Forloop_Part4", new Project_Forloop_Part4(this));
+	RegisterJob("Global_Sum", new Global_Sum(this));
+	RegisterJob("Global_Max_Abs", new Global_Max_Abs(this));
+	RegisterJob("Finish", new Finish(this));
 
 	// Simulates parameter passing mechanism.
 	// [TODO] Revise or delete.

@@ -49,7 +49,9 @@ SET(${PROJECT_NAME}_h
         
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
+SET(PROTO_LIB protobuf)
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
+LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
         
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)

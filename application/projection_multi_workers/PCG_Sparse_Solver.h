@@ -47,7 +47,6 @@
 #include "protocol_buffer/Vector_Float.pb.h"
 
 #include "nimbus_pcg_sparse_mpi.h"
-#define DESIRED_INTERATIONS 200
 
 using nimbus::Job;
 using nimbus::Data;

@@ -36,6 +36,11 @@
  */
 
 #include "shared/nimbus.h"
+#include "projection_driver.h"
+#include "projection_example.h"
+#include "app.h"
+#include "data_impl.h"
+#include "job_impl.h"
 #include "PCG_Sparse_Solver.h"
 
 using nimbus::Data;
@@ -50,50 +55,49 @@ Init::Init(Application *app) {
 Job* Init::Clone() {
 	printf("Cloning Init job\n");
 	return new Init(application());
-}
-;
-
+};
 
 void Init::Execute(Parameter params, const DataArray& da) {
 	printf("Begin Init\n");
 	App* projection_app = dynamic_cast<App*>(application());
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
-	
-	app_driver->pcg_mpi.Initialize_Datatypes();
-	int local_n=(*projection_data->A_array)(1).n;
-	app_driver->projection_internal_data->interior_n=partition.interior_indices.Size()+1;
-	app_driver->projection_internal_data->x_interior = new VECTOR_ND<T>;
-	app_driver->projection_internal_data->x_interior->Set_Subvector_View(*projection_data->x, partition.interior_indices);
-	app_driver->projection_internal_data->b_interior = new VECTOR_ND<T>;
-	app_driver->projection_internal_data->b_interior->Set_Subvector_View((*projection_data->b_array)(1), partition.interior_indices);
-	app_driver->projection_internal_data->p_interior = new VECTOR_ND<T>;
-	app_driver->projection_internal_data->p_interior->Set_Subvector_View(*projection_internal_data->p, partition.interior_indices);
-	app_driver->projection_internal_data->temp_interior = new VECTOR_ND<T>;
-	app_driver->projection_internal_data->temp_interior->Set_Subvector_View(*projection_internal_data->temp, partition.interior_indices);
-	app_driver->projection_internal_data->rho=0;
-	app_driver->projection_internal_data->rho_old=0;
-	app_driver->projection_internal_data->alpha=0;
-	app_driver->projection_internal_data->beta=0;
+	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
+		
+	app_driver->pcg_mpi->Initialize_Datatypes();
+	int local_n=(*app_driver->projection_data->A_array)(1).n;
+	internal->interior_n=app_driver->pcg_mpi->partition.interior_indices.Size()+1;
+	internal->temp = new VECTOR_ND<T>(local_n,false);
+	internal->p = new VECTOR_ND<T>(local_n,false);
+	internal->z_interior = new VECTOR_ND<T>(internal->interior_n,false);
+	internal->x_interior = new VECTOR_ND<T>;
+	internal->x_interior->Set_Subvector_View(*app_driver->projection_data->x, app_driver->pcg_mpi->partition.interior_indices);
+	internal->b_interior = new VECTOR_ND<T>;
+	internal->b_interior->Set_Subvector_View((*app_driver->projection_data->b_array)(1), app_driver->pcg_mpi->partition.interior_indices);
+	internal->p_interior = new VECTOR_ND<T>;
+	internal->p_interior->Set_Subvector_View(*app_driver->projection_internal_data->p, app_driver->pcg_mpi->partition.interior_indices);
+	internal->temp_interior = new VECTOR_ND<T>;
+	internal->temp_interior->Set_Subvector_View(*app_driver->projection_internal_data->temp, app_driver->pcg_mpi->partition.interior_indices);
+	internal->rho=0;
+	internal->rho_old=0;	
 
-	app_driver->projection_internal_data->global_n = app_driver->pcg_mpi.Global_Sum(interior_n);
-	app_driver->projection_internal_data->global_tolerance = app_driver->pcg_mpi.Global_Max(app_driver->projection_data->tolerance);
-	int desired_iterations=global_n;
-	if (pcg.maximum_iterations)
-		app_driver->projection_internal_data->desired_iterations=min(desired_iterations, pcg.maximum_iterations);
+	internal->global_n = app_driver->pcg_mpi->Global_Sum(internal->interior_n);
+	internal->global_tolerance = app_driver->pcg_mpi->Global_Max(app_driver->projection_data->tolerance);
+	internal->desired_iterations=internal->global_n;
+	internal->desired_iterations = app_driver->pcg_mpi->pcg.maximum_iterations; // HERE we set desired_iterations = pcg.maximum_iterations, since global_n >> pcg.maximum_iterations
 
 	VECTOR_ND<float>& x = (*app_driver->projection_data->x); 
 	VECTOR_ND<float>& temp = (*app_driver->projection_internal_data->temp);
 	VECTOR_ND<float>& b_interior = (*app_driver->projection_internal_data->b_interior);
 	VECTOR_ND<float>& temp_interior = (*app_driver->projection_internal_data->temp_interior);
-	SPARSE_MATRIX_FLAT_NXN<float>& A = (*projection_data->A_array)(1);
-	app_driver->pcg_mpi.Fill_Ghost_Cells(x);
+	SPARSE_MATRIX_FLAT_NXN<float>& A = (*app_driver->projection_data->A_array)(1);
+	app_driver->pcg_mpi->Fill_Ghost_Cells(x);
 	A.Times(x,temp);b_interior-=temp_interior;
-	delete A.C;A.C=A.Create_Submatrix(partition.interior_indices);
+	delete A.C;A.C=A.Create_Submatrix(app_driver->pcg_mpi->partition.interior_indices);
 	A.C->In_Place_Incomplete_Cholesky_Factorization(
-			app_driver->pcg_mpi.pcg.modified_incomplete_cholesky, 
-			app_driver->pcg_mpi.pcg.modified_incomplete_cholesky_coefficient, 
-			app_driver->pcg_mpi.pcg.preconditioner_zero_tolerance,
-			app_driver->pcg_mpi.pcg.preconditioner_zero_replacement);
+			app_driver->pcg_mpi->pcg.modified_incomplete_cholesky, 
+			app_driver->pcg_mpi->pcg.modified_incomplete_cholesky_coefficient, 
+			app_driver->pcg_mpi->pcg.preconditioner_zero_tolerance,
+			app_driver->pcg_mpi->pcg.preconditioner_zero_replacement);
 	printf("Completed Init\n");
 };
 
@@ -113,8 +117,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	std::vector<logical_data_id_t> d, da;
 	IDSet<logical_data_id_t> read, write;
 	IDSet<job_id_t> before, after;
-	IDSet<partition_id_t> neighbor_partitions;
-	partition_id_t pid1 = 1, pid2 = 2;
+	IDSet<partition_id_t> neighbor_partitions;	
 	Parameter par;
 	IDSet<param_id_t> param_idset;
 
@@ -125,8 +128,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		da.push_back(*it);
 	}
 
-	// input_data
-	Vec *d0 = reinterpret_cast<Vec*>(input_data[0]); // residual
+	// input_data	
 
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
@@ -135,9 +137,9 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	
 	// execution
 	VECTOR_ND<float>& b_interior = (*internal->b_interior);
-	internal->residual = app_driver->pcg_mpi.Global_Max(b_interior.Max_Abs());
-	if(internal->iteration == 1 || (internal->iteration < DESIRED_ITERATIONS && internal->residual > internal->global_tolerance)) {
-		printf("Jia: forloop check passed, iter = %d, res = %f\n", iteration, residual);
+	internal->residual = app_driver->pcg_mpi->Global_Max(b_interior.Max_Abs());
+	if(internal->iteration == 1 || (internal->iteration < internal->desired_iterations && internal->residual > internal->global_tolerance)) {
+		printf("Jia: forloop check passed, iter = %d, res = %f\n", internal->iteration, internal->residual);
 		GetNewJobID(&j, 19);
 
 		// Project_Forloop_Part1, pid = 1
@@ -372,23 +374,23 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		before.clear();
 		before.insert(j[10]);
 		after.clear();
-		param_idset.clear();
-		for (int i=0;i<NUM_OF_FORLOOP_INPUTS;i++) param_idset.insert(da[i]);
-		param_idset.insert(iteration+1);
-		par.set_idset(param_idset);
+		//param_idset.clear();
+		//for (int i=0;i<NUM_OF_FORLOOP_INPUTS;i++) param_idset.insert(da[i]);
+		//param_idset.insert(iteration+1);
+		//par.set_idset(param_idset);
 		SpawnComputeJob("Project_Forloop_Condition", j[11], read, write, before, after, par);
 	}
 	else {
 		GetNewJobID(&j, 2);
-		READ_0();
-		WRITE_0();
-		BEFORE_0();
-		AFTER_0();
+		read.clear();
+		write.clear();
+		before.clear();
+		after.clear();
 		SpawnComputeJob("finish", j[0], read, write, before, after, par);
-		READ_0();
-		WRITE_0();
-		BEFORE_0();
-		AFTER_0();
+		read.clear();
+		write.clear();
+		before.clear();
+		after.clear();
 		SpawnComputeJob("finish", j[1], read, write, before, after, par);		
 	}	
 };
@@ -444,14 +446,14 @@ void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
 	VECTOR_ND<float>& p_interior = (*internal->p_interior);
 	
 	internal->rho_old = internal->rho;
-	internal->rho = app_driver->pcg_mpi.Global_Sum(VECTOR_ND<float>::Dot_Product_Double_Precision(z_interior, b_interior));
-	internal->beta = 0;
+	internal->rho = app_driver->pcg_mpi->Global_Sum(VECTOR_ND<float>::Dot_Product_Double_Precision(z_interior, b_interior));	
+	float beta = 0;
 	if (iteration == 1) {
 		p_interior = z_interior;
 	} else {
-		internal->beta = internal->rho / internal->rho_old;		
+		beta = internal->rho / internal->rho_old;		
 		for(int i=1;i<=internal->interior_n;i++)
-			p_interior(i) = z_interior(i) + internal->beta * p_interior(i);
+			p_interior(i) = z_interior(i) + beta * p_interior(i);
 	}
 	std::cout << "Completed Project_Forloop_Part2 job\n";
 };
@@ -473,11 +475,11 @@ void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
 	// execution
-	app_driver->pcg_mpi.Fill_Ghost_Cells(internal->p);
-	int color = 1;
-	SPARSE_MATRIX_FLAT_NXN<float>& A = (*projection_data->A_array)(color);
-	VECTOR_ND<float>& temp = (*internal->temp);
 	VECTOR_ND<float>& p = (*internal->p);
+	app_driver->pcg_mpi->Fill_Ghost_Cells(p);
+	int color = 1;
+	SPARSE_MATRIX_FLAT_NXN<float>& A = (*app_driver->projection_data->A_array)(color);
+	VECTOR_ND<float>& temp = (*internal->temp);	
 	A.Times(p, temp);
 	
 	std::cout << "Completed Project_Forloop_Part3 job\n";
@@ -505,7 +507,7 @@ void Project_Forloop_Part4::Execute(Parameter params, const DataArray& da) {
 	VECTOR_ND<float>& b_interior = (*internal->b_interior);
 	VECTOR_ND<float>& temp_interior = (*internal->temp_interior);
 	
-	float alpha=(float)(internal->rho/app_driver->pcg_mpi.Global_Sum(VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior,temp_interior)));
+	float alpha=(float)(internal->rho/app_driver->pcg_mpi->Global_Sum(VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior,temp_interior)));
 	for(int i=1;i<=internal->interior_n;i++) {
 		x_interior(i) += alpha * p_interior(i);
 		b_interior(i) -= alpha * temp_interior(i);
@@ -545,11 +547,14 @@ Finish::Finish(Application* app) {
 	set_application(app);
 }
 
-void Finish::Execute(Parameter params, const DataArray& da) {
+void Finish::Execute(Parameter params, const DataArray& da) {	
+	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
 	dbg(DBG_PROJ, "||Finish job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
-	app_driver->pcg_mpi->ExchangePressure(app_driver->projection_internal_data, app_driver->projection_data);
+	
+	VECTOR_ND<T>& x = (*app_driver->projection_data->x); 
+	app_driver->pcg_mpi->Fill_Ghost_Cells(x);
 	
 	//=============================== the below code MUST be executed after PCG_SPARSE_MPI::Parellel_Solve ===================
 	app_driver->WindUpForOneRegion();
