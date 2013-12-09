@@ -59,32 +59,22 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	DefineData("partial_norm", d[4], partition_id1, neighbor_partitions, par);
 	// Initializes on each partition,
 	// and calculates the partial norm on each part.
-	READ_2(d[0], d[2])
-	;
-	WRITE_1(d[2])
-	;
+	READ_2(d[0], d[2]);
+	WRITE_1(d[2]);
 	BEFORE_0();
-	AFTER_1(j[3])
-	;
+	AFTER_1(j[3]);
 	SpawnComputeJob("initialization", j[0], read, write, before, after, par);
-	READ_2(d[1], d[3])
-	;
-	WRITE_1(d[3])
-	;
+	READ_2(d[1], d[3]);
+	WRITE_1(d[3]);
 	BEFORE_0();
-	AFTER_1(j[2])
-	;
+	AFTER_1(j[2]);
 	SpawnComputeJob("initialization", j[1], read, write, before, after, par);
-	BEFORE_1(j[1])
-	;
-	AFTER_1(j[3])
-	;
+	BEFORE_1(j[1]);
+	AFTER_1(j[3]);
 	SpawnCopyJob(j[2], d[3], d[4], before, after, par);
-	READ_5(d[0], d[1], d[2], d[3], d[4])
-	;
+	READ_5(d[0], d[1], d[2], d[3], d[4]);
 	WRITE_0();
-	BEFORE_2(j[0], j[2])
-	;
+	BEFORE_2(j[0], j[2]);
 	AFTER_0();
 	IDSet<logical_data_id_t> temp;
 	temp.insert(d[0]);
@@ -94,8 +84,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	temp.insert(d[4]);
 	par.set_idset(temp);
 	// TODO(quhang) Includes all the data object in the read set, not necessary.
-	SpawnComputeJob("spawn_one_iteration_if_needed", j[3], read, write, before,
-			after, par);
+	SpawnComputeJob("spawn_one_iteration_if_needed", j[3], read, write, before,	after, par);
 	dbg(DBG_PROJ, "||Main job finishes on worker %d.\n", projection_app->_rankID);
 }
 
