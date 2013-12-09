@@ -108,12 +108,9 @@ void Initialization::Execute(Parameter params, const DataArray& da) {
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	Parameter par;
-	app_driver->pcg_mpi->ExchangePressure(app_driver->projection_internal_data,
-			app_driver->projection_data);
-	app_driver->pcg_mpi->InitializeResidual(
-			app_driver->projection_internal_data, app_driver->projection_data);
-	app_driver->pcg_mpi->SpawnFirstIteration(
-			app_driver->projection_internal_data, app_driver->projection_data);
+	app_driver->pcg_mpi->ExchangePressure(app_driver->projection_internal_data,	app_driver->projection_data);
+	app_driver->pcg_mpi->InitializeResidual(app_driver->projection_internal_data, app_driver->projection_data);
+	app_driver->pcg_mpi->SpawnFirstIteration(app_driver->projection_internal_data, app_driver->projection_data);
 	app_driver->projection_internal_data->iteration=0;
 	partial_norm->norm_ = app_driver->projection_internal_data->partial_norm;
 	dbg(DBG_PROJ, "||Init job finishes on worker %d.\n", projection_app->_rankID);

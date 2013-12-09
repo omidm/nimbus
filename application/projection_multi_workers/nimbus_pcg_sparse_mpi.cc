@@ -66,31 +66,6 @@ CommunicateConfig(
   if(pcg.maximum_iterations) desired_iterations=min(desired_iterations,pcg.maximum_iterations);
 }
 
-template<class T_GRID> void NIMBUS_PCG_SPARSE_MPI<T_GRID>::
-Parallel_Solve(
-    ProjectionInternalData<TV>* projection_internal_data,
-    ProjectionData<TV>* projection_data) {
-  ExchangePressure(projection_internal_data, projection_data);
-  InitializeResidual(projection_internal_data, projection_data);
-  SpawnFirstIteration(projection_internal_data, projection_data);
-  if (projection_internal_data->move_on) {
-    projection_internal_data->iteration = 0;
-    do {
-      projection_internal_data->iteration++;
-      DoPrecondition(projection_internal_data, projection_data);
-      CalculateBeta(projection_internal_data, projection_data);
-      UpdateSearchVector(projection_internal_data, projection_data);
-      ExchangeSearchVector(projection_internal_data, projection_data);
-      UpdateTempVector(projection_internal_data, projection_data);
-      CalculateAlpha(projection_internal_data, projection_data);
-      UpdateOtherVectors(projection_internal_data, projection_data);
-      CalculateResidual(projection_internal_data, projection_data);
-      DecideToSpawnNextIteration(projection_internal_data, projection_data);
-    } while (projection_internal_data->move_on);
-    ExchangePressure(projection_internal_data, projection_data);
-  }
-}
-
 // Projection is broken to "smallest" code piece to allow future changes.
 // Data pointers are first initialized,
 // and then computation functions are invoked.

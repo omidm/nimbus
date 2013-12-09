@@ -77,9 +77,6 @@ class NIMBUS_PCG_SPARSE_MPI : public NONCOPYABLE
   void CommunicateConfig( 
       ProjectionInternalData<TV>* projection_internal_data,
       ProjectionData<TV>* projection_data);
-  void Parallel_Solve(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
   void ExchangePressure(
       ProjectionInternalData<TV>* projection_internal_data,
       ProjectionData<TV>* projection_data);

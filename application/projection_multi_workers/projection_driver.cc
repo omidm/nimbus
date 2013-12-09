@@ -219,22 +219,17 @@ template<class TV> void PROJECTION_DRIVER<TV>::PrepareForOneRegion() {
 	laplace->Find_Tolerance(b); // needs to happen after b is completely set up
 	DOMAIN_ITERATOR_THREADED_ALPHA<PCG_SPARSE_THREADED<TV>,TV> threaded_iterator(
 			laplace->grid.Domain_Indices(1), laplace->thread_queue, 1, 1, 2, 1);
-	if (color > laplace->laplace_mpi->filled_region_ranks.m) {
-		laplace->laplace_mpi->local_pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
-	} else {
-		// Initialize the projection driver with MPI. 
-		// [TODO] Remove MPI!
-		MPI::Intracomm* comm;
-		comm=&(*laplace->laplace_mpi->communicators)(color);
-		pcg_mpi
-				= new NIMBUS_PCG_SPARSE_MPI<GRID<TV> >(
-						laplace->laplace_mpi->local_pcg,*comm,laplace->laplace_mpi->partitions(color));
+	
+	// Initialize the projection driver with MPI. 
+	// [TODO] Remove MPI!
+	MPI::Intracomm* comm;
+	comm=&(*laplace->laplace_mpi->communicators)(color);
+	pcg_mpi	= new NIMBUS_PCG_SPARSE_MPI<GRID<TV> >(laplace->laplace_mpi->local_pcg,*comm,laplace->laplace_mpi->partitions(color));
 
-		// pcg_mpi.Parallel_Solve(A,x,b,laplace->tolerance);
-		projection_data->tolerance = laplace->tolerance;
-		pcg_mpi->Initialize(projection_internal_data, projection_data);
-		pcg_mpi->CommunicateConfig(projection_internal_data, projection_data);
-	}
+	// pcg_mpi.Parallel_Solve(A,x,b,laplace->tolerance);
+	projection_data->tolerance = laplace->tolerance;
+	pcg_mpi->Initialize(projection_internal_data, projection_data);
+	pcg_mpi->CommunicateConfig(projection_internal_data, projection_data);	
 }
 
 template<class TV> void PROJECTION_DRIVER<TV>::WindUpForOneRegion() {
@@ -278,40 +273,7 @@ template<class TV> void PROJECTION_DRIVER<TV>::Write_Output_Files(
 				+"/common/first_frame", frame, "\n");
 	example.Write_Output_Files(frame);
 	FILE_UTILITIES::Write_To_Text_File(example.output_directory
-			+"/common/last_frame", frame, "\n");
-}
-
-// This function is not called indeed.
-template<class TV> void PROJECTION_DRIVER<TV>::Execute_Main_Program() {
-	PrepareForProjection();
-	PrepareForOneRegion();
-	// pcg_mpi->Parallel_Solve(projection_internal_data, projection_data);
-	pcg_mpi->ExchangePressure(projection_internal_data, projection_data);
-	pcg_mpi->InitializeResidual(projection_internal_data, projection_data);
-	pcg_mpi->SpawnFirstIteration(projection_internal_data, projection_data);
-	if (projection_internal_data->move_on) {
-		projection_internal_data->iteration = 0;
-		do {
-			projection_internal_data->iteration++;
-			pcg_mpi->DoPrecondition(projection_internal_data, projection_data);
-			pcg_mpi->CalculateBeta(projection_internal_data, projection_data);
-			pcg_mpi->UpdateSearchVector(projection_internal_data,
-					projection_data);
-			pcg_mpi->ExchangeSearchVector(projection_internal_data,
-					projection_data);
-			pcg_mpi->UpdateTempVector(projection_internal_data, projection_data);
-			pcg_mpi->CalculateAlpha(projection_internal_data, projection_data);
-			pcg_mpi->UpdateOtherVectors(projection_internal_data,
-					projection_data);
-			pcg_mpi->CalculateResidual(projection_internal_data,
-					projection_data);
-			pcg_mpi->DecideToSpawnNextIteration(projection_internal_data,
-					projection_data);
-		} while (projection_internal_data->move_on);
-		pcg_mpi->ExchangePressure(projection_internal_data, projection_data);
-	}
-	WindUpForOneRegion();
-	ApplyPressureAndFinish();
+			+"/common/last_frame", frame, "\n");CommunicateConfig
 }
 
 template class PROJECTION_DRIVER<VECTOR<float,2> >;
