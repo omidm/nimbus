@@ -108,6 +108,9 @@ void Initialization::Execute(Parameter params, const DataArray& da) {
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
 	Parameter par;
+	printf("Jia: Check with new design.\n");
+	app_driver->pcg_mpi->Initialize(app_driver->projection_internal_data, app_driver->projection_data);
+	app_driver->pcg_mpi->CommunicateConfig(app_driver->projection_internal_data, app_driver->projection_data);
 	app_driver->pcg_mpi->ExchangePressure(app_driver->projection_internal_data,	app_driver->projection_data);
 	app_driver->pcg_mpi->InitializeResidual(app_driver->projection_internal_data, app_driver->projection_data);
 	app_driver->pcg_mpi->SpawnFirstIteration(app_driver->projection_internal_data, app_driver->projection_data);

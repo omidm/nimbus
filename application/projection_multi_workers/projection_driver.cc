@@ -227,9 +227,7 @@ template<class TV> void PROJECTION_DRIVER<TV>::PrepareForOneRegion() {
 	pcg_mpi	= new NIMBUS_PCG_SPARSE_MPI<GRID<TV> >(laplace->laplace_mpi->local_pcg,*comm,laplace->laplace_mpi->partitions(color));
 
 	// pcg_mpi.Parallel_Solve(A,x,b,laplace->tolerance);
-	projection_data->tolerance = laplace->tolerance;
-	pcg_mpi->Initialize(projection_internal_data, projection_data);
-	pcg_mpi->CommunicateConfig(projection_internal_data, projection_data);	
+	projection_data->tolerance = laplace->tolerance;	
 }
 
 template<class TV> void PROJECTION_DRIVER<TV>::WindUpForOneRegion() {
