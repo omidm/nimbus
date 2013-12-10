@@ -44,7 +44,7 @@
 #include "job_impl.h"
 #include "PCG_Sparse_Solver.h"
 
-#define NUM_OF_FORLOOP_PARAS 10
+#define NUM_OF_FORLOOP_PARAS 24
 
 Main::Main(Application* app) {
 	set_application(app);
@@ -68,7 +68,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	Parameter par;	
 	GetNewLogicalDataID(&d, 30);
 	GetNewJobID(&j, 3);
-	DefineData("partial_norm", d[0], pid1, neighbor_partitions, par);
+	DefineData("partial_norm", d[0], pid1, neighbor_partitions, par); // copy instance
 	DefineData("partial_norm", d[1], pid2, neighbor_partitions, par);
 	
 	// intermidate data
@@ -79,7 +79,22 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	DefineData("vector", d[6], pid1, neighbor_partitions, par); // b_interior_pid1
 	DefineData("vector", d[7], pid2, neighbor_partitions, par); // b_interior_pid2
 	DefineData("vector", d[8], pid1, neighbor_partitions, par); // z_interior_pid1
-	DefineData("vector", d[9], pid2, neighbor_partitions, par); // z_interior_pid2	
+	DefineData("vector", d[9], pid2, neighbor_partitions, par); // z_interior_pid2
+	DefineData("scalar", d[10], pid1, neighbor_partitions, par); // local_dot_sum_pid1
+	DefineData("scalar", d[11], pid2, neighbor_partitions, par); // local_dot_sum_pid2
+	DefineData("scalar", d[12], pid1, neighbor_partitions, par); // rho_pid1
+	DefineData("scalar", d[13], pid2, neighbor_partitions, par); // rho_pid2
+	DefineData("vector", d[14], pid1, neighbor_partitions, par); // p_interior_pid1
+	DefineData("vector", d[15], pid2, neighbor_partitions, par); // p_interior_pid2
+	DefineData("vector", d[16], pid1, neighbor_partitions, par); // p_ghost_pid1
+	DefineData("vector", d[17], pid2, neighbor_partitions, par); // p_ghost_pid2
+	DefineData("vector", d[18], pid1, neighbor_partitions, par); // temp_interior_pid1
+	DefineData("vector", d[19], pid2, neighbor_partitions, par); // temp_interior_pid2
+	DefineData("vector", d[20], pid1, neighbor_partitions, par); // x_interior_pid1
+	DefineData("vector", d[21], pid2, neighbor_partitions, par); // x_interior_pid2
+	DefineData("scalar", d[22], pid1, neighbor_partitions, par); // local_max_abs_pid1
+	DefineData("scalar", d[23], pid2, neighbor_partitions, par); // local_max_abs_pid2
+
 	
 	// execution
 	read.clear();
@@ -89,6 +104,10 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	write.insert(d[4]); // AC_pid1
 	write.insert(d[6]); // b_interior_pid1
 	write.insert(d[8]); // z_interior_pid1
+	write.insert(d[14]); // p_interior_pid1
+	write.insert(d[16]); // p_ghost_pid1
+	write.insert(d[18]); // temp_interior_pid1
+	write.insert(d[20]); // x_interior_pid2
 	before.clear();
 	after.clear();
 	after.insert(j[2]);
@@ -100,13 +119,16 @@ void Main::Execute(Parameter params, const DataArray& da) {
 	write.insert(d[5]); // AC_pid2
 	write.insert(d[7]); // b_interior_pid2
 	write.insert(d[9]); // z_interior_pid2
+	write.insert(d[15]); // p_interior_pid2
+	write.insert(d[17]); // p_ghost_pid2
+	write.insert(d[19]); // temp_interior_pid2
+	write.insert(d[21]); // x_interior_pid2
 	before.clear();
 	after.clear();
 	after.insert(j[2]);
 	SpawnComputeJob("Init", j[1], read, write, before, after, par);
 	read.clear();
-	read.insert(d[2]);
-	read.insert(d[3]);
+	read.insert(d[22]);
 	write.clear();
 	before.clear();
 	before.insert(j[0]);

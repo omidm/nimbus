@@ -27,7 +27,7 @@ void App::Load() {
 	RegisterJob("Project_Forloop_Part3", new Project_Forloop_Part3(this));
 	RegisterJob("Project_Forloop_Part4", new Project_Forloop_Part4(this));
 	RegisterJob("Global_Sum", new Global_Sum(this));
-	RegisterJob("Global_Max_Abs", new Global_Max_Abs(this));
+	RegisterJob("Global_Max", new Global_Max(this));
 	RegisterJob("Finish", new Finish(this));
 	
 	RegisterData("partial_norm", new PartialNorm(0));

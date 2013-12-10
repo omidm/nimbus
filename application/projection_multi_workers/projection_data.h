@@ -35,12 +35,7 @@ class ProjectionInternalData {
   typedef typename TV::SCALAR T;
   typedef typename TV::template REBIND<int>::TYPE TV_INT;
  public:
-  VECTOR_ND<T> *temp, *p, *z_interior, *x_interior, *b_interior, *p_interior, *temp_interior;
-  int global_n;
-  T global_tolerance;
-  double rho, rho_old;  
-  int desired_iterations, interior_n, local_n;
-  T residual;  
+  VECTOR_ND<T> *temp, *p, *p_interior;
 };
 }  // namespace PhysBAM
 
