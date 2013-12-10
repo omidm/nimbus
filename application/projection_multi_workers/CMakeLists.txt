@@ -31,7 +31,6 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/app.cc
         ${PROJECT_SOURCE_DIR}/data_impl.cc
         ${PROJECT_SOURCE_DIR}/job_impl.cc
-        ${PROJECT_SOURCE_DIR}/job_impl_internal.cc
         ${PROJECT_SOURCE_DIR}/projection_driver.cc
         ${PROJECT_SOURCE_DIR}/projection_example.cc
         ${PROJECT_SOURCE_DIR}/projection_data.cc

@@ -64,55 +64,6 @@ class NIMBUS_PCG_SPARSE_MPI : public NONCOPYABLE
   
   virtual void Initialize_Datatypes();
 
-  // Functions called during projection.
-  // Currently all the needed data is passed by "projection_internal_data" and "projection_data".
-  // [TODO] Change data abstraction.
-
-  // [TODO] Data is initialized here, to be moved.
-  void Initialize(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  // [TODO] Data is initialized here, to be moved.
-  // [TODO] Communcation involved to exchange config parameters.
-  void CommunicateConfig( 
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void ExchangePressure(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void InitializeResidual(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void SpawnFirstIteration(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void DoPrecondition(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void CalculateBeta(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void UpdateSearchVector(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void ExchangeSearchVector(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void UpdateTempVector(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void CalculateAlpha(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void UpdateOtherVectors(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void CalculateResidual(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
-  void DecideToSpawnNextIteration(
-      ProjectionInternalData<TV>* projection_internal_data,
-      ProjectionData<TV>* projection_data);
 };
 }  // namespace PhysBAM
 #endif

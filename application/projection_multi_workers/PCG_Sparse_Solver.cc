@@ -58,11 +58,19 @@ Job* Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {	
+	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
 	dbg(DBG_PROJ, "||Init job starts on worker %d.\n", projection_app->_rankID);
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
-		
+	
+	// load data
+	Sparse_Matrix *A_out = reinterpret_cast<Sparse_Matrix*>(da[1]);
+	Sparse_Matrix *AC_out = reinterpret_cast<Sparse_Matrix*>(da[2]);
+	PCG_Vector *b_interior_out = reinterpret_cast<PCG_Vector*>(da[3]);
+	PCG_Vector *z_interior_out = reinterpret_cast<PCG_Vector*>(da[4]);
+	
+	// execution
 	app_driver->pcg_mpi->Initialize_Datatypes();
 	int local_n=(*app_driver->projection_data->A_array)(1).n;
 	internal->interior_n=app_driver->pcg_mpi->partition.interior_indices.Size()+1;
@@ -78,13 +86,13 @@ void Init::Execute(Parameter params, const DataArray& da) {
 	internal->temp_interior = new VECTOR_ND<T>;
 	internal->temp_interior->Set_Subvector_View(*app_driver->projection_internal_data->temp, app_driver->pcg_mpi->partition.interior_indices);
 	internal->rho=0;
-	internal->rho_old=0;	
+	internal->rho_old=0;
+	internal->local_n = local_n;
 
 	internal->global_n = app_driver->pcg_mpi->Global_Sum(internal->interior_n);
 	internal->global_tolerance = app_driver->pcg_mpi->Global_Max(app_driver->projection_data->tolerance);
 	internal->desired_iterations=internal->global_n;
-	internal->desired_iterations = app_driver->pcg_mpi->pcg.maximum_iterations; // HERE we set desired_iterations = pcg.maximum_iterations, since global_n >> pcg.maximum_iterations
-	internal->iteration = 1;
+	internal->desired_iterations = app_driver->pcg_mpi->pcg.maximum_iterations; // HERE we set desired_iterations = pcg.maximum_iterations, since global_n >> pcg.maximum_iterations	
 
 	VECTOR_ND<float>& x = (*app_driver->projection_data->x); 
 	VECTOR_ND<float>& temp = (*app_driver->projection_internal_data->temp);
@@ -99,6 +107,13 @@ void Init::Execute(Parameter params, const DataArray& da) {
 			app_driver->pcg_mpi->pcg.modified_incomplete_cholesky_coefficient, 
 			app_driver->pcg_mpi->pcg.preconditioner_zero_tolerance,
 			app_driver->pcg_mpi->pcg.preconditioner_zero_replacement);
+	
+	// output data
+	A_out->matrix_ = &A;
+	AC_out->matrix_ = A.C;
+	b_interior_out->vec_ = internal->b_interior;
+	z_interior_out->vec_ = internal->z_interior;
+	
 	dbg(DBG_PROJ, "||Init job finishes on worker %d.\n", projection_app->_rankID);
 };
 
@@ -111,8 +126,7 @@ Job * Project_Forloop_Condition::Clone() {
 	return new Project_Forloop_Condition(application());
 };
 
-void Project_Forloop_Condition::Execute(Parameter params,
-		const DataArray& input_data) {
+void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input_data) {
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
 	dbg(DBG_PROJ, "||Forloop_Condition job starts on worker %d.\n", projection_app->_rankID);
@@ -120,7 +134,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
 	std::vector<job_id_t> j;
-	std::vector<logical_data_id_t> d, da;
+	std::vector<logical_data_id_t> d, da, params_data;
 	IDSet<logical_data_id_t> read, write;
 	IDSet<job_id_t> before, after;
 	IDSet<partition_id_t> neighbor_partitions;
@@ -132,7 +146,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	IDSet<param_id_t>::IDSetContainer::iterator it;
 	IDSet<param_id_t> temp_set = params.idset();
 	for (it = temp_set.begin(); it != temp_set.end(); it++) {
-		da.push_back(*it);
+		params_data.push_back(*it);		
 	}
 
 	// input_data
@@ -175,16 +189,17 @@ void Project_Forloop_Condition::Execute(Parameter params,
 	DefineData("scalar", da[8], pid2, neighbor_partitions, par); // rho_old_pid2
 	
 	// execution	
-	if(internal->iteration == 1 || (internal->iteration < internal->desired_iterations && internal->residual > internal->global_tolerance)) {
-		printf("Jia: forloop check passed, iter = %d, res = %f\n", internal->iteration, internal->residual);		
+	int iteration = params_data.back();
+	printf("Jia: forloop check passed, iter = %d, res = %f, tol = %f\n", iteration, internal->residual, internal->global_tolerance);	
+	if(iteration == 1 || (iteration < internal->desired_iterations && internal->residual > internal->global_tolerance)) {				
 		GetNewJobID(&j, 19);
 
 		// Project_Forloop_Part1, pid = 1
 		read.clear();
-		read.insert(da[1]); // A_pid1
-		read.insert(da[3]); // b_interior_pid1
+		read.insert(params_data[4]); // AC_pid1
+		read.insert(params_data[6]); // b_interior_pid1
 		write.clear();
-		write.insert(d[14]); //z_interior_pid1
+		write.insert(params_data[8]); //z_interior_pid1
 		write.insert(d[2]); // local_dot_prod_zb_pid1
 		before.clear();
 		after.clear(); after.insert(j[2]);
@@ -192,10 +207,10 @@ void Project_Forloop_Condition::Execute(Parameter params,
 
 		// Project_Forloop_Part1, pid = 2
 		read.clear();
-		read.insert(da[2]); // A_pid2
-		read.insert(da[4]); // b_interior_pid2
+		read.insert(params_data[5]); // AC_pid2
+		read.insert(params_data[7]); // b_interior_pid2
 		write.clear();
-		write.insert(d[15]); //z_interior_pid2
+		write.insert(params_data[9]); // z_interior_pid2
 		write.insert(d[3]); // local_dot_prod_zb_pid2
 		before.clear();
 		after.clear();
@@ -223,21 +238,23 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		after.clear();
 		after.insert(j[3]); // Project_Forloop_Part2, pid = 1
 		after.insert(j[4]); // Project_Forloop_Part2, pid = 2
-		after.insert(j[13]); // SpawnCopyJob j[13]
+		//after.insert(j[13]); // SpawnCopyJob j[13]
 		SpawnComputeJob("Global_Sum", j[2], read, write, before, after, par);
 
 		// SpawnCopyJob
+		/*
 		before.clear();
 		before.insert(j[2]);
 		after.clear();
 		after.insert(j[4]);
 		SpawnCopyJob(j[13], d[4], d[17], before, after, par);
-
+		*/
+	
 		// Project_Forloop_Part2, pid = 1
 		read.clear();
 		//read.insert(d[4]); // rho
 		//read.insert(da[7]); // rho_old_pid1
-		read.insert(d[14]); // z_interior_pid1
+		read.insert(params_data[8]); // z_interior_pid1
 		read.insert(d[5]); // p_interior_pid1
 		write.clear();
 		write.insert(d[5]); // p_interior_pid1
@@ -247,7 +264,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		after.clear();
 		after.insert(j[5]); // Project_Forloop_Part3
 		after.insert(j[14]); // SpawnCopyJob
-		param_idset.clear(); param_idset.insert(internal->iteration);
+		param_idset.clear(); param_idset.insert(iteration);
 		par.set_idset(param_idset);
 		SpawnComputeJob("Project_Forloop_Part2", j[3], read, write, before, after, par);
 
@@ -255,21 +272,21 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		read.clear();
 		//read.insert(d[17]); // rho, CopyJob instance
 		//read.insert(da[8]); // rho_old_pid2
-		read.insert(d[15]); // z_interior_pid2
+		read.insert(params_data[9]); // z_interior_pid2
 		read.insert(d[6]); // p_interior_pid2
 		write.clear();
 		write.insert(d[6]); // p_interior_pid2
 		write.insert(da[8]); // rho_old_pid2
 		before.clear();
 		before.insert(j[2]); // Global_Sum
-		before.insert(j[13]); // SpawnCopyJob
+		//before.insert(j[13]); // SpawnCopyJob
 		after.clear();
 		after.insert(j[6]); // Project_Forloop_Part3
 		after.insert(j[15]); // SpawnCopyJob
-		param_idset.clear(); param_idset.insert(internal->iteration);
+		param_idset.clear(); param_idset.insert(iteration);
 		par.set_idset(param_idset);
 		SpawnComputeJob("Project_Forloop_Part2", j[4], read, write, before, after, par);
-
+		
 		// SpawnCopyJob
 		before.clear();
 		before.insert(j[3]);
@@ -286,7 +303,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 
 		// Project_Forloop_Part3, pid = 1
 		read.clear();
-		read.insert(da[1]); // A_pid1
+		read.insert(params_data[2]); // A_pid1
 		read.insert(d[5]); // p_interior_pid1
 		read.insert(d[18]); // p_interior_pid2, CopyJob instance
 		write.clear();
@@ -302,7 +319,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 
 		// Project_Forloop_Part3, pid = 2
 		read.clear();
-		read.insert(da[2]); // A_pid2
+		read.insert(params_data[3]); // A_pid2
 		read.insert(d[6]); // p_interior_pid2
 		read.insert(d[19]); // p_interior_pid1, CopyJob instance
 		write.clear();
@@ -337,20 +354,22 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		after.clear();
 		after.insert(j[8]); // Project_Forloop_Part4, pid = 1
 		after.insert(j[9]); // Project_Forloop_Part4, pid = 2
-		after.insert(j[17]); // SpawnJobCopy
+		//after.insert(j[17]); // SpawnJobCopy
 		SpawnComputeJob("Global_Sum", j[7], read, write, before, after, par);
 
 		// SpawnCopyJob
+		/*
 		before.clear();
 		before.insert(j[7]);
 		after.clear();
 		after.insert(j[9]);
 		SpawnCopyJob(j[17], d[11], d[21], before, after, par);
+		*/
 
 		// Project_Forloop_Part4, pid = 1
 		read.clear();
-		read.insert(d[4]); // rho
-		read.insert(d[11]); // global_sum
+		//read.insert(d[4]); // rho
+		//read.insert(d[11]); // global_sum
 		read.insert(da[5]); // x_interior_pid1
 		read.insert(d[5]); // p_interior_pid1
 		read.insert(da[3]); // b_interior_pid1
@@ -366,8 +385,8 @@ void Project_Forloop_Condition::Execute(Parameter params,
 
 		// Project_Forloop_Part4, pid = 2
 		read.clear();
-		read.insert(d[17]); // rho, CopyJob instance
-		read.insert(d[21]); // global_sum, CopyJob instance
+		//read.insert(d[17]); // rho, CopyJob instance
+		//read.insert(d[21]); // global_sum, CopyJob instance
 		read.insert(da[6]); // x_interior_pid2
 		read.insert(d[6]); // p_interior_pid2
 		read.insert(da[4]); // b_interior_pid2
@@ -377,7 +396,7 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		write.insert(da[4]); // b_interior_pid2
 		before.clear();
 		before.insert(j[7]);
-		before.insert(j[17]); // SpawnCopyJob
+		//before.insert(j[17]); // SpawnCopyJob
 		after.clear();
 		after.insert(j[10]);
 		after.insert(j[18]); // SpawnCopyJobprojection_internal_data
@@ -411,20 +430,22 @@ void Project_Forloop_Condition::Execute(Parameter params,
 		before.clear();
 		before.insert(j[10]);
 		after.clear();
-		//param_idset.clear();
-		//for (int i=0;i<NUM_OF_FORLOOP_INPUTS;i++) param_idset.insert(da[i]);
-		//param_idset.insert(iteration+1);
-		//par.set_idset(param_idset);
+		param_idset.clear();
+		for (unsigned i=0;i<params_data.size()-1;i++) param_idset.insert(params_data[i]);
+		param_idset.insert(iteration + 1);
+		par.set_idset(param_idset);
 		SpawnComputeJob("Project_Forloop_Condition", j[11], read, write, before, after, par);
 	}
 	else {
 		GetNewJobID(&j, 2);
 		read.clear();
+		read.insert(d[0]);
 		write.clear();
 		before.clear();
 		after.clear();
 		SpawnComputeJob("Finish", j[0], read, write, before, after, par);
 		read.clear();
+		read.insert(d[1]);
 		write.clear();
 		before.clear();
 		after.clear();
@@ -447,16 +468,23 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
 	dbg(DBG_PROJ, "||Forloop_Part1 job starts on worker %d.\n", projection_app->_rankID);
-	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;	
+	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
+	
+	// load data	
+	Sparse_Matrix *AC_in = reinterpret_cast<Sparse_Matrix*>(da[0]);
+	PCG_Vector *b_interior_in = reinterpret_cast<PCG_Vector*>(da[1]);
+	PCG_Vector *z_interior_out = reinterpret_cast<PCG_Vector*>(da[2]);
 	
 	//execution
-	int color = 1;
-	SPARSE_MATRIX_FLAT_NXN<T>& A = (*app_driver->projection_data->A_array)(color);
-	VECTOR_ND<T>& z_interior = (*app_driver->projection_internal_data->z_interior);
-	VECTOR_ND<T>& b_interior = (*app_driver->projection_internal_data->b_interior);
-	VECTOR_ND<T>& temp_interior = (*app_driver->projection_internal_data->temp_interior);
-	A.C->Solve_Forward_Substitution(b_interior,temp_interior,true); // diagonal should be treated as the identity
-	A.C->Solve_Backward_Substitution(temp_interior,z_interior,false,true); // diagonal is inverted to save on divides
+	//int color = 1;
+	//SPARSE_MATRIX_FLAT_NXN<T>& A = (*app_driver->projection_data->A_array)(color);
+	VECTOR_ND<T>& z_interior = (*z_interior_out->vec_);
+	VECTOR_ND<T>& b_interior = (*b_interior_in->vec_);
+	VECTOR_ND<T> temp(app_driver->projection_internal_data->local_n, false);
+	VECTOR_ND<T> temp_interior;
+	temp_interior.Set_Subvector_View(temp, app_driver->pcg_mpi->partition.interior_indices);
+	AC_in->matrix_->Solve_Forward_Substitution(b_interior,temp_interior,true); // diagonal should be treated as the identity
+	AC_in->matrix_->Solve_Backward_Substitution(temp_interior,z_interior,false,true); // diagonal is inverted to save on divides
 
 	dbg(DBG_PROJ, "||Forloop_Part1 job finishes on worker %d.\n", projection_app->_rankID);
 };
@@ -477,9 +505,12 @@ void Project_Forloop_Part2::Execute(Parameter params, const DataArray& da) {
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
+	// load data	
+	PCG_Vector *z_interior_in = reinterpret_cast<PCG_Vector*>(da[0]);
+	
 	// execution
 	int iteration = *(params.idset().begin());
-	VECTOR_ND<float>& z_interior = (*internal->z_interior);
+	VECTOR_ND<float>& z_interior = (*z_interior_in->vec_);
 	VECTOR_ND<float>& b_interior = (*internal->b_interior);
 	VECTOR_ND<float>& p_interior = (*internal->p_interior);
 	
@@ -513,13 +544,16 @@ void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {
 	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	PhysBAM::ProjectionInternalData< PhysBAM::VECTOR<float,2> >* internal = app_driver->projection_internal_data;
 	
+	// load data
+	Sparse_Matrix *A = reinterpret_cast<Sparse_Matrix*>(da[0]);		
+	
 	// execution
 	VECTOR_ND<float>& p = (*internal->p);
 	app_driver->pcg_mpi->Fill_Ghost_Cells(p);
-	int color = 1;
-	SPARSE_MATRIX_FLAT_NXN<float>& A = (*app_driver->projection_data->A_array)(color);
+	//int color = 1;
+	//SPARSE_MATRIX_FLAT_NXN<float>& A = (*app_driver->projection_data->A_array)(color);
 	VECTOR_ND<float>& temp = (*internal->temp);	
-	A.Times(p, temp);
+	A->matrix_->Times(p, temp);
 	
 	dbg(DBG_PROJ, "||Forloop_Part3 job finishes on worker %d.\n", projection_app->_rankID);
 };

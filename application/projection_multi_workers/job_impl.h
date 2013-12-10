@@ -35,7 +35,6 @@ class SpawnOneIterationIfNeeded : public Job {
   virtual void Execute(Parameter params, const DataArray& da);
   virtual Job* Clone();
 };
-*/
 
 class OneIteration : public Job {
  public:
@@ -44,8 +43,7 @@ class OneIteration : public Job {
   virtual Job* Clone();
 };
 
-/*
- * class Finish : public Job {
+class Finish : public Job {
  public:
   Finish(Application* app); 
   virtual void Execute(Parameter params, const DataArray& da);
