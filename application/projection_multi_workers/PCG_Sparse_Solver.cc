@@ -83,24 +83,22 @@ void Init::Execute(Parameter params, const DataArray& da) {
 	// execution
 	app_driver->pcg_mpi->Initialize_Datatypes();
 	int local_n=(*app_driver->projection_data->A_array)(1).n;
-	internal->temp = new VECTOR_ND<T>(local_n,false);
 	internal->p = new VECTOR_ND<T>(local_n,false);	
 	VECTOR_ND<T>* x_interior_ptr = new VECTOR_ND<T>;
-	x_interior_ptr->Set_Subvector_View(*app_driver->projection_data->x, app_driver->pcg_mpi->partition.interior_indices);
+	x_interior_ptr->Set_Subvector_View(*app_driver->projection_data->x, INTERVAL<int>(1, INTERIOR_N));
 	VECTOR_ND<T>* b_interior_ptr = new VECTOR_ND<T>;
-	b_interior_ptr->Set_Subvector_View((*app_driver->projection_data->b_array)(1), app_driver->pcg_mpi->partition.interior_indices);
-	internal->p_interior = new VECTOR_ND<T>;
-	internal->p_interior->Set_Subvector_View(*app_driver->projection_internal_data->p, app_driver->pcg_mpi->partition.interior_indices);	
+	b_interior_ptr->Set_Subvector_View((*app_driver->projection_data->b_array)(1), INTERVAL<int>(1, INTERIOR_N));
+	VECTOR_ND<T>* p_interior_ptr = new VECTOR_ND<T>;
+	p_interior_ptr->Set_Subvector_View(*app_driver->projection_internal_data->p, INTERVAL<int>(1, INTERIOR_N));	
 
-	VECTOR_ND<float>& x = (*app_driver->projection_data->x); 
-	VECTOR_ND<float>& temp = (*app_driver->projection_internal_data->temp);
+	VECTOR_ND<float>& x = (*app_driver->projection_data->x);
 	VECTOR_ND<float>& b_interior = (*b_interior_ptr);
-	VECTOR_ND<float> temp_interior;
-	temp_interior.Set_Subvector_View(temp, app_driver->pcg_mpi->partition.interior_indices);
+	VECTOR_ND<float> temp(local_n, false), temp_interior;
+	temp_interior.Set_Subvector_View(temp, INTERVAL<int>(1, INTERIOR_N));
 	SPARSE_MATRIX_FLAT_NXN<float>& A = (*app_driver->projection_data->A_array)(1);
 	app_driver->pcg_mpi->Fill_Ghost_Cells(x);
 	A.Times(x,temp);b_interior-=temp_interior;
-	delete A.C;A.C=A.Create_Submatrix(app_driver->pcg_mpi->partition.interior_indices);	   
+	delete A.C;A.C=A.Create_Submatrix(INTERVAL<int>(1, INTERIOR_N));	   
 	A.C->In_Place_Incomplete_Cholesky_Factorization(1, 0.97, 1e-8, 1e-8);
 	
 	// output data
@@ -108,9 +106,9 @@ void Init::Execute(Parameter params, const DataArray& da) {
 	AC_out->matrix_ = A.C;
 	b_interior_out->vec_ = b_interior_ptr;
 	z_interior_out->vec_ = new VECTOR_ND<T>(INTERIOR_N,false);
-	p_interior_out->vec_ = internal->p_interior;
+	p_interior_out->vec_ = p_interior_ptr;
 	p_ghost_out->vec_ = internal->p;
-	temp_interior_out->vec_ = new VECTOR_ND<T>;	
+	temp_interior_out->vec_ = new VECTOR_ND<T>;
 	x_interior_out->vec_ = x_interior_ptr;
 	
 	dbg(DBG_PROJ, "||Init job finishes on worker %d.\n", projection_app->_rankID);
@@ -431,7 +429,6 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	// load driver
 	App* projection_app = dynamic_cast<App*>(application());
 	dbg(DBG_PROJ, "||Forloop_Part1 job starts on worker %d.\n", projection_app->_rankID);
-	PhysBAM::PROJECTION_DRIVER< PhysBAM::VECTOR<float,2> >* app_driver = projection_app->app_driver;
 	
 	// load data	
 	Sparse_Matrix *AC_in = reinterpret_cast<Sparse_Matrix*>(da[0]);
@@ -444,7 +441,7 @@ void Project_Forloop_Part1::Execute(Parameter params, const DataArray& da) {
 	VECTOR_ND<T>& b_interior = (*b_interior_in->vec_);
 	VECTOR_ND<T> temp(LOCAL_N, false);
 	VECTOR_ND<T> temp_interior;
-	temp_interior.Set_Subvector_View(temp, app_driver->pcg_mpi->partition.interior_indices);
+	temp_interior.Set_Subvector_View(temp, INTERVAL<int> (1, LOCAL_N));
 	AC_in->matrix_->Solve_Forward_Substitution(b_interior,temp_interior,true); // diagonal should be treated as the identity
 	AC_in->matrix_->Solve_Backward_Substitution(temp_interior,z_interior,false,true); // diagonal is inverted to save on divides
 
@@ -514,19 +511,16 @@ void Project_Forloop_Part3::Execute(Parameter params, const DataArray& da) {
 	PCG_Vector *temp_interior_out = reinterpret_cast<PCG_Vector*>(da[3]);
 	PartialNorm *local_dot_sum_out = reinterpret_cast<PartialNorm*>(da[4]);
 	
-	// execution
+	// execution	
 	VECTOR_ND<float>& p = (*internal->p);
 	app_driver->pcg_mpi->Fill_Ghost_Cells(p);
-	//int color = 1;
-	//SPARSE_MATRIX_FLAT_NXN<float>& A = (*app_driver->projection_data->A_array)(color);
-	VECTOR_ND<float>& temp = (*internal->temp);
-	VECTOR_ND<float>& temp_interior = *(temp_interior_out->vec_);
+	VECTOR_ND<float> local_temp(LOCAL_N, false), local_temp_interior;
+	VECTOR_ND<float>& temp_interior = *(temp_interior_out->vec_);	
 	VECTOR_ND<float>& p_interior = *(p_interior_in->vec_);
-	A->matrix_->Times(p, temp);
-	temp_interior.Set_Subvector_View(temp, app_driver->pcg_mpi->partition.interior_indices);
-	
-	local_dot_sum_out->norm_ = VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior,temp_interior);
-	
+	A->matrix_->Times(p, local_temp);
+	local_temp_interior.Set_Subvector_View(local_temp, INTERVAL<int>(1, 1024));	
+	local_dot_sum_out->norm_ = VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior,local_temp_interior);
+	temp_interior = local_temp_interior;
 	dbg(DBG_PROJ, "||Forloop_Part3 job finishes on worker %d.\n", projection_app->_rankID);
 };
 

@@ -36,19 +36,6 @@ class NIMBUS_PCG_SPARSE_MPI : public NONCOPYABLE
     MPI_UTILITIES::Free_Elements_And_Clean_Memory(boundary_datatypes);MPI_UTILITIES::Free_Elements_And_Clean_Memory(ghost_datatypes);
   }
 
-  // [TODO] Global sum should not use MPI.
-  template<class TYPE> TYPE Global_Sum(const TYPE& input) {
-    TYPE output;
-    MPI_UTILITIES::Reduce(input,output,MPI::SUM,comm);
-    return output;
-  }
-
-  // [TODO] Global max should not use MPI.
-  template<class TYPE> TYPE Global_Max(const TYPE& input) {
-     TYPE output;MPI_UTILITIES::Reduce(input,output,MPI::MAX,comm);
-    return output;
-  }
-
   // [TODO] Ghost cell transmission should not use MPI.
   virtual void Fill_Ghost_Cells(VECTOR_ND<T>& v) {
     ARRAY<MPI::Request> requests;

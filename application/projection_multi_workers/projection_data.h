@@ -28,14 +28,12 @@ class ProjectionData {
   T tolerance;
 };
 
-// All data needed to run PCG.
 template<class TV>
 class ProjectionInternalData {
  private:
   typedef typename TV::SCALAR T;
-  typedef typename TV::template REBIND<int>::TYPE TV_INT;
  public:
-  VECTOR_ND<T> *temp, *p, *p_interior;
+  VECTOR_ND<T> *p, *p_interior;
 };
 }  // namespace PhysBAM
 
