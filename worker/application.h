@@ -107,12 +107,14 @@ class Application {
   bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
   bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
   int GetCoveredLogicalObjects(CLdoVector* result,
-       std::string& variable,
-       GeometricRegion* r);
+                               std::string& variable,
+                               GeometricRegion* r);
   int GetAdjacentLogicalObjects(CLdoVector* result,
-       std::string& variable,
-       GeometricRegion* r);
-
+                                std::string& variable,
+                                GeometricRegion* r);
+  int GetIntersectingLogicalObjects(CLdoVector* result,
+                                    std::string& variable,
+                                    GeometricRegion* r);
   void* app_data();
   void set_app_data(void* data);
 

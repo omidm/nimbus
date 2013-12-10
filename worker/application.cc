@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus abstraction of an application. 
+  * Nimbus abstraction of an application.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -142,12 +142,22 @@ int Application::GetCoveredLogicalObjects(CLdoVector* result,
 }
 
 int Application::GetAdjacentLogicalObjects(CLdoVector* result,
-     std::string& variable,
-     GeometricRegion* r) {
+                                           std::string& variable,
+                                           GeometricRegion* r) {
   if (ldo_map_ == NULL) {
     return false;
   } else {
     return ldo_map_->FindAdjacentLogicalObjects(variable, r, result);
+  }
+}
+
+int Application::GetIntersectingLogicalObjects(CLdoVector* result,
+                                               std::string& variable,
+                                               GeometricRegion* r) {
+  if (ldo_map_ == NULL) {
+    return false;
+  } else {
+    return ldo_map_->FindIntersectingLogicalObjects(variable, r, result);
   }
 }
 
