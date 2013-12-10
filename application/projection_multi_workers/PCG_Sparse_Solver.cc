@@ -211,7 +211,7 @@ void Project_Forloop_Condition::Execute(Parameter params, const DataArray& input
 		read.insert(params_data[7]); // b_interior_pid2
 		write.clear();
 		write.insert(params_data[9]); // z_interior_pid2
-		write.insert(d[3]); // local_dot_prod_zb_pid2
+		write.insert(); // local_dot_prod_zb_pid2
 		before.clear();
 		after.clear();
 		after.insert(j[2]);
