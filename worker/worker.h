@@ -33,7 +33,7 @@
  */
 
  /*
-  * Nimbus abstraction of an application. 
+  * Nimbus abstraction of an application.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -86,6 +86,7 @@ class Worker {
 
   worker_id_t id();
   void set_id(worker_id_t id);
+  virtual PhysicalDataMap* data_map();
 
  protected:
   SchedulerClient* client_;
