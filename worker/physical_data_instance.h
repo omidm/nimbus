@@ -40,8 +40,8 @@
   * or different version numbers.
   */
 
-#ifndef NIMBUS_WORKER_PHYSICAL_DATA_OBJECT_H_
-#define NIMBUS_WORKER_PHYSICAL_DATA_OBJECT_H_
+#ifndef NIMBUS_WORKER_PHYSICAL_DATA_INSTANCE_H_
+#define NIMBUS_WORKER_PHYSICAL_DATA_INSTANCE_H_
 
 #include <list>
 #include <set>
@@ -88,4 +88,4 @@ namespace nimbus {
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_PHYSICAL_DATA_OBJECT_H_
+#endif  // NIMBUS_WORKER_PHYSICAL_DATA_INSTANCE_H_

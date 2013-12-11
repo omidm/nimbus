@@ -38,7 +38,7 @@
  *   DATE: Tue Dec 10 10:12:56 2013
  *  DESCR:
  ***********************************************************************/
-#include "worker/physical_data_object.h"
+#include "worker/physical_data_instance.h"
 
 namespace nimbus {
 
