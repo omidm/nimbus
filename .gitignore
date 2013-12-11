@@ -1,3 +1,6 @@
 *.o
 *.out
 *tags
+
+*CMakeCache.txt
+*CMakeFiles/
