@@ -34,7 +34,15 @@
 
  /*
   * TranslatorPhysBAM is a class for translating Nimbus physical objects into
-  * PhysBAM data objects.
+  * PhysBAM data objects. It is templated to make it a little easier
+  * to handle PhysBAM's generality, taking a simple template parameter
+  * of a PhysBAM VECTOR. This VECTOR is typically a 2D or 3D float: it
+  * represents a point in space. The class derives the scalar type
+  * (typically float) from this VECTOR, as well as the dimensionality.
+  *
+  * This class requires a pointer to the Application class because it
+  * needs to be able to translate LogicalDataObjects into physical
+  * data objects.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
@@ -42,24 +50,31 @@
 #ifndef NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
 #define NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
 
+#include <PhysBAM_Tools/Grids_Uniform/GRID.h>
+
+#include "shared/nimbus_types.h"
+#include "shared/geometric_region.h"
+#include "worker/physical_data_object.h"
+
 namespace nimbus {
 
   template <class VECTOR_TYPE> class TranslatorPhysBAM {
   public:
     typedef VECTOR_TYPE TV;
     typedef TV::SCALAR SCALAR_TYPE;
-    typedef ARRAY<TV::SCALAR, FACE_INDEX<TV::dimension> > SCALAR_ARRAY_TYPE;
-    typedef ARRAY<TV, FACE_INDEX<TV::dimension> > VECTOR_ARRAY_TYPE;
+    typedef ARRAY<TV::SCALAR, FACE_INDEX<TV::dimension> > FACE_ARRAY_TYPE;
     
-    TranslatorPhysBAM();
+    TranslatorPhysBAM(Worker* worker);
     virtual ~TranslatorPhysBAM() {}
 
-    static GRID<TV>* MakeGrid(GeometricRegion* region,
-                              CLdoVector* objects);
-    static SCALAR_ARRAY_TYPE* MakeScalarArray(GeometricRegion* region,
-                                              CLdoVector* objects);
-    
-      
+    /* Produce an array of scalars fitting the geometric region,
+       based on the data in the vector of objects. Returns NULL on
+       an error.*/
+    virtual FACE_ARRAY_TYPE* MakeFaceArray(GeometricRegion* region,
+					       PLdoVector* objects);
+
+  private:
+    Worker* worker_;
   };
   
 }  // namespace nimbus
