@@ -43,16 +43,16 @@
 namespace nimbus {
 
 /**
- * \fn nimbus::PhysicalDataObject::PhysicalDataObject()
+ * \fn nimbus::PhysicalDataInstance::PhysicalDataInstance()
  * \brief Brief description.
  * \return
 */
-PhysicalDataObject::PhysicalDataObject() {
+PhysicalDataInstance::PhysicalDataInstance() {
 }
 
 
 /**
- * \fn PhysicalDataObject::PhysicalDataObject(physical_data_id_t id,
+ * \fn PhysicalDataInstance::PhysicalDataInstance(physical_data_id_t id,
 					       LogicalDataObject *lobj,
 					       Data *data,
 					       data_version_t version)
@@ -63,10 +63,10 @@ PhysicalDataObject::PhysicalDataObject() {
  * \param version
  * \return
 */
-PhysicalDataObject::PhysicalDataObject(physical_data_id_t i,
-                                       LogicalDataObject *lobj,
-                                       Data *d,
-                                       data_version_t v) {
+PhysicalDataInstance::PhysicalDataInstance(physical_data_id_t i,
+                                           LogicalDataObject *lobj,
+                                           Data *d,
+                                           data_version_t v) {
   id_ = i;
   logical_object_ = lobj;
   data_ = d;
@@ -75,102 +75,102 @@ PhysicalDataObject::PhysicalDataObject(physical_data_id_t i,
 
 
 /**
- * \fn PhysicalDataObject::~PhysicalDataObject()
+ * \fn PhysicalDataInstance::~PhysicalDataInstance()
  * \brief Brief description.
  * \return
 */
-PhysicalDataObject::~PhysicalDataObject() {
+PhysicalDataInstance::~PhysicalDataInstance() {
 }
 
 
 /**
- * \fn physical_data_id_t PhysicalDataObject::id()
+ * \fn physical_data_id_t PhysicalDataInstance::id()
  * \brief Brief description.
  * \return
 */
-physical_data_id_t PhysicalDataObject::id() const {
+physical_data_id_t PhysicalDataInstance::id() const {
   return id_;
 }
 
 
 /**
- * \fn std::string PhysicalDataObject::variable()
+ * \fn std::string PhysicalDataInstance::variable()
  * \brief Brief description.
  * \return
 */
-std::string PhysicalDataObject::variable() const {
+std::string PhysicalDataInstance::variable() const {
   return logical_object()->variable();
 }
 
 
 /**
- * \fn GeometricRegion * PhysicalDataObject::region()
+ * \fn GeometricRegion * PhysicalDataInstance::region()
  * \brief Brief description.
  * \return
 */
-GeometricRegion * PhysicalDataObject::region() const {
+GeometricRegion * PhysicalDataInstance::region() const {
   return logical_object()->region();
 }
 
 
 /**
- * \fn partition_id_t PhysicalDataObject::partition()
+ * \fn partition_id_t PhysicalDataInstance::partition()
  * \brief Brief description.
  * \return
 */
-partition_id_t PhysicalDataObject::partition() const {
+partition_id_t PhysicalDataInstance::partition() const {
   return logical_object()->partition();
 }
 
 
 /**
- * \fn LogicalDataObject * PhysicalDataObject::logical_object()
+ * \fn LogicalDataObject * PhysicalDataInstance::logical_object()
  * \brief Brief description.
  * \return
 */
-LogicalDataObject * PhysicalDataObject::logical_object() const {
+LogicalDataObject * PhysicalDataInstance::logical_object() const {
   return logical_object_;
 }
 
 
 /**
- * \fn data_version_t PhysicalDataObject::version()
+ * \fn data_version_t PhysicalDataInstance::version()
  * \brief Brief description.
  * \return
 */
-data_version_t PhysicalDataObject::version() const {
+data_version_t PhysicalDataInstance::version() const {
   return version_;
 }
 
 
 /**
- * \fn void PhysicalDataObject::set_version(data_version_t version)
+ * \fn void PhysicalDataInstance::set_version(data_version_t version)
  * \brief Brief description.
  * \param version
  * \return
 */
-void PhysicalDataObject::set_version(data_version_t v) {
+void PhysicalDataInstance::set_version(data_version_t v) {
   version_ = v;
 }
 
 
 /**
- * \fn data_version_t PhysicalDataObject::IncrementVersion()
+ * \fn data_version_t PhysicalDataInstance::IncrementVersion()
  * \brief Brief description.
  * \return
 */
-data_version_t PhysicalDataObject::IncrementVersion() {
+data_version_t PhysicalDataInstance::IncrementVersion() {
   version_++;
   return version_;
 }
 
 
 /**
- * \fn Data * PhysicalDataObject::data()
+ * \fn Data * PhysicalDataInstance::data()
  * \brief Brief description.
  * \return
 */
-Data * PhysicalDataObject::data() const {
+Data * PhysicalDataInstance::data() const {
   return data_;
 }
 

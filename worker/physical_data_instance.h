@@ -54,15 +54,15 @@
 
 namespace nimbus {
 
-  class PhysicalDataObject {
+  class PhysicalDataInstance {
   public:
-    PhysicalDataObject();
-    PhysicalDataObject(physical_data_id_t id,
-                       LogicalDataObject* lobj,
-                       Data* data,
-                       data_version_t version);
+    PhysicalDataInstance();
+    PhysicalDataInstance(physical_data_id_t id,
+                         LogicalDataObject* lobj,
+                         Data* data,
+                         data_version_t version);
 
-    virtual ~PhysicalDataObject();
+    virtual ~PhysicalDataInstance();
 
     virtual physical_data_id_t id() const;
     virtual std::string variable() const;
@@ -81,10 +81,10 @@ namespace nimbus {
     Data* data_;
   };
 
-  typedef std::set<PhysicalDataObject*> PdoSet;
-  typedef std::list<PhysicalDataObject*> PdoList;
-  typedef std::vector<PhysicalDataObject*> PdoVector;
-  typedef std::vector<const PhysicalDataObject*> CPdoVector;
+  typedef std::set<PhysicalDataInstance*> PdiSet;
+  typedef std::list<PhysicalDataInstance*> PdiList;
+  typedef std::vector<PhysicalDataInstance*> PdiVector;
+  typedef std::vector<const PhysicalDataInstance*> CPdiVector;
 
 }  // namespace nimbus
 
