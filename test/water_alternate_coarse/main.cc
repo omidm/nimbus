@@ -32,48 +32,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * A Nimbus worker. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#include "application/water_alternate_coarse/water_app.h"
+#include <iostream>  // NOLINT
+#include <pthread.h>
+#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
+#include "simple_worker.h"
+#include "worker/application.h"
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
-
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
-
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
-
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
+int main(int argc, char *argv[]) {
+  port_t listening_port;
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  if (*argv[1] == '1') {
+    listening_port = WORKER_PORT_1;
+  } else if (*argv[1] == '2') {
+    listening_port = WORKER_PORT_2;
+  } else if (*argv[1] == '3') {
+    listening_port = WORKER_PORT_3;
+  } else if (*argv[1] == '4') {
+    listening_port = WORKER_PORT_4;
+  } else {
+    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  nimbus_initialize();
+  std::cout << "Simple Worker is up!" << std::endl;
+  application::WaterApp *app = new application::WaterApp();
+  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
+      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  w->Run();
+}
 
 
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_

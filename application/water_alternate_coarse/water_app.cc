@@ -1,10 +1,9 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -33,47 +32,40 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/job_loop.h"
+#include "application/water_alternate_coarse/job_main.h"
+#include "application/water_alternate_coarse/water_app.h"
+#include "application/water_alternate_coarse/water_driver.h"
+#include "application/water_alternate_coarse/water_example.h"
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "stdio.h"
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
+namespace application {
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
+    WaterApp::WaterApp() {
+    };
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
+    /* Register data and job types and initialize constant quantities used by
+     * application jobs. */
+    void WaterApp::Load() {
 
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
+        dbg_add_mode(APP_LOG_STR);
 
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+        dbg(APP_LOG, "Loading water application\n");
 
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
+        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, 1);
 
+        RegisterJob(MAIN, new JobMain(this));
+        RegisterJob(LOOP, new JobLoop(this));
+        RegisterJob(ITERATION, new JobIteration(this));
 
-}  // namespace nimbus
+        dbg(APP_LOG, "Completed loading water application\n");
+    }
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+} // namespace application

@@ -109,11 +109,11 @@ GeometricRegion::GeometricRegion(const std::string& data) {
 }
 
 void GeometricRegion::Rebuild(int_dimension_t x,
-                                 int_dimension_t y,
-                                 int_dimension_t z,
-                                 int_dimension_t dx,
-                                 int_dimension_t dy,
-                                 int_dimension_t dz) {
+                              int_dimension_t y,
+                              int_dimension_t z,
+                              int_dimension_t dx,
+                              int_dimension_t dy,
+                              int_dimension_t dz) {
   x_ = x;
   y_ = y;
   z_ = z;

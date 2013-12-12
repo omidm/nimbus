@@ -1,10 +1,9 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -33,47 +32,31 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * This file contains a job corresponding to one iteration consisting of all
+ * different simulation stages (advection, projection, extrapolation etc).
+ * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
+ * edit it as we progress.)
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/job_iteration.h"
+#include "shared/nimbus.h"
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
+namespace application {
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
+    JobIteration::JobIteration(Application *app) {
+        set_application(app);
+    };
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
+    nimbus::Job* JobIteration::Clone() {
+        return new JobIteration(application());
+    }
 
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
+    void JobIteration::Execute(Parameter params, const DataArray& da) {
+        dbg(APP_LOG, "Executing iteration job\n");
+        dbg(APP_LOG, "Completed executing iteration job\n");
+    }
 
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+} // namespace application

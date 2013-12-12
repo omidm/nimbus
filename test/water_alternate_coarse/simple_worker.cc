@@ -32,48 +32,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#include "./simple_worker.h"
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
+SimpleWorker::SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
+        port_t listening_port, Application * a)
+: Worker(scheduler_ip, scheduler_port, listening_port, a) {
+}
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
-
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
-
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_

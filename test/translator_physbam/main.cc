@@ -32,48 +32,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * This file tests whether LogicalDataObjects are being serialized
+  * and deserialized correctly.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#define DEBUG_MODE
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
-
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
-
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
-
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
+#include <iostream> // NOLINT
+#include "data/physbam/translator_physbam.h"
 
 
-}  // namespace nimbus
+void printLdo(nimbus::LogicalDataObject* obj) {
+  printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());
+  printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
+}
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+int main(int argc, char *argv[]) {
+  // Correct relationships:
+  /*
+       A  B  C  D  E
+     A C  I  D  A  I
+     B I  C  D  D  I
+     C D  D  C  D  A
+     D A  D  D  C  I
+     E C  C  A  C  C
+
+     Where C is covers, I is intersects, A is adjacent and
+     D is disjoint.
+
+     Row A, column E, value I means that A intersects E.
+     Row E, column A, value C means that E covers A.
+  */
+
+  nimbus::GeometricRegion* region = new nimbus::GeometricRegion(10, 11, 12, 22, 29, 33);
+  CPdiVector vector();
+  TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator();
+}

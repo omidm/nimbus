@@ -128,7 +128,8 @@ int main(int argc, char *argv[]) {
   std::string strBuf;
   for (int i = 0; i < 5; i++) {
     objects[i]->SerializeToString(&strBuf);
-    nimbus::LogicalDataObject* obj = new nimbus::LogicalDataObject(strBuf);
+    nimbus::LogicalDataObject* obj = new nimbus::LogicalDataObject();
+    obj->Parse(strBuf);
     objects[i] = obj;
   }
 

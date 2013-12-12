@@ -33,47 +33,30 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * This file contains a job corresponding to one iteration consisting of all
+ * different simulation stages (advection, projection, extrapolation etc).
+ * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
+ * edit it as we progress.)
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_ITERATION_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_JOB_ITERATION_H_
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
+#include "shared/nimbus.h"
 
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
+#define ITERATION "iteration"
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
+namespace application {
 
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
+    class JobIteration : public nimbus::Job {
+        public:
+            explicit JobIteration(Application *app);
+            virtual void Execute(Parameter params, const DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
+} // namespace application
 
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_ITERATION_H_

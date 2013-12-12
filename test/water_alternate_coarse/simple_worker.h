@@ -33,59 +33,40 @@
  */
 
  /*
-  * A physical data object is an piece of data on a worker node that an
-  * application can access. Every physical object is an instance of a
-  * logical object, with a corresponding version number. A worker can
-  * have multiple physical objects for one logical object, with the same
-  * or different version numbers.
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_PHYSICAL_DATA_OBJECT_H_
-#define NIMBUS_WORKER_PHYSICAL_DATA_OBJECT_H_
+#ifndef NIMBUS_TEST_WATER_ALTERNATE_COARSE_SIMPLE_WORKER_H_
+#define NIMBUS_TEST_WATER_ALTERNATE_COARSE_SIMPLE_WORKER_H_
 
-#include <list>
-#include <set>
+// #define DEBUG_MODE
+
+#include <boost/thread.hpp>
 #include <string>
 #include <vector>
-#include "shared/nimbus_types.h"
-#include "shared/geometric_region.h"
-#include "shared/logical_data_object.h"
+#include <map>
+#include "shared/scheduler_client.h"
+#include "shared/serialized_data.h"
+#include "shared/cluster.h"
 #include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "shared/parser.h"
+#include "shared/log.h"
+#include "worker/worker.h"
 
-namespace nimbus {
 
-  class PhysicalDataObject {
+class SimpleWorker : public Worker {
   public:
-    PhysicalDataObject();
-    PhysicalDataObject(physical_data_id_t id,
-                       LogicalDataObject* lobj,
-                       Data* data,
-                       data_version_t version);
+    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
+        port_t listening_port, Application * a);
+};
 
-    virtual ~PhysicalDataObject();
 
-    virtual physical_data_id_t id() const;
-    virtual std::string variable() const;
-    virtual GeometricRegion* region() const;
-    virtual partition_id_t partition() const;
-    virtual LogicalDataObject* logical_object() const;
-    virtual data_version_t version() const;
-    virtual void set_version(data_version_t version);
-    virtual data_version_t IncrementVersion();
-    virtual Data* data() const;
 
-  private:
-    physical_data_id_t id_;
-    data_version_t version_;
-    LogicalDataObject* logical_object_;
-    Data* data_;
-  };
 
-  typedef std::set<PhysicalDataObject*> PdoSet;
-  typedef std::list<PhysicalDataObject*> PdoList;
-  typedef std::vector<PhysicalDataObject*> PdoVector;
-  typedef std::vector<const PhysicalDataObject*> CPdoVector;
 
-}  // namespace nimbus
-
-#endif  // NIMBUS_WORKER_PHYSICAL_DATA_OBJECT_H_
+#endif  // NIMBUS_TEST_WATER_ALTERNATE_COARSE_SIMPLE_WORKER_H_
