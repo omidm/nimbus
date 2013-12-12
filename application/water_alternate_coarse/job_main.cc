@@ -32,21 +32,42 @@
  */
 
 /*
+ * This file contains the "main" job that Nimbus launches after loading an
+ * application. All subsequent jobs are spawned from here.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "job_main.h"
+#include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/job_main.h"
 #include "shared/nimbus.h"
+#include <vector>
 
 namespace application {
 
     JobMain::JobMain(Application *app) {
+        set_application(app);
     };
 
-    void JobMain::Execute(Parameter params, const DataArray& da) {
+    nimbus::Job* JobMain::Clone() {
+        return new JobMain(application());
     }
 
-    nimbus::Job* JobMain::Clone() {
+    void JobMain::Execute(Parameter params, const DataArray& da) {
+        dbg(APP_LOG, "Executing main job\n");
+        int job_num = 1;
+        std::vector<nimbus::job_id_t> job_ids;
+        GetNewJobID(&job_ids, job_num);
+        nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+        nimbus::IDSet<nimbus::job_id_t> before, after;
+        nimbus::Parameter par_job;
+        SpawnComputeJob(ITERATION,
+                        job_ids[0],
+                        read, write,
+                        before, after,
+                        par_job);
+        dbg(APP_LOG, "Completed executing main job\n");
     }
 
 } // namespace application

@@ -33,6 +33,9 @@
  */
 
 /*
+ * This file contains the "main" job that Nimbus launches after loading an
+ * application. All subsequent jobs are spawned from here.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
@@ -40,6 +43,8 @@
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_JOB_MAIN_H_
 
 #include "shared/nimbus.h"
+
+#define MAIN "main"
 
 namespace application {
 

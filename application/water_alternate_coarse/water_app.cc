@@ -35,16 +35,37 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/job_loop.h"
+#include "application/water_alternate_coarse/job_main.h"
+#include "application/water_alternate_coarse/water_app.h"
+#include "application/water_alternate_coarse/water_driver.h"
+#include "application/water_alternate_coarse/water_example.h"
+#include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
-#include "water_app.h"
 
 namespace application {
 
     WaterApp::WaterApp() {
     };
 
+    /* Register data and job types and initialize constant quantities used by
+     * application jobs. */
     void WaterApp::Load() {
+
+        dbg_add_mode(APP_LOG_STR);
+
+        dbg(APP_LOG, "Loading water application\n");
+
+        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, 1);
+
+        RegisterJob(MAIN, new JobMain(this));
+        RegisterJob(LOOP, new JobLoop(this));
+        RegisterJob(ITERATION, new JobIteration(this));
+
+        dbg(APP_LOG, "Completed loading water application\n");
     }
 
 } // namespace application

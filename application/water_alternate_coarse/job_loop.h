@@ -1,9 +1,10 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- vd* are met:
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -32,31 +33,28 @@
  */
 
 /*
- * This file contains a job corresponding to one iteration consisting of all
- * different simulation stages (advection, projection, extrapolation etc).
- * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
- * edit it as we progress.)
+ * This file contains a loop job that spawns iteration jobs at a coarse
+ * granularity.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_LOOP_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_JOB_LOOP_H_
+
 #include "shared/nimbus.h"
+
+#define LOOP "loop"
 
 namespace application {
 
-    JobIteration::JobIteration(Application *app) {
-        set_application(app);
+    class JobLoop : public nimbus::Job {
+        public:
+            JobLoop(Application *app);
+            virtual void Execute(Parameter params, const DataArray& da);
+            virtual nimbus::Job* Clone();
     };
 
-    nimbus::Job* JobIteration::Clone() {
-        return new JobIteration(application());
-    }
-
-    void JobIteration::Execute(Parameter params, const DataArray& da) {
-        dbg(APP_LOG, "Executing iteration job\n");
-        dbg(APP_LOG, "Completed executing iteration job\n");
-    }
-
 } // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_LOOP_H_

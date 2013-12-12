@@ -1,9 +1,10 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- vd* are met:
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -31,32 +32,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains a job corresponding to one iteration consisting of all
- * different simulation stages (advection, projection, extrapolation etc).
- * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
- * edit it as we progress.)
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * A Nimbus worker. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/water_app.h"
+#include <iostream>  // NOLINT
+#include <pthread.h>
 #include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
+#include "simple_worker.h"
+#include "worker/application.h"
 
-namespace application {
+int main(int argc, char *argv[]) {
+  port_t listening_port;
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  if (*argv[1] == '1') {
+    listening_port = WORKER_PORT_1;
+  } else if (*argv[1] == '2') {
+    listening_port = WORKER_PORT_2;
+  } else if (*argv[1] == '3') {
+    listening_port = WORKER_PORT_3;
+  } else if (*argv[1] == '4') {
+    listening_port = WORKER_PORT_4;
+  } else {
+    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  nimbus_initialize();
+  std::cout << "Simple Worker is up!" << std::endl;
+  application::WaterApp *app = new application::WaterApp();
+  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
+      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  w->Run();
+}
 
-    JobIteration::JobIteration(Application *app) {
-        set_application(app);
-    };
 
-    nimbus::Job* JobIteration::Clone() {
-        return new JobIteration(application());
-    }
-
-    void JobIteration::Execute(Parameter params, const DataArray& da) {
-        dbg(APP_LOG, "Executing iteration job\n");
-        dbg(APP_LOG, "Completed executing iteration job\n");
-    }
-
-} // namespace application

@@ -33,6 +33,11 @@
  */
 
 /*
+ * This file contains a job corresponding to one iteration consisting of all
+ * different simulation stages (advection, projection, extrapolation etc).
+ * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
+ * edit it as we progress.)
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
@@ -40,6 +45,8 @@
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_JOB_ITERATION_H_
 
 #include "shared/nimbus.h"
+
+#define ITERATION "iteration"
 
 namespace application {
 

@@ -5,22 +5,27 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 ###########################################################################
 
 #Set a project name
-SET(PROJECT_NAME Water)
+SET(PROJECT_NAME water_app)
 PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root and prtobuf files directory
 SET(NIMBUS_ROOT ${PROJECT_SOURCE_DIR}/../..)
 
+include_directories(${NIMBUS_ROOT})
+
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
-SET(${PROJECT_NAME}_cc
+SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_iteration.cc
+    ${PROJECT_SOURCE_DIR}/job_loop.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     )
 SET(${PROJECT_NAME}_h
+    ${PROJECT_SOURCE_DIR}/app_utils.h
     ${PROJECT_SOURCE_DIR}/job_iteration.h
+    ${PROJECT_SOURCE_DIR}/job_loop.h
     ${PROJECT_SOURCE_DIR}/job_main.h
     ${PROJECT_SOURCE_DIR}/water_app.h
     ${PROJECT_SOURCE_DIR}/water_driver.h
@@ -30,6 +35,8 @@ SET(${PROJECT_NAME}_h
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
+SET(PROTO_LIB protobuf)
+LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
 
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)

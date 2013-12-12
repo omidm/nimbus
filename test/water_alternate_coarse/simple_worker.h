@@ -1,9 +1,10 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- vd* are met:
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -31,32 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains a job corresponding to one iteration consisting of all
- * different simulation stages (advection, projection, extrapolation etc).
- * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
- * edit it as we progress.)
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
+  * without special discretion. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
-#include "shared/nimbus.h"
+#ifndef NIMBUS_TEST_WATER_ALTERNATE_COARSE_SIMPLE_WORKER_H_
+#define NIMBUS_TEST_WATER_ALTERNATE_COARSE_SIMPLE_WORKER_H_
 
-namespace application {
+// #define DEBUG_MODE
 
-    JobIteration::JobIteration(Application *app) {
-        set_application(app);
-    };
+#include <boost/thread.hpp>
+#include <string>
+#include <vector>
+#include <map>
+#include "shared/scheduler_client.h"
+#include "shared/serialized_data.h"
+#include "shared/cluster.h"
+#include "worker/data.h"
+#include "worker/job.h"
+#include "worker/application.h"
+#include "shared/parser.h"
+#include "shared/log.h"
+#include "worker/worker.h"
 
-    nimbus::Job* JobIteration::Clone() {
-        return new JobIteration(application());
-    }
 
-    void JobIteration::Execute(Parameter params, const DataArray& da) {
-        dbg(APP_LOG, "Executing iteration job\n");
-        dbg(APP_LOG, "Completed executing iteration job\n");
-    }
+class SimpleWorker : public Worker {
+  public:
+    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
+        port_t listening_port, Application * a);
+};
 
-} // namespace application
+
+
+
+
+#endif  // NIMBUS_TEST_WATER_ALTERNATE_COARSE_SIMPLE_WORKER_H_

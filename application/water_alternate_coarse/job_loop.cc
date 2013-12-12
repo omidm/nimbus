@@ -32,31 +32,29 @@
  */
 
 /*
- * This file contains a job corresponding to one iteration consisting of all
- * different simulation stages (advection, projection, extrapolation etc).
- * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
- * edit it as we progress.)
+ * This file contains a loop job that spawns iteration jobs at a coarse
+ * granularity.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/job_loop.h"
 #include "shared/nimbus.h"
 
 namespace application {
 
-    JobIteration::JobIteration(Application *app) {
+    JobLoop::JobLoop(Application *app) {
         set_application(app);
     };
 
-    nimbus::Job* JobIteration::Clone() {
-        return new JobIteration(application());
+    nimbus::Job* JobLoop::Clone() {
+        return new JobLoop(application());
     }
 
-    void JobIteration::Execute(Parameter params, const DataArray& da) {
-        dbg(APP_LOG, "Executing iteration job\n");
-        dbg(APP_LOG, "Completed executing iteration job\n");
+    void JobLoop::Execute(Parameter params, const DataArray& da) {
+        dbg(APP_LOG, "Executing loop job\n");
+        dbg(APP_LOG, "Completed executing loop job\n");
     }
 
 } // namespace application
