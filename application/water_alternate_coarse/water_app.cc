@@ -39,8 +39,12 @@
 #include "stdio.h"
 #include "water_app.h"
 
-WaterApp::WaterApp() {
-};
+namespace application {
 
-void WaterApp::Load() {
-}
+    WaterApp::WaterApp() {
+    };
+
+    void WaterApp::Load() {
+    }
+
+} // namespace application

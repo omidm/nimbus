@@ -36,20 +36,20 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_WATER_APP_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_MAIN_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_JOB_MAIN_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-    /* Water application lunached by a nimbus worker. */
-    class WaterApp : public nimbus::Application {
+    class JobMain : public nimbus::Job {
         public:
-            WaterApp();
-            virtual void Load();
+            JobMain(Application *app);
+            virtual void Execute(Parameter params, const DataArray& da);
+            virtual nimbus::Job* Clone();
     };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_WATER_APP_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_MAIN_H_

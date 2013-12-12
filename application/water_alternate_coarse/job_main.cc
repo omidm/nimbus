@@ -1,10 +1,9 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -36,20 +35,18 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_WATER_APP_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_WATER_APP_H_
-
+#include "job_main.h"
 #include "shared/nimbus.h"
 
 namespace application {
 
-    /* Water application lunached by a nimbus worker. */
-    class WaterApp : public nimbus::Application {
-        public:
-            WaterApp();
-            virtual void Load();
+    JobMain::JobMain(Application *app) {
     };
 
-} // namespace application
+    void JobMain::Execute(Parameter params, const DataArray& da) {
+    }
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_WATER_APP_H_
+    nimbus::Job* JobMain::Clone() {
+    }
+
+} // namespace application
