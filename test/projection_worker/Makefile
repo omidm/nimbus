@@ -29,7 +29,7 @@ IFLAGS += -I$(PHYSBAM_DIR)
 # ENTER application directory here #
 ####################################
 
-APP_DIR_MULTIPLE = $(NIMBUS_ROOT)/application/projection-two-worker
+APP_DIR_MULTIPLE = $(NIMBUS_ROOT)/application/projection_multi_workers
 
 ####################
 # ENTER flags here #

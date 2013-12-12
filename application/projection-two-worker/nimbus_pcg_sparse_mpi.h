@@ -24,15 +24,13 @@ class NIMBUS_PCG_SPARSE_MPI : public NONCOPYABLE
   typedef typename T_GRID::VECTOR_T TV;typedef typename TV::SCALAR T;typedef typename T_GRID::VECTOR_INT TV_INT;
   PCG_SPARSE<T>& pcg;
   MPI::Intracomm& comm;
-  THREADED_UNIFORM_GRID<T_GRID>* thread_grid;
-  MPI_THREADED_UNIFORM_GRID<T_GRID>* mpi_threaded_grid;
   SPARSE_MATRIX_PARTITION& partition;
   ARRAY<MPI::Datatype> boundary_datatypes,ghost_datatypes;
   ARRAY<ARRAY<int> > columns_to_send;
   ARRAY<ARRAY<int> > columns_to_receive;
 
   NIMBUS_PCG_SPARSE_MPI(PCG_SPARSE<T>& pcg_input,MPI::Intracomm& comm_input,SPARSE_MATRIX_PARTITION& partition_input)
-      : pcg(pcg_input),comm(comm_input),thread_grid(0),mpi_threaded_grid(0),partition(partition_input) {}
+      : pcg(pcg_input),comm(comm_input),partition(partition_input) {}
 
   virtual ~NIMBUS_PCG_SPARSE_MPI() {
     MPI_UTILITIES::Free_Elements_And_Clean_Memory(boundary_datatypes);MPI_UTILITIES::Free_Elements_And_Clean_Memory(ghost_datatypes);

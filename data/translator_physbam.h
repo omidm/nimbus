@@ -32,49 +32,51 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <pthread.h>
-#include <iostream>  // NOLINT
+ /*
+  * TranslatorPhysBAM is a class for translating Nimbus physical objects into
+  * PhysBAM data objects. It is templated to make it a little easier
+  * to handle PhysBAM's generality, taking a simple template parameter
+  * of a PhysBAM VECTOR. This VECTOR is typically a 2D or 3D float: it
+  * represents a point in space. The class derives the scalar type
+  * (typically float) from this VECTOR, as well as the dimensionality.
+  *
+  * This class requires a pointer to the Application class because it
+  * needs to be able to translate LogicalDataObjects into physical
+  * data objects.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
 
-#include "simple_worker.h"
-#include "shared/nimbus.h"
+#ifndef NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
+#define NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
+
+#include <PhysBAM_Tools/Grids_Uniform/GRID.h>
+
 #include "shared/nimbus_types.h"
-#include "worker/application.h"
+#include "shared/geometric_region.h"
+#include "worker/physical_data_object.h"
 
-#include "application/projection_multi_workers/app.h"
+namespace nimbus {
 
-int main(int argc, char *argv[]) {
-  port_t listening_port;
-  int rankID = 0;
-  if (argc < 2) {
-    std::cout << "ERROR: provide an integer (1 to 4)." <<
-      std::endl;
-    exit(-1);
-  }
-  if (*argv[1] == '1') {
-    rankID = 1;
-    std::cout << "1" << std::endl;
-    listening_port = WORKER_PORT_1;
-  } else if (*argv[1] == '2') {
-    rankID = 2;
-    std::cout << "2" << std::endl;
-    listening_port = WORKER_PORT_2;
-  } else if (*argv[1] == '3') {
-    rankID = 3;
-    listening_port = WORKER_PORT_3;
-  } else if (*argv[1] == '4') {
-    rankID = 4;
-    listening_port = WORKER_PORT_4;
-  } else {
-    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
-      std::endl;
-    exit(-1);
-  }
-  nimbus_initialize();
-  std::cout << "Simple Worker is up!" << std::endl;
-  App *app = new App(rankID);
-  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
-      NIMBUS_SCHEDULER_PORT, listening_port, app);
-  w->Run();
-}
+  template <class VECTOR_TYPE> class TranslatorPhysBAM {
+  public:
+    typedef VECTOR_TYPE TV;
+    typedef TV::SCALAR SCALAR_TYPE;
+    typedef ARRAY<TV::SCALAR, FACE_INDEX<TV::dimension> > FACE_ARRAY_TYPE;
+    
+    TranslatorPhysBAM(Worker* worker);
+    virtual ~TranslatorPhysBAM() {}
 
+    /* Produce an array of scalars fitting the geometric region,
+       based on the data in the vector of objects. Returns NULL on
+       an error.*/
+    virtual FACE_ARRAY_TYPE* MakeFaceArray(GeometricRegion* region,
+					       PLdoVector* objects);
 
+  private:
+    Worker* worker_;
+  };
+  
+}  // namespace nimbus
+
+#endif  // NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_

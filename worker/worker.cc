@@ -33,7 +33,7 @@
  */
 
  /*
-  * A Nimbus worker. 
+  * A Nimbus worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -43,7 +43,7 @@
 
 #define MAX_PARALLEL_JOB 10
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     port_t listening_port, Application* a)
@@ -160,7 +160,7 @@ void Worker::ExecuteJob(Job* job) {
   char buff[MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff),
       "Execute Job, name: %25s  id: %4lu  length(ms): %6.3lf  time(s): %6.3lf",
-      job->name().c_str(), job->id().elem(), 1000 * log.timer(), log.GetTime());
+           job->name().c_str(), job->id().elem(), 1000 * log.timer(), log.GetTime());
 
   log.writeToFile(std::string(buff), LOG_INFO);
 
@@ -364,4 +364,8 @@ void Worker::set_id(worker_id_t id) {
   id_ = id;
 }
 
+PhysicalDataMap* Worker::data_map() {
+  return &data_map_;
+}
 
+}  // namespace nimbus
