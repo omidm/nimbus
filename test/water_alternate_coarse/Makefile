@@ -34,8 +34,8 @@ APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Release
 
 IFLAGS  += -I$(LDIR)
 IFLAGS  += -I$(APP_DIR) -I$(PHYSBAM_DIR)
-LFLAGS  += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread $(APP_LIB)
-LDFLAGS += -L$(APP_DIR) -Wl,-rpath $(APP_DIR)
+LFLAGS  += -lnimbus -lprotobuf -lboost_thread-mt -lboost_system-mt -lpthread $(APP_LIB)
+LDFLAGS += -L$(APP_DIR) -Wl,-rpath=$(APP_DIR)
 
 #############################
 # add the dependencies here #

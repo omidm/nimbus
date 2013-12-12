@@ -1,5 +1,5 @@
 
-TARGET = ldo_serialization
+TARGET = translator_physbam
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -10,7 +10,7 @@ H_FILES = $(wildcard *.h)
 CPP_FILES = $(wildcard *.cc)
 OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 
-LFLAGS += -lpthread -lprotobuf -lprotoc -lnimbus -lboost_thread-mt -lboost_system-mt
+LFLAGS += -lpthread -lnimbus -lboost_thread-mt -lboost_system-mt -lprotobuf
 LFLAGS += -lPhysBAM_Dynamics -lPhysBAM_Fluids -lPhysBAM_Geometry -lPhysBAM_Solids
 LFLAGS += -lPhysBAM_Tools -lz
 LDFLAGS += -L. -L/usr/local/lib

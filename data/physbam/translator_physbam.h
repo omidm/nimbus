@@ -40,15 +40,13 @@
   * represents a point in space. The class derives the scalar type
   * (typically float) from this VECTOR, as well as the dimensionality.
   *
-  * This class requires a pointer to the Application class because it
-  * needs to be able to translate LogicalDataObjects into physical
-  * data objects.
-  *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
 #define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
+
+#include <algorithm>
 
 #include "data/physbam/physbam_include.h"
 
@@ -59,43 +57,106 @@
 
 namespace nimbus {
 
-  template <class VECTOR_TYPE> class TranslatorPhysBAM {
+template <class VECTOR_TYPE> class TranslatorPhysBAM {
   public:
     typedef VECTOR_TYPE TV;
-    typedef typename TV::SCALAR SCALAR_TYPE;
-    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<SCALAR_TYPE, FaceIndex > FACE_ARRAY_TYPE; // NOLINT
+    typedef typename TV::SCALAR scalar_t;
     typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
+    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+    typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex > FaceArray;
 
     enum {
-      X_COORD = 0,
-      Y_COORD = 1,
-      Z_COORD = 2
+      X_COORD = 1,
+      Y_COORD = 2,
+      Z_COORD = 3
     };
 
-    explicit TranslatorPhysBAM(Worker* worker);
+    explicit TranslatorPhysBAM() {}
     virtual ~TranslatorPhysBAM() {}
 
-    /* Produce an array of scalars fitting the geometric region,
-       based on the data in the vector of objects. Returns NULL on
-       an error.*/
-    virtual FACE_ARRAY_TYPE* MakeFaceArray(GeometricRegion* region,
-                                           CPdiVector* objects);
+    virtual FaceArray* MakeFaceArray(GeometricRegion* region,
+                                     CPdiVector* objects) {
+      Dimension3Vector vec;
+      vec(X_COORD) = region->dx();
+      vec(Y_COORD) = region->dy();
+      vec(Z_COORD) = region->dz();
+
+      // Create a FACE_ARRAY of the right size.
+      PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(0, region->dx(),
+                                                     0, region->dy(),
+                                                     0, region->dz());
+
+      FaceArray* fa = new FaceArray();
+      fa->Resize(range);
+
+      if (objects != NULL) {
+        CPdiVector::iterator iter = objects->begin();
+        for (; iter != objects->end(); ++iter) {
+          const PhysicalDataInstance* obj = *iter;
+          Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
+          if (HasOverlap(overlap)) {
+            printf("Incorporating physical object %lu into FaceArray.\n", obj->id());
+          }
+        }
+      }
+
+      return fa;
+    }
 
   private:
-    Worker* worker_;
 
-    virtual Dimension3Vector GetSourceOffset(GeometricRegion* src,
-                                            GeometricRegion* dest);
+    /* Return a vector describing what the offset of dest
+       within src, such that src.x + offset = dest.x. If
+       offset is negative, return 0. */
 
-    virtual Dimension3Vector GetDestOffset(GeometricRegion* src,
-                                           GeometricRegion* dest);
+    virtual Dimension3Vector GetOffset(GeometricRegion* src,
+                                       GeometricRegion* dest) {
+      Dimension3Vector result;
+
+      // If source is > than dest, its offset is zero (it's contained),
+      // otherwise the offset is the difference between the values.
+      int_dimension_t x = dest->x() - src->x();
+      int_dimension_t y = dest->y() - src->y();
+      int_dimension_t z = dest->z() - src->z();
+      result(X_COORD) = (x >= 0)? x:0;
+      result(Y_COORD) = (y >= 0)? y:0;
+      result(Z_COORD) = (z >= 0)? z:0;
+
+      return result;
+    }
 
     virtual Dimension3Vector GetOverlapSize(GeometricRegion* src,
-                                            GeometricRegion* dest);
+                                            GeometricRegion* dest) {
+      Dimension3Vector result;
 
-    virtual bool HasOverlap(Dimension3Vector overlapSize);
-  };
+      int_dimension_t x_start = std::max(src->x(), dest->x());
+      int_dimension_t x_end   = std::min(src->x() + src->dx(),
+                                         dest->x() + dest->dx());
+      int_dimension_t x_size = x_end - x_start;
+
+      int_dimension_t y_start = std::max(src->y(), dest->y());
+      int_dimension_t y_end   = std::min(src->y() + src->dy(),
+                                         dest->y() + dest->dy());
+      int_dimension_t y_size = y_end - y_start;
+
+      int_dimension_t z_start = std::max(src->y(), dest->z());
+      int_dimension_t z_end   = std::min(src->z() + src->dz(),
+                                         dest->z() + dest->dz());
+      int_dimension_t z_size = z_end - z_start;
+
+      result(X_COORD) = (x_size >= 0)? x_size:0;
+      result(Y_COORD) = (y_size >= 0)? y_size:0;
+      result(Z_COORD) = (z_size >= 0)? z_size:0;
+
+      return result;
+    }
+
+    virtual bool HasOverlap(Dimension3Vector overlapSize) {
+      return (overlapSize(X_COORD) > 0 &&
+              overlapSize(Y_COORD) > 0 &&
+              overlapSize(Z_COORD) > 0);
+    }
+};
 
 }  // namespace nimbus
 
