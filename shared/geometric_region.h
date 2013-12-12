@@ -73,13 +73,12 @@ namespace nimbus {
 
     virtual ~GeometricRegion() {}
 
-    void Rebuild(
-            int_dimension_t x,
-            int_dimension_t y,
-            int_dimension_t z,
-            int_dimension_t dx,
-            int_dimension_t dy,
-            int_dimension_t dz);
+    void Rebuild(int_dimension_t x,
+                 int_dimension_t y,
+                 int_dimension_t z,
+                 int_dimension_t dx,
+                 int_dimension_t dy,
+                 int_dimension_t dz);
 
     int_dimension_t x() const;
     int_dimension_t y() const;
