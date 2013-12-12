@@ -47,36 +47,56 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
-#define NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
+#ifndef NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
+#define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
 
-#include <PhysBAM_Tools/Grids_Uniform/GRID.h>
+#include "data/physbam/physbam_include.h"
 
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
-#include "worker/physical_data_object.h"
+#include "worker/physical_data_instance.h"
+#include "worker/worker.h"
 
 namespace nimbus {
 
   template <class VECTOR_TYPE> class TranslatorPhysBAM {
   public:
     typedef VECTOR_TYPE TV;
-    typedef TV::SCALAR SCALAR_TYPE;
-    typedef ARRAY<TV::SCALAR, FACE_INDEX<TV::dimension> > FACE_ARRAY_TYPE;
-    
-    TranslatorPhysBAM(Worker* worker);
+    typedef typename TV::SCALAR SCALAR_TYPE;
+    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+    typedef typename PhysBAM::ARRAY<SCALAR_TYPE, FaceIndex > FACE_ARRAY_TYPE; // NOLINT
+    typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
+
+    enum {
+      X_COORD = 0,
+      Y_COORD = 1,
+      Z_COORD = 2
+    };
+
+    explicit TranslatorPhysBAM(Worker* worker);
     virtual ~TranslatorPhysBAM() {}
 
     /* Produce an array of scalars fitting the geometric region,
        based on the data in the vector of objects. Returns NULL on
        an error.*/
     virtual FACE_ARRAY_TYPE* MakeFaceArray(GeometricRegion* region,
-					       PLdoVector* objects);
+                                           CPdiVector* objects);
 
   private:
     Worker* worker_;
+
+    virtual Dimension3Vector GetSourceOffset(GeometricRegion* src,
+                                            GeometricRegion* dest);
+
+    virtual Dimension3Vector GetDestOffset(GeometricRegion* src,
+                                           GeometricRegion* dest);
+
+    virtual Dimension3Vector GetOverlapSize(GeometricRegion* src,
+                                            GeometricRegion* dest);
+
+    virtual bool HasOverlap(Dimension3Vector overlapSize);
   };
-  
+
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_TRANSLATOR_PHYSBAM_H_
+#endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
