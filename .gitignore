@@ -1,3 +1,5 @@
 *.o
 *.out
 *tags
+.cproject
+.project
