@@ -46,4 +46,6 @@
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
 
+typedef float T;
+
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_

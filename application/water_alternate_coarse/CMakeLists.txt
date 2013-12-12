@@ -27,6 +27,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/water_app.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
+    ${PROJECT_SOURCE_DIR}/water_sources.cc
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
@@ -36,6 +37,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/water_app.h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h
+    ${PROJECT_SOURCE_DIR}/water_sources.h
     )
 
 #List the libraries you want to link against - including a higher-level
