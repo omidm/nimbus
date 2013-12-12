@@ -39,11 +39,7 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#define DEBUG_MODE
-
-#include <iostream> // NOLINT
 #include "data/physbam/translator_physbam.h"
-
 
 void printLdo(nimbus::LogicalDataObject* obj) {
   printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());
@@ -69,5 +65,10 @@ int main(int argc, char *argv[]) {
 
   nimbus::GeometricRegion* region = new nimbus::GeometricRegion(10, 11, 12, 22, 29, 33);
   CPdiVector vector();
-  TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator();
+  TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator;
+
+  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result; // NOLINT
+
+  result = translator.MakeFaceArray(region, NULL);
+  printf("%p\n", result);
 }
