@@ -1,4 +1,4 @@
-all: check data_t physbam
+all: check data_t # physbam
 
 NIMBUS_ROOT = ..
 include $(NIMBUS_ROOT)/Makeinclude
