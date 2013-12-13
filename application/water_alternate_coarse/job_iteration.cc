@@ -69,6 +69,11 @@ namespace application {
         example->write_substeps_level = -1;
         example->cfl = 1;
         example->output_directory = kOutputDir;
+
+        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
+                                 PhysBAM::RANGE<TV>(TV(),
+                                                    TV::All_Ones_Vector())
+                                 );
         PhysBAM::WaterSources::Add_Source(example);
 
         // initialize driver

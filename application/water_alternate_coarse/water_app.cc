@@ -61,8 +61,7 @@ namespace application {
         dbg(APP_LOG, "Loading water application\n");
 
         // PhysBAM logging and R/W
-        int threads_num = 1;
-        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, threads_num);
+        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 

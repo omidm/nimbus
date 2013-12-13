@@ -39,13 +39,10 @@
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_APP_UTILS_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
 
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include "shared/dbg.h"
-
-#ifndef APP_UTILS_
-#define APP_UTILS_
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
@@ -53,6 +50,7 @@
 namespace application {
 
     // application specific parameters
+    const int kThreadsNum = 1;
     const int kScale = 30;
     const int kDimension = 3;
     const int kLastFrame = 15;
@@ -65,7 +63,5 @@ namespace application {
     typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
 
 }
-
-#endif  // APP_UTILS_
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
