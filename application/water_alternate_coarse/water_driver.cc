@@ -56,11 +56,12 @@ Initialize()
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
     // setup time
-    current_frame=example.first_frame;
+    if (example.restart)
+        current_frame = example.restart;
+    else
+        current_frame = example.first_frame;
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
-
-    example.face_velocities.Resize(example.mac_grid);
 
     for(int i=1;i<=TV::dimension;i++)
     {
@@ -68,7 +69,6 @@ Initialize()
         example.domain_boundary(i)(2)=true;
     }
     example.domain_boundary(2)(2)=false;
-
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
     example.phi_boundary=&example.phi_boundary_water;
@@ -76,9 +76,33 @@ Initialize()
     example.boundary=&example.boundary_scalar;
     example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
+    example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
+    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
     example.incompressible.Initialize_Grids(example.mac_grid);
+    example.projection.Initialize_Grid(example.mac_grid);
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
+    example.face_velocities.Resize(example.mac_grid);
+
+    example.particle_levelset_evolution.Set_Time(time);
+    example.particle_levelset_evolution.Set_CFL_Number((T).9);
+
     example.incompressible.Set_Custom_Advection(example.advection_scalar);
-    example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+
+    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
+    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
+
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
+    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
+    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
+    example.particle_levelset_evolution.Use_Particle_Levelset(true);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
+    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
+
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
@@ -86,6 +110,28 @@ Initialize()
     example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
     example.incompressible.projection.elliptic_solver->pcg.Show_Results();
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
+
+    if (example.restart) {
+        example.Read_Output_Files(example.restart);
+        example.collision_bodies_affecting_fluid.Rasterize_Objects();
+        example.collision_bodies_affecting_fluid.
+            Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    }
+    else {
+        example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+        example.collision_bodies_affecting_fluid.Rasterize_Objects();
+        example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+        example.Initialize_Phi();
+        example.Adjust_Phi_With_Sources(time);
+        example.particle_levelset_evolution.Make_Signed_Distance();
+    }
+
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.particle_levelset_evolution.Set_Seed(2606);
+    if (!example.restart)
+        example.particle_levelset_evolution.Seed_Particles(time);
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+
     //add forces
     example.incompressible.Set_Gravity();
     example.incompressible.Set_Body_Force(true);
@@ -101,44 +147,14 @@ Initialize()
     example.incompressible.Set_Variable_Viscosity(false);
     example.incompressible.projection.Set_Density(1e3);
 
-    example.collision_bodies_affecting_fluid.Initialize_Grids();
-    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
-    example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
-
-    example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
-    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-    example.particle_levelset_evolution.Set_Time(time);
-    example.particle_levelset_evolution.Set_CFL_Number((T).9);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
-    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
-    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
-    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
-    example.particle_levelset_evolution.Use_Particle_Levelset(true);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
-    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
-    example.Initialize_Phi();
-    example.Adjust_Phi_With_Sources(time);
-    example.particle_levelset_evolution.Make_Signed_Distance();
-    example.particle_levelset_evolution.Set_Seed(2606);
-    example.particle_levelset_evolution.Seed_Particles(time);
-    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-
     ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
 
-    example.projection.Initialize_Grid(example.mac_grid);
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
-    Write_Output_Files(example.first_frame);
+    if (!example.restart)
+        Write_Output_Files(example.first_frame);
 }
 //#####################################################################
 // Run

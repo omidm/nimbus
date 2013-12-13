@@ -3,7 +3,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- vd* are met:
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -59,11 +59,11 @@ namespace application {
         dbg(APP_LOG, "Executing loop job\n");
 
         int frame;
-        std::stringstream in_frame_ss;
+        std::stringstream frame_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        in_frame_ss.str(params_str);
-        in_frame_ss >> frame;
+        frame_ss.str(params_str);
+        frame_ss >> frame;
 
         if (frame < kLastFrame) {
             int job_num = 1;
@@ -74,11 +74,8 @@ namespace application {
             nimbus::IDSet<nimbus::job_id_t> before, after;
 
             nimbus::Parameter iter_params;
-            std::stringstream out_frame_ss;
-            out_frame_ss << frame;
-            iter_params.set_ser_data(SerializedData(out_frame_ss.str()));
-
-            dbg(APP_LOG, "Spawning iteration for frame %i\n", frame);
+            iter_params.set_ser_data(SerializedData(params_str));
+            dbg(APP_LOG, "*** Spawning iteration for frame %i\n", frame);
             SpawnComputeJob(ITERATION,
                     job_ids[0],
                     read, write,
