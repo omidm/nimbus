@@ -61,15 +61,8 @@ namespace application {
         dbg(APP_LOG, "Executing iteration job\n");
 
         // initialize example
-        // TODO: move initialization to water_example
-        PhysBAM::STREAM_TYPE stream_type((RW()));
         PhysBAM::WATER_EXAMPLE<TV> *example =
-            new PhysBAM::WATER_EXAMPLE<TV>(stream_type);
-        example->last_frame = kLastFrame;
-        example->write_substeps_level = -1;
-        example->cfl = 1;
-        example->output_directory = kOutputDir;
-
+            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
         example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
                                  PhysBAM::RANGE<TV>(TV(),
                                                     TV::All_Ones_Vector())
