@@ -26,7 +26,7 @@ APP_LIB      = -lwater_app
 # ENTER application directory here #
 ####################################
 
-APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse
+APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Release
 
 ####################
 # ENTER flags here #
@@ -35,7 +35,7 @@ APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse
 IFLAGS  += -I$(LDIR)
 IFLAGS  += -I$(APP_DIR) -I$(PHYSBAM_DIR)
 LFLAGS  += -lnimbus -lprotobuf -lboost_thread-mt -lboost_system-mt -lpthread $(APP_LIB)
-LDFLAGS += -L$(APP_DIR) -Wl,-rpath=$(APP_DIR)
+LDFLAGS += -L$(APP_DIR) -Wl,-rpath $(APP_DIR)
 
 #############################
 # add the dependencies here #
@@ -49,7 +49,7 @@ LDFLAGS += -L$(APP_DIR) -Wl,-rpath=$(APP_DIR)
 ####################################
 
 $(TARGET_WATER): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(LFLAGS)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET_WATER)

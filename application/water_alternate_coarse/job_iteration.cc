@@ -42,6 +42,9 @@
 
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/water_driver.h"
+#include "application/water_alternate_coarse/water_example.h"
+#include "application/water_alternate_coarse/water_sources.h"
 #include "shared/nimbus.h"
 
 namespace application {
@@ -56,6 +59,22 @@ namespace application {
 
     void JobIteration::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing iteration job\n");
+
+        // initialize example
+        PhysBAM::WATER_EXAMPLE<TV> *example =
+            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
+                                 PhysBAM::RANGE<TV>(TV(),
+                                                    TV::All_Ones_Vector())
+                                 );
+        PhysBAM::WaterSources::Add_Source(example);
+
+        // initialize driver
+        PhysBAM::WATER_DRIVER<TV> driver(*example);
+
+        // TODO: main program - separate into initialization and iterations
+        driver.Execute_Main_Program();
+
         dbg(APP_LOG, "Completed executing iteration job\n");
     }
 

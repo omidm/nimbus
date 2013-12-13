@@ -40,8 +40,9 @@
 #include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"
 #include "application/water_alternate_coarse/water_app.h"
-#include "application/water_alternate_coarse/water_driver.h"
-#include "application/water_alternate_coarse/water_example.h"
+#include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
+#include <PhysBAM_Tools/Log/LOG.h>
+#include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
@@ -59,7 +60,10 @@ namespace application {
 
         dbg(APP_LOG, "Loading water application\n");
 
-        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, 1);
+        // PhysBAM logging and R/W
+        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
+        PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
+        PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));

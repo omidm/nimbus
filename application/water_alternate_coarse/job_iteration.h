@@ -52,7 +52,7 @@ namespace application {
 
     class JobIteration : public nimbus::Job {
         public:
-            JobIteration(Application *app);
+            explicit JobIteration(Application *app);
             virtual void Execute(Parameter params, const DataArray& da);
             virtual nimbus::Job* Clone();
     };

@@ -1,5 +1,11 @@
 *.o
 *.out
 *tags
+<<<<<<< HEAD
+
+*CMakeCache.txt
+*CMakeFiles/
+=======
 .cproject
 .project
+>>>>>>> 87da19edefbdb9015b8ae89ccbb41a9c294b0fda

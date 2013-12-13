@@ -2,6 +2,8 @@
 // Copyright 2009, Michael Lentine, Avi Robinson-Mosher, Andrew Selle.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+#include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform/READ_WRITE_GRID.h>
@@ -16,7 +18,6 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Forces/INCOMPRESSIBILITY.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
-#include "water_example.h"
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE
@@ -26,13 +27,13 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
-    last_frame(100),
+    last_frame(application::kLastFrame),
     frame_rate(24),
     write_substeps_level(-1),
     write_output_files(true),
-    output_directory("output"),
+    output_directory(application::kOutputDir),
     number_of_ghost_cells(3),
-    cfl(.9),
+    cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
     projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
     particle_levelset_evolution(mac_grid,number_of_ghost_cells),

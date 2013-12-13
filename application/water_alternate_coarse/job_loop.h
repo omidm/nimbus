@@ -50,7 +50,7 @@ namespace application {
 
     class JobLoop : public nimbus::Job {
         public:
-            JobLoop(Application *app);
+            explicit JobLoop(Application *app);
             virtual void Execute(Parameter params, const DataArray& da);
             virtual nimbus::Job* Clone();
     };
