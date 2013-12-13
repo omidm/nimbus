@@ -118,13 +118,11 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                     (source_z * (obj->region()->y() * obj->region()->x())) +
                     (source_y * (obj->region()->x())) +
                     source_x;
-
                   source_index *= 3;  // We are in three dimensions
 
                   int dest_x = x + dest(X_COORD);
                   int dest_y = y + dest(Y_COORD);
                   int dest_z = z + dest(Z_COORD);
-
                   dest_index =
                     (dest_z * (region->y() * region->x())) +
                     (dest_y * (region->x())) +
@@ -148,6 +146,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
       return fa;
     }
 
+    /** Take a FaceArray described by region and write it out to the
+     *  PhysicalDataInstance objects in the objects array. */
     virtual bool WriteFaceArray(GeometricRegion* region,
                                 CPdiVector* objects,
                                 FaceArray* fa) {
