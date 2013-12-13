@@ -41,11 +41,20 @@
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_APP_UTILS_H_
 
+#include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include "shared/dbg.h"
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
 
+// application specific parameters
+#define app_scale 30
+#define app_dimension 3
+//
+
 typedef float T;
+typedef float RW;
+typedef PhysBAM::VECTOR<T,   app_dimension> TV;
+typedef PhysBAM::VECTOR<int, app_dimension> TV_INT;
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
