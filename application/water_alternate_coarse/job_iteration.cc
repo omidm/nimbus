@@ -42,6 +42,9 @@
 
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/water_driver.h"
+#include "application/water_alternate_coarse/water_example.h"
+#include "application/water_alternate_coarse/water_sources.h"
 #include "shared/nimbus.h"
 
 namespace application {
@@ -56,6 +59,14 @@ namespace application {
 
     void JobIteration::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing iteration job\n");
+
+        PhysBAM::STREAM_TYPE stream_type((RW()));
+        PhysBAM::WATER_EXAMPLE<TV> *example =
+            new PhysBAM::WATER_EXAMPLE<TV>(stream_type);
+        example->last_frame = kLastFrame;
+        example->write_substeps_level = -1;
+        example->cfl = 1;
+
         dbg(APP_LOG, "Completed executing iteration job\n");
     }
 

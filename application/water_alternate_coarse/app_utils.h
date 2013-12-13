@@ -44,17 +44,27 @@
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include "shared/dbg.h"
 
+#ifndef APP_UTILS_
+#define APP_UTILS_
+
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
 
-// application specific parameters
-#define app_scale 30
-#define app_dimension 3
-//
+namespace application {
 
-typedef float T;
-typedef float RW;
-typedef PhysBAM::VECTOR<T,   app_dimension> TV;
-typedef PhysBAM::VECTOR<int, app_dimension> TV_INT;
+    // application specific parameters
+    const int kScale = 30;
+    const int kDimension = 3;
+    const int kLastFrame = 15;
+    //
+
+    typedef float T;
+    typedef float RW;
+    typedef PhysBAM::VECTOR<T,   kDimension> TV;
+    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
+
+}
+
+#endif  // APP_UTILS_
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_

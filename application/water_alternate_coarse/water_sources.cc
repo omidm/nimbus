@@ -6,6 +6,8 @@
 
 using namespace PhysBAM;
 
+typedef application::T T;
+
 void Add_Source(WATER_EXAMPLE<VECTOR<T,1> >* example)
 {
     PHYSBAM_FATAL_ERROR();

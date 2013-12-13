@@ -7,9 +7,11 @@
 
 namespace PhysBAM {
 
-void Add_Source(WATER_EXAMPLE<VECTOR<T,1> >* example);
-void Add_Source(WATER_EXAMPLE<VECTOR<T,2> >* example);
-void Add_Source(WATER_EXAMPLE<VECTOR<T,3> >* example);
+    typedef application::T T;
+
+    void Add_Source(WATER_EXAMPLE<VECTOR<T,1> >* example);
+    void Add_Source(WATER_EXAMPLE<VECTOR<T,2> >* example);
+    void Add_Source(WATER_EXAMPLE<VECTOR<T,3> >* example);
 
 } // namespace PhysBAM
 

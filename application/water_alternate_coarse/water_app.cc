@@ -59,7 +59,8 @@ namespace application {
 
         dbg(APP_LOG, "Loading water application\n");
 
-        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, 1);
+        int threads_num = 1;
+        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, threads_num);
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));
