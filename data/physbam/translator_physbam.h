@@ -49,6 +49,7 @@
 #include <algorithm>
 
 #include "data/physbam/physbam_include.h"
+#include "data/physbam/physbam_data.h"
 
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"

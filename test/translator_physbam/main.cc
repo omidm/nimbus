@@ -40,6 +40,7 @@
   */
 
 #include "data/physbam/translator_physbam.h"
+#include "data/physbam/physbam_data.h"
 
 void printLdo(nimbus::LogicalDataObject* obj) {
   printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());

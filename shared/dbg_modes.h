@@ -58,6 +58,7 @@ enum {
   DBG_HOSTS =           DBG_MODE(6),    /* host map/state updates       */
   DBG_DATA_OBJECTS =    DBG_MODE(7),    /* data manager/objects         */
   DBG_MEMORY =          DBG_MODE(8),    /* memory allocation            */
+  DBG_TRANSLATE =       DBG_MODE(9),    /* data translation             */
 /*====== For application use =========*/
   DBG_PROJ =            DBG_MODE(57),   /* Projection module  -quh      */
   DBG_USR1 =            DBG_MODE(58),   /* User component 1             */
@@ -83,6 +84,7 @@ enum {
         {"hosts",   DBG_HOSTS  | DBG_ERROR | DBG_WARN}, \
         {"dobjects", DBG_DATA_OBJECTS | DBG_ERROR | DBG_WARN},  \
         {"memory",  DBG_MEMORY | DBG_ERROR | DBG_WARN},       \
+        {"translate",  DBG_TRANSLATE | DBG_ERROR | DBG_WARN},       \
 \
         {"proj",    DBG_PROJ | DBG_ERROR | DBG_WARN}, \
         {"usr1",    DBG_USR1 | DBG_ERROR | DBG_WARN}, \
