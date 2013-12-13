@@ -56,6 +56,7 @@ namespace application {
     const int kScale = 30;
     const int kDimension = 3;
     const int kLastFrame = 15;
+    const std::string kOutputDir = "output";
     //
 
     typedef float T;
