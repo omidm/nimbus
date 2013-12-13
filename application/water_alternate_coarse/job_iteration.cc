@@ -60,12 +60,17 @@ namespace application {
     void JobIteration::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing iteration job\n");
 
+        // initialize example
         PhysBAM::STREAM_TYPE stream_type((RW()));
         PhysBAM::WATER_EXAMPLE<TV> *example =
             new PhysBAM::WATER_EXAMPLE<TV>(stream_type);
         example->last_frame = kLastFrame;
         example->write_substeps_level = -1;
         example->cfl = 1;
+        PhysBAM::Add_Source(example);
+
+        // initialize driver
+        PhysBAM::WATER_DRIVER<TV> driver(*example);
 
         dbg(APP_LOG, "Completed executing iteration job\n");
     }
