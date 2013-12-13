@@ -1,5 +1,5 @@
 
-TARGET = testr
+TARGET = tester
 all: $(TARGET)
 
 NIMBUS_ROOT = ../..
