@@ -7,11 +7,13 @@
 
 namespace PhysBAM {
 
-    typedef application::T T;
-
-    void Add_Source(WATER_EXAMPLE<VECTOR<T,1> >* example);
-    void Add_Source(WATER_EXAMPLE<VECTOR<T,2> >* example);
-    void Add_Source(WATER_EXAMPLE<VECTOR<T,3> >* example);
+    class WaterSources {
+        public:
+            WaterSources();
+            static void Add_Source(WATER_EXAMPLE<VECTOR<application::T,1> > *example);
+            static void Add_Source(WATER_EXAMPLE<VECTOR<application::T,2> > *example);
+            static void Add_Source(WATER_EXAMPLE<VECTOR<application::T,3> > *example);
+    };
 
 } // namespace PhysBAM
 

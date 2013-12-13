@@ -1,19 +1,24 @@
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/water_example.h"
+#include "application/water_alternate_coarse/water_sources.h"
 #include <PhysBAM_Geometry/Basic_Geometry/CYLINDER.h>
 #include <PhysBAM_Geometry/Implicit_Objects/ANALYTIC_IMPLICIT_OBJECT.h>
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 
 using namespace PhysBAM;
 
-typedef application::T T;
+namespace {
+    typedef application::T T;
+} // namespace
 
-void Add_Source(WATER_EXAMPLE<VECTOR<T,1> >* example)
+WaterSources::WaterSources() {};
+
+void WaterSources::Add_Source(WATER_EXAMPLE<VECTOR<T,1> > *example)
 {
     PHYSBAM_FATAL_ERROR();
 }
 
-void Add_Source(WATER_EXAMPLE<VECTOR<T,2> >* example)
+void WaterSources::Add_Source(WATER_EXAMPLE<VECTOR<T,2> > *example)
 {
     typedef VECTOR<T,2> TV;
     TV point1,point2;BOX<TV> source;
@@ -22,7 +27,7 @@ void Add_Source(WATER_EXAMPLE<VECTOR<T,2> >* example)
     example->sources.Append(new ANALYTIC_IMPLICIT_OBJECT<BOX<TV> >(source));
 }
 
-void Add_Source(WATER_EXAMPLE<VECTOR<T,3> >* example)
+void WaterSources::Add_Source(WATER_EXAMPLE<VECTOR<T,3> > *example)
 {
     typedef VECTOR<T,3> TV;
     TV point1,point2;CYLINDER<T> source;

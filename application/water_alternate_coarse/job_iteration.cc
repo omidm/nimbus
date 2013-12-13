@@ -69,7 +69,7 @@ namespace application {
         example->write_substeps_level = -1;
         example->cfl = 1;
         example->output_directory = kOutputDir;
-        PhysBAM::Add_Source(example);
+        PhysBAM::WaterSources::Add_Source(example);
 
         // initialize driver
         PhysBAM::WATER_DRIVER<TV> driver(*example);
