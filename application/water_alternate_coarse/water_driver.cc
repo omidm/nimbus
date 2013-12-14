@@ -301,23 +301,14 @@ Write_Substep(const std::string& title,const int substep,const int level)
 template<class TV> void WATER_DRIVER<TV>::
 Write_Output_Files(const int frame)
 {
-    printf("*** Writing output files for frame %i", frame);
-    printf("1\n");
     FILE_UTILITIES::Create_Directory(example.output_directory);
-    printf("2\n");
     FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
-    printf("3\n");
     FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
-    printf("4\n");
     FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
-    printf("5\n");
     if(frame==example.first_frame) 
         FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
-    printf("6\n");
     example.Write_Output_Files(frame);
-    printf("7\n");
     FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
-    printf("8\n");
 }
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,2> >;

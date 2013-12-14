@@ -68,7 +68,6 @@ namespace application {
                                params.ser_data().size());
         in_frame_ss.str(params_str);
         in_frame_ss >> frame;
-        dbg(APP_LOG, "*** Executing iteration job for frame %i\n", frame);
 
         // initialize configuration and state
         PhysBAM::WATER_EXAMPLE<TV> *example =
@@ -92,7 +91,6 @@ namespace application {
         example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
         driver.Write_Output_Files(++driver.output_number);
         frame++;
-        dbg(APP_LOG, "### Finished a simulation step\n");
 
         // free resources
         delete example;
@@ -109,7 +107,7 @@ namespace application {
         out_frame_ss << frame;
         loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
 
-        dbg(APP_LOG, "*** Spawning loop after simulating frame %i\n", frame);
+        dbg(APP_LOG, "Spawning loop after simulating frame %i\n", frame);
         SpawnComputeJob(LOOP,
                 job_ids[0],
                 read, write,

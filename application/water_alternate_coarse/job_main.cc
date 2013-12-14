@@ -70,7 +70,7 @@ namespace application {
         out_frame_ss << frame;
         loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
 
-        dbg(APP_LOG, "*** Spawning loop for frame %i in main\n", frame);
+        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
         SpawnComputeJob(LOOP,
                         job_ids[0],
                         read, write,
