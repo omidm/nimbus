@@ -1,83 +1,23 @@
-    
-Author: Omid Mashayekhi <omidm@stanford.edu>
+------------------------------------------------------------------------------
+Author:	chinmaye.shah@stanford.edy (Chinmayee Shah)
+------------------------------------------------------------------------------
 
-====================
-**What does this do:
-====================
+This is a worker intended to run with the application water_alternate_coarse.
 
-This is a simple worker that runs the commands that it receives from the
-scheduler. It is intended to run the 1d-stencil application, although the
-application could be changed to any other one.
+-------------------
+Build instructions:
+-------------------
 
-====================
-**How to run it:
-====================
+1. Build Nimbus.
+2. Build application/water_alternate_coarse.
+3. Issue make (release)/ make release / make debug.
+make will build with release version of water app. To make release, you should
+have Build/Release code in application/water_alternate_coarse. To make debug,
+you should have Build/Debug in application/water_alternate_coarse.
 
-1. issue make
+----
+Run:
+----
 
-2. run ./scheduler.sh first, form the simple_scheduler directory.
-
-3. run ./worker.sh.
-
-
-====================
-**Expected result:
-====================
-
-You should expect to see the following exchange of commands between scheduler
-and worker.
-
-Simple Worker is up!
-Running the Worker
-Opening connections.
-Running Nimbus application: 0
-Start Creating Data and Job Tables
-Finished Creating Data and Job Tables
-Simple Worker Core Processor
-Received command: spawnjob after:{} before:{} id:{0} name:main param:none read:{} type:operation write:{}
-Cloning main job!
-Executing the main job
-Received command: definedata id:{1} name:mainLeft
-Cloning Vec data!
-Received command: definedata id:{2} name:mainRight
-Cloning Vec data!
-Received command: definedata id:{3} name:ghostLeft
-Cloning Vec data!
-Received command: definedata id:{4} name:ghostRight
-Cloning Vec data!
-Received command: spawnjob after:{5} before:{} id:{1} name:init param:none read:{1} write:{1}
-Cloning init job!
-Executing the init job
-Received command: spawnjob after:{5} before:{} id:{2} name:init param:none read:{2} write:{2}
-Cloning init job!
-Executing the init job
-Received command: spawnjob after:{5} before:{} id:{3} name:init param:none read:{3} write:{3}
-Cloning init job!
-Executing the init job
-Received command: spawnjob after:{5} before:{} id:{4} name:init param:none read:{4} write:{4}
-Cloning init job!
-Executing the init job
-Received command: spawnjob after:{} before:{1,2,3,4} id:{5} name:forLoop param:none read:{} write:{}
-Cloning forLoop job!
-Executing the forLoop job
-Received command: spawnjob after:{8,9} before:{} id:{6} name:updateLeft param:none read:{1} write:{3}
-Cloning updateLeft job!
-Executing the updateLeft job
-Received command: spawnjob after:{8,9} before:{} id:{7} name:updateRight param:none read:{2} write:{4}
-Cloning updateRight job!
-Executing the updateRight job
-Received command: spawnjob after:{10} before:{6,7} id:{8} name:applyLeft param:none read:{1,4} write:{1}
-Cloning applyLeft job!
-Executing the applyLeft job
-Received command: spawnjob after:{10} before:{6,7} id:{9} name:applyRight param:none read:{2,3} write:{2}
-Cloning applyRight job!
-Executing the applyRight job
-Received command: spawnjob after:{} before:{8} id:{11} name:print param:none read:{1} write:{}
-Cloning print job!
-Executing the print job
-0, 0, 0, 0, 
-Received command: spawnjob after:{} before:{9} id:{12} name:print param:none read:{2} write:{}
-Cloning print job!
-Executing the print job
-0, 0, 0, 0, 
-
+1. Start scheduler in scheduler_single.
+2. Start the worker in this directory.
