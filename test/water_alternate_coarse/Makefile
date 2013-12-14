@@ -9,24 +9,26 @@ TARGET_WATER = worker
 # common #
 ##########
 
-all: $(TARGET_WATER)
-	 echo "Making water worker"
+all: executable
+	 @echo "Making ${TARGET_WATER}"
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-H_FILES      = $(wildcard *.h)
-CPP_FILES    = $(wildcard *.cc)
-OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
+H_FILES       = $(wildcard *.h)
+CPP_FILES     = $(wildcard *.cc)
+OBJECT_FILES  = $(subst .cc,.o,$(CPP_FILES))
 
-PHYSBAM_DIR  = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/
-APP_LIB      = -lwater_app
+PHYSBAM_DIR    = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/
+APP_LIB        = -lwater_app
+debug: APP_LIB = -lwater_app-debug-debug
 
 ####################################
 # ENTER application directory here #
 ####################################
 
-APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Release
+APP_DIR        = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Release
+debug: APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Debug
 
 ####################
 # ENTER flags here #
@@ -48,8 +50,12 @@ LDFLAGS += -L$(APP_DIR) -Wl,-rpath $(APP_DIR)
 # ENTER rules to build target here #
 ####################################
 
-$(TARGET_WATER): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+executable: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(LFLAGS)
+
+release: executable
+
+debug: executable
 
 clean: clean-files
 	\rm -f $(TARGET_WATER)

@@ -68,6 +68,7 @@ namespace application {
                                params.ser_data().size());
         in_frame_ss.str(params_str);
         in_frame_ss >> frame;
+        dbg(APP_LOG, "*** Executing iteration job for frame %i\n", frame);
 
         // initialize configuration and state
         PhysBAM::WATER_EXAMPLE<TV> *example =
@@ -90,8 +91,11 @@ namespace application {
         example->particle_levelset_evolution.Reseed_Particles(driver.time);
         example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
         driver.Write_Output_Files(++driver.output_number);
-        driver.current_frame++;
-        frame = driver.current_frame;
+        frame++;
+        dbg(APP_LOG, "### Finished a simulation step\n");
+
+        // free resources
+        delete example;
 
         int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;

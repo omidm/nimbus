@@ -75,7 +75,7 @@ namespace application {
 
             nimbus::Parameter iter_params;
             iter_params.set_ser_data(SerializedData(params_str));
-            dbg(APP_LOG, "*** Spawning iteration for frame %i\n", frame);
+            dbg(APP_LOG, "*** Spawning iteration after frame %i\n", frame);
             SpawnComputeJob(ITERATION,
                     job_ids[0],
                     read, write,

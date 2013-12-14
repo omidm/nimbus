@@ -14,6 +14,7 @@
 #include <PhysBAM_Geometry/Grids_Uniform_Interpolation_Collidable/LINEAR_INTERPOLATION_COLLIDABLE_FACE_UNIFORM.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
+#include "stdio.h"
 using namespace PhysBAM;
 namespace{
     template<class TV> void Write_Substep_Helper(void* writer,const std::string& title,int substep,int level)
@@ -300,14 +301,23 @@ Write_Substep(const std::string& title,const int substep,const int level)
 template<class TV> void WATER_DRIVER<TV>::
 Write_Output_Files(const int frame)
 {
+    printf("*** Writing output files for frame %i", frame);
+    printf("1\n");
     FILE_UTILITIES::Create_Directory(example.output_directory);
+    printf("2\n");
     FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
+    printf("3\n");
     FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
+    printf("4\n");
     FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+    printf("5\n");
     if(frame==example.first_frame) 
         FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
+    printf("6\n");
     example.Write_Output_Files(frame);
+    printf("7\n");
     FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
+    printf("8\n");
 }
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,2> >;
