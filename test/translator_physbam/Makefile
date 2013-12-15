@@ -1,5 +1,5 @@
 
-TARGET = translator_physbam
+TARGET = simple_rw overlap_rw
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -21,8 +21,11 @@ LDFLAGS += -L$(NIMBUS_ROOT)/application/physbam-lib/External_Libraries/lib/
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
+simple_rw: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) simple_rw.o -o $@ $(LFLAGS)
+
+overlap_rw: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) overlap_rw.o -o $@ $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)
