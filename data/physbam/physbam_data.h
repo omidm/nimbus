@@ -64,9 +64,9 @@ class PhysBAMData: public Data {
   virtual bool Serialize(SerializedData* ser_data);
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-  virtual char* buffer() {return buffer_;}
+  virtual void* buffer() {return buffer_;}
   virtual int_dimension_t size() {return size_;}
-  virtual void set_buffer(char* b, int_dimension_t s) {
+  virtual void set_buffer(void* b, int_dimension_t s) {
     buffer_ = b;
     size_ = s;
   }
@@ -79,7 +79,7 @@ class PhysBAMData: public Data {
 
  private:
   int_dimension_t size_;
-  char* buffer_;
+  void* buffer_;
 };
 
 }  // namespace nimbus

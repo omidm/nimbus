@@ -97,8 +97,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (HasOverlap(overlap)) {
             dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray.\n", obj->id());
-            PhysBAMData* data = static_cast<PhysBAMData*>obj->data();
-            scalar_t* buffer = static_cast<scalar_t*>(data->Buffer());
+            PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
+            scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
             Dimension3Vector dest = GetOffset(region, obj->region());
             Dimension3Vector src = GetOffset(obj->region(), region);
@@ -124,19 +124,16 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                   int dest_x = x + dest(X_COORD);
                   int dest_y = y + dest(Y_COORD);
                   int dest_z = z + dest(Z_COORD);
-                  dest_index =
-                    (dest_z * (region->y() * region->x())) +
-                    (dest_y * (region->x())) +
-                     dest_x;
 
-                  FaceArray::TV_INT destinationIndex(dest_x, dest_y, dest_z);
+                  typename PhysBAM::VECTOR<int, 3>
+                    destinationIndex(dest_x, dest_y, dest_z);
 
                   // The PhysBAM FACE_ARRAY object abstracts away whether
                   // the data is stored in struct of array or array of struct
                   // form (in practice, usually struct of arrays.
-                  fa(X_COORD, destinationIndex) = buffer[source_index];
-                  fa(Y_COORD, destinationIndex) = buffer[source_index + 1];
-                  fa(Z_COORD, destinationIndex) = buffer[source_index + 2];
+                  (*fa)(X_COORD, destinationIndex) = buffer[source_index];
+                  (*fa)(Y_COORD, destinationIndex) = buffer[source_index + 1];
+                  (*fa)(Z_COORD, destinationIndex) = buffer[source_index + 2];
                 }
               }
             }
@@ -154,9 +151,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                                 FaceArray* fa) {
       int_dimension_t region_size = region->dx() * region->dy() *
                                     region->dz() * 3;
-      if (region_size == fa.buffer_size) {
-        dbg(DBG_ERROR, "ERROR: writing a face array of size %i for a region of size %i and the two sizes should be equal.\n", fa.buffer_size, region_size);  // NOLINT
-        return FALSE;
+      if (region_size != fa->buffer_size) {
+        dbg(DBG_ERROR, "ERROR: writing a face array of size %i for a region of size %i and the two sizes should be equal.\n", fa->buffer_size, region_size);  // NOLINT
+        return false;
       }
 
       if (objects != NULL) {
@@ -170,8 +167,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
           if (!HasOverlap(overlap)) {continue;}
 
           dbg(DBG_TRANSLATE, "Saving FaceArray into physical object %lu.\n", obj->id());
-          PhysBAMData* data = static_cast<PhysBAMData*>obj->data();
-          scalar_t* buffer = data->buffer();
+          PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
+          scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
           Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
 
@@ -196,25 +193,23 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                 int source_x = x + src(X_COORD);
                 int source_y = y + src(Y_COORD);
                 int source_z = z + src(Z_COORD);
-                source_index =
-                  (source_z * (source->y() * source->x())) +
-                  (source_y * (source->x())) +
-                  source_x;
 
-                FaceArray::TV_INT sourceIndex(source_x, source_y, source_z);
+                typename PhysBAM::VECTOR<int, 3>
+                  sourceIndex(source_x, source_y, source_z);
 
                 // The PhysBAM FACE_ARRAY object abstracts away whether
                 // the data is stored in struct of array or array of struct
                 // form (in practice, usually struct of arrays
-                buffer[destination_index]     = fa(X_COORD, sourceIndex);
-                buffer[destination_index + 1] = fa(Y_COORD, sourceIndex);
-                buffer[destination_index + 2] = fa(Z_COORD, sourceIndex);
+                buffer[destination_index]     = (*fa)(X_COORD, sourceIndex);
+                buffer[destination_index + 1] = (*fa)(Y_COORD, sourceIndex);
+                buffer[destination_index + 2] = (*fa)(Z_COORD, sourceIndex);
               }
             }
           }
         }
       }
       delete fa;
+      return true;
     }
 
   private:

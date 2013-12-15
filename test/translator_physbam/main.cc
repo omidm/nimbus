@@ -43,7 +43,7 @@
 #include "data/physbam/physbam_data.h"
 
 void printLdo(nimbus::LogicalDataObject* obj) {
-  printf("**Object - ID: %llu, Name: %s", obj->id(), obj->variable().c_str());
+  printf("**Object - ID: %lu, Name: %s", obj->id(), obj->variable().c_str());
   printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
 }
 
@@ -64,12 +64,47 @@ int main(int argc, char *argv[]) {
      Row E, column A, value C means that E covers A.
   */
 
-  nimbus::GeometricRegion* region = new nimbus::GeometricRegion(10, 11, 12, 22, 29, 33);
-  CPdiVector vector();
+  const int_dimension_t X = 10;
+  const int_dimension_t Y = 11;
+  const int_dimension_t Z = 12;
+  const int_dimension_t DX = 22;
+  const int_dimension_t DY = 29;
+  const int_dimension_t DZ = 33;
+  const int_dimension_t SIZE = DX * DY * DZ;
+
+  int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
+  nimbus::GeometricRegion* region = new nimbus::GeometricRegion(dimensions);
+  CPdiVector vec;
   TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator;
 
   PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result; // NOLINT
 
-  result = translator.MakeFaceArray(region, NULL);
+  int_dimension_t dimensions1[] = {X, Y, Z, DX/2, DY, DZ};
+  nimbus::GeometricRegion* r1 = new nimbus::GeometricRegion(dimensions1);
+  nimbus::LogicalDataObject* ldo1 = new LogicalDataObject(1, "velocity", r1);
+  float* f1 = new float[SIZE / 2];
+  for (int i = 0; i < SIZE / 2; i++) {
+    f1[i] = 3.14;
+  }
+  PhysBAMData* pd1 = new PhysBAMData();
+  pd1->set_buffer(f1, SIZE / 2 * sizeof(float));  // NOLINT
+  PhysicalDataInstance* i1 = new PhysicalDataInstance(1, ldo1, pd1, 0);
+
+
+  int_dimension_t dimensions2[] = {X + DX/2, Y, Z, DX/2, DY, DZ};
+  nimbus::GeometricRegion* r2 = new nimbus::GeometricRegion(dimensions2);
+  nimbus::LogicalDataObject* ldo2 = new LogicalDataObject(2, "velocity", r2);
+  float* f2 = new float[SIZE / 2];
+  for (int i = 0; i < SIZE / 2; i++) {
+    f1[i] = 96.1;
+  }
+  PhysBAMData* pd2 = new PhysBAMData();
+  pd2->set_buffer(f2, SIZE / 2 * sizeof(float));  // NOLINT
+  PhysicalDataInstance* i2 = new PhysicalDataInstance(2, ldo2, pd2, 0);
+
+  vec.push_back(i1);
+  vec.push_back(i2);
+
+  result = translator.ReadFaceArray(region, &vec);
   printf("%p\n", result);
 }
