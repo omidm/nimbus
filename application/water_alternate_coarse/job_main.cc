@@ -39,7 +39,7 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
+#include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"
 #include "shared/nimbus.h"
 #include <vector>
@@ -56,17 +56,27 @@ namespace application {
 
     void JobMain::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing main job\n");
+
         int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);
+
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
         nimbus::IDSet<nimbus::job_id_t> before, after;
-        nimbus::Parameter par_job;
-        SpawnComputeJob(ITERATION,
+
+        nimbus::Parameter loop_params;
+        std::stringstream out_frame_ss;
+        int frame = 0;
+        out_frame_ss << frame;
+        loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
+
+        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
+        SpawnComputeJob(LOOP,
                         job_ids[0],
                         read, write,
                         before, after,
-                        par_job);
+                        loop_params);
+
         dbg(APP_LOG, "Completed executing main job\n");
     }
 

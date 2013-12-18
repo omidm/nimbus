@@ -1,0 +1,36 @@
+------------------------------------------------------------------------------
+Author:	chinmaye.shah@stanford.edy (Chinmayee Shah)
+------------------------------------------------------------------------------
+
+To build the distributed PhysBAM fluid simulation application library for
+Nimbus:
+
+1) Build code in physbam-lib. 
+     - Follow the instructions in applications/physbam-lib/README.
+
+3) Make the Build/Release directory within this folder.
+     - mkdir -p Build/Release
+
+4) From the Release directory, generate the Makefile with ccmake. This
+   requires CMake version >= 2.8.7.
+     - cd Build/Release
+     - ccmake ../.. 
+
+5) Build the water test application with the generated Makefile.
+     - make
+
+Note: Can alternatively build a debug version by replacing Release with Debug
+(Build/Debug).
+
+Troubleshooting:
+
+Step 4: The ccmake prompt should have 3 simple options. If there is a set of full 
+PhysBAM options and a build of "water_alternate_coarse" then change the build 
+to "Release".
+
+------------------------------------------------------------------------------
+
+File names are relative to the current directory, physbam-lib/Public_Library
+or nimbus.
+
+------------------------------------------------------------------------------

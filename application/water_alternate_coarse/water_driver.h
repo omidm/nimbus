@@ -27,12 +27,12 @@ class WATER_DRIVER
     typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_FACE_ARRAYS_BOOL;
 
 protected:
+    WATER_EXAMPLE<TV>& example;
+
+public:
     int current_frame;
     T time;
     int output_number;
-
-    WATER_EXAMPLE<TV>& example;
-public:
 
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
