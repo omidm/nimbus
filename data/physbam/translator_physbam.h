@@ -154,7 +154,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
       region_size *= sizeof(scalar_t);
       if (region_size != fa->buffer_size) {
         dbg(DBG_WARN, "WARN: writing a face array of size %i for a region of size %i and the two sizes should be equal. This check is wrong so you can ignore this warning. I need to determine correct check. -pal\n", fa->buffer_size, region_size);  // NOLINT
-        //return false;
+        //  return false;
       }
 
       if (objects != NULL) {
@@ -173,7 +173,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
           Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
 
-          
+
           for (int z = 0; z < overlap(Z_COORD); z++) {
             for (int y = 0; y < overlap(Y_COORD); y++) {
               for (int x = 0; x < overlap(X_COORD); x++) {
@@ -181,7 +181,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                 int dest_y = y + dest(Y_COORD);
                 int dest_z = z + dest(Z_COORD);
 
-                // The underlying Nimbus data objects are stored as                // arrays of structs: the x, y, and z face values for
+                // The underlying Nimbus data objects are stored as
+                // arrays of structs: the x, y, and z face values for
                 // a given cell are stored contiguously. Using arrays
                 // of structs in case PhysBAM uses struct of arrays;
                 // that way only 4 cache lines will be used.
