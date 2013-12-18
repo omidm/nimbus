@@ -10,7 +10,7 @@ CFLAGS += -fPIC
 
 SCHED_CFILES  = $(wildcard scheduler/*.cc)
 WORKER_CFILES = $(wildcard worker/*.cc)
-DATA_CFILES   = $(wildcard data/*.cc)
+DATA_CFILES   = $(wildcard data/*.cc) $(wildcard data/physbam/*.cc)
 SHARED_CFILES = $(wildcard shared/*.cc)
 
 CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES) $(SHARED_BUF_CFILES)
