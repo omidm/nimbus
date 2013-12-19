@@ -65,6 +65,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
     typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex > FaceArray;
+    typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> Particles;
 
     enum {
       X_COORD = 1,
@@ -213,6 +214,72 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
       delete fa;
       return true;
     }
+
+    /* Read the particles from the PhysicalDataInstances specified
+     * by instances, limited by the GeometricRegion specified by region,
+     * into the PhysBAM::PARTICLE_LEVELSET_PARTICLES specified by dest.
+     * This will clear out any existing data in particles first. */
+    virtual bool ReadParticles(GeometricRegion* region,
+                               CPdiVector* instances,
+                               Particles* particles) {
+      particles->array_collection->Delete_All_Elements();
+      if (instances == NULL) {
+        dbg(DBG_WARN, "Tried to read particles from a NULL vector of PhysicalDataInstances\n");
+        return false;
+      }
+
+      CPdiVector::iterator iter = instances->begin();
+      for (; iter != instances->end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        GeometricRegion* instanceRegion = instance->region();
+        if (instanceRegion->Intersects(region)) {
+          // This instance may have particles inside the region. So
+          // we have to iterate over them and insert them accordingly.
+          PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+          scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+
+          for (int i = 0; i < data->size(); i+= 3) {
+            // Particles are stored as (x,y,z) triples in data array
+            scalar_t x = buffer[i];
+            scalar_t y = buffer[i + 1];
+            scalar_t z = buffer[i + 2];
+            int_dimension_t xi = (int_dimension_t)x;
+            int_dimension_t yi = (int_dimension_t)y;
+            int_dimension_t zi = (int_dimension_t)z;
+            // If particle is within region, copy it to particles
+            if (xi >= region->x() &&
+                xi <= (region->x() + region->dx()) &&
+                yi >= region->y() &&
+                yi <= (region->y() + region->dy()) &&
+                zi >= region->z() &&
+                zi <= (region->z() + region->dz())) {
+              // Add particle to particles
+            }
+          }
+        }
+      }
+      return true;
+    }
+
+    /* Write the Particle data in particles into the
+     * PhysicalDataInstances specified by instances, limited by the
+     * GeometricRegion region. */
+
+    virtual bool WriteParticles(GeometricRegion* region,
+                                CPdiVector* instances,
+                                Particles* particles) {
+      while (particles) {
+        for (int i = 1; i <= particles->array_collection->Size(); i++) {
+          // I don't understand the complex data representations of
+          // particles just yet: PARTICLE_LEVELSET vs.
+          // PARTICLE_LEVELSET_PARTICLES, etc.
+        }
+        particles = particles->next;
+      }
+      return true;
+    }
+
+
 
   private:
     /* Return a vector describing what the offset of b
