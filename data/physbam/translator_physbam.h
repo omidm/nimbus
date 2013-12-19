@@ -66,6 +66,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex > FaceArray;
     typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> Particles;
+    typedef typename PhysBAM::ARRAY<scalar_t, Dimension3Vector> ScalarArray;
 
     enum {
       X_COORD = 1,
@@ -279,6 +280,22 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
       return true;
     }
 
+    /* Read scalar array from PhysicalDataInstances specified by instances,
+     * limited by the GeometricRegion specified by region, into the
+     * ScalarArray specified by dest. */
+    virtual ScalarArray* ReadScalarArray(GeometricRegion* region,
+                                             CPdiVector* instances) {
+        //TODO(CHINMAYEE): pressure is a simple scalar array
+        return NULL;
+    }
+
+    /* Write scalar array data into PhysicalDataInstances specified by nstances,
+     * limited by the GeometricRegion region. */
+    virtual bool ReadScalarArray(GeometricRegion* region,
+                                 CPdiVector* instances,
+                                 ScalarArray* sa) {
+        //TODO(CHINMAYEE): pressure is a simple scalar array
+    }
 
 
   private:
