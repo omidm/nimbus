@@ -63,10 +63,11 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
     typedef VECTOR_TYPE TV;
     typedef typename TV::SCALAR scalar_t;
     typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
+    typedef PhysBAM::VECTOR<int, 3> Int3Vector;
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex > FaceArray;
     typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> Particles;
-    typedef typename PhysBAM::ARRAY<scalar_t, Dimension3Vector> ScalarArray;
+    typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector > ScalarArray;
 
     enum {
       X_COORD = 1,
@@ -285,16 +286,60 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
      * ScalarArray specified by dest. */
     virtual ScalarArray* ReadScalarArray(GeometricRegion* region,
                                              CPdiVector* instances) {
-        //TODO(CHINMAYEE): pressure is a simple scalar array
-        return NULL;
+        PhysBAM::RANGE<Int3Vector> range(0, region->dx(),
+                                         0, region->dy(),
+                                         0, region->dz());
+
+        ScalarArray* sa = new ScalarArray();
+        sa->Resize(range);
+
+        if (instances != NULL) {
+            CPdiVector::iterator iter = instances->begin();
+            for (; iter != instances->end(); ++iter) {
+                const PhysicalDataInstance* inst = *iter;
+                Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
+
+                if (HasOverlap(overlap)) {
+                    dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray.\n",
+                            inst->id());
+                    PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
+                    scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
+
+                    Dimension3Vector dest = GetOffset(region, inst->region());
+                    Dimension3Vector src  = GetOffset(inst->region(), region);
+
+                    for (int z = 0; z < overlap(Z_COORD); z++) {
+                        for (int y = 0; y < overlap(Y_COORD); y++) {
+                            for (int x = 0; x < overlap(X_COORD); x++) {
+                                int source_x = x + src(X_COORD);
+                                int source_y = y + src(Y_COORD);
+                                int source_z = z + src(Z_COORD);
+                                int source_index =
+                                    (source_z * (inst->region()->dy() * inst->region()->dx())) +
+                                    (source_y * (inst->region()->dx())) +
+                                    source_x;
+                                int dest_x = x + dest(X_COORD);
+                                int dest_y = y + dest(Y_COORD);
+                                int dest_z = z + dest(Z_COORD);
+                                Int3Vector destinationIndex(dest_x, dest_y, dest_z);
+                                (*sa)(destinationIndex) = buffer[source_index];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return sa;
     }
 
     /* Write scalar array data into PhysicalDataInstances specified by nstances,
      * limited by the GeometricRegion region. */
-    virtual bool ReadScalarArray(GeometricRegion* region,
+    virtual bool WriteScalarArray(GeometricRegion* region,
                                  CPdiVector* instances,
                                  ScalarArray* sa) {
-        //TODO(CHINMAYEE): pressure is a simple scalar array
+        // TODO(CHINMAYEE): pressure is a simple scalar array
+        return false;
     }
 
 
