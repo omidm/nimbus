@@ -384,7 +384,7 @@ namespace nimbus {
 
     /* Read scalar array from PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion specified by region, into the
-     * ScalarArray specified by dest. */
+     * ScalarArray specified by dest. This allocates a new scalar array. */
     virtual ScalarArray* ReadScalarArray(GeometricRegion* region,
                                              CPdiVector* instances) {
         PhysBAM::RANGE<Int3Vector> range(0, region->dx(),
@@ -422,25 +422,65 @@ namespace nimbus {
                                 int dest_x = x + dest(X_COORD);
                                 int dest_y = y + dest(Y_COORD);
                                 int dest_z = z + dest(Z_COORD);
-                                Int3Vector destinationIndex(dest_x, dest_y, dest_z);
-                                (*sa)(destinationIndex) = buffer[source_index];
+                                Int3Vector destination_index(dest_x, dest_y, dest_z);
+                                (*sa)(destination_index) = buffer[source_index];
                             }
                         }
                     }
                 }
             }
         }
-
         return sa;
     }
 
-    /* Write scalar array data into PhysicalDataInstances specified by nstances,
-     * limited by the GeometricRegion region. */
+    /* Write scalar array data into PhysicalDataInstances specified by instances,
+     * limited by the GeometricRegion region. This frees the physbam scalar array. */
     virtual bool WriteScalarArray(GeometricRegion* region,
                                  CPdiVector* instances,
                                  ScalarArray* sa) {
-        // TODO(CHINMAYEE): pressure is a simple scalar array
-        return false;
+        if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
+            dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
+        }
+
+        if (instances != NULL) {
+            CPdiVector::iterator iter = instances->begin();
+
+            for (; iter != instances->end(); ++iter) {
+                const PhysicalDataInstance* inst = *iter;
+                Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
+
+                if (HasOverlap(overlap)) {
+                    dbg(DBG_TRANSLATE, "Saving scalar array into physical object %lu.\n",
+                                       inst->id());
+                    PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
+                    scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
+
+                    Dimension3Vector src  = GetOffset(region, inst->region());
+                    Dimension3Vector dest = GetOffset(inst->region(), region);
+
+                    for (int z = 0; z < overlap(Z_COORD); z++) {
+                        for (int y = 0; y < overlap(Y_COORD); y++) {
+                            for (int x = 0; x < overlap(X_COORD); x++) {
+                                int dest_x = x + dest(X_COORD);
+                                int dest_y = y + dest(Y_COORD);
+                                int dest_z = z + dest(Z_COORD);
+                                int destination_index =
+                                    (dest_z * (inst->region()->dy() * inst->region()->dx())) +
+                                    (dest_y * (inst->region()->dx())) +
+                                    dest_x;
+                                int source_x = x + src(X_COORD);
+                                int source_y = y + src(Y_COORD);
+                                int source_z = z + src(Z_COORD);
+                                Int3Vector source_index(source_x, source_y, source_z);
+                                buffer[destination_index] = (*sa)(source_index);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        delete sa;
+        return true;
     }
 
 
