@@ -17,6 +17,8 @@ LDFLAGS += -L. -L/usr/local/lib
 LDFLAGS += -L$(NIMBUS_ROOT)/application/physbam-lib/Public_Library/Build/Release
 LDFLAGS += -L$(NIMBUS_ROOT)/application/physbam-lib/External_Libraries/lib/
 
+CFLAGS += -pthread
+
 # Add the dependencies here
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 

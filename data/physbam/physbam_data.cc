@@ -123,4 +123,30 @@ bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
   return false;
 }
 
+/** Clear out the data from the temporary buffer. Note that this will
+ * lose any uncommitted data. */
+void PhysBAMData::ClearTempBuffer() {
+  if (temp_buffer_) {
+    delete temp_buffer_;
+  }
+  temp_buffer_ = new std::stringstream();
+}
+
+bool PhysBAMData::AddToTempBuffer(char* buffer, int len) {
+  temp_buffer_->read(buffer, len);
+  return true;
+}
+
+int PhysBAMData::CommitTempBuffer() {
+  int len = temp_buffer_->tellp();
+  delete buffer_;
+
+  buffer_ = static_cast<char*>(malloc(len));
+  temp_buffer_->write(buffer_, len);
+  if (temp_buffer_) {
+    dbg(DBG_WARN, "When copying a temporary buffer into the permanent buffer in a PhysBAMData object, the read was incomplete. %i bytes remaining.\n", temp_buffer_->tellp());  // NOLINT
+  }
+  return len;
+}
+
 }  // namespace nimbus
