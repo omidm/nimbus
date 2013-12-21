@@ -48,6 +48,7 @@
 #include "shared/cluster.h"
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
+#include <sstream>  // NOLINT
 
 namespace nimbus {
 
@@ -64,12 +65,17 @@ class PhysBAMData: public Data {
   virtual bool Serialize(SerializedData* ser_data);
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-  virtual void* buffer() {return buffer_;}
+  virtual char* buffer() {return buffer_;}
   virtual int_dimension_t size() {return size_;}
-  virtual void set_buffer(void* b, int_dimension_t s) {
+  virtual void set_buffer(char* b, int_dimension_t s) {
     buffer_ = b;
     size_ = s;
   }
+
+  virtual void ClearTempBuffer();
+  virtual bool AddToTempBuffer(char* buffer, int len);
+  virtual int CommitTempBuffer();
+
 
   // Not implemented, not clear what these interfaces mean. -pal
   virtual void duplicate(Computer source, Computer destination) {}
@@ -79,7 +85,8 @@ class PhysBAMData: public Data {
 
  private:
   int_dimension_t size_;
-  void* buffer_;
+  char* buffer_;
+  std::stringstream* temp_buffer_;
 };
 
 }  // namespace nimbus
