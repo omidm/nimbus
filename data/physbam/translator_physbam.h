@@ -58,17 +58,24 @@
 
 namespace nimbus {
 
-template <class VECTOR_TYPE> class TranslatorPhysBAM {
+  template <class VECTOR_TYPE> class TranslatorPhysBAM {
   public:
     typedef VECTOR_TYPE TV;
+    typedef PhysBAM::GRID<TV> Grid;
     typedef typename TV::SCALAR scalar_t;
     typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
     typedef PhysBAM::VECTOR<int, 3> Int3Vector;
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex > FaceArray;
+    typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex> FaceArray;
     typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> Particles;
-    typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector > ScalarArray;
+    
+    typedef typename PhysBAM::ARRAY<Particles*, PhysBAM::VECTOR<int, 3> > ParticlesArray;
 
+    //  typedef typename PhysBAM::ARRAY<Particles*, int> ParticlesArray;
+    
+    typedef typename PhysBAM::PARTICLE_LEVELSET<Grid> ParticleLevelset; 
+    typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector> ScalarArray;
+    
     enum {
       X_COORD = 1,
       Y_COORD = 2,
@@ -176,7 +183,6 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
           Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
 
-
           for (int z = 0; z < overlap(Z_COORD); z++) {
             for (int y = 0; y < overlap(Y_COORD); y++) {
               for (int x = 0; x < overlap(X_COORD); x++) {
@@ -223,8 +229,29 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
      * This will clear out any existing data in particles first. */
     virtual bool ReadParticles(GeometricRegion* region,
                                CPdiVector* instances,
-                               Particles* particles) {
-      particles->array_collection->Delete_All_Elements();
+                               ParticleLevelset* particleLevelset,
+                               bool positive) {
+      ParticlesArray particles;
+      if (positive) {
+        particles = particleLevelset->positive_particles;
+      }
+      else {
+        particles = particleLevelset->negative_particles;
+      }
+
+      for (int z = 0; z < region->dz(); z++) {
+        for (int y = 0; y < region->dy(); y++) {
+          for (int x = 0; x < region->dz(); x++) {
+            // I have no idea if this works: indexing by a 3D vector?
+            Particles* particleBucket = particles(Int3Vector(x, y, z));
+            while (particleBucket != NULL) {
+              particleBucket->array_collection->Delete_All_Elements();
+              particleBucket = particleBucket->next;
+            }
+          }
+        }
+      }
+
       if (instances == NULL) {
         dbg(DBG_WARN, "Tried to read particles from a NULL vector of PhysicalDataInstances\n");
         return false;
@@ -233,30 +260,45 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
       CPdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
-        GeometricRegion* instanceRegion = instance->region();
-        if (instanceRegion->Intersects(region)) {
+        PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+      
+        for (int i = 0; i < data->size(); i+= 5) {
           // This instance may have particles inside the region. So
           // we have to iterate over them and insert them accordingly.
-          PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-          scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+          // Particles are stored as (x,y,z) triples in data array
+          scalar_t x = buffer[i];
+          scalar_t y = buffer[i + 1];
+          scalar_t z = buffer[i + 2];
+          scalar_t radius = buffer[i + 3];
+          unsigned short collision_distance = (unsigned short)buffer[i + 4];
+            
+          VECTOR_TYPE position;
+          position.x = x;
+          position.y = y;
+          position.z = z;
+          int_dimension_t xi = (int_dimension_t)x;
+          int_dimension_t yi = (int_dimension_t)y;
+          int_dimension_t zi = (int_dimension_t)z;
 
-          for (int i = 0; i < data->size(); i+= 3) {
-            // Particles are stored as (x,y,z) triples in data array
-            scalar_t x = buffer[i];
-            scalar_t y = buffer[i + 1];
-            scalar_t z = buffer[i + 2];
-            int_dimension_t xi = (int_dimension_t)x;
-            int_dimension_t yi = (int_dimension_t)y;
-            int_dimension_t zi = (int_dimension_t)z;
-            // If particle is within region, copy it to particles
-            if (xi >= region->x() &&
-                xi <= (region->x() + region->dx()) &&
-                yi >= region->y() &&
-                yi <= (region->y() + region->dy()) &&
-                zi >= region->z() &&
-                zi <= (region->z() + region->dz())) {
-              // Add particle to particles
-            }
+          // If particle is within region, copy it to particles
+          if (xi >= region->x() &&
+              xi <= (region->x() + region->dx()) &&
+              yi >= region->y() &&
+              yi <= (region->y() + region->dy()) &&
+              zi >= region->z() &&
+              zi <= (region->z() + region->dz())) {
+
+            // I have no idea if this works -- indexing by a 3D vector?
+            Particles* cellParticles = particles(Int3Vector(x, y, z));
+
+            // Note that Add_Particle traverses a linked list of particle
+            // buckets, so it's O(N^2) time. Blech.
+            int index = particleLevelset->Add_Particle(cellParticles);
+            cellParticles->quantized_collision_distance(index) =
+              collision_distance;
+            cellParticles->X(index) = position;
+            cellParticles->radius(index) = radius;
           }
         }
       }
@@ -270,13 +312,66 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
     virtual bool WriteParticles(GeometricRegion* region,
                                 CPdiVector* instances,
                                 Particles* particles) {
+      CPdiVector::iterator iter = instances->begin();
+      for (; iter != instances->end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        data->ClearTempBuffer();
+      }
+
       while (particles) {
         for (int i = 1; i <= particles->array_collection->Size(); i++) {
-          // I don't understand the complex data representations of
-          // particles just yet: PARTICLE_LEVELSET vs.
-          // PARTICLE_LEVELSET_PARTICLES, etc.
+          VECTOR_TYPE particle = particles->X(i);
+          scalar_t x = particle.x;
+          scalar_t y = particle.y;
+          scalar_t z = particle.z;
+          int_dimension_t xi = (int_dimension_t)x;
+          int_dimension_t yi = (int_dimension_t)y;
+          int_dimension_t zi = (int_dimension_t)z;
+          // If it's inside the region,
+          if (xi >= region->x() &&
+              xi <= (region->x() + region->dx()) &&
+              yi >= region->y() &&
+              yi <= (region->y() + region->dy()) &&
+              zi >= region->z() &&
+              zi <= (region->z() + region->dz())) {
+            CPdiVector::iterator iter = instances->begin();
+
+            // Iterate across instances, checking each one
+            for (; iter != instances->end(); ++iter) {
+              const PhysicalDataInstance* instance = *iter;
+              GeometricRegion* instanceRegion = instance->region();
+              PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+
+              // If it's inside the region of the physical data instance
+              if (xi >= instanceRegion->x() &&
+                  xi <= (instanceRegion->x() + instanceRegion->dx()) &&
+                  yi >= instanceRegion->y() &&
+                  yi <= (instanceRegion->y() + instanceRegion->dy()) &&
+                  zi >= instanceRegion->z() &&
+                  zi <= (instanceRegion->z() + instanceRegion->dz())) {
+                scalar_t particleBuffer[5];
+                particleBuffer[0] = particle.x;
+                particleBuffer[1] = particle.y;
+                particleBuffer[2] = particle.z;
+                particleBuffer[3] = particles->radius(i);
+                particleBuffer[4] = particles->quantized_collision_distance(i);
+                data->AddToTempBuffer(reinterpret_cast<char*>(particleBuffer),
+                                      sizeof(particleBuffer));
+              }
+            }
+          }
         }
         particles = particles->next;
+      }
+
+      // Now that we've copied particles into the temporary data buffers,
+      // commit the results.
+      iter = instances->begin();
+      for (; iter != instances->end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        data->CommitTempBuffer();
       }
       return true;
     }
