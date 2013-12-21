@@ -48,19 +48,35 @@
 
 void printLdo(nimbus::LogicalDataObject* obj) {
   printf("**Object - ID: %lu, Name: %s", obj->id(), obj->variable().c_str());
-  printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
+  printf(" region: [%lu+%lu, %lu+%lu, %lu+%lu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
 }
 
 int main(int argc, char *argv[]) {
   dbg_init();
 
   const int_dimension_t X = 10;
-  const int_dimension_t Y = 11;
-  const int_dimension_t Z = 12;
-  const int_dimension_t DX = 22;
+  const int_dimension_t Y = 10;
+  const int_dimension_t Z = 10;
+  const int_dimension_t DX = 10;
   const int_dimension_t DY = 1;
   const int_dimension_t DZ = 1;
   const int_dimension_t SIZE = DX * DY * DZ;
+
+  const int_dimension_t X1 = 8;
+  const int_dimension_t Y1 = 9;
+  const int_dimension_t Z1 = 10;
+  const int_dimension_t DX1 = 6;
+  const int_dimension_t DY1 = 2;
+  const int_dimension_t DZ1 = 2;
+  const int_dimension_t SIZE1 = DX1 * DY1 * DZ1;
+
+  const int_dimension_t X2 = 14;
+  const int_dimension_t Y2 = 10;
+  const int_dimension_t Z2 = 10;
+  const int_dimension_t DX2 = 6;
+  const int_dimension_t DY2 = 2;
+  const int_dimension_t DZ2 = 1;
+  const int_dimension_t SIZE2 = DX2 * DY2 * DZ2;
 
 
   int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
@@ -70,31 +86,31 @@ int main(int argc, char *argv[]) {
 
   PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result; // NOLINT
 
-  int_dimension_t dimensions1[] = {X, Y, Z, DX/2, DY, DZ};
+  int_dimension_t dimensions1[] = {X1, Y1, Z1, DX1, DY1, DZ1};
   nimbus::GeometricRegion* r1 = new nimbus::GeometricRegion(dimensions1);
   nimbus::LogicalDataObject* ldo1 = new LogicalDataObject(1, "velocity", r1);
-  float* f1 = new float[3 * SIZE / 2];
-  float* f1source = new float[3 * SIZE / 2];
-  for (int i = 0; i < 3 * SIZE / 2; i++) {
+  float* f1 = new float[3 * SIZE1];
+  float* f1source = new float[3 * SIZE1];
+  for (int i = 0; i < 3 * SIZE1; i++) {
     f1source[i] = R1_VALUE;
     f1[i] = f1source[i];
   }
   PhysBAMData* pd1 = new PhysBAMData();
-  pd1->set_buffer((char*)f1, 3 * SIZE / 2 * sizeof(float));  // NOLINT
+  pd1->set_buffer((char*)f1, 3 * SIZE1 * sizeof(float));  // NOLINT
   PhysicalDataInstance* i1 = new PhysicalDataInstance(1, ldo1, pd1, 0);
 
 
-  int_dimension_t dimensions2[] = {X + DX/2, Y, Z, DX/2, DY, DZ};
+  int_dimension_t dimensions2[] = {X2, Y2, Z2, DX2, DY2, DZ2};
   nimbus::GeometricRegion* r2 = new nimbus::GeometricRegion(dimensions2);
   nimbus::LogicalDataObject* ldo2 = new LogicalDataObject(2, "velocity", r2);
-  float* f2 = new float[3 * SIZE / 2];
-  float* f2source = new float[3 * SIZE / 2];
-  for (int i = 0; i < 3* SIZE / 2; i++) {
+  float* f2 = new float[3 * SIZE2];
+  float* f2source = new float[3 * SIZE2];
+  for (int i = 0; i < 3 * SIZE2; i++) {
     f2source[i] = R2_VALUE;
     f2[i] = f2source[i];
   }
   PhysBAMData* pd2 = new PhysBAMData();
-  pd2->set_buffer((char*)f2, 3 * SIZE / 2 * sizeof(float));  // NOLINT
+  pd2->set_buffer((char*)f2, 3 * SIZE2 * sizeof(float));  // NOLINT
   PhysicalDataInstance* i2 = new PhysicalDataInstance(2, ldo2, pd2, 0);
 
   vec.push_back(i1);
@@ -102,22 +118,45 @@ int main(int argc, char *argv[]) {
 
   result = translator.ReadFaceArray(region, &vec);
 
-  for (int i = 0; i < 3 * SIZE / 2; i++) {
+  for (int i = 0; i < 3 * SIZE1; i++) {
     f1[i] = 1.0;
+  }
+  for (int i = 0; i < 3 * SIZE2; i++) {
     f2[i] = 1.0;
   }
 
   bool pass = translator.WriteFaceArray(region, &vec, result);
 
-  for (int i = 0; i < 3 * SIZE / 2; i++) {
-    if (f1[i] != f1source[i]) {
-      dbg(DBG_ERROR, "Value in physical instance 1 should be %f, it's %f.\n", f1source[i], f1[i]);
-      pass = false;
-    }
-
-    if (f2[i] != f2source[i]) {
-      dbg(DBG_ERROR, "Value in physical instance 2 should be %f, it's %f.\n", f2source[i], f2[i]);
-      pass = false;
+  for (int z = Z; z < Z + DZ; z++) {
+    for (int y = Y; y < Y + DY; y++) {
+      for (int x = X; x < X + DX; x++) {
+        if (z >= Z1 && z < (Z1 + DZ1) &&
+            y >= Y1 && y < (Y1 + DY1) &&
+            x >= X1 && z < (X1 + DZ1)) {
+          int x_offset = x - X1;
+          int y_offset = y - Y1;
+          int z_offset = z - Z1;
+          int offset = z_offset * (DX1 * DY1) + (y_offset * DX1) + x_offset;
+          if (f1[offset] != f1source[offset]) {
+            dbg(DBG_ERROR, "Value %i in PDI 1 should be %f, it's %f.\n",
+                offset, f1source[offset], f1[offset]);
+            pass = false;
+          }
+        }
+        if (z >= Z2 && z < (Z2 + DZ2) &&
+            y >= Y2 && y < (Y2 + DY2) &&
+            x >= X2 && z < (X2 + DZ2)) {
+          int x_offset = x - X2;
+          int y_offset = y - Y2;
+          int z_offset = z - Z2;
+          int offset = z_offset * (DX2 * DY2) + (y_offset * DX2) + x_offset;
+          if (f2[offset] != f2source[offset]) {
+            dbg(DBG_ERROR, "Value %i in PDI 2 should be %f, it's %f.\n",
+                offset, f2source[offset], f2[offset]);
+            pass = false;
+          }
+        }
+      }
     }
   }
 

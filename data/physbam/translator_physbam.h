@@ -271,7 +271,7 @@ namespace nimbus {
           scalar_t z = buffer[i + 2];
           scalar_t radius = buffer[i + 3];
 
-          uint16 collision_distance = (uint16)buffer[i + 4];  // NOLINT
+          uint16_t collision_distance = (uint16_t)buffer[i + 4];  // NOLINT
 
           VECTOR_TYPE position;
           position.x = x;
