@@ -48,7 +48,7 @@
 
 void printLdo(nimbus::LogicalDataObject* obj) {
   printf("**Object - ID: %lu, Name: %s", obj->id(), obj->variable().c_str());
-  printf(" region: [%llu+%llu, %llu+%llu, %llu+%llu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
+  printf(" region: [%lu+%lu, %lu+%lu, %lu+%lu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
 }
 
 int main(int argc, char *argv[]) {
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     f1[i] = f1source[i];
   }
   PhysBAMData* pd1 = new PhysBAMData();
-  pd1->set_buffer(f1, 3 * SIZE1 * sizeof(float));  // NOLINT
+  pd1->set_buffer((char*)f1, 3 * SIZE1 * sizeof(float));  // NOLINT
   PhysicalDataInstance* i1 = new PhysicalDataInstance(1, ldo1, pd1, 0);
 
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     f2[i] = f2source[i];
   }
   PhysBAMData* pd2 = new PhysBAMData();
-  pd2->set_buffer(f2, 3 * SIZE2 * sizeof(float));  // NOLINT
+  pd2->set_buffer((char*)f2, 3 * SIZE2 * sizeof(float));  // NOLINT
   PhysicalDataInstance* i2 = new PhysicalDataInstance(2, ldo2, pd2, 0);
 
   vec.push_back(i1);
