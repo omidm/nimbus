@@ -9,8 +9,7 @@ TARGET_WATER = worker
 # common #
 ##########
 
-all: executable
-	 @echo "Making ${TARGET_WATER}"
+default: release
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
@@ -27,8 +26,8 @@ debug: APP_LIB = -lwater_app-debug-debug
 # ENTER application directory here #
 ####################################
 
-APP_DIR        = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Release
-debug: APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Debug
+release: APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Release
+debug:   APP_DIR = $(NIMBUS_ROOT)/application/water_alternate_coarse/Build/Debug
 
 ####################
 # ENTER flags here #
@@ -50,12 +49,12 @@ LDFLAGS += -L$(APP_DIR) -Wl,-rpath $(APP_DIR)
 # ENTER rules to build target here #
 ####################################
 
-executable: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(LFLAGS)
-
 release: executable
 
 debug: executable
+
+executable: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET_WATER) $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET_WATER)

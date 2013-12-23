@@ -60,63 +60,74 @@ int main(int argc, char *argv[]) {
   const int_dimension_t DX = 22;
   const int_dimension_t DY = 1;
   const int_dimension_t DZ = 1;
-  const int_dimension_t SIZE = DX * DY * DZ;
-
+  const int_dimension_t SIZE_HALF = (DX/2 + 1) * DY * DZ +
+                                    (DX/2) * (DY + 1) * DZ +
+                                    (DX/2) * DY * (DZ + 1);
 
   int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
   nimbus::GeometricRegion* region = new nimbus::GeometricRegion(dimensions);
-  CPdiVector vec;
+  CPdiVector vec1, vec2;
   TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator;
 
-  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result; // NOLINT
+  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result1; // NOLINT
+  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result2; // NOLINT
 
   int_dimension_t dimensions1[] = {X, Y, Z, DX/2, DY, DZ};
   nimbus::GeometricRegion* r1 = new nimbus::GeometricRegion(dimensions1);
   nimbus::LogicalDataObject* ldo1 = new LogicalDataObject(1, "velocity", r1);
-  float* f1 = new float[3 * SIZE / 2];
-  float* f1source = new float[3 * SIZE / 2];
-  for (int i = 0; i < 3 * SIZE / 2; i++) {
+  float* f1 = new float[SIZE_HALF];
+  float* f1source = new float[SIZE_HALF];
+  for (int i = 0; i < SIZE_HALF; i++) {
     f1source[i] = R1_VALUE;
     f1[i] = f1source[i];
   }
   PhysBAMData* pd1 = new PhysBAMData();
-  pd1->set_buffer((char*)f1, 3 * SIZE / 2 * sizeof(float));  // NOLINT
+  pd1->set_buffer((char*)f1, SIZE_HALF * sizeof(float));  // NOLINT
   PhysicalDataInstance* i1 = new PhysicalDataInstance(1, ldo1, pd1, 0);
 
 
   int_dimension_t dimensions2[] = {X + DX/2, Y, Z, DX/2, DY, DZ};
   nimbus::GeometricRegion* r2 = new nimbus::GeometricRegion(dimensions2);
   nimbus::LogicalDataObject* ldo2 = new LogicalDataObject(2, "velocity", r2);
-  float* f2 = new float[3 * SIZE / 2];
-  float* f2source = new float[3 * SIZE / 2];
-  for (int i = 0; i < 3* SIZE / 2; i++) {
+  float* f2 = new float[SIZE_HALF];
+  float* f2source = new float[SIZE_HALF];
+  for (int i = 0; i < SIZE_HALF; i++) {
     f2source[i] = R2_VALUE;
     f2[i] = f2source[i];
   }
   PhysBAMData* pd2 = new PhysBAMData();
-  pd2->set_buffer((char*)f2, 3 * SIZE / 2 * sizeof(float));  // NOLINT
+  pd2->set_buffer((char*)f2, SIZE_HALF * sizeof(float));  // NOLINT
   PhysicalDataInstance* i2 = new PhysicalDataInstance(2, ldo2, pd2, 0);
 
-  vec.push_back(i1);
-  vec.push_back(i2);
+  vec1.push_back(i1);
+  vec1.push_back(i2);
+  vec2.push_back(i2);
+  vec2.push_back(i1);
+  result1 = translator.ReadFaceArray(region, &vec1);
+  result2 = translator.ReadFaceArray(region, &vec2);
 
-  result = translator.ReadFaceArray(region, &vec);
+  bool pass = true;
 
-  for (int i = 0; i < 3 * SIZE / 2; i++) {
+  for (int i = 0; i < SIZE_HALF; i++) {
     f1[i] = 1.0;
     f2[i] = 1.0;
   }
-
-  bool pass = translator.WriteFaceArray(region, &vec, result);
-
-  for (int i = 0; i < 3 * SIZE / 2; i++) {
-    if (f1[i] != f1source[i]) {
-      dbg(DBG_ERROR, "Value in physical instance 1 should be %f, it's %f.\n", f1source[i], f1[i]);
-      pass = false;
-    }
-
+  pass &= translator.WriteFaceArray(region, &vec1, result1);
+  for (int i = 0; i < SIZE_HALF; i++) {
     if (f2[i] != f2source[i]) {
       dbg(DBG_ERROR, "Value in physical instance 2 should be %f, it's %f.\n", f2source[i], f2[i]);
+      pass = false;
+    }
+  }
+
+  for (int i = 0; i < SIZE_HALF; i++) {
+    f1[i] = 1.0;
+    f2[i] = 1.0;
+  }
+  pass &= translator.WriteFaceArray(region, &vec2, result2);
+  for (int i = 0; i < SIZE_HALF; i++) {
+    if (f1[i] != f1source[i]) {
+      dbg(DBG_ERROR, "Value in physical instance 1 should be %f, it's %f.\n", f1source[i], f1[i]);
       pass = false;
     }
   }
