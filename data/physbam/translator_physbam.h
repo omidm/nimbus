@@ -93,9 +93,9 @@ namespace nimbus {
       vec(Z_COORD) = region->dz();
 
       // Create a FACE_ARRAY of the right size.
-      PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(0, region->dx(),
-                                                     0, region->dy(),
-                                                     0, region->dz());
+      PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(0, region->dx()-1,
+                                                     0, region->dy()-1,
+                                                     0, region->dz()-1);
 
       FaceArray* fa = new FaceArray();
       fa->Resize(range);
@@ -113,37 +113,63 @@ namespace nimbus {
             Dimension3Vector dest = GetOffset(region, obj->region());
             Dimension3Vector src = GetOffset(obj->region(), region);
 
-            for (int z = 0; z < overlap(Z_COORD); z++) {
-              for (int y = 0; y < overlap(Y_COORD); y++) {
-                for (int x = 0; x < overlap(X_COORD); x++) {
-                  int source_x = x + src(X_COORD);
-                  int source_y = y + src(Y_COORD);
-                  int source_z = z + src(Z_COORD);
+            //  x, y and z values are stored separately due to the
+            // difference in number of x, y and z values in face arrays
+            for (int dim = X_COORD; dim <= Z_COORD; dim++) {
+              int mult_x = 1;
+              int mult_y = obj->region()->dx();
+              int mult_z = obj->region()->dy() * obj->region()->dx();
+              int range_x = overlap(X_COORD);
+              int range_y = overlap(Y_COORD);
+              int range_z = overlap(Z_COORD);
+              int src_offset = 0;
+              switch(dim) {
+                  case X_COORD:
+                    range_x += 1;
+                    mult_y  += 1;
+                    mult_z  += obj->region()->dy();
+                    break;
+                  case Y_COORD:
+                    range_y += 1;
+                    mult_z  += obj->region()->dx();
+                    src_offset += (obj->region()->dx() + 1) *
+                                  (obj->region()->dy()) *
+                                  (obj->region()->dz());
+                    break;
+                  case Z_COORD:
+                    range_z += 1;
+                    src_offset += ((obj->region()->dx()) *
+                                  (obj->region()->dy()+1) *
+                                  (obj->region()->dz())) +
+                                  ((obj->region()->dx() + 1) *
+                                  (obj->region()->dy()) *
+                                  (obj->region()->dz()));
+                    break;
+                }
+              for (int z = 0; z < range_z; z++) {
+                for (int y = 0; y < range_y; y++) {
+                  for (int x = 0; x < range_x; x++) {
+                    int source_x = x + src(X_COORD);
+                    int source_y = y + src(Y_COORD);
+                    int source_z = z + src(Z_COORD);
 
-                  // The underlying Nimbus data objects are stored as
-                  // arrays of structs: the x, y, and z face values for
-                  // a given cell are stored contiguously. Using arrays
-                  // of structs in case PhysBAM uses struct of arrays;
-                  // that way only 4 cache lines will be used.
-                  int source_index =
-                    (source_z * (obj->region()->dy() * obj->region()->dx())) +
-                    (source_y * (obj->region()->dx())) +
-                    source_x;
-                  source_index *= 3;  // We are in three dimensions
+                    int source_index = source_x * mult_x +
+                                       source_y * mult_y +
+                                       source_z * mult_z;
+                    source_index += src_offset;
 
-                  int dest_x = x + dest(X_COORD);
-                  int dest_y = y + dest(Y_COORD);
-                  int dest_z = z + dest(Z_COORD);
+                    int dest_x = x + dest(X_COORD);
+                    int dest_y = y + dest(Y_COORD);
+                    int dest_z = z + dest(Z_COORD);
 
-                  typename PhysBAM::VECTOR<int, 3>
-                    destinationIndex(dest_x, dest_y, dest_z);
+                    typename PhysBAM::VECTOR<int, 3>
+                      destinationIndex(dest_x, dest_y, dest_z);
 
-                  // The PhysBAM FACE_ARRAY object abstracts away whether
-                  // the data is stored in struct of array or array of struct
-                  // form (in practice, usually struct of arrays.
-                  (*fa)(X_COORD, destinationIndex) = buffer[source_index];
-                  (*fa)(Y_COORD, destinationIndex) = buffer[source_index + 1];
-                  (*fa)(Z_COORD, destinationIndex) = buffer[source_index + 2];
+                    // The PhysBAM FACE_ARRAY object abstracts away whether
+                    // the data is stored in struct of array or array of struct
+                    // form (in practice, usually struct of arrays.
+                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                  }
                 }
               }
             }
@@ -159,9 +185,10 @@ namespace nimbus {
     virtual bool WriteFaceArray(GeometricRegion* region,
                                 CPdiVector* objects,
                                 FaceArray* fa) {
-      int_dimension_t region_size = region->dx() * region->dy() * region->dz();
-      region_size *= 3;  // 3D
-      region_size *= sizeof(scalar_t);
+      int_dimension_t region_size = 0;
+      region_size += (region->dx() + 1) * region->dy() * region->dz();
+      region_size += region->dx() * (region->dy() + 1) * region->dz();
+      region_size += region->dx() * region->dy() * (region->dz() + 1);
       if (region_size != fa->buffer_size) {
         dbg(DBG_WARN, "WARN: writing a face array of size %i for a region of size %i and the two sizes should be equal. This check is wrong so you can ignore this warning. I need to determine correct check. -pal\n", fa->buffer_size, region_size);  // NOLINT
         //  return false;
@@ -180,40 +207,67 @@ namespace nimbus {
           dbg(DBG_TRANSLATE, "Saving FaceArray into physical object %lu.\n", obj->id());
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
           scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+
           Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
 
-          for (int z = 0; z < overlap(Z_COORD); z++) {
-            for (int y = 0; y < overlap(Y_COORD); y++) {
-              for (int x = 0; x < overlap(X_COORD); x++) {
-                int dest_x = x + dest(X_COORD);
-                int dest_y = y + dest(Y_COORD);
-                int dest_z = z + dest(Z_COORD);
+          //  x, y and z values are stored separately due to the
+          // difference in number of x, y and z values in face arrays
+          for (int dim = X_COORD; dim <= Z_COORD; dim++) {
+            int mult_x = 1;
+            int mult_y = obj->region()->dx();
+            int mult_z = obj->region()->dy() * obj->region()->dx();
+            int range_x = overlap(X_COORD);
+            int range_y = overlap(Y_COORD);
+            int range_z = overlap(Z_COORD);
+            int dst_offset = 0;
+            switch(dim) {
+                case X_COORD:
+                  range_x += 1;
+                  mult_y  += 1;
+                  mult_z  += obj->region()->dy();
+                  break;
+                case Y_COORD:
+                  range_y += 1;
+                  mult_z  += obj->region()->dx();
+                  dst_offset += (obj->region()->dx() + 1) *
+                                (obj->region()->dy()) *
+                                (obj->region()->dz());
+                  break;
+                case Z_COORD:
+                  range_z += 1;
+                  dst_offset += ((obj->region()->dx()) *
+                                (obj->region()->dy()+1) *
+                                (obj->region()->dz())) +
+                                ((obj->region()->dx() + 1) *
+                                (obj->region()->dy()) *
+                                (obj->region()->dz()));
+                  break;
+              }
+            for (int z = 0; z < range_z; z++) {
+              for (int y = 0; y < range_y; y++) {
+                for (int x = 0; x < range_x; x++) {
+                  int dest_x = x + dest(X_COORD);
+                  int dest_y = y + dest(Y_COORD);
+                  int dest_z = z + dest(Z_COORD);
 
-                // The underlying Nimbus data objects are stored as
-                // arrays of structs: the x, y, and z face values for
-                // a given cell are stored contiguously. Using arrays
-                // of structs in case PhysBAM uses struct of arrays;
-                // that way only 4 cache lines will be used.
-                int destination_index =
-                  (dest_z * (obj->region()->dy() * obj->region()->dx())) +
-                  (dest_y * (obj->region()->dx())) +
-                  dest_x;
-                destination_index *= 3;  // We are in three dimensions
+                  int destination_index = dest_x * mult_x +
+                                          dest_y * mult_y +
+                                          dest_z * mult_z;
+                  destination_index += dst_offset;
 
-                int source_x = x + src(X_COORD);
-                int source_y = y + src(Y_COORD);
-                int source_z = z + src(Z_COORD);
+                  int source_x = x + src(X_COORD);
+                  int source_y = y + src(Y_COORD);
+                  int source_z = z + src(Z_COORD);
 
-                typename PhysBAM::VECTOR<int, 3>
-                  sourceIndex(source_x, source_y, source_z);
+                  typename PhysBAM::VECTOR<int, 3>
+                    sourceIndex(source_x, source_y, source_z);
 
-                // The PhysBAM FACE_ARRAY object abstracts away whether
-                // the data is stored in struct of array or array of struct
-                // form (in practice, usually struct of arrays
-                buffer[destination_index]     = (*fa)(X_COORD, sourceIndex);
-                buffer[destination_index + 1] = (*fa)(Y_COORD, sourceIndex);
-                buffer[destination_index + 2] = (*fa)(Z_COORD, sourceIndex);
+                  // The PhysBAM FACE_ARRAY object abstracts away whether
+                  // the data is stored in struct of array or array of struct
+                  // form (in practice, usually struct of arrays
+                  buffer[destination_index] = (*fa)(dim, sourceIndex);
+                }
               }
             }
           }
