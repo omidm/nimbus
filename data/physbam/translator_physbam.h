@@ -229,20 +229,23 @@ namespace nimbus {
      * This will clear out any existing data in particles first. */
     virtual bool ReadParticles(GeometricRegion* region,
                                CPdiVector* instances,
-                               ParticleLevelset* particleLevelset,
+                               ParticleLevelset& particleLevelset,
                                bool positive) {
-      ParticlesArray particles;
-      if (positive) {
-        particles = particleLevelset->positive_particles;
-      } else {
-        particles = particleLevelset->negative_particles;
-      }
-
-      for (int z = 0; z < region->dz(); z++) {
-        for (int y = 0; y < region->dy(); y++) {
-          for (int x = 0; x < region->dz(); x++) {
-            // I have no idea if this works: indexing by a 3D vector?
-            Particles* particleBucket = particles(Int3Vector(x, y, z));
+      for (int z = 1; z < region->dz(); z++) {
+        for (int y = 1; y < region->dy(); y++) {
+          for (int x = 1; x < region->dx(); x++) {
+            Particles* particleBucket;
+            // printf("Offset of positive particles is %i\n", offsetof(ParticleLevelset, positive_particles));
+            if (positive) {
+              // ParticlesArray& array = particleLevelset.get_positive_particles();
+              ParticlesArray* arrayPtr = (ParticlesArray*)((char*)&particleLevelset.positive_particles + 88);
+              ParticlesArray& array = *arrayPtr;
+              // printf("Pointer to positive particles is %p\n", arrayPtr);
+              particleBucket = array(Int3Vector(x, y, z));
+            } else {
+              particleBucket = particleLevelset.negative_particles(Int3Vector(x, y, z));
+            }
+            
             while (particleBucket != NULL) {
               particleBucket->array_collection->Delete_All_Elements();
               particleBucket = particleBucket->next;
@@ -289,11 +292,22 @@ namespace nimbus {
               zi >= region->z() &&
               zi <= (region->z() + region->dz())) {
             // I have no idea if this works -- indexing by a 3D vector?
-            Particles* cellParticles = particles(Int3Vector(x, y, z));
+            Particles* cellParticles;
+            if (positive) {
+              ParticlesArray* arrayPtr = (ParticlesArray*)((char*)&particleLevelset.positive_particles + 88);
+              ParticlesArray& array = *arrayPtr;
+              printf("Pointer to positive particles is %p\n", arrayPtr);
+              cellParticles = array(Int3Vector(xi - region->x(),
+                                               yi - region->y(),
+                                               zi - region->z()));
+              // cellParticles = particleLevelset.positive_particles(Int3Vector(x, y, z));
+            } else {
+              cellParticles = particleLevelset.negative_particles(Int3Vector(x, y, z));
+            }
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
-            int index = particleLevelset->Add_Particle(cellParticles);
+            int index = particleLevelset.Add_Particle(cellParticles);
             cellParticles->quantized_collision_distance(index) =
               collision_distance;
             cellParticles->X(index) = position;
@@ -310,18 +324,22 @@ namespace nimbus {
 
     virtual bool WriteParticles(GeometricRegion* region,
                                 CPdiVector* instances,
-                                ParticlesArray* particleArray) {
+                                ParticleLevelset& particleLevelset,
+                                bool positive) {
       CPdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->ClearTempBuffer();
       }
-
+      
       for (int z = 0; z < region->dz(); z++) {
         for (int y = 0; y < region->dy(); y++) {
-          for (int x = 0; x < region->dz(); x++) {
-            Particles* particles = (*particleArray)(Int3Vector(x, y, z));
+          for (int x = 0; x < region->dx(); x++) {
+            ParticlesArray* arrayPtr = (ParticlesArray*)((char*)&particleLevelset.positive_particles + 88);
+            ParticlesArray& array = *arrayPtr;
+            printf("Pointer to positive particles is %p\n", arrayPtr);
+            Particles* particles = array(Int3Vector(x, y, z));
             while (particles) {
               for (int i = 1; i <= particles->array_collection->Size(); i++) {
                 VECTOR_TYPE particle = particles->X(i);
