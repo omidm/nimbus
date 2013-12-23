@@ -60,7 +60,6 @@ int main(int argc, char *argv[]) {
   const int_dimension_t DX = 10;
   const int_dimension_t DY = 1;
   const int_dimension_t DZ = 1;
-  const int_dimension_t SIZE = DX * DY * DZ;
 
   const int_dimension_t X1 = 8;
   const int_dimension_t Y1 = 9;
