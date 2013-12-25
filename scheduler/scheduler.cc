@@ -435,7 +435,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
         PhysicalData p_s = pvv[0];
         p_s.set_last_job_read(j[2]);
         data_manager_->RemovePhysicalInstance(ldo, pvv[0]);
-        data_manager_->AddPhysicalInstance(ldo, p);
+        data_manager_->AddPhysicalInstance(ldo, p_s);
 
         // Update before_set and physical_table
         before_set.insert(j[1]);
