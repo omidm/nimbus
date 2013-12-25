@@ -43,15 +43,6 @@ template<class TV> WATER_DRIVER<TV>::
 // Initialize
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Execute_Main_Program()
-{
-    Initialize();
-    Simulate_To_Frame(example.last_frame);
-}
-//#####################################################################
-// Initialize
-//#####################################################################
-template<class TV> void WATER_DRIVER<TV>::
 Initialize()
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
@@ -268,22 +259,6 @@ Advance_To_Target_Time(const T target_time)
         time+=dt;
     }
 }
-//#####################################################################
-// Simulate_To_Frame
-//#####################################################################
-template<class TV> void WATER_DRIVER<TV>::
-Simulate_To_Frame(const int frame,const int tid)
-{
-    while(current_frame<frame){
-        LOG::SCOPE scope("FRAME","Frame %d",current_frame+1,tid);
-        Advance_To_Target_Time(example.Time_At_Frame(current_frame+1));
-        LOG::Time("Reseed");
-        if((current_frame-example.first_frame)%1==0){
-            example.particle_levelset_evolution.Reseed_Particles(time);
-            example.particle_levelset_evolution.Delete_Particles_Outside_Grid();}
-        Write_Output_Files(++output_number);
-        current_frame++;}
-} 
 //#####################################################################
 // Function Write_Substep
 //#####################################################################
