@@ -52,12 +52,12 @@ void printLdo(nimbus::LogicalDataObject* obj) {
   printf(" region: [%lu+%lu, %lu+%lu, %lu+%lu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
 }
 
-const int_dimension_t X = 10;
-const int_dimension_t Y = 11;
-const int_dimension_t Z = 12;
+const int_dimension_t X = 1;
+const int_dimension_t Y = 1;
+const int_dimension_t Z = 1;
 const int_dimension_t DX = 2;
 const int_dimension_t DY = 2;
-const int_dimension_t DZ = 4;
+const int_dimension_t DZ = 2;
 const int_dimension_t SIZE = DX * DY * DZ;
 const int AVG_PARTICLES = 10;
 const int TOTAL_PARTICLES = SIZE * AVG_PARTICLES * 5;
@@ -97,7 +97,8 @@ template <class TV>
 class CALLBACKS:public PhysBAM::LEVELSET_CALLBACKS<PhysBAM::GRID<TV> > {
   typedef typename TV::SCALAR T;
   void Adjust_Particle_For_Domain_Boundaries(PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV>& particles,
-                                             const int index,TV& V,
+                                             const int index,
+                                             TV& V,
                                              const PhysBAM::PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
                                              const T dt,
                                              const T time) {} // NOLINT
@@ -122,6 +123,9 @@ int main(int argc, char *argv[]) {
   PhysBAM::LOG::Initialize_Logging(false,false,1<<30,true,parse_args.Get_Integer_Value("-threads"));  // NOLINT
 
   Callbacks* callbacks = new Callbacks();
+  PhysBAM::Initialize_Particles();
+  PhysBAM::Initialize_Read_Write_General_Structures();
+  
   PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(0, GRID_SCALE,
                                                  0, GRID_SCALE,
                                                  0, GRID_SCALE);
@@ -175,6 +179,8 @@ int main(int argc, char *argv[]) {
   evolution->Set_Number_Particles_Per_Cell(2 * AVG_PARTICLES);
   evolution->Use_Particle_Levelset(true);
   evolution->Set_Levelset_Callbacks(*callbacks);
+
+  
   
   FaceArray* faceVelocities = new FaceArray();
   faceVelocities->Resize(range);
@@ -194,7 +200,17 @@ int main(int argc, char *argv[]) {
   // evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
   // evolution->particle_levelset.Use_Removed_Positive_Particles();
 
+  for (int z = Z; z <= Z + DZ; ++z) {
+    for (int y = Y; y <= Y + DY; ++y) {
+      for (int x = X; x <= X + DX; ++x) {
+        evolution->phi(TV_INT(x, y, z)) = -1;
+      }
+    }
+  }
+  
   evolution->Set_Seed(2606);
+
+
   evolution->Seed_Particles(0);
 
   bool pass = true;
