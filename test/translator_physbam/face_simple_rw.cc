@@ -43,9 +43,6 @@
 #include "data/physbam/translator_physbam.h"
 #include "data/physbam/physbam_data.h"
 
-#define R1_VALUE 3.1400
-#define R2_VALUE 32.0
-
 void printLdo(nimbus::LogicalDataObject* obj) {
   printf("**Object - ID: %lu, Name: %s", obj->id(), obj->variable().c_str());
   printf(" region: [%lu+%lu, %lu+%lu, %lu+%lu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
@@ -63,6 +60,8 @@ int main(int argc, char *argv[]) {
   const int_dimension_t SIZE_HALF = (DX/2 + 1) * DY * DZ +
                                     (DX/2) * (DY + 1) * DZ +
                                     (DX/2) * DY * (DZ + 1);
+  const int_dimension_t X_DIV = (DX/2) * (DY + 1) * DZ +
+                                (DX/2) * DY * (DZ + 1);
 
   int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
   nimbus::GeometricRegion* region = new nimbus::GeometricRegion(dimensions);
@@ -78,7 +77,7 @@ int main(int argc, char *argv[]) {
   float* f1 = new float[SIZE_HALF];
   float* f1source = new float[SIZE_HALF];
   for (int i = 0; i < SIZE_HALF; i++) {
-    f1source[i] = R1_VALUE;
+    f1source[i] = i % X_DIV;
     f1[i] = f1source[i];
   }
   PhysBAMData* pd1 = new PhysBAMData();
@@ -92,7 +91,7 @@ int main(int argc, char *argv[]) {
   float* f2 = new float[SIZE_HALF];
   float* f2source = new float[SIZE_HALF];
   for (int i = 0; i < SIZE_HALF; i++) {
-    f2source[i] = R2_VALUE;
+    f2source[i] = DX/2 + i % X_DIV;
     f2[i] = f2source[i];
   }
   PhysBAMData* pd2 = new PhysBAMData();
@@ -114,20 +113,12 @@ int main(int argc, char *argv[]) {
   }
   pass &= translator.WriteFaceArray(region, &vec1, result1);
   for (int i = 0; i < SIZE_HALF; i++) {
-    if (f2[i] != f2source[i]) {
-      dbg(DBG_ERROR, "Value in physical instance 2 should be %f, it's %f.\n", f2source[i], f2[i]);
+    if (f1[i] != f1source[i]) {
+      dbg(DBG_ERROR, "Value in physical instance 1 should be %f, it's %f for i = %d.\n", f1source[i], f1[i], i); // NOLINT
       pass = false;
     }
-  }
-
-  for (int i = 0; i < SIZE_HALF; i++) {
-    f1[i] = 1.0;
-    f2[i] = 1.0;
-  }
-  pass &= translator.WriteFaceArray(region, &vec2, result2);
-  for (int i = 0; i < SIZE_HALF; i++) {
-    if (f1[i] != f1source[i]) {
-      dbg(DBG_ERROR, "Value in physical instance 1 should be %f, it's %f.\n", f1source[i], f1[i]);
+    if (f2[i] != f2source[i]) {
+      dbg(DBG_ERROR, "Value in physical instance 2 should be %f, it's %f for i = %d.\n", f2source[i], f2[i], i); // NOLINT
       pass = false;
     }
   }

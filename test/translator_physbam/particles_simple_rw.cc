@@ -96,14 +96,14 @@ typedef typename TranslatorPhysBAM<VECTOR_TYPE>::FaceArray FaceArray;
 template <class TV>
 class CALLBACKS:public PhysBAM::LEVELSET_CALLBACKS<PhysBAM::GRID<TV> > {
   typedef typename TV::SCALAR T;
-  void Adjust_Particle_For_Domain_Boundaries(PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV>& particles,
+  void Adjust_Particle_For_Domain_Boundaries(PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV>& particles, // NOLINT
                                              const int index,
                                              TV& V,
-                                             const PhysBAM::PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
+                                             const PhysBAM::PARTICLE_LEVELSET_PARTICLE_TYPE particle_type, // NOLINT
                                              const T dt,
                                              const T time) {} // NOLINT
   void Get_Levelset_Velocity(const PhysBAM::GRID<TV>& grid,
-                             PhysBAM::LEVELSET_MULTIPLE_UNIFORM<PhysBAM::GRID<TV> >& levelset_multiple,
+                             PhysBAM::LEVELSET_MULTIPLE_UNIFORM<PhysBAM::GRID<TV> >& levelset_multiple, // NOLINT
                              PhysBAM::ARRAY<T, PhysBAM::FACE_INDEX<TV::dimension> >& V_levelset,
                              const T time) const PHYSBAM_OVERRIDE {} // NOLINT
 };
@@ -111,21 +111,19 @@ class CALLBACKS:public PhysBAM::LEVELSET_CALLBACKS<PhysBAM::GRID<TV> > {
 typedef CALLBACKS<VECTOR_TYPE> Callbacks;
 int main(int argc, char *argv[]) {
   dbg_init();
-  
   PhysBAM::PARSE_ARGS parse_args;
-  parse_args.Add_Integer_Argument("-restart",0,"restart frame");
-  parse_args.Add_Integer_Argument("-scale",128,"fine scale grid resolution");
-  parse_args.Add_Integer_Argument("-substep",-1,"output-substep level");
-  parse_args.Add_Integer_Argument("-e",100,"last frame");
-  parse_args.Add_Integer_Argument("-refine",1,"refine levels");
-  parse_args.Add_Integer_Argument("-threads",1,"number of threads");
-  parse_args.Add_Double_Argument("-cfl",1,"cfl number");
-  PhysBAM::LOG::Initialize_Logging(false,false,1<<30,true,parse_args.Get_Integer_Value("-threads"));  // NOLINT
+  parse_args.Add_Integer_Argument("-restart", 0, "restart frame");
+  parse_args.Add_Integer_Argument("-scale", 128, "fine scale grid resolution");
+  parse_args.Add_Integer_Argument("-substep", -1, "output-substep level");
+  parse_args.Add_Integer_Argument("-e", 100, "last frame");
+  parse_args.Add_Integer_Argument("-refine", 1, "refine levels");
+  parse_args.Add_Integer_Argument("-threads", 1, "number of threads");
+  parse_args.Add_Double_Argument("-cfl", 1, "cfl number");
+  PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, parse_args.Get_Integer_Value("-threads"));  // NOLINT
 
   Callbacks* callbacks = new Callbacks();
   PhysBAM::Initialize_Particles();
   PhysBAM::Initialize_Read_Write_General_Structures();
-  
   PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(0, GRID_SCALE,
                                                  0, GRID_SCALE,
                                                  0, GRID_SCALE);
@@ -180,8 +178,6 @@ int main(int argc, char *argv[]) {
   evolution->Use_Particle_Levelset(true);
   evolution->Set_Levelset_Callbacks(*callbacks);
 
-  
-  
   FaceArray* faceVelocities = new FaceArray();
   faceVelocities->Resize(range);
 
@@ -207,9 +203,8 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  
-  evolution->Set_Seed(2606);
 
+  evolution->Set_Seed(2606);
 
   evolution->Seed_Particles(0);
 

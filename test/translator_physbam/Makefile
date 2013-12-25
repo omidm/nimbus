@@ -5,7 +5,7 @@ all: check $(TARGET)
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-PHYSBAM_ROOT = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/Build/Release
+PHYSBAM_ROOT = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/Build/Debug
 
 IFLAGS += -I$(LDIR) -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
 H_FILES = $(wildcard *.h)
