@@ -275,44 +275,86 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       // TODO(omidm): if you are not writing you can use the copy with out
       // duplicating. Then you need to keep track of list of last_read_job.
       assert(pv[0].version() == version);
-      std::vector<job_id_t> j;
-      id_maker_.GetNewJobID(&j, 2);
-      std::vector<physical_data_id_t> d;
-      id_maker_.GetNewPhysicalDataID(&d, 1);
+
+      bool found_obsolete = false;
+      physical_data_id_t obsolete_id = 0;
+      PhysicalDataVector g_pv;
+      data_manager_->InstancesByWorker(ldo, worker->worker_id(), &g_pv);
+      PhysicalDataVector::iterator g_iter = g_pv.begin();
+      for (; g_iter != g_pv.end(); ++g_iter) {
+        JobEntryList g_list;
+        JobEntry::VersionedLogicalData g_vld(l_id, g_iter->version());
+        if (job_manager_->GetJobsNeedDataVersion(&g_list, g_vld) == 0) {
+          found_obsolete = true;
+          obsolete_id = g_iter->id();
+          break;
+        }
+      }
+
       IDSet<job_id_t> before, after;
+      physical_data_id_t new_copy_id = 0;
+      job_id_t copy_job_id = 0;
+      job_id_t create_job_id = 0;
+      if (found_obsolete) {
+        std::vector<job_id_t> j;
+        id_maker_.GetNewJobID(&j, 1);
+        copy_job_id = j[0];
 
-      after.insert(j[1]);
-      job_manager_->UpdateBeforeSet(&before);
-      CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
-          ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
-      server_->SendCommand(worker, &cm);
+        new_copy_id = obsolete_id;
+      } else {
+        std::vector<job_id_t> j;
+        id_maker_.GetNewJobID(&j, 2);
+        create_job_id = j[0];
+        copy_job_id = j[1];
 
-      // Update the job table.
-      job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+        std::vector<physical_data_id_t> d;
+        id_maker_.GetNewPhysicalDataID(&d, 1);
+        new_copy_id = d[0];
+
+        after.insert(j[1]);
+        job_manager_->UpdateBeforeSet(&before);
+        CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
+            ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
+        server_->SendCommand(worker, &cm);
+
+        // Update the job table.
+        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+      }
 
       after.clear();
       after.insert(job->job_id());
-      before.insert(j[0]);
+      if (found_obsolete) {
+        before.insert(g_iter->last_job_read());
+      } else {
+        before.insert(create_job_id);
+      }
       before.insert(pv[0].last_job_write());
       job_manager_->UpdateBeforeSet(&before);
-      LocalCopyCommand cm_c(ID<job_id_t>(j[1]),
+      LocalCopyCommand cm_c(ID<job_id_t>(copy_job_id),
           ID<physical_data_id_t>(pv[0].id()),
-          ID<physical_data_id_t>(d[0]), before, after);
+          ID<physical_data_id_t>(new_copy_id), before, after);
       dbg(DBG_SCHED, "Sending local copy command to worker %lu.\n", worker->worker_id());
       server_->SendCommand(worker, &cm_c);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[1], (job_id_t)(0), true, true);
+      job_manager_->AddJobEntry(JOB_COPY, "localcopy", copy_job_id, (job_id_t)(0), true, true);
 
       // Update data table. Q?
-      PhysicalData p_c(d[0], worker->worker_id(), version,
-          j[1], j[1]);
-      data_manager_->AddPhysicalInstance(ldo, p_c);
+      if (found_obsolete) {
+        PhysicalData p_c(new_copy_id, worker->worker_id(), version,
+            g_iter->last_job_read(), copy_job_id);
+        data_manager_->RemovePhysicalInstance(ldo, *g_iter);
+        data_manager_->AddPhysicalInstance(ldo, p_c);
+      } else {
+        PhysicalData p_c(new_copy_id, worker->worker_id(), version,
+            copy_job_id, copy_job_id);
+        data_manager_->AddPhysicalInstance(ldo, p_c);
+      }
 
       PhysicalData p = pv[0];
-      p.set_last_job_read(j[1]);
+      p.set_last_job_read(copy_job_id);
       if (job->read_set().contains(l_id)) {
-        // It is OK to rewrite j[1] as last_job_read, because you are conservative, now.
+        // It is OK to rewrite copy_job_id as last_job_read, because you are conservative, now.
         p.set_last_job_read(job->job_id());
         before_set.insert(pv[0].last_job_write());
       }
@@ -325,7 +367,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       data_manager_->AddPhysicalInstance(ldo, p);
 
       // Update before_set and physical_table
-      before_set.insert(j[1]);  // Remain conservative for now.
+      before_set.insert(copy_job_id);  // Remain conservative for now.
       physical_table[l_id] = pv[0].id();
     }
   } else {
