@@ -123,7 +123,7 @@ namespace nimbus {
               int range_y = overlap(Y_COORD);
               int range_z = overlap(Z_COORD);
               int src_offset = 0;
-              switch(dim) {
+              switch (dim) {
                   case X_COORD:
                     range_x += 1;
                     mult_y  += 1;
@@ -221,7 +221,7 @@ namespace nimbus {
             int range_y = overlap(Y_COORD);
             int range_z = overlap(Z_COORD);
             int dst_offset = 0;
-            switch(dim) {
+            switch (dim) {
                 case X_COORD:
                   range_x += 1;
                   mult_y  += 1;
@@ -289,17 +289,18 @@ namespace nimbus {
         for (int y = 1; y < region->dy(); y++) {
           for (int x = 1; x < region->dx(); x++) {
             Particles* particleBucket;
-            // printf("Offset of positive particles is %i\n", offsetof(ParticleLevelset, positive_particles));
+            // printf("Offset of positive particles is %i\n", offsetof(ParticleLevelset, positive_particles)); // NOLINT
             if (positive) {
               // ParticlesArray& array = particleLevelset.get_positive_particles();
-              ParticlesArray* arrayPtr = (ParticlesArray*)((char*)&particleLevelset.positive_particles + 88);
+              ParticlesArray* arrayPtr =
+                reinterpret_cast<ParticlesArray*>((char*)&particleLevelset.positive_particles + 88); // NOLINT
               ParticlesArray& array = *arrayPtr;
               // printf("Pointer to positive particles is %p\n", arrayPtr);
               particleBucket = array(Int3Vector(x, y, z));
             } else {
               particleBucket = particleLevelset.negative_particles(Int3Vector(x, y, z));
             }
-            
+
             while (particleBucket != NULL) {
               particleBucket->array_collection->Delete_All_Elements();
               particleBucket = particleBucket->next;
@@ -348,7 +349,8 @@ namespace nimbus {
             // I have no idea if this works -- indexing by a 3D vector?
             Particles* cellParticles;
             if (positive) {
-              ParticlesArray* arrayPtr = (ParticlesArray*)((char*)&particleLevelset.positive_particles + 88);
+              ParticlesArray* arrayPtr =
+                reinterpret_cast<ParticlesArray*>((char*)&particleLevelset.positive_particles + 88); // NOLINT
               ParticlesArray& array = *arrayPtr;
               printf("Pointer to positive particles is %p\n", arrayPtr);
               cellParticles = array(Int3Vector(xi - region->x(),
@@ -386,11 +388,12 @@ namespace nimbus {
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->ClearTempBuffer();
       }
-      
+
       for (int z = 0; z < region->dz(); z++) {
         for (int y = 0; y < region->dy(); y++) {
           for (int x = 0; x < region->dx(); x++) {
-            ParticlesArray* arrayPtr = (ParticlesArray*)((char*)&particleLevelset.positive_particles + 88);
+            ParticlesArray* arrayPtr =
+              reinterpret_cast<ParticlesArray*>((char*)&particleLevelset.positive_particles + 88); // NOLINT
             ParticlesArray& array = *arrayPtr;
             printf("Pointer to positive particles is %p\n", arrayPtr);
             Particles* particles = array(Int3Vector(x, y, z));
