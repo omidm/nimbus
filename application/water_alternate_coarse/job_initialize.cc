@@ -3,7 +3,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -32,59 +32,28 @@
  */
 
 /*
- * This file contains a loop job that spawns iteration jobs at a coarse
- * granularity.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
-#include "application/water_alternate_coarse/job_loop.h"
+#include "application/water_alternate_coarse/job_initialize.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
-#include <sstream>
-#include <string>
 
 namespace application {
 
-    JobLoop::JobLoop(Application *app) {
+    JobInitialize::JobInitialize(Application *app) {
         set_application(app);
     };
 
-    nimbus::Job* JobLoop::Clone() {
-        return new JobLoop(application());
+    nimbus::Job* JobInitialize::Clone() {
+        return new JobInitialize(application());
     }
 
-    void JobLoop::Execute(Parameter params, const DataArray& da) {
-        dbg(APP_LOG, "Executing loop job\n");
+    void JobInitialize::Execute(Parameter params, const DataArray& da) {
+        dbg(APP_LOG, "Executing initialize job\n");
 
-        int frame;
-        std::stringstream frame_ss;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        frame_ss.str(params_str);
-        frame_ss >> frame;
-
-        if (frame < kLastFrame) {
-            int job_num = 1;
-            std::vector<nimbus::job_id_t> job_ids;
-            GetNewJobID(&job_ids, job_num);
-
-            nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-            nimbus::IDSet<nimbus::job_id_t> before, after;
-
-            nimbus::Parameter iter_params;
-            iter_params.set_ser_data(SerializedData(params_str));
-            dbg(APP_LOG, "Spawning iteration after frame %i\n", frame);
-            SpawnComputeJob(ITERATION,
-                    job_ids[0],
-                    read, write,
-                    before, after,
-                    iter_params);
-        }
-
-        dbg(APP_LOG, "Completed executing loop job\n");
+        dbg(APP_LOG, "Completed executing initialize job\n");
     }
 
 } // namespace application

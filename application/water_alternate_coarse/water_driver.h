@@ -37,11 +37,11 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
     
-    void Execute_Main_Program();
     void Initialize();
     void Advance_To_Target_Time(const T target_time);
-    void Simulate_To_Frame(const int frame_input,const int tid=1);
+
     void Write_Output_Files(const int frame);
+
     void Write_Substep(const std::string& title,const int substep,const int level=0);
     void Run(RANGE<TV_INT>& domain,const T dt,const T time);
 

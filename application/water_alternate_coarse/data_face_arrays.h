@@ -1,4 +1,5 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,59 +33,26 @@
  */
 
 /*
- * This file contains a loop job that spawns iteration jobs at a coarse
- * granularity.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
-#include "application/water_alternate_coarse/job_loop.h"
-#include "shared/dbg.h"
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_FACE_ARRAYS_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_DATA_FACE_ARRAYS_H_
+
+#include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
-#include <sstream>
-#include <string>
+
+#define FACE_ARRAYS "face_arrays"
 
 namespace application {
 
-    JobLoop::JobLoop(Application *app) {
-        set_application(app);
+    // TODO(Chinmayee): we need to add serialize/ deserialize to physbamdata
+    class DataFaceArrays : public nimbus::PhysBAMData {
+        public:
+            DataFaceArrays() {};
+            virtual ~DataFaceArrays() {};
     };
 
-    nimbus::Job* JobLoop::Clone() {
-        return new JobLoop(application());
-    }
-
-    void JobLoop::Execute(Parameter params, const DataArray& da) {
-        dbg(APP_LOG, "Executing loop job\n");
-
-        int frame;
-        std::stringstream frame_ss;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        frame_ss.str(params_str);
-        frame_ss >> frame;
-
-        if (frame < kLastFrame) {
-            int job_num = 1;
-            std::vector<nimbus::job_id_t> job_ids;
-            GetNewJobID(&job_ids, job_num);
-
-            nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-            nimbus::IDSet<nimbus::job_id_t> before, after;
-
-            nimbus::Parameter iter_params;
-            iter_params.set_ser_data(SerializedData(params_str));
-            dbg(APP_LOG, "Spawning iteration after frame %i\n", frame);
-            SpawnComputeJob(ITERATION,
-                    job_ids[0],
-                    read, write,
-                    before, after,
-                    iter_params);
-        }
-
-        dbg(APP_LOG, "Completed executing loop job\n");
-    }
-
 } // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_FACE_ARRAYS_H_
