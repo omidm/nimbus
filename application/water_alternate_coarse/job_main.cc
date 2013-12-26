@@ -60,12 +60,23 @@ namespace application {
     void JobMain::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing main job\n");
 
-        // Data
+        // Data setup
         int data_num = 1;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
+        nimbus::partition_id_t partition_id = 0;
+        nimbus::IDSet<partition_id_t> neighbor_partitions;
 
-        // Job arguments and parameters
+        // Face arrays
+        nimbus::Parameter fa_params;
+        fa_params.set_ser_data(SerializedData(""));
+        DefineData(FACE_ARRAYS,
+                   data_ids[0],
+                   partition_id,
+                   neighbor_partitions,
+                   fa_params);
+
+        // Job setup
         int job_num = 2;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);
@@ -73,9 +84,11 @@ namespace application {
         nimbus::IDSet<nimbus::job_id_t> before, after;
 
         // Init job
+        read.insert(data_ids[0]);
+        write.insert(data_ids[0]);
+        after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
-        after.insert(job_ids[1]);
         dbg(APP_LOG, "Spawning initialize\n");
         SpawnComputeJob(INITIALIZE,
                         job_ids[0],
@@ -90,6 +103,9 @@ namespace application {
         after.clear();
 
         // Loop job
+        read.insert(data_ids[0]);
+        write.insert(data_ids[0]);
+        before.insert(job_ids[0]);
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;
         int frame = 0;
