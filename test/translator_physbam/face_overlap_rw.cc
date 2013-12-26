@@ -83,7 +83,8 @@ int main(int argc, char *argv[]) {
   CPdiVector vec;
   TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator;
 
-  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result; // NOLINT
+  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result
+      = new PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >(); // NOLINT
 
   int_dimension_t dimensions1[] = {X1, Y1, Z1, DX1, DY1, DZ1};
   nimbus::GeometricRegion* r1 = new nimbus::GeometricRegion(dimensions1);
@@ -115,7 +116,7 @@ int main(int argc, char *argv[]) {
   vec.push_back(i1);
   vec.push_back(i2);
 
-  result = translator.ReadFaceArray(region, &vec);
+  translator.ReadFaceArray(region, &vec, result);
 
   for (int i = 0; i < 3 * SIZE1; i++) {
     f1[i] = 1.0;

@@ -1,5 +1,8 @@
 
-TARGET = face_simple_rw face_overlap_rw particles_simple_rw particles_overlap_rw
+TARGET  = face_simple_rw
+#TARGET += face_overlap_rw
+TARGET += particles_simple_rw
+TARGET += particles_overlap_rw
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -45,8 +48,8 @@ CFLAGS += -pthread
 face_simple_rw: face_simple_rw.o
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
 
-face_overlap_rw: face_overlap_rw.o
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
+#face_overlap_rw: face_overlap_rw.o
+#	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
 
 particles_simple_rw: particles_simple_rw.o
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
@@ -57,4 +60,3 @@ particles_overlap_rw: particles_overlap_rw.o
 
 clean: clean-files
 	\rm -f $(TARGET)
-

@@ -65,11 +65,11 @@ int main(int argc, char *argv[]) {
 
   int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
   nimbus::GeometricRegion* region = new nimbus::GeometricRegion(dimensions);
-  CPdiVector vec1, vec2;
+  CPdiVector vec1;
   TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator;
 
-  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result1; // NOLINT
-  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result2; // NOLINT
+  PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >* result1 =
+      new PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<3> >(); // NOLINT
 
   int_dimension_t dimensions1[] = {X, Y, Z, DX/2, DY, DZ};
   nimbus::GeometricRegion* r1 = new nimbus::GeometricRegion(dimensions1);
@@ -100,10 +100,7 @@ int main(int argc, char *argv[]) {
 
   vec1.push_back(i1);
   vec1.push_back(i2);
-  vec2.push_back(i2);
-  vec2.push_back(i1);
-  result1 = translator.ReadFaceArray(region, &vec1);
-  result2 = translator.ReadFaceArray(region, &vec2);
+  translator.ReadFaceArray(region, &vec1, result1);
 
   bool pass = true;
 
