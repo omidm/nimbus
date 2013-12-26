@@ -85,8 +85,9 @@ namespace nimbus {
     explicit TranslatorPhysBAM() {}
     virtual ~TranslatorPhysBAM() {}
 
-    virtual FaceArray* ReadFaceArray(GeometricRegion* region,
-                                     CPdiVector* objects) {
+    virtual void ReadFaceArray(GeometricRegion* region,
+                               CPdiVector* objects,
+                               FaceArray* fa) {
       Dimension3Vector vec;
       vec(X_COORD) = region->dx();
       vec(Y_COORD) = region->dy();
@@ -97,7 +98,6 @@ namespace nimbus {
                                                      0, region->dy()-1,
                                                      0, region->dz()-1);
 
-      FaceArray* fa = new FaceArray();
       fa->Resize(range);
 
       if (objects != NULL) {
@@ -176,8 +176,6 @@ namespace nimbus {
           }
         }
       }
-
-      return fa;
     }
 
     /** Take a FaceArray described by region and write it out to the

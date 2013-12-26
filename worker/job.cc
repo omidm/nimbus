@@ -147,6 +147,15 @@ bool Job::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req
   }
 }
 
+const LogicalDataObject* Job::GetLogicalObject(logical_data_id_t id) {
+  if (app_is_set_) {
+      return application_->GetLogicalObject(id);
+  } else {
+      std::cout << "Error: GetLogicalObject, application has not been set." << std::endl;
+      exit(-1);
+  }
+}
+
 int Job::GetCoveredLogicalObjects(CLdoVector* result,
     std::string& variable,
     GeometricRegion* r) {

@@ -246,6 +246,17 @@ Job * ForLoop::Clone() {
 
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
+
+  // ******************************************
+  // Just Cheching the Creation of
+  // ******************************************
+  /*
+  GeometricRegion r_t(*(GetLogicalObject(da[0]->logical_id())->region()));
+  LogicalDataObject ldo_t(da[0]->logical_id(), da[0]->name(), &r_t);
+  PhysicalDataInstance pdi_t(da[0]->physical_id(), &ldo_t, da[0], data_version_t(0));
+  */
+  // ****
+
   std::vector<job_id_t> j;
   std::vector<logical_data_id_t> d;
   IDSet<logical_data_id_t> read, write;

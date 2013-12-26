@@ -36,6 +36,8 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/data_face_arrays.h"
+#include "application/water_alternate_coarse/job_initialize.h"
 #include "application/water_alternate_coarse/job_iteration.h"
 #include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"
@@ -64,6 +66,8 @@ namespace application {
         PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
+
+        RegisterData(FACE_ARRAYS, new DataFaceArrays());
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));

@@ -1,11 +1,14 @@
 
-TARGET = face_simple_rw face_overlap_rw particles_simple_rw particles_overlap_rw
+TARGET  = face_simple_rw
+#TARGET += face_overlap_rw
+TARGET += particles_simple_rw
+TARGET += particles_overlap_rw
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-PHYSBAM_ROOT = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/Build/Release
+PHYSBAM_ROOT = $(NIMBUS_ROOT)/application/physbam-lib/Public_Library/Build/Debug
 
 IFLAGS += -I$(LDIR) -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
 H_FILES = $(wildcard *.h)
@@ -45,8 +48,8 @@ CFLAGS += -pthread
 face_simple_rw: face_simple_rw.o
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
 
-face_overlap_rw: face_overlap_rw.o
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
+#face_overlap_rw: face_overlap_rw.o
+#	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
 
 particles_simple_rw: particles_simple_rw.o
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $@.o $(PHYSBAM_DLIBS) -o $@ $(LFLAGS)
@@ -57,4 +60,3 @@ particles_overlap_rw: particles_overlap_rw.o
 
 clean: clean-files
 	\rm -f $(TARGET)
-

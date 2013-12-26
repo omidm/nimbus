@@ -60,7 +60,6 @@ int main(int argc, char *argv[]) {
   const int_dimension_t DX = 10;
   const int_dimension_t DY = 1;
   const int_dimension_t DZ = 1;
-  const int_dimension_t SIZE = DX * DY * DZ;
 
   const int_dimension_t X1 = 8;
   const int_dimension_t Y1 = 9;
@@ -116,7 +115,7 @@ int main(int argc, char *argv[]) {
   vec.push_back(i1);
   vec.push_back(i2);
 
-  result = translator.ReadFaceArray(region, &vec);
+  translator.ReadFaceArray(region, &vec, result);
 
   for (int i = 0; i < 3 * SIZE1; i++) {
     f1[i] = 1.0;
