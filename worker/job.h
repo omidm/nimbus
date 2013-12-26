@@ -105,6 +105,8 @@ class Job {
 
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
+
+    const LogicalDataObject* GetLogicalObject(logical_data_id_t id);
     int GetCoveredLogicalObjects(CLdoVector* result,
          std::string& variable,
          GeometricRegion* r);
