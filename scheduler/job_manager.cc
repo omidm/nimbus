@@ -333,7 +333,7 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
     JobEntry* j;
     job_id_t id = *it;
     if (GetJobEntry(id, j)) {
-      if (j->done()) {
+      if ((j->done()) || (id == 0)) {
         before_set->remove(it++);
       } else {
         ++it;
