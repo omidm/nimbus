@@ -44,6 +44,7 @@
 #include "application/water_alternate_coarse/water_driver.h"
 #include "application/water_alternate_coarse/water_example.h"
 #include "application/water_alternate_coarse/water_sources.h"
+#include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <sstream>
 #include <string>
