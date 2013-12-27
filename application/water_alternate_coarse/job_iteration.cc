@@ -81,7 +81,7 @@ namespace application {
                                  );
         PhysBAM::WaterSources::Add_Source(example);
         PhysBAM::WATER_DRIVER<TV> driver(*example);
-        driver.Initialize();
+        driver.Initialize(this);
 
         // simulate - advance a time step
         PhysBAM::LOG::SCOPE scope("FRAME", "Frame %d",

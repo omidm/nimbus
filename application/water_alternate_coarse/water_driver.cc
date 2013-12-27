@@ -4,6 +4,7 @@
 //#####################################################################
 #include "application/water_alternate_coarse/water_driver.h"
 #include "application/water_alternate_coarse/water_example.h"
+#include "data/physbam/translator_physbam.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
@@ -14,7 +15,9 @@
 #include <PhysBAM_Geometry/Grids_Uniform_Interpolation_Collidable/LINEAR_INTERPOLATION_COLLIDABLE_FACE_UNIFORM.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
+#include "shared/nimbus.h"
 #include "stdio.h"
+
 using namespace PhysBAM;
 namespace{
     template<class TV> void Write_Substep_Helper(void* writer,const std::string& title,int substep,int level)
@@ -43,7 +46,7 @@ template<class TV> WATER_DRIVER<TV>::
 // Initialize
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Initialize()
+Initialize(Job *init_job)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
@@ -286,5 +289,4 @@ Write_Output_Files(const int frame)
     FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
 }
 //#####################################################################
-template class WATER_DRIVER<VECTOR<float,2> >;
 template class WATER_DRIVER<VECTOR<float,3> >;
