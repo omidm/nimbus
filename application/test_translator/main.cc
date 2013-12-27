@@ -33,7 +33,8 @@
  */
 
  /*
-  *
+  * Test whether I understand operations on particles correctly.
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
 #include <algorithm>
@@ -50,8 +51,8 @@
 // Temporery import for nimbus internal data structures. End.
 
 #include "data/physbam/translator_physbam.h"
-#include "data/physbam/physbam_data.h"
-#include "data/physbam/physbam_include.h"
+// #include "data/physbam/physbam_data.h"
+// #include "data/physbam/physbam_include.h"
 
 #define R1_VALUE 3.1400
 #define R2_VALUE 32.0
@@ -106,41 +107,24 @@ typedef typename PhysBAM::PARTICLE_LEVELSET_UNIFORM<Grid> ParticleContainer;
 typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> ParticlesUnit;
 typedef typename PhysBAM::ARRAY<ParticlesUnit*, TV_INT> ParticlesArray;
 
-template <typename GRID_T>
-void PrintGrid(GRID_T& grid) {
-  printf("Start\n");
-  printf("Counts %d %d %d\n", grid.counts(1),
-                        grid.counts(2),
-                        grid.counts(3));
-  printf("Min %1.0f %1.0f %1.0f\n", (float)grid.domain.min_corner(1),
-                        (float)grid.domain.min_corner(2),
-                        (float)grid.domain.min_corner(3));
-  printf("Max %1.0f %1.0f %1.0f\n", grid.domain.max_corner(1),
-                        (float)grid.domain.max_corner(2),
-                        (float)grid.domain.max_corner(3));
-}
-
 bool ReadParticles(nimbus::GeometricRegion* region,
                    nimbus::CPdiVector* instances,
                    ParticleContainer& particle_container,
                    bool positive) {
-  using namespace nimbus;
+  // Expected to be wrapped in nimbus namespcae.
+  using namespace nimbus;  // NOLINT
+
   ParticlesArray* particles;
   if (positive) {
     particles = &particle_container.positive_particles;
   } else {
     particles = &particle_container.negative_particles;
   }
+
+  // Allocates buckets. TODO(quhang) replaced by clearing the buckets.
   for (int z = region->z(); z < region->z()+region->dz(); z++)
     for (int y = region->y(); y < region->y()+region->dy(); y++)
       for (int x = region->x(); x < region->x()+region->dx(); x++) {
-        printf("Access %d %d %d\n", x, y, z);
-        printf(" %1.0f %1.0f %1.0f\n", (float)particles->domain.min_corner(1),
-                              (float)particles->domain.min_corner(2),
-                              (float)particles->domain.min_corner(3));
-        printf(" %1.0f %1.0f %1.0f\n", (float)particles->domain.max_corner(1),
-                              (float)particles->domain.max_corner(2),
-                              (float)particles->domain.max_corner(3));
         TV_INT block_index(x, y, z);
         if (!(*particles)(block_index)) {
           (*particles)(block_index) = particle_container.Allocate_Particles(
@@ -148,6 +132,7 @@ bool ReadParticles(nimbus::GeometricRegion* region,
         }
       }
 
+  // TODO(quhang) warning rather than assert.
   assert(instances != NULL);
 
   CPdiVector::iterator iter = instances->begin();
@@ -156,8 +141,12 @@ bool ReadParticles(nimbus::GeometricRegion* region,
     PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
     scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
-    printf("%d\n", (int) data->size());
-    for (int i = 0; i < (int) data->size() / (int) sizeof(float); i+= 5) {
+    // @Phil. The data size is returned in the unit of bytes.  --quhang
+    // TODO(anyone) anyone knows how to avoid the ugly casting?
+    for (int i = 0;
+         i < static_cast<int>(data->size())
+         / static_cast<int>(sizeof(float));  // NOLINT
+         i+= 5) {
       // This instance may have particles inside the region. So
       // we have to iterate over them and insert them accordingly.
       // Particles are stored as (x,y,z) triples in data array
@@ -192,8 +181,6 @@ bool ReadParticles(nimbus::GeometricRegion* region,
           collision_distance;
         cellParticles->X(index) = position;
         cellParticles->radius(index) = radius;
-        printf("Write %f %f %f to %d %d %d\n", x, y, z,
-            (int)xi, (int)yi,(int) zi);
       }
     }
   }
@@ -204,7 +191,7 @@ bool WriteParticles(nimbus::GeometricRegion* region,
                     nimbus::CPdiVector* instances,
                     ParticleContainer& particle_container,
                     bool positive) {
-  using namespace nimbus;
+  using namespace nimbus;  // NOLINT
   CPdiVector::iterator iter = instances->begin();
   for (; iter != instances->end(); ++iter) {
     const PhysicalDataInstance* instance = *iter;
@@ -253,7 +240,6 @@ bool WriteParticles(nimbus::GeometricRegion* region,
                     yi <= (instanceRegion->y() + instanceRegion->dy()) &&
                     zi >= instanceRegion->z() &&
                     zi <= (instanceRegion->z() + instanceRegion->dz())) {
-                  printf("Read %f %f %f\n", x, y, z);
                   scalar_t particleBuffer[5];
                   particleBuffer[0] = particle.x;
                   particleBuffer[1] = particle.y;
@@ -313,27 +299,11 @@ int main(int argc, char *argv[]) {
 
   PhysBAM::ARRAY<float, TV_INT> phi_array;
   phi_array.Resize(TV_INT(DX, DY, DZ));
-
   PhysBAM::RANGE<VECTOR_TYPE> range_input(X, X+DX-1, Y, Y+DY-1, Z, Z+DZ-1);
-
   Grid grid(TV_INT(DX, DY, DZ), range_input, true);
 
-  /*
-  if (grid.Is_MAC_Grid()) {
-    printf("Is MAC grid.\n");
-  } else {
-    printf("Is not MAC grid.\n");
-  }
-  */
-  // Critical Warning: Still cannot understand what is the memory fault.
-  // "grid" will be changed in an unexpect way.  -quhang
-  PrintGrid(grid);
-  // Grid regular_grid = grid.Get_Regular_Grid();
-  // PrintGrid(regular_grid);
   ParticleContainer particle_container(grid, phi_array, 0);
   particle_container.Initialize_Particle_Levelset_Grid_Values();
-  // PrintGrid(regular_grid);
-  // PrintGrid(particle_container.levelset.grid);
   float* result;
   bool pass = true;
   pass = ReadParticles(region, vec, particle_container, true);
@@ -353,23 +323,14 @@ int main(int argc, char *argv[]) {
     goto error;
   }
 
-  /*
-  for (int i = 0; i < TOTAL_PARTICLES; i++) {
-    if (floats[i] != floatSource[i]) {
-      dbg(DBG_ERROR, "Value in physical instance 1 should be %f, it's %f.\n", floatSource[i], floats[i]);  //  NOLINT
-      pass = false;
-    }
-  }
-  */
-  // Cannot compare to float, which is deleted by PhysBAM data. --quhang
-  // Assume particle values are different.
-  result = (float*) ((PhysBAMData*)(instance->data()))->buffer();
+  // Cannot compare to float array, which is deleted by PhysBAM data. --quhang
+  // TODO(quhang) Don't assume particle values are different.
+  result = reinterpret_cast<float*>(
+      reinterpret_cast<PhysBAMData*>(instance->data())->buffer());
   for (int i = 0; i < TOTAL_PARTICLES / 5; ++i) {
     bool any = false;
-    printf("Search for %f\n", floatSource[i*5]);
     for (int j = 0; j < TOTAL_PARTICLES / 5; ++j) {
       bool flag = true;
-      printf("Get %f\n", result[j*5]);
       for (int k = 0; k < 5; ++k)
         if (floatSource[i*5+k] != result[j*5+k]) {
           flag = false;
@@ -380,8 +341,8 @@ int main(int argc, char *argv[]) {
         break;
       }
     }
-    printf("coming to %d\n", i);
     if (!any) {
+      printf("The %dth Particle set is not found in the output.", i);
       pass = false;
       goto error;
     }
