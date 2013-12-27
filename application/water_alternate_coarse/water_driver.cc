@@ -46,7 +46,7 @@ template<class TV> WATER_DRIVER<TV>::
 // Initialize
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Initialize(Job *init_job)
+Initialize(Job *job)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 

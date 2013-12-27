@@ -33,46 +33,35 @@
  */
 
 /*
- * Definitions and typedef useful for application, data and jobs.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
-
-#include <PhysBAM_Tools/Vectors/VECTOR.h>
-#include "shared/dbg.h"
+#include "application/water_alternate_coarse/app_utils.h"
+#include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
-#include "worker/physical_data_instance.h"
-
-#define APP_LOG DBG_TEMP
-#define APP_LOG_STR "temp"
 
 namespace application {
 
-    // application specific parameters
-    const int kThreadsNum = 1;
-    const int kScale = 30;
-    const int kDimension = 3;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-
-    // typedefs
-    typedef float T;
-    typedef float RW;
-    typedef PhysBAM::VECTOR<T,   kDimension> TV;
-    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
-
-    // TODO: some hacks that need to be cleaned soon after a meeting/
-    // discussion -- one option is to make region a part of data, and
-    // let nimbus take care of initializing region correctly when creating
-    // the data object
     bool GetTranslatorData(Job &job,
                            std::string name,
                            const DataArray& da,
-                           PdiVector &vec);
+                           PdiVector &vec) {
+        bool success = false;
+        if (da.empty())
+            return success;
+        for (DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            if (d->name() != name)
+                continue;
+            const LogicalDataObject *ldo = job.GetLogicalObject(d->logical_id());
+            PhysicalDataInstance *pdi = new
+                PhysicalDataInstance(d->physical_id(),
+                                     ldo, d,
+                                     data_version_t(0));
+            vec.push_back(pdi);
+            success = true;
+        }
+        return success;
+    }
 
 } // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_

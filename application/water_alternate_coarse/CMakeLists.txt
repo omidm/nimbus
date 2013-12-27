@@ -21,6 +21,7 @@ LINK_DIRECTORIES(${NIMBUS_ROOT})
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
+    ${PROJECT_SOURCE_DIR}/app_utils.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop.cc

@@ -64,7 +64,7 @@ PhysicalDataInstance::PhysicalDataInstance() {
  * \return
 */
 PhysicalDataInstance::PhysicalDataInstance(physical_data_id_t i,
-                                           LogicalDataObject *lobj,
+                                           const LogicalDataObject *lobj,
                                            Data *d,
                                            data_version_t v) {
   id_ = i;
@@ -128,7 +128,7 @@ partition_id_t PhysicalDataInstance::partition() const {
  * \brief Brief description.
  * \return
 */
-LogicalDataObject * PhysicalDataInstance::logical_object() const {
+const LogicalDataObject * PhysicalDataInstance::logical_object() const {
   return logical_object_;
 }
 
