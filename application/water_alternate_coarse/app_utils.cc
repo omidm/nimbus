@@ -42,10 +42,10 @@
 
 namespace application {
 
-    bool GetTranslatorData(Job &job,
-                           std::string name,
+    bool GetTranslatorData(const Job *job,
+                           std::string &name,
                            const DataArray& da,
-                           PdiVector &vec) {
+                           PdiVector *vec) {
         bool success = false;
         if (da.empty())
             return success;
@@ -53,12 +53,12 @@ namespace application {
             Data *d = *it;
             if (d->name() != name)
                 continue;
-            const LogicalDataObject *ldo = job.GetLogicalObject(d->logical_id());
+            const LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
             PhysicalDataInstance *pdi = new
                 PhysicalDataInstance(d->physical_id(),
                                      ldo, d,
                                      data_version_t(0));
-            vec.push_back(pdi);
+            vec->push_back(pdi);
             success = true;
         }
         return success;

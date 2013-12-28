@@ -43,7 +43,7 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
     
-    void Initialize(Job *job);
+    void Initialize(const Job *job, const DataArray &da);
     void Advance_To_Target_Time(const T target_time);
 
     void Write_Output_Files(const int frame);

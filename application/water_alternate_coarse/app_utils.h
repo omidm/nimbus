@@ -68,10 +68,10 @@ namespace application {
     // discussion -- one option is to make region a part of data, and
     // let nimbus take care of initializing region correctly when creating
     // the data object
-    bool GetTranslatorData(Job &job,
-                           std::string name,
+    bool GetTranslatorData(const Job *job,
+                           std::string &name,
                            const DataArray& da,
-                           PdiVector &vec);
+                           PdiVector *vec);
 
 } // namespace application
 
