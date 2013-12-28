@@ -37,6 +37,7 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
+#include <set>
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
 
@@ -49,7 +50,15 @@ namespace application {
         bool success = false;
         if (da.empty())
             return success;
+        std::set<Data *> ds;
         for (DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            if (d->name() == name)
+                ds.insert(*it);
+        }
+        if (ds.empty())
+            return false;
+        for (std::set<Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
             Data *d = *it;
             if (d->name() != name)
                 continue;
