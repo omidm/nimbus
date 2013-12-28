@@ -544,7 +544,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   return true;
 }
 
-void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
+bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
     ID<job_id_t> id(job->job_id());
     IDSet<physical_data_id_t> read_set, write_set;
@@ -553,13 +553,60 @@ void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
     job->GetPhysicalWriteSet(&write_set);
     ComputeJobCommand cm(job->job_name(), id,
         read_set, write_set, job->before_set(), job->after_set(), job->params());
-    dbg(DBG_SCHED, "Sending job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
+    dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
+    return true;
   } else {
-    // TODO(omidm): under progress.
-    // ...
-    // ...
+    dbg(DBG_ERROR, "Job with id %lu is not a compute job.\n", job->job_id());
+    return false;
   }
+}
+
+bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
+    const std::string& data_name, const logical_data_id_t& logical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id, physical_data_id_t* physical_data_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  std::vector<physical_data_id_t> d;
+  id_maker_.GetNewPhysicalDataID(&d, 1);
+  *physical_data_id = d[0];
+  CreateDataCommand cm(ID<job_id_t>(j[0]), data_name,
+      ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
+  dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
+  server_->SendCommand(worker, &cm);
+  return true;
+}
+
+bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
+    const physical_data_id_t& physical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  RemoteCopyReceiveCommand cm_r(ID<job_id_t>(j[0]),
+      ID<physical_data_id_t>(physical_data_id), before, after);
+  dbg(DBG_SCHED, "Sending remote copy receive job %lu to worker %lu.\n", j[0], worker->worker_id());
+  server_->SendCommand(worker, &cm_r);
+  return true;
+}
+
+
+bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
+    const job_id_t& receive_job_id, const physical_data_id_t& physical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  RemoteCopySendCommand cm_s(ID<job_id_t>(j[0]),
+      ID<job_id_t>(receive_job_id), ID<physical_data_id_t>(physical_data_id),
+      ID<worker_id_t>(worker->worker_id()),
+      worker->ip(), ID<port_t>(worker->port()),
+      before, after);
+  return true;
 }
 
 bool Scheduler::AssignJob(JobEntry* job) {
@@ -572,7 +619,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
     PrepareDataForJobAtWorker(job, worker, *it);
   }
   job_manager_->UpdateJobBeforeSet(job);
-  SendJobToWorker(job, worker);
+  SendComputeJobToWorker(worker, job);
   job->set_assigned(true);
   return true;
 }
