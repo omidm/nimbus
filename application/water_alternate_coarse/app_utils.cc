@@ -44,7 +44,7 @@
 namespace application {
 
     bool GetTranslatorData(const Job *job,
-                           std::string &name,
+                           const std::string &name,
                            const DataArray& da,
                            PdiVector *vec) {
         bool success = false;

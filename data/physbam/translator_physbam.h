@@ -86,7 +86,7 @@ namespace nimbus {
     virtual ~TranslatorPhysBAM() {}
 
     virtual void ReadFaceArray(GeometricRegion* region,
-                               CPdiVector* objects,
+                               const PdiVector* objects,
                                FaceArray* fa) {
       Dimension3Vector vec;
       vec(X_COORD) = region->dx();
@@ -101,7 +101,7 @@ namespace nimbus {
       fa->Resize(range);
 
       if (objects != NULL) {
-        CPdiVector::iterator iter = objects->begin();
+        PdiVector::const_iterator iter = objects->begin();
         for (; iter != objects->end(); ++iter) {
           const PhysicalDataInstance* obj = *iter;
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
@@ -181,7 +181,7 @@ namespace nimbus {
     /** Take a FaceArray described by region and write it out to the
      *  PhysicalDataInstance objects in the objects array. */
     virtual bool WriteFaceArray(GeometricRegion* region,
-                                CPdiVector* objects,
+                                PdiVector* objects,
                                 FaceArray* fa) {
       int_dimension_t region_size = 0;
       region_size += (region->dx() + 1) * region->dy() * region->dz();
@@ -193,7 +193,7 @@ namespace nimbus {
       }
 
       if (objects != NULL) {
-        CPdiVector::iterator iter = objects->begin();
+        PdiVector::iterator iter = objects->begin();
 
         // Loop over the Nimbus objects, copying the relevant PhysBAM data
         // into each one

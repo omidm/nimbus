@@ -2,6 +2,7 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+#include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/water_driver.h"
 #include "application/water_alternate_coarse/water_example.h"
 #include "data/physbam/translator_physbam.h"
@@ -17,6 +18,8 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include "shared/nimbus.h"
 #include "stdio.h"
+#include "string.h"
+#include "worker/physical_data_instance.h"
 
 using namespace PhysBAM;
 namespace{
@@ -107,6 +110,11 @@ Initialize(const Job *job, const DataArray &da)
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
     if (example.restart) {
+        PdiVector fvs;
+        const std::string fvstring = std::string(APP_FACE_ARRAYS);
+        GeometricRegion temp;
+        if (application::GetTranslatorData(job, fvstring, da, &fvs))
+            translator.ReadFaceArray(&temp, &fvs, &example.face_velocities);
         example.Read_Output_Files(example.restart);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.

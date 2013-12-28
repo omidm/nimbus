@@ -69,7 +69,7 @@ namespace application {
     // let nimbus take care of initializing region correctly when creating
     // the data object
     bool GetTranslatorData(const Job *job,
-                           std::string &name,
+                           const std::string &name,
                            const DataArray& da,
                            PdiVector *vec);
    // TODO: lets make read/ write sets if possible, and also have separate
