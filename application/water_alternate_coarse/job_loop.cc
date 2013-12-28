@@ -67,13 +67,24 @@ namespace application {
         frame_ss >> frame;
 
         if (frame < kLastFrame) {
+            // Job setup
             int job_num = 1;
             std::vector<nimbus::job_id_t> job_ids;
             GetNewJobID(&job_ids, job_num);
-
             nimbus::IDSet<nimbus::logical_data_id_t> read, write;
             nimbus::IDSet<nimbus::job_id_t> before, after;
 
+            // Iteration job
+            if (!da.empty()) {
+                for (DataArray::const_iterator it = da.begin(); it != da.end(); ++it ) {
+                    Data *d = *it;
+                    logical_data_id_t id = d->logical_id();
+                    if (!application::Contains(read, id))
+                        read.insert(id);
+                    if (!application::Contains(write, id))
+                        write.insert(id);
+                }
+            }
             nimbus::Parameter iter_params;
             iter_params.set_ser_data(SerializedData(params_str));
             dbg(APP_LOG, "Spawning iteration after frame %i\n", frame);

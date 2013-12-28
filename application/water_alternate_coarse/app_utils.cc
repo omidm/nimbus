@@ -64,4 +64,17 @@ namespace application {
         return success;
     }
 
+    bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
+                  logical_data_id_t  id) {
+        return false;
+        nimbus::IDSet<nimbus::logical_data_id_t>::IDSetIter it;
+        for (it = data_set.begin(); it != data_set.end(); ++it) {
+            if (*it == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 } // namespace application
