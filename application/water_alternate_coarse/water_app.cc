@@ -72,7 +72,7 @@ namespace application {
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));
         RegisterJob(ITERATION, new JobIteration(this));
-        // RegisterJob(INITIALIZE, new JobInitialize(this));
+        RegisterJob(INITIALIZE, new JobInitialize(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }
