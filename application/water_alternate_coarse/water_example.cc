@@ -184,7 +184,7 @@ Read_Output_Files(const int frame)
     filename=output_directory+"/"+f+"/pressure";
     if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading pressure "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,incompressible.projection.p);}
     filename=output_directory+"/"+f+"/mac_velocities";
-//    if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading mac_velocities "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,face_velocities);}
+    if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading mac_velocities "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,face_velocities);}
 #ifndef COMPILE_WITHOUT_DOUBLE_SUPPORT
 #else
         PHYSBAM_FATAL_ERROR("Cannot read doubles");

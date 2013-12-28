@@ -36,6 +36,7 @@ protected:
     WATER_EXAMPLE<TV>& example;
 
 public:
+    bool init_phase;
     int current_frame;
     T time;
     int output_number;
@@ -43,6 +44,7 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
     
+    void Initialize_Nimbus_Data(const Job *job, const DataArray &da);
     void Initialize(const Job *job, const DataArray &da);
     void Advance_To_Target_Time(const T target_time);
 

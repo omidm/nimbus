@@ -53,11 +53,6 @@ Initialize(const Job *job, const DataArray &da)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
-    // setup time
-    if (example.restart)
-        current_frame = example.restart;
-    else
-        current_frame = example.first_frame;
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
 
@@ -66,6 +61,7 @@ Initialize(const Job *job, const DataArray &da)
         example.domain_boundary(i)(1)=true;
         example.domain_boundary(i)(2)=true;
     }
+
     example.domain_boundary(2)(2)=false;
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
@@ -109,7 +105,15 @@ Initialize(const Job *job, const DataArray &da)
     example.incompressible.projection.elliptic_solver->pcg.Show_Results();
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
-    if (example.restart) {
+    if (init_phase) {
+        example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+        example.collision_bodies_affecting_fluid.Rasterize_Objects();
+        example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+        example.Initialize_Phi();
+        example.Adjust_Phi_With_Sources(time);
+        example.particle_levelset_evolution.Make_Signed_Distance();
+    }
+    else {
         // invoking nimbus translator
         //PdiVector fvs;
         //const std::string fvstring = std::string(APP_FACE_ARRAYS);
@@ -119,23 +123,15 @@ Initialize(const Job *job, const DataArray &da)
         //application::DestroyTranslatorObjects(&fvs);
 
         // physbam init
-        example.Read_Output_Files(example.restart);
+        example.Read_Output_Files(current_frame);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.
             Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
     }
-    else {
-        example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
-        example.collision_bodies_affecting_fluid.Rasterize_Objects();
-        example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
-        example.Initialize_Phi();
-        example.Adjust_Phi_With_Sources(time);
-        example.particle_levelset_evolution.Make_Signed_Distance();
-    }
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
-    if (!example.restart)
+    if (init_phase)
         example.particle_levelset_evolution.Seed_Particles(time);
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
@@ -160,7 +156,7 @@ Initialize(const Job *job, const DataArray &da)
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
-    if (!example.restart)
+    if (init_phase)
         Write_Output_Files(example.first_frame);
 }
 //#####################################################################

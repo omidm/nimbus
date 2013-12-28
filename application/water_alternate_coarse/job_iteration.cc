@@ -74,13 +74,14 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV> *example =
             new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
 
-        example->restart = frame;
         example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
                                  PhysBAM::RANGE<TV>(TV(),
                                                     TV::All_Ones_Vector())
                                  );
         PhysBAM::WaterSources::Add_Source(example);
         PhysBAM::WATER_DRIVER<TV> driver(*example);
+        driver.init_phase = false;
+        driver.current_frame = frame;
         driver.Initialize(this, da);
 
         // simulate - advance a time step

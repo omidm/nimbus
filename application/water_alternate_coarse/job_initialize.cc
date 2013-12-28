@@ -37,6 +37,9 @@
 
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_initialize.h"
+#include "application/water_alternate_coarse/water_driver.h"
+#include "application/water_alternate_coarse/water_example.h"
+#include "application/water_alternate_coarse/water_sources.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
@@ -52,6 +55,22 @@ namespace application {
 
     void JobInitialize::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing initialize job\n");
+
+        // initialize configuration and state
+        PhysBAM::WATER_EXAMPLE<TV> *example =
+            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+
+        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
+                                 PhysBAM::RANGE<TV>(TV(),
+                                                    TV::All_Ones_Vector())
+                                 );
+        PhysBAM::WaterSources::Add_Source(example);
+        PhysBAM::WATER_DRIVER<TV> driver(*example);
+        driver.init_phase = true;
+        driver.current_frame = 0;
+        driver.Initialize(this, da);
+
+        delete example;
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }
