@@ -39,7 +39,6 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/data_face_arrays.h"
 #include "application/water_alternate_coarse/job_initialize.h"
 #include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"
@@ -70,7 +69,7 @@ namespace application {
         // Face arrays
         nimbus::Parameter fa_params;
         fa_params.set_ser_data(SerializedData(""));
-        DefineData(FACE_ARRAYS,
+        DefineData(APP_FACE_ARRAYS,
                    data_ids[0],
                    partition_id,
                    neighbor_partitions,

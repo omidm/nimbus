@@ -33,7 +33,6 @@ SET(${PROJECT_NAME}_cpp
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
-    ${PROJECT_SOURCE_DIR}/data_face_arrays.h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_iteration.h
     ${PROJECT_SOURCE_DIR}/job_loop.h

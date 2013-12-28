@@ -36,7 +36,6 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/data_face_arrays.h"
 #include "application/water_alternate_coarse/job_initialize.h"
 #include "application/water_alternate_coarse/job_iteration.h"
 #include "application/water_alternate_coarse/job_loop.h"
@@ -48,6 +47,7 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
+#include "data/physbam/physbam_data.h"
 
 namespace application {
 
@@ -67,7 +67,7 @@ namespace application {
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
-        RegisterData(FACE_ARRAYS, new DataFaceArrays());
+        RegisterData(APP_FACE_ARRAYS, new PhysBAMData());
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));
