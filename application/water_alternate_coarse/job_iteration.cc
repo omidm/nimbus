@@ -88,15 +88,12 @@ namespace application {
         PhysBAM::LOG::SCOPE scope("FRAME", "Frame %d",
                                   driver.current_frame+1, 1);
         driver.Advance_To_Target_Time(example->Time_At_Frame(driver.current_frame+1));
-        PhysBAM::LOG::Time("Reseed");
-        example->particle_levelset_evolution.Reseed_Particles(driver.time);
-        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
-        driver.Write_Output_Files(++driver.output_number);
         frame++;
 
         // free resources
         delete example;
 
+        // next loop
         int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);

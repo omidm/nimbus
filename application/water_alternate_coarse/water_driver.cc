@@ -248,7 +248,6 @@ Advance_To_Target_Time(const T target_time)
             example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
 
         //Project 7% (Parallelizedish)
-        //LOG::Time("Project");
         LOG::SCOPE *scope=0;
         scope=new LOG::SCOPE("Project");
         example.Set_Boundary_Conditions(time);
@@ -269,6 +268,14 @@ Advance_To_Target_Time(const T target_time)
 
         time+=dt;
     }
+
+    //Reseed
+    LOG::Time("Reseed");
+    example.particle_levelset_evolution.Reseed_Particles(time);
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+
+    //Save State
+    Write_Output_Files(++output_number);
 }
 //#####################################################################
 // Function Write_Substep
