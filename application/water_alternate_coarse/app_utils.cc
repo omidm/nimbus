@@ -40,6 +40,7 @@
 #include <set>
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
+#include "worker/physical_data_instance.h"
 
 namespace application {
 
@@ -71,6 +72,14 @@ namespace application {
             success = true;
         }
         return success;
+    }
+
+    void DestroyTranslatorObjects(PdiVector *vec) {
+        if (vec->empty())
+            return;
+        for (PdiVector::iterator it = vec->begin(); it != vec->end(); ++it) {
+            delete *it;
+        }
     }
 
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,

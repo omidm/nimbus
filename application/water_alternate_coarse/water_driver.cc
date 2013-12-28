@@ -110,11 +110,15 @@ Initialize(const Job *job, const DataArray &da)
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
     if (example.restart) {
-        PdiVector fvs;
-        const std::string fvstring = std::string(APP_FACE_ARRAYS);
-        GeometricRegion temp;
-        if (application::GetTranslatorData(job, fvstring, da, &fvs))
-            translator.ReadFaceArray(&temp, &fvs, &example.face_velocities);
+        // invoking nimbus translator
+        //PdiVector fvs;
+        //const std::string fvstring = std::string(APP_FACE_ARRAYS);
+        //GeometricRegion temp;
+        //if (application::GetTranslatorData(job, fvstring, da, &fvs))
+        //    translator.ReadFaceArray(&temp, &fvs, &example.face_velocities);
+        //application::DestroyTranslatorObjects(&fvs);
+
+        // physbam init
         example.Read_Output_Files(example.restart);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.

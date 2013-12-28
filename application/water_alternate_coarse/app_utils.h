@@ -72,6 +72,8 @@ namespace application {
                            const std::string &name,
                            const DataArray& da,
                            PdiVector *vec);
+    void DestroyTranslatorObjects(PdiVector *vec);
+
    // TODO: lets make read/ write sets if possible, and also have separate
    // read/ write instead of one DataArray passed to a job/ a better indexing
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
