@@ -2,10 +2,8 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
-#include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/water_driver.h"
 #include "application/water_alternate_coarse/water_example.h"
-#include "data/physbam/translator_physbam.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
@@ -19,7 +17,6 @@
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "string.h"
-#include "worker/physical_data_instance.h"
 
 using namespace PhysBAM;
 namespace{
@@ -114,16 +111,8 @@ Initialize(const Job *job, const DataArray &da)
         example.particle_levelset_evolution.Make_Signed_Distance();
     }
     else {
-        // invoking nimbus translator
-        //PdiVector fvs;
-        //const std::string fvstring = std::string(APP_FACE_ARRAYS);
-        //GeometricRegion temp;
-        //if (application::GetTranslatorData(job, fvstring, da, &fvs))
-        //    translator.ReadFaceArray(&temp, &fvs, &example.face_velocities);
-        //application::DestroyTranslatorObjects(&fvs);
-
         // physbam init
-        example.Read_Output_Files(current_frame);
+        example.Load_From_Nimbus(job, da, current_frame);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.
             Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
@@ -184,7 +173,7 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
 // Advance_To_Target_Time
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Advance_To_Target_Time(const T target_time)
+Advance_To_Target_Time(const Job *job, const DataArray &da, const T target_time)
 {
     bool done=false;for(int substep=1;!done;substep++){
         LOG::Time("Calculate Dt");
@@ -275,6 +264,7 @@ Advance_To_Target_Time(const T target_time)
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //Save State
+    example.Save_To_Nimbus(job, da, current_frame+1);
     Write_Output_Files(++output_number);
 }
 //#####################################################################

@@ -5,7 +5,6 @@
 #ifndef __WATER_DRIVER__
 #define __WATER_DRIVER__
 
-#include "data/physbam/translator_physbam.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_NODE.h>
 #include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_POLICY_UNIFORM.h>
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/GRID_ARRAYS_POLICY_UNIFORM.h>
@@ -30,8 +29,6 @@ class WATER_DRIVER
     typedef typename T_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_ARRAYS_BOOL;
     typedef typename T_FACE_ARRAYS_SCALAR::template REBIND<bool>::TYPE T_FACE_ARRAYS_BOOL;
 
-    TranslatorPhysBAM<TV> translator;
-
 protected:
     WATER_EXAMPLE<TV>& example;
 
@@ -44,9 +41,8 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
     
-    void Initialize_Nimbus_Data(const Job *job, const DataArray &da);
     void Initialize(const Job *job, const DataArray &da);
-    void Advance_To_Target_Time(const T target_time);
+    void Advance_To_Target_Time(const Job *job, const DataArray &da, const T target_time);
 
     void Write_Output_Files(const int frame);
 

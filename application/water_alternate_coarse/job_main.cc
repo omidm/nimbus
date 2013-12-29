@@ -59,19 +59,23 @@ namespace application {
     void JobMain::Execute(Parameter params, const DataArray& da) {
         dbg(APP_LOG, "Executing main job\n");
 
+        // Partition setup
+        nimbus::ID<partition_id_t> partition_id(0);
+        nimbus::Parameter part_params;
+        DefinePartition(partition_id, kDomain, part_params);
+        nimbus::IDSet<partition_id_t> neighbor_partitions;
+
         // Data setup
         int data_num = 1;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
-        nimbus::partition_id_t partition_id = 0;
-        nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Face arrays
         nimbus::Parameter fa_params;
         fa_params.set_ser_data(SerializedData(""));
         DefineData(APP_FACE_ARRAYS,
                    data_ids[0],
-                   partition_id,
+                   partition_id.elem(),
                    neighbor_partitions,
                    fa_params);
 

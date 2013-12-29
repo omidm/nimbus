@@ -85,7 +85,7 @@ namespace nimbus {
     explicit TranslatorPhysBAM() {}
     virtual ~TranslatorPhysBAM() {}
 
-    virtual void ReadFaceArray(GeometricRegion* region,
+    virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
       Dimension3Vector vec;
@@ -180,7 +180,7 @@ namespace nimbus {
 
     /** Take a FaceArray described by region and write it out to the
      *  PhysicalDataInstance objects in the objects array. */
-    virtual bool WriteFaceArray(GeometricRegion* region,
+    virtual bool WriteFaceArray(const GeometricRegion* region,
                                 PdiVector* objects,
                                 FaceArray* fa) {
       int_dimension_t region_size = 0;
@@ -561,8 +561,8 @@ namespace nimbus {
     /* Return a vector describing what the offset of b
        within a, such that a.x + offset = b.x. If
        offset is negative, return 0. */
-    virtual Dimension3Vector GetOffset(GeometricRegion* a,
-                                       GeometricRegion* b) {
+    virtual Dimension3Vector GetOffset(const GeometricRegion* a,
+                                       const GeometricRegion* b) {
       Dimension3Vector result;
 
       // If source is > than dest, its offset is zero (it's contained),
@@ -577,8 +577,8 @@ namespace nimbus {
       return result;
     }
 
-    virtual Dimension3Vector GetOverlapSize(GeometricRegion* src,
-                                            GeometricRegion* dest) {
+    virtual Dimension3Vector GetOverlapSize(const GeometricRegion* src,
+                                            const GeometricRegion* dest) {
       Dimension3Vector result;
 
       int_dimension_t x_start = std::max(src->x(), dest->x());

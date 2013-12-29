@@ -87,7 +87,7 @@ namespace application {
         // simulate - advance a time step
         PhysBAM::LOG::SCOPE scope("FRAME", "Frame %d",
                                   driver.current_frame+1, 1);
-        driver.Advance_To_Target_Time(example->Time_At_Frame(driver.current_frame+1));
+        driver.Advance_To_Target_Time(this, da, example->Time_At_Frame(driver.current_frame+1));
         frame++;
 
         // free resources

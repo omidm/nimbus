@@ -4,6 +4,7 @@
 //#####################################################################
 #ifndef __WATER_EXAMPLE__
 #define __WATER_EXAMPLE__
+#include "data/physbam/translator_physbam.h"
 #include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>
 #include <PhysBAM_Tools/Grids_Uniform_Boundaries/BOUNDARY_UNIFORM.h>
@@ -19,6 +20,7 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
+#include "shared/nimbus.h"
 namespace PhysBAM{
 
 template<class T_GRID> class LEVELSET_MULTIPLE_UNIFORM;
@@ -34,6 +36,8 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
     typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
     enum workaround1{d=TV::m};
+
+    TranslatorPhysBAM<TV> translator;
 
 public:
     STREAM_TYPE stream_type;
@@ -74,11 +78,15 @@ public:
     void Adjust_Particle_For_Domain_Boundaries(PARTICLE_LEVELSET_PARTICLES<TV>& particles,const int index,TV& V,const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,const T dt,const T time);
     void Get_Levelset_Velocity(const GRID<TV>& grid,LEVELSET_MULTIPLE_UNIFORM<GRID<TV> >& levelset_multiple,ARRAY<T,FACE_INDEX<TV::dimension> >& V_levelset,const T time) const PHYSBAM_OVERRIDE {}
     void Initialize_Grid(TV_INT counts,RANGE<TV> range);
-    void Write_Output_Files(const int frame);
-    void Read_Output_Files(const int frame);
     void Set_Boundary_Conditions(const T time);
     void Adjust_Phi_With_Sources(const T time);
     void Initialize_Phi();
+
+    void Write_Output_Files(const int frame);
+    void Read_Output_Files(const int frame);
+
+    void Save_To_Nimbus(const Job *job, const DataArray &da, const int frame);
+    void Load_From_Nimbus(const Job *job, const DataArray &da, const int frame);
 
 //#####################################################################
 };
