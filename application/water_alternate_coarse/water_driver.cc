@@ -46,7 +46,7 @@ template<class TV> WATER_DRIVER<TV>::
 // Initialize
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Initialize(const Job *job, const DataArray &da)
+Initialize(const nimbus::Job *job, const nimbus::DataArray &da)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
@@ -173,7 +173,7 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
 // Advance_To_Target_Time
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Advance_To_Target_Time(const Job *job, const DataArray &da, const T target_time)
+Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, const T target_time)
 {
     bool done=false;for(int substep=1;!done;substep++){
         LOG::Time("Calculate Dt");

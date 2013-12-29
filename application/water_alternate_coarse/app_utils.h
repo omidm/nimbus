@@ -70,16 +70,16 @@ namespace application {
     // discussion -- one option is to make region a part of data, and
     // let nimbus take care of initializing region correctly when creating
     // the data object
-    bool GetTranslatorData(const Job *job,
+    bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
-                           const DataArray& da,
-                           PdiVector *vec);
-    void DestroyTranslatorObjects(PdiVector *vec);
+                           const nimbus::DataArray& da,
+                           nimbus::PdiVector *vec);
+    void DestroyTranslatorObjects(nimbus::PdiVector *vec);
 
    // TODO: lets make read/ write sets if possible, and also have separate
    // read/ write instead of one DataArray passed to a job/ a better indexing
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
-                  logical_data_id_t  id);
+                  nimbus::logical_data_id_t  id);
 
 } // namespace application
 

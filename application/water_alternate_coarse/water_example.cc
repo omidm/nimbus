@@ -197,7 +197,7 @@ Read_Output_Files(const int frame)
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Save_To_Nimbus(const Job *job, const DataArray &da, const int frame)
+Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     PdiVector fvs;
     const std::string fvstring = std::string(APP_FACE_ARRAYS);
@@ -222,7 +222,7 @@ Save_To_Nimbus(const Job *job, const DataArray &da, const int frame)
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus(const Job *job, const DataArray &da, const int frame)
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     PdiVector fvs;
     const std::string fvstring = std::string(APP_FACE_ARRAYS);

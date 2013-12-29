@@ -41,8 +41,8 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
     
-    void Initialize(const Job *job, const DataArray &da);
-    void Advance_To_Target_Time(const Job *job, const DataArray &da, const T target_time);
+    void Initialize(const nimbus::Job *job, const nimbus::DataArray &da);
+    void Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, const T target_time);
 
     void Write_Output_Files(const int frame);
 

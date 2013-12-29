@@ -48,7 +48,7 @@
 
 namespace application {
 
-    JobMain::JobMain(Application *app) {
+    JobMain::JobMain(nimbus::Application *app) {
         set_application(app);
     };
 
@@ -56,7 +56,7 @@ namespace application {
         return new JobMain(application());
     }
 
-    void JobMain::Execute(Parameter params, const DataArray& da) {
+    void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing main job\n");
 
         // Partition setup

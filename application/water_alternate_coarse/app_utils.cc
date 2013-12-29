@@ -44,15 +44,19 @@
 
 namespace application {
 
-    bool GetTranslatorData(const Job *job,
+    typedef nimbus::Job Job;
+    typedef nimbus::Data Data;
+    typedef nimbus::DataArray DataArray;
+
+    bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
-                           const DataArray& da,
-                           PdiVector *vec) {
+                           const nimbus::DataArray& da,
+                           nimbus::PdiVector *vec) {
         bool success = false;
         if (da.empty())
             return success;
         std::set<Data *> ds;
-        for (DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+        for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
             if (d->name() == name)
                 ds.insert(*it);
@@ -63,27 +67,27 @@ namespace application {
             Data *d = *it;
             if (d->name() != name)
                 continue;
-            const LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
-            PhysicalDataInstance *pdi = new
-                PhysicalDataInstance(d->physical_id(),
-                                     ldo, d,
-                                     data_version_t(0));
+            const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
+            nimbus::PhysicalDataInstance *pdi = new
+                nimbus::PhysicalDataInstance(d->physical_id(),
+                                             ldo, d,
+                                             data_version_t(0));
             vec->push_back(pdi);
             success = true;
         }
         return success;
     }
 
-    void DestroyTranslatorObjects(PdiVector *vec) {
+    void DestroyTranslatorObjects(nimbus::PdiVector *vec) {
         if (vec->empty())
             return;
-        for (PdiVector::iterator it = vec->begin(); it != vec->end(); ++it) {
+        for (nimbus::PdiVector::iterator it = vec->begin(); it != vec->end(); ++it) {
             delete *it;
         }
     }
 
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
-                  logical_data_id_t  id) {
+                  nimbus::logical_data_id_t  id) {
         return false;
         nimbus::IDSet<nimbus::logical_data_id_t>::IDSetIter it;
         for (it = data_set.begin(); it != data_set.end(); ++it) {
