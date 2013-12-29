@@ -37,7 +37,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
     enum workaround1{d=TV::m};
 
-    TranslatorPhysBAM<TV> translator;
+    nimbus::TranslatorPhysBAM<TV> translator;
 
 public:
     STREAM_TYPE stream_type;

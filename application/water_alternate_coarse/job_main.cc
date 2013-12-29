@@ -39,6 +39,7 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/data_app.h"
 #include "application/water_alternate_coarse/job_initialize.h"
 #include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"

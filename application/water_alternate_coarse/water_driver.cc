@@ -145,8 +145,10 @@ Initialize(const nimbus::Job *job, const nimbus::DataArray &da)
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
-    if (init_phase)
+    if (init_phase) {
+        example.Save_To_Nimbus(job, da, current_frame);
         Write_Output_Files(example.first_frame);
+    }
 }
 //#####################################################################
 // Run

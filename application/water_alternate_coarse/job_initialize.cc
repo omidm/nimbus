@@ -45,7 +45,7 @@
 
 namespace application {
 
-    JobInitialize::JobInitialize(Application *app) {
+    JobInitialize::JobInitialize(nimbus::Application *app) {
         set_application(app);
     };
 
@@ -53,7 +53,7 @@ namespace application {
         return new JobInitialize(application());
     }
 
-    void JobInitialize::Execute(Parameter params, const DataArray& da) {
+    void JobInitialize::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing initialize job\n");
 
         // initialize configuration and state

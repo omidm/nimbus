@@ -51,7 +51,7 @@
 
 namespace application {
 
-    JobIteration::JobIteration(Application *app) {
+    JobIteration::JobIteration(nimbus::Application *app) {
         set_application(app);
     };
 
@@ -59,7 +59,7 @@ namespace application {
         return new JobIteration(application());
     }
 
-    void JobIteration::Execute(Parameter params, const DataArray& da) {
+    void JobIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing iteration job\n");
 
         // get parameters

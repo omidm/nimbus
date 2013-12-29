@@ -3,6 +3,7 @@
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
 #include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/data_app.h"
 #include "data/physbam/translator_physbam.h"
 #include "application/water_alternate_coarse/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
@@ -199,24 +200,12 @@ Read_Output_Files(const int frame)
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    LOG::Time("*** Save to Nimbus");
     PdiVector fvs;
     const std::string fvstring = std::string(APP_FACE_ARRAYS);
     if (application::GetTranslatorData(job, fvstring, da, &fvs))
         translator.ReadFaceArray(&application::kDomain, &fvs, &face_velocities);
     application::DestroyTranslatorObjects(&fvs);
-
-    std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/common/grid",mac_grid);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/pressure",incompressible.projection.p);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_N",projection.elliptic_solver->psi_N);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_D",projection.elliptic_solver->psi_D);
-    T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
-    FILE_UTILITIES::Write_To_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
 }
 //#####################################################################
 // Write_Output_Files
@@ -224,6 +213,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    LOG::Time("*** Loading from Nimbus");
     PdiVector fvs;
     const std::string fvstring = std::string(APP_FACE_ARRAYS);
     if (application::GetTranslatorData(job, fvstring, da, &fvs))

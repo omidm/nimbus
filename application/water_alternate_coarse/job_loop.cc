@@ -41,6 +41,7 @@
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_iteration.h"
 #include "application/water_alternate_coarse/job_loop.h"
+#include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <sstream>
@@ -77,9 +78,6 @@ namespace application {
             // Iteration job
             for (size_t i = 0; i < da.size(); ++i) {
                 nimbus::Data *d = da[i];
-                dbg(APP_LOG, "Attempting to insert data ... ");
-                dbg(APP_LOG, (d->name()).c_str());
-                dbg(APP_LOG, "\n");
                 logical_data_id_t id = d->logical_id();
                 if (!application::Contains(read, id))
                     read.insert(id);

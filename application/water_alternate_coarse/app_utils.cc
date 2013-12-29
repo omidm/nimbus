@@ -37,6 +37,7 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/data_app.h"
 #include <set>
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
@@ -68,6 +69,7 @@ namespace application {
             if (d->name() != name)
                 continue;
             const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
+            printf("*** Got logical object %p\n", ldo);
             nimbus::PhysicalDataInstance *pdi = new
                 nimbus::PhysicalDataInstance(d->physical_id(),
                                              ldo, d,

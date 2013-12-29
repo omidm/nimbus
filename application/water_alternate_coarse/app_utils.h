@@ -49,6 +49,7 @@
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
+#define TRANSLATE_STR "translate"
 
 namespace application {
 
@@ -82,9 +83,5 @@ namespace application {
                   nimbus::logical_data_id_t  id);
 
 } // namespace application
-
-#ifndef APP_FACE_ARRAYS
-#define APP_FACE_ARRAYS "face_arrays"
-#endif
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_

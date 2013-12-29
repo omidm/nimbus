@@ -53,6 +53,7 @@
 
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
+#include "stdio.h"
 #include "worker/physical_data_instance.h"
 #include "worker/worker.h"
 
@@ -88,6 +89,7 @@ namespace nimbus {
     virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
+      printf("*** Reading face array for %i objects\n", (int)objects->size());
       Dimension3Vector vec;
       vec(X_COORD) = region->dx();
       vec(Y_COORD) = region->dy();
@@ -183,6 +185,7 @@ namespace nimbus {
     virtual bool WriteFaceArray(const GeometricRegion* region,
                                 PdiVector* objects,
                                 FaceArray* fa) {
+      printf("*** Writing face array for %i objects\n", (int)objects->size());
       int_dimension_t region_size = 0;
       region_size += (region->dx() + 1) * region->dy() * region->dz();
       region_size += region->dx() * (region->dy() + 1) * region->dz();
