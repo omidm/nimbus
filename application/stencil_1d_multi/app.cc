@@ -247,14 +247,23 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
 
-  // ******************************************
-  // Just Cheching the Creation of
-  // ******************************************
-  /*
-  GeometricRegion r_t(*(GetLogicalObject(da[0]->logical_id())->region()));
-  LogicalDataObject ldo_t(da[0]->logical_id(), da[0]->name(), &r_t);
-  PhysicalDataInstance pdi_t(da[0]->physical_id(), &ldo_t, da[0], data_version_t(0));
-  */
+  // *******************************************************************
+  // Cheching the ldo_map and creation of PhysicalDataInstance from Data
+  // *******************************************************************
+  // logical_data_id_t l_id = da[0]->logical_id();
+  // std::string l_name = da[0]->name();
+  // Data* l_data = da[0];
+  logical_data_id_t l_id = 100001;
+  std::string l_name = "some_name";
+  Data* l_data = new Data();
+  if (GetLogicalObject(l_id) == NULL) {
+    dbg(DBG_TEMP, "Application: Did not find the ldo in ldo_map.\n");
+  } else {
+    dbg(DBG_TEMP, "Application: Found the ldo in ldo_map.\n");
+  }
+  GeometricRegion* r_t = new GeometricRegion(*(GetLogicalObject(l_id)->region()));
+  LogicalDataObject ldo_t(l_id, l_name, r_t);
+  PhysicalDataInstance pdi_t(l_id, &ldo_t, l_data, data_version_t(0));
   // ****
 
   std::vector<job_id_t> j;
