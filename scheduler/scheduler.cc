@@ -48,11 +48,15 @@ Scheduler::Scheduler(port_t p)
   registered_worker_num_ = 0;
   data_manager_ = NULL;
   job_manager_ = NULL;
+  min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
 }
 
 Scheduler::~Scheduler() {
   if (data_manager_ != NULL) {
     delete data_manager_;
+  }
+  if (job_manager_ != NULL) {
+    delete job_manager_;
   }
 }
 
@@ -68,9 +72,14 @@ void Scheduler::Run() {
   SchedulerCoreProcessor();
 }
 
+
+void Scheduler::set_min_worker_to_join(size_t num) {
+  min_worker_to_join_ = num;
+}
+
 void Scheduler::SchedulerCoreProcessor() {
   // Worker registration phase before starting the main job.
-  RegisterInitialWorkers(MIN_WORKERS_TO_JOIN);
+  RegisterInitialWorkers(min_worker_to_join_);
 
   // Adding main job to the job manager.
   AddMainJob();

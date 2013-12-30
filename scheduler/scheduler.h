@@ -62,7 +62,7 @@
 namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10
-#define MIN_WORKERS_TO_JOIN 2
+#define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define MAX_JOB_TO_ASSIGN 10
 
 class Scheduler {
@@ -115,6 +115,8 @@ class Scheduler {
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         job_id_t* job_id);
 
+    void set_min_worker_to_join(size_t num);
+
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}
     virtual void AddWorker(SchedulerWorker * worker) {}
@@ -129,6 +131,7 @@ class Scheduler {
     IDMaker id_maker_;
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;
+    size_t min_worker_to_join_;
 
   private:
     virtual void SetupUserInterface();
