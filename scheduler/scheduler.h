@@ -88,14 +88,24 @@ class Scheduler {
     virtual size_t AssignReadyJobs();
     virtual bool AssignJob(JobEntry* job);
     virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+
     virtual bool PrepareDataForJobAtWorker(JobEntry* job,
                                 SchedulerWorker* worker, logical_data_id_t l_id);
+    virtual bool AllocateLdoInstanceToJob(JobEntry* job,
+        LogicalDataObject* ldo, PhysicalData pd);
+    virtual size_t GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
+        LogicalDataObject* ldo, PhysicalDataVector* dest);
 
     virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
     virtual bool SendCreateJobToWorker(SchedulerWorker* worker,
         const std::string& data_name, const logical_data_id_t& logical_data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         job_id_t* job_id, physical_data_id_t* physical_data_id);
+    virtual bool SendLocalCopyJobToWorker(SchedulerWorker* worker,
+        const ID<physical_data_id_t>& from_physical_data_id,
+        const ID<physical_data_id_t>& to_physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
     virtual bool SendCopyReceiveJobToWorker(SchedulerWorker* worker,
         const physical_data_id_t& physical_data_id,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,

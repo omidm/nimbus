@@ -222,6 +222,49 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   return server_->GetSchedulerWorkerById(worker, w_id);
 }
 
+bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
+    LogicalDataObject* ldo, PhysicalData pd) {
+  JobEntry::VersionTable version_table = job->version_table();
+  JobEntry::PhysicalTable physical_table = job->physical_table();
+  IDSet<job_id_t> before_set = job->before_set();
+
+  PhysicalData pd_new = pd;
+  if (job->read_set().contains(ldo->id())) {
+    pd_new.set_last_job_read(job->job_id());
+    before_set.insert(pd.last_job_write());
+  }
+  if (job->write_set().contains(ldo->id())) {
+    pd_new.set_last_job_write(job->job_id());
+    pd_new.set_version(pd.version() + 1);
+    before_set.insert(pd.last_job_read());
+  }
+  data_manager_->RemovePhysicalInstance(ldo, pd);
+  data_manager_->AddPhysicalInstance(ldo, pd_new);
+  physical_table[ldo->id()] = pd.id();
+
+  job->set_before_set(before_set);
+  job->set_physical_table(physical_table);
+  return true;
+}
+
+size_t Scheduler::GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
+    LogicalDataObject* ldo, PhysicalDataVector* dest) {
+  size_t count = 0;
+  dest->clear();
+  PhysicalDataVector pv;
+  data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
+  PhysicalDataVector::iterator iter = pv.begin();
+  for (; iter != pv.end(); ++iter) {
+    JobEntryList list;
+    JobEntry::VersionedLogicalData vld(ldo->id(), iter->version());
+    if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
+      dest->push_back(*iter);
+      ++count;
+    }
+  }
+  return count;
+}
+
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
   JobEntry::VersionTable version_table = job->version_table();
@@ -576,6 +619,23 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
+  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+  return true;
+}
+
+bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
+    const ID<physical_data_id_t>& from_physical_data_id,
+    const ID<physical_data_id_t>& to_physical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
+      ID<physical_data_id_t>(from_physical_data_id),
+      ID<physical_data_id_t>(to_physical_data_id), before, after);
+  dbg(DBG_SCHED, "Sending local copy job %lu to worker %lu.\n", j[0], worker->worker_id());
+  server_->SendCommand(worker, &cm_c);
   return true;
 }
 
@@ -606,6 +666,7 @@ bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
       ID<worker_id_t>(worker->worker_id()),
       worker->ip(), ID<port_t>(worker->port()),
       before, after);
+  server_->SendCommand(worker, &cm_s);
   return true;
 }
 
