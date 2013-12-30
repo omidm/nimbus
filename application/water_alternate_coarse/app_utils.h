@@ -43,11 +43,13 @@
 
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
 
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
+#define TRANSLATE_STR "translate"
 
 namespace application {
 
@@ -57,6 +59,7 @@ namespace application {
     const int kDimension = 3;
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
+    const GeometricRegion kDomain(1, 1, 1, kScale, kScale, kScale);
 
     // typedefs
     typedef float T;
@@ -68,21 +71,17 @@ namespace application {
     // discussion -- one option is to make region a part of data, and
     // let nimbus take care of initializing region correctly when creating
     // the data object
-    bool GetTranslatorData(const Job *job,
+    bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
-                           const DataArray& da,
-                           PdiVector *vec);
-    void DestroyTranslatorObjects(PdiVector *vec);
+                           const nimbus::DataArray& da,
+                           nimbus::PdiVector *vec);
+    void DestroyTranslatorObjects(nimbus::PdiVector *vec);
 
    // TODO: lets make read/ write sets if possible, and also have separate
    // read/ write instead of one DataArray passed to a job/ a better indexing
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
-                  logical_data_id_t  id);
+                  nimbus::logical_data_id_t  id);
 
 } // namespace application
-
-#ifndef APP_FACE_ARRAYS
-#define APP_FACE_ARRAYS "face_arrays"
-#endif
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_

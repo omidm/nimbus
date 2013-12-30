@@ -50,8 +50,8 @@ namespace application {
 
     class JobMain : public nimbus::Job {
         public:
-            explicit JobMain(Application *app);
-            virtual void Execute(Parameter params, const DataArray& da);
+            explicit JobMain(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
     };
 

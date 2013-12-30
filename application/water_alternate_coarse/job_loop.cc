@@ -41,6 +41,7 @@
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_iteration.h"
 #include "application/water_alternate_coarse/job_loop.h"
+#include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <sstream>
@@ -48,7 +49,7 @@
 
 namespace application {
 
-    JobLoop::JobLoop(Application *app) {
+    JobLoop::JobLoop(nimbus::Application *app) {
         set_application(app);
     };
 
@@ -56,7 +57,7 @@ namespace application {
         return new JobLoop(application());
     }
 
-    void JobLoop::Execute(Parameter params, const DataArray& da) {
+    void JobLoop::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing loop job\n");
 
         int frame;
@@ -75,15 +76,13 @@ namespace application {
             nimbus::IDSet<nimbus::job_id_t> before, after;
 
             // Iteration job
-            if (!da.empty()) {
-                for (DataArray::const_iterator it = da.begin(); it != da.end(); ++it ) {
-                    Data *d = *it;
-                    logical_data_id_t id = d->logical_id();
-                    if (!application::Contains(read, id))
-                        read.insert(id);
-                    if (!application::Contains(write, id))
-                        write.insert(id);
-                }
+            for (size_t i = 0; i < da.size(); ++i) {
+                nimbus::Data *d = da[i];
+                logical_data_id_t id = d->logical_id();
+                if (!application::Contains(read, id))
+                    read.insert(id);
+                if (!application::Contains(write, id))
+                    write.insert(id);
             }
             nimbus::Parameter iter_params;
             iter_params.set_ser_data(SerializedData(params_str));

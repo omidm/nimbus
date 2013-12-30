@@ -1,9 +1,10 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- vd* are met:
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -32,50 +33,30 @@
  */
 
 /*
+ * This file contains the "main" job that Nimbus launches after loading an
+ * application. All subsequent jobs are spawned from here.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/data_app.h"
-#include "application/water_alternate_coarse/job_initialize.h"
-#include "application/water_alternate_coarse/job_iteration.h"
-#include "application/water_alternate_coarse/job_loop.h"
-#include "application/water_alternate_coarse/job_main.h"
-#include "application/water_alternate_coarse/water_app.h"
-#include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
-#include <PhysBAM_Tools/Log/LOG.h>
-#include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
-#include "shared/dbg.h"
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_APP_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_DATA_APP_H_
+
+#include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
-#include "stdio.h"
+
+#ifndef APP_FACE_ARRAYS
+#define APP_FACE_ARRAYS "face_arrays"
+#endif
 
 namespace application {
 
-    WaterApp::WaterApp() {
+    class DataApp : public nimbus::PhysBAMData {
+        public:
+            explicit DataApp(std::string name);
+            virtual nimbus::Data* Clone();
     };
 
-    /* Register data and job types and initialize constant quantities used by
-     * application jobs. */
-    void WaterApp::Load() {
-
-        dbg_add_mode(APP_LOG_STR);
-        dbg_add_mode(TRANSLATE_STR);
-
-        dbg(APP_LOG, "Loading water application\n");
-
-        // PhysBAM logging and R/W
-        PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
-        PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
-        PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
-
-        RegisterData(APP_FACE_ARRAYS, new DataApp(APP_FACE_ARRAYS));
-
-        RegisterJob(MAIN, new JobMain(this));
-        RegisterJob(LOOP, new JobLoop(this));
-        RegisterJob(ITERATION, new JobIteration(this));
-        RegisterJob(INITIALIZE, new JobInitialize(this));
-
-        dbg(APP_LOG, "Completed loading water application\n");
-    }
-
 } // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_APP_H_

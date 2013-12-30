@@ -3,6 +3,8 @@
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
 #include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/data_app.h"
+#include "data/physbam/translator_physbam.h"
 #include "application/water_alternate_coarse/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
@@ -18,6 +20,8 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Forces/INCOMPRESSIBILITY.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
+#include "shared/nimbus.h"
+#include "worker/physical_data_instance.h"
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE
@@ -184,12 +188,49 @@ Read_Output_Files(const int frame)
     filename=output_directory+"/"+f+"/pressure";
     if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading pressure "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,incompressible.projection.p);}
     filename=output_directory+"/"+f+"/mac_velocities";
-//    if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading mac_velocities "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,face_velocities);}
+    if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading mac_velocities "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,face_velocities);}
 #ifndef COMPILE_WITHOUT_DOUBLE_SUPPORT
 #else
         PHYSBAM_FATAL_ERROR("Cannot read doubles");
 #endif
+}
+//#####################################################################
+// Write_Output_Files
+//#####################################################################
+template<class TV> void WATER_EXAMPLE<TV>::
+Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+{
+    LOG::Time("*** Save to Nimbus");
+    PdiVector fvs;
+    const std::string fvstring = std::string(APP_FACE_ARRAYS);
+    if (application::GetTranslatorData(job, fvstring, da, &fvs))
+        translator.ReadFaceArray(&application::kDomain, &fvs, &face_velocities);
+    application::DestroyTranslatorObjects(&fvs);
+}
+//#####################################################################
+// Write_Output_Files
+//#####################################################################
+template<class TV> void WATER_EXAMPLE<TV>::
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+{
+    LOG::Time("*** Loading from Nimbus");
+    PdiVector fvs;
+    const std::string fvstring = std::string(APP_FACE_ARRAYS);
+    if (application::GetTranslatorData(job, fvstring, da, &fvs))
+        translator.WriteFaceArray(&application::kDomain, &fvs, &face_velocities);
+    application::DestroyTranslatorObjects(&fvs);
 
+    std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
+    T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
+    FILE_UTILITIES::Read_From_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
+    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
+    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
+    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
+    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
+    FILE_UTILITIES::Read_From_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
+    std::string filename;
+    filename=output_directory+"/"+f+"/pressure";
+    if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading pressure "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,incompressible.projection.p);}
 }
 //#####################################################################
 template class WATER_EXAMPLE<VECTOR<float,3> >;

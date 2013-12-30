@@ -53,6 +53,7 @@
 
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
+#include "stdio.h"
 #include "worker/physical_data_instance.h"
 #include "worker/worker.h"
 
@@ -85,9 +86,10 @@ namespace nimbus {
     explicit TranslatorPhysBAM() {}
     virtual ~TranslatorPhysBAM() {}
 
-    virtual void ReadFaceArray(GeometricRegion* region,
+    virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
+      printf("*** Reading face array for %i objects\n", (int)objects->size());
       Dimension3Vector vec;
       vec(X_COORD) = region->dx();
       vec(Y_COORD) = region->dy();
@@ -180,9 +182,10 @@ namespace nimbus {
 
     /** Take a FaceArray described by region and write it out to the
      *  PhysicalDataInstance objects in the objects array. */
-    virtual bool WriteFaceArray(GeometricRegion* region,
+    virtual bool WriteFaceArray(const GeometricRegion* region,
                                 PdiVector* objects,
                                 FaceArray* fa) {
+      printf("*** Writing face array for %i objects\n", (int)objects->size());
       int_dimension_t region_size = 0;
       region_size += (region->dx() + 1) * region->dy() * region->dz();
       region_size += region->dx() * (region->dy() + 1) * region->dz();
@@ -561,8 +564,8 @@ namespace nimbus {
     /* Return a vector describing what the offset of b
        within a, such that a.x + offset = b.x. If
        offset is negative, return 0. */
-    virtual Dimension3Vector GetOffset(GeometricRegion* a,
-                                       GeometricRegion* b) {
+    virtual Dimension3Vector GetOffset(const GeometricRegion* a,
+                                       const GeometricRegion* b) {
       Dimension3Vector result;
 
       // If source is > than dest, its offset is zero (it's contained),
@@ -577,8 +580,8 @@ namespace nimbus {
       return result;
     }
 
-    virtual Dimension3Vector GetOverlapSize(GeometricRegion* src,
-                                            GeometricRegion* dest) {
+    virtual Dimension3Vector GetOverlapSize(const GeometricRegion* src,
+                                            const GeometricRegion* dest) {
       Dimension3Vector result;
 
       int_dimension_t x_start = std::max(src->x(), dest->x());
