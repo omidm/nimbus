@@ -164,6 +164,10 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
   std::cout << "Sending command: " << comm->toStringWTags() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), comm);
   delete comm;
+
+  data_manager_->AddLogicalObject(cm->logical_data_id().elem(),
+      cm->data_name(),
+      cm->partition_id().elem());
 }
 
 void SimpleScheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
