@@ -40,6 +40,7 @@
 
 #define DEBUG_MODE
 
+#include <stdlib.h>
 #include <iostream> // NOLINT
 #include "./scheduler_alternate_coarse.h"
 #include "shared/nimbus.h"
