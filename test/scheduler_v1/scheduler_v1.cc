@@ -43,6 +43,34 @@ SchedulerV1::SchedulerV1(unsigned int p)
 : Scheduler(p) {
 }
 
+bool SchedulerV1::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  // Assumption is that partition Ids start from 0, and incrementally go up.
+  size_t worker_num = server_->worker_num();
+  size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
+  std::vector<int> workers_rank(worker_num, 0);
+
+  IDSet<logical_data_id_t> union_set = job->union_set();
+  IDSet<logical_data_id_t>::IDSetIter iter;
+  for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
+    const LogicalDataObject* ldo;
+    ldo = data_manager_->FindLogicalObject(*iter);
+    size_t poll = std::min((size_t)(ldo->partition()) / chunk, worker_num - 1);
+    workers_rank[poll] = workers_rank[poll] + 1;
+  }
+
+  // find the worker that wins the poll.
+  worker_id_t w_id = 1;
+  int count = workers_rank[0];
+  for (size_t i = 1; i < worker_num; ++i) {
+    if (count < workers_rank[i]) {
+      count = workers_rank[i];
+      w_id = i + 1;
+    }
+  }
+
+  return server_->GetSchedulerWorkerById(worker, w_id);
+}
+
 /*
 void SchedulerV1::SchedulerCoreProcessor() {
   while (true) {

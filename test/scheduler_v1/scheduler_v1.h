@@ -60,6 +60,8 @@ class SchedulerV1 : public Scheduler {
   public:
     explicit SchedulerV1(unsigned int listening_port);
 
+    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+
     // virtual void SchedulerCoreProcessor();
 };
 

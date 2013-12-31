@@ -61,10 +61,6 @@
 
 namespace nimbus {
 
-#define MAX_BATCH_COMMAND_NUM 10
-#define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 10
-
 class Scheduler {
   public:
     explicit Scheduler(port_t listening_port);

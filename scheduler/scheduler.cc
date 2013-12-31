@@ -42,6 +42,10 @@
 
 namespace nimbus {
 
+#define MAX_BATCH_COMMAND_NUM 10
+#define DEFAULT_MIN_WORKER_TO_JOIN 2
+#define MAX_JOB_TO_ASSIGN 10
+
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
   appId_ = 0;
@@ -204,31 +208,10 @@ void Scheduler::AddMainJob() {
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  // Assumption is that partition Ids start from 0, and incrementally go up.
-  size_t worker_num = server_->worker_num();
-  size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
-  std::vector<int> workers_rank(worker_num, 0);
-
-  IDSet<logical_data_id_t> union_set = job->union_set();
-  IDSet<logical_data_id_t>::IDSetIter iter;
-  for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
-    const LogicalDataObject* ldo;
-    ldo = data_manager_->FindLogicalObject(*iter);
-    size_t poll = std::min((size_t)(ldo->partition()) / chunk, worker_num - 1);
-    workers_rank[poll] = workers_rank[poll] + 1;
-  }
-
-  // find the worker that wins the poll.
-  worker_id_t w_id = 1;
-  int count = workers_rank[0];
-  for (size_t i = 1; i < worker_num; ++i) {
-    if (count < workers_rank[i]) {
-      count = workers_rank[i];
-      w_id = i + 1;
-    }
-  }
-
-  return server_->GetSchedulerWorkerById(worker, w_id);
+  // Simply just assign the job to first worker.
+  dbg(DBG_WARN, "WARNING: Base scheduler only assignes jobs to first worker, override the GetWorkerToAssignJob to have more complicated logic.\n"); // NOLINT
+  worker =  *(server_->workers()->begin());
+  return true;
 }
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
