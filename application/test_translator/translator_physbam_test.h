@@ -47,9 +47,18 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_TEST_H_
-#define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_TEST_H_
+#ifndef NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_TEST_H_  // NOLINT
+#define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_TEST_H_  // NOLINT
 
+#include "data/physbam/translator_physbam.h"
+
+namespace nimbus {
+template <class VECTOR_TYPE> class TranslatorPhysBAMTest
+    : public TranslatorPhysBAM<VECTOR_TYPE> {
+};
+}  // nimbus
+
+/*
 #include <algorithm>
 #include <cmath>
 
@@ -102,10 +111,11 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
                 particle_container.template_particles);
           }
         }
-    dbg(DBG_WARN, "Successfully clean particle data structures!\n");
 
-    // TODO(quhang) warning rather than assert.
-    assert(instances != NULL);
+    if (instances == NULL) {
+      dbg(DBG_WARN, "Tried to read particles from a NULL vector of PhysicalDataInstances\n");
+      return false;
+    }
 
     CPdiVector::iterator iter = instances->begin();
     for (; iter != instances->end(); ++iter) {
@@ -158,7 +168,6 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
         }
       }
     }
-    dbg(DBG_WARN, "Successfully finished ReadParticles!\n");
     return true;
   }
 
@@ -250,4 +259,5 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
 
 }  // namespace nimbus
 
-#endif
+*/
+#endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_TEST_H_  // NOLINT
