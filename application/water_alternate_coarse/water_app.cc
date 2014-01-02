@@ -70,6 +70,8 @@ namespace application {
 
         dbg(APP_LOG, "Registering %s\n", APP_FACE_ARRAYS);
         RegisterData(APP_FACE_ARRAYS, new DataApp(APP_FACE_ARRAYS, kFaceArrayBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_SCALAR_ARRAYS);
+        RegisterData(APP_SCALAR_ARRAYS, new DataApp(APP_SCALAR_ARRAYS, kScalarArrayBufSize));
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));

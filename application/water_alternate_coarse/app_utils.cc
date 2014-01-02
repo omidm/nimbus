@@ -61,8 +61,11 @@ namespace application {
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
             std::string name_str = d->name();
-            if (d->name() == name)
+            printf("*** Found data object %s\n", name_str.c_str());
+            if (d->name() == name) {
+                printf("*** Inserting %s\n", name_str.c_str());
                 ds.insert(*it);
+            }
         }
         if (ds.empty()) {
             return success;
@@ -71,6 +74,7 @@ namespace application {
             Data *d = *it;
             std::string name_str = d->name();
             const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
+            printf("*** Inserint logcal object with region %llu, %llu, %llu\n", ldo->region()->dx(), ldo->region()->dy(), ldo->region()->dz());
             nimbus::PhysicalDataInstance *pdi = new
                 nimbus::PhysicalDataInstance(d->physical_id(),
                                              ldo, d,
@@ -87,6 +91,7 @@ namespace application {
         for (nimbus::PdiVector::iterator it = vec->begin(); it != vec->end(); ++it) {
             delete *it;
         }
+        vec->clear();
     }
 
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,

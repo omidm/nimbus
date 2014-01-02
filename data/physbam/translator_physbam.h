@@ -462,17 +462,18 @@ namespace nimbus {
     /* Read scalar array from PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion specified by region, into the
      * ScalarArray specified by dest. This allocates a new scalar array. */
-    virtual ScalarArray* ReadScalarArray(GeometricRegion* region,
-                                             CPdiVector* instances) {
-        PhysBAM::RANGE<Int3Vector> range(0, region->dx(),
-                                         0, region->dy(),
-                                         0, region->dz());
+    virtual ScalarArray* ReadScalarArray(const GeometricRegion* region,
+                                         const PdiVector* instances,
+                                         ScalarArray *sa,
+                                         int offset) {
 
-        ScalarArray* sa = new ScalarArray();
+        PhysBAM::RANGE<Int3Vector> range(region->x() + 1, region->x() + region->dx(),
+                                         region->y() + 1, region->y() + region->dy(),
+                                         region->z() + 1, region->z() + region->dz());
         sa->Resize(range);
 
         if (instances != NULL) {
-            CPdiVector::iterator iter = instances->begin();
+            PdiVector::const_iterator iter = instances->begin();
             for (; iter != instances->end(); ++iter) {
                 const PhysicalDataInstance* inst = *iter;
                 Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
@@ -496,10 +497,11 @@ namespace nimbus {
                                     (source_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (source_y * (inst->region()->dx())) +
                                     source_x;
-                                int dest_x = x + dest(X_COORD);
-                                int dest_y = y + dest(Y_COORD);
-                                int dest_z = z + dest(Z_COORD);
+                                int dest_x = x + dest(X_COORD) + 1 - offset;
+                                int dest_y = y + dest(Y_COORD) + 1 - offset;
+                                int dest_z = z + dest(Z_COORD) + 1 - offset;
                                 Int3Vector destination_index(dest_x, dest_y, dest_z);
+                                assert(source_index < data->size() && source_index >= 0);
                                 (*sa)(destination_index) = buffer[source_index];
                             }
                         }
@@ -512,19 +514,22 @@ namespace nimbus {
 
     /* Write scalar array data into PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion region. This frees the physbam scalar array. */
-    virtual bool WriteScalarArray(GeometricRegion* region,
-                                 CPdiVector* instances,
-                                 ScalarArray* sa) {
+    virtual bool WriteScalarArray(const GeometricRegion* region,
+                                  PdiVector* instances,
+                                  ScalarArray* sa,
+                                  int offset) {
         if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
             dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
+            dbg(DBG_WARN, "Region is %i, %i, %i\n", region->dx(), region->dy(), region->dz());
         }
 
         if (instances != NULL) {
-            CPdiVector::iterator iter = instances->begin();
+            PdiVector::iterator iter = instances->begin();
 
             for (; iter != instances->end(); ++iter) {
                 const PhysicalDataInstance* inst = *iter;
-                Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
+                GeometricRegion *temp = inst->region();
+                Dimension3Vector overlap = GetOverlapSize(temp, region);
 
                 if (HasOverlap(overlap)) {
                     dbg(DBG_TRANSLATE, "Saving scalar array into physical object %lu.\n",
@@ -545,10 +550,11 @@ namespace nimbus {
                                     (dest_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (dest_y * (inst->region()->dx())) +
                                     dest_x;
-                                int source_x = x + src(X_COORD);
-                                int source_y = y + src(Y_COORD);
-                                int source_z = z + src(Z_COORD);
+                                int source_x = x + src(X_COORD) + 1 - offset;
+                                int source_y = y + src(Y_COORD) + 1 - offset;
+                                int source_z = z + src(Z_COORD) + 1 - offset;
                                 Int3Vector source_index(source_x, source_y, source_z);
+                                assert(destination_index < data->size() && destination_index >= 0);
                                 buffer[destination_index] = (*sa)(source_index);
                             }
                         }
@@ -556,7 +562,6 @@ namespace nimbus {
                 }
             }
         }
-        delete sa;
         return true;
     }
 

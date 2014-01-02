@@ -49,6 +49,10 @@
 #define APP_FACE_ARRAYS "face_arrays"
 #endif
 
+#ifndef APP_SCALAR_ARRAYS
+#define APP_SCALAR_ARRAYS "scalar_arrays"
+#endif
+
 namespace application {
 
     class DataApp : public nimbus::PhysBAMData {

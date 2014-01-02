@@ -200,11 +200,25 @@ Read_Output_Files(const int frame)
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    PdiVector fvs;
+    PdiVector pdv;
+
+    // mac velocities
     const std::string fvstring = std::string(APP_FACE_ARRAYS);
-    if (application::GetTranslatorData(job, fvstring, da, &fvs))
-        translator.WriteFaceArray(&application::kDomain, &fvs, &face_velocities);
-    application::DestroyTranslatorObjects(&fvs);
+    if (application::GetTranslatorData(job, fvstring, da, &pdv))
+        translator.WriteFaceArray(&application::kDomain, &pdv, &face_velocities);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // particle leveset quantities
+    T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
+
+    // levelset
+    const std::string lsstring = std::string(APP_SCALAR_ARRAYS);
+    if (application::GetTranslatorData(job, lsstring, da, &pdv))
+        translator.WriteScalarArray(&application::kDomainGhost,
+                                    &pdv,
+                                    &particle_levelset.levelset.phi,
+                                    application::kGhostNum);
+    application::DestroyTranslatorObjects(&pdv);
 }
 //#####################################################################
 // Write_Output_Files
@@ -212,9 +226,27 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    PdiVector pdv;
+
+    // mac velocities
+    const std::string fvstring = std::string(APP_FACE_ARRAYS);
+    if (application::GetTranslatorData(job, fvstring, da, &pdv))
+        translator.ReadFaceArray(&application::kDomain, &pdv, &face_velocities);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // particle leveset quantities
+    T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
+
+    // levelset
+    const std::string lsstring = std::string(APP_SCALAR_ARRAYS);
+    if (application::GetTranslatorData(job, lsstring, da, &pdv))
+        translator.ReadScalarArray(&application::kDomainGhost,
+                                   &pdv,
+                                   &particle_levelset.levelset.phi,
+                                   application::kGhostNum);
+    application::DestroyTranslatorObjects(&pdv);
+
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
-    FILE_UTILITIES::Read_From_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
@@ -223,14 +255,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     std::string filename;
     filename=output_directory+"/"+f+"/pressure";
     if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading pressure "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,incompressible.projection.p);}
-
-    // mac velocities
-    PdiVector fvs;
-    const std::string fvstring = std::string(APP_FACE_ARRAYS);
-    if (application::GetTranslatorData(job, fvstring, da, &fvs))
-        translator.ReadFaceArray(&application::kDomain, &fvs, &face_velocities);
-    application::DestroyTranslatorObjects(&fvs);
-
 }
 //#####################################################################
 template class WATER_EXAMPLE<VECTOR<float,3> >;

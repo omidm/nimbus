@@ -66,10 +66,14 @@ namespace application {
     // application specific parameters and constants
     const int kThreadsNum = 1;
     const int kScale = 30;
+    const int kGhostNum = 3;
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
     const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
+    const GeometricRegion kDomainGhost(-kGhostNum, -kGhostNum, -kGhostNum,
+                                       kScale + 2*kGhostNum, kScale + 2*kGhostNum, kScale + 2*kGhostNum);
     const int_dimension_t kFaceArrayBufSize = kScale * kScale * (kScale+1) * kDimension * sizeof(T);
+    const int_dimension_t kScalarArrayBufSize = (kScale + 2*kGhostNum) * (kScale + 2*kGhostNum) * (kScale + 2*kGhostNum);
 
     // TODO: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and

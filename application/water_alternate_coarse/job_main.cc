@@ -61,13 +61,15 @@ namespace application {
         dbg(APP_LOG, "Executing main job\n");
 
         // Partition setup
-        nimbus::ID<partition_id_t> partition_id(0);
+        nimbus::ID<partition_id_t> partition_id1(0);
+        nimbus::ID<partition_id_t> partition_id2(1);
         nimbus::Parameter part_params;
-        DefinePartition(partition_id, kDomain, part_params);
+        DefinePartition(partition_id1, kDomain, part_params);
+        DefinePartition(partition_id2, kDomainGhost, part_params);
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 1;
+        int data_num = 2;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
@@ -76,9 +78,18 @@ namespace application {
         fa_params.set_ser_data(SerializedData(""));
         DefineData(APP_FACE_ARRAYS,
                    data_ids[0],
-                   partition_id.elem(),
+                   partition_id1.elem(),
                    neighbor_partitions,
                    fa_params);
+
+        // Scalar arrays
+        nimbus::Parameter sa_params;
+        sa_params.set_ser_data(SerializedData(""));
+        DefineData(APP_SCALAR_ARRAYS,
+                   data_ids[1],
+                   partition_id2.elem(),
+                   neighbor_partitions,
+                   sa_params);
 
         // Job setup
         int job_num = 2;
@@ -89,7 +100,9 @@ namespace application {
 
         // Init job
         read.insert(data_ids[0]);
+        read.insert(data_ids[1]);
         write.insert(data_ids[0]);
+        write.insert(data_ids[1]);
         after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
@@ -108,7 +121,9 @@ namespace application {
 
         // Loop job
         read.insert(data_ids[0]);
+        read.insert(data_ids[1]);
         write.insert(data_ids[0]);
+        write.insert(data_ids[1]);
         before.insert(job_ids[0]);
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;
