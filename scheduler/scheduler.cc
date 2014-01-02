@@ -42,17 +42,25 @@
 
 namespace nimbus {
 
+#define MAX_BATCH_COMMAND_NUM 10
+#define DEFAULT_MIN_WORKER_TO_JOIN 2
+#define MAX_JOB_TO_ASSIGN 10
+
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
   appId_ = 0;
   registered_worker_num_ = 0;
   data_manager_ = NULL;
   job_manager_ = NULL;
+  min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
 }
 
 Scheduler::~Scheduler() {
   if (data_manager_ != NULL) {
     delete data_manager_;
+  }
+  if (job_manager_ != NULL) {
+    delete job_manager_;
   }
 }
 
@@ -68,9 +76,14 @@ void Scheduler::Run() {
   SchedulerCoreProcessor();
 }
 
+
+void Scheduler::set_min_worker_to_join(size_t num) {
+  min_worker_to_join_ = num;
+}
+
 void Scheduler::SchedulerCoreProcessor() {
   // Worker registration phase before starting the main job.
-  RegisterInitialWorkers(MIN_WORKERS_TO_JOIN);
+  RegisterInitialWorkers(min_worker_to_join_);
 
   // Adding main job to the job manager.
   AddMainJob();
@@ -195,31 +208,53 @@ void Scheduler::AddMainJob() {
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  // Assumption is that partition Ids start from 0, and incrementally go up.
-  size_t worker_num = server_->worker_num();
-  size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
-  std::vector<int> workers_rank(worker_num, 0);
+  // Simply just assign the job to first worker.
+  dbg(DBG_WARN, "WARNING: Base scheduler only assignes jobs to first worker, override the GetWorkerToAssignJob to have more complicated logic.\n"); // NOLINT
+  worker =  *(server_->workers()->begin());
+  return true;
+}
 
-  IDSet<logical_data_id_t> union_set = job->union_set();
-  IDSet<logical_data_id_t>::IDSetIter iter;
-  for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
-    const LogicalDataObject* ldo;
-    ldo = data_manager_->FindLogicalObject(*iter);
-    size_t poll = std::min((size_t)(ldo->partition()) / chunk, worker_num - 1);
-    workers_rank[poll] = workers_rank[poll] + 1;
+bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
+    LogicalDataObject* ldo, PhysicalData pd) {
+  JobEntry::VersionTable version_table = job->version_table();
+  JobEntry::PhysicalTable physical_table = job->physical_table();
+  IDSet<job_id_t> before_set = job->before_set();
+
+  PhysicalData pd_new = pd;
+  if (job->read_set().contains(ldo->id())) {
+    pd_new.set_last_job_read(job->job_id());
+    before_set.insert(pd.last_job_write());
   }
+  if (job->write_set().contains(ldo->id())) {
+    pd_new.set_last_job_write(job->job_id());
+    pd_new.set_version(pd.version() + 1);
+    before_set.insert(pd.last_job_read());
+  }
+  data_manager_->RemovePhysicalInstance(ldo, pd);
+  data_manager_->AddPhysicalInstance(ldo, pd_new);
+  physical_table[ldo->id()] = pd.id();
 
-  // find the worker that wins the poll.
-  worker_id_t w_id = 1;
-  int count = workers_rank[0];
-  for (size_t i = 1; i < worker_num; ++i) {
-    if (count < workers_rank[i]) {
-      count = workers_rank[i];
-      w_id = i + 1;
+  job->set_before_set(before_set);
+  job->set_physical_table(physical_table);
+  return true;
+}
+
+size_t Scheduler::GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
+    LogicalDataObject* ldo, PhysicalDataVector* dest) {
+  size_t count = 0;
+  dest->clear();
+  PhysicalDataVector pv;
+  data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
+  PhysicalDataVector::iterator iter = pv.begin();
+  for (; iter != pv.end(); ++iter) {
+    JobEntryList list;
+    JobEntry::VersionedLogicalData vld(ldo->id(), iter->version());
+    if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
+      dest->push_back(*iter);
+      ++count;
     }
   }
-
-  return server_->GetSchedulerWorkerById(worker, w_id);
+  return count;
 }
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
@@ -544,7 +579,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   return true;
 }
 
-void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
+bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
     ID<job_id_t> id(job->job_id());
     IDSet<physical_data_id_t> read_set, write_set;
@@ -553,13 +588,78 @@ void Scheduler::SendJobToWorker(JobEntry* job, SchedulerWorker* worker) {
     job->GetPhysicalWriteSet(&write_set);
     ComputeJobCommand cm(job->job_name(), id,
         read_set, write_set, job->before_set(), job->after_set(), job->params());
-    dbg(DBG_SCHED, "Sending job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
+    dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
+    return true;
   } else {
-    // TODO(omidm): under progress.
-    // ...
-    // ...
+    dbg(DBG_ERROR, "Job with id %lu is not a compute job.\n", job->job_id());
+    return false;
   }
+}
+
+bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
+    const std::string& data_name, const logical_data_id_t& logical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id, physical_data_id_t* physical_data_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  std::vector<physical_data_id_t> d;
+  id_maker_.GetNewPhysicalDataID(&d, 1);
+  *physical_data_id = d[0];
+  CreateDataCommand cm(ID<job_id_t>(j[0]), data_name,
+      ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
+  dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
+  server_->SendCommand(worker, &cm);
+  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+  return true;
+}
+
+bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
+    const ID<physical_data_id_t>& from_physical_data_id,
+    const ID<physical_data_id_t>& to_physical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
+      ID<physical_data_id_t>(from_physical_data_id),
+      ID<physical_data_id_t>(to_physical_data_id), before, after);
+  dbg(DBG_SCHED, "Sending local copy job %lu to worker %lu.\n", j[0], worker->worker_id());
+  server_->SendCommand(worker, &cm_c);
+  return true;
+}
+
+bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
+    const physical_data_id_t& physical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  RemoteCopyReceiveCommand cm_r(ID<job_id_t>(j[0]),
+      ID<physical_data_id_t>(physical_data_id), before, after);
+  dbg(DBG_SCHED, "Sending remote copy receive job %lu to worker %lu.\n", j[0], worker->worker_id());
+  server_->SendCommand(worker, &cm_r);
+  return true;
+}
+
+
+bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
+    const job_id_t& receive_job_id, const physical_data_id_t& physical_data_id,
+    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+    job_id_t* job_id) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  *job_id = j[0];
+  RemoteCopySendCommand cm_s(ID<job_id_t>(j[0]),
+      ID<job_id_t>(receive_job_id), ID<physical_data_id_t>(physical_data_id),
+      ID<worker_id_t>(worker->worker_id()),
+      worker->ip(), ID<port_t>(worker->port()),
+      before, after);
+  server_->SendCommand(worker, &cm_s);
+  return true;
 }
 
 bool Scheduler::AssignJob(JobEntry* job) {
@@ -572,7 +672,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
     PrepareDataForJobAtWorker(job, worker, *it);
   }
   job_manager_->UpdateJobBeforeSet(job);
-  SendJobToWorker(job, worker);
+  SendComputeJobToWorker(worker, job);
   job->set_assigned(true);
   return true;
 }

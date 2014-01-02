@@ -32,37 +32,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * This file contains the "main" job that Nimbus launches after loading an
+ * application. All subsequent jobs are spawned from here.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_
-#define NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_
-
-#define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "shared/dbg.h"
+#include "application/water_alternate_coarse/data_app.h"
+#include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
+#include "string.h"
 
-class SchedulerV1 : public Scheduler {
-  public:
-    explicit SchedulerV1(unsigned int listening_port);
+namespace application {
 
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+    DataApp::DataApp(std::string name, nimbus::int_dimension_t size) {
+        set_name(name);
+        set_size(size);
+    }
 
-    // virtual void SchedulerCoreProcessor();
-};
+    nimbus::Data* DataApp::Clone() {
+        DataApp *d = static_cast<DataApp *>(nimbus::PhysBAMData::Clone());
+        d->set_name(name());
+        return d;
+    }
 
-#endif  // NIMBUS_TEST_SCHEDULER_V1_SCHEDULER_V1_H_
+} // namespace application

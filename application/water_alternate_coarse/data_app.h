@@ -33,26 +33,30 @@
  */
 
 /*
+ * This file contains the "main" job that Nimbus launches after loading an
+ * application. All subsequent jobs are spawned from here.
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_FACE_ARRAYS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_DATA_FACE_ARRAYS_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_APP_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_DATA_APP_H_
 
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
 
-#define FACE_ARRAYS "face_arrays"
+#ifndef APP_FACE_ARRAYS
+#define APP_FACE_ARRAYS "face_arrays"
+#endif
 
 namespace application {
 
-    // TODO(Chinmayee): we need to add serialize/ deserialize to physbamdata
-    class DataFaceArrays : public nimbus::PhysBAMData {
+    class DataApp : public nimbus::PhysBAMData {
         public:
-            DataFaceArrays() {};
-            virtual ~DataFaceArrays() {};
+            explicit DataApp(std::string name, nimbus::int_dimension_t size);
+            virtual nimbus::Data* Clone();
     };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_FACE_ARRAYS_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_DATA_APP_H_

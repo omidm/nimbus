@@ -61,10 +61,6 @@
 
 namespace nimbus {
 
-#define MAX_BATCH_COMMAND_NUM 10
-#define MIN_WORKERS_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 10
-
 class Scheduler {
   public:
     explicit Scheduler(port_t listening_port);
@@ -80,15 +76,42 @@ class Scheduler {
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
+
     virtual void RegisterInitialWorkers(size_t min_to_join);
     virtual size_t RegisterPendingWorkers();
     virtual void AddMainJob();
-    virtual void SendJobToWorker(JobEntry* job, SchedulerWorker* worker);
+
     virtual size_t AssignReadyJobs();
     virtual bool AssignJob(JobEntry* job);
     virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+
     virtual bool PrepareDataForJobAtWorker(JobEntry* job,
                                 SchedulerWorker* worker, logical_data_id_t l_id);
+    virtual bool AllocateLdoInstanceToJob(JobEntry* job,
+        LogicalDataObject* ldo, PhysicalData pd);
+    virtual size_t GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
+        LogicalDataObject* ldo, PhysicalDataVector* dest);
+
+    virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
+    virtual bool SendCreateJobToWorker(SchedulerWorker* worker,
+        const std::string& data_name, const logical_data_id_t& logical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id, physical_data_id_t* physical_data_id);
+    virtual bool SendLocalCopyJobToWorker(SchedulerWorker* worker,
+        const ID<physical_data_id_t>& from_physical_data_id,
+        const ID<physical_data_id_t>& to_physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
+    virtual bool SendCopyReceiveJobToWorker(SchedulerWorker* worker,
+        const physical_data_id_t& physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
+    virtual bool SendCopySendJobToWorker(SchedulerWorker* worker,
+        const job_id_t& receive_job_id, const physical_data_id_t& physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
+
+    void set_min_worker_to_join(size_t num);
 
     virtual void LoadClusterMap(std::string) {}
     virtual void DeleteWorker(SchedulerWorker * worker) {}
@@ -104,6 +127,7 @@ class Scheduler {
     IDMaker id_maker_;
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;
+    size_t min_worker_to_join_;
 
   private:
     virtual void SetupUserInterface();

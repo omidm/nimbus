@@ -116,11 +116,21 @@ void Application::DefinePartition(const ID<partition_id_t>& partition_id,
 }
 
 Job* Application::CloneJob(std::string name) {
-  return job_table_[name]->Clone();
+  if (job_table_.count(name) == 0) {
+    dbg(DBG_ERROR, "ERROR: job name %s is not registered in the application.\n", name.c_str()); // NOLINT
+    exit(-1);
+  } else {
+    return job_table_[name]->Clone();
+  }
 }
 
 Data* Application::CloneData(std::string name) {
-  return data_table_[name]->Clone();
+  if (data_table_.count(name) == 0) {
+    dbg(DBG_ERROR, "ERROR: data name %s is not registered in the application.\n", name.c_str()); // NOLINT
+    exit(-1);
+  } else {
+    return data_table_[name]->Clone();
+  }
 }
 
 bool Application::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {

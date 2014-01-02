@@ -51,7 +51,7 @@
 
 namespace application {
 
-    JobIteration::JobIteration(Application *app) {
+    JobIteration::JobIteration(nimbus::Application *app) {
         set_application(app);
     };
 
@@ -59,7 +59,7 @@ namespace application {
         return new JobIteration(application());
     }
 
-    void JobIteration::Execute(Parameter params, const DataArray& da) {
+    void JobIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing iteration job\n");
 
         // get parameters
@@ -74,28 +74,26 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV> *example =
             new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
 
-        example->restart = frame;
         example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
                                  PhysBAM::RANGE<TV>(TV(),
                                                     TV::All_Ones_Vector())
                                  );
         PhysBAM::WaterSources::Add_Source(example);
         PhysBAM::WATER_DRIVER<TV> driver(*example);
-        driver.Initialize();
+        driver.init_phase = false;
+        driver.current_frame = frame;
+        driver.Initialize(this, da);
 
         // simulate - advance a time step
         PhysBAM::LOG::SCOPE scope("FRAME", "Frame %d",
                                   driver.current_frame+1, 1);
-        driver.Advance_To_Target_Time(example->Time_At_Frame(driver.current_frame+1));
-        PhysBAM::LOG::Time("Reseed");
-        example->particle_levelset_evolution.Reseed_Particles(driver.time);
-        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
-        driver.Write_Output_Files(++driver.output_number);
+        driver.Advance_To_Target_Time(this, da, example->Time_At_Frame(driver.current_frame+1));
         frame++;
 
         // free resources
         delete example;
 
+        // next loop
         int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);
@@ -103,6 +101,14 @@ namespace application {
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
         nimbus::IDSet<nimbus::job_id_t> before, after;
 
+        for (size_t i = 0; i < da.size(); ++i) {
+            nimbus::Data *d = da[i];
+            logical_data_id_t id = d->logical_id();
+            if (!application::Contains(read, id))
+                read.insert(id);
+            if (!application::Contains(write, id))
+                write.insert(id);
+        }
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;
         out_frame_ss << frame;

@@ -36,7 +36,7 @@
  */
 
 #include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/data_face_arrays.h"
+#include "application/water_alternate_coarse/data_app.h"
 #include "application/water_alternate_coarse/job_initialize.h"
 #include "application/water_alternate_coarse/job_iteration.h"
 #include "application/water_alternate_coarse/job_loop.h"
@@ -59,6 +59,7 @@ namespace application {
     void WaterApp::Load() {
 
         dbg_add_mode(APP_LOG_STR);
+        dbg_add_mode(TRANSLATE_STR);
 
         dbg(APP_LOG, "Loading water application\n");
 
@@ -67,11 +68,13 @@ namespace application {
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
-        RegisterData(FACE_ARRAYS, new DataFaceArrays());
+        dbg(APP_LOG, "Registering %s\n", APP_FACE_ARRAYS);
+        RegisterData(APP_FACE_ARRAYS, new DataApp(APP_FACE_ARRAYS, kFaceArrayBufSize));
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));
         RegisterJob(ITERATION, new JobIteration(this));
+        RegisterJob(INITIALIZE, new JobInitialize(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }

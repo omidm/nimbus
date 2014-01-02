@@ -1,0 +1,51 @@
+------------------------------------------------------------------------------
+Author:	omidm@stanford.edy (Omid Mashayekhi)
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Description: Scheduler Version I
+------------------------------------------------------------------------------
+This is a scheduler that in addition to basic scheduler functionalities, has a
+simple logic for job assignments to the workers. Basic functionalities includes
+deciphering the right version for a logical data objects, adding necessary
+create and copy jobs, enforcing correctness based on the program flow graph,
+basic garbage collection and physical instance reuse to avoid memory leaks and
+updating before sets to avoid race conditions.
+
+The simple logic for job assignment, tries to reduce the amount of data
+exchange while simultaneously load balance over the registered workers. There
+is a tension between load-balancing and data exchange reduction and it could be
+an optimization problem to solve; however this scheduler uses a simple
+approach. It tries to classify the jobs based on the logical data objects in
+the read/write set of a job, and then uniformly assigns each group to a
+registered worker. By grouping the jobs that operate over same/ close logical
+data objects the data exchange is reduced. 
+
+------------------------------------------------------------------------------
+Build instructions:
+------------------------------------------------------------------------------
+1. Build Nimbus: issue make in the nimbus/ folder.
+2. Build Scheduler: issue make in this folder.
+
+------------------------------------------------------------------------------
+Run/ Usage:
+------------------------------------------------------------------------------
+Run: ./scheduler [n]
+
+n: is an optional integer that sets the minimum number of workers that need to
+join the scheduler before the scheduler starts assigning the main job and
+initiates the execution of the application. If not provided or invalid, the
+default value is used.
+
+* default value is set in scheduler/scheduler.cc as DEFAULT_MIN_WORKER_TO_JON,
+* currently it is 2.
+
+------------------------------------------------------------------------------
+Notes:
+------------------------------------------------------------------------------
+1. Scheduler is capable of registering new workers after the initial registration
+process and so workers can join the system later on.
+
+2. For debugging purposes, to enforce assigning jobs to a single worker, simply
+run the scheduler with n equals to 1 and only launch one worker to join the
+system.
+

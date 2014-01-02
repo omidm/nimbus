@@ -40,6 +40,7 @@
 
 #define DEBUG_MODE
 
+#include <stdlib.h>
 #include <iostream> // NOLINT
 #include "./scheduler_alternate_coarse.h"
 #include "shared/nimbus.h"
@@ -51,6 +52,23 @@ int main(int argc, char *argv[]) {
   nimbus::nimbus_initialize();
 
   SchedulerAlternateCoarse * s = new SchedulerAlternateCoarse(NIMBUS_SCHEDULER_PORT);
+
+  if (argc < 2) {
+      dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
+  } else {
+    std::string str(argv[1]);
+    std::cout << str << std::endl;
+    std::stringstream ss(str);
+    size_t num;
+    ss >> num;
+    if (ss.fail()) {
+      dbg(DBG_SCHED, "Invalid input for min initial number of workers, using default.\n");
+    } else {
+       s->set_min_worker_to_join(num);
+      dbg(DBG_SCHED, "Set min initial number of workers to %d.\n", num);
+    }
+  }
+
   s->Run();
 }
 

@@ -48,6 +48,7 @@
 #define DEBUG_MODE
 
 #include <boost/thread.hpp>
+#include <stdlib.h>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
 #include <sstream>
@@ -67,6 +68,9 @@ class SchedulerAlternateCoarse : public Scheduler {
     explicit SchedulerAlternateCoarse(unsigned int listening_port);
 
     virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+
+  private:
+    unsigned int seed_;
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_

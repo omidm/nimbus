@@ -50,10 +50,11 @@
 #include "worker/data.h"
 #include "shared/parser.h"
 #include "shared/nimbus_types.h"
+#include "protobuf_compiled/vector_msg.pb.h"
 
 #define ML 4
 #define GL 1
-#define LOOP_COUNTER 30
+#define LOOP_COUNTER 15
 #define LOOP_CONDITION 0
 
 using nimbus::Job;
@@ -122,10 +123,21 @@ class ForLoop : public Job {
 class Vec : public Data {
   public:
     explicit Vec(int size);
-    int size;
-    int *arr;
+    virtual ~Vec();
+
     virtual void Create();
+    virtual void Destroy();
     virtual Data * Clone();
+    virtual void Copy(Data* from);
+    virtual bool Serialize(SerializedData* ser_data);
+    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
+
+    int size();
+    int* arr();
+
+  private:
+    int size_;
+    int *arr_;
 };
 
 class App : public Application {

@@ -41,18 +41,69 @@
 
 #include "./app.h"
 
+using vector_msg::VectorMsg;
+
 Vec::Vec(int size) {
-  this->size = size;
+  size_ = size;
+};
+
+Vec::~Vec() {
 };
 
 Data * Vec::Clone() {
   std::cout << "Cloning Vec data!\n";
-  return new Vec(size);
+  return new Vec(size_);
 };
 
 void Vec::Create() {
-  arr = new int[size];
+  arr_ = new int[size_];
 };
+
+void Vec::Destroy() {
+  delete arr_;
+};
+
+void Vec::Copy(Data* from) {
+  Vec *d = reinterpret_cast<Vec*>(from);
+  for (int i = 0; i < size_; i++)
+    arr_[i] = d->arr()[i];
+}
+
+bool Vec::Serialize(SerializedData* ser_data) {
+  VectorMsg vec_msg;
+  for (int i = 0; i < size_; i++) {
+    std::cout << "****" << arr_[i] << std::endl;
+    vec_msg.add_elem(arr_[i]);
+  }
+  std::string str;
+  vec_msg.SerializeToString(&str);
+  char* ptr = new char[str.length()];
+  memcpy(ptr, str.c_str(), str.length());
+  ser_data->set_data_ptr(ptr);
+  ser_data->set_size(str.length());
+  return true;
+}
+
+bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
+  VectorMsg vec_msg;
+  std::string str(ser_data.data_ptr_raw(), ser_data.size());
+  vec_msg.ParseFromString(str);
+  Vec* vec = new Vec(size_);
+  vec->Create();
+  for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
+     vec->arr()[i] = vec_msg.elem(i);
+
+  *result = vec;
+  return true;
+}
+
+int Vec::size() {
+  return size_;
+}
+
+int* Vec::arr() {
+  return arr_;
+}
 
 App::App() {
 };
@@ -91,17 +142,29 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
-  partition_id_t partition_id = 0;
+  GeometricRegion r_0(0, 0, 0, 4, 1, 0);
+  GeometricRegion r_1(4, 0, 0, 4, 1, 0);
+  GeometricRegion r_2(3, 0, 0, 1, 1, 0);
+  GeometricRegion r_3(4, 0, 0, 1, 1, 0);
+  ID<partition_id_t> p_0(0);
+  ID<partition_id_t> p_1(1);
+  ID<partition_id_t> p_2(2);
+  ID<partition_id_t> p_3(3);
   Parameter par;
   IDSet<param_id_t> params_idset;
 
   GetNewJobID(&j, 7);
   GetNewLogicalDataID(&d, 4);
 
-  DefineData("main", d[0], partition_id, neighbor_partitions, par);
-  DefineData("main", d[1], partition_id, neighbor_partitions, par);
-  DefineData("ghost", d[2], partition_id, neighbor_partitions, par);
-  DefineData("ghost", d[3], partition_id, neighbor_partitions, par);
+  DefinePartition(p_0, r_0, par);
+  DefinePartition(p_1, r_1, par);
+  DefinePartition(p_2, r_2, par);
+  DefinePartition(p_3, r_3, par);
+
+  DefineData("main", d[0], p_0.elem(), neighbor_partitions, par);
+  DefineData("main", d[1], p_1.elem(), neighbor_partitions, par);
+  DefineData("ghost", d[2], p_2.elem(), neighbor_partitions, par);
+  DefineData("ghost", d[3], p_3.elem(), neighbor_partitions, par);
 
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[0]);
@@ -235,8 +298,8 @@ Job * Init::Clone() {
 void Init::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the init job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
-  for (int i = 0; i < d->size ; i++)
-    d->arr[i] = i;
+  for (int i = 0; i < d->size(); i++)
+    d->arr()[i] = i;
 };
 
 
@@ -251,8 +314,8 @@ Job * Print::Clone() {
 void Print::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the print job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
-  for (int i = 0; i < d->size; i++)
-    std::cout << d->arr[i] << ", ";
+  for (int i = 0; i < d->size(); i++)
+    std::cout << d->arr()[i] << ", ";
   std::cout << std::endl;
 };
 
@@ -272,9 +335,9 @@ void ApplyLeft::Execute(Parameter params, const DataArray& da) {
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
 
-  int len = d1->size;
-  int *main = d1->arr;
-  int *ghost = d2->arr;
+  int len = d1->size();
+  int *main = d1->arr();
+  int *ghost = d2->arr();
   int temp[len]; // NOLINT
 
   temp[0] = sten[0] * sten[3] + sten[1] * main[0] + sten[2] * main[1];
@@ -301,9 +364,9 @@ void ApplyRight::Execute(Parameter params, const DataArray& da) {
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
 
-  int len = d1->size;
-  int *main = d1->arr;
-  int *ghost = d2->arr;
+  int len = d1->size();
+  int *main = d1->arr();
+  int *ghost = d2->arr();
   int temp[len]; // NOLINT
 
   temp[0] = sten[0] * ghost[0] + sten[1] * main[0] + sten[2] * main[1];
@@ -328,8 +391,8 @@ void UpdateLeft::Execute(Parameter params, const DataArray& da) {
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
 
-  int *main = d1->arr;
-  int *ghost = d2->arr;
+  int *main = d1->arr();
+  int *ghost = d2->arr();
   ghost[0] = main[0];
 };
 
@@ -346,9 +409,9 @@ void UpdateRight::Execute(Parameter params, const DataArray& da) {
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
 
-  int *main = d1->arr;
-  int *ghost = d2->arr;
-  ghost[0] = main[d1->size - 1];
+  int *main = d1->arr();
+  int *ghost = d2->arr();
+  ghost[0] = main[d1->size() - 1];
 };
 
 

@@ -21,6 +21,8 @@ LINK_DIRECTORIES(${NIMBUS_ROOT})
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
+    ${PROJECT_SOURCE_DIR}/app_utils.cc
+    ${PROJECT_SOURCE_DIR}/data_app.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop.cc
@@ -32,7 +34,7 @@ SET(${PROJECT_NAME}_cpp
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
-    ${PROJECT_SOURCE_DIR}/data_face_arrays.h
+    ${PROJECT_SOURCE_DIR}/data_app.h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_iteration.h
     ${PROJECT_SOURCE_DIR}/job_loop.h

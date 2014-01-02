@@ -14,7 +14,10 @@
 #include <PhysBAM_Geometry/Grids_Uniform_Interpolation_Collidable/LINEAR_INTERPOLATION_COLLIDABLE_FACE_UNIFORM.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
+#include "shared/nimbus.h"
 #include "stdio.h"
+#include "string.h"
+
 using namespace PhysBAM;
 namespace{
     template<class TV> void Write_Substep_Helper(void* writer,const std::string& title,int substep,int level)
@@ -43,15 +46,10 @@ template<class TV> WATER_DRIVER<TV>::
 // Initialize
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Initialize()
+Initialize(const nimbus::Job *job, const nimbus::DataArray &da)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
-    // setup time
-    if (example.restart)
-        current_frame = example.restart;
-    else
-        current_frame = example.first_frame;
     output_number=current_frame;
     time=example.Time_At_Frame(current_frame);
 
@@ -60,6 +58,7 @@ Initialize()
         example.domain_boundary(i)(1)=true;
         example.domain_boundary(i)(2)=true;
     }
+
     example.domain_boundary(2)(2)=false;
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
@@ -103,13 +102,7 @@ Initialize()
     example.incompressible.projection.elliptic_solver->pcg.Show_Results();
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
-    if (example.restart) {
-        example.Read_Output_Files(example.restart);
-        example.collision_bodies_affecting_fluid.Rasterize_Objects();
-        example.collision_bodies_affecting_fluid.
-            Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    }
-    else {
+    if (init_phase) {
         example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
@@ -117,10 +110,17 @@ Initialize()
         example.Adjust_Phi_With_Sources(time);
         example.particle_levelset_evolution.Make_Signed_Distance();
     }
+    else {
+        // physbam init
+        example.Load_From_Nimbus(job, da, current_frame);
+        example.collision_bodies_affecting_fluid.Rasterize_Objects();
+        example.collision_bodies_affecting_fluid.
+            Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    }
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
-    if (!example.restart)
+    if (init_phase)
         example.particle_levelset_evolution.Seed_Particles(time);
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
@@ -145,8 +145,10 @@ Initialize()
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
-    if (!example.restart)
+    if (init_phase) {
+        example.Save_To_Nimbus(job, da, current_frame);
         Write_Output_Files(example.first_frame);
+    }
 }
 //#####################################################################
 // Run
@@ -173,7 +175,7 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
 // Advance_To_Target_Time
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Advance_To_Target_Time(const T target_time)
+Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, const T target_time)
 {
     bool done=false;for(int substep=1;!done;substep++){
         LOG::Time("Calculate Dt");
@@ -237,7 +239,6 @@ Advance_To_Target_Time(const T target_time)
             example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
 
         //Project 7% (Parallelizedish)
-        //LOG::Time("Project");
         LOG::SCOPE *scope=0;
         scope=new LOG::SCOPE("Project");
         example.Set_Boundary_Conditions(time);
@@ -258,6 +259,15 @@ Advance_To_Target_Time(const T target_time)
 
         time+=dt;
     }
+
+    //Reseed
+    LOG::Time("Reseed");
+    example.particle_levelset_evolution.Reseed_Particles(time);
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+
+    //Save State
+    example.Save_To_Nimbus(job, da, current_frame+1);
+    Write_Output_Files(++output_number);
 }
 //#####################################################################
 // Function Write_Substep
@@ -286,5 +296,4 @@ Write_Output_Files(const int frame)
     FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
 }
 //#####################################################################
-template class WATER_DRIVER<VECTOR<float,2> >;
 template class WATER_DRIVER<VECTOR<float,3> >;

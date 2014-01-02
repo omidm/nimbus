@@ -58,7 +58,7 @@ namespace nimbus {
   public:
     PhysicalDataInstance();
     PhysicalDataInstance(physical_data_id_t id,
-                         LogicalDataObject* lobj,
+                         const LogicalDataObject* lobj,
                          Data* data,
                          data_version_t version);
 
@@ -68,7 +68,7 @@ namespace nimbus {
     virtual std::string variable() const;
     virtual GeometricRegion* region() const;
     virtual partition_id_t partition() const;
-    virtual LogicalDataObject* logical_object() const;
+    virtual const LogicalDataObject* logical_object() const;
     virtual data_version_t version() const;
     virtual void set_version(data_version_t version);
     virtual data_version_t IncrementVersion();
@@ -77,7 +77,7 @@ namespace nimbus {
   private:
     physical_data_id_t id_;
     data_version_t version_;
-    LogicalDataObject* logical_object_;
+    const LogicalDataObject* logical_object_;
     Data* data_;
   };
 

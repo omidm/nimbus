@@ -43,12 +43,15 @@
   */
 
 #include "./scheduler_alternate_coarse.h"
-#define WORKER_NUM 2
+#define SEED_ 123
 
 SchedulerAlternateCoarse::SchedulerAlternateCoarse(unsigned int p)
 : Scheduler(p) {
+  seed_ = SEED_;
 }
 
 bool SchedulerAlternateCoarse::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  return false;
+  size_t worker_num = server_->worker_num();
+  worker_id_t w_id  = (rand_r(&seed_) % worker_num) + 1;
+  return server_->GetSchedulerWorkerById(worker, w_id);
 }

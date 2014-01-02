@@ -271,7 +271,7 @@ void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
   dz_ = msg->dz();
 }
 
-std::string GeometricRegion::toString() {
+std::string GeometricRegion::toString() const {
   std::string str;
   char buf[2048];
   snprintf(buf, sizeof(buf), "bbox:%lld,%lld,%lld,%lld,%lld,%lld",

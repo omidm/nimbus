@@ -1,3 +1,8 @@
+IF(APPLE)
+    SET(CMAKE_C_COMPILER /usr/local/bin/gcc-4.5)
+    SET(CMAKE_CXX_COMPILER /usr/local/bin/g++-4.5)
+ENDIF()
+
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8.7 )
 MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 ###########################################################################

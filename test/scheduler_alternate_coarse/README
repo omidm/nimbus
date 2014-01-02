@@ -1,0 +1,52 @@
+------------------------------------------------------------------------------
+Author:	omidm@stanford.edy (Omid Mashayekhi)
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Description: Scheduler Alternate Coarse
+------------------------------------------------------------------------------
+This is a scheduler that in addition to basic scheduler functionalities,
+randomly assigns jobs to the workers. Basic functionalities includes
+deciphering the right version for a logical data objects, adding necessary
+create and copy jobs, enforcing correctness based on the program flow graph,
+basic garbage collection and physical instance reuse to avoid memory leaks and
+updating before sets to avoid race conditions.
+
+The random job assignment in this scheduler could be really inefficient from the
+data exchange point of view; however it an intense test to evaluate the
+functionality of the basic features of the scheduler. Also, it is a good test
+for serialization/ deserialization methods of an application. 
+
+
+------------------------------------------------------------------------------
+Build instructions:
+------------------------------------------------------------------------------
+1. Build Nimbus: issue make in the nimbus/ folder.
+2. Build Scheduler: issue make in this folder.
+
+------------------------------------------------------------------------------
+Run/ Usage:
+------------------------------------------------------------------------------
+Run: ./scheduler [n]
+
+n: is an optional integer that sets the minimum number of workers that need to
+join the scheduler before the scheduler starts assigning the main job and
+initiates the execution of the application. If not provided or invalid, the
+default value is used.
+
+* default value is set in scheduler/scheduler.cc as DEFAULT_MIN_WORKER_TO_JON,
+* currently it is 2.
+
+------------------------------------------------------------------------------
+Notes:
+------------------------------------------------------------------------------
+1. Scheduler is capable of registering new workers after the initial registration
+process and so workers can join the system later on.
+
+2. For debugging purposes, to enforce assigning jobs to a single worker, simply
+run the scheduler with n equals to 1 and only launch one worker to join the
+system.
+
+3. The performance is reproducible since the random generated sequence is
+seeded.  One can change the seed of the random sequence for job assignment by
+changing the SEED_ in scheduler_alternate_coarse.cc.
+

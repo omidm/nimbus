@@ -33,59 +33,72 @@
  */
 
 /*
- * Definitions and typedef useful for application, data and jobs.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
-
-#include <PhysBAM_Tools/Vectors/VECTOR.h>
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
+#include "application/water_alternate_coarse/app_utils.h"
+#include "application/water_alternate_coarse/data_app.h"
+#include <set>
+#include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
-#include "shared/nimbus_types.h"
 #include "worker/physical_data_instance.h"
-
-#define APP_LOG DBG_TEMP
-#define APP_LOG_STR "temp"
-#define TRANSLATE_STR "translate"
 
 namespace application {
 
-    // simulation dimension
-    const int kDimension = 3;
+    typedef nimbus::Job Job;
+    typedef nimbus::Data Data;
+    typedef nimbus::DataArray DataArray;
 
-    // typedefs
-    typedef float T;
-    typedef float RW;
-    typedef PhysBAM::VECTOR<T,   kDimension> TV;
-    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
-
-    // application specific parameters and constants
-    const int kThreadsNum = 1;
-    const int kScale = 30;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-    const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
-    const int_dimension_t kFaceArrayBufSize = kScale * kScale * (kScale+1) * kDimension * sizeof(T);
-
-    // TODO: some hacks that need to be cleaned soon after a meeting/
-    // discussion -- one option is to make region a part of data, and
-    // let nimbus take care of initializing region correctly when creating
-    // the data object
     bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
                            const nimbus::DataArray& da,
-                           nimbus::PdiVector *vec);
-    void DestroyTranslatorObjects(nimbus::PdiVector *vec);
+                           nimbus::PdiVector *vec) {
+        bool success = false;
+        if (da.empty()) {
+            return success;
+        }
+        std::set<Data *> ds;
+        for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            std::string name_str = d->name();
+            if (d->name() == name)
+                ds.insert(*it);
+        }
+        if (ds.empty()) {
+            return success;
+        }
+        for (std::set<Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
+            Data *d = *it;
+            std::string name_str = d->name();
+            const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
+            nimbus::PhysicalDataInstance *pdi = new
+                nimbus::PhysicalDataInstance(d->physical_id(),
+                                             ldo, d,
+                                             data_version_t(0));
+            vec->push_back(pdi);
+            success = true;
+        }
+        return success;
+    }
 
-   // TODO: lets make read/ write sets if possible, and also have separate
-   // read/ write instead of one DataArray passed to a job/ a better indexing
+    void DestroyTranslatorObjects(nimbus::PdiVector *vec) {
+        if (vec->empty())
+            return;
+        for (nimbus::PdiVector::iterator it = vec->begin(); it != vec->end(); ++it) {
+            delete *it;
+        }
+    }
+
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
-                  nimbus::logical_data_id_t  id);
+                  nimbus::logical_data_id_t  id) {
+        nimbus::IDSet<nimbus::logical_data_id_t>::IDSetIter it;
+        for (it = data_set.begin(); it != data_set.end(); ++it) {
+            if (*it == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 } // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_

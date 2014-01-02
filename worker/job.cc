@@ -147,7 +147,7 @@ bool Job::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req
   }
 }
 
-const LogicalDataObject* Job::GetLogicalObject(logical_data_id_t id) {
+const LogicalDataObject* Job::GetLogicalObject(logical_data_id_t id) const {
   if (app_is_set_) {
       return application_->GetLogicalObject(id);
   } else {

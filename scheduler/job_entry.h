@@ -132,6 +132,46 @@ class JobEntry {
 
 typedef std::map<job_id_t, JobEntry*> JobEntryTable;
 
+class RemoteCopySendJobEntry : public JobEntry {
+  public:
+    explicit RemoteCopySendJobEntry() {}
+    ~RemoteCopySendJobEntry() {}
+
+    ID<job_id_t> receive_job_id() {return receive_job_id_;}
+    ID<worker_id_t> to_worker_id() {return to_worker_id_;}
+    std::string to_ip() {return to_ip_;}
+    ID<port_t> to_port() {return to_port_;}
+
+    void set_receive_job_id(ID<job_id_t> receive_job_id) {}
+    void set_to_worker_id(ID<worker_id_t> worker_id) {}
+    void set_to_ip(std::string ip) {}
+    void set_to_port(ID<port_t> port) {}
+
+  private:
+    ID<job_id_t> receive_job_id_;
+    ID<worker_id_t> to_worker_id_;
+    std::string to_ip_;
+    ID<port_t> to_port_;
+};
+
+class RemoteCopyReceiveJobEntry : public JobEntry {
+  public:
+    RemoteCopyReceiveJobEntry() {}
+    ~RemoteCopyReceiveJobEntry() {}
+};
+
+class LocalCopyJobEntry : public JobEntry {
+  public:
+    LocalCopyJobEntry() {}
+    ~LocalCopyJobEntry() {}
+};
+
+class CreateDataJobEntry : public JobEntry {
+  public:
+    CreateDataJobEntry() {}
+    ~CreateDataJobEntry() {}
+};
+
 }  // namespace nimbus
 #endif  // NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
