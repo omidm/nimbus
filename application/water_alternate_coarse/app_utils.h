@@ -60,6 +60,10 @@
 #define APP_PHI "phi"
 #endif
 
+#ifndef APP_PRESSURE
+#define APP_PRESSURE "pressure"
+#endif
+
 namespace application {
 
     // simulation dimension
@@ -81,16 +85,17 @@ namespace application {
     const GeometricRegion kDomainGhost(-kGhostNum,
                                        -kGhostNum,
                                        -kGhostNum,
-                                       kScale + 2*kGhostNum,
-                                       kScale + 2*kGhostNum,
-                                       kScale + 2*kGhostNum);
+                                       kScale + kGhostNum,
+                                       kScale + kGhostNum,
+                                       kScale + kGhostNum);
     const int_dimension_t kFaceVelBufSize = kScale *
-                                              kScale * 
-                                              (kScale+1) *
-                                              kDimension * sizeof(T);
+                                            kScale * 
+                                            (kScale+1) *
+                                            kDimension * sizeof(T);
     const int_dimension_t kPhiBufSize = (kScale + 2*kGhostNum) *
-                                                (kScale + 2*kGhostNum) *
-                                                (kScale + 2*kGhostNum) * sizeof(T);
+                                        (kScale + 2*kGhostNum) *
+                                        (kScale + 2*kGhostNum) * sizeof(T);
+    const int_dimension_t kPressureBufSize = kPhiBufSize;
 
     // TODO: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and

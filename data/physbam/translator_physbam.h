@@ -91,7 +91,7 @@ namespace nimbus {
                                const PdiVector* objects,
                                FaceArray* fa) {
 
-      Int3Vector min = (fa->domain_indices).Minimum_Corner();
+      Int3Vector min = (fa->domain_indices).Minimum_Corner() - 1;
       Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
       GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
@@ -189,7 +189,7 @@ namespace nimbus {
         //  return false;
       }
 
-      Int3Vector min = (fa->domain_indices).Minimum_Corner();
+      Int3Vector min = (fa->domain_indices).Minimum_Corner() - 1;
       Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
       GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
@@ -463,7 +463,7 @@ namespace nimbus {
                                          const PdiVector* instances,
                                          ScalarArray *sa) {
 
-        Int3Vector min = (sa->domain).Minimum_Corner();
+        Int3Vector min = (sa->domain).Minimum_Corner() - 1;
         Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
         GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
@@ -516,7 +516,7 @@ namespace nimbus {
             dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
         }
 
-        Int3Vector min = (sa->domain).Minimum_Corner();
+        Int3Vector min = (sa->domain).Minimum_Corner() - 1;
         Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
         GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
