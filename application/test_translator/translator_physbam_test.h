@@ -55,6 +55,7 @@
 namespace nimbus {
 template <class VECTOR_TYPE> class TranslatorPhysBAMTest
     : public TranslatorPhysBAM<VECTOR_TYPE> {
+      /*
  public:
   typedef TranslatorPhysBAM<VECTOR_TYPE> Base;
   typedef typename Base::TV TV;
@@ -236,6 +237,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest
     }
     return true;
   }
+  */
 };
 }  // namespace nimbus
 

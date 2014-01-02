@@ -81,6 +81,10 @@ namespace nimbus {
     typedef typename PhysBAM::PARTICLE_LEVELSET_UNIFORM<Grid> ParticleContainer;
     typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> ParticlesUnit;
     typedef typename PhysBAM::ARRAY<ParticlesUnit*, TV_INT> ParticlesArray;
+    typedef typename PhysBAM::PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>
+        RemovedParticlesUnit;
+    typedef typename PhysBAM::ARRAY<RemovedParticlesUnit*, TV_INT>
+        RemovedParticlesArray;
 
     typedef typename PhysBAM::PARTICLE_LEVELSET<Grid> ParticleLevelset;
     typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector> ScalarArray;
@@ -358,6 +362,176 @@ namespace nimbus {
       return true;
     }
 
+    bool ReadRemovedParticles(GeometricRegion* region,
+                       CPdiVector* instances,
+                       ParticleContainer& particle_container,
+                       bool positive) {
+      // TODO(quhang) Check whether particle_container has valid particle data
+      // before moving on.
+      RemovedParticlesArray* particles;
+      if (positive) {
+        particles = &particle_container.removed_positive_particles;
+      } else {
+        particles = &particle_container.removed_negative_particles;
+      }
+
+      // Allocates buckets.
+      for (int z = 1; z <= region->dz(); z++)
+        for (int y = 1; y <= region->dy(); y++)
+          for (int x = 1; x <= region->dx(); x++) {
+            TV_INT block_index(x, y, z);
+            if ((*particles)(block_index)) {
+              delete (*particles)(block_index);
+            }
+            (*particles)(block_index) = particle_container.Allocate_Particles(
+                particle_container.template_removed_particles);
+          }
+
+      if (instances == NULL) {
+        return false;
+      }
+
+      CPdiVector::iterator iter = instances->begin();
+      for (; iter != instances->end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+
+        // @Phil. The data size is returned in the unit of bytes.  --quhang
+        // TODO(anyone) anyone knows how to avoid the ugly casting?
+        for (int i = 0;
+             i < static_cast<int>(data->size())
+             / static_cast<int>(sizeof(float));  // NOLINT
+             i+= 6) {
+          // This instance may have particles inside the region. So
+          // we have to iterate over them and insert them accordingly.
+          // Particles are stored as (x,y,z) triples in data array
+          scalar_t x = buffer[i];
+          scalar_t y = buffer[i + 1];
+          scalar_t z = buffer[i + 2];
+          scalar_t vx = buffer[i + 3];
+          scalar_t vy = buffer[i + 4];
+          scalar_t vz = buffer[i + 5];
+
+          VECTOR_TYPE position;
+          position.x = x;
+          position.y = y;
+          position.z = z;
+          VECTOR_TYPE velocity;
+          velocity.x = vx;
+          velocity.y = vy;
+          velocity.z = vz;
+          // TODO(quhang): Check whether the cast is safe.
+          int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
+          int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
+          int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
+
+          // TODO(quhang): The condition is not accurate.
+          // If particle is within region, copy it to particles
+          if (xi >= 1 &&
+              xi <= region->dx() &&
+              yi >= 1 &&
+              yi <= region->dy() &&
+              zi >= 1 &&
+              zi <= region->dz()) {
+            RemovedParticlesUnit* cellParticles =
+                (*particles)(TV_INT(xi, yi, zi));
+
+            // Note that Add_Particle traverses a linked list of particle
+            // buckets, so it's O(N^2) time. Blech.
+            int index = particle_container.Add_Particle(cellParticles);
+            cellParticles->X(index) = position;
+            cellParticles->V(index) = velocity;
+          }
+        }
+      }
+      return true;
+    }
+
+    bool WriteRemovedParticles(GeometricRegion* region,
+                        CPdiVector* instances,
+                        ParticleContainer& particle_container,
+                        bool positive) {
+      CPdiVector::iterator iter = instances->begin();
+      for (; iter != instances->end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        data->ClearTempBuffer();
+      }
+
+      for (int z = 1; z <= region->dz(); z++) {
+        for (int y = 1; y <= region->dy(); y++) {
+          for (int x = 1; x <= region->dx(); x++) {
+            RemovedParticlesArray* arrayPtr;
+            if (positive) {
+              arrayPtr = &particle_container.removed_positive_particles;
+            } else {
+              arrayPtr = &particle_container.removed_negative_particles;
+            }
+            RemovedParticlesUnit* particles = (*arrayPtr)(TV_INT(x, y, z));
+            while (particles) {
+              for (int i = 1; i <= particles->array_collection->Size(); i++) {
+                VECTOR_TYPE particle = particles->X(i);
+                scalar_t x = particle.x;
+                scalar_t y = particle.y;
+                scalar_t z = particle.z;
+                double xi = x;
+                double yi = y;
+                double zi = z;
+                // TODO(quhang): I am almost 100% sure this is wrong. The
+                // condition is not accurate. But needs time to figure out.
+                // If it's inside the region,
+                if (xi >= region->x() &&
+                    xi < (region->x() + region->dx()) &&
+                    yi >= region->y() &&
+                    yi < (region->y() + region->dy()) &&
+                    zi >= region->z() &&
+                    zi < (region->z() + region->dz())) {
+                  CPdiVector::iterator iter = instances->begin();
+                  // Iterate across instances, checking each one
+                  for (; iter != instances->end(); ++iter) {
+                    const PhysicalDataInstance* instance = *iter;
+                    GeometricRegion* instanceRegion = instance->region();
+                    PhysBAMData* data =
+                        static_cast<PhysBAMData*>(instance->data());
+
+                    // If it's inside the region of the physical data instance
+                    if (xi >= instanceRegion->x() &&
+                        xi < (instanceRegion->x() + instanceRegion->dx()) &&
+                        yi >= instanceRegion->y() &&
+                        yi < (instanceRegion->y() + instanceRegion->dy()) &&
+                        zi >= instanceRegion->z() &&
+                        zi < (instanceRegion->z() + instanceRegion->dz())) {
+                      scalar_t particleBuffer[6];
+                      particleBuffer[0] = particle.x;
+                      particleBuffer[1] = particle.y;
+                      particleBuffer[2] = particle.z;
+                      particleBuffer[3] = particles->V(i).x;
+                      particleBuffer[4] = particles->V(i).y;
+                      particleBuffer[5] = particles->V(i).z;
+                      data->AddToTempBuffer(
+                          reinterpret_cast<char*>(particleBuffer),
+                          sizeof(scalar_t)*6);
+                    }
+                  }
+                }
+              }
+              particles = particles->next;
+            }
+          }
+        }
+      }
+
+      // Now that we've copied particles into the temporary data buffers,
+      // commit the results.
+      iter = instances->begin();
+      for (; iter != instances->end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        data->CommitTempBuffer();
+      }
+      return true;
+    }
 
     /* Read scalar array from PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion specified by region, into the
