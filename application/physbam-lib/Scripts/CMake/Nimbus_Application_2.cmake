@@ -17,7 +17,7 @@ ENDIF(NOT WIN32)
 ###########################################################################
 
 #tell CMake where PhysBAM root is
-SET(PHYSBAM_ROOT ${PROJECT_SOURCE_DIR}/../physbam-lib)
+SET(PHYSBAM_ROOT ${PROJECT_SOURCE_DIR}/../../physbam-lib)
 #include the build options file
 INCLUDE(${PHYSBAM_ROOT}/Scripts/CMake/Build_Options.cmake)
 #include the compiler flags file
