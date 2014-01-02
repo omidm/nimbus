@@ -54,20 +54,22 @@
 
 namespace application {
 
-    // application specific parameters
-    const int kThreadsNum = 1;
-    const int kScale = 30;
+    // simulation dimension
     const int kDimension = 3;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-    const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
-    const int_dimension_t kFaceArrayBufSize = kScale * kScale * (kScale+1) * 3;
 
     // typedefs
     typedef float T;
     typedef float RW;
     typedef PhysBAM::VECTOR<T,   kDimension> TV;
     typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
+
+    // application specific parameters and constants
+    const int kThreadsNum = 1;
+    const int kScale = 30;
+    const int kLastFrame = 15;
+    const std::string kOutputDir = "output";
+    const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
+    const int_dimension_t kFaceArrayBufSize = kScale * kScale * (kScale+1) * kDimension * sizeof(T);
 
     // TODO: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and

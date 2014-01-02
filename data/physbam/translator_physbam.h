@@ -172,7 +172,7 @@ namespace nimbus {
                     // The PhysBAM FACE_ARRAY object abstracts away whether
                     // the data is stored in struct of array or array of struct
                     // form (in practice, usually struct of arrays.
-                    assert(source_index < data->size());
+                    assert(source_index < data->size() && source_index >= 0);
                     (*fa)(dim, destinationIndex) = buffer[source_index];
                   }
                 }
@@ -270,7 +270,7 @@ namespace nimbus {
                   // The PhysBAM FACE_ARRAY object abstracts away whether
                   // the data is stored in struct of array or array of struct
                   // form (in practice, usually struct of arrays
-                  assert(destination_index < data->size());
+                  assert(destination_index < data->size() && destination_index >= 0);
                   buffer[destination_index] = (*fa)(dim, sourceIndex);
                 }
               }
