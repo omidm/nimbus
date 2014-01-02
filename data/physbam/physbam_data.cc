@@ -57,7 +57,8 @@ PhysBAMData::PhysBAMData(): size_(0), buffer_(0) {}
 Data * PhysBAMData::Clone() {
   PhysBAMData* d = new PhysBAMData();
   char* buf = static_cast<char*>(malloc(size_));
-  memcpy(buf, buffer_, size_);
+  if (buffer_)
+    memcpy(buf, buffer_, size_);
   d->set_buffer(buf, size_);
   return d;
 }
@@ -69,6 +70,8 @@ Data * PhysBAMData::Clone() {
  * \return
 */
 void PhysBAMData::Create() {
+  if (!buffer_)
+      buffer_ = static_cast<char*>(malloc(size_));
 }
 
 

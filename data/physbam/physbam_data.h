@@ -72,6 +72,10 @@ class PhysBAMData: public Data {
     size_ = s;
   }
 
+  virtual void set_size(int_dimension_t s) {
+    size_ = s;
+  }
+
   virtual void ClearTempBuffer();
   virtual bool AddToTempBuffer(char* buffer, int len);
   virtual int CommitTempBuffer();

@@ -45,6 +45,7 @@
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 #include "worker/physical_data_instance.h"
 
 #define APP_LOG DBG_TEMP
@@ -59,7 +60,8 @@ namespace application {
     const int kDimension = 3;
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
-    const GeometricRegion kDomain(1, 1, 1, kScale, kScale, kScale);
+    const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
+    const int_dimension_t kFaceArrayBufSize = kScale * kScale * (kScale+1) * 3;
 
     // typedefs
     typedef float T;

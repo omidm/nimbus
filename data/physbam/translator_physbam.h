@@ -47,6 +47,7 @@
 #define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
 
 #include <algorithm>
+#include <string>
 
 #include "data/physbam/physbam_include.h"
 #include "data/physbam/physbam_data.h"
@@ -96,9 +97,9 @@ namespace nimbus {
       vec(Z_COORD) = region->dz();
 
       // Create a FACE_ARRAY of the right size.
-      PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(0, region->dx()-1,
-                                                     0, region->dy()-1,
-                                                     0, region->dz()-1);
+      PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(1, region->dx(),
+                                                     1, region->dy(),
+                                                     1, region->dz());
 
       fa->Resize(range);
 
@@ -108,7 +109,8 @@ namespace nimbus {
           const PhysicalDataInstance* obj = *iter;
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (HasOverlap(overlap)) {
-            dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray.\n", obj->id());
+            std::string reg_str = region->toString();
+            dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray for region %s.\n", obj->id(), reg_str.c_str()); // NOLINT`
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
             scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -160,9 +162,9 @@ namespace nimbus {
                                        source_z * mult_z;
                     source_index += src_offset;
 
-                    int dest_x = x + dest(X_COORD);
-                    int dest_y = y + dest(Y_COORD);
-                    int dest_z = z + dest(Z_COORD);
+                    int dest_x = x + dest(X_COORD) + 1;
+                    int dest_y = y + dest(Y_COORD) + 1;
+                    int dest_z = z + dest(Z_COORD) + 1;
 
                     typename PhysBAM::VECTOR<int, 3>
                       destinationIndex(dest_x, dest_y, dest_z);
@@ -170,6 +172,7 @@ namespace nimbus {
                     // The PhysBAM FACE_ARRAY object abstracts away whether
                     // the data is stored in struct of array or array of struct
                     // form (in practice, usually struct of arrays.
+                    assert(source_index < data->size());
                     (*fa)(dim, destinationIndex) = buffer[source_index];
                   }
                 }
@@ -257,9 +260,9 @@ namespace nimbus {
                                           dest_z * mult_z;
                   destination_index += dst_offset;
 
-                  int source_x = x + src(X_COORD);
-                  int source_y = y + src(Y_COORD);
-                  int source_z = z + src(Z_COORD);
+                  int source_x = x + src(X_COORD) + 1;
+                  int source_y = y + src(Y_COORD) + 1;
+                  int source_z = z + src(Z_COORD) + 1;
 
                   typename PhysBAM::VECTOR<int, 3>
                     sourceIndex(source_x, source_y, source_z);
@@ -267,6 +270,7 @@ namespace nimbus {
                   // The PhysBAM FACE_ARRAY object abstracts away whether
                   // the data is stored in struct of array or array of struct
                   // form (in practice, usually struct of arrays
+                  assert(destination_index < data->size());
                   buffer[destination_index] = (*fa)(dim, sourceIndex);
                 }
               }
@@ -274,7 +278,6 @@ namespace nimbus {
           }
         }
       }
-      delete fa;
       return true;
     }
 

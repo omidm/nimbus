@@ -53,7 +53,7 @@ namespace application {
 
     class DataApp : public nimbus::PhysBAMData {
         public:
-            explicit DataApp(std::string name);
+            explicit DataApp(std::string name, nimbus::int_dimension_t size);
             virtual nimbus::Data* Clone();
     };
 

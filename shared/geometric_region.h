@@ -95,7 +95,7 @@ namespace nimbus {
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
 
-    virtual std::string toString();
+    virtual std::string toString() const;
 
     virtual bool Parse(const std::string& input);
 

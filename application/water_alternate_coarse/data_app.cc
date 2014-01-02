@@ -46,8 +46,9 @@
 
 namespace application {
 
-    DataApp::DataApp(std::string name) {
+    DataApp::DataApp(std::string name, nimbus::int_dimension_t size) {
         set_name(name);
+        set_size(size);
     }
 
     nimbus::Data* DataApp::Clone() {
