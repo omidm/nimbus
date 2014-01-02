@@ -208,6 +208,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         translator.WriteFaceArray(&application::kDomain, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
 
+    // pressure
+    const std::string pstring = std::string(APP_PRESSURE);
+    if (application::GetTranslatorData(job, pstring, da, &pdv))
+        translator.WriteScalarArray(&application::kDomainPressureGhost,
+                                   &pdv,
+                                   &incompressible.projection.p);
+    application::DestroyTranslatorObjects(&pdv);
+
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
@@ -233,6 +241,14 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         translator.ReadFaceArray(&application::kDomain, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
 
+    // pressure
+    const std::string pstring = std::string(APP_PRESSURE);
+    if (application::GetTranslatorData(job, pstring, da, &pdv))
+        translator.ReadScalarArray(&application::kDomainPressureGhost,
+                                   &pdv,
+                                   &incompressible.projection.p);
+    application::DestroyTranslatorObjects(&pdv);
+
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
@@ -250,9 +266,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
     FILE_UTILITIES::Read_From_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
-    std::string filename;
-    filename=output_directory+"/"+f+"/pressure";
-    if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading pressure "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,incompressible.projection.p);}
 }
 //#####################################################################
 template class WATER_EXAMPLE<VECTOR<float,3> >;

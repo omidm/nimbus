@@ -72,6 +72,8 @@ namespace application {
         RegisterData(APP_FACE_VEL, new DataApp(APP_FACE_VEL, kFaceVelBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_PHI);
         RegisterData(APP_PHI, new DataApp(APP_PHI, kPhiBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
+        RegisterData(APP_PRESSURE, new DataApp(APP_PRESSURE, kPressureBufSize));
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));

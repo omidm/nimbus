@@ -79,6 +79,7 @@ namespace application {
     const int kThreadsNum = 1;
     const int kScale = 30;
     const int kGhostNum = 3;
+    const int kPressureGhostNum = 1;
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
     const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
@@ -88,6 +89,12 @@ namespace application {
                                        kScale + kGhostNum,
                                        kScale + kGhostNum,
                                        kScale + kGhostNum);
+    const GeometricRegion kDomainPressureGhost(-kPressureGhostNum,
+                                               -kPressureGhostNum,
+                                               -kPressureGhostNum,
+                                               kScale + kPressureGhostNum,
+                                               kScale + kPressureGhostNum,
+                                               kScale + kPressureGhostNum);
     const int_dimension_t kFaceVelBufSize = kScale *
                                             kScale * 
                                             (kScale+1) *
@@ -95,7 +102,9 @@ namespace application {
     const int_dimension_t kPhiBufSize = (kScale + 2*kGhostNum) *
                                         (kScale + 2*kGhostNum) *
                                         (kScale + 2*kGhostNum) * sizeof(T);
-    const int_dimension_t kPressureBufSize = kPhiBufSize;
+    const int_dimension_t kPressureBufSize = (kScale + 2*kPressureGhostNum) *
+                                             (kScale + 2*kPressureGhostNum) *
+                                             (kScale + 2*kPressureGhostNum) * sizeof(T);
 
     // TODO: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and
