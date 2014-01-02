@@ -90,17 +90,10 @@ namespace nimbus {
     virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
-      Dimension3Vector vec;
-      vec(X_COORD) = region->dx();
-      vec(Y_COORD) = region->dy();
-      vec(Z_COORD) = region->dz();
 
-      // Create a FACE_ARRAY of the right size.
-      PhysBAM::RANGE<PhysBAM::VECTOR<int, 3> > range(1, region->dx(),
-                                                     1, region->dy(),
-                                                     1, region->dz());
-
-      fa->Resize(range);
+      Int3Vector min = (fa->domain_indices).Minimum_Corner();
+      Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
+      GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
       if (objects != NULL) {
         PdiVector::const_iterator iter = objects->begin();
@@ -113,8 +106,8 @@ namespace nimbus {
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
             scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
-            Dimension3Vector dest = GetOffset(region, obj->region());
             Dimension3Vector src = GetOffset(obj->region(), region);
+            Dimension3Vector dest = GetOffset(&dest_region, obj->region());
 
             //  x, y and z values are stored separately due to the
             // difference in number of x, y and z values in face arrays
@@ -196,6 +189,10 @@ namespace nimbus {
         //  return false;
       }
 
+      Int3Vector min = (fa->domain_indices).Minimum_Corner();
+      Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
+      GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
+
       if (objects != NULL) {
         PdiVector::iterator iter = objects->begin();
 
@@ -210,7 +207,7 @@ namespace nimbus {
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
           scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
-          Dimension3Vector src = GetOffset(region, obj->region());
+          Dimension3Vector src = GetOffset(&src_region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
 
           //  x, y and z values are stored separately due to the
