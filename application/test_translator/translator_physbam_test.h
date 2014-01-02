@@ -51,6 +51,7 @@
 #define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_TEST_H_
 
 #include <algorithm>
+#include <cmath>
 
 #include "data/physbam/physbam_include.h"
 #include "data/physbam/physbam_data.h"
@@ -90,9 +91,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
     }
 
     // Allocates buckets.
-    for (int z = region->z(); z < region->z()+region->dz(); z++)
-      for (int y = region->y(); y < region->y()+region->dy(); y++)
-        for (int x = region->x(); x < region->x()+region->dx(); x++) {
+    for (int z = 1; z <= region->dz(); z++)
+      for (int y = 1; y <= region->dy(); y++)
+        for (int x = 1; x <= region->dx(); x++) {
           TV_INT block_index(x, y, z);
           particle_container.Free_Particle_And_Clear_Pointer(
               (*particles)(block_index));
@@ -101,6 +102,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
                 particle_container.template_particles);
           }
         }
+    dbg(DBG_WARN, "Successfully clean particle data structures!\n");
 
     // TODO(quhang) warning rather than assert.
     assert(instances != NULL);
@@ -131,18 +133,19 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
         position.x = x;
         position.y = y;
         position.z = z;
-        int_dimension_t xi = (int_dimension_t)x;
-        int_dimension_t yi = (int_dimension_t)y;
-        int_dimension_t zi = (int_dimension_t)z;
+        // TODO(quhang): Check whether the cast is safe.
+        int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
+        int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
+        int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
 
         // TODO(quhang): The condition is not accurate.
         // If particle is within region, copy it to particles
-        if (xi >= region->x() &&
-            xi < (region->x() + region->dx()) &&
-            yi >= region->y() &&
-            yi < (region->y() + region->dy()) &&
-            zi >= region->z() &&
-            zi < (region->z() + region->dz())) {
+        if (xi >= 1 &&
+            xi <= region->dx() &&
+            yi >= 1 &&
+            yi <= region->dy() &&
+            zi >= 1 &&
+            zi <= region->dz()) {
           ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
 
           // Note that Add_Particle traverses a linked list of particle
@@ -155,6 +158,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
         }
       }
     }
+    dbg(DBG_WARN, "Successfully finished ReadParticles!\n");
     return true;
   }
 
