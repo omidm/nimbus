@@ -37,32 +37,12 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#include <algorithm>
-
-// Temporery import for nimbus internal data structures.
-#include "data/physbam/physbam_include.h"
 #include "data/physbam/physbam_data.h"
-
-#include "shared/nimbus_types.h"
-#include "shared/geometric_region.h"
-#include "worker/physical_data_instance.h"
-#include "worker/worker.h"
-
-// Temporery import for nimbus internal data structures. End.
-
-#include "data/physbam/translator_physbam.h"
-// #include "data/physbam/physbam_data.h"
-// #include "data/physbam/physbam_include.h"
+#include "data/physbam/physbam_include.h"
+#include "translator_physbam_test.h"  // NOLINT
 
 #define R1_VALUE 3.1400
 #define R2_VALUE 32.0
-
-/*
-void printLdo(nimbus::LogicalDataObject* obj) {
-  printf("**Object - ID: %lu, Name: %s", obj->id(), obj->variable().c_str());
-  printf(" region: [%lu+%lu, %lu+%lu, %lu+%lu]\n", obj->region()->x(), obj->region()->dx(), obj->region()->y(), obj->region()->dy(), obj->region()->z(), obj->region()->dz());  // NOLINT
-}
-*/
 
 const int_dimension_t X = 1;
 const int_dimension_t Y = 1;
@@ -97,178 +77,6 @@ float getZ() {
   return static_cast<float>(val);
 }
 
-typedef PhysBAM::VECTOR<float, 3> VECTOR_TYPE;
-typedef VECTOR_TYPE TV;
-typedef typename TV::SCALAR scalar_t;
-typedef PhysBAM::VECTOR<int, 3> TV_INT;
-typedef PhysBAM::GRID<VECTOR_TYPE> Grid;
-typedef typename PhysBAM::PARTICLE_LEVELSET<Grid> ParticleProfile;
-typedef typename PhysBAM::PARTICLE_LEVELSET_UNIFORM<Grid> ParticleContainer;
-typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> ParticlesUnit;
-typedef typename PhysBAM::ARRAY<ParticlesUnit*, TV_INT> ParticlesArray;
-
-bool ReadParticles(nimbus::GeometricRegion* region,
-                   nimbus::CPdiVector* instances,
-                   ParticleContainer& particle_container,
-                   bool positive) {
-  // Expected to be wrapped in nimbus namespcae.
-  using namespace nimbus;  // NOLINT
-
-  ParticlesArray* particles;
-  if (positive) {
-    particles = &particle_container.positive_particles;
-  } else {
-    particles = &particle_container.negative_particles;
-  }
-
-  // Allocates buckets. TODO(quhang) replaced by clearing the buckets.
-  for (int z = region->z(); z < region->z()+region->dz(); z++)
-    for (int y = region->y(); y < region->y()+region->dy(); y++)
-      for (int x = region->x(); x < region->x()+region->dx(); x++) {
-        TV_INT block_index(x, y, z);
-        if (!(*particles)(block_index)) {
-          (*particles)(block_index) = particle_container.Allocate_Particles(
-              particle_container.template_particles);
-        }
-      }
-
-  // TODO(quhang) warning rather than assert.
-  assert(instances != NULL);
-
-  CPdiVector::iterator iter = instances->begin();
-  for (; iter != instances->end(); ++iter) {
-    const PhysicalDataInstance* instance = *iter;
-    PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-    scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
-
-    // @Phil. The data size is returned in the unit of bytes.  --quhang
-    // TODO(anyone) anyone knows how to avoid the ugly casting?
-    for (int i = 0;
-         i < static_cast<int>(data->size())
-         / static_cast<int>(sizeof(float));  // NOLINT
-         i+= 5) {
-      // This instance may have particles inside the region. So
-      // we have to iterate over them and insert them accordingly.
-      // Particles are stored as (x,y,z) triples in data array
-      scalar_t x = buffer[i];
-      scalar_t y = buffer[i + 1];
-      scalar_t z = buffer[i + 2];
-      scalar_t radius = buffer[i + 3];
-
-      uint16_t collision_distance = (uint16_t)buffer[i + 4];  // NOLINT
-
-      VECTOR_TYPE position;
-      position.x = x;
-      position.y = y;
-      position.z = z;
-      int_dimension_t xi = (int_dimension_t)x;
-      int_dimension_t yi = (int_dimension_t)y;
-      int_dimension_t zi = (int_dimension_t)z;
-
-      // If particle is within region, copy it to particles
-      if (xi >= region->x() &&
-          xi < (region->x() + region->dx()) &&
-          yi >= region->y() &&
-          yi < (region->y() + region->dy()) &&
-          zi >= region->z() &&
-          zi < (region->z() + region->dz())) {
-        ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
-
-        // Note that Add_Particle traverses a linked list of particle
-        // buckets, so it's O(N^2) time. Blech.
-        int index = particle_container.Add_Particle(cellParticles);
-        cellParticles->quantized_collision_distance(index) =
-          collision_distance;
-        cellParticles->X(index) = position;
-        cellParticles->radius(index) = radius;
-      }
-    }
-  }
-  return true;
-}
-
-bool WriteParticles(nimbus::GeometricRegion* region,
-                    nimbus::CPdiVector* instances,
-                    ParticleContainer& particle_container,
-                    bool positive) {
-  using namespace nimbus;  // NOLINT
-  CPdiVector::iterator iter = instances->begin();
-  for (; iter != instances->end(); ++iter) {
-    const PhysicalDataInstance* instance = *iter;
-    PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-    data->ClearTempBuffer();
-  }
-
-  for (int z = 1; z <= region->dz(); z++) {
-    for (int y = 1; y <= region->dy(); y++) {
-      for (int x = 1; x <= region->dx(); x++) {
-        ParticlesArray* arrayPtr;
-        if (positive) {
-          arrayPtr = &particle_container.positive_particles;
-        } else {
-          arrayPtr = &particle_container.negative_particles;
-        }
-        // printf("Pointer to positive particles is %p\n", arrayPtr);
-        ParticlesUnit* particles = (*arrayPtr)(TV_INT(x, y, z));
-        while (particles) {
-          for (int i = 1; i <= particles->array_collection->Size(); i++) {
-            VECTOR_TYPE particle = particles->X(i);
-            scalar_t x = particle.x;
-            scalar_t y = particle.y;
-            scalar_t z = particle.z;
-            double xi = x;
-            double yi = y;
-            double zi = z;
-            // If it's inside the region,
-            if (xi >= region->x() &&
-                xi <= (region->x() + region->dx()) &&
-                yi >= region->y() &&
-                yi <= (region->y() + region->dy()) &&
-                zi >= region->z() &&
-                zi <= (region->z() + region->dz())) {
-              CPdiVector::iterator iter = instances->begin();
-              // Iterate across instances, checking each one
-              for (; iter != instances->end(); ++iter) {
-                const PhysicalDataInstance* instance = *iter;
-                GeometricRegion* instanceRegion = instance->region();
-                PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-
-                // If it's inside the region of the physical data instance
-                if (xi >= instanceRegion->x() &&
-                    xi <= (instanceRegion->x() + instanceRegion->dx()) &&
-                    yi >= instanceRegion->y() &&
-                    yi <= (instanceRegion->y() + instanceRegion->dy()) &&
-                    zi >= instanceRegion->z() &&
-                    zi <= (instanceRegion->z() + instanceRegion->dz())) {
-                  scalar_t particleBuffer[5];
-                  particleBuffer[0] = particle.x;
-                  particleBuffer[1] = particle.y;
-                  particleBuffer[2] = particle.z;
-                  particleBuffer[3] = particles->radius(i);
-                  particleBuffer[4] = particles->quantized_collision_distance(i);
-                  data->AddToTempBuffer(reinterpret_cast<char*>(particleBuffer),
-                                        sizeof(scalar_t)*5);
-                }
-              }
-            }
-          }
-          particles = particles->next;
-        }
-      }
-    }
-  }
-
-  // Now that we've copied particles into the temporary data buffers,
-  // commit the results.
-  iter = instances->begin();
-  for (; iter != instances->end(); ++iter) {
-    const PhysicalDataInstance* instance = *iter;
-    PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-    data->CommitTempBuffer();
-  }
-  return true;
-}
-
 int main(int argc, char *argv[]) {
   dbg_init();
   PhysBAM::LOG::Initialize_Logging();
@@ -278,7 +86,8 @@ int main(int argc, char *argv[]) {
   int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
   nimbus::GeometricRegion* region = new nimbus::GeometricRegion(dimensions);
   CPdiVector* vec = new CPdiVector();
-  TranslatorPhysBAM<PhysBAM::VECTOR<float, 3> > translator;
+  TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > translator;
+  typedef TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > Translator;
 
   nimbus::GeometricRegion* r = new nimbus::GeometricRegion(dimensions);
   nimbus::LogicalDataObject* ldo = new LogicalDataObject(1, "velocity", r);
@@ -297,16 +106,17 @@ int main(int argc, char *argv[]) {
 
   vec->push_back(instance);
 
-  PhysBAM::ARRAY<float, TV_INT> phi_array;
-  phi_array.Resize(TV_INT(DX, DY, DZ));
-  PhysBAM::RANGE<VECTOR_TYPE> range_input(X, X+DX-1, Y, Y+DY-1, Z, Z+DZ-1);
-  Grid grid(TV_INT(DX, DY, DZ), range_input, true);
+  PhysBAM::ARRAY<float, Translator::TV_INT> phi_array;
+  phi_array.Resize(Translator::TV_INT(DX, DY, DZ));
+  PhysBAM::RANGE<Translator::TV> range_input(
+      X, X+DX-1, Y, Y+DY-1, Z, Z+DZ-1);
+  Translator::Grid grid(Translator::TV_INT(DX, DY, DZ), range_input, true);
 
-  ParticleContainer particle_container(grid, phi_array, 0);
+  Translator::ParticleContainer particle_container(grid, phi_array, 0);
   particle_container.Initialize_Particle_Levelset_Grid_Values();
   float* result;
   bool pass = true;
-  pass = ReadParticles(region, vec, particle_container, true);
+  pass = translator.ReadParticles(region, vec, particle_container, true);
 
   if (!pass) {
     printf("Failed to read particles.\n");
@@ -317,7 +127,7 @@ int main(int argc, char *argv[]) {
     floats[i] = 1.0;
   }
 
-  pass = WriteParticles(region, vec, particle_container, true);
+  pass = translator.WriteParticles(region, vec, particle_container, true);
   if (!pass) {
     printf("Failed to write particles.\n");
     goto error;

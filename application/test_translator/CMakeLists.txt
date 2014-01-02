@@ -18,7 +18,7 @@ include_directories(${NIMBUS_ROOT})
 SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/main.cc)
 SET(${PROJECT_NAME}_h
-        )
+        ${PROJECT_SOURCE_DIR}/translator_physbam_test.h)
         
 #List the libraries you want to link against - including a higher-level
 #library automatically includes the lower-level ones
