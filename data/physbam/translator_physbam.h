@@ -185,6 +185,107 @@ namespace nimbus {
       }
     }
 
+    /** Take a FaceArray described by region and write it out to the
+     *  PhysicalDataInstance objects in the objects array. */
+    virtual bool WriteFaceArray(const GeometricRegion* region,
+                                PdiVector* objects,
+                                FaceArray* fa) {
+      int_dimension_t region_size = 0;
+      region_size += (region->dx() + 1) * region->dy() * region->dz();
+      region_size += region->dx() * (region->dy() + 1) * region->dz();
+      region_size += region->dx() * region->dy() * (region->dz() + 1);
+      if (region_size != fa->buffer_size) {
+        dbg(DBG_WARN, "WARN: writing a face array of size %i for a region of size %i and the two sizes should be equal. This check is wrong so you can ignore this warning. I need to determine correct check. -pal\n", fa->buffer_size, region_size);  // NOLINT
+        //  return false;
+      }
+
+      Int3Vector min = (fa->domain_indices).Minimum_Corner() - 1;
+      Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
+      GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
+
+      if (objects != NULL) {
+        PdiVector::iterator iter = objects->begin();
+
+        // Loop over the Nimbus objects, copying the relevant PhysBAM data
+        // into each one
+        for (; iter != objects->end(); ++iter) {
+          const PhysicalDataInstance* obj = *iter;
+          Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
+          if (!HasOverlap(overlap)) {continue;}
+
+          dbg(DBG_TRANSLATE, "Saving FaceArray into physical object %lu.\n", obj->id());
+          PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
+          scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+
+          Dimension3Vector src = GetOffset(&src_region, obj->region());
+          Dimension3Vector dest = GetOffset(obj->region(), region);
+
+          //  x, y and z values are stored separately due to the
+          // difference in number of x, y and z values in face arrays
+          for (int dim = X_COORD; dim <= Z_COORD; dim++) {
+            int mult_x = 1;
+            int mult_y = obj->region()->dx();
+            int mult_z = obj->region()->dy() * obj->region()->dx();
+            int range_x = overlap(X_COORD);
+            int range_y = overlap(Y_COORD);
+            int range_z = overlap(Z_COORD);
+            int dst_offset = 0;
+            switch (dim) {
+                case X_COORD:
+                  range_x += 1;
+                  mult_y  += 1;
+                  mult_z  += obj->region()->dy();
+                  break;
+                case Y_COORD:
+                  range_y += 1;
+                  mult_z  += obj->region()->dx();
+                  dst_offset += (obj->region()->dx() + 1) *
+                                (obj->region()->dy()) *
+                                (obj->region()->dz());
+                  break;
+                case Z_COORD:
+                  range_z += 1;
+                  dst_offset += ((obj->region()->dx()) *
+                                (obj->region()->dy()+1) *
+                                (obj->region()->dz())) +
+                                ((obj->region()->dx() + 1) *
+                                (obj->region()->dy()) *
+                                (obj->region()->dz()));
+                  break;
+              }
+            for (int z = 0; z < range_z; z++) {
+              for (int y = 0; y < range_y; y++) {
+                for (int x = 0; x < range_x; x++) {
+                  int dest_x = x + dest(X_COORD);
+                  int dest_y = y + dest(Y_COORD);
+                  int dest_z = z + dest(Z_COORD);
+
+                  int destination_index = dest_x * mult_x +
+                                          dest_y * mult_y +
+                                          dest_z * mult_z;
+                  destination_index += dst_offset;
+
+                  int source_x = x + src(X_COORD) + 1;
+                  int source_y = y + src(Y_COORD) + 1;
+                  int source_z = z + src(Z_COORD) + 1;
+
+                  typename PhysBAM::VECTOR<int, 3>
+                    sourceIndex(source_x, source_y, source_z);
+
+                  // The PhysBAM FACE_ARRAY object abstracts away whether
+                  // the data is stored in struct of array or array of struct
+                  // form (in practice, usually struct of arrays
+                  assert(destination_index < data->size() && destination_index >= 0);
+                  buffer[destination_index] = (*fa)(dim, sourceIndex);
+                }
+              }
+            }
+          }
+        }
+      }
+      return true;
+    }
+
     /* Read the particles from the PhysicalDataInstances specified
      * by instances, limited by the GeometricRegion specified by region,
      * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
