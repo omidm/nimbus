@@ -24,8 +24,12 @@ SET(${PROJECT_NAME}_h
 #library automatically includes the lower-level ones
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
 LIST(APPEND LIBRARIES_TO_LINK ${NIMBUS_ROOT}/libnimbus.so)
-LIST(APPEND LIBRARIES_TO_LINK "/usr/local/lib/libboost_system.dylib")
+# LIST(APPEND LIBRARIES_TO_LINK "/usr/local/lib/libboost_system.dylib")
+LIST(APPEND LIBRARIES_TO_LINK "/usr/lib/libprotobuf.so")
+LIST(APPEND LIBRARIES_TO_LINK "/usr/lib/libboost_thread-mt.so")
+LIST(APPEND LIBRARIES_TO_LINK "/usr/lib/libboost_system-mt.so")
         
+SET(CMAKE_INSTALL_RPATH ${NIMBUS_ROOT})
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
         
