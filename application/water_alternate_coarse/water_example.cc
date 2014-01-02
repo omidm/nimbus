@@ -160,7 +160,6 @@ Write_Output_Files(const int frame)
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_D",projection.elliptic_solver->psi_D);
     T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
     FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
-    FILE_UTILITIES::Write_To_File(stream_type,"levelset_phi",particle_levelset.levelset.phi);
     FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
     FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
     FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
@@ -248,7 +247,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     application::DestroyTranslatorObjects(&pdv);
 
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    FILE_UTILITIES::Read_From_File(stream_type,"levelset_phi",particle_levelset.levelset.phi);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);

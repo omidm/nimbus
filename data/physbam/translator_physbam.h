@@ -470,7 +470,6 @@ namespace nimbus {
         PhysBAM::RANGE<Int3Vector> range(region->x() + 1, region->x() + region->dx(),
                                          region->y() + 1, region->y() + region->dy(),
                                          region->z() + 1, region->z() + region->dz());
-        sa->Resize(range);
 
         if (instances != NULL) {
             PdiVector::const_iterator iter = instances->begin();
