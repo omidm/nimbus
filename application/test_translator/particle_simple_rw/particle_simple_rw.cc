@@ -33,28 +33,25 @@
  */
 
  /*
-  * Test whether I understand operations on particles correctly.
+  * Tests simple read and write operations.
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <vector>
+
 #include "data/physbam/physbam_data.h"
 #include "data/physbam/physbam_include.h"
-#include "translator_physbam_test.h"  // NOLINT
-
-#define R1_VALUE 3.1400
-#define R2_VALUE 32.0
+#include "../translator_physbam_test.h"  // NOLINT
 
 const int_dimension_t X = 1;
 const int_dimension_t Y = 1;
 const int_dimension_t Z = 1;
-const int_dimension_t DX = 2;
-const int_dimension_t DY = 2;
-const int_dimension_t DZ = 2;
+const int_dimension_t DX = 1;
+const int_dimension_t DY = 1;
+const int_dimension_t DZ = 1;
 const int_dimension_t SIZE = DX * DY * DZ;
 const int AVG_PARTICLES = 10;
 const int TOTAL_PARTICLES = SIZE * AVG_PARTICLES * 5;
-const int NUM_GHOST_CELLS = 2;
-const int GRID_SCALE = 16;
 
 float getX() {
   double val = drand48();
@@ -77,20 +74,18 @@ float getZ() {
   return static_cast<float>(val);
 }
 
+// The goto clause prevents me from declaring variables. So switch.
+void Error() {
+  printf("Tests failed. Use dbg=error to observe errors.\n");
+  exit(1);
+  return;
+}
+
 int main(int argc, char *argv[]) {
   dbg_init();
   PhysBAM::LOG::Initialize_Logging();
 
-  // 5 because a particle is a 5-tuple: x, y, z, radius, collision range
-
-  int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
-  nimbus::GeometricRegion* region = new nimbus::GeometricRegion(dimensions);
-  CPdiVector* vec = new CPdiVector();
-  TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > translator;
-  typedef TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > Translator;
-
-  nimbus::GeometricRegion* r = new nimbus::GeometricRegion(dimensions);
-  nimbus::LogicalDataObject* ldo = new LogicalDataObject(1, "velocity", r);
+  // Sets up test data.
   float* floats = new float[TOTAL_PARTICLES];
   float* floatSource = new float[TOTAL_PARTICLES];
   for (int i = 0; i < TOTAL_PARTICLES; i+=5) {
@@ -100,68 +95,81 @@ int main(int argc, char *argv[]) {
     floatSource[i + 3] = floats[i + 3] = 1.0;
     floatSource[i + 4] = floats[i + 4] = 1.0;
   }
+
+  TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > translator;
+  typedef TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > Translator;
+
+  int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
+  nimbus::GeometricRegion* r = new nimbus::GeometricRegion(dimensions);
+  nimbus::LogicalDataObject* ldo = new LogicalDataObject(1, "velocity", r);
+
   PhysBAMData* pd = new PhysBAMData();
   pd->set_buffer((char*)floats, TOTAL_PARTICLES * sizeof(float));  // NOLINT
   PhysicalDataInstance* instance = new PhysicalDataInstance(1, ldo, pd, 0);
+  CPdiVector vec;
+  vec.push_back(instance);
 
-  vec->push_back(instance);
-
+  // TODO(quhang): Need more time to figure out whether the range specification
+  // corresponds to original PhysBAM.
   PhysBAM::ARRAY<float, Translator::TV_INT> phi_array;
   phi_array.Resize(Translator::TV_INT(DX, DY, DZ));
   PhysBAM::RANGE<Translator::TV> range_input(
-      X, X+DX-1, Y, Y+DY-1, Z, Z+DZ-1);
+      X, X+DX, Y, Y+DY, Z, Z+DZ);
   Translator::Grid grid(Translator::TV_INT(DX, DY, DZ), range_input, true);
-
   Translator::ParticleContainer particle_container(grid, phi_array, 0);
   particle_container.Initialize_Particle_Levelset_Grid_Values();
+
+  nimbus::GeometricRegion region(dimensions);
   float* result;
   bool pass = true;
-  pass = translator.ReadParticles(region, vec, particle_container, true);
+  pass = translator.ReadParticles(&region, &vec, particle_container, true);
 
   if (!pass) {
-    printf("Failed to read particles.\n");
-    goto error;
+    Error();
   }
 
   for (int i = 0; i < TOTAL_PARTICLES; i++) {
     floats[i] = 1.0;
   }
 
-  pass = translator.WriteParticles(region, vec, particle_container, true);
+  pass = translator.WriteParticles(&region, &vec, particle_container, true);
   if (!pass) {
-    printf("Failed to write particles.\n");
-    goto error;
+    Error();
   }
 
-  // Cannot compare to float array, which is deleted by PhysBAM data. --quhang
+  // @phil Cannot compare to float array, which is deleted by PhysBAM data.
+  // Not sure if this is expected behavior? --quhang
   // TODO(quhang) Don't assume particle values are different.
   result = reinterpret_cast<float*>(
       reinterpret_cast<PhysBAMData*>(instance->data())->buffer());
+
+  if (reinterpret_cast<PhysBAMData*>(instance->data())->size() !=
+      TOTAL_PARTICLES * sizeof(float)) {
+    printf("The number of particles is incorrect!\n");
+    Error();
+  }
+  std::vector<bool> checked(TOTAL_PARTICLES / 5, false);
   for (int i = 0; i < TOTAL_PARTICLES / 5; ++i) {
-    bool any = false;
-    for (int j = 0; j < TOTAL_PARTICLES / 5; ++j) {
-      bool flag = true;
-      for (int k = 0; k < 5; ++k)
-        if (floatSource[i*5+k] != result[j*5+k]) {
-          flag = false;
+    // Check whether the ith particle in floatSource exists in result.
+    bool findit = false;
+    // Go throught each particle in result.
+    for (int j = 0; j < TOTAL_PARTICLES / 5; ++j)
+      if (!checked[j]) {
+        bool flag = true;
+        for (int k = 0; k < 5; ++k)
+          if (floatSource[i*5+k] != result[j*5+k])
+            flag = false;
+        if (flag) {
+          findit = true;
+          checked[j] = true;
           break;
         }
-      if (flag) {
-        any = true;
-        break;
       }
-    }
-    if (!any) {
-      printf("The %dth Particle set is not found in the output.", i);
-      pass = false;
-      goto error;
+    if (!findit) {
+      printf("The %dth Particle set is not found in the output.\n", i);
+      Error();
     }
   }
 
- error:
-  if (pass) {
-    printf("Passed all tests successfully.\n");
-  } else {
-    printf("Tests failed. Use dbg=error to observe errors.\n");
-  }
+  printf("Passed all tests successfully.\n");
 }
