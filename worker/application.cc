@@ -125,7 +125,7 @@ Job* Application::CloneJob(std::string name) {
 }
 
 Data* Application::CloneData(std::string name) {
-  if (job_table_.count(name) == 0) {
+  if (data_table_.count(name) == 0) {
     dbg(DBG_ERROR, "ERROR: data name %s is not registered in the application.\n", name.c_str()); // NOLINT
     exit(-1);
   } else {
