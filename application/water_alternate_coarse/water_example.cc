@@ -203,7 +203,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     PdiVector pdv;
 
     // mac velocities
-    const std::string fvstring = std::string(APP_FACE_ARRAYS);
+    const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv))
         translator.WriteFaceArray(&application::kDomain, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
@@ -212,7 +212,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
-    const std::string lsstring = std::string(APP_SCALAR_ARRAYS);
+    const std::string lsstring = std::string(APP_PHI);
     if (application::GetTranslatorData(job, lsstring, da, &pdv))
         translator.WriteScalarArray(&application::kDomainGhost,
                                     &pdv,
@@ -228,7 +228,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     PdiVector pdv;
 
     // mac velocities
-    const std::string fvstring = std::string(APP_FACE_ARRAYS);
+    const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv))
         translator.ReadFaceArray(&application::kDomain, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
@@ -237,7 +237,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
-    const std::string lsstring = std::string(APP_SCALAR_ARRAYS);
+    const std::string lsstring = std::string(APP_PHI);
     if (application::GetTranslatorData(job, lsstring, da, &pdv))
         translator.ReadScalarArray(&application::kDomainGhost,
                                    &pdv,

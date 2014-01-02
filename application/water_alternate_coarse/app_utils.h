@@ -52,6 +52,14 @@
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
+#ifndef APP_FACE_VEL
+#define APP_FACE_VEL "face_vel"
+#endif
+
+#ifndef APP_PHI
+#define APP_PHI "phi"
+#endif
+
 namespace application {
 
     // simulation dimension
@@ -76,11 +84,11 @@ namespace application {
                                        kScale + 2*kGhostNum,
                                        kScale + 2*kGhostNum,
                                        kScale + 2*kGhostNum);
-    const int_dimension_t kFaceArrayBufSize = kScale *
+    const int_dimension_t kFaceVelBufSize = kScale *
                                               kScale * 
                                               (kScale+1) *
                                               kDimension * sizeof(T);
-    const int_dimension_t kScalarArrayBufSize = (kScale + 2*kGhostNum) *
+    const int_dimension_t kPhiBufSize = (kScale + 2*kGhostNum) *
                                                 (kScale + 2*kGhostNum) *
                                                 (kScale + 2*kGhostNum) * sizeof(T);
 

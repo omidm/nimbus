@@ -68,10 +68,10 @@ namespace application {
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
-        dbg(APP_LOG, "Registering %s\n", APP_FACE_ARRAYS);
-        RegisterData(APP_FACE_ARRAYS, new DataApp(APP_FACE_ARRAYS, kFaceArrayBufSize));
-        dbg(APP_LOG, "Registering %s\n", APP_SCALAR_ARRAYS);
-        RegisterData(APP_SCALAR_ARRAYS, new DataApp(APP_SCALAR_ARRAYS, kScalarArrayBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
+        RegisterData(APP_FACE_VEL, new DataApp(APP_FACE_VEL, kFaceVelBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_PHI);
+        RegisterData(APP_PHI, new DataApp(APP_PHI, kPhiBufSize));
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));

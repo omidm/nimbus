@@ -76,7 +76,7 @@ namespace application {
         // Face arrays
         nimbus::Parameter fa_params;
         fa_params.set_ser_data(SerializedData(""));
-        DefineData(APP_FACE_ARRAYS,
+        DefineData(APP_FACE_VEL,
                    data_ids[0],
                    partition_id1.elem(),
                    neighbor_partitions,
@@ -85,7 +85,7 @@ namespace application {
         // Scalar arrays
         nimbus::Parameter sa_params;
         sa_params.set_ser_data(SerializedData(""));
-        DefineData(APP_SCALAR_ARRAYS,
+        DefineData(APP_PHI,
                    data_ids[1],
                    partition_id2.elem(),
                    neighbor_partitions,
