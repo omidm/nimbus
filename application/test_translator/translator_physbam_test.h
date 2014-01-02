@@ -90,12 +90,12 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
     }
 
     // Allocates buckets.
-    // TODO(quhang) replaced by clearing the buckets. The currenct
-    // implementation is 100% wrong.
     for (int z = region->z(); z < region->z()+region->dz(); z++)
       for (int y = region->y(); y < region->y()+region->dy(); y++)
         for (int x = region->x(); x < region->x()+region->dx(); x++) {
           TV_INT block_index(x, y, z);
+          particle_container.Free_Particle_And_Clear_Pointer(
+              (*particles)(block_index));
           if (!(*particles)(block_index)) {
             (*particles)(block_index) = particle_container.Allocate_Particles(
                 particle_container.template_particles);
@@ -135,6 +135,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
         int_dimension_t yi = (int_dimension_t)y;
         int_dimension_t zi = (int_dimension_t)z;
 
+        // TODO(quhang): The condition is not accurate.
         // If particle is within region, copy it to particles
         if (xi >= region->x() &&
             xi < (region->x() + region->dx()) &&
@@ -177,7 +178,6 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
           } else {
             arrayPtr = &particle_container.negative_particles;
           }
-          // printf("Pointer to positive particles is %p\n", arrayPtr);
           ParticlesUnit* particles = (*arrayPtr)(TV_INT(x, y, z));
           while (particles) {
             for (int i = 1; i <= particles->array_collection->Size(); i++) {
@@ -188,13 +188,15 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
               double xi = x;
               double yi = y;
               double zi = z;
+              // TODO(quhang): I am almost 100% sure this is wrong. The
+              // condition is not accurate. But needs time to figure out.
               // If it's inside the region,
               if (xi >= region->x() &&
-                  xi <= (region->x() + region->dx()) &&
+                  xi < (region->x() + region->dx()) &&
                   yi >= region->y() &&
-                  yi <= (region->y() + region->dy()) &&
+                  yi < (region->y() + region->dy()) &&
                   zi >= region->z() &&
-                  zi <= (region->z() + region->dz())) {
+                  zi < (region->z() + region->dz())) {
                 CPdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one
                 for (; iter != instances->end(); ++iter) {
@@ -205,11 +207,11 @@ template <class VECTOR_TYPE> class TranslatorPhysBAMTest {
 
                   // If it's inside the region of the physical data instance
                   if (xi >= instanceRegion->x() &&
-                      xi <= (instanceRegion->x() + instanceRegion->dx()) &&
+                      xi < (instanceRegion->x() + instanceRegion->dx()) &&
                       yi >= instanceRegion->y() &&
-                      yi <= (instanceRegion->y() + instanceRegion->dy()) &&
+                      yi < (instanceRegion->y() + instanceRegion->dy()) &&
                       zi >= instanceRegion->z() &&
-                      zi <= (instanceRegion->z() + instanceRegion->dz())) {
+                      zi < (instanceRegion->z() + instanceRegion->dz())) {
                     scalar_t particleBuffer[5];
                     particleBuffer[0] = particle.x;
                     particleBuffer[1] = particle.y;
