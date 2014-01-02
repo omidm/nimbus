@@ -200,11 +200,10 @@ Read_Output_Files(const int frame)
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    LOG::Time("*** Save to Nimbus");
     PdiVector fvs;
     const std::string fvstring = std::string(APP_FACE_ARRAYS);
     if (application::GetTranslatorData(job, fvstring, da, &fvs))
-        translator.ReadFaceArray(&application::kDomain, &fvs, &face_velocities);
+        translator.WriteFaceArray(&application::kDomain, &fvs, &face_velocities);
     application::DestroyTranslatorObjects(&fvs);
 }
 //#####################################################################
@@ -213,7 +212,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    LOG::Time("*** Loading from Nimbus");
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
     T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
     FILE_UTILITIES::Read_From_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
@@ -226,10 +224,11 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     filename=output_directory+"/"+f+"/pressure";
     if(FILE_UTILITIES::File_Exists(filename)){std::stringstream ss;ss<<"Reading pressure "<<filename<<std::endl;LOG::filecout(ss.str());FILE_UTILITIES::Read_From_File(stream_type,filename,incompressible.projection.p);}
 
+    // mac velocities
     PdiVector fvs;
     const std::string fvstring = std::string(APP_FACE_ARRAYS);
     if (application::GetTranslatorData(job, fvstring, da, &fvs))
-        translator.WriteFaceArray(&application::kDomain, &fvs, &face_velocities);
+        translator.ReadFaceArray(&application::kDomain, &fvs, &face_velocities);
     application::DestroyTranslatorObjects(&fvs);
 
 }

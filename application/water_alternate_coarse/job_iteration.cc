@@ -101,6 +101,14 @@ namespace application {
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
         nimbus::IDSet<nimbus::job_id_t> before, after;
 
+        for (size_t i = 0; i < da.size(); ++i) {
+            nimbus::Data *d = da[i];
+            logical_data_id_t id = d->logical_id();
+            if (!application::Contains(read, id))
+                read.insert(id);
+            if (!application::Contains(write, id))
+                write.insert(id);
+        }
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;
         out_frame_ss << frame;

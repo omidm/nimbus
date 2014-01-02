@@ -54,22 +54,23 @@ namespace application {
                            const nimbus::DataArray& da,
                            nimbus::PdiVector *vec) {
         bool success = false;
-        if (da.empty())
+        if (da.empty()) {
             return success;
+        }
         std::set<Data *> ds;
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
+            std::string name_str = d->name();
             if (d->name() == name)
                 ds.insert(*it);
         }
-        if (ds.empty())
-            return false;
+        if (ds.empty()) {
+            return success;
+        }
         for (std::set<Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
             Data *d = *it;
-            if (d->name() != name)
-                continue;
+            std::string name_str = d->name();
             const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
-            printf("*** Got logical object %p\n", ldo);
             nimbus::PhysicalDataInstance *pdi = new
                 nimbus::PhysicalDataInstance(d->physical_id(),
                                              ldo, d,
@@ -90,7 +91,6 @@ namespace application {
 
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id) {
-        return false;
         nimbus::IDSet<nimbus::logical_data_id_t>::IDSetIter it;
         for (it = data_set.begin(); it != data_set.end(); ++it) {
             if (*it == id) {
