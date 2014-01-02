@@ -464,12 +464,11 @@ namespace nimbus {
      * ScalarArray specified by dest. This allocates a new scalar array. */
     virtual ScalarArray* ReadScalarArray(const GeometricRegion* region,
                                          const PdiVector* instances,
-                                         ScalarArray *sa,
-                                         int offset) {
+                                         ScalarArray *sa) {
 
-        PhysBAM::RANGE<Int3Vector> range(region->x() + 1, region->x() + region->dx(),
-                                         region->y() + 1, region->y() + region->dy(),
-                                         region->z() + 1, region->z() + region->dz());
+        Int3Vector min = (sa->domain).Minimum_Corner();
+        Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
+        GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
         if (instances != NULL) {
             PdiVector::const_iterator iter = instances->begin();
@@ -483,8 +482,8 @@ namespace nimbus {
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
-                    Dimension3Vector dest = GetOffset(region, inst->region());
                     Dimension3Vector src  = GetOffset(inst->region(), region);
+                    Dimension3Vector dest = GetOffset(&dest_region, inst->region());
 
                     for (int z = 0; z < overlap(Z_COORD); z++) {
                         for (int y = 0; y < overlap(Y_COORD); y++) {
@@ -496,9 +495,9 @@ namespace nimbus {
                                     (source_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (source_y * (inst->region()->dx())) +
                                     source_x;
-                                int dest_x = x + dest(X_COORD) + 1 - offset;
-                                int dest_y = y + dest(Y_COORD) + 1 - offset;
-                                int dest_z = z + dest(Z_COORD) + 1 - offset;
+                                int dest_x = x + dest(X_COORD) + 1;
+                                int dest_y = y + dest(Y_COORD) + 1;
+                                int dest_z = z + dest(Z_COORD) + 1;
                                 Int3Vector destination_index(dest_x, dest_y, dest_z);
                                 assert(source_index < data->size() && source_index >= 0);
                                 (*sa)(destination_index) = buffer[source_index];
@@ -515,12 +514,14 @@ namespace nimbus {
      * limited by the GeometricRegion region. This frees the physbam scalar array. */
     virtual bool WriteScalarArray(const GeometricRegion* region,
                                   PdiVector* instances,
-                                  ScalarArray* sa,
-                                  int offset) {
+                                  ScalarArray* sa) {
         if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
             dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
-            dbg(DBG_WARN, "Region is %i, %i, %i\n", region->dx(), region->dy(), region->dz());
         }
+
+        Int3Vector min = (sa->domain).Minimum_Corner();
+        Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
+        GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
         if (instances != NULL) {
             PdiVector::iterator iter = instances->begin();
@@ -536,7 +537,7 @@ namespace nimbus {
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
-                    Dimension3Vector src  = GetOffset(region, inst->region());
+                    Dimension3Vector src  = GetOffset(&src_region, inst->region());
                     Dimension3Vector dest = GetOffset(inst->region(), region);
 
                     for (int z = 0; z < overlap(Z_COORD); z++) {
@@ -549,9 +550,9 @@ namespace nimbus {
                                     (dest_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (dest_y * (inst->region()->dx())) +
                                     dest_x;
-                                int source_x = x + src(X_COORD) + 1 - offset;
-                                int source_y = y + src(Y_COORD) + 1 - offset;
-                                int source_z = z + src(Z_COORD) + 1 - offset;
+                                int source_x = x + src(X_COORD) + 1;
+                                int source_y = y + src(Y_COORD) + 1;
+                                int source_z = z + src(Z_COORD) + 1;
                                 Int3Vector source_index(source_x, source_y, source_z);
                                 assert(destination_index < data->size() && destination_index >= 0);
                                 buffer[destination_index] = (*sa)(source_index);

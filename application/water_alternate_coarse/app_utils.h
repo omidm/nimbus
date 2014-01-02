@@ -70,9 +70,16 @@ namespace application {
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
     const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
-    const GeometricRegion kDomainGhost(-kGhostNum, -kGhostNum, -kGhostNum,
-                                       kScale + 2*kGhostNum, kScale + 2*kGhostNum, kScale + 2*kGhostNum);
-    const int_dimension_t kFaceArrayBufSize = kScale * kScale * (kScale+1) * kDimension * sizeof(T);
+    const GeometricRegion kDomainGhost(-kGhostNum,
+                                       -kGhostNum,
+                                       -kGhostNum,
+                                       kScale + 2*kGhostNum,
+                                       kScale + 2*kGhostNum,
+                                       kScale + 2*kGhostNum);
+    const int_dimension_t kFaceArrayBufSize = kScale *
+                                              kScale * 
+                                              (kScale+1) *
+                                              kDimension * sizeof(T);
     const int_dimension_t kScalarArrayBufSize = (kScale + 2*kGhostNum) *
                                                 (kScale + 2*kGhostNum) *
                                                 (kScale + 2*kGhostNum) * sizeof(T);

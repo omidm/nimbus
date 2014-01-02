@@ -216,8 +216,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, lsstring, da, &pdv))
         translator.WriteScalarArray(&application::kDomainGhost,
                                     &pdv,
-                                    &particle_levelset.levelset.phi,
-                                    application::kGhostNum);
+                                    &particle_levelset.levelset.phi);
     application::DestroyTranslatorObjects(&pdv);
 }
 //#####################################################################
@@ -242,8 +241,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, lsstring, da, &pdv))
         translator.ReadScalarArray(&application::kDomainGhost,
                                    &pdv,
-                                   &particle_levelset.levelset.phi,
-                                   application::kGhostNum);
+                                   &particle_levelset.levelset.phi);
     application::DestroyTranslatorObjects(&pdv);
 
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);

@@ -61,9 +61,7 @@ namespace application {
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
             std::string name_str = d->name();
-            printf("*** Found data object %s\n", name_str.c_str());
             if (d->name() == name) {
-                printf("*** Inserting %s\n", name_str.c_str());
                 ds.insert(*it);
             }
         }
@@ -74,7 +72,6 @@ namespace application {
             Data *d = *it;
             std::string name_str = d->name();
             const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
-            printf("*** Inserint logcal object with region %llu, %llu, %llu\n", ldo->region()->dx(), ldo->region()->dy(), ldo->region()->dz());
             nimbus::PhysicalDataInstance *pdi = new
                 nimbus::PhysicalDataInstance(d->physical_id(),
                                              ldo, d,
