@@ -82,16 +82,17 @@ namespace application {
     const int kPressureGhostNum = 1;
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
-    const GeometricRegion kDomain(0, 0, 0, kScale, kScale, kScale);
-    const GeometricRegion kDomainGhost(-kGhostNum,
-                                       -kGhostNum,
-                                       -kGhostNum,
+    // follow physbam convenctions here, otherwise translator becomes messy
+    const GeometricRegion kDomain(1, 1, 1, kScale, kScale, kScale);
+    const GeometricRegion kDomainGhost(-kGhostNum + 1,
+                                       -kGhostNum + 1,
+                                       -kGhostNum + 1,
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2);
-    const GeometricRegion kDomainPressureGhost(-kPressureGhostNum,
-                                               -kPressureGhostNum,
-                                               -kPressureGhostNum,
+    const GeometricRegion kDomainPressureGhost(-kPressureGhostNum + 1,
+                                               -kPressureGhostNum + 1,
+                                               -kPressureGhostNum + 1,
                                                kScale + kPressureGhostNum*2,
                                                kScale + kPressureGhostNum*2,
                                                kScale + kPressureGhostNum*2);
