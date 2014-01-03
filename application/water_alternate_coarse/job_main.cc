@@ -103,7 +103,7 @@ namespace application {
         // Particles
         nimbus::Parameter particle_params;
         part_params.set_ser_data(SerializedData(""));
-        DefineData(APP_FACE_VEL,
+        DefineData(APP_POS_PARTICLES,
                    data_ids[3],
                    partition_id4.elem(),
                    neighbor_partitions,
@@ -120,11 +120,11 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
-        read.insert(data_ids[3]);
+        //read.insert(data_ids[3]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
-        write.insert(data_ids[3]);
+        //write.insert(data_ids[3]);
         after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
@@ -145,11 +145,11 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
-        read.insert(data_ids[3]);
+        //read.insert(data_ids[3]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
-        write.insert(data_ids[3]);
+        //write.insert(data_ids[3]);
         before.insert(job_ids[0]);
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;

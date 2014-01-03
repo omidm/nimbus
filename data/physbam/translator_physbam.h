@@ -282,8 +282,8 @@ namespace nimbus {
      * by instances, limited by the GeometricRegion specified by region,
      * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
      * This will clear out any existing data in particles first. */
-    bool ReadParticles(GeometricRegion* region,
-                       CPdiVector* instances,
+    bool ReadParticles(const GeometricRegion* region,
+                       const PdiVector* instances,
                        ParticleContainer& particle_container,
                        bool positive) {
       // TODO(quhang) Check whether particle_container has valid particle data
@@ -312,7 +312,7 @@ namespace nimbus {
         return false;
       }
 
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::const_iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
