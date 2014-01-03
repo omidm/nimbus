@@ -64,14 +64,16 @@ namespace application {
         nimbus::ID<partition_id_t> partition_id1(0);
         nimbus::ID<partition_id_t> partition_id2(1);
         nimbus::ID<partition_id_t> partition_id3(2);
+        nimbus::ID<partition_id_t> partition_id4(3);
         nimbus::Parameter part_params;
-        DefinePartition(partition_id1, kDomain, part_params);
-        DefinePartition(partition_id2, kDomainGhost, part_params);
-        DefinePartition(partition_id3, kDomainPressureGhost, part_params);
+        DefinePartition(partition_id1, kDomainFaceVel, part_params);
+        DefinePartition(partition_id2, kDomainPhi, part_params);
+        DefinePartition(partition_id3, kDomainPressure, part_params);
+        DefinePartition(partition_id4, kDomainParticles, part_params);
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 3;
+        int data_num = 4;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
@@ -98,6 +100,15 @@ namespace application {
                    neighbor_partitions,
                    sa_params);
 
+        // Particles
+        nimbus::Parameter particle_params;
+        part_params.set_ser_data(SerializedData(""));
+        DefineData(APP_FACE_VEL,
+                   data_ids[3],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+
         // Job setup
         int job_num = 2;
         std::vector<nimbus::job_id_t> job_ids;
@@ -109,9 +120,11 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
+        read.insert(data_ids[3]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
+        write.insert(data_ids[3]);
         after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
@@ -132,9 +145,11 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
+        read.insert(data_ids[3]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
+        write.insert(data_ids[3]);
         before.insert(job_ids[0]);
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;

@@ -64,6 +64,10 @@
 #define APP_PRESSURE "pressure"
 #endif
 
+#ifndef APP_POS_PARTICLES
+#define APP_POS_PARTICLES "pos_particles"
+#endif
+
 namespace application {
 
     // simulation dimension
@@ -90,12 +94,16 @@ namespace application {
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2);
-    const GeometricRegion kDomainPressureGhost(-kPressureGhostNum + 1,
-                                               -kPressureGhostNum + 1,
-                                               -kPressureGhostNum + 1,
-                                               kScale + kPressureGhostNum*2,
-                                               kScale + kPressureGhostNum*2,
-                                               kScale + kPressureGhostNum*2);
+    const GeometricRegion kDomainFaceVel = kDomain;
+    const GeometricRegion kDomainPhi = kDomainGhost;
+    const GeometricRegion kDomainParticles = kDomainGhost;
+    const GeometricRegion kDomainPressure(-kPressureGhostNum + 1,
+                                          -kPressureGhostNum + 1,
+                                          -kPressureGhostNum + 1,
+                                          kScale + kPressureGhostNum*2,
+                                          kScale + kPressureGhostNum*2,
+                                          kScale + kPressureGhostNum*2);
+
     const int_dimension_t kFaceVelBufSize = kScale *
                                             kScale * 
                                             (kScale+1) *
@@ -106,6 +114,7 @@ namespace application {
     const int_dimension_t kPressureBufSize = (kScale + 2*kPressureGhostNum) *
                                              (kScale + 2*kPressureGhostNum) *
                                              (kScale + 2*kPressureGhostNum) * sizeof(T);
+    const int_dimension_t kParticlesBufSize = 0;
 
     // TODO: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and
