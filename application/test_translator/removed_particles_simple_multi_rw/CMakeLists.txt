@@ -5,7 +5,7 @@ MARK_AS_ADVANCED(CMAKE_BACKWARDS_COMPATIBILITY)
 ###########################################################################
 
 #Set a project name
-SET(PROJECT_NAME particle_simple_rw)
+SET(PROJECT_NAME removed_particle_simple_multi_rw)
 PROJECT(${PROJECT_NAME})
 
 #Set Nimbus root and prtobuf files directory
@@ -16,7 +16,7 @@ include_directories(${NIMBUS_ROOT})
 
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
-        ${PROJECT_SOURCE_DIR}/particle_simple_rw.cc)
+        ${PROJECT_SOURCE_DIR}/removed_particle_simple_multi_rw.cc)
 SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/../translator_physbam_test.h)
         

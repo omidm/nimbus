@@ -46,7 +46,7 @@ namespace nimbus {
  * \brief Brief description.
  * \return
 */
-PhysBAMData::PhysBAMData(): size_(0), buffer_(0) {}
+PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 
 
 /**
