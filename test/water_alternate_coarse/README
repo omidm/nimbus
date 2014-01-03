@@ -25,3 +25,13 @@ Run:
 Note: Right now, you will have to run both scheduler and worker assuming there
 is only 1 worker. That means the command line argument to both programs (1. and
 2.) should be 1.
+
+------
+Notes:
+------
+
+When you run ./worker 1 in this directory itself (after starting the
+scheduler), an output directory will be dumped here. This contains the frames
+from the simulation. You can view the frames using physbam opengl_3d program,
+and check results visually. More comprehensive verification still needs to be
+added.

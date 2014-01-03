@@ -37,3 +37,11 @@ File names are relative to the current directory, physbam-lib/Public_Library
 or nimbus.
 
 ------------------------------------------------------------------------------
+
+------
+Notes:
+------
+
+In order to chage scale/ number of frames/ simulation parameters, change the
+constants in app_utils.h and rebuild the code. Will add support for command
+line arguments later.
