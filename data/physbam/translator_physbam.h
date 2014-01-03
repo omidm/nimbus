@@ -101,10 +101,6 @@ namespace nimbus {
     virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
-      Int3Vector min = (fa->domain_indices).Minimum_Corner() - 1;
-      Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
-      GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
-
       if (objects != NULL) {
         PdiVector::const_iterator iter = objects->begin();
         for (; iter != objects->end(); ++iter) {
@@ -117,7 +113,7 @@ namespace nimbus {
             scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
             Dimension3Vector src = GetOffset(obj->region(), region);
-            Dimension3Vector dest = GetOffset(&dest_region, obj->region());
+            Dimension3Vector dest = GetOffset(region, obj->region());
 
             //  x, y and z values are stored separately due to the
             // difference in number of x, y and z values in face arrays
@@ -199,10 +195,6 @@ namespace nimbus {
         //  return false;
       }
 
-      Int3Vector min = (fa->domain_indices).Minimum_Corner() - 1;
-      Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
-      GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
-
       if (objects != NULL) {
         PdiVector::iterator iter = objects->begin();
 
@@ -217,7 +209,7 @@ namespace nimbus {
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
           scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
-          Dimension3Vector src = GetOffset(&src_region, obj->region());
+          Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
 
           //  x, y and z values are stored separately due to the
@@ -265,9 +257,9 @@ namespace nimbus {
                                           dest_z * mult_z;
                   destination_index += dst_offset;
 
-                  int source_x = x + src(X_COORD) + 1;
-                  int source_y = y + src(Y_COORD) + 1;
-                  int source_z = z + src(Z_COORD) + 1;
+                  int source_x = x + src(X_COORD) + region->x();
+                  int source_y = y + src(Y_COORD) + region->y();
+                  int source_z = z + src(Z_COORD) + region->z();
 
                   typename PhysBAM::VECTOR<int, 3>
                     sourceIndex(source_x, source_y, source_z);
@@ -290,8 +282,8 @@ namespace nimbus {
      * by instances, limited by the GeometricRegion specified by region,
      * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
      * This will clear out any existing data in particles first. */
-    bool ReadParticles(GeometricRegion* region,
-                       CPdiVector* instances,
+    bool ReadParticles(const GeometricRegion* region,
+                       const PdiVector* instances,
                        ParticleContainer& particle_container,
                        bool positive) {
       // TODO(quhang) Check whether particle_container has valid particle data
@@ -304,9 +296,9 @@ namespace nimbus {
       }
 
       // Allocates buckets.
-      for (int z = 1; z <= region->dz(); z++)
-        for (int y = 1; y <= region->dy(); y++)
-          for (int x = 1; x <= region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++)
+        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++)
+          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
             TV_INT block_index(x, y, z);
             particle_container.Free_Particle_And_Clear_Pointer(
                 (*particles)(block_index));
@@ -320,7 +312,7 @@ namespace nimbus {
         return false;
       }
 
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::const_iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
@@ -353,12 +345,12 @@ namespace nimbus {
 
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
-          if (xi >= 1 &&
-              xi <= region->dx() &&
-              yi >= 1 &&
-              yi <= region->dy() &&
-              zi >= 1 &&
-              zi <= region->dz()) {
+          if (xi >= region->x() &&
+              xi <= region->x() + region->dx() - 1 &&
+              yi >= region->y() &&
+              yi <= region->y() + region->dy() - 1 &&
+              zi >= region->z() &&
+              zi <= region->z() + region->dz() - 1) {
             ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
 
             // Note that Add_Particle traverses a linked list of particle
@@ -378,20 +370,20 @@ namespace nimbus {
     /* Write the Particle data in particles into the
      * PhysicalDataInstances specified by instances, limited by the
      * GeometricRegion region. */
-    bool WriteParticles(GeometricRegion* region,
-                        CPdiVector* instances,
+    bool WriteParticles(const GeometricRegion* region,
+                        PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->ClearTempBuffer();
       }
 
-      for (int z = 1; z <= region->dz(); z++) {
-        for (int y = 1; y <= region->dy(); y++) {
-          for (int x = 1; x <= region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++) {
+        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++) {
+          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
             ParticlesArray* arrayPtr;
             if (positive) {
               arrayPtr = &particle_container.positive_particles;
@@ -417,7 +409,7 @@ namespace nimbus {
                     yi < (region->y() + region->dy()) &&
                     zi >= region->z() &&
                     zi < (region->z() + region->dz())) {
-                  CPdiVector::iterator iter = instances->begin();
+                  PdiVector::iterator iter = instances->begin();
                   // Iterate across instances, checking each one
                   for (; iter != instances->end(); ++iter) {
                     const PhysicalDataInstance* instance = *iter;
@@ -640,10 +632,6 @@ namespace nimbus {
     virtual ScalarArray* ReadScalarArray(const GeometricRegion* region,
                                          const PdiVector* instances,
                                          ScalarArray *sa) {
-        Int3Vector min = (sa->domain).Minimum_Corner() - 1;
-        Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
-        GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
-
         if (instances != NULL) {
             PdiVector::const_iterator iter = instances->begin();
             for (; iter != instances->end(); ++iter) {
@@ -657,7 +645,7 @@ namespace nimbus {
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
                     Dimension3Vector src  = GetOffset(inst->region(), region);
-                    Dimension3Vector dest = GetOffset(&dest_region, inst->region());
+                    Dimension3Vector dest = GetOffset(region, inst->region());
 
                     for (int z = 0; z < overlap(Z_COORD); z++) {
                         for (int y = 0; y < overlap(Y_COORD); y++) {
@@ -669,9 +657,9 @@ namespace nimbus {
                                     (source_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (source_y * (inst->region()->dx())) +
                                     source_x;
-                                int dest_x = x + dest(X_COORD) + 1;
-                                int dest_y = y + dest(Y_COORD) + 1;
-                                int dest_z = z + dest(Z_COORD) + 1;
+                                int dest_x = x + dest(X_COORD) + region->x();
+                                int dest_y = y + dest(Y_COORD) + region->y();
+                                int dest_z = z + dest(Z_COORD) + region->z();
                                 Int3Vector destination_index(dest_x, dest_y, dest_z);
                                 assert(source_index < data->size() && source_index >= 0);
                                 (*sa)(destination_index) = buffer[source_index];
@@ -693,12 +681,8 @@ namespace nimbus {
             dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
             Int3Vector cp = sa->counts;
             dbg(DBG_WARN, "WARN: physbam array has size %i, %i, %i\n", cp.x, cp.y, cp.z);
-            dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz());
+            dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz()); // NOLINT
         }
-
-        Int3Vector min = (sa->domain).Minimum_Corner() - 1;
-        Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
-        GeometricRegion src_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
 
         if (instances != NULL) {
             PdiVector::iterator iter = instances->begin();
@@ -714,7 +698,7 @@ namespace nimbus {
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
-                    Dimension3Vector src  = GetOffset(&src_region, inst->region());
+                    Dimension3Vector src  = GetOffset(region, inst->region());
                     Dimension3Vector dest = GetOffset(inst->region(), region);
 
                     for (int z = 0; z < overlap(Z_COORD); z++) {
@@ -727,9 +711,9 @@ namespace nimbus {
                                     (dest_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (dest_y * (inst->region()->dx())) +
                                     dest_x;
-                                int source_x = x + src(X_COORD) + 1;
-                                int source_y = y + src(Y_COORD) + 1;
-                                int source_z = z + src(Z_COORD) + 1;
+                                int source_x = x + src(X_COORD) + region->x();
+                                int source_y = y + src(Y_COORD) + region->y();
+                                int source_z = z + src(Z_COORD) + region->z();
                                 Int3Vector source_index(source_x, source_y, source_z);
                                 assert(destination_index < data->size() && destination_index >= 0);
                                 buffer[destination_index] = (*sa)(source_index);
