@@ -370,11 +370,11 @@ namespace nimbus {
     /* Write the Particle data in particles into the
      * PhysicalDataInstances specified by instances, limited by the
      * GeometricRegion region. */
-    bool WriteParticles(GeometricRegion* region,
-                        CPdiVector* instances,
+    bool WriteParticles(const GeometricRegion* region,
+                        PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
@@ -409,7 +409,7 @@ namespace nimbus {
                     yi < (region->y() + region->dy()) &&
                     zi >= region->z() &&
                     zi < (region->z() + region->dz())) {
-                  CPdiVector::iterator iter = instances->begin();
+                  PdiVector::iterator iter = instances->begin();
                   // Iterate across instances, checking each one
                   for (; iter != instances->end(); ++iter) {
                     const PhysicalDataInstance* instance = *iter;
