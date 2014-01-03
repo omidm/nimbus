@@ -73,7 +73,7 @@ namespace application {
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 4;
+        int data_num = 7;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
@@ -108,6 +108,11 @@ namespace application {
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
+        DefineData(APP_NEG_PARTICLES,
+                   data_ids[4],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
 
         // Job setup
         int job_num = 2;
@@ -120,11 +125,13 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
-        //read.insert(data_ids[3]);
+        read.insert(data_ids[3]);
+        read.insert(data_ids[4]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
-        //write.insert(data_ids[3]);
+        write.insert(data_ids[3]);
+        write.insert(data_ids[4]);
         after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
@@ -145,11 +152,13 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
-        //read.insert(data_ids[3]);
+        read.insert(data_ids[3]);
+        read.insert(data_ids[4]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
-        //write.insert(data_ids[3]);
+        write.insert(data_ids[3]);
+        write.insert(data_ids[4]);
         before.insert(job_ids[0]);
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;

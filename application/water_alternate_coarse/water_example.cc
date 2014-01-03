@@ -227,14 +227,23 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                                     &particle_levelset.levelset.phi);
     application::DestroyTranslatorObjects(&pdv);
 
-    // positive particles
-    const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv))
-        translator.WriteParticles(&application::kDomainParticles,
-                                  &pdv,
-                                  particle_levelset,
-                                  true);
-    application::DestroyTranslatorObjects(&pdv);
+//    // positive particles
+//    const std::string ppstring = std::string(APP_POS_PARTICLES);
+//    if (application::GetTranslatorData(job, ppstring, da, &pdv))
+//        translator.WriteParticles(&application::kDomainParticles,
+//                                  &pdv,
+//                                  particle_levelset,
+//                                  true);
+//    application::DestroyTranslatorObjects(&pdv);
+//
+//    // negative particles
+//    const std::string npstring = std::string(APP_NEG_PARTICLES);
+//    if (application::GetTranslatorData(job, npstring, da, &pdv))
+//        translator.WriteParticles(&application::kDomainParticles,
+//                                  &pdv,
+//                                  particle_levelset,
+//                                  false);
+//    application::DestroyTranslatorObjects(&pdv);
 }
 //#####################################################################
 // Write_Output_Files
@@ -269,17 +278,26 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                                    &particle_levelset.levelset.phi);
     application::DestroyTranslatorObjects(&pdv);
 
-    // positive particles
-    const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv))
-        translator.ReadParticles(&application::kDomainParticles,
-                                 &pdv,
-                                 particle_levelset,
-                                 true);
-    application::DestroyTranslatorObjects(&pdv);
+//    // positive particles
+//    const std::string ppstring = std::string(APP_POS_PARTICLES);
+//    if (application::GetTranslatorData(job, ppstring, da, &pdv))
+//        translator.ReadParticles(&application::kDomainParticles,
+//                                 &pdv,
+//                                 particle_levelset,
+//                                 true);
+//    application::DestroyTranslatorObjects(&pdv);
+//
+//    // negative particles
+//    const std::string npstring = std::string(APP_NEG_PARTICLES);
+//    if (application::GetTranslatorData(job, npstring, da, &pdv))
+//        translator.ReadParticles(&application::kDomainParticles,
+//                                 &pdv,
+//                                 particle_levelset,
+//                                 false);
+//    application::DestroyTranslatorObjects(&pdv);
 
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    //FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
+    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
     FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
