@@ -681,7 +681,7 @@ namespace nimbus {
             dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
             Int3Vector cp = sa->counts;
             dbg(DBG_WARN, "WARN: physbam array has size %i, %i, %i\n", cp.x, cp.y, cp.z);
-            dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz());
+            dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz()); // NOLINT
         }
 
         if (instances != NULL) {
