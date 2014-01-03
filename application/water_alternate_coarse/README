@@ -22,6 +22,9 @@ Nimbus:
 Note: Can alternatively build a debug version by replacing Release with Debug
 (Build/Debug).
 
+Note: On Mac, you should have g++-4.5 in /usr/local/bin for this make setup to
+work.
+
 Troubleshooting:
 
 Step 4: The ccmake prompt should have 3 simple options. If there is a set of full 

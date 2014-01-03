@@ -19,5 +19,9 @@ you should have Build/Debug in application/water_alternate_coarse.
 Run:
 ----
 
-1. Start scheduler in scheduler_single.
+1. Start scheduler in scheduler_alternate_coarse.
 2. Start the worker in this directory.
+
+Note: Right now, you will have to run both scheduler and worker assuming there
+is only 1 worker. That means the command line argument to both programs (1. and
+2.) should be 1.
