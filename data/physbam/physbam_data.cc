@@ -56,8 +56,10 @@ PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 */
 Data * PhysBAMData::Clone() {
   PhysBAMData* d = new PhysBAMData();
-  char* buf = static_cast<char*>(malloc(size_));
-  if (buffer_)
+  char *buf = NULL;
+  if (size_)
+    buf = static_cast<char*>(malloc(size_));
+  if (size_ && buffer_)
     memcpy(buf, buffer_, size_);
   d->set_buffer(buf, size_);
   return d;
@@ -70,7 +72,7 @@ Data * PhysBAMData::Clone() {
  * \return
 */
 void PhysBAMData::Create() {
-  if (!buffer_)
+  if (size_ && !buffer_)
       buffer_ = static_cast<char*>(malloc(size_));
 }
 
@@ -146,8 +148,9 @@ int PhysBAMData::CommitTempBuffer() {
   // The usage of read/write/tellp seems incorrect.  -quhang
   // int len = temp_buffer_->tellp();
   int len = temp_buffer_->str().size();
-  delete buffer_;
-
+  if (buffer_)
+    delete buffer_;
+  size_ = len;
   buffer_ = static_cast<char*>(malloc(len));
   temp_buffer_->read(buffer_, len);
   temp_buffer_->clear();
