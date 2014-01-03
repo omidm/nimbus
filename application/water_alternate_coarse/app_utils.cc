@@ -60,7 +60,6 @@ namespace application {
         std::set<Data *> ds;
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
-            std::string name_str = d->name();
             if (d->name() == name) {
                 ds.insert(*it);
             }

@@ -472,7 +472,7 @@ namespace nimbus {
                 Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
 
                 if (HasOverlap(overlap)) {
-                    dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray.\n",
+                    dbg(DBG_TRANSLATE, "Incorporating physical object %lu into scalar array.\n",
                             inst->id());
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
