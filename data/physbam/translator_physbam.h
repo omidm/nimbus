@@ -90,7 +90,6 @@ namespace nimbus {
     virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
-
       Int3Vector min = (fa->domain_indices).Minimum_Corner() - 1;
       Int3Vector delta = (fa->domain_indices).Edge_Lengths() + 1;
       GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
@@ -462,7 +461,6 @@ namespace nimbus {
     virtual ScalarArray* ReadScalarArray(const GeometricRegion* region,
                                          const PdiVector* instances,
                                          ScalarArray *sa) {
-
         Int3Vector min = (sa->domain).Minimum_Corner() - 1;
         Int3Vector delta = (sa->domain).Edge_Lengths() + 1;
         GeometricRegion dest_region(min.x, min.y, min.z, delta.x, delta.y, delta.z);
@@ -514,6 +512,9 @@ namespace nimbus {
                                   ScalarArray* sa) {
         if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
             dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
+            Int3Vector cp = sa->counts;
+            dbg(DBG_WARN, "WARN: physbam array has size %i, %i, %i\n", cp.x, cp.y, cp.z);
+            dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz());
         }
 
         Int3Vector min = (sa->domain).Minimum_Corner() - 1;

@@ -86,15 +86,15 @@ namespace application {
     const GeometricRegion kDomainGhost(-kGhostNum,
                                        -kGhostNum,
                                        -kGhostNum,
-                                       kScale + kGhostNum,
-                                       kScale + kGhostNum,
-                                       kScale + kGhostNum);
+                                       kScale + kGhostNum*2,
+                                       kScale + kGhostNum*2,
+                                       kScale + kGhostNum*2);
     const GeometricRegion kDomainPressureGhost(-kPressureGhostNum,
                                                -kPressureGhostNum,
                                                -kPressureGhostNum,
-                                               kScale + kPressureGhostNum,
-                                               kScale + kPressureGhostNum,
-                                               kScale + kPressureGhostNum);
+                                               kScale + kPressureGhostNum*2,
+                                               kScale + kPressureGhostNum*2,
+                                               kScale + kPressureGhostNum*2);
     const int_dimension_t kFaceVelBufSize = kScale *
                                             kScale * 
                                             (kScale+1) *
