@@ -296,9 +296,9 @@ namespace nimbus {
       }
 
       // Allocates buckets.
-      for (int z = 1; z <= region->dz(); z++)
-        for (int y = 1; y <= region->dy(); y++)
-          for (int x = 1; x <= region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++)
+        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++)
+          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
             TV_INT block_index(x, y, z);
             particle_container.Free_Particle_And_Clear_Pointer(
                 (*particles)(block_index));
@@ -345,12 +345,12 @@ namespace nimbus {
 
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
-          if (xi >= 1 &&
-              xi <= region->dx() &&
-              yi >= 1 &&
-              yi <= region->dy() &&
-              zi >= 1 &&
-              zi <= region->dz()) {
+          if (xi >= region->x() &&
+              xi <= region->x() + region->dx() - 1 &&
+              yi >= region->y() &&
+              yi <= region->y() + region->dy() - 1 &&
+              zi >= region->z() &&
+              zi <= region->z() + region->dz() - 1) {
             ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
 
             // Note that Add_Particle traverses a linked list of particle
@@ -381,9 +381,9 @@ namespace nimbus {
         data->ClearTempBuffer();
       }
 
-      for (int z = 1; z <= region->dz(); z++) {
-        for (int y = 1; y <= region->dy(); y++) {
-          for (int x = 1; x <= region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++) {
+        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++) {
+          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
             ParticlesArray* arrayPtr;
             if (positive) {
               arrayPtr = &particle_container.positive_particles;
