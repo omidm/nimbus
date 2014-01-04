@@ -305,10 +305,10 @@ namespace nimbus {
             // particle_container.levelset.grid
             particle_container.Free_Particle_And_Clear_Pointer(
                 (*particles)(block_index));
-            if (!(*particles)(block_index)) {
-              (*particles)(block_index) = particle_container.Allocate_Particles(
-                  particle_container.template_particles);
-            }
+//            if (!(*particles)(block_index)) {
+//              (*particles)(block_index) = particle_container.Allocate_Particles(
+//                  particle_container.template_particles);
+//            }
           }
 
       if (instances == NULL) {
@@ -355,6 +355,11 @@ namespace nimbus {
               zi >= region->z() &&
               zi < region->z()+region->dz()) {
             ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
+            TV_INT bi(xi, yi, zi);
+            if (!(*particles)(bi))
+              (*particles)(bi) = particle_container.
+                  Allocate_Particles(particle_container.template_particles);
+            cellParticles = (*particles)(bi);
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
