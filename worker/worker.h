@@ -83,6 +83,7 @@ class Worker {
   virtual void ProcessJobDoneCommand(JobDoneCommand* command);
   virtual void ProcessLdoAddCommand(LdoAddCommand* command);
   virtual void ProcessLdoRemoveCommand(LdoRemoveCommand* command);
+  virtual void ProcessTerminateCommand(TerminateCommand* command);
 
   worker_id_t id();
   void set_id(worker_id_t id);
