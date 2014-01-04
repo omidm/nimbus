@@ -113,6 +113,16 @@ namespace application {
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
+        DefineData(APP_POS_REM_PARTICLES,
+                   data_ids[5],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+        DefineData(APP_NEG_REM_PARTICLES,
+                   data_ids[6],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
 
         // Job setup
         int job_num = 2;
@@ -127,11 +137,15 @@ namespace application {
         read.insert(data_ids[2]);
         read.insert(data_ids[3]);
         read.insert(data_ids[4]);
+        read.insert(data_ids[5]);
+        read.insert(data_ids[6]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
         write.insert(data_ids[3]);
         write.insert(data_ids[4]);
+        write.insert(data_ids[5]);
+        write.insert(data_ids[6]);
         after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
@@ -154,11 +168,15 @@ namespace application {
         read.insert(data_ids[2]);
         read.insert(data_ids[3]);
         read.insert(data_ids[4]);
+        read.insert(data_ids[5]);
+        read.insert(data_ids[6]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
         write.insert(data_ids[3]);
         write.insert(data_ids[4]);
+        write.insert(data_ids[5]);
+        write.insert(data_ids[6]);
         before.insert(job_ids[0]);
         nimbus::Parameter loop_params;
         std::stringstream out_frame_ss;

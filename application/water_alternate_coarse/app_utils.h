@@ -72,6 +72,14 @@
 #define APP_NEG_PARTICLES "neg_particles"
 #endif
 
+#ifndef APP_POS_REM_PARTICLES
+#define APP_POS_REM_PARTICLES "pos_rem_particles"
+#endif
+
+#ifndef APP_NEG_REM_PARTICLES
+#define APP_NEG_REM_PARTICLES "neg_rem_particles"
+#endif
+
 namespace application {
 
     // simulation dimension

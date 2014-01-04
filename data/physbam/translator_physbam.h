@@ -470,10 +470,10 @@ namespace nimbus {
       return true;
     }
 
-    bool ReadRemovedParticles(GeometricRegion* region,
-                       CPdiVector* instances,
-                       ParticleContainer& particle_container,
-                       bool positive) {
+    bool ReadRemovedParticles(const GeometricRegion* region,
+                              const PdiVector* instances,
+                              ParticleContainer& particle_container,
+                              bool positive) {
       // TODO(quhang) Check whether particle_container has valid particle data
       // before moving on.
       RemovedParticlesArray* particles;
@@ -484,9 +484,9 @@ namespace nimbus {
       }
 
       // Allocates buckets.
-      for (int z = 1; z <= region->dz(); z++)
-        for (int y = 1; y <= region->dy(); y++)
-          for (int x = 1; x <= region->dx(); x++) {
+      for (int z = region->z(); z < region->z() + region->dz(); z++)
+        for (int y = region->y(); y < region->y() + region->dy(); y++)
+          for (int x = region->x(); x < region->x() + region->dx(); x++) {
             TV_INT block_index(x, y, z);
             if ((*particles)(block_index)) {
               delete (*particles)(block_index);
@@ -499,7 +499,7 @@ namespace nimbus {
         return false;
       }
 
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::const_iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
@@ -536,12 +536,12 @@ namespace nimbus {
 
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
-          if (xi >= 1 &&
-              xi <= region->dx() &&
-              yi >= 1 &&
-              yi <= region->dy() &&
-              zi >= 1 &&
-              zi <= region->dz()) {
+          if (xi >= region->x() &&
+              xi < region->x() + region->dx() &&
+              yi >= region->y() &&
+              yi < region->y() + region->dy() &&
+              zi >= region->z() &&
+              zi < region->z() + region->dz()) {
             RemovedParticlesUnit* cellParticles =
                 (*particles)(TV_INT(xi, yi, zi));
 
@@ -556,20 +556,20 @@ namespace nimbus {
       return true;
     }
 
-    bool WriteRemovedParticles(GeometricRegion* region,
-                        CPdiVector* instances,
+    bool WriteRemovedParticles(const GeometricRegion* region,
+                        PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->ClearTempBuffer();
       }
 
-      for (int z = 1; z <= region->dz(); z++) {
-        for (int y = 1; y <= region->dy(); y++) {
-          for (int x = 1; x <= region->dx(); x++) {
+      for (int z = region->z(); z < region->z() + region->dz(); z++) {
+        for (int y = region->y(); y < region->y() + region->dy(); y++) {
+          for (int x = region->x(); x < region->x() + region->dx(); x++) {
             RemovedParticlesArray* arrayPtr;
             if (positive) {
               arrayPtr = &particle_container.removed_positive_particles;
@@ -595,7 +595,7 @@ namespace nimbus {
                     yi < (region->y() + region->dy()) &&
                     zi >= region->z() &&
                     zi < (region->z() + region->dz())) {
-                  CPdiVector::iterator iter = instances->begin();
+                  PdiVector::iterator iter = instances->begin();
                   // Iterate across instances, checking each one
                   for (; iter != instances->end(); ++iter) {
                     const PhysicalDataInstance* instance = *iter;
