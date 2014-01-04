@@ -56,6 +56,9 @@ namespace application {
     void JobInitialize::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing initialize job\n");
 
+        std::string par_str(params.ser_data().data_ptr_raw(),
+                            params.ser_data().size());
+
         // initialize configuration and state
         PhysBAM::WATER_EXAMPLE<TV> *example =
             new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
@@ -68,7 +71,7 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = true;
         driver.current_frame = 0;
-        driver.Initialize(this, da);
+        driver.Initialize(this, da, par_str);
 
         delete example;
 

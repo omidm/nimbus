@@ -85,8 +85,8 @@ public:
     void Write_Output_Files(const int frame);
     void Read_Output_Files(const int frame);
 
-    void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
-    void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    std::string Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, std::string &par_str);
 
 //#####################################################################
 };
