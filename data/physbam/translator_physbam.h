@@ -355,10 +355,10 @@ namespace nimbus {
               zi >= region->z() &&
               zi < region->z()+region->dz()) {
             ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
-            //NOTE(By Chinmayee): Please comment out these changes and don't
-            //delete them when pushing any updates, till we verify that the
-            //code works correctly, and does not give any assertion failure or
-            //seg fault on both Linux and Mac.
+            // NOTE(By Chinmayee): Please comment out these changes and don't
+            // delete them when pushing any updates, till we verify that the
+            // code works correctly, and does not give any assertion failure or
+            // seg fault on both Linux and Mac.
             TV_INT bi(xi, yi, zi);
             if (!(*particles)(bi))
               (*particles)(bi) = particle_container.
