@@ -321,6 +321,23 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
   return num;
 }
 
+bool JobManager::AllJobsAreDone() {
+  bool all_done = true;
+  JobGraph::Iter iter = job_graph_.Begin();
+  for (; iter != job_graph_.End(); ++iter) {
+    JobEntry* job = iter->second;
+    if (job->job_id() == 0) {
+      continue;
+    } else {
+      if (!job->done()) {
+        all_done = false;
+        break;
+      }
+    }
+  }
+  return all_done;
+}
+
 void JobManager::UpdateJobBeforeSet(JobEntry* job) {
   IDSet<job_id_t> before_set = job->before_set();
   UpdateBeforeSet(&before_set);
