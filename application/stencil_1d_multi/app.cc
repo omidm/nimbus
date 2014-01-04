@@ -326,6 +326,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     before.clear(); before.insert(id().elem());
     after.clear();
     SpawnComputeJob("print", j[1], read, write, before, after, par);
+
+    TerminateApplication();
   }
 };
 

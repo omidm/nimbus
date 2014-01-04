@@ -99,7 +99,7 @@ const std::string SchedulerCommand::LOCAL_COPY_NAME = "localcopy";
 const std::string SchedulerCommand::DEFINE_PARTITION_NAME = "definepartition";
 const std::string SchedulerCommand::LDO_ADD_NAME = "ldoadd";
 const std::string SchedulerCommand::LDO_REMOVE_NAME = "ldoremove";
-const std::string SchedulerCommand::TERMINATE_NAME = "ldoremove";
+const std::string SchedulerCommand::TERMINATE_NAME = "terminate";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
