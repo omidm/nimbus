@@ -103,7 +103,7 @@ class Job {
          const GeometricRegion& r,
          const Parameter& params);
 
-    bool TerminateApplication(const exit_status_t& exit_status_id);
+    bool TerminateApplication(const exit_status_t& exit_status_id = NIMBUS_TERMINATE_SUCCESS);
 
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);

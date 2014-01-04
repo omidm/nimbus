@@ -127,7 +127,7 @@ bool Job::DefinePartition(const ID<partition_id_t>& partition_id,
     }
 }
 
-bool Job::TerminateApplication(const exit_status_t& exit_status = NIMBUS_TERMINATE_SUCCESS) {
+bool Job::TerminateApplication(const exit_status_t& exit_status) {
     if (app_is_set_) {
         application_->TerminateApplication(exit_status);
         return true;
