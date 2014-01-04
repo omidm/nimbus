@@ -160,9 +160,9 @@ namespace nimbus {
                                        source_z * mult_z;
                     source_index += src_offset;
 
-                    int dest_x = x + dest(X_COORD) + 1;
-                    int dest_y = y + dest(Y_COORD) + 1;
-                    int dest_z = z + dest(Z_COORD) + 1;
+                    int dest_x = x + dest(X_COORD) + region->x();
+                    int dest_y = y + dest(Y_COORD) + region->y();
+                    int dest_z = z + dest(Z_COORD) + region->z();
 
                     typename PhysBAM::VECTOR<int, 3>
                       destinationIndex(dest_x, dest_y, dest_z);
