@@ -295,17 +295,20 @@ namespace nimbus {
         particles = &particle_container.negative_particles;
       }
 
+      // Warning: Not safe, should check whether the region is valid, that is,
+      // inside the grid.
       // Allocates buckets.
-      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++)
-        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++)
-          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
+      for (int z = region->z(); z < region->z()+region->dz(); z++)
+        for (int y = region->y(); y < region->y()+region->dy(); y++)
+          for (int x = region->x(); x < region->x()+region->dx(); x++) {
             TV_INT block_index(x, y, z);
+            // particle_container.levelset.grid
             particle_container.Free_Particle_And_Clear_Pointer(
                 (*particles)(block_index));
-           // if (!(*particles)(block_index)) {
-           //   (*particles)(block_index) = particle_container.Allocate_Particles(
-           //       particle_container.template_particles);
-           // }
+            if (!(*particles)(block_index)) {
+              (*particles)(block_index) = particle_container.Allocate_Particles(
+                  particle_container.template_particles);
+            }
           }
 
       if (instances == NULL) {
@@ -339,23 +342,19 @@ namespace nimbus {
           position.y = y;
           position.z = z;
           // TODO(quhang): Check whether the cast is safe.
-          int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
-          int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
-          int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
+          int_dimension_t xi = (int_dimension_t)floor(x);
+          int_dimension_t yi = (int_dimension_t)floor(y);
+          int_dimension_t zi = (int_dimension_t)floor(z);
 
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
           if (xi >= region->x() &&
-              xi <= region->x() + region->dx() - 1 &&
+              xi < region->x()+region->dx() &&
               yi >= region->y() &&
-              yi <= region->y() + region->dy() - 1 &&
+              yi < region->y()+region->dy() &&
               zi >= region->z() &&
-              zi <= region->z() + region->dz() - 1) {
-            TV_INT bi(xi, yi, zi);
-            if (!(*particles)(bi))
-                (*particles)(bi) = particle_container.
-                    Allocate_Particles(particle_container.template_particles);
-            ParticlesUnit* cellParticles = (*particles)(bi);
+              zi < region->z()+region->dz()) {
+            ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
@@ -385,9 +384,12 @@ namespace nimbus {
         data->ClearTempBuffer();
       }
 
-      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++) {
-        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++) {
-          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
+      // Warning: should check whether the region is inside the grid.
+      // Error: Particles might not be all copied, some might be lost because
+      // not the whole region is checked. But for now, first ignore.
+      for (int z = region->z(); z < region->z()+region->dz(); z++) {
+        for (int y = region->y(); y < region->y()+region->dy(); y++) {
+          for (int x = region->x(); x < region->x()+region->dx(); x++) {
             ParticlesArray* arrayPtr;
             if (positive) {
               arrayPtr = &particle_container.positive_particles;
