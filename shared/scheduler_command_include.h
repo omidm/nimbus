@@ -55,6 +55,7 @@
 #include "shared/define_partition_command.h"
 #include "shared/ldo_add_command.h"
 #include "shared/ldo_remove_command.h"
+#include "shared/terminate_command.h"
 
 
 #endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_

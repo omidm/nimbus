@@ -76,10 +76,12 @@ class Scheduler {
     virtual void ProcessHandshakeCommand(HandshakeCommand* cm);
     virtual void ProcessJobDoneCommand(JobDoneCommand* cm);
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
+    virtual void ProcessTerminateCommand(TerminateCommand* cm);
 
     virtual void RegisterInitialWorkers(size_t min_to_join);
     virtual size_t RegisterPendingWorkers();
     virtual void AddMainJob();
+    virtual void TerminationProcedure();
 
     virtual size_t AssignReadyJobs();
     virtual bool AssignJob(JobEntry* job);
@@ -128,6 +130,8 @@ class Scheduler {
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;
     size_t min_worker_to_join_;
+    bool terminate_application_flag_;
+    exit_status_t terminate_application_status_;
 
   private:
     virtual void SetupUserInterface();
