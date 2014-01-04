@@ -160,9 +160,9 @@ namespace nimbus {
                                        source_z * mult_z;
                     source_index += src_offset;
 
-                    int dest_x = x + dest(X_COORD) + 1;
-                    int dest_y = y + dest(Y_COORD) + 1;
-                    int dest_z = z + dest(Z_COORD) + 1;
+                    int dest_x = x + dest(X_COORD) + region->x();
+                    int dest_y = y + dest(Y_COORD) + region->y();
+                    int dest_z = z + dest(Z_COORD) + region->z();
 
                     typename PhysBAM::VECTOR<int, 3>
                       destinationIndex(dest_x, dest_y, dest_z);
@@ -295,11 +295,14 @@ namespace nimbus {
         particles = &particle_container.negative_particles;
       }
 
+      // Warning: Not safe, should check whether the region is valid, that is,
+      // inside the grid.
       // Allocates buckets.
-      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++)
-        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++)
-          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
+      for (int z = region->z(); z < region->z()+region->dz(); z++)
+        for (int y = region->y(); y < region->y()+region->dy(); y++)
+          for (int x = region->x(); x < region->x()+region->dx(); x++) {
             TV_INT block_index(x, y, z);
+            // particle_container.levelset.grid
             particle_container.Free_Particle_And_Clear_Pointer(
                 (*particles)(block_index));
             if (!(*particles)(block_index)) {
@@ -339,18 +342,18 @@ namespace nimbus {
           position.y = y;
           position.z = z;
           // TODO(quhang): Check whether the cast is safe.
-          int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
-          int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
-          int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
+          int_dimension_t xi = (int_dimension_t)floor(x);
+          int_dimension_t yi = (int_dimension_t)floor(y);
+          int_dimension_t zi = (int_dimension_t)floor(z);
 
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
           if (xi >= region->x() &&
-              xi <= region->x() + region->dx() - 1 &&
+              xi < region->x()+region->dx() &&
               yi >= region->y() &&
-              yi <= region->y() + region->dy() - 1 &&
+              yi < region->y()+region->dy() &&
               zi >= region->z() &&
-              zi <= region->z() + region->dz() - 1) {
+              zi < region->z()+region->dz()) {
             ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
 
             // Note that Add_Particle traverses a linked list of particle
@@ -381,9 +384,12 @@ namespace nimbus {
         data->ClearTempBuffer();
       }
 
-      for (int z = region->z(); z <= region->z() + region->dz() - 1; z++) {
-        for (int y = region->y(); y <= region->y() + region->dy() - 1; y++) {
-          for (int x = region->x(); x <= region->x() + region->dx() - 1; x++) {
+      // Warning: should check whether the region is inside the grid.
+      // Error: Particles might not be all copied, some might be lost because
+      // not the whole region is checked. But for now, first ignore.
+      for (int z = region->z(); z < region->z()+region->dz(); z++) {
+        for (int y = region->y(); y < region->y()+region->dy(); y++) {
+          for (int x = region->x(); x < region->x()+region->dx(); x++) {
             ParticlesArray* arrayPtr;
             if (positive) {
               arrayPtr = &particle_container.positive_particles;
