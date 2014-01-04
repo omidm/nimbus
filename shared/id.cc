@@ -100,6 +100,7 @@ ID<T>& ID<T>::operator= (const ID<T>& right) {
 
 template class ID<uint64_t>;
 template class ID<uint32_t>;
+template class ID<int32_t>;
 
 
 

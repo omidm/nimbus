@@ -32,50 +32,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Terminate command used to signal the scheduler that the application is
+  * complete and there  would be no more spawned jobs.
+  * Also used by the scheduler to terminate the workers.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_SHARED_TERMINATE_COMMAND_H_
+#define NIMBUS_SHARED_TERMINATE_COMMAND_H_
 
-#include <inttypes.h>
+
 #include <string>
-#include "shared/address_book.h"
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
+class TerminateCommand : public SchedulerCommand {
+  public:
+    TerminateCommand();
+    explicit TerminateCommand(const ID<exit_status_t>& exit_status);
+    ~TerminateCommand();
 
-  typedef int32_t exit_status_t;
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<exit_status_t> exit_status();
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
-
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
+  private:
+    ID<exit_status_t> exit_status_;
+};
 
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SHARED_TERMINATE_COMMAND_H_
