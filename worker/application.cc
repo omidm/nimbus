@@ -115,6 +115,12 @@ void Application::DefinePartition(const ID<partition_id_t>& partition_id,
   client_->sendCommand(&cm);
 }
 
+void Application::TerminateApplication(const exit_status_t& exit_status) {
+  TerminateCommand*  cm = new TerminateCommand(ID<exit_status_t>(exit_status));
+  client_->sendCommand(cm);
+  delete cm;
+}
+
 Job* Application::CloneJob(std::string name) {
   if (job_table_.count(name) == 0) {
     dbg(DBG_ERROR, "ERROR: job name %s is not registered in the application.\n", name.c_str()); // NOLINT

@@ -127,6 +127,17 @@ bool Job::DefinePartition(const ID<partition_id_t>& partition_id,
     }
 }
 
+bool Job::TerminateApplication(const exit_status_t& exit_status = NIMBUS_TERMINATE_SUCCESS) {
+    if (app_is_set_) {
+        application_->TerminateApplication(exit_status);
+        return true;
+    } else {
+        std::cout << "ERROR: TerminateApplication, application has not been set." <<
+            std::endl;
+        return false;
+    }
+}
+
 bool Job::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   if (app_is_set_) {
     return application_->GetNewJobID(result, req_num);
