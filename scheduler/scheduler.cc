@@ -585,7 +585,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       server_->SendCommand(worker_sender, &cm_s);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[2], (job_id_t)(0), true, true);
+      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[0], (job_id_t)(0), true, true);
 
       // Update data table.
       PhysicalData p_s = pvv[0];
