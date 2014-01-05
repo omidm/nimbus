@@ -104,7 +104,7 @@ namespace application {
 
         dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
         SpawnComputeJob(LOOP,
-                        job_ids[1],
+                        job_ids[0],
                         read, write,
                         before, after,
                         loop_params);
