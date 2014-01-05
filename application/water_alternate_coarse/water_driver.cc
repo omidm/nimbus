@@ -45,8 +45,8 @@ template<class TV> WATER_DRIVER<TV>::
 //#####################################################################
 // Initialize
 //#####################################################################
-template<class TV> std::string WATER_DRIVER<TV>::
-Initialize(const nimbus::Job *job, const nimbus::DataArray &da, std::string &par_str)
+template<class TV> int WATER_DRIVER<TV>::
+Initialize(const nimbus::Job *job, const nimbus::DataArray &da, int last_unique_particle)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
@@ -112,7 +112,7 @@ Initialize(const nimbus::Job *job, const nimbus::DataArray &da, std::string &par
     }
     else {
         // physbam init
-        example.Load_From_Nimbus(job, da, current_frame, par_str);
+        example.Load_From_Nimbus(job, da, current_frame, last_unique_particle);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.
             Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
@@ -145,12 +145,13 @@ Initialize(const nimbus::Job *job, const nimbus::DataArray &da, std::string &par
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
+    int last_unique_particle_ret = -1;
     if (init_phase) {
-        example.Save_To_Nimbus(job, da, current_frame);
+        last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame);
         Write_Output_Files(example.first_frame);
     }
 
-    return "";
+    return last_unique_particle_ret;
 }
 //#####################################################################
 // Run
@@ -176,7 +177,7 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
 //#####################################################################
 // Advance_To_Target_Time
 //#####################################################################
-template<class TV> std::string WATER_DRIVER<TV>::
+template<class TV> int WATER_DRIVER<TV>::
 Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, const T target_time)
 {
     bool done=false;for(int substep=1;!done;substep++){
@@ -268,10 +269,10 @@ Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, cons
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //Save State
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
     Write_Output_Files(++output_number);
 
-    return "";
+    return last_unique_particle_ret;
 }
 //#####################################################################
 // Function Write_Substep

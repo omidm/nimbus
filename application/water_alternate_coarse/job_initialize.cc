@@ -37,6 +37,7 @@
 
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_initialize.h"
+#include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/water_driver.h"
 #include "application/water_alternate_coarse/water_example.h"
 #include "application/water_alternate_coarse/water_sources.h"
@@ -71,9 +72,42 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = true;
         driver.current_frame = 0;
-        driver.Initialize(this, da, par_str);
+        int last_unique_particle = driver.Initialize(this, da, 0);
 
         delete example;
+
+        // next loop
+        int job_num = 1;
+        std::vector<nimbus::job_id_t> job_ids;
+        GetNewJobID(&job_ids, job_num);
+
+        nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+        nimbus::IDSet<nimbus::job_id_t> before, after;
+
+        for (size_t i = 0; i < da.size(); ++i) {
+            nimbus::Data *d = da[i];
+            logical_data_id_t id = d->logical_id();
+            if (!application::Contains(read, id))
+                read.insert(id);
+            if (!application::Contains(write, id))
+                write.insert(id);
+        }
+
+        nimbus::Parameter loop_params;
+        std::stringstream out_ss;
+        int frame = 0;
+        out_ss << frame;
+        out_ss << "\n";
+        assert(last_unique_particle >= 0);
+        out_ss << last_unique_particle;
+        loop_params.set_ser_data(SerializedData(out_ss.str()));
+
+        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
+        SpawnComputeJob(LOOP,
+                        job_ids[0],
+                        read, write,
+                        before, after,
+                        loop_params);
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }

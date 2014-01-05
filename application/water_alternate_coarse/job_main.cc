@@ -41,7 +41,6 @@
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/data_app.h"
 #include "application/water_alternate_coarse/job_initialize.h"
-#include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -125,7 +124,7 @@ namespace application {
                    particle_params);
 
         // Job setup
-        int job_num = 2;
+        int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
@@ -146,7 +145,6 @@ namespace application {
         write.insert(data_ids[4]);
         write.insert(data_ids[5]);
         write.insert(data_ids[6]);
-        after.insert(job_ids[1]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");
@@ -155,40 +153,6 @@ namespace application {
                         read, write,
                         before, after,
                         init_params);
-
-        // clear
-        read.clear();
-        write.clear();
-        before.clear();
-        after.clear();
-
-        // Loop job
-        read.insert(data_ids[0]);
-        read.insert(data_ids[1]);
-        read.insert(data_ids[2]);
-        read.insert(data_ids[3]);
-        read.insert(data_ids[4]);
-        read.insert(data_ids[5]);
-        read.insert(data_ids[6]);
-        write.insert(data_ids[0]);
-        write.insert(data_ids[1]);
-        write.insert(data_ids[2]);
-        write.insert(data_ids[3]);
-        write.insert(data_ids[4]);
-        write.insert(data_ids[5]);
-        write.insert(data_ids[6]);
-        before.insert(job_ids[0]);
-        nimbus::Parameter loop_params;
-        std::stringstream out_frame_ss;
-        int frame = 0;
-        out_frame_ss << frame;
-        loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
-        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
-        SpawnComputeJob(LOOP,
-                        job_ids[1],
-                        read, write,
-                        before, after,
-                        loop_params);
 
         dbg(APP_LOG, "Completed executing main job\n");
     }
