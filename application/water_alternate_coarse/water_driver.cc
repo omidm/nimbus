@@ -145,12 +145,13 @@ Initialize(const nimbus::Job *job, const nimbus::DataArray &da, int last_unique_
 
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
+    int last_unique_particle_ret = -1;
     if (init_phase) {
-        example.Save_To_Nimbus(job, da, current_frame);
+        last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame);
         Write_Output_Files(example.first_frame);
     }
 
-    return 0;
+    return last_unique_particle_ret;
 }
 //#####################################################################
 // Run
@@ -268,10 +269,10 @@ Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, cons
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //Save State
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
     Write_Output_Files(++output_number);
 
-    return 0;
+    return last_unique_particle_ret;
 }
 //#####################################################################
 // Function Write_Substep

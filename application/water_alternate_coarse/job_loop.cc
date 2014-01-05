@@ -67,6 +67,8 @@ namespace application {
         frame_ss.str(params_str);
         frame_ss >> frame;
 
+        dbg(APP_LOG, "Loop is spawning iteration for %i frame\n", frame);
+
         if (frame < kLastFrame) {
             // Job setup
             int job_num = 1;

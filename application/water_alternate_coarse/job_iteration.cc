@@ -63,12 +63,15 @@ namespace application {
         dbg(APP_LOG, "Executing iteration job\n");
 
         // get parameters
-        int frame;
-        std::stringstream in_frame_ss;
+        int frame, last_unique_particle;
+        std::stringstream in_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        in_frame_ss.str(params_str);
-        in_frame_ss >> frame;
+        in_ss.str(params_str);
+        in_ss >> frame;
+        in_ss >> last_unique_particle;
+        dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
+                     frame, last_unique_particle);
 
         // initialize configuration and state
         PhysBAM::WATER_EXAMPLE<TV> *example =
@@ -82,14 +85,15 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
-        driver.Initialize(this, da, 0);
+        driver.Initialize(this, da, last_unique_particle);
 
         // simulate - advance a time step
         PhysBAM::LOG::SCOPE scope("FRAME", "Frame %d",
                                   driver.current_frame+1, 1);
-        driver.Advance_To_Target_Time(this,
-                                      da,
-                                      example->Time_At_Frame(driver.current_frame+1));
+        last_unique_particle =
+            driver.Advance_To_Target_Time(this,
+                                          da,
+                                          example->Time_At_Frame(driver.current_frame+1));
         frame++;
 
         // free resources
@@ -112,9 +116,11 @@ namespace application {
                 write.insert(id);
         }
         nimbus::Parameter loop_params;
-        std::stringstream out_frame_ss;
-        out_frame_ss << frame;
-        loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
+        std::stringstream out_ss;
+        out_ss << frame;
+        assert(last_unique_particle >= 0);
+        out_ss << last_unique_particle;
+        loop_params.set_ser_data(SerializedData(out_ss.str()));
 
         dbg(APP_LOG, "Spawning loop after simulating frame %i\n", frame);
         SpawnComputeJob(LOOP,

@@ -72,7 +72,7 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = true;
         driver.current_frame = 0;
-        driver.Initialize(this, da, 0);
+        int last_unique_particle = driver.Initialize(this, da, 0);
 
         delete example;
 
@@ -94,10 +94,12 @@ namespace application {
         }
 
         nimbus::Parameter loop_params;
-        std::stringstream out_frame_ss;
+        std::stringstream out_ss;
         int frame = 0;
-        out_frame_ss << frame;
-        loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
+        out_ss << frame;
+        assert(last_unique_particle >= 0);
+        out_ss << last_unique_particle;
+        loop_params.set_ser_data(SerializedData(out_ss.str()));
 
         dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
         SpawnComputeJob(LOOP,
