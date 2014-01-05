@@ -37,6 +37,7 @@
 
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/job_initialize.h"
+#include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/water_driver.h"
 #include "application/water_alternate_coarse/water_example.h"
 #include "application/water_alternate_coarse/water_sources.h"
@@ -74,6 +75,36 @@ namespace application {
         driver.Initialize(this, da, 0);
 
         delete example;
+
+        // next loop
+        int job_num = 1;
+        std::vector<nimbus::job_id_t> job_ids;
+        GetNewJobID(&job_ids, job_num);
+
+        nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+        nimbus::IDSet<nimbus::job_id_t> before, after;
+
+        for (size_t i = 0; i < da.size(); ++i) {
+            nimbus::Data *d = da[i];
+            logical_data_id_t id = d->logical_id();
+            if (!application::Contains(read, id))
+                read.insert(id);
+            if (!application::Contains(write, id))
+                write.insert(id);
+        }
+
+        nimbus::Parameter loop_params;
+        std::stringstream out_frame_ss;
+        int frame = 0;
+        out_frame_ss << frame;
+        loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
+
+        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
+        SpawnComputeJob(LOOP,
+                        job_ids[1],
+                        read, write,
+                        before, after,
+                        loop_params);
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }
