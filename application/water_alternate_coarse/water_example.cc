@@ -197,7 +197,7 @@ Read_Output_Files(const int frame)
 //#####################################################################
 // Write_Output_Files
 //#####################################################################
-template<class TV> std::string WATER_EXAMPLE<TV>::
+template<class TV> int WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     PdiVector pdv;
@@ -263,13 +263,13 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                                          false);
     application::DestroyTranslatorObjects(&pdv);
 
-    return "";
+    return 0;
 }
 //#####################################################################
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, std::string &par_str)
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, int last_unique_particle)
 {
     PdiVector pdv;
 

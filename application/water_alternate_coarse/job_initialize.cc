@@ -71,7 +71,7 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = true;
         driver.current_frame = 0;
-        driver.Initialize(this, da, par_str);
+        driver.Initialize(this, da, 0);
 
         delete example;
 
