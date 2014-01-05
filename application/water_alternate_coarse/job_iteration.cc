@@ -118,6 +118,7 @@ namespace application {
         nimbus::Parameter loop_params;
         std::stringstream out_ss;
         out_ss << frame;
+        out_ss << "\n";
         assert(last_unique_particle >= 0);
         out_ss << last_unique_particle;
         loop_params.set_ser_data(SerializedData(out_ss.str()));
