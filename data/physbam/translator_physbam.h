@@ -98,6 +98,20 @@ namespace nimbus {
     explicit TranslatorPhysBAM() {}
     virtual ~TranslatorPhysBAM() {}
 
+    // Data structures used to format particles in PhysBAMData.
+    // Should be changed to protocol buffer later for compatibility.
+    // TODO(quhang).
+    struct ParticleInternal {
+      int_dimension_t index[3];
+      scalar_t delta[3];
+      scalar_t radius;
+      uint16_t quantized_collision_distance;
+    };
+
+    struct RemovedParticleInternal : public ParticleInternal {
+      scalar_t v[3];
+    };
+
     virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
                                FaceArray* fa) {
