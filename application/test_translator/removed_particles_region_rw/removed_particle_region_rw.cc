@@ -43,7 +43,7 @@
 #include "data/physbam/physbam_include.h"
 #include "../translator_physbam_test.h"  // NOLINT
 
-const int P_DIM = 6;
+const int P_DIM = 8;
 const int_dimension_t X = 1;
 const int_dimension_t Y = 2;
 const int_dimension_t Z = 3;
@@ -53,6 +53,8 @@ const int_dimension_t DZ = 8;
 const int_dimension_t SIZE = DX * DY * DZ;
 const int AVG_PARTICLES = 10;
 const int TOTAL_PARTICLES = SIZE * AVG_PARTICLES * P_DIM;
+const int GRID_SCALE = 64;
+const int NUM_GHOST_CELL = 2;
 
 float getX() {
   double val = drand48();
@@ -98,9 +100,11 @@ int main(int argc, char *argv[]) {
     floatSource[i + 0] = floats[i + 0] = getX();
     floatSource[i + 1] = floats[i + 1] = getY();
     floatSource[i + 2] = floats[i + 2] = getZ();
-    floatSource[i + 3] = floats[i + 3] = getV();
-    floatSource[i + 4] = floats[i + 4] = getV();
+    floatSource[i + 3] = floats[i + 3] = 1.0;
+    floatSource[i + 4] = floats[i + 4] = 1.0;
     floatSource[i + 5] = floats[i + 5] = getV();
+    floatSource[i + 6] = floats[i + 6] = getV();
+    floatSource[i + 7] = floats[i + 7] = getV();
   }
 
   TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > translator;
@@ -113,16 +117,22 @@ int main(int argc, char *argv[]) {
   PhysBAMData* pd = new PhysBAMData();
   pd->set_buffer((char*)floats, TOTAL_PARTICLES * sizeof(float));  // NOLINT
   PhysicalDataInstance* instance = new PhysicalDataInstance(1, ldo, pd, 0);
-  CPdiVector vec;
+  PdiVector vec;
   vec.push_back(instance);
 
   // TODO(quhang): Need more time to figure out whether the range specification
   // corresponds to original PhysBAM.
   PhysBAM::ARRAY<float, Translator::TV_INT> phi_array;
   phi_array.Resize(Translator::TV_INT(DX, DY, DZ));
-  PhysBAM::RANGE<Translator::TV> range_input(
-      X, X+DX, Y, Y+DY, Z, Z+DZ);
-  Translator::Grid grid(Translator::TV_INT(DX, DY, DZ), range_input, true);
+  phi_array.Resize(
+      PhysBAM::RANGE<Translator::TV_INT>(
+          1, GRID_SCALE,
+          1, GRID_SCALE,
+          1, GRID_SCALE).Thickened(NUM_GHOST_CELL));
+  Translator::Grid grid(
+      Translator::TV_INT(GRID_SCALE, GRID_SCALE, GRID_SCALE),
+      PhysBAM::RANGE<Translator::TV>::Unit_Box(),
+      true);
   Translator::ParticleContainer particle_container(grid, phi_array, 0);
   particle_container.Initialize_Particle_Levelset_Grid_Values();
   particle_container.Use_Removed_Negative_Particles();

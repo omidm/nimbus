@@ -490,9 +490,8 @@ namespace nimbus {
             TV_INT block_index(x, y, z);
             if ((*particles)(block_index)) {
               delete (*particles)(block_index);
+              (*particles)(block_index) = NULL;
             }
-            (*particles)(block_index) = particle_container.Allocate_Particles(
-                particle_container.template_removed_particles);
           }
 
       if (instances == NULL) {
@@ -510,16 +509,18 @@ namespace nimbus {
         for (int i = 0;
              i < static_cast<int>(data->size())
              / static_cast<int>(sizeof(float));  // NOLINT
-             i+= 6) {
+             i+= 8) {
           // This instance may have particles inside the region. So
           // we have to iterate over them and insert them accordingly.
           // Particles are stored as (x,y,z) triples in data array
           scalar_t x = buffer[i];
           scalar_t y = buffer[i + 1];
           scalar_t z = buffer[i + 2];
-          scalar_t vx = buffer[i + 3];
-          scalar_t vy = buffer[i + 4];
-          scalar_t vz = buffer[i + 5];
+          scalar_t radius = buffer[i + 3];
+          uint16_t collision_distance = (uint16_t)buffer[i + 4];  // NOLINT
+          scalar_t vx = buffer[i + 5];
+          scalar_t vy = buffer[i + 6];
+          scalar_t vz = buffer[i + 7];
 
           VECTOR_TYPE position;
           position.x = x;
@@ -530,9 +531,9 @@ namespace nimbus {
           velocity.y = vy;
           velocity.z = vz;
           // TODO(quhang): Check whether the cast is safe.
-          int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
-          int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
-          int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
+          int_dimension_t xi = (int_dimension_t)floor(x);
+          int_dimension_t yi = (int_dimension_t)floor(y);
+          int_dimension_t zi = (int_dimension_t)floor(z);
 
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
@@ -542,13 +543,20 @@ namespace nimbus {
               yi < region->y() + region->dy() &&
               zi >= region->z() &&
               zi < region->z() + region->dz()) {
-            RemovedParticlesUnit* cellParticles =
+            RemovedParticlesUnit*& cellParticles =
                 (*particles)(TV_INT(xi, yi, zi));
+            if (cellParticles == NULL) {
+              cellParticles = particle_container.Allocate_Particles(
+                  particle_container.template_removed_particles);
+            }
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
             int index = particle_container.Add_Particle(cellParticles);
             cellParticles->X(index) = position;
+            cellParticles->radius(index) = radius;
+            cellParticles->quantized_collision_distance(index) =
+              collision_distance;
             cellParticles->V(index) = velocity;
           }
         }
@@ -610,16 +618,19 @@ namespace nimbus {
                         yi < (instanceRegion->y() + instanceRegion->dy()) &&
                         zi >= instanceRegion->z() &&
                         zi < (instanceRegion->z() + instanceRegion->dz())) {
-                      scalar_t particleBuffer[6];
+                      scalar_t particleBuffer[8];
                       particleBuffer[0] = particle.x;
                       particleBuffer[1] = particle.y;
                       particleBuffer[2] = particle.z;
-                      particleBuffer[3] = particles->V(i).x;
-                      particleBuffer[4] = particles->V(i).y;
-                      particleBuffer[5] = particles->V(i).z;
+                      particleBuffer[3] = particles->radius(i);
+                      particleBuffer[4] =
+                          particles->quantized_collision_distance(i);
+                      particleBuffer[5] = particles->V(i).x;
+                      particleBuffer[6] = particles->V(i).y;
+                      particleBuffer[7] = particles->V(i).z;
                       data->AddToTempBuffer(
                           reinterpret_cast<char*>(particleBuffer),
-                          sizeof(scalar_t)*6);
+                          sizeof(scalar_t)*8);
                     }
                   }
                 }

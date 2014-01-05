@@ -113,8 +113,6 @@ int main(int argc, char *argv[]) {
 
   // TODO(quhang): Need more time to figure out whether the range specification
   // corresponds to original PhysBAM.
-  const int GRID_SCALE = 64;
-  const int NUM_GHOST_CELL = 2;
   PhysBAM::ARRAY<float, Translator::TV_INT> phi_array;
   phi_array.Resize(
       PhysBAM::RANGE<Translator::TV_INT>(
