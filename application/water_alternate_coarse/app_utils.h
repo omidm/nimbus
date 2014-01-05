@@ -108,7 +108,12 @@ namespace application {
                                        kScale + kGhostNum*2);
     const GeometricRegion kDomainFaceVel = kDomain;
     const GeometricRegion kDomainPhi = kDomainGhost;
-    const GeometricRegion kDomainParticles = kDomainGhost;
+    const GeometricRegion kDomainParticles(-kGhostNum + 1,
+                                           -kGhostNum + 1,
+                                           -kGhostNum + 1,
+                                           kScale + kGhostNum*2 + 1,
+                                           kScale + kGhostNum*2 + 1,
+                                           kScale + kGhostNum*2 + 1);;
     const GeometricRegion kDomainPressure(-kPressureGhostNum + 1,
                                           -kPressureGhostNum + 1,
                                           -kPressureGhostNum + 1,
@@ -117,7 +122,7 @@ namespace application {
                                           kScale + kPressureGhostNum*2);
 
     const int_dimension_t kFaceVelBufSize = kScale *
-                                            kScale * 
+                                            kScale *
                                             (kScale+1) *
                                             kDimension * sizeof(T);
     const int_dimension_t kPhiBufSize = (kScale + 2*kGhostNum) *

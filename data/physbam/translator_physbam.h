@@ -305,13 +305,10 @@ namespace nimbus {
             // particle_container.levelset.grid
             particle_container.Free_Particle_And_Clear_Pointer(
                 (*particles)(block_index));
-//            if (!(*particles)(block_index)) {
-//              (*particles)(block_index) = particle_container.Allocate_Particles(
-//                  particle_container.template_particles);
-//            }
           }
 
       if (instances == NULL) {
+        dbg(DBG_WARN, "Physical data instances are empty.\n");
         return false;
       }
 
@@ -326,7 +323,7 @@ namespace nimbus {
         for (int i = 0;
              i < static_cast<int>(data->size())
              / static_cast<int>(sizeof(float));  // NOLINT
-             i+= 5) {
+             i+= 8) {
           // This instance may have particles inside the region. So
           // we have to iterate over them and insert them accordingly.
           // Particles are stored as (x,y,z) triples in data array
@@ -335,17 +332,20 @@ namespace nimbus {
           scalar_t z = buffer[i + 2];
           scalar_t radius = buffer[i + 3];
 
-          uint16_t collision_distance = (uint16_t)buffer[i + 4];  // NOLINT
+          uint16_t collision_distance = (uint16_t)floor(buffer[i + 4]);  // NOLINT
 
           VECTOR_TYPE position;
           position.x = x;
           position.y = y;
           position.z = z;
           // TODO(quhang): Check whether the cast is safe.
-          int_dimension_t xi = (int_dimension_t)floor(x);
-          int_dimension_t yi = (int_dimension_t)floor(y);
-          int_dimension_t zi = (int_dimension_t)floor(z);
+          // int_dimension_t xi = (int_dimension_t)floor(x);
+          // int_dimension_t yi = (int_dimension_t)floor(y);
+          // int_dimension_t zi = (int_dimension_t)floor(z);
 
+          int_dimension_t xi = (int_dimension_t)round(buffer[5]);
+          int_dimension_t yi = (int_dimension_t)round(buffer[6]);
+          int_dimension_t zi = (int_dimension_t)round(buffer[7]);
           // TODO(quhang): The condition is not accurate.
           // If particle is within region, copy it to particles
           if (xi >= region->x() &&
@@ -409,21 +409,15 @@ namespace nimbus {
             while (particles) {
               for (int i = 1; i <= particles->array_collection->Size(); i++) {
                 VECTOR_TYPE particle = particles->X(i);
-                scalar_t x = particle.x;
-                scalar_t y = particle.y;
-                scalar_t z = particle.z;
-                double xi = x;
-                double yi = y;
-                double zi = z;
                 // TODO(quhang): I am almost 100% sure this is wrong. The
                 // condition is not accurate. But needs time to figure out.
                 // If it's inside the region,
-                if (xi >= region->x() &&
-                    xi < (region->x() + region->dx()) &&
-                    yi >= region->y() &&
-                    yi < (region->y() + region->dy()) &&
-                    zi >= region->z() &&
-                    zi < (region->z() + region->dz())) {
+                if (x >= region->x() &&
+                    x < (region->x() + region->dx()) &&
+                    y >= region->y() &&
+                    y < (region->y() + region->dy()) &&
+                    z >= region->z() &&
+                    z < (region->z() + region->dz())) {
                   PdiVector::iterator iter = instances->begin();
                   // Iterate across instances, checking each one
                   for (; iter != instances->end(); ++iter) {
@@ -433,12 +427,12 @@ namespace nimbus {
                         static_cast<PhysBAMData*>(instance->data());
 
                     // If it's inside the region of the physical data instance
-                    if (xi >= instanceRegion->x() &&
-                        xi < (instanceRegion->x() + instanceRegion->dx()) &&
-                        yi >= instanceRegion->y() &&
-                        yi < (instanceRegion->y() + instanceRegion->dy()) &&
-                        zi >= instanceRegion->z() &&
-                        zi < (instanceRegion->z() + instanceRegion->dz())) {
+                    if (x >= instanceRegion->x() &&
+                        x < (instanceRegion->x() + instanceRegion->dx()) &&
+                        y >= instanceRegion->y() &&
+                        y < (instanceRegion->y() + instanceRegion->dy()) &&
+                        z >= instanceRegion->z() &&
+                        z < (instanceRegion->z() + instanceRegion->dz())) {
                       scalar_t particleBuffer[5];
                       particleBuffer[0] = particle.x;
                       particleBuffer[1] = particle.y;
@@ -446,9 +440,12 @@ namespace nimbus {
                       particleBuffer[3] = particles->radius(i);
                       particleBuffer[4] =
                           particles->quantized_collision_distance(i);
+                      particleBuffer[5] = x;
+                      particleBuffer[6] = y;
+                      particleBuffer[7] = z;
                       data->AddToTempBuffer(
                           reinterpret_cast<char*>(particleBuffer),
-                          sizeof(scalar_t)*5);
+                          sizeof(scalar_t)*8);
                     }
                   }
                 }
