@@ -100,7 +100,7 @@ namespace nimbus {
 
     // Data structures used to format particles in PhysBAMData.
     // Should be changed to protocol buffer later for compatibility.
-    // TODO(quhang).
+    // TODO(quhang) .
     struct ParticleInternal {
       int_dimension_t index[3];
       scalar_t delta[3];
