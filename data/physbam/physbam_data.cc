@@ -38,7 +38,10 @@
  *   DATE: Thu Dec 12 17:15:37 2013
  *  DESCR:
  ***********************************************************************/
+#include <string>
 #include "data/physbam/physbam_data.h"
+#include "data/physbam/protobuf_compiled/pd_message.pb.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -113,7 +116,24 @@ void PhysBAMData::Copy(Data *from) {
  * \return
 */
 bool PhysBAMData::Serialize(SerializedData *ser_data) {
-  return false;
+  nimbus_message::pd_message pd; // NOLINT
+  if (buffer_) {
+      std::string buf(buffer_, size_);
+      pd.set_buffer(buf);
+  }
+  if (size_)
+      pd.set_size(size_);
+  else
+      pd.set_size(0);
+  std::string ser;
+  bool success = pd.SerializeToString(&ser);
+  char *buf = new char[ser.length()];
+  memcpy(buf, ser.c_str(), sizeof(char) * (ser.length() + 1)); // NOLINT
+  if (!success)
+      return success;
+  ser_data->set_data_ptr(buf);
+  ser_data->set_size(sizeof(char) * ser.length()); // NOLINT
+  return success;
 }
 
 
@@ -127,7 +147,27 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
 */
 bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
                               Data **result) {
-  return false;
+    const char *buf = ser_data.data_ptr_raw();
+    const int buf_size = ser_data.size();
+    if (buf_size <= 0)
+        return false;
+    assert(buf);
+    nimbus_message::pd_message pd; // NOLINT
+    std::string temp(buf, buf_size); // NOLINT
+    bool success = pd.ParseFromString(temp);
+    if (!success)
+        return success;
+    PhysBAMData *data = (PhysBAMData *)(*result); // NOLINT
+    assert(data);
+    delete data->buffer();
+    if (pd.has_buffer()) {
+        char *buffer = new char[size_];
+        memcpy(buffer, pd.buffer().c_str(), pd.size());
+        data->set_buffer(buffer, pd.size());
+    } else {
+        data->set_buffer(NULL, pd.size());
+    }
+    return success;
 }
 
 /** Clear out the data from the temporary buffer. Note that this will

@@ -1,4 +1,4 @@
-all: check data_t
+all: check proto_t data_t
 
 NIMBUS_ROOT = ../..
 include $(NIMBUS_ROOT)/Makeinclude
@@ -8,11 +8,21 @@ CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
+PDIR_SOURCE = protobuf_source/
+PDIR_COMPILED = protobuf_compiled/
+PROTO_FILES = $(wildcard $(PDIR_SOURCE)*.proto)
+TEMP_OBJECT_FILES = $(subst .proto,.pb.o,$(PROTO_FILES))
+PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJECT_FILES))
+
 IFLAGS += -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
 
-data_t: $(OBJFILES) $(HFILES)
+data_t: $(OBJFILES) $(HFILES) $(PROTO_OBJECT_FILES)
+
+proto_t:
+	cd $(PDIR_SOURCE); make; cd ..
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
+	\rm -f $(PDIR_COMPILED)*.pb.*

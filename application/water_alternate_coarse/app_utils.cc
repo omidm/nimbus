@@ -36,9 +36,10 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <set>
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/data_app.h"
-#include <set>
+#include "data/physbam/physbam_data.h"
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
