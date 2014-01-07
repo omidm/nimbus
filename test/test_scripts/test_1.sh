@@ -2,16 +2,16 @@
 
 # **************************
 # Text Reset
-RCol='\e[0m'    
+RCol='\x1B[0m'    
 # Regular           
-Bla='\e[0;30m';
-Red='\e[0;31m';
-Gre='\e[0;32m';
-Yel='\e[0;33m';
-Blu='\e[0;34m';
-Pur='\e[0;35m';
-Cya='\e[0;36m';
-Whi='\e[0;37m';
+Bla='\x1B[0;30m';
+Red='\x1B[0;31m';
+Gre='\x1B[0;32m';
+Yel='\x1B[0;33m';
+Blu='\x1B[0;34m';
+Pur='\x1B[0;35m';
+Cya='\x1B[0;36m';
+Whi='\x1B[0;37m';
 # **************************
 
 echo -e "${Pur}Testing the scheduler version 1 against stencil application version multi and two workers. ${RCol}"
@@ -24,56 +24,58 @@ APPLICATION_PATH="../../application/stencil_1d_multi/"
 APPLICATION="libstencil_1d_multi.so"
 WORKER_PATH="../../test/stencil_worker/"
 WORKER="worker_multi"
-
+TEMP_FILE="$(pwd)/_nimbus_temp_file_.txt"
 
 # check whether to make clean or not, by default it will make clean.
 CLEAN="make clean"
-
 if [ "$1" = n ]
 then
   CLEAN=""
 fi
 
+echo -e "${Pur}Building Nimbus library ...${RCol}"
 # build the nimbus library
-cd ${NIMBUS_ROOT}; rm -f ${NIMBUS_LIB}; $CLEAN &> temp_; make -j 12 &> temp_; rm -f temp_;
+cd ${NIMBUS_ROOT}; rm -f ${NIMBUS_LIB}; $CLEAN &> ${TEMP_FILE}; make -j 12 &> ${TEMP_FILE};
 if [ -f ${NIMBUS_LIB} ]
 then
   echo -e "${Gre}SUCCESS: built the Nimbus library successfully. ${RCol}"
-  cd - &> temp_; rm -f temp_;
+  cd - &> ${TEMP_FILE};
 else
   echo -e "${Red}ERROR: could not build Nimbus library. ${RCol}"
   exit;
 fi
 
+echo -e "${Pur}Building the application ...${RCol}"
 # build the application
-cd ${APPLICATION_PATH}; rm -f ${APPLICATION}; $CLEAN &> temp_; make &> temp_; rm -f temp_;
+cd ${APPLICATION_PATH}; rm -f ${APPLICATION}; $CLEAN &> ${TEMP_FILE}; make &> ${TEMP_FILE};
 if [ -f ${APPLICATION} ]
 then
   echo -e "${Gre}SUCCESS: built the application successfully. ${RCol}"
-  cd - &> temp_; rm -f temp_;
+  cd - &> ${TEMP_FILE};
 else
   echo -e "${Red}ERROR: could not build application. ${RCol}"
   exit;
 fi
 
-
+echo -e "${Pur}Building the scheduler ...${RCol}"
 # build the scheduler
-cd ${SCHEDULER_PATH}; rm -f ${SCHEDULER}; $CLEAN &> temp_; make &> temp_; rm -f temp_;
+cd ${SCHEDULER_PATH}; rm -f ${SCHEDULER}; $CLEAN &> ${TEMP_FILE}; make &> ${TEMP_FILE};
 if [ -f ${SCHEDULER} ]
 then
   echo -e "${Gre}SUCCESS: built the scheduler successfully. ${RCol}"
-  cd - &> temp_; rm -f temp_;
+  cd - &> ${TEMP_FILE};
 else
   echo -e "${Red}ERROR: could not build the scheduler. ${RCol}"
   exit;
 fi
 
+echo -e "${Pur}Building the worker ...${RCol}"
 # build the worker
-cd ${WORKER_PATH}; rm -f ${WORKER}; $CLEAN &> temp_; make &> temp_; rm -f temp_;
+cd ${WORKER_PATH}; rm -f ${WORKER}; $CLEAN &> ${TEMP_FILE}; make &> ${TEMP_FILE};
 if [ -f ${WORKER} ]
 then
   echo -e "${Gre}SUCCESS: built the worker successfully. ${RCol}"
-  cd - &> temp_; rm -f temp_;
+  cd - &> ${TEMP_FILE};
 else
   echo -e "${Red}ERROR: could not build the worker. ${RCol}"
   exit;
@@ -142,5 +144,5 @@ fi
 echo -e "${Gre}TEST PASSED! ${RCol}"
 
 
-rm -f *.txt
+rm -f *.txt ${TEMP_FILE}
 
