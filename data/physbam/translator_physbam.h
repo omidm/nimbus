@@ -372,8 +372,6 @@ namespace nimbus {
             // buckets, so it's O(N^2) time. Blech.
             // I think things might not be that bad, because the number of
             // bucket is expected to be constant.  -- quhang
-            // Warning: not sure if this code will handle the case when the
-            // linked list grows.
             int index = particle_container.Add_Particle(particle_bucket);
             particle_bucket->X(index) = VECTOR_TYPE(p->delta[0],
                                                     p->delta[1],
