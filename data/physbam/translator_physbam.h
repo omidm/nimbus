@@ -382,7 +382,9 @@ namespace nimbus {
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
             if (particle_container.store_unique_particle_id) {
-              // particle_bucket->id(index) = p->id;
+              PhysBAM::ARRAY_VIEW<int>* id = particle_bucket->array_collection->
+                  template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+              (*id)(index) = p->id;
             }
           }
         }  // End the loop for buffer.
@@ -450,8 +452,10 @@ namespace nimbus {
                     particle_buffer.quantized_collision_distance =
                         particle_bucket->quantized_collision_distance(i);
                     if (particle_container.store_unique_particle_id) {
-                      // Warning: don't know why, id doesn't work.
-                      // particle_buffer.id = particle_bucket->id(i);
+                      PhysBAM::ARRAY_VIEW<int>* id =
+                          particle_bucket->array_collection->
+                          template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+                      particle_buffer.id = (*id)(i);
                     }
                     PhysBAMData* data =
                         static_cast<PhysBAMData*>(instance->data());

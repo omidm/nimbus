@@ -120,9 +120,12 @@ Initialize(const nimbus::Job *job, const nimbus::DataArray &da, int last_unique_
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
-    if (init_phase)
+    if (init_phase) {
         example.particle_levelset_evolution.Seed_Particles(time);
-    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+        // Comment: seems that particle should be not updated if loaded from
+        // Nimbus.  -quhang
+        example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+    }
 
     //add forces
     example.incompressible.Set_Gravity();
