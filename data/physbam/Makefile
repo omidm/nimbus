@@ -16,10 +16,10 @@ PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJECT_FILES
 
 IFLAGS += -I$(NIMBUS_ROOT)/application/physbam-lib/Public_Library
 
-data_t: $(OBJFILES) $(HFILES) $(PROTO_OBJECT_FILES)
-
 proto_t:
 	cd $(PDIR_SOURCE); make; cd ..
+
+data_t: $(proto_t) $(OBJFILES) $(HFILES) $(PROTO_OBJECT_FILES)
 
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
