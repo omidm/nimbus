@@ -59,12 +59,7 @@ PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 */
 Data * PhysBAMData::Clone() {
   PhysBAMData* d = new PhysBAMData();
-  char *buf = NULL;
-  if (size_)
-    buf = static_cast<char*>(malloc(size_));
-  if (size_ && buffer_)
-    memcpy(buf, buffer_, size_);
-  d->set_buffer(buf, size_);
+  d->set_buffer(NULL, size_);
   return d;
 }
 
@@ -127,12 +122,12 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
       pd.set_size(0);
   std::string ser;
   bool success = pd.SerializeToString(&ser);
-  char *buf = new char[ser.length()];
+  char *buf = new char[ser.length() + 1];
   memcpy(buf, ser.c_str(), sizeof(char) * (ser.length() + 1)); // NOLINT
   if (!success)
       return success;
   ser_data->set_data_ptr(buf);
-  ser_data->set_size(sizeof(char) * ser.length()); // NOLINT
+  ser_data->set_size(sizeof(char) * ser.length() + 1); // NOLINT
   return success;
 }
 
@@ -140,7 +135,8 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
 /**
  * \fn bool nimbus::PhysBAMData::DeSerialize(const SerializedData &ser_data,
                                  Data **result)
- * \brief Brief description.
+ * \brief This function does not free buffer. Destroy should be called to free
+ * buffer first, otherwise there will be a memory leak.
  * \param ser_data
  * \param result
  * \return
@@ -153,17 +149,17 @@ bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
         return false;
     assert(buf);
     nimbus_message::pd_message pd; // NOLINT
-    std::string temp(buf, buf_size); // NOLINT
+    std::string temp(buf, buf_size-1); // NOLINT
     bool success = pd.ParseFromString(temp);
     if (!success)
         return success;
-    PhysBAMData *data = (PhysBAMData *)(*result); // NOLINT
-    assert(data);
-    delete data->buffer();
+    PhysBAMData *data = new PhysBAMData();
+    (*result) = static_cast<Data *>(data);
     if (pd.has_buffer()) {
-        char *buffer = new char[size_];
-        memcpy(buffer, pd.buffer().c_str(), pd.size());
-        data->set_buffer(buffer, pd.size());
+        int size = pd.size();
+        char *buffer = new char[size];
+        memcpy(buffer, pd.buffer().c_str(), sizeof(char) * size); // NOLINT
+        data->set_buffer(buffer, size);
     } else {
         data->set_buffer(NULL, pd.size());
     }
