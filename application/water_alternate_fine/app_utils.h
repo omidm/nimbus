@@ -48,6 +48,11 @@
 #include "shared/nimbus_types.h"
 #include "worker/physical_data_instance.h"
 
+// Not sure if adding linking dependency for PhysBAM is right here?
+// --quhang
+#include "application/water_alternate_fine/water_driver.h"
+#include "application/water_alternate_fine/water_example.h"
+
 #define APP_LOG DBG_TEMP
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
@@ -152,6 +157,16 @@ namespace application {
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id);
 
+    // Initializes WATER_EXAMPLE and WATER_DRIVER with the given parameters and
+    // fills in WATER_EXAMPLE with the simulation variables in DataArray.
+    bool InitializeExampleAndDriver(
+        const nimbus::DataArray& da,
+        const int current_frame,
+        const T time,
+        const int last_unique_particle_id,
+        const nimbus::Job* job,
+        PhysBAM::WATER_EXAMPLE<TV>*& example,
+        PhysBAM::WATER_DRIVER<TV>*& driver);
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
