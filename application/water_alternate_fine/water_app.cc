@@ -37,11 +37,15 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
+#include "application/water_alternate_fine/job_calculate_frame.h"
+// #include "application/water_alternate_fine/job_iteration.h"
 #include "application/water_alternate_fine/job_initialize.h"
-#include "application/water_alternate_fine/job_iteration.h"
-#include "application/water_alternate_fine/job_loop.h"
+// #include "application/water_alternate_fine/job_loop.h"
+#include "application/water_alternate_fine/job_loop_frame.h"
+#include "application/water_alternate_fine/job_loop_iteration.h"
 #include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_super_2.h"
+#include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_app.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
@@ -85,10 +89,14 @@ namespace application {
         RegisterData(APP_NEG_REM_PARTICLES, new DataApp(APP_NEG_REM_PARTICLES, kParticlesBufSize));
 
         RegisterJob(MAIN, new JobMain(this));
-        RegisterJob(LOOP, new JobLoop(this));
-        RegisterJob(ITERATION, new JobIteration(this));
+        // RegisterJob(LOOP, new JobLoop(this));
+        // RegisterJob(ITERATION, new JobIteration(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
         RegisterJob(SUPER_2, new JobSuper2(this));
+        RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
+        RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
+        RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));
+        RegisterJob(WRITE_FRAME, new JobWriteFrame(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }
