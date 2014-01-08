@@ -64,7 +64,16 @@ namespace application {
         dbg(APP_LOG, "Executing loop frame job.\n");
 
         // get frame from parameters
-        int frame = *(params.idset().begin());
+        int frame;
+        std::string params_str(params.ser_data().data_ptr_raw(),
+                               params.ser_data().size());
+        LoadParameter(params_str, &frame);
+
+        // get time from frame
+        PhysBAM::WATER_EXAMPLE<TV>* example =
+          new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+        T time = example->Time_At_Frame(frame);
+        delete example;
 
         if (frame < kLastFrame) {
           //Spawn the loop iteration job to start computing the frame.
@@ -82,7 +91,11 @@ namespace application {
             read.insert((*it)->logical_id());
             write.insert((*it)->logical_id());
           }
-          iter_params.set_idset(params.idset());
+
+          std::string str;
+          SerializeParameter(frame, time, &str);
+          iter_params.set_ser_data(SerializedData(str));
+
           SpawnComputeJob(LOOP_ITERATION,
               job_ids[0],
               read, write,

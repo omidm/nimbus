@@ -152,6 +152,13 @@ namespace application {
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id);
 
+    bool SerializeParameter(const int frame, std::string* result);
+    bool SerializeParameter(const int frame, const T time, std::string *result);
+    bool SerializeParameter(const int frame, const T time, const T dt, std::string *result);
+    bool LoadParameter(const std::string str, int* frame);
+    bool LoadParameter(const std::string str, int* frame, T* time);
+    bool LoadParameter(const std::string str, int* frame, T* time, T* dt);
+
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_

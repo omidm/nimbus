@@ -102,5 +102,55 @@ namespace application {
         return false;
     }
 
+    bool SerializeParameter(const int frame, std::string* result){
+      std::stringstream ss;
+      ss << frame;
+      *result = ss.str();
+      return true;
+    }
+
+    bool SerializeParameter(const int frame, const T time, std::string *result) {
+      std::stringstream ss;
+      ss << frame;
+      ss << "\n";
+      ss << time;
+      *result = ss.str();
+      return true;
+    }
+
+    bool SerializeParameter(const int frame, const T time, const T dt, std::string *result) {
+      std::stringstream ss;
+      ss << frame;
+      ss << "\n";
+      ss << time;
+      ss << "\n";
+      ss << dt;
+      *result = ss.str();
+      return true;
+    }
+
+    bool LoadParameter(const std::string str, int* frame) {
+      std::stringstream ss;
+      ss.str(str);
+      ss >> (*frame);
+      return true;
+    }
+
+    bool LoadParameter(const std::string str, int* frame, T* time) {
+      std::stringstream ss;
+      ss.str(str);
+      ss >> (*frame);
+      ss >> (*time);
+      return true;
+    }
+
+    bool LoadParameter(const std::string str, int* frame, T* time, T* dt) {
+      std::stringstream ss;
+      ss.str(str);
+      ss >> (*frame);
+      ss >> (*time);
+      ss >> (*dt);
+      return true;
+    }
 
 } // namespace application
