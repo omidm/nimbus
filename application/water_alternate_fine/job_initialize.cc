@@ -37,7 +37,7 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_initialize.h"
-#include "application/water_alternate_fine/job_loop.h"
+#include "application/water_alternate_fine/job_loop_frame.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -72,7 +72,11 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = true;
         driver.current_frame = 0;
-        int last_unique_particle = driver.Initialize(this, da, 0);
+
+        // TODO: pass the last_unique_particle in a new data and add the
+        // logical id to read/write set of the spawned LOOP_FRAME job down.
+        // int last_unique_particle driver.Initialize(this, da, 0);
+        driver.Initialize(this, da, 0);
 
         delete example;
 
@@ -80,30 +84,25 @@ namespace application {
         int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);
-
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
         nimbus::IDSet<nimbus::job_id_t> before, after;
+        nimbus::Parameter loop_params;
 
-        for (size_t i = 0; i < da.size(); ++i) {
-            nimbus::Data *d = da[i];
-            logical_data_id_t id = d->logical_id();
-            if (!application::Contains(read, id))
-                read.insert(id);
-            if (!application::Contains(write, id))
-                write.insert(id);
+        nimbus::DataArray::const_iterator it = da.begin();
+        for (; it != da.end(); ++it) {
+          read.insert((*it)->logical_id());
+          write.insert((*it)->logical_id());
         }
 
-        nimbus::Parameter loop_params;
-        std::stringstream out_ss;
-        int frame = 0;
-        out_ss << frame;
-        out_ss << "\n";
-        assert(last_unique_particle >= 0);
-        out_ss << last_unique_particle;
-        loop_params.set_ser_data(SerializedData(out_ss.str()));
+        // TODO:  
 
-        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
-        SpawnComputeJob(LOOP,
+        int frame = 0;
+        std::string loop_str;
+        SerializeParameter(frame, &loop_str);
+        loop_params.set_ser_data(SerializedData(loop_str));
+
+        dbg(APP_LOG, "Spawning loop frame job for frame %i in main\n", frame);
+        SpawnComputeJob(LOOP_FRAME,
                         job_ids[0],
                         read, write,
                         before, after,
