@@ -40,7 +40,7 @@
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_APP_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_DATA_APP_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_APP_H_
 
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"

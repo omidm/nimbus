@@ -45,7 +45,7 @@
 
 #include "shared/nimbus.h"
 
-#define LOOP_FRAME "loop-frame"
+#define LOOP_FRAME "loopFrame"
 
 namespace application {
 

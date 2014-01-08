@@ -1,5 +1,5 @@
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_WATER_SOURCES_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_WATER_SOURCES_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_WATER_SOURCES_H_
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/water_example.h"
