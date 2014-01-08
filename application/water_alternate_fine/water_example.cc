@@ -2,10 +2,10 @@
 // Copyright 2009, Michael Lentine, Avi Robinson-Mosher, Andrew Selle.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/data_app.h"
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/data_app.h"
 #include "data/physbam/translator_physbam.h"
-#include "application/water_alternate_coarse/water_example.h"
+#include "application/water_alternate_fine/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform/READ_WRITE_GRID.h>

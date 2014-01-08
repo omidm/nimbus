@@ -35,12 +35,12 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_initialize.h"
-#include "application/water_alternate_coarse/job_loop.h"
-#include "application/water_alternate_coarse/water_driver.h"
-#include "application/water_alternate_coarse/water_example.h"
-#include "application/water_alternate_coarse/water_sources.h"
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/job_initialize.h"
+#include "application/water_alternate_fine/job_loop.h"
+#include "application/water_alternate_fine/water_driver.h"
+#include "application/water_alternate_fine/water_example.h"
+#include "application/water_alternate_fine/water_sources.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 

@@ -36,7 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_INITIALIZE_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INITIALIZE_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_COARSE_JOB_INITIALIZE_H_
 
 #include "shared/nimbus.h"
@@ -54,4 +54,4 @@ namespace application {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_JOB_INITIALIZE_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INITIALIZE_H_

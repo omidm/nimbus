@@ -2,8 +2,8 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
-#include "application/water_alternate_coarse/water_driver.h"
-#include "application/water_alternate_coarse/water_example.h"
+#include "application/water_alternate_fine/water_driver.h"
+#include "application/water_alternate_fine/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>

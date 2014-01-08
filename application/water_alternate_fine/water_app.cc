@@ -35,13 +35,13 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/data_app.h"
-#include "application/water_alternate_coarse/job_initialize.h"
-#include "application/water_alternate_coarse/job_iteration.h"
-#include "application/water_alternate_coarse/job_loop.h"
-#include "application/water_alternate_coarse/job_main.h"
-#include "application/water_alternate_coarse/water_app.h"
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/data_app.h"
+#include "application/water_alternate_fine/job_initialize.h"
+#include "application/water_alternate_fine/job_iteration.h"
+#include "application/water_alternate_fine/job_loop.h"
+#include "application/water_alternate_fine/job_main.h"
+#include "application/water_alternate_fine/water_app.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>

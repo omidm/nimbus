@@ -1,6 +1,6 @@
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/water_example.h"
-#include "application/water_alternate_coarse/water_sources.h"
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/water_example.h"
+#include "application/water_alternate_fine/water_sources.h"
 #include <PhysBAM_Geometry/Basic_Geometry/CYLINDER.h>
 #include <PhysBAM_Geometry/Implicit_Objects/ANALYTIC_IMPLICIT_OBJECT.h>
 #include <PhysBAM_Tools/Vectors/VECTOR.h>

@@ -38,8 +38,8 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
 
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include "shared/dbg.h"
@@ -150,4 +150,4 @@ namespace application {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_COARSE_APP_UTILS_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_

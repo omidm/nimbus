@@ -38,9 +38,9 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_coarse/app_utils.h"
-#include "application/water_alternate_coarse/job_iteration.h"
-#include "application/water_alternate_coarse/job_loop.h"
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/job_iteration.h"
+#include "application/water_alternate_fine/job_loop.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
