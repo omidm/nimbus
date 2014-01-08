@@ -77,9 +77,9 @@ namespace application {
       driver= new PhysBAM::WATER_DRIVER<TV>(*example);
       driver->init_phase = false;
       driver->current_frame = current_frame;
-      // The returning result is deleted.
-      driver->Initialize(this, da, last_unique_particle_id);
       driver->time = time;
+      // The returning result is not used.
+      driver->Initialize(this, da, last_unique_particle_id);
       return true;
     }
 

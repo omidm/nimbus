@@ -91,8 +91,8 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
-        driver.Initialize(this, da, last_unique_particle);
         driver.time = time;
+        driver.Initialize(this, da, last_unique_particle);
 
         dbg(APP_LOG,
             "Simulation starts"
