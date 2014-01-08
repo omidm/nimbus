@@ -288,6 +288,9 @@ WriteFrameImpl(const nimbus::Job *job,
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
                const T dt) {
+  // Comments(quhang): Notice time has already been increased here.
+  // Not sure if the Set_Number_Particles_Per_Cell function should go to
+  // initalization.
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   //Reseed

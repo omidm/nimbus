@@ -75,22 +75,34 @@ namespace application {
         dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
                      frame, last_unique_particle);
 
-        // Initialize configuration and state.
+        // Assume time, dt, frame is ready from here.
+        T time = 0;
+        dbg(APP_LOG,
+            "Initialize WATER_DRIVER/WATER_EXAMPLE"
+            "(Frame=%d, Time=%f, dt=%f).\n",
+            frame, time, dt);
         PhysBAM::WATER_EXAMPLE<TV> *example =
             new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
 
-        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
-                                 PhysBAM::RANGE<TV>(TV(),
-                                                    TV::All_Ones_Vector())
-                                 );
+        example->Initialize_Grid(
+            TV_INT::All_Ones_Vector()*kScale,
+            PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
         PhysBAM::WaterSources::Add_Source(example);
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
         driver.Initialize(this, da, last_unique_particle);
+        driver.time = time;
 
+        dbg(APP_LOG,
+            "Simulation starts"
+            "(Frame=%d, Time=%f, dt=%f).\n",
+            frame, time, dt);
         // Reseed particles and write frame.
         last_unique_particle = driver.WriteFrameImpl(this, da, true, dt);
+
+        // TODO(quhang/chinmayee): Fix the passing mechanism for
+        // last_unique_particle.
 
         // free resources
         delete example;
