@@ -26,6 +26,8 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop.cc
+    ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
+    ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
     ${PROJECT_SOURCE_DIR}/job_super_2.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
