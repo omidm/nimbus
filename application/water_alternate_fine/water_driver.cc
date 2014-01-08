@@ -145,12 +145,12 @@ Initialize(const nimbus::Job *job,
     example.incompressible.Set_Variable_Viscosity(false);
     example.incompressible.projection.Set_Density(1e3);
 
-    ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
-    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
-    example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
-
-    if (set_boundary_conditions)
+    if (set_boundary_conditions) {
+        ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
+        example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
+        example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
         example.Set_Boundary_Conditions(time); // get so CFL is correct
+    }
 
     int last_unique_particle_ret = -1;
     if (init_phase) {
