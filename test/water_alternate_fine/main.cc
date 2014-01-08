@@ -39,7 +39,7 @@
   * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#include "application/water_alternate_coarse/water_app.h"
+#include "application/water_alternate_fine/water_app.h"
 #include <iostream>  // NOLINT
 #include <pthread.h>
 #include "shared/nimbus.h"
