@@ -33,30 +33,27 @@
  */
 
 /*
- * This file contains a job corresponding to one iteration consisting of all
- * different simulation stages (advection, projection, extrapolation etc).
- * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
- * edit it as we progress.)
+ * Job that reseeds particles and write frames for one substep.
  *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_ITERATION_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_ITERATION_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_WRITE_FRAME_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_WRITE_FRAME_H_
 
 #include "shared/nimbus.h"
 
-#define ITERATION "iteration"
+#define WRITE_FRAME "write_frame"
 
 namespace application {
 
-    class JobIteration : public nimbus::Job {
+    class JobWriteFrame : public nimbus::Job {
         public:
-            explicit JobIteration(nimbus::Application *app);
+            explicit JobWriteFrame(nimbus::Application *app);
             virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
     };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_ITERATION_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_WRITE_FRAME_H_
