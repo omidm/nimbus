@@ -50,6 +50,16 @@ public:
                                const T target_time,
                                bool set_boundary_conditions = true);
 
+    int CalculateFrameImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           const bool set_boundary_conditions,
+                           const T dt);
+
+    int WriteFrameImpl(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       const bool set_boundary_conditions,
+                       const T dt);
+
     void Write_Output_Files(const int frame);
 
     void Write_Substep(const std::string& title,const int substep,const int level=0);

@@ -80,6 +80,10 @@
 #define APP_NEG_REM_PARTICLES "neg_rem_particles"
 #endif
 
+#ifndef APP_LAST_UNIQUE_PARTICLE_ID
+#define APP_LAST_UNIQUE_PARTICLE_ID "last_unique_particle_id"
+#endif
+
 namespace application {
 
     // simulation dimension
