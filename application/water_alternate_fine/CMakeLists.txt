@@ -27,6 +27,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
+    ${PROJECT_SOURCE_DIR}/job_super_2.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
@@ -39,6 +40,8 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_iteration.h
     ${PROJECT_SOURCE_DIR}/job_loop.h
     ${PROJECT_SOURCE_DIR}/job_main.h
+    ${PROJECT_SOURCE_DIR}/job_super_2.h
+    ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/water_app.h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h
