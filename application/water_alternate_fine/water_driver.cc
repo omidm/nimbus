@@ -181,6 +181,126 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
         for(int p=1;p<=particles.array_collection->Size();p++) particles.V(p)+=-TV::Axis_Vector(2)*dt*9.8; // ballistic
         for(int p=1;p<=particles.array_collection->Size();p++) particles.V(p)+=dt*interpolation.Clamped_To_Array_Face(example.mac_grid,example.incompressible.force,particles.X(p));} // external forces
 }
+
+
+
+// Substep without reseeding and writing to frame.
+// Operation on time should be solved carefully. --quhang
+template<class TV> int WATER_DRIVER<TV>::
+CalculateFrameImpl(const nimbus::Job *job,
+                   const nimbus::DataArray &da,
+                   const bool set_boundary_conditions,
+                   const T dt) {
+  // LOG::Time("Calculate Dt");
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // T dt=example.cfl*example.incompressible.CFL(example.face_velocities);dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
+  // if(time+dt>=target_time){dt=target_time-time;done=true;}
+  // else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
+
+  LOG::Time("Compute Occupied Blocks");
+  T maximum_fluid_speed=example.face_velocities.Maxabs().Max();
+  T max_particle_collision_distance=example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor*example.mac_grid.dX.Max();
+  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
+
+  LOG::Time("Adjust Phi With Objects");
+  T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
+  example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
+
+  //Advect Phi 3.6% (Parallelized)
+  LOG::Time("Advect Phi");
+  example.phi_boundary_water.Use_Extrapolation_Mode(false);
+  example.particle_levelset_evolution.Advance_Levelset(dt);
+  example.phi_boundary_water.Use_Extrapolation_Mode(true);
+
+  //Advect Particles 12.1% (Parallelized)
+  LOG::Time("Step Particles");
+  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
+
+  //Advect removed particles (Parallelized)
+  LOG::Time("Advect Removed Particles");
+  RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
+  DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
+
+  //Advect Velocities 26% (Parallelized)
+  LOG::Time("Advect V");
+  example.incompressible.advection->Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.incompressible.boundary,dt,time);
+
+  //Add Forces 0%
+  LOG::Time("Forces");
+  example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
+
+  //Modify Levelset with Particles 15% (Parallelizedish)
+  LOG::Time("Modify Levelset");
+  example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
+  example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
+  //example.particle_levelset_evolution.Make_Signed_Distance(); //TODO(mlentine) Figure out why this was needed
+
+  //Adjust Phi 0%
+  LOG::Time("Adjust Phi");
+  example.Adjust_Phi_With_Sources(time+dt);
+
+  //Delete Particles 12.5 (Parallelized)
+  LOG::Time("Delete Particles");
+  example.particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
+  example.particle_levelset_evolution.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
+  example.particle_levelset_evolution.particle_levelset.Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
+  example.particle_levelset_evolution.particle_levelset.Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
+
+  //Reincorporate Particles 0% (Parallelized)
+  LOG::Time("Reincorporate Particles");
+  if(example.particle_levelset_evolution.particle_levelset.use_removed_positive_particles || example.particle_levelset_evolution.particle_levelset.use_removed_negative_particles)
+    example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
+
+  //Project 7% (Parallelizedish)
+  LOG::SCOPE *scope=0;
+  scope=new LOG::SCOPE("Project");
+  if (set_boundary_conditions)
+    example.Set_Boundary_Conditions(time);
+  example.incompressible.Set_Dirichlet_Boundary_Conditions(&example.particle_levelset_evolution.phi,0);
+  example.projection.p*=dt;
+  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
+  example.incompressible.Advance_One_Time_Step_Implicit_Part(example.face_velocities,dt,time,true);
+  example.projection.p*=(1/dt);
+  example.incompressible.boundary->Apply_Boundary_Condition_Face(example.incompressible.grid,example.face_velocities,time+dt);
+  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
+  delete scope;
+
+  //Extrapolate Velocity 7%
+  LOG::Time("Extrapolate Velocity");
+  T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
+  example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time+dt,8);
+  example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
+
+  // TODO(quhang) Take care of this!
+  // time+=dt;
+
+  // Save State.
+  int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
+  return last_unique_particle_ret;
+}
+
+// Substep with reseeding and writing to frame.
+// Operation on time should be solved carefully. --quhang
+template<class TV> int WATER_DRIVER<TV>::
+WriteFrameImpl(const nimbus::Job *job,
+               const nimbus::DataArray &da,
+               const bool set_boundary_conditions,
+               const T dt) {
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+
+  //Reseed
+  LOG::Time("Reseed");
+  example.particle_levelset_evolution.Reseed_Particles(time);
+  example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+
+  // I changed the order. --quhang
+  Write_Output_Files(++output_number);
+
+  //Save State
+  int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
+  return last_unique_particle_ret;
+}
+
 //#####################################################################
 // Advance_To_Target_Time
 //#####################################################################
