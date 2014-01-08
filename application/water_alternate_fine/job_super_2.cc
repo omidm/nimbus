@@ -87,15 +87,37 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
-        driver.Initialize(this, da, last_unique_particle);
+        driver.Initialize(this, da, last_unique_particle, false);
 
-        // modify phi
+        // modify levelset
+        dbg(APP_LOG, "Modify Levelset ...\n");
+        example->particle_levelset_evolution.particle_levelset.
+            Exchange_Overlap_Particles();
+        //example->particle_levelset_evolution.
+        //    Modify_Levelset_And_Particles(&face_velocities_ghost);
 
-        // adjust levelset with sources
+        // adjust phi with sources
+        dbg(APP_LOG, "Adjust Phi ...\n");
+        //example.Adjust_Phi_With_Sources(time+dt);
 
         // delete particles
+        dbg(APP_LOG, "Delete Particles ...\n");
+        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
+        example->particle_levelset_evolution.particle_levelset.
+            Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
+        example->particle_levelset_evolution.particle_levelset.
+            Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
+        //example->particle_levelset_evolution.particle_levelset.
+        //    Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
 
         // reincorporate removed particles
+        dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
+        if (example->particle_levelset_evolution.particle_levelset.
+                use_removed_positive_particles ||
+            example->particle_levelset_evolution.particle_levelset.
+                use_removed_negative_particles)
+            example->particle_levelset_evolution.particle_levelset.
+                Reincorporate_Removed_Particles(1, 1, 0, true);
 
         // free resources
         delete example;
