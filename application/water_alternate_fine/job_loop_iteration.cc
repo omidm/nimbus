@@ -218,6 +218,8 @@ namespace application {
               before, after,
               frame_params);
         }
+        delete example;
+        delete driver;
 }
 
 } // namespace application
