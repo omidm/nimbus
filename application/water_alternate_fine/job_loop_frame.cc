@@ -61,21 +61,37 @@ namespace application {
     }
 
     void JobLoopFrame::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing loop frame job\n");
+        dbg(APP_LOG, "Executing loop frame job.\n");
 
-        // get parameters
-        int frame;
-        std::stringstream frame_ss;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        frame_ss.str(params_str);
-        frame_ss >> frame;
+        // get frame from parameters
+        int frame = *(params.idset().begin());
 
         if (frame < kLastFrame) {
-          dbg(APP_LOG, "Loop is spawning iteration for %i frame\n", frame);
-            // TODO(omidm): Spawn the job loop iteration to start calculating the frame.
+          //Spawn the loop iteration job to start computing the frame.
+          dbg(APP_LOG, "Loop frame is spawning loop iteration job for frame %i.\n", frame);
+
+          int job_num = 1;
+          std::vector<nimbus::job_id_t> job_ids;
+          GetNewJobID(&job_ids, job_num);
+          nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+          nimbus::IDSet<nimbus::job_id_t> before, after;
+          nimbus::Parameter iter_params;
+
+          nimbus::DataArray::const_iterator it = da.begin();
+          for (; it != da.end(); ++it) {
+            read.insert((*it)->logical_id());
+            write.insert((*it)->logical_id());
+          }
+          iter_params.set_idset(params.idset());
+          SpawnComputeJob(LOOP_ITERATION,
+              job_ids[0],
+              read, write,
+              before, after,
+              iter_params);
         } else {
-          dbg(APP_LOG, "Completed executing loop job\n");
+          // Last job has been computed, just terminate the application.
+          dbg(APP_LOG, "Simulation is complete, last frame computed.\n");
+
           TerminateApplication();
         }
     }
