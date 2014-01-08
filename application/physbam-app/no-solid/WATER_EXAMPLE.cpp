@@ -162,7 +162,7 @@ template<class TV> void WATER_EXAMPLE<TV>::Set_Boundary_Conditions(
     if (time <= 3 && source.Lazy_Inside(iterator.Location())) {
       projection.elliptic_solver->psi_N(iterator.Full_Index()) = true;
       if ((TV::dimension == 2 && iterator.Axis() == 1)
-          || (TV::dimension == 3 && iterator.Axis() == 3))
+          || (TV::dimension == 3 && iterator.Axis() == 1))
         face_velocities(iterator.Full_Index()) = 1;
       else
         face_velocities(iterator.Full_Index()) = 0;

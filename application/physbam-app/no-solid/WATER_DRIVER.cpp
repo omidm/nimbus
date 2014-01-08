@@ -111,6 +111,7 @@ template<class TV> void WATER_DRIVER<TV>::Initialize() {
   example.Set_Boundary_Conditions(time);
 
   // Setup particle_levelset.
+  example.particle_levelset.mpi_grid = example.mpi_grid;
   example.particle_levelset.levelset.Set_Levelset_Callbacks(example);
   example.particle_levelset.levelset.Set_Custom_Boundary(*example.boundary);
   example.particle_levelset.Initialize_Particle_Levelset_Grid_Values();
@@ -155,8 +156,7 @@ template<class TV> void WATER_DRIVER<TV>::Convect(const T dt, const T time) {
       &face_velocities_ghost);
   example.particle_levelset.Delete_Particles_Outside_Grid();
   example.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(1);
-  // Related to solids, so delete it.
-  // example.particle_levelset.Delete_Particles_Far_From_Interface();
+  example.particle_levelset.Delete_Particles_Far_From_Interface();
   example.particle_levelset.Identify_And_Remove_Escaped_Particles(
       face_velocities_ghost, 1.5, time + dt);
 
