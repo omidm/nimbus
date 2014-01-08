@@ -62,10 +62,31 @@ namespace application {
         return new JobLoopIteration(application());
     }
 
+    bool JobLoopIteration::InitializeExampleAndDriver(
+        const nimbus::DataArray& da,
+        const int current_frame,
+        const T time,
+        const int last_unique_particle_id,
+        PhysBAM::WATER_EXAMPLE<TV>*& example,
+        PhysBAM::WATER_DRIVER<TV>*& driver) {
+      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+      example->Initialize_Grid(
+          TV_INT::All_Ones_Vector()*kScale,
+          PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
+      PhysBAM::WaterSources::Add_Source(example);
+      driver= new PhysBAM::WATER_DRIVER<TV>(*example);
+      driver->init_phase = false;
+      driver->current_frame = current_frame;
+      // The returning result is deleted.
+      driver->Initialize(this, da, last_unique_particle_id);
+      driver->time = time;
+      return true;
+    }
+
     void JobLoopIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing loop iteration job\n");
 
-        // get parameters
+        // Get parameters: frame, time, last_unique_particle.
         int frame, last_unique_particle;
         std::stringstream in_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
@@ -76,18 +97,44 @@ namespace application {
         dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
                      frame, last_unique_particle);
 
+        // T time = example->Time_At_Frame(driver.current_frame);
+        // TODO(quhang): time should be passed.
+        T time = 0;
+        bool done = true;
+        PhysBAM::WATER_EXAMPLE<TV>* example;
+        PhysBAM::WATER_DRIVER<TV>* driver;
+        InitializeExampleAndDriver(da, frame, time, last_unique_particle,
+                                   example, driver);
+
+        T target_time = example->Time_At_Frame(driver->current_frame+1);
+        T dt = example->cfl *
+            example->incompressible.CFL(example->face_velocities);
+        T temp_dt = example->particle_levelset_evolution.CFL(false,false);
+        if (temp_dt < dt) {
+          dt = temp_dt;
+        }
+        if (time + dt >= target_time) {
+          dt = target_time - time;
+          done = true;
+        } else {
+          if (time + 2*dt >= target_time)
+            dt = .5 * (target_time-time);
+        }
 
         // check whether the frame is done or not
-        bool done = true;
         // TODO(omidm): get the right logic for done.
 
         if (!done) {
           // TODO(omidm): spawn the jobs to compute the frame, depending on the
           // level of granularity we will have different sub jobs.
+          // TODO(quhang): Needs to pass "time","dt", "frame_number", and
+          // "last_uniqute_particle_id" correctly.
         } else {
           // TODO(omidm): spawn the write frame job, or maybe compute frame job
           // for last time before write frame, and then spawn loop frame job
           // for next fram computation."
+          // TODO(quhang): Needs to pass "time", "frame_number", and
+          // "last_uniqute_particle_id" correctly.
         }
 }
 

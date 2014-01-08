@@ -54,7 +54,9 @@ Initialize(const nimbus::Job *job,
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
     output_number=current_frame;
-    time=example.Time_At_Frame(current_frame);
+    // Commented by quhang:
+    // If we want to break substeps, the time should be passed by Nimbus.
+    // time=example.Time_At_Frame(current_frame);
 
     for(int i=1;i<=TV::dimension;i++)
     {
