@@ -46,7 +46,10 @@ template<class TV> WATER_DRIVER<TV>::
 // Initialize
 //#####################################################################
 template<class TV> int WATER_DRIVER<TV>::
-Initialize(const nimbus::Job *job, const nimbus::DataArray &da, int last_unique_particle)
+Initialize(const nimbus::Job *job,
+           const nimbus::DataArray &da,
+           int last_unique_particle,
+           const bool set_boundary_conditions)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
@@ -146,7 +149,8 @@ Initialize(const nimbus::Job *job, const nimbus::DataArray &da, int last_unique_
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
 
-    example.Set_Boundary_Conditions(time); // get so CFL is correct
+    if (set_boundary_conditions)
+        example.Set_Boundary_Conditions(time); // get so CFL is correct
 
     int last_unique_particle_ret = -1;
     if (init_phase) {
@@ -181,7 +185,10 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
 // Advance_To_Target_Time
 //#####################################################################
 template<class TV> int WATER_DRIVER<TV>::
-Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, const T target_time)
+Advance_To_Target_Time(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       const T target_time,
+                       const bool set_boundary_conditions)
 {
     bool done=false;for(int substep=1;!done;substep++){
         LOG::Time("Calculate Dt");
@@ -247,7 +254,8 @@ Advance_To_Target_Time(const nimbus::Job *job, const nimbus::DataArray &da, cons
         //Project 7% (Parallelizedish)
         LOG::SCOPE *scope=0;
         scope=new LOG::SCOPE("Project");
-        example.Set_Boundary_Conditions(time);
+        if (set_boundary_conditions)
+            example.Set_Boundary_Conditions(time);
         example.incompressible.Set_Dirichlet_Boundary_Conditions(&example.particle_levelset_evolution.phi,0);
         example.projection.p*=dt;
         example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();

@@ -41,6 +41,7 @@
 #include "application/water_alternate_fine/job_iteration.h"
 #include "application/water_alternate_fine/job_loop.h"
 #include "application/water_alternate_fine/job_main.h"
+#include "application/water_alternate_fine/job_super_2.h"
 #include "application/water_alternate_fine/water_app.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
@@ -87,6 +88,7 @@ namespace application {
         RegisterJob(LOOP, new JobLoop(this));
         RegisterJob(ITERATION, new JobIteration(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
+        RegisterJob(SUPER_2, new JobSuper2(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }
