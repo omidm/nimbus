@@ -44,6 +44,8 @@
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
 #include "application/water_alternate_fine/job_loop_frame.h"
+#include "application/water_alternate_fine/job_calculate_frame.h"
+#include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -86,20 +88,20 @@ namespace application {
     void JobLoopIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing loop iteration job\n");
 
-        // Get parameters: frame, time, last_unique_particle.
-        int frame, last_unique_particle;
-        std::stringstream in_ss;
+        // TODO(omidm): get last_unique_particle from da.
+        int last_unique_particle = 1;
+
+        // Get parameters: frame, time
+        int frame;
+        T time;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        in_ss.str(params_str);
-        in_ss >> frame;
-        in_ss >> last_unique_particle;
-        dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
-                     frame, last_unique_particle);
+        LoadParameter(params_str, &frame, &time);
 
-        // T time = example->Time_At_Frame(driver.current_frame);
-        // TODO(quhang): time should be passed.
-        T time = 0;
+        dbg(APP_LOG, "Frame %i, last unique particle %i and time %i in iteration job\n",
+                     frame, last_unique_particle, time);
+
+        // check whether the frame is done or not
         bool done = true;
         PhysBAM::WATER_EXAMPLE<TV>* example;
         PhysBAM::WATER_DRIVER<TV>* driver;
@@ -121,20 +123,100 @@ namespace application {
             dt = .5 * (target_time-time);
         }
 
-        // check whether the frame is done or not
-        // TODO(omidm): get the right logic for done.
-
         if (!done) {
-          // TODO(omidm): spawn the jobs to compute the frame, depending on the
+          // spawn the jobs to compute the frame, depending on the
           // level of granularity we will have different sub jobs.
-          // TODO(quhang): Needs to pass "time","dt", "frame_number", and
-          // "last_uniqute_particle_id" correctly.
+
+          //Spawn the calculate frame job to start computing the frame.
+          dbg(APP_LOG, "Loop frame is spawning calculate frame job for frame %i.\n", frame);
+
+          int job_num = 2;
+          std::vector<nimbus::job_id_t> job_ids;
+          GetNewJobID(&job_ids, job_num);
+          nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+          nimbus::IDSet<nimbus::job_id_t> before, after;
+          nimbus::Parameter cal_params;
+          nimbus::Parameter iter_params;
+
+          nimbus::DataArray::const_iterator it = da.begin();
+          for (; it != da.end(); ++it) {
+            read.insert((*it)->logical_id());
+            write.insert((*it)->logical_id());
+          }
+
+          std::string cal_str;
+          SerializeParameter(frame, time, dt, &cal_str);
+          cal_params.set_ser_data(SerializedData(cal_str));
+          after.insert(job_ids[1]);
+          SpawnComputeJob(CALCULATE_FRAME,
+              job_ids[0],
+              read, write,
+              before, after,
+              cal_params);
+
+          std::string iter_str;
+          SerializeParameter(frame, time + dt, &iter_str);
+          iter_params.set_ser_data(SerializedData(iter_str));
+          after.clear();
+          before.insert(job_ids[0]);
+          SpawnComputeJob(LOOP_ITERATION,
+              job_ids[1],
+              read, write,
+              before, after,
+              iter_params);
         } else {
-          // TODO(omidm): spawn the write frame job, or maybe compute frame job
+          // spawn the write frame job, or maybe compute frame job
           // for last time before write frame, and then spawn loop frame job
           // for next fram computation."
-          // TODO(quhang): Needs to pass "time", "frame_number", and
-          // "last_uniqute_particle_id" correctly.
+
+        int job_num = 3;
+          std::vector<nimbus::job_id_t> job_ids;
+          GetNewJobID(&job_ids, job_num);
+          nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+          nimbus::IDSet<nimbus::job_id_t> before, after;
+          nimbus::Parameter cal_params;
+          nimbus::Parameter write_params;
+          nimbus::Parameter frame_params;
+
+          nimbus::DataArray::const_iterator it = da.begin();
+          for (; it != da.end(); ++it) {
+            read.insert((*it)->logical_id());
+            write.insert((*it)->logical_id());
+          }
+
+          std::string cal_str;
+          SerializeParameter(frame, time, dt, &cal_str);
+          cal_params.set_ser_data(SerializedData(cal_str));
+          after.insert(job_ids[1]);
+          SpawnComputeJob(CALCULATE_FRAME,
+              job_ids[0],
+              read, write,
+              before, after,
+              cal_params);
+
+          std::string write_str;
+          SerializeParameter(frame, time + dt, 0, &write_str);
+          write_params.set_ser_data(SerializedData(write_str));
+          after.clear();
+          after.insert(job_ids[2]);
+          before.insert(job_ids[0]);
+          SpawnComputeJob(WRITE_FRAME,
+              job_ids[1],
+              read, write,
+              before, after,
+              write_params);
+
+          std::string frame_str;
+          SerializeParameter(frame + 1, &frame_str);
+          frame_params.set_ser_data(SerializedData(frame_str));
+          after.clear();
+          before.clear();
+          before.insert(job_ids[1]);
+          SpawnComputeJob(LOOP_FRAME,
+              job_ids[2],
+              read, write,
+              before, after,
+              frame_params);
         }
 }
 
