@@ -56,10 +56,15 @@ public:
                         const T dt);
 
     // Execution for super job 1.
-    bool SuperJob1Impl(T dt);
+    bool SuperJob1Impl(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       T dat);
 
-    // Execution for super job 3.
-    bool SuperJob3Impl(T dt);
+    // Execution for super job 1.
+    bool SuperJob3Impl(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       T dat);
+
 
     void Write_Output_Files(const int frame);
 

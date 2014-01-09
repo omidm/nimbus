@@ -133,6 +133,9 @@ namespace application {
             example->particle_levelset_evolution.particle_levelset.
                 Reincorporate_Removed_Particles(1, 1, 0, true);
 
+        // Save State.
+        example->Save_To_Nimbus(this, da, frame+1);
+
         // free resources
         delete example;
 

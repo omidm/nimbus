@@ -90,7 +90,7 @@ namespace application {
 
         // Run the steps in the super job.
         dbg(APP_LOG, "Execute the steps is super job 1.");
-        driver->SuperJob1Impl(dt);
+        driver->SuperJob1Impl(this, da, dt);
 
         // Free resources.
         DestroyExampleAndDriver(example, driver);

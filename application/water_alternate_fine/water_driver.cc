@@ -303,7 +303,9 @@ WriteFrameImpl(const nimbus::Job *job,
 
 
 template<class TV> bool WATER_DRIVER<TV>::
-SuperJob1Impl(T dt) {
+SuperJob1Impl (const nimbus::Job *job,
+               const nimbus::DataArray &da,
+               T dt) {
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   LOG::Time("Compute Occupied Blocks");
@@ -345,12 +347,17 @@ SuperJob1Impl(T dt) {
       example.mac_grid, example.face_velocities, face_velocities_ghost,
       face_velocities_ghost, *example.incompressible.boundary, dt, time);
 
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame+1);
+
   return true;
 }
 
 
 template<class TV> bool WATER_DRIVER<TV>::
-SuperJob3Impl(T dt) {
+SuperJob3Impl (const nimbus::Job *job,
+               const nimbus::DataArray &da,
+               T dt) {
 
   LOG::SCOPE *scope=0;
   scope=new LOG::SCOPE("Project");
@@ -381,6 +388,9 @@ SuperJob3Impl(T dt) {
       example.face_velocities,
       exchanged_phi_ghost,
       false, 3, 0, TV());
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame+1);
 
   return true;
 }

@@ -86,7 +86,7 @@ namespace application {
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
 
-        driver->SuperJob3Impl(dt);
+        driver->SuperJob3Impl(this, da, dt);
 
         // Free resources.
         DestroyExampleAndDriver(example, driver);
