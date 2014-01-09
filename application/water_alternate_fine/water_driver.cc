@@ -347,6 +347,11 @@ SuperJob1Impl (const nimbus::Job *job,
       example.mac_grid, example.face_velocities, face_velocities_ghost,
       face_velocities_ghost, *example.incompressible.boundary, dt, time);
 
+  //Add Forces 0%
+  LOG::Time("Forces");
+  example.incompressible.Advance_One_Time_Step_Forces(
+      example.face_velocities, dt, time, true, 0, example.number_of_ghost_cells);
+
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame+1);
 
