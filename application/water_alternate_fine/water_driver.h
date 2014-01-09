@@ -55,6 +55,9 @@ public:
                         const bool set_boundary_conditions,
                         const T dt);
 
+    // Execution for super job 3.
+    bool SuperJob3Impl(T dt);
+
     void Write_Output_Files(const int frame);
 
     void Write_Substep(const std::string& title,const int substep,const int level=0);

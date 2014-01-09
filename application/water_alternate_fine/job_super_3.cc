@@ -46,21 +46,21 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_alternate_fine/job_write_frame.h"
+#include "application/water_alternate_fine/job_super_3.h"
 
 namespace application {
 
-    JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
+    JobSuper3::JobSuper3(nimbus::Application *app) {
         set_application(app);
     };
 
-    nimbus::Job* JobWriteFrame::Clone() {
-        return new JobWriteFrame(application());
+    nimbus::Job* JobSuper3::Clone() {
+        return new JobSuper3(application());
     }
 
-    void JobWriteFrame::Execute(nimbus::Parameter params,
-                                const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
+    void JobSuper3::Execute(nimbus::Parameter params,
+                                    const nimbus::DataArray& da) {
+        dbg(APP_LOG, "Executing SUPER_3 job.\n");
 
         T time, dt;
         int frame;
@@ -70,31 +70,28 @@ namespace application {
 
         // Assume time, dt, frame is ready from here.
         dbg(APP_LOG,
-            "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+            "In SUPER_3: Initialize WATER_DRIVER/WATER_EXAMPLE"
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
 
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
+
         bool init_success = InitializeExampleAndDriver(da, frame, time,
                                                        this, example, driver);
         assert(init_success);
 
         dbg(APP_LOG,
-            "Simulation starts"
+            "Super Job 3 starts"
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
-        // Reseed particles and write frame.
-        driver->WriteFrameImpl(this, da, true, dt);
 
-        // TODO(quhang/chinmayee): Fix the passing mechanism for
-        // last_unique_particle.
+        driver->SuperJob3Impl(dt);
 
-        // free resources
-        delete example;
-        delete driver;
+        // Free resources.
+        DestroyExampleAndDriver(example, driver);
 
-        dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+        dbg(APP_LOG, "Completed executing SUPER_3 job\n");
 }
 
 } // namespace application

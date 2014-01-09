@@ -14,6 +14,8 @@
 #include <PhysBAM_Geometry/Grids_Uniform_Interpolation_Collidable/LINEAR_INTERPOLATION_COLLIDABLE_FACE_UNIFORM.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
+#include "shared/dbg_modes.h"
+#include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "string.h"
@@ -297,6 +299,42 @@ WriteFrameImpl(const nimbus::Job *job,
 
   //Save State
   example.Save_To_Nimbus(job, da, current_frame+1);
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+SuperJob3Impl(T dt) {
+
+  LOG::SCOPE *scope=0;
+  scope=new LOG::SCOPE("Project");
+  bool set_boundary_conditions = true;
+  if (set_boundary_conditions) {
+    example.Set_Boundary_Conditions(time);
+  }
+  example.incompressible.Set_Dirichlet_Boundary_Conditions(
+      &example.particle_levelset_evolution.phi, 0);
+  example.projection.p *= dt;
+  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
+  example.incompressible.Advance_One_Time_Step_Implicit_Part(
+      example.face_velocities, dt, time, true);
+  example.projection.p *= (1/dt);
+  example.incompressible.boundary->Apply_Boundary_Condition_Face(
+      example.incompressible.grid, example.face_velocities,time+dt);
+  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(
+      false);
+  delete scope;
+
+  T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
+  example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
+      example.mac_grid,
+      example.particle_levelset_evolution.phi,
+      exchanged_phi_ghost,
+      0, time+dt, 8);
+  example.incompressible.Extrapolate_Velocity_Across_Interface(
+      example.face_velocities,
+      exchanged_phi_ghost,
+      false, 3, 0, TV());
+
+  return true;
 }
 //#####################################################################
 // Function Write_Substep

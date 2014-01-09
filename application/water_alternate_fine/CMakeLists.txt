@@ -29,6 +29,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
     ${PROJECT_SOURCE_DIR}/job_super_2.cc
+    ${PROJECT_SOURCE_DIR}/job_super_3.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
@@ -43,6 +44,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_main.h
     ${PROJECT_SOURCE_DIR}/job_super_2.h
+    ${PROJECT_SOURCE_DIR}/job_super_3.h
     ${PROJECT_SOURCE_DIR}/job_write_frame.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h

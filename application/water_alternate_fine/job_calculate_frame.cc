@@ -70,7 +70,7 @@ namespace application {
 
         // Assume time, dt, frame is ready from here.
         dbg(APP_LOG,
-            "QUHANG: In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+            "In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
 

@@ -33,38 +33,28 @@
  */
 
 /*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * The super job 3.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_3_H_
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/physbam_include.h"
-#include "application/water_alternate_fine/water_driver.h"
-#include "application/water_alternate_fine/water_example.h"
 #include "shared/nimbus.h"
+
+#define SUPER_3 "SUPER_3"
 
 namespace application {
 
-    // Initialzes WATER_EXAMPLE and WATER_DRIVER with the given input parameters
-    // and the simulation variables in data array. Notice, this function call
-    // is not expected to be called at the start of the simulation when
-    // WATER_EXAMPLE and WATER_DRIVER is not passed by Nimbus but initialized by
-    // PhysBAM itself.  --quhang
-    bool InitializeExampleAndDriver(
-        const nimbus::DataArray& da,
-        const int current_frame,
-        const T time,
-        const nimbus::Job* job,
-        PhysBAM::WATER_EXAMPLE<TV>*& example,
-        PhysBAM::WATER_DRIVER<TV>*& driver);
-
-    // Destroy WATER_EXAMPLE and WATER_DRIVER.
-    void DestroyExampleAndDriver(
-        PhysBAM::WATER_EXAMPLE<TV>*& example,
-        PhysBAM::WATER_DRIVER<TV>*& driver);
+    class JobSuper3 : public nimbus::Job {
+        public:
+            explicit JobSuper3(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params,
+                                 const nimbus::DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_

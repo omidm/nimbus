@@ -66,4 +66,12 @@ namespace application {
         return true;
     }
 
+    void DestroyExampleAndDriver(
+        PhysBAM::WATER_EXAMPLE<TV>*& example,
+        PhysBAM::WATER_DRIVER<TV>*& driver) {
+      delete example;
+      example = NULL;
+      delete driver;
+      driver = NULL;
+    }
 } // namespace application

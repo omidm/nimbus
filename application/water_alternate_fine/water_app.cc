@@ -43,6 +43,7 @@
 #include "application/water_alternate_fine/job_loop_iteration.h"
 #include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_super_2.h"
+#include "application/water_alternate_fine/job_super_3.h"
 #include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_app.h"
 #include "data/scalar_data.h"
@@ -92,6 +93,7 @@ namespace application {
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
         RegisterJob(SUPER_2, new JobSuper2(this));
+        RegisterJob(SUPER_3, new JobSuper3(this));
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
         RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
         RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));
