@@ -47,6 +47,7 @@
 #include "application/water_alternate_fine/job_super_2.h"
 #include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_app.h"
+#include "data/scalar_data.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
@@ -87,6 +88,8 @@ namespace application {
         RegisterData(APP_POS_REM_PARTICLES, new DataApp(APP_POS_REM_PARTICLES, kParticlesBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_REM_PARTICLES);
         RegisterData(APP_NEG_REM_PARTICLES, new DataApp(APP_NEG_REM_PARTICLES, kParticlesBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
+        RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
 
         RegisterJob(MAIN, new JobMain(this));
         // RegisterJob(LOOP, new JobLoop(this));

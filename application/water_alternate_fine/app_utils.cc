@@ -83,6 +83,37 @@ namespace application {
         return success;
     }
 
+    bool GetDataSet(const std::string &name,
+                    const nimbus::DataArray &da,
+                    std::set<Data * > &ds) {
+        bool success = false;
+        if (da.empty()) {
+            return success;
+        }
+        for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            if (d->name() == name) {
+                ds.insert(*it);
+                success = true;
+            }
+        }
+        return success;
+    }
+
+    nimbus::Data* GetFirstData(const std::string &name,
+                               const nimbus::DataArray &da) {
+        if (da.empty()) {
+            return NULL;
+        }
+        for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            if (d->name() == name) {
+                return d;
+            }
+        }
+        return NULL;
+    }
+
     void DestroyTranslatorObjects(nimbus::PdiVector *vec) {
         if (vec->empty())
             return;
@@ -158,7 +189,6 @@ namespace application {
         const nimbus::DataArray& da,
         const int current_frame,
         const T time,
-        const int last_unique_particle_id,
         const nimbus::Job* job,
         PhysBAM::WATER_EXAMPLE<TV>*& example,
         PhysBAM::WATER_DRIVER<TV>*& driver
@@ -173,7 +203,7 @@ namespace application {
       driver->current_frame = current_frame;
       driver->time = time;
       // The returning result is not used.
-      driver->Initialize(job, da, last_unique_particle_id);
+      driver->Initialize(job, da);
       return true;
     }
 } // namespace application

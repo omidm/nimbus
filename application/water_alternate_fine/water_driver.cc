@@ -45,10 +45,9 @@ template<class TV> WATER_DRIVER<TV>::
 //#####################################################################
 // Initialize
 //#####################################################################
-template<class TV> int WATER_DRIVER<TV>::
+template<class TV> void WATER_DRIVER<TV>::
 Initialize(const nimbus::Job *job,
            const nimbus::DataArray &da,
-           int last_unique_particle,
            const bool set_boundary_conditions)
 {
     DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
@@ -117,7 +116,7 @@ Initialize(const nimbus::Job *job,
     }
     else {
         // physbam init
-        example.Load_From_Nimbus(job, da, current_frame, last_unique_particle);
+        example.Load_From_Nimbus(job, da, current_frame);
         example.collision_bodies_affecting_fluid.Rasterize_Objects();
         example.collision_bodies_affecting_fluid.
             Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
@@ -154,13 +153,10 @@ Initialize(const nimbus::Job *job,
         example.Set_Boundary_Conditions(time); // get so CFL is correct
     }
 
-    int last_unique_particle_ret = -1;
     if (init_phase) {
-        last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame);
+        example.Save_To_Nimbus(job, da, current_frame);
         Write_Output_Files(example.first_frame);
     }
-
-    return last_unique_particle_ret;
 }
 //#####################################################################
 // Run
@@ -188,7 +184,7 @@ Run(RANGE<TV_INT>& domain,const T dt,const T time)
 
 // Substep without reseeding and writing to frame.
 // Operation on time should be solved carefully. --quhang
-template<class TV> int WATER_DRIVER<TV>::
+template<class TV> void WATER_DRIVER<TV>::
 CalculateFrameImpl(const nimbus::Job *job,
                    const nimbus::DataArray &da,
                    const bool set_boundary_conditions,
@@ -277,13 +273,12 @@ CalculateFrameImpl(const nimbus::Job *job,
   // time+=dt;
 
   // Save State.
-  int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
-  return last_unique_particle_ret;
+  example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 // Substep with reseeding and writing to frame.
 // Operation on time should be solved carefully. --quhang
-template<class TV> int WATER_DRIVER<TV>::
+template<class TV> void WATER_DRIVER<TV>::
 WriteFrameImpl(const nimbus::Job *job,
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
@@ -302,14 +297,13 @@ WriteFrameImpl(const nimbus::Job *job,
   Write_Output_Files(++output_number);
 
   //Save State
-  int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
-  return last_unique_particle_ret;
+  example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 //#####################################################################
 // Advance_To_Target_Time
 //#####################################################################
-template<class TV> int WATER_DRIVER<TV>::
+template<class TV> void WATER_DRIVER<TV>::
 Advance_To_Target_Time(const nimbus::Job *job,
                        const nimbus::DataArray &da,
                        const T target_time,
@@ -405,10 +399,8 @@ Advance_To_Target_Time(const nimbus::Job *job,
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //Save State
-    int last_unique_particle_ret = example.Save_To_Nimbus(job, da, current_frame+1);
+    example.Save_To_Nimbus(job, da, current_frame+1);
     Write_Output_Files(++output_number);
-
-    return last_unique_particle_ret;
 }
 //#####################################################################
 // Function Write_Substep

@@ -85,15 +85,15 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
-        driver.Initialize(this, da, last_unique_particle);
+        driver.Initialize(this, da);
 
         // simulate - advance a time step
         PhysBAM::LOG::SCOPE scope("FRAME", "Frame %d",
                                   driver.current_frame+1, 1);
-        last_unique_particle =
-            driver.Advance_To_Target_Time(this,
-                                          da,
-                                          example->Time_At_Frame(driver.current_frame+1));
+
+        driver.Advance_To_Target_Time(this,
+                                      da,
+                                      example->Time_At_Frame(driver.current_frame+1));
         frame++;
 
         // free resources

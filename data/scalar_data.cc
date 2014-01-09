@@ -59,14 +59,17 @@ namespace nimbus {
     template<class T> void ScalarData<T>::Destroy() {}
 
     template<class T> void ScalarData<T>::Copy(Data* from) {
-        ScalarData<T> sfrom = static_cast<ScalarData<T> * >(from);
+        ScalarData<T> *sfrom = static_cast<ScalarData<T> * >(from);
         scalar_ = sfrom->scalar();
     }
 
     template<class T> bool ScalarData<T>::Serialize(SerializedData* ser_data) {
-        std::stringstream ser;
-        ser << scalar;
-        char *buf = ser.str().c_str();
+        std::ostringstream ser;
+        ser << scalar_;
+        const char *temp = ser.str().c_str();
+        size_t len = ser.str().size() + 1;
+        char *buf = new char[len];
+        memcpy(buf, temp, len);
         ser_data->set_data_ptr(buf);
         ser_data->set_size(ser.str().size()+1); // NOLINT
         return true;
@@ -75,8 +78,8 @@ namespace nimbus {
     template <class T> bool ScalarData<T>::
     DeSerialize(const SerializedData &ser_data, Data **result) {
         std::string str(ser_data.data_ptr_raw(), ser_data.size());
-        std::stringstream ser(str);
-        ser >> scalar;
+        std::istringstream ser(str);
+        ser >> scalar_;
         return true;
     }
 
@@ -89,3 +92,5 @@ namespace nimbus {
     }
 
 }  // namespace nimbus
+
+template class nimbus::ScalarData<int>;

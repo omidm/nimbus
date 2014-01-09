@@ -41,24 +41,23 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
     
-    int Initialize(const nimbus::Job *job,
-                   const nimbus::DataArray &da,
-                   int last_unique_particle,
-                   bool set_boundary_conditions = true);
-    int Advance_To_Target_Time(const nimbus::Job *job,
-                               const nimbus::DataArray &da,
-                               const T target_time,
-                               bool set_boundary_conditions = true);
+    void Initialize(const nimbus::Job *job,
+                    const nimbus::DataArray &da,
+                    bool set_boundary_conditions = true);
+    void Advance_To_Target_Time(const nimbus::Job *job,
+                                const nimbus::DataArray &da,
+                                const T target_time,
+                                bool set_boundary_conditions = true);
 
-    int CalculateFrameImpl(const nimbus::Job *job,
-                           const nimbus::DataArray &da,
-                           const bool set_boundary_conditions,
-                           const T dt);
+    void CalculateFrameImpl(const nimbus::Job *job,
+                            const nimbus::DataArray &da,
+                            const bool set_boundary_conditions,
+                            const T dt);
 
-    int WriteFrameImpl(const nimbus::Job *job,
-                       const nimbus::DataArray &da,
-                       const bool set_boundary_conditions,
-                       const T dt);
+    void WriteFrameImpl(const nimbus::Job *job,
+                        const nimbus::DataArray &da,
+                        const bool set_boundary_conditions,
+                        const T dt);
 
     void Write_Output_Files(const int frame);
 

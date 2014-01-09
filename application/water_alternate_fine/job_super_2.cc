@@ -64,16 +64,13 @@ namespace application {
     void JobSuper2::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing 2nd super job\n");
 
-        // get parameters
-        int frame, last_unique_particle;
+        int frame;
         std::stringstream in_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
         in_ss.str(params_str);
         in_ss >> frame;
-        in_ss >> last_unique_particle;
-        dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
-                     frame, last_unique_particle);
+        dbg(APP_LOG, "Frame %i in super job 2\n", frame);
 
         // initialize configuration and state
         PhysBAM::WATER_EXAMPLE<TV> *example =
@@ -87,7 +84,7 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
-        driver.Initialize(this, da, last_unique_particle, false);
+        driver.Initialize(this, da, false);
 
         // modify levelset
         dbg(APP_LOG, "Modify Levelset ...\n");
@@ -102,13 +99,13 @@ namespace application {
 
         // delete particles
         dbg(APP_LOG, "Delete Particles ...\n");
-        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
+        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
         example->particle_levelset_evolution.particle_levelset.
-            Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
+            Delete_Particles_In_Local_Maximum_Phi_Cells(1);
         example->particle_levelset_evolution.particle_levelset.
-            Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
+            Delete_Particles_Far_From_Interface(); // uses visibility
         //example->particle_levelset_evolution.particle_levelset.
-        //    Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
+        //    Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt);
 
         // reincorporate removed particles
         dbg(APP_LOG, "Reincorporate Removed Particles ...\n");

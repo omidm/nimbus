@@ -67,9 +67,6 @@ namespace application {
     void JobLoopIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing loop iteration job\n");
 
-        // TODO(omidm): get last_unique_particle from da.
-        int last_unique_particle = 1;
-
         // Get parameters: frame, time
         int frame;
         T time;
@@ -77,15 +74,15 @@ namespace application {
                                params.ser_data().size());
         LoadParameter(params_str, &frame, &time);
 
-        dbg(APP_LOG, "Frame %i, last unique particle %i and time %i in iteration job\n",
-                     frame, last_unique_particle, time);
+        dbg(APP_LOG, "Frame %i and time %i in iteration job\n",
+                     frame, time);
 
         // check whether the frame is done or not
         bool done = false;
         PhysBAM::WATER_EXAMPLE<TV>* example;
         PhysBAM::WATER_DRIVER<TV>* driver;
         assert(InitializeExampleAndDriver(
-               da, frame, time, last_unique_particle,
+               da, frame, time,
                this, example, driver));
 
         T target_time = example->Time_At_Frame(driver->current_frame+1);

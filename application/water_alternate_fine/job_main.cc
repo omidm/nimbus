@@ -72,7 +72,7 @@ namespace application {
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 7;
+        int data_num = 8;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
@@ -122,6 +122,11 @@ namespace application {
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
+        DefineData(APP_LAST_UNIQUE_PARTICLE_ID,
+                   data_ids[7],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
 
         // Job setup
         int job_num = 1;
@@ -138,6 +143,7 @@ namespace application {
         read.insert(data_ids[4]);
         read.insert(data_ids[5]);
         read.insert(data_ids[6]);
+        read.insert(data_ids[7]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
@@ -145,6 +151,7 @@ namespace application {
         write.insert(data_ids[4]);
         write.insert(data_ids[5]);
         write.insert(data_ids[6]);
+        write.insert(data_ids[7]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");

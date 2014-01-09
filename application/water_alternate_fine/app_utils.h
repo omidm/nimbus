@@ -50,6 +50,9 @@
 
 // Not sure if adding linking dependency for PhysBAM is right here?
 // --quhang
+// Can this be moved to another file? Water driver and example specific code
+// should be in water_driver or water_example.
+// -- chinmayee
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 
@@ -151,6 +154,11 @@ namespace application {
                            const nimbus::DataArray& da,
                            nimbus::PdiVector *vec);
     void DestroyTranslatorObjects(nimbus::PdiVector *vec);
+    bool GetDataSet(const std::string &name,
+                    const nimbus::DataArray &da,
+                    std::set<Data * > &ds);
+    nimbus::Data* GetFirstData(const std::string &name,
+                               const nimbus::DataArray &da);
 
    // TODO: lets make read/ write sets if possible, and also have separate
    // read/ write instead of one DataArray passed to a job/ a better indexing
@@ -164,13 +172,15 @@ namespace application {
     bool LoadParameter(const std::string str, int* frame, T* time);
     bool LoadParameter(const std::string str, int* frame, T* time, T* dt);
 
+    // Can this be moved to another file? Water driver and example specific code
+    // should be in water_driver or water_example.
+    // -- chinmayee
     // Initializes WATER_EXAMPLE and WATER_DRIVER with the given parameters and
     // fills in WATER_EXAMPLE with the simulation variables in DataArray.
     bool InitializeExampleAndDriver(
         const nimbus::DataArray& da,
         const int current_frame,
         const T time,
-        const int last_unique_particle_id,
         const nimbus::Job* job,
         PhysBAM::WATER_EXAMPLE<TV>*& example,
         PhysBAM::WATER_DRIVER<TV>*& driver);

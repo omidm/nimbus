@@ -64,8 +64,6 @@ namespace application {
 
         T time, dt;
         int frame;
-        // TODO: Get form data array!
-        int last_unique_particle = 100;
         std::stringstream in_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
@@ -80,7 +78,7 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
         assert(InitializeExampleAndDriver(
-               da, frame, time, last_unique_particle,
+               da, frame, time,
                this, example, driver));
 
         dbg(APP_LOG,
@@ -88,7 +86,7 @@ namespace application {
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
         // Move forward time "dt" without reseeding and writing frames.
-        last_unique_particle = driver->CalculateFrameImpl(this, da, true, dt);
+        driver->CalculateFrameImpl(this, da, true, dt);
 
         // TODO(quhang/chinmayee): Fix the passing mechanism for
         // last_unique_particle.

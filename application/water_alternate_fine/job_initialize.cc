@@ -76,7 +76,7 @@ namespace application {
         // TODO: pass the last_unique_particle in a new data and add the
         // logical id to read/write set of the spawned LOOP_FRAME job down.
         // int last_unique_particle driver.Initialize(this, da, 0);
-        driver.Initialize(this, da, 0);
+        driver.Initialize(this, da);
 
         delete example;
 
