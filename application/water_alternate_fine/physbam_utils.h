@@ -39,13 +39,15 @@
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
 
-#include "shared/nimbus.h"
 #include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/physbam_include.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
+#include "shared/nimbus.h"
 
 namespace application {
 
+    // useful methods
     bool InitializeExampleAndDriver(
         const nimbus::DataArray& da,
         const int current_frame,

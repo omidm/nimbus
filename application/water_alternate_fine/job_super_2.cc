@@ -68,10 +68,10 @@ namespace application {
         dbg(APP_LOG, "Executing 2nd super job\n");
 
         int frame;
-        T time;
+        T time, dt;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        LoadParameter(params_str, &frame, &time);
+        LoadParameter(params_str, &frame, &time, &dt);
 
         dbg(APP_LOG, "Frame %i in super job 2\n", frame);
 
@@ -89,16 +89,28 @@ namespace application {
         driver.current_frame = frame;
         driver.Initialize(this, da, false);
 
+        // face velocity for ghost + interior
+        FaceArray face_velocities_ghost;
+        face_velocities_ghost.Resize(example->incompressible.grid,
+                                     example->number_of_ghost_cells,
+                                     false);
+        example->incompressible.boundary->
+            Fill_Ghost_Cells_Face(example->mac_grid,
+                                  example->face_velocities,
+                                  face_velocities_ghost,
+                                  time+dt,
+                                  example->number_of_ghost_cells);
+
         // modify levelset
         dbg(APP_LOG, "Modify Levelset ...\n");
         example->particle_levelset_evolution.particle_levelset.
             Exchange_Overlap_Particles();
-        //example->particle_levelset_evolution.
-        //    Modify_Levelset_And_Particles(&face_velocities_ghost);
+        example->particle_levelset_evolution.
+            Modify_Levelset_And_Particles(&face_velocities_ghost);
 
         // adjust phi with sources
         dbg(APP_LOG, "Adjust Phi ...\n");
-        //example.Adjust_Phi_With_Sources(time+dt);
+        example->Adjust_Phi_With_Sources(time+dt);
 
         // delete particles
         dbg(APP_LOG, "Delete Particles ...\n");
@@ -107,8 +119,10 @@ namespace application {
             Delete_Particles_In_Local_Maximum_Phi_Cells(1);
         example->particle_levelset_evolution.particle_levelset.
             Delete_Particles_Far_From_Interface(); // uses visibility
-        //example->particle_levelset_evolution.particle_levelset.
-        //    Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt);
+        example->particle_levelset_evolution.particle_levelset.
+            Identify_And_Remove_Escaped_Particles(face_velocities_ghost,
+                                                  1.5,
+                                                  time + dt);
 
         // reincorporate removed particles
         dbg(APP_LOG, "Reincorporate Removed Particles ...\n");

@@ -41,7 +41,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
 
-#include <PhysBAM_Tools/Vectors/VECTOR.h>
+#include "application/water_alternate_fine/physbam_include.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
@@ -94,6 +94,8 @@ namespace application {
     typedef float RW;
     typedef PhysBAM::VECTOR<T,   kDimension> TV;
     typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
+    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     // application specific parameters and constants
     const int kThreadsNum = 1;

@@ -37,6 +37,9 @@
  * levelset with sources, deletes particles and reincorporates removed
  * particles.
  *
+ * This job uses all data -- face velocities, phi, particles and removed
+ * particles!
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
