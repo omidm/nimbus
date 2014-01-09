@@ -88,9 +88,6 @@ namespace application {
         // Move forward time "dt" without reseeding and writing frames.
         driver->CalculateFrameImpl(this, da, true, dt);
 
-        // TODO(quhang/chinmayee): Fix the passing mechanism for
-        // last_unique_particle.
-
         // Free resources.
         DestroyExampleAndDriver(example, driver);
 
