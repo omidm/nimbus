@@ -85,7 +85,8 @@ class SchedulerCommand {
     LOCAL_COPY,
     DEFINE_PARTITION,
     LDO_ADD,
-    LDO_REMOVE
+    LDO_REMOVE,
+    TERMINATE
   };
 
   typedef std::set<Type> TypeSet;
@@ -125,6 +126,7 @@ class SchedulerCommand {
   static const std::string DEFINE_PARTITION_NAME;
   static const std::string LDO_ADD_NAME;
   static const std::string LDO_REMOVE_NAME;
+  static const std::string TERMINATE_NAME;
 
  private:
   static bool ParseCommandType(const std::string& input,

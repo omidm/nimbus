@@ -101,6 +101,8 @@ class Application {
        const GeometricRegion& r,
        const Parameter& params);
 
+  void TerminateApplication(const exit_status_t& exit_status_id);
+
   Job* CloneJob(std::string name);
   Data* CloneData(std::string name);
 

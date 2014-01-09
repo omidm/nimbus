@@ -38,7 +38,10 @@
  *   DATE: Thu Dec 12 17:15:37 2013
  *  DESCR:
  ***********************************************************************/
+#include <string>
 #include "data/physbam/physbam_data.h"
+#include "data/physbam/protobuf_compiled/pd_message.pb.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 /**
@@ -56,10 +59,7 @@ PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 */
 Data * PhysBAMData::Clone() {
   PhysBAMData* d = new PhysBAMData();
-  char* buf = static_cast<char*>(malloc(size_));
-  if (buffer_)
-    memcpy(buf, buffer_, size_);
-  d->set_buffer(buf, size_);
+  d->set_buffer(NULL, size_);
   return d;
 }
 
@@ -70,7 +70,7 @@ Data * PhysBAMData::Clone() {
  * \return
 */
 void PhysBAMData::Create() {
-  if (!buffer_)
+  if (size_ && !buffer_)
       buffer_ = static_cast<char*>(malloc(size_));
 }
 
@@ -111,21 +111,59 @@ void PhysBAMData::Copy(Data *from) {
  * \return
 */
 bool PhysBAMData::Serialize(SerializedData *ser_data) {
-  return false;
+  nimbus_message::pd_message pd; // NOLINT
+  if (buffer_) {
+      std::string buf(buffer_, size_);
+      pd.set_buffer(buf);
+  }
+  if (size_)
+      pd.set_size(size_);
+  else
+      pd.set_size(0);
+  std::string ser;
+  bool success = pd.SerializeToString(&ser);
+  char *buf = new char[ser.length() + 1];
+  memcpy(buf, ser.c_str(), sizeof(char) * (ser.length() + 1)); // NOLINT
+  if (!success)
+      return success;
+  ser_data->set_data_ptr(buf);
+  ser_data->set_size(sizeof(char) * ser.length() + 1); // NOLINT
+  return success;
 }
 
 
 /**
  * \fn bool nimbus::PhysBAMData::DeSerialize(const SerializedData &ser_data,
                                  Data **result)
- * \brief Brief description.
+ * \brief This function does not free buffer. Destroy should be called to free
+ * buffer first, otherwise there will be a memory leak.
  * \param ser_data
  * \param result
  * \return
 */
 bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
                               Data **result) {
-  return false;
+    const char *buf = ser_data.data_ptr_raw();
+    const int buf_size = ser_data.size();
+    if (buf_size <= 0)
+        return false;
+    assert(buf);
+    nimbus_message::pd_message pd; // NOLINT
+    std::string temp(buf, buf_size-1); // NOLINT
+    bool success = pd.ParseFromString(temp);
+    if (!success)
+        return success;
+    PhysBAMData *data = new PhysBAMData();
+    (*result) = static_cast<Data *>(data);
+    if (pd.has_buffer()) {
+        int size = pd.size();
+        char *buffer = new char[size];
+        memcpy(buffer, pd.buffer().c_str(), sizeof(char) * size); // NOLINT
+        data->set_buffer(buffer, size);
+    } else {
+        data->set_buffer(NULL, pd.size());
+    }
+    return success;
 }
 
 /** Clear out the data from the temporary buffer. Note that this will
@@ -146,8 +184,9 @@ int PhysBAMData::CommitTempBuffer() {
   // The usage of read/write/tellp seems incorrect.  -quhang
   // int len = temp_buffer_->tellp();
   int len = temp_buffer_->str().size();
-  delete buffer_;
-
+  if (buffer_)
+    delete buffer_;
+  size_ = len;
   buffer_ = static_cast<char*>(malloc(len));
   temp_buffer_->read(buffer_, len);
   temp_buffer_->clear();

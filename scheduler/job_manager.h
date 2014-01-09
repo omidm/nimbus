@@ -97,6 +97,8 @@ class JobManager {
     size_t GetJobsNeedDataVersion(JobEntryList* list,
         JobEntry::VersionedLogicalData vld);
 
+    bool AllJobsAreDone();
+
     void UpdateJobBeforeSet(JobEntry* job);
 
     void UpdateBeforeSet(IDSet<job_id_t>* before_set);

@@ -2,6 +2,10 @@
 // Copyright 2002-2009, Ronald Fedkiw, Geoffrey Irving, Nipun Kwatra, Frank Losasso, Andrew Selle.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+
+#ifndef __ADVECTION_SEMI_LAGRANGIAN_UNIFORM_DEFINITION_H__
+#define __ADVECTION_SEMI_LAGRANGIAN_UNIFORM_DEFINITION_H__
+
 #include <PhysBAM_Tools/Grids_Uniform/GRID.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
@@ -82,3 +86,5 @@ Update_Advection_Equation_Face_Lookup(const T_GRID& grid,T_FACE_ARRAYS_SCALAR& Z
 }
 
 }
+
+#endif

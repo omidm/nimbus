@@ -197,7 +197,7 @@ Read_Output_Files(const int frame)
 //#####################################################################
 // Write_Output_Files
 //#####################################################################
-template<class TV> void WATER_EXAMPLE<TV>::
+template<class TV> int WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     PdiVector pdv;
@@ -205,13 +205,13 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv))
-        translator.WriteFaceArray(&application::kDomain, &pdv, &face_velocities);
+        translator.WriteFaceArray(&application::kDomainFaceVel, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
 
     // pressure
     const std::string pstring = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pstring, da, &pdv))
-        translator.WriteScalarArray(&application::kDomainPressureGhost,
+        translator.WriteScalarArray(&application::kDomainPressure,
                                    &pdv,
                                    &incompressible.projection.p);
     application::DestroyTranslatorObjects(&pdv);
@@ -222,29 +222,67 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // levelset
     const std::string lsstring = std::string(APP_PHI);
     if (application::GetTranslatorData(job, lsstring, da, &pdv))
-        translator.WriteScalarArray(&application::kDomainGhost,
+        translator.WriteScalarArray(&application::kDomainPhi,
                                     &pdv,
                                     &particle_levelset.levelset.phi);
     application::DestroyTranslatorObjects(&pdv);
+
+    // positive particles
+    const std::string ppstring = std::string(APP_POS_PARTICLES);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv))
+        translator.WriteParticles(&application::kDomainParticles,
+                                  &pdv,
+                                  particle_levelset,
+                                  true);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // negative particles
+    const std::string npstring = std::string(APP_NEG_PARTICLES);
+    if (application::GetTranslatorData(job, npstring, da, &pdv))
+        translator.WriteParticles(&application::kDomainParticles,
+                                  &pdv,
+                                  particle_levelset,
+                                  false);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // positive removed particles
+    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv))
+        translator.WriteRemovedParticles(&application::kDomainParticles,
+                                         &pdv,
+                                         particle_levelset,
+                                         true);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // negative particles
+    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv))
+        translator.WriteRemovedParticles(&application::kDomainParticles,
+                                         &pdv,
+                                         particle_levelset,
+                                         false);
+    application::DestroyTranslatorObjects(&pdv);
+
+    return particle_levelset.last_unique_particle_id;
 }
 //#####################################################################
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, int last_unique_particle)
 {
     PdiVector pdv;
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv))
-        translator.ReadFaceArray(&application::kDomain, &pdv, &face_velocities);
+        translator.ReadFaceArray(&application::kDomainFaceVel, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
 
     // pressure
     const std::string pstring = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pstring, da, &pdv))
-        translator.ReadScalarArray(&application::kDomainPressureGhost,
+        translator.ReadScalarArray(&application::kDomainPressure,
                                    &pdv,
                                    &incompressible.projection.p);
     application::DestroyTranslatorObjects(&pdv);
@@ -255,17 +293,55 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     // levelset
     const std::string lsstring = std::string(APP_PHI);
     if (application::GetTranslatorData(job, lsstring, da, &pdv))
-        translator.ReadScalarArray(&application::kDomainGhost,
+        translator.ReadScalarArray(&application::kDomainPhi,
                                    &pdv,
                                    &particle_levelset.levelset.phi);
     application::DestroyTranslatorObjects(&pdv);
 
+    // positive particles
+    const std::string ppstring = std::string(APP_POS_PARTICLES);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv))
+        translator.ReadParticles(&application::kDomainParticles,
+                                 &pdv,
+                                 particle_levelset,
+                                 true);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // negative particles
+    const std::string npstring = std::string(APP_NEG_PARTICLES);
+    if (application::GetTranslatorData(job, npstring, da, &pdv))
+        translator.ReadParticles(&application::kDomainParticles,
+                                 &pdv,
+                                 particle_levelset,
+                                 false);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // positive removed particles
+    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv))
+        translator.ReadRemovedParticles(&application::kDomainParticles,
+                                        &pdv,
+                                        particle_levelset,
+                                        true);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // negative particles
+    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv))
+        translator.ReadRemovedParticles(&application::kDomainParticles,
+                                        &pdv,
+                                        particle_levelset,
+                                        false);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // last unique particle id
+    particle_levelset.last_unique_particle_id = last_unique_particle;
+
     std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
-    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
-    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
-    FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
-    FILE_UTILITIES::Read_From_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
+    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
+    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
+    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
+    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
 }
 //#####################################################################
 template class WATER_EXAMPLE<VECTOR<float,3> >;

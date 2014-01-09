@@ -202,6 +202,9 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::LDO_REMOVE:
       ProcessLdoRemoveCommand(reinterpret_cast<LdoRemoveCommand*>(cm));
       break;
+    case SchedulerCommand::TERMINATE:
+      ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
+      break;
     default:
       std::cout << "ERROR: " << cm->toString() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
@@ -320,6 +323,10 @@ void Worker::ProcessLdoRemoveCommand(LdoRemoveCommand* cm) {
         dbg(DBG_ERROR, "Worker could not remove logical object %i to ldo map\n", (ldo->id()));
 }
 
+void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
+  exit(cm->exit_status().elem());
+}
+
 void Worker::SetupDataExchangerInterface() {
   data_exchanger_ = new WorkerDataExchanger(listening_port_);
   data_exchanger_thread_ = new boost::thread(
@@ -346,6 +353,7 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_.push_back(new LocalCopyCommand());
   scheduler_command_table_.push_back(new LdoAddCommand());
   scheduler_command_table_.push_back(new LdoRemoveCommand());
+  scheduler_command_table_.push_back(new TerminateCommand());
 }
 
 void Worker::AddData(Data* data) {

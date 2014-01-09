@@ -44,6 +44,9 @@
 #include <string>
 #include "shared/address_book.h"
 
+#define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
+#define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
+
 namespace nimbus {
   typedef uint32_t port_t;
   typedef uint32_t worker_id_t;
@@ -55,6 +58,8 @@ namespace nimbus {
   typedef uint64_t partition_id_t;
   typedef uint64_t param_id_t;
   typedef uint64_t data_version_t;
+
+  typedef int32_t exit_status_t;
 
   typedef uint32_t switch_id_t;  // Used in cluster map for network switches
 

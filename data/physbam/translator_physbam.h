@@ -76,15 +76,18 @@ namespace nimbus {
     // typedef typename PhysBAM::ARRAY<Particles*, PhysBAM::VECTOR<int, 3> > ParticlesArray;
     //  typedef typename PhysBAM::ARRAY<Particles*, int> ParticlesArray;
 
-    // TODO(quhang) Document particles-related classes well and give them better
-    // names.
+    // Container class for particles and removed particles.
     typedef typename PhysBAM::PARTICLE_LEVELSET_UNIFORM<Grid> ParticleContainer;
-    typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> ParticlesUnit;
-    typedef typename PhysBAM::ARRAY<ParticlesUnit*, TV_INT> ParticlesArray;
+    // Particle bucket. Each node has a linked list of particle buckets.
+    typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> ParticleBucket;
+    // Particle array, indexed by node.
+    typedef typename PhysBAM::ARRAY<ParticleBucket*, TV_INT> ParticleArray;
+
+    // TODO(quhang) Change the name.
     typedef typename PhysBAM::PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>
-        RemovedParticlesUnit;
-    typedef typename PhysBAM::ARRAY<RemovedParticlesUnit*, TV_INT>
-        RemovedParticlesArray;
+        RemovedParticleBucket;
+    typedef typename PhysBAM::ARRAY<RemovedParticleBucket*, TV_INT>
+        RemovedParticleArray;
 
     typedef typename PhysBAM::PARTICLE_LEVELSET<Grid> ParticleLevelset;
     typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector> ScalarArray;
@@ -97,6 +100,21 @@ namespace nimbus {
 
     explicit TranslatorPhysBAM() {}
     virtual ~TranslatorPhysBAM() {}
+
+    // Data structures used to format particles in PhysBAMData.
+    // Should be changed to protocol buffer later for compatibility.
+    // TODO(quhang) .
+    struct ParticleInternal {
+      int_dimension_t index[3];
+      scalar_t delta[3];
+      scalar_t radius;
+      uint16_t quantized_collision_distance;
+      int32_t id;
+    };
+
+    struct RemovedParticleInternal : public ParticleInternal {
+      scalar_t v[3];
+    };
 
     virtual void ReadFaceArray(const GeometricRegion* region,
                                const PdiVector* objects,
@@ -160,9 +178,9 @@ namespace nimbus {
                                        source_z * mult_z;
                     source_index += src_offset;
 
-                    int dest_x = x + dest(X_COORD) + 1;
-                    int dest_y = y + dest(Y_COORD) + 1;
-                    int dest_z = z + dest(Z_COORD) + 1;
+                    int dest_x = x + dest(X_COORD) + region->x();
+                    int dest_y = y + dest(Y_COORD) + region->y();
+                    int dest_z = z + dest(Z_COORD) + region->z();
 
                     typename PhysBAM::VECTOR<int, 3>
                       destinationIndex(dest_x, dest_y, dest_z);
@@ -281,87 +299,93 @@ namespace nimbus {
     /* Read the particles from the PhysicalDataInstances specified
      * by instances, limited by the GeometricRegion specified by region,
      * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
-     * This will clear out any existing data in particles first. */
-    bool ReadParticles(GeometricRegion* region,
-                       CPdiVector* instances,
+     * This will clear out any existing data in particles first if "merge" flag
+     * is not set. */
+    bool ReadParticles(const GeometricRegion* region,
+                       const PdiVector* instances,
                        ParticleContainer& particle_container,
-                       bool positive) {
-      // TODO(quhang) Check whether particle_container has valid particle data
-      // before moving on.
-      ParticlesArray* particles;
+                       bool positive,
+                       bool merge = false) {
+      ParticleArray* particles;
       if (positive) {
         particles = &particle_container.positive_particles;
       } else {
         particles = &particle_container.negative_particles;
       }
 
-      // Allocates buckets.
-      for (int z = 1; z <= region->dz(); z++)
-        for (int y = 1; y <= region->dy(); y++)
-          for (int x = 1; x <= region->dx(); x++) {
-            TV_INT block_index(x, y, z);
-            particle_container.Free_Particle_And_Clear_Pointer(
-                (*particles)(block_index));
-            if (!(*particles)(block_index)) {
-              (*particles)(block_index) = particle_container.Allocate_Particles(
-                  particle_container.template_particles);
+      // Checks whether the geometric region in the particle array is valid, and
+      // clears corresponding buckets inside the geometric region if necessary.
+      for (int z = region->z(); z < region->z() + region->dz(); z++)
+        for (int y = region->y(); y < region->y() + region->dy(); y++)
+          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+            TV_INT bucket_index(x, y, z);
+            if (!particles->Valid_Index(bucket_index)) {
+              dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
+                            x, y, z);
+              // Warning: might be too strict.
+              return false;
+            }
+            if (!merge) {
+              particle_container.Free_Particle_And_Clear_Pointer(
+                  (*particles)(bucket_index));
             }
           }
 
       if (instances == NULL) {
+        dbg(DBG_WARN, "Physical data instances are empty.\n");
         return false;
       }
 
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::const_iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-        scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+        ParticleInternal* buffer =
+            reinterpret_cast<ParticleInternal*>(data->buffer());
+        ParticleInternal* buffer_end = buffer + static_cast<int>(data->size())
+             / static_cast<int>(sizeof(ParticleInternal));
 
-        // @Phil. The data size is returned in the unit of bytes.  --quhang
-        // TODO(anyone) anyone knows how to avoid the ugly casting?
-        for (int i = 0;
-             i < static_cast<int>(data->size())
-             / static_cast<int>(sizeof(float));  // NOLINT
-             i+= 5) {
-          // This instance may have particles inside the region. So
-          // we have to iterate over them and insert them accordingly.
-          // Particles are stored as (x,y,z) triples in data array
-          scalar_t x = buffer[i];
-          scalar_t y = buffer[i + 1];
-          scalar_t z = buffer[i + 2];
-          scalar_t radius = buffer[i + 3];
-
-          uint16_t collision_distance = (uint16_t)buffer[i + 4];  // NOLINT
-
-          VECTOR_TYPE position;
-          position.x = x;
-          position.y = y;
-          position.z = z;
-          // TODO(quhang): Check whether the cast is safe.
-          int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
-          int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
-          int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
-
-          // TODO(quhang): The condition is not accurate.
-          // If particle is within region, copy it to particles
-          if (xi >= 1 &&
-              xi <= region->dx() &&
-              yi >= 1 &&
-              yi <= region->dy() &&
-              zi >= 1 &&
-              zi <= region->dz()) {
-            ParticlesUnit* cellParticles = (*particles)(TV_INT(xi, yi, zi));
+        for (ParticleInternal* p = buffer; p != buffer_end; ++p) {
+          int_dimension_t xi = p->index[0];
+          int_dimension_t yi = p->index[1];
+          int_dimension_t zi = p->index[2];
+          if (xi >= region->x() &&
+              xi < region->x()+region->dx() &&
+              yi >= region->y() &&
+              yi < region->y()+region->dy() &&
+              zi >= region->z() &&
+              zi < region->z()+region->dz()) {
+            TV_INT bucket_index(xi, yi, zi);
+            assert(particles->Valid_Index(bucket_index));
+            // NOTE(By Chinmayee): Please comment out these changes and don't
+            // delete them when pushing any updates, till we verify that the
+            // code works correctly, and does not give any assertion failure or
+            // seg fault on both Linux and Mac.
+            if (!(*particles)(bucket_index)) {
+              (*particles)(bucket_index) = particle_container.
+                  Allocate_Particles(particle_container.template_particles);
+            }
+            ParticleBucket* particle_bucket =
+                (*particles)(bucket_index);
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
-            int index = particle_container.Add_Particle(cellParticles);
-            cellParticles->quantized_collision_distance(index) =
-              collision_distance;
-            cellParticles->X(index) = position;
-            cellParticles->radius(index) = radius;
+            // I think things might not be that bad, because the number of
+            // bucket is expected to be constant.  -- quhang
+            int index = particle_container.Add_Particle(particle_bucket);
+            particle_bucket->X(index) = VECTOR_TYPE(p->delta[0],
+                                                    p->delta[1],
+                                                    p->delta[2]);
+            particle_bucket->radius(index) = p->radius;
+            particle_bucket->quantized_collision_distance(index) =
+              p->quantized_collision_distance;
+            if (particle_container.store_unique_particle_id) {
+              PhysBAM::ARRAY_VIEW<int>* id = particle_bucket->array_collection->
+                  template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+              (*id)(index) = p->id;
+            }
           }
-        }
+        }  // End the loop for buffer.
       }
       return true;
     }
@@ -370,79 +394,78 @@ namespace nimbus {
     /* Write the Particle data in particles into the
      * PhysicalDataInstances specified by instances, limited by the
      * GeometricRegion region. */
-    bool WriteParticles(GeometricRegion* region,
-                        CPdiVector* instances,
+    bool WriteParticles(const GeometricRegion* region,
+                        PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->ClearTempBuffer();
       }
 
-      for (int z = 1; z <= region->dz(); z++) {
-        for (int y = 1; y <= region->dy(); y++) {
-          for (int x = 1; x <= region->dx(); x++) {
-            ParticlesArray* arrayPtr;
-            if (positive) {
-              arrayPtr = &particle_container.positive_particles;
-            } else {
-              arrayPtr = &particle_container.negative_particles;
+      ParticleArray* particles;
+      if (positive) {
+        particles = &particle_container.positive_particles;
+      } else {
+        particles = &particle_container.negative_particles;
+      }
+
+      // Loop through each particle bucket in the specified region.
+      for (int z = region->z(); z < region->z() + region->dz(); z++)
+        for (int y = region->y(); y < region->y() + region->dy(); y++)
+          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+            TV_INT bucket_index(x, y, z);
+            if (!particles->Valid_Index(bucket_index)) {
+              dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
+                            x, y, z);
+              return false;
             }
-            ParticlesUnit* particles = (*arrayPtr)(TV_INT(x, y, z));
-            while (particles) {
-              for (int i = 1; i <= particles->array_collection->Size(); i++) {
-                VECTOR_TYPE particle = particles->X(i);
-                scalar_t x = particle.x;
-                scalar_t y = particle.y;
-                scalar_t z = particle.z;
-                double xi = x;
-                double yi = y;
-                double zi = z;
-                // TODO(quhang): I am almost 100% sure this is wrong. The
-                // condition is not accurate. But needs time to figure out.
-                // If it's inside the region,
-                if (xi >= region->x() &&
-                    xi < (region->x() + region->dx()) &&
-                    yi >= region->y() &&
-                    yi < (region->y() + region->dy()) &&
-                    zi >= region->z() &&
-                    zi < (region->z() + region->dz())) {
-                  CPdiVector::iterator iter = instances->begin();
-                  // Iterate across instances, checking each one
-                  for (; iter != instances->end(); ++iter) {
-                    const PhysicalDataInstance* instance = *iter;
-                    GeometricRegion* instanceRegion = instance->region();
+            ParticleBucket* particle_bucket = (*particles)(bucket_index);
+            while (particle_bucket) {
+              for (int i = 1; i <= particle_bucket->array_collection->Size();
+                   i++) {
+                PdiVector::iterator iter = instances->begin();
+                // Iterate across instances, checking each one.
+                for (; iter != instances->end(); ++iter) {
+                  const PhysicalDataInstance* instance = *iter;
+                  GeometricRegion* instanceRegion = instance->region();
+                  // If it's inside the region of the physical data instance.
+                  if (x >= instanceRegion->x() &&
+                      x < (instanceRegion->x() + instanceRegion->dx()) &&
+                      y >= instanceRegion->y() &&
+                      y < (instanceRegion->y() + instanceRegion->dy()) &&
+                      z >= instanceRegion->z() &&
+                      z < (instanceRegion->z() + instanceRegion->dz())) {
+                    ParticleInternal particle_buffer;
+                    particle_buffer.index[0] = x;
+                    particle_buffer.index[1] = y;
+                    particle_buffer.index[2] = z;
+                    VECTOR_TYPE particle_delta = particle_bucket->X(i);
+                    particle_buffer.delta[0] = particle_delta.x;
+                    particle_buffer.delta[1] = particle_delta.y;
+                    particle_buffer.delta[2] = particle_delta.z;
+                    particle_buffer.radius = particle_bucket->radius(i);
+                    particle_buffer.quantized_collision_distance =
+                        particle_bucket->quantized_collision_distance(i);
+                    if (particle_container.store_unique_particle_id) {
+                      PhysBAM::ARRAY_VIEW<int>* id =
+                          particle_bucket->array_collection->
+                          template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+                      particle_buffer.id = (*id)(i);
+                    }
                     PhysBAMData* data =
                         static_cast<PhysBAMData*>(instance->data());
-
-                    // If it's inside the region of the physical data instance
-                    if (xi >= instanceRegion->x() &&
-                        xi < (instanceRegion->x() + instanceRegion->dx()) &&
-                        yi >= instanceRegion->y() &&
-                        yi < (instanceRegion->y() + instanceRegion->dy()) &&
-                        zi >= instanceRegion->z() &&
-                        zi < (instanceRegion->z() + instanceRegion->dz())) {
-                      scalar_t particleBuffer[5];
-                      particleBuffer[0] = particle.x;
-                      particleBuffer[1] = particle.y;
-                      particleBuffer[2] = particle.z;
-                      particleBuffer[3] = particles->radius(i);
-                      particleBuffer[4] =
-                          particles->quantized_collision_distance(i);
-                      data->AddToTempBuffer(
-                          reinterpret_cast<char*>(particleBuffer),
-                          sizeof(scalar_t)*5);
-                    }
+                    data->AddToTempBuffer(
+                        reinterpret_cast<char*>(&particle_buffer),
+                        sizeof(particle_buffer));
                   }
                 }
               }
-              particles = particles->next;
+              particle_bucket = particle_bucket->next;
             }
           }
-        }
-      }
 
       // Now that we've copied particles into the temporary data buffers,
       // commit the results.
@@ -455,165 +478,187 @@ namespace nimbus {
       return true;
     }
 
-    bool ReadRemovedParticles(GeometricRegion* region,
-                       CPdiVector* instances,
-                       ParticleContainer& particle_container,
-                       bool positive) {
-      // TODO(quhang) Check whether particle_container has valid particle data
-      // before moving on.
-      RemovedParticlesArray* particles;
+    /* Read the removed particles from the PhysicalDataInstances specified
+     * by instances, limited by the GeometricRegion specified by region,
+     * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
+     * This will clear out any existing data in particles first if "merge" flag
+     * is not set. */
+    bool ReadRemovedParticles(const GeometricRegion* region,
+                              const PdiVector* instances,
+                              ParticleContainer& particle_container,
+                              bool positive,
+                              bool merge = false) {
+      RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
       } else {
         particles = &particle_container.removed_negative_particles;
       }
 
-      // Allocates buckets.
-      for (int z = 1; z <= region->dz(); z++)
-        for (int y = 1; y <= region->dy(); y++)
-          for (int x = 1; x <= region->dx(); x++) {
-            TV_INT block_index(x, y, z);
-            if ((*particles)(block_index)) {
-              delete (*particles)(block_index);
+      // Checks whether the geometric region in the particle array is valid, and
+      // clears corresponding buckets inside the geometric region if necessary.
+      for (int z = region->z(); z < region->z() + region->dz(); z++)
+        for (int y = region->y(); y < region->y() + region->dy(); y++)
+          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+            TV_INT bucket_index(x, y, z);
+            if (!particles->Valid_Index(bucket_index)) {
+              dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
+                            x, y, z);
+              // Warning: might be too strict.
+              return false;
             }
-            (*particles)(block_index) = particle_container.Allocate_Particles(
-                particle_container.template_removed_particles);
+            if (!merge) {
+              if ((*particles)(bucket_index)) {
+                delete (*particles)(bucket_index);
+                (*particles)(bucket_index) = NULL;
+              }
+            }
           }
 
       if (instances == NULL) {
+        dbg(DBG_WARN, "Physical data instances are empty.\n");
         return false;
       }
 
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::const_iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-        scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+        RemovedParticleInternal* buffer =
+            reinterpret_cast<RemovedParticleInternal*>(data->buffer());
+        RemovedParticleInternal* buffer_end = buffer
+            + static_cast<int>(data->size())
+            / static_cast<int>(sizeof(RemovedParticleInternal));
 
-        // @Phil. The data size is returned in the unit of bytes.  --quhang
-        // TODO(anyone) anyone knows how to avoid the ugly casting?
-        for (int i = 0;
-             i < static_cast<int>(data->size())
-             / static_cast<int>(sizeof(float));  // NOLINT
-             i+= 6) {
-          // This instance may have particles inside the region. So
-          // we have to iterate over them and insert them accordingly.
-          // Particles are stored as (x,y,z) triples in data array
-          scalar_t x = buffer[i];
-          scalar_t y = buffer[i + 1];
-          scalar_t z = buffer[i + 2];
-          scalar_t vx = buffer[i + 3];
-          scalar_t vy = buffer[i + 4];
-          scalar_t vz = buffer[i + 5];
-
-          VECTOR_TYPE position;
-          position.x = x;
-          position.y = y;
-          position.z = z;
-          VECTOR_TYPE velocity;
-          velocity.x = vx;
-          velocity.y = vy;
-          velocity.z = vz;
-          // TODO(quhang): Check whether the cast is safe.
-          int_dimension_t xi = (int_dimension_t)floor(x - region->x() + 1);
-          int_dimension_t yi = (int_dimension_t)floor(y - region->y() + 1);
-          int_dimension_t zi = (int_dimension_t)floor(z - region->z() + 1);
-
-          // TODO(quhang): The condition is not accurate.
-          // If particle is within region, copy it to particles
-          if (xi >= 1 &&
-              xi <= region->dx() &&
-              yi >= 1 &&
-              yi <= region->dy() &&
-              zi >= 1 &&
-              zi <= region->dz()) {
-            RemovedParticlesUnit* cellParticles =
-                (*particles)(TV_INT(xi, yi, zi));
+        for (RemovedParticleInternal* p = buffer; p != buffer_end; ++p) {
+          int_dimension_t xi = p->index[0];
+          int_dimension_t yi = p->index[1];
+          int_dimension_t zi = p->index[2];
+          if (xi >= region->x() &&
+              xi < region->x()+region->dx() &&
+              yi >= region->y() &&
+              yi < region->y()+region->dy() &&
+              zi >= region->z() &&
+              zi < region->z()+region->dz()) {
+            TV_INT bucket_index(xi, yi, zi);
+            assert(particles->Valid_Index(bucket_index));
+            // NOTE(By Chinmayee): Please comment out these changes and don't
+            // delete them when pushing any updates, till we verify that the
+            // code works correctly, and does not give any assertion failure or
+            // seg fault on both Linux and Mac.
+            if (!(*particles)(bucket_index)) {
+              (*particles)(bucket_index) =
+                  particle_container.Allocate_Particles(
+                  particle_container.template_removed_particles);
+            }
+            RemovedParticleBucket* particle_bucket =
+                (*particles)(bucket_index);
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
-            int index = particle_container.Add_Particle(cellParticles);
-            cellParticles->X(index) = position;
-            cellParticles->V(index) = velocity;
+            // I think things might not be that bad, because the number of
+            // bucket is expected to be constant.  -- quhang
+            int index = particle_container.Add_Particle(particle_bucket);
+            particle_bucket->X(index) = VECTOR_TYPE(p->delta[0],
+                                                    p->delta[1],
+                                                    p->delta[2]);
+            particle_bucket->radius(index) = p->radius;
+            particle_bucket->quantized_collision_distance(index) =
+              p->quantized_collision_distance;
+            if (particle_container.store_unique_particle_id) {
+              PhysBAM::ARRAY_VIEW<int>* id = particle_bucket->array_collection->
+                  template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+              (*id)(index) = p->id;
+            }
+            particle_bucket->V(index) = VECTOR_TYPE(p->v[0],
+                                                    p->v[1],
+                                                    p->v[2]);
           }
-        }
+        }  // End the loop for buffer.
       }
       return true;
     }
 
-    bool WriteRemovedParticles(GeometricRegion* region,
-                        CPdiVector* instances,
+    /* Write the Particle data in removed particles into the
+     * PhysicalDataInstances specified by instances, limited by the
+     * GeometricRegion region. */
+    bool WriteRemovedParticles(const GeometricRegion* region,
+                        PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      CPdiVector::iterator iter = instances->begin();
+      PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->ClearTempBuffer();
       }
 
-      for (int z = 1; z <= region->dz(); z++) {
-        for (int y = 1; y <= region->dy(); y++) {
-          for (int x = 1; x <= region->dx(); x++) {
-            RemovedParticlesArray* arrayPtr;
-            if (positive) {
-              arrayPtr = &particle_container.removed_positive_particles;
-            } else {
-              arrayPtr = &particle_container.removed_negative_particles;
+      RemovedParticleArray* particles;
+      if (positive) {
+        particles = &particle_container.removed_positive_particles;
+      } else {
+        particles = &particle_container.removed_negative_particles;
+      }
+
+      // Loop through each particle bucket in the specified region.
+      for (int z = region->z(); z < region->z() + region->dz(); z++)
+        for (int y = region->y(); y < region->y() + region->dy(); y++)
+          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+            TV_INT bucket_index(x, y, z);
+            if (!particles->Valid_Index(bucket_index)) {
+              dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
+                            x, y, z);
+              return false;
             }
-            RemovedParticlesUnit* particles = (*arrayPtr)(TV_INT(x, y, z));
-            while (particles) {
-              for (int i = 1; i <= particles->array_collection->Size(); i++) {
-                VECTOR_TYPE particle = particles->X(i);
-                scalar_t x = particle.x;
-                scalar_t y = particle.y;
-                scalar_t z = particle.z;
-                double xi = x;
-                double yi = y;
-                double zi = z;
-                // TODO(quhang): I am almost 100% sure this is wrong. The
-                // condition is not accurate. But needs time to figure out.
-                // If it's inside the region,
-                if (xi >= region->x() &&
-                    xi < (region->x() + region->dx()) &&
-                    yi >= region->y() &&
-                    yi < (region->y() + region->dy()) &&
-                    zi >= region->z() &&
-                    zi < (region->z() + region->dz())) {
-                  CPdiVector::iterator iter = instances->begin();
-                  // Iterate across instances, checking each one
-                  for (; iter != instances->end(); ++iter) {
-                    const PhysicalDataInstance* instance = *iter;
-                    GeometricRegion* instanceRegion = instance->region();
+            RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
+            // Note: the outer while loop might not be necessary for removed
+            // particle bucket.
+            while (particle_bucket) {
+              for (int i = 1; i <= particle_bucket->array_collection->Size();
+                   i++) {
+                PdiVector::iterator iter = instances->begin();
+                // Iterate across instances, checking each one.
+                for (; iter != instances->end(); ++iter) {
+                  const PhysicalDataInstance* instance = *iter;
+                  GeometricRegion* instanceRegion = instance->region();
+                  // If it's inside the region of the physical data instance.
+                  if (x >= instanceRegion->x() &&
+                      x < (instanceRegion->x() + instanceRegion->dx()) &&
+                      y >= instanceRegion->y() &&
+                      y < (instanceRegion->y() + instanceRegion->dy()) &&
+                      z >= instanceRegion->z() &&
+                      z < (instanceRegion->z() + instanceRegion->dz())) {
+                    RemovedParticleInternal particle_buffer;
+                    particle_buffer.index[0] = x;
+                    particle_buffer.index[1] = y;
+                    particle_buffer.index[2] = z;
+                    VECTOR_TYPE particle_delta = particle_bucket->X(i);
+                    particle_buffer.delta[0] = particle_delta.x;
+                    particle_buffer.delta[1] = particle_delta.y;
+                    particle_buffer.delta[2] = particle_delta.z;
+                    particle_buffer.radius = particle_bucket->radius(i);
+                    particle_buffer.quantized_collision_distance =
+                        particle_bucket->quantized_collision_distance(i);
+                    if (particle_container.store_unique_particle_id) {
+                      PhysBAM::ARRAY_VIEW<int>* id =
+                          particle_bucket->array_collection->
+                          template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+                      particle_buffer.id = (*id)(i);
+                    }
+                    particle_buffer.v[0] = particle_bucket->V(i).x;
+                    particle_buffer.v[1] = particle_bucket->V(i).y;
+                    particle_buffer.v[2] = particle_bucket->V(i).z;
                     PhysBAMData* data =
                         static_cast<PhysBAMData*>(instance->data());
-
-                    // If it's inside the region of the physical data instance
-                    if (xi >= instanceRegion->x() &&
-                        xi < (instanceRegion->x() + instanceRegion->dx()) &&
-                        yi >= instanceRegion->y() &&
-                        yi < (instanceRegion->y() + instanceRegion->dy()) &&
-                        zi >= instanceRegion->z() &&
-                        zi < (instanceRegion->z() + instanceRegion->dz())) {
-                      scalar_t particleBuffer[6];
-                      particleBuffer[0] = particle.x;
-                      particleBuffer[1] = particle.y;
-                      particleBuffer[2] = particle.z;
-                      particleBuffer[3] = particles->V(i).x;
-                      particleBuffer[4] = particles->V(i).y;
-                      particleBuffer[5] = particles->V(i).z;
-                      data->AddToTempBuffer(
-                          reinterpret_cast<char*>(particleBuffer),
-                          sizeof(scalar_t)*6);
-                    }
+                    data->AddToTempBuffer(
+                        reinterpret_cast<char*>(&particle_buffer),
+                        sizeof(particle_buffer));
                   }
                 }
               }
-              particles = particles->next;
+              particle_bucket = particle_bucket->next;
             }
           }
-        }
-      }
 
       // Now that we've copied particles into the temporary data buffers,
       // commit the results.

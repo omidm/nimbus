@@ -326,6 +326,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     before.clear(); before.insert(id().elem());
     after.clear();
     SpawnComputeJob("print", j[1], read, write, before, after, par);
+
+    TerminateApplication();
   }
 };
 
@@ -359,6 +361,7 @@ void Print::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the print job\n";
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
+  std::cout << "OUTPUT: ";
   for (int i = 0; i < d1->size(); i++)
     std::cout << d1->arr()[i] << ", ";
   for (int i = 0; i < d2->size(); i++)

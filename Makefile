@@ -24,6 +24,10 @@ SHARED_PROTO_OBJECT_FILES = $(subst shared/protobuf_source,shared/protobuf_compi
 OBJFILES += $(SHARED_PROTO_OBJECT_FILES)
 
 
+DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
+OBJFILES += $(DATA_PROTO_OBJECT_FILES)
+
+
 LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf
 SHARED_FLAGS = -shared -fPIC
 

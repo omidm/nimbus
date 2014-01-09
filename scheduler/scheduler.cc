@@ -53,6 +53,7 @@ Scheduler::Scheduler(port_t p)
   data_manager_ = NULL;
   job_manager_ = NULL;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
+  terminate_application_flag_ = false;
 }
 
 Scheduler::~Scheduler() {
@@ -93,6 +94,7 @@ void Scheduler::SchedulerCoreProcessor() {
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
+    TerminationProcedure();
   }
 }
 
@@ -128,6 +130,9 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     case SchedulerCommand::DEFINE_PARTITION:
       ProcessDefinePartitionCommand(reinterpret_cast<DefinePartitionCommand*>(cm));
+      break;
+    case SchedulerCommand::TERMINATE:
+      ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
       break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
@@ -198,6 +203,23 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
   for (; iter != server_->workers()->end(); iter++) {
     server_->SendCommand(*iter, cm);
+  }
+}
+
+void Scheduler::ProcessTerminateCommand(TerminateCommand* cm) {
+  terminate_application_flag_ = true;
+  terminate_application_status_ = cm->exit_status().elem();
+}
+
+void Scheduler::TerminationProcedure() {
+  if (terminate_application_flag_) {
+    if (job_manager_->AllJobsAreDone()) {
+      SchedulerCommand* command =
+        new TerminateCommand(ID<exit_status_t>(terminate_application_status_));
+      server_->BroadcastCommand(command);
+      delete command;
+      exit(NIMBUS_TERMINATE_SUCCESS);
+    }
   }
 }
 
@@ -563,7 +585,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       server_->SendCommand(worker_sender, &cm_s);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[2], (job_id_t)(0), true, true);
+      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[0], (job_id_t)(0), true, true);
 
       // Update data table.
       PhysicalData p_s = pvv[0];
@@ -748,6 +770,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_.push_back(new HandshakeCommand());
   worker_command_table_.push_back(new JobDoneCommand());
   worker_command_table_.push_back(new DefinePartitionCommand());
+  worker_command_table_.push_back(new TerminateCommand());
 }
 
 void Scheduler::LoadUserCommands() {

@@ -41,7 +41,6 @@
 #include "application/water_alternate_coarse/app_utils.h"
 #include "application/water_alternate_coarse/data_app.h"
 #include "application/water_alternate_coarse/job_initialize.h"
-#include "application/water_alternate_coarse/job_loop.h"
 #include "application/water_alternate_coarse/job_main.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -64,14 +63,16 @@ namespace application {
         nimbus::ID<partition_id_t> partition_id1(0);
         nimbus::ID<partition_id_t> partition_id2(1);
         nimbus::ID<partition_id_t> partition_id3(2);
+        nimbus::ID<partition_id_t> partition_id4(3);
         nimbus::Parameter part_params;
-        DefinePartition(partition_id1, kDomain, part_params);
-        DefinePartition(partition_id2, kDomainGhost, part_params);
-        DefinePartition(partition_id3, kDomainPressureGhost, part_params);
+        DefinePartition(partition_id1, kDomainFaceVel, part_params);
+        DefinePartition(partition_id2, kDomainPhi, part_params);
+        DefinePartition(partition_id3, kDomainPressure, part_params);
+        DefinePartition(partition_id4, kDomainParticles, part_params);
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 3;
+        int data_num = 7;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
@@ -98,8 +99,32 @@ namespace application {
                    neighbor_partitions,
                    sa_params);
 
+        // Particles
+        nimbus::Parameter particle_params;
+        part_params.set_ser_data(SerializedData(""));
+        DefineData(APP_POS_PARTICLES,
+                   data_ids[3],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+        DefineData(APP_NEG_PARTICLES,
+                   data_ids[4],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+        DefineData(APP_POS_REM_PARTICLES,
+                   data_ids[5],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+        DefineData(APP_NEG_REM_PARTICLES,
+                   data_ids[6],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+
         // Job setup
-        int job_num = 2;
+        int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
         GetNewJobID(&job_ids, job_num);
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
@@ -109,10 +134,17 @@ namespace application {
         read.insert(data_ids[0]);
         read.insert(data_ids[1]);
         read.insert(data_ids[2]);
+        read.insert(data_ids[3]);
+        read.insert(data_ids[4]);
+        read.insert(data_ids[5]);
+        read.insert(data_ids[6]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
-        after.insert(job_ids[1]);
+        write.insert(data_ids[3]);
+        write.insert(data_ids[4]);
+        write.insert(data_ids[5]);
+        write.insert(data_ids[6]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");
@@ -121,32 +153,6 @@ namespace application {
                         read, write,
                         before, after,
                         init_params);
-
-        // clear
-        read.clear();
-        write.clear();
-        before.clear();
-        after.clear();
-
-        // Loop job
-        read.insert(data_ids[0]);
-        read.insert(data_ids[1]);
-        read.insert(data_ids[2]);
-        write.insert(data_ids[0]);
-        write.insert(data_ids[1]);
-        write.insert(data_ids[2]);
-        before.insert(job_ids[0]);
-        nimbus::Parameter loop_params;
-        std::stringstream out_frame_ss;
-        int frame = 0;
-        out_frame_ss << frame;
-        loop_params.set_ser_data(SerializedData(out_frame_ss.str()));
-        dbg(APP_LOG, "Spawning loop for frame %i in main\n", frame);
-        SpawnComputeJob(LOOP,
-                        job_ids[1],
-                        read, write,
-                        before, after,
-                        loop_params);
 
         dbg(APP_LOG, "Completed executing main job\n");
     }

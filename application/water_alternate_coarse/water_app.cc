@@ -74,6 +74,14 @@ namespace application {
         RegisterData(APP_PHI, new DataApp(APP_PHI, kPhiBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
         RegisterData(APP_PRESSURE, new DataApp(APP_PRESSURE, kPressureBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
+        RegisterData(APP_POS_PARTICLES, new DataApp(APP_POS_PARTICLES, kParticlesBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);
+        RegisterData(APP_NEG_PARTICLES, new DataApp(APP_NEG_PARTICLES, kParticlesBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_POS_REM_PARTICLES);
+        RegisterData(APP_POS_REM_PARTICLES, new DataApp(APP_POS_REM_PARTICLES, kParticlesBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_NEG_REM_PARTICLES);
+        RegisterData(APP_NEG_REM_PARTICLES, new DataApp(APP_NEG_REM_PARTICLES, kParticlesBufSize));
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(LOOP, new JobLoop(this));
