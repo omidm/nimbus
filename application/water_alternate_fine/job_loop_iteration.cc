@@ -46,6 +46,7 @@
 #include "application/water_alternate_fine/job_loop_frame.h"
 #include "application/water_alternate_fine/job_calculate_frame.h"
 #include "application/water_alternate_fine/job_write_frame.h"
+#include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -81,9 +82,9 @@ namespace application {
         bool done = false;
         PhysBAM::WATER_EXAMPLE<TV>* example;
         PhysBAM::WATER_DRIVER<TV>* driver;
-        assert(InitializeExampleAndDriver(
-               da, frame, time,
-               this, example, driver));
+        bool init_success = InitializeExampleAndDriver(da, frame, time,
+                                                       this, example, driver);
+        assert(init_success);
 
         T target_time = example->Time_At_Frame(driver->current_frame+1);
         T dt = example->cfl *

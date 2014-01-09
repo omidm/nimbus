@@ -39,6 +39,7 @@
 #include <string>
 
 #include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -75,9 +76,9 @@ namespace application {
 
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
-        assert(InitializeExampleAndDriver(
-               da, frame, time,
-               this, example, driver));
+        bool init_success = InitializeExampleAndDriver(da, frame, time,
+                                                       this, example, driver);
+        assert(init_success);
 
         dbg(APP_LOG,
             "Simulation starts"
