@@ -145,7 +145,7 @@ namespace application {
                                              (kScale + 2*kPressureGhostNum) * sizeof(T);
     const int_dimension_t kParticlesBufSize = 0;
 
-    // TODO: some hacks that need to be cleaned soon after a meeting/
+    // Note: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and
     // let nimbus take care of initializing region correctly when creating
     // the data object
@@ -156,11 +156,11 @@ namespace application {
     void DestroyTranslatorObjects(nimbus::PdiVector *vec);
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,
-                    std::set<Data * > &ds);
+                    std::set<Data * > *ds);
     nimbus::Data* GetFirstData(const std::string &name,
                                const nimbus::DataArray &da);
 
-   // TODO: lets make read/ write sets if possible, and also have separate
+   // Note: lets make read/ write sets if possible, and also have separate
    // read/ write instead of one DataArray passed to a job/ a better indexing
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id);
@@ -172,8 +172,8 @@ namespace application {
     bool LoadParameter(const std::string str, int* frame, T* time);
     bool LoadParameter(const std::string str, int* frame, T* time, T* dt);
 
-    // Can this be moved to another file? Water driver and example specific code
-    // should be in water_driver or water_example.
+    // TODO: Can this be moved to another file? Water driver and example specific
+    // code should be in water_driver or water_example.
     // -- chinmayee
     // Initializes WATER_EXAMPLE and WATER_DRIVER with the given parameters and
     // fills in WATER_EXAMPLE with the simulation variables in DataArray.

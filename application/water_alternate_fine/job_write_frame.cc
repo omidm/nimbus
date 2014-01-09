@@ -63,7 +63,6 @@ namespace application {
 
         T time, dt;
         int frame;
-        std::stringstream in_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
         LoadParameter(params_str, &frame, &time, &dt);

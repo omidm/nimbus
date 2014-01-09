@@ -231,7 +231,6 @@ CalculateFrameImpl(const nimbus::Job *job,
   LOG::Time("Modify Levelset");
   example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
   example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
-  //example.particle_levelset_evolution.Make_Signed_Distance(); //TODO(mlentine) Figure out why this was needed
 
   //Adjust Phi 0%
   LOG::Time("Adjust Phi");

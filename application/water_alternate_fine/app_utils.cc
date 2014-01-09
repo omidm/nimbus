@@ -85,7 +85,7 @@ namespace application {
 
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,
-                    std::set<Data * > &ds) {
+                    std::set<Data * > *ds) {
         bool success = false;
         if (da.empty()) {
             return success;
@@ -93,7 +93,7 @@ namespace application {
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
             if (d->name() == name) {
-                ds.insert(*it);
+                ds->insert(*it);
                 success = true;
             }
         }

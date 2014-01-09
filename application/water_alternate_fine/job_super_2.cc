@@ -36,6 +36,9 @@
  * levelset with sources, deletes particles and reincorporates removed
  * particles.
  *
+ * This job uses all data -- face velocities, phi, particles and removed
+ * particles!
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
@@ -65,11 +68,11 @@ namespace application {
         dbg(APP_LOG, "Executing 2nd super job\n");
 
         int frame;
-        std::stringstream in_ss;
+        T time;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        in_ss.str(params_str);
-        in_ss >> frame;
+        LoadParameter(params_str, &frame, &time);
+
         dbg(APP_LOG, "Frame %i in super job 2\n", frame);
 
         // initialize configuration and state
