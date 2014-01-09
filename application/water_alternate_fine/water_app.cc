@@ -38,9 +38,7 @@
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
 #include "application/water_alternate_fine/job_calculate_frame.h"
-// #include "application/water_alternate_fine/job_iteration.h"
 #include "application/water_alternate_fine/job_initialize.h"
-// #include "application/water_alternate_fine/job_loop.h"
 #include "application/water_alternate_fine/job_loop_frame.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
 #include "application/water_alternate_fine/job_main.h"
@@ -92,8 +90,6 @@ namespace application {
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
 
         RegisterJob(MAIN, new JobMain(this));
-        // RegisterJob(LOOP, new JobLoop(this));
-        // RegisterJob(ITERATION, new JobIteration(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
         RegisterJob(SUPER_2, new JobSuper2(this));
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));

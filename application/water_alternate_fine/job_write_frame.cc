@@ -39,7 +39,6 @@
 #include <string>
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/job_loop.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"

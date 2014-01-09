@@ -44,10 +44,6 @@ public:
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da,
                     bool set_boundary_conditions = true);
-    void Advance_To_Target_Time(const nimbus::Job *job,
-                                const nimbus::DataArray &da,
-                                const T target_time,
-                                bool set_boundary_conditions = true);
 
     void CalculateFrameImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,
