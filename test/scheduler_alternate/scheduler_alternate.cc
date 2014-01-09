@@ -36,10 +36,10 @@
   * This scheduler is written to alternate spawned jobs randomly among
   * registered workers of water simulation. It is guaranteed that after
   * convergence for each frame the write frame job whose name is defined as a
-  * macro with tag WRITE_FRAME will be executed over the same worker (first
-  * registered worker).This way, all the output frames are local to one worker
-  * for sanity checks. The random seed can be changed by changing the SEED_
-  * macro. 
+  * macro with tag WRITE_FRAME_NAME will be executed over the same worker
+  * (first registered worker).This way, all the output frames are local to one
+  * worker for sanity checks. The random seed can be changed by changing the
+  * SEED_ macro. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -47,7 +47,7 @@
 #include "./scheduler_alternate.h"
 
 #define SEED_ 123
-#define WRITE_FRAME "write_frame"
+#define WRITE_FRAME_NAME "write_frame"
 
 SchedulerAlternate::SchedulerAlternate(unsigned int p)
 : Scheduler(p) {
@@ -56,6 +56,18 @@ SchedulerAlternate::SchedulerAlternate(unsigned int p)
 
 bool SchedulerAlternate::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   size_t worker_num = server_->worker_num();
-  worker_id_t w_id  = (rand_r(&seed_) % worker_num) + 1;
+
+  if (worker_num < 1) {
+    dbg(DBG_SCHED, "ERROR: there is no worker in scheduler worker list for job assignment");
+    return false;
+  }
+
+  worker_id_t w_id;
+  if (job->job_name() == WRITE_FRAME_NAME) {
+    w_id = 1;
+  } else {
+    w_id  = (rand_r(&seed_) % worker_num) + 1;
+  }
+
   return server_->GetSchedulerWorkerById(worker, w_id);
 }

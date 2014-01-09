@@ -36,10 +36,10 @@
   * This scheduler is written to alternate spawned jobs randomly among
   * registered workers of water simulation. It is guaranteed that after
   * convergence for each frame the write frame job whose name is defined as a
-  * macro with tag WRITE_FRAME will be executed over the same worker (first
-  * registered worker).This way, all the output frames are local to one worker
-  * for sanity checks. The random seed can be changed by changing the SEED_
-  * macro. 
+  * macro with tag WRITE_FRAME_NAME will be executed over the same worker
+  * (first registered worker).This way, all the output frames are local to one
+  * worker for sanity checks. The random seed can be changed by changing the
+  * SEED_ macro. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
