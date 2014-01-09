@@ -46,9 +46,6 @@
 
 #include "shared/nimbus.h"
 
-#include "application/water_alternate_fine/water_driver.h"
-#include "application/water_alternate_fine/water_example.h"
-
 #define LOOP_ITERATION "loopIteration"
 
 namespace application {
@@ -56,13 +53,6 @@ namespace application {
     class JobLoopIteration : public nimbus::Job {
         public:
             explicit JobLoopIteration(nimbus::Application *app);
-            bool InitializeExampleAndDriver(
-                const nimbus::DataArray& da,
-                const int current_frame,
-                const T time,
-                const int last_unique_particle_id,
-                PhysBAM::WATER_EXAMPLE<TV>*& water_example,
-                PhysBAM::WATER_DRIVER<TV>*& water_driver);
             virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
     };

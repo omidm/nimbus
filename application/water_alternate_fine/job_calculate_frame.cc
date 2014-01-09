@@ -76,31 +76,26 @@ namespace application {
             "QUHANG: In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
-        PhysBAM::WATER_EXAMPLE<TV> *example =
-            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
 
-        example->Initialize_Grid(
-            TV_INT::All_Ones_Vector()*kScale,
-            PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
-        PhysBAM::WaterSources::Add_Source(example);
-        PhysBAM::WATER_DRIVER<TV> driver(*example);
-        driver.init_phase = false;
-        driver.current_frame = frame;
-        driver.time = time;
-        driver.Initialize(this, da, last_unique_particle);
+        PhysBAM::WATER_EXAMPLE<TV> *example;
+        PhysBAM::WATER_DRIVER<TV> *driver;
+        assert(InitializeExampleAndDriver(
+               da, frame, time, last_unique_particle,
+               this, example, driver));
 
         dbg(APP_LOG,
             "Simulation starts"
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
         // Move forward time "dt" without reseeding and writing frames.
-        last_unique_particle = driver.CalculateFrameImpl(this, da, true, dt);
+        last_unique_particle = driver->CalculateFrameImpl(this, da, true, dt);
 
         // TODO(quhang/chinmayee): Fix the passing mechanism for
         // last_unique_particle.
 
         // Free resources.
         delete example;
+        delete driver;
 
         dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
 }

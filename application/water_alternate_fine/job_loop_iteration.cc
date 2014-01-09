@@ -64,27 +64,6 @@ namespace application {
         return new JobLoopIteration(application());
     }
 
-    bool JobLoopIteration::InitializeExampleAndDriver(
-        const nimbus::DataArray& da,
-        const int current_frame,
-        const T time,
-        const int last_unique_particle_id,
-        PhysBAM::WATER_EXAMPLE<TV>*& example,
-        PhysBAM::WATER_DRIVER<TV>*& driver) {
-      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
-      example->Initialize_Grid(
-          TV_INT::All_Ones_Vector()*kScale,
-          PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
-      PhysBAM::WaterSources::Add_Source(example);
-      driver= new PhysBAM::WATER_DRIVER<TV>(*example);
-      driver->init_phase = false;
-      driver->current_frame = current_frame;
-      driver->time = time;
-      // The returning result is not used.
-      driver->Initialize(this, da, last_unique_particle_id);
-      return true;
-    }
-
     void JobLoopIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing loop iteration job\n");
 
@@ -105,8 +84,9 @@ namespace application {
         bool done = false;
         PhysBAM::WATER_EXAMPLE<TV>* example;
         PhysBAM::WATER_DRIVER<TV>* driver;
-        InitializeExampleAndDriver(da, frame, time, last_unique_particle,
-                                   example, driver);
+        assert(InitializeExampleAndDriver(
+               da, frame, time, last_unique_particle,
+               this, example, driver));
 
         T target_time = example->Time_At_Frame(driver->current_frame+1);
         T dt = example->cfl *
