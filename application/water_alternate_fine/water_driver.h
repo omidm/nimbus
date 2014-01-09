@@ -55,6 +55,9 @@ public:
                         const bool set_boundary_conditions,
                         const T dt);
 
+    // Execution for super job 1.
+    bool SuperJob1Impl(T dt);
+
     // Execution for super job 3.
     bool SuperJob3Impl(T dt);
 

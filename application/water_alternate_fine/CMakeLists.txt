@@ -28,6 +28,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
+    ${PROJECT_SOURCE_DIR}/job_super_1.cc
     ${PROJECT_SOURCE_DIR}/job_super_2.cc
     ${PROJECT_SOURCE_DIR}/job_super_3.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
