@@ -62,23 +62,18 @@ namespace application {
                                     const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing CALCULATE_FRAME job.\n");
 
-        // TODO(quhang): Get last_uniqueid, time, dt and frame right.
-        // get parameters
-        T dt = 0;
-        int frame, last_unique_particle;
+        T time, dt;
+        int frame;
+        // TODO: Get form data array!
+        int last_unique_particle = 100;
         std::stringstream in_ss;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        in_ss.str(params_str);
-        in_ss >> frame;
-        in_ss >> last_unique_particle;
-        dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
-                     frame, last_unique_particle);
+        LoadParameter(params_str, &frame, &time, &dt);
 
         // Assume time, dt, frame is ready from here.
-        T time = 0;
         dbg(APP_LOG,
-            "Initialize WATER_DRIVER/WATER_EXAMPLE"
+            "QUHANG: In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
             "(Frame=%d, Time=%f, dt=%f).\n",
             frame, time, dt);
         PhysBAM::WATER_EXAMPLE<TV> *example =

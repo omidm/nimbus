@@ -123,6 +123,8 @@ namespace application {
             dt = .5 * (target_time-time);
         }
 
+        dbg(APP_LOG, "QUHANG: Frame=%d, Time=%f, dt=%f\n", frame, time, dt);
+
         if (!done) {
           // spawn the jobs to compute the frame, depending on the
           // level of granularity we will have different sub jobs.
