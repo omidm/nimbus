@@ -102,7 +102,7 @@ namespace application {
                      frame, last_unique_particle, time);
 
         // check whether the frame is done or not
-        bool done = true;
+        bool done = false;
         PhysBAM::WATER_EXAMPLE<TV>* example;
         PhysBAM::WATER_DRIVER<TV>* driver;
         InitializeExampleAndDriver(da, frame, time, last_unique_particle,
