@@ -87,9 +87,6 @@ namespace application {
         // Reseed particles and write frame.
         driver->WriteFrameImpl(this, da, true, dt);
 
-        // TODO(quhang/chinmayee): Fix the passing mechanism for
-        // last_unique_particle.
-
         // Free resources.
         DestroyExampleAndDriver(example, driver);
 
