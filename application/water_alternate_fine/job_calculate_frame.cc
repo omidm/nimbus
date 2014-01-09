@@ -77,9 +77,9 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 
-        bool init_success = InitializeExampleAndDriver(da, frame, time,
-                                                       this, example, driver);
-        assert(init_success);
+        InitializeExampleAndDriver(da, frame, time,
+                                   this, example, driver);
+        // assert(init_success);
 
         dbg(APP_LOG,
             "Simulation starts"
@@ -92,8 +92,7 @@ namespace application {
         // last_unique_particle.
 
         // Free resources.
-        delete example;
-        delete driver;
+        DestroyExampleAndDriver(example, driver);
 
         dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
 }

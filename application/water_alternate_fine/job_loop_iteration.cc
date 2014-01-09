@@ -82,9 +82,9 @@ namespace application {
         bool done = false;
         PhysBAM::WATER_EXAMPLE<TV>* example;
         PhysBAM::WATER_DRIVER<TV>* driver;
-        bool init_success = InitializeExampleAndDriver(da, frame, time,
-                                                       this, example, driver);
-        assert(init_success);
+        InitializeExampleAndDriver(da, frame, time,
+                                   this, example, driver);
+        // assert(init_success);
 
         T target_time = example->Time_At_Frame(driver->current_frame+1);
         T dt = example->cfl *
@@ -198,8 +198,8 @@ namespace application {
               before, after,
               frame_params);
         }
-        delete example;
-        delete driver;
+        // Free resources.
+        DestroyExampleAndDriver(example, driver);
 }
 
 } // namespace application

@@ -77,9 +77,9 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 
-        bool init_success = InitializeExampleAndDriver(da, frame, time,
-                                                       this, example, driver);
-        assert(init_success);
+        InitializeExampleAndDriver(da, frame, time,
+                                   this, example, driver);
+        // assert(init_success);
 
         dbg(APP_LOG,
             "Super Job 3 starts"

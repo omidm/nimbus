@@ -60,7 +60,7 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV>*& example,
         PhysBAM::WATER_DRIVER<TV>*& driver);
 
-    // Destroy WATER_EXAMPLE and WATER_DRIVER.
+    // Destroys WATER_EXAMPLE and WATER_DRIVER.
     void DestroyExampleAndDriver(
         PhysBAM::WATER_EXAMPLE<TV>*& example,
         PhysBAM::WATER_DRIVER<TV>*& driver);
