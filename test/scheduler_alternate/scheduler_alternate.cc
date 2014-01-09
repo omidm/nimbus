@@ -33,44 +33,29 @@
  */
 
  /*
-  * This scheduler is written to alternate the iterations for each frame of
-  * water simulation between two workers. It is guaranteed that after
-  * convergence for each frame the write_frame job will be executed over the
-  * same worker, so that all the output frames are local to one worker for
-  * sanity checks.
+  * This scheduler is written to alternate spawned jobs randomly among
+  * registered workers of water simulation. It is guaranteed that after
+  * convergence for each frame the write frame job whose name is defined as a
+  * macro with tag WRITE_FRAME will be executed over the same worker (first
+  * registered worker).This way, all the output frames are local to one worker
+  * for sanity checks. The random seed can be changed by changing the SEED_
+  * macro. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_
-#define NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_
+#include "./scheduler_alternate.h"
 
-#define DEBUG_MODE
+#define SEED_ 123
+#define WRITE_FRAME "write_frame"
 
-#include <boost/thread.hpp>
-#include <stdlib.h>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
+SchedulerAlternate::SchedulerAlternate(unsigned int p)
+: Scheduler(p) {
+  seed_ = SEED_;
+}
 
-class SchedulerAlternateCoarse : public Scheduler {
-  public:
-    explicit SchedulerAlternateCoarse(unsigned int listening_port);
-
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
-
-  private:
-    unsigned int seed_;
-};
-
-#endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_
+bool SchedulerAlternate::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  size_t worker_num = server_->worker_num();
+  worker_id_t w_id  = (rand_r(&seed_) % worker_num) + 1;
+  return server_->GetSchedulerWorkerById(worker, w_id);
+}

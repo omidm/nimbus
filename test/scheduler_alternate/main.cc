@@ -42,7 +42,7 @@
 
 #include <stdlib.h>
 #include <iostream> // NOLINT
-#include "./scheduler_alternate_coarse.h"
+#include "./scheduler_alternate.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_command.h"
@@ -51,7 +51,7 @@
 int main(int argc, char *argv[]) {
   nimbus::nimbus_initialize();
 
-  SchedulerAlternateCoarse * s = new SchedulerAlternateCoarse(NIMBUS_SCHEDULER_PORT);
+  SchedulerAlternate * s = new SchedulerAlternate(NIMBUS_SCHEDULER_PORT);
 
   if (argc < 2) {
       dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
