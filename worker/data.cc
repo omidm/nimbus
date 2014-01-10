@@ -50,11 +50,11 @@ Data* Data::Clone() {
   return d;
 }
 
-uint64_t Data::logical_id() {
+logical_data_id_t Data::logical_id() {
   return logical_id_;
 }
 
-uint64_t Data::physical_id() {
+physical_data_id_t Data::physical_id() {
   return physical_id_;
 }
 

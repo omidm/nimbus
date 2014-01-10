@@ -221,7 +221,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   IDSet<param_id_t> params_idset;
 
 
-  IDSet<logical_data_id_t>::IDSetContainer::iterator it;
+  IDSet<param_id_t>::IDSetContainer::iterator it;
   IDSet<param_id_t> temp_set = params.idset();
   for (it = temp_set.begin(); it != temp_set.end(); it++) {
     d.push_back(*it);

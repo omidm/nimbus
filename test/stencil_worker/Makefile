@@ -36,13 +36,13 @@ LDFLAGS_MULTI += -L$(ADIR_MULTI) -Wl,-rpath $(ADIR_MULTI)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 application_single:
-	cd ${ADIR_SINGLE}; make; cd -
+	cd ${ADIR_SINGLE}; make clean; make; cd -
 
 application_multi_c:
-	cd ${ADIR_MULTI_C}; make; cd -
+	cd ${ADIR_MULTI_C}; make clean; make; cd -
 
 application_multi:
-	cd ${ADIR_MULTI}; make; cd -
+	cd ${ADIR_MULTI}; make clean; make; cd -
 
 $(TARGET_SINGLE): application_single $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS_SINGLE) $(LFLAGS_SINGLE) $(OBJECT_FILES) -o $(TARGET_SINGLE) $(LFLAGS_SINGLE)

@@ -231,11 +231,10 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     return false;
   }
 
-  IDSet<job_id_t>::IDSetIter iter;
-
+  IDSet<job_id_t>::IDSetIter iter_job;
   IDSet<job_id_t> before_set = job->before_set();
-  for (iter = before_set.begin(); iter != before_set.end(); ++iter) {
-    job_id_t id = (*iter);
+  for (iter_job = before_set.begin(); iter_job != before_set.end(); ++iter_job) {
+    job_id_t id = (*iter_job);
     if (GetJobEntry(id, j)) {
       if (j->versioned()) {
         vt = j->version_table();
@@ -267,17 +266,18 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     }
   }
 
+  IDSet<logical_data_id_t>::IDSetIter iter_data;
   IDSet<logical_data_id_t> read_set = job->read_set();
-  for (iter = read_set.begin(); iter != read_set.end(); ++iter) {
-    if (version_table.count(*iter) == 0) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter);
+  for (iter_data = read_set.begin(); iter_data != read_set.end(); ++iter_data) {
+    if (version_table.count(*iter_data) == 0) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
       return false;
     }
   }
   IDSet<logical_data_id_t> write_set = job->write_set();
-  for (iter = write_set.begin(); iter != write_set.end(); ++iter) {
-    if (version_table.count(*iter) == 0) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter);
+  for (iter_data = write_set.begin(); iter_data != write_set.end(); ++iter_data) {
+    if (version_table.count(*iter_data) == 0) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
       return false;
     }
   }
