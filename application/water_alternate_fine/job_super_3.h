@@ -33,7 +33,22 @@
  */
 
 /*
- * The super job 3.
+ * This file contains job SUPER_3 that:
+ *     projects velocity, and extrapolates velocity and level set.
+ * The parameters of SUPER_3:
+ *     frame number, simulation time, dt.
+ * The read set(not sure) of SUPER_3:
+ *     velocity, levelset.
+ * The write set(not sure) of SUPER_3:
+ *     velocity, levelset.
+ *
+ * It is still unclear whether other simulation variables or states are also
+ * needed.
+ * For now, all the data is transmitted to guarantee correctness.
+ *
+ * The particle reseeding operation, which was expected to be part of job
+ * SUPER_3, is included in job WRITE_FRAME. Because reseeding operation is only
+ * executed once in each frame, rather than once in each substep.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

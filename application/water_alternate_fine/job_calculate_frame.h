@@ -33,7 +33,11 @@
  */
 
 /*
- * Job that executes all the simulation work in one substep.
+ * Job that executes all the simulation work in one substep, and reads/writes
+ * all data.
+ * This job is depreciated, and might be removed in the future. It is expected
+ * to do all the operations in jobs SUPER_1, SUPER_2, and SUPER_3, for
+ * debugging.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
