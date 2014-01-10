@@ -87,6 +87,7 @@ namespace application {
         PhysBAM::WATER_DRIVER<TV> driver(*example);
         driver.init_phase = false;
         driver.current_frame = frame;
+        driver.time = time;
         driver.Initialize(this, da, false);
 
         // face velocity for ghost + interior

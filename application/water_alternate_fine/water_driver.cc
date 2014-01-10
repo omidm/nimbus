@@ -57,7 +57,9 @@ Initialize(const nimbus::Job *job,
     output_number=current_frame;
     // Commented by quhang:
     // If we want to break substeps, the time should be passed by Nimbus.
-    // time=example.Time_At_Frame(current_frame);
+    if (init_phase) {
+      time=example.Time_At_Frame(current_frame);
+    }
 
     for(int i=1;i<=TV::dimension;i++)
     {
