@@ -75,7 +75,7 @@ are nimbus data objects, are defined here. This job spawns initialization job.
   frame computation to complete (if target time is not yet reached),
   job_loop_iteration spawns another job_loop_iteration. Otherwise it spawns a
   job_write_frame and then spawns job_loop_frame for the next frame.
-- job_write_frame writes all simulation data to files, that can be read using
+- job_write_frame writes all simulation data to files which can be read using
   physbam open-gl programs.
 - job_super_* combine several simulation steps into a single job -- a
   list of which steps each super job covers is written at the top of
@@ -86,5 +86,5 @@ are nimbus data objects, are defined here. This job spawns initialization job.
   (PhysBAMData) and the correspondong PhysBAM data structures are defined in
   nimbus/data/physbam/translator_physbam.h.
 - Save_To_Nimbus and Load_To_Nimbus are passed all data objects from the job.
-  These functions scan through the data array, and call translator function
+  These functions scan through the data array, and call translator functions
   (write/ read) for the corresponding data types.
