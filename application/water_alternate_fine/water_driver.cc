@@ -200,7 +200,7 @@ CalculateFrameImpl(const nimbus::Job *job,
                    const bool set_boundary_conditions,
                    const T dt) {
   // LOG::Time("Calculate Dt");
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   // T dt=example.cfl*example.incompressible.CFL(example.face_velocities);dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
   // if(time+dt>=target_time){dt=target_time-time;done=true;}
   // else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
@@ -315,7 +315,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 SuperJob1Impl (const nimbus::Job *job,
                const nimbus::DataArray &da,
                T dt) {
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   // LOG::Time("Compute Occupied Blocks");
   // T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
@@ -411,7 +411,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ComputeOccupiedBlocksImpl (const nimbus::Job *job,
                            const nimbus::DataArray &da,
                            T dt) {
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   LOG::Time("Compute Occupied Blocks");
   T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
