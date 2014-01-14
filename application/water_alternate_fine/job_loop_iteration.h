@@ -46,8 +46,6 @@
 
 #include "shared/nimbus.h"
 
-#define LOOP_ITERATION "loopIteration"
-
 namespace application {
     enum {
       ONE_JOB,

@@ -41,8 +41,6 @@
 
 #include "shared/nimbus.h"
 
-#define INITIALIZE "initialize"
-
 namespace application {
 
     class JobInitialize : public nimbus::Job {

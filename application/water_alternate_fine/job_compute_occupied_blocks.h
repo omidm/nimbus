@@ -44,8 +44,6 @@
 
 #include "shared/nimbus.h"
 
-#define COMPUTE_OCCUPIED_BLOCKS "compute_occupied_blocks"
-
 namespace application {
 
     class JobComputeOccupiedBlocks : public nimbus::Job {

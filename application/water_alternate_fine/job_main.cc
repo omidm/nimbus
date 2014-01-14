@@ -40,8 +40,8 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
-#include "application/water_alternate_fine/job_initialize.h"
 #include "application/water_alternate_fine/job_main.h"
+#include "application/water_alternate_fine/job_names.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <vector>

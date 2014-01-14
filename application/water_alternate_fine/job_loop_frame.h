@@ -45,8 +45,6 @@
 
 #include "shared/nimbus.h"
 
-#define LOOP_FRAME "loopFrame"
-
 namespace application {
 
     class JobLoopFrame : public nimbus::Job {

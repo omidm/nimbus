@@ -33,41 +33,28 @@
  */
 
 /*
- * This file contains job SUPER_3 that:
- *     projects velocity, and extrapolates velocity and level set.
- * The parameters of SUPER_3:
- *     frame number, simulation time, dt.
- * The read set(not sure) of SUPER_3:
- *     velocity, levelset.
- * The write set(not sure) of SUPER_3:
- *     velocity, levelset.
+ * This file defines the name of jobs that will be used for registration and
+ * spawning the jobs.
  *
- * It is still unclear whether other simulation variables or states are also
- * needed.
- * For now, all the data is transmitted to guarantee correctness.
- *
- * The particle reseeding operation, which was expected to be part of job
- * SUPER_3, is included in job WRITE_FRAME. Because reseeding operation is only
- * executed once in each frame, rather than once in each substep.
- *
- * Author: Hang Qu <quhang@stanford.edu>
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_3_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_NAMES_H_
 
-#include "shared/nimbus.h"
 
-namespace application {
+#define SUPER_1 "super_1"
+#define SUPER_2 "super_2"
+#define SUPER_3 "super_3"
 
-    class JobSuper3 : public nimbus::Job {
-        public:
-            explicit JobSuper3(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params,
-                                 const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+#define MAIN "main"
+#define INITIALIZE "initialize"
+#define LOOP_FRAME "loop_frame"
+#define LOOP_ITERATION "loop_iteration"
+#define CALCULATE_FRAME "calculate_frame"
+#define WRITE_FRAME "write_frame"
 
-} // namespace application
+#define COMPUTE_OCCUPIED_BLOCKS "compute_occupied_blocks"
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_
+
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_

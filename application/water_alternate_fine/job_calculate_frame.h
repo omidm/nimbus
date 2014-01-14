@@ -47,8 +47,6 @@
 
 #include "shared/nimbus.h"
 
-#define CALCULATE_FRAME "calculate_frame"
-
 namespace application {
 
     class JobCalculateFrame : public nimbus::Job {

@@ -61,8 +61,6 @@
 
 #include "shared/nimbus.h"
 
-#define WRITE_FRAME "write_frame"
-
 namespace application {
 
     class JobWriteFrame : public nimbus::Job {

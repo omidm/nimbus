@@ -53,16 +53,11 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
-#include "application/water_alternate_fine/job_loop_frame.h"
-#include "application/water_alternate_fine/job_super_1.h"
-#include "application/water_alternate_fine/job_super_2.h"
-#include "application/water_alternate_fine/job_super_3.h"
-#include "application/water_alternate_fine/job_calculate_frame.h"
-#include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
+#include "application/water_alternate_fine/job_names.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <sstream>

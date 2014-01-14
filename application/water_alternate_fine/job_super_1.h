@@ -51,8 +51,6 @@
 
 #include "shared/nimbus.h"
 
-#define SUPER_1 "super_1"
-
 namespace application {
 
     class JobSuper1 : public nimbus::Job {
