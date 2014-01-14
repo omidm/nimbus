@@ -37,11 +37,15 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <cmath>
 #include <vector>
 
 #include "data/physbam/physbam_data.h"
 #include "data/physbam/physbam_include.h"
 #include "../translator_physbam_test.h"  // NOLINT
+
+typedef nimbus::TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > Translator;
+typedef typename Translator::ParticleInternal ParticleType;
 
 const int_dimension_t X = 1;
 const int_dimension_t Y = 1;
@@ -51,7 +55,11 @@ const int_dimension_t DY = 1;
 const int_dimension_t DZ = 1;
 const int_dimension_t SIZE = DX * DY * DZ;
 const int AVG_PARTICLES = 10;
-const int TOTAL_PARTICLES = SIZE * AVG_PARTICLES * 5;
+const int TOTAL_PARTICLES = SIZE * AVG_PARTICLES;
+const int GRID_SCALE = 64;
+const int NUM_GHOST_CELL = 2;
+const typename Translator::scalar_t MIN_R = 0.2;
+const typename Translator::scalar_t MAX_R = 0.5;
 
 float getX() {
   double val = drand48();
@@ -74,11 +82,17 @@ float getZ() {
   return static_cast<float>(val);
 }
 
+float getR() {
+  double val = drand48();
+  val *= static_cast<double>(MAX_R - MIN_R);
+  val += static_cast<double>(MIN_R);
+  return static_cast<float>(val);
+}
+
 // The goto clause prevents me from declaring variables. So switch.
 void Error() {
   printf("Tests failed. Use dbg=error to observe errors.\n");
   exit(1);
-  return;
 }
 
 int main(int argc, char *argv[]) {
@@ -86,41 +100,53 @@ int main(int argc, char *argv[]) {
   PhysBAM::LOG::Initialize_Logging();
 
   // Sets up test data.
-  float* floats = new float[TOTAL_PARTICLES];
-  float* floatSource = new float[TOTAL_PARTICLES];
-  for (int i = 0; i < TOTAL_PARTICLES; i+=5) {
-    floatSource[i + 0] = floats[i + 0] = getX();
-    floatSource[i + 1] = floats[i + 1] = getY();
-    floatSource[i + 2] = floats[i + 2] = getZ();
-    floatSource[i + 3] = floats[i + 3] = 1.0;
-    floatSource[i + 4] = floats[i + 4] = 1.0;
+  ParticleType* particles = new ParticleType[TOTAL_PARTICLES];
+  ParticleType* particlesSource = new ParticleType[TOTAL_PARTICLES];
+  for (int i = 0; i < TOTAL_PARTICLES; ++i) {
+    float temp_x = getX();
+    float temp_y = getY();
+    float temp_z = getZ();
+    particlesSource[i].index[0] = floor(temp_x);
+    particlesSource[i].index[1] = floor(temp_y);
+    particlesSource[i].index[2] = floor(temp_z);
+    particlesSource[i].delta[0] = temp_x - floor(temp_x);
+    particlesSource[i].delta[1] = temp_y - floor(temp_y);
+    particlesSource[i].delta[2] = temp_z - floor(temp_z);
+    particlesSource[i].radius = getR();
+    particlesSource[i].quantized_collision_distance = 0xEFEF;
+    particlesSource[i].id = 0x0EDEDEDE;
+    particles[i] = particlesSource[i];
   }
 
-  TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > translator;
-  typedef TranslatorPhysBAMTest<PhysBAM::VECTOR<float, 3> > Translator;
+  Translator translator;
 
   int_dimension_t dimensions[] = {X, Y, Z, DX, DY, DZ};
   nimbus::GeometricRegion* r = new nimbus::GeometricRegion(dimensions);
   nimbus::LogicalDataObject* ldo = new LogicalDataObject(1, "velocity", r);
 
   PhysBAMData* pd = new PhysBAMData();
-  pd->set_buffer((char*)floats, TOTAL_PARTICLES * sizeof(float));  // NOLINT
+  pd->set_buffer(
+      reinterpret_cast<char*>(particles),
+      TOTAL_PARTICLES * sizeof(ParticleType));
   PhysicalDataInstance* instance = new PhysicalDataInstance(1, ldo, pd, 0);
-  CPdiVector vec;
+  PdiVector vec;
   vec.push_back(instance);
 
-  // TODO(quhang): Need more time to figure out whether the range specification
-  // corresponds to original PhysBAM.
   PhysBAM::ARRAY<float, Translator::TV_INT> phi_array;
-  phi_array.Resize(Translator::TV_INT(DX, DY, DZ));
-  PhysBAM::RANGE<Translator::TV> range_input(
-      X, X+DX, Y, Y+DY, Z, Z+DZ);
-  Translator::Grid grid(Translator::TV_INT(DX, DY, DZ), range_input, true);
+  phi_array.Resize(
+      PhysBAM::RANGE<Translator::TV_INT>(
+          1, GRID_SCALE,
+          1, GRID_SCALE,
+          1, GRID_SCALE).Thickened(NUM_GHOST_CELL));
+  Translator::Grid grid(
+      Translator::TV_INT(GRID_SCALE, GRID_SCALE, GRID_SCALE),
+      PhysBAM::RANGE<Translator::TV>::Unit_Box(),
+      true);
   Translator::ParticleContainer particle_container(grid, phi_array, 0);
   particle_container.Initialize_Particle_Levelset_Grid_Values();
 
   nimbus::GeometricRegion region(dimensions);
-  float* result;
+  ParticleType* result;
   bool pass = true;
   pass = translator.ReadParticles(&region, &vec, particle_container, true);
 
@@ -129,7 +155,7 @@ int main(int argc, char *argv[]) {
   }
 
   for (int i = 0; i < TOTAL_PARTICLES; i++) {
-    floats[i] = 1.0;
+    memset(&particles[i], 0xEF, sizeof(particles[i]));
   }
 
   pass = translator.WriteParticles(&region, &vec, particle_container, true);
@@ -137,31 +163,25 @@ int main(int argc, char *argv[]) {
     Error();
   }
 
-  // @phil Cannot compare to float array, which is deleted by PhysBAM data.
-  // Not sure if this is expected behavior? --quhang
-  // TODO(quhang) Don't assume particle values are different.
-  result = reinterpret_cast<float*>(
+  result = reinterpret_cast<ParticleType*>(
       reinterpret_cast<PhysBAMData*>(instance->data())->buffer());
 
   if (reinterpret_cast<PhysBAMData*>(instance->data())->size() !=
-      TOTAL_PARTICLES * sizeof(float)) {
+      TOTAL_PARTICLES * sizeof(ParticleType)) {
     printf("The number of particles is incorrect!\n");
     Error();
   }
-  std::vector<bool> checked(TOTAL_PARTICLES / 5, false);
-  for (int i = 0; i < TOTAL_PARTICLES / 5; ++i) {
-    // Check whether the ith particle in floatSource exists in result.
+
+  std::vector<bool> checked(TOTAL_PARTICLES, false);
+  for (int i = 0; i < TOTAL_PARTICLES; ++i) {
+    // Check whether the ith particle in particlesSource exists in result.
     bool findit = false;
     // Go throught each particle in result.
-    for (int j = 0; j < TOTAL_PARTICLES / 5; ++j)
+    for (int j = 0; j < TOTAL_PARTICLES; ++j)
       if (!checked[j]) {
-        bool flag = true;
-        for (int k = 0; k < 5; ++k)
-          if (floatSource[i*5+k] != result[j*5+k])
-            flag = false;
-        if (flag) {
-          findit = true;
+        if (memcmp(&particlesSource[i], &result[j], sizeof(result[j]))) {
           checked[j] = true;
+          findit = true;
           break;
         }
       }
@@ -172,4 +192,5 @@ int main(int argc, char *argv[]) {
   }
 
   printf("Passed all tests successfully.\n");
+  return 0;
 }
