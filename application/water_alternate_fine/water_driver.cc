@@ -161,6 +161,12 @@ Initialize(const nimbus::Job *job,
         example.Save_To_Nimbus(job, da, current_frame);
         Write_Output_Files(example.first_frame);
     }
+    // Comments by quhang:
+    // The collision body should not matter, and the last two parameters should
+    // not matter. So just add them in the initialization part.
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+    // Don't know why this statement should be here.
+    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 }
 //#####################################################################
 // Run
@@ -199,10 +205,11 @@ CalculateFrameImpl(const nimbus::Job *job,
   // if(time+dt>=target_time){dt=target_time-time;done=true;}
   // else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
 
-  LOG::Time("Compute Occupied Blocks");
-  T maximum_fluid_speed=example.face_velocities.Maxabs().Max();
-  T max_particle_collision_distance=example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor*example.mac_grid.dX.Max();
-  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
+  //LOG::Time("Compute Occupied Blocks");
+  // T maximum_fluid_speed=example.face_velocities.Maxabs().Max();
+  // T max_particle_collision_distance=example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor*example.mac_grid.dX.Max();
+  // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
+  //example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
 
   LOG::Time("Adjust Phi With Objects");
   T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
@@ -289,7 +296,7 @@ WriteFrameImpl(const nimbus::Job *job,
   // Comments(quhang): Notice time has already been increased here.
   // Not sure if the Set_Number_Particles_Per_Cell function should go to
   // initalization.
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   //Reseed
   LOG::Time("Reseed");
@@ -310,13 +317,13 @@ SuperJob1Impl (const nimbus::Job *job,
                T dt) {
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
-  LOG::Time("Compute Occupied Blocks");
-  T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
-  T max_particle_collision_distance =
-    example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor *
-    example.mac_grid.dX.Max();
-  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(
-      true, dt * maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 * example.mac_grid.dX.Max(), 10);
+  // LOG::Time("Compute Occupied Blocks");
+  // T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
+  // T max_particle_collision_distance =
+  //   example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor *
+  //   example.mac_grid.dX.Max();
+  // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(
+  //     true, dt * maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 * example.mac_grid.dX.Max(), 10);
 
   LOG::Time("Adjust Phi With Objects");
   T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(
@@ -365,14 +372,11 @@ template<class TV> bool WATER_DRIVER<TV>::
 SuperJob3Impl (const nimbus::Job *job,
                const nimbus::DataArray &da,
                T dt) {
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   LOG::SCOPE *scope=0;
   scope=new LOG::SCOPE("Project");
-  bool set_boundary_conditions = true;
-  if (set_boundary_conditions) {
-    example.Set_Boundary_Conditions(time);
-  }
+  example.Set_Boundary_Conditions(time);
   example.incompressible.Set_Dirichlet_Boundary_Conditions(
       &example.particle_levelset_evolution.phi, 0);
   example.projection.p *= dt;

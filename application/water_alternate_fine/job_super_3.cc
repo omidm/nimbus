@@ -94,4 +94,4 @@ namespace application {
         dbg(APP_LOG, "Completed executing SUPER_3 job\n");
 }
 
-} // namespace application
+}  // namespace application
