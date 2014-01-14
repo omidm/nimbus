@@ -58,12 +58,16 @@ public:
     // Execution for super job 1.
     bool SuperJob1Impl(const nimbus::Job *job,
                        const nimbus::DataArray &da,
-                       T dat);
+                       T dt);
 
-    // Execution for super job 1.
+    // Execution for super job 3.
     bool SuperJob3Impl(const nimbus::Job *job,
                        const nimbus::DataArray &da,
-                       T dat);
+                       T dt);
+
+    bool ComputeOccupiedBlocksImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   T dt);
 
 
     void Write_Output_Files(const int frame);

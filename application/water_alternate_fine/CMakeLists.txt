@@ -31,6 +31,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_super_1.cc
     ${PROJECT_SOURCE_DIR}/job_super_2.cc
     ${PROJECT_SOURCE_DIR}/job_super_3.cc
+    ${PROJECT_SOURCE_DIR}/job_compute_occupied_blocks.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
