@@ -55,6 +55,18 @@
 #define WRITE_FRAME "write_frame"
 
 #define COMPUTE_OCCUPIED_BLOCKS "compute_occupied_blocks"
+#define ADJUST_PHI_WITH_OBJECTS "adjust_phi_with_objects"
+#define ADVECT_PHI "advect_phi"
+#define STEP_PARTICLES "step_particles"
+#define ADVECT_REMOVED_PARTICLES "advect_removed_particles"
+#define ADVECT_V "advect_v"
+#define FORCES "forces"
+#define MODIFY_LEVELSET "modify_levelset"
+#define ADJUST_PHI "adjust_phi"
+#define DELETE_PARTICLES "delete_particles"
+#define REINCORPORATE_PARTICLES "reincorporate_particles"
+#define PROJECT "project"
+#define EXTRAPOLATE "extrapolate"
 
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_
