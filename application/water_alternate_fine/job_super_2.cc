@@ -102,6 +102,8 @@ namespace application {
                                   time+dt,
                                   example->number_of_ghost_cells);
 
+        example->particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+
         // modify levelset
         dbg(APP_LOG, "Modify Levelset ...\n");
         example->particle_levelset_evolution.particle_levelset.

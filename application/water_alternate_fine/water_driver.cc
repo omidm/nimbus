@@ -365,6 +365,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 SuperJob3Impl (const nimbus::Job *job,
                const nimbus::DataArray &da,
                T dt) {
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   LOG::SCOPE *scope=0;
   scope=new LOG::SCOPE("Project");
