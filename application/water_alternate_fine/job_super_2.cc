@@ -45,6 +45,7 @@
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_super_2.h"
 #include "application/water_alternate_fine/physbam_include.h"
+#include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -67,28 +68,22 @@ namespace application {
     void JobSuper2::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing 2nd super job\n");
 
-        int frame;
-        T time, dt;
+        InitConfig init_config;
+        T dt;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        LoadParameter(params_str, &frame, &time, &dt);
+        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+        dbg(APP_LOG, "Frame %i in super job 2\n", init_config.frame);
 
-        dbg(APP_LOG, "Frame %i in super job 2\n", frame);
+        const int& frame = init_config.frame;
+        const T& time = init_config.time;
 
         // initialize configuration and state
-        PhysBAM::WATER_EXAMPLE<TV> *example =
-            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+        PhysBAM::WATER_EXAMPLE<TV> *example;
+        PhysBAM::WATER_DRIVER<TV> *driver;
 
-        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
-                                 PhysBAM::RANGE<TV>(TV(),
-                                                    TV::All_Ones_Vector())
-                                 );
-        PhysBAM::WaterSources::Add_Source(example);
-        PhysBAM::WATER_DRIVER<TV> driver(*example);
-        driver.init_phase = false;
-        driver.current_frame = frame;
-        driver.time = time;
-        driver.Initialize(this, da, false);
+        init_config.set_boundary_condition = false;
+        InitializeExampleAndDriver(init_config, this, da, example, driver);
 
         // face velocity for ghost + interior
         FaceArray face_velocities_ghost;
@@ -102,7 +97,6 @@ namespace application {
                                   time+dt,
                                   example->number_of_ghost_cells);
 
-        // example->particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
         // modify levelset
         dbg(APP_LOG, "Modify Levelset ...\n");
@@ -140,7 +134,7 @@ namespace application {
         example->Save_To_Nimbus(this, da, frame+1);
 
         // free resources
-        delete example;
+        DestroyExampleAndDriver(example, driver);
 
         dbg(APP_LOG, "Completed executing 2nd super job job\n");
     }

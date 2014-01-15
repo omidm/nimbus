@@ -49,13 +49,13 @@
 
 namespace application {
 
-    class JobCalculateFrame : public nimbus::Job {
-        public:
-            explicit JobCalculateFrame(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params,
-                                 const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+class JobCalculateFrame : public nimbus::Job {
+ public:
+  explicit JobCalculateFrame(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 

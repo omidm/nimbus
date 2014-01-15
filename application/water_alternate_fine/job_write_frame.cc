@@ -68,7 +68,6 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
 
-  // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,
       "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
