@@ -50,48 +50,43 @@
 
 namespace application {
 
-    JobSuper3::JobSuper3(nimbus::Application *app) {
-        set_application(app);
-    };
+JobSuper3::JobSuper3(nimbus::Application *app) {
+  set_application(app);
+};
 
-    nimbus::Job* JobSuper3::Clone() {
-        return new JobSuper3(application());
-    }
+nimbus::Job* JobSuper3::Clone() {
+  return new JobSuper3(application());
+}
 
-    void JobSuper3::Execute(nimbus::Parameter params,
-                                    const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing SUPER_3 job.\n");
+void JobSuper3::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing SUPER_3 job.\n");
 
-        T time, dt;
-        int frame;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        LoadParameter(params_str, &frame, &time, &dt);
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
 
-        // Assume time, dt, frame is ready from here.
-        dbg(APP_LOG,
-            "In SUPER_3: Initialize WATER_DRIVER/WATER_EXAMPLE"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
+  // Assume time, dt, frame is ready from here.
+  dbg(APP_LOG,
+      "In SUPER_3: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Frame=%d, Time=%f).\n",
+      init_config.frame, init_config.time);
 
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
 
-        InitializeExampleAndDriver(da, frame, time,
-                                   this, example, driver);
-        // assert(init_success);
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-        dbg(APP_LOG,
-            "Super Job 3 starts"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
+  dbg(APP_LOG, "Job SUPER_3 starts (dt=%f).\n", dt);
 
-        driver->SuperJob3Impl(this, da, dt);
+  driver->SuperJob3Impl(this, da, dt);
 
-        // Free resources.
-        DestroyExampleAndDriver(example, driver);
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
 
-        dbg(APP_LOG, "Completed executing SUPER_3 job\n");
+  dbg(APP_LOG, "Completed executing SUPER_3 job\n");
 }
 
 }  // namespace application

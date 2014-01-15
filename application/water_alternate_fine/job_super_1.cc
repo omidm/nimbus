@@ -61,41 +61,41 @@
 
 namespace application {
 
-    JobSuper1::JobSuper1(nimbus::Application *app) {
-        set_application(app);
-    };
+JobSuper1::JobSuper1(nimbus::Application *app) {
+  set_application(app);
+};
 
-    nimbus::Job* JobSuper1::Clone() {
-        return new JobSuper1(application());
-    }
+nimbus::Job* JobSuper1::Clone() {
+  return new JobSuper1(application());
+}
 
-    void JobSuper1::Execute(nimbus::Parameter params,
-                                    const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing super job 1.\n");
+void JobSuper1::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing super job 1.\n");
 
-        // get time, dt, frame from the parameters.
-        T time, dt;
-        int frame;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        LoadParameter(params_str, &frame, &time, &dt);
-        dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n", frame, time, dt);
+  // get time, dt, frame from the parameters.
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+  dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
+      init_config.frame, init_config.time, dt);
 
+  // Initializing the example and driver with state and configuration variables.
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
 
-        // Initializing the example and driver with state and configuration variables.
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-        InitializeExampleAndDriver(da, frame, time, this, example, driver);
+  // Run the steps in the super job.
+  dbg(APP_LOG, "Execute the steps is super job 1.");
+  driver->SuperJob1Impl(this, da, dt);
 
-        // Run the steps in the super job.
-        dbg(APP_LOG, "Execute the steps is super job 1.");
-        driver->SuperJob1Impl(this, da, dt);
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
 
-        // Free resources.
-        DestroyExampleAndDriver(example, driver);
+  dbg(APP_LOG, "Completed executing super job 1.\n");
+}
 
-        dbg(APP_LOG, "Completed executing super job 1.\n");
-    }
-
-} // namespace application
+}  // namespace application

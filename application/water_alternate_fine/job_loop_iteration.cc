@@ -77,11 +77,13 @@ namespace application {
     dbg(APP_LOG, "Executing loop iteration job\n");
 
     // Get parameters: frame, time
-    int frame;
-    T time;
+    InitConfig init_config;
     std::string params_str(params.ser_data().data_ptr_raw(),
-        params.ser_data().size());
-    LoadParameter(params_str, &frame, &time);
+                           params.ser_data().size());
+    LoadParameter(params_str, &init_config.frame, &init_config.time);
+
+    const int& frame = init_config.frame;
+    const T& time = init_config.time;
 
     dbg(APP_LOG, "Frame %i and time %i in iteration job\n",
         frame, time);
@@ -89,9 +91,7 @@ namespace application {
     // Initialize the state of example and driver.
     PhysBAM::WATER_EXAMPLE<TV>* example;
     PhysBAM::WATER_DRIVER<TV>* driver;
-    InitializeExampleAndDriver(da, frame, time,
-        this, example, driver);
-    // assert(init_success);
+    InitializeExampleAndDriver(init_config, this, da, example, driver);
 
     // check whether the frame is done or not
     bool done = false;

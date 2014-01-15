@@ -42,36 +42,36 @@
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
 
+#include "application/water_alternate_fine/physbam_utils.h"
+
 namespace application {
 
-    bool InitializeExampleAndDriver(
-            const nimbus::DataArray& da,
-            const int current_frame,
-            const T time,
-            const nimbus::Job* job,
-            PhysBAM::WATER_EXAMPLE<TV>*& example,
-            PhysBAM::WATER_DRIVER<TV>*& driver
-            ) {
-        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
-        example->Initialize_Grid(
-                TV_INT::All_Ones_Vector()*kScale,
-                PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
-        PhysBAM::WaterSources::Add_Source(example);
-        driver= new PhysBAM::WATER_DRIVER<TV>(*example);
-        driver->init_phase = false;
-        driver->current_frame = current_frame;
-        driver->time = time;
-        // The returning result is not used.
-        driver->Initialize(job, da);
-        return true;
-    }
+bool InitializeExampleAndDriver(
+    const InitConfig& init_config,
+    const nimbus::Job* job,
+    const nimbus::DataArray& da,
+    PhysBAM::WATER_EXAMPLE<TV>*& example,
+    PhysBAM::WATER_DRIVER<TV>*& driver) {
+  example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+  example->Initialize_Grid(
+      init_config.grid_size,
+      PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
+  PhysBAM::WaterSources::Add_Source(example);
+  driver= new PhysBAM::WATER_DRIVER<TV>(*example);
+  driver->init_phase = init_config.init_phase;
+  driver->current_frame = init_config.frame;
+  driver->time = init_config.time;
+  driver->Initialize(job, da, init_config.set_boundary_condition);
+  return true;
+}
 
-    void DestroyExampleAndDriver(
-        PhysBAM::WATER_EXAMPLE<TV>*& example,
-        PhysBAM::WATER_DRIVER<TV>*& driver) {
-      delete example;
-      example = NULL;
-      delete driver;
-      driver = NULL;
-    }
-} // namespace application
+void DestroyExampleAndDriver(
+    PhysBAM::WATER_EXAMPLE<TV>*& example,
+    PhysBAM::WATER_DRIVER<TV>*& driver) {
+  delete example;
+  example = NULL;
+  delete driver;
+  driver = NULL;
+}
+
+}  // namespace application

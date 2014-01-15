@@ -50,47 +50,42 @@
 
 namespace application {
 
-    JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
-        set_application(app);
-    };
+JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
+  set_application(app);
+};
 
-    nimbus::Job* JobWriteFrame::Clone() {
-        return new JobWriteFrame(application());
-    }
-
-    void JobWriteFrame::Execute(nimbus::Parameter params,
-                                const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
-
-        T time, dt;
-        int frame;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        LoadParameter(params_str, &frame, &time, &dt);
-
-        // Assume time, dt, frame is ready from here.
-        dbg(APP_LOG,
-            "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
-
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
-        InitializeExampleAndDriver(da, frame, time,
-                                   this, example, driver);
-        // assert(init_success);
-
-        dbg(APP_LOG,
-            "Simulation starts"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
-        // Reseed particles and write frame.
-        driver->WriteFrameImpl(this, da, true, dt);
-
-        // Free resources.
-        DestroyExampleAndDriver(example, driver);
-
-        dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+nimbus::Job* JobWriteFrame::Clone() {
+  return new JobWriteFrame(application());
 }
 
-} // namespace application
+void JobWriteFrame::Execute(nimbus::Parameter params,
+                            const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
+
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+
+  // Assume time, dt, frame is ready from here.
+  dbg(APP_LOG,
+      "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Frame=%d, Time=%f).\n",
+      init_config.frame, init_config.time, dt);
+
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
+
+  dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
+  // Reseed particles and write frame.
+  driver->WriteFrameImpl(this, da, true, dt);
+
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
+
+  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+}
+
+}  // namespace application

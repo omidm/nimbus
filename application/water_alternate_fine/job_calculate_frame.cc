@@ -50,48 +50,44 @@
 
 namespace application {
 
-    JobCalculateFrame::JobCalculateFrame(nimbus::Application *app) {
-        set_application(app);
-    };
+JobCalculateFrame::JobCalculateFrame(nimbus::Application *app) {
+  set_application(app);
+};
 
-    nimbus::Job* JobCalculateFrame::Clone() {
-        return new JobCalculateFrame(application());
-    }
-
-    void JobCalculateFrame::Execute(nimbus::Parameter params,
-                                    const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing CALCULATE_FRAME job.\n");
-
-        T time, dt;
-        int frame;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        LoadParameter(params_str, &frame, &time, &dt);
-
-        // Assume time, dt, frame is ready from here.
-        dbg(APP_LOG,
-            "In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
-
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
-
-        InitializeExampleAndDriver(da, frame, time,
-                                   this, example, driver);
-        // assert(init_success);
-
-        dbg(APP_LOG,
-            "Simulation starts"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
-        // Move forward time "dt" without reseeding and writing frames.
-        driver->CalculateFrameImpl(this, da, true, dt);
-
-        // Free resources.
-        DestroyExampleAndDriver(example, driver);
-
-        dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+nimbus::Job* JobCalculateFrame::Clone() {
+  return new JobCalculateFrame(application());
 }
 
-} // namespace application
+void JobCalculateFrame::Execute(nimbus::Parameter params,
+                                const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing CALCULATE_FRAME job.\n");
+
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+
+  // Assume time, dt, frame is ready from here.
+  dbg(APP_LOG,
+      "In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Frame=%d, Time=%f).\n",
+      init_config.frame, init_config.time);
+
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
+
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
+
+  dbg(APP_LOG, "Simulation starts(dt=%f).\n", dt);
+
+  // Move forward time "dt" without reseeding and writing frames.
+  driver->CalculateFrameImpl(this, da, true, dt);
+
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
+
+  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+}
+
+}  // namespace application
