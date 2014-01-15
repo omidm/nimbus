@@ -149,11 +149,11 @@ bool JobEntry::done() {
   return done_;
 }
 
-void JobEntry::set_before_set(IDSet<logical_data_id_t> before_set) {
+void JobEntry::set_before_set(IDSet<job_id_t> before_set) {
   before_set_ = before_set;
 }
 
-void JobEntry::set_after_set(IDSet<logical_data_id_t> after_set) {
+void JobEntry::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
 }
 

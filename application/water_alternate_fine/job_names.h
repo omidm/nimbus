@@ -32,43 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * This file has the main function that launches Nimbus scheduler.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * This file defines the name of jobs that will be used for registration and
+ * spawning the jobs.
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
+ */
 
-#define DEBUG_MODE
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_NAMES_H_
 
-#include <stdlib.h>
-#include <iostream> // NOLINT
-#include "./scheduler_alternate_coarse.h"
-#include "shared/nimbus.h"
-#include "shared/nimbus_types.h"
-#include "shared/scheduler_command.h"
-#include "shared/parser.h"
 
-int main(int argc, char *argv[]) {
-  nimbus::nimbus_initialize();
+#define SUPER_1 "super_1"
+#define SUPER_2 "super_2"
+#define SUPER_3 "super_3"
 
-  SchedulerAlternateCoarse * s = new SchedulerAlternateCoarse(NIMBUS_SCHEDULER_PORT);
+#define MAIN "main"
+#define INITIALIZE "initialize"
+#define LOOP_FRAME "loop_frame"
+#define LOOP_ITERATION "loop_iteration"
+#define CALCULATE_FRAME "calculate_frame"
+#define WRITE_FRAME "write_frame"
 
-  if (argc < 2) {
-      dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
-  } else {
-    std::string str(argv[1]);
-    std::cout << str << std::endl;
-    std::stringstream ss(str);
-    size_t num;
-    ss >> num;
-    if (ss.fail()) {
-      dbg(DBG_SCHED, "Invalid input for min initial number of workers, using default.\n");
-    } else {
-       s->set_min_worker_to_join(num);
-      dbg(DBG_SCHED, "Set min initial number of workers to %d.\n", num);
-    }
-  }
+#define COMPUTE_OCCUPIED_BLOCKS "compute_occupied_blocks"
+#define ADJUST_PHI_WITH_OBJECTS "adjust_phi_with_objects"
+#define ADVECT_PHI "advect_phi"
+#define STEP_PARTICLES "step_particles"
+#define ADVECT_REMOVED_PARTICLES "advect_removed_particles"
+#define ADVECT_V "advect_v"
+#define FORCES "forces"
+#define MODIFY_LEVELSET "modify_levelset"
+#define ADJUST_PHI "adjust_phi"
+#define DELETE_PARTICLES "delete_particles"
+#define REINCORPORATE_PARTICLES "reincorporate_particles"
+#define PROJECT "project"
+#define EXTRAPOLATE "extrapolate"
 
-  s->Run();
-}
 
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_

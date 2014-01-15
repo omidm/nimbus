@@ -260,10 +260,10 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     dbg(DBG_TEMP, "Application: Did not find the ldo in ldo_map.\n");
   } else {
     dbg(DBG_TEMP, "Application: Found the ldo in ldo_map.\n");
+    GeometricRegion* r_t = new GeometricRegion(*(GetLogicalObject(l_id)->region()));
+    LogicalDataObject ldo_t(l_id, l_name, r_t);
+    PhysicalDataInstance pdi_t(l_id, &ldo_t, l_data, data_version_t(0));
   }
-  GeometricRegion* r_t = new GeometricRegion(*(GetLogicalObject(l_id)->region()));
-  LogicalDataObject ldo_t(l_id, l_name, r_t);
-  PhysicalDataInstance pdi_t(l_id, &ldo_t, l_data, data_version_t(0));
   // ****
 
   std::vector<job_id_t> j;

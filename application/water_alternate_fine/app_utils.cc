@@ -39,7 +39,6 @@
 #include <set>
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
-#include "application/water_alternate_fine/water_sources.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
@@ -81,6 +80,37 @@ namespace application {
             success = true;
         }
         return success;
+    }
+
+    bool GetDataSet(const std::string &name,
+                    const nimbus::DataArray &da,
+                    std::set<Data * > *ds) {
+        bool success = false;
+        if (da.empty()) {
+            return success;
+        }
+        for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            if (d->name() == name) {
+                ds->insert(*it);
+                success = true;
+            }
+        }
+        return success;
+    }
+
+    nimbus::Data* GetFirstData(const std::string &name,
+                               const nimbus::DataArray &da) {
+        if (da.empty()) {
+            return NULL;
+        }
+        for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
+            Data *d = *it;
+            if (d->name() == name) {
+                return d;
+            }
+        }
+        return NULL;
     }
 
     void DestroyTranslatorObjects(nimbus::PdiVector *vec) {
@@ -154,26 +184,4 @@ namespace application {
       return true;
     }
 
-    bool InitializeExampleAndDriver(
-        const nimbus::DataArray& da,
-        const int current_frame,
-        const T time,
-        const int last_unique_particle_id,
-        const nimbus::Job* job,
-        PhysBAM::WATER_EXAMPLE<TV>*& example,
-        PhysBAM::WATER_DRIVER<TV>*& driver
-        ) {
-      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
-      example->Initialize_Grid(
-          TV_INT::All_Ones_Vector()*kScale,
-          PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
-      PhysBAM::WaterSources::Add_Source(example);
-      driver= new PhysBAM::WATER_DRIVER<TV>(*example);
-      driver->init_phase = false;
-      driver->current_frame = current_frame;
-      driver->time = time;
-      // The returning result is not used.
-      driver->Initialize(job, da, last_unique_particle_id);
-      return true;
-    }
 } // namespace application

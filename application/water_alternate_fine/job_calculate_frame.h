@@ -33,7 +33,11 @@
  */
 
 /*
- * Job that executes all the simulation work in one substep.
+ * Job that executes all the simulation work in one substep, and reads/writes
+ * all data.
+ * This job is depreciated, and might be removed in the future. It is expected
+ * to do all the operations in jobs SUPER_1, SUPER_2, and SUPER_3, for
+ * debugging.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
@@ -43,17 +47,15 @@
 
 #include "shared/nimbus.h"
 
-#define CALCULATE_FRAME "calculate_frame"
-
 namespace application {
 
-    class JobCalculateFrame : public nimbus::Job {
-        public:
-            explicit JobCalculateFrame(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params,
-                                 const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+class JobCalculateFrame : public nimbus::Job {
+ public:
+  explicit JobCalculateFrame(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 

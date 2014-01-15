@@ -37,10 +37,11 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_initialize.h"
-#include "application/water_alternate_fine/job_loop_frame.h"
+#include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
+#include "application/water_alternate_fine/job_names.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
@@ -60,25 +61,15 @@ namespace application {
         std::string par_str(params.ser_data().data_ptr_raw(),
                             params.ser_data().size());
 
-        // initialize configuration and state
-        PhysBAM::WATER_EXAMPLE<TV> *example =
-            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+        InitConfig init_config;
+        init_config.init_phase = true;
+        PhysBAM::WATER_EXAMPLE<TV> *example;
+        PhysBAM::WATER_DRIVER<TV> *driver;
 
-        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
-                                 PhysBAM::RANGE<TV>(TV(),
-                                                    TV::All_Ones_Vector())
-                                 );
-        PhysBAM::WaterSources::Add_Source(example);
-        PhysBAM::WATER_DRIVER<TV> driver(*example);
-        driver.init_phase = true;
-        driver.current_frame = 0;
+        InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-        // TODO: pass the last_unique_particle in a new data and add the
-        // logical id to read/write set of the spawned LOOP_FRAME job down.
-        // int last_unique_particle driver.Initialize(this, da, 0);
-        driver.Initialize(this, da, 0);
-
-        delete example;
+        // Free resources.
+        DestroyExampleAndDriver(example, driver);
 
         // next loop
         int job_num = 1;

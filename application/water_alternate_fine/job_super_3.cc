@@ -46,21 +46,21 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_alternate_fine/job_calculate_frame.h"
+#include "application/water_alternate_fine/job_super_3.h"
 
 namespace application {
 
-JobCalculateFrame::JobCalculateFrame(nimbus::Application *app) {
+JobSuper3::JobSuper3(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobCalculateFrame::Clone() {
-  return new JobCalculateFrame(application());
+nimbus::Job* JobSuper3::Clone() {
+  return new JobSuper3(application());
 }
 
-void JobCalculateFrame::Execute(nimbus::Parameter params,
-                                const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing CALCULATE_FRAME job.\n");
+void JobSuper3::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing SUPER_3 job.\n");
 
   InitConfig init_config;
   T dt;
@@ -70,7 +70,7 @@ void JobCalculateFrame::Execute(nimbus::Parameter params,
 
   // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,
-      "In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "In SUPER_3: Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
       init_config.frame, init_config.time);
 
@@ -79,15 +79,14 @@ void JobCalculateFrame::Execute(nimbus::Parameter params,
 
   InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-  dbg(APP_LOG, "Simulation starts(dt=%f).\n", dt);
+  dbg(APP_LOG, "Job SUPER_3 starts (dt=%f).\n", dt);
 
-  // Move forward time "dt" without reseeding and writing frames.
-  driver->CalculateFrameImpl(this, da, true, dt);
+  driver->SuperJob3Impl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+  dbg(APP_LOG, "Completed executing SUPER_3 job\n");
 }
 
 }  // namespace application

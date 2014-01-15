@@ -33,7 +33,25 @@
  */
 
 /*
- * Job that reseeds particles and write frames for one substep.
+ * This file contains job WRITE_FRAME that:
+ *     reseeds particle, and writes simulation variables to file for rendering.
+ * The parameters of WRITE_FRAME:
+ *     frame number, simulation time, dt.
+ * The read set(not sure) of SUPER_3:
+ *     velocity, levelset, particle, removed particle, last_unique_particle_id.
+ * The write set(not sure) of SUPER_3:
+ *     particles.
+ *
+ * dt is not needed for job WRITE_FRAME now, and might be removed from the
+ * parameter list in the future.
+ * It is still unclear whether other simulation variables or states are also
+ * needed.
+ * For now, all the data is transmitted to guarantee correctness.
+ *
+ * Reseeding operation is included in this job, because this job includes all
+ * the operations that are executed once in each frame, as is reseeding
+ * operation. So the job name might be a little bit misleading. Reseeding
+ * operation is expected to be moved to another job in the future.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
@@ -42,8 +60,6 @@
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_WRITE_FRAME_H_
 
 #include "shared/nimbus.h"
-
-#define WRITE_FRAME "write_frame"
 
 namespace application {
 

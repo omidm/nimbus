@@ -37,6 +37,9 @@
  * levelset with sources, deletes particles and reincorporates removed
  * particles.
  *
+ * This job uses all data -- face velocities, phi, particles and removed
+ * particles!
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
@@ -44,8 +47,6 @@
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_2_H_
 
 #include "shared/nimbus.h"
-
-#define SUPER_2 "super_2"
 
 namespace application {
 

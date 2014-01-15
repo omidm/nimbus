@@ -33,30 +33,33 @@
  */
 
 /*
- * This file contains a job corresponding to one iteration consisting of all
- * different simulation stages (advection, projection, extrapolation etc).
- * (NOTE TODO: Right now, it contains the entire water simulation job. We'll
- * edit it as we progress.)
+ * This file contains super job 1 which is the first portion of computations in
+ * each iteration of computing the frame, it includes 
+ *  Compute Occupied Blocks
+ *  Adjust Phi With Objects
+ *  Advect Phi
+ *  Step Particles
+ *  Advect Removed Particles
+ *  Advect V
+ *  Forces
  *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_ITERATION_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_ITERATION_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_1_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_1_H_
 
 #include "shared/nimbus.h"
 
-#define ITERATION "iteration"
-
 namespace application {
 
-    class JobIteration : public nimbus::Job {
+    class JobSuper1 : public nimbus::Job {
         public:
-            explicit JobIteration(nimbus::Application *app);
+            explicit JobSuper1(nimbus::Application *app);
             virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
     };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_ITERATION_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_1_H_

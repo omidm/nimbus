@@ -181,17 +181,14 @@ bool PhysBAMData::AddToTempBuffer(char* buffer, int len) {
 }
 
 int PhysBAMData::CommitTempBuffer() {
-  // The usage of read/write/tellp seems incorrect.  -quhang
-  // int len = temp_buffer_->tellp();
-  int len = temp_buffer_->str().size();
+  int len = temp_buffer_->tellp();
   if (buffer_)
     delete buffer_;
   size_ = len;
   buffer_ = static_cast<char*>(malloc(len));
   temp_buffer_->read(buffer_, len);
-  temp_buffer_->clear();
-  if (!temp_buffer_->str().empty()) {
-    dbg(DBG_WARN, "When copying a temporary buffer into the permanent buffer in a PhysBAMData object, the read was incomplete. %i bytes remaining.\n", temp_buffer_->tellp());  // NOLINT
+  if (temp_buffer_->eof()) {
+    dbg(DBG_WARN, "When copying a temporary buffer into the permanent buffer in a PhysBAMData object, the read was incomplete.\n");  // NOLINT
   }
   return len;
 }

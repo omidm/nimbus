@@ -2,9 +2,11 @@
 // Copyright 2009, Michael Lentine, Avi Robinson-Mosher, Andrew Selle.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+#include <set>
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
 #include "data/physbam/translator_physbam.h"
+#include "data/scalar_data.h"
 #include "application/water_alternate_fine/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
@@ -197,7 +199,7 @@ Read_Output_Files(const int frame)
 //#####################################################################
 // Write_Output_Files
 //#####################################################################
-template<class TV> int WATER_EXAMPLE<TV>::
+template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     PdiVector pdv;
@@ -263,13 +265,18 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                                          false);
     application::DestroyTranslatorObjects(&pdv);
 
-    return particle_levelset.last_unique_particle_id;
+    // last unique particle id
+    const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
+    if (Data *d = application::GetFirstData(lupistring, da)) {
+        nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
+        sd->set_scalar(particle_levelset.last_unique_particle_id);
+    }
 }
 //#####################################################################
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, int last_unique_particle)
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     PdiVector pdv;
 
@@ -335,13 +342,11 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     application::DestroyTranslatorObjects(&pdv);
 
     // last unique particle id
-    particle_levelset.last_unique_particle_id = last_unique_particle;
-
-    std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
-    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
-    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
-    // FILE_UTILITIES::Read_From_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
+    const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
+    if (Data *d = application::GetFirstData(lupistring, da)) {
+        nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
+        particle_levelset.last_unique_particle_id = sd->scalar();
+    }
 }
 //#####################################################################
 template class WATER_EXAMPLE<VECTOR<float,3> >;

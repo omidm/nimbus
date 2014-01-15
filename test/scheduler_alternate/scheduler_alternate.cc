@@ -32,24 +32,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * This scheduler is written to alternate spawned jobs randomly among
+  * registered workers of water simulation. It is guaranteed that after
+  * convergence for each frame the write frame job whose name is defined as a
+  * macro with tag WRITE_FRAME_NAME will be executed over the same worker
+  * (first registered worker).This way, all the output frames are local to one
+  * worker for sanity checks. The random seed can be changed by changing the
+  * SEED_ macro. 
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INITIALIZE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INITIALIZE_H_
+#include "./scheduler_alternate.h"
 
-#include "shared/nimbus.h"
+#define SEED_ 123
+#define WRITE_FRAME_NAME "write_frame"
 
-namespace application {
+SchedulerAlternate::SchedulerAlternate(unsigned int p)
+: Scheduler(p) {
+  seed_ = SEED_;
+}
 
-    class JobInitialize : public nimbus::Job {
-        public:
-            explicit JobInitialize(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+bool SchedulerAlternate::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  size_t worker_num = server_->worker_num();
 
-} // namespace application
+  if (worker_num < 1) {
+    dbg(DBG_SCHED, "ERROR: there is no worker in scheduler worker list for job assignment");
+    return false;
+  }
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INITIALIZE_H_
+  worker_id_t w_id;
+  if (job->job_name() == WRITE_FRAME_NAME) {
+    w_id = 1;
+  } else {
+    w_id  = (rand_r(&seed_) % worker_num) + 1;
+  }
+
+  return server_->GetSchedulerWorkerById(worker, w_id);
+}

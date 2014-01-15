@@ -32,45 +32,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * This scheduler is written to alternate the iterations for each frame of
-  * water simulation between two workers. It is guaranteed that after
-  * convergence for each frame the write_frame job will be executed over the
-  * same worker, so that all the output frames are local to one worker for
-  * sanity checks.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * This file contains job SUPER_3 that:
+ *     projects velocity, and extrapolates velocity and level set.
+ * The parameters of SUPER_3:
+ *     frame number, simulation time, dt.
+ * The read set(not sure) of SUPER_3:
+ *     velocity, levelset.
+ * The write set(not sure) of SUPER_3:
+ *     velocity, levelset.
+ *
+ * It is still unclear whether other simulation variables or states are also
+ * needed.
+ * For now, all the data is transmitted to guarantee correctness.
+ *
+ * The particle reseeding operation, which was expected to be part of job
+ * SUPER_3, is included in job WRITE_FRAME. Because reseeding operation is only
+ * executed once in each frame, rather than once in each substep.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_
-#define NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_3_H_
 
-#define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <stdlib.h>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include "shared/dbg.h"
 #include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
 
-class SchedulerAlternateCoarse : public Scheduler {
-  public:
-    explicit SchedulerAlternateCoarse(unsigned int listening_port);
+namespace application {
 
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+    class JobSuper3 : public nimbus::Job {
+        public:
+            explicit JobSuper3(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params,
+                                 const nimbus::DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
-  private:
-    unsigned int seed_;
-};
+} // namespace application
 
-#endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_COARSE_SCHEDULER_ALTERNATE_COARSE_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_

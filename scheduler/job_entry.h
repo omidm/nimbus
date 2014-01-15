@@ -102,8 +102,8 @@ class JobEntry {
     bool assigned();
     bool done();
 
-    void set_before_set(IDSet<logical_data_id_t> before_set);
-    void set_after_set(IDSet<logical_data_id_t> after_set);
+    void set_before_set(IDSet<job_id_t> before_set);
+    void set_after_set(IDSet<job_id_t> after_set);
     void set_version_table(VersionTable version_table);
     void set_physical_table(PhysicalTable physical_table);
     void set_versioned(bool flag);
@@ -117,8 +117,8 @@ class JobEntry {
     JobType job_type_;
     std::string job_name_;
     job_id_t job_id_;
-    IDSet<physical_data_id_t> read_set_;
-    IDSet<physical_data_id_t> write_set_;
+    IDSet<logical_data_id_t> read_set_;
+    IDSet<logical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;

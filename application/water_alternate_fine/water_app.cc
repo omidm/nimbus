@@ -37,16 +37,18 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
-#include "application/water_alternate_fine/job_calculate_frame.h"
-// #include "application/water_alternate_fine/job_iteration.h"
+#include "application/water_alternate_fine/job_names.h"
+#include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_initialize.h"
-// #include "application/water_alternate_fine/job_loop.h"
+#include "application/water_alternate_fine/job_super_1.h"
+#include "application/water_alternate_fine/job_super_2.h"
+#include "application/water_alternate_fine/job_super_3.h"
+#include "application/water_alternate_fine/job_calculate_frame.h"
+#include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/job_loop_frame.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
-#include "application/water_alternate_fine/job_main.h"
-#include "application/water_alternate_fine/job_super_2.h"
-#include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_app.h"
+#include "data/scalar_data.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
@@ -87,12 +89,14 @@ namespace application {
         RegisterData(APP_POS_REM_PARTICLES, new DataApp(APP_POS_REM_PARTICLES, kParticlesBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_REM_PARTICLES);
         RegisterData(APP_NEG_REM_PARTICLES, new DataApp(APP_NEG_REM_PARTICLES, kParticlesBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
+        RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
 
         RegisterJob(MAIN, new JobMain(this));
-        // RegisterJob(LOOP, new JobLoop(this));
-        // RegisterJob(ITERATION, new JobIteration(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
+        RegisterJob(SUPER_1, new JobSuper1(this));
         RegisterJob(SUPER_2, new JobSuper2(this));
+        RegisterJob(SUPER_3, new JobSuper3(this));
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
         RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
         RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));

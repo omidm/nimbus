@@ -39,7 +39,7 @@
 #include <string>
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/job_loop.h"
+#include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -50,54 +50,41 @@
 
 namespace application {
 
-    JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
-        set_application(app);
-    };
+JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
+  set_application(app);
+};
 
-    nimbus::Job* JobWriteFrame::Clone() {
-        return new JobWriteFrame(application());
-    }
-
-    void JobWriteFrame::Execute(nimbus::Parameter params,
-                                const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
-
-        T time, dt;
-        int frame;
-        // TODO: Get form data array!
-        int last_unique_particle = 100;
-        std::stringstream in_ss;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        LoadParameter(params_str, &frame, &time, &dt);
-
-        // Assume time, dt, frame is ready from here.
-        dbg(APP_LOG,
-            "QUHANG: In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
-
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
-        assert(InitializeExampleAndDriver(
-               da, frame, time, last_unique_particle,
-               this, example, driver));
-
-        dbg(APP_LOG,
-            "Simulation starts"
-            "(Frame=%d, Time=%f, dt=%f).\n",
-            frame, time, dt);
-        // Reseed particles and write frame.
-        last_unique_particle = driver->WriteFrameImpl(this, da, true, dt);
-
-        // TODO(quhang/chinmayee): Fix the passing mechanism for
-        // last_unique_particle.
-
-        // free resources
-        delete example;
-        delete driver;
-
-        dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+nimbus::Job* JobWriteFrame::Clone() {
+  return new JobWriteFrame(application());
 }
 
-} // namespace application
+void JobWriteFrame::Execute(nimbus::Parameter params,
+                            const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
+
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+
+  dbg(APP_LOG,
+      "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Frame=%d, Time=%f).\n",
+      init_config.frame, init_config.time, dt);
+
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
+
+  dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
+  // Reseed particles and write frame.
+  driver->WriteFrameImpl(this, da, true, dt);
+
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
+
+  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+}
+
+}  // namespace application

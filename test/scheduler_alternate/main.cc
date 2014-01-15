@@ -32,24 +32,43 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * This file has the main function that launches Nimbus scheduler.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INITIALIZE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INITIALIZE_H_
+#define DEBUG_MODE
 
+#include <stdlib.h>
+#include <iostream> // NOLINT
+#include "./scheduler_alternate.h"
 #include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
+#include "shared/scheduler_command.h"
+#include "shared/parser.h"
 
-namespace application {
+int main(int argc, char *argv[]) {
+  nimbus::nimbus_initialize();
 
-    class JobInitialize : public nimbus::Job {
-        public:
-            explicit JobInitialize(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+  SchedulerAlternate * s = new SchedulerAlternate(NIMBUS_SCHEDULER_PORT);
 
-} // namespace application
+  if (argc < 2) {
+      dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
+  } else {
+    std::string str(argv[1]);
+    std::cout << str << std::endl;
+    std::stringstream ss(str);
+    size_t num;
+    ss >> num;
+    if (ss.fail()) {
+      dbg(DBG_SCHED, "Invalid input for min initial number of workers, using default.\n");
+    } else {
+       s->set_min_worker_to_join(num);
+      dbg(DBG_SCHED, "Set min initial number of workers to %d.\n", num);
+    }
+  }
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INITIALIZE_H_
+  s->Run();
+}
+

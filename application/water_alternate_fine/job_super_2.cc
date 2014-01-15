@@ -36,12 +36,16 @@
  * levelset with sources, deletes particles and reincorporates removed
  * particles.
  *
+ * This job uses all data -- face velocities, phi, particles and removed
+ * particles!
+ *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_super_2.h"
 #include "application/water_alternate_fine/physbam_include.h"
+#include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
@@ -64,51 +68,58 @@ namespace application {
     void JobSuper2::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing 2nd super job\n");
 
-        // get parameters
-        int frame, last_unique_particle;
-        std::stringstream in_ss;
+        InitConfig init_config;
+        T dt;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        in_ss.str(params_str);
-        in_ss >> frame;
-        in_ss >> last_unique_particle;
-        dbg(APP_LOG, "Frame %i, last unique particle %i in iteration job\n",
-                     frame, last_unique_particle);
+        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+        dbg(APP_LOG, "Frame %i in super job 2\n", init_config.frame);
+
+        const int& frame = init_config.frame;
+        const T& time = init_config.time;
 
         // initialize configuration and state
-        PhysBAM::WATER_EXAMPLE<TV> *example =
-            new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+        PhysBAM::WATER_EXAMPLE<TV> *example;
+        PhysBAM::WATER_DRIVER<TV> *driver;
 
-        example->Initialize_Grid(TV_INT::All_Ones_Vector()*kScale,
-                                 PhysBAM::RANGE<TV>(TV(),
-                                                    TV::All_Ones_Vector())
-                                 );
-        PhysBAM::WaterSources::Add_Source(example);
-        PhysBAM::WATER_DRIVER<TV> driver(*example);
-        driver.init_phase = false;
-        driver.current_frame = frame;
-        driver.Initialize(this, da, last_unique_particle, false);
+        init_config.set_boundary_condition = false;
+        InitializeExampleAndDriver(init_config, this, da, example, driver);
+
+        // face velocity for ghost + interior
+        FaceArray face_velocities_ghost;
+        face_velocities_ghost.Resize(example->incompressible.grid,
+                                     example->number_of_ghost_cells,
+                                     false);
+        example->incompressible.boundary->
+            Fill_Ghost_Cells_Face(example->mac_grid,
+                                  example->face_velocities,
+                                  face_velocities_ghost,
+                                  time+dt,
+                                  example->number_of_ghost_cells);
+
 
         // modify levelset
         dbg(APP_LOG, "Modify Levelset ...\n");
         example->particle_levelset_evolution.particle_levelset.
             Exchange_Overlap_Particles();
-        //example->particle_levelset_evolution.
-        //    Modify_Levelset_And_Particles(&face_velocities_ghost);
+        example->particle_levelset_evolution.
+            Modify_Levelset_And_Particles(&face_velocities_ghost);
 
         // adjust phi with sources
         dbg(APP_LOG, "Adjust Phi ...\n");
-        //example.Adjust_Phi_With_Sources(time+dt);
+        example->Adjust_Phi_With_Sources(time+dt);
 
         // delete particles
         dbg(APP_LOG, "Delete Particles ...\n");
-        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
+        example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
         example->particle_levelset_evolution.particle_levelset.
-            Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
+            Delete_Particles_In_Local_Maximum_Phi_Cells(1);
         example->particle_levelset_evolution.particle_levelset.
-            Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
-        //example->particle_levelset_evolution.particle_levelset.
-        //    Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
+            Delete_Particles_Far_From_Interface(); // uses visibility
+        example->particle_levelset_evolution.particle_levelset.
+            Identify_And_Remove_Escaped_Particles(face_velocities_ghost,
+                                                  1.5,
+                                                  time + dt);
 
         // reincorporate removed particles
         dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
@@ -119,8 +130,11 @@ namespace application {
             example->particle_levelset_evolution.particle_levelset.
                 Reincorporate_Removed_Particles(1, 1, 0, true);
 
+        // Save State.
+        example->Save_To_Nimbus(this, da, frame+1);
+
         // free resources
-        delete example;
+        DestroyExampleAndDriver(example, driver);
 
         dbg(APP_LOG, "Completed executing 2nd super job job\n");
     }

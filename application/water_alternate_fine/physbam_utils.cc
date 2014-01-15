@@ -33,28 +33,45 @@
  */
 
 /*
- * This file contains a loop job that spawns iteration jobs at a coarse
- * granularity.
- *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_LOOP_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_LOOP_H_
-
 #include "shared/nimbus.h"
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/water_driver.h"
+#include "application/water_alternate_fine/water_example.h"
+#include "application/water_alternate_fine/water_sources.h"
 
-#define LOOP "loop"
+#include "application/water_alternate_fine/physbam_utils.h"
 
 namespace application {
 
-    class JobLoop : public nimbus::Job {
-        public:
-            explicit JobLoop(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+bool InitializeExampleAndDriver(
+    const InitConfig& init_config,
+    const nimbus::Job* job,
+    const nimbus::DataArray& da,
+    PhysBAM::WATER_EXAMPLE<TV>*& example,
+    PhysBAM::WATER_DRIVER<TV>*& driver) {
+  example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+  example->Initialize_Grid(
+      init_config.grid_size,
+      PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
+  PhysBAM::WaterSources::Add_Source(example);
+  driver= new PhysBAM::WATER_DRIVER<TV>(*example);
+  driver->init_phase = init_config.init_phase;
+  driver->current_frame = init_config.frame;
+  driver->time = init_config.time;
+  driver->Initialize(job, da, init_config.set_boundary_condition);
+  return true;
+}
 
-} // namespace application
+void DestroyExampleAndDriver(
+    PhysBAM::WATER_EXAMPLE<TV>*& example,
+    PhysBAM::WATER_DRIVER<TV>*& driver) {
+  delete example;
+  example = NULL;
+  delete driver;
+  driver = NULL;
+}
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_LOOP_H_
+}  // namespace application

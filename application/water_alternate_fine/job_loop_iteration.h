@@ -46,15 +46,27 @@
 
 #include "shared/nimbus.h"
 
-#define LOOP_ITERATION "loopIteration"
-
 namespace application {
+    enum {
+      ONE_JOB,
+      SUPER_JOBS,
+      BREAK_SUPER_JOB_1,
+      BREAK_SUPER_JOB_2,
+      BREAK_SUPER_JOB_3,
+      BREAK_ALL_SUPER_JOBS
+    };
 
     class JobLoopIteration : public nimbus::Job {
         public:
             explicit JobLoopIteration(nimbus::Application *app);
             virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
+
+        private:
+            void SpawnWithSuperJobsGranularity(
+                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
+            void SpawnWithOneJobGranularity(
+                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
     };
 
 } // namespace application

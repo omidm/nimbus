@@ -1,9 +1,10 @@
-/* Copyright 2013 Stanford University.
+/*
+ * Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- vd* are met:
+ * are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -32,7 +33,17 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * This file contains super job 1 which is the first portion of computations in
+ * each iteration of computing the frame, it includes 
+ *  Compute Occupied Blocks
+ *  Adjust Phi With Objects
+ *  Advect Phi
+ *  Step Particles
+ *  Advect Removed Particles
+ *  Advect V
+ *  Forces
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
 #include <sstream>
@@ -46,48 +57,45 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_alternate_fine/job_calculate_frame.h"
+#include "application/water_alternate_fine/job_super_1.h"
 
 namespace application {
 
-JobCalculateFrame::JobCalculateFrame(nimbus::Application *app) {
+JobSuper1::JobSuper1(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobCalculateFrame::Clone() {
-  return new JobCalculateFrame(application());
+nimbus::Job* JobSuper1::Clone() {
+  return new JobSuper1(application());
 }
 
-void JobCalculateFrame::Execute(nimbus::Parameter params,
-                                const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing CALCULATE_FRAME job.\n");
+void JobSuper1::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing super job 1.\n");
 
+  // get time, dt, frame from the parameters.
   InitConfig init_config;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+  dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
+      init_config.frame, init_config.time, dt);
 
-  // Assume time, dt, frame is ready from here.
-  dbg(APP_LOG,
-      "In CALCULATE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
-      "(Frame=%d, Time=%f).\n",
-      init_config.frame, init_config.time);
-
+  // Initializing the example and driver with state and configuration variables.
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
 
   InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-  dbg(APP_LOG, "Simulation starts(dt=%f).\n", dt);
-
-  // Move forward time "dt" without reseeding and writing frames.
-  driver->CalculateFrameImpl(this, da, true, dt);
+  // Run the steps in the super job.
+  dbg(APP_LOG, "Execute the steps is super job 1.");
+  driver->SuperJob1Impl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+  dbg(APP_LOG, "Completed executing super job 1.\n");
 }
 
 }  // namespace application

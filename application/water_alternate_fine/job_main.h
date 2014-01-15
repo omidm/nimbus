@@ -44,8 +44,6 @@
 
 #include "shared/nimbus.h"
 
-#define MAIN "main"
-
 namespace application {
 
     class JobMain : public nimbus::Job {
