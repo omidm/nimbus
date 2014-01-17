@@ -64,14 +64,14 @@ nimbus::Job* JobDeleteParticles::Clone() {
 }
 
 void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing modify levelset job\n");
+    dbg(APP_LOG, "Executing delete particles job\n");
 
     InitConfig init_config;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
     LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
-    dbg(APP_LOG, "Frame %i in modify levelset job\n", init_config.frame);
+    dbg(APP_LOG, "Frame %i in delete particles job\n", init_config.frame);
 
     const int& frame = init_config.frame;
     const T& time = init_config.time;
@@ -114,7 +114,7 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     // free resources
     DestroyExampleAndDriver(example, driver);
 
-    dbg(APP_LOG, "Completed executing modify levelset job\n");
+    dbg(APP_LOG, "Completed executing delete particles job\n");
 }
 
 } // namespace application
