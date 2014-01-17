@@ -49,13 +49,18 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/data_app.h
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
+    ${PROJECT_SOURCE_DIR}/job_loop_frame.h
+    ${PROJECT_SOURCE_DIR}/job_loop_iteration.h
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.h
     ${PROJECT_SOURCE_DIR}/job_delete_particles.h
     ${PROJECT_SOURCE_DIR}/job_main.h
     ${PROJECT_SOURCE_DIR}/job_modify_levelset.h
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.h
+    ${PROJECT_SOURCE_DIR}/job_super_1.h
     ${PROJECT_SOURCE_DIR}/job_super_2.h
     ${PROJECT_SOURCE_DIR}/job_super_3.h
+    ${PROJECT_SOURCE_DIR}/job_adjust_phi_with_objects.h
+    ${PROJECT_SOURCE_DIR}/job_advect_phi.h
     ${PROJECT_SOURCE_DIR}/job_write_frame.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h

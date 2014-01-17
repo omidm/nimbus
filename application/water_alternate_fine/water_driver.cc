@@ -432,8 +432,8 @@ AdjustPhiWithObjectsImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt) {
   LOG::Time("Adjust Phi With Objects");
-  T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(
-      example.incompressible.grid,example.number_of_ghost_cells, false);
+  T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+  face_velocities_ghost.Resize(example.incompressible.grid, example.number_of_ghost_cells, false);
   example.incompressible.boundary->Fill_Ghost_Cells_Face(
       example.mac_grid, example.face_velocities, face_velocities_ghost,
       time + dt, example.number_of_ghost_cells);
@@ -453,6 +453,31 @@ AdvectPhiImpl(const nimbus::Job *job,
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
   example.particle_levelset_evolution.Advance_Levelset(dt);
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
+
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+StepParticlesImpl(const nimbus::Job *job,
+                  const nimbus::DataArray &da,
+                  T dt) {
+  //TODO(omidm): we need to get face_velocities_ghost from the data array
+  //because velocity is updated in previous steps and it cannot give the
+  //extrapolation that we want in this step. will change this part after adding
+  //the missed state to the system. -omidm
+  T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+  face_velocities_ghost.Resize(example.incompressible.grid, example.number_of_ghost_cells, false);
+  example.incompressible.boundary->Fill_Ghost_Cells_Face(
+      example.mac_grid, example.face_velocities, face_velocities_ghost,
+      time + dt, example.number_of_ghost_cells);
+
+  //Advect Particles 12.1% (Parallelized)
+  LOG::Time("Step Particles");
+  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
+      face_velocities_ghost, dt, time, true, true, false, false);
 
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame + 1);
