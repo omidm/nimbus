@@ -81,6 +81,10 @@ Initialize(const nimbus::Job *job,
     example.projection.Initialize_Grid(example.mac_grid);
     example.collision_bodies_affecting_fluid.Initialize_Grids();
     example.face_velocities.Resize(example.mac_grid);
+    // Initialize the face_velocities_ghoas here, it may not be the best place
+    // when we get to water_multiple though. -omidm
+    example.face_velocities_ghost.Resize(example.incompressible.grid,
+                                         application::kGhostNum, false);
 
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_CFL_Number((T).9);
@@ -167,6 +171,7 @@ Initialize(const nimbus::Job *job,
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
     // Don't know why this statement should be here.
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+
 }
 //#####################################################################
 // Run

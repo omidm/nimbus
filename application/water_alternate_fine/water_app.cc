@@ -81,6 +81,8 @@ namespace application {
 
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
         RegisterData(APP_FACE_VEL, new DataApp(APP_FACE_VEL, kFaceVelBufSize));
+        dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
+        RegisterData(APP_FACE_VEL_GHOST, new DataApp(APP_FACE_VEL_GHOST, kFaceVelGhostBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_PHI);
         RegisterData(APP_PHI, new DataApp(APP_PHI, kPhiBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);

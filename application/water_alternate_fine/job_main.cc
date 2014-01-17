@@ -64,15 +64,17 @@ namespace application {
         nimbus::ID<partition_id_t> partition_id2(1);
         nimbus::ID<partition_id_t> partition_id3(2);
         nimbus::ID<partition_id_t> partition_id4(3);
+        nimbus::ID<partition_id_t> partition_id5(4);
         nimbus::Parameter part_params;
         DefinePartition(partition_id1, kDomainFaceVel, part_params);
         DefinePartition(partition_id2, kDomainPhi, part_params);
         DefinePartition(partition_id3, kDomainPressure, part_params);
         DefinePartition(partition_id4, kDomainParticles, part_params);
+        DefinePartition(partition_id5, kDomainFaceVelGhost, part_params);
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 8;
+        int data_num = 9;
         std::vector<logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
@@ -84,17 +86,22 @@ namespace application {
                    partition_id1.elem(),
                    neighbor_partitions,
                    fa_params);
+        DefineData(APP_FACE_VEL_GHOST,
+                   data_ids[1],
+                   partition_id5.elem(),
+                   neighbor_partitions,
+                   fa_params);
 
         // Scalar arrays
         nimbus::Parameter sa_params;
         sa_params.set_ser_data(SerializedData(""));
         DefineData(APP_PHI,
-                   data_ids[1],
+                   data_ids[2],
                    partition_id2.elem(),
                    neighbor_partitions,
                    sa_params);
         DefineData(APP_PRESSURE,
-                   data_ids[2],
+                   data_ids[3],
                    partition_id3.elem(),
                    neighbor_partitions,
                    sa_params);
@@ -103,27 +110,27 @@ namespace application {
         nimbus::Parameter particle_params;
         part_params.set_ser_data(SerializedData(""));
         DefineData(APP_POS_PARTICLES,
-                   data_ids[3],
-                   partition_id4.elem(),
-                   neighbor_partitions,
-                   particle_params);
-        DefineData(APP_NEG_PARTICLES,
                    data_ids[4],
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
-        DefineData(APP_POS_REM_PARTICLES,
+        DefineData(APP_NEG_PARTICLES,
                    data_ids[5],
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
-        DefineData(APP_NEG_REM_PARTICLES,
+        DefineData(APP_POS_REM_PARTICLES,
                    data_ids[6],
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
-        DefineData(APP_LAST_UNIQUE_PARTICLE_ID,
+        DefineData(APP_NEG_REM_PARTICLES,
                    data_ids[7],
+                   partition_id4.elem(),
+                   neighbor_partitions,
+                   particle_params);
+        DefineData(APP_LAST_UNIQUE_PARTICLE_ID,
+                   data_ids[8],
                    partition_id4.elem(),
                    neighbor_partitions,
                    particle_params);
@@ -144,6 +151,7 @@ namespace application {
         read.insert(data_ids[5]);
         read.insert(data_ids[6]);
         read.insert(data_ids[7]);
+        read.insert(data_ids[8]);
         write.insert(data_ids[0]);
         write.insert(data_ids[1]);
         write.insert(data_ids[2]);
@@ -152,6 +160,7 @@ namespace application {
         write.insert(data_ids[5]);
         write.insert(data_ids[6]);
         write.insert(data_ids[7]);
+        write.insert(data_ids[8]);
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");

@@ -56,6 +56,10 @@
 #define APP_FACE_VEL "face_vel"
 #endif
 
+#ifndef APP_FACE_VEL_GHOST
+#define APP_FACE_VEL_GHOST "face_vel_ghost"
+#endif
+
 #ifndef APP_PHI
 #define APP_PHI "phi"
 #endif
@@ -113,6 +117,7 @@ namespace application {
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2);
     const GeometricRegion kDomainFaceVel = kDomain;
+    const GeometricRegion kDomainFaceVelGhost = kDomainGhost;
     const GeometricRegion kDomainPhi = kDomainGhost;
     const GeometricRegion kDomainParticles(-kGhostNum + 1,
                                            -kGhostNum + 1,
@@ -131,6 +136,10 @@ namespace application {
                                             kScale *
                                             (kScale+1) *
                                             kDimension * sizeof(T);
+    const int_dimension_t kFaceVelGhostBufSize = (kScale + 2*kGhostNum) *
+                                                 (kScale + 2*kGhostNum) *
+                                                 (kScale + 2*kGhostNum + 1) *
+                                                 kDimension * sizeof(T);
     const int_dimension_t kPhiBufSize = (kScale + 2*kGhostNum) *
                                         (kScale + 2*kGhostNum) *
                                         (kScale + 2*kGhostNum) * sizeof(T);

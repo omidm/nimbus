@@ -210,6 +210,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         translator.WriteFaceArray(&application::kDomainFaceVel, &pdv, &face_velocities);
     application::DestroyTranslatorObjects(&pdv);
 
+    // mac velocities ghost
+    const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
+    if (application::GetTranslatorData(job, fvgstring, da, &pdv))
+        translator.WriteFaceArray(&application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
+    application::DestroyTranslatorObjects(&pdv);
+
     // pressure
     const std::string pstring = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pstring, da, &pdv))
@@ -284,6 +290,12 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv))
         translator.ReadFaceArray(&application::kDomainFaceVel, &pdv, &face_velocities);
+    application::DestroyTranslatorObjects(&pdv);
+
+    // mac velocities
+    const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
+    if (application::GetTranslatorData(job, fvgstring, da, &pdv))
+        translator.ReadFaceArray(&application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
     application::DestroyTranslatorObjects(&pdv);
 
     // pressure
