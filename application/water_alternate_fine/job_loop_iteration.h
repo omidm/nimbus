@@ -67,6 +67,8 @@ namespace application {
                 bool done, int frame, T time, T dt, const nimbus::DataArray& da);
             void SpawnWithOneJobGranularity(
                 bool done, int frame, T time, T dt, const nimbus::DataArray& da);
+            void SpawnWithBreakAllGranularity(
+                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
     };
 
 } // namespace application
