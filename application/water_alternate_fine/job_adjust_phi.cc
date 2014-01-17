@@ -65,14 +65,14 @@ nimbus::Job* JobAdjustPhi::Clone() {
 }
 
 void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing modify levelset job\n");
+    dbg(APP_LOG, "Executing adjust phi job\n");
 
     InitConfig init_config;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
     LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
-    dbg(APP_LOG, "Frame %i in modify levelset job\n", init_config.frame);
+    dbg(APP_LOG, "Frame %i in adjust phi job\n", init_config.frame);
 
     const int& frame = init_config.frame;
     const T& time = init_config.time;
@@ -94,7 +94,7 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     // free resources
     DestroyExampleAndDriver(example, driver);
 
-    dbg(APP_LOG, "Completed executing modify levelset job\n");
+    dbg(APP_LOG, "Completed executing adjust phi job\n");
 }
 
 } // namespace application
