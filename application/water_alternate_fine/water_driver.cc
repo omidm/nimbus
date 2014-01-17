@@ -427,6 +427,24 @@ ComputeOccupiedBlocksImpl (const nimbus::Job *job,
   return true;
 }
 
+template<class TV> bool WATER_DRIVER<TV>::
+AdjustPhiWithObjectsImpl (const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          T dt) {
+  LOG::Time("Adjust Phi With Objects");
+  T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(
+      example.incompressible.grid,example.number_of_ghost_cells, false);
+  example.incompressible.boundary->Fill_Ghost_Cells_Face(
+      example.mac_grid, example.face_velocities, face_velocities_ghost,
+      time + dt, example.number_of_ghost_cells);
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
+
+  return true;
+}
+
+
 //#####################################################################
 // Function Write_Substep
 //#####################################################################
