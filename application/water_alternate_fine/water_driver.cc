@@ -408,9 +408,9 @@ SuperJob3Impl (const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ComputeOccupiedBlocksImpl (const nimbus::Job *job,
-                           const nimbus::DataArray &da,
-                           T dt) {
+ComputeOccupiedBlocksImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          T dt) {
   // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
   LOG::Time("Compute Occupied Blocks");
@@ -443,6 +443,23 @@ AdjustPhiWithObjectsImpl (const nimbus::Job *job,
 
   return true;
 }
+
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectPhiImpl(const nimbus::Job *job,
+              const nimbus::DataArray &da,
+              T dt) {
+  //Advect Phi 3.6% (Parallelized)
+  LOG::Time("Advect Phi");
+  example.phi_boundary_water.Use_Extrapolation_Mode(false);
+  example.particle_levelset_evolution.Advance_Levelset(dt);
+  example.phi_boundary_water.Use_Extrapolation_Mode(true);
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
+
+  return true;
+}
+
 
 
 //#####################################################################

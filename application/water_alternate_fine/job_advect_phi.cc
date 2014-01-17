@@ -50,21 +50,21 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_alternate_fine/job_adjust_phi_with_objects.h"
+#include "application/water_alternate_fine/job_advect_phi.h"
 
 namespace application {
 
-JobAdjustPhiWithObjects::JobAdjustPhiWithObjects(nimbus::Application *app) {
+JobAdvectPhi::JobAdvectPhi(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobAdjustPhiWithObjects::Clone() {
-  return new JobAdjustPhiWithObjects(application());
+nimbus::Job* JobAdvectPhi::Clone() {
+  return new JobAdvectPhi(application());
 }
 
-void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
+void JobAdvectPhi::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing adjust phi with objects job.\n");
+  dbg(APP_LOG, "Executing advect phi job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
@@ -82,13 +82,13 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
   InitializeExampleAndDriver(init_config, this, da, example, driver);
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in adjust phi with objects job.");
-  driver->AdjustPhiWithObjectsImpl(this, da, dt);
+  dbg(APP_LOG, "Execute the step in advect phi job.");
+  driver->AdvectPhiImpl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing adjust phi with objects job.\n");
+  dbg(APP_LOG, "Completed executing advect phi.\n");
 }
 
 }  // namespace application
