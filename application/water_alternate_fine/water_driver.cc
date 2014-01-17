@@ -84,7 +84,7 @@ Initialize(const nimbus::Job *job,
     // Initialize the face_velocities_ghoas here, it may not be the best place
     // when we get to water_multiple though. -omidm
     example.face_velocities_ghost.Resize(example.incompressible.grid,
-                                         application::kGhostNum, false);
+                                         example.number_of_ghost_cells, false);
 
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_CFL_Number((T).9);

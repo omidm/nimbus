@@ -38,7 +38,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     write_substeps_level(-1),
     write_output_files(true),
     output_directory(application::kOutputDir),
-    number_of_ghost_cells(3),
+    number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
     projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),

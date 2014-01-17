@@ -10,8 +10,8 @@
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/GRID_ARRAYS_POLICY_UNIFORM.h>
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include <PhysBAM_Geometry/Grids_Uniform_Level_Sets/LEVELSET_POLICY_UNIFORM.h>
+#include "application/water_alternate_fine/app_utils.h"
 #include "shared/nimbus.h"
-#include "./app_utils.h"
 
 namespace PhysBAM{
 
