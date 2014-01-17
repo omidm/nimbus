@@ -37,16 +37,20 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_app.h"
-#include "application/water_alternate_fine/job_names.h"
-#include "application/water_alternate_fine/job_main.h"
+#include "application/water_alternate_fine/job_adjust_phi.h"
+#include "application/water_alternate_fine/job_calculate_frame.h"
+#include "application/water_alternate_fine/job_delete_particles.h"
 #include "application/water_alternate_fine/job_initialize.h"
+#include "application/water_alternate_fine/job_loop_frame.h"
+#include "application/water_alternate_fine/job_loop_iteration.h"
+#include "application/water_alternate_fine/job_main.h"
+#include "application/water_alternate_fine/job_names.h"
+#include "application/water_alternate_fine/job_modify_levelset.h"
+#include "application/water_alternate_fine/job_reincorporate_removed_particles.h"
 #include "application/water_alternate_fine/job_super_1.h"
 #include "application/water_alternate_fine/job_super_2.h"
 #include "application/water_alternate_fine/job_super_3.h"
-#include "application/water_alternate_fine/job_calculate_frame.h"
 #include "application/water_alternate_fine/job_write_frame.h"
-#include "application/water_alternate_fine/job_loop_frame.h"
-#include "application/water_alternate_fine/job_loop_iteration.h"
 #include "application/water_alternate_fine/water_app.h"
 #include "data/scalar_data.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
@@ -101,6 +105,10 @@ namespace application {
         RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
         RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));
         RegisterJob(WRITE_FRAME, new JobWriteFrame(this));
+        RegisterJob(MODIFY_LEVELSET, new JobModifyLevelset(this));
+        RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
+        RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
+        RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }
