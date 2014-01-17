@@ -82,6 +82,9 @@ public:
                            const nimbus::DataArray &da,
                            T dt);
 
+    bool AdvectRemovedParticlesImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt);
 
     void Write_Output_Files(const int frame);
 

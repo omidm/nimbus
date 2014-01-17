@@ -478,6 +478,24 @@ StepParticlesImpl(const nimbus::Job *job,
   return true;
 }
 
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectRemovedParticlesImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt) {
+  //Advect removed particles (Parallelized)
+  LOG::Time("Advect Removed Particles");
+  RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
+  domain.max_corner += TV_INT::All_Ones_Vector();
+  DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(
+      *this, &WATER_DRIVER<TV>::Run, dt, time);
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
+
+  return true;
+}
+
+
 
 
 //#####################################################################
