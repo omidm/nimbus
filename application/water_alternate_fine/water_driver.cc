@@ -495,6 +495,23 @@ AdvectRemovedParticlesImpl(const nimbus::Job *job,
   return true;
 }
 
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectVImpl(const nimbus::Job *job,
+            const nimbus::DataArray &da,
+            T dt) {
+  //Advect Velocities 26% (Parallelized)
+  LOG::Time("Advect V");
+  example.incompressible.advection->Update_Advection_Equation_Face(
+      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
+      example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
+
+  return true;
+}
+
+
 
 
 
