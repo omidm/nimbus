@@ -40,6 +40,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_step_particles.cc
     ${PROJECT_SOURCE_DIR}/job_advect_removed_particles.cc
     ${PROJECT_SOURCE_DIR}/job_advect_v.cc
+    ${PROJECT_SOURCE_DIR}/job_apply_forces.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
@@ -67,6 +68,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_step_particles.h
     ${PROJECT_SOURCE_DIR}/job_advect_removed_particles.h
     ${PROJECT_SOURCE_DIR}/job_advect_v.h
+    ${PROJECT_SOURCE_DIR}/job_apply_forces.h
     ${PROJECT_SOURCE_DIR}/job_write_frame.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h

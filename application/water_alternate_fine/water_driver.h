@@ -90,6 +90,10 @@ public:
                      const nimbus::DataArray &da,
                      T dt);
 
+    bool ApplyForcesImpl(const nimbus::Job *job,
+                    const nimbus::DataArray &da,
+                    T dt);
+
     void Write_Output_Files(const int frame);
 
     void Write_Substep(const std::string& title,const int substep,const int level=0);

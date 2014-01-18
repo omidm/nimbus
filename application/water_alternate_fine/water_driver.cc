@@ -511,9 +511,20 @@ AdvectVImpl(const nimbus::Job *job,
   return true;
 }
 
+template<class TV> bool WATER_DRIVER<TV>::
+ApplyForcesImpl(const nimbus::Job *job,
+           const nimbus::DataArray &da,
+           T dt) {
+  //Add Forces 0%
+  LOG::Time("Forces");
+  example.incompressible.Advance_One_Time_Step_Forces(
+      example.face_velocities, dt, time, true, 0, example.number_of_ghost_cells);
 
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
 
-
+  return true;
+}
 
 //#####################################################################
 // Function Write_Substep
