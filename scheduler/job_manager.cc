@@ -147,7 +147,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
         job_id_t id = *it;
         if (GetJobEntry(id, j)) {
           if (!(j->done())) {
-            dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.\n", id);
+            // dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.\n", id);
             before_set_done = false;
             break;
           }
