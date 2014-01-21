@@ -331,10 +331,10 @@ SuperJob1Impl (const nimbus::Job *job,
   //     true, dt * maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 * example.mac_grid.dX.Max(), 10);
 
   LOG::Time("Adjust Phi With Objects");
-  T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(
-      example.incompressible.grid,example.number_of_ghost_cells, false);
+  // T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+  // face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells, false);
   example.incompressible.boundary->Fill_Ghost_Cells_Face(
-      example.mac_grid, example.face_velocities, face_velocities_ghost,
+      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
       time + dt, example.number_of_ghost_cells);
 
   //Advect Phi 3.6% (Parallelized)
@@ -346,7 +346,7 @@ SuperJob1Impl (const nimbus::Job *job,
   //Advect Particles 12.1% (Parallelized)
   LOG::Time("Step Particles");
   example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
-      face_velocities_ghost, dt, time, true, true, false, false);
+      example.face_velocities_ghost, dt, time, true, true, false, false);
 
   //Advect removed particles (Parallelized)
   LOG::Time("Advect Removed Particles");
@@ -358,8 +358,8 @@ SuperJob1Impl (const nimbus::Job *job,
   //Advect Velocities 26% (Parallelized)
   LOG::Time("Advect V");
   example.incompressible.advection->Update_Advection_Equation_Face(
-      example.mac_grid, example.face_velocities, face_velocities_ghost,
-      face_velocities_ghost, *example.incompressible.boundary, dt, time);
+      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
+      example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
 
   //Add Forces 0%
   LOG::Time("Forces");
