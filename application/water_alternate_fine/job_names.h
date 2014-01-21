@@ -60,7 +60,7 @@
 #define STEP_PARTICLES "step_particles"
 #define ADVECT_REMOVED_PARTICLES "advect_removed_particles"
 #define ADVECT_V "advect_v"
-#define FORCES "forces"
+#define APPLY_FORCES "apply_forces"
 #define MODIFY_LEVELSET "modify_levelset"
 #define ADJUST_PHI "adjust_phi"
 #define DELETE_PARTICLES "delete_particles"
