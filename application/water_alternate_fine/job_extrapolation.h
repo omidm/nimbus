@@ -33,22 +33,21 @@
  */
 
 /*
- * This file contains job PROJECTION that:
- *     projects velocity, and extrapolates velocity and level set.
- * The parameters of PROJECTION:
+ * This file contains job EXTRAPOLATION that:
+ *     Extrapolates velocity and level set.
+ * The parameters of EXTRAPOLATION:
  *     frame number, simulation time, dt.
- * The read set(not sure) of PROJECTION:
+ * The read set(not sure) of EXTRAPOLATION:
  *     velocity, levelset.
- * The write set(not sure) of PROJECTION:
+ * The write set(not sure) of EXTRAPOLATION:
  *     velocity, levelset.
  *
  * It is still unclear whether other simulation variables or states are also
  * needed.
  * For now, all the data is transmitted to guarantee correctness.
  *
- * The particle reseeding operation, which was expected to be part of job
- * PROJECTION, is included in job WRITE_FRAME. Because reseeding operation is only
- * executed once in each frame, rather than once in each substep.
+ * The job might be further broken into extrapolating velocity and levelset, but
+ * might require some hacking in PhysBAM function calls. So leave it for now.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
