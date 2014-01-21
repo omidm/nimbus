@@ -104,7 +104,7 @@ namespace application {
         example->particle_levelset_evolution.particle_levelset.
             Delete_Particles_Far_From_Interface(); // uses visibility
         example->particle_levelset_evolution.particle_levelset.
-            Identify_And_Remove_Escaped_Particles(&example->face_velocities_ghost,
+            Identify_And_Remove_Escaped_Particles(example->face_velocities_ghost,
                                                   1.5,
                                                   time + dt);
 
