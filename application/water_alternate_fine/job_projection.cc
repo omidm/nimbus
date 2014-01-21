@@ -1,10 +1,9 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -33,41 +32,61 @@
  */
 
 /*
- * This file contains job SUPER_3 that:
- *     projects velocity, and extrapolates velocity and level set.
- * The parameters of SUPER_3:
- *     frame number, simulation time, dt.
- * The read set(not sure) of SUPER_3:
- *     velocity, levelset.
- * The write set(not sure) of SUPER_3:
- *     velocity, levelset.
- *
- * It is still unclear whether other simulation variables or states are also
- * needed.
- * For now, all the data is transmitted to guarantee correctness.
- *
- * The particle reseeding operation, which was expected to be part of job
- * SUPER_3, is included in job WRITE_FRAME. Because reseeding operation is only
- * executed once in each frame, rather than once in each substep.
- *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_3_H_
+#include <sstream>
+#include <string>
 
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/physbam_utils.h"
+#include "application/water_alternate_fine/water_driver.h"
+#include "application/water_alternate_fine/water_example.h"
+#include "shared/dbg.h"
 #include "shared/nimbus.h"
+
+#include "application/water_alternate_fine/job_projection.h"
 
 namespace application {
 
-class JobSuper3 : public nimbus::Job {
- public:
-  explicit JobSuper3(nimbus::Application *app);
-  virtual void Execute(nimbus::Parameter params,
-                       const nimbus::DataArray& da);
-  virtual nimbus::Job* Clone();
+JobProjection::JobProjection(nimbus::Application *app) {
+  set_application(app);
 };
 
-} // namespace application
+nimbus::Job* JobProjection::Clone() {
+  return new JobProjection(application());
+}
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_3_H_
+void JobProjection::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing PROJECTION job.\n");
+
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+
+  // Assume time, dt, frame is ready from here.
+  dbg(APP_LOG,
+      "In PROJECTION: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Frame=%d, Time=%f).\n",
+      init_config.frame, init_config.time);
+
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
+
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
+
+  dbg(APP_LOG, "Job PROJECTION starts (dt=%f).\n", dt);
+
+  driver->ProjectionImpl(this, da, dt);
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
+
+  dbg(APP_LOG, "Completed executing PROJECTION job\n");
+}
+
+}  // namespace application
