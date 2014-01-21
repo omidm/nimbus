@@ -43,11 +43,9 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_adjust_phi.h"
-#include "application/water_alternate_fine/physbam_include.h"
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
-#include "application/water_alternate_fine/water_sources.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -74,7 +72,6 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
     dbg(APP_LOG, "Frame %i in adjust phi job\n", init_config.frame);
 
-    const int& frame = init_config.frame;
     const T& time = init_config.time;
 
     // initialize configuration and state
@@ -84,12 +81,7 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     init_config.set_boundary_condition = false;
     InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    // adjust phi with sources
-    dbg(APP_LOG, "Adjust Phi ...\n");
-    example->Adjust_Phi_With_Sources(time+dt);
-
-    // save state
-    example->Save_To_Nimbus(this, da, frame+1);
+    driver->AdjustPhiImpl(this, da, dt, time);
 
     // free resources
     DestroyExampleAndDriver(example, driver);

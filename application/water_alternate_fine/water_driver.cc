@@ -526,6 +526,127 @@ ApplyForcesImpl(const nimbus::Job *job,
   return true;
 }
 
+template<class TV> bool WATER_DRIVER<TV>::
+ModifyLevelSetImpl(const nimbus::Job *job,
+                   const nimbus::DataArray &da,
+                   T dt,
+                   T time,
+                   int frame) {
+    dbg(APP_LOG, "Modify Levelset ...\n");
+
+    // face velocity for ghost + interior
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+    face_velocities_ghost.Resize(example.incompressible.grid,
+            example.number_of_ghost_cells,
+            false);
+    example.incompressible.boundary->
+        Fill_Ghost_Cells_Face(example.mac_grid,
+                example.face_velocities,
+                face_velocities_ghost,
+                time+dt,
+                example.number_of_ghost_cells);
+
+
+    // modify levelset
+    example.particle_levelset_evolution.particle_levelset.
+        Exchange_Overlap_Particles();
+    example.particle_levelset_evolution.
+        Modify_Levelset_And_Particles(&face_velocities_ghost);
+
+    // save state
+    example.Save_To_Nimbus(job, da, current_frame+1);
+
+    return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+AdjustPhiImpl(const nimbus::Job *job,
+        const nimbus::DataArray &da,
+        T dt,
+        T time) {
+    dbg(APP_LOG, "Adjust Phi ...\n");
+
+    // adjust phi with sources
+    example.Adjust_Phi_With_Sources(time+dt);
+
+    // Save State.
+    example.Save_To_Nimbus(job, da, current_frame + 1);
+
+    return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+DeleteParticlesImpl(const nimbus::Job *job,
+                    const nimbus::DataArray &da,
+                    T dt,
+                    T time,
+                    int frame) {
+    dbg(APP_LOG, "Delete Particles ...\n");
+
+    // face velocity for ghost + interior
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+    face_velocities_ghost.Resize(example.incompressible.grid,
+                                 example.number_of_ghost_cells,
+                                 false);
+    example.incompressible.boundary->
+        Fill_Ghost_Cells_Face(example.mac_grid,
+                              example.face_velocities,
+                              face_velocities_ghost,
+                              time+dt,
+                              example.number_of_ghost_cells);
+
+    // delete particles
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+    example.particle_levelset_evolution.particle_levelset.
+        Delete_Particles_In_Local_Maximum_Phi_Cells(1);
+    example.particle_levelset_evolution.particle_levelset.
+        Delete_Particles_Far_From_Interface(); // uses visibility
+    example.particle_levelset_evolution.particle_levelset.
+        Identify_And_Remove_Escaped_Particles(face_velocities_ghost,
+                1.5,
+                time + dt);
+
+
+    // save state
+    example.Save_To_Nimbus(job, da, current_frame+1);
+
+    return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ReincorporateParticlesImpl(const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt,
+                           T time,
+                           int frame) {
+    dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
+
+    // face velocity for ghost + interior
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
+    face_velocities_ghost.Resize(example.incompressible.grid,
+                                 example.number_of_ghost_cells,
+                                 false);
+    example.incompressible.boundary->
+        Fill_Ghost_Cells_Face(example.mac_grid,
+                              example.face_velocities,
+                              face_velocities_ghost,
+                              time+dt,
+                              example.number_of_ghost_cells);
+
+    // reincorporate removed particles
+    if (example.particle_levelset_evolution.particle_levelset.
+            use_removed_positive_particles ||
+            example.particle_levelset_evolution.particle_levelset.
+            use_removed_negative_particles)
+        example.particle_levelset_evolution.particle_levelset.
+            Reincorporate_Removed_Particles(1, 1, 0, true);
+
+    // save state
+    example.Save_To_Nimbus(job, da, current_frame+1);
+
+    return true;
+}
+
 //#####################################################################
 // Function Write_Substep
 //#####################################################################

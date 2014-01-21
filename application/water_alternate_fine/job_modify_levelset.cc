@@ -43,7 +43,6 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_modify_levelset.h"
-#include "application/water_alternate_fine/physbam_include.h"
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
@@ -83,28 +82,7 @@ void JobModifyLevelset::Execute(nimbus::Parameter params, const nimbus::DataArra
     init_config.set_boundary_condition = false;
     InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    // face velocity for ghost + interior
-    FaceArray face_velocities_ghost;
-    face_velocities_ghost.Resize(example->incompressible.grid,
-                                 example->number_of_ghost_cells,
-                                 false);
-    example->incompressible.boundary->
-        Fill_Ghost_Cells_Face(example->mac_grid,
-                              example->face_velocities,
-                              face_velocities_ghost,
-                              time+dt,
-                              example->number_of_ghost_cells);
-
-
-    // modify levelset
-    dbg(APP_LOG, "Modify Levelset ...\n");
-    example->particle_levelset_evolution.particle_levelset.
-        Exchange_Overlap_Particles();
-    example->particle_levelset_evolution.
-        Modify_Levelset_And_Particles(&face_velocities_ghost);
-
-    // save state
-    example->Save_To_Nimbus(this, da, frame+1);
+    driver->ModifyLevelSetImpl(this, da, dt, time, frame);
 
     // free resources
     DestroyExampleAndDriver(example, driver);

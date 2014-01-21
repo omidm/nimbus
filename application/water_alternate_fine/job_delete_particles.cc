@@ -43,7 +43,6 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_delete_particles.h"
-#include "application/water_alternate_fine/physbam_include.h"
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
@@ -83,33 +82,7 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     init_config.set_boundary_condition = false;
     InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    // face velocity for ghost + interior
-    FaceArray face_velocities_ghost;
-    face_velocities_ghost.Resize(example->incompressible.grid,
-                                 example->number_of_ghost_cells,
-                                 false);
-    example->incompressible.boundary->
-        Fill_Ghost_Cells_Face(example->mac_grid,
-                              example->face_velocities,
-                              face_velocities_ghost,
-                              time+dt,
-                              example->number_of_ghost_cells);
-
-    // delete particles
-    dbg(APP_LOG, "Delete Particles ...\n");
-    example->particle_levelset_evolution.Delete_Particles_Outside_Grid();
-    example->particle_levelset_evolution.particle_levelset.
-        Delete_Particles_In_Local_Maximum_Phi_Cells(1);
-    example->particle_levelset_evolution.particle_levelset.
-        Delete_Particles_Far_From_Interface(); // uses visibility
-    example->particle_levelset_evolution.particle_levelset.
-        Identify_And_Remove_Escaped_Particles(face_velocities_ghost,
-                1.5,
-                time + dt);
-
-
-    // save state
-    example->Save_To_Nimbus(this, da, frame+1);
+    driver->DeleteParticlesImpl(this, da, dt, time, frame);
 
     // free resources
     DestroyExampleAndDriver(example, driver);
