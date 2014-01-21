@@ -43,7 +43,6 @@
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_reincorporate_removed_particles.h"
-#include "application/water_alternate_fine/physbam_include.h"
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
@@ -73,9 +72,6 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
     dbg(APP_LOG, "Frame %i in reincorporate particles job\n", init_config.frame);
 
-    const int& frame = init_config.frame;
-    const T& time = init_config.time;
-
     // initialize configuration and state
     PhysBAM::WATER_EXAMPLE<TV> *example;
     PhysBAM::WATER_DRIVER<TV> *driver;
@@ -83,29 +79,7 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     init_config.set_boundary_condition = false;
     InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    // face velocity for ghost + interior
-    FaceArray face_velocities_ghost;
-    face_velocities_ghost.Resize(example->incompressible.grid,
-                                 example->number_of_ghost_cells,
-                                 false);
-    example->incompressible.boundary->
-        Fill_Ghost_Cells_Face(example->mac_grid,
-                              example->face_velocities,
-                              face_velocities_ghost,
-                              time+dt,
-                              example->number_of_ghost_cells);
-
-    // reincorporate removed particles
-    dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
-    if (example->particle_levelset_evolution.particle_levelset.
-            use_removed_positive_particles ||
-            example->particle_levelset_evolution.particle_levelset.
-            use_removed_negative_particles)
-        example->particle_levelset_evolution.particle_levelset.
-            Reincorporate_Removed_Particles(1, 1, 0, true);
-
-    // save state
-    example->Save_To_Nimbus(this, da, frame+1);
+    driver->ReincorporateParticlesImpl(this, da, dt);
 
     // free resources
     DestroyExampleAndDriver(example, driver);

@@ -94,6 +94,30 @@ public:
                     const nimbus::DataArray &da,
                     T dt);
 
+    bool ModifyLevelSetImpl(const nimbus::Job *job,
+                            const nimbus::DataArray &da,
+                            T dt);
+
+    bool AdjustPhiImpl(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       T dt);
+
+    bool DeleteParticlesImpl(const nimbus::Job *job,
+                             const nimbus::DataArray &da,
+                             T dt);
+
+    bool ReincorporateParticlesImpl(const nimbus::Job *job,
+                                    const nimbus::DataArray &da,
+                                    T dt);
+
+    bool ProjectionImpl (const nimbus::Job *job,
+                         const nimbus::DataArray &da,
+                         T dt);
+
+    bool ExtrapolationImpl (const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          T dt);
+
     void Write_Output_Files(const int frame);
 
     void Write_Substep(const std::string& title,const int substep,const int level=0);

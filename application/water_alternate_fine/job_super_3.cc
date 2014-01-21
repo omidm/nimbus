@@ -42,7 +42,6 @@
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
-#include "application/water_alternate_fine/water_sources.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
@@ -82,6 +81,7 @@ void JobSuper3::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Job SUPER_3 starts (dt=%f).\n", dt);
 
   driver->SuperJob3Impl(this, da, dt);
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);

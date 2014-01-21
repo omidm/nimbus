@@ -56,6 +56,8 @@
 #include "application/water_alternate_fine/job_advect_removed_particles.h"
 #include "application/water_alternate_fine/job_advect_v.h"
 #include "application/water_alternate_fine/job_apply_forces.h"
+#include "application/water_alternate_fine/job_projection.h"
+#include "application/water_alternate_fine/job_extrapolation.h"
 #include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_app.h"
 #include "data/scalar_data.h"
@@ -123,6 +125,8 @@ namespace application {
         RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
+        RegisterJob(PROJECTION, new JobProjection(this));
+        RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }

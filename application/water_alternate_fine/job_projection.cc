@@ -3,7 +3,7 @@
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -32,59 +32,61 @@
  */
 
 /*
- * This file contains the job that modifies levelset and particles. This job
- * should be spawned after calling advance time step forces and before
- * adjusting phi with sources.
- *
- * This job needs only phi.
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/job_adjust_phi.h"
-#include "application/water_alternate_fine/physbam_utils.h"
-#include "application/water_alternate_fine/water_driver.h"
-#include "application/water_alternate_fine/water_example.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
 #include <sstream>
 #include <string>
 
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/physbam_utils.h"
+#include "application/water_alternate_fine/water_driver.h"
+#include "application/water_alternate_fine/water_example.h"
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+
+#include "application/water_alternate_fine/job_projection.h"
+
 namespace application {
 
-JobAdjustPhi::JobAdjustPhi(nimbus::Application *app) {
-    set_application(app);
+JobProjection::JobProjection(nimbus::Application *app) {
+  set_application(app);
 };
 
-nimbus::Job* JobAdjustPhi::Clone() {
-    return new JobAdjustPhi(application());
+nimbus::Job* JobProjection::Clone() {
+  return new JobProjection(application());
 }
 
-void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing adjust phi job\n");
+void JobProjection::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing PROJECTION job.\n");
 
-    InitConfig init_config;
-    T dt;
-    std::string params_str(params.ser_data().data_ptr_raw(),
-                           params.ser_data().size());
-    LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
-    dbg(APP_LOG, "Frame %i in adjust phi job\n", init_config.frame);
+  InitConfig init_config;
+  T dt;
+  std::string params_str(params.ser_data().data_ptr_raw(),
+                         params.ser_data().size());
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
 
-    // initialize configuration and state
-    PhysBAM::WATER_EXAMPLE<TV> *example;
-    PhysBAM::WATER_DRIVER<TV> *driver;
+  // Assume time, dt, frame is ready from here.
+  dbg(APP_LOG,
+      "In PROJECTION: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Frame=%d, Time=%f).\n",
+      init_config.frame, init_config.time);
 
-    init_config.set_boundary_condition = false;
-    InitializeExampleAndDriver(init_config, this, da, example, driver);
+  PhysBAM::WATER_EXAMPLE<TV> *example;
+  PhysBAM::WATER_DRIVER<TV> *driver;
 
-    driver->AdjustPhiImpl(this, da, dt);
+  InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    // free resources
-    DestroyExampleAndDriver(example, driver);
+  dbg(APP_LOG, "Job PROJECTION starts (dt=%f).\n", dt);
 
-    dbg(APP_LOG, "Completed executing adjust phi job\n");
+  driver->ProjectionImpl(this, da, dt);
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+
+  // Free resources.
+  DestroyExampleAndDriver(example, driver);
+
+  dbg(APP_LOG, "Completed executing PROJECTION job\n");
 }
 
-} // namespace application
+}  // namespace application

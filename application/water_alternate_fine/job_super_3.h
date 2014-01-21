@@ -60,13 +60,13 @@
 
 namespace application {
 
-    class JobSuper3 : public nimbus::Job {
-        public:
-            explicit JobSuper3(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params,
-                                 const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+class JobSuper3 : public nimbus::Job {
+ public:
+  explicit JobSuper3(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 

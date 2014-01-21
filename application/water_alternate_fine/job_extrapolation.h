@@ -33,40 +33,40 @@
  */
 
 /*
- * This file defines the name of jobs that will be used for registration and
- * spawning the jobs.
+ * This file contains job EXTRAPOLATION that:
+ *     Extrapolates velocity and level set.
+ * The parameters of EXTRAPOLATION:
+ *     frame number, simulation time, dt.
+ * The read set(not sure) of EXTRAPOLATION:
+ *     velocity, levelset.
+ * The write set(not sure) of EXTRAPOLATION:
+ *     velocity, levelset.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * It is still unclear whether other simulation variables or states are also
+ * needed.
+ * For now, all the data is transmitted to guarantee correctness.
+ *
+ * The job might be further broken into extrapolating velocity and levelset, but
+ * might require some hacking in PhysBAM function calls. So leave it for now.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_NAMES_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_EXTRAPOLATION_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_EXTRAPOLATION_H_
 
+#include "shared/nimbus.h"
 
-#define SUPER_1 "super_1"
-#define SUPER_2 "super_2"
-#define SUPER_3 "super_3"
+namespace application {
 
-#define MAIN "main"
-#define INITIALIZE "initialize"
-#define LOOP_FRAME "loop_frame"
-#define LOOP_ITERATION "loop_iteration"
-#define CALCULATE_FRAME "calculate_frame"
-#define WRITE_FRAME "write_frame"
+class JobExtrapolation : public nimbus::Job {
+ public:
+  explicit JobExtrapolation(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
-#define COMPUTE_OCCUPIED_BLOCKS "compute_occupied_blocks"
-#define ADJUST_PHI_WITH_OBJECTS "adjust_phi_with_objects"
-#define ADVECT_PHI "advect_phi"
-#define STEP_PARTICLES "step_particles"
-#define ADVECT_REMOVED_PARTICLES "advect_removed_particles"
-#define ADVECT_V "advect_v"
-#define APPLY_FORCES "apply_forces"
-#define MODIFY_LEVELSET "modify_levelset"
-#define ADJUST_PHI "adjust_phi"
-#define DELETE_PARTICLES "delete_particles"
-#define REINCORPORATE_PARTICLES "reincorporate_particles"
-#define PROJECTION "projection"
-#define EXTRAPOLATION "extrapolation"
+} // namespace application
 
-
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_NAMES_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_PROJECTION_H_
