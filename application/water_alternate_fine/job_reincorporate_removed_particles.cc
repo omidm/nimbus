@@ -72,9 +72,6 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
     dbg(APP_LOG, "Frame %i in reincorporate particles job\n", init_config.frame);
 
-    const int& frame = init_config.frame;
-    const T& time = init_config.time;
-
     // initialize configuration and state
     PhysBAM::WATER_EXAMPLE<TV> *example;
     PhysBAM::WATER_DRIVER<TV> *driver;
@@ -82,7 +79,7 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     init_config.set_boundary_condition = false;
     InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    driver->ReincorporateParticlesImpl(this, da, dt, time, frame);
+    driver->ReincorporateParticlesImpl(this, da, dt);
 
     // free resources
     DestroyExampleAndDriver(example, driver);

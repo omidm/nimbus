@@ -49,7 +49,7 @@
  * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#define GRANULARITY_STATE SUPER_JOBS
+#define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
@@ -85,7 +85,7 @@ namespace application {
     const int& frame = init_config.frame;
     const T& time = init_config.time;
 
-    dbg(APP_LOG, "Frame %i and time %i in iteration job\n",
+    dbg(APP_LOG, "Frame %i and time %f in iteration job\n",
         frame, time);
 
     // Initialize the state of example and driver.

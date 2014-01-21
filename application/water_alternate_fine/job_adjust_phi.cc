@@ -72,8 +72,6 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
     dbg(APP_LOG, "Frame %i in adjust phi job\n", init_config.frame);
 
-    const T& time = init_config.time;
-
     // initialize configuration and state
     PhysBAM::WATER_EXAMPLE<TV> *example;
     PhysBAM::WATER_DRIVER<TV> *driver;
@@ -81,7 +79,7 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     init_config.set_boundary_condition = false;
     InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-    driver->AdjustPhiImpl(this, da, dt, time);
+    driver->AdjustPhiImpl(this, da, dt);
 
     // free resources
     DestroyExampleAndDriver(example, driver);

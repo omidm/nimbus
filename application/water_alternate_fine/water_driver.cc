@@ -540,9 +540,7 @@ ApplyForcesImpl(const nimbus::Job *job,
 template<class TV> bool WATER_DRIVER<TV>::
 ModifyLevelSetImpl(const nimbus::Job *job,
                    const nimbus::DataArray &da,
-                   T dt,
-                   T time,
-                   int frame) {
+                   T dt) {
     dbg(APP_LOG, "Modify Levelset ...\n");
 
     // face velocity for ghost + interior
@@ -573,8 +571,7 @@ ModifyLevelSetImpl(const nimbus::Job *job,
 template<class TV> bool WATER_DRIVER<TV>::
 AdjustPhiImpl(const nimbus::Job *job,
         const nimbus::DataArray &da,
-        T dt,
-        T time) {
+        T dt) {
     dbg(APP_LOG, "Adjust Phi ...\n");
 
     // adjust phi with sources
@@ -589,9 +586,7 @@ AdjustPhiImpl(const nimbus::Job *job,
 template<class TV> bool WATER_DRIVER<TV>::
 DeleteParticlesImpl(const nimbus::Job *job,
                     const nimbus::DataArray &da,
-                    T dt,
-                    T time,
-                    int frame) {
+                    T dt) {
     dbg(APP_LOG, "Delete Particles ...\n");
 
     // face velocity for ghost + interior
@@ -627,9 +622,7 @@ DeleteParticlesImpl(const nimbus::Job *job,
 template<class TV> bool WATER_DRIVER<TV>::
 ReincorporateParticlesImpl(const nimbus::Job *job,
                            const nimbus::DataArray &da,
-                           T dt,
-                           T time,
-                           int frame) {
+                           T dt) {
     dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
 
     // face velocity for ghost + interior

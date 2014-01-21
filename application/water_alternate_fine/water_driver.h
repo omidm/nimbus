@@ -96,26 +96,19 @@ public:
 
     bool ModifyLevelSetImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,
-                            T dt,
-                            T time,
-                            int frame);
+                            T dt);
 
     bool AdjustPhiImpl(const nimbus::Job *job,
                        const nimbus::DataArray &da,
-                       T dt,
-                       T time);
+                       T dt);
 
     bool DeleteParticlesImpl(const nimbus::Job *job,
                              const nimbus::DataArray &da,
-                             T dt,
-                             T time,
-                             int frame);
+                             T dt);
 
     bool ReincorporateParticlesImpl(const nimbus::Job *job,
                                     const nimbus::DataArray &da,
-                                    T dt,
-                                    T time,
-                                    int frame);
+                                    T dt);
 
     bool ProjectionImpl (const nimbus::Job *job,
                          const nimbus::DataArray &da,
