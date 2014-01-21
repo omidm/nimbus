@@ -49,7 +49,7 @@
  * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
+#define GRANULARITY_STATE SUPER_JOBS
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
