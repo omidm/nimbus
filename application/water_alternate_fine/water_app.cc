@@ -50,6 +50,12 @@
 #include "application/water_alternate_fine/job_super_1.h"
 #include "application/water_alternate_fine/job_super_2.h"
 #include "application/water_alternate_fine/job_super_3.h"
+#include "application/water_alternate_fine/job_adjust_phi_with_objects.h"
+#include "application/water_alternate_fine/job_advect_phi.h"
+#include "application/water_alternate_fine/job_step_particles.h"
+#include "application/water_alternate_fine/job_advect_removed_particles.h"
+#include "application/water_alternate_fine/job_advect_v.h"
+#include "application/water_alternate_fine/job_apply_forces.h"
 #include "application/water_alternate_fine/job_write_frame.h"
 #include "application/water_alternate_fine/water_app.h"
 #include "data/scalar_data.h"
@@ -103,6 +109,12 @@ namespace application {
         RegisterJob(SUPER_1, new JobSuper1(this));
         RegisterJob(SUPER_2, new JobSuper2(this));
         RegisterJob(SUPER_3, new JobSuper3(this));
+        RegisterJob(ADJUST_PHI_WITH_OBJECTS, new JobAdjustPhiWithObjects(this));
+        RegisterJob(ADVECT_PHI, new JobAdvectPhi(this));
+        RegisterJob(STEP_PARTICLES, new JobStepParticles(this));
+        RegisterJob(ADVECT_REMOVED_PARTICLES, new JobAdvectRemovedParticles(this));
+        RegisterJob(ADVECT_V, new JobAdvectV(this));
+        RegisterJob(APPLY_FORCES, new JobApplyForces(this));
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
         RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
         RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));

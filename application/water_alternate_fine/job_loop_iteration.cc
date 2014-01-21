@@ -49,7 +49,7 @@
  * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS 
+#define GRANULARITY_STATE SUPER_JOBS
 
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
@@ -120,6 +120,9 @@ namespace application {
         break;
       case SUPER_JOBS:
         SpawnWithSuperJobsGranularity(done, frame, time, dt, da);
+        break;
+      case BREAK_SUPER_JOB_1:
+        SpawnWithBreakSuperJob1Granularity(done, frame, time, dt, da);
         break;
       case BREAK_ALL_SUPER_JOBS:
         SpawnWithBreakAllGranularity(done, frame, time, dt, da);
@@ -292,6 +295,309 @@ namespace application {
           frame_params);
     }
   }
+
+  void JobLoopIteration::SpawnWithBreakSuperJob1Granularity(
+      bool done, int frame, T time, T dt, const nimbus::DataArray& da) {
+    if (!done) {
+      //Spawn one iteration of frame computation and then one loop
+      //iteration  job, for next iteration.
+      dbg(APP_LOG, "Loop frame is spawning su jobs in super job 1, and super jobs 2, 3 for frame %i.\n", frame); // NOLINT
+
+      int job_num = 9;
+      std::vector<nimbus::job_id_t> job_ids;
+      GetNewJobID(&job_ids, job_num);
+      nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+      nimbus::IDSet<nimbus::job_id_t> before, after;
+      nimbus::Parameter s11_params;
+      nimbus::Parameter s12_params;
+      nimbus::Parameter s13_params;
+      nimbus::Parameter s14_params;
+      nimbus::Parameter s15_params;
+      nimbus::Parameter s16_params;
+      nimbus::Parameter s2_params;
+      nimbus::Parameter s3_params;
+      nimbus::Parameter iter_params;
+
+      nimbus::DataArray::const_iterator it = da.begin();
+      for (; it != da.end(); ++it) {
+        read.insert((*it)->logical_id());
+        write.insert((*it)->logical_id());
+      }
+
+      std::string s11_str;
+      SerializeParameter(frame, time, dt, &s11_str);
+      s11_params.set_ser_data(SerializedData(s11_str));
+      before.clear();
+      after.clear();
+      after.insert(job_ids[1]);
+      SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
+          job_ids[0],
+          read, write,
+          before, after,
+          s11_params);
+
+      std::string s12_str;
+      SerializeParameter(frame, time, dt, &s12_str);
+      s12_params.set_ser_data(SerializedData(s12_str));
+      before.clear();
+      before.insert(job_ids[0]);
+      after.clear();
+      after.insert(job_ids[2]);
+      SpawnComputeJob(ADVECT_PHI,
+          job_ids[1],
+          read, write,
+          before, after,
+          s12_params);
+
+      std::string s13_str;
+      SerializeParameter(frame, time, dt, &s13_str);
+      s13_params.set_ser_data(SerializedData(s13_str));
+      before.clear();
+      before.insert(job_ids[1]);
+      after.clear();
+      after.insert(job_ids[3]);
+      SpawnComputeJob(STEP_PARTICLES,
+          job_ids[2],
+          read, write,
+          before, after,
+          s13_params);
+
+      std::string s14_str;
+      SerializeParameter(frame, time, dt, &s14_str);
+      s14_params.set_ser_data(SerializedData(s14_str));
+      before.clear();
+      before.insert(job_ids[2]);
+      after.clear();
+      after.insert(job_ids[4]);
+      SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
+          job_ids[3],
+          read, write,
+          before, after,
+          s14_params);
+
+      std::string s15_str;
+      SerializeParameter(frame, time, dt, &s15_str);
+      s15_params.set_ser_data(SerializedData(s15_str));
+      before.clear();
+      before.insert(job_ids[3]);
+      after.clear();
+      after.insert(job_ids[5]);
+      SpawnComputeJob(ADVECT_V,
+          job_ids[4],
+          read, write,
+          before, after,
+          s15_params);
+
+      std::string s16_str;
+      SerializeParameter(frame, time, dt, &s16_str);
+      s16_params.set_ser_data(SerializedData(s16_str));
+      before.clear();
+      before.insert(job_ids[4]);
+      after.clear();
+      after.insert(job_ids[6]);
+      SpawnComputeJob(APPLY_FORCES,
+          job_ids[5],
+          read, write,
+          before, after,
+          s16_params);
+
+      std::string s2_str;
+      SerializeParameter(frame, time, dt, &s2_str);
+      s2_params.set_ser_data(SerializedData(s2_str));
+      before.clear();
+      before.insert(job_ids[5]);
+      after.clear();
+      after.insert(job_ids[7]);
+      SpawnComputeJob(SUPER_2,
+          job_ids[6],
+          read, write,
+          before, after,
+          s2_params);
+
+      std::string s3_str;
+      SerializeParameter(frame, time, dt, &s3_str);
+      s3_params.set_ser_data(SerializedData(s3_str));
+      before.clear();
+      before.insert(job_ids[6]);
+      after.clear();
+      after.insert(job_ids[8]);
+      SpawnComputeJob(SUPER_3,
+          job_ids[7],
+          read, write,
+          before, after,
+          s3_params);
+
+      std::string iter_str;
+      SerializeParameter(frame, time + dt, &iter_str);
+      iter_params.set_ser_data(SerializedData(iter_str));
+      before.clear();
+      before.insert(job_ids[7]);
+      after.clear();
+      SpawnComputeJob(LOOP_ITERATION,
+          job_ids[8],
+          read, write,
+          before, after,
+          iter_params);
+    } else {
+      // compute one last iteration, then spawn write frame job. Finally,
+      // spawn loop frame job for next frame computation.
+
+      int job_num = 10;
+      std::vector<nimbus::job_id_t> job_ids;
+      GetNewJobID(&job_ids, job_num);
+      nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+      nimbus::IDSet<nimbus::job_id_t> before, after;
+      nimbus::Parameter s11_params;
+      nimbus::Parameter s12_params;
+      nimbus::Parameter s13_params;
+      nimbus::Parameter s14_params;
+      nimbus::Parameter s15_params;
+      nimbus::Parameter s16_params;
+      nimbus::Parameter s2_params;
+      nimbus::Parameter s3_params;
+      nimbus::Parameter write_params;
+      nimbus::Parameter frame_params;
+
+      nimbus::DataArray::const_iterator it = da.begin();
+      for (; it != da.end(); ++it) {
+        read.insert((*it)->logical_id());
+        write.insert((*it)->logical_id());
+      }
+
+      std::string s11_str;
+      SerializeParameter(frame, time, dt, &s11_str);
+      s11_params.set_ser_data(SerializedData(s11_str));
+      before.clear();
+      after.clear();
+      after.insert(job_ids[1]);
+      SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
+          job_ids[0],
+          read, write,
+          before, after,
+          s11_params);
+
+      std::string s12_str;
+      SerializeParameter(frame, time, dt, &s12_str);
+      s12_params.set_ser_data(SerializedData(s12_str));
+      before.clear();
+      before.insert(job_ids[0]);
+      after.clear();
+      after.insert(job_ids[2]);
+      SpawnComputeJob(ADVECT_PHI,
+          job_ids[1],
+          read, write,
+          before, after,
+          s12_params);
+
+      std::string s13_str;
+      SerializeParameter(frame, time, dt, &s13_str);
+      s13_params.set_ser_data(SerializedData(s13_str));
+      before.clear();
+      before.insert(job_ids[1]);
+      after.clear();
+      after.insert(job_ids[3]);
+      SpawnComputeJob(STEP_PARTICLES,
+          job_ids[2],
+          read, write,
+          before, after,
+          s13_params);
+
+      std::string s14_str;
+      SerializeParameter(frame, time, dt, &s14_str);
+      s14_params.set_ser_data(SerializedData(s14_str));
+      before.clear();
+      before.insert(job_ids[2]);
+      after.clear();
+      after.insert(job_ids[4]);
+      SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
+          job_ids[3],
+          read, write,
+          before, after,
+          s14_params);
+
+      std::string s15_str;
+      SerializeParameter(frame, time, dt, &s15_str);
+      s15_params.set_ser_data(SerializedData(s15_str));
+      before.clear();
+      before.insert(job_ids[3]);
+      after.clear();
+      after.insert(job_ids[5]);
+      SpawnComputeJob(ADVECT_V,
+          job_ids[4],
+          read, write,
+          before, after,
+          s15_params);
+
+      std::string s16_str;
+      SerializeParameter(frame, time, dt, &s16_str);
+      s16_params.set_ser_data(SerializedData(s16_str));
+      before.clear();
+      before.insert(job_ids[4]);
+      after.clear();
+      after.insert(job_ids[6]);
+      SpawnComputeJob(APPLY_FORCES,
+          job_ids[5],
+          read, write,
+          before, after,
+          s16_params);
+
+
+      std::string s2_str;
+      SerializeParameter(frame, time, dt, &s2_str);
+      s2_params.set_ser_data(SerializedData(s2_str));
+      before.clear();
+      before.insert(job_ids[5]);
+      after.clear();
+      after.insert(job_ids[7]);
+      SpawnComputeJob(SUPER_2,
+          job_ids[6],
+          read, write,
+          before, after,
+          s2_params);
+
+      std::string s3_str;
+      SerializeParameter(frame, time, dt, &s3_str);
+      s3_params.set_ser_data(SerializedData(s3_str));
+      before.clear();
+      before.insert(job_ids[6]);
+      after.clear();
+      after.insert(job_ids[8]);
+      SpawnComputeJob(SUPER_3,
+          job_ids[7],
+          read, write,
+          before, after,
+          s3_params);
+
+      std::string write_str;
+      SerializeParameter(frame, time + dt, 0, &write_str);
+      write_params.set_ser_data(SerializedData(write_str));
+      before.clear();
+      before.insert(job_ids[7]);
+      after.clear();
+      after.insert(job_ids[9]);
+      SpawnComputeJob(WRITE_FRAME,
+          job_ids[8],
+          read, write,
+          before, after,
+          write_params);
+
+      std::string frame_str;
+      SerializeParameter(frame + 1, &frame_str);
+      frame_params.set_ser_data(SerializedData(frame_str));
+      before.clear();
+      before.insert(job_ids[8]);
+      after.clear();
+      SpawnComputeJob(LOOP_FRAME,
+          job_ids[9],
+          read, write,
+          before, after,
+          frame_params);
+    }
+  }
+
+
+
+
 
   void JobLoopIteration::SpawnWithOneJobGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da) {

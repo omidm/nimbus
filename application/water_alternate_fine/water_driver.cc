@@ -374,11 +374,9 @@ SuperJob1Impl (const nimbus::Job *job,
 
 
 template<class TV> bool WATER_DRIVER<TV>::
-SuperJob3Impl (const nimbus::Job *job,
+ProjectionImpl (const nimbus::Job *job,
                const nimbus::DataArray &da,
                T dt) {
-  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-
   LOG::SCOPE *scope=0;
   scope=new LOG::SCOPE("Project");
   example.Set_Boundary_Conditions(time);
@@ -395,6 +393,13 @@ SuperJob3Impl (const nimbus::Job *job,
       false);
   delete scope;
 
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ExtrapolationImpl (const nimbus::Job *job,
+                 const nimbus::DataArray &da,
+                 T dt) {
   T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
   example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
       example.mac_grid,
@@ -406,9 +411,15 @@ SuperJob3Impl (const nimbus::Job *job,
       exchanged_phi_ghost,
       false, 3, 0, TV());
 
-  // Save State.
-  example.Save_To_Nimbus(job, da, current_frame+1);
+  return true;
+}
 
+template<class TV> bool WATER_DRIVER<TV>::
+SuperJob3Impl (const nimbus::Job *job,
+               const nimbus::DataArray &da,
+               T dt) {
+  ProjectionImpl(job, da, dt);
+  ExtrapolationImpl(job, da, dt);
   return true;
 }
 
