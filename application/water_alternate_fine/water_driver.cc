@@ -543,24 +543,11 @@ ModifyLevelSetImpl(const nimbus::Job *job,
                    T dt) {
     dbg(APP_LOG, "Modify Levelset ...\n");
 
-    // face velocity for ghost + interior
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize(example.incompressible.grid,
-            example.number_of_ghost_cells,
-            false);
-    example.incompressible.boundary->
-        Fill_Ghost_Cells_Face(example.mac_grid,
-                example.face_velocities,
-                face_velocities_ghost,
-                time+dt,
-                example.number_of_ghost_cells);
-
-
     // modify levelset
     example.particle_levelset_evolution.particle_levelset.
         Exchange_Overlap_Particles();
     example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles(&face_velocities_ghost);
+        Modify_Levelset_And_Particles(&example.face_velocities_ghost);
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
@@ -589,18 +576,6 @@ DeleteParticlesImpl(const nimbus::Job *job,
                     T dt) {
     dbg(APP_LOG, "Delete Particles ...\n");
 
-    // face velocity for ghost + interior
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize(example.incompressible.grid,
-                                 example.number_of_ghost_cells,
-                                 false);
-    example.incompressible.boundary->
-        Fill_Ghost_Cells_Face(example.mac_grid,
-                              example.face_velocities,
-                              face_velocities_ghost,
-                              time+dt,
-                              example.number_of_ghost_cells);
-
     // delete particles
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
     example.particle_levelset_evolution.particle_levelset.
@@ -608,7 +583,7 @@ DeleteParticlesImpl(const nimbus::Job *job,
     example.particle_levelset_evolution.particle_levelset.
         Delete_Particles_Far_From_Interface(); // uses visibility
     example.particle_levelset_evolution.particle_levelset.
-        Identify_And_Remove_Escaped_Particles(face_velocities_ghost,
+        Identify_And_Remove_Escaped_Particles(example.face_velocities_ghost,
                 1.5,
                 time + dt);
 
@@ -624,18 +599,6 @@ ReincorporateParticlesImpl(const nimbus::Job *job,
                            const nimbus::DataArray &da,
                            T dt) {
     dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
-
-    // face velocity for ghost + interior
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-    face_velocities_ghost.Resize(example.incompressible.grid,
-                                 example.number_of_ghost_cells,
-                                 false);
-    example.incompressible.boundary->
-        Fill_Ghost_Cells_Face(example.mac_grid,
-                              example.face_velocities,
-                              face_velocities_ghost,
-                              time+dt,
-                              example.number_of_ghost_cells);
 
     // reincorporate removed particles
     if (example.particle_levelset_evolution.particle_levelset.
