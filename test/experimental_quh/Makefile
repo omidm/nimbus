@@ -1,6 +1,6 @@
 
 TARGET = test 
-all: check $(TARGET)
+all: $(TARGET)
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude

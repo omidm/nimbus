@@ -51,8 +51,8 @@ void test_1() {
   GeometricRegion left(1, 1, 1, 64, 64, 1);
   GeometricRegion right(65, 1, 1, 64, 64, 1);
   GeometricRegion mid(2, 10, 1, 62, 10, 1);
-  std::cout << left.toString() << std::endl;
-  std::cout << right.toString() << std::endl;
+  //std::cout << left.toString() << std::endl;
+  //std::cout << right.toString() << std::endl;
   VariableRegionSet temp(
       VariableRegionSet("V", left) + VariableRegionSet("V", right));
   temp.DebugPrint();

@@ -87,6 +87,7 @@ void VariableRegionSet::DebugPrint() {
   }
 }
 
+// Initializes variable region set.
 void VariableRegionSet::Init() {
   _var_region_list.clear();
 }
@@ -99,6 +100,8 @@ bool VariableRegionSet::IntersectsTest(const VariableRegionSet& vrs) {
   return IntersectsImpl(vrs, false);
 }
 
+// Adds the geometric region of "origin" substracted by "target". The variable
+// name is "variable".
 void VariableRegionSet::AddRegionHelper(
     const std::string& variable,
     const GeometricRegion& origin,
@@ -126,6 +129,7 @@ void VariableRegionSet::AddRegionHelper(
       }
 }
 
+// Pushes the X segment endpoints of the geometric region into "vec".
 void VariableRegionSet::PushSegXHelper(
     const GeometricRegion& gr,
     std::vector<int_dimension_t>* vec) {
@@ -133,6 +137,7 @@ void VariableRegionSet::PushSegXHelper(
   vec->push_back(gr.x()+gr.dx());
 }
 
+// Pushes the Y segment endpoints of the geometric region into "vec".
 void VariableRegionSet::PushSegYHelper(
     const GeometricRegion& gr,
     std::vector<int_dimension_t>* vec) {
@@ -140,6 +145,7 @@ void VariableRegionSet::PushSegYHelper(
   vec->push_back(gr.y()+gr.dy());
 }
 
+// Pushes the Z segment endpoints of the geometric region into "vec".
 void VariableRegionSet::PushSegZHelper(
     const GeometricRegion& gr,
     std::vector<int_dimension_t>* vec) {
@@ -147,6 +153,7 @@ void VariableRegionSet::PushSegZHelper(
   vec->push_back(gr.z()+gr.dz());
 }
 
+// Sorts all endpoints and deletes duplicated ones.
 void VariableRegionSet::SortAndDeduplication(
     std::vector<int_dimension_t>* vec) {
   std::sort(vec->begin(), vec->end());
@@ -157,6 +164,7 @@ bool VariableRegionSet::IntersectsImpl(
     const VariableRegionSet& vrs, bool remove_mode) {
   bool result = false;
   VarRegionList::iterator origin = _var_region_list.begin();
+  // Decides whether moving forward an element.
   bool flag;
   while (origin != _var_region_list.end()) {
     flag = true;

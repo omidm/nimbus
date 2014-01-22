@@ -36,7 +36,7 @@
   * Stores a list of variable name/geometric region pairs, and offers
   * basic operations for set union, set differentiating, and
   * intersection query.
-  * 
+  *
   * Maybe merge with logical data objects in the future, but should not
   * contain data id information.
   *
@@ -50,8 +50,9 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
+#include "shared/logical_data_object.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
@@ -59,16 +60,21 @@ class VariableRegionSet {
  public:
   VariableRegionSet();
   VariableRegionSet(const std::string& variable, const GeometricRegion& region);
+  // VariableRegionSet(const LogicalDataObject& ldo);
+  // VariableRegionSet(CLdoVector* ldo_list);
   VariableRegionSet(const VariableRegionSet& vrs);
   virtual ~VariableRegionSet() {}
   VariableRegionSet& CopyFrom(const VariableRegionSet& vrs);
   virtual VariableRegionSet& operator+=(const VariableRegionSet right_vrs);
+  // virtual VariableRegionSet& Append(const VariableRegionSet& vrs);
+
+  // Prints out the data structures in plain text for debugging.
   virtual void DebugPrint();
   virtual bool IntersectsAndDelete(const VariableRegionSet& vrs);
   virtual bool IntersectsTest(const VariableRegionSet& vrs);
 
  private:
-  void operator=(VariableRegionSet) {}  // = delete
+  // void operator=(VariableRegionSet) {}  // = delete
   typedef std::pair<std::string, GeometricRegion> VarRegion;
   typedef std::list<VarRegion> VarRegionList;
   VarRegionList _var_region_list;
@@ -93,6 +99,8 @@ class VariableRegionSet {
     const VariableRegionSet& right_vrs);
 };
 
+// Returns the union of the two sets. Used for test because of performance
+// reasons.
 VariableRegionSet operator+(
     VariableRegionSet left_vrs,
     const VariableRegionSet& right_vrs);
