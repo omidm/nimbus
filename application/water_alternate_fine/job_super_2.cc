@@ -85,25 +85,12 @@ namespace application {
         init_config.set_boundary_condition = false;
         InitializeExampleAndDriver(init_config, this, da, example, driver);
 
-        // face velocity for ghost + interior
-        FaceArray face_velocities_ghost;
-        face_velocities_ghost.Resize(example->incompressible.grid,
-                                     example->number_of_ghost_cells,
-                                     false);
-        example->incompressible.boundary->
-            Fill_Ghost_Cells_Face(example->mac_grid,
-                                  example->face_velocities,
-                                  face_velocities_ghost,
-                                  time+dt,
-                                  example->number_of_ghost_cells);
-
-
         // modify levelset
         dbg(APP_LOG, "Modify Levelset ...\n");
         example->particle_levelset_evolution.particle_levelset.
             Exchange_Overlap_Particles();
         example->particle_levelset_evolution.
-            Modify_Levelset_And_Particles(&face_velocities_ghost);
+            Modify_Levelset_And_Particles(&example->face_velocities_ghost);
 
         // adjust phi with sources
         dbg(APP_LOG, "Adjust Phi ...\n");
@@ -117,7 +104,7 @@ namespace application {
         example->particle_levelset_evolution.particle_levelset.
             Delete_Particles_Far_From_Interface(); // uses visibility
         example->particle_levelset_evolution.particle_levelset.
-            Identify_And_Remove_Escaped_Particles(face_velocities_ghost,
+            Identify_And_Remove_Escaped_Particles(example->face_velocities_ghost,
                                                   1.5,
                                                   time + dt);
 
