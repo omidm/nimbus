@@ -786,20 +786,39 @@ namespace application {
         before, after,
         reincorporate_particles_params);
 
-    nimbus::Parameter s3_params;
-    std::string s3_str;
-    SerializeParameter(frame, time, dt, &s3_str);
-    s3_params.set_ser_data(SerializedData(s3_str));
-    after.clear();
-    after.insert(job_ids[6]);
-    before.clear();
-    before.insert(job_ids[4]);
-    SpawnComputeJob(SUPER_3,
-        job_ids[5],
-        read, write,
-        before, after,
-        s3_params);
+    {
+      int index = 5;
+      nimbus::Parameter projection_params;
+      std::string projection_str;
+      SerializeParameter(frame, time, dt, &projection_str);
+      projection_params.set_ser_data(SerializedData(projection_str));
+      after.clear();
+      after.insert(job_ids[index+1]);
+      before.clear();
+      before.insert(job_ids[index-1]);
+      SpawnComputeJob(PROJECTION,
+                      job_ids[index],
+                      read, write,
+                      before, after,
+                      projection_params);
+    }
 
+    {
+      int index = 6;
+      nimbus::Parameter extrapolation_params;
+      std::string extrapolation_str;
+      SerializeParameter(frame, time, dt, &extrapolation_str);
+      extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
+      after.clear();
+      after.insert(job_ids[index+1]);
+      before.clear();
+      before.insert(job_ids[index-1]);
+      SpawnComputeJob(EXTRAPOLATION,
+                      job_ids[index],
+                      read, write,
+                      before, after,
+                      reincorporate_particles_params);
+    }
 
     if (!done) {
       //Spawn one iteration of frame computation and then one loop
@@ -812,18 +831,21 @@ namespace application {
           write.insert((*it)->logical_id());
       }
 
-      nimbus::Parameter iter_params;
-      std::string iter_str;
-      SerializeParameter(frame, time + dt, &iter_str);
-      iter_params.set_ser_data(SerializedData(iter_str));
-      after.clear();
-      before.clear();
-      before.insert(job_ids[5]);
-      SpawnComputeJob(LOOP_ITERATION,
-          job_ids[6],
-          read, write,
-          before, after,
-          iter_params);
+      {
+        int index = 7;
+        nimbus::Parameter iter_params;
+        std::string iter_str;
+        SerializeParameter(frame, time + dt, &iter_str);
+        iter_params.set_ser_data(SerializedData(iter_str));
+        after.clear();
+        before.clear();
+        before.insert(job_ids[index-1]);
+        SpawnComputeJob(LOOP_ITERATION,
+                        job_ids[index],
+                        read, write,
+                        before, after,
+                        iter_params);
+      }
     } else {
       // compute one last iteration, then spawn write frame job. Finally,
       // spawn loop frame job for next frame computation.
@@ -838,32 +860,38 @@ namespace application {
       std::vector<nimbus::job_id_t> loop_job_id;
       GetNewJobID(&loop_job_id, job_num);
 
-      nimbus::Parameter write_params;
-      std::string write_str;
-      SerializeParameter(frame, time + dt, 0, &write_str);
-      write_params.set_ser_data(SerializedData(write_str));
-      after.clear();
-      after.insert(loop_job_id[0]);
-      before.clear();
-      before.insert(job_ids[5]);
-      SpawnComputeJob(WRITE_FRAME,
-          job_ids[6],
-          read, write,
-          before, after,
-          write_params);
+      {
+        int index = 7;
+        nimbus::Parameter write_params;
+        std::string write_str;
+        SerializeParameter(frame, time + dt, 0, &write_str);
+        write_params.set_ser_data(SerializedData(write_str));
+        after.clear();
+        after.insert(loop_job_id[0]);
+        before.clear();
+        before.insert(job_ids[index-1]);
+        SpawnComputeJob(WRITE_FRAME,
+                        job_ids[index],
+                        read, write,
+                        before, after,
+                        write_params);
+      }
 
-      nimbus::Parameter frame_params;
-      std::string frame_str;
-      SerializeParameter(frame + 1, &frame_str);
-      frame_params.set_ser_data(SerializedData(frame_str));
-      after.clear();
-      before.clear();
-      before.insert(job_ids[6]);
-      SpawnComputeJob(LOOP_FRAME,
-          loop_job_id[0],
-          read, write,
-          before, after,
-          frame_params);
+      {
+        int index = 8;
+        nimbus::Parameter frame_params;
+        std::string frame_str;
+        SerializeParameter(frame + 1, &frame_str);
+        frame_params.set_ser_data(SerializedData(frame_str));
+        after.clear();
+        before.clear();
+        before.insert(job_ids[index-1]);
+        SpawnComputeJob(LOOP_FRAME,
+                        loop_job_id[0],
+                        read, write,
+                        before, after,
+                        frame_params);
+      }
     }
   }
 
