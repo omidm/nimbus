@@ -58,7 +58,7 @@ bool InitializeHelper(
     particle_levelset_evolution) {
   typedef float T;
   PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
-      particle_levelset_evolution->particle_levelset;
+      &particle_levelset_evolution->particle_levelset;
   assert(grid_input.Is_MAC_Grid());
   particle_levelset_evolution->grid = grid_input;
   // Resizes phi here.
@@ -68,16 +68,24 @@ bool InitializeHelper(
   // particle_levelset_evolution->V.Resize(grid_input);
   // The following several lines unwrap the following functions:
   //     particle_levelset.Initialize_Particle_Levelset_Grid_Values();
+
+  // Resizes particles.
   particle_levelset->positive_particles.Resize(
       particle_levelset->levelset.grid.Block_Indices(
           particle_levelset->number_of_ghost_cells));
   particle_levelset->negative_particles.Resize(
       particle_levelset->levelset.grid.Block_Indices(
           particle_levelset->number_of_ghost_cells));
-  particle_levelset->Use_Removed_Positive_Particles(
-      particle_levelset->use_removed_positive_particles);
-  particle_levelset->Use_Removed_Negative_Particles(
-      particle_levelset->use_removed_negative_particles);
+  // Resizes removed particles.
+  particle_levelset->use_removed_positive_particles=true;
+  particle_levelset->removed_positive_particles.Resize(
+      particle_levelset->levelset.grid.Block_Indices(
+          particle_levelset->number_of_ghost_cells));
+  particle_levelset->use_removed_negative_particles=true;
+  particle_levelset->removed_negative_particles.Resize(
+      particle_levelset->levelset.grid.Block_Indices(
+          particle_levelset->number_of_ghost_cells));
+
   particle_levelset->Set_Minimum_Particle_Radius(
       (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
   particle_levelset->Set_Maximum_Particle_Radius(
@@ -119,7 +127,11 @@ Initialize()
     example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
 
     {
-        example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
+        // The following function call is replaced. --quhang
+        // example.particle_levelset_evolution.Initialize_Domain(
+        //     example.mac_grid);
+        InitializeHelper(
+            example.mac_grid, &example.particle_levelset_evolution);
 
         example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
         example.incompressible.Initialize_Grids(example.mac_grid);
@@ -256,10 +268,15 @@ Advance_To_Target_Time(const T target_time)
         LOG::Time("Calculate Dt");
         example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
         T dt=example.cfl*example.incompressible.CFL(example.face_velocities);
+
+        // Comments: I changed this sentence, following the same sematics, but
+        // notice that the buffered velocity has been changed. So no more
+        // bit-to-bit the same.  --quhang
         // dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
         dt = min(dt, example.particle_levelset_evolution.cfl_number
                  * example.particle_levelset_evolution.particle_levelset.
                    levelset.CFL(example.face_velocities));
+
         if(example.mpi_grid) example.mpi_grid->Synchronize_Dt(dt);
         if(time+dt>=target_time){dt=target_time-time;done=true;}
         else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
@@ -288,6 +305,8 @@ Advance_To_Target_Time(const T target_time)
         //Advect Phi 3.6% (Parallelized)
         LOG::Time("Advect Phi");
         example.phi_boundary_water.Use_Extrapolation_Mode(false);
+        // Comments: I changed the following function call. It has exactly the
+        // same meaning, but removes the usage of particle_levelset_evolution.V.
         // example.particle_levelset_evolution.Advance_Levelset(dt);
         assert(
             example.particle_levelset_evolution.runge_kutta_order_levelset
