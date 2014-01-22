@@ -3,16 +3,21 @@
 import sys
 import os.path
 import re
+from optparse import OptionParser
+from sets import Set
 
-def PrintErrorAndExit():
-    print "Usage: ./generate_data.py <data config file>"
-    sys.exit(1)
+# Parse the command line arguments
+parser = OptionParser()
+parser.add_option("-i", "--input", dest="infile",
+                  default="data_config", type="string",
+                  help="input configuration file listing data configuration")
+parser.add_option("-o", "--output", dest="outfile",
+                  default="data_def", type="string",
+                  help="output .h|cc file for generating data defintiions")
+(options, args) = parser.parse_args()
 
-if len(sys.argv) != 2:
-    print "Expected one argument, got " + str(len(sys.argv)-1)
-    PrintErrorAndExit()
+data_config_file = options.infile
 
-data_config_file = sys.argv[1]
 if not os.path.isfile:
     print "Could not find file " + data_config_file
     PrintErrorAndExit()
@@ -29,8 +34,16 @@ def ValidateSizeTuples(sizes, num):
             return False
     return True
 
-print "Reading data configuration file " + data_config_file
+out_h_file  = options.outfile + ".h"
+out_cc_file = options.outfile + ".cc"
+
+print "Reading data configuration file " + data_config_file + \
+        "and generating definitions in " + out_h_file + " and " + \
+        out_cc_file + "..."
+
 data_config = open(data_config_file, 'r')
+out_h       = open(out_h_file, 'w')
+out_cc      = open(out_cc_file, 'w')
 
 for num, line in enumerate(data_config):
     # empty lines
