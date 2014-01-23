@@ -86,6 +86,54 @@ void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver);
 
+// Data structure to describe which variables should be initialized in
+// initialization stage. Might be moved to another file later. Not completed
+// now.
+struct DataConfig {
+  enum DataType{
+    VELOCITY = 0,
+    LEVELSET,
+    POSITIVE_PARTICLE,
+    NEGATIVE_PARTICLE,
+    REMOVED_POSITIVE_PARTICLE,
+    REMOVED_NEGATIVE_PARTICLE,
+    NUM_VARIABLE
+  };
+  bool _flag[NUM_VARIABLE];
+  DataConfig() {
+    SetHelper(false);
+  }
+  void Clear() {
+    SetHelper(false);
+  }
+  void SetAll() {
+    SetHelper(true);
+  }
+  void SetHelper(bool value) {
+    for (int i = 0; i < NUM_VARIABLE; ++i)
+      _flag[i] = value;
+  }
+  void SetFlag(const DataType data_type) {
+    assert(data_type != NUM_VARIABLE);
+    _flag[(int)data_type] = true;
+  }
+  void UnsetFlag(const DataType data_type) {
+    assert(data_type != NUM_VARIABLE);
+    _flag[(int)data_type] = false;
+  }
+  bool GetFlag(const DataType data_type) const {
+    assert(data_type != NUM_VARIABLE);
+    return _flag[(int)data_type];
+  }
+};
+
+// Not finished. Option not added.
+template<class TV>
+bool InitializeParticleLevelsetEvolutionHelper(
+    const DataConfig& data_config,
+    const PhysBAM::GRID<TV>& grid_input,
+    PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >*
+    particle_levelset_evolution);
 }  // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
