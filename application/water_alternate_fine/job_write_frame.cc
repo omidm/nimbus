@@ -75,7 +75,10 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
 
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
-  InitializeExampleAndDriver(init_config, this, da, example, driver);
+  DataConfig data_config;
+  data_config.SetAll();
+  InitializeExampleAndDriver(init_config, data_config,
+                             this, da, example, driver);
 
   dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
   // Reseed particles and write frame.

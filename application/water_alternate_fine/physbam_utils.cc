@@ -48,6 +48,7 @@ namespace application {
 
 bool InitializeExampleAndDriver(
     const InitConfig& init_config,
+    const DataConfig& data_config,
     const nimbus::Job* job,
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
@@ -57,6 +58,7 @@ bool InitializeExampleAndDriver(
       init_config.grid_size,
       PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
   PhysBAM::WaterSources::Add_Source(example);
+  example->data_config.Set(data_config);
   driver= new PhysBAM::WATER_DRIVER<TV>(*example);
   driver->init_phase = init_config.init_phase;
   driver->current_frame = init_config.frame;

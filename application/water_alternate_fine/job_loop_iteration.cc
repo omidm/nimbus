@@ -91,7 +91,10 @@ namespace application {
     // Initialize the state of example and driver.
     PhysBAM::WATER_EXAMPLE<TV>* example;
     PhysBAM::WATER_DRIVER<TV>* driver;
-    InitializeExampleAndDriver(init_config, this, da, example, driver);
+    DataConfig data_config;
+    data_config.SetAll();
+    InitializeExampleAndDriver(init_config, data_config,
+                               this, da, example, driver);
 
     // check whether the frame is done or not
     bool done = false;

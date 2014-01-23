@@ -62,6 +62,7 @@ namespace application {
 // Returns false if it fails.
 bool InitializeExampleAndDriver(
     const InitConfig& init_config,
+    const DataConfig& data_config,
     const nimbus::Job* job,
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
