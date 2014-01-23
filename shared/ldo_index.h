@@ -68,16 +68,16 @@ namespace nimbus {
 
     virtual LogicalDataObject* SpecificObject(logical_data_id_t id);
     virtual int AllObjects(CLdoVector* dest);
-    virtual int AllObjects(std::string variable,
+    virtual int AllObjects(const std::string& variable,
                            CLdoVector* dest);
-    virtual int IntersectingObjects(std::string variable,
-                                    GeometricRegion* region,
+    virtual int IntersectingObjects(const std::string& variable,
+                                    const GeometricRegion* region,
                                     CLdoVector* dest);
-    virtual int CoveredObjects(std::string variable,
-                               GeometricRegion* region,
+    virtual int CoveredObjects(const std::string& variable,
+                               const GeometricRegion* region,
                                CLdoVector* dest);
-    virtual int AdjacentObjects(std::string variable,
-                                GeometricRegion* region,
+    virtual int AdjacentObjects(const std::string& variable,
+                                const GeometricRegion* region,
                                 CLdoVector* dest);
 
   private:

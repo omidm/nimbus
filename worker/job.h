@@ -110,11 +110,11 @@ class Job {
 
     const LogicalDataObject* GetLogicalObject(logical_data_id_t id) const;
     int GetCoveredLogicalObjects(CLdoVector* result,
-         std::string& variable,
-         GeometricRegion* r);
+         const std::string& variable,
+         const GeometricRegion* r);
     int GetAdjacentLogicalObjects(CLdoVector* result,
-         std::string& variable,
-         GeometricRegion* r);
+         const std::string& variable,
+         const GeometricRegion* r);
 
     std::string name();
     ID<job_id_t> id();

@@ -156,7 +156,7 @@ int LdoIndex::AllObjects(CLdoVector* dest) {
   return count;
 }
 
-int LdoIndex::AllObjects(std::string variable,
+int LdoIndex::AllObjects(const std::string& variable,
                          CLdoVector* dest) {
   dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -174,8 +174,8 @@ int LdoIndex::AllObjects(std::string variable,
   return count;
 }
 
-int LdoIndex::IntersectingObjects(std::string variable,
-                                  GeometricRegion *region,
+int LdoIndex::IntersectingObjects(const std::string& variable,
+                                  const GeometricRegion* region,
                                   CLdoVector* dest) {
   dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -203,8 +203,8 @@ int LdoIndex::IntersectingObjects(std::string variable,
  * \param region
  * \return
 */
-int LdoIndex::CoveredObjects(std::string variable,
-                             GeometricRegion *region,
+int LdoIndex::CoveredObjects(const std::string& variable,
+                             const GeometricRegion* region,
                              CLdoVector* dest) {
   dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
@@ -232,8 +232,8 @@ int LdoIndex::CoveredObjects(std::string variable,
  * \param region
  * \return
 */
-int LdoIndex::AdjacentObjects(std::string variable,
-                              GeometricRegion *region,
+int LdoIndex::AdjacentObjects(const std::string& variable,
+                              const GeometricRegion* region,
                               CLdoVector* dest) {
   dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
