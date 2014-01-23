@@ -145,6 +145,7 @@ LogicalDataObject* LdoIndex::SpecificObject(logical_data_id_t id) {
 }
 
 int LdoIndex::AllObjects(CLdoVector* dest) {
+  dest->clear();
   int count = 0;
   LdoIdIndex::iterator it = exists_.begin();
   for (; it != exists_.end(); ++it) {
@@ -157,6 +158,7 @@ int LdoIndex::AllObjects(CLdoVector* dest) {
 
 int LdoIndex::AllObjects(std::string variable,
                          CLdoVector* dest) {
+  dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
     return 0;
   }
@@ -175,6 +177,7 @@ int LdoIndex::AllObjects(std::string variable,
 int LdoIndex::IntersectingObjects(std::string variable,
                                   GeometricRegion *region,
                                   CLdoVector* dest) {
+  dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
     return 0;
   }
@@ -203,6 +206,7 @@ int LdoIndex::IntersectingObjects(std::string variable,
 int LdoIndex::CoveredObjects(std::string variable,
                              GeometricRegion *region,
                              CLdoVector* dest) {
+  dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
     return 0;
   }
@@ -231,6 +235,7 @@ int LdoIndex::CoveredObjects(std::string variable,
 int LdoIndex::AdjacentObjects(std::string variable,
                               GeometricRegion *region,
                               CLdoVector* dest) {
+  dest->clear();
   if (index_.find(variable) == index_.end()) {  // No such variable
     return 0;
   }
