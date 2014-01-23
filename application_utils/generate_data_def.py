@@ -49,8 +49,8 @@ def ParseLine(line, num):
     # Parsing: begin parsing
     args = re.split(':', line)
     if len(args) != 3:
-        print "Cannot parse line " + str(num) + \
-                " because it contains only " + str(len(args)-1) + " ':'"
+        print "\nCannot parse line " + str(num) + \
+                " because it contains only " + str(len(args)-1) + " ':'\n"
         sys.exit(2)
     # Parsing: C++ class
     cpp_class = args[0]
@@ -64,21 +64,68 @@ def ParseLine(line, num):
         if (len(temp) > 0):
             sizes_str.append(temp)
     params = ValidateSizeTuples(sizes_str, num)
-    print params
     if len(params) == 0:
+        print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
     return cpp_class, nimbus_types, params
 
-#TODO: complete this
-def GetPartitionIds(partn_id, params):
-    return 0
+class Partition():
+    def __init__(self, x, dx):
+        self.x = x
+        self.dx = dx
+    def toString(self):
+        return str(self.x) + " , " + str(self.dx)
 
+def GetPartitionIds(partn_id, params, num):
+    domain = params[0]
+    pnum   = params[1]
+    ghostw = params[2]
+    ps     = [0, 0, 0]
+    psl    = [0, 0, 0]
+    psize  = {0:[], 1:[], 2:[]}
+    pstart = {0:[], 1:[], 2:[]}
+    for dim in range(0, 3):
+        psl[dim] = domain[dim]/pnum[dim]
+        if domain[dim]%pnum[dim] == 0:
+            ps[dim] = psl[dim]
+        else:
+            print "Warning: Partitions for dimension " + str(dim) + \
+                    " at line " + str(num) + " are not of equal size."
+            ps[dim] = psl[dim]+1
+    pnum   = map(lambda x : x+2, pnum)
+    for dim in range(0, 3):
+        pstart[dim].append(1-ghostw[dim])
+        psize[dim].append(ghostw[dim])
+        for i in range(1, pnum[dim]-2):
+            pstart[dim].append(pstart[dim][i-1] + psize[dim][i-1])
+            psize[dim].append(ps[dim])
+        l = pnum[dim]-2
+        pstart[dim].append(pstart[dim][l-1] + psize[dim][l-1])
+        psize[dim].append(psl[dim])
+        l = l + 1
+        pstart[dim].append(pstart[dim][l-1] + psize[dim][l-1])
+        psize[dim].append(ghostw[dim])
+    pidset = set()
+    for i in range(0, pnum[0]):
+        for j in range(0, pnum[1]):
+            for k in range(0, pnum[2]):
+                x    = [pstart[0][i], pstart[1][j], pstart[2][k]]
+                dx   = [psize[0][i],  psize[1][j],  psize[2][k]]
+                p    = Partition(x, dx)
+                pstr = p.toString()
+                if pstr in partn_id:
+                    pidset.add(partn_id[pstr])
+                else:
+                    l = len(partn_id)
+                    partn_pid[pstr] = l
+                    pidset.add(l)
+    return pidset
 
 ## Begin parsing and building information for code generation ##
 
 if not os.path.isfile:
-    print "Could not find file " + data_config_file
-    PrintErrorAndExit()
+    print "Could not find file " + data_config_file + "\n"
+    sys.exit(1)
 
 print "\nReading data configuration file " + data_config_file + " ...\n"
 data_config = open(data_config_file, 'r')
@@ -95,7 +142,7 @@ for num, line in enumerate(data_config):
     cpp_class, nimbus_types, params = ParseLine(line, num)
     print cpp_class + " -- " + str(nimbus_types) + " -- " + str(params)
     # Data for code generation:
-    partns = GetPartitionIds(partn_pid, params)
+    partns = GetPartitionIds(partn_pid, params, num)
     for nt in nimbus_types:
         if nt in ntypes_pid:
             print "Redefinition of " + nt + " at line " + str(num)
@@ -105,6 +152,9 @@ for num, line in enumerate(data_config):
 
 
 # TODO: complete beyond this
+print partn_pid
+print ntypes_pid
+
 
 ## Code generation helper functions ##
 
