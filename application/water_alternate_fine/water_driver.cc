@@ -52,126 +52,186 @@ Initialize(const nimbus::Job *job,
            const nimbus::DataArray &da,
            const bool set_boundary_conditions)
 {
-    DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
+  DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
-    output_number=current_frame;
-    // Commented by quhang:
-    // If we want to break substeps, the time should be passed by Nimbus.
-    if (init_phase) {
-      time=example.Time_At_Frame(current_frame);
-    }
+  output_number=current_frame;
+  // Commented by quhang:
+  // If we want to break substeps, the time should be passed by Nimbus.
+  if (init_phase) {
+    time=example.Time_At_Frame(current_frame);
+  }
 
-    for(int i=1;i<=TV::dimension;i++)
-    {
-        example.domain_boundary(i)(1)=true;
-        example.domain_boundary(i)(2)=true;
-    }
+  for(int i=1;i<=TV::dimension;i++)
+  {
+    example.domain_boundary(i)(1)=true;
+    example.domain_boundary(i)(2)=true;
+  }
 
-    example.domain_boundary(2)(2)=false;
-    example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
-    VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
-    example.phi_boundary=&example.phi_boundary_water;
-    example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
-    example.boundary=&example.boundary_scalar;
-    example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
+  example.domain_boundary(2)(2)=false;
+  example.phi_boundary_water.Set_Velocity_Pointer(example.face_velocities);
+  VECTOR<VECTOR<bool,2>,TV::dimension> domain_open_boundaries=VECTOR_UTILITIES::Complement(example.domain_boundary);
+  example.phi_boundary=&example.phi_boundary_water;
+  example.phi_boundary->Set_Constant_Extrapolation(domain_open_boundaries);
+  example.boundary=&example.boundary_scalar;
+  example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-    example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
-    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-    example.incompressible.Initialize_Grids(example.mac_grid);
-    example.projection.Initialize_Grid(example.mac_grid);
-    example.collision_bodies_affecting_fluid.Initialize_Grids();
-    example.face_velocities.Resize(example.mac_grid);
-    // Initialize the face_velocities_ghoas here, it may not be the best place
-    // when we get to water_multiple though. -omidm
-    example.face_velocities_ghost.Resize(example.incompressible.grid,
-                                         example.number_of_ghost_cells, false);
+  example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
+  example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
+  example.incompressible.Initialize_Grids(example.mac_grid);
+  example.projection.Initialize_Grid(example.mac_grid);
+  example.collision_bodies_affecting_fluid.Initialize_Grids();
+  example.face_velocities.Resize(example.mac_grid);
+  // Initialize the face_velocities_ghoas here, it may not be the best place
+  // when we get to water_multiple though. -omidm
+  example.face_velocities_ghost.Resize(example.incompressible.grid,
+                                       example.number_of_ghost_cells, false);
 
-    example.particle_levelset_evolution.Set_Time(time);
-    example.particle_levelset_evolution.Set_CFL_Number((T).9);
+  example.particle_levelset_evolution.Set_Time(time);
+  example.particle_levelset_evolution.Set_CFL_Number((T).9);
 
-    example.incompressible.Set_Custom_Advection(example.advection_scalar);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+  example.incompressible.Set_Custom_Advection(example.advection_scalar);
+  example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
 
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
-    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
+  example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
 
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
-    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
-    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
-    example.particle_levelset_evolution.Use_Particle_Levelset(true);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
-    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
-    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
+  example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
+  example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
+  example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
+  example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
+  example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
+  example.particle_levelset_evolution.Use_Particle_Levelset(true);
+  example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+  example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
+  example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
 
-    example.incompressible.Set_Custom_Boundary(*example.boundary);
-    example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
-    example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
-    example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
-    example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
-    example.incompressible.projection.elliptic_solver->pcg.Show_Results();
-    example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
+  example.incompressible.Set_Custom_Boundary(*example.boundary);
+  example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
+  example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
+  example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
+  example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
+  example.incompressible.projection.elliptic_solver->pcg.Show_Results();
+  example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
 
-    if (init_phase) {
-        example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
-        example.collision_bodies_affecting_fluid.Rasterize_Objects();
-        example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
-        example.Initialize_Phi();
-        example.Adjust_Phi_With_Sources(time);
-        example.particle_levelset_evolution.Make_Signed_Distance();
-    }
-    else {
-        // physbam init
-        example.Load_From_Nimbus(job, da, current_frame);
-        example.collision_bodies_affecting_fluid.Rasterize_Objects();
-        example.collision_bodies_affecting_fluid.
-            Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-    }
+  if (init_phase) {
+    example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.Initialize_Phi();
+    example.Adjust_Phi_With_Sources(time);
+    example.particle_levelset_evolution.Make_Signed_Distance();
+  }
+  else {
+    // physbam init
+    example.Load_From_Nimbus(job, da, current_frame);
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.
+        Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
+  }
 
-    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
-    example.particle_levelset_evolution.Set_Seed(2606);
-    if (init_phase) {
-        example.particle_levelset_evolution.Seed_Particles(time);
-        // Comment: seems that particle should be not updated if loaded from
-        // Nimbus.  -quhang
-        example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-    }
+  example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+  example.particle_levelset_evolution.Set_Seed(2606);
+  if (init_phase) {
+    example.particle_levelset_evolution.Seed_Particles(time);
+    // Comment: seems that particle should be not updated if loaded from
+    // Nimbus.  -quhang
+    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+  }
 
-    //add forces
-    example.incompressible.Set_Gravity();
-    example.incompressible.Set_Body_Force(true);
-    example.incompressible.projection.Use_Non_Zero_Divergence(false);
-    example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(true);
-    example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
-    example.incompressible.Use_Explicit_Part_Of_Implicit_Viscosity(false);
-    example.incompressible.Set_Maximum_Implicit_Viscosity_Iterations(40);
-    example.incompressible.Use_Variable_Vorticity_Confinement(false);
-    example.incompressible.Set_Surface_Tension(0);
-    example.incompressible.Set_Variable_Surface_Tension(false);
-    example.incompressible.Set_Viscosity(0);
-    example.incompressible.Set_Variable_Viscosity(false);
-    example.incompressible.projection.Set_Density(1e3);
+  //add forces
+  example.incompressible.Set_Gravity();
+  example.incompressible.Set_Body_Force(true);
+  example.incompressible.projection.Use_Non_Zero_Divergence(false);
+  example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(true);
+  example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
+  example.incompressible.Use_Explicit_Part_Of_Implicit_Viscosity(false);
+  example.incompressible.Set_Maximum_Implicit_Viscosity_Iterations(40);
+  example.incompressible.Use_Variable_Vorticity_Confinement(false);
+  example.incompressible.Set_Surface_Tension(0);
+  example.incompressible.Set_Variable_Surface_Tension(false);
+  example.incompressible.Set_Viscosity(0);
+  example.incompressible.Set_Variable_Viscosity(false);
+  example.incompressible.projection.Set_Density(1e3);
 
-    if (set_boundary_conditions) {
-        ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
-        example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
-        example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
-        example.Set_Boundary_Conditions(time); // get so CFL is correct
-    }
+  if (set_boundary_conditions) {
+    ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
+    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
+    example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
+    example.Set_Boundary_Conditions(time); // get so CFL is correct
+  }
 
-    if (init_phase) {
-        example.Save_To_Nimbus(job, da, current_frame);
-        Write_Output_Files(example.first_frame);
-    }
-    // Comments by quhang:
-    // The collision body should not matter, and the last two parameters should
-    // not matter. So just add them in the initialization part.
-    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
-    // Don't know why this statement should be here.
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+  if (init_phase) {
+    example.Save_To_Nimbus(job, da, current_frame);
+    Write_Output_Files(example.first_frame);
+  }
+  // Comments by quhang:
+  // The collision body should not matter, and the last two parameters should
+  // not matter. So just add them in the initialization part.
+  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+  // Don't know why this statement should be here.
+  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+InitializeParticleLevelsetEvolutionHelper(
+    const application::DataConfig& data_config,
+    const GRID<TV>& grid_input,
+    PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
+    particle_levelset_evolution) {
+  typedef application::DataConfig DataConfig;
+  PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
+      &particle_levelset_evolution->particle_levelset;
+  assert(grid_input.Is_MAC_Grid());
+  particle_levelset_evolution->grid = grid_input;
+  // Resizes phi here.
+  if (data_config.GetFlag(DataConfig::LEVELSET)) {
+    particle_levelset_evolution->phi.Resize(
+        grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
+  }
+  // Resizes particles.
+  if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+    particle_levelset->positive_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+  if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+    particle_levelset->negative_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+  particle_levelset->use_removed_positive_particles=true;
+  particle_levelset->use_removed_negative_particles=true;
+  // Resizes removed particles.
+  if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+    particle_levelset->removed_positive_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+  if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+    particle_levelset->removed_negative_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+
+  particle_levelset->Set_Minimum_Particle_Radius(
+      (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+  particle_levelset->Set_Maximum_Particle_Radius(
+      (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
+  if (particle_levelset->half_band_width &&
+      particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+   particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+                   ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+  } else {
+    particle_levelset->Set_Band_Width();
+  }
+  particle_levelset->levelset.Initialize_Levelset_Grid_Values();
+  if (particle_levelset_evolution->
+      levelset_advection.semi_lagrangian_collidable) {
+    particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
+  }
+  return true;
 }
 //#####################################################################
 // Run
@@ -223,7 +283,13 @@ CalculateFrameImpl(const nimbus::Job *job,
   //Advect Phi 3.6% (Parallelized)
   LOG::Time("Advect Phi");
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
-  example.particle_levelset_evolution.Advance_Levelset(dt);
+  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
+  example.particle_levelset_evolution.levelset_advection.Euler_Step(
+      example.face_velocities,
+      dt, time,
+      example.particle_levelset_evolution.particle_levelset.
+      number_of_ghost_cells);
+  example.particle_levelset_evolution.time += dt;
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   //Advect Particles 12.1% (Parallelized)
@@ -340,7 +406,14 @@ SuperJob1Impl (const nimbus::Job *job,
   //Advect Phi 3.6% (Parallelized)
   LOG::Time("Advect Phi");
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
-  example.particle_levelset_evolution.Advance_Levelset(dt);
+  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
+  example.particle_levelset_evolution.levelset_advection.Euler_Step(
+      example.face_velocities,
+      dt, time,
+      example.particle_levelset_evolution.particle_levelset.
+      number_of_ghost_cells);
+  example.particle_levelset_evolution.time += dt;
+  example.phi_boundary_water.Use_Extrapolation_Mode(true);
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   //Advect Particles 12.1% (Parallelized)
@@ -465,7 +538,12 @@ AdvectPhiImpl(const nimbus::Job *job,
   //Advect Phi 3.6% (Parallelized)
   LOG::Time("Advect Phi");
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
-  example.particle_levelset_evolution.Advance_Levelset(dt);
+  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
+  example.particle_levelset_evolution.levelset_advection.Euler_Step(
+      example.face_velocities,
+      dt, time,
+      example.particle_levelset_evolution.particle_levelset.
+      number_of_ghost_cells);
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   // Save State.

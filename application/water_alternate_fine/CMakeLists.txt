@@ -74,6 +74,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_projection.h
     ${PROJECT_SOURCE_DIR}/job_extrapolation.h
     ${PROJECT_SOURCE_DIR}/job_write_frame.h
+    ${PROJECT_SOURCE_DIR}/options.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h
     ${PROJECT_SOURCE_DIR}/water_app.h
