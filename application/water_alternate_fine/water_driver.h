@@ -11,6 +11,7 @@
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 #include <PhysBAM_Geometry/Grids_Uniform_Level_Sets/LEVELSET_POLICY_UNIFORM.h>
 #include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/options.h"
 #include "shared/nimbus.h"
 
 namespace PhysBAM{
@@ -41,10 +42,16 @@ public:
 
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
-    
+
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da,
                     bool set_boundary_conditions = true);
+
+    bool InitializeParticleLevelsetEvolutionHelper(
+        const application::DataConfig& data_config,
+        const GRID<TV>& grid_input,
+        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
+        particle_levelset_evolution);
 
     void CalculateFrameImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,

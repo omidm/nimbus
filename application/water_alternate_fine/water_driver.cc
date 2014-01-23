@@ -173,6 +173,66 @@ Initialize(const nimbus::Job *job,
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
 }
+
+template<class TV> bool WATER_DRIVER<TV>::
+InitializeParticleLevelsetEvolutionHelper(
+    const application::DataConfig& data_config,
+    const GRID<TV>& grid_input,
+    PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
+    particle_levelset_evolution) {
+  typedef application::DataConfig DataConfig;
+  PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
+      &particle_levelset_evolution->particle_levelset;
+  assert(grid_input.Is_MAC_Grid());
+  particle_levelset_evolution->grid = grid_input;
+  // Resizes phi here.
+  if (data_config.GetFlag(DataConfig::LEVELSET)) {
+    particle_levelset_evolution->phi.Resize(
+        grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
+  }
+  // Resizes particles.
+  if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+    particle_levelset->positive_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+  if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+    particle_levelset->negative_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+  particle_levelset->use_removed_positive_particles=true;
+  particle_levelset->use_removed_negative_particles=true;
+  // Resizes removed particles.
+  if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+    particle_levelset->removed_positive_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+  if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+    particle_levelset->removed_negative_particles.Resize(
+        particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+  }
+
+  particle_levelset->Set_Minimum_Particle_Radius(
+      (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+  particle_levelset->Set_Maximum_Particle_Radius(
+      (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
+  if (particle_levelset->half_band_width &&
+      particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+   particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+                   ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+  } else {
+    particle_levelset->Set_Band_Width();
+  }
+  particle_levelset->levelset.Initialize_Levelset_Grid_Values();
+  if (particle_levelset_evolution->
+      levelset_advection.semi_lagrangian_collidable) {
+    particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
+  }
+  return true;
+}
 //#####################################################################
 // Run
 //#####################################################################
