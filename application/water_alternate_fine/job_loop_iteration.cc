@@ -96,9 +96,11 @@ namespace application {
     // check whether the frame is done or not
     bool done = false;
     T target_time = example->Time_At_Frame(driver->current_frame+1);
-    T dt = example->cfl *
-      example->incompressible.CFL(example->face_velocities);
-    T temp_dt = example->particle_levelset_evolution.CFL(false,false);
+    T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
+    T temp_dt =
+        example->particle_levelset_evolution.cfl_number
+        * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
+            example->face_velocities);
     if (temp_dt < dt) {
       dt = temp_dt;
     }
