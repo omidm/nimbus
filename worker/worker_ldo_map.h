@@ -46,8 +46,10 @@
 #include <vector>
 #include <utility>
 #include "shared/nimbus_types.h"
+#include "shared/geometric_region.h"
 #include "shared/logical_data_object.h"
 #include "shared/ldo_index.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 
@@ -56,10 +58,24 @@ class WorkerLdoMap {
     WorkerLdoMap();
     virtual ~WorkerLdoMap();
 
+    /* Managing geometric partitions. */
+    bool AddPartition(partition_id_t id, GeometricRegion region);
+    bool RemovePartition(partition_id_t id);
+    bool HasPartition(partition_id_t id);
+    GeometricRegion FindPartition(partition_id_t id);
+
     /* Managing logical objects. */
     bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
                           GeometricRegion region);
+    bool AddLogicalObject(logical_data_id_t id,
+                          std::string variable,
+                          partition_id_t partition);
+    bool AddLogicalObject(logical_data_id_t id,
+                          std::string variable,
+                          GeometricRegion region,
+                          partition_id_t partition);
+
     bool RemoveLogicalObject(logical_data_id_t id);
 
     const LogicalDataObject* FindLogicalObject(logical_data_id_t id);
@@ -77,6 +93,7 @@ class WorkerLdoMap {
 
   private:
     LdoIndex ldo_index_;
+    std::map<partition_id_t, GeometricRegion> partition_map_;
   };
 }  // namespace nimbus
 

@@ -67,6 +67,66 @@ nimbus::WorkerLdoMap::~WorkerLdoMap() {
 
 
 /**
+ * \fn bool nimbus::WorkerLdoMap::AddPartition(partition_id_t id,
+                                              GeometricRegion region)
+ * \brief Brief description.
+ * \param id
+ * \param region
+ * \return
+*/
+bool nimbus::WorkerLdoMap::AddPartition(partition_id_t id,
+                                       GeometricRegion r) {
+  dbg(DBG_DATA_OBJECTS, "Adding %llu partition.\n", id);
+  if (HasPartition(id)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing partition %llu.\n", id); // NOLINT
+    return false;
+  } else {
+    partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
+    return true;
+  }
+}
+
+/**
+ * \fn bool nimbus::WorkerLdoMap::RemovePartition(partition_id_t id)
+ *
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+bool nimbus::WorkerLdoMap::RemovePartition(partition_id_t id) {
+  dbg(DBG_DATA_OBJECTS, "Removing partition %llu.\n", id);
+  if (!HasPartition(id)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried removing non-existent partition %llu.\n", id); // NOLINT
+    return false;
+  } else {
+    partition_map_.erase(id);
+    return true;
+  }
+}
+
+/**
+ * \fn bool nimbus::WorkerLdoMap::HasPartition(partition_id_t id)
+ *
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+bool nimbus::WorkerLdoMap::HasPartition(partition_id_t id) {
+  return partition_map_.find(id) != partition_map_.end();
+}
+
+/**
+ * \fn GeometricRegion nimbus::WorkerLdoMap::FindPartition(partition_id_t id)
+ *
+ * \brief Brief description.
+ * \param id
+ * \return
+*/
+GeometricRegion nimbus::WorkerLdoMap::FindPartition(partition_id_t id) {
+  return partition_map_[id];
+}
+
+/**
  * \fn bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                        std::string variable,
                                        GeometricRegion region)
@@ -80,7 +140,12 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                             std::string variable,
                                             GeometricRegion region) {
   if (ldo_index_.HasObject(id)) {
-    return false;
+    LogicalDataObject* ldo = ldo_index_.SpecificObject(id);
+    if (ldo->variable() == variable && region.IsEqual(ldo->region())) {
+      return true;
+    } else {
+      return false;
+    }
   } else {
     GeometricRegion* r = new GeometricRegion(region);
     LogicalDataObject* obj = new LogicalDataObject(id, variable, r);
@@ -88,6 +153,60 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
   }
 }
 
+/**
+ * \fn bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
+                                      std::string variable,
+                                      GeometricRegion region,
+                                      partition_id_t partition)
+ * \brief Brief description.
+ * \param id
+ * \param variable
+ * \param region
+ * \param partition
+ * \return
+*/
+bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
+                                           std::string variable,
+                                           GeometricRegion r,
+                                           partition_id_t partition) {
+  dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
+  GeometricRegion r_p = FindPartition(partition);
+  if (!r_p.IsEqual(&r)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: region and partition id do not match.\n", id); // NOLINT
+    return false;
+  }
+  if (ldo_index_.HasObject(id)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing object %llu.\n", id); // NOLINT
+    return false;
+  } else {
+    GeometricRegion* region = new GeometricRegion(r);
+    LogicalDataObject* ldo = new LogicalDataObject(id, variable, region, partition);
+    return ldo_index_.AddObject(ldo);
+  }
+}
+
+/**
+ * \fn bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
+                                      std::string variable,
+                                      partition_id_t partition)
+ * \brief Brief description.
+ * \param id
+ * \param variable
+ * \param partition
+ * \return
+*/
+bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
+                                           std::string variable,
+                                           partition_id_t partition) {
+  dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
+  if (!HasPartition(partition)) {
+    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding object %llu with invalid partition %llu.\n", id, partition); // NOLINT
+    return false;
+  } else {
+    GeometricRegion r = FindPartition(partition);
+    return AddLogicalObject(id, variable, r, partition);
+  }
+}
 
 /**
  * \fn bool nimbus::WorkerLdoMap::RemoveLogicalObject(logical_data_id_t id)
