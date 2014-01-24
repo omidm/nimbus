@@ -142,7 +142,8 @@ if not os.path.isfile:
     print "Could not find file " + data_config_file + "\n"
     sys.exit(1)
 
-print "\nReading data configuration file " + data_config_file + " ...\n"
+print "Reading data configuration file " + data_config_file + " ..."
+
 data_config = open(data_config_file, 'r')
 ntypes_pid  = {} # mapping between nimbus type and partition id set
 partn_pid   = {} # mapping between partition and partition id
@@ -155,7 +156,6 @@ for num, line in enumerate(data_config):
     if line[0] == "#":
         continue
     cpp_class, nimbus_types, params = ParseLine(line, num)
-    print cpp_class + " -- " + str(nimbus_types) + " -- " + str(params)
     # Data for code generation:
     partns = GetPartitionIds(partn_pid, params, num)
     for nt in nimbus_types:
@@ -170,18 +170,16 @@ for d in ntypes_pid:
     data_num = data_num + len(ntypes_pid[d])
 part_num = len(partn_pid)
 
-# TODO: complete beyond this
-print partn_pid
-print ntypes_pid
 
-
-## Code generation helper functions ##
+## Code generation helper functions and variables ##
 
 logical_id_vector_str = "std::vector<nimbus::logical_data_id_t>"
 partition_id_set_str      = "nimbus::ID<partition_id_t>"
 
 
 ## Begin code generation ##
+
+print "Generating code ..."
 
 out_h       = open(out_h_file, 'w')
 out_cc      = open(out_cc_file, 'w')
