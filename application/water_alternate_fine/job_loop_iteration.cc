@@ -91,14 +91,19 @@ namespace application {
     // Initialize the state of example and driver.
     PhysBAM::WATER_EXAMPLE<TV>* example;
     PhysBAM::WATER_DRIVER<TV>* driver;
-    InitializeExampleAndDriver(init_config, this, da, example, driver);
+    DataConfig data_config;
+    data_config.SetAll();
+    InitializeExampleAndDriver(init_config, data_config,
+                               this, da, example, driver);
 
     // check whether the frame is done or not
     bool done = false;
     T target_time = example->Time_At_Frame(driver->current_frame+1);
-    T dt = example->cfl *
-      example->incompressible.CFL(example->face_velocities);
-    T temp_dt = example->particle_levelset_evolution.CFL(false,false);
+    T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
+    T temp_dt =
+        example->particle_levelset_evolution.cfl_number
+        * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
+            example->face_velocities);
     if (temp_dt < dt) {
       dt = temp_dt;
     }
@@ -155,11 +160,7 @@ namespace application {
       nimbus::Parameter s3_params;
       nimbus::Parameter iter_params;
 
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+      LoadReadWriteSets(this, &read, &write);
 
       std::string s1_str;
       SerializeParameter(frame, time, dt, &s1_str);
@@ -225,11 +226,7 @@ namespace application {
       nimbus::Parameter write_params;
       nimbus::Parameter frame_params;
 
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+      LoadReadWriteSets(this, &read, &write);
 
       std::string s1_str;
       SerializeParameter(frame, time, dt, &s1_str);
@@ -318,11 +315,7 @@ namespace application {
       nimbus::Parameter s3_params;
       nimbus::Parameter iter_params;
 
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+      LoadReadWriteSets(this, &read, &write);
 
       std::string s11_str;
       SerializeParameter(frame, time, dt, &s11_str);
@@ -458,11 +451,7 @@ namespace application {
       nimbus::Parameter write_params;
       nimbus::Parameter frame_params;
 
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+      LoadReadWriteSets(this, &read, &write);
 
       std::string s11_str;
       SerializeParameter(frame, time, dt, &s11_str);
@@ -614,11 +603,7 @@ namespace application {
       nimbus::Parameter cal_params;
       nimbus::Parameter iter_params;
 
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+      LoadReadWriteSets(this, &read, &write);
 
       std::string cal_str;
       SerializeParameter(frame, time, dt, &cal_str);
@@ -656,11 +641,7 @@ namespace application {
       nimbus::Parameter write_params;
       nimbus::Parameter frame_params;
 
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+      LoadReadWriteSets(this, &read, &write);
 
       std::string cal_str;
       SerializeParameter(frame, time, dt, &cal_str);
@@ -711,11 +692,7 @@ namespace application {
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
-    nimbus::DataArray::const_iterator it = da.begin();
-    for (; it != da.end(); ++it) {
-      read.insert((*it)->logical_id());
-      write.insert((*it)->logical_id());
-    }
+    LoadReadWriteSets(this, &read, &write);
 
     nimbus::Parameter s11_params;
     std::string s11_str;
@@ -895,11 +872,8 @@ namespace application {
       //iteration  job, for next iteration.
       read.clear();
       write.clear();
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+
+      LoadReadWriteSets(this, &read, &write);
 
       {
         int index = 12;
@@ -921,11 +895,8 @@ namespace application {
       // spawn loop frame job for next frame computation.
       read.clear();
       write.clear();
-      nimbus::DataArray::const_iterator it = da.begin();
-      for (; it != da.end(); ++it) {
-        read.insert((*it)->logical_id());
-        write.insert((*it)->logical_id());
-      }
+
+      LoadReadWriteSets(this, &read, &write);
 
       std::vector<nimbus::job_id_t> loop_job_id;
       GetNewJobID(&loop_job_id, 1);

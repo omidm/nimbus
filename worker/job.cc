@@ -168,8 +168,8 @@ const LogicalDataObject* Job::GetLogicalObject(logical_data_id_t id) const {
 }
 
 int Job::GetCoveredLogicalObjects(CLdoVector* result,
-    std::string& variable,
-    GeometricRegion* r) {
+    const std::string& variable,
+    const GeometricRegion* r) {
   if (app_is_set_) {
       return application_->GetCoveredLogicalObjects(result, variable, r);
   } else {
@@ -179,8 +179,8 @@ int Job::GetCoveredLogicalObjects(CLdoVector* result,
 }
 
 int Job::GetAdjacentLogicalObjects(CLdoVector* result,
-    std::string& variable,
-    GeometricRegion* r) {
+    const std::string& variable,
+    const GeometricRegion* r) {
   if (app_is_set_) {
       return application_->GetAdjacentLogicalObjects(result, variable, r);
   } else {

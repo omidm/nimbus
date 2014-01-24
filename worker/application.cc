@@ -157,8 +157,8 @@ const LogicalDataObject* Application::GetLogicalObject(logical_data_id_t id) {
 }
 
 int Application::GetCoveredLogicalObjects(CLdoVector* result,
-     std::string& variable,
-     GeometricRegion* r) {
+     const std::string& variable,
+     const GeometricRegion* r) {
   if (ldo_map_ == NULL) {
     return false;
   } else {
@@ -167,8 +167,8 @@ int Application::GetCoveredLogicalObjects(CLdoVector* result,
 }
 
 int Application::GetAdjacentLogicalObjects(CLdoVector* result,
-                                           std::string& variable,
-                                           GeometricRegion* r) {
+    const std::string& variable,
+    const GeometricRegion* r) {
   if (ldo_map_ == NULL) {
     return false;
   } else {
@@ -177,8 +177,8 @@ int Application::GetAdjacentLogicalObjects(CLdoVector* result,
 }
 
 int Application::GetIntersectingLogicalObjects(CLdoVector* result,
-                                               std::string& variable,
-                                               GeometricRegion* r) {
+    const std::string& variable,
+    const GeometricRegion* r) {
   if (ldo_map_ == NULL) {
     return false;
   } else {

@@ -76,7 +76,11 @@ void JobExtrapolation::Execute(nimbus::Parameter params,
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
 
-  InitializeExampleAndDriver(init_config, this, da, example, driver);
+  DataConfig data_config;
+  data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::LEVELSET);
+  InitializeExampleAndDriver(init_config, data_config,
+                             this, da, example, driver);
 
   dbg(APP_LOG, "Job EXTRAPOLATION starts (dt=%f).\n", dt);
 

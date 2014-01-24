@@ -36,11 +36,11 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "shared/nimbus.h"
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
+#include "shared/nimbus.h"
 
 #include "application/water_alternate_fine/physbam_utils.h"
 
@@ -48,6 +48,7 @@ namespace application {
 
 bool InitializeExampleAndDriver(
     const InitConfig& init_config,
+    const DataConfig& data_config,
     const nimbus::Job* job,
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
@@ -57,6 +58,7 @@ bool InitializeExampleAndDriver(
       init_config.grid_size,
       PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
   PhysBAM::WaterSources::Add_Source(example);
+  example->data_config.Set(data_config);
   driver= new PhysBAM::WATER_DRIVER<TV>(*example);
   driver->init_phase = init_config.init_phase;
   driver->current_frame = init_config.frame;
@@ -73,79 +75,5 @@ void DestroyExampleAndDriver(
   delete driver;
   driver = NULL;
 }
-
-template<class TV>
-bool InitializeParticleLevelsetEvolutionHelper(
-    const DataConfig& data_config,
-    const PhysBAM::GRID<TV>& grid_input,
-    PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >*
-    particle_levelset_evolution) {
-  typedef float T;
-  PhysBAM::PARTICLE_LEVELSET_UNIFORM<PhysBAM::GRID<TV> >* particle_levelset =
-      &particle_levelset_evolution->particle_levelset;
-  assert(grid_input.Is_MAC_Grid());
-  particle_levelset_evolution->grid = grid_input;
-  // Resizes phi here.
-  if (data_config.GetFlag(DataConfig::LEVELSET)) {
-    particle_levelset_evolution->phi.Resize(
-        grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
-  }
-  // Resizes particles.
-  if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-    particle_levelset->positive_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
-  }
-  if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-    particle_levelset->negative_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
-  }
-  particle_levelset->use_removed_positive_particles=true;
-  particle_levelset->use_removed_negative_particles=true;
-  // Resizes removed particles.
-  if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-    particle_levelset->removed_positive_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
-  }
-  if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-    particle_levelset->removed_negative_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-            particle_levelset->number_of_ghost_cells));
-  }
-
-  particle_levelset->Set_Minimum_Particle_Radius(
-      (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
-  particle_levelset->Set_Maximum_Particle_Radius(
-      (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
-  if (particle_levelset->half_band_width &&
-      particle_levelset->levelset.grid.Minimum_Edge_Length()) {
-   particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
-                   ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
-  } else {
-    particle_levelset->Set_Band_Width();
-  }
-  particle_levelset->levelset.Initialize_Levelset_Grid_Values();
-  if (particle_levelset_evolution->
-      levelset_advection.semi_lagrangian_collidable) {
-    particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
-  }
-  return true;
-}
-
-template
-bool InitializeParticleLevelsetEvolutionHelper<PhysBAM::VECTOR<float,2> >(
-    const DataConfig& data_config,
-    const PhysBAM::GRID<PhysBAM::VECTOR<float,2> >& grid_input,
-    PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM
-    <PhysBAM::GRID<PhysBAM::VECTOR<float,2> > >* particle_levelset_evolution);
-
-template
-bool InitializeParticleLevelsetEvolutionHelper<PhysBAM::VECTOR<float,3> >(
-    const DataConfig& data_config,
-    const PhysBAM::GRID<PhysBAM::VECTOR<float,3> >& grid_input,
-    PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM
-    <PhysBAM::GRID<PhysBAM::VECTOR<float,3> > >* particle_levelset_evolution);
 
 }  // namespace application

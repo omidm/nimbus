@@ -77,7 +77,10 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     PhysBAM::WATER_DRIVER<TV> *driver;
 
     init_config.set_boundary_condition = false;
-    InitializeExampleAndDriver(init_config, this, da, example, driver);
+    DataConfig data_config;
+    data_config.SetAll();
+    InitializeExampleAndDriver(init_config, data_config,
+                               this, da, example, driver);
 
     driver->DeleteParticlesImpl(this, da, dt);
 

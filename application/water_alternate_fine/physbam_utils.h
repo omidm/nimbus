@@ -47,35 +47,22 @@
 #define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/physbam_include.h"
-#include "application/water_alternate_fine/water_driver.h"
-#include "application/water_alternate_fine/water_example.h"
+#include "application/water_alternate_fine/options.h"
 #include "shared/nimbus.h"
 
+namespace PhysBAM {
+template<typename TV> class WATER_DRIVER;
+template<typename TV> class WATER_EXAMPLE;
+}  // namespace PhysBAM
+
 namespace application {
-
-// Data structure to specify how to initialize WATER_EXAMPLE and WATER_DRIVER.
-struct InitConfig {
-  int frame;
-  T time;
-  bool init_phase;
-  bool set_boundary_condition;
-  TV_INT grid_size;
-
-  InitConfig() {
-    frame = 0;
-    time = 0;
-    init_phase = false;
-    set_boundary_condition = true;
-    grid_size = TV_INT::All_Ones_Vector() * kScale;
-  }
-};
 
 // Initialzes WATER_EXAMPLE and WATER_DRIVER with the given "init_config"
 // and the simulation variables in data array.
 // Returns false if it fails.
 bool InitializeExampleAndDriver(
     const InitConfig& init_config,
+    const DataConfig& data_config,
     const nimbus::Job* job,
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
@@ -86,54 +73,6 @@ void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver);
 
-// Data structure to describe which variables should be initialized in
-// initialization stage. Might be moved to another file later. Not completed
-// now.
-struct DataConfig {
-  enum DataType{
-    VELOCITY = 0,
-    LEVELSET,
-    POSITIVE_PARTICLE,
-    NEGATIVE_PARTICLE,
-    REMOVED_POSITIVE_PARTICLE,
-    REMOVED_NEGATIVE_PARTICLE,
-    NUM_VARIABLE
-  };
-  bool _flag[NUM_VARIABLE];
-  DataConfig() {
-    SetHelper(false);
-  }
-  void Clear() {
-    SetHelper(false);
-  }
-  void SetAll() {
-    SetHelper(true);
-  }
-  void SetHelper(bool value) {
-    for (int i = 0; i < NUM_VARIABLE; ++i)
-      _flag[i] = value;
-  }
-  void SetFlag(const DataType data_type) {
-    assert(data_type != NUM_VARIABLE);
-    _flag[(int)data_type] = true;
-  }
-  void UnsetFlag(const DataType data_type) {
-    assert(data_type != NUM_VARIABLE);
-    _flag[(int)data_type] = false;
-  }
-  bool GetFlag(const DataType data_type) const {
-    assert(data_type != NUM_VARIABLE);
-    return _flag[(int)data_type];
-  }
-};
-
-// Not finished. Option not added.
-template<class TV>
-bool InitializeParticleLevelsetEvolutionHelper(
-    const DataConfig& data_config,
-    const PhysBAM::GRID<TV>& grid_input,
-    PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >*
-    particle_levelset_evolution);
 }  // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_

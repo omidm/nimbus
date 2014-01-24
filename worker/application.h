@@ -111,14 +111,14 @@ class Application {
 
   const LogicalDataObject* GetLogicalObject(logical_data_id_t id);
   int GetCoveredLogicalObjects(CLdoVector* result,
-                               std::string& variable,
-                               GeometricRegion* r);
+                               const std::string& variable,
+                               const GeometricRegion* r);
   int GetAdjacentLogicalObjects(CLdoVector* result,
-                                std::string& variable,
-                                GeometricRegion* r);
+                                const std::string& variable,
+                                const GeometricRegion* r);
   int GetIntersectingLogicalObjects(CLdoVector* result,
-                                    std::string& variable,
-                                    GeometricRegion* r);
+                                    const std::string& variable,
+                                    const GeometricRegion* r);
   void* app_data();
   void set_app_data(void* data);
 

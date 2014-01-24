@@ -66,7 +66,10 @@ namespace application {
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 
-        InitializeExampleAndDriver(init_config, this, da, example, driver);
+        DataConfig data_config;
+        data_config.SetAll();
+        InitializeExampleAndDriver(init_config, data_config,
+                                   this, da, example, driver);
 
         // Free resources.
         DestroyExampleAndDriver(example, driver);
@@ -78,12 +81,6 @@ namespace application {
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
         nimbus::IDSet<nimbus::job_id_t> before, after;
         nimbus::Parameter loop_params;
-
-        nimbus::DataArray::const_iterator it = da.begin();
-        for (; it != da.end(); ++it) {
-          read.insert((*it)->logical_id());
-          write.insert((*it)->logical_id());
-        }
 
         // TODO:  
 

@@ -88,10 +88,10 @@ namespace nimbus {
     int_dimension_t dz() const;
 
     /* Covers returns whether this region covers (encompasses) the argument. */
-    virtual bool Covers(GeometricRegion* region);
-    virtual bool Intersects(GeometricRegion* region);
-    virtual bool Adjacent(GeometricRegion* region);
-    virtual bool AdjacentOrIntersects(GeometricRegion* region);
+    virtual bool Covers(GeometricRegion* region) const;
+    virtual bool Intersects(GeometricRegion* region) const;
+    virtual bool Adjacent(GeometricRegion* region) const;
+    virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
 

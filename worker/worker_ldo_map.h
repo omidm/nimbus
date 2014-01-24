@@ -63,16 +63,16 @@ class WorkerLdoMap {
     bool RemoveLogicalObject(logical_data_id_t id);
 
     const LogicalDataObject* FindLogicalObject(logical_data_id_t id);
-    int FindLogicalObjects(std::string variable,
+    int FindLogicalObjects(const std::string& variable,
                            CLdoVector* dest);
-    int FindIntersectingLogicalObjects(std::string variable,
-                                       GeometricRegion* region,
+    int FindIntersectingLogicalObjects(const std::string& variable,
+                                       const GeometricRegion* region,
                                        CLdoVector* dest);
-    int FindCoveredLogicalObjects(std::string variable,
-                                  GeometricRegion* region,
+    int FindCoveredLogicalObjects(const std::string& variable,
+                                  const GeometricRegion* region,
                                   CLdoVector* dest);
-    int FindAdjacentLogicalObjects(std::string variable,
-                                   GeometricRegion* region,
+    int FindAdjacentLogicalObjects(const std::string& variable,
+                                   const GeometricRegion* region,
                                    CLdoVector* dest);
 
   private:

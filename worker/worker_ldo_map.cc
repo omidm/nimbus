@@ -126,7 +126,7 @@ const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(logical_data_i
  * \param dest
  * \return
 */
-int nimbus::WorkerLdoMap::FindLogicalObjects(std::string variable,
+int nimbus::WorkerLdoMap::FindLogicalObjects(const std::string& variable,
                                              CLdoVector *dest) {
   return ldo_index_.AllObjects(variable, dest);
 }
@@ -142,9 +142,10 @@ int nimbus::WorkerLdoMap::FindLogicalObjects(std::string variable,
  * \param dest
  * \return
 */
-int nimbus::WorkerLdoMap::FindIntersectingLogicalObjects(std::string variable,
-                                                     GeometricRegion *region,
-                                                     CLdoVector *dest) {
+int nimbus::WorkerLdoMap::FindIntersectingLogicalObjects(
+    const std::string& variable,
+    const GeometricRegion* region,
+    CLdoVector *dest) {
   return ldo_index_.IntersectingObjects(variable, region, dest);
 }
 
@@ -159,9 +160,10 @@ int nimbus::WorkerLdoMap::FindIntersectingLogicalObjects(std::string variable,
  * \param dest
  * \return
 */
-int nimbus::WorkerLdoMap::FindCoveredLogicalObjects(std::string variable,
-                                                GeometricRegion *region,
-                                                CLdoVector *dest) {
+int nimbus::WorkerLdoMap::FindCoveredLogicalObjects(
+    const std::string& variable,
+    const GeometricRegion* region,
+    CLdoVector *dest) {
   return ldo_index_.CoveredObjects(variable, region, dest);
 }
 
@@ -176,9 +178,10 @@ int nimbus::WorkerLdoMap::FindCoveredLogicalObjects(std::string variable,
  * \param dest
  * \return
 */
-int nimbus::WorkerLdoMap::FindAdjacentLogicalObjects(std::string variable,
-                                                     GeometricRegion *region,
-                                                     CLdoVector *dest) {
+int nimbus::WorkerLdoMap::FindAdjacentLogicalObjects(
+    const std::string& variable,
+    const GeometricRegion* region,
+    CLdoVector *dest) {
   return ldo_index_.AdjacentObjects(variable, region, dest);
 }
 

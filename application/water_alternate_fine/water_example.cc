@@ -206,14 +206,20 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
-    if (application::GetTranslatorData(job, fvstring, da, &pdv))
-        translator.WriteFaceArray(&application::kDomainFaceVel, &pdv, &face_velocities);
+    if (application::GetTranslatorData(job, fvstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::VELOCITY)) {
+      translator.WriteFaceArray(
+          &application::kDomainFaceVel, &pdv, &face_velocities);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // mac velocities ghost
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-    if (application::GetTranslatorData(job, fvgstring, da, &pdv))
-        translator.WriteFaceArray(&application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
+    if (application::GetTranslatorData(job, fvgstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+      translator.WriteFaceArray(
+          &application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // pressure
@@ -229,46 +235,47 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // levelset
     const std::string lsstring = std::string(APP_PHI);
-    if (application::GetTranslatorData(job, lsstring, da, &pdv))
-        translator.WriteScalarArray(&application::kDomainPhi,
-                                    &pdv,
-                                    &particle_levelset.levelset.phi);
+    if (application::GetTranslatorData(job, lsstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::LEVELSET)) {
+      translator.WriteScalarArray(
+          &application::kDomainPhi, &pdv, &particle_levelset.levelset.phi);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // positive particles
     const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv))
-        translator.WriteParticles(&application::kDomainParticles,
-                                  &pdv,
-                                  particle_levelset,
-                                  true);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      translator.WriteParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, true);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // negative particles
     const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv))
-        translator.WriteParticles(&application::kDomainParticles,
-                                  &pdv,
-                                  particle_levelset,
-                                  false);
+    if (application::GetTranslatorData(job, npstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      translator.WriteParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, false);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
-    // positive removed particles
+    // Removed positive particles.
     const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv))
-        translator.WriteRemovedParticles(&application::kDomainParticles,
-                                         &pdv,
-                                         particle_levelset,
-                                         true);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.WriteRemovedParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, true);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
-    // negative particles
+    // Removed negative particles.
     const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv))
-        translator.WriteRemovedParticles(&application::kDomainParticles,
-                                         &pdv,
-                                         particle_levelset,
-                                         false);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.WriteRemovedParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, false);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // last unique particle id
@@ -288,14 +295,20 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
-    if (application::GetTranslatorData(job, fvstring, da, &pdv))
-        translator.ReadFaceArray(&application::kDomainFaceVel, &pdv, &face_velocities);
+    if (application::GetTranslatorData(job, fvstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::VELOCITY)) {
+      translator.ReadFaceArray(
+          &application::kDomainFaceVel, &pdv, &face_velocities);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // mac velocities
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-    if (application::GetTranslatorData(job, fvgstring, da, &pdv))
-        translator.ReadFaceArray(&application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
+    if (application::GetTranslatorData(job, fvgstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+      translator.ReadFaceArray(
+          &application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // pressure
@@ -311,46 +324,47 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // levelset
     const std::string lsstring = std::string(APP_PHI);
-    if (application::GetTranslatorData(job, lsstring, da, &pdv))
-        translator.ReadScalarArray(&application::kDomainPhi,
-                                   &pdv,
-                                   &particle_levelset.levelset.phi);
+    if (application::GetTranslatorData(job, lsstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::LEVELSET)) {
+      translator.ReadScalarArray(
+          &application::kDomainPhi, &pdv, &particle_levelset.levelset.phi);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // positive particles
     const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv))
-        translator.ReadParticles(&application::kDomainParticles,
-                                 &pdv,
-                                 particle_levelset,
-                                 true);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      translator.ReadParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, true);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // negative particles
     const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv))
-        translator.ReadParticles(&application::kDomainParticles,
-                                 &pdv,
-                                 particle_levelset,
-                                 false);
+    if (application::GetTranslatorData(job, npstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      translator.ReadParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, false);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
-    // positive removed particles
+    // Removed positive particles.
     const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv))
-        translator.ReadRemovedParticles(&application::kDomainParticles,
-                                        &pdv,
-                                        particle_levelset,
-                                        true);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.ReadRemovedParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, true);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
-    // negative particles
+    // Removed negative particles.
     const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv))
-        translator.ReadRemovedParticles(&application::kDomainParticles,
-                                        &pdv,
-                                        particle_levelset,
-                                        false);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv)
+        && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+      translator.ReadRemovedParticles(
+          &application::kDomainParticles, &pdv, particle_levelset, false);
+    }
     application::DestroyTranslatorObjects(&pdv);
 
     // last unique particle id
