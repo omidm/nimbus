@@ -32,32 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * add partition command to add partition definition to the worker from
+  * scheduler.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_PARTITION_ADD_COMMAND_H_
+#define NIMBUS_SHARED_PARTITION_ADD_COMMAND_H_
 
+
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
 
+namespace nimbus {
+class PartitionAddCommand : public SchedulerCommand {
+  public:
+    PartitionAddCommand();
+    PartitionAddCommand(const ID<partition_id_t>& partition_id,
+        const GeometricRegion& r);
+    ~PartitionAddCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+
+    ID<partition_id_t> partition_id();
+    const GeometricRegion* region();
+
+  private:
+    ID<partition_id_t> id_;
+    GeometricRegion region_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_PARTITION_ADD_COMMAND_H_

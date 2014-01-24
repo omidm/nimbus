@@ -99,6 +99,8 @@ const std::string SchedulerCommand::LOCAL_COPY_NAME = "localcopy";
 const std::string SchedulerCommand::DEFINE_PARTITION_NAME = "definepartition";
 const std::string SchedulerCommand::LDO_ADD_NAME = "ldoadd";
 const std::string SchedulerCommand::LDO_REMOVE_NAME = "ldoremove";
+const std::string SchedulerCommand::PARTITION_ADD_NAME = "partitionadd";
+const std::string SchedulerCommand::PARTITION_REMOVE_NAME = "partitionremove";
 const std::string SchedulerCommand::TERMINATE_NAME = "terminate";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
@@ -147,6 +149,12 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       str = LDO_ADD_NAME;
       break;
     case LDO_REMOVE:
+      str = LDO_REMOVE_NAME;
+      break;
+    case PARTITION_ADD:
+      str = LDO_ADD_NAME;
+      break;
+    case PARTITION_REMOVE:
       str = LDO_REMOVE_NAME;
       break;
     case TERMINATE:

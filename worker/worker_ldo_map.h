@@ -71,10 +71,6 @@ class WorkerLdoMap {
     bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
                           partition_id_t partition);
-    bool AddLogicalObject(logical_data_id_t id,
-                          std::string variable,
-                          GeometricRegion region,
-                          partition_id_t partition);
 
     bool RemoveLogicalObject(logical_data_id_t id);
 
@@ -94,6 +90,11 @@ class WorkerLdoMap {
   private:
     LdoIndex ldo_index_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
+
+    bool AddLogicalObject(logical_data_id_t id,
+                          std::string variable,
+                          GeometricRegion region,
+                          partition_id_t partition);
   };
 }  // namespace nimbus
 

@@ -86,6 +86,8 @@ class SchedulerCommand {
     DEFINE_PARTITION,
     LDO_ADD,
     LDO_REMOVE,
+    PARTITION_ADD,
+    PARTITION_REMOVE,
     TERMINATE
   };
 
@@ -126,6 +128,8 @@ class SchedulerCommand {
   static const std::string DEFINE_PARTITION_NAME;
   static const std::string LDO_ADD_NAME;
   static const std::string LDO_REMOVE_NAME;
+  static const std::string PARTITION_ADD_NAME;
+  static const std::string PARTITION_REMOVE_NAME;
   static const std::string TERMINATE_NAME;
 
  private:
