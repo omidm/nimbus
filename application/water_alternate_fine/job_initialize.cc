@@ -79,12 +79,6 @@ namespace application {
         nimbus::IDSet<nimbus::job_id_t> before, after;
         nimbus::Parameter loop_params;
 
-        nimbus::DataArray::const_iterator it = da.begin();
-        for (; it != da.end(); ++it) {
-          read.insert((*it)->logical_id());
-          write.insert((*it)->logical_id());
-        }
-
         // TODO:  
 
         int frame = 0;

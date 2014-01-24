@@ -168,6 +168,10 @@ namespace application {
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id);
 
+    void LoadReadWriteSets(nimbus::Job* job,
+        nimbus::IDSet<nimbus::logical_data_id_t>* read,
+        nimbus::IDSet<nimbus::logical_data_id_t>* write);
+
     bool SerializeParameter(const int frame, std::string* result);
     bool SerializeParameter(const int frame, const T time, std::string *result);
     bool SerializeParameter(const int frame, const T time, const T dt, std::string *result);

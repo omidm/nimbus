@@ -88,12 +88,6 @@ namespace application {
           nimbus::IDSet<nimbus::job_id_t> before, after;
           nimbus::Parameter iter_params;
 
-          nimbus::DataArray::const_iterator it = da.begin();
-          for (; it != da.end(); ++it) {
-            read.insert((*it)->logical_id());
-            write.insert((*it)->logical_id());
-          }
-
           std::string str;
           SerializeParameter(frame, time, &str);
           iter_params.set_ser_data(SerializedData(str));
