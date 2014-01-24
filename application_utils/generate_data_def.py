@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import os.path
 import re
 from optparse import OptionParser
 
 
 ## Parse the command line arguments ##
+
+cwd = os.getcwd()
+temp = cwd[cwd.find("nimbus/application/"):]
+curr_path = temp[temp.find("application/"):]
 
 parser = OptionParser()
 parser.add_option("-i", "--input", dest="infile",
@@ -15,10 +20,18 @@ parser.add_option("-i", "--input", dest="infile",
 parser.add_option("-o", "--output", dest="outfile",
                   default="data_def", type="string",
                   help="output .h|cc file for generating data defintiions")
+parser.add_option("-n", "--namespace", dest="namespace",
+                  default="application", type="string",
+                  help="namespace to use for generated code")
+parser.add_option("-a", "--app_path", dest="app_path",
+                  default=curr_path, type="string",
+                  help="directory where application and data config file resides")
 (options, args) = parser.parse_args()
 data_config_file = options.infile           # input data config file
 out_h_file       = options.outfile + ".h"   # output .h file for gen code
 out_cc_file      = options.outfile + ".cc"  # output .cc file for gen code
+namespace        = options.namespace        # namespace for gen code
+app_path         = options.app_path         # app path
 
 
 ## Parsing helper functions ##
@@ -84,29 +97,29 @@ def GetPartitionIds(partn_id, params, num):
     ghostw = params[2]
     ps     = [0, 0, 0]
     psl    = [0, 0, 0]
-    psize  = {0:[], 1:[], 2:[]}
-    pstart = {0:[], 1:[], 2:[]}
+    # TODO: take care of invalid ghost width size
     for dim in range(0, 3):
-        psl[dim] = domain[dim]/pnum[dim]
+        psl[dim] = domain[dim]/pnum[dim] - 2*ghostw[dim]
         if domain[dim]%pnum[dim] == 0:
             ps[dim] = psl[dim]
         else:
             print "Warning: Partitions for dimension " + str(dim) + \
                     " at line " + str(num) + " are not of equal size."
             ps[dim] = psl[dim]+1
-    pnum   = map(lambda x : x+2, pnum)
+    pnum   = map(lambda x : 3*x+2, pnum)
+    psize  = {0:[0]*pnum[0], 1:[0]*pnum[1], 2:[0]*pnum[2]}
+    pstart = {0:[0]*pnum[0], 1:[0]*pnum[1], 2:[0]*pnum[2]}
     for dim in range(0, 3):
-        pstart[dim].append(1-ghostw[dim])
-        psize[dim].append(ghostw[dim])
-        for i in range(1, pnum[dim]-2):
-            pstart[dim].append(pstart[dim][i-1] + psize[dim][i-1])
-            psize[dim].append(ps[dim])
-        l = pnum[dim]-2
-        pstart[dim].append(pstart[dim][l-1] + psize[dim][l-1])
-        psize[dim].append(psl[dim])
-        l = l + 1
-        pstart[dim].append(pstart[dim][l-1] + psize[dim][l-1])
-        psize[dim].append(ghostw[dim])
+        for i in range(0, pnum[dim], 3):
+            psize[dim][i] = ghostw[dim]
+        for i in range(1, pnum[dim], 3):
+            psize[dim][i] = ghostw[dim]
+        for i in range(2, pnum[dim], 3):
+            psize[dim][i] = ps[dim]
+        psize[dim][pnum[dim]-3] = psl[dim]
+        pstart[dim][0] = 1-ghostw[dim]
+        for i in range(1, pnum[dim], 1):
+            pstart[dim][i] = pstart[dim][i-1] + psize[dim][i-1]
     pidset = set()
     for i in range(0, pnum[0]):
         for j in range(0, pnum[1]):
@@ -176,39 +189,52 @@ out_cc      = open(out_cc_file, 'w')
 # Code generation - .h file
 
 out_h.write("#include \"shared/nimbus.h\"\n")
-out_h.write("#include \"shared/geometric_region.h\"\n\n")
-out_h.write("namespace application {\n\n")
+out_h.write("#include \"shared/geometric_region.h\"\n")
+out_h.write("\nnamespace %s {\n\n" % namespace)
 out_h.write("// Helper functions for defining data objects\n")
-out_h.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb);\n\n")
-out_h.write("// Constants - partition names\n")
-for p in sorted(partn_pid.items(), key=lambda x: x[1]):
-    decl = "const nimbus::GeometricRegion %s(%s);\n" % \
-            ("kRegion%i" % (p[1]), p[0])
-    out_h.write(decl)
-out_h.write("\n} // namespace application") # namespace application
+out_h.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb);\n")
+out_h.write("\n} // namespace %s" % namespace) # namespace application
 
 # Code generation - .cc file
 
+out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
 out_cc.write("#include \"shared/nimbus.h\"\n")
-out_cc.write("#include \"shared/geometric_region.h\"\n\n")
-out_cc.write("namespace application {\n\n")
+out_cc.write("\nnamespace %s {\n\n" % namespace)
 
-out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n")
+out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n\n")
+
+# geometric regions
+pt_num_str = "pnum"
+pt_num     = len(partn_pid)
+out_cc.write("\t// Constants - geometric regions\n")
+out_cc.write("\tint %s = %i;\n" % (pt_num_str, pt_num))
+out_cc.write("\tnimbus::GeometricRegion kRegions[%s];\n" % pt_num_str)
+for p in sorted(partn_pid.items(), key=lambda x: x[1]):
+    decl = "\tkRegions[%i] = nimbus::GeometricRegion(%s);\n" % (p[1], p[0])
+    out_cc.write(decl)
 
 # partitions
 out_cc.write("\n")
 out_cc.write("\t// Define partitions\n")
 out_cc.write("\tnimbus::Parameter part_params;\n")
-for p in sorted(partn_pid.items(), key=lambda x: x[1]):
-    out_cc.write("\t%s pid%i(%i);\n" % (partition_id_str, p[1], p[1]))
-    out_cc.write("\tjb->DefinePartition(%s, %s, %s);\n" % \
-            ("pid" + str(p[1]), "kRegion" + str(p[1]), "part_params"))
+out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % pt_num_str)
+out_cc.write("\t%s pid(i);\n" % partition_id_str)
+decl = "\t\tjb->DefinePartition(%s, %s, %s);\n" %\
+        ("pid", "kRegions[i]", "part_params")
+out_cc.write(decl)
+out_cc.write("\t}\n")
+
 # data
+data_ids_str = "data_ids"
+data_num_str = "data_num"
 out_cc.write("\n")
 out_cc.write("\t//Data setup\n")
-out_cc.write("\tint data_num = %i;\n" % data_num)
-out_cc.write("\t%s data_ids;\n" % logical_id_vector_str)
+out_cc.write("\tint %s = %i;\n" % (data_num_str, data_num))
+out_cc.write("\t%s %s;\n" % (logical_id_vector_str, data_ids_str))
+out_cc.write("\tjb->GetNewLogicalDataID(&%s, %s);\n" %\
+        (data_ids_str, data_num_str))
 
+out_cc.write("\n\treturn(%s);\n" % data_ids_str)
 out_cc.write("}\n") # DefineNimbusData
 
-out_cc.write("\n} // namespace application") # namespace application
+out_cc.write("\n} // namespace %s" % namespace) # namespace application
