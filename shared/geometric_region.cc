@@ -188,6 +188,21 @@ bool GeometricRegion::Covers(GeometricRegion *region) const {
           (z() + dz() >= region->z() + region->dz()));
 }
 
+/**
+ * \fn bool GeometricRegion::IsEqual(GeometricRegion *region)
+ * \brief Returns whether this region is equal to the region
+          described by the argument.
+ * \param region
+ * \return
+*/
+bool GeometricRegion::IsEqual(GeometricRegion *region) const {
+  return ((x() == region->x()) &&
+          (y() == region->y()) &&
+          (z() == region->z()) &&
+          (dx() == region->dx()) &&
+          (dy() == region->dy()) &&
+          (dz() == region->dz()));
+}
 
 /**
  * \fn int_dimension_t GeometricRegion::x()

@@ -92,6 +92,7 @@ namespace nimbus {
     virtual bool Intersects(GeometricRegion* region) const;
     virtual bool Adjacent(GeometricRegion* region) const;
     virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
+    virtual bool IsEqual(GeometricRegion* region) const;
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
 
