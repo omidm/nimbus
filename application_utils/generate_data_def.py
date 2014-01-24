@@ -193,7 +193,7 @@ out_h.write("#include \"shared/nimbus.h\"\n")
 out_h.write("#include \"shared/geometric_region.h\"\n")
 out_h.write("\nnamespace %s {\n\n" % namespace)
 out_h.write("// Helper functions for defining data objects\n")
-out_h.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb);\n")
+out_h.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb);\n")
 out_h.write("\n} // namespace %s" % namespace) # namespace application
 
 # Code generation - .cc file
@@ -202,7 +202,7 @@ out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
 out_cc.write("#include \"shared/nimbus.h\"\n")
 out_cc.write("\nnamespace %s {\n\n" % namespace)
 
-out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n\n")
+out_cc.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb) {\n\n")
 
 # geometric regions
 pt_num_str = "pnum"
@@ -233,8 +233,9 @@ data_num_str = "data_num"
 out_cc.write("\n")
 out_cc.write("\t// Data setup\n")
 out_cc.write("\tint %s = %i;\n" % (data_num_str, data_num))
-out_cc.write("\t%s %s;\n" % (logical_id_vector_str, data_ids_str))
-out_cc.write("\tjb->GetNewLogicalDataID(&%s, %s);\n" %\
+out_cc.write("\t%s *%s = new %s();\n" %\
+        (logical_id_vector_str, data_ids_str, logical_id_vector_str))
+out_cc.write("\tjb->GetNewLogicalDataID(%s, %s);\n" %\
         (data_ids_str, data_num_str))
 ids_used_str = "data_ids_used"
 ids_used     = 0
@@ -259,7 +260,7 @@ for d in ntypes_pid:
             (ids_to_use, temp[0])
     out_cc.write("\t%s;\n" % decl)
     out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % ids_to_use_str)
-    out_cc.write("\t\tjb->DefineData(\"%s\", %s[%s + i], %s.elem(), %s, %s);\n" % \
+    out_cc.write("\t\tjb->DefineData(\"%s\", (*%s)[%s + i], %s.elem(), %s, %s);\n" % \
             (d, data_ids_str, ids_used_str, \
             ("%s[%s[i]]" % (partitions_str, pset_str)), np_str, dp_str))
     out_cc.write("\t}\n")
