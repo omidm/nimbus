@@ -233,6 +233,16 @@ void Main::Execute(Parameter params, const DataArray& da) {
   param_idset.insert(LOOP_COUNTER);
   par.set_idset(param_idset);
   SpawnComputeJob("forLoop", j[6], read, write, before, after, par);
+
+  // *******************************************************************
+  // Cheching to query  ldo_map with in the same job that defines the data
+  // *******************************************************************
+  if (GetLogicalObject(d[0]) == NULL) {
+    dbg(DBG_TEMP, "Application: FAIL - did not find the ldo in ldo_map.\n");
+  } else {
+    dbg(DBG_TEMP, "Application: Found the ldo in ldo_map.\n");
+  }
+  // ****
 };
 
 ForLoop::ForLoop(Application* app) {

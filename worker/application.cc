@@ -103,6 +103,7 @@ void Application::DefineData(const std::string& name,
   ID<partition_id_t> partition_id_made(partition_id);
   ID<job_id_t> parent_id_made(parent_id);
 
+  ldo_map_->AddLogicalObject(logical_data_id, name, partition_id);
   DefineDataCommand cm(name, logical_id_made, partition_id_made,
       neighbor_partitions, parent_id_made, params);
   client_->sendCommand(&cm);
@@ -111,6 +112,7 @@ void Application::DefineData(const std::string& name,
 void Application::DefinePartition(const ID<partition_id_t>& partition_id,
      const GeometricRegion& r,
      const Parameter& params) {
+  ldo_map_->AddPartition(partition_id.elem(), r);
   DefinePartitionCommand cm(partition_id, r, params);
   client_->sendCommand(&cm);
 }

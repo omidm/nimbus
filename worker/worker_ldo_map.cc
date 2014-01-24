@@ -144,6 +144,7 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
     if (ldo->variable() == variable && region.IsEqual(ldo->region())) {
       return true;
     } else {
+      dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing object %llu.\n", id); // NOLINT
       return false;
     }
   } else {
@@ -176,8 +177,13 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
     return false;
   }
   if (ldo_index_.HasObject(id)) {
-    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing object %llu.\n", id); // NOLINT
-    return false;
+    LogicalDataObject* ldo = ldo_index_.SpecificObject(id);
+    if (ldo->variable() == variable && r.IsEqual(ldo->region())) {
+      return true;
+    } else {
+      dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing object %llu.\n", id); // NOLINT
+      return false;
+    }
   } else {
     GeometricRegion* region = new GeometricRegion(r);
     LogicalDataObject* ldo = new LogicalDataObject(id, variable, region, partition);

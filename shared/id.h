@@ -63,7 +63,7 @@ class ID {
 
   bool Parse(const std::string& input);
   std::string toString();
-  T elem();
+  T elem() const;
   void set_elem(T elem);
 
   ID<T>& operator= (const ID<T>& right);
