@@ -88,7 +88,7 @@ void ID<T>::set_elem(T elem) {
 }
 
 template<typename T>
-T ID<T>::elem() {
+T ID<T>::elem() const {
   return elem_;
 }
 
