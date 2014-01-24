@@ -149,6 +149,15 @@ bool Application::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, si
   return id_maker_->GetNewLogicalDataID(result, req_num);
 }
 
+GeometricRegion Application::GetPartition(partition_id_t id) {
+  if (ldo_map_ == NULL) {
+    std::cout << "Error: GetLogicalObject, ldo_map_ has not been set." << std::endl;
+    exit(-1);
+  } else {
+    return ldo_map_->FindPartition(id);
+  }
+}
+
 const LogicalDataObject* Application::GetLogicalObject(logical_data_id_t id) {
   if (ldo_map_ == NULL) {
     std::cout << "Error: GetLogicalObject, ldo_map_ has not been set." << std::endl;

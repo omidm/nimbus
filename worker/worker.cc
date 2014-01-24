@@ -202,6 +202,12 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::LDO_REMOVE:
       ProcessLdoRemoveCommand(reinterpret_cast<LdoRemoveCommand*>(cm));
       break;
+    case SchedulerCommand::PARTITION_ADD:
+      ProcessPartitionAddCommand(reinterpret_cast<PartitionAddCommand*>(cm));
+      break;
+    case SchedulerCommand::PARTITION_REMOVE:
+      ProcessPartitionRemoveCommand(reinterpret_cast<PartitionRemoveCommand*>(cm));
+      break;
     case SchedulerCommand::TERMINATE:
       ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
       break;
@@ -323,6 +329,18 @@ void Worker::ProcessLdoRemoveCommand(LdoRemoveCommand* cm) {
         dbg(DBG_ERROR, "Worker could not remove logical object %i to ldo map\n", (ldo->id()));
 }
 
+void Worker::ProcessPartitionAddCommand(PartitionAddCommand* cm) {
+    GeometricRegion r = *(cm->region());
+    if (!ldo_map_->AddPartition(cm->id().elem(), r))
+        dbg(DBG_ERROR, "Worker could not add partition %i to ldo map\n", cm->id().elem());
+}
+
+void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
+    GeometricRegion r = *(cm->region());
+    if (!ldo_map_->RemovePartition(cm->id().elem()))
+        dbg(DBG_ERROR, "Worker could not remove partition %i from ldo map\n", cm->id().elem());
+}
+
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
   exit(cm->exit_status().elem());
 }
@@ -353,6 +371,8 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_.push_back(new LocalCopyCommand());
   scheduler_command_table_.push_back(new LdoAddCommand());
   scheduler_command_table_.push_back(new LdoRemoveCommand());
+  scheduler_command_table_.push_back(new PartitionAddCommand());
+  scheduler_command_table_.push_back(new PartitionRemoveCommand());
   scheduler_command_table_.push_back(new TerminateCommand());
 }
 

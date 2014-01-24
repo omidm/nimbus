@@ -59,7 +59,7 @@ class PartitionRemoveCommand : public SchedulerCommand {
     virtual std::string toString();
     virtual std::string toStringWTags();
 
-    ID<partition_id_t> partition_id();
+    ID<partition_id_t> id();
     const GeometricRegion* region();
 
   private:

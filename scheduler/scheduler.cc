@@ -173,6 +173,8 @@ void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
 void Scheduler::ProcessDefinePartitionCommand(DefinePartitionCommand* cm) {
   GeometricRegion r = *(cm->region());
   data_manager_->AddPartition(cm->partition_id().elem(), r);
+  PartitionAddCommand command(cm->partition_id(), r);
+  server_->BroadcastCommand(&command);
 }
 
 void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
