@@ -78,8 +78,12 @@ bool nimbus::WorkerLdoMap::AddPartition(partition_id_t id,
                                        GeometricRegion r) {
   dbg(DBG_DATA_OBJECTS, "Adding %llu partition.\n", id);
   if (HasPartition(id)) {
-    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing partition %llu.\n", id); // NOLINT
-    return false;
+    if (FindPartition(id).IsEqual(&r)) {
+      return true;
+    } else {
+      dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding existing partition %llu.\n", id); // NOLINT
+      return false;
+    }
   } else {
     partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
     return true;
@@ -123,7 +127,12 @@ bool nimbus::WorkerLdoMap::HasPartition(partition_id_t id) {
  * \return
 */
 GeometricRegion nimbus::WorkerLdoMap::FindPartition(partition_id_t id) {
-  return partition_map_[id];
+  if (HasPartition(id)) {
+    return partition_map_[id];
+  } else {
+    dbg(DBG_ERROR, "  - FAIL WorkerLdoMap: partition id %llu does not exist.\n", id); // NOLINT
+    return GeometricRegion();
+  }
 }
 
 /**

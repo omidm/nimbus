@@ -108,6 +108,8 @@ class Job {
     bool GetNewJobID(std::vector<job_id_t>* result, size_t req_num);
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
 
+    GeometricRegion GetPartition(partition_id_t id) const;
+
     const LogicalDataObject* GetLogicalObject(logical_data_id_t id) const;
     int GetCoveredLogicalObjects(CLdoVector* result,
          const std::string& variable,

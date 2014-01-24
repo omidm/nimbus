@@ -83,6 +83,8 @@ class Worker {
   virtual void ProcessJobDoneCommand(JobDoneCommand* command);
   virtual void ProcessLdoAddCommand(LdoAddCommand* command);
   virtual void ProcessLdoRemoveCommand(LdoRemoveCommand* command);
+  virtual void ProcessPartitionAddCommand(PartitionAddCommand* command);
+  virtual void ProcessPartitionRemoveCommand(PartitionRemoveCommand* command);
   virtual void ProcessTerminateCommand(TerminateCommand* command);
 
   worker_id_t id();

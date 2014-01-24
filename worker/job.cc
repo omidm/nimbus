@@ -158,6 +158,15 @@ bool Job::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req
   }
 }
 
+GeometricRegion Job::GetPartition(partition_id_t id) const {
+  if (app_is_set_) {
+      return application_->GetPartition(id);
+  } else {
+      std::cout << "Error: GetLogicalObject, application has not been set." << std::endl;
+      exit(-1);
+  }
+}
+
 const LogicalDataObject* Job::GetLogicalObject(logical_data_id_t id) const {
   if (app_is_set_) {
       return application_->GetLogicalObject(id);

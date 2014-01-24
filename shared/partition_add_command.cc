@@ -113,7 +113,7 @@ std::string PartitionAddCommand::toStringWTags() {
   return str;
 }
 
-ID<partition_id_t> PartitionAddCommand::partition_id() {
+ID<partition_id_t> PartitionAddCommand::id() {
   return id_;
 }
 

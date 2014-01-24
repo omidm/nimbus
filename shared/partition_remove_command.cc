@@ -113,7 +113,7 @@ std::string PartitionRemoveCommand::toStringWTags() {
   return str;
 }
 
-ID<partition_id_t> PartitionRemoveCommand::partition_id() {
+ID<partition_id_t> PartitionRemoveCommand::id() {
   return id_;
 }
 
