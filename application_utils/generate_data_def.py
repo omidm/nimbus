@@ -214,25 +214,50 @@ for p in sorted(partn_pid.items(), key=lambda x: x[1]):
     out_cc.write(decl)
 
 # partitions
+partitions_str = "partitions"
 out_cc.write("\n")
 out_cc.write("\t// Define partitions\n")
+out_cc.write("\t%s %s[%s];\n" % (partition_id_str, partitions_str, pt_num_str))
 out_cc.write("\tnimbus::Parameter part_params;\n")
 out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % pt_num_str)
-out_cc.write("\t%s pid(i);\n" % partition_id_str)
+out_cc.write("\t\t%s[i] = %s(i);\n" % (partitions_str, partition_id_str))
 decl = "\t\tjb->DefinePartition(%s, %s, %s);\n" %\
-        ("pid", "kRegions[i]", "part_params")
+        (("%s[i]" % partitions_str), "kRegions[i]", "part_params")
 out_cc.write(decl)
 out_cc.write("\t}\n")
 
-# data
+# data setup
 data_ids_str = "data_ids"
 data_num_str = "data_num"
 out_cc.write("\n")
-out_cc.write("\t//Data setup\n")
+out_cc.write("\t// Data setup\n")
 out_cc.write("\tint %s = %i;\n" % (data_num_str, data_num))
 out_cc.write("\t%s %s;\n" % (logical_id_vector_str, data_ids_str))
 out_cc.write("\tjb->GetNewLogicalDataID(&%s, %s);\n" %\
         (data_ids_str, data_num_str))
+id_used_str = "data_id_used"
+id_used     = 0
+out_cc.write("\tint %s = %i;\n" % (id_used_str, id_used))
+np_str = "neighbor_partitions"
+out_cc.write("\tnimbus::IDSet<nimbus::partition_id_t> %s;\n" % np_str)
+dp_str = "data_params"
+out_cc.write("\tnimbus::Parameter %s;\n" % dp_str)
+
+# define data
+for d in ntypes_pid:
+    out_cc.write("\n")
+    out_cc.write("\t// Define data %s\n" % d)
+    ids_to_use_str = "ids_to_use"
+    ids_to_use     = len(ntypes_pid[d])
+    out_cc.write("\t%s = %i;\n" % (ids_to_use_str, ids_to_use))
+    pset_str = "pset_" + d
+    temp = [x for x in re.split('\[|\]', str(list(ntypes_pid[d]))) if x]
+    decl = partition_id_str + " " + pset_str + "[] = {%s}" % temp[0]
+    out_cc.write("\t%s;\n" % decl)
+    out_cc.write("\tfor (int i = 0; i < %s.size(); i++) {\n" % data_ids_str)
+    out_cc.write("\t\tjb->DefineData(\"%s\", %s[i], %s.elem(), %s, %s);\n" % \
+            (d, data_ids_str, ("%s[%s[i]]" % (partitions_str, pset_str)), np_str, dp_str))
+    out_cc.write("\t}\n")
 
 out_cc.write("\n\treturn(%s);\n" % data_ids_str)
 out_cc.write("}\n") # DefineNimbusData
