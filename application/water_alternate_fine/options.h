@@ -72,6 +72,7 @@ struct InitConfig {
 struct DataConfig {
   enum DataType{
     VELOCITY = 0,
+    VELOCITY_GHOST,
     LEVELSET,
     POSITIVE_PARTICLE,
     NEGATIVE_PARTICLE,
@@ -85,6 +86,10 @@ struct DataConfig {
   }
   void Clear() {
     SetHelper(false);
+  }
+  void Set(const DataConfig& data_config) {
+    for (int i = 0; i < NUM_VARIABLE; ++i)
+      _flag[i] = data_config._flag[i];
   }
   void SetAll() {
     SetHelper(true);

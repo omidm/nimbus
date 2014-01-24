@@ -77,7 +77,10 @@ void JobCalculateFrame::Execute(nimbus::Parameter params,
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
 
-  InitializeExampleAndDriver(init_config, this, da, example, driver);
+  DataConfig data_config;
+  data_config.SetAll();
+  InitializeExampleAndDriver(init_config, data_config,
+                             this, da, example, driver);
 
   dbg(APP_LOG, "Simulation starts(dt=%f).\n", dt);
 

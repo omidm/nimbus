@@ -76,7 +76,10 @@ void JobSuper3::Execute(nimbus::Parameter params,
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
 
-  InitializeExampleAndDriver(init_config, this, da, example, driver);
+  DataConfig data_config;
+  data_config.SetAll();
+  InitializeExampleAndDriver(init_config, data_config,
+                             this, da, example, driver);
 
   dbg(APP_LOG, "Job SUPER_3 starts (dt=%f).\n", dt);
 

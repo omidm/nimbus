@@ -52,11 +52,10 @@ Initialize(const nimbus::Job *job,
            const nimbus::DataArray &da,
            const bool set_boundary_conditions)
 {
+  typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
 
   output_number=current_frame;
-  // Commented by quhang:
-  // If we want to break substeps, the time should be passed by Nimbus.
   if (init_phase) {
     time=example.Time_At_Frame(current_frame);
   }
@@ -75,16 +74,25 @@ Initialize(const nimbus::Job *job,
   example.boundary=&example.boundary_scalar;
   example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-  example.particle_levelset_evolution.Initialize_Domain(example.mac_grid);
+  // Allocates array for levelset/particles/removed particles.  --quhang
+  InitializeParticleLevelsetEvolutionHelper(
+      example.data_config,
+      example.mac_grid,
+      &example.particle_levelset_evolution);
+
   example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
   example.incompressible.Initialize_Grids(example.mac_grid);
   example.projection.Initialize_Grid(example.mac_grid);
   example.collision_bodies_affecting_fluid.Initialize_Grids();
-  example.face_velocities.Resize(example.mac_grid);
+  if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
+      example.face_velocities.Resize(example.mac_grid);
+  }
   // Initialize the face_velocities_ghoas here, it may not be the best place
   // when we get to water_multiple though. -omidm
-  example.face_velocities_ghost.Resize(example.incompressible.grid,
-                                       example.number_of_ghost_cells, false);
+  if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+      example.face_velocities_ghost.Resize(example.incompressible.grid,
+                                           example.number_of_ghost_cells, false);
+  }
 
   example.particle_levelset_evolution.Set_Time(time);
   example.particle_levelset_evolution.Set_CFL_Number((T).9);

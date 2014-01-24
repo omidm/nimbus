@@ -20,6 +20,7 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
+#include "application/water_alternate_fine/options.h"
 #include "shared/nimbus.h"
 namespace PhysBAM{
 
@@ -29,6 +30,7 @@ template<class T_GRID> class LEVELSET_MULTIPLE_UNIFORM;
 template<class TV>
 class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
 {
+    typedef application::DataConfig DataConfig;
     typedef typename TV::SCALAR T;
     typedef typename TV::template REBIND<int>::TYPE TV_INT;
     typedef typename LEVELSET_POLICY<GRID<TV> >::LEVELSET T_LEVELSET;
@@ -40,6 +42,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     nimbus::TranslatorPhysBAM<TV> translator;
 
 public:
+    DataConfig data_config;
     STREAM_TYPE stream_type;
     T initial_time;
     int first_frame,last_frame;
