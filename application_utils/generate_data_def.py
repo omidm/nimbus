@@ -74,7 +74,9 @@ class Partition():
         self.x = x
         self.dx = dx
     def toString(self):
-        return str(self.x) + " , " + str(self.dx)
+        return "%i, %i, %i, %i, %i, %i" % \
+                (self.x[0], self.x[1], self.x[2], \
+                self.dx[0], self.dx[1], self.dx[2])
 
 def GetPartitionIds(partn_id, params, num):
     domain = params[0]
@@ -150,6 +152,10 @@ for num, line in enumerate(data_config):
         else:
             ntypes_pid[nt] = partns
 
+data_num = 0
+for d in ntypes_pid:
+    data_num = data_num + len(ntypes_pid[d])
+part_num = len(partn_pid)
 
 # TODO: complete beyond this
 print partn_pid
@@ -158,8 +164,51 @@ print ntypes_pid
 
 ## Code generation helper functions ##
 
+logical_id_vector_str = "std::vector<nimbus::logical_data_id_t>"
+partition_id_str      = "nimbus::ID<partition_id_t>"
+
 
 ## Begin code generation ##
 
 out_h       = open(out_h_file, 'w')
 out_cc      = open(out_cc_file, 'w')
+
+# Code generation - .h file
+
+out_h.write("#include \"shared/nimbus.h\"\n")
+out_h.write("#include \"shared/geometric_region.h\"\n\n")
+out_h.write("namespace application {\n\n")
+out_h.write("// Helper functions for defining data objects\n")
+out_h.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb);\n\n")
+out_h.write("// Constants - partition names\n")
+for p in sorted(partn_pid.items(), key=lambda x: x[1]):
+    decl = "const nimbus::GeometricRegion %s(%s);\n" % \
+            ("kRegion%i" % (p[1]), p[0])
+    out_h.write(decl)
+out_h.write("\n} // namespace application") # namespace application
+
+# Code generation - .cc file
+
+out_cc.write("#include \"shared/nimbus.h\"\n")
+out_cc.write("#include \"shared/geometric_region.h\"\n\n")
+out_cc.write("namespace application {\n\n")
+
+out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n")
+
+# partitions
+out_cc.write("\n")
+out_cc.write("\t// Define partitions\n")
+out_cc.write("\tnimbus::Parameter part_params;\n")
+for p in sorted(partn_pid.items(), key=lambda x: x[1]):
+    out_cc.write("\t%s pid%i(%i);\n" % (partition_id_str, p[1], p[1]))
+    out_cc.write("\tjb->DefinePartition(%s, %s, %s);\n" % \
+            ("pid" + str(p[1]), "kRegion" + str(p[1]), "part_params"))
+# data
+out_cc.write("\n")
+out_cc.write("\t//Data setup\n")
+out_cc.write("\tint data_num = %i;\n" % data_num)
+out_cc.write("\t%s data_ids;\n" % logical_id_vector_str)
+
+out_cc.write("}\n") # DefineNimbusData
+
+out_cc.write("\n} // namespace application") # namespace application
