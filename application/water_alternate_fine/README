@@ -13,6 +13,10 @@ Nimbus:
 1) Build code in physbam-lib. 
      - Follow the instructions in applications/physbam-lib/README.
 
+2) Generate definitions as follows.
+     - ../../application_utils/generate_data_def.py
+   (Add executable permision to the script or run it with python.)
+
 3) Make the Build/Release directory within this folder.
      - mkdir -p Build/Release
 
