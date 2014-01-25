@@ -50,7 +50,7 @@ namespace nimbus {
 class LdoAddCommand : public SchedulerCommand {
   public:
     LdoAddCommand();
-    explicit LdoAddCommand(LogicalDataObject* obj);
+    explicit LdoAddCommand(const LogicalDataObject* obj);
     virtual ~LdoAddCommand();
 
     virtual SchedulerCommand* Clone();

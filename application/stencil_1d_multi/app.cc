@@ -268,7 +268,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::string l_name = "some_name";
   Data* l_data = new Data();
   if (GetLogicalObject(l_id) == NULL) {
-    dbg(DBG_TEMP, "Application: Did not find the ldo in ldo_map.\n");
+    dbg(DBG_TEMP, "Application: FAIL - did not find the ldo in ldo_map.\n");
   } else {
     dbg(DBG_TEMP, "Application: Found the ldo in ldo_map.\n");
     GeometricRegion* r_t = new GeometricRegion(*(GetLogicalObject(l_id)->region()));

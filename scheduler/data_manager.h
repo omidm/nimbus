@@ -58,7 +58,6 @@ namespace nimbus {
   class DataManager {
   public:
     DataManager();
-    explicit DataManager(SchedulerServer* s);
     virtual ~DataManager();
 
     /* Managing geometric partitions. */
@@ -114,14 +113,10 @@ namespace nimbus {
     partition_id_t max_defined_partition();
 
   private:
-    bool SendLdoAddToWorkers(LogicalDataObject* ldo);
-    bool SendLdoRemoveToWorkers(LogicalDataObject* ldo);
-
     PhysicalObjectMap physical_object_map_;
     LdoIndex ldo_index_;
     std::map<logical_data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
-    SchedulerServer* server_;
     partition_id_t max_defined_partition_;
   };
 }  // namespace nimbus

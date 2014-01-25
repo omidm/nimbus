@@ -163,9 +163,15 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
-  data_manager_->AddLogicalObject(cm->logical_data_id().elem(),
+  bool success = data_manager_->AddLogicalObject(cm->logical_data_id().elem(),
                                  cm->data_name(),
                                  cm->partition_id().elem());
+
+  if (success) {
+    LdoAddCommand command(data_manager_->FindLogicalObject(cm->logical_data_id().elem()));
+    server_->BroadcastCommand(&command);
+  }
+
   job_manager_->DefineData(cm->parent_job_id().elem(),
                           cm->logical_data_id().elem());
 }
@@ -757,7 +763,7 @@ void Scheduler::SetupUserInterface() {
 }
 
 void Scheduler::SetupDataManager() {
-  data_manager_ = new DataManager(server_);
+  data_manager_ = new DataManager();
 }
 
 void Scheduler::SetupJobManager() {

@@ -51,20 +51,8 @@ namespace nimbus {
  * \return
 */
 nimbus::DataManager::DataManager() {
-  server_ = NULL;
   max_defined_partition_ = (partition_id_t)(0);
 }
-
-/**
- * \fn nimbus::DataManager::DataManager(SchedulerServer* server)
- * \brief Brief description.
- * \return
-*/
-nimbus::DataManager::DataManager(SchedulerServer* server) {
-  server_ = server;
-  max_defined_partition_ = (partition_id_t)(0);
-}
-
 
 /**
  * \fn nimbus::DataManager::~DataManager()
@@ -174,9 +162,6 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
     physical_object_map_.AddLogicalObject(ldo);
     ldo_index_.AddObject(ldo);
 
-    // We've updated our local state, now tell the workers to add it too.
-    SendLdoAddToWorkers(ldo);
-
     return true;
   }
 }
@@ -215,9 +200,6 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
     ldo_map_[id] = ldo;
     physical_object_map_.AddLogicalObject(ldo);
     ldo_index_.AddObject(ldo);
-
-    // We've updated our local state, now tell the workers to add it too.
-    SendLdoAddToWorkers(ldo);
 
     return true;
   }
@@ -263,9 +245,6 @@ bool nimbus::DataManager::RemoveLogicalObject(logical_data_id_t id) {
     ldo_map_.erase(id);
     physical_object_map_.RemoveLogicalObject(id);
     ldo_index_.RemoveObject(id);
-
-    // We've cleared out local state, now tell the workers to do so too.
-    SendLdoRemoveToWorkers(obj);
 
     delete obj;
     return true;
@@ -455,26 +434,6 @@ int nimbus::DataManager::InstancesByWorkerAndVersion(LogicalDataObject *object,
                                           data_version_t version,
                                           PhysicalDataVector *dest) {
   return physical_object_map_.InstancesByWorkerAndVersion(object, worker, version, dest);
-}
-
-
-
-bool nimbus::DataManager::SendLdoAddToWorkers(LogicalDataObject* obj) {
-  if (server_ == NULL) {
-    return false;
-  }
-  SchedulerCommand* command = new LdoAddCommand(obj);
-  server_->BroadcastCommand(command);
-  return true;
-}
-
-bool nimbus::DataManager::SendLdoRemoveToWorkers(LogicalDataObject* obj) {
-  if (server_ == NULL) {
-    return false;
-  }
-  SchedulerCommand* command = new LdoRemoveCommand(obj);
-  server_->BroadcastCommand(command);
-  return true;
 }
 
 partition_id_t DataManager::max_defined_partition() {

@@ -60,7 +60,7 @@ nimbus::LdoAddCommand::LdoAddCommand() {
  * \brief Brief description.
  * \return
 */
-nimbus::LdoAddCommand::LdoAddCommand(LogicalDataObject* obj) {
+nimbus::LdoAddCommand::LdoAddCommand(const LogicalDataObject* obj) {
   name_ = LDO_ADD_NAME;
   type_ = LDO_ADD;
   region_ = new GeometricRegion(*obj->region());
