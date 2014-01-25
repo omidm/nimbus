@@ -505,26 +505,6 @@ SuperJob3Impl (const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ComputeOccupiedBlocksImpl(const nimbus::Job *job,
-                          const nimbus::DataArray &da,
-                          T dt) {
-  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-
-  LOG::Time("Compute Occupied Blocks");
-  T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
-  T max_particle_collision_distance =
-    example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor *
-    example.mac_grid.dX.Max();
-  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(
-      true, dt * maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 * example.mac_grid.dX.Max(), 10);
-
-  // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
-
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
 AdjustPhiWithObjectsImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt) {

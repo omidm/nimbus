@@ -92,6 +92,8 @@ namespace application {
           SerializeParameter(frame, time, &str);
           iter_params.set_ser_data(SerializedData(str));
 
+          LoadReadWriteSets(this, &read, &write);
+
           SpawnComputeJob(LOOP_ITERATION,
               job_ids[0],
               read, write,
