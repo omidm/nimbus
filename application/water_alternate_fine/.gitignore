@@ -3,6 +3,5 @@ opengl_2d
 opengl_3d
 *.so
 *.dylib
-
 data_def.h
 data_def.cc
