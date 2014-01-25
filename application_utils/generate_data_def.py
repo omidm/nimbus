@@ -38,13 +38,13 @@ app_path         = options.app_path         # app path
 
 def ValidateSizeTuples(sizes, num):
     if len(sizes) != 3:
-        print "Expected 3 tuples - domain, number of partitions, ghost width"
+        print "\nExpected 3 tuples - domain, number of partitions, ghost width"
         print "Got " + str(len(sizes)) + " at line " + str(num)
         return []
     params = []
     for tup in sizes:
         if len(tup) != 3:
-            print "Expect tuple elements of type (int, int, int)"
+            print "\nExpected tuple elements of type (int, int, int)"
             print "Got " + str(tup) + " at line " + str(num)
             return []
         param_tup = []
@@ -52,7 +52,7 @@ def ValidateSizeTuples(sizes, num):
             try:
                 param_tup.append(int(t))
             except:
-                print "Expect tuple elements of type (int, int, int)"
+                print "\nExpect tuple elements of type (int, int, int)"
                 print "Got " + str(tup) + " at line " + str(num)
                 return []
         params.append(param_tup)
@@ -97,13 +97,16 @@ def GetPartitionIds(partn_id, params, num):
     ghostw = params[2]
     ps     = [0, 0, 0]
     psl    = [0, 0, 0]
-    # TODO: take care of invalid ghost width size
     for dim in range(0, 3):
+        if domain[dim]/pnum[dim] < 2*ghostw[dim]:
+            print "\nError : Invalid ghost width and partition size"
+            print "Partition size is smaller than 2 x ghostwidth\n"
+            sys.exit(2)
         psl[dim] = domain[dim]/pnum[dim] - 2*ghostw[dim]
         if domain[dim]%pnum[dim] == 0:
             ps[dim] = psl[dim]
         else:
-            print "Warning: Partitions for dimension " + str(dim) + \
+            print "\nWarning: Partitions for dimension " + str(dim) + \
                     " at line " + str(num) + " are not of equal size."
             ps[dim] = psl[dim]+1
     pnum   = map(lambda x : 3*x+2, pnum)
@@ -126,6 +129,8 @@ def GetPartitionIds(partn_id, params, num):
             for k in range(0, pnum[2]):
                 x    = [pstart[0][i], pstart[1][j], pstart[2][k]]
                 dx   = [psize[0][i],  psize[1][j],  psize[2][k]]
+                if psize[0][i] == 0 or psize[1][j] == 0 or psize[2][k] == 0:
+                    continue
                 p    = Partition(x, dx)
                 pstr = p.toString()
                 if pstr in partn_id:
@@ -139,10 +144,10 @@ def GetPartitionIds(partn_id, params, num):
 ## Begin parsing and building information for code generation ##
 
 if not os.path.isfile:
-    print "Could not find file " + data_config_file + "\n"
+    print "\nCould not find file " + data_config_file + "\n"
     sys.exit(1)
 
-print "Reading data configuration file " + data_config_file + " ..."
+print "\nReading data configuration file " + data_config_file + " ..."
 
 data_config = open(data_config_file, 'r')
 ntypes_pid  = {} # mapping between nimbus type and partition id set
@@ -160,7 +165,7 @@ for num, line in enumerate(data_config):
     partns = GetPartitionIds(partn_pid, params, num)
     for nt in nimbus_types:
         if nt in ntypes_pid:
-            print "Redefinition of " + nt + " at line " + str(num)
+            print "\nWarning: Redefinition of " + nt + " at line " + str(num)
             print "Ignoring the new definition ..."
         else:
             ntypes_pid[nt] = partns
@@ -179,7 +184,7 @@ partition_id_set_str      = "nimbus::ID<partition_id_t>"
 
 ## Begin code generation ##
 
-print "Generating code ..."
+print "\nGenerating code ..."
 
 out_h       = open(out_h_file, 'w')
 out_cc      = open(out_cc_file, 'w')
@@ -190,7 +195,7 @@ out_h.write("#include \"shared/nimbus.h\"\n")
 out_h.write("#include \"shared/geometric_region.h\"\n")
 out_h.write("\nnamespace %s {\n\n" % namespace)
 out_h.write("// Helper functions for defining data objects\n")
-out_h.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb);\n")
+out_h.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb);\n")
 out_h.write("\n} // namespace %s" % namespace) # namespace application
 
 # Code generation - .cc file
@@ -199,7 +204,7 @@ out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
 out_cc.write("#include \"shared/nimbus.h\"\n")
 out_cc.write("\nnamespace %s {\n\n" % namespace)
 
-out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n\n")
+out_cc.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb) {\n\n")
 
 # geometric regions
 pt_num_str = "pnum"
@@ -230,8 +235,9 @@ data_num_str = "data_num"
 out_cc.write("\n")
 out_cc.write("\t// Data setup\n")
 out_cc.write("\tint %s = %i;\n" % (data_num_str, data_num))
-out_cc.write("\t%s %s;\n" % (logical_id_vector_str, data_ids_str))
-out_cc.write("\tjb->GetNewLogicalDataID(&%s, %s);\n" %\
+out_cc.write("\t%s *%s = new %s();\n" %\
+        (logical_id_vector_str, data_ids_str, logical_id_vector_str))
+out_cc.write("\tjb->GetNewLogicalDataID(%s, %s);\n" %\
         (data_ids_str, data_num_str))
 ids_used_str = "data_ids_used"
 ids_used     = 0
@@ -252,11 +258,11 @@ for d in ntypes_pid:
     out_cc.write("\t%s = %i;\n" % (ids_to_use_str, ids_to_use))
     pset_str = "pset_" + d
     temp = [x for x in re.split('\[|\]', str(list(ntypes_pid[d]))) if x]
-    decl = "nimbus::partition_id_t " + pset_str + "[%i] = {%s}" %\
+    decl = "size_t " + pset_str + "[%i] = {%s}" %\
             (ids_to_use, temp[0])
     out_cc.write("\t%s;\n" % decl)
     out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % ids_to_use_str)
-    out_cc.write("\t\tjb->DefineData(\"%s\", %s[%s + i], %s.elem(), %s, %s);\n" % \
+    out_cc.write("\t\tjb->DefineData(\"%s\", (*%s)[%s + i], %s.elem(), %s, %s);\n" % \
             (d, data_ids_str, ids_used_str, \
             ("%s[%s[i]]" % (partitions_str, pset_str)), np_str, dp_str))
     out_cc.write("\t}\n")
@@ -266,3 +272,5 @@ out_cc.write("\n\treturn(%s);\n" % data_ids_str)
 out_cc.write("}\n") # DefineNimbusData
 
 out_cc.write("\n} // namespace %s" % namespace) # namespace application
+
+print ""
