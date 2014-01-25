@@ -129,6 +129,8 @@ def GetPartitionIds(partn_id, params, num):
             for k in range(0, pnum[2]):
                 x    = [pstart[0][i], pstart[1][j], pstart[2][k]]
                 dx   = [psize[0][i],  psize[1][j],  psize[2][k]]
+                if psize[0][i] == 0 or psize[1][j] == 0 or psize[2][k] == 0:
+                    continue
                 p    = Partition(x, dx)
                 pstr = p.toString()
                 if pstr in partn_id:
