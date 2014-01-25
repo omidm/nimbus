@@ -100,6 +100,9 @@ namespace nimbus {
 
     virtual bool Parse(const std::string& input);
 
+    GeometricRegion& operator= (const GeometricRegion& right);
+
+
   private:
     int_dimension_t x_;
     int_dimension_t y_;

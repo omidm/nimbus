@@ -83,8 +83,14 @@ bool nimbus::DataManager::AddPartition(partition_id_t id,
                                        GeometricRegion r) {
   dbg(DBG_DATA_OBJECTS, "Adding %llu partition.\n", id);
   if (HasPartition(id)) {
-    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing partition %llu.\n", id); // NOLINT
-    return false;
+    GeometricRegion r_p;
+    FindPartition(id, &r_p);
+    if (r_p.IsEqual(&r)) {
+      return true;
+    } else {
+      dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing partition %llu.\n", id); // NOLINT
+      return false;
+    }
   } else {
     partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
     max_defined_partition_ = std::max(id, max_defined_partition_);
@@ -122,14 +128,20 @@ bool nimbus::DataManager::HasPartition(partition_id_t id) {
 }
 
 /**
- * \fn GeometricRegion nimbus::DataManager::FindPartition(partition_id_t id)
+ * \fn bool nimbus::DataManager::FindPartition(partition_id_t id, GeometricRegion* r)
  *
  * \brief Brief description.
  * \param id
  * \return
 */
-GeometricRegion nimbus::DataManager::FindPartition(partition_id_t id) {
-  return partition_map_[id];
+bool nimbus::DataManager::FindPartition(partition_id_t id, GeometricRegion* r) {
+  if (HasPartition(id)) {
+    *r =  partition_map_[id];
+    return true;
+  } else {
+    dbg(DBG_ERROR, "  - FAIL WorkerLdoMap: partition id %llu does not exist.\n", id); // NOLINT
+    return false;
+  }
 }
 
 /**
@@ -147,8 +159,13 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
                                            GeometricRegion r) {
   dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
   if (ldo_index_.HasObject(id)) {
-    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing object %llu.\n", id); // NOLINT
-    return false;
+    LogicalDataObject* ldo = ldo_index_.SpecificObject(id);
+    if (ldo->variable() == variable && r.IsEqual(ldo->region())) {
+      return true;
+    } else {
+      dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing object %llu.\n", id); // NOLINT
+      return false;
+    }
   } else {
     // We can insert this logical object. Instantiate the necessary objects
     // so the manager can be in charge of their allocation/deallocation.
@@ -157,45 +174,6 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
     GeometricRegion* region = new GeometricRegion(r);
     dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", region);
     LogicalDataObject* ldo = new LogicalDataObject(id, variable, region);
-    dbg(DBG_MEMORY, "Allocated ldo 0x%x\n", ldo);
-    ldo_map_[id] = ldo;
-    physical_object_map_.AddLogicalObject(ldo);
-    ldo_index_.AddObject(ldo);
-
-    return true;
-  }
-}
-
-/**
- * \fn bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
-                                      std::string variable,
-                                      GeometricRegion region,
-                                      partition_id_t partition)
- * \brief Brief description.
- * \param id
- * \param variable
- * \param region
- * \param partition
- * \return
-*/
-bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
-                                           std::string variable,
-                                           GeometricRegion r,
-                                           partition_id_t partition) {
-  dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
-  GeometricRegion r_p = FindPartition(partition);
-  // TODO(omidm): check if r_p and r are the same!
-  if (ldo_index_.HasObject(id)) {
-    dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding existing object %llu.\n", id); // NOLINT
-    return false;
-  } else {
-    // We can insert this logical object. Instantiate the necessary objects
-    // so the manager can be in charge of their allocation/deallocation.
-    // Insert the object into the index (id->ldo mapping), the physical
-    // map, and the LdoIndex for geometric queries.
-    GeometricRegion* region = new GeometricRegion(r);
-    dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", region);
-    LogicalDataObject* ldo = new LogicalDataObject(id, variable, region, partition);
     dbg(DBG_MEMORY, "Allocated ldo 0x%x\n", ldo);
     ldo_map_[id] = ldo;
     physical_object_map_.AddLogicalObject(ldo);
@@ -223,8 +201,9 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
     dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL DataManager: tried adding object %llu with invalid partition %llu.\n", id, partition); // NOLINT
     return false;
   } else {
-    GeometricRegion r = FindPartition(partition);
-    return AddLogicalObject(id, variable, r, partition);
+    GeometricRegion r;
+    FindPartition(partition, &r);
+    return AddLogicalObject(id, variable, r);
   }
 }
 

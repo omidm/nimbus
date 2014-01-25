@@ -62,7 +62,7 @@ class WorkerLdoMap {
     bool AddPartition(partition_id_t id, GeometricRegion region);
     bool RemovePartition(partition_id_t id);
     bool HasPartition(partition_id_t id);
-    GeometricRegion FindPartition(partition_id_t id);
+    bool FindPartition(partition_id_t id, GeometricRegion* r);
 
     /* Managing logical objects. */
     bool AddLogicalObject(logical_data_id_t id,
@@ -90,11 +90,6 @@ class WorkerLdoMap {
   private:
     LdoIndex ldo_index_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
-
-    bool AddLogicalObject(logical_data_id_t id,
-                          std::string variable,
-                          GeometricRegion region,
-                          partition_id_t partition);
   };
 }  // namespace nimbus
 

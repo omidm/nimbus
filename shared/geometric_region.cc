@@ -381,4 +381,14 @@ bool GeometricRegion::Parse(const std::string& input) {
   return true;
 }
 
+GeometricRegion& GeometricRegion::operator= (const GeometricRegion& right) {
+  x_ = right.x_;
+  y_ = right.y_;
+  z_ = right.z_;
+  dx_ = right.dx_;
+  dy_ = right.dy_;
+  dz_ = right.dz_;
+  return *this;
+}
+
 }  // namespace nimbus

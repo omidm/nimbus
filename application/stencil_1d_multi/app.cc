@@ -257,14 +257,20 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
 
-  GetPartition(0);
+  // Check if partitions are synched or not.
+  GeometricRegion r_temp;
+  if (GetPartition(3, &r_temp)) {
+    dbg(DBG_TEMP, "Application: Found the partition in ldo_map.\n");
+  } else {
+    dbg(DBG_TEMP, "Application: FAIL - did not find the partition in ldo_map.\n");
+  }
   // *******************************************************************
   // Cheching the ldo_map and creation of PhysicalDataInstance from Data
   // *******************************************************************
   // logical_data_id_t l_id = da[0]->logical_id();
   // std::string l_name = da[0]->name();
   // Data* l_data = da[0];
-  logical_data_id_t l_id = 200001;
+  logical_data_id_t l_id = 100001;
   std::string l_name = "some_name";
   Data* l_data = new Data();
   if (GetLogicalObject(l_id) == NULL) {
