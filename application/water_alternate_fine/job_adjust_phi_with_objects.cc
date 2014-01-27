@@ -81,11 +81,14 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
 
   DataConfig data_config;
   data_config.SetAll();
+  // data_config.SetFlag(DataConfig::VELOCITY);
+  // data_config.SetFlag(DataConfig::VELOCITY_GHOST);
+  dbg(APP_LOG, "Begin initialization.\n");
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in adjust phi with objects job.");
+  dbg(APP_LOG, "Execute the step in adjust phi with objects job.\n");
   driver->AdjustPhiWithObjectsImpl(this, da, dt);
 
   // Free resources.

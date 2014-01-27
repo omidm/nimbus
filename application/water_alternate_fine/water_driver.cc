@@ -85,11 +85,13 @@ Initialize(const nimbus::Job *job,
   example.projection.Initialize_Grid(example.mac_grid);
   example.collision_bodies_affecting_fluid.Initialize_Grids();
   if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
+      dbg(APP_LOG, "Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
   }
   // Initialize the face_velocities_ghoas here, it may not be the best place
   // when we get to water_multiple though. -omidm
   if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+      dbg(APP_LOG, "Ghost Velocity memory allocated.\n");
       example.face_velocities_ghost.Resize(example.incompressible.grid,
                                            example.number_of_ghost_cells, false);
   }

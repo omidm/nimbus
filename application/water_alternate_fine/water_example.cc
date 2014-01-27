@@ -84,31 +84,65 @@ Initialize_Grid(TV_INT counts,RANGE<TV> domain)
 template<class TV> void WATER_EXAMPLE<TV>::
 Set_Boundary_Conditions(const T time)
 {
-    projection.elliptic_solver->psi_D.Fill(false);projection.elliptic_solver->psi_N.Fill(false);
-    for(int axis=1;axis<=TV::dimension;axis++) for(int axis_side=1;axis_side<=2;axis_side++){int side=2*(axis-1)+axis_side;
-        TV_INT interior_cell_offset=axis_side==1?TV_INT():-TV_INT::Axis_Vector(axis);
-        TV_INT exterior_cell_offset=axis_side==1?-TV_INT::Axis_Vector(axis):TV_INT();
-        TV_INT boundary_face_offset=axis_side==1?TV_INT::Axis_Vector(axis):-TV_INT::Axis_Vector(axis);
-        if(domain_boundary(axis)(axis_side)){
-            for(typename GRID<TV>::FACE_ITERATOR iterator(mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);iterator.Valid();iterator.Next()){
-                TV_INT face=iterator.Face_Index()+boundary_face_offset;
-                if(particle_levelset_evolution.phi(face+interior_cell_offset)<=0){
-                    if(face_velocities.Component(axis).Valid_Index(face)){projection.elliptic_solver->psi_N.Component(axis)(face)=true;face_velocities.Component(axis)(face)=0;}}
-                else{TV_INT cell=face+exterior_cell_offset;projection.elliptic_solver->psi_D(cell)=true;projection.p(cell)=0;}}}
-        else for(typename GRID<TV>::FACE_ITERATOR iterator(mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);iterator.Valid();iterator.Next()){TV_INT cell=iterator.Face_Index()+interior_cell_offset;
-            projection.elliptic_solver->psi_D(cell)=true;projection.p(cell)=0;}}
-    for(typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);iterator.Valid();iterator.Next())
-    {
-        for(int i=1;i<=sources.m;i++)
-        {
-            if(time<=3 && sources(i)->Lazy_Inside(iterator.Location()))
-            {
-                projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
-                if((TV::dimension==2 && iterator.Axis()==1)|| (TV::dimension==3 && iterator.Axis()==3))
-                    face_velocities(iterator.Full_Index())=-1;
-                else face_velocities(iterator.Full_Index())=0;
-            }
+    projection.elliptic_solver->psi_D.Fill(false);
+    projection.elliptic_solver->psi_N.Fill(false);
+    for (int axis=1;axis<=TV::dimension;axis++) {
+      for(int axis_side=1;axis_side<=2;axis_side++) {
+        int side=2*(axis-1)+axis_side;
+        TV_INT interior_cell_offset =
+            axis_side==1?TV_INT():-TV_INT::Axis_Vector(axis);
+        TV_INT exterior_cell_offset =
+            axis_side==1?-TV_INT::Axis_Vector(axis):TV_INT();
+        TV_INT boundary_face_offset =
+            axis_side==1?TV_INT::Axis_Vector(axis):-TV_INT::Axis_Vector(axis);
+        if(domain_boundary(axis)(axis_side)) {
+          for (typename GRID<TV>::FACE_ITERATOR iterator(
+                  mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);
+              iterator.Valid();
+              iterator.Next()) {
+                TV_INT face = iterator.Face_Index()+boundary_face_offset;
+                // Access levelset here.
+                if (particle_levelset_evolution.phi(
+                        face+interior_cell_offset)<=0) {
+                  // Access face velocity here.
+                  if (face_velocities.Component(axis).Valid_Index(face)){
+                    projection.elliptic_solver->psi_N.Component(axis)(face)
+                        =true;
+                    face_velocities.Component(axis)(face)=0;
+                  }
+                } else {
+                  TV_INT cell=face+exterior_cell_offset;
+                  projection.elliptic_solver->psi_D(cell)=true;
+                  projection.p(cell)=0;
+                }
+          }
+        } else {
+          for (typename GRID<TV>::FACE_ITERATOR iterator(
+                  mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);
+              iterator.Valid();
+              iterator.Next()) {
+            TV_INT cell=iterator.Face_Index()+interior_cell_offset;
+            projection.elliptic_solver->psi_D(cell)=true;
+            projection.p(cell)=0;
+          }
         }
+      }
+    }
+    for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
+         iterator.Valid();
+         iterator.Next()) {
+      for (int i=1;i<=sources.m;i++) {
+        if (time<=3 && sources(i)->Lazy_Inside(iterator.Location())) {
+          projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
+          // Access velocity.
+          if ((TV::dimension==2 && iterator.Axis()==1) ||
+              (TV::dimension==3 && iterator.Axis()==3)) {
+            face_velocities(iterator.Full_Index())=-1;
+          } else {
+            face_velocities(iterator.Full_Index())=0;
+          }
+        }
+      }
     }
 }
 //#####################################################################
@@ -301,6 +335,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainFaceVel, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating velocity.\n");
 
     // mac velocities
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
@@ -310,6 +345,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainFaceVelGhost, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating ghost velocity.\n");
 
     // pressure
     const std::string pstring = std::string(APP_PRESSURE);
@@ -318,6 +354,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                                    &pdv,
                                    &incompressible.projection.p);
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating pressure.\n");
 
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
@@ -330,6 +367,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainPhi, &pdv, &particle_levelset.levelset.phi);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating levelset.\n");
 
     // positive particles
     const std::string ppstring = std::string(APP_POS_PARTICLES);
@@ -339,6 +377,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainParticles, &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating positive particles.\n");
 
     // negative particles
     const std::string npstring = std::string(APP_NEG_PARTICLES);
@@ -348,6 +387,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainParticles, &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating negative particles.\n");
 
     // Removed positive particles.
     const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
@@ -357,6 +397,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainParticles, &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating remove positive particles.\n");
 
     // Removed negative particles.
     const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
@@ -366,6 +407,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &application::kDomainParticles, &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating remove negative particles.\n");
 
     // last unique particle id
     const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
@@ -373,6 +415,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
         particle_levelset.last_unique_particle_id = sd->scalar();
     }
+    dbg(APP_LOG, "Finish translating particle id.\n");
 }
 //#####################################################################
 template class WATER_EXAMPLE<VECTOR<float,3> >;
