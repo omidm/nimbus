@@ -81,6 +81,9 @@ void JobAdvectV::Execute(nimbus::Parameter params,
 
   DataConfig data_config;
   data_config.SetAll();
+  // data_config.SetFlag(DataConfig::VELOCITY);
+  // data_config.SetFlag(DataConfig::VELOCITY_GHOST);
+
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

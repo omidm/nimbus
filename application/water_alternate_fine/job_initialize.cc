@@ -63,6 +63,7 @@ namespace application {
 
         InitConfig init_config;
         init_config.init_phase = true;
+        init_config.set_boundary_condition = true;
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 

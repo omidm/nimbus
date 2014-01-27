@@ -76,9 +76,9 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     PhysBAM::WATER_EXAMPLE<TV> *example;
     PhysBAM::WATER_DRIVER<TV> *driver;
 
-    init_config.set_boundary_condition = false;
     DataConfig data_config;
     data_config.SetAll();
+    // data_config.SetFlag(DataConfig::LEVELSET);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 

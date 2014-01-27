@@ -61,7 +61,7 @@ struct InitConfig {
     frame = 0;
     time = 0;
     init_phase = false;
-    set_boundary_condition = true;
+    set_boundary_condition = false;
     grid_size = TV_INT::All_Ones_Vector() * kScale;
   }
 };

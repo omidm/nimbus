@@ -67,7 +67,8 @@ class WorkerLdoMap {
     /* Managing logical objects. */
     bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
-                          GeometricRegion region);
+                          GeometricRegion region,
+                          partition_id_t partition = 0);
     bool AddLogicalObject(logical_data_id_t id,
                           std::string variable,
                           partition_id_t partition);
