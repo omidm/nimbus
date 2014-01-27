@@ -46,6 +46,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_extrapolation.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
+    ${PROJECT_SOURCE_DIR}/reg_def.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
@@ -79,6 +80,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/options.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
     ${PROJECT_SOURCE_DIR}/physbam_utils.h
+    ${PROJECT_SOURCE_DIR}/reg_def.h
     ${PROJECT_SOURCE_DIR}/water_app.h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h

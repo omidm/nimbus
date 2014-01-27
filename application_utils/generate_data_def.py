@@ -63,7 +63,7 @@ def ParseLine(line, num):
     args = re.split(':', line)
     if len(args) != 3:
         print "\nCannot parse line " + str(num) + \
-                " because it contains only " + str(len(args)-1) + " ':'\n"
+                " because it contains " + str(len(args)-1) + " ':'\n"
         sys.exit(2)
     # Parsing: C++ class
     cpp_class = args[0]
@@ -77,7 +77,7 @@ def ParseLine(line, num):
         if (len(temp) > 0):
             sizes_str.append(temp)
     params = ValidateSizeTuples(sizes_str, num)
-    if len(params) == 0:
+    if len(params) != 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
     return cpp_class, nimbus_types, params
@@ -192,7 +192,6 @@ out_cc      = open(out_cc_file, 'w')
 # Code generation - .h file
 
 out_h.write("#include \"shared/nimbus.h\"\n")
-out_h.write("#include \"shared/geometric_region.h\"\n")
 out_h.write("\nnamespace %s {\n\n" % namespace)
 out_h.write("// Helper functions for defining data objects\n")
 out_h.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb);\n")
@@ -201,6 +200,7 @@ out_h.write("\n} // namespace %s" % namespace) # namespace application
 # Code generation - .cc file
 
 out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
+out_cc.write("#include \"shared/geometric_region.h\"\n")
 out_cc.write("#include \"shared/nimbus.h\"\n")
 out_cc.write("\nnamespace %s {\n\n" % namespace)
 

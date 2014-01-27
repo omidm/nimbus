@@ -5,3 +5,5 @@ opengl_3d
 *.dylib
 data_def.h
 data_def.cc
+reg_def.h
+reg_def.cc
