@@ -156,7 +156,8 @@ bool nimbus::DataManager::FindPartition(partition_id_t id, GeometricRegion* r) {
 */
 bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
                                            std::string variable,
-                                           GeometricRegion r) {
+                                           GeometricRegion r,
+                                           partition_id_t partition) {
   dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
   if (ldo_index_.HasObject(id)) {
     LogicalDataObject* ldo = ldo_index_.SpecificObject(id);
@@ -173,7 +174,7 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
     // map, and the LdoIndex for geometric queries.
     GeometricRegion* region = new GeometricRegion(r);
     dbg(DBG_MEMORY, "Allocated geo region 0x%x\n", region);
-    LogicalDataObject* ldo = new LogicalDataObject(id, variable, region);
+    LogicalDataObject* ldo = new LogicalDataObject(id, variable, region, partition);
     dbg(DBG_MEMORY, "Allocated ldo 0x%x\n", ldo);
     ldo_map_[id] = ldo;
     physical_object_map_.AddLogicalObject(ldo);
@@ -203,7 +204,7 @@ bool nimbus::DataManager::AddLogicalObject(logical_data_id_t id,
   } else {
     GeometricRegion r;
     FindPartition(partition, &r);
-    return AddLogicalObject(id, variable, r);
+    return AddLogicalObject(id, variable, r, partition);
   }
 }
 

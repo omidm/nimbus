@@ -150,7 +150,8 @@ bool nimbus::WorkerLdoMap::FindPartition(partition_id_t id, GeometricRegion* r) 
 */
 bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                             std::string variable,
-                                            GeometricRegion region) {
+                                            GeometricRegion region,
+                                            partition_id_t partition) {
   if (ldo_index_.HasObject(id)) {
     LogicalDataObject* ldo = ldo_index_.SpecificObject(id);
     if (ldo->variable() == variable && region.IsEqual(ldo->region())) {
@@ -161,7 +162,7 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
     }
   } else {
     GeometricRegion* r = new GeometricRegion(region);
-    LogicalDataObject* obj = new LogicalDataObject(id, variable, r);
+    LogicalDataObject* obj = new LogicalDataObject(id, variable, r, partition);
     return ldo_index_.AddObject(obj);
   }
 }
@@ -186,7 +187,7 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
   } else {
     GeometricRegion r;
     FindPartition(partition, &r);
-    return AddLogicalObject(id, variable, r);
+    return AddLogicalObject(id, variable, r, partition);
   }
 }
 
