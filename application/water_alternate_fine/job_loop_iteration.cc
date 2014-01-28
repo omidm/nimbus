@@ -91,6 +91,7 @@ namespace application {
     // Initialize the state of example and driver.
     PhysBAM::WATER_EXAMPLE<TV>* example;
     PhysBAM::WATER_DRIVER<TV>* driver;
+    init_config.set_boundary_condition = true;
     DataConfig data_config;
     data_config.SetAll();
     InitializeExampleAndDriver(init_config, data_config,
