@@ -143,24 +143,21 @@ namespace application {
         nimbus::IDSet<nimbus::job_id_t> before, after;
 
         // Init job
-        read.insert(data_ids[0]);
-        read.insert(data_ids[1]);
-        read.insert(data_ids[2]);
-        read.insert(data_ids[3]);
-        read.insert(data_ids[4]);
-        read.insert(data_ids[5]);
-        read.insert(data_ids[6]);
-        read.insert(data_ids[7]);
-        read.insert(data_ids[8]);
-        write.insert(data_ids[0]);
-        write.insert(data_ids[1]);
-        write.insert(data_ids[2]);
-        write.insert(data_ids[3]);
-        write.insert(data_ids[4]);
-        write.insert(data_ids[5]);
-        write.insert(data_ids[6]);
-        write.insert(data_ids[7]);
-        write.insert(data_ids[8]);
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kDomainFaceVel, APP_FACE_VEL, NULL);
+        LoadLogicalIdsInSet(this, &read, kDomainFaceVelGhost, APP_FACE_VEL_GHOST, NULL);
+        LoadLogicalIdsInSet(this, &read, kDomainPhi, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kDomainPressure, APP_PRESSURE, NULL);
+        LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
+        write.clear();
+        write = read;
+
+        std::cout << "OMID read = " << read.toString() << std::endl; 
+        std::cout << "OMID write = " << write.toString() << std::endl;
+
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");

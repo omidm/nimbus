@@ -41,6 +41,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_APP_UTILS_H_
 
+#include <stdarg.h> 
 #include "application/water_alternate_fine/physbam_include.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
@@ -171,6 +172,10 @@ namespace application {
     void LoadReadWriteSets(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* read,
         nimbus::IDSet<nimbus::logical_data_id_t>* write);
+
+    void LoadLogicalIdsInSet(nimbus::Job* job,
+        nimbus::IDSet<nimbus::logical_data_id_t>* set,
+        const nimbus::GeometricRegion& region, ...);
 
     bool SerializeParameter(const int frame, std::string* result);
     bool SerializeParameter(const int frame, const T time, std::string *result);
