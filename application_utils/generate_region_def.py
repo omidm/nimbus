@@ -58,10 +58,12 @@ def ValidateSizeTuples(sizes, num):
         params.append(param_tup)
     return params
 
+bool_map = {"true" : True, "false" : False}
+
 def ParseLine(line, num):
     # Parsing: begin parsing
     args = re.split(':', line)
-    if len(args) != 2:
+    if len(args) != 3:
         print "\nCannot parse line " + str(num) + \
                 " because it contains " + str(len(args)-1) + " ':'\n"
         sys.exit(2)
@@ -83,7 +85,11 @@ def ParseLine(line, num):
     if len(params) != 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
-    return reg_name, params
+    share_boundary = args[2].strip()
+    if share_boundary not in bool_map:
+        print "\nError parsing share_boundary field at line %i\n"  % num
+        sys.exit(2)
+    return reg_name, params, bool_map[share_boundary]
 
 class Region():
     def __init__(self, x, dx):
@@ -97,7 +103,7 @@ class Region():
 inner   = 'inner'
 outer = 'outer'
 
-def GetRegions(params, num, reg_type):
+def GetRegions(params, hare_boundary, num, reg_type):
     domain = params[0]
     rnum   = params[1]
     ghostw = params[2]
@@ -131,6 +137,9 @@ def GetRegions(params, num, reg_type):
         for i in range(1, rnum[dim], 1):
             rstart[dim][i] = rstart[dim][i-1] + rsize[dim][i-1]
     regions = []
+    if share_boundary:
+        for dim in range(0, 3):
+            rsize[dim] = map(lambda x : x+1, rsize[dim])
     if reg_type == outer and \
             ghostw[0] == 0 and ghostw[1] == 0 and ghostw[2] == 0:
         return regions
@@ -163,11 +172,11 @@ for num, line in enumerate(reg_config):
     # Parsing: comment
     if line[0] == "#":
         continue
-    reg_name, params = ParseLine(line, num)
+    reg_name, params, share_boundary = ParseLine(line, num)
     # Regions:
     regions = {}
-    regions[inner]   = GetRegions(params, num, inner)
-    regions[outer] = GetRegions(params, num, outer)
+    regions[inner]   = GetRegions(params, share_boundary, num, inner)
+    regions[outer] = GetRegions(params, share_boundary, num, outer)
     if reg_name in reg_map:
         print "\nWarning: Redefinition of " + reg_name + " at line " + str(num)
         print "Ignoring the new definition ..."

@@ -63,7 +63,7 @@ bool_map = {"true" : True, "false" : False}
 def ParseLine(line, num):
     # Parsing: begin parsing
     args = re.split(':', line)
-    if len(args) != 4:
+    if len(args) != 5:
         print "\nCannot parse line " + str(num) + \
                 " because it contains " + str(len(args)-1) + " ':'\n"
         sys.exit(2)
@@ -86,7 +86,12 @@ def ParseLine(line, num):
     if include_boundary not in bool_map:
         print "\nError parsing include_boundary field at line %i\n"  % num
         sys.exit(2)
-    return cpp_class, nimbus_types, params, bool_map[include_boundary]
+    share_boundary = args[4].strip()
+    if share_boundary not in bool_map:
+        print "\nError parsing share_boundary field at line %i\n"  % num
+        sys.exit(2)
+    return cpp_class, nimbus_types, params, \
+            bool_map[include_boundary], bool_map[share_boundary]
 
 class Partition():
     def __init__(self, x, dx):
@@ -97,7 +102,7 @@ class Partition():
                 (self.x[0], self.x[1], self.x[2], \
                 self.dx[0], self.dx[1], self.dx[2])
 
-def GetPartitionIds(partn_id, params, include_boundary, num):
+def GetPartitionIds(partn_id, params, include_boundary, share_boundary, num):
     domain = params[0]
     pnum   = params[1]
     ghostw = params[2]
@@ -116,9 +121,9 @@ def GetPartitionIds(partn_id, params, include_boundary, num):
                     " at line " + str(num) + " are not of equal size."
             ps[dim] = psl[dim]+1
     if include_boundary:
-        pnum   = map(lambda x : 3*x+2, pnum)
+        pnum = map(lambda x : 3*x+2, pnum)
     else:
-        pnum   = map(lambda x : 3*x, pnum)
+        pnum = map(lambda x : 3*x, pnum)
     psize  = {0:[0]*pnum[0], 1:[0]*pnum[1], 2:[0]*pnum[2]}
     pstart = {0:[0]*pnum[0], 1:[0]*pnum[1], 2:[0]*pnum[2]}
     for dim in range(0, 3):
@@ -142,6 +147,9 @@ def GetPartitionIds(partn_id, params, include_boundary, num):
             pstart[dim][0] = 1
         for i in range(1, pnum[dim], 1):
             pstart[dim][i] = pstart[dim][i-1] + psize[dim][i-1]
+    if share_boundary:
+        for dim in range(0, 3):
+            psize[dim] = map(lambda x : x+1, psize[dim])
     pidset = set()
     for i in range(0, pnum[0]):
         for j in range(0, pnum[1]):
@@ -180,9 +188,10 @@ for num, line in enumerate(data_config):
     # Parsing: comment
     if line[0] == "#":
         continue
-    cpp_class, nimbus_types, params, include_boundary = ParseLine(line, num)
+    cpp_class, nimbus_types, params, include_boundary, share_boundary = ParseLine(line, num)
     # Data for code generation:
-    partns = GetPartitionIds(partn_pid, params, include_boundary, num)
+    partns = GetPartitionIds(partn_pid, params, \
+            include_boundary, share_boundary,  num)
     for nt in nimbus_types:
         if nt in ntypes_pid:
             print "\nWarning: Redefinition of " + nt + " at line " + str(num)
