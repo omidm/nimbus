@@ -306,6 +306,8 @@ namespace nimbus {
                        ParticleContainer& particle_container,
                        bool positive,
                        bool merge = false) {
+      // TODO(quhang), will be passed as parameters later.
+      const int shift[3] = {0, 0, 0};
       ParticleArray* particles;
       if (positive) {
         particles = &particle_container.positive_particles;
@@ -346,16 +348,16 @@ namespace nimbus {
              / static_cast<int>(sizeof(ParticleInternal));
 
         for (ParticleInternal* p = buffer; p != buffer_end; ++p) {
-          int_dimension_t xi = p->index[0];
-          int_dimension_t yi = p->index[1];
-          int_dimension_t zi = p->index[2];
-          if (xi >= region->x() &&
-              xi < region->x()+region->dx() &&
-              yi >= region->y() &&
-              yi < region->y()+region->dy() &&
-              zi >= region->z() &&
-              zi < region->z()+region->dz()) {
-            TV_INT bucket_index(xi, yi, zi);
+          int_dimension_t relative_x = p->index[0] - shift[0];
+          int_dimension_t relative_y = p->index[1] - shift[1];
+          int_dimension_t relative_z = p->index[2] - shift[2];
+          if (relative_x >= region->x() &&
+              relative_x < region->x()+region->dx() &&
+              relative_y >= region->y() &&
+              relative_y < region->y()+region->dy() &&
+              relative_z >= region->z() &&
+              relative_z < region->z()+region->dz()) {
+            TV_INT bucket_index(relative_x, relative_y, relative_z);
             assert(particles->Valid_Index(bucket_index));
             // NOTE(By Chinmayee): Please comment out these changes and don't
             // delete them when pushing any updates, till we verify that the
@@ -398,6 +400,8 @@ namespace nimbus {
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
+      // TODO(quhang), will be passed as parameters later.
+      const int shift[3] = {0, 0, 0};
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -423,6 +427,9 @@ namespace nimbus {
               return false;
             }
             ParticleBucket* particle_bucket = (*particles)(bucket_index);
+            int absolute_x = x + shift[0];
+            int absolute_y = y + shift[1];
+            int absolute_z = z + shift[2];
             while (particle_bucket) {
               for (int i = 1; i <= particle_bucket->array_collection->Size();
                    i++) {
@@ -432,16 +439,16 @@ namespace nimbus {
                   const PhysicalDataInstance* instance = *iter;
                   GeometricRegion* instanceRegion = instance->region();
                   // If it's inside the region of the physical data instance.
-                  if (x >= instanceRegion->x() &&
-                      x < (instanceRegion->x() + instanceRegion->dx()) &&
-                      y >= instanceRegion->y() &&
-                      y < (instanceRegion->y() + instanceRegion->dy()) &&
-                      z >= instanceRegion->z() &&
-                      z < (instanceRegion->z() + instanceRegion->dz())) {
+                  if (absolute_x >= instanceRegion->x() &&
+                      absolute_x < (instanceRegion->x() + instanceRegion->dx()) &&
+                      absolute_y >= instanceRegion->y() &&
+                      absolute_y < (instanceRegion->y() + instanceRegion->dy()) &&
+                      absolute_z >= instanceRegion->z() &&
+                      absolute_z < (instanceRegion->z() + instanceRegion->dz())) {
                     ParticleInternal particle_buffer;
-                    particle_buffer.index[0] = x;
-                    particle_buffer.index[1] = y;
-                    particle_buffer.index[2] = z;
+                    particle_buffer.index[0] = absolute_x;
+                    particle_buffer.index[1] = absolute_y;
+                    particle_buffer.index[2] = absolute_z;
                     VECTOR_TYPE particle_delta = particle_bucket->X(i);
                     particle_buffer.delta[0] = particle_delta.x;
                     particle_buffer.delta[1] = particle_delta.y;
@@ -488,6 +495,8 @@ namespace nimbus {
                               ParticleContainer& particle_container,
                               bool positive,
                               bool merge = false) {
+      // TODO(quhang), will be passed as parameters later.
+      const int shift[3] = {0, 0, 0};
       RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
@@ -531,16 +540,16 @@ namespace nimbus {
             / static_cast<int>(sizeof(RemovedParticleInternal));
 
         for (RemovedParticleInternal* p = buffer; p != buffer_end; ++p) {
-          int_dimension_t xi = p->index[0];
-          int_dimension_t yi = p->index[1];
-          int_dimension_t zi = p->index[2];
-          if (xi >= region->x() &&
-              xi < region->x()+region->dx() &&
-              yi >= region->y() &&
-              yi < region->y()+region->dy() &&
-              zi >= region->z() &&
-              zi < region->z()+region->dz()) {
-            TV_INT bucket_index(xi, yi, zi);
+          int_dimension_t relative_x = p->index[0] - shift[0];
+          int_dimension_t relative_y = p->index[1] - shift[1];
+          int_dimension_t relative_z = p->index[2] - shift[2];
+          if (relative_x >= region->x() &&
+              relative_x < region->x()+region->dx() &&
+              relative_y >= region->y() &&
+              relative_y < region->y()+region->dy() &&
+              relative_z >= region->z() &&
+              relative_z < region->z()+region->dz()) {
+            TV_INT bucket_index(relative_x, relative_y, relative_z);
             assert(particles->Valid_Index(bucket_index));
             // NOTE(By Chinmayee): Please comment out these changes and don't
             // delete them when pushing any updates, till we verify that the
@@ -586,6 +595,8 @@ namespace nimbus {
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
+      // TODO(quhang), will be passed as parameters later.
+      const int shift[3] = {0, 0, 0};
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -611,6 +622,9 @@ namespace nimbus {
               return false;
             }
             RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
+            int absolute_x = x + shift[0];
+            int absolute_y = y + shift[1];
+            int absolute_z = z + shift[2];
             // Note: the outer while loop might not be necessary for removed
             // particle bucket.
             while (particle_bucket) {
@@ -622,16 +636,16 @@ namespace nimbus {
                   const PhysicalDataInstance* instance = *iter;
                   GeometricRegion* instanceRegion = instance->region();
                   // If it's inside the region of the physical data instance.
-                  if (x >= instanceRegion->x() &&
-                      x < (instanceRegion->x() + instanceRegion->dx()) &&
-                      y >= instanceRegion->y() &&
-                      y < (instanceRegion->y() + instanceRegion->dy()) &&
-                      z >= instanceRegion->z() &&
-                      z < (instanceRegion->z() + instanceRegion->dz())) {
+                  if (absolute_x >= instanceRegion->x() &&
+                      absolute_x < (instanceRegion->x() + instanceRegion->dx()) &&
+                      absolute_y >= instanceRegion->y() &&
+                      absolute_y < (instanceRegion->y() + instanceRegion->dy()) &&
+                      absolute_z >= instanceRegion->z() &&
+                      absolute_z < (instanceRegion->z() + instanceRegion->dz())) {
                     RemovedParticleInternal particle_buffer;
-                    particle_buffer.index[0] = x;
-                    particle_buffer.index[1] = y;
-                    particle_buffer.index[2] = z;
+                    particle_buffer.index[0] = absolute_x;
+                    particle_buffer.index[1] = absolute_y;
+                    particle_buffer.index[2] = absolute_z;
                     VECTOR_TYPE particle_delta = particle_bucket->X(i);
                     particle_buffer.delta[0] = particle_delta.x;
                     particle_buffer.delta[1] = particle_delta.y;
