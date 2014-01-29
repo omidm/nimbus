@@ -306,7 +306,7 @@ namespace nimbus {
                        ParticleContainer& particle_container,
                        bool positive,
                        bool merge = false) {
-      // TODO(quhang), will be passed as parameters later.
+      // TODO(quhang) , will be passed as parameters later.
       const int shift[3] = {0, 0, 0};
       ParticleArray* particles;
       if (positive) {
@@ -400,7 +400,7 @@ namespace nimbus {
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      // TODO(quhang), will be passed as parameters later.
+      // TODO(quhang) , will be passed as parameters later.
       const int shift[3] = {0, 0, 0};
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
@@ -495,7 +495,7 @@ namespace nimbus {
                               ParticleContainer& particle_container,
                               bool positive,
                               bool merge = false) {
-      // TODO(quhang), will be passed as parameters later.
+      // TODO(quhang) , will be passed as parameters later.
       const int shift[3] = {0, 0, 0};
       RemovedParticleArray* particles;
       if (positive) {
@@ -595,7 +595,7 @@ namespace nimbus {
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      // TODO(quhang), will be passed as parameters later.
+      // TODO(quhang) , will be passed as parameters later.
       const int shift[3] = {0, 0, 0};
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
