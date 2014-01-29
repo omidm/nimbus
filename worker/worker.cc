@@ -259,6 +259,10 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   Data * data = application_->CloneData(cm->data_name());
   data->set_logical_id(cm->logical_data_id().elem());
   data->set_physical_id(cm->physical_data_id().elem());
+  data->set_name(cm->data_name());
+  const LogicalDataObject* ldo;
+  ldo = ldo_map_->FindLogicalObject(cm->logical_data_id().elem());
+  data->set_region(*(ldo->region()));
   AddData(data);
 
   Job * job = new CreateDataJob();
