@@ -133,6 +133,24 @@ namespace application {
         return false;
     }
 
+    void LoadLogicalIdsInSet(nimbus::Job* job,
+        nimbus::IDSet<nimbus::logical_data_id_t>* set,
+        const nimbus::GeometricRegion& region, ...) {
+      nimbus::CLdoVector result;
+      va_list vl;
+      va_start(vl, region);
+      char* arg = va_arg(vl, char*);
+      while (arg != NULL) {
+        job->GetCoveredLogicalObjects(&result, arg, &region);
+        for (size_t i = 0; i < result.size(); ++i) {
+          set->insert(result[i]->id());
+          dbg(APP_LOG, "Loaded logical id %d of variable %s to the set.\n", result[i]->id(), arg);
+        }
+        arg = va_arg(vl, char*);
+      }
+      va_end(vl);
+    }
+
     void LoadReadWriteSets(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* read,
         nimbus::IDSet<nimbus::logical_data_id_t>* write) {
