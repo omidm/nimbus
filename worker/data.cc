@@ -58,6 +58,14 @@ physical_data_id_t Data::physical_id() {
   return physical_id_;
 }
 
+std::string Data::name() {
+    return name_;
+}
+
+GeometricRegion Data::region() {
+    return region_;
+}
+
 void Data::set_logical_id(logical_data_id_t logical_id) {
   logical_id_ = logical_id;
 }
@@ -69,10 +77,11 @@ int Data::get_debug_info() {
     return -1;
 }
 
-std::string Data::name() {
-    return name_;
-}
-
 void Data::set_name(std::string name) {
     name_ = name;
 }
+
+void Data::set_region(const GeometricRegion& region) {
+    region_ = region;
+}
+

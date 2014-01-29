@@ -43,6 +43,7 @@
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
 #include "string.h"
+#include "stdio.h"
 
 namespace application {
 
@@ -52,8 +53,7 @@ namespace application {
     }
 
     nimbus::Data* DataApp::Clone() {
-        DataApp *d = static_cast<DataApp *>(nimbus::PhysBAMData::Clone());
-        d->set_name(name());
+        DataApp *d = new DataApp(name(), size());
         return d;
     }
 

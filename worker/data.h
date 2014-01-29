@@ -79,15 +79,20 @@ class Data {
 
   logical_data_id_t logical_id();
   physical_data_id_t physical_id();
+  std::string name();
+  GeometricRegion region();
+
   void set_logical_id(logical_data_id_t logical_id);
   void set_physical_id(physical_data_id_t physical_id);
-  std::string name();
   void set_name(std::string name);
+  void set_region(const GeometricRegion& region);
 
  private:
   logical_data_id_t logical_id_;
   physical_data_id_t physical_id_;
   partition_id_t partition_id_;
+  GeometricRegion region_;
+  std::string name_;
   bool advanceData_;
 
   // Set of data ids that could be involved in SYNC jobs with this data.
@@ -95,9 +100,6 @@ class Data {
 
   // Set of partition ids neighbor to this partition.
   IDSet<partition_id_t> neighbor_partitions_;
-
-  // data name
-  std::string name_;
 };
 
 }  // namespace nimbus

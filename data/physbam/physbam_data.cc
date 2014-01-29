@@ -51,6 +51,18 @@ namespace nimbus {
 */
 PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 
+void PhysBAMData::set_buffer(char *b, int_dimension_t s) {
+    buffer_ = b;
+    size_ = s;
+}
+
+int_dimension_t PhysBAMData::size() {
+    return size_;
+}
+
+void PhysBAMData::set_size(int_dimension_t s) {
+    size_ = s;
+}
 
 /**
  * \fn Data * nimbus::PhysBAMData::Clone()
