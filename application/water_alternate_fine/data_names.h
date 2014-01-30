@@ -32,21 +32,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+/*
+ * This file defines the name of jobs that will be used for registration and
+ * spawning the jobs.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_NIMBUS_H_
-#define NIMBUS_SHARED_NIMBUS_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_NAMES_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_NAMES_H_
 
-#include "shared/log.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
-#include "worker/application.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/worker.h"
+#define APP_FACE_VEL "face_vel"
+#define APP_FACE_VEL_GHOST "face_vel_ghost"
+#define APP_PHI "phi"
+#define APP_PRESSURE "pressure"
+#define APP_POS_PARTICLES "pos_particles"
+#define APP_NEG_PARTICLES "neg_particles"
+#define APP_POS_REM_PARTICLES "pos_rem_particles"
+#define APP_NEG_REM_PARTICLES "neg_rem_particles"
+#define APP_LAST_UNIQUE_PARTICLE_ID "last_unique_particle_id"
 
-namespace nimbus {
-void nimbus_initialize();
-}
-
-#endif  // NIMBUS_SHARED_NIMBUS_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_NAMES_H_

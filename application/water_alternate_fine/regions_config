@@ -2,6 +2,6 @@
 # Partition strategy name : (domain), (number of partitions), (ghost width) : share_boundary #
 ##############################################################################################
 
-reg_ghostw3  : (30, 30, 30), (1, 1, 1), (3, 3, 3) : false
-reg_ghostw1  : (30, 30, 30), (1, 1, 1), (1, 1, 1) : false
-vert_ghostw3 : (30, 30, 30), (1, 1, 1), (3, 3, 3) : true
+RegGhostw3  : (30, 30, 30), (1, 1, 1), (3, 3, 3) : false
+RegGhostw1  : (30, 30, 30), (1, 1, 1), (1, 1, 1) : false
+VertGhostw3 : (30, 30, 30), (1, 1, 1), (3, 3, 3) : true

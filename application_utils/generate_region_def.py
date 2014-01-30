@@ -28,8 +28,9 @@ parser.add_option("-a", "--app_path", dest="app_path",
                   help="directory where application and data config file resides")
 (options, args)  = parser.parse_args()
 reg_config_file  = options.infile           # input region config file
-out_h_file       = options.outfile + ".h"   # output .h file for gen code
-out_cc_file      = options.outfile + ".cc"  # output .cc file for gen code
+out_str          = options.outfile
+out_h_file       = out_str + ".h"           # output .h file for gen code
+out_cc_file      = out_str + ".cc"          # output .cc file for gen code
 namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
@@ -100,8 +101,8 @@ class Region():
                 (self.x[0], self.x[1], self.x[2], \
                 self.dx[0], self.dx[1], self.dx[2])
 
-inner   = 'inner'
-outer = 'outer'
+inner   = 'Inner'
+outer = 'Outer'
 
 def GetRegions(params, hare_boundary, num, reg_type):
     domain = params[0]
@@ -201,6 +202,10 @@ out_cc      = open(out_cc_file, 'w')
 
 # Code generation - .h file
 
+guard_str = "NIMBUS_%s_%s_H_" % \
+        (curr_path.upper().replace('/', '_'), out_str.upper())
+out_h.write("#ifndef %s\n" % guard_str)
+out_h.write("#define %s\n\n" % guard_str)
 out_h.write("#include \"shared/geometric_region.h\"\n")
 out_h.write("#include \"shared/nimbus.h\"\n")
 out_h.write("\nnamespace %s {\n\n" % namespace)
@@ -210,10 +215,11 @@ for rs in reg_map:
     for l in reg_map[rs]:
         ls = len(reg_map[rs][l])
         if ls > 0:
-            out_h.write("nimbus::GeometricRegion k%s_%s [%i];\n" % (rs, l, ls))
+            out_h.write("nimbus::GeometricRegion k%s%s [%i];\n" % (rs, l, ls))
 out_h.write("\n")
 out_h.write("void InitializeRegions();\n")
-out_h.write("\n} // namespace %s" % namespace) # namespace application
+out_h.write("\n} // namespace %s\n\n" % namespace) # namespace application
+out_h.write("#endif // %s" % guard_str)
 
 # Code generation - .cc file
 
@@ -228,7 +234,7 @@ for rs in reg_map:
         if ls > 0:
             out_cc.write("\t// k%s_%s\n" % (rs, l))
             for i in range(0, ls, 1):
-                out_cc.write("\tk%s_%s[%i].Rebuild(%s);\n" % \
+                out_cc.write("\tk%s%s[%i].Rebuild(%s);\n" % \
                         (rs, l, i, str(reg_map[rs][l][i])))
 out_cc.write("}\n") # InitializeRegions
 out_cc.write("\n} // namespace %s" % namespace) # namespace application

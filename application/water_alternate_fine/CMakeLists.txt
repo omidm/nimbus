@@ -24,6 +24,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/app_utils.cc
     ${PROJECT_SOURCE_DIR}/data_app.cc
     ${PROJECT_SOURCE_DIR}/data_def.cc
+    ${PROJECT_SOURCE_DIR}/data_face_array.cc
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
@@ -54,8 +55,13 @@ SET(${PROJECT_NAME}_cpp
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
+    ${PROJECT_SOURCE_DIR}/data_include.h
+    ${PROJECT_SOURCE_DIR}/data_names.h
     ${PROJECT_SOURCE_DIR}/data_app.h
     ${PROJECT_SOURCE_DIR}/data_def.h
+    ${PROJECT_SOURCE_DIR}/data_face_array.h
+    ${PROJECT_SOURCE_DIR}/job_include.h
+    ${PROJECT_SOURCE_DIR}/job_names.h
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_loop_frame.h

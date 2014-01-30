@@ -39,7 +39,8 @@
  */
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_app.h"
+#include "application/water_alternate_fine/data_def.h"
+#include "application/water_alternate_fine/data_names.h"
 #include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_names.h"
 #include "shared/dbg.h"
@@ -59,6 +60,8 @@ namespace application {
     void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing main job\n");
 
+        DefineNimbusData(this);
+
         // Partition setup
         nimbus::ID<partition_id_t> partition_id1(0);
         nimbus::ID<partition_id_t> partition_id2(1);
@@ -74,23 +77,9 @@ namespace application {
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 9;
-        std::vector<logical_data_id_t> data_ids;
+        int data_num = 8;
+        std::vector<nimbus::logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
-
-        // Face arrays
-        nimbus::Parameter fa_params;
-        fa_params.set_ser_data(SerializedData(""));
-        DefineData(APP_FACE_VEL,
-                   data_ids[0],
-                   partition_id1.elem(),
-                   neighbor_partitions,
-                   fa_params);
-        DefineData(APP_FACE_VEL_GHOST,
-                   data_ids[1],
-                   partition_id5.elem(),
-                   neighbor_partitions,
-                   fa_params);
 
         // Scalar arrays
         nimbus::Parameter sa_params;
@@ -154,9 +143,6 @@ namespace application {
 
         write.clear();
         write = read;
-
-        std::cout << "OMID read = " << read.toString() << std::endl; 
-        std::cout << "OMID write = " << write.toString() << std::endl;
 
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));

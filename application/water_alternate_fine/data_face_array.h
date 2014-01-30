@@ -32,21 +32,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+/*
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_NIMBUS_H_
-#define NIMBUS_SHARED_NIMBUS_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_FACE_ARRAY_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_FACE_ARRAY_H_
 
-#include "shared/log.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
-#include "worker/application.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/worker.h"
+#include "data/physbam/physbam_data.h"
+#include "shared/nimbus.h"
 
-namespace nimbus {
-void nimbus_initialize();
-}
+namespace application {
 
-#endif  // NIMBUS_SHARED_NIMBUS_H_
+    class DataFaceArray : public nimbus::PhysBAMData {
+            typedef float T;
+        public:
+            explicit DataFaceArray(std::string n);
+            virtual nimbus::Data* Clone();
+    };
+
+} // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_FACE_ARRAY_H_

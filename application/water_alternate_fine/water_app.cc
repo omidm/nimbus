@@ -36,29 +36,9 @@
  */
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_app.h"
-#include "application/water_alternate_fine/job_adjust_phi.h"
-#include "application/water_alternate_fine/job_calculate_frame.h"
-#include "application/water_alternate_fine/job_delete_particles.h"
-#include "application/water_alternate_fine/job_initialize.h"
-#include "application/water_alternate_fine/job_loop_frame.h"
-#include "application/water_alternate_fine/job_loop_iteration.h"
-#include "application/water_alternate_fine/job_main.h"
-#include "application/water_alternate_fine/job_names.h"
-#include "application/water_alternate_fine/job_modify_levelset.h"
-#include "application/water_alternate_fine/job_reincorporate_removed_particles.h"
-#include "application/water_alternate_fine/job_super_1.h"
-#include "application/water_alternate_fine/job_super_2.h"
-#include "application/water_alternate_fine/job_super_3.h"
-#include "application/water_alternate_fine/job_adjust_phi_with_objects.h"
-#include "application/water_alternate_fine/job_advect_phi.h"
-#include "application/water_alternate_fine/job_step_particles.h"
-#include "application/water_alternate_fine/job_advect_removed_particles.h"
-#include "application/water_alternate_fine/job_advect_v.h"
-#include "application/water_alternate_fine/job_apply_forces.h"
-#include "application/water_alternate_fine/job_projection.h"
-#include "application/water_alternate_fine/job_extrapolation.h"
-#include "application/water_alternate_fine/job_write_frame.h"
+#include "application/water_alternate_fine/data_include.h"
+#include "application/water_alternate_fine/job_include.h"
+#include "application/water_alternate_fine/reg_def.h"
 #include "application/water_alternate_fine/water_app.h"
 #include "data/scalar_data.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
@@ -82,13 +62,16 @@ namespace application {
 
         dbg(APP_LOG, "Loading water application\n");
 
+        // Region constants
+        InitializeRegions();
+
         // PhysBAM logging and R/W
         PhysBAM::LOG::Initialize_Logging(false, false, 1<<30, true, kThreadsNum);
         PhysBAM::FILE_UTILITIES::Create_Directory(kOutputDir+"/common");
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
-        RegisterData(APP_FACE_VEL, new DataApp(APP_FACE_VEL, kFaceVelBufSize));
+        RegisterData(APP_FACE_VEL, new DataFaceArray(APP_FACE_VEL));
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
         RegisterData(APP_FACE_VEL_GHOST, new DataApp(APP_FACE_VEL_GHOST, kFaceVelGhostBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_PHI);

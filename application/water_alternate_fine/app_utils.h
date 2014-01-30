@@ -53,42 +53,6 @@
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
-#ifndef APP_FACE_VEL
-#define APP_FACE_VEL "face_vel"
-#endif
-
-#ifndef APP_FACE_VEL_GHOST
-#define APP_FACE_VEL_GHOST "face_vel_ghost"
-#endif
-
-#ifndef APP_PHI
-#define APP_PHI "phi"
-#endif
-
-#ifndef APP_PRESSURE
-#define APP_PRESSURE "pressure"
-#endif
-
-#ifndef APP_POS_PARTICLES
-#define APP_POS_PARTICLES "pos_particles"
-#endif
-
-#ifndef APP_NEG_PARTICLES
-#define APP_NEG_PARTICLES "neg_particles"
-#endif
-
-#ifndef APP_POS_REM_PARTICLES
-#define APP_POS_REM_PARTICLES "pos_rem_particles"
-#endif
-
-#ifndef APP_NEG_REM_PARTICLES
-#define APP_NEG_REM_PARTICLES "neg_rem_particles"
-#endif
-
-#ifndef APP_LAST_UNIQUE_PARTICLE_ID
-#define APP_LAST_UNIQUE_PARTICLE_ID "last_unique_particle_id"
-#endif
-
 namespace application {
 
     // simulation dimension

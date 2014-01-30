@@ -32,21 +32,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Header file for application developers. */
+/*
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_NIMBUS_H_
-#define NIMBUS_SHARED_NIMBUS_H_
+#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_INCLUDE_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_INCLUDE_H_
 
-#include "shared/log.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
-#include "worker/application.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/worker.h"
+#include "application/water_alternate_fine/data_app.h"
+#include "application/water_alternate_fine/data_face_array.h"
+#include "application/water_alternate_fine/data_names.h"
 
-namespace nimbus {
-void nimbus_initialize();
-}
-
-#endif  // NIMBUS_SHARED_NIMBUS_H_
+#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_INCLUDE_H_

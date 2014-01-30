@@ -28,8 +28,9 @@ parser.add_option("-a", "--app_path", dest="app_path",
                   help="directory where application and data config file resides")
 (options, args) = parser.parse_args()
 data_config_file = options.infile           # input data config file
-out_h_file       = options.outfile + ".h"   # output .h file for gen code
-out_cc_file      = options.outfile + ".cc"  # output .cc file for gen code
+out_str          = options.outfile
+out_h_file       = out_str + ".h"           # output .h file for gen code
+out_cc_file      = out_str + ".cc"          # output .cc file for gen code
 namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
@@ -220,11 +221,16 @@ out_cc      = open(out_cc_file, 'w')
 
 # Code generation - .h file
 
+guard_str = "NIMBUS_%s_%s_H_" % \
+        (curr_path.upper().replace('/', '_'), out_str.upper())
+out_h.write("#ifndef %s\n" % guard_str)
+out_h.write("#define %s\n\n" % guard_str)
 out_h.write("#include \"shared/nimbus.h\"\n")
 out_h.write("\nnamespace %s {\n\n" % namespace)
 out_h.write("// Helper functions for defining data objects\n")
-out_h.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb);\n")
-out_h.write("\n} // namespace %s" % namespace) # namespace application
+out_h.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb);\n")
+out_h.write("\n} // namespace %s\n\n" % namespace) # namespace application
+out_h.write("#endif // %s" % guard_str)
 
 # Code generation - .cc file
 
@@ -233,7 +239,7 @@ out_cc.write("#include \"shared/geometric_region.h\"\n")
 out_cc.write("#include \"shared/nimbus.h\"\n")
 out_cc.write("\nnamespace %s {\n\n" % namespace)
 
-out_cc.write(logical_id_vector_str + " *DefineNimbusData(nimbus::Job *jb) {\n\n")
+out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n\n")
 
 # geometric regions
 pt_num_str = "pnum"
@@ -264,9 +270,9 @@ data_num_str = "data_num"
 out_cc.write("\n")
 out_cc.write("\t// Data setup\n")
 out_cc.write("\tint %s = %i;\n" % (data_num_str, data_num))
-out_cc.write("\t%s *%s = new %s();\n" %\
-        (logical_id_vector_str, data_ids_str, logical_id_vector_str))
-out_cc.write("\tjb->GetNewLogicalDataID(%s, %s);\n" %\
+out_cc.write("\t%s %s;\n" %\
+        (logical_id_vector_str, data_ids_str))
+out_cc.write("\tjb->GetNewLogicalDataID(&%s, %s);\n" %\
         (data_ids_str, data_num_str))
 ids_used_str = "data_ids_used"
 ids_used     = 0
@@ -291,7 +297,7 @@ for d in ntypes_pid:
             (ids_to_use, temp[0])
     out_cc.write("\t%s;\n" % decl)
     out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % ids_to_use_str)
-    out_cc.write("\t\tjb->DefineData(\"%s\", (*%s)[%s + i], %s.elem(), %s, %s);\n" % \
+    out_cc.write("\t\tjb->DefineData(\"%s\", %s[%s + i], %s.elem(), %s, %s);\n" % \
             (d, data_ids_str, ids_used_str, \
             ("%s[%s[i]]" % (partitions_str, pset_str)), np_str, dp_str))
     out_cc.write("\t}\n")
