@@ -49,6 +49,7 @@ namespace application {
         public:
             explicit DataFaceArray(std::string n);
             virtual nimbus::Data* Clone();
+            virtual void Create();
     };
 
 } // namespace application

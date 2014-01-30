@@ -48,13 +48,16 @@ namespace application {
     }
 
     nimbus::Data* DataFaceArray::Clone() {
-        DataFaceArray *d = new DataFaceArray(name());
-        nimbus::GeometricRegion r = d->region();
+        return (new DataFaceArray(name()));
+    }
+
+    void DataFaceArray::Create() {
+        nimbus::GeometricRegion r = region();
         int s = ((r.dx() + 1) * r.dy() * r.dz() +
                  r.dx() * (r.dy() + 1) * r.dz() +
                  r.dx() * r.dy() * (r.dz() + 1)) * sizeof(T);
-        d->set_size(s);
-        return d;
+        set_size(s);
+        nimbus::PhysBAMData::Create();
     }
 
 } // namespace application

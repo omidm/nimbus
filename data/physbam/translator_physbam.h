@@ -820,7 +820,7 @@ namespace nimbus {
                                          dest->y() + dest->dy());
       int_dimension_t y_size = y_end - y_start;
 
-      int_dimension_t z_start = std::max(src->y(), dest->z());
+      int_dimension_t z_start = std::max(src->z(), dest->z());
       int_dimension_t z_end   = std::min(src->z() + src->dz(),
                                          dest->z() + dest->dz());
       int_dimension_t z_size = z_end - z_start;
