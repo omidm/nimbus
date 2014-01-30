@@ -61,16 +61,17 @@ template<class TV> WATER_EXAMPLE<TV>::
 {
     delete &projection;
 }
-//#####################################################################
-// Initialize_Phi
-//#####################################################################
+
+// Initializes the initial levelset function.
 template<class TV> void WATER_EXAMPLE<TV>::
-Initialize_Phi()
-{
-    ARRAY<T,TV_INT>& phi=particle_levelset_evolution.phi;
-    for(typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);iterator.Valid();iterator.Next()){
-        const TV &X=iterator.Location();
-        phi(iterator.Cell_Index())=X.y-(T)0.35;}
+Initialize_Phi() {
+  ARRAY<T,TV_INT>& phi = particle_levelset_evolution.phi;
+  for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);
+       iterator.Valid();
+       iterator.Next()) {
+    const TV& X = iterator.Location();
+    phi(iterator.Cell_Index()) = X.y - (T)0.35;
+  }
 }
 //#####################################################################
 // Initialize_Phi
@@ -81,108 +82,134 @@ Initialize_Grid(TV_INT counts,RANGE<TV> domain)
 {
     mac_grid.Initialize(counts,domain,true);
 }
-//#####################################################################
-// Set_Boundary_Conditions
-//#####################################################################
+
+// Sets the boundary conditions before projection. It might read levelset and
+// velocity near the boundary. For velocity, it only reads to check if an index
+// is valid. It will try to write to psi_D and psi_N of the whole region, and
+// write to pressure and velocity in the boundary region.
+// From what I read. --quhang
 template<class TV> void WATER_EXAMPLE<TV>::
-Set_Boundary_Conditions(const T time)
-{
-    projection.elliptic_solver->psi_D.Fill(false);
-    projection.elliptic_solver->psi_N.Fill(false);
-    for (int axis=1;axis<=TV::dimension;axis++) {
-      for(int axis_side=1;axis_side<=2;axis_side++) {
-        int side=2*(axis-1)+axis_side;
-        TV_INT interior_cell_offset =
-            axis_side==1?TV_INT():-TV_INT::Axis_Vector(axis);
-        TV_INT exterior_cell_offset =
-            axis_side==1?-TV_INT::Axis_Vector(axis):TV_INT();
-        TV_INT boundary_face_offset =
-            axis_side==1?TV_INT::Axis_Vector(axis):-TV_INT::Axis_Vector(axis);
-        if(domain_boundary(axis)(axis_side)) {
-          for (typename GRID<TV>::FACE_ITERATOR iterator(
-                  mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);
-              iterator.Valid();
-              iterator.Next()) {
-                TV_INT face = iterator.Face_Index()+boundary_face_offset;
-                // Access levelset here.
-                if (particle_levelset_evolution.phi(
-                        face+interior_cell_offset)<=0) {
-                  // Access face velocity here.
-                  if (face_velocities.Component(axis).Valid_Index(face)){
-                    projection.elliptic_solver->psi_N.Component(axis)(face)
-                        =true;
-                    face_velocities.Component(axis)(face)=0;
-                  }
-                } else {
-                  TV_INT cell=face+exterior_cell_offset;
-                  projection.elliptic_solver->psi_D(cell)=true;
-                  projection.p(cell)=0;
-                }
-          }
-        } else {
-          for (typename GRID<TV>::FACE_ITERATOR iterator(
-                  mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);
-              iterator.Valid();
-              iterator.Next()) {
-            TV_INT cell=iterator.Face_Index()+interior_cell_offset;
-            projection.elliptic_solver->psi_D(cell)=true;
-            projection.p(cell)=0;
-          }
-        }
-      }
-    }
-    for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
-         iterator.Valid();
-         iterator.Next()) {
-      for (int i=1;i<=sources.m;i++) {
-        if (time<=3 && sources(i)->Lazy_Inside(iterator.Location())) {
-          projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
-          // Access velocity.
-          if ((TV::dimension==2 && iterator.Axis()==1) ||
-              (TV::dimension==3 && iterator.Axis()==3)) {
-            face_velocities(iterator.Full_Index())=-1;
+Set_Boundary_Conditions(const T time) {
+  projection.elliptic_solver->psi_D.Fill(false);
+  projection.elliptic_solver->psi_N.Fill(false);
+  for (int axis = 1; axis <= TV::dimension; axis++) {
+    for (int axis_side = 1; axis_side <= 2; axis_side++) {
+      int side = 2 * (axis-1) + axis_side;
+      TV_INT interior_cell_offset =
+          axis_side==1 ? TV_INT() : -TV_INT::Axis_Vector(axis);
+      TV_INT exterior_cell_offset =
+          axis_side==1 ? -TV_INT::Axis_Vector(axis) : TV_INT();
+      TV_INT boundary_face_offset =
+          axis_side==1 ? TV_INT::Axis_Vector(axis) : -TV_INT::Axis_Vector(axis);
+      if (domain_boundary(axis)(axis_side)) {
+        for (typename GRID<TV>::FACE_ITERATOR iterator(
+                mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
+            iterator.Valid();
+            iterator.Next()) {
+          TV_INT face = iterator.Face_Index() + boundary_face_offset;
+          if (particle_levelset_evolution.phi(face + interior_cell_offset)
+              <= 0) {
+            if (face_velocities.Component(axis).Valid_Index(face)){
+              projection.elliptic_solver->psi_N.Component(axis)(face) = true;
+              face_velocities.Component(axis)(face) = 0;
+            }
           } else {
-            face_velocities(iterator.Full_Index())=0;
+            TV_INT cell = face + exterior_cell_offset;
+            projection.elliptic_solver->psi_D(cell) = true;
+            projection.p(cell) = 0;
           }
+        }
+      } else {
+        for (typename GRID<TV>::FACE_ITERATOR iterator(
+                mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
+            iterator.Valid();
+            iterator.Next()) {
+          TV_INT cell = iterator.Face_Index() + interior_cell_offset;
+          projection.elliptic_solver->psi_D(cell) = true;
+          projection.p(cell) = 0;
         }
       }
     }
+  }
+  for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
+       iterator.Valid();
+       iterator.Next()) {
+    for (int i = 1; i <= sources.m; i++) {
+      if (time <= 3 && sources(i)->Lazy_Inside(iterator.Location())) {
+        projection.elliptic_solver->psi_N(iterator.Full_Index()) = true;
+        if ((TV::dimension==2 && iterator.Axis()==1) ||
+            (TV::dimension==3 && iterator.Axis()==3)) {
+          face_velocities(iterator.Full_Index()) = -1;
+        } else {
+          face_velocities(iterator.Full_Index()) = 0;
+        }
+      }
+    }
+  }
 }
-//#####################################################################
-// Adjust_Phi_With_Sources
-//#####################################################################
+
+// Enforces the boundary condition of levelset.
 template<class TV> void WATER_EXAMPLE<TV>::
 Adjust_Phi_With_Sources(const T time)
 {
-    if(time>3) return;
-    for(typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);iterator.Valid();iterator.Next()){TV_INT index=iterator.Cell_Index();
-        for(int i=1;i<=sources.m;i++) particle_levelset_evolution.phi(index)=min(particle_levelset_evolution.phi(index),sources(i)->Extended_Phi(iterator.Location()));}
+  if (time > 3) return;
+  for (typename GRID<TV>::CELL_ITERATOR iterator(mac_grid);
+       iterator.Valid();
+       iterator.Next()) {
+    TV_INT index = iterator.Cell_Index();
+    for (int i = 1; i <= sources.m; i++)
+      particle_levelset_evolution.phi(index) = min(
+          particle_levelset_evolution.phi(index),
+          sources(i)->Extended_Phi(iterator.Location()));
+  }
 }
-//#####################################################################
-// Adjust_Particle_For_Domain_Boundaries
-//#####################################################################
-template<class TV> void WATER_EXAMPLE<TV>::
-Adjust_Particle_For_Domain_Boundaries(PARTICLE_LEVELSET_PARTICLES<TV>& particles,const int index,TV& V,const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,const T dt,const T time)
-{
-    if(particle_type==PARTICLE_LEVELSET_POSITIVE || particle_type==PARTICLE_LEVELSET_REMOVED_POSITIVE) return;
 
-    TV& X=particles.X(index);TV X_new=X+dt*V;
-    T max_collision_distance=particle_levelset_evolution.particle_levelset.Particle_Collision_Distance(particles.quantized_collision_distance(index));
-    T min_collision_distance=particle_levelset_evolution.particle_levelset.min_collision_distance_factor*max_collision_distance;
-    TV min_corner=mac_grid.domain.Minimum_Corner(),max_corner=mac_grid.domain.Maximum_Corner();
-    for(int axis=1;axis<=GRID<TV>::dimension;axis++){
-        if(domain_boundary[axis][1] && X_new[axis]<min_corner[axis]+max_collision_distance){
-            T collision_distance=X[axis]-min_corner[axis];
-            if(collision_distance>max_collision_distance)collision_distance=X_new[axis]-min_corner[axis];
-            collision_distance=max(min_collision_distance,collision_distance);
-            X_new[axis]+=max((T)0,min_corner[axis]-X_new[axis]+collision_distance);
-            V[axis]=max((T)0,V[axis]);X=X_new-dt*V;}
-        if(domain_boundary[axis][2] && X_new[axis]>max_corner[axis]-max_collision_distance){
-            T collision_distance=max_corner[axis]-X[axis];
-            if(collision_distance>max_collision_distance) collision_distance=max_corner[axis]-X_new[axis];
-            collision_distance=max(min_collision_distance,collision_distance);
-            X_new[axis]-=max((T)0,X_new[axis]-max_corner[axis]+collision_distance);
-            V[axis]=min((T)0,V[axis]);X=X_new-dt*V;}}
+// Enforces the boundary condition of particles.
+template<class TV> void WATER_EXAMPLE<TV>::
+Adjust_Particle_For_Domain_Boundaries(
+    PARTICLE_LEVELSET_PARTICLES<TV>& particles,
+    const int index,
+    TV& V,
+    const PARTICLE_LEVELSET_PARTICLE_TYPE particle_type,
+    const T dt,
+    const T time) {
+  if (particle_type == PARTICLE_LEVELSET_POSITIVE ||
+      particle_type == PARTICLE_LEVELSET_REMOVED_POSITIVE)
+    return;
+
+  TV& X = particles.X(index);
+  TV X_new = X + dt*V;
+  T max_collision_distance =
+      particle_levelset_evolution.particle_levelset.Particle_Collision_Distance(
+          particles.quantized_collision_distance(index));
+  T min_collision_distance =
+      particle_levelset_evolution.particle_levelset.
+          min_collision_distance_factor *
+      max_collision_distance;
+  TV min_corner = mac_grid.domain.Minimum_Corner();
+  TV max_corner = mac_grid.domain.Maximum_Corner();
+  for (int axis = 1; axis <= GRID<TV>::dimension; axis++) {
+    if (domain_boundary[axis][1] &&
+        X_new[axis] < min_corner[axis] + max_collision_distance) {
+      T collision_distance = X[axis] - min_corner[axis];
+      if (collision_distance > max_collision_distance)
+        collision_distance = X_new[axis] - min_corner[axis];
+      collision_distance = max(min_collision_distance, collision_distance);
+      X_new[axis] += max((T)0, min_corner[axis]-X_new[axis]+collision_distance);
+      V[axis] = max((T)0, V[axis]);
+      X = X_new - dt*V;
+    }
+    if (domain_boundary[axis][2] &&
+        X_new[axis] > max_corner[axis] - max_collision_distance) {
+      T collision_distance = max_corner[axis] - X[axis];
+      if (collision_distance > max_collision_distance)
+        collision_distance = max_corner[axis] - X_new[axis];
+      collision_distance = max(min_collision_distance, collision_distance);
+      X_new[axis] -= max((T)0, X_new[axis]-max_corner[axis]+collision_distance);
+      V[axis] = min((T)0,V[axis]);
+      X = X_new-dt*V;
+    }
+  }
 }
 //#####################################################################
 // Write_Output_Files
