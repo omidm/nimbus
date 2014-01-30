@@ -46,6 +46,18 @@
 
 namespace application {
 
+Range GridToRange(const TV& global_grid, const TV& local_grid,
+                  const int_dimension_t shift[3]) {
+  TV start, end;
+  start(1) = shift[0] / global_grid.x;
+  start(2) = shift[1] / global_grid.y;
+  start(3) = shift[2] / global_grid.z;
+  end(1) = (shift[0] + local_grid.x) / global_grid.x;
+  end(2) = (shift[1] + local_grid.y) / global_grid.y;
+  end(3) = (shift[2] + local_grid.z) / global_grid.z;
+  return Range(start, end);
+}
+
 bool InitializeExampleAndDriver(
     const InitConfig& init_config,
     const DataConfig& data_config,
@@ -53,6 +65,7 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
+  dbg(APP_LOG, "HANG:Enter initialize_example_driver.\n");
   example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
   example->Initialize_Grid(
       init_config.grid_size,
@@ -63,7 +76,9 @@ bool InitializeExampleAndDriver(
   driver->init_phase = init_config.init_phase;
   driver->current_frame = init_config.frame;
   driver->time = init_config.time;
+  dbg(APP_LOG, "Before enter driver->Initialize.\n");
   driver->Initialize(job, da, init_config.set_boundary_condition);
+  dbg(APP_LOG, "HANG:Exit initialize_example_driver.\n");
   return true;
 }
 

@@ -57,6 +57,13 @@ template<typename TV> class WATER_EXAMPLE;
 
 namespace application {
 
+typedef PhysBAM::RANGE<TV> Range;
+
+// Translation between local grid and global grid.
+// Still working on it.
+Range GridToRange(const TV& global_grid, const TV& local_grid,
+                  const int_dimension_t shift[3]);
+
 // Initialzes WATER_EXAMPLE and WATER_DRIVER with the given "init_config"
 // and the simulation variables in data array.
 // Returns false if it fails.
