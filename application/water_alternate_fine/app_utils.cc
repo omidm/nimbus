@@ -39,6 +39,7 @@
 #include <set>
 #include "application/water_alternate_fine/app_utils.h"
 #include "application/water_alternate_fine/data_names.h"
+#include "application/water_alternate_fine/reg_def.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
@@ -151,12 +152,13 @@ namespace application {
       va_end(vl);
     }
 
+    // TODO: Get rid of these calls
     void LoadReadWriteSets(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* read,
         nimbus::IDSet<nimbus::logical_data_id_t>* write) {
       nimbus::CLdoVector result;
 
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kDomainFaceVel);
+      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegGhostw3Inner[0]);
       read->insert(result[0]->id());
       write->insert(result[0]->id());
 

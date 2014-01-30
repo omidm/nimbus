@@ -3,11 +3,6 @@
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
 #include <set>
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_include.h"
-#include "data/physbam/translator_physbam.h"
-#include "data/scalar_data.h"
-#include "application/water_alternate_fine/water_example.h"
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_CELL.h>
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Read_Write/Grids_Uniform/READ_WRITE_GRID.h>
@@ -22,8 +17,16 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Forces/INCOMPRESSIBILITY.h>
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
+
+#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/data_include.h"
+#include "application/water_alternate_fine/reg_def.h"
+#include "application/water_alternate_fine/water_example.h"
+#include "data/physbam/translator_physbam.h"
+#include "data/scalar_data.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
+
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE
@@ -243,7 +246,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.WriteFaceArray(
-          &application::kDomainFaceVel, &pdv, &face_velocities);
+          &application::kRegGhostw3Inner[0], &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -332,7 +335,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.ReadFaceArray(
-          &application::kDomainFaceVel, &pdv, &face_velocities);
+          &application::kRegGhostw3Inner[0], &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating velocity.\n");

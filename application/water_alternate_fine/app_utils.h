@@ -81,7 +81,6 @@ namespace application {
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2);
-    const GeometricRegion kDomainFaceVel = kDomain;
     const GeometricRegion kDomainFaceVelGhost = kDomainGhost;
     const GeometricRegion kDomainPhi = kDomainGhost;
     const GeometricRegion kDomainParticles(-kGhostNum + 1,

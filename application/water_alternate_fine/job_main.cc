@@ -43,6 +43,7 @@
 #include "application/water_alternate_fine/data_names.h"
 #include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_names.h"
+#include "application/water_alternate_fine/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <vector>
@@ -69,7 +70,6 @@ namespace application {
         nimbus::ID<partition_id_t> partition_id4(3);
         nimbus::ID<partition_id_t> partition_id5(4);
         nimbus::Parameter part_params;
-        DefinePartition(partition_id1, kDomainFaceVel, part_params);
         DefinePartition(partition_id2, kDomainPhi, part_params);
         DefinePartition(partition_id3, kDomainPressure, part_params);
         DefinePartition(partition_id4, kDomainParticles, part_params);
@@ -133,7 +133,7 @@ namespace application {
 
         // Init job
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kDomainFaceVel, APP_FACE_VEL, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Inner[0], APP_FACE_VEL, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainFaceVelGhost, APP_FACE_VEL_GHOST, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainPhi, APP_PHI, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainPressure, APP_PRESSURE, NULL);

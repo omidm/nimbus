@@ -215,7 +215,7 @@ for rs in reg_map:
     for l in reg_map[rs]:
         ls = len(reg_map[rs][l])
         if ls > 0:
-            out_h.write("nimbus::GeometricRegion k%s%s [%i];\n" % (rs, l, ls))
+            out_h.write("extern nimbus::GeometricRegion k%s%s[%i];\n" % (rs, l, ls))
 out_h.write("\n")
 out_h.write("void InitializeRegions();\n")
 out_h.write("\n} // namespace %s\n\n" % namespace) # namespace application
@@ -227,12 +227,18 @@ out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
 out_cc.write("#include \"shared/geometric_region.h\"\n")
 out_cc.write("#include \"shared/nimbus.h\"\n")
 out_cc.write("\nnamespace %s {\n\n" % namespace)
+for rs in reg_map:
+    for l in reg_map[rs]:
+        ls = len(reg_map[rs][l])
+        if ls > 0:
+            out_cc.write("nimbus::GeometricRegion k%s%s[%i];\n" % (rs, l, ls))
+out_cc.write("\n")
 out_cc.write("void InitializeRegions() {\n")
 for rs in reg_map:
     for l in reg_map[rs]:
         ls = len(reg_map[rs][l])
         if ls > 0:
-            out_cc.write("\t// k%s_%s\n" % (rs, l))
+            out_cc.write("\t// k%s%s\n" % (rs, l))
             for i in range(0, ls, 1):
                 out_cc.write("\tk%s%s[%i].Rebuild(%s);\n" % \
                         (rs, l, i, str(reg_map[rs][l][i])))
