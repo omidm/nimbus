@@ -159,8 +159,10 @@ namespace application {
       nimbus::CLdoVector result;
 
       job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegGhostw3Inner[0]);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
       job->GetCoveredLogicalObjects(&result, APP_FACE_VEL_GHOST, &kDomainFaceVelGhost);
       read->insert(result[0]->id());

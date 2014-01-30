@@ -64,11 +64,11 @@ namespace application {
         DefineNimbusData(this);
 
         // Partition setup
-        nimbus::ID<partition_id_t> partition_id1(0);
-        nimbus::ID<partition_id_t> partition_id2(1);
-        nimbus::ID<partition_id_t> partition_id3(2);
-        nimbus::ID<partition_id_t> partition_id4(3);
-        nimbus::ID<partition_id_t> partition_id5(4);
+        nimbus::ID<partition_id_t> partition_id1(1000);
+        nimbus::ID<partition_id_t> partition_id2(1001);
+        nimbus::ID<partition_id_t> partition_id3(1002);
+        nimbus::ID<partition_id_t> partition_id4(1003);
+        nimbus::ID<partition_id_t> partition_id5(1004);
         nimbus::Parameter part_params;
         DefinePartition(partition_id2, kDomainPhi, part_params);
         DefinePartition(partition_id3, kDomainPressure, part_params);
@@ -77,7 +77,7 @@ namespace application {
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
-        int data_num = 8;
+        int data_num = 9;
         std::vector<nimbus::logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
 
