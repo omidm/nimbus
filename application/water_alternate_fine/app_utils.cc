@@ -164,37 +164,53 @@ namespace application {
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL_GHOST, &kDomainFaceVelGhost);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL_GHOST, &kRegGhostw3Outer[0]);
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
-      job->GetCoveredLogicalObjects(&result, APP_PHI, &kDomainPhi);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      job->GetCoveredLogicalObjects(&result, APP_PHI, &kRegGhostw3Outer[0]);
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
-      job->GetCoveredLogicalObjects(&result, APP_PRESSURE, &kDomainPressure);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      job->GetCoveredLogicalObjects(&result, APP_PRESSURE, &kRegGhostw1Outer[0]);
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
       job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kDomainParticles);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
       job->GetCoveredLogicalObjects(&result, APP_NEG_PARTICLES, &kDomainParticles);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
       job->GetCoveredLogicalObjects(&result, APP_POS_REM_PARTICLES, &kDomainParticles);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
       job->GetCoveredLogicalObjects(&result, APP_NEG_REM_PARTICLES, &kDomainParticles);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
 
       job->GetCoveredLogicalObjects(&result, APP_LAST_UNIQUE_PARTICLE_ID, &kDomainParticles);
-      read->insert(result[0]->id());
-      write->insert(result[0]->id());
+      for (size_t i = 0; i < result.size(); ++i) {
+        read->insert(result[i]->id());
+        write->insert(result[i]->id());
+      }
     }
 
     bool SerializeParameter(const int frame, std::string* result){

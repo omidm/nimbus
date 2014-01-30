@@ -36,12 +36,26 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_INCLUDE_H_
-
-#include "application/water_alternate_fine/data_app.h"
-#include "application/water_alternate_fine/data_face_array.h"
-#include "application/water_alternate_fine/data_names.h"
 #include "application/water_alternate_fine/data_scalar_array.h"
+#include "data/physbam/physbam_data.h"
+#include "shared/nimbus.h"
+#include "string.h"
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_INCLUDE_H_
+namespace application {
+
+    DataScalarArray::DataScalarArray(std::string name) {
+        set_name(name);
+    }
+
+    nimbus::Data* DataScalarArray::Clone() {
+        return (new DataScalarArray(name()));
+    }
+
+    void DataScalarArray::Create() {
+        nimbus::GeometricRegion r = region();
+        int s = r.dx() * r.dy() * r.dz() * sizeof(T);
+        set_size(s);
+        nimbus::PhysBAMData::Create();
+    }
+
+} // namespace application

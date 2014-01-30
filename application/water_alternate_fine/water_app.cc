@@ -73,11 +73,11 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
         RegisterData(APP_FACE_VEL, new DataFaceArray(APP_FACE_VEL));
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
-        RegisterData(APP_FACE_VEL_GHOST, new DataApp(APP_FACE_VEL_GHOST, kFaceVelGhostBufSize));
+        RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray(APP_FACE_VEL_GHOST));
         dbg(APP_LOG, "Registering %s\n", APP_PHI);
-        RegisterData(APP_PHI, new DataApp(APP_PHI, kPhiBufSize));
+        RegisterData(APP_PHI, new DataScalarArray(APP_PHI));
         dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
-        RegisterData(APP_PRESSURE, new DataApp(APP_PRESSURE, kPressureBufSize));
+        RegisterData(APP_PRESSURE, new DataScalarArray(APP_PRESSURE));
         dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
         RegisterData(APP_POS_PARTICLES, new DataApp(APP_POS_PARTICLES, kParticlesBufSize));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);

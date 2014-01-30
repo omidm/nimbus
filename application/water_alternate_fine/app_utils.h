@@ -81,35 +81,12 @@ namespace application {
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2,
                                        kScale + kGhostNum*2);
-    const GeometricRegion kDomainFaceVelGhost = kDomainGhost;
-    const GeometricRegion kDomainPhi = kDomainGhost;
     const GeometricRegion kDomainParticles(-kGhostNum + 1,
                                            -kGhostNum + 1,
                                            -kGhostNum + 1,
                                            kScale + kGhostNum*2 + 1,
                                            kScale + kGhostNum*2 + 1,
                                            kScale + kGhostNum*2 + 1);;
-    const GeometricRegion kDomainPressure(-kPressureGhostNum + 1,
-                                          -kPressureGhostNum + 1,
-                                          -kPressureGhostNum + 1,
-                                          kScale + kPressureGhostNum*2,
-                                          kScale + kPressureGhostNum*2,
-                                          kScale + kPressureGhostNum*2);
-
-    const int_dimension_t kFaceVelBufSize = kScale *
-                                            kScale *
-                                            (kScale+1) *
-                                            kDimension * sizeof(T);
-    const int_dimension_t kFaceVelGhostBufSize = (kScale + 2*kGhostNum) *
-                                                 (kScale + 2*kGhostNum) *
-                                                 (kScale + 2*kGhostNum + 1) *
-                                                 kDimension * sizeof(T);
-    const int_dimension_t kPhiBufSize = (kScale + 2*kGhostNum) *
-                                        (kScale + 2*kGhostNum) *
-                                        (kScale + 2*kGhostNum) * sizeof(T);
-    const int_dimension_t kPressureBufSize = (kScale + 2*kPressureGhostNum) *
-                                             (kScale + 2*kPressureGhostNum) *
-                                             (kScale + 2*kPressureGhostNum) * sizeof(T);
     const int_dimension_t kParticlesBufSize = 0;
 
     // Note: some hacks that need to be cleaned soon after a meeting/
