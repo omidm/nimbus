@@ -39,9 +39,11 @@
  */
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_app.h"
+#include "application/water_alternate_fine/data_def.h"
+#include "application/water_alternate_fine/data_names.h"
 #include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_names.h"
+#include "application/water_alternate_fine/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <vector>
@@ -59,52 +61,18 @@ namespace application {
     void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing main job\n");
 
+        DefineNimbusData(this);
+
         // Partition setup
-        nimbus::ID<partition_id_t> partition_id1(0);
-        nimbus::ID<partition_id_t> partition_id2(1);
-        nimbus::ID<partition_id_t> partition_id3(2);
-        nimbus::ID<partition_id_t> partition_id4(3);
-        nimbus::ID<partition_id_t> partition_id5(4);
+        nimbus::ID<partition_id_t> partition_id4(1003);
         nimbus::Parameter part_params;
-        DefinePartition(partition_id1, kDomainFaceVel, part_params);
-        DefinePartition(partition_id2, kDomainPhi, part_params);
-        DefinePartition(partition_id3, kDomainPressure, part_params);
         DefinePartition(partition_id4, kDomainParticles, part_params);
-        DefinePartition(partition_id5, kDomainFaceVelGhost, part_params);
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
         int data_num = 9;
-        std::vector<logical_data_id_t> data_ids;
+        std::vector<nimbus::logical_data_id_t> data_ids;
         GetNewLogicalDataID(&data_ids, data_num);
-
-        // Face arrays
-        nimbus::Parameter fa_params;
-        fa_params.set_ser_data(SerializedData(""));
-        DefineData(APP_FACE_VEL,
-                   data_ids[0],
-                   partition_id1.elem(),
-                   neighbor_partitions,
-                   fa_params);
-        DefineData(APP_FACE_VEL_GHOST,
-                   data_ids[1],
-                   partition_id5.elem(),
-                   neighbor_partitions,
-                   fa_params);
-
-        // Scalar arrays
-        nimbus::Parameter sa_params;
-        sa_params.set_ser_data(SerializedData(""));
-        DefineData(APP_PHI,
-                   data_ids[2],
-                   partition_id2.elem(),
-                   neighbor_partitions,
-                   sa_params);
-        DefineData(APP_PRESSURE,
-                   data_ids[3],
-                   partition_id3.elem(),
-                   neighbor_partitions,
-                   sa_params);
 
         // Particles
         nimbus::Parameter particle_params;
@@ -144,19 +112,15 @@ namespace application {
 
         // Init job
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kDomainFaceVel, APP_FACE_VEL, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainFaceVelGhost, APP_FACE_VEL_GHOST, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainPhi, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainPressure, APP_PRESSURE, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Inner[0], APP_FACE_VEL, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw1Outer[0], APP_PRESSURE, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
         write.clear();
         write = read;
-
-        std::cout << "OMID read = " << read.toString() << std::endl; 
-        std::cout << "OMID write = " << write.toString() << std::endl;
 
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
