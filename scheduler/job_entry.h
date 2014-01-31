@@ -119,6 +119,7 @@ class JobEntry {
     job_id_t job_id_;
     IDSet<logical_data_id_t> read_set_;
     IDSet<logical_data_id_t> write_set_;
+    IDSet<logical_data_id_t> union_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;

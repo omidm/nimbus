@@ -60,6 +60,13 @@ JobEntry::JobEntry(const JobType& job_type,
   read_set_(read_set), write_set_(write_set),
   before_set_(before_set), after_set_(after_set),
   parent_job_id_(parent_job_id), params_(params) {
+    IDSet<logical_data_id_t>::IDSetIter it;
+    for (it = read_set_.begin(); it != read_set_.end(); ++it) {
+      union_set_.insert(*it);
+    }
+    for (it = write_set_.begin(); it != write_set_.end(); ++it) {
+      union_set_.insert(*it);
+    }
     versioned_ = false;
     assigned_ = false;
     done_ = false;
@@ -101,16 +108,7 @@ IDSet<logical_data_id_t> JobEntry::write_set() {
 }
 
 IDSet<logical_data_id_t> JobEntry::union_set() {
-  IDSet<logical_data_id_t> union_set;
-  IDSet<logical_data_id_t>::IDSetIter it;
-  for (it = read_set_.begin(); it != read_set_.end(); ++it) {
-    union_set.insert(*it);
-  }
-  for (it = write_set_.begin(); it != write_set_.end(); ++it) {
-    union_set.insert(*it);
-  }
-
-  return union_set;
+  return union_set_;
 }
 
 IDSet<job_id_t> JobEntry::before_set() {
