@@ -18,10 +18,10 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_include.h"
-#include "application/water_alternate_fine/reg_def.h"
-#include "application/water_alternate_fine/water_example.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_include.h"
+#include "application/water_multiple/reg_def.h"
+#include "application/water_multiple/water_example.h"
 #include "data/physbam/translator_physbam.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"

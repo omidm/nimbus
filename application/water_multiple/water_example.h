@@ -20,7 +20,7 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
-#include "application/water_alternate_fine/options.h"
+#include "application/water_multiple/options.h"
 #include "shared/nimbus.h"
 namespace PhysBAM{
 

@@ -41,11 +41,11 @@
  */
 
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/job_loop_frame.h"
-#include "application/water_alternate_fine/water_driver.h"
-#include "application/water_alternate_fine/water_example.h"
-#include "application/water_alternate_fine/job_names.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/job_loop_frame.h"
+#include "application/water_multiple/water_driver.h"
+#include "application/water_multiple/water_example.h"
+#include "application/water_multiple/job_names.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"

@@ -35,11 +35,11 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_include.h"
-#include "application/water_alternate_fine/job_include.h"
-#include "application/water_alternate_fine/reg_def.h"
-#include "application/water_alternate_fine/water_app.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_include.h"
+#include "application/water_multiple/job_include.h"
+#include "application/water_multiple/reg_def.h"
+#include "application/water_multiple/water_app.h"
 #include "data/scalar_data.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>

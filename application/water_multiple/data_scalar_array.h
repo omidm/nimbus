@@ -36,7 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_SCALAR_ARRAY_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_SCALAR_ARRAY_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_SCALAR_ARRAY_H_
 
 #include "data/physbam/physbam_data.h"
@@ -54,4 +54,4 @@ namespace application {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_DATA_SCALAR_ARRAY_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_SCALAR_ARRAY_H_

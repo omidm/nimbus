@@ -39,7 +39,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_MAIN_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MAIN_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_MAIN_H_
 
 #include "shared/nimbus.h"
@@ -55,4 +55,4 @@ namespace application {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_MAIN_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MAIN_H_

@@ -36,30 +36,30 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INCLUDE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INCLUDE_H_
 
-#include "application/water_alternate_fine/job_adjust_phi.h"
-#include "application/water_alternate_fine/job_adjust_phi_with_objects.h"
-#include "application/water_alternate_fine/job_advect_phi.h"
-#include "application/water_alternate_fine/job_advect_removed_particles.h"
-#include "application/water_alternate_fine/job_advect_v.h"
-#include "application/water_alternate_fine/job_apply_forces.h"
-#include "application/water_alternate_fine/job_calculate_frame.h"
-#include "application/water_alternate_fine/job_delete_particles.h"
-#include "application/water_alternate_fine/job_extrapolation.h"
-#include "application/water_alternate_fine/job_initialize.h"
-#include "application/water_alternate_fine/job_loop_frame.h"
-#include "application/water_alternate_fine/job_loop_iteration.h"
-#include "application/water_alternate_fine/job_main.h"
-#include "application/water_alternate_fine/job_modify_levelset.h"
-#include "application/water_alternate_fine/job_names.h"
-#include "application/water_alternate_fine/job_projection.h"
-#include "application/water_alternate_fine/job_reincorporate_removed_particles.h"
-#include "application/water_alternate_fine/job_step_particles.h"
-#include "application/water_alternate_fine/job_super_1.h"
-#include "application/water_alternate_fine/job_super_2.h"
-#include "application/water_alternate_fine/job_super_3.h"
-#include "application/water_alternate_fine/job_write_frame.h"
+#include "application/water_multiple/job_adjust_phi.h"
+#include "application/water_multiple/job_adjust_phi_with_objects.h"
+#include "application/water_multiple/job_advect_phi.h"
+#include "application/water_multiple/job_advect_removed_particles.h"
+#include "application/water_multiple/job_advect_v.h"
+#include "application/water_multiple/job_apply_forces.h"
+#include "application/water_multiple/job_calculate_frame.h"
+#include "application/water_multiple/job_delete_particles.h"
+#include "application/water_multiple/job_extrapolation.h"
+#include "application/water_multiple/job_initialize.h"
+#include "application/water_multiple/job_loop_frame.h"
+#include "application/water_multiple/job_loop_iteration.h"
+#include "application/water_multiple/job_main.h"
+#include "application/water_multiple/job_modify_levelset.h"
+#include "application/water_multiple/job_names.h"
+#include "application/water_multiple/job_projection.h"
+#include "application/water_multiple/job_reincorporate_removed_particles.h"
+#include "application/water_multiple/job_step_particles.h"
+#include "application/water_multiple/job_super_1.h"
+#include "application/water_multiple/job_super_2.h"
+#include "application/water_multiple/job_super_3.h"
+#include "application/water_multiple/job_write_frame.h"
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_INCLUDE_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_

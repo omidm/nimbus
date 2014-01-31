@@ -38,12 +38,12 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_def.h"
-#include "application/water_alternate_fine/data_names.h"
-#include "application/water_alternate_fine/job_main.h"
-#include "application/water_alternate_fine/job_names.h"
-#include "application/water_alternate_fine/reg_def.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_def.h"
+#include "application/water_multiple/data_names.h"
+#include "application/water_multiple/job_main.h"
+#include "application/water_multiple/job_names.h"
+#include "application/water_multiple/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <vector>

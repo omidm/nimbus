@@ -46,7 +46,7 @@
  * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_1_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_SUPER_1_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_SUPER_1_H_
 
 #include "shared/nimbus.h"
@@ -62,4 +62,4 @@ namespace application {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_SUPER_1_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_SUPER_1_H_

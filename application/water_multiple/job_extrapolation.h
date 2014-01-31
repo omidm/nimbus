@@ -52,7 +52,7 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_EXTRAPOLATION_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_EXTRAPOLATION_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_EXTRAPOLATION_H_
 
 #include "shared/nimbus.h"
@@ -69,4 +69,4 @@ class JobExtrapolation : public nimbus::Job {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_JOB_PROJECTION_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_PROJECTION_H_

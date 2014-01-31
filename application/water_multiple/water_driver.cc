@@ -13,8 +13,8 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 
-#include "application/water_alternate_fine/water_driver.h"
-#include "application/water_alternate_fine/water_example.h"
+#include "application/water_multiple/water_driver.h"
+#include "application/water_multiple/water_example.h"
 #include "shared/dbg_modes.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"

@@ -37,9 +37,9 @@
  */
 
 #include <set>
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_names.h"
-#include "application/water_alternate_fine/reg_def.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_names.h"
+#include "application/water_multiple/reg_def.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"

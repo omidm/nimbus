@@ -1,8 +1,8 @@
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_WATER_SOURCES_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_WATER_SOURCES_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_WATER_SOURCES_H_
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/water_example.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/water_example.h"
 #include <PhysBAM_Tools/Vectors/VECTOR.h>
 
 namespace PhysBAM {
@@ -17,4 +17,4 @@ namespace PhysBAM {
 
 } // namespace PhysBAM
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_WATER_SOURCES_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_WATER_SOURCES_H_

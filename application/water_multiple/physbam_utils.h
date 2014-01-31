@@ -43,11 +43,11 @@
  * Modifier: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_
 
-#include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/options.h"
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/options.h"
 #include "shared/nimbus.h"
 
 namespace PhysBAM {
@@ -82,4 +82,4 @@ void DestroyExampleAndDriver(
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_PHYSBAM_UTILS_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_UTILS_H_

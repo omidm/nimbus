@@ -42,10 +42,10 @@
  *
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_OPTIONS_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_OPTIONS_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_OPTIONS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_OPTIONS_H_
 
-#include "application/water_alternate_fine/app_utils.h"
+#include "application/water_multiple/app_utils.h"
 
 namespace application {
 
@@ -114,4 +114,4 @@ struct DataConfig {
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_ALTERNATE_FINE_OPTIONS_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_OPTIONS_H_
