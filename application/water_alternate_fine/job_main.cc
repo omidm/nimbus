@@ -39,9 +39,10 @@
  */
 
 #include "application/water_alternate_fine/app_utils.h"
-#include "application/water_alternate_fine/data_app.h"
+#include "application/water_alternate_fine/data_include.h"
 #include "application/water_alternate_fine/job_main.h"
 #include "application/water_alternate_fine/job_names.h"
+#include "application/water_alternate_fine/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <vector>
@@ -66,11 +67,11 @@ namespace application {
         nimbus::ID<partition_id_t> partition_id4(3);
         nimbus::ID<partition_id_t> partition_id5(4);
         nimbus::Parameter part_params;
-        DefinePartition(partition_id1, kDomainFaceVel, part_params);
-        DefinePartition(partition_id2, kDomainPhi, part_params);
-        DefinePartition(partition_id3, kDomainPressure, part_params);
+        DefinePartition(partition_id1, kRegGhostw3Inner[0], part_params);
+        DefinePartition(partition_id2, kRegGhostw3Outer[0], part_params);
+        DefinePartition(partition_id3, kRegGhostw1Outer[0], part_params);
         DefinePartition(partition_id4, kDomainParticles, part_params);
-        DefinePartition(partition_id5, kDomainFaceVelGhost, part_params);
+        DefinePartition(partition_id5, kRegGhostw3Outer[0], part_params);
         nimbus::IDSet<partition_id_t> neighbor_partitions;
 
         // Data setup
@@ -144,10 +145,10 @@ namespace application {
 
         // Init job
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kDomainFaceVel, APP_FACE_VEL, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainFaceVelGhost, APP_FACE_VEL_GHOST, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainPhi, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainPressure, APP_PRESSURE, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Inner[0], APP_FACE_VEL, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw1Outer[0], APP_PRESSURE, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
