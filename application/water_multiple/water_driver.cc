@@ -86,13 +86,13 @@ Initialize(const nimbus::Job *job,
   example.projection.Initialize_Grid(example.mac_grid);
   example.collision_bodies_affecting_fluid.Initialize_Grids();
   if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      dbg(APP_LOG, "Velocity memory allocated.\n");
+      LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
   }
   // Initialize the face_velocities_ghoas here, it may not be the best place
   // when we get to water_multiple though. -omidm
   if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      dbg(APP_LOG, "Ghost Velocity memory allocated.\n");
+      LOG::Time("Ghost Velocity memory allocated.\n");
       example.face_velocities_ghost.Resize(example.incompressible.grid,
                                            example.number_of_ghost_cells, false);
   }
@@ -610,7 +610,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ModifyLevelSetImpl(const nimbus::Job *job,
                    const nimbus::DataArray &da,
                    T dt) {
-    dbg(APP_LOG, "Modify Levelset ...\n");
+    LOG::Time("Modify Levelset ...\n");
 
     // modify levelset
     example.particle_levelset_evolution.particle_levelset.
@@ -628,7 +628,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 AdjustPhiImpl(const nimbus::Job *job,
         const nimbus::DataArray &da,
         T dt) {
-    dbg(APP_LOG, "Adjust Phi ...\n");
+    LOG::Time("Adjust Phi ...\n");
 
     // adjust phi with sources
     example.Adjust_Phi_With_Sources(time+dt);
@@ -643,7 +643,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 DeleteParticlesImpl(const nimbus::Job *job,
                     const nimbus::DataArray &da,
                     T dt) {
-    dbg(APP_LOG, "Delete Particles ...\n");
+    LOG::Time("Delete Particles ...\n");
 
     // delete particles
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
@@ -667,7 +667,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ReincorporateParticlesImpl(const nimbus::Job *job,
                            const nimbus::DataArray &da,
                            T dt) {
-    dbg(APP_LOG, "Reincorporate Removed Particles ...\n");
+    LOG::Time("Reincorporate Removed Particles ...\n");
 
     // reincorporate removed particles
     if (example.particle_levelset_evolution.particle_levelset.
