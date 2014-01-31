@@ -59,10 +59,11 @@ namespace application {
 
 typedef PhysBAM::RANGE<TV> Range;
 
-// Translation between local grid and global grid.
-// Still working on it.
-Range GridToRange(const TV& global_grid, const TV& local_grid,
-                  const int_dimension_t shift[3]);
+// Given the global region and local region, calculate the range to construct
+// grid.
+Range GridToRange(
+     const GeometricRegion& global_region,
+     const GeometricRegion& local_region);
 
 // Initialzes WATER_EXAMPLE and WATER_DRIVER with the given "init_config"
 // and the simulation variables in data array.
