@@ -296,18 +296,29 @@ namespace nimbus {
       return true;
     }
 
-    /* Read the particles from the PhysicalDataInstances specified
-     * by instances, limited by the GeometricRegion specified by region,
-     * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
-     * This will clear out any existing data in particles first if "merge" flag
-     * is not set. */
+    /* Reads the particle data from the PhysicalDataInstances "instances",
+     * limited by the corresponding global region calculated from shifting the
+     * local region "region" by the offset "shift", into the local region
+     * "region" of the PhysBAM particle container "particle_container".
+     *
+     * "positive" option specifies whether to work on positive particles or
+     * negative particles.
+     * "merge" option specifies whether to keep original particle data in
+     * "particle_container".
+     *
+     * More explanation for the region calculation, if,
+     *     region = {-1, -1, -1, 12, 12, 12}, shift = {10, 10, 10},
+     * then we will copy the data in "instances" limited by global region:
+     *     {9, 9, 9, 22, 22, 22}
+     * into "particle_container" for the local region:
+     *     {-1, -1, -1, 12, 12, 12}.
+     */
     bool ReadParticles(const GeometricRegion* region,
+                       const int_dimension_t shift[3],
                        const PdiVector* instances,
                        ParticleContainer& particle_container,
                        bool positive,
                        bool merge = false) {
-      // TODO(quhang) , will be passed as parameters later.
-      const int shift[3] = {0, 0, 0};
       ParticleArray* particles;
       if (positive) {
         particles = &particle_container.positive_particles;
@@ -372,8 +383,6 @@ namespace nimbus {
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
-            // I think things might not be that bad, because the number of
-            // bucket is expected to be constant.  -- quhang
             int index = particle_container.Add_Particle(particle_bucket);
             particle_bucket->X(index) = VECTOR_TYPE(p->delta[0],
                                                     p->delta[1],
@@ -393,15 +402,26 @@ namespace nimbus {
     }
 
 
-    /* Write the Particle data in particles into the
-     * PhysicalDataInstances specified by instances, limited by the
-     * GeometricRegion region. */
+    /* Writes the particle data from PhysBAM particle container
+     * "particle_container", limited the local region "region", into the
+     * corresponding global region of physical instances "instances" after
+     * performing the coordinate shifting specified by "shift".
+     *
+     * "positive" option specifies whether to work on positive particles or
+     * negative particles.
+     *
+     * More explanation for the region calculation, if,
+     *     region = {-1, -1, -1, 12, 12, 12}, shift = {10, 10, 10},
+     * then we will copy the data of "particle_container" in the local region:
+     *     {-1, -1, -1, 12, 12, 12}
+     * into the global region of corresponding "instances":
+     *     {9, 9, 9, 22, 22, 22}.
+     */
     bool WriteParticles(const GeometricRegion* region,
+                        const int_dimension_t shift[3],
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
-      // TODO(quhang) , will be passed as parameters later.
-      const int shift[3] = {0, 0, 0};
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -485,18 +505,22 @@ namespace nimbus {
       return true;
     }
 
-    /* Read the removed particles from the PhysicalDataInstances specified
-     * by instances, limited by the GeometricRegion specified by region,
-     * into the PhysBAM::PARTICLE_LEVELSET_UNIFORM specified by dest.
-     * This will clear out any existing data in particles first if "merge" flag
-     * is not set. */
+    /* Reads the removed particle data from the PhysicalDataInstances
+     * "instances", limited by the corresponding global region calculated from
+     * shifting the local region "region" by the offset "shift", into the local
+     * region "region" of the PhysBAM particle container "particle_container".
+     *
+     * "positive" option specifies whether to work on positive particles or
+     * negative particles.
+     * "merge" option specifies whether to keep original particle data in
+     * "particle_container".
+     */
     bool ReadRemovedParticles(const GeometricRegion* region,
+                              const int_dimension_t shift[3],
                               const PdiVector* instances,
                               ParticleContainer& particle_container,
                               bool positive,
                               bool merge = false) {
-      // TODO(quhang) , will be passed as parameters later.
-      const int shift[3] = {0, 0, 0};
       RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
@@ -588,15 +612,19 @@ namespace nimbus {
       return true;
     }
 
-    /* Write the Particle data in removed particles into the
-     * PhysicalDataInstances specified by instances, limited by the
-     * GeometricRegion region. */
+    /* Writes the removed particle data from PhysBAM particle container
+     * "particle_container", limited the local region "region", into the
+     * corresponding global region of physical instances "instances" after
+     * performing the coordinate shifting specified by "shift".
+     *
+     * "positive" option specifies whether to work on positive particles or
+     * negative particles.
+     */
     bool WriteRemovedParticles(const GeometricRegion* region,
-                        PdiVector* instances,
-                        ParticleContainer& particle_container,
-                        bool positive) {
-      // TODO(quhang) , will be passed as parameters later.
-      const int shift[3] = {0, 0, 0};
+                               const int_dimension_t shift[3],
+                               PdiVector* instances,
+                               ParticleContainer& particle_container,
+                               bool positive) {
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
