@@ -78,7 +78,6 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
 
     init_config.set_boundary_condition = false;
     DataConfig data_config;
-    data_config.SetAll();
     data_config.SetFlag(DataConfig::LEVELSET);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
