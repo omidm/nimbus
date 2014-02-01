@@ -132,6 +132,9 @@ class Scheduler {
     size_t min_worker_to_join_;
     bool terminate_application_flag_;
     exit_status_t terminate_application_status_;
+    Log log_;
+    Log log_assign_;
+    Log log_table_;
 
   private:
     virtual void SetupUserInterface();

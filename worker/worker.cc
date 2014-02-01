@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <ctime>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
 
@@ -51,7 +52,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   scheduler_port_(scheduler_port),
   listening_port_(listening_port),
   application_(a) {
-    log.InitTime();
+    log_.InitTime();
     id_ = -1;
 }
 
@@ -153,16 +154,15 @@ void Worker::ExecuteJob(Job* job) {
   for (iter = write.begin(); iter != write.end(); iter++)
     da.push_back(data_map_[*iter]);
 
-  log.StartTimer();
+  log_.StartTimer();
   job->Execute(job->parameters(), da);
-  log.StopTimer();
+  log_.StopTimer();
 
-  char buff[MAX_BUFF_SIZE];
+  char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff),
-      "Execute Job, name: %25s  id: %4lu  length(ms): %6.3lf  time(s): %6.3lf",
-           job->name().c_str(), job->id().elem(), 1000 * log.timer(), log.GetTime());
-
-  log.writeToFile(std::string(buff), LOG_INFO);
+      "Execute Job, name: %35s  id: %6lu  length(s): %2.3lf  time(s): %6.3lf",
+           job->name().c_str(), job->id().elem(), log_.timer(), log_.GetTime());
+  log_.WriteToOutputStream(std::string(buff), LOG_INFO);
 
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params);

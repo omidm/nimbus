@@ -54,6 +54,7 @@ Scheduler::Scheduler(port_t p)
   job_manager_ = NULL;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   terminate_application_flag_ = false;
+  log_.InitTime();
 }
 
 Scheduler::~Scheduler() {
@@ -66,7 +67,7 @@ Scheduler::~Scheduler() {
 }
 
 void Scheduler::Run() {
-  Log::dbg_printLine("Running the Scheduler");
+  Log::log_PrintLine("Running the Scheduler");
 
   SetupWorkerInterface();
   SetupUserInterface();
@@ -91,10 +92,23 @@ void Scheduler::SchedulerCoreProcessor() {
 
   // Main Loop of the scheduler.
   while (true) {
+    log_.StartTimer();
+    log_assign_.ResetTimer();
+    log_table_.ResetTimer();
+
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
     TerminationProcedure();
+
+    log_.StopTimer();
+
+    if (log_.timer() > .01) {
+      char buff[LOG_MAX_BUFF_SIZE];
+      snprintf(buff, sizeof(buff),
+          "loop: %2.3lf  assign: %2.3lf table: %2.3lf time: %6.3lf", log_.timer(), log_assign_.timer(), log_table_.timer(), log_.GetTime()); // NOLINT
+      log_.WriteToOutputStream(std::string(buff), LOG_INFO);
+    }
   }
 }
 
@@ -317,7 +331,11 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   } else if (pv.size() == 1) {
     JobEntryList list;
     JobEntry::VersionedLogicalData vld(l_id, version);
+
+    log_table_.ResumeTimer();
     job_manager_->GetJobsNeedDataVersion(&list, vld);
+    log_table_.StopTimer();
+
     assert(list.size() >= 1);
     if (list.size() == 1) {
       assert(pv[0].version() == version);
@@ -693,6 +711,8 @@ bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
 }
 
 bool Scheduler::AssignJob(JobEntry* job) {
+  log_assign_.ResumeTimer();
+
   SchedulerWorker* worker;
   GetWorkerToAssignJob(job, worker);
 
@@ -704,6 +724,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
   job_manager_->UpdateJobBeforeSet(job);
   SendComputeJobToWorker(worker, job);
   job->set_assigned(true);
+
+  log_assign_.StopTimer();
   return true;
 }
 
