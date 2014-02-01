@@ -41,45 +41,50 @@
 #include "shared/log.h"
 
 Log::Log()
-: output_stream(&std::cout),
-  log_file_name("log.txt") {
-    clearBuffer();
-    clearLogFile();
+: output_stream_(&std::cout),
+  log_file_name_("log.txt") {
+    ClearBuffer();
+    ClearLogFile();
+    InitTime();
+    ResetTimer();
 }
 
 Log::Log(std::ostream* os)
-: output_stream(os),
-  log_file_name("log.txt") {
-    clearBuffer();
-    clearLogFile();
+: output_stream_(os),
+  log_file_name_("log.txt") {
+    ClearBuffer();
+    ClearLogFile();
+    InitTime();
+    ResetTimer();
 }
 
 Log::Log(std::string fname)
-: output_stream(&std::cout),
-  log_file_name(fname) {
-    clearBuffer();
-    clearLogFile();
+: output_stream_(&std::cout),
+  log_file_name_(fname) {
+    ClearBuffer();
+    ClearLogFile();
+    InitTime();
+    ResetTimer();
 }
 
 Log::Log(std::ostream* os, std::string fname)
-: output_stream(os),
-  log_file_name(fname) {
-    clearBuffer();
-    clearLogFile();
+: output_stream_(os),
+  log_file_name_(fname) {
+    ClearBuffer();
+    ClearLogFile();
+    InitTime();
+    ResetTimer();
 }
 
 Log::~Log() {
-  clearBuffer();
-  clearLogFile();
 }
 
-
-void Log::setOutputStream(std::ostream* os) {
-  output_stream = os;
+void Log::set_output_stream(std::ostream* os) {
+  output_stream_ = os;
 }
 
-void Log::setFileName(std::string fname) {
-  log_file_name = fname;
+void Log::set_file_name(std::string fname) {
+  log_file_name_ = fname;
 }
 
 void Log::InitTime() {
@@ -98,10 +103,15 @@ void Log::set_start_time(struct timeval* time) {
 }
 
 double Log::timer() {
-  if (timer_is_on_)
-    return static_cast<double>(-1);
-  else
+  if (timer_is_on_) {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double temp  = (static_cast<double>(t.tv_sec - timer_start_time_.tv_sec)) +
+      .000001 * (static_cast<double>(t.tv_usec - timer_start_time_.tv_usec));
+    return timer_ + temp;
+  } else {
     return timer_;
+  }
 }
 
 double Log::GetTime() {
@@ -112,7 +122,20 @@ double Log::GetTime() {
   return time;
 }
 
+void Log::ResetTimer() {
+  timer_ = 0;
+  timer_is_on_ = false;
+}
+
 void Log::StartTimer() {
+  timer_ = 0;
+  gettimeofday(&timer_start_time_, NULL);
+  timer_is_on_ = true;
+}
+
+void Log::ResumeTimer() {
+  if (timer_is_on_)
+    return;
   gettimeofday(&timer_start_time_, NULL);
   timer_is_on_ = true;
 }
@@ -122,61 +145,61 @@ void Log::StopTimer() {
     return;
   struct timeval t;
   gettimeofday(&t, NULL);
-  timer_  = (static_cast<double>(t.tv_sec - timer_start_time_.tv_sec)) +
+  timer_  += (static_cast<double>(t.tv_sec - timer_start_time_.tv_sec)) +
   .000001 * (static_cast<double>(t.tv_usec - timer_start_time_.tv_usec));
   timer_is_on_ = false;
 }
 
-void Log::clearBuffer() {
-  buffer.str("");
+void Log::ClearBuffer() {
+  buffer_.str("");
 }
 
-void Log::clearLogFile() {
+void Log::ClearLogFile() {
   std::stringstream ss;
   ss.str("");
   std::ofstream ofs;
-  ofs.open(log_file_name.c_str());
+  ofs.open(log_file_name_.c_str());
   ofs << ss.str();
   ofs.close();
 }
 
-void Log::writeToBuffer(std::string buf, LOG_TYPE type) {
-  buffer << getTag(type) << buf << std::endl;
+void Log::WriteToBuffer(std::string buf, LOG_TYPE type) {
+  buffer_ << GetTag(type) << buf << std::endl;
 }
 
-void Log::writeToFile(std::string buf, LOG_TYPE type) {
+void Log::WriteToFile(std::string buf, LOG_TYPE type) {
   std::ofstream ofs;
-  ofs.open(log_file_name.c_str(), std::ofstream::app);
-  ofs << getTag(type) << buf << std::endl;
+  ofs.open(log_file_name_.c_str(), std::ofstream::app);
+  ofs << GetTag(type) << buf << std::endl;
   ofs.close();
 }
 
-void Log::writeToOutputStream(std::string buf, LOG_TYPE type) {
-  buffer << getTag(type) << buf << std::endl;
+void Log::WriteToOutputStream(std::string buf, LOG_TYPE type) {
+  *output_stream_ << GetTag(type) << buf << std::endl;
 }
 
-void Log::writeBufferToFile() {
+void Log::WriteBufferToFile() {
   std::ofstream ofs;
-  ofs.open(log_file_name.c_str(), std::ofstream::app);
-  ofs << buffer.str();
+  ofs.open(log_file_name_.c_str(), std::ofstream::app);
+  ofs << buffer_.str();
   ofs.close();
 }
 
 
-void Log::writeBufferToOutputStream() {
-  *output_stream << buffer.str();
+void Log::WriteBufferToOutputStream() {
+  *output_stream_ << buffer_.str();
 }
 
-void Log::printLine(std::string msg, LOG_TYPE type) {
-  std::cout << getTag(type) << msg << std::endl;
+void Log::PrintLine(std::string msg, LOG_TYPE type) {
+  std::cout << GetTag(type) << msg << std::endl;
 }
 
-void Log::print(std::string msg, LOG_TYPE type) {
-  std::cout << getTag(type) << msg;
+void Log::Print(std::string msg, LOG_TYPE type) {
+  std::cout << GetTag(type) << msg;
 }
 
 
-std::string getTag(LOG_TYPE type) {
+std::string GetTag(LOG_TYPE type) {
   switch (type) {
     case LOG_ERROR:
       return "ERROR: ";

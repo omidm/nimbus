@@ -103,7 +103,7 @@ class Worker {
   port_t listening_port_;
 
  private:
-  Log log;
+  Log log_;
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;

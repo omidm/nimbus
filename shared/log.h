@@ -48,24 +48,24 @@
 #include <sstream> // NOLINT
 #include <string>
 
-#define MAX_BUFF_SIZE  256
+#define LOG_MAX_BUFF_SIZE  256
 
 #ifndef _NIMBUS_NO_LOG
-#define dbg_print(...) print(__VA_ARGS__)
-#define dbg_printLine(...) printLine(__VA_ARGS__)
-#define dbg_writeToFile(...) writeToFile(__VA_ARGS__)
-#define dbg_writeToBuffer(...) writeToBuffer(__VA_ARGS__)
-#define dbg_writeBufferToFile(...) writeBufferToFile(__VA_ARGS__)
-#define dbg_writeToOutputStream(...) writeToOutputStream(__VA_ARGS__)
-#define dbg_writeBufferToOutputStream(...) writeBufferToOutputStream(__VA_ARGS__) // NOLINT
+#define log_Print(...) Print(__VA_ARGS__)
+#define log_PrintLine(...) PrintLine(__VA_ARGS__)
+#define log_WriteToFile(...) WriteToFile(__VA_ARGS__)
+#define log_WriteToBuffer(...) WriteToBuffer(__VA_ARGS__)
+#define log_WriteBufferToFile(...) WriteBufferToFile(__VA_ARGS__)
+#define log_WriteToOutputStream(...) WriteToOutputStream(__VA_ARGS__)
+#define log_WriteBufferToOutputStream(...) WriteBufferToOutputStream(__VA_ARGS__) // NOLINT
 #else
-#define dbg_print(...) none()
-#define dbg_printLine(...) none()
-#define dbg_writeToFile(...) none()
-#define dbg_writeToBuffer(...) none()
-#define dbg_writeBufferToFile(...) none()
-#define dbg_writeToOutputStream(...) none()
-#define dbg_writeBufferToOutputStream(...) none()
+#define log_Print(...) none()
+#define log_PrintLine(...) none()
+#define log_WriteToFile(...) none()
+#define log_WriteToBuffer(...) none()
+#define log_WriteBufferToFile(...) none()
+#define log_WriteToOutputStream(...) none()
+#define log_WriteBufferToOutputStream(...) none()
 #endif
 
 
@@ -79,7 +79,7 @@ enum LOG_TYPE {
   LOG_NONE
 };
 
-std::string getTag(LOG_TYPE type);
+std::string GetTag(LOG_TYPE type);
 
 class Log {
   public:
@@ -90,48 +90,40 @@ class Log {
     ~Log();
 
 
-    void setOutputStream(std::ostream* os);
-
-    void setFileName(std::string fname);
-
-    void InitTime();
-
-    struct timeval* start_time();
-
+    void set_output_stream(std::ostream* os);
+    void set_file_name(std::string fname);
     void set_start_time(struct timeval* time);
 
+    struct timeval* start_time();
     double timer();
 
+    void InitTime();
     double GetTime();
 
+    void ResetTimer();
     void StartTimer();
-
+    void ResumeTimer();
     void StopTimer();
 
-    void clearBuffer();
+    void ClearBuffer();
+    void ClearLogFile();
 
-    void clearLogFile();
+    void WriteToBuffer(std::string buf, LOG_TYPE type = LOG_NONE);
+    void WriteToFile(std::string buf, LOG_TYPE type = LOG_NONE);
+    void WriteToOutputStream(std::string buf, LOG_TYPE type = LOG_NONE);
 
-    void writeToBuffer(std::string buf, LOG_TYPE type = LOG_NONE);
+    void WriteBufferToFile();
+    void WriteBufferToOutputStream();
 
-    void writeToFile(std::string buf, LOG_TYPE type = LOG_NONE);
-
-    void writeToOutputStream(std::string buf, LOG_TYPE type = LOG_NONE);
-
-    void writeBufferToFile();
-
-    void writeBufferToOutputStream();
-
-    static void printLine(std::string msg, LOG_TYPE type = LOG_NONE);
-
-    static void print(std::string msg, LOG_TYPE type = LOG_NONE);
+    static void PrintLine(std::string msg, LOG_TYPE type = LOG_NONE);
+    static void Print(std::string msg, LOG_TYPE type = LOG_NONE);
 
     static void none() {}
 
   private:
-    std::ostream* output_stream;
-    std::stringstream buffer;
-    std::string log_file_name;
+    std::ostream* output_stream_;
+    std::string log_file_name_;
+    std::stringstream buffer_;
     struct timeval start_time_;
     struct timeval timer_start_time_;
     double timer_;
