@@ -78,7 +78,12 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
 
     init_config.set_boundary_condition = false;
     DataConfig data_config;
-    data_config.SetAll();
+    data_config.SetFlag(DataConfig::VELOCITY_GHOST);
+    data_config.SetFlag(DataConfig::LEVELSET);
+    data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 
