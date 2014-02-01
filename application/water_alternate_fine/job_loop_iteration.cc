@@ -52,12 +52,14 @@
 #define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
 
 #include "application/water_alternate_fine/app_utils.h"
+#include "application/water_alternate_fine/data_names.h"
 #include "application/water_alternate_fine/job_loop_iteration.h"
+#include "application/water_alternate_fine/job_names.h"
 #include "application/water_alternate_fine/physbam_utils.h"
 #include "application/water_alternate_fine/water_driver.h"
 #include "application/water_alternate_fine/water_example.h"
 #include "application/water_alternate_fine/water_sources.h"
-#include "application/water_alternate_fine/job_names.h"
+#include "application/water_alternate_fine/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <sstream>
@@ -792,6 +794,10 @@ namespace application {
         before, after,
         modify_levelset_params);
 
+    read.clear();
+    write.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, NULL);
+    write = read;
     nimbus::Parameter adjust_phi_params;
     std::string adjust_phi_str;
     SerializeParameter(frame, time, dt, &adjust_phi_str);
@@ -805,6 +811,10 @@ namespace application {
         read, write,
         before, after,
         adjust_phi_params);
+
+    read.clear();
+    write.clear();
+    LoadReadWriteSets(this, &read, &write);
 
     nimbus::Parameter delete_particles_params;
     std::string delete_particles_str;
