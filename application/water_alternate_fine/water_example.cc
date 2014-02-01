@@ -332,7 +332,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, prpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
-          &application::kDomainParticles, &pdv, particle_levelset, true);
+          &application::kDomainParticles, default_shift,
+          &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -341,7 +342,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, nrpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
-          &application::kDomainParticles, &pdv, particle_levelset, false);
+          &application::kDomainParticles, default_shift,
+          &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -430,7 +432,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, prpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
-          &application::kDomainParticles, &pdv, particle_levelset, true);
+          &application::kDomainParticles, default_shift,
+          &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating remove positive particles.\n");
@@ -440,7 +443,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, nrpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
-          &application::kDomainParticles, &pdv, particle_levelset, false);
+          &application::kDomainParticles, default_shift,
+          &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating remove negative particles.\n");
