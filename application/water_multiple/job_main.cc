@@ -114,7 +114,6 @@ namespace application {
         read.clear();
         LoadLogicalIdsInSet(this, &read, kRegGhostw3Inner[0], APP_FACE_VEL, NULL);
         LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegGhostw1Outer[0], APP_PRESSURE, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);

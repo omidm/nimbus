@@ -287,14 +287,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     application::DestroyTranslatorObjects(&pdv);
 
-    // pressure
-    const std::string pstring = std::string(APP_PRESSURE);
-    if (application::GetTranslatorData(job, pstring, da, &pdv))
-        translator.WriteScalarArray(&application::kRegGhostw1Outer[0],
-                                   &pdv,
-                                   &incompressible.projection.p);
-    application::DestroyTranslatorObjects(&pdv);
-
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
@@ -382,15 +374,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating ghost velocity.\n");
-
-    // pressure
-    const std::string pstring = std::string(APP_PRESSURE);
-    if (application::GetTranslatorData(job, pstring, da, &pdv))
-        translator.ReadScalarArray(&application::kRegGhostw1Outer[0],
-                                   &pdv,
-                                   &incompressible.projection.p);
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating pressure.\n");
 
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;

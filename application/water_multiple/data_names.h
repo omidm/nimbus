@@ -45,7 +45,6 @@
 #define APP_FACE_VEL "face_vel"
 #define APP_FACE_VEL_GHOST "face_vel_ghost"
 #define APP_PHI "phi"
-#define APP_PRESSURE "pressure"
 #define APP_POS_PARTICLES "pos_particles"
 #define APP_NEG_PARTICLES "neg_particles"
 #define APP_POS_REM_PARTICLES "pos_rem_particles"

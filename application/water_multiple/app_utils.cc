@@ -176,12 +176,6 @@ namespace application {
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_PRESSURE, &kRegGhostw1Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
       job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kDomainParticles);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
