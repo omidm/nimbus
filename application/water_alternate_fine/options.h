@@ -55,14 +55,17 @@ struct InitConfig {
   T time;
   bool init_phase;
   bool set_boundary_condition;
-  TV_INT grid_size;
+  GeometricRegion global_region;
+  GeometricRegion local_region;
 
-  InitConfig() {
+  // TODO(quhang), global region and local region should be passed as parameters
+  // in the future.
+  InitConfig() : global_region(1, 1, 1, kScale, kScale, kScale),
+                 local_region(1, 1, 1, 30, 30, 30) {
     frame = 0;
     time = 0;
     init_phase = false;
     set_boundary_condition = true;
-    grid_size = TV_INT::All_Ones_Vector() * kScale;
   }
 };
 
