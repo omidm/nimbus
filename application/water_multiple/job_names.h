@@ -43,10 +43,6 @@
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_NAMES_H_
 
 
-#define SUPER_1 "super_1"
-#define SUPER_2 "super_2"
-#define SUPER_3 "super_3"
-
 #define MAIN "main"
 #define INITIALIZE "initialize"
 #define LOOP_FRAME "loop_frame"

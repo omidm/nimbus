@@ -57,9 +57,6 @@
 #include "application/water_multiple/job_projection.h"
 #include "application/water_multiple/job_reincorporate_removed_particles.h"
 #include "application/water_multiple/job_step_particles.h"
-#include "application/water_multiple/job_super_1.h"
-#include "application/water_multiple/job_super_2.h"
-#include "application/water_multiple/job_super_3.h"
 #include "application/water_multiple/job_write_frame.h"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_

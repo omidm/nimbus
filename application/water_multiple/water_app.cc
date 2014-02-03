@@ -89,9 +89,6 @@ namespace application {
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
-        RegisterJob(SUPER_1, new JobSuper1(this));
-        RegisterJob(SUPER_2, new JobSuper2(this));
-        RegisterJob(SUPER_3, new JobSuper3(this));
         RegisterJob(ADJUST_PHI_WITH_OBJECTS, new JobAdjustPhiWithObjects(this));
         RegisterJob(ADVECT_PHI, new JobAdvectPhi(this));
         RegisterJob(STEP_PARTICLES, new JobStepParticles(this));
