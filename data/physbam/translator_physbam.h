@@ -117,6 +117,7 @@ namespace nimbus {
     };
 
     virtual void ReadFaceArray(const GeometricRegion* region,
+                               const int_dimension_t shift[3],
                                const PdiVector* objects,
                                FaceArray* fa) {
       if (objects != NULL) {
@@ -178,9 +179,9 @@ namespace nimbus {
                                        source_z * mult_z;
                     source_index += src_offset;
 
-                    int dest_x = x + dest(X_COORD) + region->x();
-                    int dest_y = y + dest(Y_COORD) + region->y();
-                    int dest_z = z + dest(Z_COORD) + region->z();
+                    int dest_x = x + dest(X_COORD) + region->x() - shift[0];
+                    int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
+                    int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
 
                     typename PhysBAM::VECTOR<int, 3>
                       destinationIndex(dest_x, dest_y, dest_z);
@@ -202,6 +203,7 @@ namespace nimbus {
     /** Take a FaceArray described by region and write it out to the
      *  PhysicalDataInstance objects in the objects array. */
     virtual bool WriteFaceArray(const GeometricRegion* region,
+                                const int_dimension_t shift[3],
                                 PdiVector* objects,
                                 FaceArray* fa) {
       int_dimension_t region_size = 0;
@@ -275,9 +277,9 @@ namespace nimbus {
                                           dest_z * mult_z;
                   destination_index += dst_offset;
 
-                  int source_x = x + src(X_COORD) + region->x();
-                  int source_y = y + src(Y_COORD) + region->y();
-                  int source_z = z + src(Z_COORD) + region->z();
+                  int source_x = x + src(X_COORD) + region->x() - shift[0];
+                  int source_y = y + src(Y_COORD) + region->y() - shift[1];
+                  int source_z = z + src(Z_COORD) + region->z() - shift[2];
 
                   typename PhysBAM::VECTOR<int, 3>
                     sourceIndex(source_x, source_y, source_z);
@@ -717,6 +719,7 @@ namespace nimbus {
      * limited by the GeometricRegion specified by region, into the
      * ScalarArray specified by dest. This allocates a new scalar array. */
     virtual ScalarArray* ReadScalarArray(const GeometricRegion* region,
+                                         const int_dimension_t shift[3],
                                          const PdiVector* instances,
                                          ScalarArray *sa) {
         if (instances != NULL) {
@@ -744,9 +747,9 @@ namespace nimbus {
                                     (source_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (source_y * (inst->region()->dx())) +
                                     source_x;
-                                int dest_x = x + dest(X_COORD) + region->x();
-                                int dest_y = y + dest(Y_COORD) + region->y();
-                                int dest_z = z + dest(Z_COORD) + region->z();
+                                int dest_x = x + dest(X_COORD) + region->x() - shift[0];
+                                int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
+                                int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
                                 Int3Vector destination_index(dest_x, dest_y, dest_z);
                                 assert(source_index < data->size() && source_index >= 0);
                                 (*sa)(destination_index) = buffer[source_index];
@@ -762,6 +765,7 @@ namespace nimbus {
     /* Write scalar array data into PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion region. This frees the physbam scalar array. */
     virtual bool WriteScalarArray(const GeometricRegion* region,
+                                  const int_dimension_t shift[3],
                                   PdiVector* instances,
                                   ScalarArray* sa) {
         if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
@@ -791,9 +795,9 @@ namespace nimbus {
                     for (int z = 0; z < overlap(Z_COORD); z++) {
                         for (int y = 0; y < overlap(Y_COORD); y++) {
                             for (int x = 0; x < overlap(X_COORD); x++) {
-                                int dest_x = x + dest(X_COORD);
-                                int dest_y = y + dest(Y_COORD);
-                                int dest_z = z + dest(Z_COORD);
+                                int dest_x = x + dest(X_COORD) - shift[0];
+                                int dest_y = y + dest(Y_COORD) - shift[1];
+                                int dest_z = z + dest(Z_COORD) - shift[2];
                                 int destination_index =
                                     (dest_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (dest_y * (inst->region()->dx())) +

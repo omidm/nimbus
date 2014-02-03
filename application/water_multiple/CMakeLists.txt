@@ -35,9 +35,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_main.cc
     ${PROJECT_SOURCE_DIR}/job_modify_levelset.cc
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.cc
-    ${PROJECT_SOURCE_DIR}/job_super_1.cc
-    ${PROJECT_SOURCE_DIR}/job_super_2.cc
-    ${PROJECT_SOURCE_DIR}/job_super_3.cc
     ${PROJECT_SOURCE_DIR}/job_adjust_phi_with_objects.cc
     ${PROJECT_SOURCE_DIR}/job_advect_phi.cc
     ${PROJECT_SOURCE_DIR}/job_step_particles.cc
@@ -73,9 +70,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_main.h
     ${PROJECT_SOURCE_DIR}/job_modify_levelset.h
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.h
-    ${PROJECT_SOURCE_DIR}/job_super_1.h
-    ${PROJECT_SOURCE_DIR}/job_super_2.h
-    ${PROJECT_SOURCE_DIR}/job_super_3.h
     ${PROJECT_SOURCE_DIR}/job_adjust_phi_with_objects.h
     ${PROJECT_SOURCE_DIR}/job_advect_phi.h
     ${PROJECT_SOURCE_DIR}/job_step_particles.h

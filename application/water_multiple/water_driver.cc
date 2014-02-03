@@ -392,71 +392,6 @@ WriteFrameImpl(const nimbus::Job *job,
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
-
-template<class TV> bool WATER_DRIVER<TV>::
-SuperJob1Impl (const nimbus::Job *job,
-               const nimbus::DataArray &da,
-               T dt) {
-  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-
-  // LOG::Time("Compute Occupied Blocks");
-  // T maximum_fluid_speed = example.face_velocities.Maxabs().Max();
-  // T max_particle_collision_distance =
-  //   example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor *
-  //   example.mac_grid.dX.Max();
-  // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(
-  //     true, dt * maximum_fluid_speed + 2 * max_particle_collision_distance + (T).5 * example.mac_grid.dX.Max(), 10);
-
-  LOG::Time("Adjust Phi With Objects");
-  // T_FACE_ARRAYS_SCALAR face_velocities_ghost;
-  // face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells, false);
-  example.incompressible.boundary->Fill_Ghost_Cells_Face(
-      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
-      time + dt, example.number_of_ghost_cells);
-
-  //Advect Phi 3.6% (Parallelized)
-  LOG::Time("Advect Phi");
-  example.phi_boundary_water.Use_Extrapolation_Mode(false);
-  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
-  example.particle_levelset_evolution.levelset_advection.Euler_Step(
-      example.face_velocities,
-      dt, time,
-      example.particle_levelset_evolution.particle_levelset.
-      number_of_ghost_cells);
-  example.particle_levelset_evolution.time += dt;
-  example.phi_boundary_water.Use_Extrapolation_Mode(true);
-  example.phi_boundary_water.Use_Extrapolation_Mode(true);
-
-  //Advect Particles 12.1% (Parallelized)
-  LOG::Time("Step Particles");
-  example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
-      example.face_velocities_ghost, dt, time, true, true, false, false);
-
-  //Advect removed particles (Parallelized)
-  LOG::Time("Advect Removed Particles");
-  RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
-  domain.max_corner += TV_INT::All_Ones_Vector();
-  DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(
-      *this, &WATER_DRIVER<TV>::Run, dt, time);
-
-  //Advect Velocities 26% (Parallelized)
-  LOG::Time("Advect V");
-  example.incompressible.advection->Update_Advection_Equation_Face(
-      example.mac_grid, example.face_velocities, example.face_velocities_ghost,
-      example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
-
-  //Add Forces 0%
-  LOG::Time("Forces");
-  example.incompressible.Advance_One_Time_Step_Forces(
-      example.face_velocities, dt, time, true, 0, example.number_of_ghost_cells);
-
-  // Save State.
-  example.Save_To_Nimbus(job, da, current_frame+1);
-
-  return true;
-}
-
-
 template<class TV> bool WATER_DRIVER<TV>::
 ProjectionImpl (const nimbus::Job *job,
                const nimbus::DataArray &da,
@@ -495,15 +430,6 @@ ExtrapolationImpl (const nimbus::Job *job,
       exchanged_phi_ghost,
       false, 3, 0, TV());
 
-  return true;
-}
-
-template<class TV> bool WATER_DRIVER<TV>::
-SuperJob3Impl (const nimbus::Job *job,
-               const nimbus::DataArray &da,
-               T dt) {
-  ProjectionImpl(job, da, dt);
-  ExtrapolationImpl(job, da, dt);
   return true;
 }
 

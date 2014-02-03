@@ -63,11 +63,7 @@ namespace application {
             virtual nimbus::Job* Clone();
 
         private:
-            void SpawnWithSuperJobsGranularity(
-                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
             void SpawnWithOneJobGranularity(
-                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
-            void SpawnWithBreakSuperJob1Granularity(
                 bool done, int frame, T time, T dt, const nimbus::DataArray& da);
             void SpawnWithBreakAllGranularity(
                 bool done, int frame, T time, T dt, const nimbus::DataArray& da);
