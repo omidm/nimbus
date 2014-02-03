@@ -42,7 +42,7 @@
 #include "application/water_multiple/water_sources.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple_fine/physbam_utils.h"
+#include "application/water_multiple/physbam_utils.h"
 
 namespace application {
 
