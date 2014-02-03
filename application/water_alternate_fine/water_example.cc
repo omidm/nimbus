@@ -274,7 +274,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.WriteFaceArray(
-          &application::kRegGhostw3Inner[0], &pdv, &face_velocities);
+          &application::kRegGhostw3Inner[0], default_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -283,7 +283,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, fvgstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.WriteFaceArray(
-          &application::kRegGhostw3Outer[0], &pdv, &face_velocities_ghost);
+          &application::kRegGhostw3Outer[0], default_shift, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -291,6 +291,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     const std::string pstring = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pstring, da, &pdv))
         translator.WriteScalarArray(&application::kRegGhostw1Outer[0],
+                                   default_shift,
                                    &pdv,
                                    &incompressible.projection.p);
     application::DestroyTranslatorObjects(&pdv);
@@ -303,7 +304,10 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, lsstring, da, &pdv)
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.WriteScalarArray(
-          &application::kRegGhostw3Outer[0], &pdv, &particle_levelset.levelset.phi);
+          &application::kRegGhostw3Outer[0],
+          default_shift,
+          &pdv,
+          &particle_levelset.levelset.phi);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -368,7 +372,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.ReadFaceArray(
-          &application::kRegGhostw3Inner[0], &pdv, &face_velocities);
+          &application::kRegGhostw3Inner[0], default_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating velocity.\n");
@@ -378,7 +382,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvgstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.ReadFaceArray(
-          &application::kRegGhostw3Outer[0], &pdv, &face_velocities_ghost);
+          &application::kRegGhostw3Outer[0], default_shift, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating ghost velocity.\n");
@@ -387,6 +391,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     const std::string pstring = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pstring, da, &pdv))
         translator.ReadScalarArray(&application::kRegGhostw1Outer[0],
+                                   default_shift,
                                    &pdv,
                                    &incompressible.projection.p);
     application::DestroyTranslatorObjects(&pdv);
@@ -400,7 +405,10 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, lsstring, da, &pdv)
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.ReadScalarArray(
-          &application::kRegGhostw3Outer[0], &pdv, &particle_levelset.levelset.phi);
+          &application::kRegGhostw3Outer[0],
+          default_shift,
+          &pdv,
+          &particle_levelset.levelset.phi);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating levelset.\n");
