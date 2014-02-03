@@ -42,19 +42,20 @@
 #include "application/water_multiple/water_sources.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple_fine/physbam_utils.h"
 
 namespace application {
 
-Range GridToRange(const TV& global_grid, const TV& local_grid,
-                  const int_dimension_t shift[3]) {
+Range GridToRange(
+    const GeometricRegion& global_region,
+    const GeometricRegion& local_region) {
   TV start, end;
-  start(1) = shift[0] / global_grid.x;
-  start(2) = shift[1] / global_grid.y;
-  start(3) = shift[2] / global_grid.z;
-  end(1) = (shift[0] + local_grid.x) / global_grid.x;
-  end(2) = (shift[1] + local_grid.y) / global_grid.y;
-  end(3) = (shift[2] + local_grid.z) / global_grid.z;
+  start(1) = (local_region.x() - 1) / global_region.dx();
+  start(2) = (local_region.y() - 1) / global_region.dy();
+  start(3) = (local_region.z() - 1) / global_region.dz();
+  end(1) =  (local_region.x() + local_region.dx() - 1) / global_region.dx();
+  end(2) =  (local_region.y() + local_region.dy() - 1) / global_region.dy();
+  end(3) =  (local_region.z() + local_region.dz() - 1) / global_region.dz();
   return Range(start, end);
 }
 
@@ -68,8 +69,10 @@ bool InitializeExampleAndDriver(
   dbg(APP_LOG, "HANG:Enter initialize_example_driver.\n");
   example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
   example->Initialize_Grid(
-      init_config.grid_size,
-      PhysBAM::RANGE<TV>(TV(), TV::All_Ones_Vector()));
+      TV_INT(init_config.local_region.dx(),
+             init_config.local_region.dy(),
+             init_config.local_region.dz()),
+      GridToRange(init_config.global_region, init_config.local_region));
   PhysBAM::WaterSources::Add_Source(example);
   example->data_config.Set(data_config);
   driver= new PhysBAM::WATER_DRIVER<TV>(*example);
