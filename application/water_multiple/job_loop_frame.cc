@@ -67,9 +67,10 @@ namespace application {
 
         // get frame from parameters
         int frame;
+        GeometricRegion global_region;
         std::string params_str(params.ser_data().data_ptr_raw(),
                                params.ser_data().size());
-        LoadParameter(params_str, &frame);
+        LoadParameter(params_str, &frame, &global_region);
 
         // get time from frame
         PhysBAM::WATER_EXAMPLE<TV>* example =
@@ -89,7 +90,7 @@ namespace application {
           nimbus::Parameter iter_params;
 
           std::string str;
-          SerializeParameter(frame, time, &str);
+          SerializeParameter(frame, time, global_region, &str);
           iter_params.set_ser_data(SerializedData(str));
 
           LoadReadWriteSets(this, &read, &write);

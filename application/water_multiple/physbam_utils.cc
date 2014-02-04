@@ -66,7 +66,11 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-  dbg(APP_LOG, "HANG:Enter initialize_example_driver.\n");
+  dbg(APP_LOG, "Enter initialize_example_driver.\n");
+  dbg(APP_LOG, "Global region: %s\n",
+      init_config.global_region.toString().c_str());
+  dbg(APP_LOG, "Local region: %s\n",
+      init_config.local_region.toString().c_str());
   example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
   example->Initialize_Grid(
       TV_INT(init_config.local_region.dx(),
@@ -81,7 +85,7 @@ bool InitializeExampleAndDriver(
   driver->time = init_config.time;
   dbg(APP_LOG, "Before enter driver->Initialize.\n");
   driver->Initialize(job, da, init_config.set_boundary_condition);
-  dbg(APP_LOG, "HANG:Exit initialize_example_driver.\n");
+  dbg(APP_LOG, "Exit initialize_example_driver.\n");
   return true;
 }
 

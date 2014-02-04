@@ -33,46 +33,25 @@
  */
 
 /*
- * This file contains a loop iteration job that spawns the sub step jobs to
- * calculate the current frame. It keeps spawning the iteration in a loop as
- * long as frame computation in not complete. When the frame is done it will
- * spawn the loop frame job for the next frame.
+ * Scratch data helper class contains a mapping between regions and
+ * corresponding scratch region "names" as registered with Nimbus. This map
+ * should be populated by the application writer, when defining the
+ * corresponding scratch regions.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * The class provides functions that the application writer can use to get
+ * scratch data for a job, and scratch data for a region - for synchronization
+ * job.
+ *
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_LOOP_ITERATION_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_LOOP_ITERATION_H_
+#include "data/scratch_data_helper.h"
+#include "shared/geometric_region.h"
 
-#include "shared/nimbus.h"
+namespace nimbus {
 
-namespace application {
-    enum {
-      ONE_JOB,
-      SUPER_JOBS,
-      BREAK_SUPER_JOB_1,
-      BREAK_SUPER_JOB_2,
-      BREAK_SUPER_JOB_3,
-      BREAK_ALL_SUPER_JOBS
-    };
+ScratchDataHelper::ScratchDataHelper() {}
 
-    class JobLoopIteration : public nimbus::Job {
-        public:
-            explicit JobLoopIteration(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
+ScratchDataHelper::~ScratchDataHelper() {}
 
-        private:
-            /*
-            void SpawnWithOneJobGranularity(
-                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
-                */
-            void SpawnWithBreakAllGranularity(
-                bool done, int frame, T time, T dt, const nimbus::DataArray& da,
-                const GeometricRegion& global_region);
-    };
-
-} // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_LOOP_ITERATION_H_
-
+}  // namespace nimbus

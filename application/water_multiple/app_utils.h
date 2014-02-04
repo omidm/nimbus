@@ -41,7 +41,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 
-#include <stdarg.h> 
+#include <stdarg.h>
 #include "application/water_multiple/physbam_include.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
@@ -74,6 +74,7 @@ namespace application {
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
+    const GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
     const GeometricRegion kDomain(1, 1, 1, kScale, kScale, kScale);
     const GeometricRegion kDomainGhost(-kGhostNum + 1,
                                        -kGhostNum + 1,
@@ -117,13 +118,38 @@ namespace application {
         nimbus::IDSet<nimbus::logical_data_id_t>* set,
         const nimbus::GeometricRegion& region, ...);
 
-    bool SerializeParameter(const int frame, std::string* result);
-    bool SerializeParameter(const int frame, const T time, std::string *result);
-    bool SerializeParameter(const int frame, const T time, const T dt, std::string *result);
-    bool LoadParameter(const std::string str, int* frame);
-    bool LoadParameter(const std::string str, int* frame, T* time);
-    bool LoadParameter(const std::string str, int* frame, T* time, T* dt);
-
+    bool SerializeParameter(
+        const int frame,
+        const GeometricRegion& global_region,
+        std::string* result);
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const GeometricRegion& global_region,
+        std::string *result);
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const T dt,
+        const GeometricRegion& global_region,
+        const GeometricRegion& local_region,
+        std::string *result);
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        GeometricRegion* global_region);
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        GeometricRegion* global_region);
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        T* dt,
+        GeometricRegion* global_region,
+        GeometricRegion* local_region);
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_

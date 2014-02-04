@@ -64,6 +64,8 @@ namespace application {
         InitConfig init_config;
         init_config.init_phase = true;
         init_config.set_boundary_condition = true;
+        init_config.global_region = kDefaultRegion;
+        init_config.local_region = kDefaultRegion;
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 
@@ -83,11 +85,9 @@ namespace application {
         nimbus::IDSet<nimbus::job_id_t> before, after;
         nimbus::Parameter loop_params;
 
-        // TODO:  
-
         int frame = 0;
         std::string loop_str;
-        SerializeParameter(frame, &loop_str);
+        SerializeParameter(frame, init_config.global_region, &loop_str);
         loop_params.set_ser_data(SerializedData(loop_str));
 
         dbg(APP_LOG, "Spawning loop frame job for frame %i in main\n", frame);

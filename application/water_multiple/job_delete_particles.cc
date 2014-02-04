@@ -69,7 +69,8 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
-    LoadParameter(params_str, &init_config.frame, &init_config.time, &dt);
+    LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+                  &init_config.global_region, &init_config.local_region);
     dbg(APP_LOG, "Frame %i in delete particles job\n", init_config.frame);
 
     // initialize configuration and state

@@ -73,14 +73,18 @@ namespace application {
     return new JobLoopIteration(application());
   }
 
-  void JobLoopIteration::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
+  void JobLoopIteration::Execute(
+      nimbus::Parameter params,
+      const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing loop iteration job\n");
 
     // Get parameters: frame, time
     InitConfig init_config;
     std::string params_str(params.ser_data().data_ptr_raw(),
         params.ser_data().size());
-    LoadParameter(params_str, &init_config.frame, &init_config.time);
+    LoadParameter(params_str, &init_config.frame, &init_config.time,
+                  &init_config.global_region);
+    init_config.local_region = init_config.global_region;
 
     const int& frame = init_config.frame;
     const T& time = init_config.time;
@@ -121,11 +125,15 @@ namespace application {
     // spawn the jobs to compute the frame, depending on the
     // level of granularity we will have different sub jobs.
     switch (GRANULARITY_STATE) {
+      /*
       case ONE_JOB:
-        SpawnWithOneJobGranularity(done, frame, time, dt, da);
+        SpawnWithOneJobGranularity(done, frame, time, dt, da,
+                                   init_config.global_region);
         break;
+        */
       case BREAK_ALL_SUPER_JOBS:
-        SpawnWithBreakAllGranularity(done, frame, time, dt, da);
+        SpawnWithBreakAllGranularity(done, frame, time, dt, da,
+                                     init_config.global_region);
         break;
       default:
         dbg(APP_LOG, "ERROR: The granularity state is not defined.");
@@ -137,6 +145,7 @@ namespace application {
     DestroyExampleAndDriver(example, driver);
   }
 
+  /*
   void JobLoopIteration::SpawnWithOneJobGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da) {
     if (!done) {
@@ -230,9 +239,11 @@ namespace application {
           frame_params);
     }
   }
+  */
 
   void JobLoopIteration::SpawnWithBreakAllGranularity(
-      bool done, int frame, T time, T dt, const nimbus::DataArray& da) {
+      bool done, int frame, T time, T dt, const nimbus::DataArray& da,
+      const GeometricRegion& global_region) {
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
     int job_num = 13;
@@ -245,7 +256,7 @@ namespace application {
 
     nimbus::Parameter s11_params;
     std::string s11_str;
-    SerializeParameter(frame, time, dt, &s11_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s11_str);
     s11_params.set_ser_data(SerializedData(s11_str));
     before.clear();
     after.clear();
@@ -258,7 +269,7 @@ namespace application {
 
     nimbus::Parameter s12_params;
     std::string s12_str;
-    SerializeParameter(frame, time, dt, &s12_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s12_str);
     s12_params.set_ser_data(SerializedData(s12_str));
     before.clear();
     before.insert(job_ids[0]);
@@ -272,7 +283,7 @@ namespace application {
 
     nimbus::Parameter s13_params;
     std::string s13_str;
-    SerializeParameter(frame, time, dt, &s13_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s13_str);
     s13_params.set_ser_data(SerializedData(s13_str));
     before.clear();
     before.insert(job_ids[1]);
@@ -286,7 +297,7 @@ namespace application {
 
     nimbus::Parameter s14_params;
     std::string s14_str;
-    SerializeParameter(frame, time, dt, &s14_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s14_str);
     s14_params.set_ser_data(SerializedData(s14_str));
     before.clear();
     before.insert(job_ids[2]);
@@ -300,7 +311,7 @@ namespace application {
 
     nimbus::Parameter s15_params;
     std::string s15_str;
-    SerializeParameter(frame, time, dt, &s15_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s15_str);
     s15_params.set_ser_data(SerializedData(s15_str));
     before.clear();
     before.insert(job_ids[3]);
@@ -314,7 +325,7 @@ namespace application {
 
     nimbus::Parameter s16_params;
     std::string s16_str;
-    SerializeParameter(frame, time, dt, &s16_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s16_str);
     s16_params.set_ser_data(SerializedData(s16_str));
     before.clear();
     before.insert(job_ids[4]);
@@ -328,7 +339,7 @@ namespace application {
 
     nimbus::Parameter modify_levelset_params;
     std::string modify_levelset_str;
-    SerializeParameter(frame, time, dt, &modify_levelset_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &modify_levelset_str);
     modify_levelset_params.set_ser_data(SerializedData(modify_levelset_str));
     after.clear();
     after.insert(job_ids[7]);
@@ -342,7 +353,7 @@ namespace application {
 
     nimbus::Parameter adjust_phi_params;
     std::string adjust_phi_str;
-    SerializeParameter(frame, time, dt, &adjust_phi_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &adjust_phi_str);
     adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
     after.clear();
     after.insert(job_ids[8]);
@@ -356,7 +367,7 @@ namespace application {
 
     nimbus::Parameter delete_particles_params;
     std::string delete_particles_str;
-    SerializeParameter(frame, time, dt, &delete_particles_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &delete_particles_str);
     delete_particles_params.set_ser_data(SerializedData(delete_particles_str));
     after.clear();
     after.insert(job_ids[9]);
@@ -370,7 +381,7 @@ namespace application {
 
     nimbus::Parameter reincorporate_particles_params;
     std::string reincorporate_particles_str;
-    SerializeParameter(frame, time, dt, &reincorporate_particles_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &reincorporate_particles_str);
     reincorporate_particles_params.set_ser_data(SerializedData(reincorporate_particles_str));
     after.clear();
     after.insert(job_ids[10]);
@@ -386,7 +397,7 @@ namespace application {
       int index = 10;
       nimbus::Parameter projection_params;
       std::string projection_str;
-      SerializeParameter(frame, time, dt, &projection_str);
+      SerializeParameter(frame, time, dt, global_region, global_region, &projection_str);
       projection_params.set_ser_data(SerializedData(projection_str));
       after.clear();
       after.insert(job_ids[index+1]);
@@ -403,7 +414,7 @@ namespace application {
       int index = 11;
       nimbus::Parameter extrapolation_params;
       std::string extrapolation_str;
-      SerializeParameter(frame, time, dt, &extrapolation_str);
+      SerializeParameter(frame, time, dt, global_region, global_region, &extrapolation_str);
       extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
       after.clear();
       after.insert(job_ids[index+1]);
@@ -428,7 +439,7 @@ namespace application {
         int index = 12;
         nimbus::Parameter iter_params;
         std::string iter_str;
-        SerializeParameter(frame, time + dt, &iter_str);
+        SerializeParameter(frame, time + dt, global_region, &iter_str);
         iter_params.set_ser_data(SerializedData(iter_str));
         after.clear();
         before.clear();
@@ -454,7 +465,8 @@ namespace application {
         int index = 12;
         nimbus::Parameter write_params;
         std::string write_str;
-        SerializeParameter(frame, time + dt, 0, &write_str);
+        SerializeParameter(frame, time + dt, 0,
+                           global_region, global_region, &write_str);
         write_params.set_ser_data(SerializedData(write_str));
         after.clear();
         after.insert(loop_job_id[0]);
@@ -471,7 +483,7 @@ namespace application {
         int index = 13;
         nimbus::Parameter frame_params;
         std::string frame_str;
-        SerializeParameter(frame + 1, &frame_str);
+        SerializeParameter(frame + 1, global_region, &frame_str);
         frame_params.set_ser_data(SerializedData(frame_str));
         after.clear();
         before.clear();
