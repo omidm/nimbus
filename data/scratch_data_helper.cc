@@ -42,16 +42,70 @@
  * scratch data for a job, and scratch data for a region - for synchronization
  * job.
  *
+ * Supports only 3d.
+ *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <string>
+#include <vector>
+
 #include "data/scratch_data_helper.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
-ScratchDataHelper::ScratchDataHelper() {}
+ScratchDataHelper::ScratchDataHelper() {
+    int temp[] = {7, 3, 3, 1, 1, 1};
+    for (int i = 0; i < NUM_TYPES; i++) {
+        scratch_type_names_[i] = "";
+        num_scratch_[i] = temp[i];
+    }
+}
 
 ScratchDataHelper::~ScratchDataHelper() {}
+
+void ScratchDataHelper::set_domain(const GeometricRegion &d) {
+    domain_ = d;
+}
+
+void ScratchDataHelper::set_share_boundary(bool flag) {
+    share_boundary_ = flag;
+}
+
+void ScratchDataHelper::set_ghost_width(int gw) {
+    ghost_width_ = gw;
+}
+
+void ScratchDataHelper::SetScratchType(const std::vector<ScratchTypes> &st_index,
+                                       const std::vector<std::string> &st_names) {
+    int ii = st_index.size();
+    int ni = st_names.size();
+    int mi = ii < ni? ii : ni;
+    if (ii < ni)
+        dbg(DBG_WARN, "WARNING: index and name aray sizes do not match in SetScratchType.\n");
+    for (int i = 0; i < mi; i ++) {
+        if (st_index[i] > NUM_TYPES) {
+            dbg(DBG_ERROR, "ERROR: scratch region got an index > %i\n", NUM_TYPES);
+            exit(1);
+        }
+        scratch_type_names_[st_index[i]] = st_names[i];
+    }
+}
+
+void ScratchDataHelper::GetJobScratchData(const Job *j,
+                                          const GeometricRegion &cr,
+                                          lIDSet *ids) const {}
+
+void ScratchDataHelper::GetAllScratchData(const Job *j,
+                                          std::vector<GeometricRegion> *regions,
+                                          std::vector<lIDSet> ids_list) const {}
+
+void ScratchDataHelper::GetScratchRegions(const GeometricRegion &cr,
+                                         std::vector<GeometricRegion> *regions) const {
+}
 
 }  // namespace nimbus
