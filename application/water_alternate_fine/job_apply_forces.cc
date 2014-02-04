@@ -80,8 +80,8 @@ void JobApplyForces::Execute(nimbus::Parameter params,
   PhysBAM::WATER_DRIVER<TV> *driver;
 
   DataConfig data_config;
-  data_config.SetAll();
-  // data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::LEVELSET);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
