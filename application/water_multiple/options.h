@@ -60,8 +60,8 @@ struct InitConfig {
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
-  InitConfig() : global_region(1, 1, 1, kScale, kScale, kScale),
-                 local_region(1, 1, 1, 30, 30, 30) {
+  InitConfig() : global_region(1, 1, 1, 0, 0, 0),
+                 local_region(1, 1, 1, 0, 0, 0) {
     frame = 0;
     time = 0;
     init_phase = false;

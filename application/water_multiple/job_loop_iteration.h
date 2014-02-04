@@ -63,10 +63,13 @@ namespace application {
             virtual nimbus::Job* Clone();
 
         private:
+            /*
             void SpawnWithOneJobGranularity(
                 bool done, int frame, T time, T dt, const nimbus::DataArray& da);
+                */
             void SpawnWithBreakAllGranularity(
-                bool done, int frame, T time, T dt, const nimbus::DataArray& da);
+                bool done, int frame, T time, T dt, const nimbus::DataArray& da,
+                const GeometricRegion& global_region);
     };
 
 } // namespace application
