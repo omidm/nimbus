@@ -42,47 +42,62 @@
  * scratch data for a job, and scratch data for a region - for synchronization
  * job.
  *
+ * Supports only 3d.
+ *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
 #ifndef NIMBUS_DATA_SCRATCH_DATA_HELPER_H_
 #define NIMBUS_DATA_SCRATCH_DATA_HELPER_H_
 
-#include <map>
 #include <string>
 #include <vector>
 
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
 class ScratchDataHelper {
+    public:
+        enum ScratchTypes { VERTEX = 0,
+                            EDGE1,
+                            EDGE2,
+                            FACE1,
+                            FACE2,
+                            FACE3,
+                            NUM_TYPES
+                          };
+
     private:
-        typedef std::vector<std::string> NameList;
-        struct CompareRegions {
-            bool operator() (const GeometricRegion &r1,
-                             const GeometricRegion &r2) {
-                if (r1.x() != r2.x())
-                    return(r1.x() < r2.x());
-                else if (r1.y() != r2.y())
-                    return(r1.y() < r2.y());
-                else if (r1.z() != r2.z())
-                    return(r1.z() < r2.z());
-                else if (r1.dx() != r2.dx())
-                    return(r1.dx() < r2.dx());
-                else if (r1.dy() != r2.dy())
-                    return(r1.dy() < r2.dy());
-                else
-                    return(r1.dz() < r2.dz());
-            }
-        };
-        typedef std::map<nimbus::GeometricRegion, NameList, CompareRegions>
-            RegionNameListMap;
-        RegionNameListMap scratch_map_;
+        GeometricRegion domain_;
+        bool share_boundary_;
+        int ghost_width_;
+        std::string scratch_type_names_[NUM_TYPES];
+        static int num_scratch_[NUM_TYPES];
+
+        typedef IDSet<logical_data_id_t> lIDSet;
+
+        void GetScratchRegions(const GeometricRegion &cr,
+                               std::vector<GeometricRegion> *regions) const;
 
     public:
         ScratchDataHelper();
         virtual ~ScratchDataHelper();
+
+        void set_domain(const GeometricRegion &d);
+        void set_share_boundary(bool flag);
+        void set_ghost_width(int gw);
+
+        void SetScratchType(const std::vector<ScratchTypes> &st_index,
+                            const std::vector<std::string> &st_names);
+        void GetJobScratchData(const Job *j,
+                               const GeometricRegion &cr,
+                               lIDSet *ids) const;
+        void GetAllScratchData(const Job *j,
+                               std::vector<GeometricRegion> *regions,
+                               std::vector<lIDSet> ids_list) const;
 };
 }  // namespace nimbus
 
