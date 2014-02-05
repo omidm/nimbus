@@ -268,6 +268,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 {
     int_dimension_t default_shift[3] = {
         local_region.x(), local_region.y(), local_region.z()};
+    int_dimension_t array_shift[3] = {
+        local_region.x()-1, local_region.y()-1, local_region.z()-1};
     PdiVector pdv;
 
     // mac velocities
@@ -275,7 +277,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.WriteFaceArray(
-          &application::kRegGhostw3Inner[0], default_shift, &pdv, &face_velocities);
+          &application::kRegGhostw3Inner[0], array_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -284,7 +286,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, fvgstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.WriteFaceArray(
-          &application::kRegGhostw3Outer[0], default_shift, &pdv, &face_velocities_ghost);
+          &application::kRegGhostw3Outer[0], array_shift, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -297,7 +299,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.WriteScalarArray(
           &application::kRegGhostw3Outer[0],
-          default_shift,
+          array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
     }
@@ -358,6 +360,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 {
     int_dimension_t default_shift[3] = {
         local_region.x(), local_region.y(), local_region.z()};
+    int_dimension_t array_shift[3] = {
+        local_region.x()-1, local_region.y()-1, local_region.z()-1};
     PdiVector pdv;
 
     // mac velocities
@@ -365,7 +369,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.ReadFaceArray(
-          &application::kRegGhostw3Inner[0], default_shift, &pdv, &face_velocities);
+          &application::kRegGhostw3Inner[0], array_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating velocity.\n");
@@ -375,7 +379,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvgstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.ReadFaceArray(
-          &application::kRegGhostw3Outer[0], default_shift, &pdv, &face_velocities_ghost);
+          &application::kRegGhostw3Outer[0], array_shift, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating ghost velocity.\n");
@@ -389,7 +393,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.ReadScalarArray(
           &application::kRegGhostw3Outer[0],
-          default_shift,
+          array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
     }
