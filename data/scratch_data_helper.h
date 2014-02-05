@@ -75,7 +75,7 @@ class ScratchDataHelper {
         bool share_boundary_;
         int ghost_width_;
         std::string scratch_type_names_[NUM_TYPES];
-        static int num_scratch_[NUM_TYPES];
+        int num_scratch_[NUM_TYPES];
 
         typedef IDSet<logical_data_id_t> lIDSet;
 

@@ -48,6 +48,8 @@ template<class TV> WATER_DRIVER<TV>::
 //#####################################################################
 // Initialize
 //#####################################################################
+// TODO(quhang): Any memory allocation in this initialization function should be
+// controlled by Nimbus.
 template<class TV> void WATER_DRIVER<TV>::
 Initialize(const nimbus::Job *job,
            const nimbus::DataArray &da,
@@ -61,10 +63,9 @@ Initialize(const nimbus::Job *job,
     time=example.Time_At_Frame(current_frame);
   }
 
-  for(int i=1;i<=TV::dimension;i++)
-  {
-    example.domain_boundary(i)(1)=true;
-    example.domain_boundary(i)(2)=true;
+  for (int i = 1; i <= TV::dimension; i++) {
+    example.domain_boundary(i)(1) = true;
+    example.domain_boundary(i)(2) = true;
   }
 
   example.domain_boundary(2)(2)=false;
@@ -82,7 +83,14 @@ Initialize(const nimbus::Job *job,
       &example.particle_levelset_evolution);
 
   example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
+  // TODO(quhang): This initialization function initializes valid mask, which we
+  // don't know. And this one also calls projection.Initialize_Grid, which is
+  // duplicated.
   example.incompressible.Initialize_Grids(example.mac_grid);
+  // TODO(quhang): I think the only way to debug whether psi_D and psi_N is
+  // passed around is to tune the initialization here. I will break this
+  // function and make it possible to tune whether initialze psi or not. I
+  // asked, but didn't receive a sure answer. Have to figure out ourselves.
   example.projection.Initialize_Grid(example.mac_grid);
   example.collision_bodies_affecting_fluid.Initialize_Grids();
   if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
@@ -166,6 +174,8 @@ Initialize(const nimbus::Job *job,
   example.incompressible.projection.Set_Density(1e3);
 
   if (set_boundary_conditions) {
+    // TODO(quhang): Needs a better understanding what this block is doing. This
+    // one is certainly doing something we haven't taken care of.
     ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
