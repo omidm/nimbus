@@ -695,7 +695,10 @@ namespace application {
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
-    LoadReadWriteSets(this, &read, &write);
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
 
     nimbus::Parameter s11_params;
     std::string s11_str;
@@ -709,6 +712,12 @@ namespace application {
         read, write,
         before, after,
         s11_params);
+
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s12_params;
     std::string s12_str;
@@ -724,6 +733,18 @@ namespace application {
         before, after,
         s12_params);
 
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
     nimbus::Parameter s13_params;
     std::string s13_str;
     SerializeParameter(frame, time, dt, &s13_str);
@@ -737,6 +758,16 @@ namespace application {
         read, write,
         before, after,
         s13_params);
+
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_REM_PARTICLES,
+        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_REM_PARTICLES,
+        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
     nimbus::Parameter s14_params;
     std::string s14_str;
@@ -752,6 +783,12 @@ namespace application {
         before, after,
         s14_params);
 
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+
     nimbus::Parameter s15_params;
     std::string s15_str;
     SerializeParameter(frame, time, dt, &s15_str);
@@ -765,6 +802,12 @@ namespace application {
         read, write,
         before, after,
         s15_params);
+
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s16_params;
     std::string s16_str;
@@ -780,6 +823,18 @@ namespace application {
         before, after,
         s16_params);
 
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
     nimbus::Parameter modify_levelset_params;
     std::string modify_levelset_str;
     SerializeParameter(frame, time, dt, &modify_levelset_str);
@@ -794,10 +849,12 @@ namespace application {
         before, after,
         modify_levelset_params);
 
+
     read.clear();
-    write.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, NULL);
-    write = read;
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_PHI, NULL);
+
     nimbus::Parameter adjust_phi_params;
     std::string adjust_phi_str;
     SerializeParameter(frame, time, dt, &adjust_phi_str);
@@ -813,8 +870,16 @@ namespace application {
         adjust_phi_params);
 
     read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
     write.clear();
-    LoadReadWriteSets(this, &read, &write);
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
     nimbus::Parameter delete_particles_params;
     std::string delete_particles_str;
@@ -829,6 +894,19 @@ namespace application {
         read, write,
         before, after,
         delete_particles_params);
+
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
     nimbus::Parameter reincorporate_particles_params;
     std::string reincorporate_particles_str;
@@ -845,6 +923,11 @@ namespace application {
         reincorporate_particles_params);
 
     {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+
       int index = 10;
       nimbus::Parameter projection_params;
       std::string projection_str;
@@ -862,6 +945,11 @@ namespace application {
     }
 
     {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+
       int index = 11;
       nimbus::Parameter extrapolation_params;
       std::string extrapolation_str;
@@ -881,12 +969,19 @@ namespace application {
     if (!done) {
       //Spawn one iteration of frame computation and then one loop
       //iteration  job, for next iteration.
-      read.clear();
-      write.clear();
-
-      LoadReadWriteSets(this, &read, &write);
 
       {
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        write.clear();
+        LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
         int index = 12;
         nimbus::Parameter iter_params;
         std::string iter_str;
@@ -904,15 +999,22 @@ namespace application {
     } else {
       // compute one last iteration, then spawn write frame job. Finally,
       // spawn loop frame job for next frame computation.
-      read.clear();
-      write.clear();
-
-      LoadReadWriteSets(this, &read, &write);
 
       std::vector<nimbus::job_id_t> loop_job_id;
       GetNewJobID(&loop_job_id, 1);
 
       {
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        write.clear();
+        LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
         int index = 12;
         nimbus::Parameter write_params;
         std::string write_str;
@@ -930,6 +1032,9 @@ namespace application {
       }
 
       {
+        read.clear();
+        write.clear();
+
         int index = 13;
         nimbus::Parameter frame_params;
         std::string frame_str;
