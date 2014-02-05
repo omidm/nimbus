@@ -58,13 +58,7 @@
 
 namespace nimbus {
 
-ScratchDataHelper::ScratchDataHelper() {
-    int temp[] = {7, 3, 3, 1, 1, 1};
-    for (int i = 0; i < NUM_TYPES; i++) {
-        scratch_type_names_[i] = "";
-        num_scratch_[i] = temp[i];
-    }
-}
+ScratchDataHelper::ScratchDataHelper() {}
 
 ScratchDataHelper::~ScratchDataHelper() {}
 
@@ -72,40 +66,56 @@ void ScratchDataHelper::set_domain(const GeometricRegion &d) {
     domain_ = d;
 }
 
+void ScratchDataHelper::set_ghost_width(int gw[DIMENSION]) {
+    for (size_t i = 0; i < DIMENSION; i++)
+        ghost_width_[i] = gw[i];
+}
+
 void ScratchDataHelper::set_share_boundary(bool flag) {
     share_boundary_ = flag;
 }
 
-void ScratchDataHelper::set_ghost_width(int gw) {
-    ghost_width_ = gw;
+void ScratchDataHelper::SetScratchType(const std::vector<ScratchType> &st_index,
+                                       const std::vector<std::string> &st_names) {
 }
 
-void ScratchDataHelper::SetScratchType(const std::vector<ScratchTypes> &st_index,
-                                       const std::vector<std::string> &st_names) {
-    int ii = st_index.size();
-    int ni = st_names.size();
-    int mi = ii < ni? ii : ni;
-    if (ii < ni)
-        dbg(DBG_WARN, "WARNING: index and name aray sizes do not match in SetScratchType.\n");
-    for (int i = 0; i < mi; i ++) {
-        if (st_index[i] > NUM_TYPES) {
-            dbg(DBG_ERROR, "ERROR: scratch region got an index > %i\n", NUM_TYPES);
-            exit(1);
+void ScratchDataHelper::GetJobScratchData(Job *job,
+                                          const GeometricRegion &cr,
+                                          lIDSet *ids) const {
+    const int cl[DIMENSION]  = {cr.x(),  cr.y(),  cr.z()};
+    const int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dx()};
+    int l[DIMENSION]  = {0, 0, 0};
+    int ld[DIMENSION] = {0, 0, 0};
+    size_t n;
+
+    // vertex scratch regions
+    for (int i = 0; i < DIMENSION; i++) {
+        l[i]  = cl[i] - ghost_width_[i];
+        ld[i] = 2*ghost_width_[i];
+    }
+    n  = 0;
+    for (size_t i = 0; i < 2; i++) {
+        l[XCOORD] = (i == 0)? l[XCOORD] : l[XCOORD] + cld[XCOORD];
+        for (size_t j = 0; j < 2; j++) {
+            l[YCOORD] = (j == 0)? l[YCOORD] : l[YCOORD] + cld[YCOORD];
+            for (size_t k = 0; k < 2; k++) {
+                l[ZCOORD] = (k == 0)? l[ZCOORD] : l[ZCOORD] + cld[ZCOORD];
+                CLdoVector ldos;
+                GeometricRegion region(l[XCOORD], l[YCOORD], l[ZCOORD],
+                                       ld[XCOORD], ld[YCOORD], ld[ZCOORD]);
+                job->GetCoveredLogicalObjects(&ldos, vertex_types_[n], &region);
+                n++;
+            }
         }
-        scratch_type_names_[st_index[i]] = st_names[i];
+    }
+
+    // edge scratch regions
+    n = 0;
+    for (size_t i = 0; i < DIMENSION; i++) {
     }
 }
 
-void ScratchDataHelper::GetJobScratchData(const Job *j,
-                                          const GeometricRegion &cr,
-                                          lIDSet *ids) const {}
-
-void ScratchDataHelper::GetAllScratchData(const Job *j,
+void ScratchDataHelper::GetAllScratchData(Job *j,
                                           std::vector<GeometricRegion> *regions,
                                           std::vector<lIDSet> ids_list) const {}
-
-void ScratchDataHelper::GetScratchRegions(const GeometricRegion &cr,
-                                         std::vector<GeometricRegion> *regions) const {
-}
-
 }  // namespace nimbus
