@@ -110,6 +110,8 @@ def GetRegions(params, hare_boundary, num, reg_type):
     ghostw = params[2]
     rs     = [0, 0, 0]
     rsl    = [0, 0, 0]
+    rd     = [0, 0, 0]
+    rdl    = [0, 0, 0]
     for dim in range(0, 3):
         if domain[dim]/rnum[dim] < 2*ghostw[dim]:
             print "\nError : Invalid ghost width and region size"
@@ -117,26 +119,32 @@ def GetRegions(params, hare_boundary, num, reg_type):
             sys.exit(2)
         if reg_type == inner:
             rsl[dim] = domain[dim]/rnum[dim]
+            rdl[dim] = rsl[dim]
         elif reg_type == outer:
             rsl[dim] = domain[dim]/rnum[dim] + 2*ghostw[dim]
+            rdl[dim] = domain[dim]/rnum[dim]
         if domain[dim]%rnum[dim] == 0:
             rs[dim] = rsl[dim]
+            rd[dim] = rdl[dim]
         else:
             print "\nWarning: Regions for dimension " + str(dim) + \
                     " at line " + str(num) + " are not of equal size."
             rs[dim] = rsl[dim]+1
     rsize  = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
+    rdelta = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
     rstart = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
     for dim in range(0, 3):
         for i in range(0, rnum[dim], 1):
-            rsize[dim][i] = rs[dim]
-        rsize[dim][rnum[dim]-1] = rsl[dim]
+            rsize[dim][i]  = rs[dim]
+            rdelta[dim][i] = rd[dim]
+        rsize[dim][rnum[dim]-1]  = rsl[dim]
+        rdelta[dim][rnum[dim]-1] = rdl[dim]
         if reg_type == inner:
             rstart[dim][0] = 1
         elif reg_type == outer:
             rstart[dim][0] = 1 - ghostw[dim]
         for i in range(1, rnum[dim], 1):
-            rstart[dim][i] = rstart[dim][i-1] + rsize[dim][i-1]
+            rstart[dim][i] = rstart[dim][i-1] + rdelta[dim][i-1]
     regions = []
     if share_boundary:
         for dim in range(0, 3):
