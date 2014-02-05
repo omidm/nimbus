@@ -797,16 +797,16 @@ namespace nimbus {
                     for (int z = 0; z < overlap(Z_COORD); z++) {
                         for (int y = 0; y < overlap(Y_COORD); y++) {
                             for (int x = 0; x < overlap(X_COORD); x++) {
-                                int dest_x = x + dest(X_COORD) - shift[0];
-                                int dest_y = y + dest(Y_COORD) - shift[1];
-                                int dest_z = z + dest(Z_COORD) - shift[2];
+                                int dest_x = x + dest(X_COORD);
+                                int dest_y = y + dest(Y_COORD);
+                                int dest_z = z + dest(Z_COORD);
                                 int destination_index =
                                     (dest_z * (inst->region()->dy() * inst->region()->dx())) +
                                     (dest_y * (inst->region()->dx())) +
                                     dest_x;
-                                int source_x = x + src(X_COORD) + region->x();
-                                int source_y = y + src(Y_COORD) + region->y();
-                                int source_z = z + src(Z_COORD) + region->z();
+                                int source_x = x + src(X_COORD) + region->x() - shift[0];
+                                int source_y = y + src(Y_COORD) + region->y() - shift[1];
+                                int source_z = z + src(Z_COORD) + region->z() - shift[2];
                                 Int3Vector source_index(source_x, source_y, source_z);
                                 assert(destination_index < data->size() && destination_index >= 0);
                                 buffer[destination_index] = (*sa)(source_index);

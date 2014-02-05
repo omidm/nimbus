@@ -364,12 +364,26 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         local_region.x()-1, local_region.y()-1, local_region.z()-1};
     PdiVector pdv;
 
+    GeometricRegion array_reg_inner(local_region.x(),
+                                    local_region.y(),
+                                    local_region.z(),
+                                    local_region.dx(),
+                                    local_region.dy(),
+                                    local_region.dz());
+
+    GeometricRegion array_reg_outer(local_region.x()-application::kGhostNum,
+                                    local_region.y()-application::kGhostNum,
+                                    local_region.z()-application::kGhostNum,
+                                    local_region.dx()+2*application::kGhostNum,
+                                    local_region.dy()+2*application::kGhostNum,
+                                    local_region.dz()+2*application::kGhostNum);
+
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.ReadFaceArray(
-          &application::kRegGhostw3Inner[0], array_shift, &pdv, &face_velocities);
+          &array_reg_inner, array_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating velocity.\n");
@@ -379,7 +393,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvgstring, da, &pdv)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.ReadFaceArray(
-          &application::kRegGhostw3Outer[0], array_shift, &pdv, &face_velocities_ghost);
+          &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating ghost velocity.\n");
@@ -392,7 +406,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, lsstring, da, &pdv)
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.ReadScalarArray(
-          &application::kRegGhostw3Outer[0],
+          &array_reg_outer,
           array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
