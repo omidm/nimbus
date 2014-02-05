@@ -82,6 +82,8 @@ void ScratchDataHelper::SetScratchType(const std::vector<ScratchType> &st_index,
 void ScratchDataHelper::GetJobScratchData(Job *job,
                                           const GeometricRegion &cr,
                                           lIDSet *ids) const {
+    ids->clear();
+
     const int cl[DIMENSION]  = {cr.x(),  cr.y(),  cr.z()};
     const int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dx()};
     int l[DIMENSION]  = {0, 0, 0};
@@ -89,21 +91,26 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     size_t n;
 
     // vertex scratch regions
-    for (int i = 0; i < DIMENSION; i++) {
-        l[i]  = cl[i] - ghost_width_[i];
-        ld[i] = 2*ghost_width_[i];
+    for (int d = 0; d < DIMENSION; d++) {
+        l[d]  = cl[d] - ghost_width_[d];
+        ld[d] = 2*ghost_width_[d];
     }
     n  = 0;
     for (size_t i = 0; i < 2; i++) {
-        l[XCOORD] = (i == 0)? l[XCOORD] : l[XCOORD] + cld[XCOORD];
+        l[XCOORD] = cl[XCOORD] - ghost_width_[XCOORD] +
+                    i * cld[XCOORD];
         for (size_t j = 0; j < 2; j++) {
-            l[YCOORD] = (j == 0)? l[YCOORD] : l[YCOORD] + cld[YCOORD];
+            l[YCOORD] = cl[YCOORD] - ghost_width_[YCOORD] +
+                        j * cld[YCOORD];
             for (size_t k = 0; k < 2; k++) {
-                l[ZCOORD] = (k == 0)? l[ZCOORD] : l[ZCOORD] + cld[ZCOORD];
+                l[ZCOORD] = cl[ZCOORD] - ghost_width_[ZCOORD] +
+                            k * cld[ZCOORD];
                 CLdoVector ldos;
                 GeometricRegion region(l[XCOORD], l[YCOORD], l[ZCOORD],
                                        ld[XCOORD], ld[YCOORD], ld[ZCOORD]);
                 job->GetCoveredLogicalObjects(&ldos, vertex_types_[n], &region);
+                for (size_t s = 0; s < ldos.size(); s++)
+                    ids->insert(ldos[s]->id());
                 n++;
             }
         }
@@ -111,9 +118,57 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
 
     // edge scratch regions
     n = 0;
-    for (size_t i = 0; i < DIMENSION; i++) {
+    for (size_t d = 0; d < DIMENSION; d++) {
+        l[d]  = cl[d] + ghost_width_[d];
+        ld[d] = cld[d] - 2*ghost_width_[d];
+        size_t d1 = (d+1)%DIMENSION;
+        size_t d2 = (d+2)%DIMENSION;
+        ld[d1] = 2*ghost_width_[d1];
+        ld[d2] = 2*ghost_width_[d2];
+        for (int i = 0; i < 2; i++) {
+            l[d1] = cl[d1] - ghost_width_[d1] +
+                    i * cld[d1];
+            for (int j = 0; j < 2; j++) {
+                l[d2] = cl[d2] - ghost_width_[d2] +
+                        j * cld[d2];
+                CLdoVector ldos;
+                GeometricRegion region(l[XCOORD], l[YCOORD], l[ZCOORD],
+                                       ld[XCOORD], ld[YCOORD], ld[ZCOORD]);
+                job->GetCoveredLogicalObjects(&ldos, edge_types_[n], &region);
+                for (size_t s = 0; s < ldos.size(); s++)
+                    ids->insert(ldos[s]->id());
+                n++;
+            }
+        }
+    }
+
+    // face scratch regions
+    n = 0;
+    for (size_t d = 0; d < DIMENSION; d++) {
+        size_t d1 = (d+1)%DIMENSION;
+        size_t d2 = (d+2)%DIMENSION;
+        ld[d] = 2*ghost_width_[d];
+        l[d1]  = cl[d1] + ghost_width_[d1];
+        l[d2]  = cl[d2] + ghost_width_[d2];
+        ld[d1] = cld[d1] - 2*ghost_width_[d1];
+        ld[d2] = cld[d2] - 2*ghost_width_[d2];
+        for (size_t i = 0; i < 2; i++) {
+            l[d]  = cl[d] - ghost_width_[d] + i * cld[d];
+            CLdoVector ldos;
+            GeometricRegion region(l[XCOORD], l[YCOORD], l[ZCOORD],
+                                   ld[XCOORD], ld[YCOORD], ld[ZCOORD]);
+            job->GetCoveredLogicalObjects(&ldos, face_types_[n], &region);
+            for (size_t s = 0; s < ldos.size(); s++)
+                ids->insert(ldos[s]->id());
+            n++;
+        }
     }
 }
+
+void ScratchDataHelper::GetJobScratchData(Job *job,
+                                          const GeometricRegion &cr,
+                                          const GeometricRegion &region,
+                                          lIDSet *ids) const {}
 
 void ScratchDataHelper::GetAllScratchData(Job *j,
                                           std::vector<GeometricRegion> *regions,

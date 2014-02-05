@@ -100,6 +100,10 @@ class ScratchDataHelper {
         void GetJobScratchData(Job *job,
                                const GeometricRegion &cr,
                                lIDSet *ids) const;
+        void GetJobScratchData(Job *job,
+                               const GeometricRegion &region,
+                               const GeometricRegion &cr,
+                               lIDSet *ids) const;
         void GetAllScratchData(Job *job,
                                std::vector<GeometricRegion> *regions,
                                std::vector<lIDSet> ids_list) const;
