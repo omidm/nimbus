@@ -2,6 +2,6 @@
 # C++ Class : Nimbus type : (domain), (number of partitions), (ghost width) : include_boundary : share_boundary #
 #################################################################################################################
 
-DataApp : face_vel : (30, 30, 30), (1, 1, 1), (3, 3, 3) : false : false
+DataApp : face_vel : (30, 30, 30), (2, 1, 1), (3, 3, 3) : false : false
 DataApp : face_vel_ghost, phi : (30, 30, 30), (1, 1, 1), (3, 3, 3) : true : false
 #DataApp : pos_particles, neg_particles, pos_rem_particles, neg_rem_particles : (31, 31, 31), (1, 1, 1), (3, 3, 3) : true : true
