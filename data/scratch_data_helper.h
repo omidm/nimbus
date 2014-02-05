@@ -61,41 +61,50 @@ namespace nimbus {
 
 class ScratchDataHelper {
     public:
-        enum ScratchTypes { VERTEX = 0,
-                            EDGE1,
-                            EDGE2,
-                            FACE1,
-                            FACE2,
-                            FACE3,
-                            NUM_TYPES
-                          };
+    enum ScratchType { VERTEX,
+                       EDGE,
+                       FACE,
+                       ELEMS
+                     };
 
     private:
+        enum { DIMENSION = 3 };
+        enum { XCOORD = 0,
+               YCOORD,
+               ZCOORD
+             };
+        enum { VERTEX_TYPES = 8 };
+        enum { EDGE_TYPES = 12 };
+        enum { FACE_TYPES = 6 };
+
         GeometricRegion domain_;
+        int ghost_width_[DIMENSION];
         bool share_boundary_;
-        int ghost_width_;
-        std::string scratch_type_names_[NUM_TYPES];
-        int num_scratch_[NUM_TYPES];
+
+        std::string vertex_types_[VERTEX_TYPES];
+        std::string edge_types_[EDGE_TYPES];
+        std::string face_types_[FACE_TYPES];
 
         typedef IDSet<logical_data_id_t> lIDSet;
-
-        void GetScratchRegions(const GeometricRegion &cr,
-                               std::vector<GeometricRegion> *regions) const;
 
     public:
         ScratchDataHelper();
         virtual ~ScratchDataHelper();
 
         void set_domain(const GeometricRegion &d);
+        void set_ghost_width(int gw[DIMENSION]);
         void set_share_boundary(bool flag);
-        void set_ghost_width(int gw);
 
-        void SetScratchType(const std::vector<ScratchTypes> &st_index,
+        void SetScratchType(const std::vector<ScratchType> &st_index,
                             const std::vector<std::string> &st_names);
-        void GetJobScratchData(const Job *j,
+        void GetJobScratchData(Job *job,
                                const GeometricRegion &cr,
                                lIDSet *ids) const;
-        void GetAllScratchData(const Job *j,
+        void GetJobScratchData(Job *job,
+                               const GeometricRegion &region,
+                               const GeometricRegion &cr,
+                               lIDSet *ids) const;
+        void GetAllScratchData(Job *job,
                                std::vector<GeometricRegion> *regions,
                                std::vector<lIDSet> ids_list) const;
 };
