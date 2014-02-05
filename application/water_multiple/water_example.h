@@ -42,6 +42,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     nimbus::TranslatorPhysBAM<TV> translator;
 
 public:
+    GeometricRegion local_region;
     DataConfig data_config;
     STREAM_TYPE stream_type;
     T initial_time;

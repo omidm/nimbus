@@ -266,7 +266,8 @@ Read_Output_Files(const int frame)
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    int_dimension_t default_shift[3] = {0, 0, 0};
+    int_dimension_t default_shift[3] = {
+        local_region.x(), local_region.y(), local_region.z()};
     PdiVector pdv;
 
     // mac velocities
@@ -355,7 +356,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    int_dimension_t default_shift[3] = {0, 0, 0};
+    int_dimension_t default_shift[3] = {
+        local_region.x(), local_region.y(), local_region.z()};
     PdiVector pdv;
 
     // mac velocities
