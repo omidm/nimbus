@@ -144,17 +144,17 @@ namespace application {
         nimbus::IDSet<nimbus::job_id_t> before, after;
 
         // Init job
+
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegGhostw3Inner[0], APP_FACE_VEL, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegGhostw1Outer[0], APP_PRESSURE, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
         LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         write.clear();
-        write = read;
+        LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
         std::cout << "OMID read = " << read.toString() << std::endl; 
         std::cout << "OMID write = " << write.toString() << std::endl;
