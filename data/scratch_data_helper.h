@@ -61,11 +61,14 @@ namespace nimbus {
 
 class ScratchDataHelper {
     public:
-    enum ScratchType { VERTEX,
-                       EDGE,
-                       FACE,
-                       ELEMS
-                     };
+        /* scratch types in 3d - scratch regions at the corner, ones at the
+         * edge, and onces on 2 sides of a face.
+         */
+        enum ScratchType { VERTEX,
+                           EDGE,
+                           FACE,
+                           ELEMS
+                         };
 
     private:
         enum { DIMENSION = 3 };
@@ -77,10 +80,20 @@ class ScratchDataHelper {
         enum { EDGE_TYPES = 12 };
         enum { FACE_TYPES = 6 };
 
-        GeometricRegion domain_;
+        /* ghost width ( = scratch region width)
+         */
         int ghost_width_[DIMENSION];
+
+        /* share_boundary flag to be set true for vertex arrays that share
+         * vertices -- needed for calculation of scratch regions.
+         */
         bool share_boundary_;
 
+        /* scratch type names.
+         * example: there will be 8 vertex type names for the 8 different
+         * corners, since 1 corner region is shared by 8 different application
+         * partitions.
+         */
         std::string vertex_types_[VERTEX_TYPES];
         std::string edge_types_[EDGE_TYPES];
         std::string face_types_[FACE_TYPES];
@@ -89,24 +102,32 @@ class ScratchDataHelper {
 
     public:
         ScratchDataHelper();
+        ScratchDataHelper(const GeometricRegion &d, int gw[DIMENSION], bool sb);
         virtual ~ScratchDataHelper();
 
-        void set_domain(const GeometricRegion &d);
         void set_ghost_width(int gw[DIMENSION]);
-        void set_share_boundary(bool flag);
+        void set_share_boundary(bool sb);
 
-        void SetScratchType(const std::vector<ScratchType> &st_index,
+        /* pass a scratch type and corresponding list of names.
+         */
+        void SetScratchType(const ScratchType st,
                             const std::vector<std::string> &st_names);
+        /* given the inner bounding box for an application partition (that
+         * includes the inner scratch region, this gives all the scratch
+         * regions associated with the job region.
+         * inner region: for a 1d domain 1-30, partitions 2, ghost width 3,
+         * inner regions are 1-15 and 16-30.
+         */
         void GetJobScratchData(Job *job,
                                const GeometricRegion &cr,
                                lIDSet *ids) const;
-        void GetJobScratchData(Job *job,
-                               const GeometricRegion &region,
-                               const GeometricRegion &cr,
-                               lIDSet *ids) const;
+        /* given a region, this function obtains all the scratch data ids in
+         * that region.
+         */
         void GetAllScratchData(Job *job,
-                               std::vector<GeometricRegion> *regions,
-                               std::vector<lIDSet> ids_list) const;
+                               const GeometricRegion &region,
+                               ScratchType st,
+                               lIDSet *ids) const;
 };
 }  // namespace nimbus
 
