@@ -46,6 +46,8 @@
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/job_names.h"
+#include "application/water_multiple/data_names.h"
+#include "application/water_multiple/reg_def.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -93,7 +95,17 @@ namespace application {
           SerializeParameter(frame, time, global_region, &str);
           iter_params.set_ser_data(SerializedData(str));
 
-          LoadReadWriteSets(this, &read, &write);
+          read.clear();
+          LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+          LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+              APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+              APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+          write.clear();
+          LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+          LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+              APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+              APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
 
           SpawnComputeJob(LOOP_ITERATION,
               job_ids[0],
