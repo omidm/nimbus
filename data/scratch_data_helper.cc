@@ -58,25 +58,58 @@
 
 namespace nimbus {
 
-ScratchDataHelper::ScratchDataHelper() {}
+ScratchDataHelper::ScratchDataHelper() {
+    share_boundary_ = false;
+}
+
+ScratchDataHelper::ScratchDataHelper(const GeometricRegion &d,
+                                    int gw[DIMENSION],
+                                    bool sb) {
+    for (size_t i = 0; i < DIMENSION; i++)
+        ghost_width_[i] = (gw[i] >= 0)? gw[i] : 0;
+    share_boundary_ = sb;
+}
 
 ScratchDataHelper::~ScratchDataHelper() {}
 
-void ScratchDataHelper::set_domain(const GeometricRegion &d) {
-    domain_ = d;
-}
-
 void ScratchDataHelper::set_ghost_width(int gw[DIMENSION]) {
     for (size_t i = 0; i < DIMENSION; i++)
-        ghost_width_[i] = gw[i];
+        ghost_width_[i] = (gw[i] >= 0)? gw[i] : 0;
 }
 
-void ScratchDataHelper::set_share_boundary(bool flag) {
-    share_boundary_ = flag;
+void ScratchDataHelper::set_share_boundary(bool sb) {
+    share_boundary_ = sb;
 }
 
-void ScratchDataHelper::SetScratchType(const std::vector<ScratchType> &st_index,
+void ScratchDataHelper::SetScratchType(const ScratchType st,
                                        const std::vector<std::string> &st_names) {
+    size_t nl = st_names.size();
+    switch (st) {
+        case VERTEX:
+            if (nl != VERTEX_TYPES)
+                dbg(DBG_WARN, "WARNING: scratch type name vector for VERTEX does not match required size of %i\n", VERTEX_TYPES); // NOLINT
+            nl = (VERTEX_TYPES < nl)? VERTEX_TYPES : nl;
+            for (size_t i = 0; i < nl; i++)
+                vertex_types_[i] = st_names[i];
+            break;
+        case EDGE:
+            if (nl != EDGE_TYPES)
+                dbg(DBG_WARN, "WARNING: scratch type name vector for EDGE does not match required size of %i\n", EDGE_TYPES); // NOLINT
+            nl = (EDGE_TYPES < nl)? EDGE_TYPES : nl;
+            for (size_t i = 0; i < nl; i++)
+                edge_types_[i] = st_names[i];
+            break;
+        case FACE:
+            if (nl != FACE_TYPES)
+                dbg(DBG_WARN, "WARNING: scratch type name vector for FACE does not match required size of %i\n", FACE_TYPES); // NOLINT
+            nl = (FACE_TYPES < nl)? FACE_TYPES : nl;
+            for (size_t i = 0; i < nl; i++)
+                face_types_[i] = st_names[i];
+            break;
+        default:
+            dbg(DBG_WARN, "WARNING: invalid scratch type %i, ignoring it in SetScratchType\n"); // NOLINT
+            return;
+    }
 }
 
 void ScratchDataHelper::GetJobScratchData(Job *job,
@@ -165,12 +198,29 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     }
 }
 
-void ScratchDataHelper::GetJobScratchData(Job *job,
-                                          const GeometricRegion &cr,
+void ScratchDataHelper::GetAllScratchData(Job *job,
                                           const GeometricRegion &region,
-                                          lIDSet *ids) const {}
-
-void ScratchDataHelper::GetAllScratchData(Job *j,
-                                          std::vector<GeometricRegion> *regions,
-                                          std::vector<lIDSet> ids_list) const {}
+                                          ScratchType st,
+                                          lIDSet *ids) const {
+    CLdoVector ldos;
+    switch (st) {
+        case VERTEX:
+            for (size_t i = 0; i < VERTEX_TYPES; i++)
+                job->GetCoveredLogicalObjects(&ldos, vertex_types_[i], &region);
+            break;
+        case EDGE:
+            for (size_t i = 0; i < EDGE_TYPES; i++)
+                job->GetCoveredLogicalObjects(&ldos, edge_types_[i], &region);
+            break;
+        case FACE:
+            for (size_t i = 0; i < FACE_TYPES; i++)
+                job->GetCoveredLogicalObjects(&ldos, face_types_[i], &region);
+            break;
+        default:
+            dbg(DBG_WARN, "WARNING: invalid scratch type %i, ignoring it in GetAllScratchData\n", st); // NOLINT
+            return;
+    }
+    for (size_t s = 0; s < ldos.size(); s++)
+        ids->insert(ldos[s]->id());
+}
 }  // namespace nimbus
