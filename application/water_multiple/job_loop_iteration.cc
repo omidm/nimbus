@@ -249,8 +249,6 @@ namespace application {
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
     int job_num = 13;
-    // --quhang
-    // int job_num = 14;
     std::vector<nimbus::job_id_t> job_ids;
     GetNewJobID(&job_ids, job_num);
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
@@ -299,47 +297,6 @@ namespace application {
         before, after,
         s12_params);
 
-    /*
-       --quhang
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-
-    nimbus::Parameter s12_params;
-    std::string s12_str;
-    SerializeParameter(frame, time, dt, global_region, kReg_w3Inner[0], &s12_str);
-    s12_params.set_ser_data(SerializedData(s12_str));
-    before.clear();
-    before.insert(job_ids[0]);
-    after.clear();
-    after.insert(job_ids[2]);
-    SpawnComputeJob(ADVECT_PHI,
-        job_ids[1],
-        read, write,
-        before, after,
-        s12_params);
-
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-
-    nimbus::Parameter s12r_params;
-    std::string s12r_str;
-    SerializeParameter(frame, time, dt, global_region, kReg_w3Inner[1],
-                       &s12r_str);
-    s12r_params.set_ser_data(SerializedData(s12r_str));
-    before.clear();
-    before.insert(job_ids[0]);
-    after.clear();
-    after.insert(job_ids[2]);
-    SpawnComputeJob(ADVECT_PHI,
-        job_ids[13],
-        read, write,
-        before, after,
-        s12r_params);
-    */
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
@@ -358,8 +315,6 @@ namespace application {
     s13_params.set_ser_data(SerializedData(s13_str));
     before.clear();
     before.insert(job_ids[1]);
-    // --quhang
-    // before.insert(job_ids[13]);
     after.clear();
     after.insert(job_ids[3]);
     SpawnComputeJob(STEP_PARTICLES,
@@ -385,19 +340,20 @@ namespace application {
     before.clear();
     before.insert(job_ids[2]);
     after.clear();
-    after.insert(job_ids[4]);
-    // after.insert(advect_v_job_ids[0]); after.insert(advect_v_job_ids[1]);
+    // after.insert(job_ids[4]);
+    after.insert(advect_v_job_ids[0]); after.insert(advect_v_job_ids[1]);
     SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
         job_ids[3],
         read, write,
         before, after,
         s14_params);
 
-/*
+
     // Spawning multiple jobs for Advect V stage
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Inner[0], APP_FACE_VEL, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
 
@@ -417,6 +373,7 @@ namespace application {
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Inner[1], APP_FACE_VEL, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
 
@@ -433,12 +390,11 @@ namespace application {
         read, write,
         before, after,
         s15_params_1);
-*/
 
     // TODO(omidm): Replace the following block with the commented block above.
     // Also change the before and after sets for the after and before jobs. 
 
-
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
@@ -457,7 +413,7 @@ namespace application {
         read, write,
         before, after,
         s15_params);
-
+*/
 
 
     read.clear();
@@ -470,8 +426,8 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &s16_str);
     s16_params.set_ser_data(SerializedData(s16_str));
     before.clear();
-    before.insert(job_ids[4]);
-    // before.insert(advect_v_job_ids[0]); before.insert(advect_v_job_ids[1]);
+    // before.insert(job_ids[4]);
+    before.insert(advect_v_job_ids[0]); before.insert(advect_v_job_ids[1]);
     after.clear();
     after.insert(job_ids[6]);
     SpawnComputeJob(APPLY_FORCES,
