@@ -283,6 +283,13 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                                     local_region.dy()+2*application::kGhostNum,
                                     local_region.dz()+2*application::kGhostNum);
 
+    GeometricRegion enlarge(1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            local_region.dx()+2*application::kGhostNum,
+                            local_region.dy()+2*application::kGhostNum,
+                            local_region.dz()+2*application::kGhostNum);
+
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv)
@@ -321,7 +328,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, ppstring, da, &pdv)
         && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       translator.WriteParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -331,7 +338,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, npstring, da, &pdv)
         && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
       translator.WriteParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -341,7 +348,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, prpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -351,7 +358,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, nrpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -385,6 +392,13 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                                     local_region.dx()+2*application::kGhostNum,
                                     local_region.dy()+2*application::kGhostNum,
                                     local_region.dz()+2*application::kGhostNum);
+
+    GeometricRegion enlarge(1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            local_region.dx()+2*application::kGhostNum,
+                            local_region.dy()+2*application::kGhostNum,
+                            local_region.dz()+2*application::kGhostNum);
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
@@ -427,7 +441,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, ppstring, da, &pdv)
         && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       translator.ReadParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -438,7 +452,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, npstring, da, &pdv)
         && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
       translator.ReadParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -449,7 +463,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, prpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -460,7 +474,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, nrpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
-          &relative_region, array_shift,
+          &enlarge, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
