@@ -69,6 +69,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   T dt;
+  init_config.set_boundary_condition = false;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
@@ -90,6 +91,8 @@ void JobAdvectV::Execute(nimbus::Parameter params,
 
   InitializeExampleAndDriverForAdvectV(init_config, data_config,
                              this, da, example, driver);
+  //InitializeExampleAndDriver(init_config, data_config,
+  //                           this, da, example, driver);
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect v job.");
