@@ -88,7 +88,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   data_config.SetFlag(DataConfig::LEVELSET);
 
-  InitializeExampleAndDriver(init_config, data_config,
+  InitializeExampleAndDriverForAdvectV(init_config, data_config,
                              this, da, example, driver);
 
   // Run the computation in the job.
