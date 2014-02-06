@@ -43,6 +43,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
 
 public:
     GeometricRegion local_region;
+    GeometricRegion relative_region;
     DataConfig data_config;
     STREAM_TYPE stream_type;
     T initial_time;

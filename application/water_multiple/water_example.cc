@@ -266,12 +266,9 @@ Read_Output_Files(const int frame)
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    int_dimension_t default_shift[3] = {
-        local_region.x(), local_region.y(), local_region.z()};
     int_dimension_t array_shift[3] = {
-        local_region.x()-1, local_region.y()-1, local_region.z()-1};
+        local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     PdiVector pdv;
-
     GeometricRegion array_reg_inner(local_region.x(),
                                     local_region.y(),
                                     local_region.z(),
@@ -324,7 +321,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, ppstring, da, &pdv)
         && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       translator.WriteParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -334,7 +331,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, npstring, da, &pdv)
         && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
       translator.WriteParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -344,7 +341,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, prpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -354,7 +351,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, nrpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -372,12 +369,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    int_dimension_t default_shift[3] = {
-        local_region.x(), local_region.y(), local_region.z()};
     int_dimension_t array_shift[3] = {
-        local_region.x()-1, local_region.y()-1, local_region.z()-1};
+        local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     PdiVector pdv;
-
     GeometricRegion array_reg_inner(local_region.x(),
                                     local_region.y(),
                                     local_region.z(),
@@ -433,7 +427,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, ppstring, da, &pdv)
         && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       translator.ReadParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -444,7 +438,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, npstring, da, &pdv)
         && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
       translator.ReadParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -455,7 +449,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, prpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, true);
     }
     application::DestroyTranslatorObjects(&pdv);
@@ -466,7 +460,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, nrpstring, da, &pdv)
         && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
-          &application::kDomainParticles, default_shift,
+          &relative_region, array_shift,
           &pdv, particle_levelset, false);
     }
     application::DestroyTranslatorObjects(&pdv);

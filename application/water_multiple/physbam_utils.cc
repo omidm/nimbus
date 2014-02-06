@@ -73,6 +73,10 @@ bool InitializeExampleAndDriver(
       init_config.local_region.toString().c_str());
   example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
   example->local_region = init_config.local_region;
+  example->relative_region.Rebuild(1, 1, 1,
+                                   init_config.local_region.dx(),
+                                   init_config.local_region.dy(),
+                                   init_config.local_region.dz());
   example->Initialize_Grid(
       TV_INT(init_config.local_region.dx(),
              init_config.local_region.dy(),
