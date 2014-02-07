@@ -118,15 +118,25 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     ids->clear();
 
     const int cl[DIMENSION]  = {cr.x(),  cr.y(),  cr.z()};
-    const int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dx()};
+    int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dx()};
     int l[DIMENSION]  = {0, 0, 0};
     int ld[DIMENSION] = {0, 0, 0};
     size_t n;
 
+    if (share_boundary_) {
+        for (size_t d = 0; d < DIMENSION; d++) {
+            cld[d] -= 1;
+        }
+    }
+
     // vertex scratch regions
-    for (int d = 0; d < DIMENSION; d++) {
-        l[d]  = cl[d] - ghost_width_[d];
+    for (size_t d = 0; d < DIMENSION; d++) {
         ld[d] = 2*ghost_width_[d];
+    }
+    if (share_boundary_) {
+        for (size_t d = 0; d < DIMENSION; d++) {
+            ld[d]  += 1;
+        }
     }
     n  = 0;
     for (size_t i = 0; i < 2; i++) {
@@ -158,6 +168,11 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
         size_t d2 = (d+2)%DIMENSION;
         ld[d1] = 2*ghost_width_[d1];
         ld[d2] = 2*ghost_width_[d2];
+        if (share_boundary_) {
+            for  (size_t dd = 0; dd < DIMENSION; dd++) {
+                ld[dd] += 1;
+            }
+        }
         for (int i = 0; i < 2; i++) {
             l[d1] = cl[d1] - ghost_width_[d1] +
                     i * cld[d1];
@@ -185,6 +200,11 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
         l[d2]  = cl[d2] + ghost_width_[d2];
         ld[d1] = cld[d1] - 2*ghost_width_[d1];
         ld[d2] = cld[d2] - 2*ghost_width_[d2];
+        if (share_boundary_) {
+            for  (size_t dd = 0; dd < DIMENSION; dd++) {
+                ld[dd] += 1;
+            }
+        }
         for (size_t i = 0; i < 2; i++) {
             l[d]  = cl[d] - ghost_width_[d] + i * cld[d];
             CLdoVector ldos;
