@@ -326,7 +326,7 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
-  Data * data_copy;
+  Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
 
