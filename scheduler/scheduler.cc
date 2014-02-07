@@ -487,7 +487,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       PhysicalDataVector pvv;
       data_manager_->InstancesByVersion(ldo, version, &pvv);
       if (pvv.size() == 0) {
-        dbg(DBG_ERROR, "ERROR: the version (%lu) neded for job (%lu) does not exist.\n", version, job->job_id()); // NOLINT
+        dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
         return false;
       } else {
         // TODO(omidm): do something smarter!
@@ -716,17 +716,27 @@ bool Scheduler::AssignJob(JobEntry* job) {
   SchedulerWorker* worker;
   GetWorkerToAssignJob(job, worker);
 
+  bool prepared_data = true;
   IDSet<logical_data_id_t> union_set = job->union_set();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = union_set.begin(); it != union_set.end(); ++it) {
-    PrepareDataForJobAtWorker(job, worker, *it);
+    if (!PrepareDataForJobAtWorker(job, worker, *it)) {
+      prepared_data = false;
+      break;
+    }
   }
-  job_manager_->UpdateJobBeforeSet(job);
-  SendComputeJobToWorker(worker, job);
-  job->set_assigned(true);
+  if (prepared_data) {
+    job_manager_->UpdateJobBeforeSet(job);
+    SendComputeJobToWorker(worker, job);
+    job->set_assigned(true);
 
-  log_assign_.StopTimer();
-  return true;
+    log_assign_.StopTimer();
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not assign job %s (id: %lu).\n", job->job_name().c_str(), job->job_id()); // NOLINT
+    log_assign_.StopTimer();
+    return false;
+  }
 }
 
 size_t Scheduler::AssignReadyJobs() {
