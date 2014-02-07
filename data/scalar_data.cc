@@ -79,7 +79,11 @@ namespace nimbus {
     DeSerialize(const SerializedData &ser_data, Data **result) {
         std::string str(ser_data.data_ptr_raw(), ser_data.size());
         std::istringstream ser(str);
-        ser >> scalar_;
+        ScalarData<T> * sd  = new ScalarData<T>();
+        *result = sd;
+        T temp;
+        ser >> temp;
+        sd->set_scalar(temp);
         return true;
     }
 
