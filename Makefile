@@ -18,11 +18,8 @@ HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
 
-SHARED_PROTO_FILES = $(wildcard shared/protobuf_source/*.proto)
-TEMP = $(subst .proto,.pb.o,$(SHARED_PROTO_FILES))
-SHARED_PROTO_OBJECT_FILES = $(subst shared/protobuf_source,shared/protobuf_compiled,$(TEMP))
+SHARED_PROTO_OBJECT_FILES = $(wildcard shared/protobuf_compiled/*.pb.o)
 OBJFILES += $(SHARED_PROTO_OBJECT_FILES)
-
 
 DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
