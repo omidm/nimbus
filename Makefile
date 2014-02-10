@@ -35,13 +35,13 @@ endif
 lib: $(LIBRARY)
 
 .PHONY: scheduler_t worker_t data_t shared_t
-scheduler_t:  
+scheduler_t: shared_t 
 	cd scheduler; make; cd ..
 
-worker_t:
+worker_t: shared_t
 	cd worker; make; cd ..
 
-data_t: 
+data_t: shared_t
 	cd data; make; cd ..
 
 shared_t:
