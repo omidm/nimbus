@@ -155,7 +155,7 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
                 range(2, pnum[2], 3) ]
         for nt in nimbus_types:
             # vertex
-            vpidset = {}
+            vpidset = set()
             for i in ii[0]:
                 for j in jj[0]:
                     for k in kk[0]:
@@ -167,7 +167,7 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
             for t in range(1, 9):
                 nt_pid["%s_%s_%i" % (nt, vertex, t)] = vpidset
             # edge
-            epidset = {}
+            epidset = set()
             for dim in range(0, 3):
                 for i in ii[1 if dim == 0 else 0]:
                     for j in ii[1 if dim == 1 else 0]:
@@ -180,7 +180,7 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
             for t in range(1, 5):
                 nt_pid["%s_%s_%i" % (nt, edge, t)] = epidset
             # face
-            fpidset = {}
+            fpidset = set()
             for dim in range(0, 3):
                 for i in ii[0 if dim == 0 else 1]:
                     for j in ii[0 if dim == 1 else 1]:
@@ -191,7 +191,7 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
                                 continue
                             fpidset.add(GetPartitionID(x, dx, partn_id))
             for t in range(1, 2):
-                nt_pid["%s_%i" % (nt, face, t)] = fpidset
+                nt_pid["%s_%s_%i" % (nt, face, t)] = fpidset
     return nt_pid
 
 def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
@@ -234,7 +234,7 @@ def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
         for i in range(1, pnum[dim], 1):
             pstart[dim][i] = pstart[dim][i-1] + psize[dim][i-1]
         if share_boundary:  # share_boundary = True
-            psize[dim] = map(lambda x : x+1, psize[dim])
+            psize[dim] = map(lambda x : x+1 if x > 0 else x, psize[dim])
     # obtain nimbus type - partition id mapping
     nt_pid = GetNimbusTypePIDMapHelper(nimbus_types, \
                                        pnum, pstart, psize, use_scratch, \
