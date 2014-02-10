@@ -1,4 +1,3 @@
-
 all: check proto_t shared_t 
 
 NIMBUS_ROOT = ..
@@ -10,12 +9,8 @@ HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
 PDIR_SOURCE = protobuf_source/
-PDIR_COMPILED = protobuf_compiled/
-PROTO_FILES = $(wildcard $(PDIR_SOURCE)*.proto)
-TEMP_OBJECT_FILES = $(subst .proto,.pb.o,$(PROTO_FILES))
-PROTO_OBJECT_FILES = $(subst $(PDIR_SOURCE),$(PDIR_COMPILED),$(TEMP_OBJECT_FILES))
 
-shared_t: $(OBJFILES) $(HFILES) $(PROTO_OBJECT_FILES)
+shared_t: proto_t $(OBJFILES) $(HFILES)
 
 proto_t: 
 	cd $(PDIR_SOURCE); make; cd ..
@@ -24,5 +19,5 @@ proto_t:
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	\rm -f $(PDIR_COMPILED)*.pb.*
+	cd $(PDIR_SOURCE); make clean; cd ..
 
