@@ -54,3 +54,10 @@ clean: clean-files
 	\rm -f */*.o */*~ */\#*
 	\rm -f $(LIBRARY)
 
+clean-hard: clean-files
+	cd scheduler; make clean; cd ..
+	cd worker; make clean; cd ..
+	cd shared; make clean; cd ..
+	cd data; make clean; cd ..
+	\rm -f $(LIBRARY)
+
