@@ -59,12 +59,14 @@ def ValidateSizeTuples(sizes, num):
         params.append(param_tup)
     return params
 
-bool_map = {"true" : True, "false" : False}
+include_boundary_str = "include_boundary"
+share_boundary_str   = "share_boundary"
+use_scratch_str      = "use_scratch"
 
 def ParseLine(line, num):
     # Parsing: begin parsing
     args = re.split(':', line)
-    if len(args) != 5:
+    if len(args) != 4:
         print "\nCannot parse line " + str(num) + \
                 " because it contains " + str(len(args)-1) + " ':'\n"
         sys.exit(2)
@@ -83,16 +85,25 @@ def ParseLine(line, num):
     if len(params) != 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
-    include_boundary = args[3].strip()
-    if include_boundary not in bool_map:
-        print "\nError parsing include_boundary field at line %i\n"  % num
-        sys.exit(2)
-    share_boundary = args[4].strip()
-    if share_boundary not in bool_map:
-        print "\nError parsing share_boundary field at line %i\n"  % num
-        sys.exit(2)
+    flags = re.split('\s|,', args[3].strip())
+    include_boundary = False
+    share_boundary   = False
+    use_scratch      = False
+    if "none" in flags:
+        if (len(flags) > 1):
+            print "\nInvalid flags %s at line %i\n" % (str(flags), num)
+            sys.exit(2)
+    if include_boundary_str in flags:
+        include_boundary = True
+    if share_boundary_str in flags:
+        share_boundary = True
+    if use_scratch_str in flags:
+        use_scratch = True
     return cpp_class, nimbus_types, params, \
-            bool_map[include_boundary], bool_map[share_boundary]
+            {  include_boundary_str : include_boundary, \
+               share_boundary_str   : share_boundary, \
+               use_scratch_str      : use_scratch }
+            
 
 class Partition():
     def __init__(self, x, dx):
@@ -103,7 +114,9 @@ class Partition():
                 (self.x[0], self.x[1], self.x[2], \
                 self.dx[0], self.dx[1], self.dx[2])
 
-def GetPartitionIds(partn_id, params, include_boundary, share_boundary, num):
+def GetPartitionIds(partn_id, params, flags, num):
+    include_boundary = flags[include_boundary_str]
+    share_boundary   = flags[share_boundary_str]
     domain = params[0]
     pnum   = params[1]
     ghostw = params[2]
@@ -189,10 +202,10 @@ for num, line in enumerate(data_config):
     # Parsing: comment
     if line[0] == "#":
         continue
-    cpp_class, nimbus_types, params, include_boundary, share_boundary = ParseLine(line, num)
+    cpp_class, nimbus_types, params, flags = ParseLine(line, num)
     # Data for code generation:
     partns = GetPartitionIds(partn_pid, params, \
-            include_boundary, share_boundary,  num)
+            flags,  num)
     for nt in nimbus_types:
         if nt in ntypes_pid:
             print "\nWarning: Redefinition of " + nt + " at line " + str(num)
