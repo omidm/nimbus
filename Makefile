@@ -18,11 +18,8 @@ HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
 
 
-SHARED_PROTO_FILES = $(wildcard shared/protobuf_source/*.proto)
-TEMP = $(subst .proto,.pb.o,$(SHARED_PROTO_FILES))
-SHARED_PROTO_OBJECT_FILES = $(subst shared/protobuf_source,shared/protobuf_compiled,$(TEMP))
+SHARED_PROTO_OBJECT_FILES = $(wildcard shared/protobuf_compiled/*.pb.o)
 OBJFILES += $(SHARED_PROTO_OBJECT_FILES)
-
 
 DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
@@ -38,13 +35,13 @@ endif
 lib: $(LIBRARY)
 
 .PHONY: scheduler_t worker_t data_t shared_t
-scheduler_t:  
+scheduler_t: shared_t 
 	cd scheduler; make; cd ..
 
-worker_t:
+worker_t: shared_t
 	cd worker; make; cd ..
 
-data_t: 
+data_t: shared_t
 	cd data; make; cd ..
 
 shared_t:
@@ -55,5 +52,12 @@ $(LIBRARY): shared_t scheduler_t worker_t data_t
 
 clean: clean-files
 	\rm -f */*.o */*~ */\#*
+	\rm -f $(LIBRARY)
+
+clean-hard: clean-files
+	cd scheduler; make clean; cd ..
+	cd worker; make clean; cd ..
+	cd shared; make clean; cd ..
+	cd data; make clean; cd ..
 	\rm -f $(LIBRARY)
 
