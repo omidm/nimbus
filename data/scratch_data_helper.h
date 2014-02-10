@@ -77,8 +77,8 @@ class ScratchDataHelper {
                ZCOORD
              };
         enum { VERTEX_TYPES = 8 };
-        enum { EDGE_TYPES = 12 };
-        enum { FACE_TYPES = 6 };
+        enum { EDGE_TYPES = 4 };
+        enum { FACE_TYPES = 2 };
 
         /* ghost width ( = scratch region width)
          */

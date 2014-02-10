@@ -160,7 +160,6 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     }
 
     // edge scratch regions
-    n = 0;
     for (size_t d = 0; d < DIMENSION; d++) {
         l[d]  = cl[d] + ghost_width_[d];
         ld[d] = cld[d] - 2*ghost_width_[d];
@@ -173,6 +172,7 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
                 ld[dd] += 1;
             }
         }
+        n = 0;
         for (int i = 0; i < 2; i++) {
             l[d1] = cl[d1] - ghost_width_[d1] +
                     i * cld[d1];
@@ -191,7 +191,6 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     }
 
     // face scratch regions
-    n = 0;
     for (size_t d = 0; d < DIMENSION; d++) {
         size_t d1 = (d+1)%DIMENSION;
         size_t d2 = (d+2)%DIMENSION;
@@ -205,6 +204,7 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
                 ld[dd] += 1;
             }
         }
+        n = 0;
         for (size_t i = 0; i < 2; i++) {
             l[d]  = cl[d] - ghost_width_[d] + i * cld[d];
             CLdoVector ldos;
