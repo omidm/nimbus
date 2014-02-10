@@ -34,6 +34,15 @@ out_cc_file      = out_str + ".cc"          # output .cc file for gen code
 namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
+# flags
+include_boundary_str = "include_boundary"
+share_boundary_str   = "share_boundary"
+use_scratch_str      = "use_scratch"
+
+# scratch types
+vertex = "vertex"
+edge   = "edge"
+face   = "face"
 
 ## Parsing helper functions ##
 
@@ -58,10 +67,6 @@ def ValidateSizeTuples(sizes, num):
                 return []
         params.append(param_tup)
     return params
-
-include_boundary_str = "include_boundary"
-share_boundary_str   = "share_boundary"
-use_scratch_str      = "use_scratch"
 
 def ParseLine(line, num):
     # Parsing: begin parsing
@@ -104,7 +109,6 @@ def ParseLine(line, num):
                share_boundary_str   : share_boundary, \
                use_scratch_str      : use_scratch }
             
-
 class Partition():
     def __init__(self, x, dx):
         self.x = x
@@ -114,32 +118,81 @@ class Partition():
                 (self.x[0], self.x[1], self.x[2], \
                 self.dx[0], self.dx[1], self.dx[2])
 
+def GetPartitionID(x, dx, partn_id):
+    p = Partition(x, dx)
+    pstr = p.toString()
+    if pstr in partn_id:
+        return partn_id[pstr]
+    else:
+        l = len(partn_id)
+        partn_id[pstr] = l
+        return l
+
 def GetNimbusTypePIDMapHelper(nimbus_types, \
                               pnum, pstart, psize, use_scratch, \
                               partn_id):
     nt_pid = {}
-    if not use_scratch:
-        pidset = set()
-        for i in range(0, pnum[0]):
-            for j in range(0, pnum[1]):
-                for k in range(0, pnum[2]):
-                    x    = [pstart[0][i], pstart[1][j], pstart[2][k]]
-                    dx   = [psize[0][i],  psize[1][j],  psize[2][k]]
-                    if psize[0][i] == 0 or psize[1][j] == 0 or psize[2][k] == 0:
-                        continue
-                    p    = Partition(x, dx)
-                    pstr = p.toString()
-                    if pstr in partn_id:
-                        pidset.add(partn_id[pstr])
-                    else:
-                        l = len(partn_id)
-                        partn_pid[pstr] = l
-                        pidset.add(l)
+    pidset = set()
+    for i in range(0, pnum[0]):
+        for j in range(0, pnum[1]):
+            for k in range(0, pnum[2]):
+                x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
+                dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                if 0 in dx:
+                    continue
+                pidset.add(GetPartitionID(x, dx, partn_id))
+    for nt in nimbus_types:
+        nt_pid[nt] = pidset
+    if use_scratch:
+        ii = [ \
+                range(0, pnum[0], 3) + range(1, pnum[0], 3), \
+                range(2, pnum[0], 3) ]
+        jj = [ \
+                range(0, pnum[1], 3) + range(1, pnum[1], 3), \
+                range(2, pnum[1], 3) ]
+        kk = [ \
+                range(0, pnum[2], 3) + range(1, pnum[2], 3), \
+                range(2, pnum[2], 3) ]
         for nt in nimbus_types:
-            nt_pid[nt] = pidset
-        return nt_pid
-    else:
-        return {}
+            # vertex
+            vpidset = {}
+            for i in ii[0]:
+                for j in jj[0]:
+                    for k in kk[0]:
+                        x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
+                        dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                        if 0 in dx:
+                            continue
+                        vpidset.add(GetPartitionID(x, dx, partn_id))
+            for t in range(1, 9):
+                nt_pid["%s_%s_%i" % (nt, vertex, t)] = vpidset
+            # edge
+            epidset = {}
+            for dim in range(0, 3):
+                for i in ii[1 if dim == 0 else 0]:
+                    for j in ii[1 if dim == 1 else 0]:
+                        for k in kk[1 if dim == 2 else 0]:
+                            x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
+                            dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                            if 0 in dx:
+                                continue
+                            epidset.add(GetPartitionID(x, dx, partn_id))
+            for t in range(1, 5):
+                nt_pid["%s_%s_%i" % (nt, edge, t)] = epidset
+            # face
+            fpidset = {}
+            for dim in range(0, 3):
+                for i in ii[0 if dim == 0 else 1]:
+                    for j in ii[0 if dim == 1 else 1]:
+                        for k in kk[0 if dim == 2 else 1]:
+                            x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
+                            dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                            if 0 in dx:
+                                continue
+                            fpidset.add(GetPartitionID(x, dx, partn_id))
+            for t in range(1, 2):
+                nt_pid["%s_%i" % (nt, face, t)] = fpidset
+    return nt_pid
 
 def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     include_boundary = flags[include_boundary_str]
@@ -168,9 +221,7 @@ def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     psize  = {0:[0]*pnum[0], 1:[0]*pnum[1], 2:[0]*pnum[2]}
     pstart = {0:[0]*pnum[0], 1:[0]*pnum[1], 2:[0]*pnum[2]}
     for dim in range(0, 3):
-        for i in range(0, pnum[dim], 3):
-            psize[dim][i] = ghostw[dim]
-        for i in range(1, pnum[dim], 3):
+        for i in range(0, pnum[dim], 3) + range(1, pnum[dim], 3):
             psize[dim][i] = ghostw[dim]
         for i in range(2, pnum[dim], 3):
             psize[dim][i] = ps[dim]
