@@ -34,6 +34,10 @@ out_cc_file      = out_str + ".cc"          # output .cc file for gen code
 namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
+# flags
+share_boundary_str   = "share_boundary"
+generate_scratch_str = "generate_scratch"
+
 
 ## Parsing helper functions ##
 
@@ -58,8 +62,6 @@ def ValidateSizeTuples(sizes, num):
                 return []
         params.append(param_tup)
     return params
-
-bool_map = {"true" : True, "false" : False}
 
 def ParseLine(line, num):
     # Parsing: begin parsing
@@ -86,11 +88,20 @@ def ParseLine(line, num):
     if len(params) != 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
-    share_boundary = args[2].strip()
-    if share_boundary not in bool_map:
-        print "\nError parsing share_boundary field at line %i\n"  % num
-        sys.exit(2)
-    return reg_name, params, bool_map[share_boundary]
+    flags = re.split('\s|,', args[2].strip())
+    share_boundary   = False
+    generate_scratch = False
+    if "none" in flags:
+        if (len(flags) > 1):
+            print "\nInvalid flags %s at line %i\n" % (str(flags), num)
+            sys.exit(2)
+    if share_boundary_str in flags:
+        share_boundary = True
+    if generate_scratch_str in flags:
+        generate_scratch = True
+    return reg_name, params, \
+            {  share_boundary_str   : share_boundary, \
+               generate_scratch_str : generate_scratch }
 
 class Region():
     def __init__(self, x, dx):
@@ -104,7 +115,9 @@ class Region():
 inner   = 'Inner'
 outer = 'Outer'
 
-def GetRegions(params, hare_boundary, num, reg_type):
+def GetRegions(params, flags, num, reg_type):
+    share_boundary   = flags[share_boundary_str]
+    generate_scratch = flags[generate_scratch_str]
     domain = params[0]
     rnum   = params[1]
     ghostw = params[2]
@@ -181,11 +194,11 @@ for num, line in enumerate(reg_config):
     # Parsing: comment
     if line[0] == "#":
         continue
-    reg_name, params, share_boundary = ParseLine(line, num)
+    reg_name, params, flags = ParseLine(line, num)
     # Regions:
     regions = {}
-    regions[inner]   = GetRegions(params, share_boundary, num, inner)
-    regions[outer] = GetRegions(params, share_boundary, num, outer)
+    regions[inner]   = GetRegions(params, flags, num, inner)
+    regions[outer] = GetRegions(params, flags, num, outer)
     if reg_name in reg_map:
         print "\nWarning: Redefinition of " + reg_name + " at line " + str(num)
         print "Ignoring the new definition ..."
