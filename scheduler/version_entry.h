@@ -48,11 +48,7 @@
 #include <fstream> // NOLINT
 #include <sstream>
 #include <string>
-#include <vector>
-#include <algorithm>
-#include <utility>
-#include <map>
-#include <set>
+#include <list>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
@@ -66,6 +62,8 @@ class VersionEntry {
     VersionEntry();
     VersionEntry(logical_data_id_t logical_id, data_version_t version,
     JobEntry* job_entry, Relation relation);
+    VersionEntry(const VersionEntry& ve);
+
     virtual ~VersionEntry();
 
     logical_data_id_t logical_id();
@@ -73,12 +71,16 @@ class VersionEntry {
     JobEntry* job_entry();
     Relation relation();
 
+    VersionEntry& operator= (const VersionEntry& right);
+
   private:
     logical_data_id_t logical_id_;
     data_version_t version_;
     JobEntry* job_entry_;
     Relation relation_;
 };
+
+typedef std::list<VersionEntry> VersionEntryList;
 
 }  // namespace nimbus
 #endif  // NIMBUS_SCHEDULER_VERSION_ENTRY_H_
