@@ -460,19 +460,11 @@ AdjustPhiWithObjectsImpl (const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-AdvectPhiImpl(const nimbus::Job *job,
-              const nimbus::DataArray &da,
-              T dt) {
-  //Advect Phi 3.6% (Parallelized)
-  LOG::Time("Advect Phi");
+ExtrapolatePhiImpl(const nimbus::Job *job,
+                   const nimbus::DataArray &da,
+                   T dt) {
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
-  /*
-     // I wrote and tested the following code, which broke levelset advection
-     // into function calls. Because extrapolation and MPI calls are used
-     // implicitly in this function call, I think we cannot get rid of it.
-     // Will uncomment this code after everthing is ready. It is right, but
-     // now, just leave it here.  --quhang
   {
     typedef typename LEVELSET_ADVECTION_POLICY<GRID<TV> >
         ::FAST_LEVELSET_ADVECTION_T T_FAST_LEVELSET_ADVECTION;
@@ -486,23 +478,58 @@ AdvectPhiImpl(const nimbus::Job *job,
     T_ARRAYS_SCALAR phi_ghost(grid.Domain_Indices(
             example.particle_levelset_evolution.particle_levelset.
             number_of_ghost_cells));
-    // T_ARRAYS_SCALAR::Copy(phi, phi_ghost);
     ((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary->Fill_Ghost_Cells(
         grid, phi, phi_ghost, dt, time,
         example.particle_levelset_evolution.particle_levelset.number_of_ghost_cells);
+    T_ARRAYS_SCALAR::Copy(phi_ghost, phi);
+  }
+  example.phi_boundary_water.Use_Extrapolation_Mode(true);
+
+  // Save State.
+  example.Save_To_Nimbus(job, da, current_frame + 1);
+
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+AdvectPhiImpl(const nimbus::Job *job,
+              const nimbus::DataArray &da,
+              T dt) {
+  //Advect Phi 3.6% (Parallelized)
+  LOG::Time("Advect Phi");
+  example.phi_boundary_water.Use_Extrapolation_Mode(false);
+  assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
+  // I wrote and tested the following code, which broke levelset advection
+  // into function calls. Because extrapolation and MPI calls are used
+  // implicitly in this function call, I think we cannot get rid of it.
+  {
+    typedef typename LEVELSET_ADVECTION_POLICY<GRID<TV> >
+        ::FAST_LEVELSET_ADVECTION_T T_FAST_LEVELSET_ADVECTION;
+    typedef typename LEVELSET_POLICY<GRID<TV> >
+        ::FAST_LEVELSET_T T_FAST_LEVELSET;
+    T_FAST_LEVELSET_ADVECTION& levelset_advection =
+        example.particle_levelset_evolution.levelset_advection;
+    GRID<TV>& grid = ((T_FAST_LEVELSET*)levelset_advection.levelset)->grid;
+    T_ARRAYS_SCALAR& phi = ((T_FAST_LEVELSET*)levelset_advection.levelset)->phi;
+    assert(grid.Is_MAC_Grid() && levelset_advection.advection);
+    T_ARRAYS_SCALAR phi_ghost(grid.Domain_Indices(
+            example.particle_levelset_evolution.particle_levelset.
+            number_of_ghost_cells));
+    T_ARRAYS_SCALAR::Copy(phi, phi_ghost);
     levelset_advection.advection->Update_Advection_Equation_Cell(
         grid, phi, phi_ghost, example.face_velocities,
         *((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary, dt, time);
     ((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary->Apply_Boundary_Condition(
         grid, phi, time + dt);
   }
-  */
+  /*
   example.particle_levelset_evolution.levelset_advection.Euler_Step(
       example.face_velocities,
       dt, time,
       example.particle_levelset_evolution.particle_levelset.
       number_of_ghost_cells);
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
+  */
 
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame + 1);

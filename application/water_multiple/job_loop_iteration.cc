@@ -249,8 +249,6 @@ namespace application {
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
     int job_num = 13;
-    // --quhang
-    // int job_num = 14;
     std::vector<nimbus::job_id_t> job_ids;
     GetNewJobID(&job_ids, job_num);
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
@@ -280,6 +278,8 @@ namespace application {
         s11_params);
 
 
+    /*
+       // Original ADVECT_PHI job spawning.
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
@@ -298,59 +298,56 @@ namespace application {
         read, write,
         before, after,
         s12_params);
+    */
 
-    /*
-       --quhang
+    // Start, Running ADVECT_PHI on two workers.
+    int advect_phi_job_num = 2;
+    std::vector<nimbus::job_id_t> advect_phi_job_ids;
+    GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
+
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0],
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0],
         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0],
-        APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_PHI, NULL);
 
     nimbus::Parameter s12_params;
     std::string s12_str;
     SerializeParameter(frame, time, dt, global_region,
-        kReg_w3Inner[0], &s12_str);
+        kRegX2w3Inner[0], &s12_str);
     s12_params.set_ser_data(SerializedData(s12_str));
     before.clear();
     before.insert(job_ids[0]);
     after.clear();
     after.insert(job_ids[2]);
     SpawnComputeJob(ADVECT_PHI,
-        job_ids[1],
-        read, write,
-        before, after,
-        s12_params);
+                    advect_phi_job_ids[0],
+                    read, write,
+                    before, after,
+                    s12_params);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0],
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1],
         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0],
-        APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_PHI, NULL);
 
     nimbus::Parameter s12r_params;
     std::string s12r_str;
     SerializeParameter(frame, time, dt, global_region,
-        kReg_w3Inner[1],
-        &s12r_str);
+        kRegX2w3Inner[1], &s12r_str);
     s12r_params.set_ser_data(SerializedData(s12r_str));
     before.clear();
     before.insert(job_ids[0]);
     after.clear();
     after.insert(job_ids[2]);
     SpawnComputeJob(ADVECT_PHI,
-        job_ids[13],
-        read, write,
-        before, after,
-        s12r_params);
+                    advect_phi_job_ids[1],
+                    read, write,
+                    before, after,
+                    s12r_params);
 
-    */
-
-
-
-
+    // End Running ADVECT_PHI on two workers.
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
@@ -368,9 +365,9 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &s13_str);
     s13_params.set_ser_data(SerializedData(s13_str));
     before.clear();
-    before.insert(job_ids[1]);
-    // --quhang
-    // before.insert(job_ids[13]);
+    before.insert(advect_phi_job_ids[0]);
+    before.insert(advect_phi_job_ids[1]);
+    // before.insert(job_ids[1]);
     after.clear();
     after.insert(job_ids[3]);
     SpawnComputeJob(STEP_PARTICLES,
