@@ -63,14 +63,21 @@ class VersionEntry {
   public:
     enum Relation {In, Out};
 
-    explicit VersionEntry();
+    VersionEntry();
+    VersionEntry(logical_data_id_t logical_id, data_version_t version,
+    JobEntry* job_entry, Relation relation);
     virtual ~VersionEntry();
 
+    logical_data_id_t logical_id();
+    data_version_t version();
+    JobEntry* job_entry();
+    Relation relation();
+
   private:
-    Relation relation_;
     logical_data_id_t logical_id_;
     data_version_t version_;
-    JobEntry * job_entry_;
+    JobEntry* job_entry_;
+    Relation relation_;
 };
 
 }  // namespace nimbus

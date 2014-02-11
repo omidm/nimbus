@@ -51,5 +51,26 @@ VersionEntry::VersionEntry() {
 VersionEntry::~VersionEntry() {
 }
 
+VersionEntry::VersionEntry(logical_data_id_t logical_id, data_version_t version,
+    JobEntry* job_entry, Relation relation)
+  : logical_id_(logical_id), version_(version),
+  job_entry_(job_entry), relation_(relation) {
+}
+
+logical_data_id_t VersionEntry::logical_id() {
+  return logical_id_;
+}
+
+data_version_t VersionEntry::version() {
+  return version_;
+}
+
+JobEntry* VersionEntry::job_entry() {
+  return job_entry_;
+}
+
+VersionEntry::Relation VersionEntry::relation() {
+  return relation_;
+}
 
 
