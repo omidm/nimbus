@@ -310,8 +310,9 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     if (job->versioned() && !job->assigned()) {
       JobEntry::VersionTable version_table = job->version_table();
       if (version_table.count(vld.first) != 0) {
-        if ((version_table[vld.first] == vld.second) &&
-            (job->union_set().contains(vld.first))) {
+        if ((version_table[vld.first] == vld.second)) {
+            // && (job->union_set().contains(vld.first))) {
+            // Since job could be productive it does not need to read or writ it.
           list->push_back(job);
           ++num;
         }
