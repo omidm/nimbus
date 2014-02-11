@@ -1,3 +1,4 @@
+/*
 //#####################################################################
 // Copyright 2007, Andrew Selle.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
@@ -77,3 +78,4 @@ void THREAD_QUEUE::Queue(TASK* task) {PHYSBAM_FATAL_ERROR();}
 void THREAD_QUEUE::Wait() {PHYSBAM_FATAL_ERROR();}
 int THREAD_QUEUE::Number_Of_Threads() {return 1;}
 #endif
+*/
