@@ -95,6 +95,10 @@ public:
                             const nimbus::DataArray &da,
                             T dt);
 
+    bool ExtrapolatePhiImpl(const nimbus::Job *job,
+                            const nimbus::DataArray &da,
+                            T dt);
+
     bool AdjustPhiImpl(const nimbus::Job *job,
                        const nimbus::DataArray &da,
                        T dt);

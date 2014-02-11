@@ -34,6 +34,11 @@ out_cc_file      = out_str + ".cc"          # output .cc file for gen code
 namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
+# flags
+share_boundary_str   = "share_boundary"
+generate_inner_str   = "inner"
+generate_outer_str   = "outer"
+generate_scratch_str = "scratch"
 
 ## Parsing helper functions ##
 
@@ -58,8 +63,6 @@ def ValidateSizeTuples(sizes, num):
                 return []
         params.append(param_tup)
     return params
-
-bool_map = {"true" : True, "false" : False}
 
 def ParseLine(line, num):
     # Parsing: begin parsing
@@ -86,11 +89,28 @@ def ParseLine(line, num):
     if len(params) != 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
-    share_boundary = args[2].strip()
-    if share_boundary not in bool_map:
-        print "\nError parsing share_boundary field at line %i\n"  % num
-        sys.exit(2)
-    return reg_name, params, bool_map[share_boundary]
+    flags = re.split('\s|,', args[2].strip())
+    share_boundary   = False
+    generate_inner   = False
+    generate_outer   = False
+    generate_scratch = False
+    if "none" in flags:
+        if (len(flags) > 1):
+            print "\nInvalid flags %s at line %i\n" % (str(flags), num)
+            sys.exit(2)
+    if share_boundary_str in flags:
+        share_boundary = True
+    if generate_inner_str in flags:
+        generate_inner = True
+    if generate_outer_str in flags:
+        generate_outer = True
+    if generate_scratch_str in flags:
+        generate_scratch = True
+    return reg_name, params, \
+            {  share_boundary_str   : share_boundary, \
+               generate_inner_str   : generate_inner, \
+               generate_outer_str   : generate_outer, \
+               generate_scratch_str : generate_scratch }
 
 class Region():
     def __init__(self, x, dx):
@@ -102,9 +122,11 @@ class Region():
                 self.dx[0], self.dx[1], self.dx[2])
 
 inner   = 'Inner'
-outer = 'Outer'
+outer   = 'Outer'
+scratch = 'Scratch'
 
-def GetRegions(params, hare_boundary, num, reg_type):
+def GetRegionsBB(params, flags, num, reg_type):
+    share_boundary = flags[share_boundary_str]
     domain = params[0]
     rnum   = params[1]
     ghostw = params[2]
@@ -157,11 +179,94 @@ def GetRegions(params, hare_boundary, num, reg_type):
             for k in range(0, rnum[2]):
                 x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
                 dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
-                if rsize[0][i] == 0 or rsize[1][j] == 0 or rsize[2][k] == 0:
+                if 0 in dx:
                     continue
                 r  = Region(x, dx)
                 regions.append(r)
     return regions
+
+def GetRegionsScratch(params, flags, num, reg_type):
+    share_boundary = flags[share_boundary_str]
+    domain = params[0]
+    rnum   = params[1]
+    ghostw = params[2]
+    rs     = [0, 0, 0]
+    rsl    = [0, 0, 0]
+    for dim in range(0, 3):
+        if domain[dim]/rnum[dim] < 2*ghostw[dim]:
+            print "\nError : Invalid ghost width and partition size"
+            print "Partition size is smaller than 2 x ghostwidth\n"
+            sys.exit(2)
+        rsl[dim] = domain[dim]/rnum[dim] - 2*ghostw[dim]
+        if domain[dim]%rnum[dim] == 0:
+            rs[dim] = rsl[dim]
+        else:
+            print "\nWarning: Partitions for dimension " + str(dim) + \
+                    " at line " + str(num) + " are not of equal size."
+            rs[dim] = rsl[dim]+1
+    rnum = map(lambda x : 3*x+2, rnum)
+    rsize  = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
+    rstart = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
+    for dim in range(0, 3):
+        for i in range(0, rnum[dim], 3) + range(1, rnum[dim], 3):
+            rsize[dim][i] = ghostw[dim]
+        for i in range(2, rnum[dim], 3):
+            rsize[dim][i] = rs[dim]
+        rsize[dim][rnum[dim]-3] = rsl[dim]
+        rstart[dim][0] = 1-ghostw[dim]
+        for i in range(1, rnum[dim], 1):
+            rstart[dim][i] = rstart[dim][i-1] + rsize[dim][i-1]
+        if share_boundary:  # share_boundary = True
+            rsize[dim] = map(lambda x : x+1 if x > 0 else x, rsize[dim])
+    ii = [ \
+            range(0, rnum[0], 3) + range(1, rnum[0], 3), \
+            range(2, rnum[0], 3) ]
+    jj = [ \
+            range(0, rnum[1], 3) + range(1, rnum[1], 3), \
+            range(2, rnum[1], 3) ]
+    kk = [ \
+            range(0, rnum[2], 3) + range(1, rnum[2], 3), \
+            range(2, rnum[2], 3) ]
+    regions = []
+    # vertex
+    for i in ii[0]:
+        for j in jj[0]:
+            for k in kk[0]:
+                x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
+                dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
+                if 0 in dx:
+                    continue
+                regions.append(Region(x, dx))
+    # edge
+    epidset = set()
+    for dim in range(0, 3):
+        for i in ii[1 if dim == 0 else 0]:
+            for j in jj[1 if dim == 1 else 0]:
+                for k in kk[1 if dim == 2 else 0]:
+                    x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
+                    dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
+                    if 0 in dx:
+                        continue
+                    regions.append(Region(x, dx))
+    # face
+    fpidset = set()
+    for dim in range(0, 3):
+        for i in ii[0 if dim == 0 else 1]:
+            for j in jj[0 if dim == 1 else 1]:
+                for k in kk[0 if dim == 2 else 1]:
+                    x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
+                    dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
+                    if 0 in dx:
+                        continue
+                    regions.append(Region(x, dx))
+    return regions
+
+
+def GetRegions(params, flags, num, reg_type):
+    if reg_type == scratch:
+        return GetRegionsScratch(params, flags, num, reg_type)
+    else:
+        return GetRegionsBB(params, flags, num, reg_type)
 
 ## Begin parsing and building information for code generation ##
 
@@ -181,11 +286,15 @@ for num, line in enumerate(reg_config):
     # Parsing: comment
     if line[0] == "#":
         continue
-    reg_name, params, share_boundary = ParseLine(line, num)
+    reg_name, params, flags = ParseLine(line, num)
     # Regions:
     regions = {}
-    regions[inner]   = GetRegions(params, share_boundary, num, inner)
-    regions[outer] = GetRegions(params, share_boundary, num, outer)
+    if flags[generate_inner_str]:
+        regions[inner]   = GetRegions(params, flags, num, inner)
+    if flags[generate_outer_str]:
+        regions[outer] = GetRegions(params, flags, num, outer)
+    if flags[generate_scratch_str]:
+        regions[scratch] = GetRegions(params, flags, num, scratch)
     if reg_name in reg_map:
         print "\nWarning: Redefinition of " + reg_name + " at line " + str(num)
         print "Ignoring the new definition ..."
