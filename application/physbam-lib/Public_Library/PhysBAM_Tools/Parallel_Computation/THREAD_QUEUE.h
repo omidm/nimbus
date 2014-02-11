@@ -1,16 +1,37 @@
-//#####################################################################
-// Copyright 2007, Andrew Selle.
-// This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
-//#####################################################################
 #ifndef __THREAD_QUEUE__
 #define __THREAD_QUEUE__
-#include <PhysBAM_Tools/Data_Structures/PAIR.h>
-#include <PhysBAM_Tools/Data_Structures/QUEUE.h>
+#include <cstdio>
+#include <cstdlib>
+namespace PhysBAM {
+
+class THREAD_QUEUE {
+ public:
+  struct TASK {
+    virtual ~TASK() {}
+    virtual void Run(const int tid) = 0;
+  };
+  THREAD_QUEUE(const int thread_count, const bool set_affinity=false) {
+    if (thread_count != -1) {
+      printf("ERROR: class THREAD_QUEUE should never be initialized!\n");
+      exit(-1);
+    }
+  }
+  virtual ~THREAD_QUEUE() {}
+
+  virtual void Queue(TASK* task) {}
+  virtual void Wait() {}
+  virtual int Number_Of_Threads() {
+    return -1;
+  }
+};
+
+}  // namespace PhysBAM
+#endif
+
+/*
 #ifdef USE_PTHREADS
 #include <pthread.h>
 #endif
-namespace PhysBAM{
-
 class THREAD_QUEUE
 {
 #ifdef USE_PTHREADS
@@ -36,7 +57,7 @@ public:
         void Run(const int threadid)
         {pthread_exit(0);}
     };
-    
+
 private:
     QUEUE<TASK*> queue;
 public:
@@ -73,4 +94,4 @@ public:
 //#####################################################################
 };
 }
-#endif
+*/
