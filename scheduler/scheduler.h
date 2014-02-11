@@ -57,6 +57,7 @@
 #include "shared/scheduler_server.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/job_manager.h"
+#include "scheduler/version_manager.h"
 #include "shared/id_maker.h"
 
 namespace nimbus {

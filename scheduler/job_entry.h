@@ -63,7 +63,6 @@ typedef std::vector<Data*> DataArray;
 
 class JobEntry {
   public:
-    typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
     typedef std::map<logical_data_id_t, data_version_t> VersionTable;
     typedef std::map<logical_data_id_t, physical_data_id_t> PhysicalTable;
     typedef VersionTable::iterator VTIter;

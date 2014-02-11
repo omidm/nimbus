@@ -292,7 +292,7 @@ size_t Scheduler::GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
   PhysicalDataVector::iterator iter = pv.begin();
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
-    JobEntry::VersionedLogicalData vld(ldo->id(), iter->version());
+    VersionedLogicalData vld(ldo->id(), iter->version());
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
@@ -330,7 +330,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     physical_table[l_id] = pv[0].id();
   } else if (pv.size() == 1) {
     JobEntryList list;
-    JobEntry::VersionedLogicalData vld(l_id, version);
+    VersionedLogicalData vld(l_id, version);
 
     log_table_.ResumeTimer();
     job_manager_->GetJobsNeedDataVersion(&list, vld);
@@ -366,12 +366,14 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       PhysicalDataVector::iterator g_iter = g_pv.begin();
       for (; g_iter != g_pv.end(); ++g_iter) {
         JobEntryList g_list;
-        JobEntry::VersionedLogicalData g_vld(l_id, g_iter->version());
+        VersionedLogicalData g_vld(l_id, g_iter->version());
+        log_table_.ResumeTimer();
         if (job_manager_->GetJobsNeedDataVersion(&g_list, g_vld) == 0) {
           found_obsolete = true;
           obsolete_id = g_iter->id();
           break;
         }
+        log_table_.StopTimer();
       }
 
       IDSet<job_id_t> before, after;
@@ -505,12 +507,14 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       PhysicalDataVector::iterator g_iter = g_pv.begin();
       for (; g_iter != g_pv.end(); ++g_iter) {
         JobEntryList g_list;
-        JobEntry::VersionedLogicalData g_vld(l_id, g_iter->version());
+        VersionedLogicalData g_vld(l_id, g_iter->version());
+        log_table_.ResumeTimer();
         if (job_manager_->GetJobsNeedDataVersion(&g_list, g_vld) == 0) {
           found_obsolete = true;
           obsolete_id = g_iter->id();
           break;
         }
+        log_table_.StopTimer();
       }
 
       IDSet<job_id_t> before, after;

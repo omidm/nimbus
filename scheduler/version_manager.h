@@ -33,14 +33,15 @@
  */
 
  /*
-  * Scheduler Job Manager object. This module serves the scheduler by providing
-  * facilities about jobs ready to be maped, and their dependencies.
+  * Scheduler Version Manager. This module serves the job manager by keeping
+  * track of the version numbers of each logical data object that are needed by
+  * the jobs in the job graph.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_JOB_MANAGER_H_
-#define NIMBUS_SCHEDULER_JOB_MANAGER_H_
+#ifndef NIMBUS_SCHEDULER_VERSION_MANAGER_H_
+#define NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 
 #include <boost/thread.hpp>
 #include <iostream> // NOLINT
@@ -49,68 +50,24 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <utility>
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
-#include "scheduler/job_graph.h"
 #include "scheduler/job_entry.h"
-#include "scheduler/version_manager.h"
 
 namespace nimbus {
-class JobManager {
+
+typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
+
+class VersionManager {
   public:
-    explicit JobManager();
-    virtual ~JobManager();
-
-    bool AddJobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const IDSet<logical_data_id_t>& read_set,
-        const IDSet<logical_data_id_t>& write_set,
-        const IDSet<job_id_t>& before_set,
-        const IDSet<job_id_t>& after_set,
-        const job_id_t& parent_job_id,
-        const Parameter& params);
-
-    bool AddJobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const job_id_t& parent_job_id,
-        const bool& versioned = false,
-        const bool& assigned = false);
-
-
-    bool GetJobEntry(job_id_t job_id, JobEntry*& job);
-
-    bool RemoveJobEntry(JobEntry* job);
-
-    bool RemoveJobEntry(job_id_t job_id);
-
-    size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
-
-    size_t RemoveObsoleteJobEntries();
-
-    void JobDone(job_id_t job_id);
-
-    void DefineData(job_id_t job_id, logical_data_id_t ldid);
-
-    size_t GetJobsNeedDataVersion(JobEntryList* list,
-        VersionedLogicalData vld);
-
-    bool AllJobsAreDone();
-
-    void UpdateJobBeforeSet(JobEntry* job);
-
-    void UpdateBeforeSet(IDSet<job_id_t>* before_set);
+    explicit VersionManager();
+    virtual ~VersionManager();
 
   private:
-    JobGraph job_graph_;
-    VersionManager version_manager_;
-
-    bool ResolveJobDataVersions(JobEntry* job);
-    size_t ResolveVersions();
 };
 
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_JOB_MANAGER_H_
+#endif  // NIMBUS_SCHEDULER_VERSION_MANAGER_H_

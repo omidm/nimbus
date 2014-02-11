@@ -301,7 +301,7 @@ size_t JobManager::ResolveVersions() {
 
 
 size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
-    JobEntry::VersionedLogicalData vld) {
+    VersionedLogicalData vld) {
   size_t num = 0;
   list->clear();
   JobGraph::Iter iter = job_graph_.Begin();
