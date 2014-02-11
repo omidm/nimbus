@@ -44,6 +44,7 @@ vertex = "vertex"
 edge   = "edge"
 face   = "face"
 
+
 ## Parsing helper functions ##
 
 def ValidateSizeTuples(sizes, num):
