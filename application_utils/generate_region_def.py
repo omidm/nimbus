@@ -219,21 +219,21 @@ def GetRegionsScratch(params, flags, num, reg_type):
         if share_boundary:  # share_boundary = True
             rsize[dim] = map(lambda x : x+1 if x > 0 else x, rsize[dim])
     ii = [ \
-            range(0, pnum[0], 3) + range(1, pnum[0], 3), \
-            range(2, pnum[0], 3) ]
+            range(0, rnum[0], 3) + range(1, rnum[0], 3), \
+            range(2, rnum[0], 3) ]
     jj = [ \
-            range(0, pnum[1], 3) + range(1, pnum[1], 3), \
-            range(2, pnum[1], 3) ]
+            range(0, rnum[1], 3) + range(1, rnum[1], 3), \
+            range(2, rnum[1], 3) ]
     kk = [ \
-            range(0, pnum[2], 3) + range(1, pnum[2], 3), \
-            range(2, pnum[2], 3) ]
+            range(0, rnum[2], 3) + range(1, rnum[2], 3), \
+            range(2, rnum[2], 3) ]
     regions = []
     # vertex
     for i in ii[0]:
         for j in jj[0]:
             for k in kk[0]:
-                x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
-                dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
+                dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
                 if 0 in dx:
                     continue
                 regions.append(Region(x, dx))
@@ -241,10 +241,10 @@ def GetRegionsScratch(params, flags, num, reg_type):
     epidset = set()
     for dim in range(0, 3):
         for i in ii[1 if dim == 0 else 0]:
-            for j in ii[1 if dim == 1 else 0]:
+            for j in jj[1 if dim == 1 else 0]:
                 for k in kk[1 if dim == 2 else 0]:
-                    x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
-                    dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                    x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
+                    dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
                     if 0 in dx:
                         continue
                     regions.append(Region(x, dx))
@@ -252,10 +252,10 @@ def GetRegionsScratch(params, flags, num, reg_type):
     fpidset = set()
     for dim in range(0, 3):
         for i in ii[0 if dim == 0 else 1]:
-            for j in ii[0 if dim == 1 else 1]:
+            for j in jj[0 if dim == 1 else 1]:
                 for k in kk[0 if dim == 2 else 1]:
-                    x  = [pstart[0][i], pstart[1][j], pstart[2][k]]
-                    dx = [psize[0][i],  psize[1][j],  psize[2][k]]
+                    x  = [rstart[0][i], rstart[1][j], rstart[2][k]]
+                    dx = [rsize[0][i],  rsize[1][j],  rsize[2][k]]
                     if 0 in dx:
                         continue
                     regions.append(Region(x, dx))
