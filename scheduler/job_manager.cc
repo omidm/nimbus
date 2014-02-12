@@ -184,7 +184,7 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     JobEntry::VersionTable vt;
-    vt = job->version_table();
+    vt = job->version_table_out();
     JobEntry::VTIter it = vt.begin();
     bool new_logical_data = true;
     for (; it != vt.end(); ++it) {
@@ -196,7 +196,7 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
     }
     if (new_logical_data) {
       vt[ldid] = (data_version_t)(0);
-      job->set_version_table(vt);
+      job->set_version_table_out(vt);
     }
   } else {
     dbg(DBG_WARN, "WARNING: parent of define data with job id %lu is not in the graph.\n", job_id);
@@ -208,20 +208,12 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     return true;
 
   JobEntry* j;
-  JobEntry::VersionTable version_table, vt;
+  JobEntry::VersionTable version_table_in, version_table_out, vt;
 
   job_id_t parent_id = job->parent_job_id();
   if (GetJobEntry(parent_id, j)) {
     if (j->versioned()) {
-      vt = j->version_table();
-      JobEntry::VTIter it = vt.begin();
-      for (; it != vt.end(); ++it) {
-        if (j->write_set().contains(it->first)) {
-          version_table[it->first] =  ++(it->second);
-        } else {
-          version_table[it->first] =  (it->second);
-        }
-      }
+      version_table_in = j->version_table_out();
     } else {
       dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not versioned yet.\n", parent_id);
       return false;
@@ -237,23 +229,14 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     job_id_t id = (*iter_job);
     if (GetJobEntry(id, j)) {
       if (j->versioned()) {
-        vt = j->version_table();
+        vt = j->version_table_out();
         JobEntry::VTIter it = vt.begin();
         for (; it != vt.end(); ++it) {
-          if (version_table.count(it->first) == 0) {
-            if (j->write_set().contains(it->first)) {
-              version_table[it->first] =  ++(it->second);
-            } else {
-              version_table[it->first] =  (it->second);
-            }
+          if (version_table_in.count(it->first) == 0) {
+            version_table_in[it->first] =  (it->second);
           } else {
-            if (j->write_set().contains(it->first)) {
-              version_table[it->first] =
-                std::max(++(it->second), version_table[it->first]);
-            } else {
-              version_table[it->first] =
-                std::max((it->second), version_table[it->first]);
-            }
+            version_table_in[it->first] =
+              std::max((it->second), version_table_in[it->first]);
           }
         }
       } else {
@@ -266,24 +249,29 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     }
   }
 
+  version_table_out = version_table_in;
+
   IDSet<logical_data_id_t>::IDSetIter iter_data;
   IDSet<logical_data_id_t> read_set = job->read_set();
   for (iter_data = read_set.begin(); iter_data != read_set.end(); ++iter_data) {
-    if (version_table.count(*iter_data) == 0) {
+    if (version_table_in.count(*iter_data) == 0) {
       dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
       return false;
     }
   }
   IDSet<logical_data_id_t> write_set = job->write_set();
   for (iter_data = write_set.begin(); iter_data != write_set.end(); ++iter_data) {
-    if (version_table.count(*iter_data) == 0) {
+    if (version_table_in.count(*iter_data) == 0) {
       dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
       return false;
+    } else {
+      ++version_table_out[*iter_data];
     }
   }
 
   job->set_versioned(true);
-  job->set_version_table(version_table);
+  job->set_version_table_in(version_table_in);
+  job->set_version_table_out(version_table_out);
   return true;
 }
 
@@ -308,9 +296,9 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
   for (; iter != job_graph_.End(); ++iter) {
     JobEntry* job = iter->second;
     if (job->versioned() && !job->assigned()) {
-      JobEntry::VersionTable version_table = job->version_table();
-      if (version_table.count(vld.first) != 0) {
-        if ((version_table[vld.first] == vld.second)) {
+      JobEntry::VersionTable version_table_in = job->version_table_in();
+      if (version_table_in.count(vld.first) != 0) {
+        if ((version_table_in[vld.first] == vld.second)) {
             // && (job->union_set().contains(vld.first))) {
             // Since job could be productive it does not need to read or writ it.
           list->push_back(job);

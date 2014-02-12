@@ -260,7 +260,7 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
-  JobEntry::VersionTable version_table = job->version_table();
+  JobEntry::VersionTable version_table_out = job->version_table_out();
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
 
@@ -271,7 +271,7 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   }
   if (job->write_set().contains(ldo->id())) {
     pd_new.set_last_job_write(job->job_id());
-    pd_new.set_version(pd.version() + 1);
+    pd_new.set_version(version_table_out[ldo->id()]);
     before_set.insert(pd.last_job_read());
   }
   data_manager_->RemovePhysicalInstance(ldo, pd);
@@ -303,14 +303,14 @@ size_t Scheduler::GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
-  JobEntry::VersionTable version_table = job->version_table();
+  JobEntry::VersionTable version_table_in = job->version_table_in();
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
 
   PhysicalDataVector pv;
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  data_version_t version = version_table[l_id];
+  data_version_t version = version_table_in[l_id];
   data_manager_->InstancesByWorkerAndVersion(ldo, worker->worker_id(), version, &pv);
 
   if (pv.size() > 1) {

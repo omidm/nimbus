@@ -95,7 +95,8 @@ class JobEntry {
     IDSet<job_id_t> after_set();
     job_id_t parent_job_id();
     Parameter params();
-    VersionTable version_table();
+    VersionTable version_table_in();
+    VersionTable version_table_out();
     PhysicalTable physical_table();
     bool versioned();
     bool assigned();
@@ -103,7 +104,8 @@ class JobEntry {
 
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
-    void set_version_table(VersionTable version_table);
+    void set_version_table_in(VersionTable version_table);
+    void set_version_table_out(VersionTable version_table);
     void set_physical_table(PhysicalTable physical_table);
     void set_versioned(bool flag);
     void set_assigned(bool flag);
@@ -123,7 +125,8 @@ class JobEntry {
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;
     Parameter params_;
-    VersionTable version_table_;
+    VersionTable version_table_in_;
+    VersionTable version_table_out_;
     PhysicalTable physical_table_;
     bool versioned_;
     bool assigned_;

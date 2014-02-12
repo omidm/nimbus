@@ -127,8 +127,12 @@ Parameter JobEntry::params() {
   return params_;
 }
 
-JobEntry::VersionTable JobEntry::version_table() {
-  return version_table_;
+JobEntry::VersionTable JobEntry::version_table_in() {
+  return version_table_in_;
+}
+
+JobEntry::VersionTable JobEntry::version_table_out() {
+  return version_table_out_;
 }
 
 JobEntry::PhysicalTable JobEntry::physical_table() {
@@ -155,8 +159,12 @@ void JobEntry::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
 }
 
-void JobEntry::set_version_table(VersionTable version_table) {
-  version_table_ = version_table;
+void JobEntry::set_version_table_in(VersionTable version_table) {
+  version_table_in_ = version_table;
+}
+
+void JobEntry::set_version_table_out(VersionTable version_table) {
+  version_table_out_ = version_table;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
