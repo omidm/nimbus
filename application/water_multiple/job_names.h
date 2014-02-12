@@ -51,6 +51,7 @@
 #define WRITE_FRAME "write_frame"
 
 #define ADJUST_PHI_WITH_OBJECTS "adjust_phi_with_objects"
+#define EXTRAPOLATE_PHI "extrapolate_phi"
 #define ADVECT_PHI "advect_phi"
 #define STEP_PARTICLES "step_particles"
 #define ADVECT_REMOVED_PARTICLES "advect_removed_particles"

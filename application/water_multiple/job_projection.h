@@ -37,9 +37,9 @@
  *     projects velocity.
  * The parameters of PROJECTION:
  *     frame number, simulation time, dt.
- * The read set(not sure) of SUPER_3:
+ * The read set(not sure) of PROJECTION:
  *     velocity, levelset.
- * The write set(not sure) of SUPER_3:
+ * The write set(not sure) of PROJECTION:
  *     velocity.
  *
  * It is still unclear whether other simulation variables or states are also
