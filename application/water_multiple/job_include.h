@@ -47,6 +47,7 @@
 #include "application/water_multiple/job_apply_forces.h"
 #include "application/water_multiple/job_calculate_frame.h"
 #include "application/water_multiple/job_delete_particles.h"
+#include "application/water_multiple/job_extrapolate_phi.h"
 #include "application/water_multiple/job_extrapolation.h"
 #include "application/water_multiple/job_initialize.h"
 #include "application/water_multiple/job_loop_frame.h"

@@ -33,8 +33,17 @@
  */
 
 /*
- * This file contains levelset extrapolation operation, which extrapolates
- * levelset at the global boundary, this job is only a temprory solution.
+ * This file contains job EXTRAPOLATE_PHI that:
+ *     extrapolates levelset in the global boundary.
+ * The parameters of PROJECTION:
+ *     frame number, simulation time, dt.
+ * The read set of EXTRAPOLATE_PHI:
+ *     velocity, levelset.
+ * The write set(not sure) of EXTRAPOLATE_PHI:
+ *     levelset.
+ *
+ * Notice that the job reads the inner region of levelset but writes the
+ * boundary region of levelset. Velocity is needed, which you might not expect.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

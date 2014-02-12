@@ -61,7 +61,7 @@ nimbus::Job* JobExtrapolatePhi::Clone() {
 
 void JobExtrapolatePhi::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing advect phi job.\n");
+  dbg(APP_LOG, "Executing extrapolate phi job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
@@ -84,13 +84,13 @@ void JobExtrapolatePhi::Execute(nimbus::Parameter params,
                              this, da, example, driver);
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in advect phi job.");
+  dbg(APP_LOG, "Execute the step in extrapolate phi job.");
   driver->ExtrapolatePhiImpl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing advect phi.\n");
+  dbg(APP_LOG, "Completed executing extrapolate phi.\n");
 }
 
 }  // namespace application
