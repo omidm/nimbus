@@ -197,6 +197,7 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
     if (new_logical_data) {
       vt[ldid] = (data_version_t)(0);
       job->set_version_table_out(vt);
+      version_manager_.AddVersionEntry(ldid, (data_version_t)(0), job, VersionEntry::OUT);
     }
   } else {
     dbg(DBG_WARN, "WARNING: parent of define data with job id %lu is not in the graph.\n", job_id);
@@ -272,6 +273,7 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
   job->set_versioned(true);
   job->set_version_table_in(version_table_in);
   job->set_version_table_out(version_table_out);
+  version_manager_.AddJobVersionTables(job);
   return true;
 }
 

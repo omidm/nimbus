@@ -83,6 +83,25 @@ bool VersionManager::AddVersionEntry(const VersionEntry& ve) {
   return true;
 }
 
+bool VersionManager::AddJobVersionTables(JobEntry* job_entry) {
+  if (!job_entry->versioned()) {
+    return false;
+  }
+
+  JobEntry::VersionTable::iterator iter;
+
+  JobEntry::VersionTable  vt_in = job_entry->version_table_in();
+  for (iter = vt_in.begin(); iter != vt_in.end(); ++iter) {
+    AddVersionEntry(iter->first, iter->second, job_entry, VersionEntry::IN);
+  }
+
+  JobEntry::VersionTable  vt_out = job_entry->version_table_out();
+  for (iter = vt_out.begin(); iter != vt_out.end(); ++iter) {
+    AddVersionEntry(iter->first, iter->second, job_entry, VersionEntry::OUT);
+  }
+  return true;
+}
+
 bool VersionManager::RemoveVersionEntry(
     logical_data_id_t logical_id, data_version_t version,
     JobEntry* job_entry, VersionEntry::Relation relation) {

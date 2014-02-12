@@ -61,12 +61,14 @@ class VersionManager {
     virtual ~VersionManager();
 
     bool AddVersionEntry(logical_data_id_t logical_id, data_version_t version,
-    JobEntry* job_entry, VersionEntry::Relation relation);
+        JobEntry* job_entry, VersionEntry::Relation relation);
 
     bool AddVersionEntry(const VersionEntry& ve);
 
+    bool AddJobVersionTables(JobEntry* job_entry);
+
     bool RemoveVersionEntry(logical_data_id_t logical_id, data_version_t version,
-    JobEntry* job_entry, VersionEntry::Relation relation);
+        JobEntry* job_entry, VersionEntry::Relation relation);
 
     bool RemoveVersionEntry(const VersionEntry& ve);
 
