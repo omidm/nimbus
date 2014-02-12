@@ -62,19 +62,19 @@ VersionEntry::VersionEntry(const VersionEntry& ve)
 VersionEntry::~VersionEntry() {
 }
 
-logical_data_id_t VersionEntry::logical_id() {
+logical_data_id_t VersionEntry::logical_id() const {
   return logical_id_;
 }
 
-data_version_t VersionEntry::version() {
+data_version_t VersionEntry::version() const {
   return version_;
 }
 
-JobEntry* VersionEntry::job_entry() {
+JobEntry* VersionEntry::job_entry() const {
   return job_entry_;
 }
 
-VersionEntry::Relation VersionEntry::relation() {
+VersionEntry::Relation VersionEntry::relation() const {
   return relation_;
 }
 

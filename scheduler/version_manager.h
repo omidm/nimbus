@@ -43,30 +43,45 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 #define NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
-#include <algorithm>
 #include <utility>
 #include <map>
-#include <set>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/version_entry.h"
 
 namespace nimbus {
 
 typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
+typedef std::map<logical_data_id_t, VersionEntryList*> VersionIndex;
 
 class VersionManager {
   public:
-    explicit VersionManager();
+    VersionManager();
     virtual ~VersionManager();
 
+    bool AddVersionEntry(logical_data_id_t logical_id, data_version_t version,
+    JobEntry* job_entry, VersionEntry::Relation relation);
+
+    bool AddVersionEntry(const VersionEntry& ve);
+
+    bool RemoveVersionEntry(logical_data_id_t logical_id, data_version_t version,
+    JobEntry* job_entry, VersionEntry::Relation relation);
+
+    bool RemoveVersionEntry(const VersionEntry& ve);
+
+    size_t GetJobsNeedDataVersion(JobEntryList* result,
+        VersionedLogicalData vld);
+
+    size_t GetJobsOutputDataVersion(JobEntryList* result,
+        VersionedLogicalData vld);
+
+    size_t RemoveObsoleteVersionEntriesOfLdo(logical_data_id_t logical_id);
+
+    size_t RemoveAllObsoleteVersionEntries();
+
   private:
+    VersionIndex version_index_;
 };
 
 }  // namespace nimbus

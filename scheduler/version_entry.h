@@ -44,10 +44,6 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 #define NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
 #include <list>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
@@ -57,7 +53,7 @@ namespace nimbus {
 
 class VersionEntry {
   public:
-    enum Relation {In, Out};
+    enum Relation {IN, OUT};
 
     VersionEntry();
     VersionEntry(logical_data_id_t logical_id, data_version_t version,
@@ -66,10 +62,10 @@ class VersionEntry {
 
     virtual ~VersionEntry();
 
-    logical_data_id_t logical_id();
-    data_version_t version();
-    JobEntry* job_entry();
-    Relation relation();
+    logical_data_id_t logical_id() const;
+    data_version_t version() const;
+    JobEntry* job_entry() const;
+    Relation relation() const;
 
     VersionEntry& operator= (const VersionEntry& right);
 

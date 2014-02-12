@@ -48,6 +48,164 @@ VersionManager::VersionManager() {
 }
 
 VersionManager::~VersionManager() {
+  VersionIndex::iterator iter = version_index_.begin();
+  for (; iter != version_index_.end(); ++iter) {
+    VersionEntryList* list = (*iter).second;
+    delete list;
+  }
+}
+
+bool VersionManager::AddVersionEntry(
+    logical_data_id_t logical_id, data_version_t version,
+    JobEntry* job_entry, VersionEntry::Relation relation) {
+  VersionEntryList* list;
+  if (version_index_.find(logical_id) == version_index_.end()) {
+    list = new VersionEntryList();
+    version_index_[logical_id] = list;
+  } else {
+    list = version_index_[logical_id];
+  }
+  VersionEntry ve(logical_id, version, job_entry, relation);
+  list->push_back(ve);
+  return true;
+}
+
+bool VersionManager::AddVersionEntry(const VersionEntry& ve) {
+  logical_data_id_t logical_id = ve.logical_id();
+  VersionEntryList* list;
+  if (version_index_.find(logical_id) == version_index_.end()) {
+    list = new VersionEntryList();
+    version_index_[logical_id] = list;
+  } else {
+    list = version_index_[logical_id];
+  }
+  list->push_back(ve);
+  return true;
+}
+
+bool VersionManager::RemoveVersionEntry(
+    logical_data_id_t logical_id, data_version_t version,
+    JobEntry* job_entry, VersionEntry::Relation relation) {
+  if (version_index_.find(logical_id) == version_index_.end()) {
+    dbg(DBG_ERROR,"ERROR: the logical id %lu is not in the version index.\n", logical_id); // NOLINT 
+    return false;
+  } else {
+    VersionEntryList* list = version_index_[logical_id];
+    VersionEntryList::iterator iter = list->begin();
+    for (; iter != list->end(); ++iter) {
+      if ((iter->version() == version) &&
+          (iter->job_entry() == job_entry) &&
+          (iter->relation() == relation)) {
+        list->erase(iter);
+        return true;
+      }
+    }
+    dbg(DBG_ERROR,"ERROR: could not match any entry in version index.\n"); // NOLINT
+    return false;
+  }
+}
+
+bool VersionManager::RemoveVersionEntry(const VersionEntry& ve) {
+  logical_data_id_t logical_id = ve.logical_id();
+  if (version_index_.find(logical_id) == version_index_.end()) {
+    dbg(DBG_ERROR,"ERROR: the logical id %lu is not in the version index.\n", logical_id); // NOLINT 
+    return false;
+  } else {
+    VersionEntryList* list = version_index_[logical_id];
+    VersionEntryList::iterator iter = list->begin();
+    for (; iter != list->end(); ++iter) {
+      if ((iter->version() == ve.version()) &&
+          (iter->job_entry() == ve.job_entry()) &&
+          (iter->relation() == ve.relation())) {
+        list->erase(iter);
+        return true;
+      }
+    }
+    dbg(DBG_ERROR,"ERROR: could not match any entry in version index.\n"); // NOLINT
+    return false;
+  }
+}
+
+size_t VersionManager::GetJobsNeedDataVersion(
+    JobEntryList* result, VersionedLogicalData vld) {
+  size_t num = 0;
+  result->clear();
+  if (version_index_.find(vld.first) == version_index_.end()) {
+    return num;
+  } else {
+    VersionEntryList* list = version_index_[vld.first];
+    VersionEntryList::iterator iter = list->begin();
+    for (; iter != list->end(); ++iter) {
+      if ((iter->version() == vld.second) &&
+          (iter->relation() == VersionEntry::IN)) {
+        result->push_back(iter->job_entry());
+        ++num;
+      }
+    }
+  }
+
+  return num;
+}
+
+size_t VersionManager::GetJobsOutputDataVersion(
+    JobEntryList* result, VersionedLogicalData vld) {
+  size_t num = 0;
+  result->clear();
+  if (version_index_.find(vld.first) == version_index_.end()) {
+    return num;
+  } else {
+    VersionEntryList* list = version_index_[vld.first];
+    VersionEntryList::iterator iter = list->begin();
+    for (; iter != list->end(); ++iter) {
+      if ((iter->version() == vld.second) &&
+          (iter->relation() == VersionEntry::OUT)) {
+        result->push_back(iter->job_entry());
+        ++num;
+      }
+    }
+  }
+
+  return num;
+}
+
+size_t VersionManager::RemoveObsoleteVersionEntriesOfLdo(
+    logical_data_id_t logical_id) {
+  size_t num = 0;
+  if (version_index_.find(logical_id) == version_index_.end()) {
+    return num;
+  } else {
+    VersionEntryList* list = version_index_[logical_id];
+    VersionEntryList::iterator iter = list->begin();
+    for (; iter != list->end();) {
+      // TODO(omidm): figure out when it is obsolete.
+      if (false) {
+        list->erase(iter++);
+        ++num;
+      } else {
+        ++iter;
+      }
+    }
+  }
+  return num;
+}
+
+size_t VersionManager::RemoveAllObsoleteVersionEntries() {
+  VersionIndex::iterator it = version_index_.begin();
+  size_t num = 0;
+  for (; it != version_index_.end(); ++it) {
+    VersionEntryList* list = (*it).second;
+    VersionEntryList::iterator iter = list->begin();
+    for (; iter != list->end();) {
+      // TODO(omidm): figure out when it is obsolete.
+      if (false) {
+        list->erase(iter++);
+        ++num;
+      } else {
+        ++iter;
+      }
+    }
+  }
+  return num;
 }
 
 
