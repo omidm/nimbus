@@ -162,7 +162,9 @@ Initialize(const nimbus::Job *job,
   example.incompressible.Set_Gravity();
   example.incompressible.Set_Body_Force(true);
   example.incompressible.projection.Use_Non_Zero_Divergence(false);
-  example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(true);
+  // We don't want to deal with the additional burden caused by newmann regions.
+  // Just set it to false.  --quhang
+  example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
   example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
   example.incompressible.Use_Explicit_Part_Of_Implicit_Viscosity(false);
   example.incompressible.Set_Maximum_Implicit_Viscosity_Iterations(40);
@@ -410,13 +412,43 @@ ProjectionImpl (const nimbus::Job *job,
   LOG::SCOPE *scope=0;
   scope=new LOG::SCOPE("Project");
   example.Set_Boundary_Conditions(time);
+  // According to levelset, write to psi_D and pressure. Then exchange psi_D and
+  // pressure.
   example.incompressible.Set_Dirichlet_Boundary_Conditions(
       &example.particle_levelset_evolution.phi, 0);
+  // Write to pressure.
   example.projection.p *= dt;
+  // projection has type: PROJECTION_COLLIDABLE_UNIFORM.
+  // collidable_solver has type: LAPLACE_COLLIDABLE_UNIFORM.
+  // Configures and resizes u_interface array.
   example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
+  // The following is the projection code.
+  // Step 1: Apply boundary.
+  /*
+  int ghost_cells=3;
+  // boundary conditions
+  if(!projection_boundary) projection_boundary=boundary;
+  projection_boundary->Apply_Boundary_Condition_Face(projection.p_grid,face_velocities,time+dt);
+  ARRAY<T,FACE_INDEX<TV::dimension> >
+      face_velocities_ghost(projection.p_grid,ghost_cells);
+  projection_boundary->Fill_Ghost_Cells_Face(projection.p_grid,face_velocities,face_velocities_ghost,time,ghost_cells);
+  assert(Consistent_Boundary_Conditions(face_velocities));
+  */
+  // Step 2: Core projection.
+  /*
+     // Write to divergence, solver->f.
+  Compute_Divergence(T_FACE_LOOKUP(face_velocities),elliptic_solver);
+     // Write to filled_region_colors, psi_N, filled_region_touches_dirichlet,
+     // probably.
+  elliptic_solver->Find_Solution_Regions();
+  elliptic_solver->Solve(time,true);
+  Apply_Pressure(face_velocities,dt,time);
+  */
   example.incompressible.Advance_One_Time_Step_Implicit_Part(
       example.face_velocities, dt, time, true);
+  // Write to pressure.
   example.projection.p *= (1/dt);
+  // Does nothing. But average face_velocities in MPI, necessary?
   example.incompressible.boundary->Apply_Boundary_Condition_Face(
       example.incompressible.grid, example.face_velocities,time+dt);
   example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(
