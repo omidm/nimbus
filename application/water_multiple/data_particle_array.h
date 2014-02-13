@@ -36,12 +36,22 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_INCLUDE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_PARTICLE_ARRAY_H_
+#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_PARTICLE_ARRAY_H_
 
-#include "application/water_multiple/data_face_array.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/data_particle_array.h"
-#include "application/water_multiple/data_scalar_array.h"
+#include "data/physbam/physbam_data.h"
+#include "shared/nimbus.h"
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_
+namespace application {
+
+    class DataParticleArray : public nimbus::PhysBAMData {
+            typedef float T;
+        public:
+            explicit DataParticleArray(std::string n);
+            virtual nimbus::Data* Clone();
+            virtual void Create();
+    };
+
+} // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_PARTICLE_ARRAY_H_

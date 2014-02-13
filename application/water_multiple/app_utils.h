@@ -88,7 +88,6 @@ namespace application {
                                            kScale + kGhostNum*2 + 1,
                                            kScale + kGhostNum*2 + 1,
                                            kScale + kGhostNum*2 + 1);;
-    const int_dimension_t kParticlesBufSize = 0;
 
     // Note: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and
