@@ -254,6 +254,10 @@ namespace application {
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
+    int adjust_phi_with_objects_job_num = 2;
+    std::vector<nimbus::job_id_t> adjust_phi_with_objects_job_ids;
+    GetNewJobID(&adjust_phi_with_objects_job_ids, adjust_phi_with_objects_job_num);
+
     int advect_v_job_num = 2;
     std::vector<nimbus::job_id_t> advect_v_job_ids;
     GetNewJobID(&advect_v_job_ids, advect_v_job_num);
@@ -266,7 +270,6 @@ namespace application {
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
 
-/*
     // Original adjust phi with objects that operates over entire block.
 
     read.clear();
@@ -286,29 +289,51 @@ namespace application {
         read, write,
         before, after,
         s11_params);
-*/
 
     /* 
-     * Spawning adjust phi with objects over two workrs
+     * Spawning adjust phi with objects stage over two workrs
      */
+/*
+    nimbus::GeometricRegion kRegX2w3Half[2];
+    kRegX2w3Half[0].Rebuild(-2, -2, -2, 18, 36, 36);
+    kRegX2w3Half[1].Rebuild(16, -2, -2, 18, 36, 36);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegX2w3Half[0], APP_FACE_VEL_GHOST, NULL);
 
-    nimbus::Parameter s11_params;
-    std::string s11_str;
-    SerializeParameter(frame, time, dt, global_region, global_region, &s11_str);
-    s11_params.set_ser_data(SerializedData(s11_str));
+    nimbus::Parameter s11_params_0;
+    std::string s11_str_0;
+    SerializeParameter(frame, time, dt, global_region, kRegX2w3Inner[0], &s11_str_0);
+    s11_params_0.set_ser_data(SerializedData(s11_str_0));
     before.clear();
     after.clear();
     after.insert(extrapolate_phi_job_ids[0]);
     SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
-        job_ids[0],
+        adjust_phi_with_objects_job_ids[0],
         read, write,
         before, after,
-        s11_params);
+        s11_params_0);
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegX2w3Half[1], APP_FACE_VEL_GHOST, NULL);
+
+    nimbus::Parameter s11_params_1;
+    std::string s11_str_1;
+    SerializeParameter(frame, time, dt, global_region, kRegX2w3Inner[1], &s11_str_1);
+    s11_params_1.set_ser_data(SerializedData(s11_str_1));
+    before.clear();
+    after.clear();
+    after.insert(extrapolate_phi_job_ids[0]);
+    SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
+        adjust_phi_with_objects_job_ids[1],
+        read, write,
+        before, after,
+        s11_params_1);
+*/
 
 /*
     // Original ADVECT_PHI job spawning.
@@ -350,6 +375,8 @@ namespace application {
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     before.clear();
     before.insert(job_ids[0]);
+    // before.insert(adjust_phi_with_objects_job_ids[0]);
+    // before.insert(adjust_phi_with_objects_job_ids[1]);
     after.clear();
     after.insert(advect_phi_job_ids[0]);
     after.insert(advect_phi_job_ids[1]);
