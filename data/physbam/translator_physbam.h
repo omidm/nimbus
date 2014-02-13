@@ -127,7 +127,6 @@ namespace nimbus {
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (HasOverlap(overlap)) {
             std::string reg_str = region->toString();
-            dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray for region %s.\n", obj->id(), reg_str.c_str()); // NOLINT`
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
             scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -225,7 +224,6 @@ namespace nimbus {
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (!HasOverlap(overlap)) {continue;}
 
-          dbg(DBG_TRANSLATE, "Saving FaceArray into physical object %lu.\n", obj->id());
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
           scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -731,8 +729,6 @@ namespace nimbus {
                 Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
 
                 if (HasOverlap(overlap)) {
-                    dbg(DBG_TRANSLATE, "Incorporating physical object %lu into scalar array.\n",
-                            inst->id());
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -786,8 +782,6 @@ namespace nimbus {
                 Dimension3Vector overlap = GetOverlapSize(temp, region);
 
                 if (HasOverlap(overlap)) {
-                    dbg(DBG_TRANSLATE, "Saving scalar array into physical object %lu.\n",
-                                       inst->id());
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
