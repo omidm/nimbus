@@ -266,6 +266,32 @@ namespace application {
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
 
+/*
+    // Original adjust phi with objects that operates over entire block.
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+
+    nimbus::Parameter s11_params;
+    std::string s11_str;
+    SerializeParameter(frame, time, dt, global_region, global_region, &s11_str);
+    s11_params.set_ser_data(SerializedData(s11_str));
+    before.clear();
+    after.clear();
+    after.insert(extrapolate_phi_job_ids[0]);
+    SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
+        job_ids[0],
+        read, write,
+        before, after,
+        s11_params);
+*/
+
+    /* 
+     * Spawning adjust phi with objects over two workrs
+     */
+
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
@@ -284,9 +310,8 @@ namespace application {
         before, after,
         s11_params);
 
-
-    /*
-       // Original ADVECT_PHI job spawning.
+/*
+    // Original ADVECT_PHI job spawning.
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
@@ -305,7 +330,11 @@ namespace application {
         read, write,
         before, after,
         s12_params);
-    */
+*/
+
+    /* 
+     * Spawning extrapolate phi stage over entire block
+     */
 
     read.clear();
     // TODO(quhang): read set should be the inner region if it is right.
@@ -330,7 +359,10 @@ namespace application {
                     before, after,
                     s_extra_params);
 
-    // Start, Running ADVECT_PHI on two workers.
+
+    /* 
+     * Start, Running ADVECT_PHI on two workers.
+     */
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0],
@@ -376,6 +408,10 @@ namespace application {
 
     // End Running ADVECT_PHI on two workers.
 
+    /* 
+     * Spawning advect particles stage over entire block
+     */
+
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
     LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
@@ -404,6 +440,10 @@ namespace application {
         s13_params);
 
 
+    /* 
+     * Spawning advect removed particles stage over entire block
+     */
+
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_REM_PARTICLES,
@@ -429,7 +469,32 @@ namespace application {
         s14_params);
 
 
-    // Spawning multiple jobs for Advect V stage
+/*
+    // Spawning Advect V stage over entire block.
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+
+   nimbus::Parameter s15_params;
+    std::string s15_str;
+    SerializeParameter(frame, time, dt, global_region, global_region, &s15_str);
+    s15_params.set_ser_data(SerializedData(s15_str));
+    before.clear();
+    before.insert(job_ids[3]);
+    after.clear();
+    after.insert(job_ids[5]);
+    SpawnComputeJob(ADVECT_V,
+        job_ids[4],
+        read, write,
+        before, after,
+        s15_params);
+*/
+
+    /* 
+     * Spawning multiple jobs for Advect V stage
+     */
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
@@ -471,30 +536,10 @@ namespace application {
         before, after,
         s15_params_1);
 
-    // TODO(omidm): Replace the following block with the commented block above.
-    // Also change the before and after sets for the after and before jobs. 
 
-/*
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-
-   nimbus::Parameter s15_params;
-    std::string s15_str;
-    SerializeParameter(frame, time, dt, global_region, global_region, &s15_str);
-    s15_params.set_ser_data(SerializedData(s15_str));
-    before.clear();
-    before.insert(job_ids[3]);
-    after.clear();
-    after.insert(job_ids[5]);
-    SpawnComputeJob(ADVECT_V,
-        job_ids[4],
-        read, write,
-        before, after,
-        s15_params);
-*/
-
+    /* 
+     * Spawning apply forces stage over entire block
+     */
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
@@ -516,6 +561,10 @@ namespace application {
         before, after,
         s16_params);
 
+
+    /* 
+     * Spawning modify levelset stage over entire block
+     */
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
@@ -543,6 +592,10 @@ namespace application {
         modify_levelset_params);
 
 
+    /* 
+     * Spawning adjust phi stage over entire block
+     */
+
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, NULL);
     write.clear();
@@ -562,6 +615,10 @@ namespace application {
         before, after,
         adjust_phi_params);
 
+
+    /* 
+     * Spawning aelete particles stage over entire block
+     */
 
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
@@ -590,6 +647,10 @@ namespace application {
         delete_particles_params);
 
 
+    /* 
+     * Spawning reincorporate particles stage over entire block
+     */
+
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
@@ -616,6 +677,10 @@ namespace application {
         before, after,
         reincorporate_particles_params);
 
+    /* 
+     * Spawning projection stage over entire block
+     */
+
     {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
@@ -637,6 +702,10 @@ namespace application {
                       before, after,
                       projection_params);
     }
+
+    /* 
+     * Spawning extrapolation stage over entire block
+     */
 
     {
       read.clear();
@@ -661,8 +730,10 @@ namespace application {
     }
 
     if (!done) {
-      //Spawn one iteration of frame computation and then one loop
-      //iteration  job, for next iteration.
+
+    /* 
+     * Spawning loop iteration fopr next iteration.
+     */
 
       {
         read.clear();
@@ -691,11 +762,13 @@ namespace application {
                         iter_params);
       }
     } else {
-      // compute one last iteration, then spawn write frame job. Finally,
-      // spawn loop frame job for next frame computation.
 
       std::vector<nimbus::job_id_t> loop_job_id;
       GetNewJobID(&loop_job_id, 1);
+
+    /* 
+     * Spawning write frame over entire block
+     */
 
       {
         read.clear();
@@ -725,6 +798,10 @@ namespace application {
                         before, after,
                         write_params);
       }
+
+    /* 
+     * Spawning loop frame to compute next frame.
+     */
 
       {
         read.clear();
