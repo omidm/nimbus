@@ -292,6 +292,11 @@ size_t JobManager::ResolveVersions() {
 
 size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     VersionedLogicalData vld) {
+  return version_manager_.GetJobsNeedDataVersion(list, vld);
+
+  /*
+   * Obsolete slow approach
+   *
   size_t num = 0;
   list->clear();
   JobGraph::Iter iter = job_graph_.Begin();
@@ -310,6 +315,7 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     }
   }
   return num;
+  */
 }
 
 bool JobManager::AllJobsAreDone() {

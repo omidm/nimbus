@@ -156,7 +156,8 @@ size_t VersionManager::GetJobsNeedDataVersion(
     VersionEntryList::iterator iter = list->begin();
     for (; iter != list->end(); ++iter) {
       if ((iter->version() == vld.second) &&
-          (iter->relation() == VersionEntry::IN)) {
+          (iter->relation() == VersionEntry::IN) &&
+          !(iter->job_entry()->assigned())) {
         result->push_back(iter->job_entry());
         ++num;
       }
