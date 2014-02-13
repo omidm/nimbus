@@ -105,8 +105,7 @@ namespace nimbus {
     // Should be changed to protocol buffer later for compatibility.
     // TODO(quhang) .
     struct ParticleInternal {
-      int_dimension_t index[3];
-      scalar_t delta[3];
+      scalar_t position[3];
       scalar_t radius;
       uint16_t quantized_collision_distance;
       int32_t id;
@@ -323,6 +322,7 @@ namespace nimbus {
                        ParticleContainer& particle_container,
                        bool positive,
                        bool merge = false) {
+      const int_dimension_t kScale = 30;
       ParticleArray* particles;
       if (positive) {
         particles = &particle_container.positive_particles;
@@ -363,16 +363,19 @@ namespace nimbus {
              / static_cast<int>(sizeof(ParticleInternal));
 
         for (ParticleInternal* p = buffer; p != buffer_end; ++p) {
-          int_dimension_t relative_x = p->index[0] - shift[0];
-          int_dimension_t relative_y = p->index[1] - shift[1];
-          int_dimension_t relative_z = p->index[2] - shift[2];
-          if (relative_x >= region->x() &&
-              relative_x < region->x()+region->dx() &&
-              relative_y >= region->y() &&
-              relative_y < region->y()+region->dy() &&
-              relative_z >= region->z() &&
-              relative_z < region->z()+region->dz()) {
-            TV_INT bucket_index(relative_x, relative_y, relative_z);
+          VECTOR_TYPE absolute_position;
+          absolute_position.x = p->position[0];
+          absolute_position.y = p->position[1];
+          absolute_position.z = p->position[2];
+          if (absolute_position.x >= region->x() + shift[0] &&
+              absolute_position.x < region->x() + region->dx() + shift[0] &&
+              absolute_position.y >= region->y() + shift[1] &&
+              absolute_position.y < region->y() + region->dy() + shift[1] &&
+              absolute_position.z >= region->z() + shift[2] &&
+              absolute_position.z < region->z() + region->dz() + shift[2]) {
+            TV_INT bucket_index(round(absolute_position.x - shift[0]),
+                                round(absolute_position.y - shift[1]),
+                                round(absolute_position.z - shift[2]));
             assert(particles->Valid_Index(bucket_index));
             // NOTE(By Chinmayee): Please comment out these changes and don't
             // delete them when pushing any updates, till we verify that the
@@ -388,9 +391,8 @@ namespace nimbus {
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
             int index = particle_container.Add_Particle(particle_bucket);
-            particle_bucket->X(index) = VECTOR_TYPE(p->delta[0],
-                                                    p->delta[1],
-                                                    p->delta[2]);
+            particle_bucket->X(index) =
+                (absolute_position - 1.0) / (float) kScale;
             particle_bucket->radius(index) = p->radius;
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
@@ -422,10 +424,11 @@ namespace nimbus {
      *     {9, 9, 9, 22, 22, 22}.
      */
     bool WriteParticles(const GeometricRegion* region,
-                        const int_dimension_t shift[3],
+                        const int_dimension_t shift[3] PHYSBAM_UNUSED,
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
+      const int_dimension_t kScale = 30;
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -451,32 +454,34 @@ namespace nimbus {
               return false;
             }
             ParticleBucket* particle_bucket = (*particles)(bucket_index);
-            int absolute_x = x + shift[0];
-            int absolute_y = y + shift[1];
-            int absolute_z = z + shift[2];
             while (particle_bucket) {
               for (int i = 1; i <= particle_bucket->array_collection->Size();
                    i++) {
+                VECTOR_TYPE particle_position = particle_bucket->X(i);
+                VECTOR_TYPE absolute_position =
+                    particle_position * (float) kScale + 1.0;
                 PdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one.
                 for (; iter != instances->end(); ++iter) {
                   const PhysicalDataInstance* instance = *iter;
                   GeometricRegion* instanceRegion = instance->region();
                   // If it's inside the region of the physical data instance.
-                  if (absolute_x >= instanceRegion->x() &&
-                      absolute_x < (instanceRegion->x() + instanceRegion->dx()) &&
-                      absolute_y >= instanceRegion->y() &&
-                      absolute_y < (instanceRegion->y() + instanceRegion->dy()) &&
-                      absolute_z >= instanceRegion->z() &&
-                      absolute_z < (instanceRegion->z() + instanceRegion->dz())) {
+                  if (absolute_position.x >=
+                          instanceRegion->x() &&
+                      absolute_position.x <
+                          (instanceRegion->x() + instanceRegion->dx()) &&
+                      absolute_position.y >=
+                          instanceRegion->y() &&
+                      absolute_position.y <
+                          (instanceRegion->y() + instanceRegion->dy()) &&
+                      absolute_position.z >=
+                          instanceRegion->z() &&
+                      absolute_position.z <
+                          (instanceRegion->z() + instanceRegion->dz())) {
                     ParticleInternal particle_buffer;
-                    particle_buffer.index[0] = absolute_x;
-                    particle_buffer.index[1] = absolute_y;
-                    particle_buffer.index[2] = absolute_z;
-                    VECTOR_TYPE particle_delta = particle_bucket->X(i);
-                    particle_buffer.delta[0] = particle_delta.x;
-                    particle_buffer.delta[1] = particle_delta.y;
-                    particle_buffer.delta[2] = particle_delta.z;
+                    particle_buffer.position[0] = absolute_position.x;
+                    particle_buffer.position[1] = absolute_position.y;
+                    particle_buffer.position[2] = absolute_position.z;
                     particle_buffer.radius = particle_bucket->radius(i);
                     particle_buffer.quantized_collision_distance =
                         particle_bucket->quantized_collision_distance(i);
@@ -525,6 +530,7 @@ namespace nimbus {
                               ParticleContainer& particle_container,
                               bool positive,
                               bool merge = false) {
+      const int_dimension_t kScale = 30;
       RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
@@ -568,16 +574,19 @@ namespace nimbus {
             / static_cast<int>(sizeof(RemovedParticleInternal));
 
         for (RemovedParticleInternal* p = buffer; p != buffer_end; ++p) {
-          int_dimension_t relative_x = p->index[0] - shift[0];
-          int_dimension_t relative_y = p->index[1] - shift[1];
-          int_dimension_t relative_z = p->index[2] - shift[2];
-          if (relative_x >= region->x() &&
-              relative_x < region->x()+region->dx() &&
-              relative_y >= region->y() &&
-              relative_y < region->y()+region->dy() &&
-              relative_z >= region->z() &&
-              relative_z < region->z()+region->dz()) {
-            TV_INT bucket_index(relative_x, relative_y, relative_z);
+          VECTOR_TYPE absolute_position;
+          absolute_position.x = p->position[0];
+          absolute_position.y = p->position[1];
+          absolute_position.z = p->position[2];
+          if (absolute_position.x >= region->x() + shift[0] &&
+              absolute_position.x < region->x() + region->dx() + shift[0] &&
+              absolute_position.y >= region->y() + shift[1] &&
+              absolute_position.y < region->y() + region->dy() + shift[1] &&
+              absolute_position.z >= region->z() + shift[2] &&
+              absolute_position.z < region->z() + region->dz() + shift[2]) {
+            TV_INT bucket_index(round(absolute_position.x - shift[0]),
+                                round(absolute_position.y - shift[1]),
+                                round(absolute_position.z - shift[2]));
             assert(particles->Valid_Index(bucket_index));
             // NOTE(By Chinmayee): Please comment out these changes and don't
             // delete them when pushing any updates, till we verify that the
@@ -593,12 +602,9 @@ namespace nimbus {
 
             // Note that Add_Particle traverses a linked list of particle
             // buckets, so it's O(N^2) time. Blech.
-            // I think things might not be that bad, because the number of
-            // bucket is expected to be constant.  -- quhang
             int index = particle_container.Add_Particle(particle_bucket);
-            particle_bucket->X(index) = VECTOR_TYPE(p->delta[0],
-                                                    p->delta[1],
-                                                    p->delta[2]);
+            particle_bucket->X(index) =
+                (absolute_position - 1.0) / (float) kScale;
             particle_bucket->radius(index) = p->radius;
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
@@ -629,6 +635,7 @@ namespace nimbus {
                                PdiVector* instances,
                                ParticleContainer& particle_container,
                                bool positive) {
+      const int_dimension_t kScale = 30;
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -654,34 +661,34 @@ namespace nimbus {
               return false;
             }
             RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
-            int absolute_x = x + shift[0];
-            int absolute_y = y + shift[1];
-            int absolute_z = z + shift[2];
-            // Note: the outer while loop might not be necessary for removed
-            // particle bucket.
             while (particle_bucket) {
               for (int i = 1; i <= particle_bucket->array_collection->Size();
                    i++) {
+                VECTOR_TYPE particle_position = particle_bucket->X(i);
+                VECTOR_TYPE absolute_position =
+                    particle_position * (float) kScale + 1.0;
                 PdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one.
                 for (; iter != instances->end(); ++iter) {
                   const PhysicalDataInstance* instance = *iter;
                   GeometricRegion* instanceRegion = instance->region();
                   // If it's inside the region of the physical data instance.
-                  if (absolute_x >= instanceRegion->x() &&
-                      absolute_x < (instanceRegion->x() + instanceRegion->dx()) &&
-                      absolute_y >= instanceRegion->y() &&
-                      absolute_y < (instanceRegion->y() + instanceRegion->dy()) &&
-                      absolute_z >= instanceRegion->z() &&
-                      absolute_z < (instanceRegion->z() + instanceRegion->dz())) {
+                  if (absolute_position.x >=
+                          instanceRegion->x() &&
+                      absolute_position.x <
+                          (instanceRegion->x() + instanceRegion->dx()) &&
+                      absolute_position.y >=
+                          instanceRegion->y() &&
+                      absolute_position.y <
+                          (instanceRegion->y() + instanceRegion->dy()) &&
+                      absolute_position.z >=
+                          instanceRegion->z() &&
+                      absolute_position.z <
+                          (instanceRegion->z() + instanceRegion->dz())) {
                     RemovedParticleInternal particle_buffer;
-                    particle_buffer.index[0] = absolute_x;
-                    particle_buffer.index[1] = absolute_y;
-                    particle_buffer.index[2] = absolute_z;
-                    VECTOR_TYPE particle_delta = particle_bucket->X(i);
-                    particle_buffer.delta[0] = particle_delta.x;
-                    particle_buffer.delta[1] = particle_delta.y;
-                    particle_buffer.delta[2] = particle_delta.z;
+                    particle_buffer.position[0] = absolute_position.x;
+                    particle_buffer.position[1] = absolute_position.y;
+                    particle_buffer.position[2] = absolute_position.z;
                     particle_buffer.radius = particle_bucket->radius(i);
                     particle_buffer.quantized_collision_distance =
                         particle_bucket->quantized_collision_distance(i);

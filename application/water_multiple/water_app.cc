@@ -77,13 +77,13 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_PHI);
         RegisterData(APP_PHI, new DataScalarArray(APP_PHI));
         dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
-        RegisterData(APP_POS_PARTICLES, new DataApp(APP_POS_PARTICLES, kParticlesBufSize));
+        RegisterData(APP_POS_PARTICLES, new DataParticleArray(APP_POS_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);
-        RegisterData(APP_NEG_PARTICLES, new DataApp(APP_NEG_PARTICLES, kParticlesBufSize));
+        RegisterData(APP_NEG_PARTICLES, new DataParticleArray(APP_NEG_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_POS_REM_PARTICLES);
-        RegisterData(APP_POS_REM_PARTICLES, new DataApp(APP_POS_REM_PARTICLES, kParticlesBufSize));
+        RegisterData(APP_POS_REM_PARTICLES, new DataParticleArray(APP_POS_REM_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_REM_PARTICLES);
-        RegisterData(APP_NEG_REM_PARTICLES, new DataApp(APP_NEG_REM_PARTICLES, kParticlesBufSize));
+        RegisterData(APP_NEG_REM_PARTICLES, new DataParticleArray(APP_NEG_REM_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
 
