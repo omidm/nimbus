@@ -104,7 +104,8 @@ bool nimbus::WorkerGraph::RemoveWorker(SchedulerWorker *worker) {
  * \return
 */
 int nimbus::WorkerGraph::AllWorkers(WorkerIdVector *dest) {
-  int count;
+  int count = 0;
+  dest->clear();
   SchedulerWorkerTable::iterator it = worker_table_.begin();
   for (; it != worker_table_.end(); ++it) {
     worker_id_t id = (*it).first;
