@@ -313,8 +313,6 @@ namespace nimbus {
      *     {9, 9, 9, 22, 22, 22}
      * into "particle_container" for the local region:
      *     {-1, -1, -1, 12, 12, 12}.
-     * TODO(quhang): Particle is stored in a way that is complicated. The
-     * particle cell on the boundary is splitted. Needs to handle this, asap.
      */
     bool ReadParticles(const GeometricRegion* region,
                        const int_dimension_t shift[3],

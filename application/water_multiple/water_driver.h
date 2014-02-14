@@ -47,6 +47,12 @@ public:
                     const nimbus::DataArray &da,
                     bool set_boundary_conditions = true);
 
+    bool InitializeIncompressibleProjectionHelper(
+        const application::DataConfig& data_config,
+        const GRID<TV>& grid_input,
+        INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
+        PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection);
+
     bool InitializeParticleLevelsetEvolutionHelper(
         const application::DataConfig& data_config,
         const GRID<TV>& grid_input,
