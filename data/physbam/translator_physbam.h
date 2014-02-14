@@ -390,7 +390,7 @@ namespace nimbus {
             // buckets, so it's O(N^2) time. Blech.
             int index = particle_container.Add_Particle(particle_bucket);
             particle_bucket->X(index) =
-                (absolute_position - 1.0) / (float) kScale;
+                (absolute_position - 1.0) / (float) kScale; // NOLINT
             particle_bucket->radius(index) = p->radius;
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
@@ -457,7 +457,7 @@ namespace nimbus {
                    i++) {
                 VECTOR_TYPE particle_position = particle_bucket->X(i);
                 VECTOR_TYPE absolute_position =
-                    particle_position * (float) kScale + 1.0;
+                    particle_position * (float) kScale + 1.0; // NOLINT
                 PdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one.
                 for (; iter != instances->end(); ++iter) {
@@ -602,7 +602,7 @@ namespace nimbus {
             // buckets, so it's O(N^2) time. Blech.
             int index = particle_container.Add_Particle(particle_bucket);
             particle_bucket->X(index) =
-                (absolute_position - 1.0) / (float) kScale;
+                (absolute_position - 1.0) / (float) kScale; // NOLINT
             particle_bucket->radius(index) = p->radius;
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
@@ -664,7 +664,7 @@ namespace nimbus {
                    i++) {
                 VECTOR_TYPE particle_position = particle_bucket->X(i);
                 VECTOR_TYPE absolute_position =
-                    particle_position * (float) kScale + 1.0;
+                    particle_position * (float) kScale + 1.0; // NOLINT
                 PdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one.
                 for (; iter != instances->end(); ++iter) {
