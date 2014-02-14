@@ -56,6 +56,7 @@ JobManager::JobManager() {
   } else {
     job->set_versioned(true);
     job->set_assigned(true);
+    job->set_done(true);
   }
 }
 
@@ -139,25 +140,33 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   for (; (iter != job_graph_.End()) && (num < max_num); ++iter) {
     JobEntry* job = iter->second;
     if (job->versioned() && !job->assigned()) {
-      bool before_set_done = true;
-      IDSet<job_id_t>::IDSetIter it;
-      IDSet<job_id_t> before_set = job->before_set();
-      for (it = before_set.begin(); it != before_set.end(); ++it) {
-        JobEntry* j;
-        job_id_t id = *it;
-        if (GetJobEntry(id, j)) {
-          if (!(j->done())) {
-            // dbg(DBG_SCHED, "Job in befor set (id: %lu) is not done yet.\n", id);
-            before_set_done = false;
-            break;
-          }
+      bool parent_and_before_set_done = true;
+      JobEntry* j;
+
+      if (GetJobEntry(job->parent_job_id(), j)) {
+        if (!(j->done())) {
+          parent_and_before_set_done = false;
         } else {
-          dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.\n", id);
-          before_set_done = false;
-          break;
+          IDSet<job_id_t>::IDSetIter it;
+          IDSet<job_id_t> before_set = job->before_set();
+          for (it = before_set.begin(); it != before_set.end(); ++it) {
+            if (GetJobEntry(*it, j)) {
+              if (!(j->done())) {
+                parent_and_before_set_done = false;
+                break;
+              }
+            } else {
+              dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.\n", *it);
+              parent_and_before_set_done = false;
+              break;
+            }
+          }
         }
+      } else {
+        dbg(DBG_ERROR, "ERROR: Parent job (id: %lu) is not in the graph.\n", job->parent_job_id());
+        parent_and_before_set_done = false;
       }
-      if (before_set_done) {
+      if (parent_and_before_set_done) {
         // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
         list->push_back(job);
         ++num;
