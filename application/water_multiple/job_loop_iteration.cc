@@ -302,6 +302,7 @@ namespace application {
     LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegX2w3Half[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s11_params_0;
     std::string s11_str_0;
@@ -320,6 +321,7 @@ namespace application {
     LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegX2w3Half[1], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s11_params_1;
     std::string s11_str_1;
