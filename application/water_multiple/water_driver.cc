@@ -83,15 +83,24 @@ Initialize(const nimbus::Job *job,
       &example.particle_levelset_evolution);
 
   example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-  // TODO(quhang): This initialization function initializes valid mask, which we
+
+  // Allocates array for valid mask and data structures used in projeciton.
+  // --quhang
+  InitializeIncompressibleProjectionHelper(
+      example.data_config,
+      example.mac_grid,
+      &example.incompressible,
+      &example.projection);
+  // This initialization function initializes valid mask, which we
   // don't know. And this one also calls projection.Initialize_Grid, which is
   // duplicated.
-  example.incompressible.Initialize_Grids(example.mac_grid);
-  // TODO(quhang): I think the only way to debug whether psi_D and psi_N is
+  // example.incompressible.Initialize_Grids(example.mac_grid);
+  // I think the only way to debug whether psi_D and psi_N is
   // passed around is to tune the initialization here. I will break this
   // function and make it possible to tune whether initialze psi or not. I
   // asked, but didn't receive a sure answer. Have to figure out ourselves.
-  example.projection.Initialize_Grid(example.mac_grid);
+  // example.projection.Initialize_Grid(example.mac_grid);
+
   example.collision_bodies_affecting_fluid.Initialize_Grids();
   if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
       LOG::Time("Velocity memory allocated.\n");
@@ -195,6 +204,57 @@ Initialize(const nimbus::Job *job,
   // Don't know why this statement should be here.
   example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
 
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+InitializeIncompressibleProjectionHelper(
+    const application::DataConfig& data_config,
+    const GRID<TV>& grid_input,
+    INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
+    PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection) {
+  // TODO(quhang): Array here.
+  incompressible->valid_mask.Resize(
+      grid_input.Domain_Indices(3), true, true, true);
+  incompressible->grid = grid_input.Get_MAC_Grid();
+  // Strain is not considered.
+  assert(incompressible->strain == NULL);
+  assert(grid_input.Is_MAC_Grid());
+  projection->p_grid = grid_input;
+  // Laplace solver is used.
+  assert(projection->poisson == NULL);
+  assert(projection->laplace != NULL);
+  assert(grid_input.DX()==TV() || grid_input.Is_MAC_Grid());
+  // projection->laplace->Initialize_Grid(grid_input);
+  {
+    LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace =
+        dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >*>(
+            projection->laplace);
+    laplace->grid = grid_input;
+    // TODO(quhang): Array here.
+    laplace->f.Resize(grid_input.Domain_Indices(1));
+    // TODO(quhang): Array here.
+    laplace->psi_N.Resize(grid_input, 1);
+    // TODO(quhang): Array here.
+    laplace->psi_D.Resize(grid_input.Domain_Indices(1));
+    // TODO(quhang): Array here.
+    laplace->filled_region_colors.Resize(
+        grid_input.Domain_Indices(1));
+    // assert(laplace->levelset != laplace->levelset_default);
+    assert(laplace->second_order_cut_cell_method == false);
+    laplace->u_interface.Clean_Memory();
+  }
+  // Flag use_non_zero_divergence is expected to be false.
+  assert(!projection->use_non_zero_divergence);
+  projection->divergence.Clean_Memory();
+  // TODO(quhang): Array here.
+  projection->p.Resize(grid_input.Domain_Indices(1));
+  // TODO(quhang): Array here.
+  projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
+  // TODO(quhang): Array here.
+  projection->face_velocities_save_for_projection.Resize(grid_input);
+  // dsd is not considered.
+  assert(projection->dsd == NULL);
+  return true;
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -418,7 +478,8 @@ ProjectionImpl (const nimbus::Job *job,
       &example.particle_levelset_evolution.phi, 0);
   // Write to pressure.
   example.projection.p *= dt;
-  // projection has type: PROJECTION_COLLIDABLE_UNIFORM.
+  // projection has type:
+  // PROJECTION_DYNAMIC_UNIFORM.
   // collidable_solver has type: LAPLACE_COLLIDABLE_UNIFORM.
   // Configures and resizes u_interface array.
   example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
