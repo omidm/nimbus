@@ -38,6 +38,7 @@ app_path         = options.app_path         # app path
 include_boundary_str = "include_boundary"
 share_boundary_str   = "share_boundary"
 use_scratch_str      = "use_scratch"
+single_partition_str = "single_partition"
 
 # scratch types
 vertex = "vertex"
@@ -95,6 +96,7 @@ def ParseLine(line, num):
     include_boundary = False
     share_boundary   = False
     use_scratch      = False
+    single_partition = False
     if "none" in flags:
         if (len(flags) > 1):
             print "\nInvalid flags %s at line %i\n" % (str(flags), num)
@@ -105,10 +107,13 @@ def ParseLine(line, num):
         share_boundary = True
     if use_scratch_str in flags:
         use_scratch = True
+    if single_partition_str in flags:
+        single_partition = True
     return cpp_class, nimbus_types, params, \
             {  include_boundary_str : include_boundary, \
                share_boundary_str   : share_boundary, \
-               use_scratch_str      : use_scratch }
+               use_scratch_str      : use_scratch, \
+               single_partition_str : single_partition }
             
 class Partition():
     def __init__(self, x, dx):
@@ -195,13 +200,35 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
                 nt_pid["%s_%s_%i" % (nt, face, t)] = fpidset
     return nt_pid
 
+def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
+                                             domain, ghostw, \
+                                             share_boundary, \
+                                             partn_id):
+    nt_pid = {}
+    pidset = set()
+    x  = map(lambda z : 1-z, ghostw)
+    dx = domain
+    if share_boundary:
+        dx = map(lambda z : 1 + z, dx)
+    pidset.add(GetPartitionID(x, dx, partn_id))
+    for nt in nimbus_types:
+        nt_pid[nt] = pidset
+    return nt_pid
+
 def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     include_boundary = flags[include_boundary_str]
     share_boundary   = flags[share_boundary_str]
     use_scratch      = flags[use_scratch_str]
+    single_partition = flags[single_partition_str]
     domain = params[0]
     pnum   = params[1]
     ghostw = params[2]
+    if single_partition:
+        nt_pid = GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
+                                                          domain, ghostw, \
+                                                          share_boundary, \
+                                                          partn_id)
+        return nt_pid
     ps     = [0, 0, 0]
     psl    = [0, 0, 0]
     for dim in range(0, 3):
