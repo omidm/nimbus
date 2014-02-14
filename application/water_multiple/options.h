@@ -83,7 +83,7 @@ struct DataConfig {
     REMOVED_NEGATIVE_PARTICLE,
     NUM_VARIABLE
   };
-  bool _flag[NUM_VARIABLE];
+  bool flag_[NUM_VARIABLE];
   DataConfig() {
     SetHelper(false);
   }
@@ -92,26 +92,26 @@ struct DataConfig {
   }
   void Set(const DataConfig& data_config) {
     for (int i = 0; i < NUM_VARIABLE; ++i)
-      _flag[i] = data_config._flag[i];
+      flag_[i] = data_config.flag_[i];
   }
   void SetAll() {
     SetHelper(true);
   }
   void SetHelper(bool value) {
     for (int i = 0; i < NUM_VARIABLE; ++i)
-      _flag[i] = value;
+      flag_[i] = value;
   }
   void SetFlag(const DataType data_type) {
     assert(data_type != NUM_VARIABLE);
-    _flag[(int)data_type] = true;
+    flag_[(int)data_type] = true;
   }
   void UnsetFlag(const DataType data_type) {
     assert(data_type != NUM_VARIABLE);
-    _flag[(int)data_type] = false;
+    flag_[(int)data_type] = false;
   }
   bool GetFlag(const DataType data_type) const {
     assert(data_type != NUM_VARIABLE);
-    return _flag[(int)data_type];
+    return flag_[(int)data_type];
   }
 };
 
