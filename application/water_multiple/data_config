@@ -1,7 +1,9 @@
-############################################################################################################################################
-# C++ Class : Nimbus type : (domain), (number of partitions), (ghost width) : flags (none, include_boundary, share_boundary, use_scratch)  #
-############################################################################################################################################
+##############################################################################################################################################################
+# C++ Class : Nimbus type : (domain), (number of partitions), (ghost width) : flags (none, include_boundary, share_boundary, use_scratch, single_partition)  #
+##############################################################################################################################################################
 
-DataApp : face_vel : (30, 30, 30), (2, 1, 1), (3, 3, 3) : none
-DataApp : face_vel_ghost, phi : (30, 30, 30), (2, 1, 1), (3, 3, 3) : include_boundary
-#DataApp : pos_particles, neg_particles, pos_rem_particles, neg_rem_particles : (31, 31, 31), (1, 1, 1), (3, 3, 3) : include_boundary, share_boundary
+DataFaceArray     : face_vel       : (30, 30, 30), (2, 1, 1), (3, 3, 3) : none
+DataFaceArray     : face_vel_ghost : (30, 30, 30), (2, 1, 1), (3, 3, 3) : include_boundary
+DataScalarArray   : phi            : (30, 30, 30), (2, 1, 1), (3, 3, 3) : include_boundary
+ScalarData        : last_unique_particle_id : (30, 30, 30), (1, 1, 1), (3, 3, 3) : share_boundary, single_partition
+DataParticleArray : pos_particles, neg_particles, pos_rem_particles, neg_rem_particles : (30, 30, 30), (1, 1, 1), (3, 3, 3) : share_boundary, single_partition

@@ -63,46 +63,6 @@ namespace application {
 
         DefineNimbusData(this);
 
-        // Partition setup
-        nimbus::ID<partition_id_t> partition_id4(1003);
-        nimbus::Parameter part_params;
-        DefinePartition(partition_id4, kDomainParticles, part_params);
-        nimbus::IDSet<partition_id_t> neighbor_partitions;
-
-        // Data setup
-        int data_num = 9;
-        std::vector<nimbus::logical_data_id_t> data_ids;
-        GetNewLogicalDataID(&data_ids, data_num);
-
-        // Particles
-        nimbus::Parameter particle_params;
-        part_params.set_ser_data(SerializedData(""));
-        DefineData(APP_POS_PARTICLES,
-                   data_ids[4],
-                   partition_id4.elem(),
-                   neighbor_partitions,
-                   particle_params);
-        DefineData(APP_NEG_PARTICLES,
-                   data_ids[5],
-                   partition_id4.elem(),
-                   neighbor_partitions,
-                   particle_params);
-        DefineData(APP_POS_REM_PARTICLES,
-                   data_ids[6],
-                   partition_id4.elem(),
-                   neighbor_partitions,
-                   particle_params);
-        DefineData(APP_NEG_REM_PARTICLES,
-                   data_ids[7],
-                   partition_id4.elem(),
-                   neighbor_partitions,
-                   particle_params);
-        DefineData(APP_LAST_UNIQUE_PARTICLE_ID,
-                   data_ids[8],
-                   partition_id4.elem(),
-                   neighbor_partitions,
-                   particle_params);
-
         // Job setup
         int job_num = 1;
         std::vector<nimbus::job_id_t> job_ids;
@@ -113,12 +73,12 @@ namespace application {
         // Init job
         read.clear();
         LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kDomainParticles, APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
         write.clear();
         LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &write, kDomainParticles, APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 

@@ -177,31 +177,31 @@ namespace application {
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kDomainParticles);
+      job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kSharedX1W3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_NEG_PARTICLES, &kDomainParticles);
+      job->GetCoveredLogicalObjects(&result, APP_NEG_PARTICLES, &kSharedX1W3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_POS_REM_PARTICLES, &kDomainParticles);
+      job->GetCoveredLogicalObjects(&result, APP_POS_REM_PARTICLES, &kSharedX1W3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_NEG_REM_PARTICLES, &kDomainParticles);
+      job->GetCoveredLogicalObjects(&result, APP_NEG_REM_PARTICLES, &kSharedX1W3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_LAST_UNIQUE_PARTICLE_ID, &kDomainParticles);
+      job->GetCoveredLogicalObjects(&result, APP_LAST_UNIQUE_PARTICLE_ID, &kSharedX1W3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());

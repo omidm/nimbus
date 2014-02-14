@@ -126,7 +126,6 @@ namespace nimbus {
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (HasOverlap(overlap)) {
             std::string reg_str = region->toString();
-            dbg(DBG_TRANSLATE, "Incorporating physical object %lu into FaceArray for region %s.\n", obj->id(), reg_str.c_str()); // NOLINT`
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
             scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -224,7 +223,6 @@ namespace nimbus {
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (!HasOverlap(overlap)) {continue;}
 
-          dbg(DBG_TRANSLATE, "Saving FaceArray into physical object %lu.\n", obj->id());
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
           scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -313,8 +311,6 @@ namespace nimbus {
      *     {9, 9, 9, 22, 22, 22}
      * into "particle_container" for the local region:
      *     {-1, -1, -1, 12, 12, 12}.
-     * TODO(quhang): Particle is stored in a way that is complicated. The
-     * particle cell on the boundary is splitted. Needs to handle this, asap.
      */
     bool ReadParticles(const GeometricRegion* region,
                        const int_dimension_t shift[3],
@@ -392,7 +388,7 @@ namespace nimbus {
             // buckets, so it's O(N^2) time. Blech.
             int index = particle_container.Add_Particle(particle_bucket);
             particle_bucket->X(index) =
-                (absolute_position - 1.0) / (float) kScale;
+                (absolute_position - 1.0) / (float) kScale; // NOLINT
             particle_bucket->radius(index) = p->radius;
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
@@ -459,7 +455,7 @@ namespace nimbus {
                    i++) {
                 VECTOR_TYPE particle_position = particle_bucket->X(i);
                 VECTOR_TYPE absolute_position =
-                    particle_position * (float) kScale + 1.0;
+                    particle_position * (float) kScale + 1.0; // NOLINT
                 PdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one.
                 for (; iter != instances->end(); ++iter) {
@@ -604,7 +600,7 @@ namespace nimbus {
             // buckets, so it's O(N^2) time. Blech.
             int index = particle_container.Add_Particle(particle_bucket);
             particle_bucket->X(index) =
-                (absolute_position - 1.0) / (float) kScale;
+                (absolute_position - 1.0) / (float) kScale; // NOLINT
             particle_bucket->radius(index) = p->radius;
             particle_bucket->quantized_collision_distance(index) =
               p->quantized_collision_distance;
@@ -666,7 +662,7 @@ namespace nimbus {
                    i++) {
                 VECTOR_TYPE particle_position = particle_bucket->X(i);
                 VECTOR_TYPE absolute_position =
-                    particle_position * (float) kScale + 1.0;
+                    particle_position * (float) kScale + 1.0; // NOLINT
                 PdiVector::iterator iter = instances->begin();
                 // Iterate across instances, checking each one.
                 for (; iter != instances->end(); ++iter) {
@@ -738,8 +734,6 @@ namespace nimbus {
                 Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
 
                 if (HasOverlap(overlap)) {
-                    dbg(DBG_TRANSLATE, "Incorporating physical object %lu into scalar array.\n",
-                            inst->id());
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
@@ -793,8 +787,6 @@ namespace nimbus {
                 Dimension3Vector overlap = GetOverlapSize(temp, region);
 
                 if (HasOverlap(overlap)) {
-                    dbg(DBG_TRANSLATE, "Saving scalar array into physical object %lu.\n",
-                                       inst->id());
                     PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
                     scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
 
