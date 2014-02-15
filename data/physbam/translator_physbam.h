@@ -53,11 +53,14 @@
 #include "data/physbam/physbam_include.h"
 #include "data/physbam/physbam_data.h"
 
+#include "shared/log.h"
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 #include "stdio.h" // NOLINT
 #include "worker/physical_data_instance.h"
 #include "worker/worker.h"
+
+#define TRANSLATE_LOG_H "[Translator]"
 
 namespace nimbus {
 
@@ -318,6 +321,16 @@ namespace nimbus {
                        ParticleContainer& particle_container,
                        bool positive,
                        bool merge = false) {
+      if (positive) {
+        dbg(DBG_TRANSLATE,
+            TRANSLATE_LOG_H"Start ReadParticles for positive particles\n");
+      } else {
+        dbg(DBG_TRANSLATE,
+            TRANSLATE_LOG_H"Start ReadParticles for negative particles\n");
+      }
+      Log timer;
+      int64_t counter, counter1, counter2;
+
       const int_dimension_t kScale = 30;
       ParticleArray* particles;
       if (positive) {
@@ -326,11 +339,14 @@ namespace nimbus {
         particles = &particle_container.negative_particles;
       }
 
+      timer.StartTimer();
+      counter = 0;
       // Checks whether the geometric region in the particle array is valid, and
       // clears corresponding buckets inside the geometric region if necessary.
-      for (int z = region->z(); z < region->z() + region->dz(); z++)
-        for (int y = region->y(); y < region->y() + region->dy(); y++)
-          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz(); z++)
+        for (int y = region->y(); y <= region->y() + region->dy(); y++)
+          for (int x = region->x(); x <= region->x() + region->dx(); x++) {
+            ++counter;
             TV_INT bucket_index(x, y, z);
             if (!particles->Valid_Index(bucket_index)) {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
@@ -343,12 +359,19 @@ namespace nimbus {
                   (*particles)(bucket_index));
             }
           }
+      dbg(DBG_TRANSLATE,
+          TRANSLATE_LOG_H
+          "In ReadParticles, clean %ld buckets in %0.2f seconds\n",
+          counter, timer.GetTime());
 
       if (instances == NULL) {
         dbg(DBG_WARN, "Physical data instances are empty.\n");
         return false;
       }
 
+      timer.StartTimer();
+      counter1 = 0;
+      counter2 = 0;
       PdiVector::const_iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -363,12 +386,14 @@ namespace nimbus {
           absolute_position.x = p->position[0];
           absolute_position.y = p->position[1];
           absolute_position.z = p->position[2];
+          ++counter1;
           if (absolute_position.x >= region->x() + shift[0] &&
-              absolute_position.x < region->x() + region->dx() + shift[0] &&
+              absolute_position.x <= region->x() + region->dx() + shift[0] &&
               absolute_position.y >= region->y() + shift[1] &&
-              absolute_position.y < region->y() + region->dy() + shift[1] &&
+              absolute_position.y <= region->y() + region->dy() + shift[1] &&
               absolute_position.z >= region->z() + shift[2] &&
-              absolute_position.z < region->z() + region->dz() + shift[2]) {
+              absolute_position.z <= region->z() + region->dz() + shift[2]) {
+            ++counter2;
             TV_INT bucket_index(round(absolute_position.x - shift[0]),
                                 round(absolute_position.y - shift[1]),
                                 round(absolute_position.z - shift[2]));
@@ -400,6 +425,11 @@ namespace nimbus {
           }
         }  // End the loop for buffer.
       }
+      dbg(DBG_TRANSLATE,
+          TRANSLATE_LOG_H
+          "In ReadParticles, go through %ld particles and read %ld particles"
+          " in %0.2f seconds\n",
+          counter1, counter2, timer.GetTime());
       return true;
     }
 
@@ -424,6 +454,16 @@ namespace nimbus {
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
+      if (positive) {
+        dbg(DBG_TRANSLATE,
+            TRANSLATE_LOG_H"Start WriteParticles for positive particles\n");
+      } else {
+        dbg(DBG_TRANSLATE,
+            TRANSLATE_LOG_H"Start WriteParticles for negative particles\n");
+      }
+      Log timer;
+      int64_t counter1, counter2;
+
       const int_dimension_t kScale = 30;
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
@@ -439,10 +479,13 @@ namespace nimbus {
         particles = &particle_container.negative_particles;
       }
 
+      timer.StartTimer();
+      counter1 = 0;
+      counter2 = 0;
       // Loop through each particle bucket in the specified region.
-      for (int z = region->z(); z < region->z() + region->dz(); z++)
-        for (int y = region->y(); y < region->y() + region->dy(); y++)
-          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz(); z++)
+        for (int y = region->y(); y <= region->y() + region->dy(); y++)
+          for (int x = region->x(); x <= region->x() + region->dx(); x++) {
             TV_INT bucket_index(x, y, z);
             if (!particles->Valid_Index(bucket_index)) {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
@@ -476,19 +519,21 @@ namespace nimbus {
                   VECTOR_TYPE particle_position = particle_bucket->X(i);
                   VECTOR_TYPE absolute_position =
                       particle_position * (float) kScale + 1.0; // NOLINT
+                  ++counter1;
                   // If it's inside the region of the physical data instance.
                   if (absolute_position.x >=
                       instanceRegion->x() &&
-                      absolute_position.x <
+                      absolute_position.x <=
                       (instanceRegion->x() + instanceRegion->dx()) &&
                       absolute_position.y >=
                       instanceRegion->y() &&
-                      absolute_position.y <
+                      absolute_position.y <=
                       (instanceRegion->y() + instanceRegion->dy()) &&
                       absolute_position.z >=
                       instanceRegion->z() &&
-                      absolute_position.z <
+                      absolute_position.z <=
                       (instanceRegion->z() + instanceRegion->dz())) {
+                    ++counter2;
                     ParticleInternal particle_buffer;
                     particle_buffer.position[0] = absolute_position.x;
                     particle_buffer.position[1] = absolute_position.y;
@@ -513,6 +558,12 @@ particle_buffer.id = (*id)(i);
               }  // Finish looping through all particles.
             }
           }
+
+      dbg(DBG_TRANSLATE,
+          TRANSLATE_LOG_H
+          "In WriteParticles, scan %ld particles and write %ld particles"
+          " in %0.2f seconds\n",
+          counter1, counter2, timer.GetTime());
 
       // Now that we've copied particles into the temporary data buffers,
       // commit the results.
