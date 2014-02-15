@@ -35,7 +35,6 @@ namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
 # flags
-share_boundary_str   = "share_boundary"
 generate_inner_str   = "inner"
 generate_outer_str   = "outer"
 generate_scratch_str = "scratch"
@@ -90,7 +89,6 @@ def ParseLine(line, num):
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
     flags = re.split('\s|,', args[2].strip())
-    share_boundary   = False
     generate_inner   = False
     generate_outer   = False
     generate_scratch = False
@@ -98,8 +96,6 @@ def ParseLine(line, num):
         if (len(flags) > 1):
             print "\nInvalid flags %s at line %i\n" % (str(flags), num)
             sys.exit(2)
-    if share_boundary_str in flags:
-        share_boundary = True
     if generate_inner_str in flags:
         generate_inner = True
     if generate_outer_str in flags:
@@ -107,8 +103,7 @@ def ParseLine(line, num):
     if generate_scratch_str in flags:
         generate_scratch = True
     return reg_name, params, \
-            {  share_boundary_str   : share_boundary, \
-               generate_inner_str   : generate_inner, \
+            {  generate_inner_str   : generate_inner, \
                generate_outer_str   : generate_outer, \
                generate_scratch_str : generate_scratch }
 
@@ -126,7 +121,6 @@ outer   = 'Outer'
 scratch = 'Scratch'
 
 def GetRegionsBB(params, flags, num, reg_type):
-    share_boundary = flags[share_boundary_str]
     domain = params[0]
     rnum   = params[1]
     ghostw = params[2]
@@ -168,9 +162,6 @@ def GetRegionsBB(params, flags, num, reg_type):
         for i in range(1, rnum[dim], 1):
             rstart[dim][i] = rstart[dim][i-1] + rdelta[dim][i-1]
     regions = []
-    if share_boundary:
-        for dim in range(0, 3):
-            rsize[dim] = map(lambda x : x+1, rsize[dim])
     if reg_type == outer and \
             ghostw[0] == 0 and ghostw[1] == 0 and ghostw[2] == 0:
         return regions
@@ -186,7 +177,6 @@ def GetRegionsBB(params, flags, num, reg_type):
     return regions
 
 def GetRegionsScratch(params, flags, num, reg_type):
-    share_boundary = flags[share_boundary_str]
     domain = params[0]
     rnum   = params[1]
     ghostw = params[2]
@@ -216,8 +206,6 @@ def GetRegionsScratch(params, flags, num, reg_type):
         rstart[dim][0] = 1-ghostw[dim]
         for i in range(1, rnum[dim], 1):
             rstart[dim][i] = rstart[dim][i-1] + rsize[dim][i-1]
-        if share_boundary:  # share_boundary = True
-            rsize[dim] = map(lambda x : x+1 if x > 0 else x, rsize[dim])
     ii = [ \
             range(0, rnum[0], 3) + range(1, rnum[0], 3), \
             range(2, rnum[0], 3) ]

@@ -36,7 +36,6 @@ app_path         = options.app_path         # app path
 
 # flags
 include_boundary_str = "include_boundary"
-share_boundary_str   = "share_boundary"
 use_scratch_str      = "use_scratch"
 single_partition_str = "single_partition"
 
@@ -94,7 +93,6 @@ def ParseLine(line, num):
         sys.exit(2)
     flags = re.split('\s|,', args[3].strip())
     include_boundary = False
-    share_boundary   = False
     use_scratch      = False
     single_partition = False
     if "none" in flags:
@@ -103,15 +101,12 @@ def ParseLine(line, num):
             sys.exit(2)
     if include_boundary_str in flags:
         include_boundary = True
-    if share_boundary_str in flags:
-        share_boundary = True
     if use_scratch_str in flags:
         use_scratch = True
     if single_partition_str in flags:
         single_partition = True
     return cpp_class, nimbus_types, params, \
             {  include_boundary_str : include_boundary, \
-               share_boundary_str   : share_boundary, \
                use_scratch_str      : use_scratch, \
                single_partition_str : single_partition }
             
@@ -202,7 +197,6 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
 
 def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
                                              domain, ghostw, \
-                                             share_boundary, \
                                              partn_id):
     nt_pid = {}
     pidset = set()
@@ -211,8 +205,6 @@ def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
     for dim in range (0, 3):
         x[dim]  = 1-ghostw[dim]
         dx[dim] = domain[dim] + 2*ghostw[dim]
-    if share_boundary:
-        dx = map(lambda z : 1 + z, dx)
     pidset.add(GetPartitionID(x, dx, partn_id))
     for nt in nimbus_types:
         nt_pid[nt] = pidset
@@ -220,7 +212,6 @@ def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
 
 def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     include_boundary = flags[include_boundary_str]
-    share_boundary   = flags[share_boundary_str]
     use_scratch      = flags[use_scratch_str]
     single_partition = flags[single_partition_str]
     domain = params[0]
@@ -229,7 +220,6 @@ def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     if single_partition:
         nt_pid = GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
                                                           domain, ghostw, \
-                                                          share_boundary, \
                                                           partn_id)
         return nt_pid
     ps     = [0, 0, 0]
@@ -264,8 +254,6 @@ def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
             psize[dim][pnum[dim]-1] = 0
         for i in range(1, pnum[dim], 1):
             pstart[dim][i] = pstart[dim][i-1] + psize[dim][i-1]
-        if share_boundary:  # share_boundary = True
-            psize[dim] = map(lambda x : x+1 if x > 0 else x, psize[dim])
     # obtain nimbus type - partition id mapping
     nt_pid = GetNimbusTypePIDMapHelper(nimbus_types, \
                                        pnum, pstart, psize, use_scratch, \
