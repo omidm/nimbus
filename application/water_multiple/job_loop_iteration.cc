@@ -296,11 +296,11 @@ namespace application {
      */
 /*
     nimbus::GeometricRegion kRegX2w3Half[2];
-    kRegX2w3Half[0].Rebuild(-2, -2, -2, 18, 36, 36);
-    kRegX2w3Half[1].Rebuild(16, -2, -2, 18, 36, 36);
+    kRegX2w3Half[0].Rebuild(-2, -2, -2, 36, 18, 36);
+    kRegX2w3Half[1].Rebuild(-2, 16, -2, 36, 18, 36);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegX2w3Half[0], APP_FACE_VEL_GHOST, NULL);
     LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
@@ -311,7 +311,8 @@ namespace application {
     s11_params_0.set_ser_data(SerializedData(s11_str_0));
     before.clear();
     after.clear();
-    after.insert(extrapolate_phi_job_ids[0]);
+    after.insert(job_ids[1]);
+    // after.insert(extrapolate_phi_job_ids[0]);
     SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
         adjust_phi_with_objects_job_ids[0],
         read, write,
@@ -319,7 +320,7 @@ namespace application {
         s11_params_0);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegX2w3Half[1], APP_FACE_VEL_GHOST, NULL);
     LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
@@ -330,14 +331,14 @@ namespace application {
     s11_params_1.set_ser_data(SerializedData(s11_str_1));
     before.clear();
     after.clear();
-    after.insert(extrapolate_phi_job_ids[0]);
+    after.insert(job_ids[1]);
+    // after.insert(extrapolate_phi_job_ids[0]);
     SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
         adjust_phi_with_objects_job_ids[1],
         read, write,
         before, after,
         s11_params_1);
 */
-
 
     // Original ADVECT_PHI job spawning.
     read.clear();
@@ -351,6 +352,8 @@ namespace application {
     s12_params.set_ser_data(SerializedData(s12_str));
     before.clear();
     before.insert(job_ids[0]);
+    // before.insert(adjust_phi_with_objects_job_ids[0]);
+    // before.insert(adjust_phi_with_objects_job_ids[1]);
     after.clear();
     after.insert(job_ids[2]);
     SpawnComputeJob(ADVECT_PHI,

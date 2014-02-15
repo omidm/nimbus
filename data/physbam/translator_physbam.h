@@ -420,7 +420,7 @@ namespace nimbus {
      *     {9, 9, 9, 22, 22, 22}.
      */
     bool WriteParticles(const GeometricRegion* region,
-                        const int_dimension_t shift[3] PHYSBAM_UNUSED,
+                        const int_dimension_t shift[3],
                         PdiVector* instances,
                         ParticleContainer& particle_container,
                         bool positive) {
@@ -449,31 +449,46 @@ namespace nimbus {
                             x, y, z);
               return false;
             }
-            ParticleBucket* particle_bucket = (*particles)(bucket_index);
-            while (particle_bucket) {
-              for (int i = 1; i <= particle_bucket->array_collection->Size();
-                   i++) {
-                VECTOR_TYPE particle_position = particle_bucket->X(i);
-                VECTOR_TYPE absolute_position =
-                    particle_position * (float) kScale + 1.0; // NOLINT
-                PdiVector::iterator iter = instances->begin();
-                // Iterate across instances, checking each one.
-                for (; iter != instances->end(); ++iter) {
-                  const PhysicalDataInstance* instance = *iter;
-                  GeometricRegion* instanceRegion = instance->region();
+            PdiVector::iterator iter = instances->begin();
+            for (; iter != instances->end(); ++iter) {
+              // Iterate across instances, checking each one.
+              const PhysicalDataInstance* instance = *iter;
+              GeometricRegion* instanceRegion = instance->region();
+              const int_dimension_t kMargin = 1;
+              if (x + shift[0] <
+                  instanceRegion->x() - kMargin ||
+                  x + shift[0] >
+                  instanceRegion->x() + instanceRegion->dx() + kMargin ||
+                  y + shift[1] <
+                  instanceRegion->y() - kMargin ||
+                  y + shift[1] >
+                  instanceRegion->y() + instanceRegion->dy() + kMargin ||
+                  z + shift[2] <
+                  instanceRegion->z() - kMargin ||
+                  z + shift[2] >
+                  instanceRegion->z() + instanceRegion->dz() + kMargin) {
+                continue;
+              }
+              ParticleBucket* particle_bucket = (*particles)(bucket_index);
+              while (particle_bucket) {
+                for (int i = 1; i <= particle_bucket->array_collection->Size();
+                     i++) {
+                  VECTOR_TYPE particle_position = particle_bucket->X(i);
+                  VECTOR_TYPE absolute_position =
+                      particle_position * (float) kScale + 1.0; // NOLINT
                   // If it's inside the region of the physical data instance.
                   if (absolute_position.x >=
-                          instanceRegion->x() &&
+                      instanceRegion->x() &&
                       absolute_position.x <
-                          (instanceRegion->x() + instanceRegion->dx()) &&
+                      (instanceRegion->x() + instanceRegion->dx()) &&
                       absolute_position.y >=
-                          instanceRegion->y() &&
+                      instanceRegion->y() &&
                       absolute_position.y <
-                          (instanceRegion->y() + instanceRegion->dy()) &&
+                      (instanceRegion->y() + instanceRegion->dy()) &&
                       absolute_position.z >=
-                          instanceRegion->z() &&
+                      instanceRegion->z() &&
                       absolute_position.z <
-                          (instanceRegion->z() + instanceRegion->dz())) {
+                      (instanceRegion->z() + instanceRegion->dz())) {
                     ParticleInternal particle_buffer;
                     particle_buffer.position[0] = absolute_position.x;
                     particle_buffer.position[1] = absolute_position.y;
@@ -485,7 +500,7 @@ namespace nimbus {
                       PhysBAM::ARRAY_VIEW<int>* id =
                           particle_bucket->array_collection->
                           template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
-                      particle_buffer.id = (*id)(i);
+particle_buffer.id = (*id)(i);
                     }
                     PhysBAMData* data =
                         static_cast<PhysBAMData*>(instance->data());
@@ -494,8 +509,8 @@ namespace nimbus {
                         sizeof(particle_buffer));
                   }
                 }
-              }
-              particle_bucket = particle_bucket->next;
+                particle_bucket = particle_bucket->next;
+              }  // Finish looping through all particles.
             }
           }
 

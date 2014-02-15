@@ -198,35 +198,35 @@ int Job::GetAdjacentLogicalObjects(CLdoVector* result,
   }
 }
 
-std::string Job::name() {
+std::string Job::name() const {
   return name_;
 }
 
-ID<job_id_t> Job::id() {
+ID<job_id_t> Job::id() const {
   return id_;
 }
 
-IDSet<physical_data_id_t> Job::read_set() {
+IDSet<physical_data_id_t> Job::read_set() const {
   return read_set_;
 }
 
-IDSet<physical_data_id_t> Job::write_set() {
+IDSet<physical_data_id_t> Job::write_set() const {
   return write_set_;
 }
 
-IDSet<job_id_t> Job::before_set() {
+IDSet<job_id_t> Job::before_set() const {
   return before_set_;
 }
 
-IDSet<job_id_t> Job::after_set() {
+IDSet<job_id_t> Job::after_set() const {
   return after_set_;
 }
 
-Parameter Job::parameters() {
+Parameter Job::parameters() const {
   return parameters_;
 }
 
-Application* Job::application() {
+Application* Job::application() const {
   return application_;
 }
 
