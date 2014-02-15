@@ -387,7 +387,7 @@ namespace nimbus {
           absolute_position.y = p->position[1];
           absolute_position.z = p->position[2];
           ++counter1;
-          // TODO(quhang): Needs to deal with the particles that lies exactly on
+          // TODO(quhang) Needs to deal with the particles that lies exactly on
           // the boundary.
           if (absolute_position.x >= region->x() + shift[0] &&
               absolute_position.x < region->x() + region->dx() + shift[0] &&
@@ -499,7 +499,7 @@ namespace nimbus {
               // Iterate across instances, checking each one.
               const PhysicalDataInstance* instance = *iter;
               GeometricRegion* instanceRegion = instance->region();
-              // TODO(quhang), needs to double check the margin setting.
+              // TODO(quhang) needs to double check the margin setting.
               const int_dimension_t kMargin = 1;
               if (x + shift[0] <
                   instanceRegion->x() - kMargin ||
@@ -523,7 +523,7 @@ namespace nimbus {
                   VECTOR_TYPE absolute_position =
                       particle_position * (float) kScale + 1.0; // NOLINT
                   ++counter1;
-                  // TODO(quhang), Needs to deal with the case when the particle
+                  // TODO(quhang) Needs to deal with the case when the particle
                   // lies exactly on the boundary.
                   // If it's inside the region of the physical data instance.
                   if (absolute_position.x >=
