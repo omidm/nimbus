@@ -105,13 +105,13 @@ int main(int argc,char *argv[])
 
     // Custom Partition
     TV_INT ppd=TV_INT::All_Ones_Vector();
-    ppd(1)=4;
+    //ppd(1)=4;
 
     if(mpi_world.initialized){
         // Custom Partition
-        example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3,false,ppd);
+        // example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3,false,ppd);
         // Original Partition
-        //example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3);
+        example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3);
         if(example->mpi_grid->Number_Of_Processors()>1) example->output_directory+=STRING_UTILITIES::string_sprintf("/%d",(mpi_world.rank+1));}
 
     FILE_UTILITIES::Create_Directory(example->output_directory+"/common");

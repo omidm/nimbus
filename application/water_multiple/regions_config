@@ -1,6 +1,6 @@
-###################################################################################################################################
-# Partition strategy name : (domain), (number of partitions), (ghost width) : flags (none, share_boundary, inner, outer, scratch) #
-###################################################################################################################################
+###################################################################################################################
+# Partition strategy name : (domain), (number of partitions), (ghost width) : flags (none, inner, outer, scratch) #
+###################################################################################################################
 
 # TODO: remove these
 RegGhostw3  : (30, 30, 30), (1, 1, 1), (3, 3, 3) : inner, outer
@@ -10,5 +10,6 @@ RegGhostw1  : (30, 30, 30), (1, 1, 1), (0, 0, 0) : inner, outer
 RegX2w3 : (30, 30, 30), (1, 2, 1), (3, 3, 3) : inner, outer
 Reg_w3      : (30, 30, 30), (1, 2, 1), (0, 0, 0) : inner, outer
 
-# Particle regions
-SharedX1W3 : (30, 30, 30), (1, 1, 1), (3, 3, 3) : share_boundary, outer
+# TODO(chinmayee): Get rid of Particle regions since we do not have a
+# share_boundary special case any more
+SharedX1W3 : (30, 30, 30), (1, 1, 1), (3, 3, 3) : outer
