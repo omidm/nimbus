@@ -387,12 +387,14 @@ namespace nimbus {
           absolute_position.y = p->position[1];
           absolute_position.z = p->position[2];
           ++counter1;
+          // TODO(quhang): Needs to deal with the particles that lies exactly on
+          // the boundary.
           if (absolute_position.x >= region->x() + shift[0] &&
-              absolute_position.x <= region->x() + region->dx() + shift[0] &&
+              absolute_position.x < region->x() + region->dx() + shift[0] &&
               absolute_position.y >= region->y() + shift[1] &&
-              absolute_position.y <= region->y() + region->dy() + shift[1] &&
+              absolute_position.y < region->y() + region->dy() + shift[1] &&
               absolute_position.z >= region->z() + shift[2] &&
-              absolute_position.z <= region->z() + region->dz() + shift[2]) {
+              absolute_position.z < region->z() + region->dz() + shift[2]) {
             ++counter2;
             TV_INT bucket_index(round(absolute_position.x - shift[0]),
                                 round(absolute_position.y - shift[1]),
@@ -497,6 +499,7 @@ namespace nimbus {
               // Iterate across instances, checking each one.
               const PhysicalDataInstance* instance = *iter;
               GeometricRegion* instanceRegion = instance->region();
+              // TODO(quhang), needs to double check the margin setting.
               const int_dimension_t kMargin = 1;
               if (x + shift[0] <
                   instanceRegion->x() - kMargin ||
@@ -520,18 +523,20 @@ namespace nimbus {
                   VECTOR_TYPE absolute_position =
                       particle_position * (float) kScale + 1.0; // NOLINT
                   ++counter1;
+                  // TODO(quhang), Needs to deal with the case when the particle
+                  // lies exactly on the boundary.
                   // If it's inside the region of the physical data instance.
                   if (absolute_position.x >=
                       instanceRegion->x() &&
-                      absolute_position.x <=
+                      absolute_position.x <
                       (instanceRegion->x() + instanceRegion->dx()) &&
                       absolute_position.y >=
                       instanceRegion->y() &&
-                      absolute_position.y <=
+                      absolute_position.y <
                       (instanceRegion->y() + instanceRegion->dy()) &&
                       absolute_position.z >=
                       instanceRegion->z() &&
-                      absolute_position.z <=
+                      absolute_position.z <
                       (instanceRegion->z() + instanceRegion->dz())) {
                     ++counter2;
                     ParticleInternal particle_buffer;
@@ -602,9 +607,9 @@ particle_buffer.id = (*id)(i);
 
       // Checks whether the geometric region in the particle array is valid, and
       // clears corresponding buckets inside the geometric region if necessary.
-      for (int z = region->z(); z < region->z() + region->dz(); z++)
-        for (int y = region->y(); y < region->y() + region->dy(); y++)
-          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz(); z++)
+        for (int y = region->y(); y <= region->y() + region->dy(); y++)
+          for (int x = region->x(); x <= region->x() + region->dx(); x++) {
             TV_INT bucket_index(x, y, z);
             if (!particles->Valid_Index(bucket_index)) {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
@@ -713,9 +718,9 @@ particle_buffer.id = (*id)(i);
       }
 
       // Loop through each particle bucket in the specified region.
-      for (int z = region->z(); z < region->z() + region->dz(); z++)
-        for (int y = region->y(); y < region->y() + region->dy(); y++)
-          for (int x = region->x(); x < region->x() + region->dx(); x++) {
+      for (int z = region->z(); z <= region->z() + region->dz(); z++)
+        for (int y = region->y(); y <= region->y() + region->dy(); y++)
+          for (int x = region->x(); x <= region->x() + region->dx(); x++) {
             TV_INT bucket_index(x, y, z);
             if (!particles->Valid_Index(bucket_index)) {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
