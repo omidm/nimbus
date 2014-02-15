@@ -292,7 +292,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
-    if (application::GetTranslatorData(job, fvstring, da, &pdv)
+    if (application::GetTranslatorData(job, fvstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.WriteFaceArray(
           &array_reg_inner, array_shift, &pdv, &face_velocities);
@@ -301,7 +301,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // mac velocities ghost
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-    if (application::GetTranslatorData(job, fvgstring, da, &pdv)
+    if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.WriteFaceArray(
           &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
@@ -313,7 +313,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // levelset
     const std::string lsstring = std::string(APP_PHI);
-    if (application::GetTranslatorData(job, lsstring, da, &pdv)
+    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.WriteScalarArray(
           &array_reg_outer,
@@ -325,7 +325,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // positive particles
     const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv)
+    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       translator.WriteParticles(
           &enlarge, array_shift,
@@ -335,7 +335,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // negative particles
     const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv)
+    if (application::GetTranslatorData(job, npstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
       translator.WriteParticles(
           &enlarge, array_shift,
@@ -345,7 +345,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // Removed positive particles.
     const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv)
+    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
           &enlarge, array_shift,
@@ -355,7 +355,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     // Removed negative particles.
     const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv)
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.WriteRemovedParticles(
           &enlarge, array_shift,
@@ -402,7 +402,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
-    if (application::GetTranslatorData(job, fvstring, da, &pdv)
+    if (application::GetTranslatorData(job, fvstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.ReadFaceArray(
           &array_reg_inner, array_shift, &pdv, &face_velocities);
@@ -412,7 +412,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // mac velocities
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-    if (application::GetTranslatorData(job, fvgstring, da, &pdv)
+    if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
       translator.ReadFaceArray(
           &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
@@ -425,7 +425,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // levelset
     const std::string lsstring = std::string(APP_PHI);
-    if (application::GetTranslatorData(job, lsstring, da, &pdv)
+    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::LEVELSET)) {
       translator.ReadScalarArray(
           &array_reg_outer,
@@ -438,7 +438,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // positive particles
     const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv)
+    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       translator.ReadParticles(
           &enlarge, array_shift,
@@ -449,7 +449,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // negative particles
     const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv)
+    if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
       translator.ReadParticles(
           &enlarge, array_shift,
@@ -460,7 +460,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // Removed positive particles.
     const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv)
+    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
           &enlarge, array_shift,
@@ -471,7 +471,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // Removed negative particles.
     const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv)
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
       translator.ReadRemovedParticles(
           &enlarge, array_shift,

@@ -55,15 +55,27 @@ namespace application {
     bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
                            const nimbus::DataArray& da,
-                           nimbus::PdiVector *vec) {
+                           nimbus::PdiVector *vec,
+                           AccessType access_type) {
         bool success = false;
         if (da.empty()) {
             return success;
         }
+        IDSet<physical_data_id_t> read_set = job->read_set();
+        IDSet<physical_data_id_t> write_set = job->write_set();
         std::set<Data *> ds;
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
-            if (d->name() == name) {
+            bool allowed = false;
+            if ((access_type == READ_ACCESS) &&
+                read_set.contains(d->physical_id())) {
+              allowed = true;
+            }
+            if ((access_type == WRITE_ACCESS) &&
+                write_set.contains(d->physical_id())) {
+              allowed = true;
+            }
+            if (d->name() == name && allowed) {
                 ds.insert(*it);
             }
         }

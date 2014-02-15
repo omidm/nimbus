@@ -89,6 +89,8 @@ namespace application {
                                            kScale + kGhostNum*2 + 1,
                                            kScale + kGhostNum*2 + 1);;
 
+    enum AccessType {READ_ACCESS, WRITE_ACCESS};
+
     // Note: some hacks that need to be cleaned soon after a meeting/
     // discussion -- one option is to make region a part of data, and
     // let nimbus take care of initializing region correctly when creating
@@ -96,7 +98,8 @@ namespace application {
     bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
                            const nimbus::DataArray& da,
-                           nimbus::PdiVector *vec);
+                           nimbus::PdiVector *vec,
+                           AccessType access_type);
     void DestroyTranslatorObjects(nimbus::PdiVector *vec);
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,

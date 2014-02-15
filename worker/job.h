@@ -118,14 +118,14 @@ class Job {
          const std::string& variable,
          const GeometricRegion* r);
 
-    std::string name();
-    ID<job_id_t> id();
-    IDSet<physical_data_id_t> read_set();
-    IDSet<physical_data_id_t> write_set();
-    IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
-    Parameter parameters();
-    Application* application();
+    std::string name() const;
+    ID<job_id_t> id() const;
+    IDSet<physical_data_id_t> read_set() const;
+    IDSet<physical_data_id_t> write_set() const;
+    IDSet<job_id_t> before_set() const;
+    IDSet<job_id_t> after_set() const;
+    Parameter parameters() const;
+    Application* application() const;
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
