@@ -206,8 +206,11 @@ def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
                                              partn_id):
     nt_pid = {}
     pidset = set()
-    x  = map(lambda z : 1-z, ghostw)
-    dx = domain
+    x  = [0, 0, 0]
+    dx = [0, 0, 0]
+    for dim in range (0, 3):
+        x[dim]  = 1-ghostw[dim]
+        dx[dim] = domain[dim] + 2*ghostw[dim]
     if share_boundary:
         dx = map(lambda z : 1 + z, dx)
     pidset.add(GetPartitionID(x, dx, partn_id))
