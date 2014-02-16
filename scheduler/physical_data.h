@@ -49,11 +49,20 @@ namespace nimbus {
   class PhysicalData {
   public:
     PhysicalData();
-    PhysicalData(physical_data_id_t id, worker_id_t worker);
-    PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
+    PhysicalData(const physical_data_id_t& id, const worker_id_t& worker);
+
+    PhysicalData(const physical_data_id_t& id, const worker_id_t& worker,
+        const data_version_t& version);
+
+    PhysicalData(const physical_data_id_t& id, const worker_id_t& worker,
+        const data_version_t& version,
+        const IDSet<job_id_t>& list_job_read, const job_id_t& last_job_write);
+
+    PhysicalData(const PhysicalData& other);
+
+
     PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version,
         job_id_t last_job_read, job_id_t last_job_write);
-    PhysicalData(const PhysicalData& other);
 
     virtual ~PhysicalData();
 
