@@ -42,6 +42,7 @@
 
 #include <vector>
 #include "shared/nimbus_types.h"
+#include "shared/idset.h"
 
 namespace nimbus {
 
@@ -52,22 +53,34 @@ namespace nimbus {
     PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
     PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version,
         job_id_t last_job_read, job_id_t last_job_write);
+    PhysicalData(const PhysicalData& other);
+
     virtual ~PhysicalData();
 
     physical_data_id_t id();
     worker_id_t worker();
     data_version_t version();
+    IDSet<job_id_t> list_job_read();
     job_id_t last_job_read();
     job_id_t last_job_write();
 
+    void set_id(physical_data_id_t id);
+    void set_worker(worker_id_t worker);
     void set_version(data_version_t v);
+    void set_list_job_read(IDSet<job_id_t> list_job_read);
     void set_last_job_read(job_id_t id);
     void set_last_job_write(job_id_t id);
+
+    void clear_list_job_read();
+    void add_to_list_job_read(job_id_t job_id);
+
+    PhysicalData& operator= (const PhysicalData& right);
 
   private:
     physical_data_id_t id_;
     worker_id_t worker_;
     data_version_t version_;
+    IDSet<job_id_t> list_job_read_;
     job_id_t last_job_read_;
     job_id_t last_job_write_;
   };

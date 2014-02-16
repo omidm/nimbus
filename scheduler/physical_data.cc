@@ -109,6 +109,26 @@ nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
   last_job_write_ = last_job_write;
 }
 
+
+nimbus::PhysicalData::PhysicalData(const PhysicalData& other) {
+  id_ = other.id_;
+  worker_ = other.worker_;
+  version_ = other.version_;
+  list_job_read_ = other.list_job_read_;
+  last_job_read_ = other.last_job_read_;
+  last_job_write_ = other.last_job_write_;
+}
+
+PhysicalData& nimbus::PhysicalData::operator= (const PhysicalData& right) {
+  id_ = right.id_;
+  worker_ = right.worker_;
+  version_ = right.version_;
+  list_job_read_ = right.list_job_read_;
+  last_job_read_ = right.last_job_read_;
+  last_job_write_ = right.last_job_write_;
+  return *this;
+}
+
 /**
  * \fn nimbus::PhysicalData::~PhysicalData()
  * \brief Brief description.
@@ -146,6 +166,11 @@ data_version_t nimbus::PhysicalData::version() {
   return version_;
 }
 
+
+IDSet<job_id_t> nimbus::PhysicalData::list_job_read() {
+  return list_job_read_;
+}
+
 /**
  * \fn job_id_t nimbus::PhysicalData::last_job_read()
  * \brief Brief description.
@@ -164,6 +189,14 @@ job_id_t nimbus::PhysicalData::last_job_write() {
   return last_job_write_;
 }
 
+void nimbus::PhysicalData::set_id(physical_data_id_t id) {
+  id_ = id;
+}
+
+void nimbus::PhysicalData::set_worker(worker_id_t worker) {
+  worker_ = worker;
+}
+
 /**
  * \fn void nimbus::PhysicalData::set_version(data_version_t v)
  * \brief Brief description.
@@ -172,6 +205,10 @@ job_id_t nimbus::PhysicalData::last_job_write() {
 */
 void nimbus::PhysicalData::set_version(data_version_t v) {
   version_ = v;
+}
+
+void nimbus::PhysicalData::set_list_job_read(IDSet<job_id_t> list_job_read) {
+  list_job_read_ = list_job_read;
 }
 
 /**
@@ -192,6 +229,14 @@ void nimbus::PhysicalData::set_last_job_read(job_id_t id) {
 */
 void nimbus::PhysicalData::set_last_job_write(job_id_t id) {
   last_job_write_ = id;
+}
+
+void nimbus::PhysicalData::clear_list_job_read() {
+  list_job_read_.clear();
+}
+
+void nimbus::PhysicalData::add_to_list_job_read(job_id_t job_id) {
+  list_job_read_.insert(job_id);
 }
 
 }  // namespace nimbus
