@@ -165,6 +165,15 @@ void IDSet<T>::insert(T n) {
 }
 
 template<typename T>
+void IDSet<T>::insert(const IDSet<T>& add_set) {
+  IDSetContainer ids =  add_set.identifiers_;
+  IDSetIter iter =  ids.begin();
+  for (; iter !=  ids.end(); ++iter) {
+    this->insert(*iter);
+  }
+}
+
+template<typename T>
 void IDSet<T>::remove(T n) {
   IDSetIter iter =  identifiers_.begin();
   for (; iter !=  identifiers_.end(); ++iter) {

@@ -70,6 +70,7 @@ class IDSet {
   bool Parse(const std::string& input);
   virtual std::string toString();
   virtual void insert(T entry);
+  virtual void insert(const IDSet<T>& add_set);
   virtual void remove(T entry);
   virtual void remove(IDSetIter it);
   virtual void clear();
@@ -82,7 +83,7 @@ class IDSet {
   IDSet<T>& operator= (const IDSet<T>& right);
 
  private:
-  typename std::list<T> identifiers_;
+  IDSetContainer identifiers_;
 };
 
 }  // namespace nimbus
