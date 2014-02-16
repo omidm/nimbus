@@ -47,6 +47,7 @@ namespace nimbus {
 
   class PhysicalData {
   public:
+    PhysicalData();
     PhysicalData(physical_data_id_t id, worker_id_t worker);
     PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version);
     PhysicalData(physical_data_id_t id, worker_id_t worker, data_version_t version,
