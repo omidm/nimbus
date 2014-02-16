@@ -151,6 +151,14 @@ bool JobEntry::done() {
   return done_;
 }
 
+void JobEntry::set_job_name(std::string job_name) {
+  job_name_ = job_name;
+}
+
+void JobEntry::set_job_id(job_id_t job_id) {
+  job_id_ = job_id;
+}
+
 void JobEntry::set_before_set(IDSet<job_id_t> before_set) {
   before_set_ = before_set;
 }

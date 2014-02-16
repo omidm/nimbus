@@ -102,6 +102,8 @@ class JobEntry {
     bool assigned();
     bool done();
 
+    void set_job_name(std::string job_name);
+    void set_job_id(job_id_t job_id);
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
     void set_version_table_in(VersionTable version_table);
