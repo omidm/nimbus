@@ -92,7 +92,7 @@ class Scheduler {
                                 SchedulerWorker* worker, logical_data_id_t l_id);
     virtual bool AllocateLdoInstanceToJob(JobEntry* job,
         LogicalDataObject* ldo, PhysicalData pd);
-    virtual size_t GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
+    virtual size_t GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
         LogicalDataObject* ldo, PhysicalDataVector* dest);
 
     virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
@@ -145,6 +145,15 @@ class Scheduler {
     virtual void GetUserCommand();
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
+
+    virtual bool PrepareDataForJobAtWorkerG2(JobEntry* job,
+        SchedulerWorker* worker, logical_data_id_t l_id);
+
+    virtual bool CreateDataAtWorker(SchedulerWorker* worker,
+        LogicalDataObject* ldo, PhysicalData* created_data);
+
+    virtual bool GetFreeDataAtWorker(SchedulerWorker* worker,
+        LogicalDataObject* ldo, PhysicalData* free_data);
 
     boost::thread* user_interface_thread_;
     boost::thread* worker_interface_thread_;

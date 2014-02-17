@@ -260,30 +260,38 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
+  assert(job->versioned());
+  JobEntry::VersionTable version_table_in = job->version_table_in();
   JobEntry::VersionTable version_table_out = job->version_table_out();
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
-
   PhysicalData pd_new = pd;
+
+  // Beacuse of the clear_list_job_read the order of if blocks are important.
+  if (job->write_set().contains(ldo->id())) {
+    pd_new.set_version(version_table_out[ldo->id()]);
+    pd_new.set_last_job_write(job->job_id());
+    pd_new.clear_list_job_read();
+    before_set.insert(pd.list_job_read());
+  }
+
   if (job->read_set().contains(ldo->id())) {
-    pd_new.set_last_job_read(job->job_id());
+    assert(version_table_in[ldo->id()] == pd.version());
+    pd_new.add_to_list_job_read(job->job_id());
     before_set.insert(pd.last_job_write());
   }
-  if (job->write_set().contains(ldo->id())) {
-    pd_new.set_last_job_write(job->job_id());
-    pd_new.set_version(version_table_out[ldo->id()]);
-    before_set.insert(pd.last_job_read());
-  }
+
+  physical_table[ldo->id()] = pd.id();
+
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);
-  physical_table[ldo->id()] = pd.id();
 
   job->set_before_set(before_set);
   job->set_physical_table(physical_table);
   return true;
 }
 
-size_t Scheduler::GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
+size_t Scheduler::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
     LogicalDataObject* ldo, PhysicalDataVector* dest) {
   size_t count = 0;
   dest->clear();
@@ -293,13 +301,116 @@ size_t Scheduler::GetObsoleteLdoInstanceAtWorker(SchedulerWorker* worker,
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
+    log_table_.ResumeTimer();
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
     }
+    log_table_.StopTimer();
   }
   return count;
 }
+
+bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
+    LogicalDataObject* ldo, PhysicalData* created_data) {
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  std::vector<physical_data_id_t> d;
+  id_maker_.GetNewPhysicalDataID(&d, 1);
+  IDSet<job_id_t> before, after;
+
+  // Send the create command to worker.
+  job_manager_->UpdateBeforeSet(&before);
+  CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
+      ID<logical_data_id_t>(ldo->id()), ID<physical_data_id_t>(d[0]), before, after);
+  server_->SendCommand(worker, &cm);
+
+  // Update the job table.
+  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true, true);
+
+  // Update data table.
+  IDSet<job_id_t> list_job_read;
+  PhysicalData p(d[0], worker->worker_id(), (data_version_t)(0), list_job_read, j[0]);
+  data_manager_->AddPhysicalInstance(ldo, p);
+
+  *created_data = p;
+  return true;
+}
+
+
+bool Scheduler::GetFreeDataAtWorker(SchedulerWorker* worker,
+    LogicalDataObject* ldo, PhysicalData* free_data) {
+  PhysicalDataVector obsolete_instances;
+  if (GetObsoleteLdoInstancesAtWorker(worker, ldo, &obsolete_instances) > 0) {
+    *free_data = obsolete_instances[0];
+    return true;
+  }
+
+  // Since there are no obsoletes, go ahead and create a new one.
+  return CreateDataAtWorker(worker, ldo, free_data);
+}
+
+
+bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
+    SchedulerWorker* worker, logical_data_id_t l_id) {
+  JobEntry::VersionTable version_table_in = job->version_table_in();
+  JobEntry::PhysicalTable physical_table = job->physical_table();
+  IDSet<job_id_t> before_set = job->before_set();
+
+  LogicalDataObject* ldo =
+    const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
+  data_version_t version = version_table_in[l_id];
+
+
+  if (version == 0) {
+    PhysicalData created_data;
+    CreateDataAtWorker(worker, ldo, &created_data);
+    AllocateLdoInstanceToJob(job, ldo, created_data);
+    return true;
+  }
+
+  PhysicalDataVector instances_at_worker;
+  PhysicalDataVector instances_in_system;
+  data_manager_->InstancesByWorkerAndVersion(
+      ldo, worker->worker_id(), version, &instances_at_worker);
+  data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
+
+  if (instances_in_system.size() == 0) {
+    dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
+    return false;
+  }
+
+  JobEntryList list;
+  VersionedLogicalData vld(l_id, version);
+  log_table_.ResumeTimer();
+  job_manager_->GetJobsNeedDataVersion(&list, vld);
+  log_table_.StopTimer();
+  assert(list.size() >= 1);
+  bool writing_needed_version = (list.size() == 1) &&
+    (job->write_set().contains(l_id));
+
+  if (instances_at_worker.size() > 1) {
+    PhysicalData target_instance = instances_at_worker[0];
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
+  }
+
+  if ((instances_at_worker.size() == 1) && !writing_needed_version) {
+    PhysicalData target_instance = instances_at_worker[0];
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
+  }
+
+  if ((instances_at_worker.size() == 1) && writing_needed_version) {
+    // TODO(omidm): complete the logic.
+  }
+
+  // TODO(omidm): bring data from the other worker.
+
+  return false;
+}
+
+
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
