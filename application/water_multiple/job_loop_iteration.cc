@@ -262,13 +262,19 @@ namespace application {
     std::vector<nimbus::job_id_t> advect_v_job_ids;
     GetNewJobID(&advect_v_job_ids, advect_v_job_num);
 
+    int advect_phi_job_num = 2;
+    std::vector<nimbus::job_id_t> advect_phi_job_ids;
+    GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
+
     int extrapolate_phi_job_num = 1;
     std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
     GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
-    int advect_phi_job_num = 2;
-    std::vector<nimbus::job_id_t> advect_phi_job_ids;
-    GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
+    // TODO(chinmayee): delete job_num=1 once multiple version works
+    int step_particles_job_num = 1;
+    // int step_particles_job_num = 2;
+    std::vector<nimbus::job_id_t> step_particles_job_ids;
+    GetNewJobID(&step_particles_job_ids, step_particles_job_num);
 
     // Original adjust phi with objects that operates over entire block.
 
@@ -355,7 +361,8 @@ namespace application {
     // before.insert(adjust_phi_with_objects_job_ids[0]);
     // before.insert(adjust_phi_with_objects_job_ids[1]);
     after.clear();
-    after.insert(job_ids[2]);
+    for (int i = 0; i < step_particles_job_num; i++)
+        after.insert(step_particles_job_ids[i]);
     SpawnComputeJob(ADVECT_PHI,
         job_ids[1],
         read, write,
@@ -411,7 +418,8 @@ namespace application {
     before.clear();
     before.insert(extrapolate_phi_job_ids[0]);
     after.clear();
-    after.insert(job_ids[2]);
+    for (int i = 0; i < step_particles_job_num; i++)
+        after.insert(step_particles_job_ids[i]);
     SpawnComputeJob(ADVECT_PHI,
                     advect_phi_job_ids[0],
                     read, write,
@@ -432,7 +440,8 @@ namespace application {
     before.clear();
     before.insert(extrapolate_phi_job_ids[0]);
     after.clear();
-    after.insert(job_ids[2]);
+    for (int i = 0; i < step_particles_job_num; i++)
+        after.insert(step_particles_job_ids[i]);
     SpawnComputeJob(ADVECT_PHI,
                     advect_phi_job_ids[1],
                     read, write,
@@ -445,6 +454,41 @@ namespace application {
      * Spawning advect particles stage over entire block
      */
 
+    // TODO(chinmayee): remove this commented block once step particles multiple works
+    {
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+                APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        write.clear();
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+                APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
+        nimbus::Parameter s13_params;
+        std::string s13_str;
+        SerializeParameter(frame, time, dt, global_region, global_region, &s13_str);
+        s13_params.set_ser_data(SerializedData(s13_str));
+        before.clear();
+        // before.insert(advect_phi_job_ids[0]);
+        // before.insert(advect_phi_job_ids[1]);
+        before.insert(job_ids[1]);
+        after.clear();
+        after.insert(job_ids[3]);
+        SpawnComputeJob(STEP_PARTICLES,
+                step_particles_job_ids[0],
+                read, write,
+                before, after,
+                s13_params);
+    }
+
+    // TODO(chinmayee): working on step particles multiple
+/*    {
+        before.clear();
+        after.clear();
+    }
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
@@ -472,6 +516,34 @@ namespace application {
         before, after,
         s13_params);
 
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
+    nimbus::Parameter s13_params;
+    std::string s13_str;
+    SerializeParameter(frame, time, dt, global_region, global_region, &s13_str);
+    s13_params.set_ser_data(SerializedData(s13_str));
+    before.clear();
+    // before.insert(advect_phi_job_ids[0]);
+    // before.insert(advect_phi_job_ids[1]);
+    before.insert(job_ids[1]);
+    after.clear();
+    after.insert(job_ids[3]);
+    SpawnComputeJob(STEP_PARTICLES,
+        job_ids[2],
+        read, write,
+        before, after,
+        s13_params);
+*/
+
 
     /* 
      * Spawning advect removed particles stage over entire block
@@ -491,7 +563,8 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &s14_str);
     s14_params.set_ser_data(SerializedData(s14_str));
     before.clear();
-    before.insert(job_ids[2]);
+    for (int i = 0; i < step_particles_job_num; i++)
+        before.insert(step_particles_job_ids[i]);
     after.clear();
     // after.insert(job_ids[4]);
     after.insert(advect_v_job_ids[0]); after.insert(advect_v_job_ids[1]);
