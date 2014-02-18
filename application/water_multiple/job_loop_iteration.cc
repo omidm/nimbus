@@ -295,19 +295,19 @@ namespace application {
      * Spawning adjust phi with objects stage over two workrs
      */
 /*
-    nimbus::GeometricRegion kRegX2w3Half[2];
-    kRegX2w3Half[0].Rebuild(-2, -2, -2, 36, 18, 36);
-    kRegX2w3Half[1].Rebuild(-2, 16, -2, 36, 18, 36);
+    nimbus::GeometricRegion kRegY2W3Half[2];
+    kRegY2W3Half[0].Rebuild(-2, -2, -2, 36, 18, 36);
+    kRegY2W3Half[1].Rebuild(-2, 16, -2, 36, 18, 36);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Half[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Half[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s11_params_0;
     std::string s11_str_0;
-    SerializeParameter(frame, time, dt, global_region, kRegX2w3Inner[0], &s11_str_0);
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[0], &s11_str_0);
     s11_params_0.set_ser_data(SerializedData(s11_str_0));
     before.clear();
     after.clear();
@@ -320,14 +320,14 @@ namespace application {
         s11_params_0);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[1], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Half[1], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Half[1], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s11_params_1;
     std::string s11_str_1;
-    SerializeParameter(frame, time, dt, global_region, kRegX2w3Inner[1], &s11_str_1);
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[1], &s11_str_1);
     s11_params_1.set_ser_data(SerializedData(s11_str_1));
     before.clear();
     after.clear();
@@ -398,15 +398,15 @@ namespace application {
      */
 /*
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0],
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0],
         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[0], APP_PHI, NULL);
 
     nimbus::Parameter s12_params;
     std::string s12_str;
     SerializeParameter(frame, time, dt, global_region,
-        kRegX2w3Inner[0], &s12_str);
+        kRegY2W3Inner[0], &s12_str);
     s12_params.set_ser_data(SerializedData(s12_str));
     before.clear();
     before.insert(extrapolate_phi_job_ids[0]);
@@ -419,15 +419,15 @@ namespace application {
                     s12_params);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1],
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[1],
         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[1], APP_PHI, NULL);
 
     nimbus::Parameter s12r_params;
     std::string s12r_str;
     SerializeParameter(frame, time, dt, global_region,
-        kRegX2w3Inner[1], &s12r_str);
+        kRegY2W3Inner[1], &s12r_str);
     s12r_params.set_ser_data(SerializedData(s12r_str));
     before.clear();
     before.insert(extrapolate_phi_job_ids[0]);
@@ -530,14 +530,14 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Inner[0], APP_FACE_VEL, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Inner[0], APP_FACE_VEL, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s15_params_0;
     std::string s15_str_0;
-    SerializeParameter(frame, time, dt, global_region, kRegX2w3Inner[0], &s15_str_0);
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[0], &s15_str_0);
     s15_params_0.set_ser_data(SerializedData(s15_str_0));
     before.clear();
     before.insert(job_ids[3]);
@@ -550,14 +550,14 @@ namespace application {
         s15_params_0);
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Outer[1], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegX2w3Inner[1], APP_FACE_VEL, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[1], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Inner[1], APP_FACE_VEL, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegX2w3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s15_params_1;
     std::string s15_str_1;
-    SerializeParameter(frame, time, dt, global_region, kRegX2w3Inner[1], &s15_str_1);
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[1], &s15_str_1);
     s15_params_1.set_ser_data(SerializedData(s15_str_1));
     before.clear();
     before.insert(job_ids[3]);
