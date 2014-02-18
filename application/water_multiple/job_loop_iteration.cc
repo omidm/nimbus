@@ -273,9 +273,9 @@ namespace application {
     // Original adjust phi with objects that operates over entire block.
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
 
     nimbus::Parameter s11_params;
     std::string s11_str;
@@ -342,9 +342,9 @@ namespace application {
 
     // Original ADVECT_PHI job spawning.
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s12_params;
     std::string s12_str;
@@ -369,10 +369,10 @@ namespace application {
 /*
     read.clear();
     // TODO(quhang): read set should be the inner region if it is right.
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, APP_FACE_VEL,
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, APP_FACE_VEL,
                         NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
 
     nimbus::Parameter s_extra_params;
     std::string s_extra_str;
@@ -446,13 +446,13 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
@@ -478,12 +478,12 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_REM_PARTICLES,
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_REM_PARTICLES,
         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_REM_PARTICLES,
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
     nimbus::Parameter s14_params;
@@ -506,9 +506,9 @@ namespace application {
     // Spawning Advect V stage over entire block.
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
 
    nimbus::Parameter s15_params;
     std::string s15_str;
@@ -575,9 +575,9 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s16_params;
     std::string s16_str;
@@ -600,13 +600,13 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
@@ -630,9 +630,9 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
 
     nimbus::Parameter adjust_phi_params;
     std::string adjust_phi_str;
@@ -654,14 +654,14 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
@@ -685,14 +685,14 @@ namespace application {
      */
 
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
         APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
@@ -716,9 +716,9 @@ namespace application {
 
     {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
       int index = 10;
       nimbus::Parameter projection_params;
@@ -742,9 +742,9 @@ namespace application {
 
     {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
       int index = 11;
       nimbus::Parameter extrapolation_params;
@@ -770,13 +770,13 @@ namespace application {
 
       {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
         write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
@@ -805,13 +805,13 @@ namespace application {
 
       {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
         write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegGhostw3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &write, kSharedX1W3Outer[0], APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
