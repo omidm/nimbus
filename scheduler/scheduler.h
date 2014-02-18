@@ -152,6 +152,13 @@ class Scheduler {
     virtual bool CreateDataAtWorker(SchedulerWorker* worker,
         LogicalDataObject* ldo, PhysicalData* created_data);
 
+    virtual bool RemoteCopyData(SchedulerWorker* from_worker,
+        SchedulerWorker* to_worker, LogicalDataObject* ldo,
+        PhysicalData* from_data, PhysicalData* to_data);
+
+    virtual bool LocalCopyData(SchedulerWorker* worker,
+        LogicalDataObject* ldo, PhysicalData* created_data, PhysicalData* to_data);
+
     virtual bool GetFreeDataAtWorker(SchedulerWorker* worker,
         LogicalDataObject* ldo, PhysicalData* free_data);
 

@@ -253,7 +253,7 @@ void Scheduler::AddMainJob() {
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   // Simply just assign the job to first worker.
-  dbg(DBG_WARN, "WARNING: Base scheduler only assignes jobs to first worker, override the GetWorkerToAssignJob to have more complicated logic.\n"); // NOLINT
+  dbg(DBG_WARN, "WARNING: Base scheduler only assigns jobs to first worker, override the GetWorkerToAssignJob to have more complicated logic.\n"); // NOLINT
   worker =  *(server_->workers()->begin());
   return true;
 }
@@ -267,12 +267,15 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
 
-  // Beacuse of the clear_list_job_read the order of if blocks are important.
+  // Because of the clear_list_job_read the order of if blocks are important.
   if (job->write_set().contains(ldo->id())) {
     pd_new.set_version(version_table_out[ldo->id()]);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
     before_set.insert(pd.list_job_read());
+    // become ancestor of last job write if not already ,so that read access
+    // is safe for the jobs in list job read cleared by the previous write job - omidm
+    before_set.insert(pd.last_job_write());
   }
 
   if (job->read_set().contains(ldo->id())) {
@@ -319,24 +322,131 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   id_maker_.GetNewPhysicalDataID(&d, 1);
   IDSet<job_id_t> before, after;
 
-  // Send the create command to worker.
-  job_manager_->UpdateBeforeSet(&before);
-  CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
-      ID<logical_data_id_t>(ldo->id()), ID<physical_data_id_t>(d[0]), before, after);
-  server_->SendCommand(worker, &cm);
-
   // Update the job table.
   job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true, true);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
+  list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
   PhysicalData p(d[0], worker->worker_id(), (data_version_t)(0), list_job_read, j[0]);
   data_manager_->AddPhysicalInstance(ldo, p);
 
+  // send the create command to worker.
+  job_manager_->UpdateBeforeSet(&before);
+  CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
+      ID<logical_data_id_t>(ldo->id()),
+      ID<physical_data_id_t>(d[0]), before, after);
+  server_->SendCommand(worker, &cm);
+
   *created_data = p;
+
   return true;
 }
 
+bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
+    SchedulerWorker* to_worker, LogicalDataObject* ldo,
+    PhysicalData* from_data, PhysicalData* to_data) {
+  assert(from_worker->worker_id() == from_data->worker());
+  assert(to_worker->worker_id() == to_data->worker());
+
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 2);
+  job_id_t receive_id = j[0];
+  job_id_t send_id = j[1];
+  IDSet<job_id_t> before, after;
+
+  // Receive part
+
+  // Update the job table.
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), true, true);
+
+  // Update data table.
+  PhysicalData to_data_new = *to_data;
+  to_data_new.set_version(from_data->version());
+  to_data_new.set_last_job_write(receive_id);
+  to_data_new.clear_list_job_read();
+  data_manager_->RemovePhysicalInstance(ldo, *to_data);
+  data_manager_->AddPhysicalInstance(ldo, to_data_new);
+
+  // send remote copy receive job to worker.
+  before.clear();
+  before.insert(to_data->list_job_read());
+  before.insert(to_data->last_job_write());
+  job_manager_->UpdateBeforeSet(&before);
+  RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
+      ID<physical_data_id_t>(to_data->id()), before, after);
+  server_->SendCommand(to_worker, &cm_r);
+
+
+  // Send Part.
+
+  // Update the job table.
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), true, true);
+
+  // Update data table.
+  PhysicalData from_data_new = *from_data;
+  from_data_new.add_to_list_job_read(send_id);
+  data_manager_->RemovePhysicalInstance(ldo, *from_data);
+  data_manager_->AddPhysicalInstance(ldo, from_data_new);
+
+  // send remote copy send command to worker.
+  before.clear();
+  before.insert(from_data->last_job_write());
+  job_manager_->UpdateBeforeSet(&before);
+  RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
+      ID<job_id_t>(receive_id), ID<physical_data_id_t>(from_data->id()),
+      ID<worker_id_t>(to_worker->worker_id()),
+      to_worker->ip(), ID<port_t>(to_worker->port()),
+      before, after);
+  server_->SendCommand(from_worker, &cm_s);
+
+
+  *from_data = from_data_new;
+  *to_data = to_data_new;
+
+  return false;
+}
+
+bool Scheduler::LocalCopyData(SchedulerWorker* worker,
+    LogicalDataObject* ldo, PhysicalData* from_data, PhysicalData* to_data) {
+  assert(worker->worker_id() == from_data->worker());
+  assert(worker->worker_id() == to_data->worker());
+
+  std::vector<job_id_t> j;
+  id_maker_.GetNewJobID(&j, 1);
+  IDSet<job_id_t> before, after;
+
+  // Update the job table.
+  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), true, true);
+
+  // Update data table.
+  PhysicalData from_data_new = *from_data;
+  from_data_new.add_to_list_job_read(j[0]);
+  data_manager_->RemovePhysicalInstance(ldo, *from_data);
+  data_manager_->AddPhysicalInstance(ldo, from_data_new);
+
+  PhysicalData to_data_new = *to_data;
+  to_data_new.set_version(from_data->version());
+  to_data_new.set_last_job_write(j[0]);
+  to_data_new.clear_list_job_read();
+  data_manager_->RemovePhysicalInstance(ldo, *to_data);
+  data_manager_->AddPhysicalInstance(ldo, to_data_new);
+
+  // send local copy command to worker.
+  before.insert(to_data->list_job_read());
+  before.insert(to_data->last_job_write());
+  before.insert(from_data->last_job_write());
+  job_manager_->UpdateBeforeSet(&before);
+  LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
+      ID<physical_data_id_t>(from_data->id()),
+      ID<physical_data_id_t>(to_data->id()), before, after);
+  server_->SendCommand(worker, &cm_c);
+
+  *from_data = from_data_new;
+  *to_data = to_data_new;
+
+  return true;
+}
 
 bool Scheduler::GetFreeDataAtWorker(SchedulerWorker* worker,
     LogicalDataObject* ldo, PhysicalData* free_data) {
@@ -375,18 +485,13 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
       ldo, worker->worker_id(), version, &instances_at_worker);
   data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
 
-  if (instances_in_system.size() == 0) {
-    dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
-    return false;
-  }
-
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
   log_table_.ResumeTimer();
   job_manager_->GetJobsNeedDataVersion(&list, vld);
   log_table_.StopTimer();
   assert(list.size() >= 1);
-  bool writing_needed_version = (list.size() == 1) &&
+  bool writing_needed_version = (list.size() > 1) &&
     (job->write_set().contains(l_id));
 
   if (instances_at_worker.size() > 1) {
@@ -402,15 +507,32 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
   }
 
   if ((instances_at_worker.size() == 1) && writing_needed_version) {
-    // TODO(omidm): complete the logic.
+    PhysicalData target_instance = instances_at_worker[0];
+    PhysicalData copy_data;
+    GetFreeDataAtWorker(worker, ldo, &copy_data);
+    LocalCopyData(worker, ldo, &target_instance, &copy_data);
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
   }
 
-  // TODO(omidm): bring data from the other worker.
+  if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
+    PhysicalData from_instance = instances_in_system[0];
+    worker_id_t sender_id = from_instance.worker();
+    SchedulerWorker* worker_sender;
+    if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
+      dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
+      exit(-1);
+    }
+    PhysicalData target_instance;
+    GetFreeDataAtWorker(worker, ldo, &target_instance);
+    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance);
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
+  }
 
+  dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
   return false;
 }
-
-
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
