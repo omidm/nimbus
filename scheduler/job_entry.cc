@@ -54,12 +54,14 @@ JobEntry::JobEntry(const JobType& job_type,
     const IDSet<job_id_t>& before_set,
     const IDSet<job_id_t>& after_set,
     const job_id_t& parent_job_id,
-    const Parameter& params)
+    const Parameter& params,
+    const bool& is_parent)
   : job_type_(job_type),
   job_name_(job_name), job_id_(job_id),
   read_set_(read_set), write_set_(write_set),
   before_set_(before_set), after_set_(after_set),
-  parent_job_id_(parent_job_id), params_(params) {
+  parent_job_id_(parent_job_id), params_(params),
+  is_parent_(is_parent) {
     IDSet<logical_data_id_t>::IDSetIter it;
     for (it = read_set_.begin(); it != read_set_.end(); ++it) {
       union_set_.insert(*it);
@@ -79,6 +81,7 @@ JobEntry::JobEntry(const JobType& job_type,
   : job_type_(job_type),
   job_name_(job_name), job_id_(job_id),
   parent_job_id_(parent_job_id) {
+    is_parent_ = false;
     versioned_ = false;
     assigned_ = false;
     done_ = false;
@@ -139,6 +142,10 @@ JobEntry::PhysicalTable JobEntry::physical_table() {
   return physical_table_;
 }
 
+bool JobEntry::is_parent() {
+  return is_parent_;
+}
+
 bool JobEntry::versioned() {
   return versioned_;
 }
@@ -177,6 +184,10 @@ void JobEntry::set_version_table_out(VersionTable version_table) {
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
   physical_table_ = physical_table;
+}
+
+void JobEntry::set_is_parent(bool flag) {
+  is_parent_ = flag;
 }
 
 void JobEntry::set_versioned(bool flag) {

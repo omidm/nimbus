@@ -69,10 +69,11 @@ bool Job::SpawnComputeJob(const std::string& name,
     const IDSet<logical_data_id_t>& write,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
-    const Parameter& params) {
+    const Parameter& params,
+    const bool& is_parent) {
   if (app_is_set_) {
     application_->SpawnComputeJob(name, id, read, write, before, after,
-        id_.elem(), params);
+        id_.elem(), params, is_parent);
     return true;
   } else {
     std::cout << "ERROR: SpawnComputeJob, application has not been set." <<

@@ -159,7 +159,8 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
         cm->job_name(), cm->job_id().elem(),
         cm->read_set(), cm->write_set(),
         cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params());
+        cm->parent_job_id().elem(), cm->params(),
+        cm->is_parent());
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
@@ -169,11 +170,12 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
   IDSet<logical_data_id_t> write_set;
   write_set.insert(cm->to_logical_id().elem());
 
+  // TODO(omid): we need to add support for copy jobs.
   job_manager_->AddJobEntry(JOB_COPY,
         job_name, cm->job_id().elem(),
         read_set, write_set,
         cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params());
+        cm->parent_job_id().elem(), cm->params(), false);
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
@@ -248,7 +250,7 @@ void Scheduler::TerminationProcedure() {
 void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
-  job_manager_->AddJobEntry(JOB_COMP, "main", j[0], (job_id_t)(0));
+  job_manager_->AddJobEntry(JOB_COMP, "main", j[0], (job_id_t)(0), false);
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
@@ -323,7 +325,7 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
@@ -358,7 +360,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Receive part
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), true);
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
@@ -381,7 +383,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Send Part.
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), true);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -417,7 +419,7 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), true);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -636,7 +638,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
         server_->SendCommand(worker, &cm);
 
         // Update the job table.
-        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true);
       }
 
       after.clear();
@@ -655,7 +657,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       server_->SendCommand(worker, &cm_c);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "localcopy", copy_job_id, (job_id_t)(0), true, true);
+      job_manager_->AddJobEntry(JOB_COPY, "localcopy", copy_job_id, (job_id_t)(0), true);
 
       // Update data table. Q?
       if (found_obsolete) {
@@ -704,7 +706,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       server_->SendCommand(worker, &cm);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+      job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true);
 
       // Update data table. Q?
       data_version_t new_version = version;
@@ -779,7 +781,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
         server_->SendCommand(worker, &cm);
 
         // Update the job table.
-        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true);
       }
 
       // Update the job table.
@@ -801,7 +803,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       server_->SendCommand(worker, &cm_r);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_job_id, (job_id_t)(0), true, true); // NOLINT
+      job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_job_id, (job_id_t)(0), true); // NOLINT
 
       // Update data table. Q?
       PhysicalData p(new_copy_id, worker->worker_id(), version);
@@ -848,7 +850,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       server_->SendCommand(worker_sender, &cm_s);
 
       // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[0], (job_id_t)(0), true, true);
+      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[0], (job_id_t)(0), true);
 
       // Update data table.
       PhysicalData p_s = pvv[0];
@@ -896,7 +898,7 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
-  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true);
   return true;
 }
 

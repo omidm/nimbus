@@ -55,12 +55,13 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
     const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
     const ID<job_id_t>& parent_job_id,
-    const Parameter& params)
+    const Parameter& params,
+    const bool& is_parent)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
   parent_job_id_(parent_job_id),
-  params_(params) {
+  params_(params), is_parent_(is_parent) {
   name_ = SPAWN_COMPUTE_JOB_NAME;
   type_ = SPAWN_COMPUTE_JOB;
 }
@@ -74,7 +75,7 @@ SchedulerCommand* SpawnComputeJobCommand::Clone() {
 
 
 bool SpawnComputeJobCommand::Parse(const std::string& params) {
-  int num = 8;
+  int num = 9;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -138,6 +139,16 @@ bool SpawnComputeJobCommand::Parse(const std::string& params) {
     return false;
   }
 
+  iter++;
+  if (*iter == "is_parent") {
+    is_parent_ = true;
+  } else if (*iter == "not_parent") {
+    is_parent_ = false;
+  } else {
+    std::cout << "ERROR: Could not detect valid is parent flag." << std::endl;
+    return false;
+  }
+
   return true;
 }
 
@@ -151,7 +162,12 @@ std::string SpawnComputeJobCommand::toString() {
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
   str += (parent_job_id_.toString() + " ");
-  str += params_.toString();
+  str += (params_.toString() + " ");
+  if (is_parent_) {
+    str += "is_parent";
+  } else {
+    str += "not_parent";
+  }
 
   return str;
 }
@@ -166,7 +182,12 @@ std::string SpawnComputeJobCommand::toStringWTags() {
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
   str += ("parent-id:" + parent_job_id_.toString() + " ");
-  str += ("params:" + params_.toString());
+  str += ("params:" + params_.toString() + " ");
+  if (is_parent_) {
+    str += "is_parent";
+  } else {
+    str += "not_parent";
+  }
   return str;
 }
 
@@ -201,4 +222,7 @@ Parameter SpawnComputeJobCommand::params() {
   return params_;
 }
 
+bool SpawnComputeJobCommand::is_parent() {
+  return is_parent_;
+}
 

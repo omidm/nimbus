@@ -71,14 +71,14 @@ class JobManager {
         const IDSet<job_id_t>& before_set,
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
-        const Parameter& params);
+        const Parameter& params,
+        const bool& is_parent);
 
     bool AddJobEntry(const JobType& job_type,
         const std::string& job_name,
         const job_id_t& job_id,
         const job_id_t& parent_job_id,
-        const bool& versioned = false,
-        const bool& assigned = false);
+        const bool& versioned_and_assigned);
 
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
