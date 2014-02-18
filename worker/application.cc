@@ -73,10 +73,11 @@ void Application::SpawnComputeJob(const std::string& name,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const job_id_t& parent_id,
-    const Parameter& params) {
+    const Parameter& params,
+    const bool& is_parent) {
 
   SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after,
-      ID<job_id_t>(parent_id), params);
+      ID<job_id_t>(parent_id), params, is_parent);
   client_->sendCommand(&cm);
 }
 

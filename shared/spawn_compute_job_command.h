@@ -55,7 +55,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
         const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
         const ID<job_id_t>& parent_job_id,
-        const Parameter& params);
+        const Parameter& params,
+        const bool& is_parent);
     ~SpawnComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
@@ -70,6 +71,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
     Parameter params();
+    bool is_parent();
 
   private:
     std::string job_name_;
@@ -80,6 +82,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
     Parameter params_;
+    bool is_parent_;
 };
 
 

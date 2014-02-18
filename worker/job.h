@@ -84,7 +84,8 @@ class Job {
         const IDSet<logical_data_id_t>& write,
         const IDSet<job_id_t>& before,
         const IDSet<job_id_t>& after,
-        const Parameter& params);
+        const Parameter& params,
+        const bool& is_parent = true);
 
     bool SpawnCopyJob(const job_id_t& id,
         const logical_data_id_t& from_logical_id,
