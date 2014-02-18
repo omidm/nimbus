@@ -131,6 +131,7 @@ def GetPartitionID(x, dx, partn_id):
 
 def GetNimbusTypePIDMapHelper(nimbus_types, \
                               pnum, pstart, psize, use_scratch, \
+                              num, \
                               partn_id):
     nt_pid = {}
     pidset = set()
@@ -143,7 +144,11 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
                     continue
                 pidset.add(GetPartitionID(x, dx, partn_id))
     for nt in nimbus_types:
-        nt_pid[nt] = pidset
+        if nt in nt_pid:
+            print "\nWarning: Redefinition of " + nt + " at line " + str(num)
+            print "Ignoring the new definition ..."
+        else:
+            nt_pid[nt] = pidset
     if use_scratch:
         ii = [ \
                 range(0, pnum[0], 3) + range(1, pnum[0], 3), \
@@ -197,6 +202,7 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
 
 def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
                                              domain, ghostw, \
+                                             num, \
                                              partn_id):
     nt_pid = {}
     pidset = set()
@@ -207,7 +213,11 @@ def GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
         dx[dim] = domain[dim] + 2*ghostw[dim]
     pidset.add(GetPartitionID(x, dx, partn_id))
     for nt in nimbus_types:
-        nt_pid[nt] = pidset
+        if nt in nt_pid:
+            print "\nWarning: Redefinition of " + nt + " at line " + str(num)
+            print "Ignoring the new definition ..."
+        else:
+            nt_pid[nt] = pidset
     return nt_pid
 
 def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
@@ -220,6 +230,7 @@ def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     if single_partition:
         nt_pid = GetNimbusTypePIDMapHelperSinglePartition(nimbus_types, \
                                                           domain, ghostw, \
+                                                          num, \
                                                           partn_id)
         return nt_pid
     ps     = [0, 0, 0]
@@ -257,6 +268,7 @@ def GetNimbusTypePIDMap(nimbus_types, params, flags, num, partn_id):
     # obtain nimbus type - partition id mapping
     nt_pid = GetNimbusTypePIDMapHelper(nimbus_types, \
                                        pnum, pstart, psize, use_scratch, \
+                                       num, \
                                        partn_id)
     return nt_pid
 
