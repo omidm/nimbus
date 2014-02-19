@@ -84,6 +84,9 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::PSI_D);
+    data_config.SetFlag(DataConfig::PSI_N);
+    data_config.SetFlag(DataConfig::PRESSURE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 

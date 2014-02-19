@@ -88,6 +88,9 @@ void JobAdvectV::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   data_config.SetFlag(DataConfig::LEVELSET);
+  data_config.SetFlag(DataConfig::PSI_D);
+  data_config.SetFlag(DataConfig::PSI_N);
+  data_config.SetFlag(DataConfig::PRESSURE);
 
   InitializeExampleAndDriverForAdvectV(init_config, data_config,
                              this, da, example, driver);

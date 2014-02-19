@@ -212,9 +212,11 @@ InitializeIncompressibleProjectionHelper(
     const GRID<TV>& grid_input,
     INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection) {
-  // TODO(quhang): Array here.
-  incompressible->valid_mask.Resize(
-      grid_input.Domain_Indices(3), true, true, true);
+  typedef application::DataConfig DataConfig;
+  if (data_config.GetFlag(DataConfig::VALID_MASK)) {
+    incompressible->valid_mask.Resize(
+        grid_input.Domain_Indices(3), true, true, true);
+  }
   incompressible->grid = grid_input.Get_MAC_Grid();
   // Strain is not considered.
   assert(incompressible->strain == NULL);
@@ -230,15 +232,19 @@ InitializeIncompressibleProjectionHelper(
         dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >*>(
             projection->laplace);
     laplace->grid = grid_input;
-    // TODO(quhang): Array here.
-    laplace->f.Resize(grid_input.Domain_Indices(1));
-    // TODO(quhang): Array here.
-    laplace->psi_N.Resize(grid_input, 1);
-    // TODO(quhang): Array here.
-    laplace->psi_D.Resize(grid_input.Domain_Indices(1));
-    // TODO(quhang): Array here.
-    laplace->filled_region_colors.Resize(
-        grid_input.Domain_Indices(1));
+    if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
+      laplace->f.Resize(grid_input.Domain_Indices(1));
+    }
+    if (data_config.GetFlag(DataConfig::PSI_N)) {
+      laplace->psi_N.Resize(grid_input, 1);
+    }
+    if (data_config.GetFlag(DataConfig::PSI_D)) {
+      laplace->psi_D.Resize(grid_input.Domain_Indices(1));
+    }
+    if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
+        laplace->filled_region_colors.Resize(
+            grid_input.Domain_Indices(1));
+    }
     // assert(laplace->levelset != laplace->levelset_default);
     assert(laplace->second_order_cut_cell_method == false);
     laplace->u_interface.Clean_Memory();
@@ -246,12 +252,15 @@ InitializeIncompressibleProjectionHelper(
   // Flag use_non_zero_divergence is expected to be false.
   assert(!projection->use_non_zero_divergence);
   projection->divergence.Clean_Memory();
-  // TODO(quhang): Array here.
-  projection->p.Resize(grid_input.Domain_Indices(1));
-  // TODO(quhang): Array here.
-  projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
-  // TODO(quhang): Array here.
-  projection->face_velocities_save_for_projection.Resize(grid_input);
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    projection->p.Resize(grid_input.Domain_Indices(1));
+  }
+  if (data_config.GetFlag(DataConfig::PRESSURE_SAVE)) {
+    projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
+  }
+  if (data_config.GetFlag(DataConfig::VELOCITY_SAVE)) {
+    projection->face_velocities_save_for_projection.Resize(grid_input);
+  }
   // dsd is not considered.
   assert(projection->dsd == NULL);
   return true;
@@ -421,11 +430,11 @@ CalculateFrameImpl(const nimbus::Job *job,
     example.Set_Boundary_Conditions(time);
   example.incompressible.Set_Dirichlet_Boundary_Conditions(&example.particle_levelset_evolution.phi,0);
   example.projection.p*=dt;
-  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
+  // example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
   example.incompressible.Advance_One_Time_Step_Implicit_Part(example.face_velocities,dt,time,true);
   example.projection.p*=(1/dt);
   example.incompressible.boundary->Apply_Boundary_Condition_Face(example.incompressible.grid,example.face_velocities,time+dt);
-  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
+  // example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(false);
   delete scope;
 
   //Extrapolate Velocity 7%
@@ -482,7 +491,6 @@ ProjectionImpl (const nimbus::Job *job,
   // PROJECTION_DYNAMIC_UNIFORM.
   // collidable_solver has type: LAPLACE_COLLIDABLE_UNIFORM.
   // Configures and resizes u_interface array.
-  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method();
   // The following is the projection code.
   // Step 1: Apply boundary.
   /*
@@ -512,8 +520,6 @@ ProjectionImpl (const nimbus::Job *job,
   // Does nothing. But average face_velocities in MPI, necessary?
   example.incompressible.boundary->Apply_Boundary_Condition_Face(
       example.incompressible.grid, example.face_velocities,time+dt);
-  example.projection.collidable_solver->Set_Up_Second_Order_Cut_Cell_Method(
-      false);
   delete scope;
 
   return true;
