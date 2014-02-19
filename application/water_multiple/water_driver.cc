@@ -213,6 +213,7 @@ InitializeIncompressibleProjectionHelper(
     INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection) {
   typedef application::DataConfig DataConfig;
+
   // T_FACE_ARRAYS_BOOL.
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
     incompressible->valid_mask.Resize(
@@ -233,6 +234,10 @@ InitializeIncompressibleProjectionHelper(
         dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >*>(
             projection->laplace);
     laplace->grid = grid_input;
+    laplace->second_order_cut_cell_method = true;
+    if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
+      laplace->u_interface.Resize(grid_input);
+    }
     // T_ARRAYS_SCALAR.
     if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
       laplace->f.Resize(grid_input.Domain_Indices(1));
