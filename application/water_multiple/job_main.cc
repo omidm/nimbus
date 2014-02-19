@@ -89,7 +89,6 @@ namespace application {
         kScratchNegParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
         kScratchPosRemParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
         kScratchNegRemParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
-        init_params.set_idset(id_set);
 
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");
