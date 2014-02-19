@@ -75,19 +75,6 @@ namespace application {
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
     const GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
-    const GeometricRegion kDomain(1, 1, 1, kScale, kScale, kScale);
-    const GeometricRegion kDomainGhost(-kGhostNum + 1,
-                                       -kGhostNum + 1,
-                                       -kGhostNum + 1,
-                                       kScale + kGhostNum*2,
-                                       kScale + kGhostNum*2,
-                                       kScale + kGhostNum*2);
-    const GeometricRegion kDomainParticles(-kGhostNum + 1,
-                                           -kGhostNum + 1,
-                                           -kGhostNum + 1,
-                                           kScale + kGhostNum*2 + 1,
-                                           kScale + kGhostNum*2 + 1,
-                                           kScale + kGhostNum*2 + 1);;
 
     enum AccessType {READ_ACCESS, WRITE_ACCESS};
 
