@@ -196,6 +196,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
         received_commands_.push_back(command);
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
+        exit(-1);
       }
       // Next string starts after the semicolon
       start_pointer = buffer + i + 1;
