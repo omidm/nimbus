@@ -232,7 +232,7 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
   // of the buffer, mark how many bytes are valid with existing_bytes.
   if (remaining > 0) {
     char* buffer = worker->read_buffer();
-    memcpy(buffer, (buffer + len), remaining);
+    memmove(buffer, (buffer + len), remaining);
     char* read_start_ptr = buffer + remaining;
     int read_buffer_length = worker->read_buffer_length() - remaining;
 
