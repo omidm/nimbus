@@ -44,6 +44,7 @@
 #include "application/water_multiple/job_main.h"
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/reg_def.h"
+#include "data/scratch_data_helper.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 #include <vector>
@@ -69,6 +70,8 @@ namespace application {
         GetNewJobID(&job_ids, job_num);
         nimbus::IDSet<nimbus::logical_data_id_t> read, write;
         nimbus::IDSet<nimbus::job_id_t> before, after;
+        nimbus::IDSet<nimbus::param_id_t> id_set;
+        nimbus::Parameter init_params;
 
         // Init job
         read.clear();
@@ -81,8 +84,13 @@ namespace application {
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        id_set.clear();
+        kScratchPosParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
+        kScratchNegParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
+        kScratchPosRemParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
+        kScratchNegRemParticles.GetJobScratchData(this, kRegW1Inner[0], &id_set);
+        init_params.set_idset(id_set);
 
-        nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));
         dbg(APP_LOG, "Spawning initialize\n");
         SpawnComputeJob(INITIALIZE,
