@@ -78,7 +78,9 @@ class JobManager {
         const std::string& job_name,
         const job_id_t& job_id,
         const job_id_t& parent_job_id,
-        const bool& versioned_and_assigned);
+        const bool& is_parent,
+        const bool& versioned,
+        const bool& assigned);
 
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);

@@ -77,13 +77,15 @@ JobEntry::JobEntry(const JobType& job_type,
 JobEntry::JobEntry(const JobType& job_type,
     const std::string& job_name,
     const job_id_t& job_id,
-    const job_id_t& parent_job_id)
+    const job_id_t& parent_job_id,
+    const bool& is_parent,
+    const bool& versioned,
+    const bool& assigned)
   : job_type_(job_type),
   job_name_(job_name), job_id_(job_id),
-  parent_job_id_(parent_job_id) {
-    is_parent_ = false;
-    versioned_ = false;
-    assigned_ = false;
+  parent_job_id_(parent_job_id),
+  is_parent_(is_parent), versioned_(versioned),
+  assigned_(assigned) {
     done_ = false;
 }
 
