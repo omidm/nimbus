@@ -171,49 +171,49 @@ namespace application {
         nimbus::IDSet<nimbus::logical_data_id_t>* write) {
       nimbus::CLdoVector result;
 
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegGhostw3Inner[0]);
+      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegW3Inner[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL_GHOST, &kRegGhostw3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL_GHOST, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_PHI, &kRegGhostw3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_PHI, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kSharedX1W3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_NEG_PARTICLES, &kSharedX1W3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_NEG_PARTICLES, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_POS_REM_PARTICLES, &kSharedX1W3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_POS_REM_PARTICLES, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_NEG_REM_PARTICLES, &kSharedX1W3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_NEG_REM_PARTICLES, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
       }
 
-      job->GetCoveredLogicalObjects(&result, APP_LAST_UNIQUE_PARTICLE_ID, &kSharedX1W3Outer[0]);
+      job->GetCoveredLogicalObjects(&result, APP_LAST_UNIQUE_PARTICLE_ID, &kRegW3Outer[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());

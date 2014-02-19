@@ -3,13 +3,9 @@
 ###################################################################################################################
 
 # TODO: remove these
-RegGhostw3  : (30, 30, 30), (1, 1, 1), (3, 3, 3) : inner, outer
-RegGhostw1  : (30, 30, 30), (1, 1, 1), (0, 0, 0) : inner, outer
+RegW3  : (30, 30, 30), (1, 1, 1), (3, 3, 3) : inner, outer
+RegW1  : (30, 30, 30), (1, 1, 1), (0, 0, 0) : inner, outer
 
 # TODO: rename these 2 to a consistent style
-RegX2w3 : (30, 30, 30), (1, 2, 1), (3, 3, 3) : inner, outer
-Reg_w3      : (30, 30, 30), (1, 2, 1), (0, 0, 0) : inner, outer
-
-# TODO(chinmayee): Get rid of Particle regions since we do not have a
-# share_boundary special case any more
-SharedX1W3 : (30, 30, 30), (1, 1, 1), (3, 3, 3) : outer
+RegY2W3 : (30, 30, 30), (1, 2, 1), (3, 3, 3) : inner, outer
+RegY2W0      : (30, 30, 30), (1, 2, 1), (0, 0, 0) : inner, outer
