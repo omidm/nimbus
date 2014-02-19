@@ -86,7 +86,6 @@ namespace nimbus {
     // Particle array, indexed by node.
     typedef typename PhysBAM::ARRAY<ParticleBucket*, TV_INT> ParticleArray;
 
-    // TODO(quhang) Change the name.
     typedef typename PhysBAM::PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>
         RemovedParticleBucket;
     typedef typename PhysBAM::ARRAY<RemovedParticleBucket*, TV_INT>
@@ -697,6 +696,7 @@ particle_buffer.id = (*id)(i);
      * "positive" option specifies whether to work on positive particles or
      * negative particles.
      */
+    // TODO(quhang) The similar optimization in WriteParticles can be put here.
     bool WriteRemovedParticles(const GeometricRegion* region,
                                const int_dimension_t shift[3],
                                PdiVector* instances,

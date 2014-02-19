@@ -196,7 +196,7 @@ def GetNimbusTypePIDMapHelper(nimbus_types, \
                             if 0 in dx:
                                 continue
                             fpidset.add(GetPartitionID(x, dx, partn_id))
-            for t in range(1, 2):
+            for t in range(1, 3):
                 nt_pid["%s_%s_%i" % (nt, face, t)] = fpidset
     return nt_pid
 

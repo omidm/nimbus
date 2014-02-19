@@ -55,6 +55,8 @@
 
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
+#include "worker/application.h"
+#include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
@@ -84,11 +86,6 @@ class ScratchDataHelper {
          */
         int ghost_width_[DIMENSION];
 
-        /* share_boundary flag to be set true for vertex arrays that share
-         * vertices -- needed for calculation of scratch regions.
-         */
-        bool share_boundary_;
-
         /* scratch type names.
          * example: there will be 8 vertex type names for the 8 different
          * corners, since 1 corner region is shared by 8 different application
@@ -102,16 +99,25 @@ class ScratchDataHelper {
 
     public:
         ScratchDataHelper();
-        ScratchDataHelper(const GeometricRegion &d, int gw[DIMENSION], bool sb);
+        explicit ScratchDataHelper(int gw[DIMENSION]);
+        ScratchDataHelper(int gw[DIMENSION], const std::string b_name);
         virtual ~ScratchDataHelper();
 
         void set_ghost_width(int gw[DIMENSION]);
-        void set_share_boundary(bool sb);
 
         /* pass a scratch type and corresponding list of names.
          */
-        void SetScratchType(const ScratchType st,
-                            const std::vector<std::string> &st_names);
+        void SetScratchNames(const ScratchType st,
+                             const std::vector<std::string> &st_names);
+        /* use default scratch type names.
+         */
+        void SetScratchBaseName(const std::string b_name);
+
+        /* resgister scratch types.
+         */
+        void RegisterScratchNames(Application *app,
+                                  Data *data);
+
         /* given the inner bounding box for an application partition (that
          * includes the inner scratch region, this gives all the scratch
          * regions associated with the job region.
