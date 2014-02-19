@@ -213,6 +213,7 @@ InitializeIncompressibleProjectionHelper(
     INCOMPRESSIBLE_UNIFORM<GRID<TV> >* incompressible,
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection) {
   typedef application::DataConfig DataConfig;
+  // T_FACE_ARRAYS_BOOL.
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
     incompressible->valid_mask.Resize(
         grid_input.Domain_Indices(3), true, true, true);
@@ -232,15 +233,19 @@ InitializeIncompressibleProjectionHelper(
         dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >*>(
             projection->laplace);
     laplace->grid = grid_input;
+    // T_ARRAYS_SCALAR.
     if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
       laplace->f.Resize(grid_input.Domain_Indices(1));
     }
+    // T_FACE_ARRAYS_BOOL.
     if (data_config.GetFlag(DataConfig::PSI_N)) {
       laplace->psi_N.Resize(grid_input, 1);
     }
+    // T_ARRAYS_BOOL.
     if (data_config.GetFlag(DataConfig::PSI_D)) {
       laplace->psi_D.Resize(grid_input.Domain_Indices(1));
     }
+    // T_ARRAYS_INT.
     if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
         laplace->filled_region_colors.Resize(
             grid_input.Domain_Indices(1));
@@ -252,12 +257,15 @@ InitializeIncompressibleProjectionHelper(
   // Flag use_non_zero_divergence is expected to be false.
   assert(!projection->use_non_zero_divergence);
   projection->divergence.Clean_Memory();
+  // T_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
     projection->p.Resize(grid_input.Domain_Indices(1));
   }
+  // T_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::PRESSURE_SAVE)) {
     projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
   }
+  // T_FACE_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::VELOCITY_SAVE)) {
     projection->face_velocities_save_for_projection.Resize(grid_input);
   }
