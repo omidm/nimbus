@@ -45,6 +45,7 @@ using namespace nimbus; // NOLINT
 
 Job::Job() {
   app_is_set_ = false;
+  is_parent_ = false;
 }
 
 Job::~Job() {
@@ -71,6 +72,10 @@ bool Job::SpawnComputeJob(const std::string& name,
     const IDSet<job_id_t>& after,
     const Parameter& params,
     const bool& is_parent) {
+  if (!is_parent_) {
+    dbg(DBG_ERROR, "ERROR: the job is not parent, it cannot spawn jobs.\n");
+    return false;
+  }
   if (app_is_set_) {
     application_->SpawnComputeJob(name, id, read, write, before, after,
         id_.elem(), params, is_parent);
@@ -88,6 +93,10 @@ bool Job::SpawnCopyJob(const job_id_t& id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
+  if (!is_parent_) {
+    dbg(DBG_ERROR, "ERROR: the job is not parent, it cannot spawn jobs.\n");
+    return false;
+  }
   if (app_is_set_) {
     application_->SpawnCopyJob(id, from_logical_id, to_logical_id, before,
         after, id_.elem(), params);
@@ -231,6 +240,10 @@ Application* Job::application() const {
   return application_;
 }
 
+bool Job::is_parent() const {
+  return is_parent_;
+}
+
 void Job::set_name(std::string name) {
   name_ = name;
 }
@@ -262,6 +275,10 @@ void Job::set_parameters(Parameter parameters) {
 void Job::set_application(Application* app) {
   application_ = app;
   app_is_set_ = true;
+}
+
+void Job::set_is_parent(bool is_parent) {
+  is_parent_ = is_parent;
 }
 
 

@@ -53,11 +53,12 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     const ID<job_id_t>& job_id,
     const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const Parameter& params)
+    const Parameter& params,
+    const bool& is_parent)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
-  params_(params) {
+  params_(params), is_parent_(is_parent) {
   name_ = COMPUTE_JOB_NAME;
   type_ = COMPUTE_JOB;
 }
@@ -70,7 +71,7 @@ SchedulerCommand* ComputeJobCommand::Clone() {
 }
 
 bool ComputeJobCommand::Parse(const std::string& params) {
-  int num = 7;
+  int num = 8;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -128,6 +129,16 @@ bool ComputeJobCommand::Parse(const std::string& params) {
     return false;
   }
 
+  iter++;
+  if (*iter == "is_parent") {
+    is_parent_ = true;
+  } else if (*iter == "not_parent") {
+    is_parent_ = false;
+  } else {
+    std::cout << "ERROR: Could not detect valid is parent flag." << std::endl;
+    return false;
+  }
+
   return true;
 }
 
@@ -140,7 +151,12 @@ std::string ComputeJobCommand::toString() {
   str += (write_set_.toString() + " ");
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
-  str += params_.toString();
+  str += (params_.toString() + " ");
+  if (is_parent_) {
+    str += "is_parent";
+  } else {
+    str += "not_parent";
+  }
 
   return str;
 }
@@ -154,7 +170,12 @@ std::string ComputeJobCommand::toStringWTags() {
   str += ("write:" + write_set_.toString() + " ");
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_.toString());
+  str += ("params:" + params_.toString() + " ");
+  if (is_parent_) {
+    str += "is_parent";
+  } else {
+    str += "not_parent";
+  }
   return str;
 }
 
@@ -185,4 +206,7 @@ Parameter ComputeJobCommand::params() {
   return params_;
 }
 
+bool ComputeJobCommand::is_parent() {
+  return is_parent_;
+}
 

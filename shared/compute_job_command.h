@@ -53,7 +53,8 @@ class ComputeJobCommand : public SchedulerCommand {
         const ID<job_id_t>& job_id,
         const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write,
         const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const Parameter& params);
+        const Parameter& params,
+        const bool& is_parent);
     ~ComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
@@ -67,6 +68,7 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     Parameter params();
+    bool is_parent();
 
   private:
     std::string job_name_;
@@ -76,6 +78,7 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     Parameter params_;
+    bool is_parent_;
 };
 
 

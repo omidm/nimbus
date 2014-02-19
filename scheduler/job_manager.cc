@@ -49,14 +49,12 @@ JobManager::JobManager() {
   IDSet<job_id_t> job_id_set;
   IDSet<logical_data_id_t> logical_data_id_set;
   Parameter params;
-  JobEntry* job = new JobEntry(JOB_SCHED, "kernel", (job_id_t)(0), (job_id_t)(0));
+  JobEntry* job = new JobEntry(JOB_SCHED, "kernel", (job_id_t)(0),
+      (job_id_t)(0), true, true, true);
   if (!job_graph_.AddJobEntry(job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.\n");
   } else {
-    job->set_is_parent(true);
-    job->set_versioned(true);
-    job->set_assigned(true);
     job->set_done(true);
   }
 }
@@ -93,11 +91,15 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     const std::string& job_name,
     const job_id_t& job_id,
     const job_id_t& parent_job_id,
-    const bool& versioned_and_assigned) {
-  JobEntry* job = new JobEntry(job_type, job_name, job_id, parent_job_id);
+    const bool& is_parent,
+    const bool& versioned,
+    const bool& assigned) {
+  JobEntry* job = new JobEntry(job_type, job_name, job_id, parent_job_id,
+      is_parent, versioned, assigned);
   if (job_graph_.AddJobEntry(job)) {
-    job->set_versioned(versioned_and_assigned);
-    job->set_assigned(versioned_and_assigned);
+    job->set_is_parent(is_parent);
+    job->set_versioned(versioned);
+    job->set_assigned(assigned);
     return true;
   } else {
     delete job;

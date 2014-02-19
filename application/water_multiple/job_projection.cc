@@ -80,6 +80,13 @@ void JobProjection::Execute(nimbus::Parameter params,
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::LEVELSET);
+  data_config.SetFlag(DataConfig::DIVERGENCE);
+  data_config.SetFlag(DataConfig::PSI_N);
+  data_config.SetFlag(DataConfig::PSI_D);
+  data_config.SetFlag(DataConfig::REGION_COLORS);
+  data_config.SetFlag(DataConfig::PRESSURE);
+  data_config.SetFlag(DataConfig::PRESSURE_SAVE);
+  data_config.SetFlag(DataConfig::VELOCITY_SAVE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
