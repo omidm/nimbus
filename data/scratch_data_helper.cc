@@ -33,14 +33,11 @@
  */
 
 /*
- * Scratch data helper class contains a mapping between regions and
- * corresponding scratch region "names" as registered with Nimbus. This map
- * should be populated by the application writer, when defining the
- * corresponding scratch regions.
- *
  * The class provides functions that the application writer can use to get
- * scratch data for a job, and scratch data for a region - for synchronization
- * job.
+ * scratch data for a job, scratch data from a region for synchronization
+ * job and scratch name registration utilities.
+ *
+ * The user should provide base nimbus type name or a list of scratch names.
  *
  * Supports only 3d.
  *
@@ -62,11 +59,11 @@ namespace nimbus {
 
 ScratchDataHelper::ScratchDataHelper() {}
 
-ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION]) {
+ScratchDataHelper::ScratchDataHelper(const int gw[DIMENSION]) {
     set_ghost_width(gw);
 }
 
-ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION],
+ScratchDataHelper::ScratchDataHelper(const int gw[DIMENSION],
                                      const std::string b_name) {
     set_ghost_width(gw);
     SetScratchBaseName(b_name);
@@ -74,7 +71,7 @@ ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION],
 
 ScratchDataHelper::~ScratchDataHelper() {}
 
-void ScratchDataHelper::set_ghost_width(int gw[DIMENSION]) {
+void ScratchDataHelper::set_ghost_width(const int gw[DIMENSION]) {
     for (size_t i = 0; i < DIMENSION; i++)
         ghost_width_[i] = (gw[i] >= 0)? gw[i] : 0;
 }
@@ -129,7 +126,7 @@ void ScratchDataHelper::SetScratchBaseName(const std::string b_name) {
 }
 
 void ScratchDataHelper::RegisterScratchNames(Application *app,
-                                             Data *data) {
+                                             Data *data) const {
     for (size_t i = 0; i < VERTEX_TYPES; i++) {
         app->RegisterData(vertex_types_[i], data);
     }

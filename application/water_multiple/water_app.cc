@@ -41,6 +41,7 @@
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_app.h"
 #include "data/scalar_data.h"
+#include "data/scratch_data_helper.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
@@ -86,6 +87,15 @@ namespace application {
         RegisterData(APP_NEG_REM_PARTICLES, new DataParticleArray(APP_NEG_REM_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
+
+        dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
+        kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
+        dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_PARTICLES);
+        kScratchNegParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_PARTICLES));
+        dbg(APP_LOG, "Registering scratch %s\n", APP_POS_REM_PARTICLES);
+        kScratchPosRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_REM_PARTICLES));
+        dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_REM_PARTICLES);
+        kScratchNegRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_REM_PARTICLES));
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
