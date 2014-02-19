@@ -33,14 +33,11 @@
  */
 
 /*
- * Scratch data helper class contains a mapping between regions and
- * corresponding scratch region "names" as registered with Nimbus. This map
- * should be populated by the application writer, when defining the
- * corresponding scratch regions.
- *
  * The class provides functions that the application writer can use to get
- * scratch data for a job, and scratch data for a region - for synchronization
- * job.
+ * scratch data for a job, scratch data from a region for synchronization
+ * job and scratch name registration utilities.
+ *
+ * The user should provide base nimbus type name or a list of scratch names.
  *
  * Supports only 3d.
  *
