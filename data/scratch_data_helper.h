@@ -92,8 +92,6 @@ class ScratchDataHelper {
         std::string edge_types_[EDGE_TYPES];
         std::string face_types_[FACE_TYPES];
 
-        typedef IDSet<logical_data_id_t> lIDSet;
-
     public:
         ScratchDataHelper();
         explicit ScratchDataHelper(const int gw[DIMENSION]);
@@ -121,16 +119,18 @@ class ScratchDataHelper {
          * inner region: for a 1d domain 1-30, partitions 2, ghost width 3,
          * inner regions are 1-15 and 16-30.
          */
+        template<typename T>
         void GetJobScratchData(Job *job,
                                const GeometricRegion &cr,
-                               lIDSet *ids) const;
+                               nimbus::IDSet<T> *ids) const;
         /* given a region, this function obtains all the scratch data ids in
          * that region.
          */
+        template<typename T>
         void GetAllScratchData(Job *job,
                                const GeometricRegion &region,
                                ScratchType st,
-                               lIDSet *ids) const;
+                               nimbus::IDSet<T> *ids) const;
 };
 }  // namespace nimbus
 

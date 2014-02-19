@@ -138,9 +138,10 @@ void ScratchDataHelper::RegisterScratchNames(Application *app,
     }
 }
 
+template<typename T>
 void ScratchDataHelper::GetJobScratchData(Job *job,
                                           const GeometricRegion &cr,
-                                          lIDSet *ids) const {
+                                          nimbus::IDSet<T> *ids) const {
     ids->clear();
 
     const int cl[DIMENSION]  = {cr.x(),  cr.y(),  cr.z()};
@@ -223,10 +224,11 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     }
 }
 
+template<typename T>
 void ScratchDataHelper::GetAllScratchData(Job *job,
                                           const GeometricRegion &region,
                                           ScratchType st,
-                                          lIDSet *ids) const {
+                                          nimbus::IDSet<T> *ids) const {
     CLdoVector ldos;
     switch (st) {
         case VERTEX:
@@ -248,4 +250,14 @@ void ScratchDataHelper::GetAllScratchData(Job *job,
     for (size_t s = 0; s < ldos.size(); s++)
         ids->insert(ldos[s]->id());
 }
+
+template void ScratchDataHelper::
+GetJobScratchData<logical_data_id_t>(Job *job,
+                                     const GeometricRegion &cr,
+                                     nimbus::IDSet<logical_data_id_t> *ids) const;
+template void ScratchDataHelper::
+GetAllScratchData<logical_data_id_t>(Job *job,
+                                     const GeometricRegion &region,
+                                     ScratchType st,
+                                     nimbus::IDSet<logical_data_id_t> *ids) const;
 }  // namespace nimbus
