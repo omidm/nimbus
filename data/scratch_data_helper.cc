@@ -54,20 +54,22 @@
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
+#include "worker/application.h"
+#include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-ScratchDataHelper::ScratchDataHelper() {
-    share_boundary_ = false;
+ScratchDataHelper::ScratchDataHelper() {}
+
+ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION]) {
+    set_ghost_width(gw);
 }
 
-ScratchDataHelper::ScratchDataHelper(const GeometricRegion &d,
-                                    int gw[DIMENSION],
-                                    bool sb) {
-    for (size_t i = 0; i < DIMENSION; i++)
-        ghost_width_[i] = (gw[i] >= 0)? gw[i] : 0;
-    share_boundary_ = sb;
+ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION],
+                                     const std::string b_name) {
+    set_ghost_width(gw);
+    SetScratchBaseName(b_name);
 }
 
 ScratchDataHelper::~ScratchDataHelper() {}
@@ -77,12 +79,8 @@ void ScratchDataHelper::set_ghost_width(int gw[DIMENSION]) {
         ghost_width_[i] = (gw[i] >= 0)? gw[i] : 0;
 }
 
-void ScratchDataHelper::set_share_boundary(bool sb) {
-    share_boundary_ = sb;
-}
-
-void ScratchDataHelper::SetScratchType(const ScratchType st,
-                                       const std::vector<std::string> &st_names) {
+void ScratchDataHelper::SetScratchNames(const ScratchType st,
+                                        const std::vector<std::string> &st_names) {
     size_t nl = st_names.size();
     switch (st) {
         case VERTEX:
@@ -112,6 +110,37 @@ void ScratchDataHelper::SetScratchType(const ScratchType st,
     }
 }
 
+void ScratchDataHelper::SetScratchBaseName(const std::string b_name) {
+    for (size_t i = 0; i < VERTEX_TYPES; i++) {
+        std::stringstream ss;
+        ss << b_name << "_vertex_" << i+1;
+        vertex_types_[i] = ss.str();
+    }
+    for (size_t i = 0; i < EDGE_TYPES; i++) {
+        std::stringstream ss;
+        ss << b_name << "_edge_" << i+1;
+        edge_types_[i] = ss.str();
+    }
+    for (size_t i = 0; i < FACE_TYPES; i++) {
+        std::stringstream ss;
+        ss << b_name << "_face_" << i+1;
+        face_types_[i] = ss.str();
+    }
+}
+
+void ScratchDataHelper::RegisterScratchNames(Application *app,
+                                             Data *data) {
+    for (size_t i = 0; i < VERTEX_TYPES; i++) {
+        app->RegisterData(vertex_types_[i], data);
+    }
+    for (size_t i = 0; i < EDGE_TYPES; i++) {
+        app->RegisterData(edge_types_[i], data);
+    }
+    for (size_t i = 0; i < FACE_TYPES; i++) {
+        app->RegisterData(face_types_[i], data);
+    }
+}
+
 void ScratchDataHelper::GetJobScratchData(Job *job,
                                           const GeometricRegion &cr,
                                           lIDSet *ids) const {
@@ -123,20 +152,9 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
     int ld[DIMENSION] = {0, 0, 0};
     size_t n;
 
-    if (share_boundary_) {
-        for (size_t d = 0; d < DIMENSION; d++) {
-            cld[d] -= 1;
-        }
-    }
-
     // vertex scratch regions
     for (size_t d = 0; d < DIMENSION; d++) {
         ld[d] = 2*ghost_width_[d];
-    }
-    if (share_boundary_) {
-        for (size_t d = 0; d < DIMENSION; d++) {
-            ld[d]  += 1;
-        }
     }
     n  = 0;
     for (size_t i = 0; i < 2; i++) {
@@ -167,11 +185,6 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
         size_t d2 = (d+2)%DIMENSION;
         ld[d1] = 2*ghost_width_[d1];
         ld[d2] = 2*ghost_width_[d2];
-        if (share_boundary_) {
-            for  (size_t dd = 0; dd < DIMENSION; dd++) {
-                ld[dd] += 1;
-            }
-        }
         n = 0;
         for (int i = 0; i < 2; i++) {
             l[d1] = cl[d1] - ghost_width_[d1] +
@@ -199,11 +212,6 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
         l[d2]  = cl[d2] + ghost_width_[d2];
         ld[d1] = cld[d1] - 2*ghost_width_[d1];
         ld[d2] = cld[d2] - 2*ghost_width_[d2];
-        if (share_boundary_) {
-            for  (size_t dd = 0; dd < DIMENSION; dd++) {
-                ld[dd] += 1;
-            }
-        }
         n = 0;
         for (size_t i = 0; i < 2; i++) {
             l[d]  = cl[d] - ghost_width_[d] + i * cld[d];
