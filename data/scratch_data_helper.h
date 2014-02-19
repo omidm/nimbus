@@ -113,7 +113,7 @@ class ScratchDataHelper {
         /* resgister scratch types.
          */
         void RegisterScratchNames(Application *app,
-                                  Data *data);
+                                  Data *data) const;
 
         /* given the inner bounding box for an application partition (that
          * includes the inner scratch region, this gives all the scratch

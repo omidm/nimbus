@@ -126,7 +126,7 @@ void ScratchDataHelper::SetScratchBaseName(const std::string b_name) {
 }
 
 void ScratchDataHelper::RegisterScratchNames(Application *app,
-                                             Data *data) {
+                                             Data *data) const {
     for (size_t i = 0; i < VERTEX_TYPES; i++) {
         app->RegisterData(vertex_types_[i], data);
     }
