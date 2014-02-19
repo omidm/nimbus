@@ -237,6 +237,8 @@ InitializeIncompressibleProjectionHelper(
     laplace->second_order_cut_cell_method = true;
     if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
       laplace->u_interface.Resize(grid_input);
+    } else {
+      laplace->u_interface.Clean_Memory();
     }
     // T_ARRAYS_SCALAR.
     if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
@@ -256,8 +258,6 @@ InitializeIncompressibleProjectionHelper(
             grid_input.Domain_Indices(1));
     }
     // assert(laplace->levelset != laplace->levelset_default);
-    assert(laplace->second_order_cut_cell_method == false);
-    laplace->u_interface.Clean_Memory();
   }
   // Flag use_non_zero_divergence is expected to be false.
   assert(!projection->use_non_zero_divergence);
