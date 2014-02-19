@@ -63,6 +63,7 @@
 #define REINCORPORATE_PARTICLES "reincorporate_particles"
 #define PROJECTION "projection"
 #define EXTRAPOLATION "extrapolation"
+#define SYNCHRONIZE_PARTICLES "synchronize_particles"
 
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_

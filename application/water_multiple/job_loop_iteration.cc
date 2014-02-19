@@ -272,9 +272,11 @@ namespace application {
 
     // TODO(chinmayee): delete job_num=1 once multiple version works
     int step_particles_job_num = 1;
-    // int step_particles_job_num = 2;
     std::vector<nimbus::job_id_t> step_particles_job_ids;
     GetNewJobID(&step_particles_job_ids, step_particles_job_num);
+    int step_particles_sync_job_num = 1;
+    std::vector<nimbus::job_id_t> step_particles_sync_job_ids;
+    GetNewJobID(&step_particles_sync_job_ids, step_particles_sync_job_num);
 
     // Original adjust phi with objects that operates over entire block.
 
@@ -483,13 +485,30 @@ namespace application {
         // before.insert(advect_phi_job_ids[1]);
 
         after.clear();
-        after.insert(job_ids[3]);
+        after.insert(step_particles_sync_job_ids[0]);
 
         SpawnComputeJob(STEP_PARTICLES,
                 step_particles_job_ids[0],
                 read, write,
                 before, after,
                 step_particles_params);
+    }
+    {
+        read.clear();
+        write.clear();
+
+        nimbus::Parameter step_particles_sync_params;
+
+        before.clear();
+        before.insert(step_particles_job_ids[0]);
+        after.clear();
+        after.insert(job_ids[3]);
+
+        SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+                step_particles_sync_job_ids[0],
+                read, write,
+                before, after,
+                step_particles_sync_params);
     }
 
     // TODO(chinmayee): working on step particles multiple
@@ -571,8 +590,8 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &s14_str);
     s14_params.set_ser_data(SerializedData(s14_str));
     before.clear();
-    for (int i = 0; i < step_particles_job_num; i++)
-        before.insert(step_particles_job_ids[i]);
+    for (int i = 0; i < step_particles_sync_job_num; i++)
+        before.insert(step_particles_sync_job_ids[i]);
     after.clear();
     // after.insert(job_ids[4]);
     after.insert(advect_v_job_ids[0]); after.insert(advect_v_job_ids[1]);

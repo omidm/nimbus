@@ -1,10 +1,9 @@
-/*
- * Copyright 2013 Stanford University.
+/* Copyright 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
- * are met:
+ vd* are met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -36,29 +35,26 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INCLUDE_H_
-
-#include "application/water_multiple/job_adjust_phi.h"
-#include "application/water_multiple/job_adjust_phi_with_objects.h"
-#include "application/water_multiple/job_advect_phi.h"
-#include "application/water_multiple/job_advect_removed_particles.h"
-#include "application/water_multiple/job_advect_v.h"
-#include "application/water_multiple/job_apply_forces.h"
-#include "application/water_multiple/job_calculate_frame.h"
-#include "application/water_multiple/job_delete_particles.h"
-#include "application/water_multiple/job_extrapolate_phi.h"
-#include "application/water_multiple/job_extrapolation.h"
-#include "application/water_multiple/job_initialize.h"
-#include "application/water_multiple/job_loop_frame.h"
-#include "application/water_multiple/job_loop_iteration.h"
-#include "application/water_multiple/job_main.h"
-#include "application/water_multiple/job_modify_levelset.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/job_projection.h"
-#include "application/water_multiple/job_reincorporate_removed_particles.h"
-#include "application/water_multiple/job_step_particles.h"
+#include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/job_synchronize_particles.h"
-#include "application/water_multiple/job_write_frame.h"
+#include "application/water_multiple/job_names.h"
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
+namespace application {
+
+    JobSynchronizeParticles::JobSynchronizeParticles(nimbus::Application *app) {
+        set_application(app);
+    };
+
+    nimbus::Job* JobSynchronizeParticles::Clone() {
+        return new JobSynchronizeParticles(application());
+    }
+
+    void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
+        dbg(APP_LOG, "Executing synchronize particles job\n");
+
+        dbg(APP_LOG, "Completed executing synchronize particles job\n");
+    }
+
+} // namespace application

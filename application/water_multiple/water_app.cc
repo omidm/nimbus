@@ -116,6 +116,7 @@ namespace application {
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
         RegisterJob(PROJECTION, new JobProjection(this));
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
+        RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
 
         dbg(APP_LOG, "Completed loading water application\n");
     }
