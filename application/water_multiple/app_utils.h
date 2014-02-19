@@ -42,7 +42,9 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 
 #include <stdarg.h>
+#include "application/water_multiple/data_names.h"
 #include "application/water_multiple/physbam_include.h"
+#include "data/scratch_data_helper.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
@@ -70,11 +72,18 @@ namespace application {
     const int kThreadsNum = 1;
     const int kScale = 30;
     const int kGhostNum = 3;
+    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
     const int kLastFrame = 15;
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
-    const GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
+    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
+
+    // scratch data helpers
+    const nimbus::ScratchDataHelper kScratchPosParticles(kGhostW, APP_POS_PARTICLES);
+    const nimbus::ScratchDataHelper kScratchNegParticles(kGhostW, APP_NEG_PARTICLES);
+    const nimbus::ScratchDataHelper kScratchPosRemParticles(kGhostW, APP_POS_REM_PARTICLES);
+    const nimbus::ScratchDataHelper kScratchNegRemParticles(kGhostW, APP_NEG_REM_PARTICLES);
 
     enum AccessType {READ_ACCESS, WRITE_ACCESS};
 

@@ -99,11 +99,11 @@ class ScratchDataHelper {
 
     public:
         ScratchDataHelper();
-        explicit ScratchDataHelper(int gw[DIMENSION]);
-        ScratchDataHelper(int gw[DIMENSION], const std::string b_name);
+        explicit ScratchDataHelper(const int gw[DIMENSION]);
+        ScratchDataHelper(const int gw[DIMENSION], const std::string b_name);
         virtual ~ScratchDataHelper();
 
-        void set_ghost_width(int gw[DIMENSION]);
+        void set_ghost_width(const int gw[DIMENSION]);
 
         /* pass a scratch type and corresponding list of names.
          */

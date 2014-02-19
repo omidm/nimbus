@@ -62,11 +62,11 @@ namespace nimbus {
 
 ScratchDataHelper::ScratchDataHelper() {}
 
-ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION]) {
+ScratchDataHelper::ScratchDataHelper(const int gw[DIMENSION]) {
     set_ghost_width(gw);
 }
 
-ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION],
+ScratchDataHelper::ScratchDataHelper(const int gw[DIMENSION],
                                      const std::string b_name) {
     set_ghost_width(gw);
     SetScratchBaseName(b_name);
@@ -74,7 +74,7 @@ ScratchDataHelper::ScratchDataHelper(int gw[DIMENSION],
 
 ScratchDataHelper::~ScratchDataHelper() {}
 
-void ScratchDataHelper::set_ghost_width(int gw[DIMENSION]) {
+void ScratchDataHelper::set_ghost_width(const int gw[DIMENSION]) {
     for (size_t i = 0; i < DIMENSION; i++)
         ghost_width_[i] = (gw[i] >= 0)? gw[i] : 0;
 }
