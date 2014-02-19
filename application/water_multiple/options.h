@@ -89,6 +89,7 @@ struct DataConfig {
     PRESSURE,
     PRESSURE_SAVE,
     VELOCITY_SAVE,
+    U_INTERFACE,
     NUM_VARIABLE
   };
   bool flag_[NUM_VARIABLE];
