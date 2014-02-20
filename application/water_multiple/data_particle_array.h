@@ -53,7 +53,7 @@ namespace application {
             virtual nimbus::Data* Clone();
             virtual void Create();
 
-            void MergeParticles(const std::vector<DataParticleArray * > &scratch) {}
+            void MergeParticles(const std::vector<DataParticleArray * > &scratch);
     };
 
 } // namespace application
