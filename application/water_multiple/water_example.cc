@@ -269,7 +269,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     PdiVector pdv;
-    GeometricRegion array_reg_inner(local_region.x(),
+    GeometricRegion array_reg_central(local_region.x(),
                                     local_region.y(),
                                     local_region.z(),
                                     local_region.dx(),
@@ -295,7 +295,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, fvstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.WriteFaceArray(
-          &array_reg_inner, array_shift, &pdv, &face_velocities);
+          &array_reg_central, array_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
 
@@ -379,7 +379,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     PdiVector pdv;
-    GeometricRegion array_reg_inner(local_region.x(),
+    GeometricRegion array_reg_central(local_region.x(),
                                     local_region.y(),
                                     local_region.z(),
                                     local_region.dx(),
@@ -405,7 +405,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, fvstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
       translator.ReadFaceArray(
-          &array_reg_inner, array_shift, &pdv, &face_velocities);
+          &array_reg_central, array_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating velocity.\n");

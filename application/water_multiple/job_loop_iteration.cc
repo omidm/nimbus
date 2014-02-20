@@ -315,11 +315,11 @@ namespace application {
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3Half[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[0], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s11_params_0;
     std::string s11_str_0;
-    SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[0], &s11_str_0);
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[0], &s11_str_0);
     s11_params_0.set_ser_data(SerializedData(s11_str_0));
     before.clear();
     after.clear();
@@ -335,11 +335,11 @@ namespace application {
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[1], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3Half[1], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[1], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[1], APP_FACE_VEL, APP_PHI, NULL);
 
     nimbus::Parameter s11_params_1;
     std::string s11_str_1;
-    SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[1], &s11_str_1);
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[1], &s11_str_1);
     s11_params_1.set_ser_data(SerializedData(s11_str_1));
     before.clear();
     after.clear();
@@ -381,7 +381,7 @@ namespace application {
      */
 /*
     read.clear();
-    // TODO(quhang): read set should be the inner region if it is right.
+    // TODO(quhang): read set should be the central region if it is right.
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, APP_FACE_VEL,
                         NULL);
     write.clear();
@@ -414,12 +414,12 @@ namespace application {
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0],
         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[0], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[0], APP_PHI, NULL);
 
     nimbus::Parameter s12_params;
     std::string s12_str;
     SerializeParameter(frame, time, dt, global_region,
-        kRegY2W3Inner[0], &s12_str);
+        kRegY2W3Central[0], &s12_str);
     s12_params.set_ser_data(SerializedData(s12_str));
     before.clear();
     before.insert(extrapolate_phi_job_ids[0]);
@@ -436,12 +436,12 @@ namespace application {
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[1],
         APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[1], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[1], APP_PHI, NULL);
 
     nimbus::Parameter s12r_params;
     std::string s12r_str;
     SerializeParameter(frame, time, dt, global_region,
-        kRegY2W3Inner[1], &s12r_str);
+        kRegY2W3Central[1], &s12r_str);
     s12r_params.set_ser_data(SerializedData(s12r_str));
     before.clear();
     before.insert(extrapolate_phi_job_ids[0]);
@@ -473,10 +473,10 @@ namespace application {
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
                 APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-        kScratchPosParticles.GetJobScratchData(this, kRegW1Inner[0], &write);
-        kScratchNegParticles.GetJobScratchData(this, kRegW1Inner[0], &write);
-        kScratchPosRemParticles.GetJobScratchData(this, kRegW1Inner[0], &write);
-        kScratchNegRemParticles.GetJobScratchData(this, kRegW1Inner[0], &write);
+        kScratchPosParticles.GetJobScratchData(this, kRegW1Central[0], &write);
+        kScratchNegParticles.GetJobScratchData(this, kRegW1Central[0], &write);
+        kScratchPosRemParticles.GetJobScratchData(this, kRegW1Central[0], &write);
+        kScratchNegRemParticles.GetJobScratchData(this, kRegW1Central[0], &write);
 
         nimbus::Parameter step_particles_params;
         std::string step_particles_str;
@@ -638,13 +638,13 @@ namespace application {
     for (int i = 0; i < advect_v_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Inner[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
       nimbus::Parameter s15_params;
       std::string s15_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[i], &s15_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s15_str);
       s15_params.set_ser_data(SerializedData(s15_str));
       before.clear();
       before.insert(job_ids[3]);
@@ -693,11 +693,11 @@ namespace application {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
       nimbus::Parameter s16_params;
       std::string s16_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Inner[i], &s16_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s16_str);
       s16_params.set_ser_data(SerializedData(s16_str));
       before.clear();
       // before.insert(job_ids[4]);

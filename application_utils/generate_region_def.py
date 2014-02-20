@@ -35,7 +35,7 @@ namespace        = options.namespace        # namespace for gen code
 app_path         = options.app_path         # app path
 
 # flags
-generate_inner_str   = "inner"
+generate_central_str = "central"
 generate_outer_str   = "outer"
 generate_scratch_str = "scratch"
 
@@ -89,21 +89,21 @@ def ParseLine(line, num):
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
     flags = re.split('\s|,', args[2].strip())
-    generate_inner   = False
+    generate_central   = False
     generate_outer   = False
     generate_scratch = False
     if "none" in flags:
         if (len(flags) > 1):
             print "\nInvalid flags %s at line %i\n" % (str(flags), num)
             sys.exit(2)
-    if generate_inner_str in flags:
-        generate_inner = True
+    if generate_central_str in flags:
+        generate_central = True
     if generate_outer_str in flags:
         generate_outer = True
     if generate_scratch_str in flags:
         generate_scratch = True
     return reg_name, params, \
-            {  generate_inner_str   : generate_inner, \
+            {  generate_central_str : generate_central, \
                generate_outer_str   : generate_outer, \
                generate_scratch_str : generate_scratch }
 
@@ -116,7 +116,7 @@ class Region():
                 (self.x[0], self.x[1], self.x[2], \
                 self.dx[0], self.dx[1], self.dx[2])
 
-inner   = 'Inner'
+central = 'Central'
 outer   = 'Outer'
 scratch = 'Scratch'
 
@@ -133,7 +133,7 @@ def GetRegionsBB(params, flags, num, reg_type):
             print "\nError : Invalid ghost width and region size"
             print "Region size is smaller than 2 x ghostwidth\n"
             sys.exit(2)
-        if reg_type == inner:
+        if reg_type == central:
             rsl[dim] = domain[dim]/rnum[dim]
             rdl[dim] = rsl[dim]
         elif reg_type == outer:
@@ -155,7 +155,7 @@ def GetRegionsBB(params, flags, num, reg_type):
             rdelta[dim][i] = rd[dim]
         rsize[dim][rnum[dim]-1]  = rsl[dim]
         rdelta[dim][rnum[dim]-1] = rdl[dim]
-        if reg_type == inner:
+        if reg_type == central:
             rstart[dim][0] = 1
         elif reg_type == outer:
             rstart[dim][0] = 1 - ghostw[dim]
@@ -277,8 +277,8 @@ for num, line in enumerate(reg_config):
     reg_name, params, flags = ParseLine(line, num)
     # Regions:
     regions = {}
-    if flags[generate_inner_str]:
-        regions[inner]   = GetRegions(params, flags, num, inner)
+    if flags[generate_central_str]:
+        regions[central] = GetRegions(params, flags, num, central)
     if flags[generate_outer_str]:
         regions[outer] = GetRegions(params, flags, num, outer)
     if flags[generate_scratch_str]:

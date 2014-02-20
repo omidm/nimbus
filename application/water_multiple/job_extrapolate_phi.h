@@ -42,7 +42,7 @@
  * The write set(not sure) of EXTRAPOLATE_PHI:
  *     levelset.
  *
- * Notice that the job reads the inner region of levelset but writes the
+ * Notice that the job reads the central region of levelset but writes the
  * boundary region of levelset. Velocity is needed, which you might not expect.
  *
  * Author: Hang Qu <quhang@stanford.edu>

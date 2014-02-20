@@ -171,7 +171,7 @@ namespace application {
         nimbus::IDSet<nimbus::logical_data_id_t>* write) {
       nimbus::CLdoVector result;
 
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegW3Inner[0]);
+      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegW3Central[0]);
       for (size_t i = 0; i < result.size(); ++i) {
         read->insert(result[i]->id());
         write->insert(result[i]->id());
