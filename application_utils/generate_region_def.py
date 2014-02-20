@@ -37,6 +37,7 @@ app_path         = options.app_path         # app path
 # flags
 generate_central_str = "central"
 generate_outer_str   = "outer"
+generate_inner_str   = "inner"
 generate_scratch_str = "scratch"
 
 ## Parsing helper functions ##
@@ -91,6 +92,7 @@ def ParseLine(line, num):
     flags = re.split('\s|,', args[2].strip())
     generate_central   = False
     generate_outer   = False
+    generate_inner   = False
     generate_scratch = False
     if "none" in flags:
         if (len(flags) > 1):
@@ -100,11 +102,14 @@ def ParseLine(line, num):
         generate_central = True
     if generate_outer_str in flags:
         generate_outer = True
+    if generate_inner_str in flags:
+        generate_inner = True
     if generate_scratch_str in flags:
         generate_scratch = True
     return reg_name, params, \
             {  generate_central_str : generate_central, \
                generate_outer_str   : generate_outer, \
+               generate_inner_str   : generate_inner, \
                generate_scratch_str : generate_scratch }
 
 class Region():
@@ -118,6 +123,7 @@ class Region():
 
 central = 'Central'
 outer   = 'Outer'
+inner   = 'Inner'
 scratch = 'Scratch'
 
 def GetRegionsBB(params, flags, num, reg_type):
@@ -139,6 +145,9 @@ def GetRegionsBB(params, flags, num, reg_type):
         elif reg_type == outer:
             rsl[dim] = domain[dim]/rnum[dim] + 2*ghostw[dim]
             rdl[dim] = domain[dim]/rnum[dim]
+        elif reg_type == inner:
+            rsl[dim] = domain[dim]/rnum[dim] - 2*ghostw[dim]
+            rdl[dim] = domain[dim]/rnum[dim]
         if domain[dim]%rnum[dim] == 0:
             rs[dim] = rsl[dim]
             rd[dim] = rdl[dim]
@@ -159,10 +168,13 @@ def GetRegionsBB(params, flags, num, reg_type):
             rstart[dim][0] = 1
         elif reg_type == outer:
             rstart[dim][0] = 1 - ghostw[dim]
+        elif reg_type == inner:
+            rstart[dim][0] = 1 + ghostw[dim]
         for i in range(1, rnum[dim], 1):
             rstart[dim][i] = rstart[dim][i-1] + rdelta[dim][i-1]
     regions = []
-    if reg_type == outer and \
+    # generate only central if any ghostw == 0
+    if (reg_type == outer or reg_type == inner) and \
             ghostw[0] == 0 and ghostw[1] == 0 and ghostw[2] == 0:
         return regions
     for i in range(0, rnum[0]):
@@ -281,6 +293,8 @@ for num, line in enumerate(reg_config):
         regions[central] = GetRegions(params, flags, num, central)
     if flags[generate_outer_str]:
         regions[outer] = GetRegions(params, flags, num, outer)
+    if flags[generate_inner_str]:
+        regions[inner] = GetRegions(params, flags, num, inner)
     if flags[generate_scratch_str]:
         regions[scratch] = GetRegions(params, flags, num, scratch)
     if reg_name in reg_map:
