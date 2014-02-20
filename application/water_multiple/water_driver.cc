@@ -15,6 +15,7 @@
 
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
+#include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "application/water_multiple/projection/projection_helper.h"
 #include "shared/dbg_modes.h"
 #include "shared/dbg.h"
@@ -541,7 +542,13 @@ ProjectionImpl (const nimbus::Job *job,
         projection.elliptic_solver->psi_D, projection.elliptic_solver->psi_N,
         false, &projection.elliptic_solver->filled_region_colors);
 
-    projection.elliptic_solver->Solve(time,true);
+    {
+      LaplaceSolverWrapper laplace_solver_wrapper(
+          dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+              projection.elliptic_solver));
+      laplace_solver_wrapper.Solve();
+    }
+    // projection.elliptic_solver->Solve(time,true);
     projection.Apply_Pressure(example.face_velocities, dt, time);
   }
   // Write to pressure.
