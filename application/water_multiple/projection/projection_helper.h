@@ -33,32 +33,35 @@
  */
 
 /*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Helper function for projection job. Still in progress.
+ * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INCLUDE_H_
+#include "application/water_multiple/app_utils.h"
 
-#include "application/water_multiple/job_adjust_phi.h"
-#include "application/water_multiple/job_adjust_phi_with_objects.h"
-#include "application/water_multiple/job_advect_phi.h"
-#include "application/water_multiple/job_advect_removed_particles.h"
-#include "application/water_multiple/job_advect_v.h"
-#include "application/water_multiple/job_apply_forces.h"
-#include "application/water_multiple/job_calculate_frame.h"
-#include "application/water_multiple/job_delete_particles.h"
-#include "application/water_multiple/job_extrapolate_phi.h"
-#include "application/water_multiple/job_extrapolation.h"
-#include "application/water_multiple/job_initialize.h"
-#include "application/water_multiple/job_loop_frame.h"
-#include "application/water_multiple/job_loop_iteration.h"
-#include "application/water_multiple/job_main.h"
-#include "application/water_multiple/job_modify_levelset.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/job_projection.h"
-#include "application/water_multiple/job_reincorporate_removed_particles.h"
-#include "application/water_multiple/job_step_particles.h"
-#include "application/water_multiple/job_synchronize_particles.h"
-#include "application/water_multiple/job_write_frame.h"
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
+namespace PhysBAM {
+
+typedef application::TV TV;
+typedef application::TV_INT TV_INT;
+
+typedef ARRAY<bool, VECTOR<int, TV::dimension> > T_PSI_D;
+typedef ARRAY<bool, FACE_INDEX<TV::dimension> > T_PSI_N;
+typedef ARRAY<int, VECTOR<int, TV::dimension> > T_COLOR;
+typedef GRID<TV> T_GRID;
+
+/* Fills in the color for projection. Assume only one colors. */
+void FillUniformRegionColor(
+    const T_GRID& grid,
+    const T_PSI_D& psi_D,
+    const T_PSI_N& psi_N,
+    const bool solve_single_cell_neumann_regions,
+    T_COLOR* filled_region_colors);
+
+bool All_Cell_Faces_Neumann(
+    const TV_INT& cell_index, const T_PSI_N& psi_N);
+
+}  // namespace PhysBAM
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_

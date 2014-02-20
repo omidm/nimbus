@@ -44,6 +44,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_apply_forces.cc
     ${PROJECT_SOURCE_DIR}/job_projection.cc
     ${PROJECT_SOURCE_DIR}/job_extrapolation.cc
+    ${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/reg_def.cc
@@ -51,6 +52,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     ${PROJECT_SOURCE_DIR}/water_sources.cc
+    ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
@@ -80,6 +82,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_apply_forces.h
     ${PROJECT_SOURCE_DIR}/job_projection.h
     ${PROJECT_SOURCE_DIR}/job_extrapolation.h
+    ${PROJECT_SOURCE_DIR}/job_synchronize_particles.h
     ${PROJECT_SOURCE_DIR}/job_write_frame.h
     ${PROJECT_SOURCE_DIR}/options.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h
@@ -89,6 +92,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h
     ${PROJECT_SOURCE_DIR}/water_sources.h
+    ${PROJECT_SOURCE_DIR}/projection/projection_helper.h
     )
 
 #List the libraries you want to link against - including a higher-level

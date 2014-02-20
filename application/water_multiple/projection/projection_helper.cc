@@ -33,32 +33,46 @@
  */
 
 /*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INCLUDE_H_
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/projection/projection_helper.h"
 
-#include "application/water_multiple/job_adjust_phi.h"
-#include "application/water_multiple/job_adjust_phi_with_objects.h"
-#include "application/water_multiple/job_advect_phi.h"
-#include "application/water_multiple/job_advect_removed_particles.h"
-#include "application/water_multiple/job_advect_v.h"
-#include "application/water_multiple/job_apply_forces.h"
-#include "application/water_multiple/job_calculate_frame.h"
-#include "application/water_multiple/job_delete_particles.h"
-#include "application/water_multiple/job_extrapolate_phi.h"
-#include "application/water_multiple/job_extrapolation.h"
-#include "application/water_multiple/job_initialize.h"
-#include "application/water_multiple/job_loop_frame.h"
-#include "application/water_multiple/job_loop_iteration.h"
-#include "application/water_multiple/job_main.h"
-#include "application/water_multiple/job_modify_levelset.h"
-#include "application/water_multiple/job_names.h"
-#include "application/water_multiple/job_projection.h"
-#include "application/water_multiple/job_reincorporate_removed_particles.h"
-#include "application/water_multiple/job_step_particles.h"
-#include "application/water_multiple/job_synchronize_particles.h"
-#include "application/water_multiple/job_write_frame.h"
+namespace PhysBAM {
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
+void FillUniformRegionColor(
+    const T_GRID& grid,
+    const T_PSI_D& psi_D,
+    const T_PSI_N& psi_N,
+    const bool solve_single_cell_neumann_regions,
+    T_COLOR* filled_region_colors) {
+  for (typename T_GRID::CELL_ITERATOR iterator(grid, 1, T_GRID::GHOST_REGION);
+       iterator.Valid();
+       iterator.Next()) {
+    (*filled_region_colors)(iterator.Cell_Index())=-1;
+  }
+  for (typename T_GRID::CELL_ITERATOR iterator(grid);
+       iterator.Valid();
+       iterator.Next()) {
+    if (psi_D(iterator.Cell_Index()) ||
+        (!solve_single_cell_neumann_regions &&
+         All_Cell_Faces_Neumann(iterator.Cell_Index(), psi_N))) {
+      (*filled_region_colors)(iterator.Cell_Index()) = -1;
+    } else {
+      (*filled_region_colors)(iterator.Cell_Index()) = 1;
+    }
+  }
+}
+
+bool All_Cell_Faces_Neumann(
+    const TV_INT& cell_index, const T_PSI_N& psi_N) {
+  for (int axis = 1; axis <= T_GRID::dimension; axis++)
+    if (!psi_N.Component(axis)(cell_index) ||
+        !psi_N.Component(axis)(cell_index+TV_INT::Axis_Vector(axis))) {
+      return false;
+    }
+  return true;
+}
+
+}  // namespace PhysBAM

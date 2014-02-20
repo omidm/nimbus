@@ -140,8 +140,10 @@ void ScratchDataHelper::RegisterScratchNames(Application *app,
 
 void ScratchDataHelper::GetJobScratchData(Job *job,
                                           const GeometricRegion &cr,
-                                          lIDSet *ids) const {
-    ids->clear();
+                                          lIDSet *ids,
+                                          bool clear) const {
+    if (clear)
+        ids->clear();
 
     const int cl[DIMENSION]  = {cr.x(),  cr.y(),  cr.z()};
     int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dx()};
@@ -226,7 +228,11 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
 void ScratchDataHelper::GetAllScratchData(Job *job,
                                           const GeometricRegion &region,
                                           ScratchType st,
-                                          lIDSet *ids) const {
+                                          lIDSet *ids,
+                                          bool clear) const {
+    if (clear)
+        ids->clear();
+
     CLdoVector ldos;
     switch (st) {
         case VERTEX:

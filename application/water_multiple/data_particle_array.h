@@ -39,6 +39,8 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_PARTICLE_ARRAY_H_
 #define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_PARTICLE_ARRAY_H_
 
+#include <vector>
+
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
 
@@ -50,6 +52,8 @@ namespace application {
             explicit DataParticleArray(std::string n);
             virtual nimbus::Data* Clone();
             virtual void Create();
+
+            void MergeParticles(const std::vector<DataParticleArray * > &scratch) {}
     };
 
 } // namespace application

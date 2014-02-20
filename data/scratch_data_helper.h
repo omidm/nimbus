@@ -123,14 +123,16 @@ class ScratchDataHelper {
          */
         void GetJobScratchData(Job *job,
                                const GeometricRegion &cr,
-                               lIDSet *ids) const;
+                               lIDSet *ids,
+                               bool clear = false) const;
         /* given a region, this function obtains all the scratch data ids in
          * that region.
          */
         void GetAllScratchData(Job *job,
                                const GeometricRegion &region,
                                ScratchType st,
-                               lIDSet *ids) const;
+                               lIDSet *ids,
+                               bool clear = false) const;
 };
 }  // namespace nimbus
 
