@@ -15,6 +15,7 @@
 
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
+#include "application/water_multiple/projection/projection_helper.h"
 #include "shared/dbg_modes.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -258,6 +259,10 @@ InitializeIncompressibleProjectionHelper(
             grid_input.Domain_Indices(1));
     }
     // assert(laplace->levelset != laplace->levelset_default);
+    // Assume uniform region coloring.
+    laplace->number_of_regions = 1;
+    laplace->filled_region_touches_dirichlet.Resize(1);
+    laplace->filled_region_touches_dirichlet(1) = true;
   }
   // Flag use_non_zero_divergence is expected to be false.
   assert(!projection->use_non_zero_divergence);
@@ -493,46 +498,59 @@ ProjectionImpl (const nimbus::Job *job,
                T dt) {
   LOG::SCOPE *scope=0;
   scope=new LOG::SCOPE("Project");
-  example.Set_Boundary_Conditions(time);
-  // According to levelset, write to psi_D and pressure. Then exchange psi_D and
-  // pressure.
-  example.incompressible.Set_Dirichlet_Boundary_Conditions(
-      &example.particle_levelset_evolution.phi, 0);
-  // Write to pressure.
-  example.projection.p *= dt;
   // projection has type:
-  // PROJECTION_DYNAMIC_UNIFORM.
-  // collidable_solver has type: LAPLACE_COLLIDABLE_UNIFORM.
-  // Configures and resizes u_interface array.
-  // The following is the projection code.
-  // Step 1: Apply boundary.
-  /*
-  int ghost_cells=3;
-  // boundary conditions
-  if(!projection_boundary) projection_boundary=boundary;
-  projection_boundary->Apply_Boundary_Condition_Face(projection.p_grid,face_velocities,time+dt);
-  ARRAY<T,FACE_INDEX<TV::dimension> >
-      face_velocities_ghost(projection.p_grid,ghost_cells);
-  projection_boundary->Fill_Ghost_Cells_Face(projection.p_grid,face_velocities,face_velocities_ghost,time,ghost_cells);
-  assert(Consistent_Boundary_Conditions(face_velocities));
-  */
-  // Step 2: Core projection.
-  /*
-     // Write to divergence, solver->f.
-  Compute_Divergence(T_FACE_LOOKUP(face_velocities),elliptic_solver);
-     // Write to filled_region_colors, psi_N, filled_region_touches_dirichlet,
-     // probably.
-  elliptic_solver->Find_Solution_Regions();
-  elliptic_solver->Solve(time,true);
-  Apply_Pressure(face_velocities,dt,time);
-  */
-  example.incompressible.Advance_One_Time_Step_Implicit_Part(
-      example.face_velocities, dt, time, true);
+  //     PROJECTION_DYNAMIC_UNIFORM.
+  // collidable_solver has type:
+  //     LAPLACE_COLLIDABLE_UNIFORM.
+  INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  {
+    // Code before enter PROJECTION_DYNAMIC_UNIFORM.
+    example.Set_Boundary_Conditions(time);
+    // According to levelset, write to psi_D and pressure. Then exchange psi_D
+    // and pressure.
+    incompressible.Set_Dirichlet_Boundary_Conditions(
+        &example.particle_levelset_evolution.phi, 0);
+    // Write to pressure.
+    projection.p *= dt;
+  }
+  {
+    // Code in INCOMPRESSIBLE_UNIFORM:
+    //     example.incompressible.Advance_One_Time_Step_Implicit_Part(
+    //       example.face_velocities, dt, time, true);
+    // Boundary conditions.
+    incompressible.boundary->Apply_Boundary_Condition_Face(
+        incompressible.projection.p_grid,
+        example.face_velocities,
+        time + dt);
+  }
+  {
+    // Code in PRJECTION_DYNAMIC_UNIFORM:
+    //    projection.Make_Divergence_Free(face_velocities, dt, time);
+     typedef typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP
+        T_FACE_LOOKUP;
+    // Write to divergence(solver->f).
+    projection.Compute_Divergence(
+        T_FACE_LOOKUP(example.face_velocities),
+        projection.elliptic_solver);
+    // Write to filled_region_colors, psi_N, filled_region_touches_dirichlet,
+    // probably.
+    // [TODO] filled_region_touches_dirichlet.
+    FillUniformRegionColor(
+        projection.elliptic_solver->grid,
+        projection.elliptic_solver->psi_D, projection.elliptic_solver->psi_N,
+        false, &projection.elliptic_solver->filled_region_colors);
+
+    projection.elliptic_solver->Solve(time,true);
+    projection.Apply_Pressure(example.face_velocities, dt, time);
+  }
   // Write to pressure.
-  example.projection.p *= (1/dt);
+  projection.p *= (1/dt);
   // Does nothing. But average face_velocities in MPI, necessary?
-  example.incompressible.boundary->Apply_Boundary_Condition_Face(
-      example.incompressible.grid, example.face_velocities,time+dt);
+  incompressible.boundary->Apply_Boundary_Condition_Face(
+      incompressible.grid,
+      example.face_velocities,
+      time + dt);
   delete scope;
 
   return true;
