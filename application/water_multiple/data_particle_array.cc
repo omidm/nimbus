@@ -43,31 +43,31 @@
 
 namespace application {
 
-    DataParticleArray::DataParticleArray(std::string name) {
-        set_name(name);
-    }
+DataParticleArray::DataParticleArray(std::string name) {
+    set_name(name);
+}
 
-    nimbus::Data* DataParticleArray::Clone() {
-        return (new DataParticleArray(name()));
-    }
+nimbus::Data* DataParticleArray::Clone() {
+    return (new DataParticleArray(name()));
+}
 
-    void DataParticleArray::Create() {
-        set_size(0);
-        nimbus::PhysBAMData::Create();
-    }
+void DataParticleArray::Create() {
+    set_size(0);
+    nimbus::PhysBAMData::Create();
+}
 
-    void DataParticleArray::MergeParticles(const std::vector<DataParticleArray * > &scratch) {
-        int_dimension_t new_size = size();
-        for (size_t i = 0; i < scratch.size(); i++)
-            new_size += scratch[i]->size();
-        char *new_buffer = new char[new_size];
-        char *buf_merged = new_buffer;
-        memcpy(buf_merged, buffer(), size());
-        buf_merged += size();
-        for (size_t i = 0; i < scratch.size(); i++) {
-            memcpy(buf_merged, scratch[i]->buffer(), scratch[i]->size());
-            buf_merged += scratch[i]->size();
-        }
+void DataParticleArray::MergeParticles(const std::vector<DataParticleArray * > &scratch) {
+    int_dimension_t new_size = 0;
+    for (size_t i = 0; i < scratch.size(); i++)
+        new_size += scratch[i]->size();
+    char *new_buffer = new char[new_size];
+    char *buf_merged = new_buffer;
+    for (size_t i = 0; i < scratch.size(); i++) {
+        memcpy(buf_merged, scratch[i]->buffer(), scratch[i]->size());
+        buf_merged += scratch[i]->size();
     }
+    delete buffer();
+    set_buffer(new_buffer, new_size);
+}
 
 } // namespace application

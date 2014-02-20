@@ -46,15 +46,15 @@
 
 namespace application {
 
-    class DataParticleArray : public nimbus::PhysBAMData {
-            typedef float T;
-        public:
-            explicit DataParticleArray(std::string n);
-            virtual nimbus::Data* Clone();
-            virtual void Create();
+class DataParticleArray : public nimbus::PhysBAMData {
+        typedef float T;
+    public:
+        explicit DataParticleArray(std::string n);
+        virtual nimbus::Data* Clone();
+        virtual void Create();
 
-            void MergeParticles(const std::vector<DataParticleArray * > &scratch);
-    };
+        void MergeParticles(const std::vector<DataParticleArray * > &scratch);
+};
 
 } // namespace application
 

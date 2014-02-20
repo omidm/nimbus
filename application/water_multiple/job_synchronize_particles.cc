@@ -44,51 +44,51 @@
 
 namespace application {
 
-    JobSynchronizeParticles::JobSynchronizeParticles(nimbus::Application *app) {
-        set_application(app);
-    };
+JobSynchronizeParticles::JobSynchronizeParticles(nimbus::Application *app) {
+    set_application(app);
+};
 
-    nimbus::Job* JobSynchronizeParticles::Clone() {
-        return new JobSynchronizeParticles(application());
+nimbus::Job* JobSynchronizeParticles::Clone() {
+    return new JobSynchronizeParticles(application());
+}
+
+void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
+    dbg(APP_LOG, "Executing synchronize particles job\n");
+
+    // need at least 2 elements - a data object to merge to, and a data
+    // object to merge from
+    if (da.size() <= 2) {
+        dbg(DBG_WARN, "Nothing to synchronize\n");
+        return;
     }
 
-    void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-        dbg(APP_LOG, "Executing synchronize particles job\n");
-
-        // need at least 2 elements - a data object to merge to, and a data
-        // object to merge from
-        if (da.size() <= 2) {
-            dbg(DBG_WARN, "Nothing to synchronize\n");
-            return;
-        }
-
-        DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[0]);
-        if (merge_to == NULL) {
-            dbg(DBG_WARN, "Passed object is not a particle array\n");
-        }
-        GeometricRegion merge_region = merge_to->region();
-
-        std::vector<DataParticleArray * > scratch;
-        DataParticleArray *scratch_data;
-        GeometricRegion scratch_region;
-        for (size_t i = 1; i < da.size(); i++) {
-            scratch_data = dynamic_cast<DataParticleArray * >(da[i]);
-            if (scratch_data == NULL) {
-                dbg(DBG_WARN, "Ignoring scratch object since it is not a particle array\n");
-                continue;
-            }
-            scratch_region = scratch_data->region();
-            if (scratch_region != merge_region) {
-                dbg(DBG_WARN,
-                    "Ignoring scratch object since region does not match with merge region\n");
-                continue;
-            }
-            scratch.push_back(scratch_data);
-        }
-
-        merge_to->MergeParticles(scratch);
-
-        dbg(APP_LOG, "Completed executing synchronize particles job\n");
+    DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[0]);
+    if (merge_to == NULL) {
+        dbg(DBG_WARN, "Passed object is not a particle array\n");
     }
+    GeometricRegion merge_region = merge_to->region();
+
+    std::vector<DataParticleArray * > scratch;
+    DataParticleArray *scratch_data;
+    GeometricRegion scratch_region;
+    for (size_t i = 1; i < da.size(); i++) {
+        scratch_data = dynamic_cast<DataParticleArray * >(da[i]);
+        if (scratch_data == NULL) {
+            dbg(DBG_WARN, "Ignoring scratch object since it is not a particle array\n");
+            continue;
+        }
+        scratch_region = scratch_data->region();
+        if (scratch_region != merge_region) {
+            dbg(DBG_WARN,
+                "Ignoring scratch object since region does not match with merge region\n");
+            continue;
+        }
+        scratch.push_back(scratch_data);
+    }
+
+    merge_to->MergeParticles(scratch);
+
+    dbg(APP_LOG, "Completed executing synchronize particles job\n");
+}
 
 } // namespace application

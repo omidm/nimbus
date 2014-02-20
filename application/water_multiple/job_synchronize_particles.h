@@ -43,12 +43,12 @@
 
 namespace application {
 
-    class JobSynchronizeParticles : public nimbus::Job {
-        public:
-            explicit JobSynchronizeParticles(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+class JobSynchronizeParticles : public nimbus::Job {
+    public:
+        explicit JobSynchronizeParticles(nimbus::Application *app);
+        virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+        virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 
