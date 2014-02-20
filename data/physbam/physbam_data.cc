@@ -51,12 +51,16 @@ namespace nimbus {
 */
 PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 
+char* PhysBAMData::buffer() const {
+    return buffer_;
+}
+
 void PhysBAMData::set_buffer(char *b, int_dimension_t s) {
     buffer_ = b;
     size_ = s;
 }
 
-int_dimension_t PhysBAMData::size() {
+int_dimension_t PhysBAMData::size() const {
     return size_;
 }
 
