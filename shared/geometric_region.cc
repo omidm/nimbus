@@ -390,5 +390,4 @@ GeometricRegion& GeometricRegion::operator= (const GeometricRegion& right) {
   dz_ = right.dz_;
   return *this;
 }
-
 }  // namespace nimbus
