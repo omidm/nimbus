@@ -52,6 +52,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     ${PROJECT_SOURCE_DIR}/water_sources.cc
+    ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
     )
 SET(${PROJECT_NAME}_h
@@ -92,6 +93,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h
     ${PROJECT_SOURCE_DIR}/water_sources.h
+    ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.h
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.h
     )
 
