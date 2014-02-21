@@ -37,10 +37,10 @@
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#include "application/water_multiple/app_utils.h"
-
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
+
+#include "application/water_multiple/app_utils.h"
 
 namespace PhysBAM {
 

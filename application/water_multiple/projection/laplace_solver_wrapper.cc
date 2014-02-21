@@ -1,22 +1,64 @@
+/*
+ * Copyright 2013 Stanford University.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * - Neither the name of the copyright holders nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * Author: Hang Qu<quhang@stanford.edu>
+ */
+
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/projection/nimbus_pcg_sparse_mpi.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 
 namespace PhysBAM {
 
 void LaplaceSolverWrapper::Solve() {
   const int number_of_regions = laplace->number_of_regions;
-  // int -> (dim_t, dim_t, dim_t)
+
+  // region_id -> matrix_id -> (dim_t, dim_t, dim_t)
   ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array(number_of_regions);
 
-  // (dim_t, dim_t, dim_t) -> int
+  // (dim_t, dim_t, dim_t) -> matrix_id
   ARRAY<int, TV_INT> cell_index_to_matrix_index(
       laplace->grid.Domain_Indices(1));
 
-  // color_id -> int
+  // region_id -> sum
   ARRAY<int, VECTOR<int, 1> > filled_region_cell_count(-1, number_of_regions);
 
+  // region_id -> matrix
   ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array(number_of_regions);
 
+  // region_id -> vector
   ARRAY<VECTOR_ND<T> > b_array(number_of_regions);
 
   // Count the cells in each region.
@@ -59,6 +101,7 @@ void LaplaceSolverWrapper::Solve() {
           laplace->enforce_compatibility);
       SolveSubregion(
           matrix_index_to_cell_index_array(color),
+          cell_index_to_matrix_index,
           A_array(color),
           b_array(color),
           color);
@@ -79,6 +122,7 @@ void LaplaceSolverWrapper::Solve() {
 
 void LaplaceSolverWrapper::SolveSubregion(
     ARRAY<TV_INT>& matrix_index_to_cell_index,
+    ARRAY<int, TV_INT>& cell_index_to_matrix_index,
     SPARSE_MATRIX_FLAT_NXN<T>& A,
     VECTOR_ND<T>& b,
     const int color) {
@@ -86,16 +130,30 @@ void LaplaceSolverWrapper::SolveSubregion(
   int number_of_unknowns = matrix_index_to_cell_index.m;
   A.Negate();
   b *= (T) -1;
-  VECTOR_ND<T> x(number_of_unknowns), q, s, r, k, z;
+  VECTOR_ND<T> x(number_of_unknowns);  //, q, s, r, k, z
   for (int i = 1; i <= number_of_unknowns; i++)
     x(i) = laplace->u(matrix_index_to_cell_index(i));
 
-  laplace->Find_Tolerance(b); // needs to happen after b is completely set up
+  laplace->Find_Tolerance(b);
 
   // MPI reference version:
   // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
   // color only used for MPI version.
-  laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
+  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
+  {
+    NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace->pcg);
+    pcg_mpi.projection_data.matrix_index_to_cell_index =
+        &matrix_index_to_cell_index;
+    pcg_mpi.projection_data.cell_index_to_matrix_index =
+        &cell_index_to_matrix_index;
+    pcg_mpi.projection_data.matrix_a = &A;
+    pcg_mpi.projection_data.vector_b = &b;
+    pcg_mpi.projection_data.vector_x = &x;
+    pcg_mpi.projection_data.local_tolerance = laplace->tolerance;
+    pcg_mpi.Initialize();
+    pcg_mpi.CommunicateConfig();
+    pcg_mpi.Parallel_Solve();
+  }
 
   for (int i = 1; i <= number_of_unknowns; i++) {
     TV_INT cell_index = matrix_index_to_cell_index(i);
