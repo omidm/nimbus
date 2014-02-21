@@ -109,6 +109,7 @@ class JobManager {
   private:
     JobGraph job_graph_;
     VersionManager version_manager_;
+    bool processed_new_job_done_;
 
     bool ResolveJobDataVersions(JobEntry* job);
     size_t ResolveVersions();

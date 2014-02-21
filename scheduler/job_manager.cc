@@ -44,6 +44,7 @@
 using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
+  processed_new_job_done_ = false;
   // Add the SCHED job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
   IDSet<job_id_t> job_id_set;
@@ -187,6 +188,7 @@ void JobManager::JobDone(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
+    processed_new_job_done_ = true;
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
