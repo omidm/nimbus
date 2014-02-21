@@ -334,6 +334,7 @@ for rs in reg_map:
     for l in reg_map[rs]:
         ls = len(reg_map[rs][l])
         if ls > 0:
+            out_h.write("const size_t k%s%s_len = %i;\n" % (rs, l, ls))
             out_h.write("extern nimbus::GeometricRegion k%s%s[%i];\n" % (rs, l, ls))
 out_h.write("\n")
 out_h.write("void InitializeRegions();\n")

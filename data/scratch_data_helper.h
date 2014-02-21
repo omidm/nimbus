@@ -130,6 +130,13 @@ class ScratchDataHelper {
          */
         void GetAllScratchData(Job *job,
                                const GeometricRegion &region,
+                               lIDSet *ids,
+                               bool clear = false) const;
+        /* given a region and a scratch type, this function obtains all the
+         * scratch data ids in that region.
+         */
+        void GetAllScratchData(Job *job,
+                               const GeometricRegion &region,
                                ScratchType st,
                                lIDSet *ids,
                                bool clear = false) const;
