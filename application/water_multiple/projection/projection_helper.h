@@ -60,8 +60,5 @@ void FillUniformRegionColor(
     const bool solve_single_cell_neumann_regions,
     T_COLOR* filled_region_colors);
 
-bool All_Cell_Faces_Neumann(
-    const TV_INT& cell_index, const T_PSI_N& psi_N);
-
 }  // namespace PhysBAM
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
