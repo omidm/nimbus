@@ -495,11 +495,126 @@ WriteFrameImpl(const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ProjectionImpl (const nimbus::Job *job,
+ProjectionCalculateBoundaryConditionImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
+
+  // Sets boundary conditions.
+  // Local.
+  // Read velocity and pressure. Write velocity, pressure, psi_D, and psi_N.
+  example.Set_Boundary_Conditions(time);
+
+  // Sets dirichlet boundary conditions in the air.
+  // Remote: exchange psi_D and pressure afterwards.
+  // Read levelset. Write psi_D and pressure.
+  incompressible.Set_Dirichlet_Boundary_Conditions(
+      &example.particle_levelset_evolution.phi, 0);
+
+  // Scales pressure.
+  // Read/Write pressure.
+  projection.p *= dt;
+
+  typedef typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP
+      T_FACE_LOOKUP;
+
+  // Computes divergence.
+  // Local.
+  // Read velocity. Write divergence(solver->f).
+  projection.Compute_Divergence(
+      T_FACE_LOOKUP(example.face_velocities),
+      &laplace_solver);
+
+  // Coloring.
+  // Local.
+  // Read psi_D, psi_N.
+  // Write filled_region_colors.
+  FillUniformRegionColor(
+      laplace_solver.grid,
+      laplace_solver.psi_D, laplace_solver.psi_N,
+      false, &laplace_solver.filled_region_colors);
+
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionCoreImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
+  LaplaceSolverWrapper laplace_solver_wrapper(&laplace_solver);
+
+  // Read psi_N, psi_D, filled_region_colors, divergence, pressure.
+  // Write A, b, x, tolerance, indexing.
+  laplace_solver_wrapper.PrepareProjectionInput();
+
+  // MPI reference version:
+  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
+  // color only used for MPI version.
+  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
+  NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace_solver.pcg);
+  pcg_mpi.projection_data.matrix_index_to_cell_index =
+      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
+  pcg_mpi.projection_data.cell_index_to_matrix_index =
+      &laplace_solver_wrapper.cell_index_to_matrix_index;
+  pcg_mpi.projection_data.matrix_a = &laplace_solver_wrapper.A_array(1);
+  pcg_mpi.projection_data.vector_b = &laplace_solver_wrapper.b_array(1);
+  pcg_mpi.projection_data.vector_x = &laplace_solver_wrapper.x;
+  pcg_mpi.projection_data.local_tolerance = laplace_solver.tolerance;
+  pcg_mpi.Initialize();
+  pcg_mpi.CommunicateConfig();
+  pcg_mpi.Parallel_Solve();
+
+  // Read matrix_index_to_cell_index and x. Write u.
+  laplace_solver_wrapper.TransformResult();
+
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionWrapupImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+
+  // Applies pressure.
+  // Local.
+  // Read pressure(u/p), levelset, psi_D, psi_N, u_interface, velocity.
+  // Write velocity.
+  projection.Apply_Pressure(example.face_velocities, dt, time);
+
+  // Scales pressure.
+  // Read/Write pressure.
+  projection.p *= (1/dt);
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionImpl(
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  ProjectionCalculateBoundaryConditionImpl(job, da, dt);
+  ProjectionCoreImpl(job, da, dt);
+  ProjectionWrapupImpl(job, da, dt);
+  return true;
+}
+
+/*
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionImpl(const nimbus::Job *job,
                const nimbus::DataArray &da,
                T dt) {
-  LOG::SCOPE *scope=0;
-  scope=new LOG::SCOPE("Project");
   INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
   PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
   LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
@@ -582,6 +697,7 @@ ProjectionImpl (const nimbus::Job *job,
   pcg_mpi.CommunicateConfig();
   pcg_mpi.Parallel_Solve();
 
+  // Read matrix_index_to_cell_index and x. Write u.
   laplace_solver_wrapper.TransformResult();
 
   // Applies pressure.
@@ -599,10 +715,10 @@ ProjectionImpl (const nimbus::Job *job,
   //    incompressible.grid,
   //    example.face_velocities,
   //    time + dt);
-  delete scope;
 
   return true;
 }
+*/
 
 template<class TV> bool WATER_DRIVER<TV>::
 ExtrapolationImpl (const nimbus::Job *job,
