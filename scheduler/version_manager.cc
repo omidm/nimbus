@@ -145,6 +145,25 @@ bool VersionManager::RemoveVersionEntry(const VersionEntry& ve) {
   }
 }
 
+bool VersionManager::RemoveJobVersionTables(JobEntry* job_entry) {
+  if (!job_entry->versioned()) {
+    return false;
+  }
+
+  JobEntry::VersionTable::iterator iter;
+
+  JobEntry::VersionTable  vt_in = job_entry->version_table_in();
+  for (iter = vt_in.begin(); iter != vt_in.end(); ++iter) {
+    RemoveVersionEntry(iter->first, iter->second, job_entry, VersionEntry::IN);
+  }
+
+  JobEntry::VersionTable  vt_out = job_entry->version_table_out();
+  for (iter = vt_out.begin(); iter != vt_out.end(); ++iter) {
+    RemoveVersionEntry(iter->first, iter->second, job_entry, VersionEntry::OUT);
+  }
+  return true;
+}
+
 size_t VersionManager::GetJobsNeedDataVersion(
     JobEntryList* result, VersionedLogicalData vld) {
   size_t num = 0;

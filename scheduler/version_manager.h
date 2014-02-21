@@ -72,6 +72,8 @@ class VersionManager {
 
     bool RemoveVersionEntry(const VersionEntry& ve);
 
+    bool RemoveJobVersionTables(JobEntry* job_entry);
+
     size_t GetJobsNeedDataVersion(JobEntryList* result,
         VersionedLogicalData vld);
 

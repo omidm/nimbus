@@ -146,6 +146,8 @@ class Scheduler {
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
 
+    virtual size_t RemoveObsoleteJobEntries();
+
     virtual bool PrepareDataForJobAtWorkerG2(JobEntry* job,
         SchedulerWorker* worker, logical_data_id_t l_id);
 
