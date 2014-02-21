@@ -55,8 +55,27 @@ class LaplaceSolverWrapper {
   LaplaceSolverWrapper(
       LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input) {
     laplace = laplace_input;
+    const int number_of_regions = 1;
+    matrix_index_to_cell_index_array.Resize(number_of_regions);
+    cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
+    A_array.Resize(number_of_regions);
+    b_array.Resize(number_of_regions);
   }
-  void Solve();
+  ~LaplaceSolverWrapper() {}
+
+  // region_id -> matrix_id -> (dim_t, dim_t, dim_t)
+  ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array;
+  // (dim_t, dim_t, dim_t) -> matrix_id
+  ARRAY<int, TV_INT> cell_index_to_matrix_index;
+  // region_id -> matrix
+  ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array;
+  // region_id -> vector
+  ARRAY<VECTOR_ND<T> > b_array;
+  VECTOR_ND<T> x;
+
+  // Input refers to A, x, b, indexing, tolerance.
+  void PrepareProjectionInput();
+  void TransformResult();
  private:
   LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace;
 };

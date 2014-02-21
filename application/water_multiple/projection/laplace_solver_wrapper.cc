@@ -42,25 +42,11 @@
 
 namespace PhysBAM {
 
-void LaplaceSolverWrapper::Solve() {
+void LaplaceSolverWrapper::PrepareProjectionInput() {
   const int number_of_regions = laplace->number_of_regions;
   assert(number_of_regions == 1);
-
-  // region_id -> matrix_id -> (dim_t, dim_t, dim_t)
-  ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array(number_of_regions);
-
-  // (dim_t, dim_t, dim_t) -> matrix_id
-  ARRAY<int, TV_INT> cell_index_to_matrix_index(
-      laplace->grid.Domain_Indices(1));
-
   // region_id -> sum
   ARRAY<int, VECTOR<int, 1> > filled_region_cell_count(-1, number_of_regions);
-
-  // region_id -> matrix
-  ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array(number_of_regions);
-
-  // region_id -> vector
-  ARRAY<VECTOR_ND<T> > b_array(number_of_regions);
 
   // Count the cells in each region.
   for (typename T_GRID::CELL_ITERATOR iterator(laplace->grid, 1);
@@ -107,52 +93,35 @@ void LaplaceSolverWrapper::Solve() {
   int number_of_unknowns = matrix_index_to_cell_index.m;
   A.Negate();
   b *= (T) -1;
-  VECTOR_ND<T> x(number_of_unknowns);  //, q, s, r, k, z
+  x.Resize(number_of_unknowns);
+  VECTOR_ND<T> x(number_of_unknowns);
   for (int i = 1; i <= number_of_unknowns; i++) {
     x(i) = laplace->u(matrix_index_to_cell_index(i));
   }
 
   laplace->Find_Tolerance(b);
+}
 
-  // In the following:
-  //     A, b, x, matrix_index_to_cell_index, cell_index_to_matrix_index,
-  //     laplace->tolerance
-  // are used.
-
-  // MPI reference version:
-  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
-  // color only used for MPI version.
-  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
-  {
-    NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace->pcg);
-    pcg_mpi.projection_data.matrix_index_to_cell_index =
-        &matrix_index_to_cell_index;
-    pcg_mpi.projection_data.cell_index_to_matrix_index =
-        &cell_index_to_matrix_index;
-    pcg_mpi.projection_data.matrix_a = &A;
-    pcg_mpi.projection_data.vector_b = &b;
-    pcg_mpi.projection_data.vector_x = &x;
-    pcg_mpi.projection_data.local_tolerance = laplace->tolerance;
-    pcg_mpi.Initialize();
-    pcg_mpi.CommunicateConfig();
-    pcg_mpi.Parallel_Solve();
-  }
-
+void LaplaceSolverWrapper::TransformResult() {
+  // Assume only one color.
+  const int color = 1;
+  ARRAY<TV_INT>& matrix_index_to_cell_index =
+      matrix_index_to_cell_index_array(color);
+  int number_of_unknowns = matrix_index_to_cell_index.m;
   for (int i = 1; i <= number_of_unknowns; i++) {
     TV_INT cell_index = matrix_index_to_cell_index(i);
     laplace->u(cell_index) = x(i);
   }
-
   // Set some velocity to zero.
-  for (typename T_GRID::CELL_ITERATOR iterator(laplace->grid, 1);
-       iterator.Valid();
-       iterator.Next()) {
-    int filled_region_color =
-        laplace->filled_region_colors(iterator.Cell_Index());
-    if (filled_region_color > 0 &&
-        !laplace->filled_region_touches_dirichlet(filled_region_color))
-      laplace->u(iterator.Cell_Index()) = 0;
-  }
+  // for (typename T_GRID::CELL_ITERATOR iterator(laplace->grid, 1);
+  //     iterator.Valid();
+  //     iterator.Next()) {
+  //  int filled_region_color =
+  //      laplace->filled_region_colors(iterator.Cell_Index());
+  //  if (filled_region_color > 0 &&
+  //      !laplace->filled_region_touches_dirichlet(filled_region_color))
+  //    laplace->u(iterator.Cell_Index()) = 0;
+  // }
 }
 
 }  // namespace PhysBAM
