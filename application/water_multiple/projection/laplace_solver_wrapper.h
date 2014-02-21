@@ -59,12 +59,6 @@ class LaplaceSolverWrapper {
   void Solve();
  private:
   LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace;
-  void SolveSubregion(
-      ARRAY<TV_INT>& matrix_index_to_cell_index,
-      ARRAY<int, TV_INT>& cell_index_to_matrix_index,
-      SPARSE_MATRIX_FLAT_NXN<T>& A,
-      VECTOR_ND<T>& b,
-      const int color);
 };
 
 }  // namespace PhysBAM

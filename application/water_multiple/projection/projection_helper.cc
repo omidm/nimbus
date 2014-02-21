@@ -41,6 +41,8 @@
 
 namespace PhysBAM {
 
+bool All_Cell_Faces_Neumann(const TV_INT& cell_index, const T_PSI_N& psi_N);
+
 void FillUniformRegionColor(
     const T_GRID& grid,
     const T_PSI_D& psi_D,
