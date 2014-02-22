@@ -32,54 +32,19 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * The graph abstraction which defines the vertex, edge and graph class. They
+  * are all build as template class so that one can choose the data structure
+  * to keep the data at each vertex dynamically.
+  *
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#include "shared/graph.h"
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
-
-#define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
-#define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
-
-namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
-  typedef uint64_t edge_id_t;
-
-  typedef int32_t exit_status_t;
-
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
-
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
+using namespace nimbus; // NOLINT
 
 
-}  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+
