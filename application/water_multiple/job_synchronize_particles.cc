@@ -57,26 +57,37 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // need at least 2 elements - a data object to merge to, and a data
     // object to merge from
-    if (da.size() <= 2) {
+    size_t dnum = da.size();
+    if (dnum < 2) {
         dbg(DBG_WARN, "Nothing to synchronize\n");
         return;
     }
 
-    DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[0]);
+    DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[dnum-1]);
     if (merge_to == NULL) {
         dbg(DBG_WARN, "Passed object is not a particle array\n");
     }
+    dbg(APP_LOG, "*** SIZEOF CHAR %i\n", sizeof(char));
+    dbg(APP_LOG, "******** Step particles job received MERGE TO %s\n data with logical id %i, physical id %i\n",
+            merge_to->name().c_str(),
+            merge_to->logical_id(),
+            merge_to->physical_id());
     GeometricRegion merge_region = merge_to->region();
 
     std::vector<DataParticleArray * > scratch;
     DataParticleArray *scratch_data;
     GeometricRegion scratch_region;
-    for (size_t i = 1; i < da.size(); i++) {
+    for (size_t i = 0; i < dnum - 1; i++) {
         scratch_data = dynamic_cast<DataParticleArray * >(da[i]);
         if (scratch_data == NULL) {
             dbg(DBG_WARN, "Ignoring scratch object since it is not a particle array\n");
             continue;
         }
+        dbg(APP_LOG, "******** Step particles job received SCRATCH DATA %s\n data with logical id %i, physical id %i\n, region %s\n",
+                scratch_data->name().c_str(),
+                scratch_data->logical_id(),
+                scratch_data->physical_id(),
+                scratch_data->region().toString().c_str());
         scratch_region = scratch_data->region();
         if (scratch_region != merge_region) {
             dbg(DBG_WARN,
