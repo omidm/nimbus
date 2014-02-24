@@ -37,7 +37,7 @@
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_INCLUDE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
 
 #include "application/water_multiple/job_adjust_phi.h"
 #include "application/water_multiple/job_adjust_phi_with_objects.h"
