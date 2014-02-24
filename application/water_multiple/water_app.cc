@@ -72,11 +72,11 @@ namespace application {
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
-        RegisterData(APP_FACE_VEL, new DataFaceArray(APP_FACE_VEL));
+        RegisterData(APP_FACE_VEL, new DataFaceArray<float>(APP_FACE_VEL));
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
-        RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray(APP_FACE_VEL_GHOST));
+        RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray<float>(APP_FACE_VEL_GHOST));
         dbg(APP_LOG, "Registering %s\n", APP_PHI);
-        RegisterData(APP_PHI, new DataScalarArray(APP_PHI));
+        RegisterData(APP_PHI, new DataScalarArray<float>(APP_PHI));
         dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
         RegisterData(APP_POS_PARTICLES, new DataParticleArray(APP_POS_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);

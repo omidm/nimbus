@@ -43,21 +43,23 @@
 
 namespace application {
 
-    DataFaceArray::DataFaceArray(std::string name) {
-        set_name(name);
-    }
+template<typename T> DataFaceArray<T>::DataFaceArray(std::string name) {
+  set_name(name);
+}
 
-    nimbus::Data* DataFaceArray::Clone() {
-        return (new DataFaceArray(name()));
-    }
+template<typename T> nimbus::Data* DataFaceArray<T>::Clone() {
+  return (new DataFaceArray<T>(name()));
+}
 
-    void DataFaceArray::Create() {
-        nimbus::GeometricRegion r = region();
-        int s = ((r.dx() + 1) * r.dy() * r.dz() +
-                 r.dx() * (r.dy() + 1) * r.dz() +
-                 r.dx() * r.dy() * (r.dz() + 1)) * sizeof(T);
-        set_size(s);
-        nimbus::PhysBAMData::Create();
-    }
+template<typename T> void DataFaceArray<T>::Create() {
+  nimbus::GeometricRegion r = region();
+  int s = ((r.dx() + 1) * r.dy() * r.dz() +
+           r.dx() * (r.dy() + 1) * r.dz() +
+           r.dx() * r.dy() * (r.dz() + 1)) * sizeof(T);
+  set_size(s);
+  nimbus::PhysBAMData::Create();
+}
+
+template class DataFaceArray<float>;
 
 } // namespace application

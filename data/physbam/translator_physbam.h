@@ -73,7 +73,7 @@ namespace nimbus {
     typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
     typedef PhysBAM::VECTOR<int, 3> Int3Vector;
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex> FaceArray;
+    // typedef typename PhysBAM::ARRAY<scalar_t, FaceIndex> FaceArray;
 
     // typedef typename PhysBAM::PARTICLE_LEVELSET_PARTICLES<TV> Particles;
     // typedef typename PhysBAM::ARRAY<Particles*, PhysBAM::VECTOR<int, 3> > ParticlesArray;
@@ -92,7 +92,7 @@ namespace nimbus {
         RemovedParticleArray;
 
     typedef typename PhysBAM::PARTICLE_LEVELSET<Grid> ParticleLevelset;
-    typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector> ScalarArray;
+    // typedef typename PhysBAM::ARRAY<scalar_t, Int3Vector> ScalarArray;
 
     enum {
       X_COORD = 1,
@@ -117,10 +117,11 @@ namespace nimbus {
       scalar_t v[3];
     };
 
-    virtual void ReadFaceArray(const GeometricRegion* region,
-                               const int_dimension_t shift[3],
-                               const PdiVector* objects,
-                               FaceArray* fa) {
+    template<typename T> void ReadFaceArray(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* objects,
+        typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
       if (objects != NULL) {
         PdiVector::const_iterator iter = objects->begin();
         for (; iter != objects->end(); ++iter) {
@@ -129,7 +130,7 @@ namespace nimbus {
           if (HasOverlap(overlap)) {
             std::string reg_str = region->toString();
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
-            scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+            T* buffer = reinterpret_cast<T*>(data->buffer());
 
             Dimension3Vector src = GetOffset(obj->region(), region);
             Dimension3Vector dest = GetOffset(region, obj->region());
@@ -202,10 +203,11 @@ namespace nimbus {
 
     /** Take a FaceArray described by region and write it out to the
      *  PhysicalDataInstance objects in the objects array. */
-    virtual bool WriteFaceArray(const GeometricRegion* region,
-                                const int_dimension_t shift[3],
-                                PdiVector* objects,
-                                FaceArray* fa) {
+    template<typename T> bool WriteFaceArray(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* objects,
+        typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
       int_dimension_t region_size = 0;
       region_size += (region->dx() + 1) * region->dy() * region->dz();
       region_size += region->dx() * (region->dy() + 1) * region->dz();
@@ -226,7 +228,7 @@ namespace nimbus {
           if (!HasOverlap(overlap)) {continue;}
 
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
-          scalar_t* buffer = reinterpret_cast<scalar_t*>(data->buffer());
+          T* buffer = reinterpret_cast<T*>(data->buffer());
 
           Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
@@ -794,99 +796,101 @@ particle_buffer.id = (*id)(i);
     /* Read scalar array from PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion specified by region, into the
      * ScalarArray specified by dest. This allocates a new scalar array. */
-    virtual ScalarArray* ReadScalarArray(const GeometricRegion* region,
-                                         const int_dimension_t shift[3],
-                                         const PdiVector* instances,
-                                         ScalarArray *sa) {
-        if (instances != NULL) {
-            PdiVector::const_iterator iter = instances->begin();
-            for (; iter != instances->end(); ++iter) {
-                const PhysicalDataInstance* inst = *iter;
-                Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
+    template<typename T> typename PhysBAM::ARRAY<T, Int3Vector>* ReadScalarArray(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* instances,
+        typename PhysBAM::ARRAY<T, Int3Vector>* sa) {
+      if (instances != NULL) {
+        PdiVector::const_iterator iter = instances->begin();
+        for (; iter != instances->end(); ++iter) {
+          const PhysicalDataInstance* inst = *iter;
+          Dimension3Vector overlap = GetOverlapSize(inst->region(), region);
 
-                if (HasOverlap(overlap)) {
-                    PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
-                    scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
+          if (HasOverlap(overlap)) {
+            PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
+            T* buffer  = reinterpret_cast<T*>(data->buffer());
 
-                    Dimension3Vector src  = GetOffset(inst->region(), region);
-                    Dimension3Vector dest = GetOffset(region, inst->region());
+            Dimension3Vector src  = GetOffset(inst->region(), region);
+            Dimension3Vector dest = GetOffset(region, inst->region());
 
-                    for (int z = 0; z < overlap(Z_COORD); z++) {
-                        for (int y = 0; y < overlap(Y_COORD); y++) {
-                            for (int x = 0; x < overlap(X_COORD); x++) {
-                                int source_x = x + src(X_COORD);
-                                int source_y = y + src(Y_COORD);
-                                int source_z = z + src(Z_COORD);
-                                int source_index =
-                                    (source_z * (inst->region()->dy() * inst->region()->dx())) +
-                                    (source_y * (inst->region()->dx())) +
-                                    source_x;
-                                int dest_x = x + dest(X_COORD) + region->x() - shift[0];
-                                int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
-                                int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
-                                Int3Vector destination_index(dest_x, dest_y, dest_z);
-                                assert(source_index < data->size() && source_index >= 0);
-                                (*sa)(destination_index) = buffer[source_index];
-                            }
-                        }
-                    }
+            for (int z = 0; z < overlap(Z_COORD); z++) {
+              for (int y = 0; y < overlap(Y_COORD); y++) {
+                for (int x = 0; x < overlap(X_COORD); x++) {
+                  int source_x = x + src(X_COORD);
+                  int source_y = y + src(Y_COORD);
+                  int source_z = z + src(Z_COORD);
+                  int source_index =
+                      (source_z * (inst->region()->dy() * inst->region()->dx())) +
+                      (source_y * (inst->region()->dx())) +
+                      source_x;
+                  int dest_x = x + dest(X_COORD) + region->x() - shift[0];
+                  int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
+                  int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
+                  Int3Vector destination_index(dest_x, dest_y, dest_z);
+                  assert(source_index < data->size() && source_index >= 0);
+                  (*sa)(destination_index) = buffer[source_index];
                 }
+              }
             }
+          }
         }
-        return sa;
+      }
+      return sa;
     }
 
     /* Write scalar array data into PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion region. This frees the physbam scalar array. */
-    virtual bool WriteScalarArray(const GeometricRegion* region,
-                                  const int_dimension_t shift[3],
-                                  PdiVector* instances,
-                                  ScalarArray* sa) {
-        if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
-            dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
-            Int3Vector cp = sa->counts;
-            dbg(DBG_WARN, "WARN: physbam array has size %i, %i, %i\n", cp.x, cp.y, cp.z);
-            dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz()); // NOLINT
-        }
+    template<typename T> bool WriteScalarArray(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* instances,
+        typename PhysBAM::ARRAY<T, Int3Vector>* sa) {
+      if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
+        dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
+        Int3Vector cp = sa->counts;
+        dbg(DBG_WARN, "WARN: physbam array has size %i, %i, %i\n", cp.x, cp.y, cp.z);
+        dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region->dx(), region->dy(), region->dz()); // NOLINT
+      }
 
-        if (instances != NULL) {
-            PdiVector::iterator iter = instances->begin();
+      if (instances != NULL) {
+        PdiVector::iterator iter = instances->begin();
 
-            for (; iter != instances->end(); ++iter) {
-                const PhysicalDataInstance* inst = *iter;
-                GeometricRegion *temp = inst->region();
-                Dimension3Vector overlap = GetOverlapSize(temp, region);
+        for (; iter != instances->end(); ++iter) {
+          const PhysicalDataInstance* inst = *iter;
+          GeometricRegion *temp = inst->region();
+          Dimension3Vector overlap = GetOverlapSize(temp, region);
 
-                if (HasOverlap(overlap)) {
-                    PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
-                    scalar_t* buffer  = reinterpret_cast<scalar_t*>(data->buffer());
+          if (HasOverlap(overlap)) {
+            PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
+            T* buffer  = reinterpret_cast<T*>(data->buffer());
 
-                    Dimension3Vector src  = GetOffset(region, inst->region());
-                    Dimension3Vector dest = GetOffset(inst->region(), region);
+            Dimension3Vector src  = GetOffset(region, inst->region());
+            Dimension3Vector dest = GetOffset(inst->region(), region);
 
-                    for (int z = 0; z < overlap(Z_COORD); z++) {
-                        for (int y = 0; y < overlap(Y_COORD); y++) {
-                            for (int x = 0; x < overlap(X_COORD); x++) {
-                                int dest_x = x + dest(X_COORD);
-                                int dest_y = y + dest(Y_COORD);
-                                int dest_z = z + dest(Z_COORD);
-                                int destination_index =
-                                    (dest_z * (inst->region()->dy() * inst->region()->dx())) +
-                                    (dest_y * (inst->region()->dx())) +
-                                    dest_x;
-                                int source_x = x + src(X_COORD) + region->x() - shift[0];
-                                int source_y = y + src(Y_COORD) + region->y() - shift[1];
-                                int source_z = z + src(Z_COORD) + region->z() - shift[2];
-                                Int3Vector source_index(source_x, source_y, source_z);
-                                assert(destination_index < data->size() && destination_index >= 0);
-                                buffer[destination_index] = (*sa)(source_index);
-                            }
-                        }
-                    }
+            for (int z = 0; z < overlap(Z_COORD); z++) {
+              for (int y = 0; y < overlap(Y_COORD); y++) {
+                for (int x = 0; x < overlap(X_COORD); x++) {
+                  int dest_x = x + dest(X_COORD);
+                  int dest_y = y + dest(Y_COORD);
+                  int dest_z = z + dest(Z_COORD);
+                  int destination_index =
+                      (dest_z * (inst->region()->dy() * inst->region()->dx())) +
+                      (dest_y * (inst->region()->dx())) +
+                      dest_x;
+                  int source_x = x + src(X_COORD) + region->x() - shift[0];
+                  int source_y = y + src(Y_COORD) + region->y() - shift[1];
+                  int source_z = z + src(Z_COORD) + region->z() - shift[2];
+                  Int3Vector source_index(source_x, source_y, source_z);
+                  assert(destination_index < data->size() && destination_index >= 0);
+                  buffer[destination_index] = (*sa)(source_index);
                 }
+              }
             }
+          }
         }
-        return true;
+      }
+      return true;
     }
 
 
