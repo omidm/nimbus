@@ -33,9 +33,8 @@
  */
 
  /*
-  * The graph abstraction which defines the vertex, edge and graph class. They
-  * are all build as template class so that one can choose the data structure
-  * to keep the data at each vertex dynamically.
+  * The graph graph abstraction class, build as template class so that one can
+  * choose the data structure to keep the data at each vertex dynamically.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>
@@ -52,63 +51,13 @@
 #include <set>
 #include "shared/nimbus_types.h"
 
-
-
 namespace nimbus {
 
-template<typename T>
+template<typename T, typename key_t>
 class Edge;
 
-template<typename T>
+template<typename T, typename key_t>
 class Vertex;
-
-template<typename T>
-class Vertex {
-  friend class Graph;
-  public:
-    explicit Vertex(T* entry) {}
-    Vertex(const Vertex<T>& other) {}
-    virtual ~Vertex() {}
-
-    virtual std::map<edge_id_t, Edge<T>*>* outgoing_edges() {}
-    virtual std::map<edge_id_t, Edge<T>*>* incoming_edges() {}
-    virtual T* entry() {}
-
-    Vertex<T>& operator=(const Vertex<T>& other) {}
-
-  protected:
-    virtual void AddOutgoingEdge(Edge<T>* e) {}
-
-    virtual void AddIncomingEdge(Edge<T>* e) {}
-
-    virtual void RemoveOutgoingEdge(Edge<T>* e) {}
-
-    virtual void RemoveIncomingEdge(Edge<T>* e) {}
-
-  private:
-    std::map<edge_id_t, Edge<T>*> outgoing_edges_;
-    std::map<edge_id_t, Edge<T>*> incoming_edges_;
-    T* entry_;
-};
-
-template<typename T>
-class Edge {
-  public:
-    Edge(edge_id_t id, Vertex<T>* startVertex, Vertex<T>* endVertex) {}
-    Edge(const Edge<T>& other) {}
-    virtual ~Edge() {}
-
-    virtual Vertex<T>* start_vertex() {}
-    virtual Vertex<T>* end_vertex() {}
-    virtual edge_id_t id();
-
-    Edge<T>& operator=(const Edge<T>& other) {}
-
-  private:
-    Vertex<T>* start_vertex_;
-    Vertex<T>* end_vertex_;
-    edge_id_t id_;
-};
 
 template<typename T, typename key_t>
 class Graph {
@@ -116,28 +65,28 @@ class Graph {
     Graph() {}
     virtual ~Graph() {}
 
-    virtual std::map<key_t, Vertex<T>*>* vertices() {}
-    virtual std::map<edge_id_t, Edge<T>*>* edges() {}
+    virtual std::map<key_t, Vertex<T, key_t>*>* vertices() {}
+    virtual std::map<key_t, Edge<T, key_t>*>* edges() {}
 
     virtual bool AddVertex(key_t key, T* entry) {}
 
-    virtual bool AddVertex(key_t key, T* entry, Vertex<T>** vertex) {}
+    virtual bool AddVertex(key_t key, T* entry, Vertex<T, key_t>** vertex) {}
 
-    virtual bool GetVertex(key_t key, Vertex<T>** vertex) {}
+    virtual bool GetVertex(key_t key, Vertex<T, key_t>** vertex) {}
 
     virtual bool RemoveVertex(key_t key) {}
 
-    virtual bool AddEdge(Vertex<T>* start, Vertex<T>* end) {}
+    virtual bool AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {}
 
     virtual bool AddEdge(key_t start_key, key_t end_key) {}
 
-    virtual bool RemoveEdge(Vertex<T>* start, Vertex<T>* end) {}
+    virtual bool RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {}
 
     virtual bool RemoveEdge(key_t start_key, key_t end_key) {}
 
   private:
-    std::map<key_t, Vertex<T>*> vertices_;
-    std::map<edge_id_t, Edge<T>*> edges_;
+    std::map<key_t, Vertex<T, key_t>*> vertices_;
+    std::map<key_t, Edge<T, key_t>*> edges_;
 };
 
 

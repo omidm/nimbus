@@ -58,7 +58,6 @@ namespace nimbus {
   typedef uint64_t partition_id_t;
   typedef uint64_t param_id_t;
   typedef uint64_t data_version_t;
-  typedef uint64_t edge_id_t;
 
   typedef int32_t exit_status_t;
 

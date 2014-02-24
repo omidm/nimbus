@@ -33,16 +33,15 @@
  */
 
  /*
-  * The graph graph abstraction class, build as template class so that one can
+  * The graph vertex abstraction class, build as template class so that one can
   * choose the data structure to keep the data at each vertex dynamically.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "shared/graph.h"
-#include "shared/edge.h"
 #include "shared/vertex.h"
+#include "shared/edge.h"
 
 using namespace nimbus; // NOLINT
 

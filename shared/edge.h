@@ -33,19 +33,50 @@
  */
 
  /*
-  * The graph graph abstraction class, build as template class so that one can
+  * The graph edge abstraction class, build as template class so that one can
   * choose the data structure to keep the data at each vertex dynamically.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "shared/graph.h"
-#include "shared/edge.h"
-#include "shared/vertex.h"
+#ifndef NIMBUS_SHARED_EDGE_H_
+#define NIMBUS_SHARED_EDGE_H_
 
-using namespace nimbus; // NOLINT
+#include <sstream> // NOLINT
+#include <iostream> // NOLINT
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include "shared/nimbus_types.h"
 
 
 
+namespace nimbus {
 
+template<typename T, typename key_t>
+class Vertex;
+
+template<typename T, typename key_t>
+class Edge {
+  public:
+    Edge(key_t id, Vertex<T, key_t>* startVertex, Vertex<T, key_t>* endVertex) {}
+    Edge(const Edge<T, key_t>& other) {}
+    virtual ~Edge() {}
+
+    virtual Vertex<T, key_t>* start_vertex() {}
+    virtual Vertex<T, key_t>* end_vertex() {}
+    virtual key_t id();
+
+    Edge<T, key_t>& operator=(const Edge<T, key_t>& other) {}
+
+  private:
+    Vertex<T, key_t>* start_vertex_;
+    Vertex<T, key_t>* end_vertex_;
+    key_t id_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_EDGE_H_
