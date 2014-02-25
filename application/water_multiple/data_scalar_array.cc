@@ -59,5 +59,7 @@ template<typename T> void DataScalarArray<T>::Create() {
 }
 
 template class DataScalarArray<float>;
+template class DataScalarArray<int>;
+template class DataScalarArray<bool>;
 
 } // namespace application

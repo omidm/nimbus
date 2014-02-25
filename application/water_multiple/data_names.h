@@ -51,4 +51,10 @@
 #define APP_NEG_REM_PARTICLES "neg_rem_particles"
 #define APP_LAST_UNIQUE_PARTICLE_ID "last_unique_particle_id"
 
+#define APP_PSI_D "psi_d"
+#define APP_PSI_N "psi_n"
+#define APP_PRESSURE "pressure"
+#define APP_FILLED_REGION_COLORS "filled_region_colors"
+#define APP_DIVERGENCE "divergence"
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

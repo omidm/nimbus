@@ -61,5 +61,6 @@ template<typename T> void DataFaceArray<T>::Create() {
 }
 
 template class DataFaceArray<float>;
+template class DataFaceArray<bool>;
 
 } // namespace application

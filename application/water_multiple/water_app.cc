@@ -88,6 +88,19 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
 
+        dbg(APP_LOG, "Registering %s\n", APP_PSI_D);
+        RegisterData(APP_PSI_D, new DataScalarArray<bool>(APP_PSI_D));
+        dbg(APP_LOG, "Registering %s\n", APP_PSI_N);
+        RegisterData(APP_PSI_N, new DataFaceArray<bool>(APP_PSI_N));
+        dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
+        RegisterData(APP_PRESSURE, new DataScalarArray<float>(APP_PRESSURE));
+        dbg(APP_LOG, "Registering %s\n", APP_FILLED_REGION_COLORS);
+        RegisterData(APP_FILLED_REGION_COLORS,
+                     new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
+        dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
+        RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
+
+
         dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
         kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
         dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_PARTICLES);

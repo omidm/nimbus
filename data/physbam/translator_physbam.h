@@ -201,6 +201,22 @@ namespace nimbus {
       }
     }
 
+    void ReadFaceArrayFloat(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* objects,
+        typename PhysBAM::ARRAY<float, FaceIndex>* fa) {
+      ReadFaceArray<float>(region, shift, objects, fa);
+    }
+
+    void ReadFaceArrayBool(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* objects,
+        typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
+      ReadFaceArray<bool>(region, shift, objects, fa);
+    }
+
     /** Take a FaceArray described by region and write it out to the
      *  PhysicalDataInstance objects in the objects array. */
     template<typename T> bool WriteFaceArray(
@@ -297,6 +313,22 @@ namespace nimbus {
         }
       }
       return true;
+    }
+
+    bool WriteFaceArrayFloat(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* objects,
+        typename PhysBAM::ARRAY<float, FaceIndex>* fa) {
+      return WriteFaceArray<float>(region, shift, objects, fa);
+    }
+
+    bool WriteFaceArrayBool(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* objects,
+        typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
+      return WriteFaceArray<bool>(region, shift, objects, fa);
     }
 
     /* Reads the particle data from the PhysicalDataInstances "instances",
@@ -839,6 +871,30 @@ particle_buffer.id = (*id)(i);
       return sa;
     }
 
+    typename PhysBAM::ARRAY<float, Int3Vector>* ReadScalarArrayFloat(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* instances,
+        typename PhysBAM::ARRAY<float, Int3Vector>* sa) {
+      return ReadScalarArray<float>(region, shift, instances, sa);
+    }
+
+    typename PhysBAM::ARRAY<int, Int3Vector>* ReadScalarArrayInt(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* instances,
+        typename PhysBAM::ARRAY<int, Int3Vector>* sa) {
+      return ReadScalarArray<int>(region, shift, instances, sa);
+    }
+
+    typename PhysBAM::ARRAY<bool, Int3Vector>* ReadScalarArrayBool(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        const PdiVector* instances,
+        typename PhysBAM::ARRAY<bool, Int3Vector>* sa) {
+      return ReadScalarArray<bool>(region, shift, instances, sa);
+    }
+
     /* Write scalar array data into PhysicalDataInstances specified by instances,
      * limited by the GeometricRegion region. This frees the physbam scalar array. */
     template<typename T> bool WriteScalarArray(
@@ -893,7 +949,29 @@ particle_buffer.id = (*id)(i);
       return true;
     }
 
+    bool WriteScalarArrayFloat(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* instances,
+        typename PhysBAM::ARRAY<float, Int3Vector>* sa) {
+      return WriteScalarArray<float>(region, shift, instances, sa);
+    }
 
+    bool WriteScalarArrayInt(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* instances,
+        typename PhysBAM::ARRAY<int, Int3Vector>* sa) {
+      return WriteScalarArray<int>(region, shift, instances, sa);
+    }
+
+    bool WriteScalarArrayBool(
+        const GeometricRegion* region,
+        const int_dimension_t shift[3],
+        PdiVector* instances,
+        typename PhysBAM::ARRAY<bool, Int3Vector>* sa) {
+      return WriteScalarArray<bool>(region, shift, instances, sa);
+    }
   private:
     /* Return a vector describing what the offset of b
        within a, such that a.x + offset = b.x. If
