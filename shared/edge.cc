@@ -42,6 +42,7 @@
 
 #include "shared/edge.h"
 #include "shared/vertex.h"
+#include "scheduler/job_entry.h"
 
 using namespace nimbus; // NOLINT
 
@@ -85,5 +86,5 @@ Edge<T, key_t>& Edge<T, key_t>::operator=(const Edge<T, key_t>& other) {
 }
 
 
-
+template class Edge<JobEntry, job_id_t>;
 

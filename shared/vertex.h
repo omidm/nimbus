@@ -65,31 +65,31 @@ template<typename T, typename key_t>
 class Vertex {
   friend class Graph<T, key_t>;
   public:
-    explicit Vertex(T* entry) {}
-    Vertex(const Vertex<T, key_t>& other) {}
-    virtual ~Vertex() {}
+    explicit Vertex(key_t id, T* entry);
+    Vertex(const Vertex<T, key_t>& other);
+    virtual ~Vertex();
 
-    virtual std::map<key_t, Edge<T, key_t>*>* outgoing_edges() {}
-    virtual std::map<key_t, Edge<T, key_t>*>* incoming_edges() {}
-    virtual key_t id() {}
-    virtual T* entry() {}
+    virtual std::map<key_t, Edge<T, key_t>*>* outgoing_edges();
+    virtual std::map<key_t, Edge<T, key_t>*>* incoming_edges();
+    virtual key_t id();
+    virtual T* entry();
 
-    Vertex<T, key_t>& operator=(const Vertex<T, key_t>& other) {}
+    Vertex<T, key_t>& operator=(const Vertex<T, key_t>& other);
 
   protected:
-    virtual void AddOutgoingEdge(Edge<T, key_t>* e) {}
+    virtual void AddOutgoingEdge(Edge<T, key_t>* e);
 
-    virtual void AddIncomingEdge(Edge<T, key_t>* e) {}
+    virtual void AddIncomingEdge(Edge<T, key_t>* e);
 
-    virtual void RemoveOutgoingEdge(Edge<T, key_t>* e) {}
+    virtual void RemoveOutgoingEdge(Edge<T, key_t>* e);
 
-    virtual void RemoveIncomingEdge(Edge<T, key_t>* e) {}
+    virtual void RemoveIncomingEdge(Edge<T, key_t>* e);
 
   private:
-    std::map<key_t, Edge<T, key_t>*> outgoing_edges_;
-    std::map<key_t, Edge<T, key_t>*> incoming_edges_;
     key_t id_;
     T* entry_;
+    std::map<key_t, Edge<T, key_t>*> outgoing_edges_;
+    std::map<key_t, Edge<T, key_t>*> incoming_edges_;
 };
 
 }  // namespace nimbus

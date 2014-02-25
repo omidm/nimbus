@@ -42,9 +42,80 @@
 
 #include "shared/vertex.h"
 #include "shared/edge.h"
+#include "scheduler/job_entry.h"
 
 using namespace nimbus; // NOLINT
 
+template<typename T, typename key_t>
+Vertex<T, key_t>::Vertex(key_t id, T* entry)
+  : id_(id), entry_(entry) {
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>::Vertex(const Vertex<T, key_t>& other) {
+  id_ = other.id_;
+  entry_ = other.entry_;
+  outgoing_edges_ = other.outgoing_edges_;
+  incoming_edges_ = other.incoming_edges_;
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>::~Vertex() {
+}
 
 
+template<typename T, typename key_t>
+std::map<key_t, Edge<T, key_t>*>* Vertex<T, key_t>::outgoing_edges() {
+  return &outgoing_edges_;
+}
+
+template<typename T, typename key_t>
+std::map<key_t, Edge<T, key_t>*>* Vertex<T, key_t>::incoming_edges() {
+  return &incoming_edges_;
+}
+
+template<typename T, typename key_t>
+key_t Vertex<T, key_t>::id() {
+  return id_;
+}
+
+template<typename T, typename key_t>
+T* Vertex<T, key_t>::entry() {
+  return entry_;
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>& Vertex<T, key_t>::operator=(const Vertex<T, key_t>& other) {
+  id_ = other.id_;
+  entry_ = other.entry_;
+  outgoing_edges_ = other.outgoing_edges_;
+  incoming_edges_ = other.incoming_edges_;
+  return *this;
+}
+
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::AddOutgoingEdge(Edge<T, key_t>* e) {
+  outgoing_edges_[e->id()] = e;
+}
+
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::AddIncomingEdge(Edge<T, key_t>* e) {
+  incoming_edges_[e->id()] = e;
+}
+
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::RemoveOutgoingEdge(Edge<T, key_t>* e) {
+  outgoing_edges_.erase(e->id());
+}
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::RemoveIncomingEdge(Edge<T, key_t>* e) {
+  incoming_edges_.erase(e->id());
+}
+
+
+template class Vertex<JobEntry, job_id_t>;
 

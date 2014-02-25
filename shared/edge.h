@@ -72,9 +72,9 @@ class Edge {
     Edge<T, key_t>& operator=(const Edge<T, key_t>& other);
 
   private:
+    key_t id_;
     Vertex<T, key_t>* start_vertex_;
     Vertex<T, key_t>* end_vertex_;
-    key_t id_;
 };
 
 }  // namespace nimbus
