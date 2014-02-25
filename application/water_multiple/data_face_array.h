@@ -44,13 +44,12 @@
 
 namespace application {
 
-    class DataFaceArray : public nimbus::PhysBAMData {
-            typedef float T;
-        public:
-            explicit DataFaceArray(std::string n);
-            virtual nimbus::Data* Clone();
-            virtual void Create();
-    };
+template<typename T> class DataFaceArray : public nimbus::PhysBAMData {
+ public:
+  explicit DataFaceArray(std::string n);
+  virtual nimbus::Data* Clone();
+  virtual void Create();
+};
 
 } // namespace application
 

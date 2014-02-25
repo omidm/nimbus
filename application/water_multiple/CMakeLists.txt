@@ -42,7 +42,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_advect_removed_particles.cc
     ${PROJECT_SOURCE_DIR}/job_advect_v.cc
     ${PROJECT_SOURCE_DIR}/job_apply_forces.cc
-    ${PROJECT_SOURCE_DIR}/job_projection.cc
     ${PROJECT_SOURCE_DIR}/job_extrapolation.cc
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
@@ -52,6 +51,9 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/water_driver.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     ${PROJECT_SOURCE_DIR}/water_sources.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_core.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.cc
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/nimbus_pcg_sparse_mpi.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
@@ -82,7 +84,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_advect_removed_particles.h
     ${PROJECT_SOURCE_DIR}/job_advect_v.h
     ${PROJECT_SOURCE_DIR}/job_apply_forces.h
-    ${PROJECT_SOURCE_DIR}/job_projection.h
     ${PROJECT_SOURCE_DIR}/job_extrapolation.h
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.h
     ${PROJECT_SOURCE_DIR}/job_write_frame.h
@@ -94,6 +95,9 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h
     ${PROJECT_SOURCE_DIR}/water_sources.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_core.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.h
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.h
     ${PROJECT_SOURCE_DIR}/projection/nimbus_pcg_sparse_mpi.h
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.h

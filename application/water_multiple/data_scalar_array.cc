@@ -43,19 +43,23 @@
 
 namespace application {
 
-    DataScalarArray::DataScalarArray(std::string name) {
-        set_name(name);
-    }
+template<typename T> DataScalarArray<T>::DataScalarArray(std::string name) {
+  set_name(name);
+}
 
-    nimbus::Data* DataScalarArray::Clone() {
-        return (new DataScalarArray(name()));
-    }
+template<typename T> nimbus::Data* DataScalarArray<T>::Clone() {
+  return (new DataScalarArray<T>(name()));
+}
 
-    void DataScalarArray::Create() {
-        nimbus::GeometricRegion r = region();
-        int s = r.dx() * r.dy() * r.dz() * sizeof(T);
-        set_size(s);
-        nimbus::PhysBAMData::Create();
-    }
+template<typename T> void DataScalarArray<T>::Create() {
+  nimbus::GeometricRegion r = region();
+  int s = r.dx() * r.dy() * r.dz() * sizeof(T);
+  set_size(s);
+  nimbus::PhysBAMData::Create();
+}
+
+template class DataScalarArray<float>;
+template class DataScalarArray<int>;
+template class DataScalarArray<bool>;
 
 } // namespace application

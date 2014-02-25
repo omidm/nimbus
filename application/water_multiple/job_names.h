@@ -40,7 +40,7 @@
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_NAMES_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
 
 
 #define MAIN "main"
@@ -61,7 +61,9 @@
 #define ADJUST_PHI "adjust_phi"
 #define DELETE_PARTICLES "delete_particles"
 #define REINCORPORATE_PARTICLES "reincorporate_particles"
-#define PROJECTION "projection"
+#define PROJECTION_CALCULATE_BOUNDARY_CONDITION "projection_calculate_boundary_condition"
+#define PROJECTION_CORE "projection_core"
+#define PROJECTION_WRAPUP "projection_wrapup"
 #define EXTRAPOLATION "extrapolation"
 #define SYNCHRONIZE_PARTICLES "synchronize_particles"
 

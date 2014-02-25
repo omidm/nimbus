@@ -33,26 +33,35 @@
  */
 
 /*
- * This file contains advect phi job which is one of the sub
- * jobs in the iteration of computing a simulation frame.
+ * This file contains job PROJECTION_CORE that:
+ *     performs the implicit method of projection.
+ * The parameters of PROJECTION_CORE:
+ *     frame number, simulation time, dt.
+ * The read set of PROJECTION_CORE:
+       psi_D, psi_N, filled_region_colors, divergence, pressure.
+ * The write set(not sure) of PROJECTION_CORE:
+ *     pressure.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * This job should be broken into finer jobs in the future.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADVECT_PHI_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADVECT_PHI_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-    class JobAdvectPhi : public nimbus::Job {
-        public:
-            explicit JobAdvectPhi(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+class JobProjectionCore : public nimbus::Job {
+ public:
+  explicit JobProjectionCore(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADVECT_PHI_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_

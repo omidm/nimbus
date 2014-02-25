@@ -33,26 +33,36 @@
  */
 
 /*
- * This file contains advect phi job which is one of the sub
- * jobs in the iteration of computing a simulation frame.
+ * This file contains job PROJECTION_CALCULATE_BOUNDARY_CONDITION that:
+ *     calculates all the boundary condition required by projection.
+ * The parameters of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
+ *     frame number, simulation time, dt.
+ * The read set of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
+ *     velocity, pressure, levelset.
+ * The write set(not sure) of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
+ *     velocity, pressure, psi_D, psi_N, filled_region_colors, divergence.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * This job should be broken into finer-grained jobs in the future.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADVECT_PHI_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADVECT_PHI_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-    class JobAdvectPhi : public nimbus::Job {
-        public:
-            explicit JobAdvectPhi(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+class JobProjectionCalculateBoundaryCondition : public nimbus::Job {
+ public:
+  explicit JobProjectionCalculateBoundaryCondition(nimbus::Application *app);
+  virtual void Execute(
+      nimbus::Parameter params,
+      const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADVECT_PHI_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_

@@ -72,11 +72,11 @@ namespace application {
         PhysBAM::LOG::Instance()->Copy_Log_To_File(kOutputDir+"/common/log.txt", false);
 
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL);
-        RegisterData(APP_FACE_VEL, new DataFaceArray(APP_FACE_VEL));
+        RegisterData(APP_FACE_VEL, new DataFaceArray<float>(APP_FACE_VEL));
         dbg(APP_LOG, "Registering %s\n", APP_FACE_VEL_GHOST);
-        RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray(APP_FACE_VEL_GHOST));
+        RegisterData(APP_FACE_VEL_GHOST, new DataFaceArray<float>(APP_FACE_VEL_GHOST));
         dbg(APP_LOG, "Registering %s\n", APP_PHI);
-        RegisterData(APP_PHI, new DataScalarArray(APP_PHI));
+        RegisterData(APP_PHI, new DataScalarArray<float>(APP_PHI));
         dbg(APP_LOG, "Registering %s\n", APP_POS_PARTICLES);
         RegisterData(APP_POS_PARTICLES, new DataParticleArray(APP_POS_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_NEG_PARTICLES);
@@ -87,6 +87,21 @@ namespace application {
         RegisterData(APP_NEG_REM_PARTICLES, new DataParticleArray(APP_NEG_REM_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
+
+        dbg(APP_LOG, "Registering %s\n", APP_PSI_D);
+        RegisterData(APP_PSI_D, new DataScalarArray<bool>(APP_PSI_D));
+        dbg(APP_LOG, "Registering %s\n", APP_PSI_N);
+        RegisterData(APP_PSI_N, new DataFaceArray<bool>(APP_PSI_N));
+        dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
+        RegisterData(APP_PRESSURE, new DataScalarArray<float>(APP_PRESSURE));
+        dbg(APP_LOG, "Registering %s\n", APP_FILLED_REGION_COLORS);
+        RegisterData(APP_FILLED_REGION_COLORS,
+                     new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
+        dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
+        RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
+        dbg(APP_LOG, "Registering %s\n", APP_U_INTERFACE);
+        RegisterData(APP_U_INTERFACE, new DataFaceArray<float>(APP_U_INTERFACE));
+
 
         dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
         kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
@@ -114,7 +129,10 @@ namespace application {
         RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
-        RegisterJob(PROJECTION, new JobProjection(this));
+        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION,
+                    new JobProjectionCalculateBoundaryCondition(this));
+        RegisterJob(PROJECTION_CORE, new JobProjectionCore(this));
+        RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
         RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
 

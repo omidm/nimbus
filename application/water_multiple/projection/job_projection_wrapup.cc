@@ -45,23 +45,24 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/job_projection.h"
+#include "application/water_multiple/projection/job_projection_wrapup.h"
 
 namespace application {
 
-JobProjection::JobProjection(nimbus::Application *app) {
+JobProjectionWrapup::JobProjectionWrapup(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobProjection::Clone() {
-  return new JobProjection(application());
+nimbus::Job* JobProjectionWrapup::Clone() {
+  return new JobProjectionWrapup(application());
 }
 
-void JobProjection::Execute(nimbus::Parameter params,
+void JobProjectionWrapup::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing PROJECTION job.\n");
+  dbg(APP_LOG, "Executing PROJECTION_WRAPUP job.\n");
 
   InitConfig init_config;
+  init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -85,21 +86,19 @@ void JobProjection::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::REGION_COLORS);
   data_config.SetFlag(DataConfig::PRESSURE);
-  // data_config.SetFlag(DataConfig::PRESSURE_SAVE);
-  // data_config.SetFlag(DataConfig::VELOCITY_SAVE);
   data_config.SetFlag(DataConfig::U_INTERFACE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
-  dbg(APP_LOG, "Job PROJECTION starts (dt=%f).\n", dt);
+  dbg(APP_LOG, "Job PROJECTION_WRAPUP starts (dt=%f).\n", dt);
 
-  driver->ProjectionImpl(this, da, dt);
+  driver->ProjectionWrapupImpl(this, da, dt);
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing PROJECTION job\n");
+  dbg(APP_LOG, "Completed executing PROJECTION_WRAPUP job\n");
 }
 
 }  // namespace application

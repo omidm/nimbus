@@ -33,32 +33,31 @@
  */
 
 /*
- * This file contains job PROJECTION that:
- *     projects velocity.
- * The parameters of PROJECTION:
+ * This file contains job PROJECTION_WRAPUP that:
+ *     applies the projection result to velocity.
+ * The parameters of PROJECTION_WRAPUP:
  *     frame number, simulation time, dt.
- * The read set(not sure) of PROJECTION:
- *     velocity, levelset.
- * The write set(not sure) of PROJECTION:
- *     velocity.
+ * The read set of PROJECTION_WRAPUP:
+       pressure, levelset, psi_D, psi_N, velocity.
+ * The write set(not sure) of PROJECTION_WRAPUP:
+ *     pressure, velocity.
  *
- * It is still unclear whether other simulation variables or states are also
- * needed.
- * For now, all the data is transmitted to guarantee correctness.
+ * Not clear about the effect of u_interface.
+ * This job should be broken into finer jobs in the future.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_PROJECTION_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_JOB_PROJECTION_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_WRAPUP_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_WRAPUP_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobProjection : public nimbus::Job {
+class JobProjectionWrapup : public nimbus::Job {
  public:
-  explicit JobProjection(nimbus::Application *app);
+  explicit JobProjectionWrapup(nimbus::Application *app);
   virtual void Execute(nimbus::Parameter params,
                        const nimbus::DataArray& da);
   virtual nimbus::Job* Clone();
@@ -66,4 +65,4 @@ class JobProjection : public nimbus::Job {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_PROJECTION_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_WRAPUP_H_
