@@ -33,7 +33,16 @@
  */
 
 /*
- * comments coming soon.
+ * This file contains job PROJECTION_CORE that:
+ *     performs the implicit method of projection.
+ * The parameters of PROJECTION_CORE:
+ *     frame number, simulation time, dt.
+ * The read set of PROJECTION_CORE:
+       psi_D, psi_N, filled_region_colors, divergence, pressure.
+ * The write set(not sure) of PROJECTION_CORE:
+ *     pressure.
+ *
+ * This job should be broken into finer jobs in the future.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

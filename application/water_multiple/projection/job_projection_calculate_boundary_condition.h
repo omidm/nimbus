@@ -33,7 +33,16 @@
  */
 
 /*
- * Comments coming soon.
+ * This file contains job PROJECTION_CALCULATE_BOUNDARY_CONDITION that:
+ *     calculates all the boundary condition required by projection.
+ * The parameters of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
+ *     frame number, simulation time, dt.
+ * The read set of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
+ *     velocity, pressure, levelset.
+ * The write set(not sure) of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
+ *     velocity, pressure, psi_D, psi_N, filled_region_colors, divergence.
+ *
+ * This job should be broken into finer-grained jobs in the future.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

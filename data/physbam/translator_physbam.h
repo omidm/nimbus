@@ -117,6 +117,9 @@ namespace nimbus {
       scalar_t v[3];
     };
 
+    /** Take a FaceArray described by region and read its data from the
+     *  PhysicalDataInstance objects in the objects array.
+     */
     template<typename T> void ReadFaceArray(
         const GeometricRegion* region,
         const int_dimension_t shift[3],
@@ -201,6 +204,9 @@ namespace nimbus {
       }
     }
 
+    /* Helper function to specify the element type. Implicit template type
+     * inference seems unreliable.
+     */
     void ReadFaceArrayFloat(
         const GeometricRegion* region,
         const int_dimension_t shift[3],
@@ -315,6 +321,9 @@ namespace nimbus {
       return true;
     }
 
+    /* Helper function to specify the element type. Implicit template type
+     * inference seems unreliable.
+     */
     bool WriteFaceArrayFloat(
         const GeometricRegion* region,
         const int_dimension_t shift[3],
@@ -871,6 +880,9 @@ particle_buffer.id = (*id)(i);
       return sa;
     }
 
+    /* Helper function to specify the element type. Implicit template type
+     * inference seems unreliable.
+     */
     typename PhysBAM::ARRAY<float, Int3Vector>* ReadScalarArrayFloat(
         const GeometricRegion* region,
         const int_dimension_t shift[3],
@@ -949,6 +961,9 @@ particle_buffer.id = (*id)(i);
       return true;
     }
 
+    /* Helper function to specify the element type. Implicit template type
+     * inference seems unreliable.
+     */
     bool WriteScalarArrayFloat(
         const GeometricRegion* region,
         const int_dimension_t shift[3],
@@ -972,6 +987,7 @@ particle_buffer.id = (*id)(i);
         typename PhysBAM::ARRAY<bool, Int3Vector>* sa) {
       return WriteScalarArray<bool>(region, shift, instances, sa);
     }
+
   private:
     /* Return a vector describing what the offset of b
        within a, such that a.x + offset = b.x. If

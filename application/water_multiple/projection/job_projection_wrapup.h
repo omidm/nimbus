@@ -33,7 +33,17 @@
  */
 
 /*
- * Comments coming soon.
+ * This file contains job PROJECTION_WRAPUP that:
+ *     applies the projection result to velocity.
+ * The parameters of PROJECTION_WRAPUP:
+ *     frame number, simulation time, dt.
+ * The read set of PROJECTION_WRAPUP:
+       pressure, levelset, psi_D, psi_N, velocity.
+ * The write set(not sure) of PROJECTION_WRAPUP:
+ *     pressure, velocity.
+ *
+ * Not clear about the effect of u_interface.
+ * This job should be broken into finer jobs in the future.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
