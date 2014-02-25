@@ -61,15 +61,15 @@ class Vertex;
 template<typename T, typename key_t>
 class Edge {
   public:
-    Edge(key_t id, Vertex<T, key_t>* startVertex, Vertex<T, key_t>* endVertex) {}
-    Edge(const Edge<T, key_t>& other) {}
-    virtual ~Edge() {}
+    Edge(key_t id, Vertex<T, key_t>* start_vertex, Vertex<T, key_t>* end_vertex);
+    Edge(const Edge<T, key_t>& other);
+    virtual ~Edge();
 
-    virtual Vertex<T, key_t>* start_vertex() {}
-    virtual Vertex<T, key_t>* end_vertex() {}
+    virtual Vertex<T, key_t>* start_vertex();
+    virtual Vertex<T, key_t>* end_vertex();
     virtual key_t id();
 
-    Edge<T, key_t>& operator=(const Edge<T, key_t>& other) {}
+    Edge<T, key_t>& operator=(const Edge<T, key_t>& other);
 
   private:
     Vertex<T, key_t>* start_vertex_;

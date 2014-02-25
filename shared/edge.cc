@@ -45,6 +45,45 @@
 
 using namespace nimbus; // NOLINT
 
+template<typename T, typename key_t>
+Edge<T, key_t>::Edge(key_t id, Vertex<T, key_t>* start_vertex, Vertex<T, key_t>* end_vertex)
+  : id_(id), start_vertex_(start_vertex), end_vertex_(end_vertex) {
+}
+
+template<typename T, typename key_t>
+Edge<T, key_t>::Edge(const Edge<T, key_t>& other) {
+  start_vertex_ = other.start_vertex_;
+  end_vertex_ = other.end_vertex_;
+  id_ = other.id_;
+}
+
+template<typename T, typename key_t>
+Edge<T, key_t>::~Edge() {
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>* Edge<T, key_t>::start_vertex() {
+  return start_vertex_;
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>* Edge<T, key_t>::end_vertex() {
+  return end_vertex_;
+}
+
+template<typename T, typename key_t>
+key_t Edge<T, key_t>::id() {
+  return id_;
+}
+
+template<typename T, typename key_t>
+Edge<T, key_t>& Edge<T, key_t>::operator=(const Edge<T, key_t>& other) {
+  start_vertex_ = other.start_vertex_;
+  end_vertex_ = other.end_vertex_;
+  id_ = other.id_;
+  return *this;
+}
+
 
 
 
