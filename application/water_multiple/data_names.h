@@ -56,5 +56,6 @@
 #define APP_PRESSURE "pressure"
 #define APP_FILLED_REGION_COLORS "filled_region_colors"
 #define APP_DIVERGENCE "divergence"
+#define APP_U_INTERFACE "u_interface"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

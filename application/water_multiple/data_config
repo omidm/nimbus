@@ -19,3 +19,5 @@ DataScalarArray   : pressure             : (30, 30, 30), (1, 1, 1), (1, 1, 1) : 
 DataScalarArray   : filled_region_colors : (30, 30, 30), (1, 1, 1), (1, 1, 1) : include_boundary
 # float.
 DataScalarArray   : divergence           : (30, 30, 30), (1, 1, 1), (1, 1, 1) : include boundary
+# float.
+DataFaceArray     : u_interface          : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none

@@ -895,13 +895,15 @@ namespace application {
       LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N);
+      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N);
+      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE);
 
       nimbus::Parameter projection_calculate_boundary_condition_params;
       std::string projection_calculate_boundary_condition_str;
@@ -929,13 +931,15 @@ namespace application {
       LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N);
+      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N);
+      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE);
 
       nimbus::Parameter projection_core_params;
       std::string projection_core_str;
@@ -962,13 +966,15 @@ namespace application {
       LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N);
+      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N);
+      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE);
 
       nimbus::Parameter projection_wrapup_params;
       std::string projection_wrapup_str;

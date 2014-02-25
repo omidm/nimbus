@@ -99,6 +99,8 @@ namespace application {
                      new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
         dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
         RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
+        dbg(APP_LOG, "Registering %s\n", APP_U_INTERFACE);
+        RegisterData(APP_U_INTERFACE, new DataFaceArray<float>(APP_U_INTERFACE));
 
 
         dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
