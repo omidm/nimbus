@@ -114,7 +114,10 @@ namespace application {
         RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
-        RegisterJob(PROJECTION, new JobProjection(this));
+        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION,
+                    new JobProjectionCalculateBoundaryCondition(this));
+        RegisterJob(PROJECTION_CORE, new JobProjectionCore(this));
+        RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
         RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
 

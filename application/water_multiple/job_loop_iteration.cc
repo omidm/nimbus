@@ -274,6 +274,10 @@ namespace application {
     std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
     GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
+    int projection_job_num = 1;
+    std::vector<nimbus::job_id_t> projection_job_ids;
+    GetNewJobID(&projection_job_ids, projection_job_num);
+
     // TODO(chinmayee): delete job_num=1 once multiple version works
     size_t step_particles_job_num = 1;
     std::vector<nimbus::job_id_t> step_particles_job_ids;
@@ -867,7 +871,7 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &reincorporate_particles_str);
     reincorporate_particles_params.set_ser_data(SerializedData(reincorporate_particles_str));
     after.clear();
-    after.insert(job_ids[10]);
+    after.insert(projection_job_ids[0]);
     before.clear();
     before.insert(job_ids[8]);
     SpawnComputeJob(REINCORPORATE_PARTICLES,
@@ -876,7 +880,9 @@ namespace application {
         before, after,
         reincorporate_particles_params);
 
-    /* 
+    /*
+     * TAG_PROJECTION
+     * std::vector<nimbus::job_id_t> projection_job_ids;
      * Spawning projection stage over entire block
      */
 
@@ -886,23 +892,70 @@ namespace application {
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
-      int index = 10;
-      nimbus::Parameter projection_params;
-      std::string projection_str;
-      SerializeParameter(frame, time, dt, global_region, global_region, &projection_str);
-      projection_params.set_ser_data(SerializedData(projection_str));
-      after.clear();
-      after.insert(job_ids[index+1]);
+      nimbus::Parameter projection_calculate_boundary_condition_params;
+      std::string projection_calculate_boundary_condition_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         &projection_calculate_boundary_condition_str);
+      projection_calculate_boundary_condition_params.set_ser_data(
+          SerializedData(projection_calculate_boundary_condition_str));
+
       before.clear();
-      before.insert(job_ids[index-1]);
-      SpawnComputeJob(PROJECTION,
-                      job_ids[index],
+      before.insert(job_ids[9]);
+      after.clear();
+      after.insert(projection_job_ids[1]);
+
+      SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION,
+                      projection_job_ids[0],
                       read, write,
                       before, after,
-                      projection_params);
+                      projection_calculate_boundary_condition_params);
+
+
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+
+      nimbus::Parameter projection_core_params;
+      std::string projection_core_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         &projection_core_str);
+      projection_core_params.set_ser_data(SerializedData(projection_core_str));
+
+      before.clear();
+      before.insert(projection_job_ids[0]);
+      after.clear();
+      after.insert(projection_job_ids[2]);
+      SpawnComputeJob(PROJECTION_CORE,
+                      projection_job_ids[1],
+                      read, write,
+                      before, after,
+                      projection_core_params);
+
+
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+
+      nimbus::Parameter projection_wrapup_params;
+      std::string projection_wrapup_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         &projection_wrapup_str);
+      projection_wrapup_params.set_ser_data(SerializedData(projection_wrapup_str));
+
+      before.clear();
+      before.insert(projection_job_ids[1]);
+      after.clear();
+      after.insert(job_ids[11]);
+      SpawnComputeJob(PROJECTION_WRAPUP,
+                      projection_job_ids[2],
+                      read, write,
+                      before, after,
+                      projection_wrapup_params);
     }
 
-    /* 
+    /*
      * Spawning extrapolation stage over entire block
      */
 
@@ -920,7 +973,7 @@ namespace application {
       after.clear();
       after.insert(job_ids[index+1]);
       before.clear();
-      before.insert(job_ids[index-1]);
+      before.insert(projection_job_ids[2]);
       SpawnComputeJob(EXTRAPOLATION,
                       job_ids[index],
                       read, write,
