@@ -51,14 +51,10 @@
 #include <set>
 #include "shared/dbg.h"
 #include "shared/nimbus_types.h"
+#include "shared/edge.h"
+#include "shared/vertex.h"
 
 namespace nimbus {
-
-template<typename T, typename key_t>
-class Edge;
-
-template<typename T, typename key_t>
-class Vertex;
 
 template<typename T, typename key_t>
 class Graph {
