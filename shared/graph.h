@@ -49,6 +49,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "shared/dbg.h"
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -62,31 +63,31 @@ class Vertex;
 template<typename T, typename key_t>
 class Graph {
   public:
-    Graph() {}
-    virtual ~Graph() {}
+    Graph();
+    virtual ~Graph();
 
-    virtual std::map<key_t, Vertex<T, key_t>*>* vertices() {}
-    virtual std::map<key_t, Edge<T, key_t>*>* edges() {}
+    virtual std::map<key_t, Vertex<T, key_t>*>* vertices();
 
-    virtual bool AddVertex(key_t key, T* entry) {}
+    virtual bool AddVertex(key_t key, T* entry);
 
-    virtual bool AddVertex(key_t key, T* entry, Vertex<T, key_t>** vertex) {}
+    virtual bool AddVertex(key_t key, T* entry, Vertex<T, key_t>** vertex);
 
-    virtual bool GetVertex(key_t key, Vertex<T, key_t>** vertex) {}
+    virtual bool HasVertex(key_t key);
 
-    virtual bool RemoveVertex(key_t key) {}
+    virtual bool GetVertex(key_t key, Vertex<T, key_t>** vertex);
 
-    virtual bool AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {}
+    virtual bool RemoveVertex(key_t key);
 
-    virtual bool AddEdge(key_t start_key, key_t end_key) {}
+    virtual bool AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end);
 
-    virtual bool RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {}
+    virtual bool AddEdge(key_t start_key, key_t end_key);
 
-    virtual bool RemoveEdge(key_t start_key, key_t end_key) {}
+    virtual bool RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end);
+
+    virtual bool RemoveEdge(key_t start_key, key_t end_key);
 
   private:
     std::map<key_t, Vertex<T, key_t>*> vertices_;
-    std::map<key_t, Edge<T, key_t>*> edges_;
 };
 
 

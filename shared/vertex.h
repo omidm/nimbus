@@ -81,6 +81,14 @@ class Vertex {
 
     virtual void AddIncomingEdge(Edge<T, key_t>* e);
 
+    virtual bool HasOutgoingEdge(Edge<T, key_t>* e);
+
+    virtual bool HasIncomingEdge(Edge<T, key_t>* e);
+
+    virtual bool HasOutgoingEdgeTo(Vertex<T, key_t>* end);
+
+    virtual bool HasIncomingEdgeFrom(Vertex<T, key_t>* start);
+
     virtual void RemoveOutgoingEdge(Edge<T, key_t>* e);
 
     virtual void RemoveIncomingEdge(Edge<T, key_t>* e);

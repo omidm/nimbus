@@ -96,24 +96,44 @@ Vertex<T, key_t>& Vertex<T, key_t>::operator=(const Vertex<T, key_t>& other) {
 
 template<typename T, typename key_t>
 void Vertex<T, key_t>::AddOutgoingEdge(Edge<T, key_t>* e) {
-  outgoing_edges_[e->id()] = e;
+  outgoing_edges_[e->end_vertex()->id()] = e;
 }
 
 
 template<typename T, typename key_t>
 void Vertex<T, key_t>::AddIncomingEdge(Edge<T, key_t>* e) {
-  incoming_edges_[e->id()] = e;
+  incoming_edges_[e->start_vertex()->id()] = e;
 }
 
 
 template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasOutgoingEdge(Edge<T, key_t>* e) {
+  return (outgoing_edges_.find(e->end_vertex()->id()) != outgoing_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasIncomingEdge(Edge<T, key_t>* e) {
+  return (incoming_edges_.find(e->start_vertex()->id()) != incoming_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasOutgoingEdgeTo(Vertex<T, key_t>* end) {
+  return (outgoing_edges_.find(end->id()) != outgoing_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasIncomingEdgeFrom(Vertex<T, key_t>* start) {
+  return (incoming_edges_.find(start->id()) != incoming_edges_.end());
+}
+
+template<typename T, typename key_t>
 void Vertex<T, key_t>::RemoveOutgoingEdge(Edge<T, key_t>* e) {
-  outgoing_edges_.erase(e->id());
+  outgoing_edges_.erase(e->end_vertex()->id());
 }
 
 template<typename T, typename key_t>
 void Vertex<T, key_t>::RemoveIncomingEdge(Edge<T, key_t>* e) {
-  incoming_edges_.erase(e->id());
+  incoming_edges_.erase(e->start_vertex()->id());
 }
 
 
