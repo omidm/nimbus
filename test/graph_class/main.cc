@@ -45,9 +45,6 @@
 #include "shared/graph.h"
 #include "./vertex_entry.h"
 
-#define VERTEX_NUM 1000000
-#define GRAPH_NUM 10
-
 int main(int argc, char *argv[]) {
   nimbus::nimbus_initialize();
 
@@ -55,20 +52,19 @@ int main(int argc, char *argv[]) {
   std::cout << "Start... ";
   std::cin >> input;
 
-  for (int i = 0; i < GRAPH_NUM; i++) {
+  for (int i = 1; i < 2; i++) {
     nimbus::Graph<VertexEntry, int>* graph = new nimbus::Graph<VertexEntry, int>();
-    for (int j = 0; j < VERTEX_NUM; j++) {
+    char* buffer = new char[1024000];
+    for (int j = 1; j < 1000000; j++) {
       VertexEntry entry;
       graph->AddVertex(j, &entry);
     }
-    // std::cout << "After insertion... ";
-    // std::cin >> input;
-    // for (int j = 1; j < VERTEX_NUM; j++) {
-    //   graph->RemoveVertex(j);
-    // }
+    std::cout << "After insertion... ";
+    std::cin >> input;
+    delete buffer;
     delete graph;
-    // std::cout << "After deletion... ";
-    // std::cin >> input;
+    std::cout << "After deletion... ";
+    std::cin >> input;
   }
 
 
