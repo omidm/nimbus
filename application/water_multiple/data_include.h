@@ -37,7 +37,7 @@
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_ALTERNARE_FINE_DATA_INCLUDE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_
 
 #include "application/water_multiple/data_face_array.h"
 #include "application/water_multiple/data_names.h"
