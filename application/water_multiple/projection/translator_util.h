@@ -40,6 +40,7 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_TRANSLATOR_UTIL_H_
 
 #include <PhysBAM_Tools/Arrays/ARRAY.h>
+#include <PhysBAM_Tools/Arrays/ARRAY_VIEW.h>
 #include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
 
 #include "shared/nimbus.h"
@@ -123,4 +124,5 @@ template<class T> bool DeserializePhysBAMVector(
   }
   return true;
 }
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_TRANSLATOR_UTIL_H_
