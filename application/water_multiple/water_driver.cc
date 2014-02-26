@@ -16,6 +16,7 @@
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
+#include "application/water_multiple/projection/nimbus_pcg_sparse_mpi.h"
 #include "application/water_multiple/projection/projection_helper.h"
 #include "shared/dbg_modes.h"
 #include "shared/dbg.h"
@@ -494,74 +495,230 @@ WriteFrameImpl(const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ProjectionImpl (const nimbus::Job *job,
-               const nimbus::DataArray &da,
-               T dt) {
-  LOG::SCOPE *scope=0;
-  scope=new LOG::SCOPE("Project");
-  // projection has type:
-  //     PROJECTION_DYNAMIC_UNIFORM.
-  // collidable_solver has type:
-  //     LAPLACE_COLLIDABLE_UNIFORM.
+ProjectionCalculateBoundaryConditionImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
   INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
   PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
-  {
-    // Code before enter PROJECTION_DYNAMIC_UNIFORM.
-    example.Set_Boundary_Conditions(time);
-    // According to levelset, write to psi_D and pressure. Then exchange psi_D
-    // and pressure.
-    incompressible.Set_Dirichlet_Boundary_Conditions(
-        &example.particle_levelset_evolution.phi, 0);
-    // Write to pressure.
-    projection.p *= dt;
-  }
-  {
-    // Code in INCOMPRESSIBLE_UNIFORM:
-    //     example.incompressible.Advance_One_Time_Step_Implicit_Part(
-    //       example.face_velocities, dt, time, true);
-    // Boundary conditions.
-    incompressible.boundary->Apply_Boundary_Condition_Face(
-        incompressible.projection.p_grid,
-        example.face_velocities,
-        time + dt);
-  }
-  {
-    // Code in PRJECTION_DYNAMIC_UNIFORM:
-    //    projection.Make_Divergence_Free(face_velocities, dt, time);
-     typedef typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP
-        T_FACE_LOOKUP;
-    // Write to divergence(solver->f).
-    projection.Compute_Divergence(
-        T_FACE_LOOKUP(example.face_velocities),
-        projection.elliptic_solver);
-    // Write to filled_region_colors, psi_N, filled_region_touches_dirichlet,
-    // probably.
-    // [TODO] filled_region_touches_dirichlet.
-    FillUniformRegionColor(
-        projection.elliptic_solver->grid,
-        projection.elliptic_solver->psi_D, projection.elliptic_solver->psi_N,
-        false, &projection.elliptic_solver->filled_region_colors);
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
 
-    {
-      LaplaceSolverWrapper laplace_solver_wrapper(
-          dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
-              projection.elliptic_solver));
-      laplace_solver_wrapper.Solve();
-    }
-    // projection.elliptic_solver->Solve(time,true);
-    projection.Apply_Pressure(example.face_velocities, dt, time);
-  }
-  // Write to pressure.
-  projection.p *= (1/dt);
-  // Does nothing. But average face_velocities in MPI, necessary?
-  incompressible.boundary->Apply_Boundary_Condition_Face(
-      incompressible.grid,
-      example.face_velocities,
-      time + dt);
-  delete scope;
+  // Sets boundary conditions.
+  // Local.
+  // Read velocity and pressure. Write velocity, pressure, psi_D, and psi_N.
+  example.Set_Boundary_Conditions(time);
+
+  // Sets dirichlet boundary conditions in the air.
+  // Remote: exchange psi_D and pressure afterwards.
+  // Read levelset. Write psi_D and pressure.
+  incompressible.Set_Dirichlet_Boundary_Conditions(
+      &example.particle_levelset_evolution.phi, 0);
+
+  // Scales pressure.
+  // Read/Write pressure.
+  projection.p *= dt;
+
+  typedef typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP
+      T_FACE_LOOKUP;
+
+  // Computes divergence.
+  // Local.
+  // Read velocity. Write divergence(solver->f).
+  projection.Compute_Divergence(
+      T_FACE_LOOKUP(example.face_velocities),
+      &laplace_solver);
+
+  // Coloring.
+  // Local.
+  // Read psi_D, psi_N.
+  // Write filled_region_colors.
+  FillUniformRegionColor(
+      laplace_solver.grid,
+      laplace_solver.psi_D, laplace_solver.psi_N,
+      false, &laplace_solver.filled_region_colors);
 
   return true;
 }
+
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionCoreImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
+  LaplaceSolverWrapper laplace_solver_wrapper(&laplace_solver);
+
+  // Read psi_N, psi_D, filled_region_colors, divergence, pressure.
+  // Write A, b, x, tolerance, indexing.
+  laplace_solver_wrapper.PrepareProjectionInput();
+
+  // MPI reference version:
+  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
+  // color only used for MPI version.
+  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
+  NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace_solver.pcg);
+  pcg_mpi.projection_data.matrix_index_to_cell_index =
+      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
+  pcg_mpi.projection_data.cell_index_to_matrix_index =
+      &laplace_solver_wrapper.cell_index_to_matrix_index;
+  pcg_mpi.projection_data.matrix_a = &laplace_solver_wrapper.A_array(1);
+  pcg_mpi.projection_data.vector_b = &laplace_solver_wrapper.b_array(1);
+  pcg_mpi.projection_data.vector_x = &laplace_solver_wrapper.x;
+  pcg_mpi.projection_data.local_tolerance = laplace_solver.tolerance;
+  pcg_mpi.Initialize();
+  pcg_mpi.CommunicateConfig();
+  pcg_mpi.Parallel_Solve();
+
+  // Read matrix_index_to_cell_index and x. Write u.
+  laplace_solver_wrapper.TransformResult();
+
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionWrapupImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+
+  // Applies pressure.
+  // Local.
+  // Read pressure(u/p), levelset, psi_D, psi_N, u_interface, velocity.
+  // Write velocity.
+  projection.Apply_Pressure(example.face_velocities, dt, time);
+
+  // Scales pressure.
+  // Read/Write pressure.
+  projection.p *= (1/dt);
+  return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionImpl(
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  ProjectionCalculateBoundaryConditionImpl(job, da, dt);
+  ProjectionCoreImpl(job, da, dt);
+  ProjectionWrapupImpl(job, da, dt);
+  return true;
+}
+
+/*
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionImpl(const nimbus::Job *job,
+               const nimbus::DataArray &da,
+               T dt) {
+  INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
+  LaplaceSolverWrapper laplace_solver_wrapper(&laplace_solver);
+
+  // [START] Code before entering INCOMPRESSIBLE.
+
+  // Sets boundary conditions.
+  // Local.
+  // Read velocity and pressure. Write velocity, pressure, psi_D, and psi_N.
+  example.Set_Boundary_Conditions(time);
+
+  // Sets dirichlet boundary conditions in the air.
+  // Remote: exchange psi_D and pressure afterwards.
+  // Read levelset. Write psi_D and pressure.
+  incompressible.Set_Dirichlet_Boundary_Conditions(
+      &example.particle_levelset_evolution.phi, 0);
+  // Scales pressure.
+  // Read/Write pressure.
+  projection.p *= dt;
+
+  // [END] Code before entering INCOMPRESSIBLE.
+
+
+  // [START] Code in INCOMPRESSIBLE:
+  //     example.incompressible.Advance_One_Time_Step_Implicit_Part(
+  //       example.face_velocities, dt, time, true);
+
+  // Averaging common face of face_velocities.
+  // incompressible.boundary->Apply_Boundary_Condition_Face(
+  //    incompressible.projection.p_grid,
+  //    example.face_velocities,
+  //    time + dt);
+
+  // [END] Code in INCOMPRESSIBLE.
+
+
+  // [START] Code in PROJECTION:
+  //    projection.Make_Divergence_Free(face_velocities, dt, time);
+
+  typedef typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP
+      T_FACE_LOOKUP;
+  // Computes divergence.
+  // Local.
+  // Read velocity. Write divergence(solver->f).
+  projection.Compute_Divergence(
+      T_FACE_LOOKUP(example.face_velocities),
+      &laplace_solver);
+
+  // Coloring.
+  // Local.
+  // Read psi_D, psi_N.
+  // Write filled_region_colors.
+  FillUniformRegionColor(
+      laplace_solver.grid,
+      laplace_solver.psi_D, laplace_solver.psi_N,
+      false, &laplace_solver.filled_region_colors);
+
+  // projection.elliptic_solver->Solve(time,true);
+  // Read psi_N, psi_D, filled_region_colors, divergence, pressure.
+  // Write A, b, x, tolerance, indexing.
+  laplace_solver_wrapper.PrepareProjectionInput();
+
+  // MPI reference version:
+  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
+  // color only used for MPI version.
+  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
+  NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace_solver.pcg);
+  pcg_mpi.projection_data.matrix_index_to_cell_index =
+      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
+  pcg_mpi.projection_data.cell_index_to_matrix_index =
+      &laplace_solver_wrapper.cell_index_to_matrix_index;
+  pcg_mpi.projection_data.matrix_a = &laplace_solver_wrapper.A_array(1);
+  pcg_mpi.projection_data.vector_b = &laplace_solver_wrapper.b_array(1);
+  pcg_mpi.projection_data.vector_x = &laplace_solver_wrapper.x;
+  pcg_mpi.projection_data.local_tolerance = laplace_solver.tolerance;
+  pcg_mpi.Initialize();
+  pcg_mpi.CommunicateConfig();
+  pcg_mpi.Parallel_Solve();
+
+  // Read matrix_index_to_cell_index and x. Write u.
+  laplace_solver_wrapper.TransformResult();
+
+  // Applies pressure.
+  // Not clear.
+  // pressure, psi_D, psi_N, u_interface is needed.
+  projection.Apply_Pressure(example.face_velocities, dt, time);
+
+  // [END] Code in PROJECTION.
+
+  // Scales pressure.
+  // Read/Write pressure.
+  projection.p *= (1/dt);
+
+  // incompressible.boundary->Apply_Boundary_Condition_Face(
+  //    incompressible.grid,
+  //    example.face_velocities,
+  //    time + dt);
+
+  return true;
+}
+*/
 
 template<class TV> bool WATER_DRIVER<TV>::
 ExtrapolationImpl (const nimbus::Job *job,

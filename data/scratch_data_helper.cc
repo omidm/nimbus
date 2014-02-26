@@ -235,21 +235,30 @@ void ScratchDataHelper::GetAllScratchData(Job *job,
     if (clear)
         ids->clear();
 
-    CLdoVector ldos_v;
-    for (size_t i = 0; i < VERTEX_TYPES; i++)
-        job->GetCoveredLogicalObjects(&ldos_v, vertex_types_[i], &region);
-    for (size_t s = 0; s < ldos_v.size(); s++)
-        ids->insert(ldos_v[s]->id());
-    CLdoVector ldos_e;
-    for (size_t i = 0; i < EDGE_TYPES; i++)
-        job->GetCoveredLogicalObjects(&ldos_e, edge_types_[i], &region);
-    for (size_t s = 0; s < ldos_e.size(); s++)
-        ids->insert(ldos_e[s]->id());
-    CLdoVector ldos_f;
-    for (size_t i = 0; i < FACE_TYPES; i++)
-        job->GetCoveredLogicalObjects(&ldos_f, face_types_[i], &region);
-    for (size_t s = 0; s < ldos_f.size(); s++)
-        ids->insert(ldos_f[s]->id());
+    {
+        CLdoVector ldos_v;
+        for (size_t i = 0; i < VERTEX_TYPES; i++) {
+            job->GetCoveredLogicalObjects(&ldos_v, vertex_types_[i], &region);
+            for (size_t s = 0; s < ldos_v.size(); s++)
+                ids->insert(ldos_v[s]->id());
+        }
+    }
+    {
+        CLdoVector ldos_e;
+        for (size_t i = 0; i < EDGE_TYPES; i++) {
+            job->GetCoveredLogicalObjects(&ldos_e, edge_types_[i], &region);
+            for (size_t s = 0; s < ldos_e.size(); s++)
+                ids->insert(ldos_e[s]->id());
+        }
+    }
+    {
+        CLdoVector ldos_f;
+        for (size_t i = 0; i < FACE_TYPES; i++) {
+            job->GetCoveredLogicalObjects(&ldos_f, face_types_[i], &region);
+            for (size_t s = 0; s < ldos_f.size(); s++)
+                ids->insert(ldos_f[s]->id());
+        }
+    }
 }
 
 void ScratchDataHelper::GetAllScratchData(Job *job,

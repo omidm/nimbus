@@ -99,14 +99,15 @@ void Scheduler::SchedulerCoreProcessor() {
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
+    RemoveObsoleteJobEntries();
     TerminationProcedure();
 
     log_.StopTimer();
-
     if (log_.timer() > .01) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.3lf  assign: %2.3lf table: %2.3lf time: %6.3lf", log_.timer(), log_assign_.timer(), log_table_.timer(), log_.GetTime()); // NOLINT
+          "loop: %2.3lf  assign: %2.3lf table: %2.3lf time: %6.3lf",
+          log_.timer(), log_assign_.timer(), log_table_.timer(), log_.GetTime());
       log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
@@ -258,6 +259,10 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   dbg(DBG_WARN, "WARNING: Base scheduler only assigns jobs to first worker, override the GetWorkerToAssignJob to have more complicated logic.\n"); // NOLINT
   worker =  *(server_->workers()->begin());
   return true;
+}
+
+size_t Scheduler::RemoveObsoleteJobEntries() {
+  return job_manager_->RemoveObsoleteJobEntries();
 }
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,

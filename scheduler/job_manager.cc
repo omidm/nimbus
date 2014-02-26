@@ -44,6 +44,7 @@
 using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
+  processed_new_job_done_ = false;
   // Add the SCHED job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
   IDSet<job_id_t> job_id_set;
@@ -114,6 +115,7 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
   if (job_graph_.RemoveJobEntry(job)) {
+    version_manager_.RemoveJobVersionTables(job);
     delete job;
     return true;
   } else {
@@ -125,6 +127,7 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     job_graph_.RemoveJobEntry(job);
+    version_manager_.RemoveJobVersionTables(job);
     delete job;
     return true;
   } else {
@@ -142,6 +145,8 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   JobGraph::Iter iter = job_graph_.Begin();
   for (; (iter != job_graph_.End()) && (num < max_num); ++iter) {
     JobEntry* job = iter->second;
+    // Job is already versioned so it has the information from parent and
+    // beforeset already, they may not be in the graph at this point though.
     if (job->versioned() && !job->assigned()) {
       bool parent_and_before_set_done = true;
       JobEntry* j;
@@ -149,26 +154,21 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       if (GetJobEntry(job->parent_job_id(), j)) {
         if (!(j->done())) {
           parent_and_before_set_done = false;
-        } else {
-          IDSet<job_id_t>::IDSetIter it;
-          IDSet<job_id_t> before_set = job->before_set();
-          for (it = before_set.begin(); it != before_set.end(); ++it) {
-            if (GetJobEntry(*it, j)) {
-              if (!(j->done())) {
-                parent_and_before_set_done = false;
-                break;
-              }
-            } else {
-              dbg(DBG_ERROR, "ERROR: Job in befor set (id: %lu) is not in the graph.\n", *it);
-              parent_and_before_set_done = false;
-              break;
-            }
+          continue;
+        }
+      }
+
+      IDSet<job_id_t>::IDSetIter it;
+      IDSet<job_id_t> before_set = job->before_set();
+      for (it = before_set.begin(); it != before_set.end(); ++it) {
+        if (GetJobEntry(*it, j)) {
+          if (!(j->done())) {
+            parent_and_before_set_done = false;
+            break;
           }
         }
-      } else {
-        dbg(DBG_ERROR, "ERROR: Parent job (id: %lu) is not in the graph.\n", job->parent_job_id());
-        parent_and_before_set_done = false;
       }
+
       if (parent_and_before_set_done) {
         // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
         list->push_back(job);
@@ -180,13 +180,34 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
-  return 0;
+  if (!processed_new_job_done_) {
+    return 0;
+  }
+
+  while (ResolveVersions() > 0) {
+    continue;
+  }
+
+  size_t num = 0;
+  JobGraph::Iter iter = job_graph_.Begin();
+  for (; (iter != job_graph_.End());) {
+    JobEntry* job = iter->second;
+    job_id_t job_id = job->job_id();
+    ++iter;
+    if (job->done() && (job_id != 0)) {
+      RemoveJobEntry(job);
+      dbg(DBG_SCHED, "removed job with id %lu from job manager.", job_id);
+      ++num;
+    }
+  }
+  return num;
 }
 
 void JobManager::JobDone(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
+    processed_new_job_done_ = true;
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
@@ -365,7 +386,8 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
         ++it;
       }
     } else {
-      ++it;
+      // if the job is not in the table it is already done and removed.
+      before_set->remove(it++);
     }
   }
 }
