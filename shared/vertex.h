@@ -100,6 +100,101 @@ class Vertex {
     std::map<key_t, Edge<T, key_t>*> incoming_edges_;
 };
 
+
+
+template<typename T, typename key_t>
+Vertex<T, key_t>::Vertex(key_t id, T* entry)
+  : id_(id), entry_(entry) {
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>::Vertex(const Vertex<T, key_t>& other) {
+  id_ = other.id_;
+  entry_ = other.entry_;
+  outgoing_edges_ = other.outgoing_edges_;
+  incoming_edges_ = other.incoming_edges_;
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>::~Vertex() {
+}
+
+
+template<typename T, typename key_t>
+std::map<key_t, Edge<T, key_t>*>* Vertex<T, key_t>::outgoing_edges() {
+  return &outgoing_edges_;
+}
+
+template<typename T, typename key_t>
+std::map<key_t, Edge<T, key_t>*>* Vertex<T, key_t>::incoming_edges() {
+  return &incoming_edges_;
+}
+
+template<typename T, typename key_t>
+key_t Vertex<T, key_t>::id() {
+  return id_;
+}
+
+template<typename T, typename key_t>
+T* Vertex<T, key_t>::entry() {
+  return entry_;
+}
+
+template<typename T, typename key_t>
+Vertex<T, key_t>& Vertex<T, key_t>::operator=(const Vertex<T, key_t>& other) {
+  id_ = other.id_;
+  entry_ = other.entry_;
+  outgoing_edges_ = other.outgoing_edges_;
+  incoming_edges_ = other.incoming_edges_;
+  return *this;
+}
+
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::AddOutgoingEdge(Edge<T, key_t>* e) {
+  outgoing_edges_[e->end_vertex()->id()] = e;
+}
+
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::AddIncomingEdge(Edge<T, key_t>* e) {
+  incoming_edges_[e->start_vertex()->id()] = e;
+}
+
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasOutgoingEdge(Edge<T, key_t>* e) {
+  return (outgoing_edges_.find(e->end_vertex()->id()) != outgoing_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasIncomingEdge(Edge<T, key_t>* e) {
+  return (incoming_edges_.find(e->start_vertex()->id()) != incoming_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasOutgoingEdgeTo(Vertex<T, key_t>* end) {
+  return (outgoing_edges_.find(end->id()) != outgoing_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasIncomingEdgeFrom(Vertex<T, key_t>* start) {
+  return (incoming_edges_.find(start->id()) != incoming_edges_.end());
+}
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::RemoveOutgoingEdge(Edge<T, key_t>* e) {
+  outgoing_edges_.erase(e->end_vertex()->id());
+}
+
+template<typename T, typename key_t>
+void Vertex<T, key_t>::RemoveIncomingEdge(Edge<T, key_t>* e) {
+  incoming_edges_.erase(e->start_vertex()->id());
+}
+
+
+
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_SHARED_VERTEX_H_
