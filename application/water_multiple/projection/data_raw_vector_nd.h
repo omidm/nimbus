@@ -36,31 +36,29 @@
  * Author: Hang Qu <quhang@stanford.edu
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_RAW_VECTOR_ND_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_RAW_VECTOR_ND_H_
 
-#include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
+#include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
 
 namespace application {
 
-class DataSparseMatrix : public nimbus::PhysBAMData {
+class DataRawVectorNd : public nimbus::PhysBAMData {
  private:
   struct Header {
     int64_t n;
-    int64_t length_offset;
-    int64_t length_element;
   };
  public:
-  explicit DataSparseMatrix(std::string name);
+  typedef PhysBAM::VECTOR<int, 3> TV_INT;
+  explicit DataRawVectorNd(std::string name);
   virtual nimbus::Data* Clone();
-  bool SaveToNimbus(
-      const PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>& matrix);
-  bool LoadFromNimbus(
-      PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>* matrix);
+
+  bool SaveToNimbus(const PhysBAM::VECTOR_ND<float>& array_input);
+  bool LoadFromNimbus(PhysBAM::VECTOR_ND<float>* array);
 };
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_RAW_VECTOR_ND_H_

@@ -61,6 +61,6 @@ class DataRawArrayM2C : public nimbus::PhysBAMData {
   bool LoadFromNimbus(PhysBAM::ARRAY<TV_INT>* array);
 };
 
-} // namespace application
+}  // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_RAW_ARRAY_M2C_H_

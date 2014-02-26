@@ -40,6 +40,7 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_TRANSLATOR_UTIL_H_
 
 #include <PhysBAM_Tools/Arrays/ARRAY.h>
+#include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
 
 #include "shared/nimbus.h"
 
@@ -89,4 +90,37 @@ template<class T> bool DeserializePhysBAMArray(
   return true;
 }
 
+
+template<class T> bool SerializePhysBAMVector(
+    const PhysBAM::VECTOR_ND<T>& vector_input,
+    Buffer* buffer) {
+  int64_t length = vector_input.n;
+  assert(buffer->pointer == NULL);
+  buffer->pointer = malloc(length * sizeof(T));
+  buffer->size = length * sizeof(T);
+  T* pointer = reinterpret_cast<T*>(buffer->pointer);
+  // Not using memcpy because the equal operator might be overloaded.
+  for (int i = 0; i < length; i++) {
+    pointer[i] = vector_input.x[i];
+  }
+  return true;
+}
+
+template<class T> bool DeserializePhysBAMVector(
+    const Buffer& buffer_input,
+    PhysBAM::VECTOR_ND<T>* vector) {
+  assert(vector->Owns_Data());
+  if (vector->x != NULL && vector->Owns_Data()) {
+    delete[] vector->x;
+  }
+  int64_t length = buffer_input.size / sizeof(T);
+  vector->n = length;
+  vector->x = new T[length];
+  const T* pointer = reinterpret_cast<T*>(buffer_input.pointer);
+  // Not using memcpy because the equal operator might be overloaded.
+  for (int i = 0; i < length; i++) {
+    vector->x[i] = pointer[i];
+  }
+  return true;
+}
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_TRANSLATOR_UTIL_H_

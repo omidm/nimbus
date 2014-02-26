@@ -42,6 +42,7 @@
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"
 #include "application/water_multiple/projection/data_raw_array_m2c.h"
+#include "application/water_multiple/projection/data_raw_vector_nd.h"
 
 namespace PhysBAM {
 
@@ -91,19 +92,8 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   ARRAY<TV_INT>& matrix_index_to_cell_index =
       matrix_index_to_cell_index_array(color);
   SPARSE_MATRIX_FLAT_NXN<T>& A = A_array(color);
-
-  /*
-  application::DataSparseMatrix test("matrix");
-  test.SaveToNimbus(A);
-  test.LoadFromNimbus(&A);
-  test.SaveToNimbus(A);
-  test.LoadFromNimbus(&A);
-  application::DataRawArrayM2C test_array("map");
-  test_array.SaveToNimbus(matrix_index_to_cell_index);
-  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
-  */
-
   VECTOR_ND<T>& b = b_array(color);
+
 
   int number_of_unknowns = matrix_index_to_cell_index.m;
   A.Negate();
@@ -115,6 +105,22 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   }
 
   laplace->Find_Tolerance(b);
+
+  application::DataSparseMatrix test("matrix");
+  test.SaveToNimbus(A);
+  test.LoadFromNimbus(&A);
+  test.SaveToNimbus(A);
+  test.LoadFromNimbus(&A);
+  application::DataRawArrayM2C test_array("map");
+  test_array.SaveToNimbus(matrix_index_to_cell_index);
+  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
+  test_array.SaveToNimbus(matrix_index_to_cell_index);
+  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
+  application::DataRawVectorNd test_vector("vect");
+  test_vector.SaveToNimbus(b);
+  test_vector.LoadFromNimbus(&b);
+  test_vector.SaveToNimbus(x);
+  test_vector.LoadFromNimbus(&x);
 }
 
 void LaplaceSolverWrapper::TransformResult() {

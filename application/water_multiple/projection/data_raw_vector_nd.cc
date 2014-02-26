@@ -33,34 +33,52 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
-
-#include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
+#include "application/water_multiple/projection/translator_util.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
+#include <string>
+
+#include "application/water_multiple/projection/data_raw_vector_nd.h"
 
 namespace application {
 
-class DataSparseMatrix : public nimbus::PhysBAMData {
- private:
-  struct Header {
-    int64_t n;
-    int64_t length_offset;
-    int64_t length_element;
-  };
- public:
-  explicit DataSparseMatrix(std::string name);
-  virtual nimbus::Data* Clone();
-  bool SaveToNimbus(
-      const PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>& matrix);
-  bool LoadFromNimbus(
-      PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>* matrix);
-};
+DataRawVectorNd::DataRawVectorNd(std::string name) {
+  set_name(name);
+}
 
-}  // namespace application
+nimbus::Data* DataRawVectorNd::Clone() {
+  return (new DataRawVectorNd(name()));
+}
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
+bool DataRawVectorNd::SaveToNimbus(
+    const PhysBAM::VECTOR_ND<float>& vector_input) {
+  Header header;
+  header.n = vector_input.n;
+  ClearTempBuffer();
+  AddToTempBuffer(reinterpret_cast<char*>(&header), sizeof(header));
+  Buffer buffer;
+  SerializePhysBAMVector(vector_input, &buffer);
+  AddToTempBuffer(reinterpret_cast<char*>(buffer.pointer), buffer.size);
+  assert(buffer.size == header.n * sizeof(float));
+  buffer.Clean();
+  CommitTempBuffer();
+  return true;
+}
+
+bool DataRawVectorNd::LoadFromNimbus(PhysBAM::VECTOR_ND<float>* vector) {
+  char* pointer = buffer();
+  const Header &header = *(reinterpret_cast<const Header*>(pointer));
+  vector->n = header.n;
+  pointer += sizeof(Header);
+  Buffer buffer;
+  buffer.pointer = reinterpret_cast<void*>(pointer);
+  buffer.size = header.n * sizeof(TV_INT);
+  DeserializePhysBAMVector(buffer, vector);
+  buffer.Reset();
+  return true;
+}
+
+} // namespace application
