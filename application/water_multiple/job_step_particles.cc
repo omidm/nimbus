@@ -66,14 +66,6 @@ void JobStepParticles::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
   dbg(APP_LOG, "Executing step particles job.\n");
 
-  size_t dnum = da.size();
-  for (size_t i = 0; i < dnum; i++) {
-      dbg(APP_LOG, "******** Step particles job received %s\n data with logical id %i, physical id %i\n",
-              da[i]->name().c_str(),
-              da[i]->logical_id(),
-              da[i]->physical_id());
-  }
-
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   T dt;
