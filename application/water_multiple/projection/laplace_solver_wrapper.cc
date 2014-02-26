@@ -42,6 +42,7 @@
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"
 #include "application/water_multiple/projection/data_raw_array_m2c.h"
+#include "application/water_multiple/projection/data_raw_grid_array.h"
 #include "application/water_multiple/projection/data_raw_vector_nd.h"
 
 namespace PhysBAM {
@@ -121,6 +122,9 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   test_vector.LoadFromNimbus(&b);
   test_vector.SaveToNimbus(x);
   test_vector.LoadFromNimbus(&x);
+  application::DataRawGridArray test_c2m("vect");
+  test_c2m.SaveToNimbus(cell_index_to_matrix_index);
+  test_c2m.LoadFromNimbus(&cell_index_to_matrix_index);
 }
 
 void LaplaceSolverWrapper::TransformResult() {
