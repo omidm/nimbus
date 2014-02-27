@@ -63,6 +63,8 @@ void DataParticleArray::MergeParticles(const std::vector<DataParticleArray * > &
     char *new_buffer = new char[new_size];
     char *buf_merged = new_buffer;
     for (size_t i = 0; i < scratch.size(); i++) {
+        if (scratch[i]->size() == 0)
+            continue;
         memcpy(buf_merged, scratch[i]->buffer(), scratch[i]->size());
         buf_merged += scratch[i]->size();
     }
