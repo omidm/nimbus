@@ -144,6 +144,10 @@ Initialize(const nimbus::Job *job,
   example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
   example.incompressible.projection.elliptic_solver->pcg.Show_Results();
   example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
+      dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          example.projection.elliptic_solver);
+  example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
   if (init_phase) {
     example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
@@ -542,26 +546,35 @@ ProjectionCalculateBoundaryConditionImpl (
   return true;
 }
 
+// TAG_PROJECTION
 template<class TV> bool WATER_DRIVER<TV>::
-ProjectionCoreImpl (
+ProjectionConstructMatrixImpl (
     const nimbus::Job *job,
     const nimbus::DataArray &da,
     T dt) {
-  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
-  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
-      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
-          projection.elliptic_solver);
-  LaplaceSolverWrapper laplace_solver_wrapper(&laplace_solver);
-
   // Read psi_N, psi_D, filled_region_colors, divergence, pressure.
   // Write A, b, x, tolerance, indexing.
-  laplace_solver_wrapper.PrepareProjectionInput();
+  example.laplace_solver_wrapper.PrepareProjectionInput();
+  return true;
+}
 
+/*
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionCoreImpl(
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
   // MPI reference version:
   // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
   // color only used for MPI version.
   // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
-  NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace_solver.pcg);
+  PCG_SPARSE<T> pcg_temp;
+  pcg_temp.Set_Maximum_Iterations(40);
+  pcg_temp.evolution_solver_type=krylov_solver_cg;
+  pcg_temp.cg_restart_iterations=0;
+  pcg_temp.Show_Results();
+
+  NIMBUS_PCG_SPARSE_MPI pcg_mpi(pcg_temp);
   pcg_mpi.projection_data.matrix_index_to_cell_index =
       &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
   pcg_mpi.projection_data.cell_index_to_matrix_index =
@@ -574,31 +587,31 @@ ProjectionCoreImpl (
   pcg_mpi.CommunicateConfig();
   pcg_mpi.Parallel_Solve();
 
-  // Read matrix_index_to_cell_index and x. Write u.
-  laplace_solver_wrapper.TransformResult();
-
   return true;
 }
+*/
 
 template<class TV> bool WATER_DRIVER<TV>::
-ProjectionWrapupImpl (
+ProjectionWrapupImpl(
     const nimbus::Job *job,
     const nimbus::DataArray &da,
     T dt) {
-  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  // Read matrix_index_to_cell_index and x. Write u.
+  example.laplace_solver_wrapper.TransformResult();
 
   // Applies pressure.
   // Local.
   // Read pressure(u/p), levelset, psi_D, psi_N, u_interface, velocity.
   // Write velocity.
-  projection.Apply_Pressure(example.face_velocities, dt, time);
+  example.projection.Apply_Pressure(example.face_velocities, dt, time);
 
   // Scales pressure.
   // Read/Write pressure.
-  projection.p *= (1/dt);
+  example.projection.p *= (1/dt);
   return true;
 }
 
+/*
 template<class TV> bool WATER_DRIVER<TV>::
 ProjectionImpl(
     const nimbus::Job *job,
@@ -609,6 +622,7 @@ ProjectionImpl(
   ProjectionWrapupImpl(job, da, dt);
   return true;
 }
+*/
 
 /*
 template<class TV> bool WATER_DRIVER<TV>::

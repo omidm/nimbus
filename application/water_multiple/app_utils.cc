@@ -127,6 +127,45 @@ namespace application {
         return NULL;
     }
 
+    Data* GetTheOnlyData(const nimbus::Job *job,
+                         const std::string &name,
+                         const nimbus::DataArray& da,
+                         AccessType access_type) {
+      if (da.empty()) {
+        return NULL;
+      }
+      IDSet<physical_data_id_t> read_set = job->read_set();
+      IDSet<physical_data_id_t> write_set = job->write_set();
+      Data* result = NULL;
+      for (nimbus::DataArray::const_iterator it = da.begin();
+           it != da.end();
+           ++it) {
+        Data *d = *it;
+        bool allowed = false;
+        if ((access_type == READ_ACCESS) &&
+            read_set.contains(d->physical_id())) {
+              allowed = true;
+        }
+        if ((access_type == WRITE_ACCESS) &&
+            write_set.contains(d->physical_id())) {
+              allowed = true;
+        }
+        if (d->name() == name && allowed) {
+          if (result == NULL) {
+            result = d;
+          } else {
+            dbg(DBG_ERROR, "More than one physical data instances matches, "
+                "but only one is expected.\n");
+            // return NULL;
+            // [TODO] Variable in read/write set will appear twice. Maybe it
+            // will be changed as the asbtraction changes?  --quhang
+            return result;
+          }
+        }
+      }
+      return result;
+    }
+
     void DestroyTranslatorObjects(nimbus::PdiVector *vec) {
         if (vec->empty())
             return;

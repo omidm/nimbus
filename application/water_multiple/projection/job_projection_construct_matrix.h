@@ -33,55 +33,25 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
- * Author: Hang Qu<quhang@stanford.edu>
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CONSTRUCT_MATRIX_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CONSTRUCT_MATRIX_H_
 
-#include "application/water_multiple/app_utils.h"
+#include "shared/nimbus.h"
 
-namespace PhysBAM {
+namespace application {
 
-typedef application::T T;
-typedef application::TV TV;
-typedef application::TV_INT TV_INT;
-
-typedef GRID<TV> T_GRID;
-
-class LaplaceSolverWrapper {
+class JobProjectionConstructMatrix : public nimbus::Job {
  public:
-  LaplaceSolverWrapper() {
-  }
-  void BindLaplaceAndInitialize(
-      LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input) {
-    laplace = laplace_input;
-    const int number_of_regions = 1;
-    matrix_index_to_cell_index_array.Resize(number_of_regions);
-    cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
-    A_array.Resize(number_of_regions);
-    b_array.Resize(number_of_regions);
-  }
-  ~LaplaceSolverWrapper() {}
-
-  // region_id -> matrix_id -> (dim_t, dim_t, dim_t)
-  ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array;
-  // (dim_t, dim_t, dim_t) -> matrix_id
-  ARRAY<int, TV_INT> cell_index_to_matrix_index;
-  // region_id -> matrix
-  ARRAY<SPARSE_MATRIX_FLAT_NXN<T> > A_array;
-  // region_id -> vector
-  ARRAY<VECTOR_ND<T> > b_array;
-  VECTOR_ND<T> x;
-
-  // Input refers to A, x, b, indexing, tolerance.
-  void PrepareProjectionInput();
-  void TransformResult();
- private:
-  LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace;
+  explicit JobProjectionConstructMatrix(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
 };
 
-}  // namespace PhysBAM
+}  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_HELPER_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CONSTRUCT_MATRIX_H_

@@ -21,3 +21,10 @@ DataScalarArray   : filled_region_colors : (30, 30, 30), (1, 1, 1), (1, 1, 1) : 
 DataScalarArray   : divergence           : (30, 30, 30), (1, 1, 1), (1, 1, 1) : include boundary
 # float.
 DataFaceArray     : u_interface          : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+
+DataSparseMatrix  : matrix_a             : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+DataRawVectorNd   : vector_x             : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+DataRawVectorNd   : vector_b             : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_local_tolerance  : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+DataRawGridArray  : index_c2m            : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+DataRawArrayM2C   : index_m2c            : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none

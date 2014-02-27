@@ -120,15 +120,12 @@ public:
     bool ProjectionCalculateBoundaryConditionImpl(const nimbus::Job *job,
                                                   const nimbus::DataArray &da,
                                                   T dt);
-    bool ProjectionCoreImpl(const nimbus::Job *job,
-                            const nimbus::DataArray &da,
-                            T dt);
+    bool ProjectionConstructMatrixImpl(const nimbus::Job *job,
+                                       const nimbus::DataArray &da,
+                                       T dt);
     bool ProjectionWrapupImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,
                             T dt);
-    bool ProjectionImpl(const nimbus::Job *job,
-                        const nimbus::DataArray &da,
-                        T dt);
 
     bool ExtrapolationImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,

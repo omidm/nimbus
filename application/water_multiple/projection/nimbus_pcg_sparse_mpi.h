@@ -60,11 +60,6 @@ class NIMBUS_PCG_SPARSE_MPI {
   typedef typename T_GRID::VECTOR_INT TV_INT;
 
   NIMBUS_PCG_SPARSE_MPI(PCG_SPARSE<T>& pcg_input) : pcg(pcg_input) {
-    projection_data.matrix_index_to_cell_index = NULL;
-    projection_data.cell_index_to_matrix_index = NULL;
-    projection_data.matrix_a = NULL;
-    projection_data.vector_b = NULL;
-    projection_data.vector_x = NULL;
     projection_data.x_interior = NULL;
     projection_data.temp = NULL;
     projection_data.temp_interior = NULL;
@@ -97,11 +92,11 @@ class NIMBUS_PCG_SPARSE_MPI {
   class ProjectionData {
    public:
     typedef VECTOR_ND<T>* P_VECTOR;
-    ARRAY<TV_INT>* matrix_index_to_cell_index;
-    ARRAY<int, TV_INT>* cell_index_to_matrix_index;
-    SPARSE_MATRIX_FLAT_NXN<T>* matrix_a;
-    P_VECTOR vector_b;
-    P_VECTOR vector_x;
+    ARRAY<TV_INT> matrix_index_to_cell_index;
+    ARRAY<int, TV_INT> cell_index_to_matrix_index;
+    SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
+    VECTOR_ND<T> vector_b;
+    VECTOR_ND<T> vector_x;
     P_VECTOR x_interior;
     P_VECTOR temp, temp_interior;
     P_VECTOR p, p_interior;

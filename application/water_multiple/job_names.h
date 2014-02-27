@@ -62,6 +62,7 @@
 #define DELETE_PARTICLES "delete_particles"
 #define REINCORPORATE_PARTICLES "reincorporate_particles"
 #define PROJECTION_CALCULATE_BOUNDARY_CONDITION "projection_calculate_boundary_condition"
+#define PROJECTION_CONSTRUCT_MATRIX "projection_construct_matrix"
 #define PROJECTION_CORE "projection_core"
 #define PROJECTION_WRAPUP "projection_wrapup"
 #define EXTRAPOLATION "extrapolation"

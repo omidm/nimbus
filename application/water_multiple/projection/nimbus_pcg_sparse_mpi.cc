@@ -48,7 +48,7 @@
 namespace PhysBAM {
 
 void NIMBUS_PCG_SPARSE_MPI::Initialize() {
-  int local_n = (*projection_data.matrix_a).n;
+  int local_n = (projection_data.matrix_a).n;
   // [TODO] Not accurate.
   partition.interior_indices.min_corner = 1;
   partition.interior_indices.max_corner = local_n;
@@ -56,7 +56,7 @@ void NIMBUS_PCG_SPARSE_MPI::Initialize() {
 
   projection_data.x_interior = new VECTOR_ND<T>;
   projection_data.x_interior->Set_Subvector_View(
-      *projection_data.vector_x,
+      projection_data.vector_x,
       partition.interior_indices);
 
   projection_data.temp = new VECTOR_ND<T>(local_n, false);
@@ -75,7 +75,7 @@ void NIMBUS_PCG_SPARSE_MPI::Initialize() {
 
   projection_data.b_interior = new VECTOR_ND<T>;
   projection_data.b_interior->Set_Subvector_View(
-      *projection_data.vector_b,
+      projection_data.vector_b,
       partition.interior_indices);
 
   projection_data.alpha = 0;
@@ -127,13 +127,13 @@ void NIMBUS_PCG_SPARSE_MPI::Parallel_Solve() {
 // Projection is broken to "smallest" code piece to allow future changes.
 
 void NIMBUS_PCG_SPARSE_MPI::ExchangePressure() {
-  VECTOR_ND<T>& x = (*projection_data.vector_x);
+  VECTOR_ND<T>& x = (projection_data.vector_x);
   Fill_Ghost_Cells(x);
 }
 
 void NIMBUS_PCG_SPARSE_MPI::InitializeResidual() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
-  VECTOR_ND<T>& x = (*projection_data.vector_x);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
+  VECTOR_ND<T>& x = (projection_data.vector_x);
   VECTOR_ND<T>& temp = (*projection_data.temp);
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
   VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
@@ -142,7 +142,7 @@ void NIMBUS_PCG_SPARSE_MPI::InitializeResidual() {
 }
 
 bool NIMBUS_PCG_SPARSE_MPI::SpawnFirstIteration() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
   const bool recompute_preconditioner = true;
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
 
@@ -164,7 +164,7 @@ bool NIMBUS_PCG_SPARSE_MPI::SpawnFirstIteration() {
 }
 
 void NIMBUS_PCG_SPARSE_MPI::DoPrecondition() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
   VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
   VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
@@ -199,7 +199,7 @@ void NIMBUS_PCG_SPARSE_MPI::ExchangeSearchVector() {
 }
 
 void NIMBUS_PCG_SPARSE_MPI::UpdateTempVector() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
   VECTOR_ND<T>& temp = (*projection_data.temp);
   VECTOR_ND<T>& p = (*projection_data.p);
   A.Times(p, temp);

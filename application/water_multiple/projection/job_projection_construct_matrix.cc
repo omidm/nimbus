@@ -45,21 +45,22 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/projection/job_projection_wrapup.h"
+#include "application/water_multiple/projection/job_projection_construct_matrix.h"
 
 namespace application {
 
-JobProjectionWrapup::JobProjectionWrapup(nimbus::Application *app) {
+JobProjectionConstructMatrix::JobProjectionConstructMatrix(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobProjectionWrapup::Clone() {
-  return new JobProjectionWrapup(application());
+nimbus::Job* JobProjectionConstructMatrix::Clone() {
+  return new JobProjectionConstructMatrix(application());
 }
 
-void JobProjectionWrapup::Execute(nimbus::Parameter params,
-                        const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing PROJECTION_WRAPUP job.\n");
+void JobProjectionConstructMatrix::Execute(
+    nimbus::Parameter params,
+    const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing PROJECTION_CONSTRUCT_MATRIX job.\n");
 
   InitConfig init_config;
   init_config.set_boundary_condition = false;
@@ -71,7 +72,7 @@ void JobProjectionWrapup::Execute(nimbus::Parameter params,
 
   // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,
-      "In PROJECTION: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "In PROJECTION_CONSTRUCT_MATRIX: Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
       init_config.frame, init_config.time);
 
@@ -79,28 +80,31 @@ void JobProjectionWrapup::Execute(nimbus::Parameter params,
   PhysBAM::WATER_DRIVER<TV> *driver;
 
   DataConfig data_config;
-  data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::LEVELSET);
-  data_config.SetFlag(DataConfig::DIVERGENCE);
   data_config.SetFlag(DataConfig::PSI_N);
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::REGION_COLORS);
   data_config.SetFlag(DataConfig::PRESSURE);
+  data_config.SetFlag(DataConfig::DIVERGENCE);
   data_config.SetFlag(DataConfig::U_INTERFACE);
+  data_config.SetFlag(DataConfig::MATRIX_A);
   data_config.SetFlag(DataConfig::VECTOR_X);
+  data_config.SetFlag(DataConfig::VECTOR_B);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
+  data_config.SetFlag(DataConfig::INDEX_C2M);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
-  dbg(APP_LOG, "Job PROJECTION_WRAPUP starts (dt=%f).\n", dt);
+  dbg(APP_LOG, "Job PROJECTION_CONSTRUCT_MATRIX starts (dt=%f).\n", dt);
 
-  driver->ProjectionWrapupImpl(this, da, dt);
+  driver->ProjectionConstructMatrixImpl(this, da, dt);
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing PROJECTION_WRAPUP job\n");
+  dbg(APP_LOG, "Completed executing PROJECTION_CONSTRUCT_MATRIX job\n");
 }
 
 }  // namespace application

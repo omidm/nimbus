@@ -58,4 +58,11 @@
 #define APP_DIVERGENCE "divergence"
 #define APP_U_INTERFACE "u_interface"
 
+#define APP_MATRIX_A "matrix_a"
+#define APP_VECTOR_B "vector_b"
+#define APP_VECTOR_X "vector_x"
+#define APP_PROJECTION_LOCAL_TOLERANCE "projection_local_tolerance"
+#define APP_INDEX_C2M "index_c2m"
+#define APP_INDEX_M2C "index_m2c"
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

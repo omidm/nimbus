@@ -102,6 +102,19 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_U_INTERFACE);
         RegisterData(APP_U_INTERFACE, new DataFaceArray<float>(APP_U_INTERFACE));
 
+        dbg(APP_LOG, "Registering %s\n", APP_MATRIX_A);
+        RegisterData(APP_MATRIX_A, new DataSparseMatrix(APP_MATRIX_A));
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_B);
+        RegisterData(APP_VECTOR_B, new DataRawVectorNd(APP_VECTOR_B));
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_X);
+        RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_TOLERANCE);
+        RegisterData(APP_PROJECTION_LOCAL_TOLERANCE,
+                     new nimbus::ScalarData<float>(APP_PROJECTION_LOCAL_TOLERANCE));
+        dbg(APP_LOG, "Registering %s\n", APP_INDEX_C2M);
+        RegisterData(APP_INDEX_C2M, new DataRawGridArray(APP_INDEX_C2M));
+        dbg(APP_LOG, "Registering %s\n", APP_INDEX_M2C);
+        RegisterData(APP_INDEX_M2C, new DataRawArrayM2C(APP_INDEX_M2C));
 
         dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
         kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
@@ -131,6 +144,8 @@ namespace application {
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION,
                     new JobProjectionCalculateBoundaryCondition(this));
+        RegisterJob(PROJECTION_CONSTRUCT_MATRIX,
+                    new JobProjectionConstructMatrix(this));
         RegisterJob(PROJECTION_CORE, new JobProjectionCore(this));
         RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
