@@ -164,15 +164,18 @@ bool Graph<T, key_t>::RemoveVertex(key_t key) {
 
   // first remove all the edges
   typename std::map<key_t, Edge<T, key_t>*>::iterator it;
+  typename std::map<key_t, Edge<T, key_t>*>::iterator temp_it;
 
   std::map<key_t, Edge<T, key_t>*>* outgoing_edges = vertex->outgoing_edges();
-  for (it = outgoing_edges->begin(); it != outgoing_edges->end(); ++it) {
-    RemoveEdge(it->second->start_vertex(), it->second->end_vertex());
+  for (it = outgoing_edges->begin(); it != outgoing_edges->end();) {
+    temp_it = it++;
+    RemoveEdge(temp_it->second->start_vertex(), temp_it->second->end_vertex());
   }
 
   std::map<key_t, Edge<T, key_t>*>* incoming_edges = vertex->incoming_edges();
-  for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
-    RemoveEdge(it->second->start_vertex(), it->second->end_vertex());
+  for (it = incoming_edges->begin(); it != incoming_edges->end();) {
+    temp_it = it++;
+    RemoveEdge(temp_it->second->start_vertex(), temp_it->second->end_vertex());
   }
 
   vertices_.erase(key);
