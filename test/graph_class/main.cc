@@ -39,16 +39,20 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <mcheck.h>
+#include <stdlib.h>
 #include <iostream> // NOLINT
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
 #include "shared/graph.h"
 #include "./vertex_entry.h"
 
-#define VERTEX_NUM 1000000
-#define GRAPH_NUM 10
+#define VERTEX_NUM 5
+#define GRAPH_NUM 1
 
 int main(int argc, char *argv[]) {
+  mtrace();
+
   nimbus::nimbus_initialize();
 
   int input;
@@ -57,18 +61,35 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < GRAPH_NUM; i++) {
     nimbus::Graph<VertexEntry, int>* graph = new nimbus::Graph<VertexEntry, int>();
+    std::cout << graph << std::endl;
     for (int j = 0; j < VERTEX_NUM; j++) {
       VertexEntry entry;
       graph->AddVertex(j, &entry);
     }
-    // std::cout << "After insertion... ";
-    // std::cin >> input;
-    // for (int j = 1; j < VERTEX_NUM; j++) {
-    //   graph->RemoveVertex(j);
-    // }
+    for (int j = 0; j < VERTEX_NUM; j++) {
+      for (int m = 0; m < j; m++) {
+        graph->AddEdge(j, m);
+      }
+    }
+    for (int j = 0; j < VERTEX_NUM; j++) {
+      for (int m = 0; m < j; m++) {
+        graph->AddEdge(j, m);
+      }
+    }
+
+    std::cout << "After insertion... ";
+    std::cin >> input;
+
+    // pick either of the following to check the remove vertex and remove edge.
+    for (int j = 0; j < VERTEX_NUM; j++) {
+      graph->RemoveVertex(j);
+      std::cout << "removed vertex "<< j << std::endl;
+    }
+
     delete graph;
-    // std::cout << "After deletion... ";
-    // std::cin >> input;
+
+    std::cout << "After deletion... ";
+    std::cin >> input;
   }
 
 

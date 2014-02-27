@@ -219,7 +219,7 @@ bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key) {
 
 template<typename T, typename key_t>
 bool Graph<T, key_t>::RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {
-  if (start->HasOutgoingEdgeTo(end)) {
+  if (!start->HasOutgoingEdgeTo(end)) {
     dbg(DBG_WARN, "WARNING: edge from %lu to %lu does not exist.\n", start->id(), end->id());
     return true;
   }
@@ -245,7 +245,7 @@ bool Graph<T, key_t>::RemoveEdge(key_t start_key, key_t end_key) {
   Vertex<T, key_t>* start = vertices_[start_key];
   Vertex<T, key_t>* end = vertices_[end_key];
 
-  if (start->HasOutgoingEdgeTo(end)) {
+  if (!start->HasOutgoingEdgeTo(end)) {
     dbg(DBG_WARN, "WARNING: edge from %lu to %lu does not exist.\n", start->id(), end->id());
     return true;
   }

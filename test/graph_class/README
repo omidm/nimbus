@@ -1,0 +1,10 @@
+This is a test program to find the memory leaks in graph using mtrace.
+
+1. $ make clean
+2. $ make
+3. create new file out.txt
+4. $ export MALLOC_TRACE=out.txt
+5. $ ./test
+6. $ mtrace ./test out.txt
+
+
