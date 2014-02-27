@@ -58,6 +58,7 @@ class IDSet {
  public:
   typedef typename std::list<T> IDSetContainer;
   typedef typename std::list<T>::iterator IDSetIter;
+  typedef typename std::list<T>::const_iterator ConstIter;
 
   IDSet();
   explicit IDSet(const IDSetContainer& ids);
@@ -79,6 +80,9 @@ class IDSet {
 
   IDSetIter begin();
   IDSetIter end();
+
+  ConstIter begin() const;
+  ConstIter end() const;
 
   IDSet<T>& operator= (const IDSet<T>& right);
 
