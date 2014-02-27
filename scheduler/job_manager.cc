@@ -50,7 +50,7 @@ JobManager::JobManager() {
   IDSet<job_id_t> job_id_set;
   IDSet<logical_data_id_t> logical_data_id_set;
   Parameter params;
-  JobEntry* job = new JobEntry(JOB_SCHED, "kernel", (job_id_t)(0),
+  JobEntry* job = new JobEntry(JOB_SCHED, "kernel", NIMBUS_KERNEL_JOB_ID,
       (job_id_t)(0), true, true, true);
   if (!job_graph_.AddJobEntry(job)) {
     delete job;

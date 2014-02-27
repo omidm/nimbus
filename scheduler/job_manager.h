@@ -54,6 +54,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/graph.h"
+#include "scheduler/job_graph.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
 
@@ -107,7 +108,8 @@ class JobManager {
     void UpdateBeforeSet(IDSet<job_id_t>* before_set);
 
   private:
-    Graph<JobEntry, job_id_t> job_graph_;
+    // Graph<JobEntry, job_id_t> job_graph_;
+    JobGraph job_graph_;
     VersionManager version_manager_;
     bool processed_new_job_done_;
 

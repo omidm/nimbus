@@ -47,6 +47,8 @@
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
 #define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
 
+#define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
+
 namespace nimbus {
   typedef uint32_t port_t;
   typedef uint32_t worker_id_t;
