@@ -157,7 +157,8 @@ template<typename T, typename key_t>
 bool Graph<T, key_t>::RemoveVertex(key_t key) {
   if (!HasVertex(key)) {
     dbg(DBG_WARN, "WARNING: vertex with id %lu does not exist.\n", key);
-    return true;
+    dbg(DBG_WARN, "WARNING: Nothing removed from graph.\n");
+    return false;
   }
 
   Vertex<T, key_t>* vertex = vertices_[key];

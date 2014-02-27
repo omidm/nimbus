@@ -127,11 +127,19 @@ bool JobManager::AddJobEntry(const JobType& job_type,
 }
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
-  return job_graph_.GetJobEntry(job_id, job);
+  Vertex<JobEntry, job_id_t>* vertex;
+  if (job_graph_.GetVertex(job_id, &vertex)) {
+    job = vertex->entry();
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: job entry with id %lu is not in the job graph.\n", job_id);
+    job = NULL;
+    return false;
+  }
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
-  if (job_graph_.RemoveJobEntry(job)) {
+  if (job_graph_.RemoveVertex(job->job_id())) {
     version_manager_.RemoveJobVersionTables(job);
     delete job;
     return true;
@@ -143,7 +151,8 @@ bool JobManager::RemoveJobEntry(JobEntry* job) {
 bool JobManager::RemoveJobEntry(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
-    job_graph_.RemoveJobEntry(job);
+    assert(job_id == job->job_id());
+    job_graph_.RemoveVertex(job_id);
     version_manager_.RemoveJobVersionTables(job);
     delete job;
     return true;
