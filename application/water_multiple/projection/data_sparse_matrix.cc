@@ -39,7 +39,6 @@
 #include "application/water_multiple/projection/translator_util.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
-#include <string>
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"
 
@@ -75,6 +74,7 @@ bool DataSparseMatrix::SaveToNimbus(
 
 bool DataSparseMatrix::LoadFromNimbus(
     PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>* matrix) {
+  assert(matrix != NULL);
   char* pointer = buffer();
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   matrix->n = header.n;
@@ -106,4 +106,4 @@ bool DataSparseMatrix::LoadFromNimbus(
   return true;
 }
 
-} // namespace application
+}  // namespace application

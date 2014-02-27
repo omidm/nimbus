@@ -33,6 +33,16 @@
  */
 
  /*
+  * Utility functions to serialze and deserialze PhysBAM array and vector. Most
+  * PhysBAM data structures are ultimately serialized to a linear array. By
+  * providing functionality to serialze the linear array, Nimbus can pass
+  * PhysBAM data around with little translation cost compared to translators in
+  * data directory.
+  *
+  * The implementation here operates at a low level, and thus it cannot
+  * understand geometry compared to the implentation in data directory. This is
+  * the case when Nimbus performs projection calculation.
+  *
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
@@ -45,6 +55,7 @@
 
 #include "shared/nimbus.h"
 
+// An internal data structure used to represent a buffer.
 struct Buffer {
   void* pointer;
   size_t size;
@@ -61,55 +72,55 @@ struct Buffer {
   }
 };
 
+// Serializes the PhysBAM array into a buffer. Allocates memory in the buffer.
 template<class T> bool SerializePhysBAMArray(
     const PhysBAM::ARRAY<T>& array_input,
     Buffer* buffer) {
+  assert(buffer != NULL);
   int64_t length = array_input.m;
   assert(buffer->pointer == NULL);
   buffer->pointer = malloc(length * sizeof(T));
   buffer->size = length * sizeof(T);
   T* pointer = reinterpret_cast<T*>(buffer->pointer);
-  // Not using memcpy because the equal operator might be overloaded.
-  for (int i = 0; i < length; i++) {
-    pointer[i] = array_input.base_pointer[i];
-  }
+  memcpy(pointer, array_input.base_pointer, length * sizeof(T));
   return true;
 }
 
+// Deserialzes the data in the buffer into the PhysBAM array. Allocates memory
+// for the PhysBAM array.
 template<class T> bool DeserializePhysBAMArray(
     const Buffer& buffer_input,
     PhysBAM::ARRAY<T>* array) {
+  assert(array != NULL);
   array->Clean_Memory();
   int64_t length = buffer_input.size / sizeof(T);
   array->m = length;
   array->base_pointer = new T[length];
   const T* pointer = reinterpret_cast<T*>(buffer_input.pointer);
-  // Not using memcpy because the equal operator might be overloaded.
-  for (int i = 0; i < length; i++) {
-    array->base_pointer[i] = pointer[i];
-  }
+  memcpy(array->base_pointer, pointer, length * sizeof(T));
   return true;
 }
 
-
+// Serializes the PhysBAM vector into a buffer. Allocates memory in the buffer.
 template<class T> bool SerializePhysBAMVector(
     const PhysBAM::VECTOR_ND<T>& vector_input,
     Buffer* buffer) {
+  assert(buffer != NULL);
   int64_t length = vector_input.n;
   assert(buffer->pointer == NULL);
   buffer->pointer = malloc(length * sizeof(T));
   buffer->size = length * sizeof(T);
   T* pointer = reinterpret_cast<T*>(buffer->pointer);
-  // Not using memcpy because the equal operator might be overloaded.
-  for (int i = 0; i < length; i++) {
-    pointer[i] = vector_input.x[i];
-  }
+  memcpy(pointer, vector_input.x, length * sizeof(T));
   return true;
 }
 
+// Deserialzes the data in the buffer into the PhysBAM vector. Allocates memory
+// for the PhysBAM vector.
 template<class T> bool DeserializePhysBAMVector(
     const Buffer& buffer_input,
     PhysBAM::VECTOR_ND<T>* vector) {
+  assert(vector != NULL);
   assert(vector->Owns_Data());
   if (vector->x != NULL && vector->Owns_Data()) {
     delete[] vector->x;
@@ -118,10 +129,7 @@ template<class T> bool DeserializePhysBAMVector(
   vector->n = length;
   vector->x = new T[length];
   const T* pointer = reinterpret_cast<T*>(buffer_input.pointer);
-  // Not using memcpy because the equal operator might be overloaded.
-  for (int i = 0; i < length; i++) {
-    vector->x[i] = pointer[i];
-  }
+  memcpy(vector->x, pointer, length * sizeof(T));
   return true;
 }
 
