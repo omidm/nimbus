@@ -107,6 +107,7 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
 
   laplace->Find_Tolerance(b);
 
+  /*
   application::DataSparseMatrix test("matrix");
   test.SaveToNimbus(A);
   test.LoadFromNimbus(&A);
@@ -125,6 +126,7 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   application::DataRawGridArray test_c2m("vect");
   test_c2m.SaveToNimbus(cell_index_to_matrix_index);
   test_c2m.LoadFromNimbus(&cell_index_to_matrix_index);
+  */
 }
 
 void LaplaceSolverWrapper::TransformResult() {
