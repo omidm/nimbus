@@ -57,12 +57,13 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // need at least 2 elements - a data object to merge to, and a data
     // object to merge from
-    if (da.size() <= 2) {
+    size_t dnum = da.size();
+    if (dnum < 2) {
         dbg(DBG_WARN, "Nothing to synchronize\n");
         return;
     }
 
-    DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[0]);
+    DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[dnum-1]);
     if (merge_to == NULL) {
         dbg(DBG_WARN, "Passed object is not a particle array\n");
     }
@@ -71,7 +72,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     std::vector<DataParticleArray * > scratch;
     DataParticleArray *scratch_data;
     GeometricRegion scratch_region;
-    for (size_t i = 1; i < da.size(); i++) {
+    for (size_t i = 0; i < dnum - 1; i++) {
         scratch_data = dynamic_cast<DataParticleArray * >(da[i]);
         if (scratch_data == NULL) {
             dbg(DBG_WARN, "Ignoring scratch object since it is not a particle array\n");
