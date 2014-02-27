@@ -476,11 +476,9 @@ namespace application {
         write.clear();
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
         //LoadLogicalIdsInSet(this, &write, kRegW3Inner[0], APP_POS_PARTICLES,
-        //        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        //        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        //        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-                APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
         kScratchPosParticles.GetJobScratchData(this, kRegW3Central[0], &write);
         kScratchNegParticles.GetJobScratchData(this, kRegW3Central[0], &write);
         kScratchPosRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
