@@ -479,10 +479,10 @@ namespace application {
         //        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-        kScratchPosParticles.GetJobScratchData(this, kRegW3Central[0], &write);
-        kScratchNegParticles.GetJobScratchData(this, kRegW3Central[0], &write);
-        kScratchPosRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
-        kScratchNegRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
+        //kScratchPosParticles.GetJobScratchData(this, kRegW3Central[0], &write);
+        //kScratchNegParticles.GetJobScratchData(this, kRegW3Central[0], &write);
+        //kScratchPosRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
+        //kScratchNegRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
 
         nimbus::Parameter step_particles_params;
         std::string step_particles_str;
