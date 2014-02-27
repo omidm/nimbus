@@ -45,14 +45,14 @@ using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
   processed_new_job_done_ = false;
-  // Add the SCHED job which is the parent of main, create and copy jobs that
+  // Add the KERNEL job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
   IDSet<job_id_t> job_id_set;
   IDSet<logical_data_id_t> logical_data_id_set;
   Parameter params;
   JobEntry* job = new JobEntry(JOB_SCHED, "kernel", NIMBUS_KERNEL_JOB_ID,
-      (job_id_t)(0), true, true, true);
-  if (!job_graph_.AddJobEntry(job)) {
+      NIMBUS_KERNEL_JOB_ID , true, true, true);
+  if (!job_graph_.AddVertex(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.\n");
   } else {
@@ -61,8 +61,9 @@ JobManager::JobManager() {
 }
 
 JobManager::~JobManager() {
+  // TODO(omidm): do you need to call remove obsolete?
   JobEntry* job;
-  if (JobManager::GetJobEntry((job_id_t)(0), job)) {
+  if (JobManager::GetJobEntry(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
   }
 }
@@ -79,12 +80,30 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     const bool& is_parent) {
   JobEntry* job = new JobEntry(job_type, job_name, job_id, read_set, write_set,
       before_set, after_set, parent_job_id, params, is_parent);
-  if (job_graph_.AddJobEntry(job)) {
-    return true;
-  } else {
+
+  if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     return false;
+  } else {
+    bool completed_before_set_edges = true;
+
+    IDSet<job_id_t>::ConstIter it;
+    for (it = before_set.begin(); it != before_set.end(); ++it) {
+      if (!job_graph_.AddEdge(*it, job_id)) {
+        completed_before_set_edges = false;
+        break;
+      }
+    }
+
+    if (!completed_before_set_edges) {
+      job_graph_.RemoveVertex(job_id);
+      delete job;
+      dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+      return false;
+    }
+
+    return true;
   }
 }
 
@@ -97,15 +116,13 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     const bool& assigned) {
   JobEntry* job = new JobEntry(job_type, job_name, job_id, parent_job_id,
       is_parent, versioned, assigned);
-  if (job_graph_.AddJobEntry(job)) {
-    job->set_is_parent(is_parent);
-    job->set_versioned(versioned);
-    job->set_assigned(assigned);
-    return true;
-  } else {
+
+  if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     return false;
+  } else {
+    return true;
   }
 }
 
