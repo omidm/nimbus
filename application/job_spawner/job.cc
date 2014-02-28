@@ -40,6 +40,7 @@
 
 #include "./job.h"
 #include "./data.h"
+#include "./utils.h"
 
 #define APP_LOOP_COUNTER 15
 #define APP_LOOP_CONDITION 0
@@ -134,9 +135,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
   }
   after.clear();
   param_idset.clear();
-  param_idset.insert(d[0]); param_idset.insert(d[1]);
-  param_idset.insert(d[2]); param_idset.insert(d[3]);
-  param_idset.insert(d[4]); param_idset.insert(d[5]);
   param_idset.insert(APP_LOOP_COUNTER);
   par.set_idset(param_idset);
   SpawnComputeJob(LOOP_JOB_NAME, job_ids[APP_CHUNK_NUM * 3], read, write, before, after, par);
@@ -190,47 +188,44 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   }
   // ****
 
-  std::vector<job_id_t> j;
-  std::vector<logical_data_id_t> d;
+  std::vector<job_id_t> job_ids;
+  // std::vector<logical_data_id_t> d;
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
   IDSet<param_id_t> param_idset;
 
-  IDSet<param_id_t>::IDSetContainer::iterator it;
-  IDSet<param_id_t> temp_set = params.idset();
-  for (it = temp_set.begin(); it != temp_set.end(); it++) {
-    d.push_back(*it);
-  }
+  param_id_t loop_counter = *(params.idset().begin());
 
-  if (d[6] > APP_LOOP_CONDITION) {
-    GetNewJobID(&j, 1);
+  if (loop_counter > APP_LOOP_CONDITION) {
+    GetNewJobID(&job_ids, 1);
 
     read.clear();
     write.clear();
     before.clear();
     after.clear();
     param_idset.clear();
-    param_idset.insert(d[0]); param_idset.insert(d[1]);
-    param_idset.insert(d[2]); param_idset.insert(d[3]);
-    param_idset.insert(d[4]); param_idset.insert(d[5]);
-    param_idset.insert(d[6] - 1);
+    param_idset.insert(loop_counter - 1);
     par.set_idset(param_idset);
-    SpawnComputeJob(LOOP_JOB_NAME, j[0], read, write, before, after, par);
+    SpawnComputeJob(LOOP_JOB_NAME, job_ids[0], read, write, before, after, par);
   } else {
-    GetNewJobID(&j, 2);
+    GetNewJobID(&job_ids, APP_CHUNK_NUM);
 
-    read.clear(); read.insert(d[1]); read.insert(d[2]);
+    read.clear();
+    GeometricRegion r_l(1, 0, 0, 4, 1, 1);
+    LoadLogicalIdsInSet(this, &read, r_l, DATA_NAME, NULL);
     write.clear();
-    before.clear(); before.insert(id().elem());
+    before.clear();
     after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, j[0], read, write, before, after, par);
+    SpawnComputeJob(PRINT_JOB_NAME, job_ids[0], read, write, before, after, par);
 
-    read.clear(); read.insert(d[3]); read.insert(d[4]);
+    read.clear();
+    GeometricRegion r_r(5, 0, 0, 4, 1, 1);
+    LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
     write.clear();
-    before.clear(); before.insert(id().elem());
+    before.clear();
     after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, j[1], read, write, before, after, par);
+    SpawnComputeJob(PRINT_JOB_NAME, job_ids[1], read, write, before, after, par);
 
     TerminateApplication();
   }

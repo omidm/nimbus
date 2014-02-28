@@ -33,40 +33,34 @@
  */
 
 /*
- * Data classes for job spawner application.
+ * An Example application that spawns a lot of jobs in the 3d space.
  *
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
-#define NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
+#include "./utils.h"
 
-#include <iostream> // NOLINT
-#include "shared/nimbus.h"
-#include "protobuf_compiled/vector_msg.pb.h"
+void LoadLogicalIdsInSet(Job* job,
+    IDSet<logical_data_id_t>* set,
+    const GeometricRegion& region, ...) {
+  CLdoVector result;
+  va_list vl;
+  va_start(vl, region);
+  char* arg = va_arg(vl, char*);
+  while (arg != NULL) {
+    job->GetCoveredLogicalObjects(&result,
+        arg, &region);
+    for (size_t i = 0; i < result.size(); ++i) {
+      set->insert(result[i]->id());
+      dbg(DBG_WORKER, "Loaded logical id %d of variable %s to the set.\n",
+          result[i]->id(), arg);
+    }
+    arg = va_arg(vl,
+        char*);
+  }
+  va_end(vl);
+}
 
-#define DATA_NAME "velocity"
 
-using namespace nimbus; // NOLINT
 
-class Vec : public Data {
-  public:
-    Vec();
-    virtual ~Vec();
 
-    virtual void Create();
-    virtual void Destroy();
-    virtual Data * Clone();
-    virtual void Copy(Data* from);
-    virtual bool Serialize(SerializedData* ser_data);
-    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
-
-    int size();
-    int* arr();
-
-  private:
-    int size_;
-    int *arr_;
-};
-
-#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_

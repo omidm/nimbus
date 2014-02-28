@@ -49,9 +49,7 @@
 #define PRINT_JOB_NAME "print"
 #define LOOP_JOB_NAME "for_loop"
 
-using nimbus::Job;
-using nimbus::Data;
-using nimbus::Application;
+using namespace nimbus; // NOLINT
 
 class Main : public Job {
   public:

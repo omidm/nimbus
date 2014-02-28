@@ -33,40 +33,25 @@
  */
 
 /*
- * Data classes for job spawner application.
+ * An Example application that is meant to run over multiple workers.
+ * It is simply applying a stencil over a one dimensional array.
  *
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
-#define NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
+#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_
+#define NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_
 
 #include <iostream> // NOLINT
-#include "shared/nimbus.h"
-#include "protobuf_compiled/vector_msg.pb.h"
-
-#define DATA_NAME "velocity"
+#include "worker/application.h"
+#include "shared/nimbus_types.h"
 
 using namespace nimbus; // NOLINT
 
-class Vec : public Data {
-  public:
-    Vec();
-    virtual ~Vec();
+void LoadLogicalIdsInSet(Job* job,
+    nimbus::IDSet<logical_data_id_t>* set,
+    const GeometricRegion& region, ...);
 
-    virtual void Create();
-    virtual void Destroy();
-    virtual Data * Clone();
-    virtual void Copy(Data* from);
-    virtual bool Serialize(SerializedData* ser_data);
-    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-    int size();
-    int* arr();
 
-  private:
-    int size_;
-    int *arr_;
-};
-
-#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
+#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_
