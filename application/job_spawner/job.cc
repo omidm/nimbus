@@ -44,8 +44,7 @@
 
 #define APP_LOOP_COUNTER 15
 #define APP_LOOP_CONDITION 0
-#define ML 4
-#define APP_CHUNK_NUM 2
+#define APP_CHUNK_NUM 10
 #define APP_CHUNK_SIZE 5
 #define APP_BANDWIDTH 1
 
@@ -138,16 +137,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
   param_idset.insert(APP_LOOP_COUNTER);
   par.set_idset(param_idset);
   SpawnComputeJob(LOOP_JOB_NAME, job_ids[APP_CHUNK_NUM * 3], read, write, before, after, par);
-
-  // *******************************************************************
-  // Cheching to query  ldo_map with in the same job that defines the data
-  // *******************************************************************
-  if (GetLogicalObject(d[0]) == NULL) {
-    dbg(DBG_TEMP, "Application: FAIL - did not find the ldo in ldo_map.\n");
-  } else {
-    dbg(DBG_TEMP, "Application: Found the ldo in ldo_map.\n");
-  }
-  // ****
 };
 
 ForLoop::ForLoop(Application* app) {
@@ -162,34 +151,7 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
 
-  // Check if partitions are synched or not.
-  GeometricRegion r_temp;
-  if (GetPartition(3, &r_temp)) {
-    dbg(DBG_TEMP, "Application: Found the partition in ldo_map.\n");
-  } else {
-    dbg(DBG_TEMP, "Application: FAIL - did not find the partition in ldo_map.\n");
-  }
-  // *******************************************************************
-  // Cheching the ldo_map and creation of PhysicalDataInstance from Data
-  // *******************************************************************
-  // logical_data_id_t l_id = da[0]->logical_id();
-  // std::string l_name = da[0]->name();
-  // Data* l_data = da[0];
-  logical_data_id_t l_id = 100001;
-  std::string l_name = "some_name";
-  Data* l_data = new Data();
-  if (GetLogicalObject(l_id) == NULL) {
-    dbg(DBG_TEMP, "Application: FAIL - did not find the ldo in ldo_map.\n");
-  } else {
-    dbg(DBG_TEMP, "Application: Found the ldo in ldo_map.\n");
-    GeometricRegion* r_t = new GeometricRegion(*(GetLogicalObject(l_id)->region()));
-    LogicalDataObject ldo_t(l_id, l_name, r_t);
-    PhysicalDataInstance pdi_t(l_id, &ldo_t, l_data, data_version_t(0));
-  }
-  // ****
-
   std::vector<job_id_t> job_ids;
-  // std::vector<logical_data_id_t> d;
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
@@ -211,21 +173,15 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   } else {
     GetNewJobID(&job_ids, APP_CHUNK_NUM);
 
-    read.clear();
-    GeometricRegion r_l(1, 0, 0, 4, 1, 1);
-    LoadLogicalIdsInSet(this, &read, r_l, DATA_NAME, NULL);
-    write.clear();
-    before.clear();
-    after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, job_ids[0], read, write, before, after, par);
-
-    read.clear();
-    GeometricRegion r_r(5, 0, 0, 4, 1, 1);
-    LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
-    write.clear();
-    before.clear();
-    after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, job_ids[1], read, write, before, after, par);
+    for (int i = 0; i < APP_CHUNK_NUM; ++i) {
+      read.clear();
+      GeometricRegion r(i * APP_CHUNK_SIZE, 0, 0, APP_CHUNK_SIZE, 1, 1);
+      LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+      write.clear();
+      before.clear();
+      after.clear();
+      SpawnComputeJob(PRINT_JOB_NAME, job_ids[i], read, write, before, after, par);
+    }
 
     TerminateApplication();
   }
@@ -261,11 +217,17 @@ void Print::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the print job\n";
   Vec *d1 = reinterpret_cast<Vec*>(da[0]);
   Vec *d2 = reinterpret_cast<Vec*>(da[1]);
+  Vec *d3 = reinterpret_cast<Vec*>(da[2]);
   std::cout << "OUTPUT: ";
+  std::cout << " d1: ";
   for (int i = 0; i < d1->size(); i++)
     std::cout << d1->arr()[i] << ", ";
+  std::cout << " d2: ";
   for (int i = 0; i < d2->size(); i++)
     std::cout << d2->arr()[i] << ", ";
+  std::cout << " d3: ";
+  for (int i = 0; i < d3->size(); i++)
+    std::cout << d3->arr()[i] << ", ";
   std::cout << std::endl;
 };
 
