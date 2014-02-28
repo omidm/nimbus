@@ -251,7 +251,8 @@ void Scheduler::TerminationProcedure() {
 void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
-  job_manager_->AddJobEntry(JOB_COMP, "main", j[0], (job_id_t)(0), true, false, false);
+  job_manager_->AddJobEntry(JOB_COMP, NIMBUS_MAIN_JOB_NAME, j[0],
+      NIMBUS_KERNEL_JOB_ID, true, false, false);
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {

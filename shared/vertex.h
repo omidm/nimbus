@@ -66,11 +66,11 @@ template<typename T, typename key_t>
 class Vertex {
   friend class Graph<T, key_t>;
 
-  typedef typename std::map<key_t, Vertex<T, key_t>*> Map;
-  typedef typename std::map<key_t, Vertex<T, key_t>*>::iterator Iter;
-  typedef typename std::map<key_t, Vertex<T, key_t>*>::const_iterator ConstIter;
-
   public:
+    typedef typename std::map<key_t, Vertex<T, key_t>*> Map;
+    typedef typename std::map<key_t, Vertex<T, key_t>*>::iterator Iter;
+    typedef typename std::map<key_t, Vertex<T, key_t>*>::const_iterator ConstIter;
+
     explicit Vertex(key_t id, T* entry);
     Vertex(const Vertex<T, key_t>& other);
     virtual ~Vertex();
