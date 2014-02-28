@@ -33,12 +33,13 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
+ * Iterative projection solving driver. Still in progress.
+ *
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_NIMBUS_PCG_SPARSE_MPI_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_NIMBUS_PCG_SPARSE_MPI_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_DRIVER_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_DRIVER_H_
 
 #include <PhysBAM_Tools/Grids_Uniform/GRID.h>
 #include <PhysBAM_Tools/Krylov_Solvers/PCG_SPARSE.h>
@@ -53,13 +54,13 @@ namespace PhysBAM {
 class SPARSE_MATRIX_PARTITION;
 typedef GRID<application::TV> T_GRID;
 
-class NIMBUS_PCG_SPARSE_MPI {
+class ProjectionDriver {
  public:
   typedef typename T_GRID::VECTOR_T TV;
   typedef typename TV::SCALAR T;
   typedef typename T_GRID::VECTOR_INT TV_INT;
 
-  NIMBUS_PCG_SPARSE_MPI(PCG_SPARSE<T>& pcg_input) : pcg(pcg_input) {
+  ProjectionDriver(PCG_SPARSE<T>& pcg_input) : pcg(pcg_input) {
     projection_data.x_interior = NULL;
     projection_data.temp = NULL;
     projection_data.temp_interior = NULL;
@@ -79,7 +80,7 @@ class NIMBUS_PCG_SPARSE_MPI {
     projection_data.iteration = 0;
   }
 
-  virtual ~NIMBUS_PCG_SPARSE_MPI() {
+  virtual ~ProjectionDriver() {
     delete projection_data.x_interior;
     delete projection_data.temp;
     delete projection_data.temp_interior;
@@ -153,4 +154,4 @@ class NIMBUS_PCG_SPARSE_MPI {
 };
 }  // namespace PhysBAM
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_NIMBUS_PCG_SPARSE_MPI_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_DRIVER_H_

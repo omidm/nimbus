@@ -42,7 +42,7 @@
 
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/projection/nimbus_pcg_sparse_mpi.h"
+#include "application/water_multiple/projection/projection_driver.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "shared/dbg.h"
@@ -76,7 +76,7 @@ void JobProjectionCore::Execute(
 
   // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,
-      "In PROJECTION: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "In PROJECTION_CORE: Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
       init_config.frame, init_config.time);
 
@@ -98,7 +98,7 @@ void JobProjectionCore::Execute(
   pcg_temp.cg_restart_iterations = 0;
   pcg_temp.Show_Results();
 
-  PhysBAM::NIMBUS_PCG_SPARSE_MPI pcg_mpi(pcg_temp);
+  PhysBAM::ProjectionDriver pcg_mpi(pcg_temp);
   dbg(APP_LOG, "Job PROJECTION_CORE starts (dt=%f).\n", dt);
 
   {
@@ -111,7 +111,7 @@ void JobProjectionCore::Execute(
         application::DataSparseMatrix* data_real =
             dynamic_cast<application::DataSparseMatrix*>(data_temp);
         data_real->LoadFromNimbus(&pcg_mpi.projection_data.matrix_a);
-        dbg(APP_LOG, "Finish reading MATRIX_A\n");
+        dbg(APP_LOG, "Finish reading MATRIX_A.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::VECTOR_X)) {
@@ -121,7 +121,7 @@ void JobProjectionCore::Execute(
         application::DataRawVectorNd* data_real =
             dynamic_cast<application::DataRawVectorNd*>(data_temp);
         data_real->LoadFromNimbus(&pcg_mpi.projection_data.vector_x);
-        dbg(APP_LOG, "Finish reading VECTOR_X\n");
+        dbg(APP_LOG, "Finish reading VECTOR_X.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
@@ -131,7 +131,7 @@ void JobProjectionCore::Execute(
         application::DataRawVectorNd* data_real =
             dynamic_cast<application::DataRawVectorNd*>(data_temp);
         data_real->LoadFromNimbus(&pcg_mpi.projection_data.vector_b);
-        dbg(APP_LOG, "Finish reading VECTOR_B\n");
+        dbg(APP_LOG, "Finish reading VECTOR_B.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
@@ -148,7 +148,7 @@ void JobProjectionCore::Execute(
 
         data_real->LoadFromNimbus(
             &pcg_mpi.projection_data.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish reading INDEX_C2M\n");
+        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
@@ -159,7 +159,7 @@ void JobProjectionCore::Execute(
             dynamic_cast<application::DataRawArrayM2C*>(data_temp);
         data_real->LoadFromNimbus(
             &pcg_mpi.projection_data.matrix_index_to_cell_index);
-        dbg(APP_LOG, "Finish reading INDEX_M2C\n");
+        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
@@ -170,20 +170,11 @@ void JobProjectionCore::Execute(
         nimbus::ScalarData<float>* data_real =
             dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
         pcg_mpi.projection_data.local_tolerance = data_real->scalar();
-        dbg(APP_LOG, "Finish reading tolerance\n");
+        dbg(APP_LOG, "Finish reading tolerance.\n");
       }
     }
   }
-  /*
-  pcg_mpi.projection_data.matrix_index_to_cell_index =
-      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
-  pcg_mpi.projection_data.cell_index_to_matrix_index =
-      &laplace_solver_wrapper.cell_index_to_matrix_index;
-  pcg_mpi.projection_data.matrix_a = &laplace_solver_wrapper.A_array(1);
-  pcg_mpi.projection_data.vector_b = &laplace_solver_wrapper.b_array(1);
-  pcg_mpi.projection_data.vector_x = &laplace_solver_wrapper.x;
-  pcg_mpi.projection_data.local_tolerance = laplace_solver.tolerance;
-  */
+
   pcg_mpi.Initialize();
   pcg_mpi.CommunicateConfig();
   pcg_mpi.Parallel_Solve();
@@ -195,6 +186,7 @@ void JobProjectionCore::Execute(
       application::DataRawVectorNd* data_real =
           dynamic_cast<application::DataRawVectorNd*>(data_temp);
       data_real->SaveToNimbus(pcg_mpi.projection_data.vector_x);
+        dbg(APP_LOG, "Finish writing VECTOR_X.\n");
     }
   }
 
