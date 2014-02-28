@@ -143,6 +143,7 @@ namespace application {
         RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
+        RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION,
                     new JobProjectionCalculateBoundaryCondition(this));
         RegisterJob(PROJECTION_CONSTRUCT_MATRIX,

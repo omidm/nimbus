@@ -33,42 +33,31 @@
  */
 
 /*
- * This file defines the name of jobs that will be used for registration and
- * spawning the jobs.
+ * This file contains job PROJECTION_MAIN in which all the projection jobs are
+ * spawned. It has empty read set/write set.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_PROJECTION_PROJECTION_MAIN_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_PROJECTION_PROJECTION_MAIN_H_
 
+#include "shared/nimbus.h"
 
-#define MAIN "main"
-#define INITIALIZE "initialize"
-#define LOOP_FRAME "loop_frame"
-#define LOOP_ITERATION "loop_iteration"
-#define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
-#define CALCULATE_FRAME "calculate_frame"
-#define WRITE_FRAME "write_frame"
+namespace application {
 
-#define ADJUST_PHI_WITH_OBJECTS "adjust_phi_with_objects"
-#define EXTRAPOLATE_PHI "extrapolate_phi"
-#define ADVECT_PHI "advect_phi"
-#define STEP_PARTICLES "step_particles"
-#define ADVECT_REMOVED_PARTICLES "advect_removed_particles"
-#define ADVECT_V "advect_v"
-#define APPLY_FORCES "apply_forces"
-#define MODIFY_LEVELSET "modify_levelset"
-#define ADJUST_PHI "adjust_phi"
-#define DELETE_PARTICLES "delete_particles"
-#define REINCORPORATE_PARTICLES "reincorporate_particles"
-#define PROJECTION_MAIN "projection_main"
-#define PROJECTION_CALCULATE_BOUNDARY_CONDITION "projection_calculate_boundary_condition"
-#define PROJECTION_CONSTRUCT_MATRIX "projection_construct_matrix"
-#define PROJECTION_CORE "projection_core"
-#define PROJECTION_WRAPUP "projection_wrapup"
-#define EXTRAPOLATION "extrapolation"
-#define SYNCHRONIZE_PARTICLES "synchronize_particles"
+class JobProjectionMain : public nimbus::Job {
+ public:
+  explicit JobProjectionMain(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+ private:
+  void SpawnJobs(
+      int frame, T time, T dt, const nimbus::DataArray& da,
+      const nimbus::GeometricRegion& global_region);
 
+};
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_PROJECTION_PROJECTION_MAIN_H_

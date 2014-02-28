@@ -56,6 +56,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_main.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_core.cc
@@ -106,6 +107,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_main.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_core.h

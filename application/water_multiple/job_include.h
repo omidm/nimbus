@@ -56,6 +56,7 @@
 #include "application/water_multiple/job_main.h"
 #include "application/water_multiple/job_modify_levelset.h"
 #include "application/water_multiple/job_names.h"
+#include "application/water_multiple/projection/job_projection_main.h"
 #include "application/water_multiple/projection/job_projection_calculate_boundary_condition.h"
 #include "application/water_multiple/projection/job_projection_construct_matrix.h"
 #include "application/water_multiple/projection/job_projection_core.h"
