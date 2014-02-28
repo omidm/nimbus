@@ -168,7 +168,6 @@ bool Graph<T, key_t>::HasVertex(key_t key) {
 template<typename T, typename key_t>
 bool Graph<T, key_t>::GetVertex(key_t key, Vertex<T, key_t>** vertex) {
   if (!HasVertex(key)) {
-    dbg(DBG_ERROR, "ERROR: vertex with id %lu does not exist.\n", key);
     *vertex = NULL;
     return false;
   }

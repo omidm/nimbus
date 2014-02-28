@@ -132,7 +132,6 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
     job = vertex->entry();
     return true;
   } else {
-    dbg(DBG_ERROR, "ERROR: job entry with id %lu is not in the job graph.\n", job_id);
     job = NULL;
     return false;
   }
@@ -168,15 +167,16 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 
   size_t num = 0;
   list->clear();
-  JobGraph::Iter iter = job_graph_.Begin();
-  for (; (iter != job_graph_.End()) && (num < max_num); ++iter) {
-    JobEntry* job = iter->second;
-    // Job is already versioned so it has the information from parent and
-    // beforeset already, they may not be in the graph at this point though.
+  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+  for (; (iter != job_graph_.end()) && (num < max_num); ++iter) {
+    Vertex<JobEntry, job_id_t>* vertex = iter->second;
+    JobEntry* job = vertex->entry();
     if (job->versioned() && !job->assigned()) {
+    // Job is already versioned so it has the information from parent and
+    // beforeset already, they may not be in the graph at this point though. -omidm
       bool parent_and_before_set_done = true;
-      JobEntry* j;
 
+      JobEntry* j;
       if (GetJobEntry(job->parent_job_id(), j)) {
         if (!(j->done())) {
           parent_and_before_set_done = false;
@@ -184,14 +184,12 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
         }
       }
 
-      IDSet<job_id_t>::IDSetIter it;
-      IDSet<job_id_t> before_set = job->before_set();
-      for (it = before_set.begin(); it != before_set.end(); ++it) {
-        if (GetJobEntry(*it, j)) {
-          if (!(j->done())) {
-            parent_and_before_set_done = false;
-            break;
-          }
+      Edge<JobEntry, job_id_t>::Iter it;
+      typename Edge<JobEntry, job_id_t>::Map* incoming_edges = vertex->incoming_edges();
+      for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
+        if (!(it->second->start_vertex()->entry()->done())) {
+          parent_and_before_set_done = false;
+          break;
         }
       }
 
@@ -215,14 +213,14 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   }
 
   size_t num = 0;
-  JobGraph::Iter iter = job_graph_.Begin();
-  for (; (iter != job_graph_.End());) {
-    JobEntry* job = iter->second;
+  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+  for (; (iter != job_graph_.end());) {
+    JobEntry* job = iter->second->entry();
     job_id_t job_id = job->job_id();
     ++iter;
-    if (job->done() && (job_id != 0)) {
+    if (job->done() && (job_id != NIMBUS_KERNEL_JOB_ID)) {
       RemoveJobEntry(job);
-      dbg(DBG_SCHED, "removed job with id %lu from job manager.", job_id);
+      dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", job_id);
       ++num;
     }
   }
@@ -283,6 +281,8 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     return false;
   }
 
+  // Specifically use the before set not the edges in the graph to make sure
+  // that jobs in before set are not removed before job is versioned - omidm
   IDSet<job_id_t>::IDSetIter iter_job;
   IDSet<job_id_t> before_set = job->before_set();
   for (iter_job = before_set.begin(); iter_job != before_set.end(); ++iter_job) {
@@ -338,10 +338,11 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
 
 size_t JobManager::ResolveVersions() {
   size_t num_new_versioned = 0;
-  JobGraph::Iter iter = job_graph_.Begin();
-  for (; iter != job_graph_.End(); ++iter) {
-    if (!iter->second->versioned()) {
-      if (ResolveJobDataVersions(iter->second))
+
+  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+  for (; iter != job_graph_.end(); ++iter) {
+    if ((!iter->second->entry()->versioned())) {
+      if (ResolveJobDataVersions(iter->second->entry()))
         ++num_new_versioned;
     }
   }
@@ -379,16 +380,13 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 
 bool JobManager::AllJobsAreDone() {
   bool all_done = true;
-  JobGraph::Iter iter = job_graph_.Begin();
-  for (; iter != job_graph_.End(); ++iter) {
-    JobEntry* job = iter->second;
-    if (job->job_id() == 0) {
-      continue;
-    } else {
-      if (!job->done()) {
-        all_done = false;
-        break;
-      }
+
+  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+  for (; iter != job_graph_.end(); ++iter) {
+    JobEntry* job = iter->second->entry();
+    if (!job->done()) {
+      all_done = false;
+      break;
     }
   }
   return all_done;
@@ -406,7 +404,7 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
     JobEntry* j;
     job_id_t id = *it;
     if (GetJobEntry(id, j)) {
-      if ((j->done()) || (id == 0)) {
+      if ((j->done()) || (id == NIMBUS_KERNEL_JOB_ID)) {
         before_set->remove(it++);
       } else {
         ++it;
