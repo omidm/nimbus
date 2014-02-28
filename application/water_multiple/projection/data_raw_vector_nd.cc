@@ -69,6 +69,7 @@ bool DataRawVectorNd::SaveToNimbus(
 }
 
 bool DataRawVectorNd::LoadFromNimbus(PhysBAM::VECTOR_ND<float>* vector) {
+  assert(vector != NULL);
   char* pointer = buffer();
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   vector->n = header.n;
@@ -81,4 +82,4 @@ bool DataRawVectorNd::LoadFromNimbus(PhysBAM::VECTOR_ND<float>* vector) {
   return true;
 }
 
-} // namespace application
+}  // namespace application

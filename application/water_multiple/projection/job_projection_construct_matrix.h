@@ -33,6 +33,16 @@
  */
 
 /*
+ * This file contains job PROJECTION_CONSTRUCT_MATRIX that:
+ *     construct the matrix required by projection implicit solving.
+ * The parameters of PROJECTION_CONSTRUCT_MATRIX:
+ *     frame number, simulation time, dt.
+ * The read set of PROJECTION_CONSTRUCT_MATRIX:
+ *     not sure.
+ * The write set(not sure) of PROJECTION_CONSTRUCT_MATRIX:
+ *     not sure.
+ *
+ * TODO(quhang), figure out and eliminate the read set and the write set.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

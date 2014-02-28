@@ -37,7 +37,6 @@
  */
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/projection/nimbus_pcg_sparse_mpi.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"

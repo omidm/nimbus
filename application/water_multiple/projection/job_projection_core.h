@@ -62,6 +62,6 @@ class JobProjectionCore : public nimbus::Job {
   virtual nimbus::Job* Clone();
 };
 
-} // namespace application
+}  // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_

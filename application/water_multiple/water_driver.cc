@@ -16,7 +16,6 @@
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
-#include "application/water_multiple/projection/nimbus_pcg_sparse_mpi.h"
 #include "application/water_multiple/projection/projection_helper.h"
 #include "shared/dbg_modes.h"
 #include "shared/dbg.h"
@@ -610,19 +609,6 @@ ProjectionWrapupImpl(
   example.projection.p *= (1/dt);
   return true;
 }
-
-/*
-template<class TV> bool WATER_DRIVER<TV>::
-ProjectionImpl(
-    const nimbus::Job *job,
-    const nimbus::DataArray &da,
-    T dt) {
-  ProjectionCalculateBoundaryConditionImpl(job, da, dt);
-  ProjectionCoreImpl(job, da, dt);
-  ProjectionWrapupImpl(job, da, dt);
-  return true;
-}
-*/
 
 /*
 template<class TV> bool WATER_DRIVER<TV>::
