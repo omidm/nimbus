@@ -32,64 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Data classes for job spawner application.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
+#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
+#define NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_
 
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
 #include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
+#include "shared/nimbus.h"
+#include "protobuf_compiled/vector_msg.pb.h"
 
+#define DATA_NAME "velocity"
 
+using nimbus::Data;
 
-namespace nimbus {
+class Vec : public Data {
+  public:
+    Vec();
+    virtual ~Vec();
 
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
+    virtual void Create();
+    virtual void Destroy();
+    virtual Data * Clone();
+    virtual void Copy(Data* from);
+    virtual bool Serialize(SerializedData* ser_data);
+    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
+    int size();
+    int* arr();
 
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry);
-  virtual int size();
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
+  private:
+    int size_;
+    int *arr_;
 };
 
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_IDSET_H_
+#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_DATA_H_

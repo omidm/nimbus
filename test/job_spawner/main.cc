@@ -33,63 +33,40 @@
  */
 
  /*
-  * Object representation of a set of identifires.
+  * A Nimbus worker for job spawner application. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
+#include <iostream>  // NOLINT
+#include "shared/nimbus.h"
+#include "../../application/job_spawner/app.h"
 
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
-#include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
+int main(int argc, char *argv[]) {
+  port_t listening_port;
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  if (*argv[1] == '1') {
+    listening_port = WORKER_PORT_1;
+  } else if (*argv[1] == '2') {
+    listening_port = WORKER_PORT_2;
+  } else if (*argv[1] == '3') {
+    listening_port = WORKER_PORT_3;
+  } else if (*argv[1] == '4') {
+    listening_port = WORKER_PORT_4;
+  } else {
+    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  nimbus_initialize();
+  std::cout << "Job spawner worker is up!" << std::endl;
+  JobSpawnerApp * app = new JobSpawnerApp();
+  Worker * w = new Worker(NIMBUS_SCHEDULER_IP,
+      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  w->Run();
+}
 
-
-
-namespace nimbus {
-
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
-
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
-
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry);
-  virtual int size();
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
-};
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_IDSET_H_

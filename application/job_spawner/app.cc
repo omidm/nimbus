@@ -32,64 +32,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * An Example application that spawns a lot of jobs in the 3d space.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
+#include "./app.h"
+#include "./job.h"
+#include "./data.h"
 
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
-#include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
-
-
-
-namespace nimbus {
-
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
-
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
-
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry);
-  virtual int size();
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
+JobSpawnerApp::JobSpawnerApp() {
 };
 
-}  // namespace nimbus
+JobSpawnerApp::~JobSpawnerApp() {
+};
 
-#endif  // NIMBUS_SHARED_IDSET_H_
+void JobSpawnerApp::Load() {
+  std::cout << "Start Creating Data and Job Tables" << std::endl;
+
+  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
+  RegisterJob(INIT_JOB_NAME, new Init());
+  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
+  RegisterJob(PRINT_JOB_NAME, new Print());
+
+  RegisterData(DATA_NAME, new Vec());
+
+  std::cout << "Finished Creating Data and Job Tables" << std::endl;
+};
+
+
+

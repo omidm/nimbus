@@ -32,64 +32,82 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Data classes for job spawner application.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
+#include <stdlib.h>
+#include "./data.h"
 
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
-#include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
+#define ML 4
+#define GL 1
 
+using vector_msg::VectorMsg;
 
-
-namespace nimbus {
-
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
-
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
-
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry);
-  virtual int size();
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
+Vec::Vec() {
 };
 
-}  // namespace nimbus
+Vec::~Vec() {
+};
 
-#endif  // NIMBUS_SHARED_IDSET_H_
+Data * Vec::Clone() {
+  std::cout << "Cloning Vec data!\n";
+  return new Vec();
+};
+
+void Vec::Create() {
+  size_ = abs(region().dx() * region().dy() * region().dz());
+  arr_ = new int[size_];
+};
+
+void Vec::Destroy() {
+  delete arr_;
+};
+
+void Vec::Copy(Data* from) {
+  Vec *d = static_cast<Vec*>(from);
+  assert(d);
+  assert(size_ == d->size_);
+  for (int i = 0; i < size_; i++) {
+    arr_[i] = d->arr()[i];
+  }
+}
+
+bool Vec::Serialize(SerializedData* ser_data) {
+  VectorMsg vec_msg;
+  for (int i = 0; i < size_; i++) {
+    vec_msg.add_elem(arr_[i]);
+  }
+  std::string str;
+  vec_msg.SerializeToString(&str);
+  char* ptr = new char[str.length()];
+  memcpy(ptr, str.c_str(), str.length());
+  ser_data->set_data_ptr(ptr);
+  ser_data->set_size(str.length());
+  return true;
+}
+
+bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
+  VectorMsg vec_msg;
+  std::string str(ser_data.data_ptr_raw(), ser_data.size());
+  vec_msg.ParseFromString(str);
+  Vec* vec = new Vec();
+  vec->arr_ = new int[size_];
+  vec->size_ = size_;
+  for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
+     vec->arr_[i] = vec_msg.elem(i);
+
+  *result = vec;
+  return true;
+}
+
+int Vec::size() {
+  return size_;
+}
+
+int* Vec::arr() {
+  return arr_;
+}
+

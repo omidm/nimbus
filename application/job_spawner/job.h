@@ -32,64 +32,53 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Job classes for job spawner application.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
+#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
+#define NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
 
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
 #include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
+#include "worker/physical_data_instance.h"
+#include "shared/nimbus.h"
 
+#define INIT_JOB_NAME "init"
+#define PRINT_JOB_NAME "print"
+#define LOOP_JOB_NAME "for_loop"
 
+using nimbus::Job;
+using nimbus::Data;
+using nimbus::Application;
 
-namespace nimbus {
-
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
-
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
-
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry);
-  virtual int size();
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
+class Main : public Job {
+  public:
+    explicit Main(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
 };
 
-}  // namespace nimbus
+class Init : public Job {
+  public:
+    Init();
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
-#endif  // NIMBUS_SHARED_IDSET_H_
+class Print : public Job {
+  public:
+    Print();
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class ForLoop : public Job {
+  public:
+    explicit ForLoop(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_

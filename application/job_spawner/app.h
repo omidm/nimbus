@@ -32,64 +32,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * An Example application that is meant to run over multiple workers.
+ * It is simply applying a stencil over a one dimensional array.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
+#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
+#define NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
 
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
 #include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
+#include "worker/application.h"
 #include "shared/nimbus_types.h"
 
+using nimbus::Application;
 
-
-namespace nimbus {
-
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
-
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
-
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry);
-  virtual int size();
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
+class JobSpawnerApp : public Application {
+  public:
+    JobSpawnerApp();
+    ~JobSpawnerApp();
+    virtual void Load();
 };
 
-}  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_IDSET_H_
+
+#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_

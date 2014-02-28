@@ -50,6 +50,7 @@
 #include <map>
 #include <set>
 #include "shared/nimbus_types.h"
+#include "shared/edge.h"
 
 
 
@@ -64,13 +65,18 @@ class Edge;
 template<typename T, typename key_t>
 class Vertex {
   friend class Graph<T, key_t>;
+
   public:
+    typedef typename std::map<key_t, Vertex<T, key_t>*> Map;
+    typedef typename std::map<key_t, Vertex<T, key_t>*>::iterator Iter;
+    typedef typename std::map<key_t, Vertex<T, key_t>*>::const_iterator ConstIter;
+
     explicit Vertex(key_t id, T* entry);
     Vertex(const Vertex<T, key_t>& other);
     virtual ~Vertex();
 
-    virtual std::map<key_t, Edge<T, key_t>*>* outgoing_edges();
-    virtual std::map<key_t, Edge<T, key_t>*>* incoming_edges();
+    virtual typename Edge<T, key_t>::Map* outgoing_edges();
+    virtual typename Edge<T, key_t>::Map* incoming_edges();
     virtual key_t id();
     virtual T* entry();
 
@@ -96,8 +102,8 @@ class Vertex {
   private:
     key_t id_;
     T* entry_;
-    std::map<key_t, Edge<T, key_t>*> outgoing_edges_;
-    std::map<key_t, Edge<T, key_t>*> incoming_edges_;
+    typename Edge<T, key_t>::Map outgoing_edges_;
+    typename Edge<T, key_t>::Map incoming_edges_;
 };
 
 
@@ -121,12 +127,12 @@ Vertex<T, key_t>::~Vertex() {
 
 
 template<typename T, typename key_t>
-std::map<key_t, Edge<T, key_t>*>* Vertex<T, key_t>::outgoing_edges() {
+typename Edge<T, key_t>::Map* Vertex<T, key_t>::outgoing_edges() {
   return &outgoing_edges_;
 }
 
 template<typename T, typename key_t>
-std::map<key_t, Edge<T, key_t>*>* Vertex<T, key_t>::incoming_edges() {
+typename Edge<T, key_t>::Map* Vertex<T, key_t>::incoming_edges() {
   return &incoming_edges_;
 }
 
