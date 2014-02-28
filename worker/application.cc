@@ -40,6 +40,8 @@
 
 #include "worker/application.h"
 
+using namespace nimbus; // NOLINT
+
 Application::Application() {
   app_data_ = NULL;
 }
