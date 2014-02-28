@@ -42,6 +42,8 @@
 #include "shared/nimbus.h"
 #include "../../application/job_spawner/app.h"
 
+using namespace nimbus; // NOLINT
+
 int main(int argc, char *argv[]) {
   port_t listening_port;
   if (argc < 2) {
