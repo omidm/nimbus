@@ -52,6 +52,7 @@
 #include "application/water_multiple/job_initialize.h"
 #include "application/water_multiple/job_loop_frame.h"
 #include "application/water_multiple/job_loop_iteration.h"
+#include "application/water_multiple/job_loop_iteration_part_two.h"
 #include "application/water_multiple/job_main.h"
 #include "application/water_multiple/job_modify_levelset.h"
 #include "application/water_multiple/job_names.h"

@@ -135,6 +135,7 @@ namespace application {
         RegisterJob(ADVECT_V, new JobAdvectV(this));
         RegisterJob(APPLY_FORCES, new JobApplyForces(this));
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));
+        RegisterJob(LOOP_ITERATION_PART_TWO, new JobLoopIterationPartTwo(this));
         RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
         RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));
         RegisterJob(WRITE_FRAME, new JobWriteFrame(this));

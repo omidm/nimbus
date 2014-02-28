@@ -30,6 +30,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
+    ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.cc
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.cc
     ${PROJECT_SOURCE_DIR}/job_delete_particles.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
@@ -77,6 +78,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_loop_frame.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.h
+    ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.h
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.h
     ${PROJECT_SOURCE_DIR}/job_delete_particles.h
     ${PROJECT_SOURCE_DIR}/job_main.h

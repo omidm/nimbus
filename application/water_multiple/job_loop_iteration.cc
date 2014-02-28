@@ -1029,124 +1029,26 @@ namespace application {
     }
 
     /*
-     * Spawning extrapolation stage over entire block
+     * Loop iteration part two.
      */
 
-    {
-      read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-      write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    read.clear();
+    write.clear();
 
-      int index = 11;
-      nimbus::Parameter extrapolation_params;
-      std::string extrapolation_str;
-      SerializeParameter(frame, time, dt, global_region, global_region, &extrapolation_str);
-      extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
-      after.clear();
-      after.insert(job_ids[index+1]);
-      before.clear();
-      before.insert(projection_job_ids[3]);
-      SpawnComputeJob(EXTRAPOLATION,
-                      job_ids[index],
-                      read, write,
-                      before, after,
-                      reincorporate_particles_params);
-    }
-
-    if (!done) {
-
-    /* 
-     * Spawning loop iteration fopr next iteration.
-     */
-
-      {
-        read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-        write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
-        int index = 12;
-        nimbus::Parameter iter_params;
-        std::string iter_str;
-        SerializeParameter(frame, time + dt, global_region, &iter_str);
-        iter_params.set_ser_data(SerializedData(iter_str));
-        after.clear();
-        before.clear();
-        before.insert(job_ids[index-1]);
-        SpawnComputeJob(LOOP_ITERATION,
-                        job_ids[index],
-                        read, write,
-                        before, after,
-                        iter_params);
-      }
-    } else {
-
-      std::vector<nimbus::job_id_t> loop_job_id;
-      GetNewJobID(&loop_job_id, 1);
-
-    /* 
-     * Spawning write frame over entire block
-     */
-
-      {
-        read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-        write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-            APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
-        int index = 12;
-        nimbus::Parameter write_params;
-        std::string write_str;
-        SerializeParameter(frame, time + dt, 0,
-                           global_region, global_region, &write_str);
-        write_params.set_ser_data(SerializedData(write_str));
-        after.clear();
-        after.insert(loop_job_id[0]);
-        before.clear();
-        before.insert(job_ids[index-1]);
-        SpawnComputeJob(WRITE_FRAME,
-                        job_ids[index],
-                        read, write,
-                        before, after,
-                        write_params);
-      }
-
-    /* 
-     * Spawning loop frame to compute next frame.
-     */
-
-      {
-        read.clear();
-        write.clear();
-
-        int index = 13;
-        nimbus::Parameter frame_params;
-        std::string frame_str;
-        SerializeParameter(frame + 1, global_region, &frame_str);
-        frame_params.set_ser_data(SerializedData(frame_str));
-        after.clear();
-        before.clear();
-        before.insert(job_ids[index-1]);
-        SpawnComputeJob(LOOP_FRAME,
-                        loop_job_id[0],
-                        read, write,
-                        before, after,
-                        frame_params);
-      }
-    }
+    nimbus::Parameter loop_iteration_part_two_params;
+    std::string loop_iteration_part_two_str;
+    SerializeParameter(frame, time, dt, global_region, global_region,
+                       &loop_iteration_part_two_str);
+    loop_iteration_part_two_params.set_ser_data(
+        SerializedData(loop_iteration_part_two_str));
+    after.clear();
+    before.clear();
+    before.insert(projection_job_ids[3]);
+    SpawnComputeJob(LOOP_ITERATION_PART_TWO,
+                    job_ids[11],
+                    read, write,
+                    before, after,
+                    loop_iteration_part_two_params);
   }
 
 
