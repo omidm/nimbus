@@ -40,9 +40,6 @@
 
 #include <iostream>  // NOLINT
 #include "shared/nimbus.h"
-#include "shared/nimbus_types.h"
-#include "worker/application.h"
-#include "worker/worker.h"
 #include "../../application/job_spawner/app.h"
 
 int main(int argc, char *argv[]) {
@@ -67,7 +64,7 @@ int main(int argc, char *argv[]) {
   }
   nimbus_initialize();
   std::cout << "Job spawner worker is up!" << std::endl;
-  App * app = new App();
+  JobSpawnerApp * app = new JobSpawnerApp();
   Worker * w = new Worker(NIMBUS_SCHEDULER_IP,
       NIMBUS_SCHEDULER_PORT, listening_port, app);
   w->Run();

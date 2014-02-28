@@ -42,10 +42,13 @@
 #include "./job.h"
 #include "./data.h"
 
-App::App() {
+JobSpawnerApp::JobSpawnerApp() {
 };
 
-void App::Load() {
+JobSpawnerApp::~JobSpawnerApp() {
+};
+
+void JobSpawnerApp::Load() {
   std::cout << "Start Creating Data and Job Tables" << std::endl;
 
   RegisterJob("main", new Main(this));

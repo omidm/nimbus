@@ -213,31 +213,12 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     d.push_back(*it);
   }
 
-//  d.push_back(16777217);
-//  d.push_back(16777218);
-//  d.push_back(16777219);
-//  d.push_back(16777220);
-
-
   if (d[6] > LOOP_CONDITION) {
-    GetNewJobID(&j, 3);
-
-    read.clear(); read.insert(d[0]); read.insert(d[1]); read.insert(d[2]); read.insert(d[3]);
-    write.clear(); write.insert(d[1]); write.insert(d[2]);
-    before.clear(); before.insert(id().elem());
-    after.clear(); after.insert(j[2]);
-    SpawnComputeJob("applyLeft", j[0], read, write, before, after, par);
-
-    read.clear(); read.insert(d[3]); read.insert(d[4]); read.insert(d[5]); read.insert(d[2]);
-    write.clear(); write.insert(d[3]); write.insert(d[4]);
-    before.clear(); before.insert(id().elem());
-    after.clear(); after.insert(j[2]);
-    SpawnComputeJob("applyRight", j[1], read, write, before, after, par);
+    GetNewJobID(&j, 1);
 
     read.clear();
     write.clear();
-    before.clear(); before.insert(j[0]); before.insert(j[1]);
-    after.clear();
+    before.clear();
     after.clear();
     param_idset.clear();
     param_idset.insert(d[0]); param_idset.insert(d[1]);
@@ -245,7 +226,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     param_idset.insert(d[4]); param_idset.insert(d[5]);
     param_idset.insert(d[6] - 1);
     par.set_idset(param_idset);
-    SpawnComputeJob("forLoop", j[2], read, write, before, after, par);
+    SpawnComputeJob("forLoop", j[0], read, write, before, after, par);
   } else {
     GetNewJobID(&j, 2);
 

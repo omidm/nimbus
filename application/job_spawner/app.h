@@ -42,22 +42,16 @@
 #ifndef NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
 #define NIMBUS_APPLICATION_JOB_SPAWNER_APP_H_
 
-#include <boost/tokenizer.hpp>
-#include <string>
 #include <iostream> // NOLINT
 #include "worker/application.h"
-#include "worker/job.h"
-#include "worker/data.h"
-#include "worker/physical_data_instance.h"
-#include "shared/parser.h"
 #include "shared/nimbus_types.h"
-#include "protobuf_compiled/vector_msg.pb.h"
 
 using nimbus::Application;
 
-class App : public Application {
+class JobSpawnerApp : public Application {
   public:
-    App();
+    JobSpawnerApp();
+    ~JobSpawnerApp();
     virtual void Load();
 };
 
