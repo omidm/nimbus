@@ -45,10 +45,9 @@
 #include "worker/physical_data_instance.h"
 #include "shared/nimbus.h"
 
-#define ML 4
-#define GL 1
-#define LOOP_COUNTER 15
-#define LOOP_CONDITION 0
+#define INIT_JOB_NAME "init"
+#define PRINT_JOB_NAME "print"
+#define LOOP_JOB_NAME "for_loop"
 
 using nimbus::Job;
 using nimbus::Data;

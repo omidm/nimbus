@@ -38,6 +38,7 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <stdlib.h>
 #include "./data.h"
 
 #define ML 4
@@ -45,8 +46,7 @@
 
 using vector_msg::VectorMsg;
 
-Vec::Vec(int size) {
-  size_ = size;
+Vec::Vec() {
 };
 
 Vec::~Vec() {
@@ -54,10 +54,11 @@ Vec::~Vec() {
 
 Data * Vec::Clone() {
   std::cout << "Cloning Vec data!\n";
-  return new Vec(size_);
+  return new Vec();
 };
 
 void Vec::Create() {
+  size_ = abs(region().dx() * region().dy() * region().dz());
   arr_ = new int[size_];
 };
 
@@ -66,15 +67,17 @@ void Vec::Destroy() {
 };
 
 void Vec::Copy(Data* from) {
-  Vec *d = reinterpret_cast<Vec*>(from);
-  for (int i = 0; i < size_; i++)
+  Vec *d = static_cast<Vec*>(from);
+  assert(d);
+  assert(size_ == d->size_);
+  for (int i = 0; i < size_; i++) {
     arr_[i] = d->arr()[i];
+  }
 }
 
 bool Vec::Serialize(SerializedData* ser_data) {
   VectorMsg vec_msg;
   for (int i = 0; i < size_; i++) {
-    std::cout << "****" << arr_[i] << std::endl;
     vec_msg.add_elem(arr_[i]);
   }
   std::string str;
@@ -90,10 +93,11 @@ bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
   VectorMsg vec_msg;
   std::string str(ser_data.data_ptr_raw(), ser_data.size());
   vec_msg.ParseFromString(str);
-  Vec* vec = new Vec(size_);
-  vec->Create();
+  Vec* vec = new Vec();
+  vec->arr_ = new int[size_];
+  vec->size_ = size_;
   for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
-     vec->arr()[i] = vec_msg.elem(i);
+     vec->arr_[i] = vec_msg.elem(i);
 
   *result = vec;
   return true;

@@ -41,6 +41,10 @@
 #include "./job.h"
 #include "./data.h"
 
+#define LOOP_COUNTER 15
+#define LOOP_CONDITION 0
+#define ML 4
+
 Main::Main(Application* app) {
   set_application(app);
 };
@@ -58,12 +62,12 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
-  GeometricRegion r_0(0, 0, 0, 1, 1, 0);
-  GeometricRegion r_1(1, 0, 0, 3, 1, 0);
-  GeometricRegion r_2(4, 0, 0, 1, 1, 0);
-  GeometricRegion r_3(5, 0, 0, 1, 1, 0);
-  GeometricRegion r_4(6, 0, 0, 3, 1, 0);
-  GeometricRegion r_5(9, 0, 0, 1, 1, 0);
+  GeometricRegion r_0(0, 0, 0, 1, 1, 1);
+  GeometricRegion r_1(1, 0, 0, 3, 1, 1);
+  GeometricRegion r_2(4, 0, 0, 1, 1, 1);
+  GeometricRegion r_3(5, 0, 0, 1, 1, 1);
+  GeometricRegion r_4(6, 0, 0, 3, 1, 1);
+  GeometricRegion r_5(9, 0, 0, 1, 1, 1);
   ID<partition_id_t> p_0(0);
   ID<partition_id_t> p_1(1);
   ID<partition_id_t> p_2(2);
@@ -83,12 +87,12 @@ void Main::Execute(Parameter params, const DataArray& da) {
   DefinePartition(p_4, r_4, par);
   DefinePartition(p_5, r_5, par);
 
-  DefineData("side", d[0], p_0.elem(), neighbor_partitions, par);
-  DefineData("middle", d[1], p_1.elem(), neighbor_partitions, par);
-  DefineData("side", d[2], p_2.elem(), neighbor_partitions, par);
-  DefineData("side", d[3], p_3.elem(), neighbor_partitions, par);
-  DefineData("middle", d[4], p_4.elem(), neighbor_partitions, par);
-  DefineData("side", d[5], p_5.elem(), neighbor_partitions, par);
+  DefineData(DATA_NAME, d[0], p_0.elem(), neighbor_partitions, par);
+  DefineData(DATA_NAME, d[1], p_1.elem(), neighbor_partitions, par);
+  DefineData(DATA_NAME, d[2], p_2.elem(), neighbor_partitions, par);
+  DefineData(DATA_NAME, d[3], p_3.elem(), neighbor_partitions, par);
+  DefineData(DATA_NAME, d[4], p_4.elem(), neighbor_partitions, par);
+  DefineData(DATA_NAME, d[5], p_5.elem(), neighbor_partitions, par);
 
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[0]);
@@ -96,7 +100,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[0], read, write, before, after, par);
+  SpawnComputeJob(INIT_JOB_NAME, j[0], read, write, before, after, par);
 
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[1]);
@@ -104,7 +108,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[1], read, write, before, after, par);
+  SpawnComputeJob(INIT_JOB_NAME, j[1], read, write, before, after, par);
 
   read.clear(); read.insert(d[2]);
   write.clear(); write.insert(d[2]);
@@ -112,7 +116,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(ML - 1);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[2], read, write, before, after, par);
+  SpawnComputeJob(INIT_JOB_NAME, j[2], read, write, before, after, par);
 
   read.clear(); read.insert(d[3]);
   write.clear(); write.insert(d[3]);
@@ -120,7 +124,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[3], read, write, before, after, par);
+  SpawnComputeJob(INIT_JOB_NAME, j[3], read, write, before, after, par);
 
   read.clear(); read.insert(d[4]);
   write.clear(); write.insert(d[4]);
@@ -128,7 +132,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(1);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[4], read, write, before, after, par);
+  SpawnComputeJob(INIT_JOB_NAME, j[4], read, write, before, after, par);
 
   read.clear(); read.insert(d[5]);
   write.clear(); write.insert(d[5]);
@@ -136,7 +140,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[5], read, write, before, after, par);
+  SpawnComputeJob(INIT_JOB_NAME, j[5], read, write, before, after, par);
 
   read.clear();
   write.clear();
@@ -149,7 +153,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   param_idset.insert(d[4]); param_idset.insert(d[5]);
   param_idset.insert(LOOP_COUNTER);
   par.set_idset(param_idset);
-  SpawnComputeJob("forLoop", j[6], read, write, before, after, par);
+  SpawnComputeJob(LOOP_JOB_NAME, j[6], read, write, before, after, par);
 
   // *******************************************************************
   // Cheching to query  ldo_map with in the same job that defines the data
@@ -226,7 +230,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     param_idset.insert(d[4]); param_idset.insert(d[5]);
     param_idset.insert(d[6] - 1);
     par.set_idset(param_idset);
-    SpawnComputeJob("forLoop", j[0], read, write, before, after, par);
+    SpawnComputeJob(LOOP_JOB_NAME, j[0], read, write, before, after, par);
   } else {
     GetNewJobID(&j, 2);
 
@@ -234,13 +238,13 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear();
     before.clear(); before.insert(id().elem());
     after.clear();
-    SpawnComputeJob("print", j[0], read, write, before, after, par);
+    SpawnComputeJob(PRINT_JOB_NAME, j[0], read, write, before, after, par);
 
     read.clear(); read.insert(d[3]); read.insert(d[4]);
     write.clear();
     before.clear(); before.insert(id().elem());
     after.clear();
-    SpawnComputeJob("print", j[1], read, write, before, after, par);
+    SpawnComputeJob(PRINT_JOB_NAME, j[1], read, write, before, after, par);
 
     TerminateApplication();
   }

@@ -45,11 +45,13 @@
 #include "shared/nimbus.h"
 #include "protobuf_compiled/vector_msg.pb.h"
 
+#define DATA_NAME "velocity"
+
 using nimbus::Data;
 
 class Vec : public Data {
   public:
-    explicit Vec(int size);
+    Vec();
     virtual ~Vec();
 
     virtual void Create();

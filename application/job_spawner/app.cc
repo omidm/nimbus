@@ -51,13 +51,12 @@ JobSpawnerApp::~JobSpawnerApp() {
 void JobSpawnerApp::Load() {
   std::cout << "Start Creating Data and Job Tables" << std::endl;
 
-  RegisterJob("main", new Main(this));
-  RegisterJob("init", new Init());
-  RegisterJob("forLoop", new ForLoop(this));
-  RegisterJob("print", new Print());
+  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
+  RegisterJob(INIT_JOB_NAME, new Init());
+  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
+  RegisterJob(PRINT_JOB_NAME, new Print());
 
-  RegisterData("middle", new Vec(ML - 1));
-  RegisterData("side", new Vec(GL));
+  RegisterData(DATA_NAME, new Vec());
 
   std::cout << "Finished Creating Data and Job Tables" << std::endl;
 };
