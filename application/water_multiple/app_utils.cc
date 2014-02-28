@@ -153,7 +153,7 @@ namespace application {
         if (d->name() == name && allowed) {
           if (result == NULL) {
             result = d;
-          } else {
+          } else if (result != d) {
             dbg(DBG_ERROR, "More than one physical data instances matches, "
                 "but only one is expected.\n");
             // return NULL;
