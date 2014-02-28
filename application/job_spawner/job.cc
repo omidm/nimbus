@@ -61,7 +61,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
   assert(APP_CHUNK_SIZE > (2 * APP_BANDWIDTH));
 
-  std::vector<job_id_t> j;
+  std::vector<job_id_t> job_ids;
   std::vector<logical_data_id_t> d;
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
@@ -69,9 +69,11 @@ void Main::Execute(Parameter params, const DataArray& da) {
   Parameter par;
   IDSet<param_id_t> param_idset;
 
-  GetNewJobID(&j, 7);
 
 
+  /*
+   * Defining partition and data.
+   */
   GetNewLogicalDataID(&d, APP_CHUNK_NUM * 3);
 
   for (int i = 0; i < APP_CHUNK_NUM; ++i) {
@@ -96,93 +98,40 @@ void Main::Execute(Parameter params, const DataArray& da) {
     DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions, par);
   }
 
-/*
-  GeometricRegion r_0(0, 0, 0, 1, 1, 1);
-  GeometricRegion r_1(1, 0, 0, 3, 1, 1);
-  GeometricRegion r_2(4, 0, 0, 1, 1, 1);
-  GeometricRegion r_3(5, 0, 0, 1, 1, 1);
-  GeometricRegion r_4(6, 0, 0, 3, 1, 1);
-  GeometricRegion r_5(9, 0, 0, 1, 1, 1);
-  ID<partition_id_t> p_0(0);
-  ID<partition_id_t> p_1(1);
-  ID<partition_id_t> p_2(2);
-  ID<partition_id_t> p_3(3);
-  ID<partition_id_t> p_4(4);
-  ID<partition_id_t> p_5(5);
-  Parameter par;
-  IDSet<param_id_t> param_idset;
+  /*
+   * Spawning jobs
+   */
+  GetNewJobID(&job_ids, APP_CHUNK_NUM * 3 + 1);
 
-  GetNewJobID(&j, 7);
-  GetNewLogicalDataID(&d, 8);
+  for (int i = 0; i < APP_CHUNK_NUM; ++i) {
+    read.clear(); read.insert(d[i * 3]);
+    write.clear(); write.insert(d[i * 3]);
+    before.clear();
+    param_idset.clear(); param_idset.insert(0);
+    par.set_idset(param_idset);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3], read, write, before, after, par);
 
-  DefinePartition(p_0, r_0, par);
-  DefinePartition(p_1, r_1, par);
-  DefinePartition(p_2, r_2, par);
-  DefinePartition(p_3, r_3, par);
-  DefinePartition(p_4, r_4, par);
-  DefinePartition(p_5, r_5, par);
+    read.clear(); read.insert(d[i * 3 + 1]);
+    write.clear(); write.insert(d[i * 3 + 1]);
+    before.clear();
+    param_idset.clear(); param_idset.insert(APP_BANDWIDTH);
+    par.set_idset(param_idset);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1], read, write, before, after, par);
 
-
-  DefineData(DATA_NAME, d[0], p_0.elem(), neighbor_partitions, par);
-  DefineData(DATA_NAME, d[1], p_1.elem(), neighbor_partitions, par);
-  DefineData(DATA_NAME, d[2], p_2.elem(), neighbor_partitions, par);
-  DefineData(DATA_NAME, d[3], p_3.elem(), neighbor_partitions, par);
-  DefineData(DATA_NAME, d[4], p_4.elem(), neighbor_partitions, par);
-  DefineData(DATA_NAME, d[5], p_5.elem(), neighbor_partitions, par);
-*/
-
-  read.clear(); read.insert(d[0]);
-  write.clear(); write.insert(d[0]);
-  before.clear();
-  after.clear(); after.insert(j[6]);
-  param_idset.clear(); param_idset.insert(0);
-  par.set_idset(param_idset);
-  SpawnComputeJob(INIT_JOB_NAME, j[0], read, write, before, after, par);
-
-  read.clear(); read.insert(d[1]);
-  write.clear(); write.insert(d[1]);
-  before.clear();
-  after.clear(); after.insert(j[6]);
-  param_idset.clear(); param_idset.insert(0);
-  par.set_idset(param_idset);
-  SpawnComputeJob(INIT_JOB_NAME, j[1], read, write, before, after, par);
-
-  read.clear(); read.insert(d[2]);
-  write.clear(); write.insert(d[2]);
-  before.clear();
-  after.clear(); after.insert(j[6]);
-  param_idset.clear(); param_idset.insert(ML - 1);
-  par.set_idset(param_idset);
-  SpawnComputeJob(INIT_JOB_NAME, j[2], read, write, before, after, par);
-
-  read.clear(); read.insert(d[3]);
-  write.clear(); write.insert(d[3]);
-  before.clear();
-  after.clear(); after.insert(j[6]);
-  param_idset.clear(); param_idset.insert(0);
-  par.set_idset(param_idset);
-  SpawnComputeJob(INIT_JOB_NAME, j[3], read, write, before, after, par);
-
-  read.clear(); read.insert(d[4]);
-  write.clear(); write.insert(d[4]);
-  before.clear();
-  after.clear(); after.insert(j[6]);
-  param_idset.clear(); param_idset.insert(1);
-  par.set_idset(param_idset);
-  SpawnComputeJob(INIT_JOB_NAME, j[4], read, write, before, after, par);
-
-  read.clear(); read.insert(d[5]);
-  write.clear(); write.insert(d[5]);
-  before.clear();
-  after.clear(); after.insert(j[6]);
-  param_idset.clear(); param_idset.insert(0);
-  par.set_idset(param_idset);
-  SpawnComputeJob(INIT_JOB_NAME, j[5], read, write, before, after, par);
+    read.clear(); read.insert(d[i * 3 + 2]);
+    write.clear(); write.insert(d[i * 3 + 2]);
+    before.clear();
+    param_idset.clear(); param_idset.insert(APP_CHUNK_SIZE - APP_BANDWIDTH);
+    par.set_idset(param_idset);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2], read, write, before, after, par);
+  }
 
   read.clear();
   write.clear();
-  before.clear(); before.insert(j[0]); before.insert(j[1]); before.insert(j[2]);
-  before.insert(j[3]); before.insert(j[4]); before.insert(j[5]);
+  before.clear();
+  for (int j = 0; j < APP_CHUNK_NUM * 3; ++j) {
+    before.insert(job_ids[j]);
+  }
   after.clear();
   param_idset.clear();
   param_idset.insert(d[0]); param_idset.insert(d[1]);
@@ -190,7 +139,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   param_idset.insert(d[4]); param_idset.insert(d[5]);
   param_idset.insert(APP_LOOP_COUNTER);
   par.set_idset(param_idset);
-  SpawnComputeJob(LOOP_JOB_NAME, j[6], read, write, before, after, par);
+  SpawnComputeJob(LOOP_JOB_NAME, job_ids[APP_CHUNK_NUM * 3], read, write, before, after, par);
 
   // *******************************************************************
   // Cheching to query  ldo_map with in the same job that defines the data
