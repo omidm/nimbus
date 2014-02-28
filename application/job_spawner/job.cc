@@ -41,9 +41,12 @@
 #include "./job.h"
 #include "./data.h"
 
-#define LOOP_COUNTER 15
-#define LOOP_CONDITION 0
+#define APP_LOOP_COUNTER 15
+#define APP_LOOP_CONDITION 0
 #define ML 4
+#define APP_CHUNK_NUM 2
+#define APP_CHUNK_SIZE 5
+#define APP_BANDWIDTH 1
 
 Main::Main(Application* app) {
   set_application(app);
@@ -56,12 +59,44 @@ Job * Main::Clone() {
 
 void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
+  assert(APP_CHUNK_SIZE > (2 * APP_BANDWIDTH));
 
   std::vector<job_id_t> j;
   std::vector<logical_data_id_t> d;
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
+  Parameter par;
+  IDSet<param_id_t> param_idset;
+
+  GetNewJobID(&j, 7);
+
+
+  GetNewLogicalDataID(&d, APP_CHUNK_NUM * 3);
+
+  for (int i = 0; i < APP_CHUNK_NUM; ++i) {
+    GeometricRegion r_l(i * APP_CHUNK_SIZE, 0, 0,
+                        APP_BANDWIDTH, 1, 1);
+    ID<partition_id_t> p_l(i * 3);
+    DefinePartition(p_l, r_l, par);
+    DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions, par);
+
+
+
+    GeometricRegion r_m(i * APP_CHUNK_SIZE + APP_BANDWIDTH, 0, 0,
+                        APP_CHUNK_SIZE - 2 * APP_BANDWIDTH, 1, 1);
+    ID<partition_id_t> p_m(i * 3 + 1);
+    DefinePartition(p_m, r_m, par);
+    DefineData(DATA_NAME, d[i * 3 + 1], p_m.elem(), neighbor_partitions, par);
+
+    GeometricRegion r_r(i * APP_CHUNK_SIZE + APP_CHUNK_SIZE - APP_BANDWIDTH, 0, 0,
+                        APP_BANDWIDTH, 1, 1);
+    ID<partition_id_t> p_r(i * 3 + 2);
+    DefinePartition(p_r, r_r, par);
+    DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions, par);
+  }
+
+/*
   GeometricRegion r_0(0, 0, 0, 1, 1, 1);
   GeometricRegion r_1(1, 0, 0, 3, 1, 1);
   GeometricRegion r_2(4, 0, 0, 1, 1, 1);
@@ -87,12 +122,14 @@ void Main::Execute(Parameter params, const DataArray& da) {
   DefinePartition(p_4, r_4, par);
   DefinePartition(p_5, r_5, par);
 
+
   DefineData(DATA_NAME, d[0], p_0.elem(), neighbor_partitions, par);
   DefineData(DATA_NAME, d[1], p_1.elem(), neighbor_partitions, par);
   DefineData(DATA_NAME, d[2], p_2.elem(), neighbor_partitions, par);
   DefineData(DATA_NAME, d[3], p_3.elem(), neighbor_partitions, par);
   DefineData(DATA_NAME, d[4], p_4.elem(), neighbor_partitions, par);
   DefineData(DATA_NAME, d[5], p_5.elem(), neighbor_partitions, par);
+*/
 
   read.clear(); read.insert(d[0]);
   write.clear(); write.insert(d[0]);
@@ -151,7 +188,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   param_idset.insert(d[0]); param_idset.insert(d[1]);
   param_idset.insert(d[2]); param_idset.insert(d[3]);
   param_idset.insert(d[4]); param_idset.insert(d[5]);
-  param_idset.insert(LOOP_COUNTER);
+  param_idset.insert(APP_LOOP_COUNTER);
   par.set_idset(param_idset);
   SpawnComputeJob(LOOP_JOB_NAME, j[6], read, write, before, after, par);
 
@@ -217,7 +254,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     d.push_back(*it);
   }
 
-  if (d[6] > LOOP_CONDITION) {
+  if (d[6] > APP_LOOP_CONDITION) {
     GetNewJobID(&j, 1);
 
     read.clear();
