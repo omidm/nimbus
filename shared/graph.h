@@ -47,7 +47,6 @@
 #include <iostream> // NOLINT
 #include <string>
 #include <vector>
-#include <map>
 #include <set>
 #include "shared/dbg.h"
 #include "shared/nimbus_types.h"
@@ -62,7 +61,7 @@ class Graph {
     Graph();
     virtual ~Graph();
 
-    virtual std::map<key_t, Vertex<T, key_t>*>* vertices();
+    virtual typename Vertex<T, key_t>::Map* vertices();
 
     virtual bool AddVertex(key_t key, T* entry);
 
@@ -83,7 +82,7 @@ class Graph {
     virtual bool RemoveEdge(key_t start_key, key_t end_key);
 
   private:
-    std::map<key_t, Vertex<T, key_t>*> vertices_;
+    typename Vertex<T, key_t>::Map vertices_;
 };
 
 
@@ -93,11 +92,11 @@ Graph<T, key_t>::Graph() {
 
 template<typename T, typename key_t>
 Graph<T, key_t>::~Graph() {
-  typename std::map<key_t, Vertex<T, key_t>*>::iterator iter;
+  typename Vertex<T, key_t>::Iter iter;
 
   for (iter = vertices_.begin(); iter != vertices_.end(); ++iter) {
-    typename std::map<key_t, Edge<T, key_t>*>::iterator it;
-    std::map<key_t, Edge<T, key_t>*>* edges = iter->second->outgoing_edges();
+    typename Edge<T, key_t>::Iter it;
+    typename Edge<T, key_t>::Map* edges = iter->second->outgoing_edges();
     for (it = edges->begin(); it != edges->end(); ++it) {
       delete (it->second);
     }
@@ -106,7 +105,7 @@ Graph<T, key_t>::~Graph() {
 }
 
 template<typename T, typename key_t>
-std::map<key_t, Vertex<T, key_t>*>* Graph<T, key_t>::vertices() {
+typename Vertex<T, key_t>::Map* Graph<T, key_t>::vertices() {
   return &vertices_;
 }
 
@@ -164,16 +163,16 @@ bool Graph<T, key_t>::RemoveVertex(key_t key) {
   Vertex<T, key_t>* vertex = vertices_[key];
 
   // first remove all the edges
-  typename std::map<key_t, Edge<T, key_t>*>::iterator it;
-  typename std::map<key_t, Edge<T, key_t>*>::iterator temp_it;
+  typename Edge<T, key_t>::Iter it;
+  typename Edge<T, key_t>::Iter temp_it;
 
-  std::map<key_t, Edge<T, key_t>*>* outgoing_edges = vertex->outgoing_edges();
+  typename Edge<T, key_t>::Map* outgoing_edges = vertex->outgoing_edges();
   for (it = outgoing_edges->begin(); it != outgoing_edges->end();) {
     temp_it = it++;
     RemoveEdge(temp_it->second->start_vertex(), temp_it->second->end_vertex());
   }
 
-  std::map<key_t, Edge<T, key_t>*>* incoming_edges = vertex->incoming_edges();
+  typename Edge<T, key_t>::Map* incoming_edges = vertex->incoming_edges();
   for (it = incoming_edges->begin(); it != incoming_edges->end();) {
     temp_it = it++;
     RemoveEdge(temp_it->second->start_vertex(), temp_it->second->end_vertex());
