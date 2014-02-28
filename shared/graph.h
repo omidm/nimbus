@@ -63,6 +63,11 @@ class Graph {
 
     virtual typename Vertex<T, key_t>::Map* vertices();
 
+    virtual typename Vertex<T, key_t>::Iter begin();
+    virtual typename Vertex<T, key_t>::ConstIter begin() const;
+    virtual typename Vertex<T, key_t>::Iter end();
+    virtual typename Vertex<T, key_t>::ConstIter end() const;
+
     virtual bool AddVertex(key_t key, T* entry);
 
     virtual bool AddVertex(key_t key, T* entry, Vertex<T, key_t>** vertex);
@@ -107,6 +112,26 @@ Graph<T, key_t>::~Graph() {
 template<typename T, typename key_t>
 typename Vertex<T, key_t>::Map* Graph<T, key_t>::vertices() {
   return &vertices_;
+}
+
+template<typename T, typename key_t>
+typename Vertex<T, key_t>::Iter Graph<T, key_t>::begin() {
+  return vertices_.begin();
+}
+
+template<typename T, typename key_t>
+typename Vertex<T, key_t>::ConstIter Graph<T, key_t>::begin() const {
+  return vertices_.begin();
+}
+
+template<typename T, typename key_t>
+typename Vertex<T, key_t>::Iter Graph<T, key_t>::end() {
+  return vertices_.end();
+}
+
+template<typename T, typename key_t>
+typename Vertex<T, key_t>::ConstIter Graph<T, key_t>::end() const {
+  return vertices_.end();
 }
 
 template<typename T, typename key_t>

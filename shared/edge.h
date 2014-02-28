@@ -63,6 +63,7 @@ class Edge {
   public:
     typedef typename std::map<key_t, Edge<T, key_t>*> Map;
     typedef typename std::map<key_t, Edge<T, key_t>*>::iterator Iter;
+    typedef typename std::map<key_t, Edge<T, key_t>*>::const_iterator ConstIter;
 
     Edge(Vertex<T, key_t>* start_vertex, Vertex<T, key_t>* end_vertex);
     Edge(const Edge<T, key_t>& other);

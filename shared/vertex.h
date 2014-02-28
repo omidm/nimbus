@@ -68,6 +68,7 @@ class Vertex {
 
   typedef typename std::map<key_t, Vertex<T, key_t>*> Map;
   typedef typename std::map<key_t, Vertex<T, key_t>*>::iterator Iter;
+  typedef typename std::map<key_t, Vertex<T, key_t>*>::const_iterator ConstIter;
 
   public:
     explicit Vertex(key_t id, T* entry);
