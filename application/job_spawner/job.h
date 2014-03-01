@@ -48,6 +48,7 @@
 #define INIT_JOB_NAME "init"
 #define PRINT_JOB_NAME "print"
 #define LOOP_JOB_NAME "for_loop"
+#define STENCIL_JOB_NAME "stencil"
 
 using namespace nimbus; // NOLINT
 
@@ -78,5 +79,14 @@ class ForLoop : public Job {
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
+
+class Stencil : public Job {
+  public:
+    explicit Stencil(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+
 
 #endif  // NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_

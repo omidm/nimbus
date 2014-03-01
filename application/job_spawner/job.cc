@@ -44,9 +44,11 @@
 
 #define APP_LOOP_COUNTER 15
 #define APP_LOOP_CONDITION 0
-#define APP_CHUNK_NUM 10
-#define APP_CHUNK_SIZE 5
-#define APP_BANDWIDTH 1
+#define APP_JOB_LENGTH 1
+#define APP_CHUNK_NUM 8
+#define APP_CHUNK_SIZE 30000
+#define APP_BANDWIDTH 10000
+#define APP_STENCIL_SIZE 2*APP_BANDWIDTH+1
 
 Main::Main(Application* app) {
   set_application(app);
@@ -82,8 +84,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
     ID<partition_id_t> p_l(i * 3);
     DefinePartition(p_l, r_l, par);
     DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions, par);
-
-
 
     GeometricRegion r_m(i * APP_CHUNK_SIZE + APP_BANDWIDTH, 0, 0,
                         APP_CHUNK_SIZE - 2 * APP_BANDWIDTH, 1, 1);
@@ -160,16 +160,33 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   param_id_t loop_counter = *(params.idset().begin());
 
   if (loop_counter > APP_LOOP_CONDITION) {
-    GetNewJobID(&job_ids, 1);
+    GetNewJobID(&job_ids, APP_CHUNK_NUM + 1);
+
+    for (int i = 0; i < APP_CHUNK_NUM; ++i) {
+      read.clear();
+      GeometricRegion r_r(i * APP_CHUNK_SIZE - APP_BANDWIDTH, 0, 0,
+          APP_CHUNK_SIZE + 2 * APP_BANDWIDTH, 1, 1);
+      LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
+      write.clear();
+      GeometricRegion r_w(i * APP_CHUNK_SIZE, 0, 0,
+          APP_CHUNK_SIZE, 1, 1);
+      LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
+      before.clear();
+      after.clear();
+      SpawnComputeJob(STENCIL_JOB_NAME, job_ids[i], read, write, before, after, par);
+    }
 
     read.clear();
     write.clear();
     before.clear();
+    for (int j = 0; j < APP_CHUNK_NUM; ++j) {
+      before.insert(job_ids[j]);
+    }
     after.clear();
     param_idset.clear();
     param_idset.insert(loop_counter - 1);
     par.set_idset(param_idset);
-    SpawnComputeJob(LOOP_JOB_NAME, job_ids[0], read, write, before, after, par);
+    SpawnComputeJob(LOOP_JOB_NAME, job_ids[APP_CHUNK_NUM], read, write, before, after, par);
   } else {
     GetNewJobID(&job_ids, APP_CHUNK_NUM);
 
@@ -182,6 +199,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       after.clear();
       SpawnComputeJob(PRINT_JOB_NAME, job_ids[i], read, write, before, after, par);
     }
+
 
     TerminateApplication();
   }
@@ -230,6 +248,22 @@ void Print::Execute(Parameter params, const DataArray& da) {
     std::cout << d3->arr()[i] << ", ";
   std::cout << std::endl;
 };
+
+Stencil::Stencil(Application* app) {
+  set_application(app);
+};
+
+Job * Stencil::Clone() {
+  std::cout << "Cloning init job!\n";
+  return new Stencil(application());
+};
+
+void Stencil::Execute(Parameter params, const DataArray& da) {
+  std::cout << "Executing the stencil job\n";
+
+  sleep(APP_JOB_LENGTH);
+};
+
 
 
 

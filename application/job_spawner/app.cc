@@ -55,6 +55,7 @@ void JobSpawnerApp::Load() {
   RegisterJob(INIT_JOB_NAME, new Init());
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(PRINT_JOB_NAME, new Print());
+  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
 
   RegisterData(DATA_NAME, new Vec());
 
