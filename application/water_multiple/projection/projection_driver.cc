@@ -43,48 +43,43 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
+#include "application/water_multiple/data_include.h"
+#include "data/scalar_data.h"
 #include "application/water_multiple/projection/projection_driver.h"
 
 namespace PhysBAM {
 
-void ProjectionDriver::Initialize() {
-  int local_n = (projection_data.matrix_a).n;
-  // [TODO] Not accurate.
+// local_n is the dimentsion of matrixa_a, interior_n is the size of the
+// internal.
+void ProjectionDriver::Initialize(int local_n) {
+  // int local_n = (projection_data.matrix_a).n;
   partition.interior_indices.min_corner = 1;
+  // TODO(quhang), make it right.
   partition.interior_indices.max_corner = local_n;
   int interior_n = partition.interior_indices.Size()+1;
 
-  projection_data.x_interior = new VECTOR_ND<T>;
-  projection_data.x_interior->Set_Subvector_View(
+  if (projection_data.temp.Size() == 0) {
+    projection_data.temp.Resize(local_n, false);
+  }
+  if (projection_data.p.Size() == 0) {
+    projection_data.p.Resize(local_n, false);
+  }
+  if (projection_data.z_interior.Size() == 0) {
+    projection_data.z_interior.Resize(interior_n, false);
+  }
+
+  projection_data.x_interior.Set_Subvector_View(
       projection_data.vector_x,
       partition.interior_indices);
-
-  projection_data.temp = new VECTOR_ND<T>(local_n, false);
-  projection_data.temp_interior = new VECTOR_ND<T>;
-  projection_data.temp_interior->Set_Subvector_View(
-      *projection_data.temp,
+  projection_data.temp_interior.Set_Subvector_View(
+      projection_data.temp,
       partition.interior_indices);
-
-  projection_data.p = new VECTOR_ND<T>(local_n, false);
-  projection_data.p_interior = new VECTOR_ND<T>;
-  projection_data.p_interior->Set_Subvector_View(
-      *projection_data.p,
+  projection_data.p_interior.Set_Subvector_View(
+      projection_data.p,
       partition.interior_indices);
-
-  projection_data.z_interior = new VECTOR_ND<T>(interior_n, false);
-
-  projection_data.b_interior = new VECTOR_ND<T>;
-  projection_data.b_interior->Set_Subvector_View(
+  projection_data.b_interior.Set_Subvector_View(
       projection_data.vector_b,
       partition.interior_indices);
-
-  projection_data.alpha = 0;
-  projection_data.beta = 0;
-  projection_data.rho = 0;
-  projection_data.rho_last = 0;
-  projection_data.residual = 0;
-
-  projection_data.iteration = 0;
 }
 
 void ProjectionDriver::CommunicateConfig() {
@@ -127,24 +122,24 @@ void ProjectionDriver::Parallel_Solve() {
 // Projection is broken to "smallest" code piece to allow future changes.
 
 void ProjectionDriver::ExchangePressure() {
-  VECTOR_ND<T>& x = (projection_data.vector_x);
+  VECTOR_ND<T>& x = projection_data.vector_x;
   Fill_Ghost_Cells(x);
 }
 
 void ProjectionDriver::InitializeResidual() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
-  VECTOR_ND<T>& x = (projection_data.vector_x);
-  VECTOR_ND<T>& temp = (*projection_data.temp);
-  VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
-  VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  VECTOR_ND<T>& x = projection_data.vector_x;
+  VECTOR_ND<T>& temp = projection_data.temp;
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   A.Times(x, temp);
   b_interior -= temp_interior;
 }
 
 bool ProjectionDriver::SpawnFirstIteration() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
   const bool recompute_preconditioner = true;
-  VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
 
   double local_norm = b_interior.Max_Abs();
   if (Global_Max(local_norm) <= projection_data.global_tolerance) {
@@ -164,17 +159,17 @@ bool ProjectionDriver::SpawnFirstIteration() {
 }
 
 void ProjectionDriver::DoPrecondition() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
-  VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
-  VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
-  VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  VECTOR_ND<T>& z_interior = projection_data.z_interior;
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   A.C->Solve_Forward_Substitution(b_interior, temp_interior, true);
   A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
 }
 
 void ProjectionDriver::CalculateBeta() {
-  VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
-  VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
+  VECTOR_ND<T>& z_interior = projection_data.z_interior;
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
   projection_data.rho_last = projection_data.rho;
   projection_data.rho = Global_Sum(
       VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior, b_interior));
@@ -183,8 +178,8 @@ void ProjectionDriver::CalculateBeta() {
 
 void ProjectionDriver::UpdateSearchVector() {
   int interior_n = partition.interior_indices.Size() + 1;
-  VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
-  VECTOR_ND<T>& p_interior = (*projection_data.p_interior);
+  VECTOR_ND<T>& z_interior = projection_data.z_interior;
+  VECTOR_ND<T>& p_interior = projection_data.p_interior;
   if (projection_data.iteration == 1) {
     p_interior = z_interior;
   } else {
@@ -194,20 +189,20 @@ void ProjectionDriver::UpdateSearchVector() {
 }
 
 void ProjectionDriver::ExchangeSearchVector() {
-  VECTOR_ND<T>& p = (*projection_data.p);
+  VECTOR_ND<T>& p = projection_data.p;
   Fill_Ghost_Cells(p);
 }
 
 void ProjectionDriver::UpdateTempVector() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
-  VECTOR_ND<T>& temp = (*projection_data.temp);
-  VECTOR_ND<T>& p = (*projection_data.p);
+  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  VECTOR_ND<T>& temp = projection_data.temp;
+  VECTOR_ND<T>& p = projection_data.p;
   A.Times(p, temp);
 }
 
 void ProjectionDriver::CalculateAlpha() {
-  VECTOR_ND<T>& p_interior = (*projection_data.p_interior);
-  VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
+  VECTOR_ND<T>& p_interior = projection_data.p_interior;
+  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   projection_data.alpha =
       (T) (projection_data.rho /
            Global_Sum(VECTOR_ND<T>::Dot_Product_Double_Precision(
@@ -216,10 +211,10 @@ void ProjectionDriver::CalculateAlpha() {
 
 void ProjectionDriver::UpdateOtherVectors() {
   int interior_n = partition.interior_indices.Size()+1;
-  VECTOR_ND<T>& x_interior = (*projection_data.x_interior);
-  VECTOR_ND<T>& p_interior = (*projection_data.p_interior);
-  VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
-  VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
+  VECTOR_ND<T>& x_interior = projection_data.x_interior;
+  VECTOR_ND<T>& p_interior = projection_data.p_interior;
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   for (int i = 1; i <= interior_n; i++) {
     x_interior(i) += projection_data.alpha * p_interior(i);
     b_interior(i) -= projection_data.alpha * temp_interior(i);
@@ -227,7 +222,7 @@ void ProjectionDriver::UpdateOtherVectors() {
 }
 
 void ProjectionDriver::CalculateResidual() {
-  VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
   double local_norm = b_interior.Max_Abs();
   projection_data.residual = Global_Max(local_norm);
 }
@@ -240,6 +235,95 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
     return false;
   }
   return true;
+}
+
+void ProjectionDriver::LoadFromNimbus(
+    const nimbus::Job* job, const nimbus::DataArray& da) {
+  typedef nimbus::Data Data;
+  if (data_config.GetFlag(DataConfig::MATRIX_A)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_MATRIX_A), da, application::READ_ACCESS);
+    if (data_temp) {
+      application::DataSparseMatrix* data_real =
+          dynamic_cast<application::DataSparseMatrix*>(data_temp);
+      data_real->LoadFromNimbus(&projection_data.matrix_a);
+      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+    }
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_VECTOR_X), da, application::READ_ACCESS);
+    if (data_temp) {
+      application::DataRawVectorNd* data_real =
+          dynamic_cast<application::DataRawVectorNd*>(data_temp);
+      data_real->LoadFromNimbus(&projection_data.vector_x);
+      dbg(APP_LOG, "Finish reading VECTOR_X.\n");
+    }
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_B)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
+    if (data_temp) {
+      application::DataRawVectorNd* data_real =
+          dynamic_cast<application::DataRawVectorNd*>(data_temp);
+      data_real->LoadFromNimbus(&projection_data.vector_b);
+      dbg(APP_LOG, "Finish reading VECTOR_B.\n");
+    }
+  }
+  if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
+    if (data_temp) {
+      application::DataRawGridArray* data_real =
+          dynamic_cast<application::DataRawGridArray*>(data_temp);
+      projection_data.cell_index_to_matrix_index.Resize(
+          PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
+                                 TV_INT(init_config.local_region.dx()+1,
+                                        init_config.local_region.dy()+1,
+                                        init_config.local_region.dz()+1)));
+
+      data_real->LoadFromNimbus(
+          &projection_data.cell_index_to_matrix_index);
+      dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
+    }
+  }
+  if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
+    if (data_temp) {
+      application::DataRawArrayM2C* data_real =
+          dynamic_cast<application::DataRawArrayM2C*>(data_temp);
+      data_real->LoadFromNimbus(
+          &projection_data.matrix_index_to_cell_index);
+      dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
+    }
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_PROJECTION_LOCAL_TOLERANCE),
+        da, application::READ_ACCESS);
+    if (data_temp) {
+      nimbus::ScalarData<float>* data_real =
+          dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+      projection_data.local_tolerance = data_real->scalar();
+      dbg(APP_LOG, "Finish reading tolerance.\n");
+    }
+  }
+  Initialize(projection_data.matrix_a.n);
+}
+
+void ProjectionDriver::SaveToNimbus(
+    const nimbus::Job* job, const nimbus::DataArray& da) {
+  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_VECTOR_X), da, application::WRITE_ACCESS);
+    if (data_temp) {
+      application::DataRawVectorNd* data_real =
+          dynamic_cast<application::DataRawVectorNd*>(data_temp);
+      data_real->SaveToNimbus(projection_data.vector_x);
+        dbg(APP_LOG, "Finish writing VECTOR_X.\n");
+    }
+  }
 }
 
 }  // namespace PhysBAM

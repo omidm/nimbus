@@ -48,6 +48,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/options.h"
 
 namespace PhysBAM {
 
@@ -59,15 +60,16 @@ class ProjectionDriver {
   typedef typename T_GRID::VECTOR_T TV;
   typedef typename TV::SCALAR T;
   typedef typename T_GRID::VECTOR_INT TV_INT;
+  typedef application::DataConfig DataConfig;
+  typedef application::InitConfig InitConfig;
 
-  ProjectionDriver(PCG_SPARSE<T>& pcg_input) : pcg(pcg_input) {
-    projection_data.x_interior = NULL;
-    projection_data.temp = NULL;
-    projection_data.temp_interior = NULL;
-    projection_data.p = NULL;
-    projection_data.p_interior = NULL;
-    projection_data.z_interior = NULL;
-    projection_data.b_interior = NULL;
+  ProjectionDriver(
+      PCG_SPARSE<T>& pcg_input,
+      application::InitConfig& init_config_input,
+      application::DataConfig& data_config_input)
+          : pcg(pcg_input),
+            init_config(init_config_input),
+            data_config(data_config_input) {
     projection_data.global_n = 0;
     projection_data.local_tolerance = 0;
     projection_data.global_tolerance = 0;
@@ -80,29 +82,20 @@ class ProjectionDriver {
     projection_data.iteration = 0;
   }
 
-  virtual ~ProjectionDriver() {
-    delete projection_data.x_interior;
-    delete projection_data.temp;
-    delete projection_data.temp_interior;
-    delete projection_data.p;
-    delete projection_data.p_interior;
-    delete projection_data.z_interior;
-    delete projection_data.b_interior;
-  }
+  virtual ~ProjectionDriver() {}
 
   class ProjectionData {
    public:
-    typedef VECTOR_ND<T>* P_VECTOR;
     ARRAY<TV_INT> matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
-    P_VECTOR x_interior;
-    P_VECTOR temp, temp_interior;
-    P_VECTOR p, p_interior;
-    P_VECTOR z_interior;
-    P_VECTOR b_interior;
+    VECTOR_ND<T> x_interior;
+    VECTOR_ND<T> temp, temp_interior;
+    VECTOR_ND<T> p, p_interior;
+    VECTOR_ND<T> z_interior;
+    VECTOR_ND<T> b_interior;
 
     // Static config.
     int global_n;
@@ -118,6 +111,9 @@ class ProjectionDriver {
   } projection_data;
 
   PCG_SPARSE<T>& pcg;
+  InitConfig& init_config;
+  DataConfig& data_config;
+
   // [TODO]
   SPARSE_MATRIX_PARTITION partition;
 
@@ -136,7 +132,7 @@ class ProjectionDriver {
     return;
   }
 
-  void Initialize();
+  void Initialize(int local_n);
   void CommunicateConfig();
   void Parallel_Solve();
   void ExchangePressure();
@@ -151,7 +147,10 @@ class ProjectionDriver {
   void UpdateOtherVectors();
   void CalculateResidual();
   bool DecideToSpawnNextIteration();
+  void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
 };
+
 }  // namespace PhysBAM
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_DRIVER_H_

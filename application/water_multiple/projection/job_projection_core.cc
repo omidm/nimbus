@@ -98,97 +98,15 @@ void JobProjectionCore::Execute(
   pcg_temp.cg_restart_iterations = 0;
   pcg_temp.Show_Results();
 
-  PhysBAM::ProjectionDriver pcg_mpi(pcg_temp);
+  PhysBAM::ProjectionDriver projection_driver(
+      pcg_temp, init_config, data_config);
   dbg(APP_LOG, "Job PROJECTION_CORE starts (dt=%f).\n", dt);
 
-  {
-    nimbus::Job* job = this;
-    typedef nimbus::Data Data;
-    if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_MATRIX_A), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataSparseMatrix* data_real =
-            dynamic_cast<application::DataSparseMatrix*>(data_temp);
-        data_real->LoadFromNimbus(&pcg_mpi.projection_data.matrix_a);
-        dbg(APP_LOG, "Finish reading MATRIX_A.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_X), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->LoadFromNimbus(&pcg_mpi.projection_data.vector_x);
-        dbg(APP_LOG, "Finish reading VECTOR_X.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->LoadFromNimbus(&pcg_mpi.projection_data.vector_b);
-        dbg(APP_LOG, "Finish reading VECTOR_B.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        pcg_mpi.projection_data.cell_index_to_matrix_index.Resize(
-            PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
-                                   TV_INT(init_config.local_region.dx()+1,
-                                          init_config.local_region.dy()+1,
-                                          init_config.local_region.dz()+1)));
 
-        data_real->LoadFromNimbus(
-            &pcg_mpi.projection_data.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->LoadFromNimbus(
-            &pcg_mpi.projection_data.matrix_index_to_cell_index);
-        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_PROJECTION_LOCAL_TOLERANCE),
-          da, application::READ_ACCESS);
-      if (data_temp) {
-        nimbus::ScalarData<float>* data_real =
-            dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
-        pcg_mpi.projection_data.local_tolerance = data_real->scalar();
-        dbg(APP_LOG, "Finish reading tolerance.\n");
-      }
-    }
-  }
-
-  pcg_mpi.Initialize();
-  pcg_mpi.CommunicateConfig();
-  pcg_mpi.Parallel_Solve();
-
-  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-    Data* data_temp = application::GetTheOnlyData(
-        this, std::string(APP_VECTOR_X), da, application::WRITE_ACCESS);
-    if (data_temp) {
-      application::DataRawVectorNd* data_real =
-          dynamic_cast<application::DataRawVectorNd*>(data_temp);
-      data_real->SaveToNimbus(pcg_mpi.projection_data.vector_x);
-        dbg(APP_LOG, "Finish writing VECTOR_X.\n");
-    }
-  }
+  projection_driver.LoadFromNimbus(this, da);
+  projection_driver.CommunicateConfig();
+  projection_driver.Parallel_Solve();
+  projection_driver.SaveToNimbus(this, da);
 
   dbg(APP_LOG, "Completed executing PROJECTION_CORE job\n");
 }
