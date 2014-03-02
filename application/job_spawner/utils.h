@@ -43,8 +43,11 @@
 #define NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_
 
 #include <iostream> // NOLINT
+#include <vector>
+#include <algorithm>
 #include "worker/application.h"
 #include "shared/nimbus_types.h"
+#include "./data.h"
 
 using namespace nimbus; // NOLINT
 
@@ -52,6 +55,11 @@ void LoadLogicalIdsInSet(Job* job,
     nimbus::IDSet<logical_data_id_t>* set,
     const GeometricRegion& region, ...);
 
+void LoadDataFromNimbus(Job* job,
+    const DataArray& da, std::vector<int>* result);
+
+void SaveDataToNimbus(Job* job,
+    const DataArray& da, std::vector<int>* vec);
 
 
 #endif  // NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_

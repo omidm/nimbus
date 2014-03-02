@@ -61,6 +61,62 @@ void LoadLogicalIdsInSet(Job* job,
   va_end(vl);
 }
 
+bool CompareData(Data* i, Data* j) {
+  return i->region().x() < j->region().x();
+}
+
+
+void LoadDataFromNimbus(Job* job,
+    const DataArray& da, std::vector<int>* result) {
+  DataArray da_t;
+  std::set<physical_data_id_t> seen;
+  for (size_t i = 0; i < da.size(); ++i) {
+    physical_data_id_t id = da[i]->physical_id();
+    if ((job->read_set().contains(id)) && (seen.count(id) == 0)) {
+      seen.insert(id);
+      da_t.push_back(da[i]);
+    }
+  }
+  std::sort(da_t.begin(), da_t.end(), CompareData);
+  result->clear();
+  for (size_t i = 0; i < da_t.size(); ++i) {
+    if (i < (da_t.size() - 1)) {
+      assert((da_t[i]->region().x() + da_t[i]->region().dx()) == (da_t[i + 1]->region().x()));
+    }
+    Vec *d = reinterpret_cast<Vec*>(da_t[i]);
+    for (int j = 0; j < d->size(); ++j) {
+      result->push_back(d->arr()[j]);
+    }
+  }
+}
+
+void SaveDataToNimbus(Job* job,
+    const DataArray& da, std::vector<int>* vec) {
+  DataArray da_t;
+  std::set<physical_data_id_t> seen;
+  for (size_t i = 0; i < da.size(); ++i) {
+    physical_data_id_t id = da[i]->physical_id();
+    if ((job->write_set().contains(id)) && (seen.count(id) == 0)) {
+      seen.insert(id);
+      da_t.push_back(da[i]);
+    }
+  }
+  std::sort(da_t.begin(), da_t.end(), CompareData);
+  size_t write_length = 0;
+  size_t cursor = 0;
+  for (size_t i = 0; i < da_t.size(); ++i) {
+    if (i < (da_t.size() - 1)) {
+      assert((da_t[i]->region().x() + da_t[i]->region().dx()) == (da_t[i + 1]->region().x()));
+    }
+    Vec *d = reinterpret_cast<Vec*>(da_t[i]);
+    for (int j = 0; j < d->size(); ++j) {
+      d->arr()[j] = vec->operator[](cursor++);
+    }
+    write_length += d->size();
+  }
+
+  assert(write_length == vec->size());
+}
 
 
 

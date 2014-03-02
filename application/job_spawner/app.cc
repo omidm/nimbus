@@ -38,6 +38,7 @@
  * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
+#include <vector>
 #include "./app.h"
 #include "./job.h"
 #include "./data.h"
@@ -55,7 +56,7 @@ void JobSpawnerApp::Load() {
   RegisterJob(INIT_JOB_NAME, new Init());
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
+  RegisterJob(STAGE_JOB_NAME, new Stage(this));
 
   RegisterData(DATA_NAME, new Vec());
 

@@ -42,13 +42,16 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define APP_LOOP_COUNTER 15
-#define APP_LOOP_CONDITION 0
-#define APP_JOB_LENGTH 1
-#define APP_CHUNK_NUM 8
-#define APP_CHUNK_SIZE 30000
-#define APP_BANDWIDTH 10000
-#define APP_STENCIL_SIZE 2*APP_BANDWIDTH+1
+#define LOOP_COUNTER 15
+#define LOOP_CONDITION 0
+#define STAGE_NUM 20
+#define JOB_LENGTH_SEC 0.01
+#define PART_NUM 2
+#define CHUNK_NUM 4
+#define CHUNK_SIZE 50
+#define BANDWIDTH 10
+#define STENCIL_SIZE (2 * BANDWIDTH) + 1
+#define PART_SIZE (CHUNK_NUM / PART_NUM) * CHUNK_SIZE
 
 Main::Main(Application* app) {
   set_application(app);
@@ -61,7 +64,9 @@ Job * Main::Clone() {
 
 void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
-  assert(APP_CHUNK_SIZE > (2 * APP_BANDWIDTH));
+  assert(CHUNK_SIZE > (2 * BANDWIDTH));
+  assert(CHUNK_NUM >= PART_NUM);
+  assert(CHUNK_NUM % PART_NUM == 0);
 
   std::vector<job_id_t> job_ids;
   std::vector<logical_data_id_t> d;
@@ -76,23 +81,23 @@ void Main::Execute(Parameter params, const DataArray& da) {
   /*
    * Defining partition and data.
    */
-  GetNewLogicalDataID(&d, APP_CHUNK_NUM * 3);
+  GetNewLogicalDataID(&d, CHUNK_NUM * 3);
 
-  for (int i = 0; i < APP_CHUNK_NUM; ++i) {
-    GeometricRegion r_l(i * APP_CHUNK_SIZE, 0, 0,
-                        APP_BANDWIDTH, 1, 1);
+  for (int i = 0; i < CHUNK_NUM; ++i) {
+    GeometricRegion r_l(i * CHUNK_SIZE, 0, 0,
+                        BANDWIDTH, 1, 1);
     ID<partition_id_t> p_l(i * 3);
     DefinePartition(p_l, r_l, par);
     DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions, par);
 
-    GeometricRegion r_m(i * APP_CHUNK_SIZE + APP_BANDWIDTH, 0, 0,
-                        APP_CHUNK_SIZE - 2 * APP_BANDWIDTH, 1, 1);
+    GeometricRegion r_m(i * CHUNK_SIZE + BANDWIDTH, 0, 0,
+                        CHUNK_SIZE - 2 * BANDWIDTH, 1, 1);
     ID<partition_id_t> p_m(i * 3 + 1);
     DefinePartition(p_m, r_m, par);
     DefineData(DATA_NAME, d[i * 3 + 1], p_m.elem(), neighbor_partitions, par);
 
-    GeometricRegion r_r(i * APP_CHUNK_SIZE + APP_CHUNK_SIZE - APP_BANDWIDTH, 0, 0,
-                        APP_BANDWIDTH, 1, 1);
+    GeometricRegion r_r(i * CHUNK_SIZE + CHUNK_SIZE - BANDWIDTH, 0, 0,
+                        BANDWIDTH, 1, 1);
     ID<partition_id_t> p_r(i * 3 + 2);
     DefinePartition(p_r, r_r, par);
     DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions, par);
@@ -101,9 +106,10 @@ void Main::Execute(Parameter params, const DataArray& da) {
   /*
    * Spawning jobs
    */
-  GetNewJobID(&job_ids, APP_CHUNK_NUM * 3 + 1);
+  GetNewJobID(&job_ids, CHUNK_NUM * 3 + 1);
 
-  for (int i = 0; i < APP_CHUNK_NUM; ++i) {
+  // Spawning inti jobs
+  for (int i = 0; i < CHUNK_NUM; ++i) {
     read.clear(); read.insert(d[i * 3]);
     write.clear(); write.insert(d[i * 3]);
     before.clear();
@@ -114,29 +120,30 @@ void Main::Execute(Parameter params, const DataArray& da) {
     read.clear(); read.insert(d[i * 3 + 1]);
     write.clear(); write.insert(d[i * 3 + 1]);
     before.clear();
-    param_idset.clear(); param_idset.insert(APP_BANDWIDTH);
+    param_idset.clear(); param_idset.insert(BANDWIDTH);
     par.set_idset(param_idset);
     SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1], read, write, before, after, par);
 
     read.clear(); read.insert(d[i * 3 + 2]);
     write.clear(); write.insert(d[i * 3 + 2]);
     before.clear();
-    param_idset.clear(); param_idset.insert(APP_CHUNK_SIZE - APP_BANDWIDTH);
+    param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
     par.set_idset(param_idset);
     SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2], read, write, before, after, par);
   }
 
+  // Spawning loop job
   read.clear();
   write.clear();
   before.clear();
-  for (int j = 0; j < APP_CHUNK_NUM * 3; ++j) {
+  for (int j = 0; j < CHUNK_NUM * 3; ++j) {
     before.insert(job_ids[j]);
   }
   after.clear();
   param_idset.clear();
-  param_idset.insert(APP_LOOP_COUNTER);
+  param_idset.insert(LOOP_COUNTER);
   par.set_idset(param_idset);
-  SpawnComputeJob(LOOP_JOB_NAME, job_ids[APP_CHUNK_NUM * 3], read, write, before, after, par);
+  SpawnComputeJob(LOOP_JOB_NAME, job_ids[CHUNK_NUM * 3], read, write, before, after, par);
 };
 
 ForLoop::ForLoop(Application* app) {
@@ -151,7 +158,6 @@ Job * ForLoop::Clone() {
 void ForLoop::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the forLoop job\n";
 
-  std::vector<job_id_t> job_ids;
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
@@ -159,46 +165,72 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
   param_id_t loop_counter = *(params.idset().begin());
 
-  if (loop_counter > APP_LOOP_CONDITION) {
-    GetNewJobID(&job_ids, APP_CHUNK_NUM + 1);
-
-    for (int i = 0; i < APP_CHUNK_NUM; ++i) {
-      read.clear();
-      GeometricRegion r_r(i * APP_CHUNK_SIZE - APP_BANDWIDTH, 0, 0,
-          APP_CHUNK_SIZE + 2 * APP_BANDWIDTH, 1, 1);
-      LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
-      write.clear();
-      GeometricRegion r_w(i * APP_CHUNK_SIZE, 0, 0,
-          APP_CHUNK_SIZE, 1, 1);
-      LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
-      before.clear();
-      after.clear();
-      SpawnComputeJob(STENCIL_JOB_NAME, job_ids[i], read, write, before, after, par);
+  if (loop_counter > LOOP_CONDITION) {
+    // Spawn the batch of jobs in each stage
+    std::vector<job_id_t> stage_job_ids;
+    GetNewJobID(&stage_job_ids, STAGE_NUM * PART_NUM);
+    for (int s = 0; s < STAGE_NUM; ++s) {
+      for (int i = 0; i < PART_NUM; ++i) {
+        read.clear();
+        GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
+            PART_SIZE + 2 * BANDWIDTH, 1, 1);
+        LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
+        write.clear();
+        GeometricRegion r_w(i * PART_SIZE, 0, 0,
+            PART_SIZE, 1, 1);
+        LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
+        before.clear();
+        if (s > 0) {
+          for (int j = 0; j < PART_NUM; ++j) {
+            before.insert(stage_job_ids[(s - 1) * PART_NUM + j]);
+          }
+        }
+        after.clear();
+        SpawnComputeJob(STAGE_JOB_NAME, stage_job_ids[s * PART_NUM + i],
+            read, write, before, after, par);
+      }
     }
 
+    // Spawning the print jobs at the end of each loop
+    std::vector<job_id_t> print_job_ids;
+    GetNewJobID(&print_job_ids, PART_NUM);
+    for (int i = 0; i < PART_NUM; ++i) {
+      read.clear();
+      GeometricRegion r(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
+      LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+      write.clear();
+      before.clear();
+      before.insert(stage_job_ids[(STAGE_NUM - 1) * PART_NUM + i]);
+      after.clear();
+      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par);
+    }
+
+    // Spawning the next for loop job
+    std::vector<job_id_t> forloop_job_id;
+    GetNewJobID(&forloop_job_id, 1);
     read.clear();
     write.clear();
     before.clear();
-    for (int j = 0; j < APP_CHUNK_NUM; ++j) {
-      before.insert(job_ids[j]);
+    for (int j = 0; j < PART_NUM; ++j) {
+      before.insert(print_job_ids[j]);
     }
     after.clear();
     param_idset.clear();
     param_idset.insert(loop_counter - 1);
     par.set_idset(param_idset);
-    SpawnComputeJob(LOOP_JOB_NAME, job_ids[APP_CHUNK_NUM], read, write, before, after, par);
+    SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
   } else {
-    GetNewJobID(&job_ids, APP_CHUNK_NUM);
+    std::vector<job_id_t> print_job_id;
+    GetNewJobID(&print_job_id, 1);
 
-    for (int i = 0; i < APP_CHUNK_NUM; ++i) {
-      read.clear();
-      GeometricRegion r(i * APP_CHUNK_SIZE, 0, 0, APP_CHUNK_SIZE, 1, 1);
-      LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
-      write.clear();
-      before.clear();
-      after.clear();
-      SpawnComputeJob(PRINT_JOB_NAME, job_ids[i], read, write, before, after, par);
-    }
+    // Spawning final print job
+    read.clear();
+    GeometricRegion r(0, 0, 0, CHUNK_SIZE * CHUNK_NUM, 1, 1);
+    LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+    write.clear();
+    before.clear();
+    after.clear();
+    SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0], read, write, before, after, par);
 
 
     TerminateApplication();
@@ -214,12 +246,26 @@ Job * Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
+/*
+  std::cout << "Executing the init job\n";
   uint32_t base_val;
   base_val = *(params.idset().begin());
-  std::cout << "Executing the init job\n";
   Vec *d = reinterpret_cast<Vec*>(da[0]);
   for (int i = 0; i < d->size() ; i++)
     d->arr()[i] = base_val + i;
+*/
+  std::cout << "Executing the init job\n";
+  std::vector<int> read_data;
+  std::vector<int> write_data;
+  LoadDataFromNimbus(this, da, &read_data);
+
+  param_id_t base_val;
+  base_val = *(params.idset().begin());
+  for (size_t i = 0; i < read_data.size() ; ++i) {
+    write_data.push_back(base_val + i);
+  }
+
+  SaveDataToNimbus(this, da, &write_data);
 };
 
 
@@ -232,36 +278,43 @@ Job * Print::Clone() {
 };
 
 void Print::Execute(Parameter params, const DataArray& da) {
+/*
   std::cout << "Executing the print job\n";
-  Vec *d1 = reinterpret_cast<Vec*>(da[0]);
-  Vec *d2 = reinterpret_cast<Vec*>(da[1]);
-  Vec *d3 = reinterpret_cast<Vec*>(da[2]);
   std::cout << "OUTPUT: ";
-  std::cout << " d1: ";
-  for (int i = 0; i < d1->size(); i++)
-    std::cout << d1->arr()[i] << ", ";
-  std::cout << " d2: ";
-  for (int i = 0; i < d2->size(); i++)
-    std::cout << d2->arr()[i] << ", ";
-  std::cout << " d3: ";
-  for (int i = 0; i < d3->size(); i++)
-    std::cout << d3->arr()[i] << ", ";
+  for (size_t i = 0; i < da.size(); ++i) {
+    Vec *d = reinterpret_cast<Vec*>(da[i]);
+    for (int j = 0; j < d->size(); ++j)
+      std::cout << d->arr()[j] << ", ";
+  }
   std::cout << std::endl;
+*/
+  std::cout << "Executing the print job\n";
+  std::vector<int> read_data;
+  std::vector<int> write_data;
+  LoadDataFromNimbus(this, da, &read_data);
+
+  std::cout << "OUTPUT: ";
+  for (size_t i = 0; i < read_data.size(); ++i) {
+      std::cout << read_data[i] << ", ";
+  }
+  std::cout << std::endl;
+
+  SaveDataToNimbus(this, da, &write_data);
 };
 
-Stencil::Stencil(Application* app) {
+Stage::Stage(Application* app) {
   set_application(app);
 };
 
-Job * Stencil::Clone() {
+Job * Stage::Clone() {
   std::cout << "Cloning init job!\n";
-  return new Stencil(application());
+  return new Stage(application());
 };
 
-void Stencil::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the stencil job\n";
+void Stage::Execute(Parameter params, const DataArray& da) {
+  std::cout << "Executing the stage job\n";
 
-  sleep(APP_JOB_LENGTH);
+  usleep(1000000 * JOB_LENGTH_SEC);
 };
 
 
