@@ -50,8 +50,9 @@
 #define CHUNK_NUM 4
 #define CHUNK_SIZE 50
 #define BANDWIDTH 10
-#define STENCIL_SIZE (2 * BANDWIDTH) + 1
-#define PART_SIZE (CHUNK_NUM / PART_NUM) * CHUNK_SIZE
+
+#define STENCIL_SIZE (2*BANDWIDTH)+1
+#define PART_SIZE (CHUNK_NUM/PART_NUM)*CHUNK_SIZE
 
 Main::Main(Application* app) {
   set_application(app);
