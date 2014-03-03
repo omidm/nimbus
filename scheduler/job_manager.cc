@@ -172,28 +172,29 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     Vertex<JobEntry, job_id_t>* vertex = iter->second;
     JobEntry* job = vertex->entry();
     if (job->versioned() && !job->assigned()) {
-    // Job is already versioned so it has the information from parent and
-    // beforeset already, they may not be in the graph at this point though. -omidm
-      bool parent_and_before_set_done = true;
-
+      // Job is already versioned so it has the information from parent and
+      // beforeset already, they may not be in the graph at this point though. -omidm
       JobEntry* j;
+
       if (GetJobEntry(job->parent_job_id(), j)) {
         if (!(j->done())) {
-          parent_and_before_set_done = false;
           continue;
         }
       }
 
+      bool before_set_done_or_sterile = true;
+
       Edge<JobEntry, job_id_t>::Iter it;
       typename Edge<JobEntry, job_id_t>::Map* incoming_edges = vertex->incoming_edges();
       for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
-        if (!(it->second->start_vertex()->entry()->done())) {
-          parent_and_before_set_done = false;
+        j = it->second->start_vertex()->entry();
+        if (!(j->done()) && !(j->sterile())) {
+          before_set_done_or_sterile = false;
           break;
         }
       }
 
-      if (parent_and_before_set_done) {
+      if (before_set_done_or_sterile) {
         // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
         list->push_back(job);
         ++num;
