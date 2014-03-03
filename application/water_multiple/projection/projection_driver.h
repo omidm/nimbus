@@ -74,10 +74,13 @@ class ProjectionDriver {
     projection_data.local_tolerance = 0;
     projection_data.global_tolerance = 0;
     projection_data.global_desired_iterations = 0;
+    projection_data.local_alpha = 0;
     projection_data.alpha = 0;
     projection_data.beta = 0;
+    projection_data.local_rho = 0;
     projection_data.rho = 0;
     projection_data.rho_last = 0;
+    projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
   }
@@ -103,8 +106,11 @@ class ProjectionDriver {
     T global_tolerance;
     int global_desired_iterations;
 
-    double rho, rho_last;
-    T beta, alpha;
+    double local_rho, rho, rho_last;
+    T beta;
+    double local_alpha;
+    T alpha;
+    double local_residual;
     T residual;
 
     int iteration;
@@ -134,18 +140,19 @@ class ProjectionDriver {
 
   void Initialize(int local_n);
   void CommunicateConfig();
-  void Parallel_Solve();
   void ExchangePressure();
   void InitializeResidual();
   bool SpawnFirstIteration();
   void DoPrecondition();
-  void CalculateBeta();
+  void CalculateLocalRho();
+  void ReduceRho();
   void UpdateSearchVector();
   void ExchangeSearchVector();
   void UpdateTempVector();
-  void CalculateAlpha();
+  void CalculateLocalAlpha();
+  void ReduceAlpha();
   void UpdateOtherVectors();
-  void CalculateResidual();
+  void CalculateLocalResidual();
   bool DecideToSpawnNextIteration();
   void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);

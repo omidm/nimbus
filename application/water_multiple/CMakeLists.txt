@@ -64,6 +64,13 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_two.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_three.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_alpha.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_four.h
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
@@ -116,6 +123,13 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/translator_util.h
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.h
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_two.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_three.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_alpha.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_four.h
     )
 
 #List the libraries you want to link against - including a higher-level

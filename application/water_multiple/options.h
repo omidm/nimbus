@@ -92,11 +92,24 @@ struct DataConfig {
     U_INTERFACE,
     // The following for projeciton.
     MATRIX_A,
+    MATRIX_C,
     VECTOR_X,
     VECTOR_B,
     PROJECTION_LOCAL_TOLERANCE,
+    PROJECTION_GLOBAL_TOLERANCE,
     INDEX_M2C,
     INDEX_C2M,
+    // The following only for projection internal loop.
+    PROJECTION_LOCAL_RESIDUAL,
+    PROJECTION_LOCAL_PHO,
+    PROJECTION_GLOBAL_PHO,
+    PROJECTION_GLOBAL_PHO_OLD,
+    PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
+    PROJECTION_ALPHA,
+    PROJECTION_BETA,
+    VECTOR_Z,
+    VECTOR_P,
+    VECTOR_TEMP,
     NUM_VARIABLE
   };
   bool flag_[NUM_VARIABLE];

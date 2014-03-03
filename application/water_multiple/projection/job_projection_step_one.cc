@@ -50,48 +50,33 @@
 
 #include "data/scalar_data.h"
 #include "application/water_multiple/data_include.h"
-#include "application/water_multiple/projection/job_projection_core.h"
+#include "application/water_multiple/projection/job_projection_step_one.h"
 
 namespace application {
 
-JobProjectionCore::JobProjectionCore(nimbus::Application *app) {
+JobProjectionStepOne::JobProjectionStepOne(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobProjectionCore::Clone() {
-  return new JobProjectionCore(application());
+nimbus::Job* JobProjectionStepOne::Clone() {
+  return new JobProjectionStepOne(application());
 }
 
-void JobProjectionCore::Execute(
+void JobProjectionStepOne::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing PROJECTION_CORE job.\n");
+  dbg(APP_LOG, "Executing PROJECTION_STEP_ONE job.\n");
 
   InitConfig init_config;
   T dt;
+  // TODO(quhang), process iteration number.
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
                 &init_config.global_region, &init_config.local_region);
 
-  // Assume time, dt, frame is ready from here.
-  dbg(APP_LOG,
-      "In PROJECTION_CORE: Initialize WATER_DRIVER/WATER_EXAMPLE"
-      "(Frame=%d, Time=%f).\n",
-      init_config.frame, init_config.time);
-
   DataConfig data_config;
-  data_config.SetFlag(DataConfig::MATRIX_A);
-  data_config.SetFlag(DataConfig::VECTOR_X);
-  data_config.SetFlag(DataConfig::VECTOR_B);
-  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
-  data_config.SetFlag(DataConfig::INDEX_M2C);
-  data_config.SetFlag(DataConfig::INDEX_C2M);
 
-  // MPI reference version:
-  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
-  // color only used for MPI version.
-  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
@@ -100,15 +85,21 @@ void JobProjectionCore::Execute(
 
   PhysBAM::ProjectionDriver projection_driver(
       pcg_temp, init_config, data_config);
-  dbg(APP_LOG, "Job PROJECTION_CORE starts (dt=%f).\n", dt);
-
+  dbg(APP_LOG, "Job PROJECTION_STEP_ONE starts (dt=%f).\n", dt);
 
   projection_driver.LoadFromNimbus(this, da);
-  projection_driver.CommunicateConfig();
-  // projection_driver.Parallel_Solve();
+
+  // Read MATRIX_C, VECTOR_B, VECTOR_Z.
+  // Write VECTOR_Z, PROJECTION_LOCAL_RHO.
+
+  // TODO(quhang), Initialize vector_z.
+
+  projection_driver.DoPrecondition();
+  projection_driver.CalculateLocalRho();
+
   projection_driver.SaveToNimbus(this, da);
 
-  dbg(APP_LOG, "Completed executing PROJECTION_CORE job\n");
+  dbg(APP_LOG, "Completed executing PROJECTION_STEP_ONE job\n");
 }
 
 }  // namespace application
