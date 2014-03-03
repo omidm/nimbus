@@ -42,7 +42,7 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define LOOP_COUNTER 15
+#define LOOP_COUNTER 150
 #define LOOP_CONDITION 0
 #define PART_NUM 4
 #define CHUNK_NUM 16
@@ -114,21 +114,21 @@ void Main::Execute(Parameter params, const DataArray& da) {
     before.clear();
     param_idset.clear(); param_idset.insert(0);
     par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3], read, write, before, after, par);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3], read, write, before, after, par, true);
 
     read.clear(); read.insert(d[i * 3 + 1]);
     write.clear(); write.insert(d[i * 3 + 1]);
     before.clear();
     param_idset.clear(); param_idset.insert(BANDWIDTH);
     par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1], read, write, before, after, par);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1], read, write, before, after, par, true);
 
     read.clear(); read.insert(d[i * 3 + 2]);
     write.clear(); write.insert(d[i * 3 + 2]);
     before.clear();
     param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
     par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2], read, write, before, after, par);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2], read, write, before, after, par, true);
   }
 
   // Spawning loop job
@@ -181,7 +181,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       after.clear();
       param_idset.clear(); param_idset.insert(i);
       par.set_idset(param_idset);
-      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par);
+      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par, true);
     }
 
     // Spawning the print jobs at the end of each loop
@@ -195,7 +195,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       before.clear();
       before.insert(stencil_job_ids[i]);
       after.clear();
-      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par);
+      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par, true);
     }
 
     // Spawning the next for loop job
@@ -223,7 +223,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear();
     before.clear();
     after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0], read, write, before, after, par);
+    SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0], read, write, before, after, par, true);
 
 
     TerminateApplication();
