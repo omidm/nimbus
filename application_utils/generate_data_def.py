@@ -311,7 +311,7 @@ part_num = len(partn_pid)
 ## Code generation helper functions and variables ##
 
 logical_id_vector_str = "std::vector<nimbus::logical_data_id_t>"
-partition_id_set_str      = "nimbus::ID<partition_id_t>"
+partition_id_set_str      = "nimbus::ID<nimbus::partition_id_t>"
 
 
 ## Begin code generation ##
