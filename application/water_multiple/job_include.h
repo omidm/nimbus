@@ -66,4 +66,12 @@
 #include "application/water_multiple/job_synchronize_particles.h"
 #include "application/water_multiple/job_write_frame.h"
 
+#include "application/water_multiple//projection/job_projection_loop_iteration.h"
+#include "application/water_multiple/projection/job_projection_step_one.h"
+#include "application/water_multiple/projection/job_projection_reduce_rho.h"
+#include "application/water_multiple/projection/job_projection_step_two.h"
+#include "application/water_multiple/projection/job_projection_step_three.h"
+#include "application/water_multiple/projection/job_projection_reduce_alpha.h"
+#include "application/water_multiple/projection/job_projection_step_four.h"
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_

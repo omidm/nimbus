@@ -64,13 +64,13 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_two.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_three.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_alpha.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_four.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_two.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_three.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_alpha.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_four.cc
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h

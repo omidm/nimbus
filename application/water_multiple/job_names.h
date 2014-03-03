@@ -70,5 +70,12 @@
 #define EXTRAPOLATION "extrapolation"
 #define SYNCHRONIZE_PARTICLES "synchronize_particles"
 
+#define PROJECTION_LOOP_ITERATION "projection_loop_iteration"
+#define PROJECTION_STEP_ONE "projection_step_one"
+#define PROJECTION_REDUCE_RHO "projection_reduce_rho"
+#define PROJECTION_STEP_TWO "projection_step_two"
+#define PROJECTION_STEP_THREE "projection_step_three"
+#define PROJECTION_REDUCE_ALPHA "projection_reduce_alpha"
+#define PROJECTION_STEP_FOUR "projection_step_four"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_

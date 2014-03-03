@@ -153,6 +153,15 @@ namespace application {
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
         RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
 
+        RegisterJob(PROJECTION_LOOP_ITERATION, new JobProjectionLoopIteration(this));
+        RegisterJob(PROJECTION_STEP_ONE, new JobProjectionStepOne(this));
+        RegisterJob(PROJECTION_REDUCE_RHO, new JobProjectionReduceRho(this));
+        RegisterJob(PROJECTION_STEP_TWO, new JobProjectionStepTwo(this));
+        RegisterJob(PROJECTION_STEP_THREE, new JobProjectionStepThree(this));
+        RegisterJob(PROJECTION_REDUCE_ALPHA,
+                    new JobProjectionReduceAlpha(this));
+        RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
+
         dbg(APP_LOG, "Completed loading water application\n");
     }
 
