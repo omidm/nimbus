@@ -50,6 +50,7 @@
 #define PRINT_JOB_NAME "print"
 #define LOOP_JOB_NAME "for_loop"
 #define STAGE_JOB_NAME "stage"
+#define CONNECTOR_JOB_NAME "connector"
 
 using namespace nimbus; // NOLINT
 
@@ -88,6 +89,12 @@ class Stage : public Job {
     virtual Job * Clone();
 };
 
+class Connector : public Job {
+  public:
+    explicit Connector(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
 
 
 #endif  // NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_

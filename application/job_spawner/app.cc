@@ -57,6 +57,7 @@ void JobSpawnerApp::Load() {
   RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
   RegisterJob(PRINT_JOB_NAME, new Print());
   RegisterJob(STAGE_JOB_NAME, new Stage(this));
+  RegisterJob(CONNECTOR_JOB_NAME, new Connector(this));
 
   RegisterData(DATA_NAME, new Vec());
 

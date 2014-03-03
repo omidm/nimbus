@@ -42,12 +42,12 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define LOOP_COUNTER 15
+#define LOOP_COUNTER 3
 #define LOOP_CONDITION 0
-#define STAGE_NUM 20
-#define JOB_LENGTH_SEC 0.01
-#define PART_NUM 2
-#define CHUNK_NUM 4
+#define STAGE_NUM 10
+#define JOB_LENGTH_SEC 0.0001
+#define PART_NUM 100
+#define CHUNK_NUM 100
 #define CHUNK_SIZE 50
 #define BANDWIDTH 10
 
@@ -170,6 +170,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     // Spawn the batch of jobs in each stage
     std::vector<job_id_t> stage_job_ids;
     GetNewJobID(&stage_job_ids, STAGE_NUM * PART_NUM);
+    std::vector<job_id_t> connector_job_ids;
+    GetNewJobID(&connector_job_ids, STAGE_NUM - 1);
     for (int s = 0; s < STAGE_NUM; ++s) {
       for (int i = 0; i < PART_NUM; ++i) {
         read.clear();
@@ -182,13 +184,21 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
         before.clear();
         if (s > 0) {
-          for (int j = 0; j < PART_NUM; ++j) {
-            before.insert(stage_job_ids[(s - 1) * PART_NUM + j]);
-          }
+          before.insert(connector_job_ids[s - 1]);
         }
         after.clear();
         SpawnComputeJob(STAGE_JOB_NAME, stage_job_ids[s * PART_NUM + i],
             read, write, before, after, par);
+      }
+      if (s < (STAGE_NUM - 1)) {
+        read.clear();
+        write.clear();
+        before.clear();
+        for (int j = 0; j < PART_NUM; ++j) {
+          before.insert(stage_job_ids[s * PART_NUM + j]);
+        }
+        after.clear();
+        SpawnComputeJob(CONNECTOR_JOB_NAME, connector_job_ids[s], read, write, before, after, par);
       }
     }
 
@@ -316,6 +326,20 @@ void Stage::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the stage job\n";
 
   usleep(1000000 * JOB_LENGTH_SEC);
+};
+
+Connector::Connector(Application* app) {
+  set_application(app);
+};
+
+Job * Connector::Clone() {
+  std::cout << "Cloning init job!\n";
+  return new Connector(application());
+};
+
+void Connector::Execute(Parameter params, const DataArray& da) {
+  std::cout << "Executing the connector job\n";
+  // This job is empty and is meant to just form the job graph.
 };
 
 
