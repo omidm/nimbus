@@ -99,3 +99,4 @@ namespace nimbus {
 
 template class nimbus::ScalarData<int>;
 template class nimbus::ScalarData<float>;
+template class nimbus::ScalarData<double>;

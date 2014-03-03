@@ -70,16 +70,21 @@ class ProjectionDriver {
           : pcg(pcg_input),
             init_config(init_config_input),
             data_config(data_config_input) {
-    projection_data.global_n = 0;
+    projection_data.local_n = 0;
+    projection_data.interior_n = 0;
+
     projection_data.local_tolerance = 0;
     projection_data.global_tolerance = 0;
-    projection_data.global_desired_iterations = 0;
-    projection_data.local_alpha = 0;
-    projection_data.alpha = 0;
-    projection_data.beta = 0;
+    projection_data.global_n = 0;
+    projection_data.desired_iterations = 0;
+
     projection_data.local_rho = 0;
     projection_data.rho = 0;
     projection_data.rho_last = 0;
+    projection_data.local_dot_product_for_alpha = 0;
+    projection_data.alpha = 0;
+    projection_data.beta = 0;
+
     projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
@@ -100,19 +105,24 @@ class ProjectionDriver {
     VECTOR_ND<T> z_interior;
     VECTOR_ND<T> b_interior;
 
-    // Static config.
-    int global_n;
+    int local_n;
+    int interior_n;
+
     T local_tolerance;
     T global_tolerance;
-    int global_desired_iterations;
+    int global_n;
+    int desired_iterations;
 
-    double local_rho, rho, rho_last;
-    T beta;
-    double local_alpha;
-    T alpha;
     double local_residual;
+    double local_rho, rho, rho_last;
+    double local_dot_product_for_alpha;
+    T alpha;
+    T beta;
+
+    // Not a Nimbus data type.
     T residual;
 
+    // Passed by parameter.
     int iteration;
   } projection_data;
 

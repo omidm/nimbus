@@ -105,7 +105,13 @@ void JobProjectionCore::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
   projection_driver.CommunicateConfig();
-  // projection_driver.Parallel_Solve();
+
+  // TODO(quhang), Spawn initial computation.
+  projection_driver.InitializeResidual();
+  if (projection_driver.SpawnFirstIteration()) {
+    // TODO(quhang), Spawn first loop.
+  }
+
   projection_driver.SaveToNimbus(this, da);
 
   dbg(APP_LOG, "Completed executing PROJECTION_CORE job\n");

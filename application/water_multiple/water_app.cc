@@ -88,33 +88,119 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
 
+        // These Nimbus data types are used in projection but not used in
+        // internal projection loop. They are generally used to generate the
+        // matrixes or vectors used in internal projection loop.
+        // PSI_D.
         dbg(APP_LOG, "Registering %s\n", APP_PSI_D);
         RegisterData(APP_PSI_D, new DataScalarArray<bool>(APP_PSI_D));
+        // PSI_N.
         dbg(APP_LOG, "Registering %s\n", APP_PSI_N);
         RegisterData(APP_PSI_N, new DataFaceArray<bool>(APP_PSI_N));
+        // PRESSURE.
         dbg(APP_LOG, "Registering %s\n", APP_PRESSURE);
         RegisterData(APP_PRESSURE, new DataScalarArray<float>(APP_PRESSURE));
+        // FILLED_REGION_COLORS.
         dbg(APP_LOG, "Registering %s\n", APP_FILLED_REGION_COLORS);
         RegisterData(APP_FILLED_REGION_COLORS,
-                     new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
+            new DataScalarArray<int>(APP_FILLED_REGION_COLORS));
+        // DIVERGENCE.
         dbg(APP_LOG, "Registering %s\n", APP_DIVERGENCE);
         RegisterData(APP_DIVERGENCE, new DataScalarArray<float>(APP_DIVERGENCE));
+        // U_INTERFACE.
         dbg(APP_LOG, "Registering %s\n", APP_U_INTERFACE);
         RegisterData(APP_U_INTERFACE, new DataFaceArray<float>(APP_U_INTERFACE));
 
+        // These Nimbus data types are used in internal projection loop. They
+        // are derived from boundary conditions and act as the linkage between
+        // inside projection and outside projection.
+        // MATRIX_A.
         dbg(APP_LOG, "Registering %s\n", APP_MATRIX_A);
         RegisterData(APP_MATRIX_A, new DataSparseMatrix(APP_MATRIX_A));
+        // VECTOR_B.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_B);
         RegisterData(APP_VECTOR_B, new DataRawVectorNd(APP_VECTOR_B));
+        // VECTOR_X.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_X);
         RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
-        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_TOLERANCE);
-        RegisterData(APP_PROJECTION_LOCAL_TOLERANCE,
-                     new nimbus::ScalarData<float>(APP_PROJECTION_LOCAL_TOLERANCE));
+        // INDEX_C2M.
         dbg(APP_LOG, "Registering %s\n", APP_INDEX_C2M);
         RegisterData(APP_INDEX_C2M, new DataRawGridArray(APP_INDEX_C2M));
+        // INDEX_M2C.
         dbg(APP_LOG, "Registering %s\n", APP_INDEX_M2C);
         RegisterData(APP_INDEX_M2C, new DataRawArrayM2C(APP_INDEX_M2C));
+        // PROJECTION_LOCAL_N.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_N);
+        RegisterData(APP_PROJECTION_LOCAL_N,
+            new nimbus::ScalarData<int>(APP_PROJECTION_LOCAL_N));
+        // PROJECTION_INTERIOR_N.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_INTERIOR_N);
+        RegisterData(APP_PROJECTION_INTERIOR_N,
+            new nimbus::ScalarData<int>(APP_PROJECTION_INTERIOR_N));
+
+        // These Nimbus data types are used only in internal projection loop.
+        // They are mostly static configurations set for projeciton.
+        // PROJECTION_LOCAL_TOLERANCE.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_TOLERANCE);
+        RegisterData(APP_PROJECTION_LOCAL_TOLERANCE,
+            new nimbus::ScalarData<float>(APP_PROJECTION_LOCAL_TOLERANCE));
+        // PROJECTION_GLOBAL_TOLERANCE.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_TOLERANCE);
+        RegisterData(APP_PROJECTION_GLOBAL_TOLERANCE,
+            new nimbus::ScalarData<float>(APP_PROJECTION_GLOBAL_TOLERANCE));
+        // PROJECTION_GLOBAL_N.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_N);
+        RegisterData(APP_PROJECTION_GLOBAL_N,
+            new nimbus::ScalarData<int>(APP_PROJECTION_GLOBAL_N));
+        // PROJECTION_DESIRED_N.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_DESIRED_ITERATIONS);
+        RegisterData(APP_PROJECTION_DESIRED_ITERATIONS,
+            new nimbus::ScalarData<int>(APP_PROJECTION_DESIRED_ITERATIONS));
+
+        // These Nimbus data types are used in internal projection loop.
+        // PROJECTION_LOCAL_RESIDUAL.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_RESIDUAL);
+        RegisterData(APP_PROJECTION_LOCAL_RESIDUAL,
+            new nimbus::ScalarData<double>(APP_PROJECTION_LOCAL_RESIDUAL));
+        // PROJECTION_LOCAL_RHO.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_LOCAL_RHO);
+        RegisterData(APP_PROJECTION_LOCAL_RHO,
+            new nimbus::ScalarData<double>(APP_PROJECTION_LOCAL_RHO));
+        // PROJECTION_GLOBAL_RHO.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_RHO);
+        RegisterData(APP_PROJECTION_GLOBAL_RHO,
+            new nimbus::ScalarData<double>(APP_PROJECTION_GLOBAL_RHO));
+        // PROJECTION_GLOBAL_RHO_OLD.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_GLOBAL_RHO_OLD);
+        RegisterData(APP_PROJECTION_GLOBAL_RHO_OLD,
+            new nimbus::ScalarData<double>(APP_PROJECTION_GLOBAL_RHO_OLD));
+        // PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
+        dbg(APP_LOG, "Registering %s\n",
+            APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
+        RegisterData(APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
+            new nimbus::ScalarData<double>(
+                APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA));
+        // PROJECTION_ALPHA.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_ALPHA);
+        RegisterData(APP_PROJECTION_ALPHA,
+            new nimbus::ScalarData<float>(APP_PROJECTION_ALPHA));
+        // PROJECTION_BETA.
+        dbg(APP_LOG, "Registering %s\n", APP_PROJECTION_BETA);
+        RegisterData(APP_PROJECTION_BETA,
+            new nimbus::ScalarData<float>(APP_PROJECTION_BETA));
+        // MATRIX_C.
+        dbg(APP_LOG, "Registering %s\n", APP_MATRIX_C);
+        RegisterData(APP_MATRIX_C, new DataSparseMatrix(APP_MATRIX_C));
+        // VECTOR_Z.
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
+        RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
+        // VECTOR_P.
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P);
+        RegisterData(APP_VECTOR_P, new DataRawVectorNd(APP_VECTOR_P));
+        // VECTOR_TEMP.
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
+        RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
+
 
         dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
         kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));

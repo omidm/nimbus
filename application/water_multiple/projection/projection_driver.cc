@@ -83,21 +83,18 @@ void ProjectionDriver::Initialize(int local_n) {
 }
 
 void ProjectionDriver::CommunicateConfig() {
-  int interior_n = partition.interior_indices.Size()+1;
+  projection_data.interior_n = partition.interior_indices.Size()+1;
 
-  int global_n = Global_Sum(interior_n);
-  projection_data.global_n = global_n;
+  projection_data.global_n = Global_Sum(projection_data.interior_n);
 
-  T global_tolerance = Global_Max(projection_data.local_tolerance);
-  projection_data.global_tolerance = global_tolerance;
+  projection_data.global_tolerance =
+      Global_Max(projection_data.local_tolerance);
 
-  int global_desired_iterations = projection_data.global_n;
+  projection_data.desired_iterations = projection_data.global_n;
   if (pcg.maximum_iterations) {
-    global_desired_iterations =
-        min(global_desired_iterations, pcg.maximum_iterations);
+    projection_data.desired_iterations =
+        min(projection_data.desired_iterations, pcg.maximum_iterations);
   }
-
-  projection_data.global_desired_iterations = global_desired_iterations;
 }
 
 // Projection is broken to "smallest" code piece to allow future changes.
@@ -122,8 +119,9 @@ bool ProjectionDriver::SpawnFirstIteration() {
   const bool recompute_preconditioner = true;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
 
-  double local_norm = b_interior.Max_Abs();
-  if (Global_Max(local_norm) <= projection_data.global_tolerance) {
+  projection_data.local_residual = b_interior.Max_Abs();
+  if (Global_Max(projection_data.local_residual)
+      <= projection_data.global_tolerance) {
     return false;
   }
 
@@ -192,7 +190,7 @@ void ProjectionDriver::UpdateTempVector() {
 void ProjectionDriver::CalculateLocalAlpha() {
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  projection_data.local_alpha =
+  projection_data.local_dot_product_for_alpha =
       VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior, temp_interior);
 }
 
@@ -227,7 +225,7 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
   if (projection_data.residual <= projection_data.global_tolerance) {
     return false;
   }
-  if (projection_data.iteration == projection_data.global_desired_iterations) {
+  if (projection_data.iteration == projection_data.desired_iterations) {
     return false;
   }
   return true;
