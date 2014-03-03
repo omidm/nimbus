@@ -161,7 +161,7 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
         cm->read_set(), cm->write_set(),
         cm->before_set(), cm->after_set(),
         cm->parent_job_id().elem(), cm->params(),
-        cm->is_parent());
+        cm->sterile());
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
@@ -885,7 +885,7 @@ bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
     job->GetPhysicalReadSet(&read_set);
     job->GetPhysicalWriteSet(&write_set);
     ComputeJobCommand cm(job->job_name(), id,
-        read_set, write_set, job->before_set(), job->after_set(), job->params(), job->is_parent());
+        read_set, write_set, job->before_set(), job->after_set(), job->params(), job->sterile());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
     return true;

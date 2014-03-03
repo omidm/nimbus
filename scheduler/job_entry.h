@@ -77,13 +77,13 @@ class JobEntry {
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
         const Parameter& params,
-        const bool& is_parent);
+        const bool& sterile);
 
     JobEntry(const JobType& job_type,
         const std::string& job_name,
         const job_id_t& job_id,
         const job_id_t& parent_job_id,
-        const bool& is_parent,
+        const bool& sterile,
         const bool& versioned,
         const bool& assigned);
 
@@ -102,7 +102,7 @@ class JobEntry {
     VersionTable version_table_in();
     VersionTable version_table_out();
     PhysicalTable physical_table();
-    bool is_parent();
+    bool sterile();
     bool versioned();
     bool assigned();
     bool done();
@@ -114,7 +114,7 @@ class JobEntry {
     void set_version_table_in(VersionTable version_table);
     void set_version_table_out(VersionTable version_table);
     void set_physical_table(PhysicalTable physical_table);
-    void set_is_parent(bool flag);
+    void set_sterile(bool flag);
     void set_versioned(bool flag);
     void set_assigned(bool flag);
     void set_done(bool flag);
@@ -136,7 +136,7 @@ class JobEntry {
     VersionTable version_table_in_;
     VersionTable version_table_out_;
     PhysicalTable physical_table_;
-    bool is_parent_;
+    bool sterile_;
     bool versioned_;
     bool assigned_;
     bool done_;

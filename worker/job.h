@@ -85,7 +85,7 @@ class Job {
         const IDSet<job_id_t>& before,
         const IDSet<job_id_t>& after,
         const Parameter& params,
-        const bool& is_parent = true);
+        const bool& sterile = false);
 
     bool SpawnCopyJob(const job_id_t& id,
         const logical_data_id_t& from_logical_id,
@@ -127,7 +127,7 @@ class Job {
     IDSet<job_id_t> after_set() const;
     Parameter parameters() const;
     Application* application() const;
-    bool  is_parent() const;
+    bool  sterile() const;
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
@@ -137,7 +137,7 @@ class Job {
     void set_after_set(IDSet<job_id_t> after_set);
     void set_parameters(Parameter parameters);
     void set_application(Application* app);
-    void set_is_parent(bool is_parent);
+    void set_sterile(bool sterile);
 
   private:
     std::string name_;
@@ -148,7 +148,7 @@ class Job {
     IDSet<job_id_t> after_set_;
     Parameter parameters_;
     Application* application_;
-    bool is_parent_;
+    bool sterile_;
     bool app_is_set_;
 
   protected:

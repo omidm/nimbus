@@ -77,9 +77,9 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     const IDSet<job_id_t>& after_set,
     const job_id_t& parent_job_id,
     const Parameter& params,
-    const bool& is_parent) {
+    const bool& sterile) {
   JobEntry* job = new JobEntry(job_type, job_name, job_id, read_set, write_set,
-      before_set, after_set, parent_job_id, params, is_parent);
+      before_set, after_set, parent_job_id, params, sterile);
 
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
@@ -111,11 +111,11 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     const std::string& job_name,
     const job_id_t& job_id,
     const job_id_t& parent_job_id,
-    const bool& is_parent,
+    const bool& sterile,
     const bool& versioned,
     const bool& assigned) {
   JobEntry* job = new JobEntry(job_type, job_name, job_id, parent_job_id,
-      is_parent, versioned, assigned);
+      sterile, versioned, assigned);
 
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
