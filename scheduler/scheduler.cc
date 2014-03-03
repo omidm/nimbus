@@ -475,12 +475,16 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
 
+  bool reading = job->read_set().contains(l_id);
+  bool writing = job->write_set().contains(l_id);
+  assert(reading || writing);
+
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
   data_version_t version = version_table_in[l_id];
 
 
-  if (version == 0) {
+  if (version == 0 || !reading) {
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
     AllocateLdoInstanceToJob(job, ldo, created_data);
@@ -499,8 +503,7 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
   job_manager_->GetJobsNeedDataVersion(&list, vld);
   log_table_.StopTimer();
   assert(list.size() >= 1);
-  bool writing_needed_version = (list.size() > 1) &&
-    (job->write_set().contains(l_id));
+  bool writing_needed_version = (list.size() > 1) && writing;
 
   if (instances_at_worker.size() > 1) {
     PhysicalData target_instance = instances_at_worker[0];
@@ -522,6 +525,8 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
+
+  assert(instances_in_system.size() >= 1);
 
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = instances_in_system[0];
@@ -965,7 +970,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
   IDSet<logical_data_id_t> union_set = job->union_set();
   IDSet<logical_data_id_t>::IDSetIter it;
   for (it = union_set.begin(); it != union_set.end(); ++it) {
-    if (!PrepareDataForJobAtWorker(job, worker, *it)) {
+    if (!PrepareDataForJobAtWorkerG2(job, worker, *it)) {
       prepared_data = false;
       break;
     }
