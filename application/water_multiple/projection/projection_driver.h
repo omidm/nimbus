@@ -148,7 +148,7 @@ class ProjectionDriver {
     return;
   }
 
-  void Initialize(int local_n);
+  void Initialize(int local_n, int interior_n);
   void CommunicateConfig();
   void ExchangePressure();
   void InitializeResidual();
@@ -166,6 +166,12 @@ class ProjectionDriver {
   bool DecideToSpawnNextIteration();
   void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  template<typename TYPE_NAME> void ReadScalarData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, TYPE_NAME& value);
+  void ReadVectorData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, VECTOR_ND<float>& value);
 };
 
 }  // namespace PhysBAM
