@@ -244,13 +244,13 @@ void ProjectionDriver::LoadFromNimbus(
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     }
   }
-  // VECTOR_X. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-    ReadVectorData(job, da, APP_VECTOR_X, projection_data.vector_x);
-  }
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     ReadVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
+  }
+  // VECTOR_X. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
+    ReadVectorData(job, da, APP_VECTOR_X, projection_data.vector_x);
   }
   // INDEX_C2M. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
@@ -284,11 +284,13 @@ void ProjectionDriver::LoadFromNimbus(
   }
   // LOCAL_N. Reduction cannot take this branch.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
-    ReadScalarData<int>(job, da, APP_PROJECTION_LOCAL_N, projection_data.local_n);
+    ReadScalarData<int>(job, da, APP_PROJECTION_LOCAL_N,
+                        projection_data.local_n);
   }
   // INTERIOR_N. Reduction cannot take this branch.
   if (data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N)) {
-    ReadScalarData<int>(job, da, APP_PROJECTION_INTERIOR_N, projection_data.interior_n);
+    ReadScalarData<int>(job, da, APP_PROJECTION_INTERIOR_N,
+                        projection_data.interior_n);
   }
   // Groud III.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
@@ -300,7 +302,8 @@ void ProjectionDriver::LoadFromNimbus(
                           projection_data.global_tolerance);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_N)) {
-    ReadScalarData<int>(job, da, APP_PROJECTION_GLOBAL_N, projection_data.global_n);
+    ReadScalarData<int>(job, da, APP_PROJECTION_GLOBAL_N,
+                        projection_data.global_n);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_DESIRED_ITERATIONS)) {
     ReadScalarData<int>(job, da, APP_PROJECTION_DESIRED_ITERATIONS,
@@ -335,6 +338,9 @@ void ProjectionDriver::LoadFromNimbus(
   }
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
+    if (projection_data.matrix_a.C == NULL) {
+      projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<float>;
+    }
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
     if (data_temp) {
@@ -389,17 +395,107 @@ void ProjectionDriver::ReadVectorData(
 
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  // VECTOR_B. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_B)) {
+    WriteVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
+  }
   if (data_config.GetFlag(DataConfig::VECTOR_X)) {
+    WriteVectorData(job, da, APP_VECTOR_X, projection_data.vector_x);
+  }
+  // Groud III.
+  if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
+    WriteScalarData<float>(job, da, APP_PROJECTION_LOCAL_TOLERANCE,
+                          projection_data.local_tolerance);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_TOLERANCE)) {
+    WriteScalarData<float>(job, da, APP_PROJECTION_GLOBAL_TOLERANCE,
+                          projection_data.global_tolerance);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_N)) {
+    WriteScalarData<int>(job, da, APP_PROJECTION_GLOBAL_N,
+                         projection_data.global_n);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_DESIRED_ITERATIONS)) {
+    WriteScalarData<int>(job, da, APP_PROJECTION_DESIRED_ITERATIONS,
+                        projection_data.desired_iterations);
+  }
+  // Group IV.
+  if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL)) {
+    WriteScalarData<double>(job, da, APP_PROJECTION_LOCAL_RESIDUAL,
+                           projection_data.local_residual);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_RHO)) {
+    WriteScalarData<double>(job, da, APP_PROJECTION_LOCAL_RHO,
+                           projection_data.local_rho);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_RHO)) {
+    WriteScalarData<double>(job, da, APP_PROJECTION_GLOBAL_RHO,
+                           projection_data.rho);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_RHO_OLD)) {
+    WriteScalarData<double>(job, da, APP_PROJECTION_GLOBAL_RHO_OLD,
+                           projection_data.rho_last);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA)) {
+    WriteScalarData<double>(job, da, APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
+                           projection_data.local_dot_product_for_alpha);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_ALPHA)) {
+    WriteScalarData<float>(job, da, APP_PROJECTION_ALPHA,
+                           projection_data.alpha);
+  }
+  if (data_config.GetFlag(DataConfig::PROJECTION_BETA)) {
+    WriteScalarData<float>(job, da, APP_PROJECTION_BETA, projection_data.beta);
+  }
+  // MATRIX_C. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::MATRIX_C)) {
     Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_VECTOR_X), da, application::WRITE_ACCESS);
+        job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
     if (data_temp) {
-      application::DataRawVectorNd* data_real =
-          dynamic_cast<application::DataRawVectorNd*>(data_temp);
-      data_real->SaveToNimbus(projection_data.vector_x);
-        dbg(APP_LOG, "Finish writing VECTOR_X.\n");
+      application::DataSparseMatrix* data_real =
+          dynamic_cast<application::DataSparseMatrix*>(data_temp);
+      data_real->SaveToNimbus(*projection_data.matrix_a.C);
+      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     }
+  }
+  // VECTOR_Z. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
+    WriteVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
+  }
+  // VECTOR_P. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+    WriteVectorData(job, da, APP_VECTOR_P, projection_data.p);
+  }
+  // VECTOR_TEMP. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
+    WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
 }
 
+template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const TYPE_NAME& value) {
+  Data* data_temp = application::GetTheOnlyData(
+      job, std::string(variable_name), da, application::READ_ACCESS);
+  if (data_temp) {
+    nimbus::ScalarData<TYPE_NAME>* data_real =
+        dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
+    data_real->set_scalar(value);
+    dbg(APP_LOG, "Finish writing %s.\n", variable_name);
+  }
+}
+
+void ProjectionDriver::WriteVectorData(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const VECTOR_ND<float>& value) {
+  Data* data_temp = application::GetTheOnlyData(
+      job, std::string(variable_name), da, application::READ_ACCESS);
+  if (data_temp) {
+    application::DataRawVectorNd* data_real =
+        dynamic_cast<application::DataRawVectorNd*>(data_temp);
+    data_real->SaveToNimbus(value);
+    dbg(APP_LOG, "Finish reading %s.\n", variable_name);
+  }
+}
 
 }  // namespace PhysBAM

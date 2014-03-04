@@ -172,6 +172,12 @@ class ProjectionDriver {
   void ReadVectorData(
       const nimbus::Job* job, const nimbus::DataArray& da,
       const char* variable_name, VECTOR_ND<float>& value);
+  template<typename TYPE_NAME> void WriteScalarData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, const TYPE_NAME& value);
+  void WriteVectorData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, const VECTOR_ND<float>& value);
 };
 
 }  // namespace PhysBAM
