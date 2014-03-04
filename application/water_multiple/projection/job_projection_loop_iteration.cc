@@ -72,11 +72,13 @@ void JobProjectionLoopIteration::Execute(
 
   InitConfig init_config;
   T dt;
+  int iteration;
   // TODO(quhang), process iteration number.
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
+                &init_config.global_region, &init_config.local_region,
+                &iteration);
   const nimbus::GeometricRegion& global_region = init_config.global_region;
   const int& frame = init_config.frame;
   const T& time = init_config.time;
@@ -156,6 +158,12 @@ void JobProjectionLoopIteration::Execute(
     // Start a new iteration.
     // All the jobs inside the loop.
     // Spawn next iteration.
+    nimbus::Parameter default_params;
+    std::string default_params_str;
+    SerializeParameter(frame, time, dt, global_region, global_region, iteration,
+                       &default_params_str);
+    default_params.set_ser_data(SerializedData(default_params_str));
+
     int projection_job_num = 6;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
@@ -164,40 +172,41 @@ void JobProjectionLoopIteration::Execute(
 
     before.clear();
     after.clear();  after.insert(projection_job_ids[1]);
-    nimbus::Parameter projection_step_one_params;
     SpawnComputeJob(PROJECTION_STEP_ONE, projection_job_ids[0],
-                    read, write, before, after, projection_step_one_params);
+                    read, write, before, after, default_params);
 
     before.clear();  before.insert(projection_job_ids[0]);
     after.clear();  after.insert(projection_job_ids[2]);
-    nimbus::Parameter projection_reduce_rho_params;
     SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
-                    read, write, before, after, projection_reduce_rho_params);
+                    read, write, before, after, default_params);
 
     before.clear();  before.insert(projection_job_ids[1]);
     after.clear();  after.insert(projection_job_ids[3]);
-    nimbus::Parameter projection_step_two_params;
     SpawnComputeJob(PROJECTION_STEP_TWO, projection_job_ids[2],
-                    read, write, before, after, projection_step_two_params);
+                    read, write, before, after, default_params);
 
     before.clear();  before.insert(projection_job_ids[2]);
     after.clear();  after.insert(projection_job_ids[4]);
-    nimbus::Parameter projection_step_three_params;
     SpawnComputeJob(PROJECTION_STEP_THREE, projection_job_ids[3],
-                    read, write, before, after, projection_step_three_params);
+                    read, write, before, after, default_params);
 
     before.clear();  before.insert(projection_job_ids[3]);
     after.clear();  after.insert(projection_job_ids[5]);
-    nimbus::Parameter projection_reduce_alpha_params;
     SpawnComputeJob(PROJECTION_REDUCE_ALPHA, projection_job_ids[4],
-                    read, write, before, after, projection_reduce_alpha_params);
+                    read, write, before, after, default_params);
 
     before.clear();  before.insert(projection_job_ids[4]);
     after.clear();
-    nimbus::Parameter projection_loop_iteration_params;
+    nimbus::Parameter next_iteration_params;
+    std::string next_iteration_params_str;
+    SerializeParameter(frame, time, dt, global_region, global_region,
+                       iteration + 1,
+                       &next_iteration_params_str);
+    next_iteration_params.set_ser_data(
+        SerializedData(next_iteration_params_str));
     SpawnComputeJob(PROJECTION_LOOP_ITERATION, projection_job_ids[5],
                     read, write, before, after,
-                    projection_loop_iteration_params);
+                    next_iteration_params);
   }
 
   projection_driver.SaveToNimbus(this, da);
