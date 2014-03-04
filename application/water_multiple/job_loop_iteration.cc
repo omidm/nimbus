@@ -262,7 +262,7 @@ namespace application {
     std::vector<nimbus::job_id_t> advect_v_job_ids;
     GetNewJobID(&advect_v_job_ids, advect_v_job_num);
 
-    int apply_forces_job_num = 1;
+    int apply_forces_job_num = 2;
     std::vector<nimbus::job_id_t> apply_forces_job_ids;
     GetNewJobID(&apply_forces_job_ids, apply_forces_job_num);
 
@@ -710,6 +710,7 @@ namespace application {
     /* 
      * Spawning apply forces stage over entire block
      */
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D, NULL);
@@ -733,14 +734,16 @@ namespace application {
         read, write,
         before, after,
         s16_params);
+*/
 
     /* 
      * Spawning multiple jobs for apply forces stage
      */
-/*
     for (int i = 0; i < apply_forces_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[i], APP_PSI_N, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
@@ -761,7 +764,6 @@ namespace application {
           before, after,
           s16_params);
     }
-*/
 
 
     /* 
