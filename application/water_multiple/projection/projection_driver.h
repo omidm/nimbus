@@ -149,7 +149,8 @@ class ProjectionDriver {
   }
 
   void Initialize(int local_n, int interior_n);
-  void CommunicateConfig();
+  void LocalInitialize();
+  void GlobalInitialize();
   void ExchangePressure();
   void InitializeResidual();
   bool SpawnFirstIteration();

@@ -98,6 +98,7 @@ void JobProjectionConstructMatrix::Execute(
 
   dbg(APP_LOG, "Job PROJECTION_CONSTRUCT_MATRIX starts (dt=%f).\n", dt);
 
+  // TODO(quhang), write to LOCAL_N, INTERIOR_N.
   driver->ProjectionConstructMatrixImpl(this, da, dt);
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 

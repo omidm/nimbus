@@ -104,10 +104,10 @@ void JobProjectionCore::Execute(
 
 
   projection_driver.LoadFromNimbus(this, da);
-  projection_driver.CommunicateConfig();
 
   // TODO(quhang), Spawn initial computation.
-  projection_driver.InitializeResidual();
+  projection_driver.LocalInitialize();
+  projection_driver.GlobalInitialize();
   if (projection_driver.SpawnFirstIteration()) {
     // TODO(quhang), Spawn first loop.
   }

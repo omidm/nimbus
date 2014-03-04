@@ -58,35 +58,69 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
   partition.interior_indices.max_corner = interior_n;
   // int interior_n = partition.interior_indices.Size()+1;
 
-  if (projection_data.temp.Size() == 0) {
+  if (projection_data.temp.Size() == 0 &&
+      data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     projection_data.temp.Resize(local_n, false);
   }
-  if (projection_data.p.Size() == 0) {
+  if (projection_data.p.Size() == 0 &&
+      data_config.GetFlag(DataConfig::VECTOR_P)) {
     projection_data.p.Resize(local_n, false);
   }
-  if (projection_data.z_interior.Size() == 0) {
+  if (projection_data.z_interior.Size() == 0 &&
+      data_config.GetFlag(DataConfig::VECTOR_Z)) {
     projection_data.z_interior.Resize(interior_n, false);
   }
 
-  projection_data.x_interior.Set_Subvector_View(
-      projection_data.vector_x,
-      partition.interior_indices);
-  projection_data.temp_interior.Set_Subvector_View(
-      projection_data.temp,
-      partition.interior_indices);
-  projection_data.p_interior.Set_Subvector_View(
-      projection_data.p,
-      partition.interior_indices);
-  projection_data.b_interior.Set_Subvector_View(
-      projection_data.vector_b,
-      partition.interior_indices);
+  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
+    projection_data.x_interior.Set_Subvector_View(
+        projection_data.vector_x,
+        partition.interior_indices);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
+    projection_data.temp_interior.Set_Subvector_View(
+        projection_data.temp,
+        partition.interior_indices);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+    projection_data.p_interior.Set_Subvector_View(
+        projection_data.p,
+        partition.interior_indices);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_B)) {
+    projection_data.b_interior.Set_Subvector_View(
+        projection_data.vector_b,
+        partition.interior_indices);
+  }
 }
 
-void ProjectionDriver::CommunicateConfig() {
-  projection_data.interior_n = partition.interior_indices.Size()+1;
+// Projection is broken to "smallest" code piece to allow future changes.
+void ProjectionDriver::LocalInitialize() {
+  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  VECTOR_ND<T>& x = projection_data.vector_x;
+  VECTOR_ND<T>& temp = projection_data.temp;
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  A.Times(x, temp);
+  b_interior -= temp_interior;
+  projection_data.local_residual = b_interior.Max_Abs();
+  const bool recompute_preconditioner = true;
+  if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
+      delete A.C;
+      A.C = A.Create_Submatrix(partition.interior_indices);
+      A.C->In_Place_Incomplete_Cholesky_Factorization(
+          pcg.modified_incomplete_cholesky,
+          pcg.modified_incomplete_cholesky_coefficient,
+          pcg.preconditioner_zero_tolerance,
+          pcg.preconditioner_zero_replacement);
+  }
+  projection_data.temp.Resize(projection_data.local_n, false);
+  projection_data.p.Resize(projection_data.local_n, false);
+  projection_data.z_interior.Resize(projection_data.interior_n, false);
+}
 
+void ProjectionDriver::GlobalInitialize() {
+  // projection_data.interior_n = partition.interior_indices.Size()+1;
   projection_data.global_n = Global_Sum(projection_data.interior_n);
-
   projection_data.global_tolerance =
       Global_Max(projection_data.local_tolerance);
 
@@ -97,44 +131,9 @@ void ProjectionDriver::CommunicateConfig() {
   }
 }
 
-// Projection is broken to "smallest" code piece to allow future changes.
-
 void ProjectionDriver::ExchangePressure() {
   VECTOR_ND<T>& x = projection_data.vector_x;
   Fill_Ghost_Cells(x);
-}
-
-void ProjectionDriver::InitializeResidual() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
-  VECTOR_ND<T>& x = projection_data.vector_x;
-  VECTOR_ND<T>& temp = projection_data.temp;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  A.Times(x, temp);
-  b_interior -= temp_interior;
-}
-
-bool ProjectionDriver::SpawnFirstIteration() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
-  const bool recompute_preconditioner = true;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-
-  projection_data.local_residual = b_interior.Max_Abs();
-  if (Global_Max(projection_data.local_residual)
-      <= projection_data.global_tolerance) {
-    return false;
-  }
-
-  if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      delete A.C;
-      A.C = A.Create_Submatrix(partition.interior_indices);
-      A.C->In_Place_Incomplete_Cholesky_Factorization(
-          pcg.modified_incomplete_cholesky,
-          pcg.modified_incomplete_cholesky_coefficient,
-          pcg.preconditioner_zero_tolerance,
-          pcg.preconditioner_zero_replacement);
-  }
-  return true;
 }
 
 void ProjectionDriver::DoPrecondition() {
