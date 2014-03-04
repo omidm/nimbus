@@ -69,6 +69,7 @@ void JobApplyForces::Execute(nimbus::Parameter params,
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   T dt;
+  init_config.set_boundary_condition = false;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
@@ -82,10 +83,8 @@ void JobApplyForces::Execute(nimbus::Parameter params,
 
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
-  data_config.SetFlag(DataConfig::LEVELSET);
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::PSI_N);
-  data_config.SetFlag(DataConfig::PRESSURE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

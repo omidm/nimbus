@@ -33,7 +33,11 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu
+ * Nimbus data type for "sparse_matrix", which represents a sparse N-by-N matrix
+ * in projection calculation.
+ * Translating functionality is implemented in the class.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_SPARSE_MATRIX_H_
@@ -55,8 +59,11 @@ class DataSparseMatrix : public nimbus::PhysBAMData {
  public:
   explicit DataSparseMatrix(std::string name);
   virtual nimbus::Data* Clone();
+
+  // Saves the PhysBAM data structure to this nimbus data instance.
   bool SaveToNimbus(
       const PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>& matrix);
+  // Loads the PhysBAM data structure from this nimbus data instance.
   bool LoadFromNimbus(
       PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>* matrix);
 };

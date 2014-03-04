@@ -56,10 +56,11 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_core.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.cc
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
-    ${PROJECT_SOURCE_DIR}/projection/nimbus_pcg_sparse_mpi.cc
+    ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
     )
 SET(${PROJECT_NAME}_h
@@ -104,11 +105,12 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_core.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.h
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.h
     ${PROJECT_SOURCE_DIR}/projection/translator_util.h
-    ${PROJECT_SOURCE_DIR}/projection/nimbus_pcg_sparse_mpi.h
+    ${PROJECT_SOURCE_DIR}/projection/projection_driver.h
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.h
     )
 

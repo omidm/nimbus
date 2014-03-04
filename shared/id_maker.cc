@@ -53,7 +53,7 @@ IDMaker::~IDMaker() {
 void IDMaker::Initialize(worker_id_t worker_id) {
   worker_id_ = worker_id;
   initialized_ = true;
-  first_job_id_ = JOB_ID_BATCH * worker_id;
+  first_job_id_ = JOB_ID_BATCH * worker_id + NIMBUS_KERNEL_JOB_ID;
   last_job_id_ = first_job_id_;
   first_physical_data_id_ = PHYSICAL_DATA_ID_BATCH * worker_id;
   last_physical_data_id_ = first_physical_data_id_;

@@ -55,6 +55,11 @@
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
+using nimbus::Data;
+using nimbus::GeometricRegion;
+using nimbus::IDSet;
+using nimbus::SerializedData;
+
 namespace application {
 
     // simulation dimension
@@ -102,6 +107,10 @@ namespace application {
                     std::set<Data * > *ds);
     nimbus::Data* GetFirstData(const std::string &name,
                                const nimbus::DataArray &da);
+    nimbus::Data* GetTheOnlyData(const nimbus::Job *job,
+                                 const std::string &name,
+                                 const nimbus::DataArray& da,
+                                 AccessType access_type);
 
    // Note: lets make read/ write sets if possible, and also have separate
    // read/ write instead of one DataArray passed to a job/ a better indexing

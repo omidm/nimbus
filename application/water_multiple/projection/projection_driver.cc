@@ -43,12 +43,12 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
-#include "application/water_multiple/projection/nimbus_pcg_sparse_mpi.h"
+#include "application/water_multiple/projection/projection_driver.h"
 
 namespace PhysBAM {
 
-void NIMBUS_PCG_SPARSE_MPI::Initialize() {
-  int local_n = (*projection_data.matrix_a).n;
+void ProjectionDriver::Initialize() {
+  int local_n = (projection_data.matrix_a).n;
   // [TODO] Not accurate.
   partition.interior_indices.min_corner = 1;
   partition.interior_indices.max_corner = local_n;
@@ -56,7 +56,7 @@ void NIMBUS_PCG_SPARSE_MPI::Initialize() {
 
   projection_data.x_interior = new VECTOR_ND<T>;
   projection_data.x_interior->Set_Subvector_View(
-      *projection_data.vector_x,
+      projection_data.vector_x,
       partition.interior_indices);
 
   projection_data.temp = new VECTOR_ND<T>(local_n, false);
@@ -75,7 +75,7 @@ void NIMBUS_PCG_SPARSE_MPI::Initialize() {
 
   projection_data.b_interior = new VECTOR_ND<T>;
   projection_data.b_interior->Set_Subvector_View(
-      *projection_data.vector_b,
+      projection_data.vector_b,
       partition.interior_indices);
 
   projection_data.alpha = 0;
@@ -87,7 +87,7 @@ void NIMBUS_PCG_SPARSE_MPI::Initialize() {
   projection_data.iteration = 0;
 }
 
-void NIMBUS_PCG_SPARSE_MPI::CommunicateConfig() {
+void ProjectionDriver::CommunicateConfig() {
   int interior_n = partition.interior_indices.Size()+1;
 
   int global_n = Global_Sum(interior_n);
@@ -105,7 +105,7 @@ void NIMBUS_PCG_SPARSE_MPI::CommunicateConfig() {
   projection_data.global_desired_iterations = global_desired_iterations;
 }
 
-void NIMBUS_PCG_SPARSE_MPI::Parallel_Solve() {
+void ProjectionDriver::Parallel_Solve() {
   ExchangePressure();
   InitializeResidual();
   if (SpawnFirstIteration()) {
@@ -126,14 +126,14 @@ void NIMBUS_PCG_SPARSE_MPI::Parallel_Solve() {
 
 // Projection is broken to "smallest" code piece to allow future changes.
 
-void NIMBUS_PCG_SPARSE_MPI::ExchangePressure() {
-  VECTOR_ND<T>& x = (*projection_data.vector_x);
+void ProjectionDriver::ExchangePressure() {
+  VECTOR_ND<T>& x = (projection_data.vector_x);
   Fill_Ghost_Cells(x);
 }
 
-void NIMBUS_PCG_SPARSE_MPI::InitializeResidual() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
-  VECTOR_ND<T>& x = (*projection_data.vector_x);
+void ProjectionDriver::InitializeResidual() {
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
+  VECTOR_ND<T>& x = (projection_data.vector_x);
   VECTOR_ND<T>& temp = (*projection_data.temp);
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
   VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
@@ -141,8 +141,8 @@ void NIMBUS_PCG_SPARSE_MPI::InitializeResidual() {
   b_interior -= temp_interior;
 }
 
-bool NIMBUS_PCG_SPARSE_MPI::SpawnFirstIteration() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
+bool ProjectionDriver::SpawnFirstIteration() {
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
   const bool recompute_preconditioner = true;
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
 
@@ -163,8 +163,8 @@ bool NIMBUS_PCG_SPARSE_MPI::SpawnFirstIteration() {
   return true;
 }
 
-void NIMBUS_PCG_SPARSE_MPI::DoPrecondition() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
+void ProjectionDriver::DoPrecondition() {
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
   VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
   VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
@@ -172,7 +172,7 @@ void NIMBUS_PCG_SPARSE_MPI::DoPrecondition() {
   A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
 }
 
-void NIMBUS_PCG_SPARSE_MPI::CalculateBeta() {
+void ProjectionDriver::CalculateBeta() {
   VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
   projection_data.rho_last = projection_data.rho;
@@ -181,7 +181,7 @@ void NIMBUS_PCG_SPARSE_MPI::CalculateBeta() {
   projection_data.beta = (T)(projection_data.rho / projection_data.rho_last);
 }
 
-void NIMBUS_PCG_SPARSE_MPI::UpdateSearchVector() {
+void ProjectionDriver::UpdateSearchVector() {
   int interior_n = partition.interior_indices.Size() + 1;
   VECTOR_ND<T>& z_interior = (*projection_data.z_interior);
   VECTOR_ND<T>& p_interior = (*projection_data.p_interior);
@@ -193,19 +193,19 @@ void NIMBUS_PCG_SPARSE_MPI::UpdateSearchVector() {
   }
 }
 
-void NIMBUS_PCG_SPARSE_MPI::ExchangeSearchVector() {
+void ProjectionDriver::ExchangeSearchVector() {
   VECTOR_ND<T>& p = (*projection_data.p);
   Fill_Ghost_Cells(p);
 }
 
-void NIMBUS_PCG_SPARSE_MPI::UpdateTempVector() {
-  SPARSE_MATRIX_FLAT_NXN<T>& A = (*projection_data.matrix_a);
+void ProjectionDriver::UpdateTempVector() {
+  SPARSE_MATRIX_FLAT_NXN<T>& A = (projection_data.matrix_a);
   VECTOR_ND<T>& temp = (*projection_data.temp);
   VECTOR_ND<T>& p = (*projection_data.p);
   A.Times(p, temp);
 }
 
-void NIMBUS_PCG_SPARSE_MPI::CalculateAlpha() {
+void ProjectionDriver::CalculateAlpha() {
   VECTOR_ND<T>& p_interior = (*projection_data.p_interior);
   VECTOR_ND<T>& temp_interior = (*projection_data.temp_interior);
   projection_data.alpha =
@@ -214,7 +214,7 @@ void NIMBUS_PCG_SPARSE_MPI::CalculateAlpha() {
                    p_interior, temp_interior)));
 }
 
-void NIMBUS_PCG_SPARSE_MPI::UpdateOtherVectors() {
+void ProjectionDriver::UpdateOtherVectors() {
   int interior_n = partition.interior_indices.Size()+1;
   VECTOR_ND<T>& x_interior = (*projection_data.x_interior);
   VECTOR_ND<T>& p_interior = (*projection_data.p_interior);
@@ -226,13 +226,13 @@ void NIMBUS_PCG_SPARSE_MPI::UpdateOtherVectors() {
   }
 }
 
-void NIMBUS_PCG_SPARSE_MPI::CalculateResidual() {
+void ProjectionDriver::CalculateResidual() {
   VECTOR_ND<T>& b_interior = (*projection_data.b_interior);
   double local_norm = b_interior.Max_Abs();
   projection_data.residual = Global_Max(local_norm);
 }
 
-bool NIMBUS_PCG_SPARSE_MPI::DecideToSpawnNextIteration() {
+bool ProjectionDriver::DecideToSpawnNextIteration() {
   if (projection_data.residual <= projection_data.global_tolerance) {
     return false;
   }

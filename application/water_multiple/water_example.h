@@ -21,6 +21,7 @@
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
 #include "application/water_multiple/options.h"
+#include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "shared/nimbus.h"
 namespace PhysBAM{
 
@@ -71,6 +72,7 @@ public:
     VECTOR<VECTOR<bool,2>,TV::dimension> domain_boundary;
     T_GRID_BASED_COLLISION_GEOMETRY collision_bodies_affecting_fluid;
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
+    LaplaceSolverWrapper laplace_solver_wrapper;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();

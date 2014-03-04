@@ -43,6 +43,7 @@
  *     velocity, pressure, psi_D, psi_N, filled_region_colors, divergence.
  *
  * This job should be broken into finer-grained jobs in the future.
+ * TODO(quhang), eliminate the read set and the write set.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

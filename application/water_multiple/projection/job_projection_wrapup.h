@@ -42,7 +42,7 @@
  * The write set(not sure) of PROJECTION_WRAPUP:
  *     pressure, velocity.
  *
- * Not clear about the effect of u_interface.
+ * TODO(quhang), u_interface used for second-cut method needs special treatment.
  * This job should be broken into finer jobs in the future.
  *
  * Author: Hang Qu <quhang@stanford.edu>
@@ -63,6 +63,6 @@ class JobProjectionWrapup : public nimbus::Job {
   virtual nimbus::Job* Clone();
 };
 
-} // namespace application
+}  // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_WRAPUP_H_

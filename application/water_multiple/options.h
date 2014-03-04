@@ -90,6 +90,13 @@ struct DataConfig {
     PRESSURE_SAVE,
     VELOCITY_SAVE,
     U_INTERFACE,
+    // The following for projeciton.
+    MATRIX_A,
+    VECTOR_X,
+    VECTOR_B,
+    PROJECTION_LOCAL_TOLERANCE,
+    INDEX_M2C,
+    INDEX_C2M,
     NUM_VARIABLE
   };
   bool flag_[NUM_VARIABLE];

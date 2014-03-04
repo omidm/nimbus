@@ -58,6 +58,7 @@
 #include "shared/log.h"
 #include "worker/worker.h"
 
+using namespace nimbus; // NOLINT
 
 class SimpleWorker : public Worker {
   public:

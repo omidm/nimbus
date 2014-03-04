@@ -33,12 +33,16 @@
  */
 
 /*
+ * Grid array is an array indexed by 3-dimension tuples. It is internally
+ * serialzed as ARRAY_VIEW in PhysBAM. Given its complexity, this class takes no
+ * responsibility to manage memory for ARRAY_VIEW, which should be instead done
+ * by the caller.
+ *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
-#include <string>
 
 #include "application/water_multiple/projection/data_raw_grid_array.h"
 
@@ -67,8 +71,10 @@ bool DataRawGridArray::SaveToNimbus(
 }
 
 bool DataRawGridArray::LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array) {
+  assert(array != NULL);
   char* pointer = buffer();
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
+  // Notice, Nimbus assumes the array is already initialized.
   assert(array->counts.Product() == header.n);
   pointer += sizeof(Header);
   memcpy(pointer, array->array.Get_Array_Pointer(), header.n * sizeof(T));

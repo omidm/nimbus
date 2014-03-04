@@ -87,6 +87,8 @@ void JobProjectionWrapup::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::REGION_COLORS);
   data_config.SetFlag(DataConfig::PRESSURE);
   data_config.SetFlag(DataConfig::U_INTERFACE);
+  data_config.SetFlag(DataConfig::VECTOR_X);
+  data_config.SetFlag(DataConfig::INDEX_M2C);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

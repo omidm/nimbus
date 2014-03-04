@@ -33,7 +33,10 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
+ * Simplified replacement for flood fill method, written from scratch.
+ * TODO(quhang), the function can only work for one partition. Needs further
+ * chagnes.
+ *
  * Author: Hang Qu<quhang@stanford.edu>
  */
 

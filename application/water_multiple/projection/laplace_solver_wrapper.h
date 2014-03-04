@@ -52,7 +52,9 @@ typedef GRID<TV> T_GRID;
 
 class LaplaceSolverWrapper {
  public:
-  LaplaceSolverWrapper(
+  LaplaceSolverWrapper() {
+  }
+  void BindLaplaceAndInitialize(
       LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input) {
     laplace = laplace_input;
     const int number_of_regions = 1;

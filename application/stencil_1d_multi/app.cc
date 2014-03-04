@@ -41,6 +41,7 @@
 
 #include "./app.h"
 
+using namespace nimbus; // NOLINT
 using vector_msg::VectorMsg;
 
 Vec::Vec(int size) {

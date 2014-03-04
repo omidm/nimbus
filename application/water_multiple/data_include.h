@@ -43,5 +43,9 @@
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/data_particle_array.h"
 #include "application/water_multiple/data_scalar_array.h"
+#include "application/water_multiple/projection/data_raw_array_m2c.h"
+#include "application/water_multiple/projection/data_raw_grid_array.h"
+#include "application/water_multiple/projection/data_raw_vector_nd.h"
+#include "application/water_multiple/projection/data_sparse_matrix.h"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_INCLUDE_H_

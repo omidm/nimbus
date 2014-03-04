@@ -262,9 +262,13 @@ namespace application {
     std::vector<nimbus::job_id_t> advect_v_job_ids;
     GetNewJobID(&advect_v_job_ids, advect_v_job_num);
 
-    int apply_forces_job_num = 1;
+    int apply_forces_job_num = 2;
     std::vector<nimbus::job_id_t> apply_forces_job_ids;
     GetNewJobID(&apply_forces_job_ids, apply_forces_job_num);
+
+    int adjust_phi_job_num = 2;
+    std::vector<nimbus::job_id_t> adjust_phi_job_ids;
+    GetNewJobID(&adjust_phi_job_ids, adjust_phi_job_num);
 
     int advect_phi_job_num = 2;
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
@@ -274,7 +278,7 @@ namespace application {
     std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
     GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
-    int projection_job_num = 3;
+    int projection_job_num = 4;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
@@ -684,6 +688,8 @@ namespace application {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[i], APP_PSI_N, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
@@ -708,8 +714,11 @@ namespace application {
     /* 
      * Spawning apply forces stage over entire block
      */
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PSI_N, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
@@ -729,14 +738,16 @@ namespace application {
         read, write,
         before, after,
         s16_params);
+*/
 
     /* 
      * Spawning multiple jobs for apply forces stage
      */
-/*
     for (int i = 0; i < apply_forces_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[i], APP_PSI_N, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
@@ -757,7 +768,6 @@ namespace application {
           before, after,
           s16_params);
     }
-*/
 
 
     /* 
@@ -780,7 +790,10 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &modify_levelset_str);
     modify_levelset_params.set_ser_data(SerializedData(modify_levelset_str));
     after.clear();
-    after.insert(job_ids[7]);
+    for (int j = 0; j < adjust_phi_job_num; ++j) {
+      after.insert(adjust_phi_job_ids[j]);
+    }
+    // after.insert(job_ids[7]);
     before.clear();
     // before.insert(job_ids[5]);
     for (int j = 0; j < apply_forces_job_num; ++j) {
@@ -796,7 +809,7 @@ namespace application {
     /* 
      * Spawning adjust phi stage over entire block
      */
-
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, NULL);
     write.clear();
@@ -811,10 +824,36 @@ namespace application {
     before.clear();
     before.insert(job_ids[6]);
     SpawnComputeJob(ADJUST_PHI,
-        job_ids[7],
+        adjust_phi_job_ids[0],
         read, write,
         before, after,
         adjust_phi_params);
+*/
+
+    /* 
+     * Spawning adjust phi stage for multiple workers.
+     */
+
+    for (int i = 0; i < adjust_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_PHI, NULL);
+
+      nimbus::Parameter adjust_phi_params;
+      std::string adjust_phi_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &adjust_phi_str);
+      adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
+      after.clear();
+      after.insert(job_ids[8]);
+      before.clear();
+      before.insert(job_ids[6]);
+      SpawnComputeJob(ADJUST_PHI,
+          adjust_phi_job_ids[i],
+          read, write,
+          before, after,
+          adjust_phi_params);
+    }
 
 
     /* 
@@ -840,7 +879,10 @@ namespace application {
     after.clear();
     after.insert(job_ids[9]);
     before.clear();
-    before.insert(job_ids[7]);
+    for (int j = 0; j < adjust_phi_job_num; ++j) {
+      before.insert(adjust_phi_job_ids[j]);
+    }
+    // before.insert(job_ids[7]);
     SpawnComputeJob(DELETE_PARTICLES,
         job_ids[8],
         read, write,
@@ -921,7 +963,6 @@ namespace application {
                       before, after,
                       projection_calculate_boundary_condition_params);
 
-
       // Read psi_D, psi_N, filled_region_colors, divergence, pressure.
       // Write pressure.
       read.clear();
@@ -937,7 +978,45 @@ namespace application {
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
       LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                          APP_U_INTERFACE, NULL);
+                          APP_U_INTERFACE, APP_MATRIX_A, APP_VECTOR_X,
+                          APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
+                          APP_INDEX_M2C, APP_INDEX_C2M, NULL);
+
+      nimbus::Parameter projection_construct_matrix_params;
+      std::string projection_construct_matrix_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         &projection_construct_matrix_str);
+      projection_construct_matrix_params.set_ser_data(
+          SerializedData(projection_construct_matrix_str));
+
+      before.clear();
+      before.insert(projection_job_ids[0]);
+      after.clear();
+      after.insert(projection_job_ids[2]);
+      SpawnComputeJob(PROJECTION_CONSTRUCT_MATRIX,
+                      projection_job_ids[1],
+                      read, write,
+                      before, after,
+                      projection_construct_matrix_params);
+
+      // Read psi_D, psi_N, filled_region_colors, divergence, pressure.
+      // Write pressure.
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
+                          APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                          APP_PRESSURE, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE, APP_MATRIX_A, APP_VECTOR_X,
+                          APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
+                          APP_INDEX_M2C, APP_INDEX_C2M, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
+                          APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                          APP_PRESSURE, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE, APP_VECTOR_X, NULL);
 
       nimbus::Parameter projection_core_params;
       std::string projection_core_str;
@@ -946,11 +1025,11 @@ namespace application {
       projection_core_params.set_ser_data(SerializedData(projection_core_str));
 
       before.clear();
-      before.insert(projection_job_ids[0]);
+      before.insert(projection_job_ids[1]);
       after.clear();
-      after.insert(projection_job_ids[2]);
+      after.insert(projection_job_ids[3]);
       SpawnComputeJob(PROJECTION_CORE,
-                      projection_job_ids[1],
+                      projection_job_ids[2],
                       read, write,
                       before, after,
                       projection_core_params);
@@ -965,7 +1044,7 @@ namespace application {
                           APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                           APP_PRESSURE, NULL);
       LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                          APP_U_INTERFACE, NULL);
+                          APP_U_INTERFACE, APP_INDEX_M2C, APP_VECTOR_X, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
@@ -981,11 +1060,11 @@ namespace application {
       projection_wrapup_params.set_ser_data(SerializedData(projection_wrapup_str));
 
       before.clear();
-      before.insert(projection_job_ids[1]);
+      before.insert(projection_job_ids[2]);
       after.clear();
       after.insert(job_ids[11]);
       SpawnComputeJob(PROJECTION_WRAPUP,
-                      projection_job_ids[2],
+                      projection_job_ids[3],
                       read, write,
                       before, after,
                       projection_wrapup_params);
@@ -1009,7 +1088,7 @@ namespace application {
       after.clear();
       after.insert(job_ids[index+1]);
       before.clear();
-      before.insert(projection_job_ids[2]);
+      before.insert(projection_job_ids[3]);
       SpawnComputeJob(EXTRAPOLATION,
                       job_ids[index],
                       read, write,

@@ -33,7 +33,11 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu
+ * Nimbus data type for "cell_index_to_matrix_index", which is a mapping from
+ * cell index to matrix index in projection calculation.
+ * Translating functionality is implemented in the class.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_DATA_RAW_GRID_ARRAY_H_
@@ -57,7 +61,9 @@ class DataRawGridArray : public nimbus::PhysBAMData {
   explicit DataRawGridArray(std::string name);
   virtual nimbus::Data* Clone();
 
+  // Saves the PhysBAM data structure to this nimbus data instance.
   bool SaveToNimbus(const PhysBAM::ARRAY<T, TV_INT>& array_input);
+  // Loads the PhysBAM data structure from this nimbus data instance.
   bool LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array);
 };
 

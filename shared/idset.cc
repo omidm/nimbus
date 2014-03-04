@@ -221,6 +221,16 @@ typename IDSet<T>::IDSetIter IDSet<T>::end() {
 }
 
 template<typename T>
+typename IDSet<T>::ConstIter IDSet<T>::begin() const {
+  return identifiers_.begin();
+}
+
+template<typename T>
+typename IDSet<T>::ConstIter IDSet<T>::end() const {
+  return identifiers_.end();
+}
+
+template<typename T>
 IDSet<T>& IDSet<T>::operator= (const IDSet<T>& right) {
   identifiers_ = right.identifiers_;
   return *this;

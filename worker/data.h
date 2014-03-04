@@ -33,7 +33,15 @@
  */
 
  /*
-  * Nimbus abstraction of data. 
+  * Nimbus abstraction of data.
+  *
+  * Nimbus calls following chain of methods:
+  *   Clone -> Create
+  *   Clone -> Create -> Serialize
+  *   Clone -> Create -> Deserialize -> Copy
+  *
+  * Before Create gets called logical_id, phisical_id, and region are set for
+  * the data. For more information see worker/worker.cc and worker/job.cc files.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */

@@ -39,7 +39,6 @@
 #include "application/water_multiple/projection/translator_util.h"
 #include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
-#include <string>
 
 #include "application/water_multiple/projection/data_raw_array_m2c.h"
 
@@ -68,6 +67,7 @@ bool DataRawArrayM2C::SaveToNimbus(const PhysBAM::ARRAY<TV_INT>& array_input) {
 }
 
 bool DataRawArrayM2C::LoadFromNimbus(PhysBAM::ARRAY<TV_INT>* array) {
+  assert(array != NULL);
   char* pointer = buffer();
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   array->m = header.n;
@@ -80,4 +80,4 @@ bool DataRawArrayM2C::LoadFromNimbus(PhysBAM::ARRAY<TV_INT>* array) {
   return true;
 }
 
-} // namespace application
+}  // namespace application

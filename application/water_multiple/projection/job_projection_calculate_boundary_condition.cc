@@ -74,7 +74,8 @@ void JobProjectionCalculateBoundaryCondition::Execute(
 
   // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,
-      "In PROJECTION: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "In PROJECTION_CALCULATE_BOUNDARY_CONDITION: "
+      "Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
       init_config.frame, init_config.time);
 
@@ -89,6 +90,7 @@ void JobProjectionCalculateBoundaryCondition::Execute(
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::REGION_COLORS);
   data_config.SetFlag(DataConfig::PRESSURE);
+  data_config.SetFlag(DataConfig::U_INTERFACE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
