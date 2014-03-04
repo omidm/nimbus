@@ -371,6 +371,7 @@ template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     value = data_real->scalar();
+    dbg(APP_LOG, "[Data Loading]%s: %0.1f", variable_name, (float)value);
     dbg(APP_LOG, "Finish reading %s.\n", variable_name);
   }
 }
@@ -471,11 +472,12 @@ template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(
     const nimbus::Job* job, const nimbus::DataArray& da,
     const char* variable_name, const TYPE_NAME& value) {
   Data* data_temp = application::GetTheOnlyData(
-      job, std::string(variable_name), da, application::READ_ACCESS);
+      job, std::string(variable_name), da, application::WRITE_ACCESS);
   if (data_temp) {
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     data_real->set_scalar(value);
+    dbg(APP_LOG, "[Data Saving]%s: %0.1f", variable_name, (float)value);
     dbg(APP_LOG, "Finish writing %s.\n", variable_name);
   }
 }
@@ -484,12 +486,12 @@ void ProjectionDriver::WriteVectorData(
     const nimbus::Job* job, const nimbus::DataArray& da,
     const char* variable_name, const VECTOR_ND<float>& value) {
   Data* data_temp = application::GetTheOnlyData(
-      job, std::string(variable_name), da, application::READ_ACCESS);
+      job, std::string(variable_name), da, application::WRITE_ACCESS);
   if (data_temp) {
     application::DataRawVectorNd* data_real =
         dynamic_cast<application::DataRawVectorNd*>(data_temp);
     data_real->SaveToNimbus(value);
-    dbg(APP_LOG, "Finish reading %s.\n", variable_name);
+    dbg(APP_LOG, "Finish writing %s.\n", variable_name);
   }
 }
 

@@ -77,6 +77,8 @@ void JobProjectionReduceRho::Execute(
                 &iteration);
 
   DataConfig data_config;
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RHO);
   data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_RHO);
   data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_RHO_OLD);

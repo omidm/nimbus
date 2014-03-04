@@ -77,6 +77,12 @@ void JobProjectionGlobalInitialize::Execute(
                 &init_config.global_region, &init_config.local_region);
 
   DataConfig data_config;
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
+  data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_TOLERANCE);
+  data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_DESIRED_ITERATIONS);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);

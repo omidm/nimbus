@@ -84,6 +84,8 @@ void JobProjectionLoopIteration::Execute(
   const T& time = init_config.time;
 
   DataConfig data_config;
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
   data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_TOLERANCE);
   data_config.SetFlag(DataConfig::PROJECTION_DESIRED_ITERATIONS);
@@ -190,6 +192,7 @@ void JobProjectionLoopIteration::Execute(
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
                         APP_PROJECTION_LOCAL_RHO, APP_PROJECTION_GLOBAL_RHO,
                         APP_PROJECTION_GLOBAL_RHO_OLD, APP_PROJECTION_BETA, NULL);
+    before.clear();  before.insert(projection_job_ids[0]);
     after.clear();  after.insert(projection_job_ids[2]);
     SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
                     read, write, before, after, default_params);
@@ -210,8 +213,8 @@ void JobProjectionLoopIteration::Execute(
 
     // STEP_THREE
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_P);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_MATRIX_A);
+    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_P, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_MATRIX_A, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_VECTOR_TEMP, NULL);
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],

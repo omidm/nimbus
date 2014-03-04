@@ -77,6 +77,9 @@ void JobProjectionReduceAlpha::Execute(
                 &iteration);
 
   DataConfig data_config;
+  // TODO(quhang), remove.
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_RHO);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);

@@ -179,8 +179,9 @@ void JobProjectionMain::SpawnJobs(
                       APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_TOLERANCE,
                       NULL);
   write.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+  LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
                       APP_PROJECTION_GLOBAL_N,
+                      APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS, NULL);
   before.clear();
   before.insert(projection_job_ids[2]);

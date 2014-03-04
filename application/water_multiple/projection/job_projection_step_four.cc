@@ -77,6 +77,8 @@ void JobProjectionStepFour::Execute(
                 &iteration);
 
   DataConfig data_config;
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);
   data_config.SetFlag(DataConfig::VECTOR_X);
   data_config.SetFlag(DataConfig::VECTOR_P);
