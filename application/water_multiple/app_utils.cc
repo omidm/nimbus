@@ -329,6 +329,31 @@ namespace application {
       return true;
     }
 
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const T dt,
+        const GeometricRegion& global_region,
+        const GeometricRegion& local_region,
+        const int iteration,
+        std::string *result) {
+      std::stringstream ss;
+      ss << frame;
+      ss << "\n";
+      ss << time;
+      ss << "\n";
+      ss << dt;
+      ss << "\n";
+      ss << region_serial_helper(global_region);
+      ss << "\n";
+      ss << region_serial_helper(local_region);
+      ss << "\n";
+      ss << iteration;
+      ss << "\n";
+      *result = ss.str();
+      return true;
+    }
+
     bool LoadParameter(
         const std::string str,
         int* frame,
@@ -394,6 +419,38 @@ namespace application {
         std::getline(ss, temp);
         region_deserial_helper(temp, local_region);
       }
+      return true;
+    }
+
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        T* dt,
+        GeometricRegion* global_region,
+        GeometricRegion* local_region,
+        int* iteration) {
+      std::stringstream ss;
+      ss.str(str);
+      ss >> (*frame);
+      ss >> (*time);
+      ss >> (*dt);
+      if (global_region == NULL) {
+        dbg(DBG_WARN, "Deserialization of job parameter might be wrong.\n");
+      } else {
+        std::string temp;
+        std::getline(ss, temp);
+        std::getline(ss, temp);
+        region_deserial_helper(temp, global_region);
+      }
+      if (local_region == NULL) {
+        dbg(DBG_WARN, "Deserialization of job parameter might be wrong.\n");
+      } else {
+        std::string temp;
+        std::getline(ss, temp);
+        region_deserial_helper(temp, local_region);
+      }
+      ss >> (*iteration);
       return true;
     }
 

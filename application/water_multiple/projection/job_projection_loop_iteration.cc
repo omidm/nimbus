@@ -156,6 +156,48 @@ void JobProjectionLoopIteration::Execute(
     // Start a new iteration.
     // All the jobs inside the loop.
     // Spawn next iteration.
+    int projection_job_num = 6;
+    std::vector<nimbus::job_id_t> projection_job_ids;
+    GetNewJobID(&projection_job_ids, projection_job_num);
+    nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+    nimbus::IDSet<nimbus::job_id_t> before, after;
+
+    before.clear();
+    after.clear();  after.insert(projection_job_ids[1]);
+    nimbus::Parameter projection_step_one_params;
+    SpawnComputeJob(PROJECTION_STEP_ONE, projection_job_ids[0],
+                    read, write, before, after, projection_step_one_params);
+
+    before.clear();  before.insert(projection_job_ids[0]);
+    after.clear();  after.insert(projection_job_ids[2]);
+    nimbus::Parameter projection_reduce_rho_params;
+    SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
+                    read, write, before, after, projection_reduce_rho_params);
+
+    before.clear();  before.insert(projection_job_ids[1]);
+    after.clear();  after.insert(projection_job_ids[3]);
+    nimbus::Parameter projection_step_two_params;
+    SpawnComputeJob(PROJECTION_STEP_TWO, projection_job_ids[2],
+                    read, write, before, after, projection_step_two_params);
+
+    before.clear();  before.insert(projection_job_ids[2]);
+    after.clear();  after.insert(projection_job_ids[4]);
+    nimbus::Parameter projection_step_three_params;
+    SpawnComputeJob(PROJECTION_STEP_THREE, projection_job_ids[3],
+                    read, write, before, after, projection_step_three_params);
+
+    before.clear();  before.insert(projection_job_ids[3]);
+    after.clear();  after.insert(projection_job_ids[5]);
+    nimbus::Parameter projection_reduce_alpha_params;
+    SpawnComputeJob(PROJECTION_REDUCE_ALPHA, projection_job_ids[4],
+                    read, write, before, after, projection_reduce_alpha_params);
+
+    before.clear();  before.insert(projection_job_ids[4]);
+    after.clear();
+    nimbus::Parameter projection_loop_iteration_params;
+    SpawnComputeJob(PROJECTION_LOOP_ITERATION, projection_job_ids[5],
+                    read, write, before, after,
+                    projection_loop_iteration_params);
   }
 
   projection_driver.SaveToNimbus(this, da);

@@ -87,6 +87,12 @@ void JobProjectionMain::SpawnJobs(
   GetNewJobID(&projection_job_ids, projection_job_num);
   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
   nimbus::IDSet<nimbus::job_id_t> before, after;
+  nimbus::Parameter default_params;
+  std::string default_params_str;
+  SerializeParameter(
+      frame, time, dt, global_region, global_region,
+      &default_params_str);
+  default_params.set_ser_data(SerializedData(default_params_str));
 
   // Read velocity, pressure, levelset.
   // Write velocity, pressure, psi_D, psi_N, filled_region_colors,
@@ -106,13 +112,6 @@ void JobProjectionMain::SpawnJobs(
   LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
                       APP_U_INTERFACE, NULL);
 
-  nimbus::Parameter projection_calculate_boundary_condition_params;
-  std::string projection_calculate_boundary_condition_str;
-  SerializeParameter(frame, time, dt, global_region, global_region,
-                     &projection_calculate_boundary_condition_str);
-  projection_calculate_boundary_condition_params.set_ser_data(
-      SerializedData(projection_calculate_boundary_condition_str));
-
   before.clear();
   after.clear();
   after.insert(projection_job_ids[1]);
@@ -121,7 +120,7 @@ void JobProjectionMain::SpawnJobs(
                   projection_job_ids[0],
                   read, write,
                   before, after,
-                  projection_calculate_boundary_condition_params);
+                  default_params);
 
   // Read psi_D, psi_N, filled_region_colors, divergence, pressure.
   // Write pressure.
@@ -144,13 +143,6 @@ void JobProjectionMain::SpawnJobs(
                       APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                       NULL);
 
-  nimbus::Parameter projection_construct_matrix_params;
-  std::string projection_construct_matrix_str;
-  SerializeParameter(frame, time, dt, global_region, global_region,
-                     &projection_construct_matrix_str);
-  projection_construct_matrix_params.set_ser_data(
-      SerializedData(projection_construct_matrix_str));
-
   before.clear();
   before.insert(projection_job_ids[0]);
   after.clear();
@@ -159,7 +151,7 @@ void JobProjectionMain::SpawnJobs(
                   projection_job_ids[1],
                   read, write,
                   before, after,
-                  projection_construct_matrix_params);
+                  default_params);
 
   // Loop job GLOBAL_INITIALIZE/LOCAL_INITIALIZE, and then spawns
   // PROJECTION_LOOP_ITERATION.
@@ -176,12 +168,11 @@ void JobProjectionMain::SpawnJobs(
   before.insert(projection_job_ids[1]);
   after.clear();
   after.insert(projection_job_ids[3]);
-  nimbus::Parameter projection_local_initialize_params;
   SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
                   projection_job_ids[2],
                   read, write,
                   before, after,
-                  projection_local_initialize_params);
+                  default_params);
 
   read.clear();
   LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
@@ -195,12 +186,11 @@ void JobProjectionMain::SpawnJobs(
   before.insert(projection_job_ids[2]);
   after.clear();
   after.insert(projection_job_ids[4]);
-  nimbus::Parameter projection_global_initialize_params;
   SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
                   projection_job_ids[3],
                   read, write,
                   before, after,
-                  projection_global_initialize_params);
+                  default_params);
 
   read.clear();
   LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
@@ -213,6 +203,12 @@ void JobProjectionMain::SpawnJobs(
   before.insert(projection_job_ids[3]);
   after.clear();
   nimbus::Parameter projection_loop_iteration_params;
+  std::string projection_loop_iteration_str;
+  SerializeParameter(
+      frame, time, dt, global_region, global_region, 0,
+      &projection_loop_iteration_str);
+  projection_loop_iteration_params.set_ser_data(
+      SerializedData(projection_loop_iteration_str));
   SpawnComputeJob(PROJECTION_LOOP_ITERATION,
                   projection_job_ids[4],
                   read, write,

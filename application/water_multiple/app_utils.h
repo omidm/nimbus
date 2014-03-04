@@ -136,6 +136,14 @@ namespace application {
         const GeometricRegion& global_region,
         const GeometricRegion& local_region,
         std::string *result);
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const T dt,
+        const GeometricRegion& global_region,
+        const GeometricRegion& local_region,
+        const int iteration,
+        std::string *result);
     bool LoadParameter(
         const std::string str,
         int* frame,
@@ -152,6 +160,14 @@ namespace application {
         T* dt,
         GeometricRegion* global_region,
         GeometricRegion* local_region);
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        T* dt,
+        GeometricRegion* global_region,
+        GeometricRegion* local_region,
+        int* iteration);
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
