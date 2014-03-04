@@ -266,6 +266,10 @@ namespace application {
     std::vector<nimbus::job_id_t> apply_forces_job_ids;
     GetNewJobID(&apply_forces_job_ids, apply_forces_job_num);
 
+    int adjust_phi_job_num = 2;
+    std::vector<nimbus::job_id_t> adjust_phi_job_ids;
+    GetNewJobID(&adjust_phi_job_ids, adjust_phi_job_num);
+
     int advect_phi_job_num = 2;
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
@@ -786,7 +790,10 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &modify_levelset_str);
     modify_levelset_params.set_ser_data(SerializedData(modify_levelset_str));
     after.clear();
-    after.insert(job_ids[7]);
+    for (int j = 0; j < adjust_phi_job_num; ++j) {
+      after.insert(adjust_phi_job_ids[j]);
+    }
+    // after.insert(job_ids[7]);
     before.clear();
     // before.insert(job_ids[5]);
     for (int j = 0; j < apply_forces_job_num; ++j) {
@@ -802,7 +809,7 @@ namespace application {
     /* 
      * Spawning adjust phi stage over entire block
      */
-
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, NULL);
     write.clear();
@@ -817,10 +824,36 @@ namespace application {
     before.clear();
     before.insert(job_ids[6]);
     SpawnComputeJob(ADJUST_PHI,
-        job_ids[7],
+        adjust_phi_job_ids[0],
         read, write,
         before, after,
         adjust_phi_params);
+*/
+
+    /* 
+     * Spawning adjust phi stage for multiple workers.
+     */
+
+    for (int i = 0; i < adjust_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_PHI, NULL);
+
+      nimbus::Parameter adjust_phi_params;
+      std::string adjust_phi_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &adjust_phi_str);
+      adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
+      after.clear();
+      after.insert(job_ids[8]);
+      before.clear();
+      before.insert(job_ids[6]);
+      SpawnComputeJob(ADJUST_PHI,
+          adjust_phi_job_ids[i],
+          read, write,
+          before, after,
+          adjust_phi_params);
+    }
 
 
     /* 
@@ -846,7 +879,10 @@ namespace application {
     after.clear();
     after.insert(job_ids[9]);
     before.clear();
-    before.insert(job_ids[7]);
+    for (int j = 0; j < adjust_phi_job_num; ++j) {
+      before.insert(adjust_phi_job_ids[j]);
+    }
+    // before.insert(job_ids[7]);
     SpawnComputeJob(DELETE_PARTICLES,
         job_ids[8],
         read, write,
