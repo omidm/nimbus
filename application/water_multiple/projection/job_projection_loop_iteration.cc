@@ -41,8 +41,10 @@
 #include <PhysBAM_Tools/Krylov_Solvers/PCG_SPARSE.h>
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/job_names.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/projection/projection_driver.h"
+#include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "shared/dbg.h"
@@ -75,10 +77,79 @@ void JobProjectionLoopIteration::Execute(
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
                 &init_config.global_region, &init_config.local_region);
+  const nimbus::GeometricRegion& global_region = init_config.global_region;
+  const int& frame = init_config.frame;
+  const T& time = init_config.time;
 
   DataConfig data_config;
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
   data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_TOLERANCE);
+
+  // TODO(quhang).
+  // Decide to spawn next loop or not based on local_residual and
+  // global_tolerance.
+  // If done, spawns the following two jobs. Otherwise, spawn a new iteration.
+  int projection_job_num = 5;
+  std::vector<nimbus::job_id_t> projection_job_ids;
+  GetNewJobID(&projection_job_ids, projection_job_num);
+  nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+  nimbus::IDSet<nimbus::job_id_t> before, after;
+
+
+  // ? u_interface
+  // Read pressure, levelset, psi_D, psi_N, velocity.
+  // Write velocity, write pressure.
+  read.clear();
+  LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+  LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
+                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                      APP_PRESSURE, NULL);
+  LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
+                      APP_U_INTERFACE, APP_INDEX_M2C, APP_VECTOR_X, NULL);
+  write.clear();
+  LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+  LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
+                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                      APP_PRESSURE, NULL);
+  LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
+                      APP_U_INTERFACE, NULL);
+  nimbus::Parameter projection_wrapup_params;
+  std::string projection_wrapup_str;
+  SerializeParameter(frame, time, dt, global_region, global_region,
+                     &projection_wrapup_str);
+  projection_wrapup_params.set_ser_data(SerializedData(projection_wrapup_str));
+
+  before.clear();
+  before.insert(projection_job_ids[2]);
+  after.clear();
+  after.insert(projection_job_ids[4]);
+  SpawnComputeJob(PROJECTION_WRAPUP,
+                  projection_job_ids[3],
+                  read, write,
+                  before, after,
+                  projection_wrapup_params);
+
+  // Loop iteration part two.
+
+  read.clear();
+  write.clear();
+
+  nimbus::Parameter loop_iteration_part_two_params;
+  std::string loop_iteration_part_two_str;
+  SerializeParameter(frame, time, dt, global_region, global_region,
+                     &loop_iteration_part_two_str);
+  loop_iteration_part_two_params.set_ser_data(
+      SerializedData(loop_iteration_part_two_str));
+  before.clear();
+  before.insert(projection_job_ids[3]);
+  after.clear();
+  SpawnComputeJob(LOOP_ITERATION_PART_TWO,
+                  projection_job_ids[4],
+                  read, write,
+                  before, after,
+                  loop_iteration_part_two_params);
+
+
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);

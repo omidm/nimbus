@@ -64,6 +64,8 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_local_initialize.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_global_initialize.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.cc
@@ -123,6 +125,8 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/translator_util.h
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.h
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_local_initialize.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_global_initialize.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.h

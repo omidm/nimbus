@@ -194,60 +194,10 @@ void JobProjectionMain::SpawnJobs(
                   before, after,
                   projection_core_params);
 
+  // Loop job GLOBAL_INITIALIZE/LOCAL_INITIALIZE, and then spawns
+  // PROJECTION_LOOP_ITERATION.
 
-  // ? u_interface
-  // Read pressure, levelset, psi_D, psi_N, velocity.
-  // Write velocity, write pressure.
-  read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, APP_INDEX_M2C, APP_VECTOR_X, NULL);
-  write.clear();
-  LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, NULL);
 
-  nimbus::Parameter projection_wrapup_params;
-  std::string projection_wrapup_str;
-  SerializeParameter(frame, time, dt, global_region, global_region,
-                     &projection_wrapup_str);
-  projection_wrapup_params.set_ser_data(SerializedData(projection_wrapup_str));
-
-  before.clear();
-  before.insert(projection_job_ids[2]);
-  after.clear();
-  after.insert(projection_job_ids[4]);
-  SpawnComputeJob(PROJECTION_WRAPUP,
-                  projection_job_ids[3],
-                  read, write,
-                  before, after,
-                  projection_wrapup_params);
-
-  // Loop iteration part two.
-
-  read.clear();
-  write.clear();
-
-  nimbus::Parameter loop_iteration_part_two_params;
-  std::string loop_iteration_part_two_str;
-  SerializeParameter(frame, time, dt, global_region, global_region,
-                     &loop_iteration_part_two_str);
-  loop_iteration_part_two_params.set_ser_data(
-      SerializedData(loop_iteration_part_two_str));
-  before.clear();
-  before.insert(projection_job_ids[3]);
-  after.clear();
-  SpawnComputeJob(LOOP_ITERATION_PART_TWO,
-                  projection_job_ids[4],
-                  read, write,
-                  before, after,
-                  loop_iteration_part_two_params);
 }
 
 
