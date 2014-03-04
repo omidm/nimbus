@@ -9,6 +9,7 @@
 
 RegW3  : (30, 30, 30), (1, 1, 1), (3, 3, 3) : central, outer, inner, scratch
 RegW1  : (30, 30, 30), (1, 1, 1), (1, 1, 1) : central, outer, inner
+RegW0  : (30, 30, 30), (1, 1, 1), (0, 0, 0) : central
 
 RegY2W3 : (30, 30, 30), (1, 2, 1), (3, 3, 3) : central, outer, inner
 RegY2W0 : (30, 30, 30), (1, 2, 1), (0, 0, 0) : central

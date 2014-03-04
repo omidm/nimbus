@@ -234,7 +234,6 @@ namespace application {
                     new JobProjectionCalculateBoundaryCondition(this));
         RegisterJob(PROJECTION_CONSTRUCT_MATRIX,
                     new JobProjectionConstructMatrix(this));
-        RegisterJob(PROJECTION_CORE, new JobProjectionCore(this));
         RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
         RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));

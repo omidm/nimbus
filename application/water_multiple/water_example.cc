@@ -492,6 +492,30 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         dbg(APP_LOG, "Finish writing PROJECTION_LOCAL_TOLERANCE.\n");
       }
     }
+    if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_PROJECTION_LOCAL_N),
+          da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<int>* data_real =
+            dynamic_cast<nimbus::ScalarData<int>*>(data_temp);
+        data_real->set_scalar(
+            laplace_solver_wrapper.matrix_index_to_cell_index_array(1).m);
+        dbg(APP_LOG, "Finish writing PROJECTION_LOCAL_N.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_PROJECTION_INTERIOR_N),
+          da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<int>* data_real =
+            dynamic_cast<nimbus::ScalarData<int>*>(data_temp);
+        data_real->set_scalar(
+            laplace_solver_wrapper.matrix_index_to_cell_index_array(1).m);
+        dbg(APP_LOG, "Finish writing PROJECTION_INTERIOR_N.\n");
+      }
+    }
 }
 //#####################################################################
 // Write_Output_Files

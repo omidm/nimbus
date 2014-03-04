@@ -90,9 +90,11 @@ void JobProjectionConstructMatrix::Execute(
   data_config.SetFlag(DataConfig::MATRIX_A);
   data_config.SetFlag(DataConfig::VECTOR_X);
   data_config.SetFlag(DataConfig::VECTOR_B);
-  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
   data_config.SetFlag(DataConfig::INDEX_C2M);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

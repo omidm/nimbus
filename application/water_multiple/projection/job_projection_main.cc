@@ -140,7 +140,9 @@ void JobProjectionMain::SpawnJobs(
   LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
                       APP_U_INTERFACE, APP_MATRIX_A, APP_VECTOR_X,
                       APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
-                      APP_INDEX_M2C, APP_INDEX_C2M, NULL);
+                      APP_INDEX_M2C, APP_INDEX_C2M,
+                      APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                      NULL);
 
   nimbus::Parameter projection_construct_matrix_params;
   std::string projection_construct_matrix_str;
@@ -159,45 +161,63 @@ void JobProjectionMain::SpawnJobs(
                   before, after,
                   projection_construct_matrix_params);
 
-  // Read psi_D, psi_N, filled_region_colors, divergence, pressure.
-  // Write pressure.
+  // Loop job GLOBAL_INITIALIZE/LOCAL_INITIALIZE, and then spawns
+  // PROJECTION_LOOP_ITERATION.
   read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, APP_MATRIX_A, APP_VECTOR_X,
-                      APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
-                      APP_INDEX_M2C, APP_INDEX_C2M, NULL);
+  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                      APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                      APP_VECTOR_X, APP_VECTOR_B,
+                      APP_MATRIX_A, NULL);
   write.clear();
-  LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, APP_VECTOR_X, NULL);
-
-  nimbus::Parameter projection_core_params;
-  std::string projection_core_str;
-  SerializeParameter(frame, time, dt, global_region, global_region,
-                     &projection_core_str);
-  projection_core_params.set_ser_data(SerializedData(projection_core_str));
-
+  LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
+                      APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
+                      APP_VECTOR_TEMP, APP_VECTOR_P, APP_VECTOR_Z, NULL);
   before.clear();
   before.insert(projection_job_ids[1]);
   after.clear();
   after.insert(projection_job_ids[3]);
-  SpawnComputeJob(PROJECTION_CORE,
+  nimbus::Parameter projection_local_initialize_params;
+  SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
                   projection_job_ids[2],
                   read, write,
                   before, after,
-                  projection_core_params);
+                  projection_local_initialize_params);
 
-  // Loop job GLOBAL_INITIALIZE/LOCAL_INITIALIZE, and then spawns
-  // PROJECTION_LOOP_ITERATION.
+  read.clear();
+  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                      APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_TOLERANCE,
+                      NULL);
+  write.clear();
+  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                      APP_PROJECTION_GLOBAL_N,
+                      APP_PROJECTION_DESIRED_ITERATIONS, NULL);
+  before.clear();
+  before.insert(projection_job_ids[2]);
+  after.clear();
+  after.insert(projection_job_ids[4]);
+  nimbus::Parameter projection_global_initialize_params;
+  SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
+                  projection_job_ids[3],
+                  read, write,
+                  before, after,
+                  projection_global_initialize_params);
 
-
+  read.clear();
+  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                      APP_PROJECTION_LOCAL_RESIDUAL,
+                      APP_PROJECTION_GLOBAL_TOLERANCE,
+                      APP_PROJECTION_DESIRED_ITERATIONS,
+                      NULL);
+  write.clear();
+  before.clear();
+  before.insert(projection_job_ids[3]);
+  after.clear();
+  nimbus::Parameter projection_loop_iteration_params;
+  SpawnComputeJob(PROJECTION_LOOP_ITERATION,
+                  projection_job_ids[4],
+                  read, write,
+                  before, after,
+                  projection_loop_iteration_params);
 }
 
 

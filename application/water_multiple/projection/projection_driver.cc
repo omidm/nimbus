@@ -114,8 +114,11 @@ void ProjectionDriver::LocalInitialize() {
           pcg.preconditioner_zero_replacement);
   }
   projection_data.temp.Resize(projection_data.local_n, false);
+  projection_data.temp.Fill(0);
   projection_data.p.Resize(projection_data.local_n, false);
+  projection_data.p.Fill(0);
   projection_data.z_interior.Resize(projection_data.interior_n, false);
+  projection_data.z_interior.Fill(0);
 }
 
 void ProjectionDriver::GlobalInitialize() {

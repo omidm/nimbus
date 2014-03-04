@@ -59,7 +59,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/job_projection_main.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.cc
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_core.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.cc
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
@@ -119,7 +118,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_main.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_core.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.h
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.h
     ${PROJECT_SOURCE_DIR}/projection/translator_util.h
