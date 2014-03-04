@@ -70,6 +70,8 @@
 #define EXTRAPOLATION "extrapolation"
 #define SYNCHRONIZE_PARTICLES "synchronize_particles"
 
+#define PROJECTION_GLOBAL_INITIALIZE "projection_global_initialize"
+#define PROJECTION_LOCAL_INITIALIZE "projection_local_initialize"
 #define PROJECTION_LOOP_ITERATION "projection_loop_iteration"
 #define PROJECTION_STEP_ONE "projection_step_one"
 #define PROJECTION_REDUCE_RHO "projection_reduce_rho"

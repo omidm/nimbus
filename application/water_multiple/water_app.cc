@@ -239,6 +239,10 @@ namespace application {
         RegisterJob(EXTRAPOLATION, new JobExtrapolation(this));
         RegisterJob(SYNCHRONIZE_PARTICLES, new JobSynchronizeParticles(this));
 
+        RegisterJob(PROJECTION_GLOBAL_INITIALIZE,
+                    new JobProjectionGlobalInitialize(this));
+        RegisterJob(PROJECTION_LOCAL_INITIALIZE,
+                    new JobProjectionLocalInitialize(this));
         RegisterJob(PROJECTION_LOOP_ITERATION, new JobProjectionLoopIteration(this));
         RegisterJob(PROJECTION_STEP_ONE, new JobProjectionStepOne(this));
         RegisterJob(PROJECTION_REDUCE_RHO, new JobProjectionReduceRho(this));
