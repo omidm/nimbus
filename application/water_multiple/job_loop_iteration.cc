@@ -712,6 +712,8 @@ namespace application {
      */
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PSI_N, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
