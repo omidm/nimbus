@@ -69,13 +69,17 @@ void JobProjectionStepTwo::Execute(
 
   InitConfig init_config;
   T dt;
-  // TODO(quhang), process iteration number.
+  int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
+                &init_config.global_region, &init_config.local_region,
+                &iteration);
 
   DataConfig data_config;
+  data_config.SetFlag(DataConfig::PROJECTION_BETA);
+  data_config.SetFlag(DataConfig::VECTOR_Z);
+  data_config.SetFlag(DataConfig::VECTOR_P);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);

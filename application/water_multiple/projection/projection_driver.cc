@@ -156,12 +156,9 @@ void ProjectionDriver::CalculateLocalRho() {
 }
 
 void ProjectionDriver::ReduceRho() {
-  VECTOR_ND<T>& z_interior = projection_data.z_interior;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
   projection_data.rho_last = projection_data.rho;
   // TODO(quhang), change.
-  projection_data.rho = Global_Sum(
-      VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior, b_interior));
+  projection_data.rho = Global_Sum(projection_data.local_rho);
   projection_data.beta = (T)(projection_data.rho / projection_data.rho_last);
 }
 
@@ -197,13 +194,9 @@ void ProjectionDriver::CalculateLocalAlpha() {
 }
 
 void ProjectionDriver::ReduceAlpha() {
-  VECTOR_ND<T>& p_interior = projection_data.p_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  // TODO(quhang), change.
   projection_data.alpha =
       (T) (projection_data.rho /
-           Global_Sum(VECTOR_ND<T>::Dot_Product_Double_Precision(
-                   p_interior, temp_interior)));
+           Global_Sum(projection_data.local_dot_product_for_alpha));
 }
 
 void ProjectionDriver::UpdateOtherVectors() {
