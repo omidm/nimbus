@@ -745,7 +745,7 @@ ExtrapolationImpl (const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-AdjustPhiWithObjectsImpl (const nimbus::Job *job,
+UpdateGhostVelocitiesImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt) {
   LOG::Time("Adjust Phi With Objects");
