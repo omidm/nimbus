@@ -175,7 +175,8 @@ void JobProjectionLoopIteration::Execute(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z, NULL);
+                        APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z,
+                        APP_INDEX_M2C, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
                         APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
@@ -204,7 +205,7 @@ void JobProjectionLoopIteration::Execute(
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_BETA,
                         NULL);
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_Z, APP_VECTOR_P,
-                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                        APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
@@ -218,7 +219,7 @@ void JobProjectionLoopIteration::Execute(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_P, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_MATRIX_A,
-                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
+                        APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_VECTOR_TEMP, NULL);
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
@@ -247,7 +248,7 @@ void JobProjectionLoopIteration::Execute(
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_PROJECTION_ALPHA, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_VECTOR_P,
+                        APP_INDEX_M2C, APP_VECTOR_P,
                         APP_VECTOR_TEMP, APP_VECTOR_B,
                         APP_PRESSURE, APP_INDEX_M2C,
                         NULL);

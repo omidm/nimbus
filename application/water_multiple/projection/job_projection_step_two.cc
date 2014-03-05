@@ -82,6 +82,7 @@ void JobProjectionStepTwo::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_BETA);
   data_config.SetFlag(DataConfig::VECTOR_Z);
   data_config.SetFlag(DataConfig::VECTOR_P);
+  data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);

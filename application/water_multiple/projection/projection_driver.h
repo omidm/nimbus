@@ -96,7 +96,8 @@ class ProjectionDriver {
 
   class ProjectionData {
    public:
-    ARRAY<float,VECTOR<int,3> > pressure;
+    ARRAY<float, VECTOR<int,3> > pressure;
+    ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
     ARRAY<TV_INT> matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
@@ -147,22 +148,15 @@ class ProjectionDriver {
     return input;
   }
 
-  // [TODO] Ghost cell transmission should not use MPI.
-  virtual void Fill_Ghost_Cells(VECTOR_ND<T>& v) {
-    return;
-  }
-
   void Initialize(int local_n, int interior_n);
   void LocalInitialize();
   void GlobalInitialize();
-  void ExchangePressure();
   void InitializeResidual();
   bool SpawnFirstIteration();
   void DoPrecondition();
   void CalculateLocalRho();
   void ReduceRho();
   void UpdateSearchVector();
-  void ExchangeSearchVector();
   void UpdateTempVector();
   void CalculateLocalAlpha();
   void ReduceAlpha();

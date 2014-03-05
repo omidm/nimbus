@@ -67,6 +67,13 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
   if (projection_data.p.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_P)) {
     projection_data.p.Resize(local_n, false);
+    assert(data_config.GetFlag(DataConfig::INDEX_M2C));
+    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+    for (int i = 1; i <= local_n; ++i) {
+      projection_data.p(i) =
+          projection_data.grid_format_vector_p(
+              projection_data.matrix_index_to_cell_index(i));
+    }
   }
   if (projection_data.z_interior.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_Z)) {
@@ -190,11 +197,6 @@ void ProjectionDriver::UpdateSearchVector() {
   }
 }
 
-void ProjectionDriver::ExchangeSearchVector() {
-  VECTOR_ND<T>& p = projection_data.p;
-  Fill_Ghost_Cells(p);
-}
-
 void ProjectionDriver::UpdateTempVector() {
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
   VECTOR_ND<T>& temp = projection_data.temp;
@@ -263,15 +265,14 @@ void ProjectionDriver::LoadFromNimbus(
                                        init_config.local_region.dx()+2,
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
-  // TODO(quhang), make sure it compiles.
+  GRID<TV> grid;
+  grid.Initialize(
+      TV_INT(init_config.local_region.dx(),
+             init_config.local_region.dy(),
+             init_config.local_region.dz()),
+      application::GridToRange(init_config.global_region,
+                               init_config.local_region));
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
-    GRID<TV> grid;
-    grid.Initialize(
-        TV_INT(init_config.local_region.dx(),
-               init_config.local_region.dy(),
-               init_config.local_region.dz()),
-        application::GridToRange(init_config.global_region,
-                                 init_config.local_region));
     projection_data.pressure.Resize(grid.Domain_Indices(1));
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv,
@@ -403,7 +404,14 @@ void ProjectionDriver::LoadFromNimbus(
   }
   // VECTOR_P. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-    ReadVectorData(job, da, APP_VECTOR_P, projection_data.p);
+    projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
+    if (application::GetTranslatorData(
+            job, std::string(APP_VECTOR_P), da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::VECTOR_P)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection_data.grid_format_vector_p);
+    }
   }
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
@@ -536,7 +544,19 @@ void ProjectionDriver::SaveToNimbus(
   }
   // VECTOR_P. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-    WriteVectorData(job, da, APP_VECTOR_P, projection_data.p);
+    if (application::GetTranslatorData(job, std::string(APP_VECTOR_P), da, &pdv,
+            application::WRITE_ACCESS)) {
+      assert(data_config.GetFlag(DataConfig::INDEX_M2C));
+      assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+      for (int i = 1; i <= projection_data.local_n; ++i) {
+        projection_data.grid_format_vector_p(
+            projection_data.matrix_index_to_cell_index(i)) =
+            projection_data.p(i);
+      }
+      translator.WriteScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv,
+          &projection_data.grid_format_vector_p);
+    }
   }
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {

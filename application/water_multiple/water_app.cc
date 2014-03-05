@@ -196,7 +196,7 @@ namespace application {
         RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
         // VECTOR_P.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P);
-        RegisterData(APP_VECTOR_P, new DataRawVectorNd(APP_VECTOR_P));
+        RegisterData(APP_VECTOR_P, new DataScalarArray<float>(APP_VECTOR_P));
         // VECTOR_TEMP.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
         RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
