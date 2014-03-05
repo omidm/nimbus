@@ -323,23 +323,20 @@ namespace application {
 
     for (int i = 0; i < adjust_phi_with_objects_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[i], APP_PSI_N, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Half[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Half[i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter s11_params;
       std::string s11_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[0], &s11_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s11_str);
       s11_params.set_ser_data(SerializedData(s11_str));
       before.clear();
       after.clear();
       after.insert(job_ids[1]);
       // after.insert(extrapolate_phi_job_ids[0]);
       SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
-          adjust_phi_with_objects_job_ids[0],
+          adjust_phi_with_objects_job_ids[i],
           read, write,
           before, after,
           s11_params);
