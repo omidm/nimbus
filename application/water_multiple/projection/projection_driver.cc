@@ -337,13 +337,51 @@ void ProjectionDriver::LoadFromNimbus(
   }
   // INTERIOR_N. Reduction cannot take this branch.
   if (data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N)) {
-    ReadScalarData<int>(job, da, APP_PROJECTION_INTERIOR_N,
-                        projection_data.interior_n);
+    // sum of int.
+    if (application::GetTranslatorData(
+            job, std::string(APP_PROJECTION_INTERIOR_N), da, &pdv,
+            application::READ_ACCESS)) {
+      dbg(APP_LOG, "Reduceing on:");
+      projection_data.interior_n = 0;
+      PdiVector::const_iterator iter = pdv.begin();
+      for (; iter != pdv.end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        nimbus::ScalarData<int>* data_real =
+            dynamic_cast<nimbus::ScalarData<int>*>(instance->data());
+        int value = data_real->scalar();
+        dbg(APP_LOG, "%d ", value);
+        projection_data.interior_n += value;
+      }
+      dbg(APP_LOG, "\nFinish reading PROJECTION_INTERIOR_N.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    // ReadScalarData<int>(job, da, APP_PROJECTION_INTERIOR_N,
+    //                     projection_data.interior_n);
   }
   // Groud III.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
-    ReadScalarData<float>(job, da, APP_PROJECTION_LOCAL_TOLERANCE,
-                          projection_data.local_tolerance);
+    // max of float.
+    if (application::GetTranslatorData(
+            job, std::string(APP_PROJECTION_LOCAL_TOLERANCE), da, &pdv,
+            application::READ_ACCESS)) {
+      dbg(APP_LOG, "Reduceing on:");
+      projection_data.local_tolerance = 0;
+      PdiVector::const_iterator iter = pdv.begin();
+      for (; iter != pdv.end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        nimbus::ScalarData<float>* data_real =
+            dynamic_cast<nimbus::ScalarData<float>*>(instance->data());
+        float value = data_real->scalar();
+        dbg(APP_LOG, "%f ", value);
+        if (value > projection_data.local_tolerance) {
+          projection_data.local_tolerance = value;
+        }
+      }
+      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_TOLERANCE.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    // ReadScalarData<float>(job, da, APP_PROJECTION_LOCAL_TOLERANCE,
+    //                      projection_data.local_tolerance);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_TOLERANCE)) {
     ReadScalarData<float>(job, da, APP_PROJECTION_GLOBAL_TOLERANCE,
@@ -359,12 +397,50 @@ void ProjectionDriver::LoadFromNimbus(
   }
   // Group IV.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL)) {
-    ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_RESIDUAL,
-                           projection_data.local_residual);
+    // Max of double.
+    if (application::GetTranslatorData(
+            job, std::string(APP_PROJECTION_LOCAL_RESIDUAL), da, &pdv,
+            application::READ_ACCESS)) {
+      dbg(APP_LOG, "Reduceing on:\n");
+      projection_data.local_residual = 0;
+      PdiVector::const_iterator iter = pdv.begin();
+      for (; iter != pdv.end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        nimbus::ScalarData<double>* data_real =
+            dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
+        float value = data_real->scalar();
+        dbg(APP_LOG, "%f ", value);
+        if (value > projection_data.local_residual) {
+          projection_data.local_residual = value;
+        }
+      }
+      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_RESIDUAL.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    // ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_RESIDUAL,
+    //                       projection_data.local_residual);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_RHO)) {
-    ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_RHO,
-                           projection_data.local_rho);
+    // Sum of double.
+    if (application::GetTranslatorData(
+            job, std::string(APP_PROJECTION_LOCAL_RHO), da, &pdv,
+            application::READ_ACCESS)) {
+      dbg(APP_LOG, "Reduceing on:");
+      projection_data.local_rho = 0;
+      PdiVector::const_iterator iter = pdv.begin();
+      for (; iter != pdv.end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        nimbus::ScalarData<double>* data_real =
+            dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
+        double value = data_real->scalar();
+        dbg(APP_LOG, "%f ", value);
+        projection_data.local_rho += value;
+      }
+      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_RHO.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    // ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_RHO,
+    //                       projection_data.local_rho);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_RHO)) {
     ReadScalarData<double>(job, da, APP_PROJECTION_GLOBAL_RHO,
@@ -375,8 +451,28 @@ void ProjectionDriver::LoadFromNimbus(
                            projection_data.rho_last);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA)) {
-    ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
-                           projection_data.local_dot_product_for_alpha);
+    // Sum of double.
+    if (application::GetTranslatorData(
+            job, std::string(APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA),
+            da, &pdv, application::READ_ACCESS)) {
+      dbg(APP_LOG, "Reduceing on:");
+      projection_data.local_dot_product_for_alpha = 0;
+      PdiVector::const_iterator iter = pdv.begin();
+      for (; iter != pdv.end(); ++iter) {
+        const PhysicalDataInstance* instance = *iter;
+        nimbus::ScalarData<double>* data_real =
+            dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
+        double value = data_real->scalar();
+        dbg(APP_LOG, "%f ", value);
+        if (value > projection_data.local_rho) {
+          projection_data.local_dot_product_for_alpha += value;
+        }
+      }
+      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    // ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
+    //                       projection_data.local_dot_product_for_alpha);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_ALPHA)) {
     ReadScalarData<float>(job, da, APP_PROJECTION_ALPHA, projection_data.alpha);
@@ -412,6 +508,7 @@ void ProjectionDriver::LoadFromNimbus(
           &array_reg_thin_outer, array_shift, &pdv,
           &projection_data.grid_format_vector_p);
     }
+    application::DestroyTranslatorObjects(&pdv);
   }
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
@@ -469,14 +566,15 @@ void ProjectionDriver::SaveToNimbus(
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
   const std::string pressure_string = std::string(APP_PRESSURE);
-  if (application::GetTranslatorData(job, pressure_string, da, &pdv,
-                                     application::WRITE_ACCESS)
-      && data_config.GetFlag(DataConfig::PRESSURE)) {
-    translator.WriteScalarArrayFloat(
-        &array_reg_central, array_shift, &pdv, &projection_data.pressure);
-    dbg(APP_LOG, "Finish writing pressure.\n");
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    if (application::GetTranslatorData(job, pressure_string, da, &pdv,
+                                       application::WRITE_ACCESS)) {
+      translator.WriteScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+      dbg(APP_LOG, "Finish writing pressure.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
   }
-  application::DestroyTranslatorObjects(&pdv);
 
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
@@ -557,6 +655,7 @@ void ProjectionDriver::SaveToNimbus(
           &array_reg_central, array_shift, &pdv,
           &projection_data.grid_format_vector_p);
     }
+    application::DestroyTranslatorObjects(&pdv);
   }
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {

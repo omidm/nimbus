@@ -110,16 +110,16 @@ class ProjectionDriver {
     VECTOR_ND<T> b_interior;
 
     int local_n;
-    int interior_n;
+    int interior_n;  // SUM.
 
-    T local_tolerance;
+    T local_tolerance;  // MAX.
     T global_tolerance;
     int global_n;
     int desired_iterations;
 
-    double local_residual;
-    double local_rho, rho, rho_last;
-    double local_dot_product_for_alpha;
+    double local_residual;  // SUM.
+    double local_rho, rho, rho_last;  // SUM.
+    double local_dot_product_for_alpha;  // SUM.
     T alpha;
     T beta;
 
