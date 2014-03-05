@@ -50,7 +50,7 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/job_adjust_phi_with_objects.h"
+#include "application/water_multiple/job_update_ghost_velocities.h"
 
 namespace application {
 
@@ -93,7 +93,7 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in adjust phi with objects job.\n");
-  driver->AdjustPhiWithObjectsImpl(this, da, dt);
+  driver->UpdateGhostVelocitiesImpl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);

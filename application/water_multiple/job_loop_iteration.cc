@@ -255,9 +255,9 @@ namespace application {
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // because of Half Region definition this number could be either 1 or 2 for now -omidm
-    int adjust_phi_with_objects_job_num = 1;
-    std::vector<nimbus::job_id_t> adjust_phi_with_objects_job_ids;
-    GetNewJobID(&adjust_phi_with_objects_job_ids, adjust_phi_with_objects_job_num);
+    int update_ghost_velocities_job_num = 2;
+    std::vector<nimbus::job_id_t> update_ghost_velocities_job_ids;
+    GetNewJobID(&update_ghost_velocities_job_ids, update_ghost_velocities_job_num);
 
     int advect_v_job_num = 2;
     std::vector<nimbus::job_id_t> advect_v_job_ids;
@@ -292,6 +292,7 @@ namespace application {
     bool step_particles_single = (step_particles_job_num == 1);
 
     // Original adjust phi with objects that operates over entire block.
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
@@ -305,44 +306,40 @@ namespace application {
     after.clear();
     // after.insert(extrapolate_phi_job_ids[0]);
     after.insert(job_ids[1]);
-    SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
-        adjust_phi_with_objects_job_ids[0],
+    SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+        update_ghost_velocities_job_ids[0],
         read, write,
         before, after,
         s11_params);
+*/
 
     /* 
      * Spawning adjust phi with objects stage over two workrs
      */
-/*
     nimbus::GeometricRegion kRegY2W3Half[2];
     kRegY2W3Half[0].Rebuild(-2, -2, -2, 36, 18, 36);
     kRegY2W3Half[1].Rebuild(-2, 16, -2, 36, 18, 36);
 
-    for (int i = 0; i < adjust_phi_with_objects_job_num; ++i) {
+    for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[i], APP_PSI_N, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Half[i], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Half[i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter s11_params;
       std::string s11_str;
-      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[0], &s11_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s11_str);
       s11_params.set_ser_data(SerializedData(s11_str));
       before.clear();
       after.clear();
       after.insert(job_ids[1]);
       // after.insert(extrapolate_phi_job_ids[0]);
-      SpawnComputeJob(ADJUST_PHI_WITH_OBJECTS,
-          adjust_phi_with_objects_job_ids[0],
+      SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+          update_ghost_velocities_job_ids[i],
           read, write,
           before, after,
           s11_params);
     }
-*/
 
 
     // Original ADVECT_PHI job spawning.
@@ -356,12 +353,12 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &s12_str);
     s12_params.set_ser_data(SerializedData(s12_str));
     before.clear();
-    for (int j = 0; j < adjust_phi_with_objects_job_num; ++j) {
-        before.insert(adjust_phi_with_objects_job_ids[j]);
+    for (int j = 0; j < update_ghost_velocities_job_num; ++j) {
+        before.insert(update_ghost_velocities_job_ids[j]);
     }
     // before.insert(job_ids[0]);
-    // before.insert(adjust_phi_with_objects_job_ids[0]);
-    // before.insert(adjust_phi_with_objects_job_ids[1]);
+    // before.insert(update_ghost_velocities_job_ids[0]);
+    // before.insert(update_ghost_velocities_job_ids[1]);
     after.clear();
     for (size_t j = 0; j < step_particles_job_num; ++j) {
         after.insert(step_particles_job_ids[j]);
@@ -391,8 +388,8 @@ namespace application {
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     before.clear();
     before.insert(job_ids[0]);
-    // before.insert(adjust_phi_with_objects_job_ids[0]);
-    // before.insert(adjust_phi_with_objects_job_ids[1]);
+    // before.insert(update_ghost_velocities_job_ids[0]);
+    // before.insert(update_ghost_velocities_job_ids[1]);
     after.clear();
     after.insert(advect_phi_job_ids[0]);
     after.insert(advect_phi_job_ids[1]);
