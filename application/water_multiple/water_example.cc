@@ -489,8 +489,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       if (data_temp) {
         nimbus::ScalarData<int>* data_real =
             dynamic_cast<nimbus::ScalarData<int>*>(data_temp);
-        data_real->set_scalar(
-            laplace_solver_wrapper.matrix_index_to_cell_index_array(1).m);
+        data_real->set_scalar(laplace_solver_wrapper.local_n);
         dbg(APP_LOG, "Finish writing PROJECTION_LOCAL_N.\n");
       }
     }
@@ -501,8 +500,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       if (data_temp) {
         nimbus::ScalarData<int>* data_real =
             dynamic_cast<nimbus::ScalarData<int>*>(data_temp);
-        data_real->set_scalar(
-            laplace_solver_wrapper.matrix_index_to_cell_index_array(1).m);
+        data_real->set_scalar(laplace_solver_wrapper.interior_n);
         dbg(APP_LOG, "Finish writing PROJECTION_INTERIOR_N.\n");
       }
     }

@@ -65,6 +65,7 @@ class LaplaceSolverWrapper {
   }
   ~LaplaceSolverWrapper() {}
 
+  int local_n, interior_n;
   // region_id -> matrix_id -> (dim_t, dim_t, dim_t)
   ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array;
   // (dim_t, dim_t, dim_t) -> matrix_id

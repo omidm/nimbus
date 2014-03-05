@@ -37,12 +37,14 @@
  */
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/projection/laplace_solver_wrapper.h"
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"
 #include "application/water_multiple/projection/data_raw_array_m2c.h"
 #include "application/water_multiple/projection/data_raw_grid_array.h"
 #include "application/water_multiple/projection/data_raw_vector_nd.h"
+#include "application/water_multiple/projection/projection_helper.h"
+
+#include "application/water_multiple/projection/laplace_solver_wrapper.h"
 
 namespace PhysBAM {
 
@@ -73,11 +75,24 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   // laplace_mpi->Find_Matrix_Indices(filled_region_cell_count,
   //                                  cell_index_to_matrix_index,
   //                                  matrix_index_to_cell_index_array);
+  /*
   laplace->Compute_Matrix_Indices(
       laplace->grid.Domain_Indices(1),
       filled_region_cell_count,
       matrix_index_to_cell_index_array,
       cell_index_to_matrix_index);
+      */
+
+  FindMatrixIndices(
+      laplace->grid,
+      laplace->filled_region_colors,
+      &filled_region_cell_count,
+      &cell_index_to_matrix_index,
+      &matrix_index_to_cell_index_array(1),
+      &local_n,
+      &interior_n);
+
+
 
   RANGE<TV_INT> domain = laplace->grid.Domain_Indices(1);
   // Construct both A and b.

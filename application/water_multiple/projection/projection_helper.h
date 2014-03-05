@@ -63,5 +63,14 @@ void FillUniformRegionColor(
     const bool solve_single_cell_neumann_regions,
     T_COLOR* filled_region_colors);
 
+void FindMatrixIndices(
+    const T_GRID& local_grid,
+    const ARRAY<int, TV_INT>& filled_region_colors,
+    ARRAY<int, VECTOR<int, 1> >* filled_region_cell_count,
+    ARRAY<int, TV_INT>* cell_index_to_matrix_index,
+    ARRAY<TV_INT >* matrix_index_to_cell_index_array,
+    int* local_n,
+    int* interior_n);
+
 }  // namespace PhysBAM
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
