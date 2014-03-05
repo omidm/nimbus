@@ -65,9 +65,11 @@ Initialize(const nimbus::Job *job,
     time=example.Time_At_Frame(current_frame);
   }
 
+  TV min_corner = example.mac_grid.Domain().Minimum_Corner();
+  TV max_corner = example.mac_grid.Domain().Maximum_Corner();
   for (int i = 1; i <= TV::dimension; i++) {
-    example.domain_boundary(i)(1) = true;
-    example.domain_boundary(i)(2) = true;
+    example.domain_boundary(i)(1) = (min_corner(i) <= 0.001);
+    example.domain_boundary(i)(2) = (max_corner(i) >= 0.999);
   }
 
   example.domain_boundary(2)(2)=false;
@@ -155,6 +157,7 @@ Initialize(const nimbus::Job *job,
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
     example.particle_levelset_evolution.Make_Signed_Distance();
+    example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
   }
   else {
     // physbam init
