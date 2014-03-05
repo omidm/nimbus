@@ -439,16 +439,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         dbg(APP_LOG, "Finish writing MATRIX_A.\n");
       }
     }
-    if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_X), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->SaveToNimbus(laplace_solver_wrapper.x);
-        dbg(APP_LOG, "Finish writing VECTOR_X.\n");
-      }
-    }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_VECTOR_B), da, application::WRITE_ACCESS);
@@ -702,16 +692,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
             dynamic_cast<application::DataSparseMatrix*>(data_temp);
         data_real->LoadFromNimbus(&laplace_solver_wrapper.A_array(1));
         dbg(APP_LOG, "Finish reading MATRIX_A.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_X), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->LoadFromNimbus(&laplace_solver_wrapper.x);
-        dbg(APP_LOG, "Finish reading VECTOR_X.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {

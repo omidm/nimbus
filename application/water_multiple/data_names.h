@@ -60,7 +60,6 @@
 
 #define APP_MATRIX_A "matrix_a"
 #define APP_VECTOR_B "vector_b"
-#define APP_VECTOR_X "vector_x"
 #define APP_INDEX_C2M "index_c2m"
 #define APP_INDEX_M2C "index_m2c"
 #define APP_PROJECTION_LOCAL_N "projection_local_n"

@@ -137,7 +137,7 @@ void JobProjectionMain::SpawnJobs(
                       APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                       APP_PRESSURE, NULL);
   LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, APP_MATRIX_A, APP_VECTOR_X,
+                      APP_U_INTERFACE, APP_MATRIX_A,
                       APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
                       APP_INDEX_M2C, APP_INDEX_C2M,
                       APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
@@ -158,7 +158,8 @@ void JobProjectionMain::SpawnJobs(
   read.clear();
   LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
                       APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                      APP_VECTOR_X, APP_VECTOR_B,
+                      APP_PRESSURE, APP_INDEX_M2C,
+                      APP_VECTOR_B,
                       APP_MATRIX_A, NULL);
   write.clear();
   LoadLogicalIdsInSet(this, &write, kRegW0Central[0],

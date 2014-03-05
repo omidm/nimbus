@@ -89,47 +89,32 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
      !laplace->filled_region_touches_dirichlet(color) &&
      laplace->enforce_compatibility);
 
-  ARRAY<TV_INT>& matrix_index_to_cell_index =
-      matrix_index_to_cell_index_array(color);
   SPARSE_MATRIX_FLAT_NXN<T>& A = A_array(color);
   VECTOR_ND<T>& b = b_array(color);
 
 
-  int number_of_unknowns = matrix_index_to_cell_index.m;
   A.Negate();
   b *= (T) -1;
+  /*
+  ARRAY<TV_INT>& matrix_index_to_cell_index =
+      matrix_index_to_cell_index_array(color);
+  int number_of_unknowns = matrix_index_to_cell_index.m;
   x.Resize(number_of_unknowns);
-  VECTOR_ND<T> x(number_of_unknowns);
   for (int i = 1; i <= number_of_unknowns; i++) {
     x(i) = laplace->u(matrix_index_to_cell_index(i));
   }
-
-  laplace->Find_Tolerance(b);
-
-  /*
-  application::DataSparseMatrix test("matrix");
-  test.SaveToNimbus(A);
-  test.LoadFromNimbus(&A);
-  test.SaveToNimbus(A);
-  test.LoadFromNimbus(&A);
-  application::DataRawArrayM2C test_array("map");
-  test_array.SaveToNimbus(matrix_index_to_cell_index);
-  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
-  test_array.SaveToNimbus(matrix_index_to_cell_index);
-  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
-  application::DataRawVectorNd test_vector("vect");
-  test_vector.SaveToNimbus(b);
-  test_vector.LoadFromNimbus(&b);
-  test_vector.SaveToNimbus(x);
-  test_vector.LoadFromNimbus(&x);
-  application::DataRawGridArray test_c2m("vect");
-  test_c2m.SaveToNimbus(cell_index_to_matrix_index);
-  test_c2m.LoadFromNimbus(&cell_index_to_matrix_index);
   */
+  ARRAY<TV_INT>& matrix_index_to_cell_index =
+      matrix_index_to_cell_index_array(color);
+  for (int i = 1; i <= 10; ++i) {
+    printf("%f ", laplace->u(matrix_index_to_cell_index(i)));
+  }
+  laplace->Find_Tolerance(b);
 }
 
 void LaplaceSolverWrapper::TransformResult() {
   // Assume only one color.
+  /*
   const int color = 1;
   ARRAY<TV_INT>& matrix_index_to_cell_index =
       matrix_index_to_cell_index_array(color);
@@ -138,6 +123,7 @@ void LaplaceSolverWrapper::TransformResult() {
     TV_INT cell_index = matrix_index_to_cell_index(i);
     laplace->u(cell_index) = x(i);
   }
+  */
   // Set some velocity to zero.
   // for (typename T_GRID::CELL_ITERATOR iterator(laplace->grid, 1);
   //     iterator.Valid();

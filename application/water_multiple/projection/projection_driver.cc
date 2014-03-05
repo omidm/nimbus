@@ -46,7 +46,9 @@
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
 #include "application/water_multiple/data_include.h"
+#include "application/water_multiple/physbam_utils.h"
 #include "data/scalar_data.h"
+
 #include "application/water_multiple/projection/projection_driver.h"
 
 namespace PhysBAM {
@@ -71,11 +73,16 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     projection_data.z_interior.Resize(interior_n, false);
   }
 
+  /*
   if (data_config.GetFlag(DataConfig::VECTOR_X)) {
+    projection_data.vector_x.Resize(local_n, false);
+
     projection_data.x_interior.Set_Subvector_View(
         projection_data.vector_x,
         partition.interior_indices);
   }
+  */
+
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     projection_data.temp_interior.Set_Subvector_View(
         projection_data.temp,
@@ -96,6 +103,14 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
 // Projection is broken to "smallest" code piece to allow future changes.
 void ProjectionDriver::LocalInitialize() {
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  projection_data.vector_x.Resize(projection_data.local_n, false);
+  for (int i = 1; i <= projection_data.local_n; ++i) {
+    projection_data.vector_x(i) =
+        projection_data.pressure(projection_data.matrix_index_to_cell_index(i));
+  }
+  for (int i = 1; i <= 10; ++i) {
+    printf("%f ", projection_data.vector_x(i));
+  }
   VECTOR_ND<T>& x = projection_data.vector_x;
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
@@ -134,11 +149,6 @@ void ProjectionDriver::GlobalInitialize() {
     projection_data.desired_iterations =
         min(projection_data.desired_iterations, pcg.maximum_iterations);
   }
-}
-
-void ProjectionDriver::ExchangePressure() {
-  VECTOR_ND<T>& x = projection_data.vector_x;
-  Fill_Ghost_Cells(x);
 }
 
 void ProjectionDriver::DoPrecondition() {
@@ -207,13 +217,17 @@ void ProjectionDriver::ReduceAlpha() {
 
 void ProjectionDriver::UpdateOtherVectors() {
   int interior_n = partition.interior_indices.Size()+1;
-  VECTOR_ND<T>& x_interior = projection_data.x_interior;
+  // VECTOR_ND<T>& x_interior = projection_data.x_interior;
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   for (int i = 1; i <= interior_n; i++) {
-    x_interior(i) += projection_data.alpha * p_interior(i);
+    // x_interior(i) += projection_data.alpha * p_interior(i);
     b_interior(i) -= projection_data.alpha * temp_interior(i);
+  }
+  for (int i = 1; i <= interior_n; i++) {
+    projection_data.pressure(projection_data.matrix_index_to_cell_index(i))
+        += projection_data.alpha * p_interior(i);
   }
 }
 
@@ -234,6 +248,42 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
 
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  int_dimension_t array_shift[3] = {
+    init_config.local_region.x() - 1, init_config.local_region.y() - 1, init_config.local_region.z() - 1};
+  PdiVector pdv;
+  GeometricRegion array_reg_central(init_config.local_region.x(),
+                                    init_config.local_region.y(),
+                                    init_config.local_region.z(),
+                                    init_config.local_region.dx(),
+                                    init_config.local_region.dy(),
+                                    init_config.local_region.dz());
+  GeometricRegion array_reg_thin_outer(init_config.local_region.x()-1,
+                                       init_config.local_region.y()-1,
+                                       init_config.local_region.z()-1,
+                                       init_config.local_region.dx()+2,
+                                       init_config.local_region.dy()+2,
+                                       init_config.local_region.dz()+2);
+  // TODO(quhang), make sure it compiles.
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    GRID<TV> grid;
+    grid.Initialize(
+        TV_INT(init_config.local_region.dx(),
+               init_config.local_region.dy(),
+               init_config.local_region.dz()),
+        application::GridToRange(init_config.global_region,
+                                 init_config.local_region));
+    projection_data.pressure.Resize(grid.Domain_Indices(1));
+    const std::string pressure_string = std::string(APP_PRESSURE);
+    if (application::GetTranslatorData(job, pressure_string, da, &pdv,
+                                       application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::PRESSURE)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+      dbg(APP_LOG, "Finish reading pressure.\n");
+    }
+    application::DestroyTranslatorObjects(&pdv);
+  }
+
   // MATRIX_A. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_A)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -248,10 +298,6 @@ void ProjectionDriver::LoadFromNimbus(
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     ReadVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
-  }
-  // VECTOR_X. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-    ReadVectorData(job, da, APP_VECTOR_X, projection_data.vector_x);
   }
   // INDEX_C2M. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
@@ -397,12 +443,36 @@ void ProjectionDriver::ReadVectorData(
 
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  int_dimension_t array_shift[3] = {
+    init_config.local_region.x() - 1,
+    init_config.local_region.y() - 1,
+    init_config.local_region.z() - 1};
+  PdiVector pdv;
+  GeometricRegion array_reg_central(init_config.local_region.x(),
+                                    init_config.local_region.y(),
+                                    init_config.local_region.z(),
+                                    init_config.local_region.dx(),
+                                    init_config.local_region.dy(),
+                                    init_config.local_region.dz());
+  GeometricRegion array_reg_thin_outer(init_config.local_region.x()-1,
+                                       init_config.local_region.y()-1,
+                                       init_config.local_region.z()-1,
+                                       init_config.local_region.dx()+2,
+                                       init_config.local_region.dy()+2,
+                                       init_config.local_region.dz()+2);
+  const std::string pressure_string = std::string(APP_PRESSURE);
+  if (application::GetTranslatorData(job, pressure_string, da, &pdv,
+                                     application::WRITE_ACCESS)
+      && data_config.GetFlag(DataConfig::PRESSURE)) {
+    translator.WriteScalarArrayFloat(
+        &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+    dbg(APP_LOG, "Finish writing pressure.\n");
+  }
+  application::DestroyTranslatorObjects(&pdv);
+
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     WriteVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
-  }
-  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-    WriteVectorData(job, da, APP_VECTOR_X, projection_data.vector_x);
   }
   // Groud III.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {

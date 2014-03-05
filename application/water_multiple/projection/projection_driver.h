@@ -47,6 +47,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 
+#include "data/physbam/translator_physbam.h"
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/options.h"
 
@@ -95,12 +96,13 @@ class ProjectionDriver {
 
   class ProjectionData {
    public:
+    ARRAY<float,VECTOR<int,3> > pressure;
     ARRAY<TV_INT> matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
-    VECTOR_ND<T> x_interior;
+    // VECTOR_ND<T> x_interior;
     VECTOR_ND<T> temp, temp_interior;
     VECTOR_ND<T> p, p_interior;
     VECTOR_ND<T> z_interior;
@@ -127,6 +129,7 @@ class ProjectionDriver {
     int iteration;
   } projection_data;
 
+  nimbus::TranslatorPhysBAM<TV> translator;
   PCG_SPARSE<T>& pcg;
   InitConfig& init_config;
   DataConfig& data_config;

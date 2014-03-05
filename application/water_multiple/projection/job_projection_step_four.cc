@@ -80,11 +80,13 @@ void JobProjectionStepFour::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);
-  data_config.SetFlag(DataConfig::VECTOR_X);
   data_config.SetFlag(DataConfig::VECTOR_P);
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::VECTOR_B);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
+
+  data_config.SetFlag(DataConfig::INDEX_M2C);
+  data_config.SetFlag(DataConfig::PRESSURE);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);

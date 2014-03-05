@@ -79,7 +79,6 @@ void JobProjectionLocalInitialize::Execute(
   DataConfig data_config;
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
-  data_config.SetFlag(DataConfig::VECTOR_X);
   data_config.SetFlag(DataConfig::VECTOR_B);
   data_config.SetFlag(DataConfig::MATRIX_A);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
@@ -87,6 +86,8 @@ void JobProjectionLocalInitialize::Execute(
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::VECTOR_P);
   data_config.SetFlag(DataConfig::VECTOR_Z);
+  data_config.SetFlag(DataConfig::PRESSURE);
+  data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);

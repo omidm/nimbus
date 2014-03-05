@@ -88,7 +88,6 @@ void JobProjectionConstructMatrix::Execute(
   data_config.SetFlag(DataConfig::DIVERGENCE);
   data_config.SetFlag(DataConfig::U_INTERFACE);
   data_config.SetFlag(DataConfig::MATRIX_A);
-  data_config.SetFlag(DataConfig::VECTOR_X);
   data_config.SetFlag(DataConfig::VECTOR_B);
   data_config.SetFlag(DataConfig::INDEX_M2C);
   data_config.SetFlag(DataConfig::INDEX_C2M);

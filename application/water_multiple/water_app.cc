@@ -121,8 +121,8 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_B);
         RegisterData(APP_VECTOR_B, new DataRawVectorNd(APP_VECTOR_B));
         // VECTOR_X.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_X);
-        RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
+        // dbg(APP_LOG, "Registering %s\n", APP_VECTOR_X);
+        // RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
         // INDEX_C2M.
         dbg(APP_LOG, "Registering %s\n", APP_INDEX_C2M);
         RegisterData(APP_INDEX_C2M, new DataRawGridArray(APP_INDEX_C2M));

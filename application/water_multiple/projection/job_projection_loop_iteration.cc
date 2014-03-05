@@ -126,7 +126,7 @@ void JobProjectionLoopIteration::Execute(
                         APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                         APP_PRESSURE, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                        APP_U_INTERFACE, APP_INDEX_M2C, APP_VECTOR_X, NULL);
+                        APP_U_INTERFACE, APP_INDEX_M2C, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
@@ -246,13 +246,16 @@ void JobProjectionLoopIteration::Execute(
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_PROJECTION_ALPHA, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_X,
-                        APP_VECTOR_P, APP_VECTOR_TEMP, APP_VECTOR_B,
+    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                        APP_VECTOR_P,
+                        APP_VECTOR_TEMP, APP_VECTOR_B,
+                        APP_PRESSURE, APP_INDEX_M2C,
                         NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                        APP_VECTOR_X, APP_VECTOR_B,
-                        APP_PROJECTION_LOCAL_RESIDUAL, NULL);
+                        APP_VECTOR_B,
+                        APP_PROJECTION_LOCAL_RESIDUAL,
+                        APP_PRESSURE, NULL);
     before.clear();  before.insert(projection_job_ids[4]);
     after.clear();  after.insert(projection_job_ids[6]);
     SpawnComputeJob(PROJECTION_STEP_FOUR, projection_job_ids[5],

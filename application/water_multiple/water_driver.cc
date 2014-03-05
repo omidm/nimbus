@@ -155,6 +155,7 @@ Initialize(const nimbus::Job *job,
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
     example.particle_levelset_evolution.Make_Signed_Distance();
+    example.projection.p.Fill(0);
   }
   else {
     // physbam init
