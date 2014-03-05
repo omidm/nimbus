@@ -94,7 +94,7 @@ void JobProjectionStepFour::Execute(
 
   PhysBAM::ProjectionDriver projection_driver(
       pcg_temp, init_config, data_config);
-  dbg(APP_LOG, "Job PROJECTION_STEP_FOUR starts (dt=%f).\n", dt);
+  dbg(APP_LOG, "Job PROJECTION_STEP_FOUR starts (iteration=%d).\n", iteration);
 
   projection_driver.LoadFromNimbus(this, da);
 

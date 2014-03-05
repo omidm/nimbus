@@ -73,7 +73,6 @@ void JobProjectionLoopIteration::Execute(
   InitConfig init_config;
   T dt;
   int iteration;
-  // TODO(quhang), process iteration number.
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
@@ -181,10 +180,9 @@ void JobProjectionLoopIteration::Execute(
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
                         APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
     before.clear();
-    after.clear(); // after.insert(projection_job_ids[1]);
+    after.clear(); after.insert(projection_job_ids[1]);
     SpawnComputeJob(PROJECTION_STEP_ONE, projection_job_ids[0],
                     read, write, before, after, default_params);
-    return;
 
     // REDUCE_RHO
     read.clear();

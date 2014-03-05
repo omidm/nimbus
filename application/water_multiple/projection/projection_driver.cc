@@ -161,7 +161,11 @@ void ProjectionDriver::ReduceRho() {
   projection_data.rho_last = projection_data.rho;
   // TODO(quhang), change.
   projection_data.rho = Global_Sum(projection_data.local_rho);
-  projection_data.beta = (T)(projection_data.rho / projection_data.rho_last);
+  if (projection_data.iteration == 1) {
+    projection_data.beta = 0;
+  } else {
+    projection_data.beta = (T)(projection_data.rho / projection_data.rho_last);
+  }
 }
 
 void ProjectionDriver::UpdateSearchVector() {
@@ -373,7 +377,7 @@ template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     value = data_real->scalar();
-    dbg(APP_LOG, "[Data Loading]%s: %0.1f", variable_name, (float)value);
+    dbg(APP_LOG, "[Data Loading]%s: %0.9f", variable_name, (float)value);
     dbg(APP_LOG, "Finish reading %s.\n", variable_name);
   }
 }
@@ -479,7 +483,7 @@ template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     data_real->set_scalar(value);
-    dbg(APP_LOG, "[Data Saving]%s: %0.1f", variable_name, (float)value);
+    dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", variable_name, (float)value);
     dbg(APP_LOG, "Finish writing %s.\n", variable_name);
   }
 }

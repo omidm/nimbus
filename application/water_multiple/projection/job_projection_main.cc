@@ -206,7 +206,7 @@ void JobProjectionMain::SpawnJobs(
   nimbus::Parameter projection_loop_iteration_params;
   std::string projection_loop_iteration_str;
   SerializeParameter(
-      frame, time, dt, global_region, global_region, 0,
+      frame, time, dt, global_region, global_region, 1,
       &projection_loop_iteration_str);
   projection_loop_iteration_params.set_ser_data(
       SerializedData(projection_loop_iteration_str));
