@@ -95,6 +95,7 @@ public:
     void Add_Energy_With_Vorticity(T_FACE_ARRAYS_SCALAR& face_velocities,const VECTOR<VECTOR<bool,2>,TV::dimension>& domain_boundary,const T dt,const T time,const int number_of_ghost_cells,T_LEVELSET* lsv=0,T_ARRAYS_SCALAR* density=0);
     void Advance_One_Time_Step_Convection(const T dt,const T time,const T_FACE_ARRAYS_SCALAR& advecting_face_velocities,T_FACE_ARRAYS_SCALAR& face_velocities_to_advect,const int number_of_ghost_cells);
     void Advance_One_Time_Step_Forces(T_FACE_ARRAYS_SCALAR& face_velocities,const T dt,const T time,const bool implicit_viscosity,const T_ARRAYS_SCALAR* phi_ghost,const int number_of_ghost_cells);
+    void Advance_One_Time_Step_Forces(T_FACE_ARRAYS_SCALAR& face_velocities,T_FACE_ARRAYS_SCALAR& face_velocities_ghost,const T dt,const T time,const bool implicit_viscosity,const T_ARRAYS_SCALAR* phi_ghost,const int number_of_ghost_cells);
     void Add_Gravity_Threaded(RANGE<TV_INT>&domain,T_FACE_ARRAYS_SCALAR& face_velocities,const T dt,int axis);
     void Add_Body_Force_Threaded(RANGE<TV_INT>&domain,T_FACE_ARRAYS_SCALAR& face_velocities,const T dt,int axis);
     virtual void Advance_One_Time_Step_Implicit_Part(T_FACE_ARRAYS_SCALAR& face_velocities,const T dt,const T time,const bool implicit_viscosity=false,BOUNDARY_UNIFORM<T_GRID,T>* projection_boundary=0,

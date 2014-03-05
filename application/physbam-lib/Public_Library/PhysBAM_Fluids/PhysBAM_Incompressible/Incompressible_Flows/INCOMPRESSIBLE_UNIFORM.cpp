@@ -65,6 +65,59 @@ Advance_One_Time_Step_Convection(const T dt,const T time,const T_FACE_ARRAYS_SCA
     // update convection
     advection->Update_Advection_Equation_Face(grid,face_velocities_to_advect,face_velocities_to_advect_ghost,advection_face_velocities_ghost,*boundary,dt,time);
 }
+
+//#####################################################################
+// Function Advance_One_Time_Step_Forces
+// This version of the function gets as input the face_velocity_ghost.
+// This is meant to work with Nimbus applications. -omidm
+//#####################################################################
+template<class T_GRID> void INCOMPRESSIBLE_UNIFORM<T_GRID>::
+Advance_One_Time_Step_Forces(T_FACE_ARRAYS_SCALAR& face_velocities,T_FACE_ARRAYS_SCALAR& face_velocities_ghost,const T dt,const T time,const bool implicit_viscosity,const T_ARRAYS_SCALAR* phi_ghost,const int number_of_ghost_cells)
+{
+  // The next two lines are the only difference that we made in addition to
+  // signature, instead of building the ghost velocity it will be passed -omidm
+
+  //  T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(grid,number_of_ghost_cells,false);
+  //  boundary->Fill_Ghost_Cells_Face(grid,face_velocities,face_velocities_ghost,time,number_of_ghost_cells);
+
+    // update strain and apply elastic forces
+    if(strain){
+        assert(!projection.flame);assert(phi_ghost);strain->Update_Strain_Equation(dt,time,projection.density,face_velocities,face_velocities_ghost,*phi_ghost,number_of_ghost_cells);}
+
+    // update gravity
+    if(gravity) for(int axis=1;axis<=TV::dimension;axis++)
+        DOMAIN_ITERATOR_THREADED_ALPHA<INCOMPRESSIBLE_UNIFORM<T_GRID>,TV>(grid.Face_Indices()[axis],thread_queue).template Run<T_FACE_ARRAYS_SCALAR&,const T,int>(*this,&INCOMPRESSIBLE_UNIFORM<T_GRID>::Add_Gravity_Threaded,face_velocities,dt,axis);
+
+    // update body force
+    if(use_force){
+        for(int axis=1;axis<=TV::dimension;axis++)
+            DOMAIN_ITERATOR_THREADED_ALPHA<INCOMPRESSIBLE_UNIFORM<T_GRID>,TV>(grid.Face_Indices()[axis],thread_queue).template Run<T_FACE_ARRAYS_SCALAR&,const T,int>(*this,&INCOMPRESSIBLE_UNIFORM<T_GRID>::Add_Body_Force_Threaded,face_velocities,dt,axis);
+        boundary->Apply_Boundary_Condition_Face(grid,face_velocities,time+dt);
+        boundary->Fill_Ghost_Cells_Face(grid,face_velocities,face_velocities_ghost,time,number_of_ghost_cells);}
+
+    // update viscosity explicitly
+    //if(dt && (viscosity || use_variable_viscosity) && (!implicit_viscosity || use_explicit_part_of_implicit_viscosity)){
+    //    if(!implicit_viscosity) PHYSBAM_NOT_IMPLEMENTED();
+    //    IMPLICIT_VISCOSITY_UNIFORM<T_GRID>::Variable_Viscosity_Explicit_Part(projection.density,variable_viscosity,grid,face_velocities,face_velocities_ghost,dt,time);}
+    
+    T_FACE_ARRAYS_SCALAR face_velocities_old=face_velocities;
+    if(vorticity_confinement || use_variable_vorticity_confinement){
+        T tolerance=0; //TODO (mlentine): Look into what are good values here
+        T_ARRAYS_VECTOR F(grid.Cell_Indices(1),false);
+        Compute_Vorticity_Confinement_Force(grid,face_velocities_ghost,F);
+        if(collision_body_list){
+            if(use_variable_vorticity_confinement){F*=dt;F*=variable_vorticity_confinement;}else F*=dt*vorticity_confinement;}
+        else{
+            if(use_variable_vorticity_confinement){F*=dt*(T).5;F*=variable_vorticity_confinement;}else F*=dt*vorticity_confinement*(T).5;}
+        for(CELL_ITERATOR iterator(grid,1);iterator.Valid();iterator.Next()){TV_INT cell=iterator.Cell_Index();
+            for(int i=1;i<=TV::dimension;i++) if(abs(F(cell)(i))<tolerance) F(cell)(i)=0;}
+        Apply_Vorticity_Confinement_Force(face_velocities,F);}
+    Update_Potential_Energy(face_velocities,face_velocities_old,dt,time);
+
+    boundary->Apply_Boundary_Condition_Face(grid,face_velocities,time+dt);
+}
+//#####################################################################
+
 //#####################################################################
 // Function Advance_One_Time_Step_Forces
 //#####################################################################
