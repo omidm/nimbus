@@ -165,123 +165,246 @@ void JobProjectionLoopIteration::Execute(
                        &default_params_str);
     default_params.set_ser_data(SerializedData(default_params_str));
 
+    nimbus::Parameter default_left_params;
+    std::string default_left_params_str;
+    SerializeParameter(
+        frame, time, dt, global_region, kRegY2W0Central[0], iteration,
+        &default_left_params_str);
+    default_left_params.set_ser_data(SerializedData(default_left_params_str));
+
+    nimbus::Parameter default_right_params;
+    std::string default_right_params_str;
+    SerializeParameter(
+        frame, time, dt, global_region, kRegY2W0Central[1], iteration,
+        &default_right_params_str);
+    default_right_params.set_ser_data(SerializedData(default_right_params_str));
+
+
     int projection_job_num = 7;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
-    // STEP_ONE
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z,
-                        APP_INDEX_M2C, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                        APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
-    before.clear();
-    after.clear(); after.insert(projection_job_ids[1]);
-    SpawnComputeJob(PROJECTION_STEP_ONE, projection_job_ids[0],
-                    read, write, before, after, default_params);
+    int step_one_job_num = 2;
+    std::vector<nimbus::job_id_t> step_one_job_ids;
+    GetNewJobID(&step_one_job_ids, step_one_job_num);
 
-    // REDUCE_RHO
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        APP_PROJECTION_LOCAL_RHO, APP_PROJECTION_GLOBAL_RHO,
-                        NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_RHO, APP_PROJECTION_GLOBAL_RHO,
-                        APP_PROJECTION_GLOBAL_RHO_OLD, APP_PROJECTION_BETA, NULL);
-    before.clear();  before.insert(projection_job_ids[0]);
-    after.clear();  after.insert(projection_job_ids[2]);
-    SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
-                    read, write, before, after, default_params);
+    int step_two_job_num = 2;
+    std::vector<nimbus::job_id_t> step_two_job_ids;
+    GetNewJobID(&step_two_job_ids, step_two_job_num);
 
-    // STEP_TWO
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_BETA,
-                        NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_Z, APP_VECTOR_P,
-                        APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                        APP_VECTOR_P, NULL);
-    before.clear();  before.insert(projection_job_ids[1]);
-    after.clear();  after.insert(projection_job_ids[3]);
-    SpawnComputeJob(PROJECTION_STEP_TWO, projection_job_ids[2],
-                    read, write, before, after, default_params);
+    int step_three_job_num = 2;
+    std::vector<nimbus::job_id_t> step_three_job_ids;
+    GetNewJobID(&step_three_job_ids, step_three_job_num);
 
-    // STEP_THREE
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_P, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_MATRIX_A,
-                        APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_VECTOR_TEMP, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
-    before.clear();  before.insert(projection_job_ids[2]);
-    after.clear();  after.insert(projection_job_ids[4]);
-    SpawnComputeJob(PROJECTION_STEP_THREE, projection_job_ids[3],
-                    read, write, before, after, default_params);
+    int step_four_job_num = 2;
+    std::vector<nimbus::job_id_t> step_four_job_ids;
+    GetNewJobID(&step_four_job_ids, step_four_job_num);
 
-    // REDUCE_ALPHA
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_GLOBAL_RHO,
-                        NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);
-    before.clear();  before.insert(projection_job_ids[3]);
-    after.clear();  after.insert(projection_job_ids[5]);
-    SpawnComputeJob(PROJECTION_REDUCE_ALPHA, projection_job_ids[4],
-                    read, write, before, after, default_params);
-    // STEP_FOUR
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        APP_PROJECTION_ALPHA, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_INDEX_M2C, APP_VECTOR_P,
-                        APP_VECTOR_TEMP, APP_VECTOR_B,
-                        APP_PRESSURE, APP_INDEX_M2C,
-                        NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                        APP_VECTOR_B,
-                        APP_PROJECTION_LOCAL_RESIDUAL,
-                        APP_PRESSURE, NULL);
-    before.clear();  before.insert(projection_job_ids[4]);
-    after.clear();  after.insert(projection_job_ids[6]);
-    SpawnComputeJob(PROJECTION_STEP_FOUR, projection_job_ids[5],
-                    read, write, before, after, default_params);
+    {
+      // STEP_ONE
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[0],
+                          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z,
+                          APP_INDEX_M2C, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[0],
+                          APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
+      before.clear();
+      after.clear(); after.insert(projection_job_ids[1]);
+      SpawnComputeJob(PROJECTION_STEP_ONE, step_one_job_ids[0],
+                      read, write, before, after, default_left_params);
 
-    // NEXT_ITERATION
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                        APP_PROJECTION_LOCAL_RESIDUAL,
-                        APP_PROJECTION_GLOBAL_TOLERANCE,
-                        APP_PROJECTION_DESIRED_ITERATIONS,
-                        NULL);
-    write.clear();
-    before.clear();  before.insert(projection_job_ids[5]);
-    after.clear();
-    nimbus::Parameter next_iteration_params;
-    std::string next_iteration_params_str;
-    SerializeParameter(frame, time, dt, global_region, global_region,
-                       iteration + 1,
-                       &next_iteration_params_str);
-    next_iteration_params.set_ser_data(
-        SerializedData(next_iteration_params_str));
-    SpawnComputeJob(PROJECTION_LOOP_ITERATION, projection_job_ids[6],
-                    read, write, before, after,
-                    next_iteration_params);
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[1],
+                          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z,
+                          APP_INDEX_M2C, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[1],
+                          APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
+      before.clear();
+      after.clear(); after.insert(projection_job_ids[1]);
+      SpawnComputeJob(PROJECTION_STEP_ONE, step_one_job_ids[1],
+                      read, write, before, after, default_right_params);
+    }
+
+    {
+      // REDUCE_RHO
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          APP_PROJECTION_LOCAL_RHO, APP_PROJECTION_GLOBAL_RHO,
+                          NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
+                          APP_PROJECTION_LOCAL_RHO, APP_PROJECTION_GLOBAL_RHO,
+                          APP_PROJECTION_GLOBAL_RHO_OLD, APP_PROJECTION_BETA, NULL);
+      before.clear();
+      before.insert(step_one_job_ids[0]);
+      before.insert(step_one_job_ids[1]);
+      after.clear();
+      after.insert(step_two_job_ids[0]);
+      after.insert(step_two_job_ids[1]);
+      SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
+                      read, write, before, after, default_params);
+    }
+
+    {
+      // STEP_TWO
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_BETA,
+                          NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[0], APP_VECTOR_Z, APP_VECTOR_P,
+                          APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[0], APP_VECTOR_P, NULL);
+      before.clear();
+      before.insert(projection_job_ids[1]);
+      after.clear();
+      after.insert(step_three_job_ids[0]);
+      after.insert(step_three_job_ids[1]);
+      SpawnComputeJob(PROJECTION_STEP_TWO, step_two_job_ids[0],
+                      read, write, before, after, default_left_params);
+
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_BETA,
+                          NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[1], APP_VECTOR_Z, APP_VECTOR_P,
+                          APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[1], APP_VECTOR_P, NULL);
+      before.clear();
+      before.insert(projection_job_ids[1]);
+      after.clear();
+      after.insert(step_three_job_ids[0]);
+      after.insert(step_three_job_ids[1]);
+      SpawnComputeJob(PROJECTION_STEP_TWO, step_two_job_ids[1],
+                      read, write, before, after, default_right_params);
+    }
+
+    {
+      // STEP_THREE
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_VECTOR_P, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[0], APP_MATRIX_A,
+                          APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[0], APP_VECTOR_TEMP, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[0],
+                          APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
+      before.clear();
+      before.insert(step_two_job_ids[0]);
+      before.insert(step_two_job_ids[1]);
+      after.clear();
+      after.insert(projection_job_ids[4]);
+      SpawnComputeJob(PROJECTION_STEP_THREE, step_three_job_ids[0],
+                      read, write, before, after, default_left_params);
+      // STEP_THREE
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Central[1], APP_VECTOR_P, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[1], APP_MATRIX_A,
+                          APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[1], APP_VECTOR_TEMP, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[1],
+                          APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
+      before.clear();
+      before.insert(step_two_job_ids[0]);
+      before.insert(step_two_job_ids[1]);
+      after.clear();
+      after.insert(projection_job_ids[4]);
+      SpawnComputeJob(PROJECTION_STEP_THREE, step_three_job_ids[1],
+                      read, write, before, after, default_right_params);
+    }
+
+    {
+      // REDUCE_ALPHA
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_GLOBAL_RHO,
+                          NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);
+      before.clear();
+      before.insert(step_three_job_ids[0]);
+      before.insert(step_three_job_ids[1]);
+      after.clear();
+      after.insert(step_four_job_ids[0]);
+      after.insert(step_four_job_ids[1]);
+      SpawnComputeJob(PROJECTION_REDUCE_ALPHA, projection_job_ids[4],
+                      read, write, before, after, default_params);
+    }
+    {
+      // STEP_FOUR
+      // Only interior p is needed.
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[0],
+                          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          APP_INDEX_M2C, APP_VECTOR_P,
+                          APP_VECTOR_TEMP, APP_VECTOR_B,
+                          APP_PRESSURE, APP_INDEX_M2C,
+                          NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_ALPHA,
+                          NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[0],
+                          APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL,
+                          APP_PRESSURE, NULL);
+      before.clear();  before.insert(projection_job_ids[4]);
+      after.clear();  after.insert(projection_job_ids[6]);
+      SpawnComputeJob(PROJECTION_STEP_FOUR, step_four_job_ids[0],
+                      read, write, before, after, default_left_params);
+      // Only interior p is needed.
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W0Central[1],
+                          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+                          APP_INDEX_M2C, APP_VECTOR_P,
+                          APP_VECTOR_TEMP, APP_VECTOR_B,
+                          APP_PRESSURE, APP_INDEX_M2C,
+                          NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_ALPHA,
+                          NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[1],
+                          APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL,
+                          APP_PRESSURE, NULL);
+      before.clear();  before.insert(projection_job_ids[4]);
+      after.clear();  after.insert(projection_job_ids[6]);
+      SpawnComputeJob(PROJECTION_STEP_FOUR, step_four_job_ids[1],
+                      read, write, before, after, default_right_params);
+    }
+
+    {
+      // NEXT_ITERATION
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                          APP_PROJECTION_LOCAL_RESIDUAL,
+                          APP_PROJECTION_GLOBAL_TOLERANCE,
+                          APP_PROJECTION_DESIRED_ITERATIONS,
+                          NULL);
+      write.clear();
+      before.clear();
+      before.insert(step_four_job_ids[0]);
+      before.insert(step_four_job_ids[1]);
+      after.clear();
+      nimbus::Parameter next_iteration_params;
+      std::string next_iteration_params_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         iteration + 1,
+                         &next_iteration_params_str);
+      next_iteration_params.set_ser_data(
+          SerializedData(next_iteration_params_str));
+      SpawnComputeJob(PROJECTION_LOOP_ITERATION, projection_job_ids[6],
+                      read, write, before, after,
+                      next_iteration_params);
+    }
   }
 
   projection_driver.SaveToNimbus(this, da);

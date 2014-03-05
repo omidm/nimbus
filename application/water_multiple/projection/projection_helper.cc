@@ -102,10 +102,10 @@ void Find_Matrix_Indices_In_Region(
     (*matrix_index_to_cell_index)(new_index) = c;
   }
   if (region_index == 0) {
-    assert(local_n != NULL);
+    assert(interior_n != NULL);
     *interior_n = (*filled_region_cell_count)(1);
   } else if (region_index == 6) {
-    assert(interior_n != NULL);
+    assert(local_n != NULL);
     *local_n = (*filled_region_cell_count)(1);
   }
 }
