@@ -283,15 +283,13 @@ namespace application {
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    // TODO(chinmayee): delete job_num=1 once multiple version works
     size_t step_particles_job_num = 1;
     std::vector<nimbus::job_id_t> step_particles_job_ids;
     GetNewJobID(&step_particles_job_ids, step_particles_job_num);
-    size_t step_particles_sync_job_num = 4 * kRegW3Scratch_len;
+    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : 4 * kRegY2W3Scratch_len;
     std::vector<nimbus::job_id_t> step_particles_sync_job_ids;
     GetNewJobID(&step_particles_sync_job_ids, step_particles_sync_job_num);
-
-
+    bool step_particles_single = (step_particles_job_num == 1);
 
     // Original adjust phi with objects that operates over entire block.
     read.clear();
@@ -457,66 +455,86 @@ namespace application {
 */
 
     /* 
-     * Spawning advect particles stage over entire domain and writing particles
-     * that move to/ in shared regions to scratch copies.
+     * Spawning advect particles.
      */
-    // TODO(chinmayee): remove this commented block once step particles multiple works
-    {
+    for (size_t sj = 0; sj < step_particles_job_num; sj++) {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
+        write.clear();
+        std::string step_particles_str;
+
+        // there is just 1 last unique particle id: need to figure out how to
+        // handle the case of splitting last unique particle id
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0],
                 APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
-        write.clear();
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-        //LoadLogicalIdsInSet(this, &write, kRegW3Inner[0], APP_POS_PARTICLES,
-        //        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-        //kScratchPosParticles.GetJobScratchData(this, kRegW3Central[0], &write);
-        //kScratchNegParticles.GetJobScratchData(this, kRegW3Central[0], &write);
-        //kScratchPosRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
-        //kScratchNegRemParticles.GetJobScratchData(this, kRegW3Central[0], &write);
+        if (step_particles_single) {
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+                    APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+                    APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegW3Central[0],
+                               &step_particles_str);
+        } else {
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Central[sj], APP_POS_PARTICLES,
+                    APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[sj], APP_POS_PARTICLES,
+                    APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            kScratchPosParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
+            kScratchNegParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
+            kScratchPosRemParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
+            kScratchNegRemParticles.GetJobScratchData(this, kRegY2W3Central[sj], &write);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegY2W3Central[sj],
+                               &step_particles_str);
+        }
 
         nimbus::Parameter step_particles_params;
-        std::string step_particles_str;
-        SerializeParameter(frame, time, dt, global_region, global_region, &step_particles_str);
         step_particles_params.set_ser_data(SerializedData(step_particles_str));
 
         before.clear();
-        before.insert(job_ids[1]);
+        after.clear();
         // before.insert(advect_phi_job_ids[0]);
         // before.insert(advect_phi_job_ids[1]);
-
-        after.clear();
-        for (size_t i = 0; i < step_particles_sync_job_num; i++)
-            after.insert(step_particles_sync_job_ids[i]);
+        before.insert(job_ids[1]);
+        if (step_particles_single) {
+            after.insert(job_ids[3]);
+        } else {
+            for (size_t i = 0; i < step_particles_sync_job_num; i++)
+                after.insert(step_particles_sync_job_ids[i]);
+        }
 
         SpawnComputeJob(STEP_PARTICLES,
-                step_particles_job_ids[0],
+                step_particles_job_ids[sj],
                 read, write,
                 before, after,
                 step_particles_params);
     }
+
     /*
-     * Spawn synchronization jobs over all scratch regions, merging all
-     * particles to one master copy - for positive, negative, and removed
-     * positive and negative particles.
+     * Conditionally spawn synchronize jobs.
      */
-    {
+    if (!step_particles_single) {
         nimbus::Parameter step_particles_sync_params;
         before.clear();
-        before.insert(step_particles_job_ids[0]);
         after.clear();
+        for (size_t i = 0; i < step_particles_job_num; i++)
+            before.insert(step_particles_job_ids[i]);
         after.insert(job_ids[3]);
-        for (size_t i = 0; i < kRegW3Scratch_len; i++) {
+        for (size_t i = 0; i < kRegY2W3Scratch_len; i++) {
             size_t ii = 4*i;
             // positive
             read.clear();
-            //kScratchPosParticles.GetAllScratchData(this, kRegW3Scratch[i], &read);
             write.clear();
-            //LoadLogicalIdsInSet(this, &write, kRegW3Scratch[i], APP_POS_PARTICLES, NULL);
+            kScratchPosParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_POS_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii],
                     read, write,
@@ -524,9 +542,9 @@ namespace application {
                     step_particles_sync_params);
             // negative
             read.clear();
-            //kScratchNegParticles.GetAllScratchData(this, kRegW3Scratch[i], &read);
             write.clear();
-            //LoadLogicalIdsInSet(this, &write, kRegW3Scratch[i], APP_NEG_PARTICLES, NULL);
+            kScratchNegParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_NEG_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+1],
                     read, write,
@@ -534,9 +552,9 @@ namespace application {
                     step_particles_sync_params);
             // positive removed
             read.clear();
-            //kScratchPosRemParticles.GetAllScratchData(this, kRegW3Scratch[i], &read);
             write.clear();
-            //LoadLogicalIdsInSet(this, &write, kRegW3Scratch[i], APP_POS_REM_PARTICLES, NULL);
+            kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_POS_REM_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+2],
                     read, write,
@@ -544,9 +562,9 @@ namespace application {
                     step_particles_sync_params);
             // negative removed
             read.clear();
-            //kScratchNegRemParticles.GetAllScratchData(this, kRegW3Scratch[i], &read);
             write.clear();
-            //LoadLogicalIdsInSet(this, &write, kRegW3Scratch[i], APP_NEG_REM_PARTICLES, NULL);
+            kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_NEG_REM_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+3],
                     read, write,
@@ -555,76 +573,16 @@ namespace application {
         }
     }
 
-    // TODO(chinmayee): working on step particles multiple
-/*    {
-        before.clear();
-        after.clear();
-    }
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
-    nimbus::Parameter s13_params;
-    std::string s13_str;
-    SerializeParameter(frame, time, dt, global_region, global_region, &s13_str);
-    s13_params.set_ser_data(SerializedData(s13_str));
-    before.clear();
-    // before.insert(advect_phi_job_ids[0]);
-    // before.insert(advect_phi_job_ids[1]);
-    before.insert(job_ids[1]);
-    after.clear();
-    after.insert(job_ids[3]);
-    SpawnComputeJob(STEP_PARTICLES,
-        job_ids[2],
-        read, write,
-        before, after,
-        s13_params);
-
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
-    nimbus::Parameter s13_params;
-    std::string s13_str;
-    SerializeParameter(frame, time, dt, global_region, global_region, &s13_str);
-    s13_params.set_ser_data(SerializedData(s13_str));
-    before.clear();
-    // before.insert(advect_phi_job_ids[0]);
-    // before.insert(advect_phi_job_ids[1]);
-    before.insert(job_ids[1]);
-    after.clear();
-    after.insert(job_ids[3]);
-    SpawnComputeJob(STEP_PARTICLES,
-        job_ids[2],
-        read, write,
-        before, after,
-        s13_params);
-*/
-
 
     /* 
      * Spawning advect removed particles stage over entire block
      */
 
     read.clear();
+    write.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_REM_PARTICLES,
         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-    write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID , NULL);
@@ -634,9 +592,14 @@ namespace application {
     SerializeParameter(frame, time, dt, global_region, global_region, &s14_str);
     s14_params.set_ser_data(SerializedData(s14_str));
     before.clear();
-    for (size_t i = 0; i < step_particles_sync_job_num; i++)
-        before.insert(step_particles_sync_job_ids[i]);
     after.clear();
+    if (step_particles_single) {
+        for (size_t i = 0; i < step_particles_job_num; i++)
+            before.insert(step_particles_job_ids[i]);
+    } else {
+        for (size_t i = 0; i < step_particles_sync_job_num; i++)
+            before.insert(step_particles_sync_job_ids[i]);
+    }
     // after.insert(job_ids[4]);
     for (int j = 0; j < advect_v_job_num; ++j) {
       after.insert(advect_v_job_ids[j]);
