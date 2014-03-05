@@ -477,6 +477,7 @@ namespace application {
                                kRegW3Central[0],
                                &step_particles_str);
         } else {
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Central[sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[sj], APP_POS_PARTICLES,
