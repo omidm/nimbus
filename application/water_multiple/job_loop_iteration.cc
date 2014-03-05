@@ -255,7 +255,7 @@ namespace application {
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // because of Half Region definition this number could be either 1 or 2 for now -omidm
-    int adjust_phi_with_objects_job_num = 1;
+    int adjust_phi_with_objects_job_num = 2;
     std::vector<nimbus::job_id_t> adjust_phi_with_objects_job_ids;
     GetNewJobID(&adjust_phi_with_objects_job_ids, adjust_phi_with_objects_job_num);
 
@@ -294,6 +294,7 @@ namespace application {
 
 
     // Original adjust phi with objects that operates over entire block.
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
@@ -312,11 +313,11 @@ namespace application {
         read, write,
         before, after,
         s11_params);
+*/
 
     /* 
      * Spawning adjust phi with objects stage over two workrs
      */
-/*
     nimbus::GeometricRegion kRegY2W3Half[2];
     kRegY2W3Half[0].Rebuild(-2, -2, -2, 36, 18, 36);
     kRegY2W3Half[1].Rebuild(-2, 16, -2, 36, 18, 36);
@@ -341,7 +342,6 @@ namespace application {
           before, after,
           s11_params);
     }
-*/
 
 
     // Original ADVECT_PHI job spawning.
