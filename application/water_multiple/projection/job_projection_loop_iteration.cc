@@ -175,17 +175,21 @@ void JobProjectionLoopIteration::Execute(
     // STEP_ONE
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
                         APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
     before.clear();
-    after.clear();  after.insert(projection_job_ids[1]);
+    after.clear(); // after.insert(projection_job_ids[1]);
     SpawnComputeJob(PROJECTION_STEP_ONE, projection_job_ids[0],
                     read, write, before, after, default_params);
+    return;
+
     // REDUCE_RHO
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_PROJECTION_LOCAL_RHO, APP_PROJECTION_GLOBAL_RHO,
                         NULL);
     write.clear();
@@ -202,6 +206,7 @@ void JobProjectionLoopIteration::Execute(
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_BETA,
                         NULL);
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_Z, APP_VECTOR_P,
+                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
@@ -214,7 +219,8 @@ void JobProjectionLoopIteration::Execute(
     // STEP_THREE
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_P, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_MATRIX_A, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_MATRIX_A,
+                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_VECTOR_TEMP, NULL);
     LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
@@ -227,6 +233,7 @@ void JobProjectionLoopIteration::Execute(
     // REDUCE_ALPHA
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PROJECTION_GLOBAL_RHO,
                         NULL);
@@ -239,6 +246,7 @@ void JobProjectionLoopIteration::Execute(
     // STEP_FOUR
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                        APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_PROJECTION_ALPHA, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_VECTOR_X,
                         APP_VECTOR_P, APP_VECTOR_TEMP, APP_VECTOR_B,

@@ -105,7 +105,9 @@ void ProjectionDriver::LocalInitialize() {
   projection_data.local_residual = b_interior.Max_Abs();
   const bool recompute_preconditioner = true;
   if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      delete A.C;
+      if (A.C != NULL) {
+        delete A.C;
+      }
       A.C = A.Create_Submatrix(partition.interior_indices);
       A.C->In_Place_Incomplete_Cholesky_Factorization(
           pcg.modified_incomplete_cholesky,
@@ -446,12 +448,12 @@ void ProjectionDriver::SaveToNimbus(
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
     Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
+        job, std::string(APP_MATRIX_C), da, application::WRITE_ACCESS);
     if (data_temp) {
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       data_real->SaveToNimbus(*projection_data.matrix_a.C);
-      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+      dbg(APP_LOG, "Finish writing MATRIX_C.\n");
     }
   }
   // VECTOR_Z. It cannot be splitted or merged.

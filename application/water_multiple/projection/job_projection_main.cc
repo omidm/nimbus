@@ -153,7 +153,7 @@ void JobProjectionMain::SpawnJobs(
                   before, after,
                   default_params);
 
-  // Loop job GLOBAL_INITIALIZE/LOCAL_INITIALIZE, and then spawns
+  // Loop job LOCAL_INITIALIZE/GLOBAL_INITIALIZE, and then spawns
   // PROJECTION_LOOP_ITERATION.
   read.clear();
   LoadLogicalIdsInSet(this, &read, kRegW0Central[0],

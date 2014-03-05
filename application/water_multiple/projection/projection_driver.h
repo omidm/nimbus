@@ -88,6 +88,7 @@ class ProjectionDriver {
     projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
+    projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<T>;
   }
 
   virtual ~ProjectionDriver() {}
