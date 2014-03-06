@@ -68,6 +68,7 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
+  init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -82,13 +83,10 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
 
 
   DataConfig data_config;
-  data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   data_config.SetFlag(DataConfig::LEVELSET);
   data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-  data_config.SetFlag(DataConfig::PSI_D);
-  data_config.SetFlag(DataConfig::PSI_N);
-  data_config.SetFlag(DataConfig::PRESSURE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

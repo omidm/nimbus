@@ -360,20 +360,46 @@ InitializeParticleLevelsetEvolutionHelper(
 template<class TV> void WATER_DRIVER<TV>::
 Run(RANGE<TV_INT>& domain,const T dt,const T time)
 {
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,3,false);
-    example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost = example.face_velocities_ghost;
     LINEAR_INTERPOLATION_UNIFORM<GRID<TV>,TV> interpolation;
-    PARTICLE_LEVELSET_UNIFORM<GRID<TV> >& pls=example.particle_levelset_evolution.particle_levelset;
-    if(pls.use_removed_positive_particles) for(typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);iterator.Valid();iterator.Next()) if(pls.removed_positive_particles(iterator.Node_Index())){
-        PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles=*pls.removed_positive_particles(iterator.Node_Index());
-        for(int p=1;p<=particles.array_collection->Size();p++){
-            TV X=particles.X(p),V=interpolation.Clamped_To_Array_Face(example.mac_grid,face_velocities_ghost,X);
-            if(-pls.levelset.Phi(X)>1.5*particles.radius(p)) V-=-TV::Axis_Vector(2)*.3; // buoyancy
-            particles.V(p)=V;}}
-    if(pls.use_removed_negative_particles) for(typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);iterator.Valid();iterator.Next()) if(pls.removed_negative_particles(iterator.Node_Index())){
-        PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles=*pls.removed_negative_particles(iterator.Node_Index());
-        for(int p=1;p<=particles.array_collection->Size();p++) particles.V(p)+=-TV::Axis_Vector(2)*dt*9.8; // ballistic
-        for(int p=1;p<=particles.array_collection->Size();p++) particles.V(p)+=dt*interpolation.Clamped_To_Array_Face(example.mac_grid,example.incompressible.force,particles.X(p));} // external forces
+    PARTICLE_LEVELSET_UNIFORM<GRID<TV> >& pls = example.particle_levelset_evolution.particle_levelset;
+    if (pls.use_removed_positive_particles) {
+        for (typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);
+            iterator.Valid();
+            iterator.Next()) {
+            if(pls.removed_positive_particles(iterator.Node_Index())) {
+                PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles =
+                    *pls.removed_positive_particles(iterator.Node_Index());
+                for (int p = 1; p <= particles.array_collection->Size(); p++) {
+                    TV X = particles.X(p);
+                    TV V = interpolation.Clamped_To_Array_Face(example.mac_grid,
+                                                               face_velocities_ghost,
+                                                               X);
+                if (-pls.levelset.Phi(X) > 1.5*particles.radius(p))
+                    V-=-TV::Axis_Vector(2)*.3; // buoyancy
+                particles.V(p)=V;
+                }
+            }
+        }
+    }
+    if (pls.use_removed_negative_particles) {
+        for (typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);
+             iterator.Valid();
+             iterator.Next()) {
+            if (pls.removed_negative_particles(iterator.Node_Index())) {
+                PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles =
+                    *pls.removed_negative_particles(iterator.Node_Index());
+                for (int p = 1; p <= particles.array_collection->Size(); p++)
+                    particles.V(p) += -TV::Axis_Vector(2)*dt*9.8; // ballistic
+                for (int p = 1; p <= particles.array_collection->Size(); p++) {
+                    particles.V(p) += dt*interpolation.
+                        Clamped_To_Array_Face(example.mac_grid,
+                                              example.incompressible.force,
+                                              particles.X(p)); // external forces
+                }
+            }
+        }
+    }
 }
 
 
