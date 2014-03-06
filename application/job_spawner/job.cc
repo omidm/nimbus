@@ -45,11 +45,12 @@
 #define LOOP_COUNTER 3
 #define LOOP_CONDITION 0
 #define STAGE_NUM 10
-#define JOB_LENGTH_SEC 0.0001
+#define JOB_LENGTH_SEC 0
 #define PART_NUM 100
 #define CHUNK_NUM 100
 #define CHUNK_SIZE 50
 #define BANDWIDTH 10
+#define STERILE_FLAG true
 
 #define STENCIL_SIZE (2*BANDWIDTH)+1
 #define PART_SIZE (CHUNK_NUM/PART_NUM)*CHUNK_SIZE
@@ -116,21 +117,24 @@ void Main::Execute(Parameter params, const DataArray& da) {
     before.clear();
     param_idset.clear(); param_idset.insert(0);
     par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3], read, write, before, after, par);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3],
+        read, write, before, after, par, STERILE_FLAG);
 
     read.clear(); read.insert(d[i * 3 + 1]);
     write.clear(); write.insert(d[i * 3 + 1]);
     before.clear();
     param_idset.clear(); param_idset.insert(BANDWIDTH);
     par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1], read, write, before, after, par);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1],
+        read, write, before, after, par, STERILE_FLAG);
 
     read.clear(); read.insert(d[i * 3 + 2]);
     write.clear(); write.insert(d[i * 3 + 2]);
     before.clear();
     param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
     par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2], read, write, before, after, par);
+    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2],
+        read, write, before, after, par, STERILE_FLAG);
   }
 
   // Spawning loop job
@@ -188,7 +192,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         }
         after.clear();
         SpawnComputeJob(STAGE_JOB_NAME, stage_job_ids[s * PART_NUM + i],
-            read, write, before, after, par);
+            read, write, before, after, par, STERILE_FLAG);
       }
       if (s < (STAGE_NUM - 1)) {
         read.clear();
@@ -198,7 +202,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
           before.insert(stage_job_ids[s * PART_NUM + j]);
         }
         after.clear();
-        SpawnComputeJob(CONNECTOR_JOB_NAME, connector_job_ids[s], read, write, before, after, par);
+        SpawnComputeJob(CONNECTOR_JOB_NAME, connector_job_ids[s],
+            read, write, before, after, par, STERILE_FLAG);
       }
     }
 
@@ -213,7 +218,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       before.clear();
       before.insert(stage_job_ids[(STAGE_NUM - 1) * PART_NUM + i]);
       after.clear();
-      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par);
+      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i],
+          read, write, before, after, par, STERILE_FLAG);
     }
 
     // Spawning the next for loop job
@@ -241,7 +247,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear();
     before.clear();
     after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0], read, write, before, after, par);
+    SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0],
+        read, write, before, after, par, STERILE_FLAG);
 
 
     TerminateApplication();
@@ -318,7 +325,7 @@ Stage::Stage(Application* app) {
 };
 
 Job * Stage::Clone() {
-  std::cout << "Cloning init job!\n";
+  std::cout << "Cloning stage job!\n";
   return new Stage(application());
 };
 
@@ -333,7 +340,7 @@ Connector::Connector(Application* app) {
 };
 
 Job * Connector::Clone() {
-  std::cout << "Cloning init job!\n";
+  std::cout << "Cloning connector job!\n";
   return new Connector(application());
 };
 

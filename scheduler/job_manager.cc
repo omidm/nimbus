@@ -188,7 +188,14 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       typename Edge<JobEntry, job_id_t>::Map* incoming_edges = vertex->incoming_edges();
       for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
         j = it->second->start_vertex()->entry();
-        if (!(j->done()) && !(j->sterile())) {
+        // Due to the current graph traversal we should only assign the job if
+        // before set is done otherwise by leveraging the sterile flag we could
+        // end up flooding worker with lots of jobs that depend on a job that
+        // has not been assigned yet and so it causes a lot of latency. the
+        // graph traversal right now is based on iterator of map (so job ids)
+        // we need to traverse based on graph shape. -omidm
+        if (!(j->done())) {
+        // if (!(j->done()) && !(j->sterile())) {
           before_set_done_or_sterile = false;
           break;
         }
