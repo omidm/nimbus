@@ -284,7 +284,7 @@ namespace application {
     GetNewJobID(&projection_job_ids, projection_job_num);
 
     // jobs that touch particles
-    size_t particle_partitions = 2;
+    size_t particle_partitions = 1;
     // step particles
     size_t step_particles_job_num = particle_partitions;
     std::vector<nimbus::job_id_t> step_particles_job_ids;
