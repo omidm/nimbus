@@ -918,7 +918,7 @@ ApplyForcesImpl(const nimbus::Job *job,
   //Add Forces 0%
   LOG::Time("Forces");
   example.incompressible.Advance_One_Time_Step_Forces(
-      example.face_velocities, dt, time, true, 0, example.number_of_ghost_cells);
+      example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
 
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame + 1);
