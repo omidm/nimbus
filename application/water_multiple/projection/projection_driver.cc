@@ -40,8 +40,6 @@
 #include <cassert>
 
 #include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
-#include <PhysBAM_Tools/Parallel_Computation/MPI_PACKAGE.h>
-#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
@@ -53,12 +51,9 @@
 
 namespace PhysBAM {
 
-// local_n is the dimentsion of matrixa_a, interior_n is the size of the
-// internal.
 void ProjectionDriver::Initialize(int local_n, int interior_n) {
   partition.interior_indices.min_corner = 1;
   partition.interior_indices.max_corner = interior_n;
-  // int interior_n = partition.interior_indices.Size()+1;
 
   if (projection_data.temp.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
@@ -79,16 +74,6 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
       data_config.GetFlag(DataConfig::VECTOR_Z)) {
     projection_data.z_interior.Resize(interior_n, false);
   }
-
-  /*
-  if (data_config.GetFlag(DataConfig::VECTOR_X)) {
-    projection_data.vector_x.Resize(local_n, false);
-
-    projection_data.x_interior.Set_Subvector_View(
-        projection_data.vector_x,
-        partition.interior_indices);
-  }
-  */
 
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     projection_data.temp_interior.Set_Subvector_View(
@@ -251,7 +236,9 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   int_dimension_t array_shift[3] = {
-    init_config.local_region.x() - 1, init_config.local_region.y() - 1, init_config.local_region.z() - 1};
+    init_config.local_region.x() - 1,
+    init_config.local_region.y() - 1,
+    init_config.local_region.z() - 1};
   PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
@@ -272,15 +259,18 @@ void ProjectionDriver::LoadFromNimbus(
              init_config.local_region.dz()),
       application::GridToRange(init_config.global_region,
                                init_config.local_region));
+
+  // TODO(quhang), critical! this is logically wrong. In LOCAL_INITIALIZE, ghost
+  // regions should be passed around.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
     projection_data.pressure.Resize(grid.Domain_Indices(1));
-    const std::string pressure_string = std::string(APP_PRESSURE);
-    if (application::GetTranslatorData(job, pressure_string, da, &pdv,
-                                       application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::PRESSURE)) {
+    if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
+                                       application::READ_ACCESS)) {
       translator.ReadScalarArrayFloat(
           &array_reg_central, array_shift, &pdv, &projection_data.pressure);
-      dbg(APP_LOG, "Finish reading pressure.\n");
+      dbg(APP_LOG, "Finish reading PRESSURE.\n");
+    } else {
+      dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
   }
@@ -292,8 +282,11 @@ void ProjectionDriver::LoadFromNimbus(
     if (data_temp) {
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
+      // The memory will be allocated automatically.
       data_real->LoadFromNimbus(&projection_data.matrix_a);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+    } else {
+      dbg(APP_LOG, "MATRIX_A flag is set but data is not local.\n");
     }
   }
   // VECTOR_B. It cannot be splitted or merged.
@@ -313,9 +306,10 @@ void ProjectionDriver::LoadFromNimbus(
                                         init_config.local_region.dy()+1,
                                         init_config.local_region.dz()+1)));
 
-      data_real->LoadFromNimbus(
-          &projection_data.cell_index_to_matrix_index);
+      data_real->LoadFromNimbus(&projection_data.cell_index_to_matrix_index);
       dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
+    } else {
+      dbg(APP_LOG, "INDEX_C2M flag is set but data is not local.\n");
     }
   }
   // INDEX_M2C. It cannot be splitted or merged.
@@ -325,23 +319,25 @@ void ProjectionDriver::LoadFromNimbus(
     if (data_temp) {
       application::DataRawArrayM2C* data_real =
           dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-      data_real->LoadFromNimbus(
-          &projection_data.matrix_index_to_cell_index);
+      // The memory will be allocated automatically.
+      data_real->LoadFromNimbus(&projection_data.matrix_index_to_cell_index);
       dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
+    } else {
+      dbg(APP_LOG, "INDEX_M2C flag is set but data is not local.\n");
     }
   }
-  // LOCAL_N. Reduction cannot take this branch.
+  // LOCAL_N.
+  // Reduction on LOCAL_N is never used and thus not supported.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
     ReadScalarData<int>(job, da, APP_PROJECTION_LOCAL_N,
                         projection_data.local_n);
   }
-  // INTERIOR_N. Reduction cannot take this branch.
+  // INTERIOR_N. Reducible.
   if (data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N)) {
-    // sum of int.
     if (application::GetTranslatorData(
             job, std::string(APP_PROJECTION_INTERIOR_N), da, &pdv,
             application::READ_ACCESS)) {
-      dbg(APP_LOG, "Reduceing on:");
+      dbg(APP_LOG, "Reducing PROJECTION_INTERIOR_N sum(");
       projection_data.interior_n = 0;
       PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
@@ -352,19 +348,20 @@ void ProjectionDriver::LoadFromNimbus(
         dbg(APP_LOG, "%d ", value);
         projection_data.interior_n += value;
       }
-      dbg(APP_LOG, "\nFinish reading PROJECTION_INTERIOR_N.\n");
+      dbg(APP_LOG, ") = %d.\n", projection_data.interior_n);
+    } else {
+      dbg(APP_LOG, "PROJECTION_INTERIOR_N flag"
+          " is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
-    // ReadScalarData<int>(job, da, APP_PROJECTION_INTERIOR_N,
-    //                     projection_data.interior_n);
   }
-  // Groud III.
+  // Group III.
+  // PROJECTION_LOCAL_TOLERANCE. Reducible.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
-    // max of float.
     if (application::GetTranslatorData(
             job, std::string(APP_PROJECTION_LOCAL_TOLERANCE), da, &pdv,
             application::READ_ACCESS)) {
-      dbg(APP_LOG, "Reduceing on:");
+      dbg(APP_LOG, "Reducing PROJECTION_LOCAL_TOLERANCE MAX(");
       projection_data.local_tolerance = 0;
       PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
@@ -377,11 +374,12 @@ void ProjectionDriver::LoadFromNimbus(
           projection_data.local_tolerance = value;
         }
       }
-      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_TOLERANCE.\n");
+      dbg(APP_LOG, ") = %f.\n", projection_data.local_tolerance);
+    } else {
+      dbg(APP_LOG, "PROJECTION_LOCAL_TOLERANCE flag"
+          " is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
-    // ReadScalarData<float>(job, da, APP_PROJECTION_LOCAL_TOLERANCE,
-    //                      projection_data.local_tolerance);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_TOLERANCE)) {
     ReadScalarData<float>(job, da, APP_PROJECTION_GLOBAL_TOLERANCE,
@@ -396,36 +394,37 @@ void ProjectionDriver::LoadFromNimbus(
                         projection_data.desired_iterations);
   }
   // Group IV.
+  // PROJECTION_LOCAL_RESIDUAL. Reducible.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL)) {
-    // Max of double.
     if (application::GetTranslatorData(
             job, std::string(APP_PROJECTION_LOCAL_RESIDUAL), da, &pdv,
             application::READ_ACCESS)) {
-      dbg(APP_LOG, "Reduceing on:\n");
+      dbg(APP_LOG, "Reducing PROJECTION_LOCAL_RESIDUAL max(\n");
       projection_data.local_residual = 0;
       PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         nimbus::ScalarData<double>* data_real =
             dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
-        float value = data_real->scalar();
+        double value = data_real->scalar();
         dbg(APP_LOG, "%f ", value);
         if (value > projection_data.local_residual) {
           projection_data.local_residual = value;
         }
       }
-      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_RESIDUAL.\n");
+      dbg(APP_LOG, ") = %f.\n", projection_data.local_residual);
+    } else {
+      dbg(APP_LOG, "PROJECTION_LOCAL_RESIDUAL flag"
+          "is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
-    // ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_RESIDUAL,
-    //                       projection_data.local_residual);
   }
+  // PROJECTION_LOCAL_RHO. Reducible.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_RHO)) {
-    // Sum of double.
     if (application::GetTranslatorData(
             job, std::string(APP_PROJECTION_LOCAL_RHO), da, &pdv,
             application::READ_ACCESS)) {
-      dbg(APP_LOG, "Reduceing on:");
+      dbg(APP_LOG, "Reducing PROJECTION_LOCAL_RHO sum(:");
       projection_data.local_rho = 0;
       PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
@@ -436,11 +435,12 @@ void ProjectionDriver::LoadFromNimbus(
         dbg(APP_LOG, "%f ", value);
         projection_data.local_rho += value;
       }
-      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_RHO.\n");
+      dbg(APP_LOG, ") = %f.\n", projection_data.local_rho);
+    } else {
+      dbg(APP_LOG, "PROJECTION_LOCAL_RHO flag"
+          "is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
-    // ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_RHO,
-    //                       projection_data.local_rho);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_GLOBAL_RHO)) {
     ReadScalarData<double>(job, da, APP_PROJECTION_GLOBAL_RHO,
@@ -450,12 +450,12 @@ void ProjectionDriver::LoadFromNimbus(
     ReadScalarData<double>(job, da, APP_PROJECTION_GLOBAL_RHO_OLD,
                            projection_data.rho_last);
   }
+  // PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA. Reducible.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA)) {
-    // Sum of double.
     if (application::GetTranslatorData(
             job, std::string(APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA),
             da, &pdv, application::READ_ACCESS)) {
-      dbg(APP_LOG, "Reduceing on:");
+      dbg(APP_LOG, "Reducing PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA sum(:");
       projection_data.local_dot_product_for_alpha = 0;
       PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
@@ -464,15 +464,14 @@ void ProjectionDriver::LoadFromNimbus(
             dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
         double value = data_real->scalar();
         dbg(APP_LOG, "%f ", value);
-        if (value > projection_data.local_rho) {
-          projection_data.local_dot_product_for_alpha += value;
-        }
+        projection_data.local_dot_product_for_alpha += value;
       }
-      dbg(APP_LOG, "\nFinish reading PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.\n");
+      dbg(APP_LOG, ") = %f.\n", projection_data.local_dot_product_for_alpha);
+    } else {
+      dbg(APP_LOG, "PROJECTION_LOCAL_PRODUCT_FOR_ALPHA flag"
+          "is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
-    // ReadScalarData<double>(job, da, APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
-    //                       projection_data.local_dot_product_for_alpha);
   }
   if (data_config.GetFlag(DataConfig::PROJECTION_ALPHA)) {
     ReadScalarData<float>(job, da, APP_PROJECTION_ALPHA, projection_data.alpha);
@@ -490,8 +489,12 @@ void ProjectionDriver::LoadFromNimbus(
     if (data_temp) {
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
+      // Memory allocation happens inside the call.
       data_real->LoadFromNimbus(projection_data.matrix_a.C);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+    } else {
+      dbg(APP_LOG, "MATRIX_C flag"
+          "is set but data is not local.\n");
     }
   }
   // VECTOR_Z. It cannot be splitted or merged.
@@ -499,6 +502,8 @@ void ProjectionDriver::LoadFromNimbus(
     ReadVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
   }
   // VECTOR_P. It cannot be splitted or merged.
+  // In nimbus side, VECTOR_P is always stored as grid-format.
+  // TODO(quhang), ghost regions are always read, which is not necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_P)) {
     projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
     if (application::GetTranslatorData(
@@ -507,6 +512,10 @@ void ProjectionDriver::LoadFromNimbus(
       translator.ReadScalarArrayFloat(
           &array_reg_thin_outer, array_shift, &pdv,
           &projection_data.grid_format_vector_p);
+      dbg(APP_LOG, "Finish reading the grid-format vector_p\n");
+    } else {
+      dbg(APP_LOG, "MATRIX_C flag"
+          "is set but data is not local.\n");
     }
     application::DestroyTranslatorObjects(&pdv);
   }
@@ -528,8 +537,10 @@ template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     value = data_real->scalar();
-    dbg(APP_LOG, "[Data Loading]%s: %0.9f", variable_name, (float)value);
+    dbg(APP_LOG, "[Data Loading]%s: %0.9f\n", variable_name, (float)value);
     dbg(APP_LOG, "Finish reading %s.\n", variable_name);
+  } else {
+    dbg(APP_LOG, "Flag is set but data is not local:%s.\n", variable_name);
   }
 }
 
@@ -543,15 +554,17 @@ void ProjectionDriver::ReadVectorData(
         dynamic_cast<application::DataRawVectorNd*>(data_temp);
     data_real->LoadFromNimbus(&value);
     dbg(APP_LOG, "Finish reading %s.\n", variable_name);
+  } else {
+    dbg(APP_LOG, "Flag is set but data is not local:%s.\n", variable_name);
   }
 }
 
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   int_dimension_t array_shift[3] = {
-    init_config.local_region.x() - 1,
-    init_config.local_region.y() - 1,
-    init_config.local_region.z() - 1};
+      init_config.local_region.x() - 1,
+      init_config.local_region.y() - 1,
+      init_config.local_region.z() - 1};
   PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
