@@ -51,6 +51,7 @@
 #define CHUNK_SIZE 50
 #define BANDWIDTH 10
 #define STERILE_FLAG true
+#define WITH_DATA true
 
 #define STENCIL_SIZE (2*BANDWIDTH)+1
 #define PART_SIZE (CHUNK_NUM/PART_NUM)*CHUNK_SIZE
@@ -78,77 +79,79 @@ void Main::Execute(Parameter params, const DataArray& da) {
   Parameter par;
   IDSet<param_id_t> param_idset;
 
-
-
-  /*
-   * Defining partition and data.
-   */
-  GetNewLogicalDataID(&d, CHUNK_NUM * 3);
-
-  for (int i = 0; i < CHUNK_NUM; ++i) {
-    GeometricRegion r_l(i * CHUNK_SIZE, 0, 0,
-                        BANDWIDTH, 1, 1);
-    ID<partition_id_t> p_l(i * 3);
-    DefinePartition(p_l, r_l, par);
-    DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions, par);
-
-    GeometricRegion r_m(i * CHUNK_SIZE + BANDWIDTH, 0, 0,
-                        CHUNK_SIZE - 2 * BANDWIDTH, 1, 1);
-    ID<partition_id_t> p_m(i * 3 + 1);
-    DefinePartition(p_m, r_m, par);
-    DefineData(DATA_NAME, d[i * 3 + 1], p_m.elem(), neighbor_partitions, par);
-
-    GeometricRegion r_r(i * CHUNK_SIZE + CHUNK_SIZE - BANDWIDTH, 0, 0,
-                        BANDWIDTH, 1, 1);
-    ID<partition_id_t> p_r(i * 3 + 2);
-    DefinePartition(p_r, r_r, par);
-    DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions, par);
-  }
-
-  /*
-   * Spawning jobs
-   */
   GetNewJobID(&job_ids, CHUNK_NUM * 3 + 1);
 
-  // Spawning inti jobs
-  for (int i = 0; i < CHUNK_NUM; ++i) {
-    read.clear(); read.insert(d[i * 3]);
-    write.clear(); write.insert(d[i * 3]);
-    before.clear();
-    param_idset.clear(); param_idset.insert(0);
-    par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3],
-        read, write, before, after, par, STERILE_FLAG);
+  if (WITH_DATA) {
+    /*
+     * Defining partition and data.
+     */
+    GetNewLogicalDataID(&d, CHUNK_NUM * 3);
+    for (int i = 0; i < CHUNK_NUM; ++i) {
+      GeometricRegion r_l(i * CHUNK_SIZE, 0, 0,
+          BANDWIDTH, 1, 1);
+      ID<partition_id_t> p_l(i * 3);
+      DefinePartition(p_l, r_l, par);
+      DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions, par);
 
-    read.clear(); read.insert(d[i * 3 + 1]);
-    write.clear(); write.insert(d[i * 3 + 1]);
-    before.clear();
-    param_idset.clear(); param_idset.insert(BANDWIDTH);
-    par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1],
-        read, write, before, after, par, STERILE_FLAG);
+      GeometricRegion r_m(i * CHUNK_SIZE + BANDWIDTH, 0, 0,
+          CHUNK_SIZE - 2 * BANDWIDTH, 1, 1);
+      ID<partition_id_t> p_m(i * 3 + 1);
+      DefinePartition(p_m, r_m, par);
+      DefineData(DATA_NAME, d[i * 3 + 1], p_m.elem(), neighbor_partitions, par);
 
-    read.clear(); read.insert(d[i * 3 + 2]);
-    write.clear(); write.insert(d[i * 3 + 2]);
-    before.clear();
-    param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
-    par.set_idset(param_idset);
-    SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2],
-        read, write, before, after, par, STERILE_FLAG);
+      GeometricRegion r_r(i * CHUNK_SIZE + CHUNK_SIZE - BANDWIDTH, 0, 0,
+          BANDWIDTH, 1, 1);
+      ID<partition_id_t> p_r(i * 3 + 2);
+      DefinePartition(p_r, r_r, par);
+      DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions, par);
+    }
+
+    /*
+     * Spawning init jobs
+     */
+    for (int i = 0; i < CHUNK_NUM; ++i) {
+      read.clear(); read.insert(d[i * 3]);
+      write.clear(); write.insert(d[i * 3]);
+      before.clear();
+      param_idset.clear(); param_idset.insert(0);
+      par.set_idset(param_idset);
+      SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3],
+          read, write, before, after, par, STERILE_FLAG);
+
+      read.clear(); read.insert(d[i * 3 + 1]);
+      write.clear(); write.insert(d[i * 3 + 1]);
+      before.clear();
+      param_idset.clear(); param_idset.insert(BANDWIDTH);
+      par.set_idset(param_idset);
+      SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1],
+          read, write, before, after, par, STERILE_FLAG);
+
+      read.clear(); read.insert(d[i * 3 + 2]);
+      write.clear(); write.insert(d[i * 3 + 2]);
+      before.clear();
+      param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
+      par.set_idset(param_idset);
+      SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2],
+          read, write, before, after, par, STERILE_FLAG);
+    }
   }
 
-  // Spawning loop job
+  /*
+   * Spawning loop job
+   */
   read.clear();
   write.clear();
   before.clear();
-  for (int j = 0; j < CHUNK_NUM * 3; ++j) {
-    before.insert(job_ids[j]);
+  if (WITH_DATA) {
+    for (int j = 0; j < CHUNK_NUM * 3; ++j) {
+      before.insert(job_ids[j]);
+    }
   }
   after.clear();
   param_idset.clear();
   param_idset.insert(LOOP_COUNTER);
   par.set_idset(param_idset);
-  SpawnComputeJob(LOOP_JOB_NAME, job_ids[CHUNK_NUM * 3], read, write, before, after, par);
+  SpawnComputeJob(LOOP_JOB_NAME, job_ids[3 * CHUNK_NUM], read, write, before, after, par);
 };
 
 ForLoop::ForLoop(Application* app) {
@@ -171,7 +174,9 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   param_id_t loop_counter = *(params.idset().begin());
 
   if (loop_counter > LOOP_CONDITION) {
-    // Spawn the batch of jobs in each stage
+    /*
+     * Spawn the batch of jobs in each stage
+     */
     std::vector<job_id_t> stage_job_ids;
     GetNewJobID(&stage_job_ids, STAGE_NUM * PART_NUM);
     std::vector<job_id_t> connector_job_ids;
@@ -179,13 +184,17 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     for (int s = 0; s < STAGE_NUM; ++s) {
       for (int i = 0; i < PART_NUM; ++i) {
         read.clear();
-        GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
-            PART_SIZE + 2 * BANDWIDTH, 1, 1);
-        LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
+        if (WITH_DATA) {
+          GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
+              PART_SIZE + 2 * BANDWIDTH, 1, 1);
+          LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
+        }
         write.clear();
-        GeometricRegion r_w(i * PART_SIZE, 0, 0,
-            PART_SIZE, 1, 1);
-        LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
+        if (WITH_DATA) {
+          GeometricRegion r_w(i * PART_SIZE, 0, 0,
+              PART_SIZE, 1, 1);
+          LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
+        }
         before.clear();
         if (s > 0) {
           before.insert(connector_job_ids[s - 1]);
@@ -207,29 +216,38 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       }
     }
 
-    // Spawning the print jobs at the end of each loop
     std::vector<job_id_t> print_job_ids;
     GetNewJobID(&print_job_ids, PART_NUM);
-    for (int i = 0; i < PART_NUM; ++i) {
-      read.clear();
-      GeometricRegion r(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
-      LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
-      write.clear();
-      before.clear();
-      before.insert(stage_job_ids[(STAGE_NUM - 1) * PART_NUM + i]);
-      after.clear();
-      SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i],
-          read, write, before, after, par, STERILE_FLAG);
+
+    if (WITH_DATA) {
+      /*
+       * Spawning the print jobs at the end of each loop
+       */
+      for (int i = 0; i < PART_NUM; ++i) {
+        read.clear();
+        GeometricRegion r(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
+        LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+        write.clear();
+        before.clear();
+        before.insert(stage_job_ids[(STAGE_NUM - 1) * PART_NUM + i]);
+        after.clear();
+        SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i],
+            read, write, before, after, par, STERILE_FLAG);
+      }
     }
 
-    // Spawning the next for loop job
+    /*
+     * Spawning the next for loop job
+     */
     std::vector<job_id_t> forloop_job_id;
     GetNewJobID(&forloop_job_id, 1);
     read.clear();
     write.clear();
     before.clear();
-    for (int j = 0; j < PART_NUM; ++j) {
-      before.insert(print_job_ids[j]);
+    if (WITH_DATA) {
+      for (int j = 0; j < PART_NUM; ++j) {
+        before.insert(print_job_ids[j]);
+      }
     }
     after.clear();
     param_idset.clear();
@@ -237,19 +255,22 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     par.set_idset(param_idset);
     SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
   } else {
-    std::vector<job_id_t> print_job_id;
-    GetNewJobID(&print_job_id, 1);
+    if (WITH_DATA) {
+      std::vector<job_id_t> print_job_id;
+      GetNewJobID(&print_job_id, 1);
 
-    // Spawning final print job
-    read.clear();
-    GeometricRegion r(0, 0, 0, CHUNK_SIZE * CHUNK_NUM, 1, 1);
-    LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
-    write.clear();
-    before.clear();
-    after.clear();
-    SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0],
-        read, write, before, after, par, STERILE_FLAG);
-
+      /*
+       * Spawning final print job
+       */
+      read.clear();
+      GeometricRegion r(0, 0, 0, CHUNK_SIZE * CHUNK_NUM, 1, 1);
+      LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
+      write.clear();
+      before.clear();
+      after.clear();
+      SpawnComputeJob(PRINT_JOB_NAME, print_job_id[0],
+          read, write, before, after, par, STERILE_FLAG);
+    }
 
     TerminateApplication();
   }
