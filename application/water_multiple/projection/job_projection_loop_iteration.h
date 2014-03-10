@@ -33,6 +33,16 @@
  */
 
 /*
+ * This file contains job PROJECTION_LOOP_ITERATION that:
+ *     spawns a new projection loop, or spawns the jobs after projection
+ *     iteration if it finishes.
+ * The parameters:
+ *
+ * The read set:
+ *     PROJECTION_LOCAL_RESIDUAL, PROJECTION_GLOBAL_RESIDUAL,
+ *     PROJECTION_DESIRED_ITERATION.
+ * The write set:
+ *     none.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
@@ -54,4 +64,4 @@ class JobProjectionLoopIteration : public nimbus::Job {
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOOP_ITERATION_H_
