@@ -598,9 +598,9 @@ namespace application {
         if (advect_removed_particles_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_POS_REM_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegW3Central[0], APP_POS_REM_PARTICLES,
+            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
             SerializeParameter(frame,
                                time,
