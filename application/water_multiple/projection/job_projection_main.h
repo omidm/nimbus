@@ -55,7 +55,6 @@ class JobProjectionMain : public nimbus::Job {
   void SpawnJobs(
       int frame, T time, T dt, const nimbus::DataArray& da,
       const nimbus::GeometricRegion& global_region);
-
 };
 
 }  // namespace application

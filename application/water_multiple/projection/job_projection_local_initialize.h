@@ -33,6 +33,14 @@
  */
 
 /*
+ * This file contains job PROJECTION_LOCAL_INITIALIZE that:
+ *     initializes all the data for projection that requires no global
+ *     coordination.
+ * Parameter list:
+ *
+ * The read set:
+ *
+ * The write set:
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */

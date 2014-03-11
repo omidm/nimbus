@@ -596,9 +596,6 @@ ProjectionWrapupImpl(
     const nimbus::Job *job,
     const nimbus::DataArray &da,
     T dt) {
-  // Read matrix_index_to_cell_index and x. Write u.
-  example.laplace_solver_wrapper.TransformResult();
-
   // Applies pressure.
   // Local.
   // Read pressure(u/p), levelset, psi_D, psi_N, u_interface, velocity.

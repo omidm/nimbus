@@ -73,4 +73,5 @@ void FindMatrixIndices(
     int* interior_n);
 
 }  // namespace PhysBAM
+
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_HELPER_H_
