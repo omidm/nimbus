@@ -56,12 +56,12 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
     const ID<job_id_t>& parent_job_id,
     const Parameter& params,
-    const bool& is_parent)
+    const bool& sterile)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
   parent_job_id_(parent_job_id),
-  params_(params), is_parent_(is_parent) {
+  params_(params), sterile_(sterile) {
   name_ = SPAWN_COMPUTE_JOB_NAME;
   type_ = SPAWN_COMPUTE_JOB;
 }
@@ -140,10 +140,10 @@ bool SpawnComputeJobCommand::Parse(const std::string& params) {
   }
 
   iter++;
-  if (*iter == "is_parent") {
-    is_parent_ = true;
-  } else if (*iter == "not_parent") {
-    is_parent_ = false;
+  if (*iter == "sterile") {
+    sterile_ = true;
+  } else if (*iter == "not_sterile") {
+    sterile_ = false;
   } else {
     std::cout << "ERROR: Could not detect valid is parent flag." << std::endl;
     return false;
@@ -163,10 +163,10 @@ std::string SpawnComputeJobCommand::toString() {
   str += (after_set_.toString() + " ");
   str += (parent_job_id_.toString() + " ");
   str += (params_.toString() + " ");
-  if (is_parent_) {
-    str += "is_parent";
+  if (sterile_) {
+    str += "sterile";
   } else {
-    str += "not_parent";
+    str += "not_sterile";
   }
 
   return str;
@@ -183,10 +183,10 @@ std::string SpawnComputeJobCommand::toStringWTags() {
   str += ("after:" + after_set_.toString() + " ");
   str += ("parent-id:" + parent_job_id_.toString() + " ");
   str += ("params:" + params_.toString() + " ");
-  if (is_parent_) {
-    str += "is_parent";
+  if (sterile_) {
+    str += "sterile";
   } else {
-    str += "not_parent";
+    str += "not_sterile";
   }
   return str;
 }
@@ -222,7 +222,7 @@ Parameter SpawnComputeJobCommand::params() {
   return params_;
 }
 
-bool SpawnComputeJobCommand::is_parent() {
-  return is_parent_;
+bool SpawnComputeJobCommand::sterile() {
+  return sterile_;
 }
 

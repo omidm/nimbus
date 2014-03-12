@@ -44,7 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 10
+#define MAX_JOB_TO_ASSIGN 100000000
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
@@ -70,7 +70,7 @@ void Scheduler::Run() {
   Log::log_PrintLine("Running the Scheduler");
 
   SetupWorkerInterface();
-  SetupUserInterface();
+  // SetupUserInterface();
   SetupDataManager();
   SetupJobManager();
   id_maker_.Initialize(0);
@@ -161,7 +161,7 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
         cm->read_set(), cm->write_set(),
         cm->before_set(), cm->after_set(),
         cm->parent_job_id().elem(), cm->params(),
-        cm->is_parent());
+        cm->sterile());
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
@@ -176,7 +176,7 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
         job_name, cm->job_id().elem(),
         read_set, write_set,
         cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params(), false);
+        cm->parent_job_id().elem(), cm->params(), true);
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
@@ -252,7 +252,7 @@ void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   job_manager_->AddJobEntry(JOB_COMP, NIMBUS_MAIN_JOB_NAME, j[0],
-      NIMBUS_KERNEL_JOB_ID, true, false, false);
+      NIMBUS_KERNEL_JOB_ID, false, false, false);
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
@@ -331,12 +331,12 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), false, true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true, true, true);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
   list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
-  PhysicalData p(d[0], worker->worker_id(), (data_version_t)(0), list_job_read, j[0]);
+  PhysicalData p(d[0], worker->worker_id(), NIMBUS_INIT_DATA_VERSION, list_job_read, j[0]);
   data_manager_->AddPhysicalInstance(ldo, p);
 
   // send the create command to worker.
@@ -366,7 +366,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Receive part
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), false, true, true); // NOLINT
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), true, true, true); // NOLINT
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
@@ -389,7 +389,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Send Part.
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), false, true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), true, true, true);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -425,7 +425,7 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), false, true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), true, true, true);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -469,16 +469,26 @@ bool Scheduler::GetFreeDataAtWorker(SchedulerWorker* worker,
 }
 
 
-bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
+bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
   JobEntry::VersionTable version_table_in = job->version_table_in();
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
 
+  bool reading = job->read_set().contains(l_id);
+  bool writing = job->write_set().contains(l_id);
+  assert(reading || writing);
+
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
   data_version_t version = version_table_in[l_id];
 
+  if (!reading) {
+    PhysicalData target_instance;
+    GetFreeDataAtWorker(worker, ldo, &target_instance);
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
+  }
 
   if (version == 0) {
     PhysicalData created_data;
@@ -499,8 +509,7 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
   job_manager_->GetJobsNeedDataVersion(&list, vld);
   log_table_.StopTimer();
   assert(list.size() >= 1);
-  bool writing_needed_version = (list.size() > 1) &&
-    (job->write_set().contains(l_id));
+  bool writing_needed_version = (list.size() > 1) && writing;
 
   if (instances_at_worker.size() > 1) {
     PhysicalData target_instance = instances_at_worker[0];
@@ -523,6 +532,8 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
     return true;
   }
 
+  assert(instances_in_system.size() >= 1);
+
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = instances_in_system[0];
     worker_id_t sender_id = from_instance.worker();
@@ -542,336 +553,6 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
   return false;
 }
 
-bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
-    SchedulerWorker* worker, logical_data_id_t l_id) {
-  JobEntry::VersionTable version_table_in = job->version_table_in();
-  JobEntry::PhysicalTable physical_table = job->physical_table();
-  IDSet<job_id_t> before_set = job->before_set();
-
-  PhysicalDataVector pv;
-  LogicalDataObject* ldo =
-    const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  data_version_t version = version_table_in[l_id];
-  data_manager_->InstancesByWorkerAndVersion(ldo, worker->worker_id(), version, &pv);
-
-  if (pv.size() > 1) {
-    assert(pv[0].version() == version);
-    PhysicalData p = pv[0];
-    if (job->read_set().contains(l_id)) {
-      p.set_last_job_read(job->job_id());
-      before_set.insert(pv[0].last_job_write());
-    }
-    if (job->write_set().contains(l_id)) {
-      p.set_last_job_write(job->job_id());
-      p.set_version(version + 1);
-      before_set.insert(pv[0].last_job_read());
-    }
-    data_manager_->RemovePhysicalInstance(ldo, pv[0]);
-    data_manager_->AddPhysicalInstance(ldo, p);
-    physical_table[l_id] = pv[0].id();
-  } else if (pv.size() == 1) {
-    JobEntryList list;
-    VersionedLogicalData vld(l_id, version);
-
-    log_table_.ResumeTimer();
-    job_manager_->GetJobsNeedDataVersion(&list, vld);
-    log_table_.StopTimer();
-
-    assert(list.size() >= 1);
-    if (list.size() == 1) {
-      assert(pv[0].version() == version);
-      PhysicalData p = pv[0];
-      if (job->read_set().contains(l_id)) {
-        p.set_last_job_read(job->job_id());
-        before_set.insert(pv[0].last_job_write());
-      }
-      if (job->write_set().contains(l_id)) {
-        p.set_last_job_write(job->job_id());
-        p.set_version(version + 1);
-        before_set.insert(pv[0].last_job_read());
-      }
-      data_manager_->RemovePhysicalInstance(ldo, pv[0]);
-      data_manager_->AddPhysicalInstance(ldo, p);
-      physical_table[l_id] = pv[0].id();
-
-    } else {
-      // Duplicate data for the other job, before using it.
-      // TODO(omidm): if you are not writing you can use the copy with out
-      // duplicating. Then you need to keep track of list of last_read_job.
-      assert(pv[0].version() == version);
-
-      bool found_obsolete = false;
-      physical_data_id_t obsolete_id = 0;
-      PhysicalDataVector g_pv;
-      data_manager_->InstancesByWorker(ldo, worker->worker_id(), &g_pv);
-      PhysicalDataVector::iterator g_iter = g_pv.begin();
-      for (; g_iter != g_pv.end(); ++g_iter) {
-        JobEntryList g_list;
-        VersionedLogicalData g_vld(l_id, g_iter->version());
-        log_table_.ResumeTimer();
-        if (job_manager_->GetJobsNeedDataVersion(&g_list, g_vld) == 0) {
-          found_obsolete = true;
-          obsolete_id = g_iter->id();
-          break;
-        }
-        log_table_.StopTimer();
-      }
-
-      IDSet<job_id_t> before, after;
-      physical_data_id_t new_copy_id = 0;
-      job_id_t copy_job_id = 0;
-      job_id_t create_job_id = 0;
-      if (found_obsolete) {
-        std::vector<job_id_t> j;
-        id_maker_.GetNewJobID(&j, 1);
-        copy_job_id = j[0];
-
-        new_copy_id = obsolete_id;
-      } else {
-        std::vector<job_id_t> j;
-        id_maker_.GetNewJobID(&j, 2);
-        create_job_id = j[0];
-        copy_job_id = j[1];
-
-        std::vector<physical_data_id_t> d;
-        id_maker_.GetNewPhysicalDataID(&d, 1);
-        new_copy_id = d[0];
-
-        after.insert(j[1]);
-        job_manager_->UpdateBeforeSet(&before);
-        CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
-            ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
-        server_->SendCommand(worker, &cm);
-
-        // Update the job table.
-        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), false, true, true);
-      }
-
-      after.clear();
-      after.insert(job->job_id());
-      if (found_obsolete) {
-        before.insert(g_iter->last_job_read());
-      } else {
-        before.insert(create_job_id);
-      }
-      before.insert(pv[0].last_job_write());
-      job_manager_->UpdateBeforeSet(&before);
-      LocalCopyCommand cm_c(ID<job_id_t>(copy_job_id),
-          ID<physical_data_id_t>(pv[0].id()),
-          ID<physical_data_id_t>(new_copy_id), before, after);
-      dbg(DBG_SCHED, "Sending local copy command to worker %lu.\n", worker->worker_id());
-      server_->SendCommand(worker, &cm_c);
-
-      // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "localcopy", copy_job_id, (job_id_t)(0), false, true, true); // NOLINT
-
-      // Update data table. Q?
-      if (found_obsolete) {
-        PhysicalData p_c(new_copy_id, worker->worker_id(), version,
-            g_iter->last_job_read(), copy_job_id);
-        data_manager_->RemovePhysicalInstance(ldo, *g_iter);
-        data_manager_->AddPhysicalInstance(ldo, p_c);
-      } else {
-        PhysicalData p_c(new_copy_id, worker->worker_id(), version,
-            copy_job_id, copy_job_id);
-        data_manager_->AddPhysicalInstance(ldo, p_c);
-      }
-
-      PhysicalData p = pv[0];
-      p.set_last_job_read(copy_job_id);
-      if (job->read_set().contains(l_id)) {
-        // It is OK to rewrite copy_job_id as last_job_read, because you are conservative, now.
-        p.set_last_job_read(job->job_id());
-        before_set.insert(pv[0].last_job_write());
-      }
-      if (job->write_set().contains(l_id)) {
-        p.set_last_job_write(job->job_id());
-        p.set_version(version + 1);
-        before_set.insert(pv[0].last_job_read());
-      }
-      data_manager_->RemovePhysicalInstance(ldo, pv[0]);
-      data_manager_->AddPhysicalInstance(ldo, p);
-
-      // Update before_set and physical_table
-      before_set.insert(copy_job_id);  // Remain conservative for now.
-      physical_table[l_id] = pv[0].id();
-    }
-  } else {
-    if (version == 0) {
-      std::vector<job_id_t> j;
-      id_maker_.GetNewJobID(&j, 1);
-      std::vector<physical_data_id_t> d;
-      id_maker_.GetNewPhysicalDataID(&d, 1);
-      IDSet<job_id_t> before, after;
-
-      // Move this to SendJobToWorker
-      after.insert(job->job_id());
-      job_manager_->UpdateBeforeSet(&before);
-      CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
-          ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
-      server_->SendCommand(worker, &cm);
-
-      // Update the job table.
-      job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), false, true, true);
-
-      // Update data table. Q?
-      data_version_t new_version = version;
-      if (job->write_set().contains(l_id)) {
-        ++new_version;
-      }
-      PhysicalData p(d[0], worker->worker_id(), new_version,
-          job->job_id(), job->job_id());
-      data_manager_->AddPhysicalInstance(ldo, p);
-
-      // Update before_set and physical_table
-      before_set.insert(j[0]);
-      physical_table[l_id] = d[0];
-    } else {
-      PhysicalDataVector pvv;
-      data_manager_->InstancesByVersion(ldo, version, &pvv);
-      if (pvv.size() == 0) {
-        dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
-        return false;
-      } else {
-        // TODO(omidm): do something smarter!
-        worker_id_t sender_id = pvv[0].worker();
-        SchedulerWorker* worker_sender;
-        if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
-          dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
-          exit(-1);
-        }
-
-      bool found_obsolete = false;
-      physical_data_id_t obsolete_id = 0;
-      PhysicalDataVector g_pv;
-      data_manager_->InstancesByWorker(ldo, worker->worker_id(), &g_pv);
-      PhysicalDataVector::iterator g_iter = g_pv.begin();
-      for (; g_iter != g_pv.end(); ++g_iter) {
-        JobEntryList g_list;
-        VersionedLogicalData g_vld(l_id, g_iter->version());
-        log_table_.ResumeTimer();
-        if (job_manager_->GetJobsNeedDataVersion(&g_list, g_vld) == 0) {
-          found_obsolete = true;
-          obsolete_id = g_iter->id();
-          break;
-        }
-        log_table_.StopTimer();
-      }
-
-      IDSet<job_id_t> before, after;
-
-      // Receive part
-      physical_data_id_t new_copy_id = 0;
-      job_id_t receive_job_id = 0;
-      job_id_t create_job_id = 0;
-      if (found_obsolete) {
-        std::vector<job_id_t> j;
-        id_maker_.GetNewJobID(&j, 1);
-        receive_job_id = j[0];
-
-        new_copy_id = obsolete_id;
-      } else {
-        std::vector<job_id_t> j;
-        id_maker_.GetNewJobID(&j, 2);
-        create_job_id = j[0];
-        receive_job_id = j[1];
-
-        std::vector<physical_data_id_t> d;
-        id_maker_.GetNewPhysicalDataID(&d, 1);
-        new_copy_id = d[0];
-
-        after.insert(j[1]);
-        job_manager_->UpdateBeforeSet(&before);
-        CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
-            ID<logical_data_id_t>(l_id), ID<physical_data_id_t>(d[0]), before, after);
-        server_->SendCommand(worker, &cm);
-
-        // Update the job table.
-        job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), false, true, true);
-      }
-
-      // Update the job table.
-      // job_manager_->AddJobEntry(JOB_CREATE, ...
-      // job_manager_->AddJobEntry(JOB_COPY, ...
-      // job_manager_->AddJobEntry(JOB_COPY, ...
-
-      after.clear();
-      after.insert(job->job_id());
-      if (found_obsolete) {
-        before.insert(g_iter->last_job_read());  // Remain conservative.
-      } else {
-        before.insert(create_job_id);
-      }
-      job_manager_->UpdateBeforeSet(&before);
-      RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_job_id),
-          ID<physical_data_id_t>(new_copy_id), before, after);
-      dbg(DBG_SCHED, "Sending remote copy command to worker %lu.\n", worker->worker_id());
-      server_->SendCommand(worker, &cm_r);
-
-      // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_job_id, (job_id_t)(0), false, true, true); // NOLINT
-
-      // Update data table. Q?
-      PhysicalData p(new_copy_id, worker->worker_id(), version);
-      p.set_last_job_write(receive_job_id);
-
-      if (found_obsolete) {
-        p.set_last_job_read(g_iter->last_job_read());
-        data_manager_->RemovePhysicalInstance(ldo, *g_iter);
-      }
-
-      if (job->read_set().contains(l_id)) {
-        // It is OK to rewrite last_job_read of obsolete, because you are conservative, now.
-        p.set_last_job_read(job->job_id());
-        // It is waiting for receive job (last job write)
-      }
-      if (job->write_set().contains(l_id)) {
-        // It is OK to rewrite receive_job_id, because you are conservative, now.
-        p.set_last_job_write(job->job_id());
-        p.set_version(version + 1);
-        // do not need to add last_job_read of obsolete, because you are conservative, now.
-      }
-      data_manager_->AddPhysicalInstance(ldo, p);
-
-      // Update before_set and physical_table
-      before_set.insert(receive_job_id);  // Remain conservative for now.
-      physical_table[l_id] = new_copy_id;
-
-
-      // Send part
-      std::vector<job_id_t> j;
-      id_maker_.GetNewJobID(&j, 1);
-      physical_data_id_t send_job_id = j[0];
-
-      after.clear();
-      before.clear();
-      before.insert(pvv[0].last_job_write());
-      job_manager_->UpdateBeforeSet(&before);
-      RemoteCopySendCommand cm_s(ID<job_id_t>(send_job_id),
-          ID<job_id_t>(receive_job_id), ID<physical_data_id_t>(pvv[0].id()),
-          ID<worker_id_t>(worker->worker_id()),
-          worker->ip(), ID<port_t>(worker->port()),
-          before, after);
-      dbg(DBG_SCHED, "Sending remote copy command to worker %lu.\n", worker_sender->worker_id());
-      server_->SendCommand(worker_sender, &cm_s);
-
-      // Update the job table.
-      job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", j[0], (job_id_t)(0), false, true, true);
-
-      // Update data table.
-      PhysicalData p_s = pvv[0];
-      p_s.set_last_job_read(send_job_id);
-      data_manager_->RemovePhysicalInstance(ldo, pvv[0]);
-      data_manager_->AddPhysicalInstance(ldo, p_s);
-      }
-    }
-  }
-
-  job->set_before_set(before_set);
-  job->set_physical_table(physical_table);
-  return true;
-}
-
 bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
     ID<job_id_t> id(job->job_id());
@@ -880,7 +561,7 @@ bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
     job->GetPhysicalReadSet(&read_set);
     job->GetPhysicalWriteSet(&write_set);
     ComputeJobCommand cm(job->job_name(), id,
-        read_set, write_set, job->before_set(), job->after_set(), job->params(), job->is_parent());
+        read_set, write_set, job->before_set(), job->after_set(), job->params(), job->sterile());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
     return true;
@@ -904,7 +585,7 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
-  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), false, true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true, true);
   return true;
 }
 

@@ -48,10 +48,8 @@ PhysicalData::PhysicalData() {}
 PhysicalData::PhysicalData(const physical_data_id_t& id, const worker_id_t& worker) {
   id_ = id;
   worker_ = worker;
-  version_ = (data_version_t)(0);
-  last_job_write_ = (job_id_t)(0);
-
-  last_job_read_ = 0;
+  version_ = NIMBUS_INIT_DATA_VERSION;
+  last_job_write_ = NIMBUS_KERNEL_JOB_ID;
 }
 
 
@@ -60,9 +58,7 @@ PhysicalData::PhysicalData(const physical_data_id_t& id, const worker_id_t& work
   id_ = id;
   worker_ = worker;
   version_ = version;
-  last_job_write_ = (job_id_t)(0);
-
-  last_job_read_ = 0;
+  last_job_write_ = NIMBUS_KERNEL_JOB_ID;
 }
 
 
@@ -74,8 +70,6 @@ PhysicalData::PhysicalData(const physical_data_id_t& id, const worker_id_t& work
   version_ = version;
   list_job_read_ = list_job_read;
   last_job_write_ = last_job_write;
-
-  last_job_read_ = 0;
 }
 
 PhysicalData::PhysicalData(const PhysicalData& other) {
@@ -83,53 +77,14 @@ PhysicalData::PhysicalData(const PhysicalData& other) {
   worker_ = other.worker_;
   version_ = other.version_;
   list_job_read_ = other.list_job_read_;
-  last_job_read_ = other.last_job_read_;
   last_job_write_ = other.last_job_write_;
 }
-
-
-
-
-
-
-
-/**
- * \fn nimbus::PhysicalData::PhysicalData(physical_data_id_t id,
-                                   worker_id_t worker,
-                                   data_version_t version,
-                                   job_id_t last_job_read,
-                                   job_id_t last_job_write)
- * \brief Brief description.
- * \param id
- * \param worker
- * \param version
- * \param last_job_read
- * \param last_job_write
- * \return
-*/
-nimbus::PhysicalData::PhysicalData(physical_data_id_t i,
-                                   worker_id_t w,
-                                   data_version_t v,
-                                   job_id_t last_job_read,
-                                   job_id_t last_job_write) {
-  id_ = i;
-  worker_ = w;
-  version_ = v;
-  last_job_read_ = last_job_read;
-  last_job_write_ = last_job_write;
-}
-
-
-
-
-
 
 PhysicalData& nimbus::PhysicalData::operator= (const PhysicalData& right) {
   id_ = right.id_;
   worker_ = right.worker_;
   version_ = right.version_;
   list_job_read_ = right.list_job_read_;
-  last_job_read_ = right.last_job_read_;
   last_job_write_ = right.last_job_write_;
   return *this;
 }
@@ -177,15 +132,6 @@ IDSet<job_id_t> nimbus::PhysicalData::list_job_read() {
 }
 
 /**
- * \fn job_id_t nimbus::PhysicalData::last_job_read()
- * \brief Brief description.
- * \return
-*/
-job_id_t nimbus::PhysicalData::last_job_read() {
-  return last_job_read_;
-}
-
-/**
  * \fn job_id_t nimbus::PhysicalData::last_job_write()
  * \brief Brief description.
  * \return
@@ -214,16 +160,6 @@ void nimbus::PhysicalData::set_version(data_version_t v) {
 
 void nimbus::PhysicalData::set_list_job_read(IDSet<job_id_t> list_job_read) {
   list_job_read_ = list_job_read;
-}
-
-/**
- * \fn void nimbus::PhysicalData::set_last_job_read(job_id_t id)
- * \brief Brief description.
- * \param id
- * \return
-*/
-void nimbus::PhysicalData::set_last_job_read(job_id_t id) {
-  last_job_read_ = id;
 }
 
 /**
