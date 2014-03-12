@@ -96,19 +96,17 @@ void JobProjectionMain::SpawnJobs(
       &default_params_str);
   default_params.set_ser_data(SerializedData(default_params_str));
 
-  nimbus::Parameter default_left_params;
+  nimbus::Parameter default_part_params[2];
   std::string default_left_params_str;
   SerializeParameter(
       frame, time, dt, global_region, kRegY2W0Central[0],
       &default_left_params_str);
-  default_left_params.set_ser_data(SerializedData(default_left_params_str));
-
-  nimbus::Parameter default_right_params;
+  default_part_params[0].set_ser_data(SerializedData(default_left_params_str));
   std::string default_right_params_str;
   SerializeParameter(
       frame, time, dt, global_region, kRegY2W0Central[1],
       &default_right_params_str);
-  default_right_params.set_ser_data(SerializedData(default_right_params_str));
+  default_part_params[1].set_ser_data(SerializedData(default_right_params_str));
 
   int construct_matrix_job_num = 2;
   std::vector<nimbus::job_id_t> construct_matrix_job_ids;
@@ -156,8 +154,8 @@ void JobProjectionMain::SpawnJobs(
     LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
                         APP_U_INTERFACE, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W1Outer[index],
+    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
                         APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
                         APP_PRESSURE, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
@@ -176,7 +174,7 @@ void JobProjectionMain::SpawnJobs(
                     construct_matrix_job_ids[index],
                     read, write,
                     before, after,
-                    default_left_params);
+                    default_part_params[index]);
   }
 
   // Local initialize.
@@ -200,7 +198,7 @@ void JobProjectionMain::SpawnJobs(
                     local_initialize_job_ids[index],
                     read, write,
                     before, after,
-                    default_left_params);
+                    default_part_params[index]);
   }
 
   // Global initialize.

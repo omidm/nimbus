@@ -191,19 +191,19 @@ void JobProjectionLoopIteration::Execute(
                        &default_params_str);
     default_params.set_ser_data(SerializedData(default_params_str));
 
-    nimbus::Parameter default_left_params;
+    nimbus::Parameter default_part_params[2];
     std::string default_left_params_str;
     SerializeParameter(
-        frame, time, dt, global_region, kRegY2W0Central[0], iteration,
+        frame, time, dt, global_region, kRegY2W0Central[0],
         &default_left_params_str);
-    default_left_params.set_ser_data(SerializedData(default_left_params_str));
-
-    nimbus::Parameter default_right_params;
+    default_part_params[0].set_ser_data(
+        SerializedData(default_left_params_str));
     std::string default_right_params_str;
     SerializeParameter(
-        frame, time, dt, global_region, kRegY2W0Central[1], iteration,
+        frame, time, dt, global_region, kRegY2W0Central[1],
         &default_right_params_str);
-    default_right_params.set_ser_data(SerializedData(default_right_params_str));
+    default_part_params[1].set_ser_data(
+        SerializedData(default_right_params_str));
 
     int projection_job_num = 7;
     std::vector<nimbus::job_id_t> projection_job_ids;
@@ -243,7 +243,7 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[1]);
       SpawnComputeJob(PROJECTION_STEP_ONE, step_one_job_ids[index],
-                      read, write, before, after, default_left_params);
+                      read, write, before, after, default_part_params[index]);
     }
 
     // REDUCE_RHO
@@ -277,14 +277,14 @@ void JobProjectionLoopIteration::Execute(
           NULL);
       write.clear();
       LoadLogicalIdsInSet(
-          this, &write, kRegY2W0Central[index], APP_VECTOR_P, NULL);
+          this, &write, kRegY2W1CentralWGB[index], APP_VECTOR_P, NULL);
       before.clear();
       before.insert(projection_job_ids[1]);
       after.clear();
       after.insert(step_three_job_ids[0]);
       after.insert(step_three_job_ids[1]);
       SpawnComputeJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
-                      read, write, before, after, default_left_params);
+                      read, write, before, after, default_part_params[index]);
     }
 
     // STEP_THREE
@@ -305,7 +305,7 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[4]);
       SpawnComputeJob(PROJECTION_STEP_THREE, step_three_job_ids[0],
-                      read, write, before, after, default_left_params);
+                      read, write, before, after, default_part_params[index]);
     }
 
     // REDUCE_ALPHA
@@ -347,7 +347,7 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[6]);
       SpawnComputeJob(PROJECTION_STEP_FOUR, step_four_job_ids[0],
-                      read, write, before, after, default_left_params);
+                      read, write, before, after, default_part_params[index]);
     }
 
     // NEXT_ITERATION
