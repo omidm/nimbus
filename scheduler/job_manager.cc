@@ -84,6 +84,7 @@ bool JobManager::AddJobEntry(const JobType& job_type,
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
     return false;
   } else {
     bool completed_before_set_edges = true;
@@ -100,6 +101,7 @@ bool JobManager::AddJobEntry(const JobType& job_type,
       job_graph_.RemoveVertex(job_id);
       delete job;
       dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+      exit(-1);
       return false;
     }
 
