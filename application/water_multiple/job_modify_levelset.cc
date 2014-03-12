@@ -66,6 +66,7 @@ void JobModifyLevelset::Execute(nimbus::Parameter params, const nimbus::DataArra
     dbg(APP_LOG, "Executing modify levelset job\n");
 
     InitConfig init_config;
+    init_config.set_boundary_condition = false;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
@@ -78,7 +79,13 @@ void JobModifyLevelset::Execute(nimbus::Parameter params, const nimbus::DataArra
     PhysBAM::WATER_DRIVER<TV> *driver;
 
     DataConfig data_config;
-    data_config.SetAll();
+    data_config.SetFlag(DataConfig::VELOCITY);
+    data_config.SetFlag(DataConfig::VELOCITY_GHOST);
+    data_config.SetFlag(DataConfig::LEVELSET);
+    data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 
