@@ -68,8 +68,32 @@ class Scheduler {
     virtual ~Scheduler();
 
     virtual void Run();
+
+    void set_min_worker_to_join(size_t num);
+
+    /* TODO(omidm): figure out what we want for these methods. */
+    virtual void LoadClusterMap(std::string) {}
+    virtual void DeleteWorker(SchedulerWorker * worker) {}
+    virtual void AddWorker(SchedulerWorker * worker) {}
+    virtual SchedulerWorker* GetWorker(int workerId) {return NULL;}
+
+  protected:
     virtual void SchedulerCoreProcessor();
+
+    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+
+    virtual void RegisterInitialWorkers(size_t min_to_join);
+
+    virtual size_t RegisterPendingWorkers();
+
+    virtual size_t AssignReadyJobs();
+
+    virtual void AddMainJob();
+
+    virtual void TerminationProcedure();
+
     virtual void ProcessQueuedSchedulerCommands(size_t max_num);
+
     virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
     virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
     virtual void ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm);
@@ -79,51 +103,14 @@ class Scheduler {
     virtual void ProcessDefinePartitionCommand(DefinePartitionCommand* cm);
     virtual void ProcessTerminateCommand(TerminateCommand* cm);
 
-    virtual void RegisterInitialWorkers(size_t min_to_join);
-    virtual size_t RegisterPendingWorkers();
-    virtual void AddMainJob();
-    virtual void TerminationProcedure();
+    virtual void SetupUserInterface();
+    virtual void SetupWorkerInterface();
+    virtual void SetupDataManager();
+    virtual void SetupJobManager();
+    virtual void GetUserCommand();
+    virtual void LoadUserCommands();
+    virtual void LoadWorkerCommands();
 
-    virtual size_t AssignReadyJobs();
-    virtual bool AssignJob(JobEntry* job);
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
-
-    virtual bool PrepareDataForJobAtWorker(JobEntry* job,
-                                SchedulerWorker* worker, logical_data_id_t l_id);
-    virtual bool AllocateLdoInstanceToJob(JobEntry* job,
-        LogicalDataObject* ldo, PhysicalData pd);
-    virtual size_t GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
-        LogicalDataObject* ldo, PhysicalDataVector* dest);
-
-    virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
-    virtual bool SendCreateJobToWorker(SchedulerWorker* worker,
-        const std::string& data_name, const logical_data_id_t& logical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        job_id_t* job_id, physical_data_id_t* physical_data_id);
-    virtual bool SendLocalCopyJobToWorker(SchedulerWorker* worker,
-        const ID<physical_data_id_t>& from_physical_data_id,
-        const ID<physical_data_id_t>& to_physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        job_id_t* job_id);
-    virtual bool SendCopyReceiveJobToWorker(SchedulerWorker* worker,
-        const physical_data_id_t& physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        job_id_t* job_id);
-    virtual bool SendCopySendJobToWorker(SchedulerWorker* worker,
-        const job_id_t& receive_job_id, const physical_data_id_t& physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        job_id_t* job_id);
-
-    void set_min_worker_to_join(size_t num);
-
-    virtual void LoadClusterMap(std::string) {}
-    virtual void DeleteWorker(SchedulerWorker * worker) {}
-    virtual void AddWorker(SchedulerWorker * worker) {}
-    virtual SchedulerWorker* GetWorker(int workerId) {
-      return NULL;
-    }
-
-  protected:
     SchedulerServer* server_;
     DataManager* data_manager_;
     JobManager* job_manager_;
@@ -138,18 +125,13 @@ class Scheduler {
     Log log_table_;
 
   private:
-    virtual void SetupUserInterface();
-    virtual void SetupWorkerInterface();
-    virtual void SetupDataManager();
-    virtual void SetupJobManager();
-    virtual void GetUserCommand();
-    virtual void LoadUserCommands();
-    virtual void LoadWorkerCommands();
+    virtual bool AssignJob(JobEntry* job);
 
-    virtual size_t RemoveObsoleteJobEntries();
-
-    virtual bool PrepareDataForJobAtWorkerG2(JobEntry* job,
+    virtual bool PrepareDataForJobAtWorker(JobEntry* job,
         SchedulerWorker* worker, logical_data_id_t l_id);
+
+    virtual bool AllocateLdoInstanceToJob(JobEntry* job,
+        LogicalDataObject* ldo, PhysicalData pd);
 
     virtual bool CreateDataAtWorker(SchedulerWorker* worker,
         LogicalDataObject* ldo, PhysicalData* created_data);
@@ -163,6 +145,34 @@ class Scheduler {
 
     virtual bool GetFreeDataAtWorker(SchedulerWorker* worker,
         LogicalDataObject* ldo, PhysicalData* free_data);
+
+    virtual size_t GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
+        LogicalDataObject* ldo, PhysicalDataVector* dest);
+
+    virtual size_t RemoveObsoleteJobEntries();
+
+    virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
+
+    virtual bool SendCreateJobToWorker(SchedulerWorker* worker,
+        const std::string& data_name, const logical_data_id_t& logical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id, physical_data_id_t* physical_data_id);
+
+    virtual bool SendLocalCopyJobToWorker(SchedulerWorker* worker,
+        const ID<physical_data_id_t>& from_physical_data_id,
+        const ID<physical_data_id_t>& to_physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
+
+    virtual bool SendCopyReceiveJobToWorker(SchedulerWorker* worker,
+        const physical_data_id_t& physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
+
+    virtual bool SendCopySendJobToWorker(SchedulerWorker* worker,
+        const job_id_t& receive_job_id, const physical_data_id_t& physical_data_id,
+        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
+        job_id_t* job_id);
 
     boost::thread* user_interface_thread_;
     boost::thread* worker_interface_thread_;
