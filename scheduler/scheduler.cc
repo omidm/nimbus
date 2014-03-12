@@ -44,7 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 10
+#define MAX_JOB_TO_ASSIGN 100000000
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
@@ -70,7 +70,7 @@ void Scheduler::Run() {
   Log::log_PrintLine("Running the Scheduler");
 
   SetupWorkerInterface();
-  SetupUserInterface();
+  // SetupUserInterface();
   SetupDataManager();
   SetupJobManager();
   id_maker_.Initialize(0);
