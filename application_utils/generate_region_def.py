@@ -39,6 +39,7 @@ generate_central_str = "central"
 generate_outer_str   = "outer"
 generate_inner_str   = "inner"
 generate_scratch_str = "scratch"
+generate_cwgb_str    = "central_w_gb"
 
 ## Parsing helper functions ##
 
@@ -90,10 +91,11 @@ def ParseLine(line, num):
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
     flags = re.split('\s|,', args[2].strip())
-    generate_central   = False
+    generate_central = False
     generate_outer   = False
     generate_inner   = False
     generate_scratch = False
+    generate_cwgb    = False
     if "none" in flags:
         if (len(flags) > 1):
             print "\nInvalid flags %s at line %i\n" % (str(flags), num)
@@ -106,11 +108,14 @@ def ParseLine(line, num):
         generate_inner = True
     if generate_scratch_str in flags:
         generate_scratch = True
+    if generate_cwgb_str in flags:
+        generate_cwgb = True
     return reg_name, params, \
             {  generate_central_str : generate_central, \
                generate_outer_str   : generate_outer, \
                generate_inner_str   : generate_inner, \
-               generate_scratch_str : generate_scratch }
+               generate_scratch_str : generate_scratch, \
+               generate_cwgb_str    : generate_cwgb  }
 
 class Region():
     def __init__(self, x, dx):
@@ -125,6 +130,7 @@ central = 'Central'
 outer   = 'Outer'
 inner   = 'Inner'
 scratch = 'Scratch'
+cwgb    = 'CentralWGB'
 
 def GetRegionsBB(params, flags, num, reg_type):
     domain = params[0]
@@ -132,8 +138,10 @@ def GetRegionsBB(params, flags, num, reg_type):
     ghostw = params[2]
     rs     = [0, 0, 0]
     rsl    = [0, 0, 0]
+    rsf    = [0, 0, 0]
     rd     = [0, 0, 0]
     rdl    = [0, 0, 0]
+    rdf    = [0, 0, 0]
     for dim in range(0, 3):
         if domain[dim]/rnum[dim] < 2*ghostw[dim]:
             print "\nError : Invalid ghost width and region size"
@@ -142,19 +150,37 @@ def GetRegionsBB(params, flags, num, reg_type):
         if reg_type == central:
             rsl[dim] = domain[dim]/rnum[dim]
             rdl[dim] = rsl[dim]
+            rsf[dim] = domain[dim]/rnum[dim]
+            rdf[dim] = rsf[dim]
+            rs[dim]  = rsl[dim]
+            rd[dim]  = rdl[dim]
         elif reg_type == outer:
             rsl[dim] = domain[dim]/rnum[dim] + 2*ghostw[dim]
             rdl[dim] = domain[dim]/rnum[dim]
+            rsf[dim] = domain[dim]/rnum[dim] + 2*ghostw[dim]
+            rdf[dim] = domain[dim]/rnum[dim]
+            rs[dim]  = rsl[dim]
+            rd[dim]  = rdl[dim]
         elif reg_type == inner:
             rsl[dim] = domain[dim]/rnum[dim] - 2*ghostw[dim]
             rdl[dim] = domain[dim]/rnum[dim]
-        if domain[dim]%rnum[dim] == 0:
-            rs[dim] = rsl[dim]
-            rd[dim] = rdl[dim]
-        else:
+            rsf[dim] = domain[dim]/rnum[dim] - 2*ghostw[dim]
+            rdf[dim] = domain[dim]/rnum[dim]
+            rs[dim]  = rsl[dim]
+            rd[dim]  = rdl[dim]
+        if reg_type == cwgb:
+            rsl[dim] = domain[dim]/rnum[dim] + ghostw[dim]
+            rdl[dim] = rsl[dim]
+            rsf[dim] = domain[dim]/rnum[dim] + ghostw[dim]
+            rdf[dim] = rsf[dim]
+            rs[dim]  = domain[dim]/rnum[dim]
+            rd[dim]  = rs[dim]
+        if domain[dim]%rnum[dim] != 0:
             print "\nWarning: Regions for dimension " + str(dim) + \
                     " at line " + str(num) + " are not of equal size."
-            rs[dim] = rsl[dim]+1
+            if reg_type == cwgb:
+                rs[dim] = rs[dim]+1
+                rd[dim] = rd[dim]+1
     rsize  = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
     rdelta = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
     rstart = {0:[0]*rnum[0], 1:[0]*rnum[1], 2:[0]*rnum[2]}
@@ -162,6 +188,8 @@ def GetRegionsBB(params, flags, num, reg_type):
         for i in range(0, rnum[dim], 1):
             rsize[dim][i]  = rs[dim]
             rdelta[dim][i] = rd[dim]
+        rsize[dim][0]  = rsf[dim]
+        rdelta[dim][0] = rdf[dim]
         rsize[dim][rnum[dim]-1]  = rsl[dim]
         rdelta[dim][rnum[dim]-1] = rdl[dim]
         if reg_type == central:
@@ -170,6 +198,8 @@ def GetRegionsBB(params, flags, num, reg_type):
             rstart[dim][0] = 1 - ghostw[dim]
         elif reg_type == inner:
             rstart[dim][0] = 1 + ghostw[dim]
+        elif reg_type == cwgb:
+            rstart[dim][0] = 1 - ghostw[dim]
         for i in range(1, rnum[dim], 1):
             rstart[dim][i] = rstart[dim][i-1] + rdelta[dim][i-1]
     regions = []
@@ -297,6 +327,8 @@ for num, line in enumerate(reg_config):
         regions[inner] = GetRegions(params, flags, num, inner)
     if flags[generate_scratch_str]:
         regions[scratch] = GetRegions(params, flags, num, scratch)
+    if flags[generate_cwgb_str]:
+        regions[cwgb] = GetRegions(params, flags, num, cwgb)
     if reg_name in reg_map:
         print "\nWarning: Redefinition of " + reg_name + " at line " + str(num)
         print "Ignoring the new definition ..."
@@ -308,6 +340,7 @@ for rs in reg_map:
     for l in reg_map[rs]:
         if len(reg_map[rs][l]) > 0:
             region_num = region_num + len(reg_map[rs][l])
+
 
 ## Code generation helper functions and variables ##
 

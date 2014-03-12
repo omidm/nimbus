@@ -1,6 +1,6 @@
 ##################################################################################
 # Partition strategy name : (domain), (number of partitions), (ghost width) :    #
-# flags (none, central, inner, outer, scratch)                                   #
+# flags (none, central, inner, outer, central_w_gb, scratch)                     #
 ##################################################################################
 #
 # NOTE: if ghostwidth equals 0 for any dimension, only central region defitions
