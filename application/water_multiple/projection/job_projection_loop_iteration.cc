@@ -112,39 +112,62 @@ void JobProjectionLoopIteration::Execute(
     int projection_job_num = 2;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
+
+    int wrapup_job_num = 2;
+    std::vector<nimbus::job_id_t> wrapup_job_ids;
+    GetNewJobID(&wrapup_job_ids, wrapup_job_num);
+
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // Projection wrapup.
-    // TODO(quhang), eliminate read/write set if possible.
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI,
-                        NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                        APP_U_INTERFACE, APP_INDEX_M2C, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI,
-                        NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
-    nimbus::Parameter projection_wrapup_params;
-    std::string projection_wrapup_str;
-    SerializeParameter(frame, time, dt, global_region, global_region,
-                       &projection_wrapup_str);
-    projection_wrapup_params.set_ser_data(
-        SerializedData(projection_wrapup_str));
-    before.clear();
-    after.clear();
-    after.insert(projection_job_ids[1]);
-    SpawnComputeJob(PROJECTION_WRAPUP, projection_job_ids[0],
-                    read, write, before, after, projection_wrapup_params);
+    /*
+    for (int index = 0; index < 1; ++index) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL, APP_PHI,
+                          NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_PSI_D,
+                          APP_PRESSURE, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[0], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W1Outer[0], APP_PRESSURE, NULL);
+      nimbus::Parameter projection_wrapup_params;
+      std::string projection_wrapup_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         &projection_wrapup_str);
+      projection_wrapup_params.set_ser_data(
+          SerializedData(projection_wrapup_str));
+      before.clear();
+      after.clear();
+      after.insert(projection_job_ids[1]);
+      SpawnComputeJob(PROJECTION_WRAPUP, projection_job_ids[0],
+                      read, write, before, after, projection_wrapup_params);
+    }
+    */
 
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI,
+                          NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+                          APP_PRESSURE, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
+                          APP_U_INTERFACE, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegW0Central[0], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegW1Outer[0], APP_PRESSURE, NULL);
+      nimbus::Parameter projection_wrapup_params;
+      std::string projection_wrapup_str;
+      SerializeParameter(frame, time, dt, global_region, global_region,
+                         &projection_wrapup_str);
+      projection_wrapup_params.set_ser_data(
+          SerializedData(projection_wrapup_str));
+      before.clear();
+      after.clear();
+      after.insert(projection_job_ids[1]);
+      SpawnComputeJob(PROJECTION_WRAPUP, projection_job_ids[0],
+                      read, write, before, after, projection_wrapup_params);
     // Loop iteration part two.
     read.clear();
     write.clear();
@@ -155,7 +178,8 @@ void JobProjectionLoopIteration::Execute(
     loop_iteration_part_two_params.set_ser_data(
         SerializedData(loop_iteration_part_two_str));
     before.clear();
-    before.insert(projection_job_ids[0]);
+    before.insert(wrapup_job_ids[0]);
+    // before.insert(wrapup_job_ids[1]);
     after.clear();
     SpawnComputeJob(LOOP_ITERATION_PART_TWO, projection_job_ids[1],
                     read, write, before, after, loop_iteration_part_two_params);

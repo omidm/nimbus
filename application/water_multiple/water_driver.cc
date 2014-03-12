@@ -519,6 +519,16 @@ ProjectionCalculateBoundaryConditionImpl (
   // Read levelset. Write psi_D and pressure.
   incompressible.Set_Dirichlet_Boundary_Conditions(
       &example.particle_levelset_evolution.phi, 0);
+  /*
+  T_ARRAYS_BOOL& psi_D=projection.elliptic_solver->psi_D;
+  for (CELL_ITERATOR iterator(projection.p_grid);
+       iterator.Valid();
+       iterator.Next())
+    if ((*phi)(iterator.Cell_Index())>0) {
+      psi_D(iterator.Cell_Index())=true;
+      projection.p(iterator.Cell_Index())=pressure;
+    }
+    */
 
   // Scales pressure.
   // Read/Write pressure.
