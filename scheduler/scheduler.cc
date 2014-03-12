@@ -483,8 +483,14 @@ bool Scheduler::PrepareDataForJobAtWorkerG2(JobEntry* job,
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
   data_version_t version = version_table_in[l_id];
 
+  if (!reading) {
+    PhysicalData target_instance;
+    GetFreeDataAtWorker(worker, ldo, &target_instance);
+    AllocateLdoInstanceToJob(job, ldo, target_instance);
+    return true;
+  }
 
-  if (version == 0 || !reading) {
+  if (version == 0) {
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
     AllocateLdoInstanceToJob(job, ldo, created_data);
