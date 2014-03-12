@@ -33,41 +33,42 @@
  */
 
  /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
+  * A Nimbus worker for job spawner application. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-
-// #define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <string>
-#include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#include <iostream>  // NOLINT
+#include "shared/nimbus.h"
+#include "../../application/stencil_1d/app.h"
 
 using namespace nimbus; // NOLINT
 
-class SimpleWorker : public Worker {
-  public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
-};
+int main(int argc, char *argv[]) {
+  port_t listening_port;
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  if (*argv[1] == '1') {
+    listening_port = WORKER_PORT_1;
+  } else if (*argv[1] == '2') {
+    listening_port = WORKER_PORT_2;
+  } else if (*argv[1] == '3') {
+    listening_port = WORKER_PORT_3;
+  } else if (*argv[1] == '4') {
+    listening_port = WORKER_PORT_4;
+  } else {
+    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
+      std::endl;
+    exit(-1);
+  }
+  nimbus_initialize();
+  std::cout << "Job spawner worker is up!" << std::endl;
+  Stencil1DApp * app = new Stencil1DApp();
+  Worker * w = new Worker(NIMBUS_SCHEDULER_IP,
+      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  w->Run();
+}
 
-
-
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_

@@ -57,12 +57,14 @@ void DataParticleArray::Create() {
 }
 
 void DataParticleArray::MergeParticles(const std::vector<DataParticleArray * > &scratch) {
-    int_dimension_t new_size = 0;
+    nimbus::int_dimension_t new_size = 0;
     for (size_t i = 0; i < scratch.size(); i++)
         new_size += scratch[i]->size();
     char *new_buffer = new char[new_size];
     char *buf_merged = new_buffer;
     for (size_t i = 0; i < scratch.size(); i++) {
+        if (scratch[i]->size() == 0)
+            continue;
         memcpy(buf_merged, scratch[i]->buffer(), scratch[i]->size());
         buf_merged += scratch[i]->size();
     }

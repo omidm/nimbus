@@ -40,7 +40,7 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_INCLUDE_H_
 
 #include "application/water_multiple/job_adjust_phi.h"
-#include "application/water_multiple/job_adjust_phi_with_objects.h"
+#include "application/water_multiple/job_update_ghost_velocities.h"
 #include "application/water_multiple/job_advect_phi.h"
 #include "application/water_multiple/job_advect_removed_particles.h"
 #include "application/water_multiple/job_advect_v.h"

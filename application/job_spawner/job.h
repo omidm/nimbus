@@ -41,6 +41,7 @@
 #ifndef NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
 #define NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
 
+#include <unistd.h>
 #include <iostream> // NOLINT
 #include "worker/physical_data_instance.h"
 #include "shared/nimbus.h"
@@ -48,10 +49,10 @@
 #define INIT_JOB_NAME "init"
 #define PRINT_JOB_NAME "print"
 #define LOOP_JOB_NAME "for_loop"
+#define STAGE_JOB_NAME "stage"
+#define CONNECTOR_JOB_NAME "connector"
 
-using nimbus::Job;
-using nimbus::Data;
-using nimbus::Application;
+using namespace nimbus; // NOLINT
 
 class Main : public Job {
   public:
@@ -80,5 +81,20 @@ class ForLoop : public Job {
     virtual void Execute(Parameter params, const DataArray& da);
     virtual Job * Clone();
 };
+
+class Stage : public Job {
+  public:
+    explicit Stage(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Connector : public Job {
+  public:
+    explicit Connector(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
 
 #endif  // NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_

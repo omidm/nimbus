@@ -32,42 +32,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * An Example application that is meant to run over multiple workers.
+ * It is simply applying a stencil over a one dimensional array.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_
+#define NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_
 
-// #define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <string>
+#include <iostream> // NOLINT
 #include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
+#include <algorithm>
 #include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#include "shared/nimbus_types.h"
+#include "./data.h"
 
 using namespace nimbus; // NOLINT
 
-class SimpleWorker : public Worker {
-  public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
-};
+void LoadLogicalIdsInSet(Job* job,
+    nimbus::IDSet<logical_data_id_t>* set,
+    const GeometricRegion& region, ...);
+
+void LoadDataFromNimbus(Job* job,
+    const DataArray& da, std::vector<int>* result);
+
+void SaveDataToNimbus(Job* job,
+    const DataArray& da, std::vector<int>* vec);
 
 
-
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_

@@ -32,42 +32,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * An Example application that is meant to run over multiple workers.
+ * It is simply applying a stencil over a one dimensional array.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#ifndef NIMBUS_APPLICATION_STENCIL_1D_APP_H_
+#define NIMBUS_APPLICATION_STENCIL_1D_APP_H_
 
-// #define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <string>
-#include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
+#include <iostream> // NOLINT
 #include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#include "shared/nimbus_types.h"
 
-using namespace nimbus; // NOLINT
+using nimbus::Application;
 
-class SimpleWorker : public Worker {
+class Stencil1DApp : public Application {
   public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
+    Stencil1DApp();
+    ~Stencil1DApp();
+    virtual void Load();
 };
 
 
 
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#endif  // NIMBUS_APPLICATION_STENCIL_1D_APP_H_

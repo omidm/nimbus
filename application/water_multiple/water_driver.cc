@@ -65,9 +65,11 @@ Initialize(const nimbus::Job *job,
     time=example.Time_At_Frame(current_frame);
   }
 
+  TV min_corner = example.mac_grid.Domain().Minimum_Corner();
+  TV max_corner = example.mac_grid.Domain().Maximum_Corner();
   for (int i = 1; i <= TV::dimension; i++) {
-    example.domain_boundary(i)(1) = true;
-    example.domain_boundary(i)(2) = true;
+    example.domain_boundary(i)(1) = (min_corner(i) <= 0.001);
+    example.domain_boundary(i)(2) = (max_corner(i) >= 0.999);
   }
 
   example.domain_boundary(2)(2)=false;
@@ -156,6 +158,7 @@ Initialize(const nimbus::Job *job,
     example.Adjust_Phi_With_Sources(time);
     example.particle_levelset_evolution.Make_Signed_Distance();
     example.projection.p.Fill(0);
+    example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
   }
   else {
     // physbam init
@@ -191,12 +194,15 @@ Initialize(const nimbus::Job *job,
   example.incompressible.Set_Variable_Viscosity(false);
   example.incompressible.projection.Set_Density(1e3);
 
-  if (set_boundary_conditions) {
+  if (set_boundary_conditions && init_phase) {
     // TODO(quhang): Needs a better understanding what this block is doing. This
     // one is certainly doing something we haven't taken care of.
     ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
+    // example.Set_Boundary_Conditions(time); // get so CFL is correct
+  }
+  if (set_boundary_conditions) {
     example.Set_Boundary_Conditions(time); // get so CFL is correct
   }
 
@@ -355,20 +361,46 @@ InitializeParticleLevelsetEvolutionHelper(
 template<class TV> void WATER_DRIVER<TV>::
 Run(RANGE<TV_INT>& domain,const T dt,const T time)
 {
-    T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,3,false);
-    example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
+    T_FACE_ARRAYS_SCALAR face_velocities_ghost = example.face_velocities_ghost;
     LINEAR_INTERPOLATION_UNIFORM<GRID<TV>,TV> interpolation;
-    PARTICLE_LEVELSET_UNIFORM<GRID<TV> >& pls=example.particle_levelset_evolution.particle_levelset;
-    if(pls.use_removed_positive_particles) for(typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);iterator.Valid();iterator.Next()) if(pls.removed_positive_particles(iterator.Node_Index())){
-        PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles=*pls.removed_positive_particles(iterator.Node_Index());
-        for(int p=1;p<=particles.array_collection->Size();p++){
-            TV X=particles.X(p),V=interpolation.Clamped_To_Array_Face(example.mac_grid,face_velocities_ghost,X);
-            if(-pls.levelset.Phi(X)>1.5*particles.radius(p)) V-=-TV::Axis_Vector(2)*.3; // buoyancy
-            particles.V(p)=V;}}
-    if(pls.use_removed_negative_particles) for(typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);iterator.Valid();iterator.Next()) if(pls.removed_negative_particles(iterator.Node_Index())){
-        PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles=*pls.removed_negative_particles(iterator.Node_Index());
-        for(int p=1;p<=particles.array_collection->Size();p++) particles.V(p)+=-TV::Axis_Vector(2)*dt*9.8; // ballistic
-        for(int p=1;p<=particles.array_collection->Size();p++) particles.V(p)+=dt*interpolation.Clamped_To_Array_Face(example.mac_grid,example.incompressible.force,particles.X(p));} // external forces
+    PARTICLE_LEVELSET_UNIFORM<GRID<TV> >& pls = example.particle_levelset_evolution.particle_levelset;
+    if (pls.use_removed_positive_particles) {
+        for (typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);
+            iterator.Valid();
+            iterator.Next()) {
+            if(pls.removed_positive_particles(iterator.Node_Index())) {
+                PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles =
+                    *pls.removed_positive_particles(iterator.Node_Index());
+                for (int p = 1; p <= particles.array_collection->Size(); p++) {
+                    TV X = particles.X(p);
+                    TV V = interpolation.Clamped_To_Array_Face(example.mac_grid,
+                                                               face_velocities_ghost,
+                                                               X);
+                if (-pls.levelset.Phi(X) > 1.5*particles.radius(p))
+                    V-=-TV::Axis_Vector(2)*.3; // buoyancy
+                particles.V(p)=V;
+                }
+            }
+        }
+    }
+    if (pls.use_removed_negative_particles) {
+        for (typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);
+             iterator.Valid();
+             iterator.Next()) {
+            if (pls.removed_negative_particles(iterator.Node_Index())) {
+                PARTICLE_LEVELSET_REMOVED_PARTICLES<TV>& particles =
+                    *pls.removed_negative_particles(iterator.Node_Index());
+                for (int p = 1; p <= particles.array_collection->Size(); p++)
+                    particles.V(p) += -TV::Axis_Vector(2)*dt*9.8; // ballistic
+                for (int p = 1; p <= particles.array_collection->Size(); p++) {
+                    particles.V(p) += dt*interpolation.
+                        Clamped_To_Array_Face(example.mac_grid,
+                                              example.incompressible.force,
+                                              particles.X(p)); // external forces
+                }
+            }
+        }
+    }
 }
 
 
@@ -747,7 +779,7 @@ ExtrapolationImpl (const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-AdjustPhiWithObjectsImpl (const nimbus::Job *job,
+UpdateGhostVelocitiesImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt) {
   LOG::Time("Adjust Phi With Objects");
@@ -894,7 +926,7 @@ ApplyForcesImpl(const nimbus::Job *job,
   //Add Forces 0%
   LOG::Time("Forces");
   example.incompressible.Advance_One_Time_Step_Forces(
-      example.face_velocities, dt, time, true, 0, example.number_of_ghost_cells);
+      example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
 
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame + 1);
@@ -908,9 +940,14 @@ ModifyLevelSetImpl(const nimbus::Job *job,
                    T dt) {
     LOG::Time("Modify Levelset ...\n");
 
-    // modify levelset
-    example.particle_levelset_evolution.particle_levelset.
-        Exchange_Overlap_Particles();
+    /* Stack indicating what code needs to be restructured.
+     * TODO: to restructure the code so that there are no MPI calls underneath,
+#0  PhysBAM::LEVELSET_3D<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Get_Signed_Distance_Using_FMM PhysBAM_Geometry/Grids_Uniform_Level_Sets/LEVELSET_3D.cpp:189
+#1  PhysBAM::LEVELSET_3D<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Fast_Marching_Method at PhysBAM_Geometry/Grids_Uniform_Level_Sets/LEVELSET_3D.cpp:172
+#2  PhysBAM::FAST_LEVELSET<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Fast_Marching_Method PhysBAM_Geometry/Grids_Uniform_Level_Sets/FAST_LEVELSET.cpp:68
+#3  PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Make_Signed_Distance PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h:77
+#4  PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Modify_Levelset_And_Particles PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.cpp:204
+     */
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles(&example.face_velocities_ghost);
 

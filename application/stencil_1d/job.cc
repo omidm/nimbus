@@ -42,14 +42,12 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define LOOP_COUNTER 3
+#define LOOP_COUNTER 15
 #define LOOP_CONDITION 0
-#define STAGE_NUM 10
-#define JOB_LENGTH_SEC 0.0001
-#define PART_NUM 100
-#define CHUNK_NUM 100
-#define CHUNK_SIZE 50
-#define BANDWIDTH 10
+#define PART_NUM 4
+#define CHUNK_NUM 16
+#define CHUNK_SIZE 5
+#define BANDWIDTH 1
 
 #define STENCIL_SIZE (2*BANDWIDTH)+1
 #define PART_SIZE (CHUNK_NUM/PART_NUM)*CHUNK_SIZE
@@ -167,39 +165,23 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   param_id_t loop_counter = *(params.idset().begin());
 
   if (loop_counter > LOOP_CONDITION) {
-    // Spawn the batch of jobs in each stage
-    std::vector<job_id_t> stage_job_ids;
-    GetNewJobID(&stage_job_ids, STAGE_NUM * PART_NUM);
-    std::vector<job_id_t> connector_job_ids;
-    GetNewJobID(&connector_job_ids, STAGE_NUM - 1);
-    for (int s = 0; s < STAGE_NUM; ++s) {
-      for (int i = 0; i < PART_NUM; ++i) {
-        read.clear();
-        GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
-            PART_SIZE + 2 * BANDWIDTH, 1, 1);
-        LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
-        write.clear();
-        GeometricRegion r_w(i * PART_SIZE, 0, 0,
-            PART_SIZE, 1, 1);
-        LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
-        before.clear();
-        if (s > 0) {
-          before.insert(connector_job_ids[s - 1]);
-        }
-        after.clear();
-        SpawnComputeJob(STAGE_JOB_NAME, stage_job_ids[s * PART_NUM + i],
-            read, write, before, after, par);
-      }
-      if (s < (STAGE_NUM - 1)) {
-        read.clear();
-        write.clear();
-        before.clear();
-        for (int j = 0; j < PART_NUM; ++j) {
-          before.insert(stage_job_ids[s * PART_NUM + j]);
-        }
-        after.clear();
-        SpawnComputeJob(CONNECTOR_JOB_NAME, connector_job_ids[s], read, write, before, after, par);
-      }
+    // Spawn the batch of jobs in each stencil
+    std::vector<job_id_t> stencil_job_ids;
+    GetNewJobID(&stencil_job_ids, PART_NUM);
+    for (int i = 0; i < PART_NUM; ++i) {
+      read.clear();
+      GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
+          PART_SIZE + 2 * BANDWIDTH, 1, 1);
+      LoadLogicalIdsInSet(this, &read, r_r, DATA_NAME, NULL);
+      write.clear();
+      GeometricRegion r_w(i * PART_SIZE, 0, 0,
+          PART_SIZE, 1, 1);
+      LoadLogicalIdsInSet(this, &write, r_w, DATA_NAME, NULL);
+      before.clear();
+      after.clear();
+      param_idset.clear(); param_idset.insert(i);
+      par.set_idset(param_idset);
+      SpawnComputeJob(STENCIL_JOB_NAME, stencil_job_ids[i], read, write, before, after, par);
     }
 
     // Spawning the print jobs at the end of each loop
@@ -211,7 +193,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
       write.clear();
       before.clear();
-      before.insert(stage_job_ids[(STAGE_NUM - 1) * PART_NUM + i]);
+      before.insert(stencil_job_ids[i]);
       after.clear();
       SpawnComputeJob(PRINT_JOB_NAME, print_job_ids[i], read, write, before, after, par);
     }
@@ -257,14 +239,6 @@ Job * Init::Clone() {
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
-/*
-  std::cout << "Executing the init job\n";
-  uint32_t base_val;
-  base_val = *(params.idset().begin());
-  Vec *d = reinterpret_cast<Vec*>(da[0]);
-  for (int i = 0; i < d->size() ; i++)
-    d->arr()[i] = base_val + i;
-*/
   std::cout << "Executing the init job\n";
   std::vector<int> read_data;
   std::vector<int> write_data;
@@ -289,16 +263,6 @@ Job * Print::Clone() {
 };
 
 void Print::Execute(Parameter params, const DataArray& da) {
-/*
-  std::cout << "Executing the print job\n";
-  std::cout << "OUTPUT: ";
-  for (size_t i = 0; i < da.size(); ++i) {
-    Vec *d = reinterpret_cast<Vec*>(da[i]);
-    for (int j = 0; j < d->size(); ++j)
-      std::cout << d->arr()[j] << ", ";
-  }
-  std::cout << std::endl;
-*/
   std::cout << "Executing the print job\n";
   std::vector<int> read_data;
   std::vector<int> write_data;
@@ -313,33 +277,40 @@ void Print::Execute(Parameter params, const DataArray& da) {
   SaveDataToNimbus(this, da, &write_data);
 };
 
-Stage::Stage(Application* app) {
+Stencil::Stencil(Application* app) {
   set_application(app);
 };
 
-Job * Stage::Clone() {
+Job * Stencil::Clone() {
   std::cout << "Cloning init job!\n";
-  return new Stage(application());
+  return new Stencil(application());
 };
 
-void Stage::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the stage job\n";
+void Stencil::Execute(Parameter params, const DataArray& da) {
+  std::cout << "Executing the stencil job\n";
+  std::vector<int> read_data;
+  std::vector<int> write_data;
+  LoadDataFromNimbus(this, da, &read_data);
 
-  usleep(1000000 * JOB_LENGTH_SEC);
-};
+  for (size_t i = BANDWIDTH; i < (read_data.size() - BANDWIDTH); ++i) {
+    int temp = 2 * BANDWIDTH * read_data[i];
+    for (size_t j = 1; j <= BANDWIDTH; ++j) {
+      temp -= read_data[i - j];
+      temp -= read_data[i + j];
+    }
+    write_data.push_back(temp);
+  }
 
-Connector::Connector(Application* app) {
-  set_application(app);
-};
+  // compensate for the left-most and right-most partitions.
+  param_id_t part_num = *(params.idset().begin());
+  if (part_num == 0) {
+    write_data.insert(write_data.begin(), read_data.begin(), read_data.begin() + BANDWIDTH);
+  }
+  if (part_num == (PART_NUM - 1)) {
+    write_data.insert(write_data.end(), read_data.end() - BANDWIDTH, read_data.end());
+  }
 
-Job * Connector::Clone() {
-  std::cout << "Cloning init job!\n";
-  return new Connector(application());
-};
-
-void Connector::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the connector job\n";
-  // This job is empty and is meant to just form the job graph.
+  SaveDataToNimbus(this, da, &write_data);
 };
 
 

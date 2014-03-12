@@ -32,42 +32,82 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Data classes for job spawner application.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#include <stdlib.h>
+#include "./data.h"
 
-// #define DEBUG_MODE
+#define ML 4
+#define GL 1
 
-#include <boost/thread.hpp>
-#include <string>
-#include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+using vector_msg::VectorMsg;
 
-using namespace nimbus; // NOLINT
-
-class SimpleWorker : public Worker {
-  public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
+Vec::Vec() {
 };
 
+Vec::~Vec() {
+};
 
+Data * Vec::Clone() {
+  std::cout << "Cloning Vec data!\n";
+  return new Vec();
+};
 
+void Vec::Create() {
+  size_ = abs(region().dx() * region().dy() * region().dz());
+  arr_ = new int[size_];
+};
 
+void Vec::Destroy() {
+  delete arr_;
+};
 
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+void Vec::Copy(Data* from) {
+  Vec *d = static_cast<Vec*>(from);
+  assert(d);
+  assert(size_ == d->size_);
+  for (int i = 0; i < size_; i++) {
+    arr_[i] = d->arr()[i];
+  }
+}
+
+bool Vec::Serialize(SerializedData* ser_data) {
+  VectorMsg vec_msg;
+  for (int i = 0; i < size_; i++) {
+    vec_msg.add_elem(arr_[i]);
+  }
+  std::string str;
+  vec_msg.SerializeToString(&str);
+  char* ptr = new char[str.length()];
+  memcpy(ptr, str.c_str(), str.length());
+  ser_data->set_data_ptr(ptr);
+  ser_data->set_size(str.length());
+  return true;
+}
+
+bool Vec::DeSerialize(const SerializedData& ser_data, Data** result) {
+  VectorMsg vec_msg;
+  std::string str(ser_data.data_ptr_raw(), ser_data.size());
+  vec_msg.ParseFromString(str);
+  Vec* vec = new Vec();
+  vec->arr_ = new int[size_];
+  vec->size_ = size_;
+  for (int i = 0; (i < size_) && (i < vec_msg.elem_size()); i++)
+     vec->arr_[i] = vec_msg.elem(i);
+
+  *result = vec;
+  return true;
+}
+
+int Vec::size() {
+  return size_;
+}
+
+int* Vec::arr() {
+  return arr_;
+}
+

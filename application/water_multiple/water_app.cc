@@ -213,7 +213,7 @@ namespace application {
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
-        RegisterJob(ADJUST_PHI_WITH_OBJECTS, new JobAdjustPhiWithObjects(this));
+        RegisterJob(UPDATE_GHOST_VELOCITIES, new JobAdjustPhiWithObjects(this));
         RegisterJob(EXTRAPOLATE_PHI, new JobExtrapolatePhi(this));
         RegisterJob(ADVECT_PHI, new JobAdvectPhi(this));
         RegisterJob(STEP_PARTICLES, new JobStepParticles(this));

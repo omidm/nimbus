@@ -266,9 +266,9 @@ Read_Output_Files(const int frame)
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    int_dimension_t array_shift[3] = {
+    nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
-    PdiVector pdv;
+    nimbus::PdiVector pdv;
     GeometricRegion array_reg_central(local_region.x(),
                                     local_region.y(),
                                     local_region.z(),
@@ -511,9 +511,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    int_dimension_t array_shift[3] = {
+    nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
-    PdiVector pdv;
+    nimbus::PdiVector pdv;
     GeometricRegion array_reg_central(local_region.x(),
                                     local_region.y(),
                                     local_region.z(),

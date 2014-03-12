@@ -32,42 +32,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * An Example application that spawns a lot of jobs in the 3d space.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-
-// #define DEBUG_MODE
-
-#include <boost/thread.hpp>
-#include <string>
 #include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#include "./app.h"
+#include "./job.h"
+#include "./data.h"
 
-using namespace nimbus; // NOLINT
+Stencil1DApp::Stencil1DApp() {
+};
 
-class SimpleWorker : public Worker {
-  public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
+Stencil1DApp::~Stencil1DApp() {
+};
+
+void Stencil1DApp::Load() {
+  std::cout << "Start Creating Data and Job Tables" << std::endl;
+
+  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
+  RegisterJob(INIT_JOB_NAME, new Init());
+  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
+  RegisterJob(PRINT_JOB_NAME, new Print());
+  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
+
+  RegisterData(DATA_NAME, new Vec());
+
+  std::cout << "Finished Creating Data and Job Tables" << std::endl;
 };
 
 
 
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_

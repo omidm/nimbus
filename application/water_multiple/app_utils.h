@@ -55,6 +55,11 @@
 #define APP_LOG_STR "temp"
 #define TRANSLATE_STR "translate"
 
+using nimbus::Data;
+using nimbus::GeometricRegion;
+using nimbus::IDSet;
+using nimbus::SerializedData;
+
 namespace application {
 
     // simulation dimension

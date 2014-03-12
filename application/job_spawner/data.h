@@ -47,7 +47,7 @@
 
 #define DATA_NAME "velocity"
 
-using nimbus::Data;
+using namespace nimbus; // NOLINT
 
 class Vec : public Data {
   public:

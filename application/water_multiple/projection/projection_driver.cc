@@ -46,6 +46,7 @@
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "data/scalar_data.h"
+#include "shared/nimbus.h"
 
 #include "application/water_multiple/projection/projection_driver.h"
 
@@ -236,11 +237,11 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
 
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
-  int_dimension_t array_shift[3] = {
+  nimbus::int_dimension_t array_shift[3] = {
     init_config.local_region.x() - 1,
     init_config.local_region.y() - 1,
     init_config.local_region.z() - 1};
-  PdiVector pdv;
+  nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
                                     init_config.local_region.z(),
@@ -340,9 +341,9 @@ void ProjectionDriver::LoadFromNimbus(
             application::READ_ACCESS)) {
       dbg(APP_LOG, "Reducing PROJECTION_INTERIOR_N sum(");
       projection_data.interior_n = 0;
-      PdiVector::const_iterator iter = pdv.begin();
+      nimbus::PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
-        const PhysicalDataInstance* instance = *iter;
+        const nimbus::PhysicalDataInstance* instance = *iter;
         nimbus::ScalarData<int>* data_real =
             dynamic_cast<nimbus::ScalarData<int>*>(instance->data());
         int value = data_real->scalar();
@@ -364,9 +365,9 @@ void ProjectionDriver::LoadFromNimbus(
             application::READ_ACCESS)) {
       dbg(APP_LOG, "Reducing PROJECTION_LOCAL_TOLERANCE MAX(");
       projection_data.local_tolerance = 0;
-      PdiVector::const_iterator iter = pdv.begin();
+      nimbus::PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
-        const PhysicalDataInstance* instance = *iter;
+        const nimbus::PhysicalDataInstance* instance = *iter;
         nimbus::ScalarData<float>* data_real =
             dynamic_cast<nimbus::ScalarData<float>*>(instance->data());
         float value = data_real->scalar();
@@ -402,9 +403,9 @@ void ProjectionDriver::LoadFromNimbus(
             application::READ_ACCESS)) {
       dbg(APP_LOG, "Reducing PROJECTION_LOCAL_RESIDUAL max(\n");
       projection_data.local_residual = 0;
-      PdiVector::const_iterator iter = pdv.begin();
+      nimbus::PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
-        const PhysicalDataInstance* instance = *iter;
+        const nimbus::PhysicalDataInstance* instance = *iter;
         nimbus::ScalarData<double>* data_real =
             dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
         double value = data_real->scalar();
@@ -427,9 +428,9 @@ void ProjectionDriver::LoadFromNimbus(
             application::READ_ACCESS)) {
       dbg(APP_LOG, "Reducing PROJECTION_LOCAL_RHO sum(:");
       projection_data.local_rho = 0;
-      PdiVector::const_iterator iter = pdv.begin();
+      nimbus::PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
-        const PhysicalDataInstance* instance = *iter;
+        const nimbus::PhysicalDataInstance* instance = *iter;
         nimbus::ScalarData<double>* data_real =
             dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
         double value = data_real->scalar();
@@ -458,9 +459,9 @@ void ProjectionDriver::LoadFromNimbus(
             da, &pdv, application::READ_ACCESS)) {
       dbg(APP_LOG, "Reducing PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA sum(:");
       projection_data.local_dot_product_for_alpha = 0;
-      PdiVector::const_iterator iter = pdv.begin();
+      nimbus::PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
-        const PhysicalDataInstance* instance = *iter;
+        const nimbus::PhysicalDataInstance* instance = *iter;
         nimbus::ScalarData<double>* data_real =
             dynamic_cast<nimbus::ScalarData<double>*>(instance->data());
         double value = data_real->scalar();
@@ -560,11 +561,11 @@ void ProjectionDriver::ReadVectorData(
 
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
-  int_dimension_t array_shift[3] = {
+  nimbus::int_dimension_t array_shift[3] = {
       init_config.local_region.x() - 1,
       init_config.local_region.y() - 1,
       init_config.local_region.z() - 1};
-  PdiVector pdv;
+  nimbus::PdiVector pdv;
   GeometricRegion array_reg_central(init_config.local_region.x(),
                                     init_config.local_region.y(),
                                     init_config.local_region.z(),

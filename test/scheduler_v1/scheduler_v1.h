@@ -56,6 +56,8 @@
 #include "shared/parser.h"
 #include "scheduler/scheduler.h"
 
+using namespace nimbus; // NOLINT
+
 class SchedulerV1 : public Scheduler {
   public:
     explicit SchedulerV1(unsigned int listening_port);

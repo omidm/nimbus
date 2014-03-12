@@ -33,26 +33,33 @@
  */
 
 /*
- * This file contains adjust phi with objects job 1 which is one of the sub
- * jobs in the iteration of computing a simulation frame.
+ * An Example application that is meant to run over multiple workers.
+ * It is simply applying a stencil over a one dimensional array.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADJUST_PHI_WITH_OBJECTS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADJUST_PHI_WITH_OBJECTS_H_
+#ifndef NIMBUS_APPLICATION_STENCIL_1D_UTILS_H_
+#define NIMBUS_APPLICATION_STENCIL_1D_UTILS_H_
 
-#include "shared/nimbus.h"
+#include <iostream> // NOLINT
+#include <vector>
+#include <algorithm>
+#include "worker/application.h"
+#include "shared/nimbus_types.h"
+#include "./data.h"
 
-namespace application {
+using namespace nimbus; // NOLINT
 
-    class JobAdjustPhiWithObjects : public nimbus::Job {
-        public:
-            explicit JobAdjustPhiWithObjects(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+void LoadLogicalIdsInSet(Job* job,
+    nimbus::IDSet<logical_data_id_t>* set,
+    const GeometricRegion& region, ...);
 
-} // namespace application
+void LoadDataFromNimbus(Job* job,
+    const DataArray& da, std::vector<int>* result);
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_ADJUST_PHI_WITH_OBJECTS_H_
+void SaveDataToNimbus(Job* job,
+    const DataArray& da, std::vector<int>* vec);
+
+
+#endif  // NIMBUS_APPLICATION_STENCIL_1D_UTILS_H_

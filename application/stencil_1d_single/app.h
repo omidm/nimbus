@@ -57,9 +57,7 @@
 #define LOOP_COUNTER 15
 #define LOOP_CONDITION 0
 
-using nimbus::Job;
-using nimbus::Data;
-using nimbus::Application;
+using namespace nimbus; // NOLINT
 using boost::tokenizer;
 using boost::char_separator;
 

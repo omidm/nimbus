@@ -32,42 +32,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * This file contains adjust phi with objects job 1 which is one of the sub
+ * jobs in the iteration of computing a simulation frame.
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_UPDATE_GHOST_VELOCITIES_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_UPDATE_GHOST_VELOCITIES_H_
 
-// #define DEBUG_MODE
+#include "shared/nimbus.h"
 
-#include <boost/thread.hpp>
-#include <string>
-#include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+namespace application {
 
-using namespace nimbus; // NOLINT
+    class JobAdjustPhiWithObjects : public nimbus::Job {
+        public:
+            explicit JobAdjustPhiWithObjects(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
-class SimpleWorker : public Worker {
-  public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
-};
+} // namespace application
 
-
-
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_UPDATE_GHOST_VELOCITIES_H_

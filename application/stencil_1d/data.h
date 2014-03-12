@@ -32,42 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Data classes for job spawner application.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#ifndef NIMBUS_APPLICATION_STENCIL_1D_DATA_H_
+#define NIMBUS_APPLICATION_STENCIL_1D_DATA_H_
 
-// #define DEBUG_MODE
+#include <iostream> // NOLINT
+#include "shared/nimbus.h"
+#include "protobuf_compiled/vector_msg.pb.h"
 
-#include <boost/thread.hpp>
-#include <string>
-#include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#define DATA_NAME "velocity"
 
 using namespace nimbus; // NOLINT
 
-class SimpleWorker : public Worker {
+class Vec : public Data {
   public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
+    Vec();
+    virtual ~Vec();
+
+    virtual void Create();
+    virtual void Destroy();
+    virtual Data * Clone();
+    virtual void Copy(Data* from);
+    virtual bool Serialize(SerializedData* ser_data);
+    virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
+
+    int size();
+    int* arr();
+
+  private:
+    int size_;
+    int *arr_;
 };
 
-
-
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#endif  // NIMBUS_APPLICATION_STENCIL_1D_DATA_H_

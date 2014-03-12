@@ -61,8 +61,8 @@ namespace application {
         if (da.empty()) {
             return success;
         }
-        IDSet<physical_data_id_t> read_set = job->read_set();
-        IDSet<physical_data_id_t> write_set = job->write_set();
+        IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
+        IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
         std::set<Data *> ds;
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
             Data *d = *it;
@@ -89,7 +89,7 @@ namespace application {
             nimbus::PhysicalDataInstance *pdi = new
                 nimbus::PhysicalDataInstance(d->physical_id(),
                                              ldo, d,
-                                             data_version_t(0));
+                                             nimbus::data_version_t(0));
             vec->push_back(pdi);
             success = true;
         }
@@ -134,8 +134,8 @@ namespace application {
       if (da.empty()) {
         return NULL;
       }
-      IDSet<physical_data_id_t> read_set = job->read_set();
-      IDSet<physical_data_id_t> write_set = job->write_set();
+      IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
+      IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
       Data* result = NULL;
       for (nimbus::DataArray::const_iterator it = da.begin();
            it != da.end();
@@ -272,7 +272,7 @@ namespace application {
         GeometricRegion* region) {
       assert(region != NULL);
       std::stringstream ss(input);
-      int_dimension_t x, y, z, dx, dy, dz;
+      nimbus::int_dimension_t x, y, z, dx, dy, dz;
       ss >> x >> y >> z >> dx >> dy >> dz;
       region->Rebuild(x, y, z, dx, dy, dz);
       return true;

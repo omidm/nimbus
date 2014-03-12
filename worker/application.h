@@ -55,8 +55,6 @@
 #include "worker/data.h"
 #include "worker/worker_ldo_map.h"
 
-using namespace nimbus; // NOLINT
-
 namespace nimbus {
 
 class Application;

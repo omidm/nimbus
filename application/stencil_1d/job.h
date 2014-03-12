@@ -32,42 +32,61 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Simple Nimbus Worker. It runs the commands it receives from the scheduler
-  * without special discretion. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Job classes for job spawner application.
+ *
+ * Author: Omid Mashayekhi<omidm@stanford.edu>
+ */
 
-#ifndef NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
-#define NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#ifndef NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
+#define NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
 
-// #define DEBUG_MODE
+#include <iostream> // NOLINT
+#include "worker/physical_data_instance.h"
+#include "shared/nimbus.h"
 
-#include <boost/thread.hpp>
-#include <string>
-#include <vector>
-#include <map>
-#include "shared/scheduler_client.h"
-#include "shared/serialized_data.h"
-#include "shared/cluster.h"
-#include "worker/data.h"
-#include "worker/job.h"
-#include "worker/application.h"
-#include "shared/parser.h"
-#include "shared/log.h"
-#include "worker/worker.h"
+#define INIT_JOB_NAME "init"
+#define PRINT_JOB_NAME "print"
+#define LOOP_JOB_NAME "for_loop"
+#define STENCIL_JOB_NAME "stencil"
 
 using namespace nimbus; // NOLINT
 
-class SimpleWorker : public Worker {
+class Main : public Job {
   public:
-    SimpleWorker(std::string scheduler_ip, port_t scheduler_port,
-        port_t listening_port, Application * a);
+    explicit Main(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Init : public Job {
+  public:
+    Init();
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Print : public Job {
+  public:
+    Print();
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class ForLoop : public Job {
+  public:
+    explicit ForLoop(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
+};
+
+class Stencil : public Job {
+  public:
+    explicit Stencil(Application* app);
+    virtual void Execute(Parameter params, const DataArray& da);
+    virtual Job * Clone();
 };
 
 
 
-
-
-#endif  // NIMBUS_TEST_STENCIL_WORKER_STENCIL_WORKER_H_
+#endif  // NIMBUS_APPLICATION_STENCIL_1D_JOB_H_
