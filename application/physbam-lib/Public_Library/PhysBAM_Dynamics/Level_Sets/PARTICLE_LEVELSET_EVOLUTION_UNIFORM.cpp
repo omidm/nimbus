@@ -200,14 +200,14 @@ Advance_Particles(T_ARRAYS_PARTICLE_LEVELSET_REMOVED_PARTICLES& particles,const 
 // -- Chinmayee
 //#####################################################################
 template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
-Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                         T_ARRAYS_SCALAR* phi_ghost)
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities)
 {
     PHYSBAM_NOT_IMPLEMENTED();
 }
 template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
 Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                         T_ARRAYS_SCALAR* phi_ghost)
+                                         T_ARRAYS_SCALAR* phi_ghost,
+                                         const int ghost_cells)
 {
     PHYSBAM_NOT_IMPLEMENTED();
 }
@@ -303,8 +303,7 @@ template class PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<double,3> > >;
 //#####################################################################
 template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
-Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                         T_ARRAYS_SCALAR* phi_ghost)
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities)
 {
     std::cout << "#### CHINMAYEE: In specialized implementation for "
               << "modify levelset for 3d water simulation\n";
@@ -315,7 +314,8 @@ Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
 template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
 Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                         T_ARRAYS_SCALAR* phi_ghost)
+                                         T_ARRAYS_SCALAR* phi_ghost,
+                                         const int ghost_cells)
 {
     typedef float T;
     typedef VECTOR<T, 3> TV;
@@ -340,23 +340,14 @@ Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
                         // LEVELSET_3D::Get_Signed_Distance_Using_FMM
                         const ARRAY<TV_INT>* seed_indices = NULL;
                         const bool add_seed_indices_for_ghost_cells = false;
-                        const int ghost_cells = max(2 * ls->number_of_ghost_cells+1,
-                                                    1 - ls->phi.Domain_Indices().Minimum_Corner()(1));
-                        T_ARRAYS_SCALAR pg(ls->grid.Domain_Indices(ghost_cells));
-                        ls->boundary->Fill_Ghost_Cells(ls->grid,
-                                                       ls->phi,
-                                                       pg,
-                                                       0,
-                                                       time,
-                                                       ghost_cells);
                         FAST_MARCHING_METHOD_UNIFORM<T_GRID> fmm(*ls,
                                                                  ghost_cells,
                                                                  ls->thread_queue);
-                        fmm.Fast_Marching_Method(pg,
+                        fmm.Fast_Marching_Method(*phi_ghost,
                                                  stopping_distance,
                                                  seed_indices,
                                                  add_seed_indices_for_ghost_cells);
-                        ARRAY<T, TV_INT>::Get(ls->phi, pg);
+                        ARRAY<T, TV_INT>::Get(ls->phi, *phi_ghost);
                         ls->boundary->Apply_Boundary_Condition(ls->grid, ls->phi, time);
                     }
                 }

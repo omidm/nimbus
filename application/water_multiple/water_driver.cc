@@ -933,9 +933,22 @@ ModifyLevelSetImpl(const nimbus::Job *job,
     LOG::Time("Modify Levelset ...\n");
 
     example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_One(&example.face_velocities_ghost, NULL);
+        Modify_Levelset_And_Particles_Nimbus_One(&example.
+                                                 face_velocities_ghost);
+    const int ghost_cells = 7;
+    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
+    example.particle_levelset_evolution.particle_levelset.
+        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
+                                            example.particle_levelset_evolution.phi,
+                                            phi_ghost,
+                                            0,
+                                            time,
+                                            ghost_cells);
     example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_Two(&example.face_velocities_ghost, NULL);
+        Modify_Levelset_And_Particles_Nimbus_Two(&example.
+                                                 face_velocities_ghost,
+                                                 &phi_ghost,
+                                                 ghost_cells);
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);

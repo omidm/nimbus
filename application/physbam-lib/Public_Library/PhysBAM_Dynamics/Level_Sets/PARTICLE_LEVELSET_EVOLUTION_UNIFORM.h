@@ -136,10 +136,10 @@ public:
     // convenience.
     // -- Chinmayee
     //#####################################################################
-    void Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                                  T_ARRAYS_SCALAR* phi_ghost);
+    void Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities);
     void Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                                  T_ARRAYS_SCALAR* phi_ghost);
+                                                  T_ARRAYS_SCALAR* phi_ghost,
+                                                  const int ghost_cells);
 };
 
 //#####################################################################
@@ -148,11 +148,11 @@ public:
 //#####################################################################
 template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
-Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                         T_ARRAYS_SCALAR* phi_ghost);
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities);
 template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
 Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                         T_ARRAYS_SCALAR* phi_ghost);
+                                         T_ARRAYS_SCALAR* phi_ghost,
+                                         const int ghost_cells);
 }
 #endif
