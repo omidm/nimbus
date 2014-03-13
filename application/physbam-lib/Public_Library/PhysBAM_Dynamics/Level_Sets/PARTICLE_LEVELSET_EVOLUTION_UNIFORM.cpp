@@ -328,7 +328,8 @@ Modify_Levelset_And_Particles_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
                         // LEVELSET_3D::Get_Signed_Distance_Using_FMM
                         const ARRAY<TV_INT>* seed_indices = NULL;
                         const bool add_seed_indices_for_ghost_cells = false;
-                        const int ghost_cells = 7;
+                        const int ghost_cells = max(2 * ls->number_of_ghost_cells+1,
+                                                    1 - ls->phi.Domain_Indices().Minimum_Corner()(1));
                         T_ARRAYS_SCALAR pg(ls->grid.Domain_Indices(ghost_cells));
                         ls->boundary->Fill_Ghost_Cells(ls->grid,
                                                        ls->phi,
