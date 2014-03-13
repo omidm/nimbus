@@ -79,7 +79,7 @@ class Application {
       const IDSet<job_id_t>& after,
       const job_id_t& parent_id,
       const Parameter& params,
-      const bool& is_parent);
+      const bool& sterile);
 
   void SpawnCopyJob(const job_id_t& id,
       const logical_data_id_t& from_logical_id,

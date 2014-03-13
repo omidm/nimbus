@@ -180,7 +180,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[0], read, write, before, after, par);
+  SpawnComputeJob("init", j[0], read, write, before, after, par, true);
 
   read.clear(); read.insert(d[1]);
   write.clear(); write.insert(d[1]);
@@ -188,7 +188,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[1], read, write, before, after, par);
+  SpawnComputeJob("init", j[1], read, write, before, after, par, true);
 
   read.clear(); read.insert(d[2]);
   write.clear(); write.insert(d[2]);
@@ -196,7 +196,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(ML - 1);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[2], read, write, before, after, par);
+  SpawnComputeJob("init", j[2], read, write, before, after, par, true);
 
   read.clear(); read.insert(d[3]);
   write.clear(); write.insert(d[3]);
@@ -204,7 +204,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[3], read, write, before, after, par);
+  SpawnComputeJob("init", j[3], read, write, before, after, par, true);
 
   read.clear(); read.insert(d[4]);
   write.clear(); write.insert(d[4]);
@@ -212,7 +212,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(1);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[4], read, write, before, after, par);
+  SpawnComputeJob("init", j[4], read, write, before, after, par, true);
 
   read.clear(); read.insert(d[5]);
   write.clear(); write.insert(d[5]);
@@ -220,7 +220,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   after.clear(); after.insert(j[6]);
   param_idset.clear(); param_idset.insert(0);
   par.set_idset(param_idset);
-  SpawnComputeJob("init", j[5], read, write, before, after, par);
+  SpawnComputeJob("init", j[5], read, write, before, after, par, true);
 
   read.clear();
   write.clear();
@@ -310,13 +310,13 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear(); write.insert(d[1]); write.insert(d[2]);
     before.clear(); before.insert(id().elem());
     after.clear(); after.insert(j[2]);
-    SpawnComputeJob("applyLeft", j[0], read, write, before, after, par);
+    SpawnComputeJob("applyLeft", j[0], read, write, before, after, par, true);
 
     read.clear(); read.insert(d[3]); read.insert(d[4]); read.insert(d[5]); read.insert(d[2]);
     write.clear(); write.insert(d[3]); write.insert(d[4]);
     before.clear(); before.insert(id().elem());
     after.clear(); after.insert(j[2]);
-    SpawnComputeJob("applyRight", j[1], read, write, before, after, par);
+    SpawnComputeJob("applyRight", j[1], read, write, before, after, par, true);
 
     read.clear();
     write.clear();
@@ -337,13 +337,13 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear();
     before.clear(); before.insert(id().elem());
     after.clear();
-    SpawnComputeJob("print", j[0], read, write, before, after, par);
+    SpawnComputeJob("print", j[0], read, write, before, after, par, true);
 
     read.clear(); read.insert(d[3]); read.insert(d[4]);
     write.clear();
     before.clear(); before.insert(id().elem());
     after.clear();
-    SpawnComputeJob("print", j[1], read, write, before, after, par);
+    SpawnComputeJob("print", j[1], read, write, before, after, par, true);
 
     TerminateApplication();
   }

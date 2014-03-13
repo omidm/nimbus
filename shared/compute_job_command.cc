@@ -54,11 +54,11 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write,
     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
     const Parameter& params,
-    const bool& is_parent)
+    const bool& sterile)
 : job_name_(job_name), job_id_(job_id),
   read_set_(read), write_set_(write),
   before_set_(before), after_set_(after),
-  params_(params), is_parent_(is_parent) {
+  params_(params), sterile_(sterile) {
   name_ = COMPUTE_JOB_NAME;
   type_ = COMPUTE_JOB;
 }
@@ -130,10 +130,10 @@ bool ComputeJobCommand::Parse(const std::string& params) {
   }
 
   iter++;
-  if (*iter == "is_parent") {
-    is_parent_ = true;
-  } else if (*iter == "not_parent") {
-    is_parent_ = false;
+  if (*iter == "sterile") {
+    sterile_ = true;
+  } else if (*iter == "not_sterile") {
+    sterile_ = false;
   } else {
     std::cout << "ERROR: Could not detect valid is parent flag." << std::endl;
     return false;
@@ -152,10 +152,10 @@ std::string ComputeJobCommand::toString() {
   str += (before_set_.toString() + " ");
   str += (after_set_.toString() + " ");
   str += (params_.toString() + " ");
-  if (is_parent_) {
-    str += "is_parent";
+  if (sterile_) {
+    str += "sterile";
   } else {
-    str += "not_parent";
+    str += "not_sterile";
   }
 
   return str;
@@ -171,10 +171,10 @@ std::string ComputeJobCommand::toStringWTags() {
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
   str += ("params:" + params_.toString() + " ");
-  if (is_parent_) {
-    str += "is_parent";
+  if (sterile_) {
+    str += "sterile";
   } else {
-    str += "not_parent";
+    str += "not_sterile";
   }
   return str;
 }
@@ -206,7 +206,7 @@ Parameter ComputeJobCommand::params() {
   return params_;
 }
 
-bool ComputeJobCommand::is_parent() {
-  return is_parent_;
+bool ComputeJobCommand::sterile() {
+  return sterile_;
 }
 
