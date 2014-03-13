@@ -352,7 +352,7 @@ namespace application {
           update_ghost_velocities_job_ids[i],
           read, write,
           before, after,
-          s11_params);
+          s11_params, true);
     }
 
 
@@ -381,7 +381,7 @@ namespace application {
         job_ids[1],
         read, write,
         before, after,
-        s12_params);
+        s12_params, true);
 
 
     /* 
@@ -527,7 +527,7 @@ namespace application {
                 step_particles_job_ids[sj],
                 read, write,
                 before, after,
-                step_particles_params);
+                step_particles_params, true);
     }
 
     /*
@@ -552,7 +552,7 @@ namespace application {
                     step_particles_sync_job_ids[ii],
                     read, write,
                     before, after,
-                    step_particles_sync_params);
+                    step_particles_sync_params, true);
             // negative
             read.clear();
             write.clear();
@@ -562,7 +562,7 @@ namespace application {
                     step_particles_sync_job_ids[ii+1],
                     read, write,
                     before, after,
-                    step_particles_sync_params);
+                    step_particles_sync_params, true);
             // positive removed
             read.clear();
             write.clear();
@@ -572,7 +572,7 @@ namespace application {
                     step_particles_sync_job_ids[ii+2],
                     read, write,
                     before, after,
-                    step_particles_sync_params);
+                    step_particles_sync_params, true);
             // negative removed
             read.clear();
             write.clear();
@@ -582,7 +582,7 @@ namespace application {
                     step_particles_sync_job_ids[ii+3],
                     read, write,
                     before, after,
-                    step_particles_sync_params);
+                    step_particles_sync_params, true);
         }
     }
 
@@ -648,7 +648,7 @@ namespace application {
             advect_removed_particles_job_ids[sj],
             read, write,
             before, after,
-            advect_rem_particles_params);
+            advect_rem_particles_params, true);
     }
 
 
@@ -705,7 +705,7 @@ namespace application {
           advect_v_job_ids[i],
           read, write,
           before, after,
-          s15_params);
+          s15_params, true);
     }
 
     /* 
@@ -765,7 +765,7 @@ namespace application {
           apply_forces_job_ids[i],
           read, write,
           before, after,
-          s16_params);
+          s16_params, true);
     }
 
 
@@ -828,7 +828,7 @@ namespace application {
             modify_levelset_job_ids[mj],
             read, write,
             before, after,
-            modify_levelset_params);
+            modify_levelset_params, true);
     }
 
 
@@ -880,7 +880,7 @@ namespace application {
           adjust_phi_job_ids[i],
           read, write,
           before, after,
-          adjust_phi_params);
+          adjust_phi_params, true);
     }
 
 
@@ -915,7 +915,7 @@ namespace application {
         job_ids[8],
         read, write,
         before, after,
-        delete_particles_params);
+        delete_particles_params, true);
 
 
     /* 
@@ -946,7 +946,7 @@ namespace application {
         job_ids[9],
         read, write,
         before, after,
-        reincorporate_particles_params);
+        reincorporate_particles_params, true);
 
     /*
      * TAG_PROJECTION
@@ -1121,7 +1121,7 @@ namespace application {
                       job_ids[index],
                       read, write,
                       before, after,
-                      reincorporate_particles_params);
+                      reincorporate_particles_params, true);
     }
 
     if (!done) {
@@ -1191,7 +1191,7 @@ namespace application {
                         job_ids[index],
                         read, write,
                         before, after,
-                        write_params);
+                        write_params, true);
       }
 
     /* 
