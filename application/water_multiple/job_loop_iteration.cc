@@ -989,7 +989,7 @@ namespace application {
                       projection_job_ids[0],
                       read, write,
                       before, after,
-                      projection_calculate_boundary_condition_params);
+                      projection_calculate_boundary_condition_params, true);
 
       // Read psi_D, psi_N, filled_region_colors, divergence, pressure.
       // Write pressure.
@@ -1025,7 +1025,7 @@ namespace application {
                       projection_job_ids[1],
                       read, write,
                       before, after,
-                      projection_construct_matrix_params);
+                      projection_construct_matrix_params, true);
 
       // Read psi_D, psi_N, filled_region_colors, divergence, pressure.
       // Write pressure.
@@ -1095,7 +1095,7 @@ namespace application {
                       projection_job_ids[3],
                       read, write,
                       before, after,
-                      projection_wrapup_params);
+                      projection_wrapup_params, true);
     }
 
     /*
