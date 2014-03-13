@@ -191,17 +191,23 @@ Advance_Particles(T_ARRAYS_PARTICLE_LEVELSET_REMOVED_PARTICLES& particles,const 
     return input_time+dt; // there may be no removed particles
 }
 //#####################################################################
-// Note: This function is added for correct execution of 3d water simulation
-// with Nimbus. There are no MPI calls hidden in this function. However, this
-// is not expected to give correct results with other PhysBAM simulations. The
-// function is not tested for any case apart from 3d water simulation with
+// Note: These functions are added for correct execution of 3d water
+// simulation with Nimbus. There are no MPI calls hidden in here. However,
+// they are not expected to give correct results with other simulations.
+// Functions not tested for any case apart from 3d water simulation with
 // Nimbus. Calls unrequired by the simple 3d water simulation are deleted for
 // convenience.
 // -- Chinmayee
 //#####################################################################
 template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
-Modify_Levelset_And_Particles_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                     T_ARRAYS_SCALAR* phi_ghost)
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost)
+{
+    PHYSBAM_NOT_IMPLEMENTED();
+}
+template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
+Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost)
 {
     PHYSBAM_NOT_IMPLEMENTED();
 }
@@ -297,18 +303,24 @@ template class PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<double,3> > >;
 //#####################################################################
 template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
-Modify_Levelset_And_Particles_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                     T_ARRAYS_SCALAR* phi_ghost)
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost)
 {
     std::cout << "#### CHINMAYEE: In specialized implementation for "
               << "modify levelset for 3d water simulation\n";
+    if(use_particle_levelset) {
+        particle_levelset.Modify_Levelset_Using_Escaped_Particles(face_velocities);
+    }
+}
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost)
+{
     typedef float T;
     typedef VECTOR<T, 3> TV;
     typedef VECTOR<int, 3> TV_INT;
     typedef GRID<VECTOR<float, 3> > T_GRID;
-    if(use_particle_levelset) {
-        particle_levelset.Modify_Levelset_Using_Escaped_Particles(face_velocities);
-    }
     {
         // Make_Signed_Distance()
         if(use_fmm) {
