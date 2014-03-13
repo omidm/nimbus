@@ -36,6 +36,7 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <limits>
 #include <set>
 #include <string>
 #include "application/water_multiple/app_utils.h"
@@ -278,11 +279,13 @@ namespace application {
       return true;
     }
 
+    // TODO(quhang), passing float number this way is very unreliable.
     bool SerializeParameter(
         const int frame,
         const GeometricRegion& global_region,
         std::string* result) {
       std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::digits10);
       ss << frame;
       ss << "\n";
       ss << region_serial_helper(global_region);
@@ -297,6 +300,7 @@ namespace application {
         const GeometricRegion& global_region,
         std::string* result) {
       std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::digits10);
       ss << frame;
       ss << "\n";
       ss << time;
@@ -315,6 +319,7 @@ namespace application {
         const GeometricRegion& local_region,
         std::string *result) {
       std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::digits10);
       ss << frame;
       ss << "\n";
       ss << time;
@@ -338,6 +343,7 @@ namespace application {
         const int iteration,
         std::string *result) {
       std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::digits10);
       ss << frame;
       ss << "\n";
       ss << time;

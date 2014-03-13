@@ -128,6 +128,12 @@ void JobLoopIterationPartTwo::SpawnJobs(
                   before, after,
                   extrapolation_params);
 
+  if (done) {
+    dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
+  } else {
+    dbg(APP_LOG, "[CONTROL FLOW] Loop not done.\n");
+  }
+
   if (!done) {
 
     // Spawning loop iteration for next iteration.
