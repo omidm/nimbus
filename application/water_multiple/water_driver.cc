@@ -932,16 +932,10 @@ ModifyLevelSetImpl(const nimbus::Job *job,
                    T dt) {
     LOG::Time("Modify Levelset ...\n");
 
-    /* Stack indicating what code needs to be restructured.
-     * TODO: to restructure the code so that there are no MPI calls underneath,
-#0  PhysBAM::LEVELSET_3D<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Get_Signed_Distance_Using_FMM PhysBAM_Geometry/Grids_Uniform_Level_Sets/LEVELSET_3D.cpp:189
-#1  PhysBAM::LEVELSET_3D<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Fast_Marching_Method at PhysBAM_Geometry/Grids_Uniform_Level_Sets/LEVELSET_3D.cpp:172
-#2  PhysBAM::FAST_LEVELSET<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Fast_Marching_Method PhysBAM_Geometry/Grids_Uniform_Level_Sets/FAST_LEVELSET.cpp:68
-#3  PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Make_Signed_Distance PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h:77
-#4  PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Modify_Levelset_And_Particles PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.cpp:204
-     */
     example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus(&example.face_velocities_ghost, NULL);
+        Modify_Levelset_And_Particles_Nimbus_One(&example.face_velocities_ghost, NULL);
+    example.particle_levelset_evolution.
+        Modify_Levelset_And_Particles_Nimbus_Two(&example.face_velocities_ghost, NULL);
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);

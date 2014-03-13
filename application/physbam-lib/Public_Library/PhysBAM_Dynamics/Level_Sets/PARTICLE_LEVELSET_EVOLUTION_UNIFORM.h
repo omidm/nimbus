@@ -128,16 +128,18 @@ public:
 //#####################################################################
 
     //#####################################################################
-    // Note: This function is added for correct execution of 3d water simulation
-    // with Nimbus. There are no MPI calls hidden in this function. However, this
-    // is not expected to give correct results with other PhysBAM simulations. The
-    // function is not tested for any case apart from 3d water simulation with
+    // Note: These functions are added for correct execution of 3d water
+    // simulation with Nimbus. There are no MPI calls hidden in here. However,
+    // they are not expected to give correct results with other simulations.
+    // Functions not tested for any case apart from 3d water simulation with
     // Nimbus. Calls unrequired by the simple 3d water simulation are deleted for
     // convenience.
     // -- Chinmayee
     //#####################################################################
-    void Modify_Levelset_And_Particles_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                              T_ARRAYS_SCALAR* phi_ghost);
+    void Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                                  T_ARRAYS_SCALAR* phi_ghost);
+    void Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                                  T_ARRAYS_SCALAR* phi_ghost);
 };
 
 //#####################################################################
@@ -146,7 +148,11 @@ public:
 //#####################################################################
 template <>
 void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
-Modify_Levelset_And_Particles_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
-                                     T_ARRAYS_SCALAR* phi_ghost);
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost);
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost);
 }
 #endif
