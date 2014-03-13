@@ -941,7 +941,7 @@ ModifyLevelSetImpl(const nimbus::Job *job,
 #4  PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<PhysBAM::VECTOR<float, 3> > >::Modify_Levelset_And_Particles PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.cpp:204
      */
     example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles(&example.face_velocities_ghost);
+        Modify_Levelset_And_Particles_Nimbus(&example.face_velocities_ghost, NULL);
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
