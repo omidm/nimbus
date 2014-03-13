@@ -532,8 +532,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  assert(instances_in_system.size() >= 1);
-
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = instances_in_system[0];
     worker_id_t sender_id = from_instance.worker();
@@ -549,7 +547,10 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
+  dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data %s (%lu) needed for job %s (%lu) does not exist.\n", // NOLINT
+      version, ldo->variable().c_str(), l_id, job->job_name().c_str(), job->job_id());
+  assert(instances_in_system.size() >= 1);
+
   return false;
 }
 
