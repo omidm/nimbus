@@ -252,7 +252,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
   job->set_parameters(cm->params());
-  job->set_is_parent(cm->is_parent());
+  job->set_sterile(cm->sterile());
   blocked_jobs_.push_back(job);
 }
 

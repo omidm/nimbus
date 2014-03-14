@@ -45,7 +45,7 @@ using namespace nimbus; // NOLINT
 
 Job::Job() {
   app_is_set_ = false;
-  is_parent_ = false;
+  sterile_ = true;
 }
 
 Job::~Job() {
@@ -71,14 +71,14 @@ bool Job::SpawnComputeJob(const std::string& name,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params,
-    const bool& is_parent) {
-  if (!is_parent_) {
-    dbg(DBG_ERROR, "ERROR: the job is not parent, it cannot spawn jobs.\n");
+    const bool& sterile) {
+  if (sterile_) {
+    dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
     return false;
   }
   if (app_is_set_) {
     application_->SpawnComputeJob(name, id, read, write, before, after,
-        id_.elem(), params, is_parent);
+        id_.elem(), params, sterile);
     return true;
   } else {
     std::cout << "ERROR: SpawnComputeJob, application has not been set." <<
@@ -93,8 +93,8 @@ bool Job::SpawnCopyJob(const job_id_t& id,
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params) {
-  if (!is_parent_) {
-    dbg(DBG_ERROR, "ERROR: the job is not parent, it cannot spawn jobs.\n");
+  if (sterile_) {
+    dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
     return false;
   }
   if (app_is_set_) {
@@ -240,8 +240,8 @@ Application* Job::application() const {
   return application_;
 }
 
-bool Job::is_parent() const {
-  return is_parent_;
+bool Job::sterile() const {
+  return sterile_;
 }
 
 void Job::set_name(std::string name) {
@@ -277,8 +277,8 @@ void Job::set_application(Application* app) {
   app_is_set_ = true;
 }
 
-void Job::set_is_parent(bool is_parent) {
-  is_parent_ = is_parent;
+void Job::set_sterile(bool sterile) {
+  sterile_ = sterile;
 }
 
 
