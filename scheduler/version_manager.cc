@@ -178,7 +178,7 @@ size_t VersionManager::GetJobsNeedDataVersion(
       if ((iter->version() == vld.second) &&
           (iter->relation() == VersionEntry::IN) &&
           !(j->assigned()) &&
-          ((j->read_set().contains(vld.first)) || !(j->sterile()))) {
+          ((j->read_set_p()->contains(vld.first)) || !(j->sterile()))) {
         result->push_back(iter->job_entry());
         ++num;
       }
