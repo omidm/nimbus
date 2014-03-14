@@ -204,6 +204,10 @@ void JobEntry::set_physical_table(PhysicalTable physical_table) {
   physical_table_ = physical_table;
 }
 
+void JobEntry::set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id) {
+  physical_table_[l_id] = p_id;
+}
+
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;
 }

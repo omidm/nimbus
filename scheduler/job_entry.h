@@ -122,6 +122,7 @@ class JobEntry {
     void set_versioned(bool flag);
     void set_assigned(bool flag);
     void set_done(bool flag);
+    void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
 
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);

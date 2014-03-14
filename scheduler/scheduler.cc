@@ -269,7 +269,6 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
   assert(job->versioned());
-  JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
 
@@ -290,13 +289,12 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     before_set.insert(pd.last_job_write());
   }
 
-  physical_table[ldo->id()] = pd.id();
+  job->set_physical_table_entry(ldo->id(), pd.id());
+  job->set_before_set(before_set);
 
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);
 
-  job->set_before_set(before_set);
-  job->set_physical_table(physical_table);
   return true;
 }
 
