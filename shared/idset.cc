@@ -195,8 +195,8 @@ void IDSet<T>::clear() {
 }
 
 template<typename T>
-bool IDSet<T>::contains(T n) {
-  IDSetIter iter =  identifiers_.begin();
+bool IDSet<T>::contains(T n) const {
+  ConstIter iter =  identifiers_.begin();
   for (; iter !=  identifiers_.end(); ++iter) {
     if (*iter == n)
       return true;

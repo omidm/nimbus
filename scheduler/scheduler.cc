@@ -276,7 +276,7 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   PhysicalData pd_new = pd;
 
   // Because of the clear_list_job_read the order of if blocks are important.
-  if (job->write_set().contains(ldo->id())) {
+  if (job->write_set_p()->contains(ldo->id())) {
     pd_new.set_version(version_table_out[ldo->id()]);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
@@ -286,7 +286,7 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     before_set.insert(pd.last_job_write());
   }
 
-  if (job->read_set().contains(ldo->id())) {
+  if (job->read_set_p()->contains(ldo->id())) {
     assert(version_table_in[ldo->id()] == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
     before_set.insert(pd.last_job_write());
@@ -480,8 +480,8 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   IDSet<job_id_t> before_set = job->before_set();
 
   query_log.StartTimer();
-  bool reading = job->read_set().contains(l_id);
-  bool writing = job->write_set().contains(l_id);
+  bool reading = job->read_set_p()->contains(l_id);
+  bool writing = job->write_set_p()->contains(l_id);
   assert(reading || writing);
   query_log.StopTimer();
   std::cout << "INFO: query a: " << query_log.timer() << std::endl;

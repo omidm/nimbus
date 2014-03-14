@@ -112,6 +112,14 @@ IDSet<logical_data_id_t> JobEntry::write_set() {
   return write_set_;
 }
 
+const IDSet<logical_data_id_t>* JobEntry::read_set_p() {
+  return &read_set_;
+}
+
+const IDSet<logical_data_id_t>* JobEntry::write_set_p() {
+  return &write_set_;
+}
+
 IDSet<logical_data_id_t> JobEntry::union_set() {
   return union_set_;
 }
