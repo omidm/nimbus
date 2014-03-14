@@ -471,9 +471,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   Log query_log;
   total_log.StartTimer();
 
-  JobEntry::PhysicalTable physical_table = job->physical_table();
-  IDSet<job_id_t> before_set = job->before_set();
-
   query_log.StartTimer();
   bool reading = job->read_set_p()->contains(l_id);
   bool writing = job->write_set_p()->contains(l_id);
