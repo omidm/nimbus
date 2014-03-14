@@ -341,16 +341,16 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
 
   version_table_out = version_table_in;
 
-  IDSet<logical_data_id_t>::IDSetIter iter_data;
-  IDSet<logical_data_id_t> read_set = job->read_set();
-  for (iter_data = read_set.begin(); iter_data != read_set.end(); ++iter_data) {
+  IDSet<logical_data_id_t>::ConstIter iter_data;
+  const IDSet<logical_data_id_t>* read_set_p = job->read_set_p();
+  for (iter_data = read_set_p->begin(); iter_data != read_set_p->end(); ++iter_data) {
     if (version_table_in.count(*iter_data) == 0) {
       dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
       return false;
     }
   }
-  IDSet<logical_data_id_t> write_set = job->write_set();
-  for (iter_data = write_set.begin(); iter_data != write_set.end(); ++iter_data) {
+  const IDSet<logical_data_id_t>* write_set_p = job->write_set_p();
+  for (iter_data = write_set_p->begin(); iter_data != write_set_p->end(); ++iter_data) {
     if (version_table_in.count(*iter_data) == 0) {
       dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
       return false;
