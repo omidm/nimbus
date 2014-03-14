@@ -148,6 +148,14 @@ JobEntry::VersionTable JobEntry::version_table_out() {
   return version_table_out_;
 }
 
+data_version_t JobEntry::version_table_in_query(logical_data_id_t l_id) {
+  return version_table_in_[l_id];
+}
+
+data_version_t JobEntry::version_table_out_query(logical_data_id_t l_id) {
+  return version_table_out_[l_id];
+}
+
 JobEntry::PhysicalTable JobEntry::physical_table() {
   return physical_table_;
 }

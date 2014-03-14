@@ -269,15 +269,13 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
   assert(job->versioned());
-  JobEntry::VersionTable version_table_in = job->version_table_in();
-  JobEntry::VersionTable version_table_out = job->version_table_out();
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
 
   // Because of the clear_list_job_read the order of if blocks are important.
   if (job->write_set_p()->contains(ldo->id())) {
-    pd_new.set_version(version_table_out[ldo->id()]);
+    pd_new.set_version(job->version_table_out_query(ldo->id()));
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
     before_set.insert(pd.list_job_read());
@@ -287,7 +285,7 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   }
 
   if (job->read_set_p()->contains(ldo->id())) {
-    assert(version_table_in[ldo->id()] == pd.version());
+    assert(job->version_table_in_query(ldo->id()) == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
     before_set.insert(pd.last_job_write());
   }
