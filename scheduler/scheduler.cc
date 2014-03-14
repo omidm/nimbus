@@ -471,7 +471,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   Log query_log;
   total_log.StartTimer();
 
-  JobEntry::VersionTable version_table_in = job->version_table_in();
   JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
 
@@ -485,7 +484,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   query_log.StartTimer();
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  data_version_t version = version_table_in[l_id];
+  data_version_t version = job->version_table_in_query(l_id);
   query_log.StopTimer();
   std::cout << "INFO: query b: " << query_log.timer() << std::endl;
 
