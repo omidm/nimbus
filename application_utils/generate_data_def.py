@@ -67,8 +67,7 @@ def ParseLine(line, num):
         tuple_elems   = re.findall(tuple_reg_exp, tup)
         if len(tuple_elems) > 0:
             params.append([int(x) for x in tuple_elems[0]])
-            print tuple_elems[0]
-    if len(params) != 3:
+    if len(params) < 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)
     flags = re.split('\s|,', args[3].strip())
