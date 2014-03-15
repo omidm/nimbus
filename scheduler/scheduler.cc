@@ -467,30 +467,18 @@ bool Scheduler::GetFreeDataAtWorker(SchedulerWorker* worker,
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
-  Log total_log;
-  Log query_log;
-  total_log.StartTimer();
-
-  query_log.StartTimer();
   bool reading = job->read_set_p()->contains(l_id);
   bool writing = job->write_set_p()->contains(l_id);
   assert(reading || writing);
-  query_log.StopTimer();
-  std::cout << "INFO: query a: " << query_log.timer() << std::endl;
 
-  query_log.StartTimer();
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
   data_version_t version = job->version_table_in_query(l_id);
-  query_log.StopTimer();
-  std::cout << "INFO: query b: " << query_log.timer() << std::endl;
 
   if (!reading) {
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
     AllocateLdoInstanceToJob(job, ldo, target_instance);
-    total_log.StopTimer();
-    std::cout << "INFO: total 1: " << total_log.timer() << std::endl;
     return true;
   }
 
@@ -498,23 +486,15 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
     AllocateLdoInstanceToJob(job, ldo, created_data);
-    total_log.StopTimer();
-    std::cout << "INFO: total 2: " << total_log.timer() << std::endl;
     return true;
   }
 
-
-  query_log.StartTimer();
   PhysicalDataVector instances_at_worker;
   PhysicalDataVector instances_in_system;
   data_manager_->InstancesByWorkerAndVersion(
       ldo, worker->worker_id(), version, &instances_at_worker);
   data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
-  query_log.StopTimer();
-  std::cout << "INFO: query c: " << query_log.timer() << std::endl;
 
-
-  query_log.StartTimer();
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
   log_table_.ResumeTimer();
@@ -522,25 +502,16 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   log_table_.StopTimer();
   assert(list.size() >= 1);
   bool writing_needed_version = (list.size() > 1) && writing;
-  query_log.StopTimer();
-  std::cout << "INFO: query y: " << query_log.timer() << std::endl;
 
   if (instances_at_worker.size() > 1) {
     PhysicalData target_instance = instances_at_worker[0];
     AllocateLdoInstanceToJob(job, ldo, target_instance);
-    total_log.StopTimer();
-    std::cout << "INFO: total 3: " << total_log.timer() << std::endl;
     return true;
   }
 
   if ((instances_at_worker.size() == 1) && !writing_needed_version) {
     PhysicalData target_instance = instances_at_worker[0];
-    query_log.StartTimer();
     AllocateLdoInstanceToJob(job, ldo, target_instance);
-    query_log.StopTimer();
-    std::cout << "INFO: query x: " << query_log.timer() << std::endl;
-    total_log.StopTimer();
-    std::cout << "INFO: total 4: " << total_log.timer() << std::endl;
     return true;
   }
 
@@ -550,8 +521,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     GetFreeDataAtWorker(worker, ldo, &copy_data);
     LocalCopyData(worker, ldo, &target_instance, &copy_data);
     AllocateLdoInstanceToJob(job, ldo, target_instance);
-    total_log.StopTimer();
-    std::cout << "INFO: total 5: " << total_log.timer() << std::endl;
     return true;
   }
 
@@ -567,8 +536,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     GetFreeDataAtWorker(worker, ldo, &target_instance);
     RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance);
     AllocateLdoInstanceToJob(job, ldo, target_instance);
-    total_log.StopTimer();
-    std::cout << "INFO: total 6: " << total_log.timer() << std::endl;
     return true;
   }
 
@@ -576,8 +543,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
       version, ldo->variable().c_str(), l_id, job->job_name().c_str(), job->job_id());
   assert(instances_in_system.size() >= 1);
 
-  total_log.StopTimer();
-  std::cout << "INFO: total 7: " << total_log.timer() << std::endl;
   return false;
 }
 
