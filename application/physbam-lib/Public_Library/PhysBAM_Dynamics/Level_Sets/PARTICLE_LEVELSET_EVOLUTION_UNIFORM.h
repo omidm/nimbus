@@ -126,6 +126,33 @@ public:
     void Reinitialize_Geometry(const int number_of_regions);
     void Perform_Conservative_Advection(const int number_of_regions,const T time,const T dt,T_FACE_ARRAYS_SCALAR& face_velocities);
 //#####################################################################
+
+    //#####################################################################
+    // Note: These functions are added for correct execution of 3d water
+    // simulation with Nimbus. There are no MPI calls hidden in here. However,
+    // they are not expected to give correct results with other simulations.
+    // Functions not tested for any case apart from 3d water simulation with
+    // Nimbus. Calls unrequired by the simple 3d water simulation are deleted for
+    // convenience.
+    // -- Chinmayee
+    //#####################################################################
+    void Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities);
+    void Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                                  T_ARRAYS_SCALAR* phi_ghost,
+                                                  const int ghost_cells);
 };
+
+//#####################################################################
+// Specialized implementation for 3d water simulation as mentioned before.
+// -- Chinmayee
+//#####################################################################
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities);
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost,
+                                         const int ghost_cells);
 }
 #endif

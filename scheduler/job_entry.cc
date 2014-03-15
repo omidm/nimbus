@@ -112,6 +112,14 @@ IDSet<logical_data_id_t> JobEntry::write_set() {
   return write_set_;
 }
 
+const IDSet<logical_data_id_t>* JobEntry::read_set_p() {
+  return &read_set_;
+}
+
+const IDSet<logical_data_id_t>* JobEntry::write_set_p() {
+  return &write_set_;
+}
+
 IDSet<logical_data_id_t> JobEntry::union_set() {
   return union_set_;
 }
@@ -138,6 +146,14 @@ JobEntry::VersionTable JobEntry::version_table_in() {
 
 JobEntry::VersionTable JobEntry::version_table_out() {
   return version_table_out_;
+}
+
+data_version_t JobEntry::version_table_in_query(logical_data_id_t l_id) {
+  return version_table_in_[l_id];
+}
+
+data_version_t JobEntry::version_table_out_query(logical_data_id_t l_id) {
+  return version_table_out_[l_id];
 }
 
 JobEntry::PhysicalTable JobEntry::physical_table() {
@@ -186,6 +202,10 @@ void JobEntry::set_version_table_out(VersionTable version_table) {
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
   physical_table_ = physical_table;
+}
+
+void JobEntry::set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id) {
+  physical_table_[l_id] = p_id;
 }
 
 void JobEntry::set_sterile(bool flag) {

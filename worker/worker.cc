@@ -167,6 +167,7 @@ void Worker::ExecuteJob(Job* job) {
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params);
   client_->sendCommand(&cm);
+  done_jobs_[job->id().elem()] = job->after_set();
   delete job;
 }
 

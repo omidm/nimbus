@@ -33,63 +33,54 @@
  */
 
  /*
-  * Object representation of a set of identifires.
+  * A test for idset template class query. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
-
-#include <boost/tokenizer.hpp>
-#include <sstream> // NOLINT
-#include <iostream> // NOLINT
+#include <iostream>  // NOLINT
+#include <sstream>  // NOLINT
 #include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
+#include "shared/nimbus.h"
+#include "shared/log.h"
+#include "../../application/job_spawner/app.h"
 
+#define START_ 100000
 
+using namespace nimbus; // NOLINT
 
-namespace nimbus {
+int main(int argc, const char *argv[]) {
+  if (argc < 2) {
+    std::cout << "ERROR: provide an integer!" << std::endl;
+    exit(-1);
+  }
 
-template<typename T>
-class IDSet {
- public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
+  int elem_num;
+  std::string s(argv[1]);
+  std::stringstream ss(s);
+  ss >> elem_num;
+  if (ss.fail()) {
+    std::cout << "ERROR: provide an integer!" << std::endl;
+    exit(-1);
+  }
 
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
+  nimbus_initialize();
+  Log log;
 
-  // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
+  IDSet<job_id_t> set;
+  for (int i = 0; i < elem_num; ++i) {
+    set.insert(START_ + i);
+  }
 
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void clear();
-  virtual bool contains(T entry) const;
-  virtual int size();
+  IDSet<job_id_t> set_copy;
+  log.StartTimer();
+  set_copy = set;
+  log.StopTimer();
+  std::cout << "Time elapsed copy: " << log.timer() << std::endl;
 
-  IDSetIter begin();
-  IDSetIter end();
+  log.StartTimer();
+  set.contains(START_ + elem_num + 1);
+  log.StopTimer();
+  std::cout << "Time elapsed query: " << log.timer() << std::endl;
+}
 
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
-};
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_IDSET_H_

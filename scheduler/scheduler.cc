@@ -269,15 +269,12 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
   assert(job->versioned());
-  JobEntry::VersionTable version_table_in = job->version_table_in();
-  JobEntry::VersionTable version_table_out = job->version_table_out();
-  JobEntry::PhysicalTable physical_table = job->physical_table();
   IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
 
   // Because of the clear_list_job_read the order of if blocks are important.
-  if (job->write_set().contains(ldo->id())) {
-    pd_new.set_version(version_table_out[ldo->id()]);
+  if (job->write_set_p()->contains(ldo->id())) {
+    pd_new.set_version(job->version_table_out_query(ldo->id()));
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
     before_set.insert(pd.list_job_read());
@@ -286,19 +283,18 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     before_set.insert(pd.last_job_write());
   }
 
-  if (job->read_set().contains(ldo->id())) {
-    assert(version_table_in[ldo->id()] == pd.version());
+  if (job->read_set_p()->contains(ldo->id())) {
+    assert(job->version_table_in_query(ldo->id()) == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
     before_set.insert(pd.last_job_write());
   }
 
-  physical_table[ldo->id()] = pd.id();
+  job->set_physical_table_entry(ldo->id(), pd.id());
+  job->set_before_set(before_set);
 
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);
 
-  job->set_before_set(before_set);
-  job->set_physical_table(physical_table);
   return true;
 }
 
@@ -471,17 +467,13 @@ bool Scheduler::GetFreeDataAtWorker(SchedulerWorker* worker,
 
 bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     SchedulerWorker* worker, logical_data_id_t l_id) {
-  JobEntry::VersionTable version_table_in = job->version_table_in();
-  JobEntry::PhysicalTable physical_table = job->physical_table();
-  IDSet<job_id_t> before_set = job->before_set();
-
-  bool reading = job->read_set().contains(l_id);
-  bool writing = job->write_set().contains(l_id);
+  bool reading = job->read_set_p()->contains(l_id);
+  bool writing = job->write_set_p()->contains(l_id);
   assert(reading || writing);
 
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  data_version_t version = version_table_in[l_id];
+  data_version_t version = job->version_table_in_query(l_id);
 
   if (!reading) {
     PhysicalData target_instance;
@@ -532,8 +524,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  assert(instances_in_system.size() >= 1);
-
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = instances_in_system[0];
     worker_id_t sender_id = from_instance.worker();
@@ -549,7 +539,10 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data (%lu) needed for job (%lu) does not exist.\n", version, l_id, job->job_id()); // NOLINT
+  dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data %s (%lu) needed for job %s (%lu) does not exist.\n", // NOLINT
+      version, ldo->variable().c_str(), l_id, job->job_name().c_str(), job->job_id());
+  assert(instances_in_system.size() >= 1);
+
   return false;
 }
 

@@ -190,13 +190,33 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       typename Edge<JobEntry, job_id_t>::Map* incoming_edges = vertex->incoming_edges();
       for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
         j = it->second->start_vertex()->entry();
-        // Due to the current graph traversal we should only assign the job if
-        // before set is done otherwise by leveraging the sterile flag we could
-        // end up flooding worker with lots of jobs that depend on a job that
-        // has not been assigned yet and so it causes a lot of latency. the
-        // graph traversal right now is based on iterator of map (so job ids)
-        // we need to traverse based on graph shape. -omidm
-        if (!(j->done())) {
+        /* 
+         * Due to the current graph traversal we should only assign the job if
+         * before set is done otherwise by leveraging the sterile flag we could
+         * end up flooding worker with lots of jobs that depend on a job that
+         * has not been assigned yet and so it causes a lot of latency. the
+         * graph traversal right now is based on iterator of map (so job ids)
+         * we need to traverse based on graph shape. In addition to efficiency
+         * issues it could cause problem since the before set may not be
+         * assigned yet and so we may not find the data version for the job in
+         * the system. -omidm
+         */
+         // if (!(j->done())) {
+        /* 
+         * For now and sake of current water multiple since the number of jobs
+         * are not too large and we have huge number of data partitions the
+         * application would benefit if scheduler can use the sterile flag and
+         * scheduler jobs in advance. Note that since still the job ids may not
+         * be in order we have to make sure that the jobs in before set are
+         * already assigned, otherwise we may not find the data version we want
+         * for the job in the system. -omidm
+         */
+        if (!(j->done()) && !(j->sterile() && j->assigned())) {
+        /*
+         * The ultimate goal is to turn it to this after we have built the
+         * graph traversal, since the job in before set is assigned for sure
+         * before the job in after set if we travers properly. -omidm
+         */
         // if (!(j->done()) && !(j->sterile())) {
           before_set_done_or_sterile = false;
           break;
@@ -321,16 +341,16 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
 
   version_table_out = version_table_in;
 
-  IDSet<logical_data_id_t>::IDSetIter iter_data;
-  IDSet<logical_data_id_t> read_set = job->read_set();
-  for (iter_data = read_set.begin(); iter_data != read_set.end(); ++iter_data) {
+  IDSet<logical_data_id_t>::ConstIter iter_data;
+  const IDSet<logical_data_id_t>* read_set_p = job->read_set_p();
+  for (iter_data = read_set_p->begin(); iter_data != read_set_p->end(); ++iter_data) {
     if (version_table_in.count(*iter_data) == 0) {
       dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
       return false;
     }
   }
-  IDSet<logical_data_id_t> write_set = job->write_set();
-  for (iter_data = write_set.begin(); iter_data != write_set.end(); ++iter_data) {
+  const IDSet<logical_data_id_t>* write_set_p = job->write_set_p();
+  for (iter_data = write_set_p->begin(); iter_data != write_set_p->end(); ++iter_data) {
     if (version_table_in.count(*iter_data) == 0) {
       dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
       return false;

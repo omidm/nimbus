@@ -106,6 +106,10 @@ class JobEntry {
     bool versioned();
     bool assigned();
     bool done();
+    const IDSet<logical_data_id_t>* read_set_p();
+    const IDSet<logical_data_id_t>* write_set_p();
+    data_version_t version_table_in_query(logical_data_id_t l_id);
+    data_version_t version_table_out_query(logical_data_id_t l_id);
 
     void set_job_name(std::string job_name);
     void set_job_id(job_id_t job_id);
@@ -118,6 +122,7 @@ class JobEntry {
     void set_versioned(bool flag);
     void set_assigned(bool flag);
     void set_done(bool flag);
+    void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
 
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);

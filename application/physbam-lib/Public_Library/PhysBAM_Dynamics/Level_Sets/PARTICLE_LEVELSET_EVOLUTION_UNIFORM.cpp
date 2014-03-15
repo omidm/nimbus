@@ -10,6 +10,7 @@
 #include <PhysBAM_Geometry/Grids_Dyadic_Level_Sets/LEVELSET_OCTREE.h>
 #include <PhysBAM_Geometry/Grids_Dyadic_Level_Sets/LEVELSET_QUADTREE.h>
 #include <PhysBAM_Geometry/Grids_Uniform_Level_Sets/FAST_LEVELSET.h>
+#include <PhysBAM_Geometry/Grids_Uniform_Level_Sets/FAST_MARCHING_METHOD_UNIFORM.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
 #include <PhysBAM_Dynamics/Level_Sets/VOF_ADVECTION.h>
@@ -190,6 +191,27 @@ Advance_Particles(T_ARRAYS_PARTICLE_LEVELSET_REMOVED_PARTICLES& particles,const 
     return input_time+dt; // there may be no removed particles
 }
 //#####################################################################
+// Note: These functions are added for correct execution of 3d water
+// simulation with Nimbus. There are no MPI calls hidden in here. However,
+// they are not expected to give correct results with other simulations.
+// Functions not tested for any case apart from 3d water simulation with
+// Nimbus. Calls unrequired by the simple 3d water simulation are deleted for
+// convenience.
+// -- Chinmayee
+//#####################################################################
+template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities)
+{
+    PHYSBAM_NOT_IMPLEMENTED();
+}
+template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
+Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost,
+                                         const int ghost_cells)
+{
+    PHYSBAM_NOT_IMPLEMENTED();
+}
+//#####################################################################
 // Function Modify_Levelset_And_Particles
 //#####################################################################
 template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
@@ -274,3 +296,70 @@ template class PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<double,1> > >;
 template class PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<double,2> > >;
 template class PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<double,3> > >;
 #endif
+
+//#####################################################################
+// Specialized implementation for 3d water simulation as mentioned before.
+// -- Chinmayee
+//#####################################################################
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Modify_Levelset_And_Particles_Nimbus_One(T_FACE_ARRAYS_SCALAR* face_velocities)
+{
+    std::cout << "#### CHINMAYEE: In specialized implementation for "
+              << "modify levelset for 3d water simulation\n";
+    if(use_particle_levelset) {
+        particle_levelset.Modify_Levelset_Using_Escaped_Particles(face_velocities);
+    }
+}
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                         T_ARRAYS_SCALAR* phi_ghost,
+                                         const int ghost_cells)
+{
+    typedef float T;
+    typedef VECTOR<T, 3> TV;
+    typedef VECTOR<int, 3> TV_INT;
+    typedef GRID<VECTOR<float, 3> > T_GRID;
+    {
+        // Make_Signed_Distance()
+        if(use_fmm) {
+            {
+                // T_FAST_LEVELSET::Fast_Marching_Method()
+                T_FAST_LEVELSET* ls = &particle_levelset.levelset;
+                const int local_advection_spatial_order =
+                    levelset_advection.local_advection_spatial_order;
+                T time = 0;
+                {
+                    // T_FAST_LEVELSET::BASE::Fast_Marching_Method()
+                    // That is, LEVELSET_3D::Fast_Marching_Method()
+                    T stopping_distance = ls->half_band_width +
+                                          ls->grid.dX.Max() *
+                                          (1 + min(3, local_advection_spatial_order));
+                    {
+                        // LEVELSET_3D::Get_Signed_Distance_Using_FMM
+                        const ARRAY<TV_INT>* seed_indices = NULL;
+                        const bool add_seed_indices_for_ghost_cells = false;
+                        FAST_MARCHING_METHOD_UNIFORM<T_GRID> fmm(*ls,
+                                                                 ghost_cells,
+                                                                 ls->thread_queue);
+                        fmm.Fast_Marching_Method(*phi_ghost,
+                                                 stopping_distance,
+                                                 seed_indices,
+                                                 add_seed_indices_for_ghost_cells);
+                        ARRAY<T, TV_INT>::Get(ls->phi, *phi_ghost);
+                        ls->boundary->Apply_Boundary_Condition(ls->grid, ls->phi, time);
+                    }
+                }
+                // Unrequired??
+                ls->boundary->Apply_Boundary_Condition(ls->grid, ls->phi, time);
+            }
+        }
+        else if(use_reinitialization)
+            levelset_advection.Reinitialize();
+    }
+    if(use_particle_levelset) {
+        particle_levelset.Modify_Levelset_Using_Escaped_Particles(face_velocities);
+        particle_levelset.Adjust_Particle_Radii();
+    }
+}
