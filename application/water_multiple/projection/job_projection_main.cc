@@ -142,7 +142,7 @@ void JobProjectionMain::SpawnJobs(
                   projection_job_ids[0],
                   read, write,
                   before, after,
-                  default_params);
+                  default_params, true);
 
   // Construct matrix.
   for (int index = 0; index < construct_matrix_job_num; ++index) {
@@ -174,7 +174,7 @@ void JobProjectionMain::SpawnJobs(
                     construct_matrix_job_ids[index],
                     read, write,
                     before, after,
-                    default_part_params[index]);
+                    default_part_params[index], true);
   }
 
   // Local initialize.
@@ -198,7 +198,7 @@ void JobProjectionMain::SpawnJobs(
                     local_initialize_job_ids[index],
                     read, write,
                     before, after,
-                    default_part_params[index]);
+                    default_part_params[index], true);
   }
 
   // Global initialize.
@@ -220,7 +220,7 @@ void JobProjectionMain::SpawnJobs(
                   projection_job_ids[3],
                   read, write,
                   before, after,
-                  default_params);
+                  default_params, true);
 
   // Projection loop.
   read.clear();

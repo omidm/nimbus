@@ -126,7 +126,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                   job_ids[0],
                   read, write,
                   before, after,
-                  extrapolation_params);
+                  extrapolation_params, true);
 
   if (done) {
     dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
@@ -200,7 +200,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                     job_ids[1],
                     read, write,
                     before, after,
-                    write_params);
+                    write_params, true);
 
     // Spawning loop frame to compute next frame.
 

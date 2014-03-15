@@ -150,7 +150,8 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[1]);
       SpawnComputeJob(PROJECTION_WRAPUP, wrapup_job_ids[index],
-                      read, write, before, after, default_part_params[index]);
+                      read, write, before, after, default_part_params[index],
+                      true);
     }
     /*
       read.clear();
@@ -251,7 +252,8 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[1]);
       SpawnComputeJob(PROJECTION_STEP_ONE, step_one_job_ids[index],
-                      read, write, before, after, default_part_params[index]);
+                      read, write, before, after, default_part_params[index],
+                      true);
     }
 
     // REDUCE_RHO
@@ -272,7 +274,7 @@ void JobProjectionLoopIteration::Execute(
     after.insert(step_two_job_ids[0]);
     after.insert(step_two_job_ids[1]);
     SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
-                    read, write, before, after, default_params);
+                    read, write, before, after, default_params, true);
 
     // STEP_TWO
     for (int index = 0; index < step_two_job_num; ++index) {
@@ -292,7 +294,8 @@ void JobProjectionLoopIteration::Execute(
       after.insert(step_three_job_ids[0]);
       after.insert(step_three_job_ids[1]);
       SpawnComputeJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
-                      read, write, before, after, default_part_params[index]);
+                      read, write, before, after, default_part_params[index],
+                      true);
     }
 
     // STEP_THREE
@@ -313,7 +316,8 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[4]);
       SpawnComputeJob(PROJECTION_STEP_THREE, step_three_job_ids[index],
-                      read, write, before, after, default_part_params[index]);
+                      read, write, before, after, default_part_params[index],
+                      true);
     }
 
     // REDUCE_ALPHA
@@ -334,7 +338,7 @@ void JobProjectionLoopIteration::Execute(
     after.insert(step_four_job_ids[0]);
     after.insert(step_four_job_ids[1]);
     SpawnComputeJob(PROJECTION_REDUCE_ALPHA, projection_job_ids[4],
-                    read, write, before, after, default_params);
+                    read, write, before, after, default_params, true);
 
     // STEP_FOUR
     // Only interior p is needed.
@@ -355,7 +359,8 @@ void JobProjectionLoopIteration::Execute(
       after.clear();
       after.insert(projection_job_ids[6]);
       SpawnComputeJob(PROJECTION_STEP_FOUR, step_four_job_ids[index],
-                      read, write, before, after, default_part_params[index]);
+                      read, write, before, after, default_part_params[index],
+                      true);
     }
 
     // NEXT_ITERATION
