@@ -33,41 +33,29 @@
  */
 
 /*
- * This file defines the name of jobs that will be used for registration and
- * spawning the jobs.
+ * This file contains the job that modifies levelset and particles. This job
+ * should be spawned after calling advance time step forces and before
+ * adjusting phi with sources.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * This job needs all data (levelset, particles and face velocities).
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_ONE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_ONE_H_
 
+#include "shared/nimbus.h"
 
-#define MAIN "main"
-#define INITIALIZE "initialize"
-#define LOOP_FRAME "loop_frame"
-#define LOOP_ITERATION "loop_iteration"
-#define CALCULATE_FRAME "calculate_frame"
-#define WRITE_FRAME "write_frame"
+namespace application {
 
-#define UPDATE_GHOST_VELOCITIES "update_ghost_velocities"
-#define EXTRAPOLATE_PHI "extrapolate_phi"
-#define ADVECT_PHI "advect_phi"
-#define STEP_PARTICLES "step_particles"
-#define ADVECT_REMOVED_PARTICLES "advect_removed_particles"
-#define ADVECT_V "advect_v"
-#define APPLY_FORCES "apply_forces"
-#define MODIFY_LEVELSET_PART_ONE "modify_levelset_part_one"
-#define MODIFY_LEVELSET_PART_TWO "modify_levelset_part_two"
-#define ADJUST_PHI "adjust_phi"
-#define DELETE_PARTICLES "delete_particles"
-#define REINCORPORATE_PARTICLES "reincorporate_particles"
-#define PROJECTION_CALCULATE_BOUNDARY_CONDITION "projection_calculate_boundary_condition"
-#define PROJECTION_CONSTRUCT_MATRIX "projection_construct_matrix"
-#define PROJECTION_CORE "projection_core"
-#define PROJECTION_WRAPUP "projection_wrapup"
-#define EXTRAPOLATION "extrapolation"
-#define SYNCHRONIZE_PARTICLES "synchronize_particles"
+class JobModifyLevelsetPartOne : public nimbus::Job {
+    public:
+        explicit JobModifyLevelsetPartOne(nimbus::Application *app);
+        virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+        virtual nimbus::Job* Clone();
+};
 
+} // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_ONE_H_

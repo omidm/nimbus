@@ -301,8 +301,10 @@ namespace application {
     bool advect_removed_particles_single = (advect_removed_particles_job_num == 1);
     // modify levelset
     size_t modify_levelset_job_num = particle_partitions;
-    std::vector<nimbus::job_id_t> modify_levelset_job_ids;
-    GetNewJobID(&modify_levelset_job_ids, modify_levelset_job_num);
+    std::vector<nimbus::job_id_t> modify_levelset_part_one_job_ids;
+    GetNewJobID(&modify_levelset_part_one_job_ids, modify_levelset_job_num);
+    std::vector<nimbus::job_id_t> modify_levelset_part_two_job_ids;
+    GetNewJobID(&modify_levelset_part_two_job_ids, modify_levelset_job_num);
     bool modify_levelset_single = (modify_levelset_job_num == 1);
 
     // Original adjust phi with objects that operates over entire block.
@@ -730,7 +732,7 @@ namespace application {
     }
     after.clear();
     for (size_t j = 0; j < modify_levelset_job_num; j++)
-        after.insert(modify_levelset_job_ids[j]);
+        after.insert(modify_levelset_part_one_job_ids[j]);
     SpawnComputeJob(APPLY_FORCES,
         apply_forces_job_ids[0],
         read, write,
@@ -760,7 +762,7 @@ namespace application {
       }
       after.clear();
       for (size_t j = 0; j < modify_levelset_job_num; j++)
-        after.insert(modify_levelset_job_ids[j]);
+        after.insert(modify_levelset_part_one_job_ids[j]);
       SpawnComputeJob(APPLY_FORCES,
           apply_forces_job_ids[i],
           read, write,
@@ -770,7 +772,7 @@ namespace application {
 
 
     /* 
-     * Spawning modify levelset.
+     * Spawning modify levelset -- part one.
      */
     for (size_t mj = 0; mj < modify_levelset_job_num; mj++) {
         read.clear();
@@ -824,13 +826,75 @@ namespace application {
         for (int j = 0; j < adjust_phi_job_num; ++j) {
           after.insert(adjust_phi_job_ids[j]);
         }
-        SpawnComputeJob(MODIFY_LEVELSET,
-            modify_levelset_job_ids[mj],
+        SpawnComputeJob(MODIFY_LEVELSET_PART_ONE,
+            modify_levelset_part_one_job_ids[mj],
             read, write,
             before, after,
             modify_levelset_params, true);
     }
 
+    /* 
+     * Spawning modify levelset -- part two.
+     */
+    /*
+    for (size_t mj = 0; mj < modify_levelset_job_num; mj++) {
+        read.clear();
+        write.clear();
+        std::string modify_levelset_str;
+
+        // there is just 1 last unique particle id: need to figure out how to
+        // handle the case of splitting last unique particle id
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+
+        if (modify_levelset_single) {
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+                    APP_FACE_VEL, APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegW3Central[0],
+                               &modify_levelset_str);
+        } else {
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
+                    APP_FACE_VEL, APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3Central[mj], APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Central[mj], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegY2W3Central[mj],
+                               &modify_levelset_str);
+        }
+
+        nimbus::Parameter modify_levelset_params;
+        modify_levelset_params.set_ser_data(SerializedData(modify_levelset_str));
+
+        before.clear();
+        after.clear();
+        // before.insert(job_ids[5]);
+        for (int j = 0; j < apply_forces_job_num; ++j) {
+          before.insert(apply_forces_job_ids[j]);
+        }
+        // after.insert(job_ids[7]);
+        for (int j = 0; j < adjust_phi_job_num; ++j) {
+          after.insert(adjust_phi_job_ids[j]);
+        }
+        SpawnComputeJob(MODIFY_LEVELSET,
+            modify_levelset_part_one_job_ids[mj],
+            read, write,
+            before, after,
+            modify_levelset_params, true);
+    }*/
 
     /* 
      * Spawning adjust phi stage over entire block
@@ -875,7 +939,7 @@ namespace application {
       after.insert(job_ids[8]);
       before.clear();
       for (size_t j = 0; j < modify_levelset_job_num; j++)
-        before.insert(modify_levelset_job_ids[j]);
+        before.insert(modify_levelset_part_one_job_ids[j]);
       SpawnComputeJob(ADJUST_PHI,
           adjust_phi_job_ids[i],
           read, write,
