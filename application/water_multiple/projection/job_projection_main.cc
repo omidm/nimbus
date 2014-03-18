@@ -126,59 +126,67 @@ void JobProjectionMain::SpawnJobs(
   GetNewJobID(&calculate_boundary_condition_part_two_job_ids,
               calculate_boundary_condition_part_two_job_num);
 
-  // Calculate boundary condition part one.
-  read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, NULL);
-  write.clear();
-  LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, NULL);
+  for (int index = 0;
+       index < calculate_boundary_condition_part_one_job_num;
+       ++index) {
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                        APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
+                        APP_U_INTERFACE, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                        APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
+                        APP_U_INTERFACE, NULL);
 
-  before.clear();
-  after.clear();
-  after.insert(calculate_boundary_condition_part_two_job_ids[0]);
+    before.clear();
+    after.clear();
+    after.insert(calculate_boundary_condition_part_two_job_ids[0]);
+    after.insert(calculate_boundary_condition_part_two_job_ids[1]);
 
-  SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
-                  calculate_boundary_condition_part_one_job_ids[0],
-                  read, write,
-                  before, after,
-                  default_params, true);
+    SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
+                    calculate_boundary_condition_part_one_job_ids[index],
+                    read, write,
+                    before, after,
+                    default_part_params[index], true);
+  }
 
-  // Calculate boundary condition.
-  read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &read, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, NULL);
-  write.clear();
-  LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Outer[0],
-                      APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                      APP_PRESSURE, NULL);
-  LoadLogicalIdsInSet(this, &write, kRegW1Central[0], APP_PSI_N,
-                      APP_U_INTERFACE, NULL);
+  for (int index = 0;
+       index < calculate_boundary_condition_part_two_job_num;
+       ++index) {
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                        APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
+                        APP_U_INTERFACE, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
+                        APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
+                        APP_U_INTERFACE, NULL);
 
-  before.clear();
-  before.insert(calculate_boundary_condition_part_one_job_ids[0]);
-  after.clear();
-  after.insert(construct_matrix_job_ids[0]);
-  after.insert(construct_matrix_job_ids[1]);
+    before.clear();
+    before.insert(calculate_boundary_condition_part_one_job_ids[0]);
+    before.insert(calculate_boundary_condition_part_one_job_ids[1]);
+    after.clear();
+    after.insert(construct_matrix_job_ids[0]);
+    after.insert(construct_matrix_job_ids[1]);
 
-  SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
-                  calculate_boundary_condition_part_two_job_ids[0],
-                  read, write,
-                  before, after,
-                  default_params, true);
+    SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
+                    calculate_boundary_condition_part_two_job_ids[index],
+                    read, write,
+                    before, after,
+                    default_part_params[index], true);
+  }
 
   // Construct matrix.
   for (int index = 0; index < construct_matrix_job_num; ++index) {
@@ -203,6 +211,7 @@ void JobProjectionMain::SpawnJobs(
 
     before.clear();
     before.insert(calculate_boundary_condition_part_two_job_ids[0]);
+    before.insert(calculate_boundary_condition_part_two_job_ids[1]);
     after.clear();
     after.insert(local_initialize_job_ids[0]);
     after.insert(local_initialize_job_ids[1]);
