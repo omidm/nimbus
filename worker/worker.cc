@@ -96,9 +96,7 @@ void Worker::WorkerCoreProcessor() {
 
 void Worker::ScanBlockedJobs() {
   JobList::iterator iter;
-  // std::cout << "Here!\n";
   for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end();) {
-    std::cout << "Blocked: " << (*iter)->name() << (*iter)->id().elem() << std::endl;
     if ((*iter)->before_set().size() == 0) {
       if (dynamic_cast<RemoteCopyReceiveJob*>(*iter) == NULL) { // NOLINT
         ready_jobs_.push_back(*iter);
@@ -110,35 +108,11 @@ void Worker::ScanBlockedJobs() {
       ++iter;
     }
   }
-/*
-  JobList::iterator iter;
-  for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end();) {
-    IDSet<job_id_t> req = (*iter)->before_set();
-    IDSet<job_id_t>::IDSetIter it;
-    for (it = req.begin(); it != req.end();) {
-      if (done_jobs_.count(*it) != 0)
-        req.remove(it++);
-      else
-        ++it;
-    }
-    (*iter)->set_before_set(req);
-    if ((*iter)->before_set().size() == 0) {
-      if (dynamic_cast<RemoteCopyReceiveJob*>(*iter) == NULL) // NOLINT
-        ready_jobs_.push_back(*iter);
-      else
-        pending_transfer_jobs_.push_back(*iter);
-      blocked_jobs_.erase(iter++);
-    } else {
-      ++iter;
-    }
-  }
-*/
 }
 
 void Worker::ScanPendingTransferJobs() {
   JobList::iterator iter;
   for (iter = pending_transfer_jobs_.begin(); iter != pending_transfer_jobs_.end();) {
-    std::cout << "Pending Transfer: " << (*iter)->name() << (*iter)->id().elem() << std::endl;
     SerializedData* ser_data;
     if (data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data)) {
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
@@ -155,7 +129,6 @@ void Worker::GetJobsToRun(JobList* list, size_t max_num) {
   size_t ready_num = ready_jobs_.size();
   for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
     Job* job = ready_jobs_.front();
-    std::cout << "Ready: " << job->name() << job->id().elem() << std::endl;
     list->push_back(job);
     ready_jobs_.pop_front();
   }
@@ -250,26 +223,12 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
-  std::cout << "JobDone!\n";
   JobList::iterator iter;
   for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end(); iter++) {
     IDSet<job_id_t> req = (*iter)->before_set();
     req.remove(cm->job_id().elem());
     (*iter)->set_before_set(req);
   }
-/*
-  std::map<job_id_t, IDSet<job_id_t> >::iterator iter;
-  for (iter = done_jobs_.begin(); iter != done_jobs_.end();) {
-    iter->second.remove(cm->job_id().elem());
-    if (iter->second.size() == 0)
-      // done_jobs_.erase(iter++);
-      ++iter;
-    else
-      ++iter;
-  }
-  // if (cm->after_set().size() != 0)
-    done_jobs_[cm->job_id().elem()] = cm->after_set();
-*/
 }
 
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
