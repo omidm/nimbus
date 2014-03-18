@@ -40,8 +40,6 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
     enum workaround1{d=TV::m};
 
-    nimbus::TranslatorPhysBAM<TV> translator;
-
 public:
     GeometricRegion local_region;
     GeometricRegion relative_region;
@@ -73,6 +71,8 @@ public:
     T_GRID_BASED_COLLISION_GEOMETRY collision_bodies_affecting_fluid;
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
+
+    nimbus::TranslatorPhysBAM<TV> translator;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();

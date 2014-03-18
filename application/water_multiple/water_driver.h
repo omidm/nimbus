@@ -97,9 +97,15 @@ public:
                     const nimbus::DataArray &da,
                     T dt);
 
-    bool ModifyLevelSetImpl(const nimbus::Job *job,
-                            const nimbus::DataArray &da,
-                            T dt);
+    bool ModifyLevelSetPartOneImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   const nimbus::GeometricRegion &local_region,
+                                   T dt);
+
+    bool ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   const nimbus::GeometricRegion &local_region,
+                                   T dt);
 
     bool ExtrapolatePhiImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,

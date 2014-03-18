@@ -13,12 +13,15 @@
 #include <PhysBAM_Fluids/PhysBAM_Incompressible/Incompressible_Flows/PROJECTION_FREE_SURFACE_REFINEMENT_UNIFORM.h>
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_names.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "application/water_multiple/projection/projection_helper.h"
 #include "shared/dbg_modes.h"
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 #include "string.h"
@@ -927,10 +930,11 @@ ApplyForcesImpl(const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ModifyLevelSetImpl(const nimbus::Job *job,
-                   const nimbus::DataArray &da,
-                   T dt) {
-    LOG::Time("Modify Levelset ...\n");
+ModifyLevelSetPartOneImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    LOG::Time("Modify Levelset Part one ...\n");
 
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles_Nimbus_One(&example.
@@ -944,6 +948,80 @@ ModifyLevelSetImpl(const nimbus::Job *job,
                                             0,
                                             time,
                                             ghost_cells);
+    
+    // TODO: this involves redundant copy operations. make this better.
+    // save phi ghost correctly
+//    {
+//        nimbus::int_dimension_t shift[3] = {
+//            local_region.x() - 1,
+//            local_region.y() - 1,
+//            local_region.z() - 1
+//        };
+//        nimbus::GeometricRegion outer_region(local_region.x()-ghost_cells,
+//                                             local_region.y()-ghost_cells,
+//                                             local_region.z()-ghost_cells,
+//                                             local_region.dx()+2*ghost_cells,
+//                                             local_region.dy()+2*ghost_cells,
+//                                             local_region.dz()+2*ghost_cells);
+//        const std::string lsstring = std::string(APP_PHI);
+//        nimbus::PdiVector pdv;
+//        if (application::GetTranslatorData(job, lsstring, da, &pdv,
+//                                           application::WRITE_ACCESS))
+//            example.translator.WriteScalarArrayFloat(&outer_region,
+//                                                     shift,
+//                                                     &pdv,
+//                                                     &phi_ghost);
+//        application::DestroyTranslatorObjects(&pdv);
+//    }
+
+    example.particle_levelset_evolution.
+        Modify_Levelset_And_Particles_Nimbus_Two(&example.
+                                                 face_velocities_ghost,
+                                                 &phi_ghost,
+                                                 ghost_cells);
+
+
+    // save state
+    example.Save_To_Nimbus(job, da, current_frame+1);
+
+    return true;
+}
+
+template<class TV> bool WATER_DRIVER<TV>::
+ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    LOG::Time("Modify Levelset Part two ...\n");
+
+    const int ghost_cells = 7;
+    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
+
+    // TODO: this involves redundant copy operations. make this better.
+    // save phi ghost correctly
+    {
+        nimbus::int_dimension_t shift[3] = {
+            local_region.x() - 1,
+            local_region.y() - 1,
+            local_region.z() - 1
+        };
+        nimbus::GeometricRegion outer_region(local_region.x()-ghost_cells,
+                                             local_region.y()-ghost_cells,
+                                             local_region.z()-ghost_cells,
+                                             local_region.dx()+2*ghost_cells,
+                                             local_region.dy()+2*ghost_cells,
+                                             local_region.dz()+2*ghost_cells);
+        const std::string lsstring = std::string(APP_PHI);
+        nimbus::PdiVector pdv;
+        if (application::GetTranslatorData(job, lsstring, da, &pdv,
+                                           application::READ_ACCESS))
+            example.translator.ReadScalarArrayFloat(&outer_region,
+                                                    shift,
+                                                    &pdv,
+                                                    &phi_ghost);
+        application::DestroyTranslatorObjects(&pdv);
+    }
+
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles_Nimbus_Two(&example.
                                                  face_velocities_ghost,
