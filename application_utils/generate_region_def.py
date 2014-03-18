@@ -43,28 +43,6 @@ generate_cwgb_str    = "central_w_gb"
 
 ## Parsing helper functions ##
 
-def ValidateSizeTuples(sizes, num):
-    if len(sizes) != 3:
-        print "\nExpected 3 tuples - domain, number of partitions, ghost width"
-        print "Got " + str(len(sizes)) + " at line " + str(num)
-        return []
-    params = []
-    for tup in sizes:
-        if len(tup) != 3:
-            print "\nExpected tuple elements of type (int, int, int)"
-            print "Got " + str(tup) + " at line " + str(num)
-            return []
-        param_tup = []
-        for t in tup:
-            try:
-                param_tup.append(int(t))
-            except:
-                print "\nExpect tuple elements of type (int, int, int)"
-                print "Got " + str(tup) + " at line " + str(num)
-                return []
-        params.append(param_tup)
-    return params
-
 def ParseLine(line, num):
     # Parsing: begin parsing
     args = re.split(':', line)
@@ -81,12 +59,12 @@ def ParseLine(line, num):
     reg_name = names[0]
     # Parsing: tuples - domain, number of partitions, ghost width
     sizes_tuple_str = [x for x in re.split('\(|\)', args[1]) if x]
-    sizes_str = []
+    params = []
     for tup in sizes_tuple_str:
-        temp = [x for x in re.split('\s|,', tup) if x]
-        if (len(temp) > 0):
-            sizes_str.append(temp)
-    params = ValidateSizeTuples(sizes_str, num)
+        tuple_reg_exp = '(\d+)\s*,\s*(\d+)\s*,\s*(\d+)'
+        tuple_elems   = re.findall(tuple_reg_exp, tup)
+        if len(tuple_elems) > 0:
+            params.append([int(x) for x in tuple_elems[0]])
     if len(params) != 3:
         print "\nError parsing line " + str(num) + "\n"
         sys.exit(2)

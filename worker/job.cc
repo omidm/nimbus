@@ -208,6 +208,17 @@ int Job::GetAdjacentLogicalObjects(CLdoVector* result,
   }
 }
 
+int Job::GetIntersectingLogicalObjects(CLdoVector* result,
+    const std::string& variable,
+    const GeometricRegion* r) {
+  if (app_is_set_) {
+      return application_->GetIntersectingLogicalObjects(result, variable, r);
+  } else {
+      std::cout << "Error: GetAdjacentLogicalObjects, application has not been set." << std::endl;
+      return -1;
+  }
+}
+
 std::string Job::name() const {
   return name_;
 }

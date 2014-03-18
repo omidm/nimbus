@@ -42,20 +42,20 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_ONE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_ONE_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobModifyLevelset : public nimbus::Job {
+class JobModifyLevelsetPartOne : public nimbus::Job {
     public:
-        explicit JobModifyLevelset(nimbus::Application *app);
+        explicit JobModifyLevelsetPartOne(nimbus::Application *app);
         virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
         virtual nimbus::Job* Clone();
 };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_MODIFY_LEVELSET_PART_ONE_H_

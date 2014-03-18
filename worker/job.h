@@ -118,6 +118,9 @@ class Job {
     int GetAdjacentLogicalObjects(CLdoVector* result,
          const std::string& variable,
          const GeometricRegion* r);
+    int GetIntersectingLogicalObjects(CLdoVector* result,
+         const std::string& variable,
+         const GeometricRegion* r);
 
     std::string name() const;
     ID<job_id_t> id() const;
