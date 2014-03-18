@@ -33,7 +33,9 @@ using namespace PhysBAM;
 //##################################################################### 
 template<class T_GRID> PARTICLE_LEVELSET<T_GRID>::
 PARTICLE_LEVELSET(T_GRID& grid_input,T_ARRAYS_SCALAR& phi_input,const int number_of_ghost_cells_input)
-    :only_use_negative_particles(false),last_unique_particle_id(0),particle_pool(template_particles),reincorporate_removed_particles_everywhere(false),
+    :only_use_negative_particles(false),last_unique_particle_id(0),
+    particle_pool(template_particles, 1000),
+    reincorporate_removed_particles_everywhere(false),
     save_removed_particle_times(false),delete_positive_particles_crossing_bodies(true),number_of_ghost_cells(number_of_ghost_cells_input),levelset(grid_input,phi_input,number_of_ghost_cells_input),deletion_list(levelset.grid.Domain_Indices())
 {   
     Set_Outside_Particle_Distance();
