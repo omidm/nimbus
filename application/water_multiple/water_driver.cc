@@ -534,15 +534,11 @@ WriteFrameImpl(const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ProjectionCalculateBoundaryConditionImpl (
+ProjectionCalculateBoundaryConditionPartOneImpl (
     const nimbus::Job *job,
     const nimbus::DataArray &da,
     T dt) {
   INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
-  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
-  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
-      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
-          projection.elliptic_solver);
 
   // Sets boundary conditions.
   // Local.
@@ -564,7 +560,18 @@ ProjectionCalculateBoundaryConditionImpl (
       projection.p(iterator.Cell_Index())=pressure;
     }
     */
+  return true;
+}
 
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionCalculateBoundaryConditionPartTwoImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
   // Scales pressure.
   // Read/Write pressure.
   projection.p *= dt;

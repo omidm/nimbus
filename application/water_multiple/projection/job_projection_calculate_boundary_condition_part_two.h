@@ -34,30 +34,21 @@
 
 /*
  * This file contains job PROJECTION_CALCULATE_BOUNDARY_CONDITION that:
- *     calculates all the boundary condition required by projection.
- * The parameters of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
- *     frame number, simulation time, dt.
- * The read set of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
- *     velocity, pressure, levelset.
- * The write set(not sure) of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
- *     velocity, pressure, psi_D, psi_N, filled_region_colors, divergence.
- *
- * This job should be broken into finer-grained jobs in the future.
- * TODO(quhang), eliminate the read set and the write set.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobProjectionCalculateBoundaryCondition : public nimbus::Job {
+class JobProjectionCalculateBoundaryConditionPartTwo : public nimbus::Job {
  public:
-  explicit JobProjectionCalculateBoundaryCondition(nimbus::Application *app);
+  explicit JobProjectionCalculateBoundaryConditionPartTwo(
+      nimbus::Application *app);
   virtual void Execute(
       nimbus::Parameter params,
       const nimbus::DataArray& da);
@@ -66,4 +57,4 @@ class JobProjectionCalculateBoundaryCondition : public nimbus::Job {
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO_H_

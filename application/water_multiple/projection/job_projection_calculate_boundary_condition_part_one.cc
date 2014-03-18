@@ -45,23 +45,24 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/projection/job_projection_calculate_boundary_condition.h"
+#include "application/water_multiple/projection/job_projection_calculate_boundary_condition_part_one.h"
 
 namespace application {
 
-JobProjectionCalculateBoundaryCondition::
-    JobProjectionCalculateBoundaryCondition(nimbus::Application *app) {
+JobProjectionCalculateBoundaryConditionPartOne::
+    JobProjectionCalculateBoundaryConditionPartOne(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobProjectionCalculateBoundaryCondition::Clone() {
-  return new JobProjectionCalculateBoundaryCondition(application());
+nimbus::Job* JobProjectionCalculateBoundaryConditionPartOne::Clone() {
+  return new JobProjectionCalculateBoundaryConditionPartOne(application());
 }
 
-void JobProjectionCalculateBoundaryCondition::Execute(
+void JobProjectionCalculateBoundaryConditionPartOne::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing PROJECTION_CALCULATE_BOUNDARY_CONDITION job.\n");
+  dbg(APP_LOG,
+      "Executing PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE job.\n");
 
   InitConfig init_config;
   init_config.set_boundary_condition = false;
@@ -74,7 +75,7 @@ void JobProjectionCalculateBoundaryCondition::Execute(
 
   // Assume time, dt, frame is ready from here.
   dbg(APP_LOG,
-      "In PROJECTION_CALCULATE_BOUNDARY_CONDITION: "
+      "In PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE: "
       "Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
       init_config.frame, init_config.time);
@@ -95,16 +96,18 @@ void JobProjectionCalculateBoundaryCondition::Execute(
                              this, da, example, driver);
 
   dbg(APP_LOG,
-      "Job PROJECTION_CALCULATE_BOUNDARY_CONDITION starts (dt=%f).\n", dt);
+      "Job PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE starts (dt=%f).\n",
+      dt);
 
-  driver->ProjectionCalculateBoundaryConditionImpl(this, da, dt);
+  driver->ProjectionCalculateBoundaryConditionPartOneImpl(this, da, dt);
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
   dbg(APP_LOG,
-      "Completed executing PROJECTION_CALCULATE_BOUNDARY_CONDITION job\n");
+      "Completed executing"
+      " PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE job\n");
 }
 
 }  // namespace application

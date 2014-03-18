@@ -123,9 +123,14 @@ public:
                                     const nimbus::DataArray &da,
                                     T dt);
 
-    bool ProjectionCalculateBoundaryConditionImpl(const nimbus::Job *job,
-                                                  const nimbus::DataArray &da,
-                                                  T dt);
+    bool ProjectionCalculateBoundaryConditionPartOneImpl(
+        const nimbus::Job *job,
+        const nimbus::DataArray &da,
+        T dt);
+    bool ProjectionCalculateBoundaryConditionPartTwoImpl(
+        const nimbus::Job *job,
+        const nimbus::DataArray &da,
+        T dt);
     bool ProjectionConstructMatrixImpl(const nimbus::Job *job,
                                        const nimbus::DataArray &da,
                                        T dt);

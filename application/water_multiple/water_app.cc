@@ -231,8 +231,10 @@ namespace application {
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
         RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
-        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION,
-                    new JobProjectionCalculateBoundaryCondition(this));
+        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
+                    new JobProjectionCalculateBoundaryConditionPartOne(this));
+        RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
+                    new JobProjectionCalculateBoundaryConditionPartTwo(this));
         RegisterJob(PROJECTION_CONSTRUCT_MATRIX,
                     new JobProjectionConstructMatrix(this));
         RegisterJob(PROJECTION_WRAPUP, new JobProjectionWrapup(this));
