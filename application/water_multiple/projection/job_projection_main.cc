@@ -169,7 +169,7 @@ void JobProjectionMain::SpawnJobs(
                       APP_U_INTERFACE, NULL);
 
   before.clear();
-  after.insert(calculate_boundary_condition_part_one_job_ids[0]);
+  before.insert(calculate_boundary_condition_part_one_job_ids[0]);
   after.clear();
   after.insert(construct_matrix_job_ids[0]);
   after.insert(construct_matrix_job_ids[1]);
