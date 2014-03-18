@@ -42,7 +42,7 @@
  */
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/job_modify_levelset.h"
+#include "application/water_multiple/job_modify_levelset_part_one.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
@@ -54,16 +54,16 @@
 
 namespace application {
 
-JobModifyLevelset::JobModifyLevelset(nimbus::Application *app) {
+JobModifyLevelsetPartOne::JobModifyLevelsetPartOne(nimbus::Application *app) {
     set_application(app);
 };
 
-nimbus::Job* JobModifyLevelset::Clone() {
-    return new JobModifyLevelset(application());
+nimbus::Job* JobModifyLevelsetPartOne::Clone() {
+    return new JobModifyLevelsetPartOne(application());
 }
 
-void JobModifyLevelset::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing modify levelset job\n");
+void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
+    dbg(APP_LOG, "Executing modify levelset job -- part one\n");
 
     InitConfig init_config;
     init_config.set_boundary_condition = false;
@@ -89,12 +89,12 @@ void JobModifyLevelset::Execute(nimbus::Parameter params, const nimbus::DataArra
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 
-    driver->ModifyLevelSetImpl(this, da, dt);
+    driver->ModifyLevelSetPartOneImpl(this, da, init_config.local_region, dt);
 
     // free resources
     DestroyExampleAndDriver(example, driver);
 
-    dbg(APP_LOG, "Completed executing modify levelset job\n");
+    dbg(APP_LOG, "Completed executing modify levelset job -- part one\n");
 }
 
 } // namespace application

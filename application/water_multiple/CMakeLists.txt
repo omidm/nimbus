@@ -34,7 +34,8 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.cc
     ${PROJECT_SOURCE_DIR}/job_delete_particles.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
-    ${PROJECT_SOURCE_DIR}/job_modify_levelset.cc
+    ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.cc
+    ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.cc
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.cc
     ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.cc
     ${PROJECT_SOURCE_DIR}/job_extrapolate_phi.cc
@@ -91,7 +92,8 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.h
     ${PROJECT_SOURCE_DIR}/job_delete_particles.h
     ${PROJECT_SOURCE_DIR}/job_main.h
-    ${PROJECT_SOURCE_DIR}/job_modify_levelset.h
+    ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.h
+    ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.h
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.h
     ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.h
     ${PROJECT_SOURCE_DIR}/job_extrapolate_phi.h

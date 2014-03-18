@@ -119,7 +119,7 @@ namespace application {
 
     void LoadReadWriteSets(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* read,
-        nimbus::IDSet<nimbus::logical_data_id_t>* write);
+        nimbus::IDSet<nimbus::logical_data_id_t>* write) __attribute__((deprecated));
 
     void LoadLogicalIdsInSet(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* set,

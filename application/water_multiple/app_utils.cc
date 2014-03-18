@@ -195,7 +195,7 @@ namespace application {
       va_start(vl, region);
       char* arg = va_arg(vl, char*);
       while (arg != NULL) {
-        job->GetCoveredLogicalObjects(&result, arg, &region);
+        job->GetIntersectingLogicalObjects(&result, arg, &region);
         for (size_t i = 0; i < result.size(); ++i) {
           set->insert(result[i]->id());
           dbg(APP_LOG, "Loaded logical id %d of variable %s to the set.\n", result[i]->id(), arg);
