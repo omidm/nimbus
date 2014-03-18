@@ -551,6 +551,7 @@ ProjectionCalculateBoundaryConditionPartOneImpl (
   incompressible.Set_Dirichlet_Boundary_Conditions(
       &example.particle_levelset_evolution.phi, 0);
   /*
+     // No filling function calls. Good!
   T_ARRAYS_BOOL& psi_D=projection.elliptic_solver->psi_D;
   for (CELL_ITERATOR iterator(projection.p_grid);
        iterator.Valid();

@@ -202,7 +202,7 @@ void JobProjectionMain::SpawnJobs(
                         NULL);
 
     before.clear();
-    before.insert(projection_job_ids[0]);
+    before.insert(calculate_boundary_condition_part_two_job_ids[0]);
     after.clear();
     after.insert(local_initialize_job_ids[0]);
     after.insert(local_initialize_job_ids[1]);
