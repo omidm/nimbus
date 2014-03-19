@@ -976,10 +976,10 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
         outer_reg.Enlarge(7);
         nimbus::Coord lmin = outer_reg.MinCorner();
         nimbus::Coord lmax = outer_reg.MaxCorner();
-        nimbus::Coord gmin(1, 1, 1);
-        nimbus::Coord gmax(application::kScale,
-                           application::kScale,
-                           application::kScale);
+        nimbus::Coord gmin(-2, -2, -2);
+        nimbus::Coord gmax(application::kScale + 3,
+                           application::kScale + 3,
+                           application::kScale + 3);
 
         nimbus::GeometricRegion copy_reg(nimbus::ElementWiseMax(lmin, gmin),
                                          nimbus::ElementWiseMin(lmax, gmax));
