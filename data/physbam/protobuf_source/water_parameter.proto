@@ -33,34 +33,28 @@
  */
 
  /*
-  * Worker-side job factory. 
-  *
-  * Author: Hang Qu <quhang@stanford.edu>
+  * The message for water parameter.
+  * Author: Hang Qu <quhang@stanford.edu> 
   */
-#include "worker/experimental/job-worker-factory.h"
 
-#include <cstdio>
+package nimbus_message;
 
-#include "worker/experimental/job-worker-interface.h"
+message WaterParameter {
+  optional int32 frame = 1;
+  optional float time = 2;
+  optional float dt = 3;
 
-JobWorkerInterface *JobWorkerFactory::New(const int job_catogory_id) {
-  if (job_catogory_id >= list_length) {
-    return NULL;
-  } else {
-    // [TODO] If it is a prototype class in the list,
-    // we should return a copy of the clas
-    return job_list[job_catogory_id];
+  message GeometricRegion {
+    required int64 x = 1;
+    required int64 y = 2;
+    required int64 z = 3;
+    required int64 dx = 4;
+    required int64 dy = 5;
+    required int64 dz = 6;
   }
-}
+  
+  optional GeometricRegion global_region = 4; 
+  optional GeometricRegion local_region = 5;
 
-bool JobWorkerFactory::RegisterJob(
-    JobWorkerInterface *job_worker, const int job_catogory_id) {
-  // [TODO] First assume only add job by increasing job catogory id.
-  if (job_catogory_id != list_length) {
-    return false;
-  } else {
-    job_list[list_length++] = job_worker;
-    return true;
-  }
+  optional int32 iteration = 6;
 }
-
