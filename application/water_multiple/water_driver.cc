@@ -2,6 +2,9 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+#include "stdio.h"
+#include "string.h"
+
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
@@ -23,8 +26,6 @@
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
-#include "stdio.h"
-#include "string.h"
 
 using namespace PhysBAM;
 namespace{
@@ -939,47 +940,6 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles_Nimbus_One(&example.
                                                  face_velocities_ghost);
-    const int ghost_cells = 7;
-    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
-    example.particle_levelset_evolution.particle_levelset.
-        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
-                                            example.particle_levelset_evolution.phi,
-                                            phi_ghost,
-                                            0,
-                                            time,
-                                            ghost_cells);
-    
-    // TODO: this involves redundant copy operations. make this better.
-    // save phi ghost correctly
-//    {
-//        nimbus::int_dimension_t shift[3] = {
-//            local_region.x() - 1,
-//            local_region.y() - 1,
-//            local_region.z() - 1
-//        };
-//        nimbus::GeometricRegion outer_region(local_region.x()-ghost_cells,
-//                                             local_region.y()-ghost_cells,
-//                                             local_region.z()-ghost_cells,
-//                                             local_region.dx()+2*ghost_cells,
-//                                             local_region.dy()+2*ghost_cells,
-//                                             local_region.dz()+2*ghost_cells);
-//        const std::string lsstring = std::string(APP_PHI);
-//        nimbus::PdiVector pdv;
-//        if (application::GetTranslatorData(job, lsstring, da, &pdv,
-//                                           application::WRITE_ACCESS))
-//            example.translator.WriteScalarArrayFloat(&outer_region,
-//                                                     shift,
-//                                                     &pdv,
-//                                                     &phi_ghost);
-//        application::DestroyTranslatorObjects(&pdv);
-//    }
-
-    example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_Two(&example.
-                                                 face_velocities_ghost,
-                                                 &phi_ghost,
-                                                 ghost_cells);
-
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
@@ -996,6 +956,13 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
 
     const int ghost_cells = 7;
     T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
+    example.particle_levelset_evolution.particle_levelset.
+        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
+                                            example.particle_levelset_evolution.phi,
+                                            phi_ghost,
+                                            0,
+                                            time,
+                                            ghost_cells);
 
     // TODO: this involves redundant copy operations. make this better.
     // save phi ghost correctly
@@ -1005,17 +972,22 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
             local_region.y() - 1,
             local_region.z() - 1
         };
-        nimbus::GeometricRegion outer_region(local_region.x()-ghost_cells,
-                                             local_region.y()-ghost_cells,
-                                             local_region.z()-ghost_cells,
-                                             local_region.dx()+2*ghost_cells,
-                                             local_region.dy()+2*ghost_cells,
-                                             local_region.dz()+2*ghost_cells);
+        GeometricRegion outer_reg = local_region;
+        outer_reg.Enlarge(7);
+        nimbus::Coord lmin = outer_reg.MinCorner();
+        nimbus::Coord lmax = outer_reg.MaxCorner();
+        nimbus::Coord gmin(1, 1, 1);
+        nimbus::Coord gmax(application::kScale,
+                           application::kScale,
+                           application::kScale);
+
+        nimbus::GeometricRegion copy_reg(nimbus::ElementWiseMax(lmin, gmin),
+                                         nimbus::ElementWiseMin(lmax, gmax));
         const std::string lsstring = std::string(APP_PHI);
         nimbus::PdiVector pdv;
         if (application::GetTranslatorData(job, lsstring, da, &pdv,
                                            application::READ_ACCESS))
-            example.translator.ReadScalarArrayFloat(&outer_region,
+            example.translator.ReadScalarArrayFloat(&copy_reg,
                                                     shift,
                                                     &pdv,
                                                     &phi_ghost);
