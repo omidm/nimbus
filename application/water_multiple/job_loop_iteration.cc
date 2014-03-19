@@ -275,10 +275,6 @@ namespace application {
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
 
-    int extrapolate_phi_job_num = 1;
-    std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
-    GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
-
     int projection_job_num = 4;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
@@ -286,6 +282,10 @@ namespace application {
     int extrapolation_job_num = 1;
     std::vector<nimbus::job_id_t> extrapolation_job_ids;
     GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
+
+    int extrapolate_phi_job_num = 1;
+    std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
+    GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
     // jobs that touch particles
     size_t particle_partitions = 1;
@@ -1157,16 +1157,36 @@ namespace application {
       before.clear();
       before.insert(projection_job_ids[2]);
       after.clear();
-      for (int j = 0; j < extrapolation_job_num; ++j) {
-        after.insert(extrapolation_job_ids[j]);
-      }
-      // after.insert(job_ids[11]);
       SpawnComputeJob(PROJECTION_WRAPUP,
                       projection_job_ids[3],
                       read, write,
                       before, after,
                       projection_wrapup_params, true);
     }
+
+    /* 
+     * Spawning extrapolate phi stage over entire block
+     */
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, APP_FACE_VEL,
+                        NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
+
+    nimbus::Parameter s_extra_params;
+    std::string s_extra_str;
+    SerializeParameter(frame, time, dt, global_region, global_region,
+                       &s_extra_str);
+    s_extra_params.set_ser_data(SerializedData(s_extra_str));
+    before.clear();
+    before.insert(projection_job_ids[3]);
+    after.clear();
+    SpawnComputeJob(EXTRAPOLATE_PHI,
+                    extrapolate_phi_job_ids[0],
+                    read, write,
+                    before, after,
+                    s_extra_params);
+
 
     /*
      * Spawning extrapolation stage over entire block
@@ -1185,7 +1205,9 @@ namespace application {
       after.clear();
       after.insert(job_ids[index+1]);
       before.clear();
-      before.insert(projection_job_ids[3]);
+      for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+        before.insert(extrapolate_phi_job_ids[j]);
+      }
       SpawnComputeJob(EXTRAPOLATION,
                       extrapolation_job_ids[0],
                       read, write,
