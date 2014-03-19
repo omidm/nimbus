@@ -108,6 +108,26 @@ GeometricRegion::GeometricRegion(const std::string& data) {
   fillInValues(&msg);
 }
 
+GeometricRegion::GeometricRegion(const Coord &min, const Coord &delta) {
+  x_ = min.x;
+  y_ = min.y;
+  z_ = min.z;
+  dx_ = delta.x;
+  dy_ = delta.y;
+  dz_ = delta.z;
+}
+
+GeometricRegion GeometricRegion::GeometricRegionFromRange(const Coord &min,
+                                                          const Coord &max) {
+  GeometricRegion result(min.x,
+                         min.y,
+                         min.z,
+                         max.x - min.x + 1,
+                         max.y - min.y + 1,
+                         max.z - min.z + 1);
+  return result;
+}
+
 void GeometricRegion::Rebuild(int_dimension_t x,
                               int_dimension_t y,
                               int_dimension_t z,
@@ -263,6 +283,39 @@ int_dimension_t GeometricRegion::dz() const {
   return dz_;
 }
 
+Coord GeometricRegion::MinCorner() const {
+  Coord result(x_, y_, z_);
+  return result;
+}
+
+Coord GeometricRegion::MaxCorner() const {
+  Coord result(x_ + dx_ - 1, y_ + dy_ - 1, z_ + dz_ - 1);
+  return result;
+}
+
+Coord GeometricRegion::Delta() const {
+  Coord result(dx_, dy_, dz_);
+  return result;
+}
+
+void GeometricRegion::Enlarge(const int_dimension_t delta) {
+  x_ -= delta;
+  y_ -= delta;
+  z_ -= delta;
+  dx_ += 2*delta;
+  dy_ += 2*delta;
+  dz_ += 2*delta;
+}
+
+void GeometricRegion::Enlarge(const Coord delta) {
+  x_ -= delta.x;
+  y_ -= delta.y;
+  z_ -= delta.z;
+  dx_ += 2*delta.x;
+  dy_ += 2*delta.y;
+  dz_ += 2*delta.z;
+}
+
 /**
  * \fn int_dimension_t GeometricRegion::fillInValues()
  * \brief Fills in six parameters from array.
@@ -389,5 +442,33 @@ GeometricRegion& GeometricRegion::operator= (const GeometricRegion& right) {
   dy_ = right.dy_;
   dz_ = right.dz_;
   return *this;
+}
+
+Coord::Coord() {
+  x = 0;
+  y = 0;
+  z = 0;
+}
+
+Coord::Coord(int_dimension_t xe, int_dimension_t ye, int_dimension_t ze) {
+  x = xe;
+  y = ye;
+  z = ze;
+}
+
+Coord ElementWiseMin(Coord a, Coord b) {
+  Coord r;
+  r.x = (a.x < b.x)? a.x : b.x;
+  r.y = (a.y < b.y)? a.y : b.y;
+  r.z = (a.z < b.z)? a.z : b.z;
+  return r;
+}
+
+Coord ElementWiseMax(Coord a, Coord b) {
+  Coord r;
+  r.x = (a.x > b.x)? a.x : b.x;
+  r.y = (a.y > b.y)? a.y : b.y;
+  r.z = (a.z > b.z)? a.z : b.z;
+  return r;
 }
 }  // namespace nimbus

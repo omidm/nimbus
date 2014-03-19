@@ -50,6 +50,17 @@
 
 namespace nimbus {
 
+  struct Coord {
+    int_dimension_t x;
+    int_dimension_t y;
+    int_dimension_t z;
+    Coord();
+    Coord(int_dimension_t xe, int_dimension_t ye, int_dimension_t ze);
+  };
+
+  Coord ElementWiseMin(Coord a, Coord b);
+  Coord ElementWiseMax(Coord a, Coord b);
+
   class GeometricRegion {
   public:
     GeometricRegion();
@@ -70,6 +81,11 @@ namespace nimbus {
     explicit GeometricRegion(std::istream* is);
     // Read in as a serialized GeometricRegionMessage from a string
     explicit GeometricRegion(const std::string& data);
+    // Geometric region from coordinates (min corner and delta)
+    explicit GeometricRegion(const Coord &min, const Coord &delta);
+    // Geometric region from max and min coordinates
+    static GeometricRegion GeometricRegionFromRange(const Coord &min,
+                                                    const Coord &max);
 
     virtual ~GeometricRegion() {}
 
@@ -86,6 +102,13 @@ namespace nimbus {
     int_dimension_t dx() const;
     int_dimension_t dy() const;
     int_dimension_t dz() const;
+
+    Coord MinCorner() const;
+    Coord MaxCorner() const;
+    Coord Delta() const;
+
+    void Enlarge(const int_dimension_t delta);
+    void Enlarge(const Coord delta);
 
     /* Covers returns whether this region covers (encompasses) the argument. */
     virtual bool Covers(GeometricRegion* region) const;
