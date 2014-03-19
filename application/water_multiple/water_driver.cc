@@ -770,7 +770,6 @@ ExtrapolationImpl (const nimbus::Job *job,
       example.face_velocities,
       exchanged_phi_ghost,
       false, 3, 0, TV());
-
 /*
   example.incompressible.Extrapolate_Velocity_Across_Interface(
       example.face_velocities,
@@ -802,6 +801,7 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
   {
+/*
     typedef typename LEVELSET_ADVECTION_POLICY<GRID<TV> >
         ::FAST_LEVELSET_ADVECTION_T T_FAST_LEVELSET_ADVECTION;
     typedef typename LEVELSET_POLICY<GRID<TV> >
@@ -818,6 +818,17 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
         grid, phi, phi_ghost, dt, time,
         example.particle_levelset_evolution.particle_levelset.number_of_ghost_cells);
     T_ARRAYS_SCALAR::Copy(phi_ghost, phi);
+*/
+
+/*
+    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(8));
+    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
+        example.mac_grid,
+        example.particle_levelset_evolution.phi,
+        phi_ghost,
+        0, time+dt, 8);
+    T_ARRAYS_SCALAR::Copy(phi_ghost, example.particle_levelset_evolution.phi);
+*/
   }
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
