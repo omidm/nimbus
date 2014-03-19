@@ -111,7 +111,6 @@ class Worker {
   JobList ready_jobs_;
   JobList blocked_jobs_;
   JobList pending_transfer_jobs_;
-  std::map<job_id_t, IDSet<job_id_t> > done_jobs_;
   Application* application_;
 
   virtual void SetupSchedulerInterface();
