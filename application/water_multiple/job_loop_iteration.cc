@@ -283,6 +283,10 @@ namespace application {
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
+    int extrapolation_job_num = 1;
+    std::vector<nimbus::job_id_t> extrapolation_job_ids;
+    GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
+
     // jobs that touch particles
     size_t particle_partitions = 1;
     // step particles
@@ -1153,7 +1157,10 @@ namespace application {
       before.clear();
       before.insert(projection_job_ids[2]);
       after.clear();
-      after.insert(job_ids[11]);
+      for (int j = 0; j < extrapolation_job_num; ++j) {
+        after.insert(extrapolation_job_ids[j]);
+      }
+      // after.insert(job_ids[11]);
       SpawnComputeJob(PROJECTION_WRAPUP,
                       projection_job_ids[3],
                       read, write,
@@ -1164,7 +1171,6 @@ namespace application {
     /*
      * Spawning extrapolation stage over entire block
      */
-
     {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
@@ -1181,11 +1187,40 @@ namespace application {
       before.clear();
       before.insert(projection_job_ids[3]);
       SpawnComputeJob(EXTRAPOLATION,
-                      job_ids[index],
+                      extrapolation_job_ids[0],
                       read, write,
                       before, after,
                       reincorporate_particles_params, true);
     }
+
+    /*
+     * Spawning extrapolation stage over multiple workers
+     */
+/*
+    for (int i = 0; i < extrapolation_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+
+      int index = 11;
+      nimbus::Parameter extrapolation_params;
+      std::string extrapolation_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &extrapolation_str);
+      extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
+      after.clear();
+      after.insert(job_ids[index+1]);
+      before.clear();
+      before.insert(projection_job_ids[3]);
+      SpawnComputeJob(EXTRAPOLATION,
+                      extrapolation_job_ids[i],
+                      read, write,
+                      before, after,
+                      reincorporate_particles_params, true);
+    }
+
+*/
+
 
     if (!done) {
 
@@ -1212,7 +1247,10 @@ namespace application {
         iter_params.set_ser_data(SerializedData(iter_str));
         after.clear();
         before.clear();
-        before.insert(job_ids[index-1]);
+        for (int j = 0; j < extrapolation_job_num; ++j) {
+          before.insert(extrapolation_job_ids[j]);
+        }
+        //before.insert(job_ids[index-1]);
         SpawnComputeJob(LOOP_ITERATION,
                         job_ids[index],
                         read, write,
@@ -1249,7 +1287,10 @@ namespace application {
         after.clear();
         after.insert(loop_job_id[0]);
         before.clear();
-        before.insert(job_ids[index-1]);
+        for (int j = 0; j < extrapolation_job_num; ++j) {
+          before.insert(extrapolation_job_ids[j]);
+        }
+        // before.insert(job_ids[index-1]);
         SpawnComputeJob(WRITE_FRAME,
                         job_ids[index],
                         read, write,

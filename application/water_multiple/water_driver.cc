@@ -759,6 +759,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ExtrapolationImpl (const nimbus::Job *job,
                  const nimbus::DataArray &da,
                  T dt) {
+
   T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
   example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
       example.mac_grid,
@@ -770,6 +771,12 @@ ExtrapolationImpl (const nimbus::Job *job,
       exchanged_phi_ghost,
       false, 3, 0, TV());
 
+/*
+  example.incompressible.Extrapolate_Velocity_Across_Interface(
+      example.face_velocities,
+      example.particle_levelset_evolution.phi,
+      false, 3, 0, TV());
+*/
   return true;
 }
 
