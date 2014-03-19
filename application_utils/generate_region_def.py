@@ -153,6 +153,11 @@ def GetRegionsBB(params, flags, num, reg_type):
             rdf[dim] = rsf[dim]
             rs[dim]  = domain[dim]/rnum[dim]
             rd[dim]  = rs[dim]
+            if rnum[dim] == 1:
+                rsl[dim] = rsl[dim] + ghostw[dim]
+                rdl[dim] = rsl[dim]
+                rsf[dim] = rsl[dim]
+                rdf[dim] = rsl[dim]
         if domain[dim]%rnum[dim] != 0:
             print "\nWarning: Regions for dimension " + str(dim) + \
                     " at line " + str(num) + " are not of equal size."
