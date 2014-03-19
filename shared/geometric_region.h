@@ -107,6 +107,7 @@ namespace nimbus {
     Coord MaxCorner() const;
     Coord Delta() const;
 
+    /* Increase the size of geometric region along each dimension and side. */
     void Enlarge(const int_dimension_t delta);
     void Enlarge(const Coord delta);
 
@@ -116,6 +117,14 @@ namespace nimbus {
     virtual bool Adjacent(GeometricRegion* region) const;
     virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
     virtual bool IsEqual(GeometricRegion* region) const;
+
+    /* Largest common rectangular region shared by 2 regions. */
+    GeometricRegion GetIntersection(const GeometricRegion &region1,
+                                    const GeometricRegion &region2);
+    /* Smallest rectangular region (bounding box) that contains the two
+     * regions. */
+    GeometricRegion GetBoundingBox(const GeometricRegion &region1,
+                                   const GeometricRegion &region2);
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
 

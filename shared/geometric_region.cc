@@ -225,6 +225,37 @@ bool GeometricRegion::IsEqual(GeometricRegion *region) const {
 }
 
 /**
+ * \fn bool GeometricRegion::GetIntersection(const GeometricRegion &region1,
+ *                                           const GeometricRegion &region2).
+ * \brief Returns intersection of 2 regions
+ * \param region1, region2
+ * \return - returns (0, 0, 0, 0, 0, 0) if the regions don't intersect
+ */
+GeometricRegion GeometricRegion::GetIntersection(const GeometricRegion &region1,
+                                                 const GeometricRegion &region2) {
+  GeometricRegion temp = region2;
+  if (!region1.Intersects(&temp))
+    return GeometricRegion(0, 0, 0, 0, 0, 0);
+  Coord min = ElementWiseMax(region1.MinCorner(), region2.MinCorner());
+  Coord max = ElementWiseMin(region1.MaxCorner(), region2.MaxCorner());
+  return GeometricRegionFromRange(min, max);
+}
+
+/**
+ * \fn bool GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
+ *                                          const GeometricRegion &region2).
+ * \brief Returns bounding box of 2 regions
+ * \param region1, region2
+ * \return
+ */
+GeometricRegion GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
+                                                const GeometricRegion &region2) {
+  Coord min = ElementWiseMin(region1.MinCorner(), region2.MinCorner());
+  Coord max = ElementWiseMax(region1.MaxCorner(), region2.MaxCorner());
+  return GeometricRegionFromRange(min, max);
+}
+
+/**
  * \fn int_dimension_t GeometricRegion::x()
  * \brief Brief description.
  * \return
