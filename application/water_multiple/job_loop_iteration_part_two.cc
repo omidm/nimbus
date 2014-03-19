@@ -85,7 +85,7 @@ void JobLoopIterationPartTwo::Execute(
 
   // check whether the frame is done or not
   bool done = false;
-  if (time + dt >= example->Time_At_Frame(frame + 1) - 1e-6) {
+  if (time + dt >= example->Time_At_Frame(frame + 1)) {
     done = true;
   }
 
