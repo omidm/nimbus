@@ -373,7 +373,7 @@ namespace nimbus {
       Log timer;
       int64_t counter, counter1, counter2;
 
-      const int_dimension_t kScale = 30;
+      const int_dimension_t kScale = 40;
       ParticleArray* particles;
       if (positive) {
         particles = &particle_container.positive_particles;
@@ -508,7 +508,7 @@ namespace nimbus {
       Log timer;
       int64_t counter1, counter2;
 
-      const int_dimension_t kScale = 30;
+      const int_dimension_t kScale = 40;
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -639,7 +639,7 @@ particle_buffer.id = (*id)(i);
                               ParticleContainer& particle_container,
                               bool positive,
                               bool merge = false) {
-      const int_dimension_t kScale = 30;
+      const int_dimension_t kScale = 40;
       RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
@@ -745,7 +745,7 @@ particle_buffer.id = (*id)(i);
                                PdiVector* instances,
                                ParticleContainer& particle_container,
                                bool positive) {
-      const int_dimension_t kScale = 30;
+      const int_dimension_t kScale = 40;
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
