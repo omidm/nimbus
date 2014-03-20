@@ -1140,15 +1140,13 @@ namespace application {
      * Spawning extrapolate phi stage over entire block
      */
     read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, APP_FACE_VEL,
-                        NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW8Outer[0], APP_PHI, APP_FACE_VEL, NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegW8Outer[0], APP_PHI, NULL);
 
     nimbus::Parameter s_extra_params;
     std::string s_extra_str;
-    SerializeParameter(frame, time, dt, global_region, global_region,
-                       &s_extra_str);
+    SerializeParameter(frame, time, dt, global_region, global_region, &s_extra_str);
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
     before.clear();
     before.insert(projection_job_ids[3]);
@@ -1190,9 +1188,9 @@ namespace application {
      */
     {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegW8Outer[0], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegW8Outer[0], APP_FACE_VEL, NULL);
 
       int index = 11;
       nimbus::Parameter extrapolation_params;
@@ -1218,9 +1216,9 @@ namespace application {
 /*
     for (int i = 0; i < extrapolation_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W8Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
       int index = 11;
       nimbus::Parameter extrapolation_params;

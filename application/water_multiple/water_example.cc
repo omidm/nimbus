@@ -340,6 +340,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
             array_shift,
             &pdv,
             &particle_levelset.levelset.phi);
+        std::cout << "OMID: write 3.\n";
       }
       application::DestroyTranslatorObjects(&pdv);
     } else {
@@ -351,6 +352,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
             array_shift,
             &pdv,
             &phi_ghost_bandwidth_seven);
+        std::cout << "OMID: write 7.\n";
       }
       application::DestroyTranslatorObjects(&pdv);
       if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -360,6 +362,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
             array_shift,
             &pdv,
             &phi_ghost_bandwidth_eight);
+        std::cout << "OMID: write 8.\n";
       }
       application::DestroyTranslatorObjects(&pdv);
     }
@@ -608,6 +611,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           array_shift,
           &pdv,
           &particle_levelset.levelset.phi);
+      std::cout << "OMID: Read 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
     if (!levelset_extrapolation_mode) {
@@ -618,6 +622,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
             array_shift,
             &pdv,
             &phi_ghost_bandwidth_seven);
+        std::cout << "OMID: Read 7.\n";
       }
       application::DestroyTranslatorObjects(&pdv);
       if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
@@ -627,6 +632,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
             array_shift,
             &pdv,
             &phi_ghost_bandwidth_eight);
+        std::cout << "OMID: Read 8.\n";
       }
       application::DestroyTranslatorObjects(&pdv);
     }
