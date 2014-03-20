@@ -2,29 +2,29 @@
 # C++ Class : Nimbus type : (domain), (number of partitions), (ghost width) : flags (none, include_boundary, use_scratch, single_partition)  #
 ##############################################################################################################################################
 
-DataFaceArray     : face_vel       : (30, 30, 30), (1, 2, 1), (3, 3, 3) : none
-DataFaceArray     : face_vel_ghost : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary
-DataScalarArray   : phi            : (30, 30, 30), (1, 2, 1), (7, 7, 7) : include_boundary
-ScalarData        : last_unique_particle_id : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-DataParticleArray : pos_particles, neg_particles  : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch, single_partition
-DataParticleArray : pos_rem_particles, neg_rem_particles  : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch, single_partition
+DataFaceArray     : face_vel       : (40, 40, 40), (1, 2, 1), (3, 3, 3) : none
+DataFaceArray     : face_vel_ghost : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary
+DataScalarArray   : phi            : (40, 40, 40), (1, 2, 1), (8, 8, 8) : include_boundary
+ScalarData        : last_unique_particle_id : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+DataParticleArray : pos_particles, neg_particles  : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch, single_partition
+DataParticleArray : pos_rem_particles, neg_rem_particles  : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch, single_partition
 
 # boolean.
-DataScalarArray   : psi_d                : (30, 30, 30), (1, 2, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : psi_d                : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
 # boolean.
-DataFaceArray     : psi_n                : (30, 30, 30), (1, 2, 1), (0, 0, 0) : none
+DataFaceArray     : psi_n                : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
 # float.
-DataScalarArray   : pressure             : (30, 30, 30), (1, 1, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : pressure             : (40, 40, 40), (1, 1, 1), (1, 1, 1) : include_boundary
 # int.
-DataScalarArray   : filled_region_colors : (30, 30, 30), (1, 1, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : filled_region_colors : (40, 40, 40), (1, 1, 1), (1, 1, 1) : include_boundary
 # float.
-DataScalarArray   : divergence           : (30, 30, 30), (1, 1, 1), (1, 1, 1) : include boundary
+DataScalarArray   : divergence           : (40, 40, 40), (1, 1, 1), (1, 1, 1) : include boundary
 # float.
-DataFaceArray     : u_interface          : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+DataFaceArray     : u_interface          : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
 
-DataSparseMatrix  : matrix_a             : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-DataRawVectorNd   : vector_x             : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-DataRawVectorNd   : vector_b             : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-ScalarData        : projection_local_tolerance  : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-DataRawGridArray  : index_c2m            : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-DataRawArrayM2C   : index_m2c            : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
+DataSparseMatrix  : matrix_a             : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+DataRawVectorNd   : vector_x             : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+DataRawVectorNd   : vector_b             : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+ScalarData        : projection_local_tolerance  : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+DataRawGridArray  : index_c2m            : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
+DataRawArrayM2C   : index_m2c            : (40, 40, 40), (1, 1, 1), (0, 0, 0) : none
