@@ -83,6 +83,15 @@ Initialize(const nimbus::Job *job,
   example.boundary=&example.boundary_scalar;
   example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
+  if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+    example.phi_ghost_bandwidth_seven.Resize(
+        example.mac_grid.Domain_Indices(7));
+  }
+  if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+    example.phi_ghost_bandwidth_eight.Resize(
+        example.mac_grid.Domain_Indices(8));
+  }
+
   // Allocates array for levelset/particles/removed particles.  --quhang
   InitializeParticleLevelsetEvolutionHelper(
       example.data_config,
