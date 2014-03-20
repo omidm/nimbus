@@ -1184,6 +1184,31 @@ namespace application {
                     s_extra_params);
 
 
+    /* 
+     * Spawning extrapolate phi stage over multiple workers.
+     */
+/*    
+    for (int i = 0; i < extrapolate_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, APP_FACE_VEL, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W8CentralWGB[i], APP_PHI, NULL);
+
+      nimbus::Parameter s_extra_params;
+      std::string s_extra_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s_extra_str);
+      s_extra_params.set_ser_data(SerializedData(s_extra_str));
+      before.clear();
+      before.insert(projection_job_ids[3]);
+      after.clear();
+      SpawnComputeJob(EXTRAPOLATE_PHI,
+          extrapolate_phi_job_ids[i],
+          read, write,
+          before, after,
+          s_extra_params);
+    }
+*/
+
     /*
      * Spawning extrapolation stage over entire block
      */
