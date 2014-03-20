@@ -119,11 +119,11 @@ namespace nimbus {
     virtual bool IsEqual(GeometricRegion* region) const;
 
     /* Largest common rectangular region shared by 2 regions. */
-    GeometricRegion GetIntersection(const GeometricRegion &region1,
-                                    const GeometricRegion &region2);
+    static GeometricRegion GetIntersection(const GeometricRegion &region1,
+                                           const GeometricRegion &region2);
     /* Smallest rectangular region (bounding box) that contains the two
      * regions. */
-    GeometricRegion GetBoundingBox(const GeometricRegion &region1,
+    static GeometricRegion GetBoundingBox(const GeometricRegion &region1,
                                    const GeometricRegion &region2);
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
