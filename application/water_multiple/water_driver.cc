@@ -941,6 +941,22 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
         Modify_Levelset_And_Particles_Nimbus_One(&example.
                                                  face_velocities_ghost);
 
+//    const int ghost_cells = 7;
+//    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
+//    example.particle_levelset_evolution.particle_levelset.
+//        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
+//                                            example.particle_levelset_evolution.phi,
+//                                            phi_ghost,
+//                                            0,
+//                                            time,
+//                                            ghost_cells);
+//
+//    example.particle_levelset_evolution.
+//        Modify_Levelset_And_Particles_Nimbus_Two(&example.
+//                                                 face_velocities_ghost,
+//                                                 &phi_ghost,
+//                                                 ghost_cells);
+
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
 
@@ -964,8 +980,8 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
                                             time,
                                             ghost_cells);
 
-    // TODO: this involves redundant copy operations. make this better.
-    // save phi ghost correctly
+    // TODO: this involves redundant copy operation. can get rid of some/ all
+    // of this after merging with Hang's updates.
     {
         nimbus::int_dimension_t shift[3] = {
             local_region.x() - 1,
@@ -974,15 +990,9 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
         };
         GeometricRegion outer_reg = local_region;
         outer_reg.Enlarge(7);
-        nimbus::Coord lmin = outer_reg.MinCorner();
-        nimbus::Coord lmax = outer_reg.MaxCorner();
-        nimbus::Coord gmin(-2, -2, -2);
-        nimbus::Coord gmax(application::kScale + 3,
-                           application::kScale + 3,
-                           application::kScale + 3);
-
-        nimbus::GeometricRegion copy_reg(nimbus::ElementWiseMax(lmin, gmin),
-                                         nimbus::ElementWiseMin(lmax, gmax));
+        nimbus::GeometricRegion copy_reg =
+          GeometricRegion::GetIntersection(outer_reg,
+                                           application::kDefaultRegion);
         const std::string lsstring = std::string(APP_PHI);
         nimbus::PdiVector pdv;
         if (application::GetTranslatorData(job, lsstring, da, &pdv,
