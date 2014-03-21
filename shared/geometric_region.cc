@@ -108,6 +108,26 @@ GeometricRegion::GeometricRegion(const std::string& data) {
   fillInValues(&msg);
 }
 
+GeometricRegion::GeometricRegion(const Coord &min, const Coord &delta) {
+  x_ = min.x;
+  y_ = min.y;
+  z_ = min.z;
+  dx_ = delta.x;
+  dy_ = delta.y;
+  dz_ = delta.z;
+}
+
+GeometricRegion GeometricRegion::GeometricRegionFromRange(const Coord &min,
+                                                          const Coord &max) {
+  GeometricRegion result(min.x,
+                         min.y,
+                         min.z,
+                         max.x - min.x + 1,
+                         max.y - min.y + 1,
+                         max.z - min.z + 1);
+  return result;
+}
+
 void GeometricRegion::Rebuild(int_dimension_t x,
                               int_dimension_t y,
                               int_dimension_t z,
@@ -205,6 +225,37 @@ bool GeometricRegion::IsEqual(GeometricRegion *region) const {
 }
 
 /**
+ * \fn bool GeometricRegion::GetIntersection(const GeometricRegion &region1,
+ *                                           const GeometricRegion &region2).
+ * \brief Returns intersection of 2 regions
+ * \param region1, region2
+ * \return - returns (0, 0, 0, 0, 0, 0) if the regions don't intersect
+ */
+GeometricRegion GeometricRegion::GetIntersection(const GeometricRegion &region1,
+                                                 const GeometricRegion &region2) {
+  GeometricRegion temp = region2;
+  if (!region1.Intersects(&temp))
+    return GeometricRegion(0, 0, 0, 0, 0, 0);
+  Coord min = ElementWiseMax(region1.MinCorner(), region2.MinCorner());
+  Coord max = ElementWiseMin(region1.MaxCorner(), region2.MaxCorner());
+  return GeometricRegionFromRange(min, max);
+}
+
+/**
+ * \fn bool GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
+ *                                          const GeometricRegion &region2).
+ * \brief Returns bounding box of 2 regions
+ * \param region1, region2
+ * \return
+ */
+GeometricRegion GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
+                                                const GeometricRegion &region2) {
+  Coord min = ElementWiseMin(region1.MinCorner(), region2.MinCorner());
+  Coord max = ElementWiseMax(region1.MaxCorner(), region2.MaxCorner());
+  return GeometricRegionFromRange(min, max);
+}
+
+/**
  * \fn int_dimension_t GeometricRegion::x()
  * \brief Brief description.
  * \return
@@ -261,6 +312,39 @@ int_dimension_t GeometricRegion::dy() const {
 */
 int_dimension_t GeometricRegion::dz() const {
   return dz_;
+}
+
+Coord GeometricRegion::MinCorner() const {
+  Coord result(x_, y_, z_);
+  return result;
+}
+
+Coord GeometricRegion::MaxCorner() const {
+  Coord result(x_ + dx_ - 1, y_ + dy_ - 1, z_ + dz_ - 1);
+  return result;
+}
+
+Coord GeometricRegion::Delta() const {
+  Coord result(dx_, dy_, dz_);
+  return result;
+}
+
+void GeometricRegion::Enlarge(const int_dimension_t delta) {
+  x_ -= delta;
+  y_ -= delta;
+  z_ -= delta;
+  dx_ += 2*delta;
+  dy_ += 2*delta;
+  dz_ += 2*delta;
+}
+
+void GeometricRegion::Enlarge(const Coord delta) {
+  x_ -= delta.x;
+  y_ -= delta.y;
+  z_ -= delta.z;
+  dx_ += 2*delta.x;
+  dy_ += 2*delta.y;
+  dz_ += 2*delta.z;
 }
 
 /**
@@ -389,5 +473,33 @@ GeometricRegion& GeometricRegion::operator= (const GeometricRegion& right) {
   dy_ = right.dy_;
   dz_ = right.dz_;
   return *this;
+}
+
+Coord::Coord() {
+  x = 0;
+  y = 0;
+  z = 0;
+}
+
+Coord::Coord(int_dimension_t xe, int_dimension_t ye, int_dimension_t ze) {
+  x = xe;
+  y = ye;
+  z = ze;
+}
+
+Coord ElementWiseMin(Coord a, Coord b) {
+  Coord r;
+  r.x = (a.x < b.x)? a.x : b.x;
+  r.y = (a.y < b.y)? a.y : b.y;
+  r.z = (a.z < b.z)? a.z : b.z;
+  return r;
+}
+
+Coord ElementWiseMax(Coord a, Coord b) {
+  Coord r;
+  r.x = (a.x > b.x)? a.x : b.x;
+  r.y = (a.y > b.y)? a.y : b.y;
+  r.z = (a.z > b.z)? a.z : b.z;
+  return r;
 }
 }  // namespace nimbus

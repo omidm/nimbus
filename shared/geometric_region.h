@@ -50,6 +50,17 @@
 
 namespace nimbus {
 
+  struct Coord {
+    int_dimension_t x;
+    int_dimension_t y;
+    int_dimension_t z;
+    Coord();
+    Coord(int_dimension_t xe, int_dimension_t ye, int_dimension_t ze);
+  };
+
+  Coord ElementWiseMin(Coord a, Coord b);
+  Coord ElementWiseMax(Coord a, Coord b);
+
   class GeometricRegion {
   public:
     GeometricRegion();
@@ -70,6 +81,11 @@ namespace nimbus {
     explicit GeometricRegion(std::istream* is);
     // Read in as a serialized GeometricRegionMessage from a string
     explicit GeometricRegion(const std::string& data);
+    // Geometric region from coordinates (min corner and delta)
+    explicit GeometricRegion(const Coord &min, const Coord &delta);
+    // Geometric region from max and min coordinates
+    static GeometricRegion GeometricRegionFromRange(const Coord &min,
+                                                    const Coord &max);
 
     virtual ~GeometricRegion() {}
 
@@ -87,12 +103,28 @@ namespace nimbus {
     int_dimension_t dy() const;
     int_dimension_t dz() const;
 
+    Coord MinCorner() const;
+    Coord MaxCorner() const;
+    Coord Delta() const;
+
+    /* Increase the size of geometric region along each dimension and side. */
+    void Enlarge(const int_dimension_t delta);
+    void Enlarge(const Coord delta);
+
     /* Covers returns whether this region covers (encompasses) the argument. */
     virtual bool Covers(GeometricRegion* region) const;
     virtual bool Intersects(GeometricRegion* region) const;
     virtual bool Adjacent(GeometricRegion* region) const;
     virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
     virtual bool IsEqual(GeometricRegion* region) const;
+
+    /* Largest common rectangular region shared by 2 regions. */
+    static GeometricRegion GetIntersection(const GeometricRegion &region1,
+                                           const GeometricRegion &region2);
+    /* Smallest rectangular region (bounding box) that contains the two
+     * regions. */
+    static GeometricRegion GetBoundingBox(const GeometricRegion &region1,
+                                   const GeometricRegion &region2);
 
     virtual void FillInMessage(GeometricRegionMessage* msg);
 

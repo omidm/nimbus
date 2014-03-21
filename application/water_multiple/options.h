@@ -76,7 +76,9 @@ struct DataConfig {
   enum DataType{
     VELOCITY = 0,
     VELOCITY_GHOST,
-    LEVELSET,
+    LEVELSET,  // Default is bandwidth 3.
+    LEVELSET_BW_SEVEN,
+    LEVELSET_BW_EIGHT,
     POSITIVE_PARTICLE,
     NEGATIVE_PARTICLE,
     REMOVED_POSITIVE_PARTICLE,
@@ -129,6 +131,8 @@ struct DataConfig {
   }
   void SetAll() {
     SetHelper(true);
+    UnsetFlag(LEVELSET_BW_SEVEN);
+    UnsetFlag(LEVELSET_BW_EIGHT);
   }
   void SetHelper(bool value) {
     for (int i = 0; i < NUM_VARIABLE; ++i)

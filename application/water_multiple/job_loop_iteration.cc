@@ -276,17 +276,25 @@ namespace application {
     std::vector<nimbus::job_id_t> adjust_phi_job_ids;
     GetNewJobID(&adjust_phi_job_ids, adjust_phi_job_num);
 
+    int first_extrapolate_phi_job_num = 2;
+    std::vector<nimbus::job_id_t> first_extrapolate_phi_job_ids;
+    GetNewJobID(&first_extrapolate_phi_job_ids, first_extrapolate_phi_job_num);
+
     int advect_phi_job_num = 2;
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
 
-    int extrapolate_phi_job_num = 1;
-    std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
-    GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
-
     int projection_job_num = 4;
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
+
+    int extrapolation_job_num = 2;
+    std::vector<nimbus::job_id_t> extrapolation_job_ids;
+    GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
+
+    int extrapolate_phi_job_num = 2;
+    std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
+    GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
     // jobs that touch particles
     size_t particle_partitions = 1;
@@ -337,15 +345,11 @@ namespace application {
     /* 
      * Spawning adjust phi with objects stage over two workrs
      */
-    nimbus::GeometricRegion kRegY2W3Half[2];
-    kRegY2W3Half[0].Rebuild(-2, -2, -2, 36, 18, 36);
-    kRegY2W3Half[1].Rebuild(-2, 16, -2, 36, 18, 36);
-
     for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W3Half[i], APP_FACE_VEL_GHOST, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
 
       nimbus::Parameter s11_params;
       std::string s11_str;
@@ -353,8 +357,6 @@ namespace application {
       s11_params.set_ser_data(SerializedData(s11_str));
       before.clear();
       after.clear();
-      after.insert(job_ids[1]);
-      // after.insert(extrapolate_phi_job_ids[0]);
       SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
           update_ghost_velocities_job_ids[i],
           read, write,
@@ -364,6 +366,7 @@ namespace application {
 
 
     // Original ADVECT_PHI job spawning.
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
@@ -377,101 +380,71 @@ namespace application {
     for (int j = 0; j < update_ghost_velocities_job_num; ++j) {
         before.insert(update_ghost_velocities_job_ids[j]);
     }
-    // before.insert(job_ids[0]);
-    // before.insert(update_ghost_velocities_job_ids[0]);
-    // before.insert(update_ghost_velocities_job_ids[1]);
     after.clear();
     for (size_t j = 0; j < step_particles_job_num; ++j) {
         after.insert(step_particles_job_ids[j]);
     }
     SpawnComputeJob(ADVECT_PHI,
-        job_ids[1],
+        advect_phi_job_ids[0],
         read, write,
         before, after,
         s12_params, true);
+*/
 
 
     /* 
-     * Spawning extrapolate phi stage over entire block
+     * Spawning first extrapolate phi stage over multiple workers.
      */
-/*
-    read.clear();
-    // TODO(quhang): read set should be the central region if it is right.
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_PHI, APP_FACE_VEL,
-                        NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_PHI, NULL);
+    for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, APP_FACE_VEL, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W8CentralWGB[i], APP_PHI, NULL);
 
-    nimbus::Parameter s_extra_params;
-    std::string s_extra_str;
-    SerializeParameter(frame, time, dt, global_region, global_region,
-                       &s_extra_str);
-    s_extra_params.set_ser_data(SerializedData(s_extra_str));
-    before.clear();
-    before.insert(job_ids[0]);
-    // before.insert(update_ghost_velocities_job_ids[0]);
-    // before.insert(update_ghost_velocities_job_ids[1]);
-    after.clear();
-    after.insert(advect_phi_job_ids[0]);
-    after.insert(advect_phi_job_ids[1]);
-    SpawnComputeJob(EXTRAPOLATE_PHI,
-                    extrapolate_phi_job_ids[0],
-                    read, write,
-                    before, after,
-                    s_extra_params);
+      nimbus::Parameter s_extra_params;
+      std::string s_extra_str;
+      SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s_extra_str);
+      s_extra_params.set_ser_data(SerializedData(s_extra_str));
+      before.clear();
+      for (int j = 0; j < update_ghost_velocities_job_num; ++j) {
+        before.insert(update_ghost_velocities_job_ids[j]);
+      }
+      after.clear();
+      SpawnComputeJob(EXTRAPOLATE_PHI,
+          first_extrapolate_phi_job_ids[i],
+          read, write,
+          before, after,
+          s_extra_params, true);
+    }
 
-*/
     /* 
-     * Start, Running ADVECT_PHI on two workers.
+     * Spawning advect phi stage over multiple workers
      */
-/*
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0],
-        APP_FACE_VEL, APP_PHI, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[0], APP_PHI, NULL);
+    for(int i = 0; i < advect_phi_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_PHI, NULL);
 
-    nimbus::Parameter s12_params;
-    std::string s12_str;
-    SerializeParameter(frame, time, dt, global_region,
-        kRegY2W3Central[0], &s12_str);
-    s12_params.set_ser_data(SerializedData(s12_str));
-    before.clear();
-    before.insert(extrapolate_phi_job_ids[0]);
-    after.clear();
-    for (int i = 0; i < step_particles_job_num; i++)
-        after.insert(step_particles_job_ids[i]);
-    SpawnComputeJob(ADVECT_PHI,
-                    advect_phi_job_ids[0],
-                    read, write,
-                    before, after,
-                    s12_params);
+      nimbus::Parameter s12_params;
+      std::string s12_str;
+      SerializeParameter(frame, time, dt, global_region, global_region, &s12_str);
+      s12_params.set_ser_data(SerializedData(s12_str));
+      before.clear();
+      for (int j = 0; j < update_ghost_velocities_job_num; ++j) {
+        before.insert(first_extrapolate_phi_job_ids[j]);
+      }
+      after.clear();
+      SpawnComputeJob(ADVECT_PHI,
+          advect_phi_job_ids[i],
+          read, write,
+          before, after,
+          s12_params, true);
+    }
 
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[1],
-        APP_FACE_VEL, APP_PHI, NULL);
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3Central[1], APP_PHI, NULL);
 
-    nimbus::Parameter s12r_params;
-    std::string s12r_str;
-    SerializeParameter(frame, time, dt, global_region,
-        kRegY2W3Central[1], &s12r_str);
-    s12r_params.set_ser_data(SerializedData(s12r_str));
-    before.clear();
-    before.insert(extrapolate_phi_job_ids[0]);
-    after.clear();
-    for (int i = 0; i < step_particles_job_num; i++)
-        after.insert(step_particles_job_ids[i]);
-    SpawnComputeJob(ADVECT_PHI,
-                    advect_phi_job_ids[1],
-                    read, write,
-                    before, after,
-                    s12r_params);
 
-    // End Running ADVECT_PHI on two workers.
-*/
-
+    
     /* 
      * Spawning step particles.
      */
@@ -519,9 +492,9 @@ namespace application {
 
         before.clear();
         after.clear();
-        // before.insert(advect_phi_job_ids[0]);
-        // before.insert(advect_phi_job_ids[1]);
-        before.insert(job_ids[1]);
+        for (int j = 0; j < advect_phi_job_num; ++j) {
+          before.insert(advect_phi_job_ids[j]);
+        }
         if (step_particles_single) {
             for (size_t i = 0; i < advect_removed_particles_job_num; i++)
                 after.insert(advect_removed_particles_job_ids[i]);

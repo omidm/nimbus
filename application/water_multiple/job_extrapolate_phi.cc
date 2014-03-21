@@ -80,6 +80,7 @@ void JobExtrapolatePhi::Execute(nimbus::Parameter params,
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::LEVELSET);
+  data_config.SetFlag(DataConfig::LEVELSET_BW_EIGHT);
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::PSI_N);
   data_config.SetFlag(DataConfig::PRESSURE);

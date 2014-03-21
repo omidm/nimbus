@@ -75,7 +75,7 @@ namespace application {
 
     // application specific parameters and constants
     const int kThreadsNum = 1;
-    const int kScale = 30;
+    const int kScale = 40;
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
