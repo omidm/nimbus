@@ -84,6 +84,17 @@ Initialize(const nimbus::Job *job,
   example.boundary=&example.boundary_scalar;
   example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
+  if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+    example.phi_ghost_bandwidth_seven.Resize(
+        example.mac_grid.Domain_Indices(7));
+    std::cout << "OMID: ALLOcated 7.\n";
+  }
+  if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+    example.phi_ghost_bandwidth_eight.Resize(
+        example.mac_grid.Domain_Indices(8));
+    std::cout << "OMID: ALLOcated 8.\n";
+  }
+
   // Allocates array for levelset/particles/removed particles.  --quhang
   InitializeParticleLevelsetEvolutionHelper(
       example.data_config,
@@ -760,7 +771,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ExtrapolationImpl (const nimbus::Job *job,
                  const nimbus::DataArray &da,
                  T dt) {
-
+/*
   T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
   example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
       example.mac_grid,
@@ -771,12 +782,13 @@ ExtrapolationImpl (const nimbus::Job *job,
       example.face_velocities,
       exchanged_phi_ghost,
       false, 3, 0, TV());
-/*
+*/
+
   example.incompressible.Extrapolate_Velocity_Across_Interface(
       example.face_velocities,
-      example.particle_levelset_evolution.phi,
+      example.phi_ghost_bandwidth_eight,
       false, 3, 0, TV());
-*/
+
   return true;
 }
 
@@ -799,7 +811,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ExtrapolatePhiImpl(const nimbus::Job *job,
                    const nimbus::DataArray &da,
                    T dt) {
-  example.phi_boundary_water.Use_Extrapolation_Mode(false);
+  // example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
   {
 /*
@@ -820,18 +832,14 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
         example.particle_levelset_evolution.particle_levelset.number_of_ghost_cells);
     T_ARRAYS_SCALAR::Copy(phi_ghost, phi);
 */
-
-/*
-    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(8));
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
         example.mac_grid,
         example.particle_levelset_evolution.phi,
-        phi_ghost,
+        example.phi_ghost_bandwidth_eight,
         0, time+dt, 8);
-    T_ARRAYS_SCALAR::Copy(phi_ghost, example.particle_levelset_evolution.phi);
-*/
+    std::cout << "OMID: called extrapolate phi.\n";
   }
-  example.phi_boundary_water.Use_Extrapolation_Mode(true);
+  // example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame + 1);

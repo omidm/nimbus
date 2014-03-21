@@ -41,6 +41,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     enum workaround1{d=TV::m};
 
 public:
+    nimbus::int_dimension_t kScale;
     GeometricRegion local_region;
     GeometricRegion relative_region;
     DataConfig data_config;
@@ -73,6 +74,9 @@ public:
     LaplaceSolverWrapper laplace_solver_wrapper;
 
     nimbus::TranslatorPhysBAM<TV> translator;
+
+    ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
+    ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();
