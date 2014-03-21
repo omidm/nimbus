@@ -1302,7 +1302,7 @@ namespace application {
                       extrapolation_job_ids[0],
                       read, write,
                       before, after,
-                      reincorporate_particles_params, true);
+                      extrapolation_params, true);
     }
 
     /*
