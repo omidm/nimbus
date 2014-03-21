@@ -1040,8 +1040,8 @@ namespace application {
         before.clear();
         after.clear();
         after.insert(projection_job_ids[0]);
-        for (int j = 0; j < adjust_phi_job_num; ++j) {
-          before.insert(delete_particles_job_ids[j]);
+        for (size_t dj = 0; dj < delete_particles_job_num; ++dj) {
+          before.insert(delete_particles_job_ids[dj]);
         }
         // before.insert(job_ids[7]);
         SpawnComputeJob(REINCORPORATE_PARTICLES,
