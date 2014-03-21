@@ -319,6 +319,16 @@ namespace application {
     std::vector<nimbus::job_id_t> modify_levelset_part_two_job_ids;
     GetNewJobID(&modify_levelset_part_two_job_ids, modify_levelset_job_num);
     bool modify_levelset_single = (modify_levelset_job_num == 1);
+    // delete particles
+    size_t delete_particles_job_num = particle_partitions;
+    std::vector<nimbus::job_id_t> delete_particles_job_ids;
+    GetNewJobID(&delete_particles_job_ids, delete_particles_job_num);
+    bool delete_particles_single = (delete_particles_job_num == 1);
+    // reincorporate particles
+    size_t reincorporate_particles_job_num = particle_partitions;
+    std::vector<nimbus::job_id_t> reincorporate_particles_job_ids;
+    GetNewJobID(&reincorporate_particles_job_ids, reincorporate_particles_job_num);
+    bool reincorporate_particles_single = (reincorporate_particles_job_num == 1);
 
     // Original adjust phi with objects that operates over entire block.
 /*
@@ -471,7 +481,7 @@ namespace application {
                                &step_particles_str);
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Central[sj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3Inner[sj], APP_POS_PARTICLES,
                     APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
@@ -596,9 +606,9 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Central[sj], APP_POS_REM_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Central[sj], APP_POS_REM_PARTICLES,
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
             SerializeParameter(frame,
                                time,
@@ -780,8 +790,8 @@ namespace application {
                     APP_FACE_VEL, APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Central[mj], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Central[mj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame,
                                time,
@@ -838,12 +848,13 @@ namespace application {
                                kRegW3Central[0],
                                &modify_levelset_part_two_str);
         } else {
+            LoadLogicalIdsInSet(this, &read, kRegY2W7Outer[mj], APP_PHI, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_FACE_VEL_GHOST,
-                    APP_FACE_VEL, APP_PHI, NULL);
+                    APP_FACE_VEL, NULL);
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Central[mj], APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Central[mj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[mj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             SerializeParameter(frame,
                                time,
@@ -913,7 +924,8 @@ namespace application {
       SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &adjust_phi_str);
       adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
       after.clear();
-      after.insert(job_ids[8]);
+      for (size_t dj = 0; dj < delete_particles_job_num; dj++)
+          after.insert(delete_particles_job_ids[dj]);
       before.clear();
       for (size_t j = 0; j < modify_levelset_job_num; j++)
         before.insert(modify_levelset_part_two_job_ids[j]);
@@ -926,68 +938,123 @@ namespace application {
 
 
     /* 
-     * Spawning aelete particles stage over entire block
+     * Spawning delete particles.
      */
 
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+    for (size_t dj = 0; dj < delete_particles_job_num; dj++) {
+        read.clear();
+        write.clear();
+        std::string delete_particles_str;
 
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL_GHOST, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        // there is just 1 last unique particle id: need to figure out how to
+        // handle the case of splitting last unique particle id
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
-    nimbus::Parameter delete_particles_params;
-    std::string delete_particles_str;
-    SerializeParameter(frame, time, dt, global_region, global_region, &delete_particles_str);
-    delete_particles_params.set_ser_data(SerializedData(delete_particles_str));
-    after.clear();
-    after.insert(job_ids[9]);
-    before.clear();
-    for (int j = 0; j < adjust_phi_job_num; ++j) {
-      before.insert(adjust_phi_job_ids[j]);
+        if (delete_particles_single) {
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
+                    APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegW3Central[0],
+                               &delete_particles_str);
+        } else {
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
+                    APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegY2W3Central[dj],
+                               &delete_particles_str);
+        }
+
+        nimbus::Parameter delete_particles_params;
+        delete_particles_params.set_ser_data(SerializedData(delete_particles_str));
+
+        before.clear();
+        for (int j = 0; j < adjust_phi_job_num; ++j) 
+            before.insert(adjust_phi_job_ids[j]);
+        after.clear();
+        for (size_t rj = 0; rj < reincorporate_particles_job_num; rj++)
+            after.insert(reincorporate_particles_job_ids[rj]);
+        // before.insert(job_ids[7]);
+        SpawnComputeJob(DELETE_PARTICLES,
+            delete_particles_job_ids[dj],
+            read, write,
+            before, after,
+            delete_particles_params, true);
     }
-    // before.insert(job_ids[7]);
-    SpawnComputeJob(DELETE_PARTICLES,
-        job_ids[8],
-        read, write,
-        before, after,
-        delete_particles_params, true);
 
 
     /* 
      * Spawning reincorporate particles stage over entire block
      */
 
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+    for (size_t rj = 0; rj < reincorporate_particles_job_num; rj++) {
+        read.clear();
+        write.clear();
+        std::string reincorporate_particles_str;
 
-    write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
-        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
-        APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        // there is just 1 last unique particle id: need to figure out how to
+        // handle the case of splitting last unique particle id
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
-    nimbus::Parameter reincorporate_particles_params;
-    std::string reincorporate_particles_str;
-    SerializeParameter(frame, time, dt, global_region, global_region, &reincorporate_particles_str);
-    reincorporate_particles_params.set_ser_data(SerializedData(reincorporate_particles_str));
-    after.clear();
-    after.insert(job_ids[10]);
-    before.clear();
-    before.insert(job_ids[8]);
-    SpawnComputeJob(REINCORPORATE_PARTICLES,
-        job_ids[9],
-        read, write,
-        before, after,
-        reincorporate_particles_params, true);
+        if (reincorporate_particles_single) {
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
+                    APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegW3Central[0],
+                               &reincorporate_particles_str);
+        } else {
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_FACE_VEL,
+                    APP_PHI, NULL);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
+                APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegY2W3Central[rj],
+                               &reincorporate_particles_str);
+        }
+
+        nimbus::Parameter reincorporate_particles_params;
+        reincorporate_particles_params.set_ser_data(SerializedData(reincorporate_particles_str));
+
+        before.clear();
+        after.clear();
+        after.insert(job_ids[10]);
+        for (size_t dj = 0; dj < delete_particles_job_num; ++dj) {
+          before.insert(delete_particles_job_ids[dj]);
+        }
+        // before.insert(job_ids[7]);
+        SpawnComputeJob(REINCORPORATE_PARTICLES,
+            reincorporate_particles_job_ids[rj],
+            read, write,
+            before, after,
+            reincorporate_particles_params, true);
+    }
 
     /*
      * Loop iteration part two.
@@ -1003,7 +1070,9 @@ namespace application {
     projection_main_params.set_ser_data(
         SerializedData(projection_main_str));
     before.clear();
-    before.insert(job_ids[9]);
+    for (size_t rj = 0; rj < reincorporate_particles_job_num; rj++) {
+      before.insert(reincorporate_particles_job_ids[rj]);
+    }
     after.clear();
     SpawnComputeJob(PROJECTION_MAIN,
                     job_ids[10],
