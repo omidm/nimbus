@@ -72,6 +72,7 @@ JobEntry::JobEntry(const JobType& job_type,
     versioned_ = false;
     assigned_ = false;
     done_ = false;
+    future_ = false;
 }
 
 JobEntry::JobEntry(const JobType& job_type,
@@ -87,7 +88,18 @@ JobEntry::JobEntry(const JobType& job_type,
   sterile_(sterile), versioned_(versioned),
   assigned_(assigned) {
     done_ = false;
+    future_ = false;
 }
+
+JobEntry::JobEntry(const job_id_t& job_id)
+  : job_id_(job_id) {
+  sterile_ = false;
+  versioned_ = false;
+  assigned_ = false;
+  done_ = false;
+  future_ = true;
+}
+
 
 JobEntry::~JobEntry() {
 }
@@ -176,6 +188,10 @@ bool JobEntry::done() {
   return done_;
 }
 
+bool JobEntry::future() {
+  return future_;
+}
+
 void JobEntry::set_job_name(std::string job_name) {
   job_name_ = job_name;
 }
@@ -222,6 +238,10 @@ void JobEntry::set_assigned(bool flag) {
 
 void JobEntry::set_done(bool flag) {
   done_ = flag;
+}
+
+void JobEntry::set_future(bool flag) {
+  future_ = flag;
 }
 
 bool JobEntry::GetPhysicalReadSet(IDSet<physical_data_id_t>* set) {

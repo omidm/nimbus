@@ -87,6 +87,8 @@ class JobEntry {
         const bool& versioned,
         const bool& assigned);
 
+    explicit JobEntry(const job_id_t& job_id);
+
     virtual ~JobEntry();
 
     JobType job_type();
@@ -106,6 +108,7 @@ class JobEntry {
     bool versioned();
     bool assigned();
     bool done();
+    bool future();
     const IDSet<logical_data_id_t>* read_set_p();
     const IDSet<logical_data_id_t>* write_set_p();
     data_version_t version_table_in_query(logical_data_id_t l_id);
@@ -122,6 +125,7 @@ class JobEntry {
     void set_versioned(bool flag);
     void set_assigned(bool flag);
     void set_done(bool flag);
+    void set_future(bool flag);
     void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
 
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
@@ -145,6 +149,7 @@ class JobEntry {
     bool versioned_;
     bool assigned_;
     bool done_;
+    bool future_;
 };
 
 typedef std::map<job_id_t, JobEntry*> JobEntryTable;
