@@ -82,6 +82,7 @@ class JobManager {
         const bool& versioned,
         const bool& assigned);
 
+    bool AddFutureJobEntry(const job_id_t& job_id);
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 

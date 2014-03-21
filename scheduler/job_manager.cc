@@ -128,6 +128,24 @@ bool JobManager::AddJobEntry(const JobType& job_type,
   }
 }
 
+bool JobManager::AddFutureJobEntry(
+    const job_id_t& job_id) {
+  JobEntry* job = new JobEntry(job_id);
+  if (!job_graph_.AddVertex(job_id, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
+    exit(-1);
+    return false;
+  } else {
+    return true;
+  }
+}
+
+
+
+
+
+
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
   Vertex<JobEntry, job_id_t>* vertex;
   if (job_graph_.GetVertex(job_id, &vertex)) {
