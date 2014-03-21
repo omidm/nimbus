@@ -317,7 +317,7 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
     if (new_logical_data) {
       vt[ldid] = (data_version_t)(0);
       job->set_version_table_out(vt);
-      version_manager_.AddVersionEntry(ldid, (data_version_t)(0), job, VersionEntry::OUT);
+      version_manager_.AddVersionEntry(ldid, NIMBUS_INIT_DATA_VERSION, job, VersionEntry::OUT);
     }
   } else {
     dbg(DBG_WARN, "WARNING: parent of define data with job id %lu is not in the graph.\n", job_id);
@@ -325,8 +325,68 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 }
 
 bool JobManager::ResolveJobDataVersions(JobEntry* job) {
-  if (job->versioned())
+  if (job->future()) {
+    return false;
+  }
+
+  if (job->versioned()) {
     return true;
+  }
+
+  // const JobEntry::VersionTable *version_table_in, *version_table_out, *vt;
+  // version_table_in = job->version_table_in_p();
+
+  IDSet<job_id_t> need = job->need_set();
+  size_t need_count = need.size();
+  size_t remain_count = need_count;
+
+  IDSet<job_id_t>::IDSetIter iter;
+  for (iter = need.begin(); iter != need.end(); ++iter) {
+    job_id_t id = (*iter);
+    JobEntry* j;
+    if (GetJobEntry(id, j)) {
+      if (j->versioned()) {
+        const JobEntry::VersionTable *vt = j->version_table_out_p();
+        JobEntry::ConstVTIter it;
+        for (it = vt->begin(); it != vt->end(); ++it) {
+          if (job->version_table_in_p()->count(it->first) == 0) {
+            job->set_version_table_in_entry(it->first, it->second);
+          } else {
+            job->set_version_table_in_entry(it->first,
+              std::max((it->second), job->version_table_in_query(it->first)));
+          }
+        }
+        job->add_job_passed_versions(id);
+        job->set_partial_versioned(true);
+        remain_count--;
+      } else {
+        dbg(DBG_SCHED, "Job in need set (id: %lu) is not versioned yet.\n", id);
+        return false;
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: Job in need set (id: %lu) is not in the graph.\n", id);
+      return false;
+    }
+  }
+
+  if (remain_count == 0) {
+    // TODO(omidm) : update the version manager.
+    if (job->build_version_table_out_and_check()) {
+      job->set_versioned(true);
+      return true;
+    } else {
+      return false;
+    }
+  } else if (remain_count < need_count) {
+    // TODO(omidm) : update the version manager.
+    return false;
+  } else {
+    return false;
+  }
+
+
+/*
+
 
   JobEntry* j;
   JobEntry::VersionTable version_table_in, version_table_out, vt;
@@ -397,6 +457,7 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
   job->set_version_table_out(version_table_out);
   version_manager_.AddJobVersionTables(job);
   return true;
+*/
 }
 
 size_t JobManager::ResolveVersions() {

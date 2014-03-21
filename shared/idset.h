@@ -74,6 +74,7 @@ class IDSet {
   virtual void insert(const IDSet<T>& add_set);
   virtual void remove(T entry);
   virtual void remove(IDSetIter it);
+  virtual void remove(const IDSet<T>& remove_set);
   virtual void clear();
   virtual bool contains(T entry) const;
   virtual int size();

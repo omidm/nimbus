@@ -64,6 +64,7 @@ JobEntry::JobEntry(const JobType& job_type,
   sterile_(sterile) {
     union_set_.insert(read_set_);
     union_set_.insert(write_set_);
+    partial_versioned_ = false;
     versioned_ = false;
     assigned_ = false;
     done_ = false;
@@ -82,6 +83,7 @@ JobEntry::JobEntry(const JobType& job_type,
   parent_job_id_(parent_job_id),
   sterile_(sterile), versioned_(versioned),
   assigned_(assigned) {
+    partial_versioned_ = versioned;
     done_ = false;
     future_ = false;
 }
@@ -89,6 +91,7 @@ JobEntry::JobEntry(const JobType& job_type,
 JobEntry::JobEntry(const job_id_t& job_id)
   : job_id_(job_id) {
   sterile_ = false;
+  partial_versioned_ = false;
   versioned_ = false;
   assigned_ = false;
   done_ = false;
@@ -155,6 +158,14 @@ JobEntry::VersionTable JobEntry::version_table_out() {
   return version_table_out_;
 }
 
+const JobEntry::VersionTable* JobEntry::version_table_in_p() {
+  return &version_table_in_;
+}
+
+const JobEntry::VersionTable* JobEntry::version_table_out_p() {
+  return &version_table_out_;
+}
+
 data_version_t JobEntry::version_table_in_query(logical_data_id_t l_id) {
   return version_table_in_[l_id];
 }
@@ -167,8 +178,23 @@ JobEntry::PhysicalTable JobEntry::physical_table() {
   return physical_table_;
 }
 
+IDSet<job_id_t> JobEntry::jobs_passed_versions() {
+  return jobs_passed_versions_;
+}
+
+IDSet<job_id_t> JobEntry::need_set() {
+  IDSet<job_id_t> need = before_set_;
+  need.insert(parent_job_id_);
+  need.remove(jobs_passed_versions_);
+  return need;
+}
+
 bool JobEntry::sterile() {
   return sterile_;
+}
+
+bool JobEntry::partial_versioned() {
+  return partial_versioned_;
 }
 
 bool JobEntry::versioned() {
@@ -229,8 +255,16 @@ void JobEntry::set_version_table_in(VersionTable version_table) {
   version_table_in_ = version_table;
 }
 
+void JobEntry::set_version_table_in_entry(logical_data_id_t l_id, data_version_t version) {
+  version_table_in_[l_id] = version;
+}
+
 void JobEntry::set_version_table_out(VersionTable version_table) {
   version_table_out_ = version_table;
+}
+
+void JobEntry::set_version_table_out_entry(logical_data_id_t l_id, data_version_t version) {
+  version_table_out_[l_id] = version;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
@@ -241,8 +275,43 @@ void JobEntry::set_physical_table_entry(logical_data_id_t l_id, physical_data_id
   physical_table_[l_id] = p_id;
 }
 
+void JobEntry::set_jobs_passed_versions(IDSet<job_id_t> jobs) {
+  jobs_passed_versions_ = jobs;
+}
+
+void JobEntry::add_job_passed_versions(job_id_t job_id) {
+  jobs_passed_versions_.insert(job_id);
+}
+
+bool JobEntry::build_version_table_out_and_check() {
+  version_table_out_ = version_table_in_;
+  IDSet<logical_data_id_t>::ConstIter iter_data;
+
+  for (iter_data = read_set_.begin(); iter_data != read_set_.end(); ++iter_data) {
+    if (version_table_in_.count(*iter_data) == 0) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
+      return false;
+    }
+  }
+  for (iter_data = write_set_.begin(); iter_data != write_set_.end(); ++iter_data) {
+    if (version_table_in_.count(*iter_data) == 0) {
+      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
+      return false;
+    } else {
+      ++version_table_out_[*iter_data];
+    }
+  }
+
+  return true;
+}
+
+
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;
+}
+
+void JobEntry::set_partial_versioned(bool flag) {
+  partial_versioned_ = flag;
 }
 
 void JobEntry::set_versioned(bool flag) {

@@ -66,6 +66,7 @@ class JobEntry {
     typedef std::map<logical_data_id_t, data_version_t> VersionTable;
     typedef std::map<logical_data_id_t, physical_data_id_t> PhysicalTable;
     typedef VersionTable::iterator VTIter;
+    typedef VersionTable::const_iterator ConstVTIter;
 
     JobEntry();
     JobEntry(const JobType& job_type,
@@ -104,13 +105,18 @@ class JobEntry {
     VersionTable version_table_in();
     VersionTable version_table_out();
     PhysicalTable physical_table();
+    IDSet<job_id_t> jobs_passed_versions();
+    IDSet<job_id_t> need_set();
     bool sterile();
+    bool partial_versioned();
     bool versioned();
     bool assigned();
     bool done();
     bool future();
     const IDSet<logical_data_id_t>* read_set_p();
     const IDSet<logical_data_id_t>* write_set_p();
+    const VersionTable* version_table_in_p();
+    const VersionTable* version_table_out_p();
     data_version_t version_table_in_query(logical_data_id_t l_id);
     data_version_t version_table_out_query(logical_data_id_t l_id);
 
@@ -126,12 +132,18 @@ class JobEntry {
     void set_version_table_in(VersionTable version_table);
     void set_version_table_out(VersionTable version_table);
     void set_physical_table(PhysicalTable physical_table);
+    void set_jobs_passed_versions(IDSet<job_id_t> jobs);
+    void add_job_passed_versions(job_id_t job_id);
     void set_sterile(bool flag);
+    void set_partial_versioned(bool flag);
     void set_versioned(bool flag);
     void set_assigned(bool flag);
     void set_done(bool flag);
     void set_future(bool flag);
+    void set_version_table_in_entry(logical_data_id_t l_id, data_version_t version);
+    void set_version_table_out_entry(logical_data_id_t l_id, data_version_t version);
     void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
+    bool build_version_table_out_and_check();
 
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
@@ -150,7 +162,9 @@ class JobEntry {
     VersionTable version_table_in_;
     VersionTable version_table_out_;
     PhysicalTable physical_table_;
+    IDSet<job_id_t> jobs_passed_versions_;
     bool sterile_;
+    bool partial_versioned_;
     bool versioned_;
     bool assigned_;
     bool done_;

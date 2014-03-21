@@ -190,6 +190,15 @@ void IDSet<T>::remove(IDSetIter it) {
 }
 
 template<typename T>
+void IDSet<T>::remove(const IDSet<T>& remove_set) {
+  IDSetContainer ids =  remove_set.identifiers_;
+  IDSetIter iter =  ids.begin();
+  for (; iter !=  ids.end(); ++iter) {
+    this->remove(*iter);
+  }
+}
+
+template<typename T>
 void IDSet<T>::clear() {
   identifiers_.clear();
 }
