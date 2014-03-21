@@ -62,13 +62,8 @@ JobEntry::JobEntry(const JobType& job_type,
   before_set_(before_set), after_set_(after_set),
   parent_job_id_(parent_job_id), params_(params),
   sterile_(sterile) {
-    IDSet<logical_data_id_t>::IDSetIter it;
-    for (it = read_set_.begin(); it != read_set_.end(); ++it) {
-      union_set_.insert(*it);
-    }
-    for (it = write_set_.begin(); it != write_set_.end(); ++it) {
-      union_set_.insert(*it);
-    }
+    union_set_.insert(read_set_);
+    union_set_.insert(write_set_);
     versioned_ = false;
     assigned_ = false;
     done_ = false;
@@ -192,6 +187,10 @@ bool JobEntry::future() {
   return future_;
 }
 
+void JobEntry::set_job_type(JobType job_type) {
+  job_type_ = job_type;
+}
+
 void JobEntry::set_job_name(std::string job_name) {
   job_name_ = job_name;
 }
@@ -200,12 +199,30 @@ void JobEntry::set_job_id(job_id_t job_id) {
   job_id_ = job_id;
 }
 
+void JobEntry::set_read_set(IDSet<logical_data_id_t> read_set) {
+  read_set_ = read_set;
+  union_set_.insert(read_set);
+}
+
+void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
+  write_set_ = write_set;
+  union_set_.insert(write_set);
+}
+
 void JobEntry::set_before_set(IDSet<job_id_t> before_set) {
   before_set_ = before_set;
 }
 
 void JobEntry::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
+}
+
+void JobEntry::set_parent_job_id(job_id_t parent_job_id) {
+  parent_job_id_ = parent_job_id;
+}
+
+void JobEntry::set_params(Parameter params) {
+  params_ = params;
 }
 
 void JobEntry::set_version_table_in(VersionTable version_table) {

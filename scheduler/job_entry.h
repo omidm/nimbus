@@ -114,10 +114,15 @@ class JobEntry {
     data_version_t version_table_in_query(logical_data_id_t l_id);
     data_version_t version_table_out_query(logical_data_id_t l_id);
 
+    void set_job_type(JobType job_type);
     void set_job_name(std::string job_name);
     void set_job_id(job_id_t job_id);
+    void set_read_set(IDSet<logical_data_id_t> read_set);
+    void set_write_set(IDSet<logical_data_id_t> write_set);
     void set_before_set(IDSet<job_id_t> before_set);
     void set_after_set(IDSet<job_id_t> after_set);
+    void set_parent_job_id(job_id_t parent_job_id);
+    void set_params(Parameter params);
     void set_version_table_in(VersionTable version_table);
     void set_version_table_out(VersionTable version_table);
     void set_physical_table(PhysicalTable physical_table);

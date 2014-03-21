@@ -82,31 +82,51 @@ bool JobManager::AddJobEntry(const JobType& job_type,
       before_set, after_set, parent_job_id, params, sterile);
 
   if (!job_graph_.AddVertex(job_id, job)) {
+    dbg(DBG_SCHED, "Filling possible future job (id: %lu) in job manager.\n", job_id);
     delete job;
-    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-    exit(-1);
-    return false;
-  } else {
-    bool completed_before_set_edges = true;
+    GetJobEntry(job_id, job);
+    if (job->future()) {
+      job->set_job_type(job_type);
+      job->set_job_name(job_name);
+      job->set_read_set(read_set);
+      job->set_write_set(write_set);
+      job->set_before_set(before_set);
+      job->set_after_set(after_set);
+      job->set_parent_job_id(parent_job_id);
+      job->set_params(params);
+      job->set_sterile(sterile);
+      job->set_future(false);
+      dbg(DBG_SCHED, "Filled the information for used to be future job (id: %lu).\n", job_id);
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+      exit(-1);
+      return false;
+    }
+  }
 
-    IDSet<job_id_t>::ConstIter it;
-    for (it = before_set.begin(); it != before_set.end(); ++it) {
+  bool completed_before_set_edges = true;
+
+  IDSet<job_id_t>::ConstIter it;
+  for (it = before_set.begin(); it != before_set.end(); ++it) {
+    if (!job_graph_.AddEdge(*it, job_id)) {
+      dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
+      AddFutureJobEntry(*it);
       if (!job_graph_.AddEdge(*it, job_id)) {
         completed_before_set_edges = false;
         break;
       }
     }
-
-    if (!completed_before_set_edges) {
-      job_graph_.RemoveVertex(job_id);
-      delete job;
-      dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
-      exit(-1);
-      return false;
-    }
-
-    return true;
   }
+
+  if (!completed_before_set_edges) {
+    job_graph_.RemoveVertex(job_id);
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  return true;
 }
 
 bool JobManager::AddJobEntry(const JobType& job_type,
@@ -122,10 +142,10 @@ bool JobManager::AddJobEntry(const JobType& job_type,
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
     return false;
-  } else {
-    return true;
   }
+  return true;
 }
 
 bool JobManager::AddFutureJobEntry(
@@ -136,14 +156,9 @@ bool JobManager::AddFutureJobEntry(
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
     exit(-1);
     return false;
-  } else {
-    return true;
   }
+  return true;
 }
-
-
-
-
 
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
