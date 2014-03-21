@@ -24,7 +24,7 @@ LDIR = ${NIMBUS_ROOT}
 
 CPP = g++
 # Flags for all cpp invocations
-CFLAGS = -Wall -g -pg -O3
+CFLAGS = -Wall -g -O3
 # CFLAGS += -D_NIMBUS_NO_DBG
 # CFLAGS += -D_NIMBUS_NO_LOG
 

@@ -438,10 +438,10 @@ namespace application {
 
       nimbus::Parameter s12_params;
       std::string s12_str;
-      SerializeParameter(frame, time, dt, global_region, global_region, &s12_str);
+      SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s12_str);
       s12_params.set_ser_data(SerializedData(s12_str));
       before.clear();
-      for (int j = 0; j < update_ghost_velocities_job_num; ++j) {
+      for (int j = 0; j < first_extrapolate_phi_job_num; ++j) {
         before.insert(first_extrapolate_phi_job_ids[j]);
       }
       after.clear();
