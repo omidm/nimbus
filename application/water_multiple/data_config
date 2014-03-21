@@ -6,8 +6,8 @@ DataFaceArray     : face_vel       : (30, 30, 30), (1, 2, 1), (3, 3, 3) : none
 DataFaceArray     : face_vel_ghost : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary
 DataScalarArray   : phi            : (30, 30, 30), (1, 2, 1), (7, 7, 7) : include_boundary
 ScalarData        : last_unique_particle_id : (30, 30, 30), (1, 1, 1), (0, 0, 0) : none
-DataParticleArray : pos_particles, neg_particles  : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch
-DataParticleArray : pos_rem_particles, neg_rem_particles  : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch
+DataParticleArray : pos_particles, neg_particles  : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch, single_partition
+DataParticleArray : pos_rem_particles, neg_rem_particles  : (30, 30, 30), (1, 2, 1), (3, 3, 3) : include_boundary, use_scratch, single_partition
 
 # boolean.
 DataScalarArray   : psi_d                : (30, 30, 30), (1, 2, 1), (1, 1, 1) : include_boundary
