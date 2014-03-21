@@ -283,11 +283,11 @@ namespace application {
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    int extrapolation_job_num = 1;
+    int extrapolation_job_num = 2;
     std::vector<nimbus::job_id_t> extrapolation_job_ids;
     GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
 
-    int extrapolate_phi_job_num = 1;
+    int extrapolate_phi_job_num = 2;
     std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
     GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
@@ -1139,6 +1139,7 @@ namespace application {
     /* 
      * Spawning extrapolate phi stage over entire block
      */
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW8Outer[0], APP_PHI, APP_FACE_VEL, NULL);
     write.clear();
@@ -1155,13 +1156,12 @@ namespace application {
                     extrapolate_phi_job_ids[0],
                     read, write,
                     before, after,
-                    s_extra_params);
-
+                    s_extra_params, true);
+*/
 
     /* 
      * Spawning extrapolate phi stage over multiple workers.
      */
-/*    
     for (int i = 0; i < extrapolate_phi_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, APP_FACE_VEL, NULL);
@@ -1179,13 +1179,14 @@ namespace application {
           extrapolate_phi_job_ids[i],
           read, write,
           before, after,
-          s_extra_params);
+          s_extra_params, true);
     }
-*/
+
 
     /*
      * Spawning extrapolation stage over entire block
      */
+/*
     {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegW8Outer[0], APP_FACE_VEL, APP_PHI, NULL);
@@ -1209,16 +1210,15 @@ namespace application {
                       before, after,
                       reincorporate_particles_params, true);
     }
-
+*/
     /*
      * Spawning extrapolation stage over multiple workers
      */
-/*
     for (int i = 0; i < extrapolation_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_FACE_VEL, APP_PHI, NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W8Central[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W8Central[i], APP_FACE_VEL, NULL);
 
       int index = 11;
       nimbus::Parameter extrapolation_params;
@@ -1228,15 +1228,16 @@ namespace application {
       after.clear();
       after.insert(job_ids[index+1]);
       before.clear();
-      before.insert(projection_job_ids[3]);
+      for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+        before.insert(extrapolate_phi_job_ids[j]);
+      }
       SpawnComputeJob(EXTRAPOLATION,
                       extrapolation_job_ids[i],
                       read, write,
                       before, after,
-                      reincorporate_particles_params, true);
+                      extrapolation_params, true);
     }
 
-*/
 
 
     if (!done) {
