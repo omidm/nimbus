@@ -271,11 +271,11 @@ namespace application {
     std::vector<nimbus::job_id_t> adjust_phi_job_ids;
     GetNewJobID(&adjust_phi_job_ids, adjust_phi_job_num);
 
-    int first_extrapolate_phi_job_num = 1;
+    int first_extrapolate_phi_job_num = 2;
     std::vector<nimbus::job_id_t> first_extrapolate_phi_job_ids;
     GetNewJobID(&first_extrapolate_phi_job_ids, first_extrapolate_phi_job_num);
 
-    int advect_phi_job_num = 1;
+    int advect_phi_job_num = 2;
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
 
@@ -361,6 +361,7 @@ namespace application {
 
 
     // Original ADVECT_PHI job spawning.
+/*
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
     write.clear();
@@ -383,13 +384,12 @@ namespace application {
         read, write,
         before, after,
         s12_params, true);
-
+*/
 
 
     /* 
      * Spawning first extrapolate phi stage over multiple workers.
      */
-/*
     for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, APP_FACE_VEL, NULL);
@@ -409,14 +409,12 @@ namespace application {
           first_extrapolate_phi_job_ids[i],
           read, write,
           before, after,
-          s_extra_params);
+          s_extra_params, true);
     }
-*/    
 
     /* 
      * Spawning advect phi stage over multiple workers
      */
-/*
     for(int i = 0; i < advect_phi_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
@@ -438,7 +436,6 @@ namespace application {
           before, after,
           s12_params, true);
     }
-*/
 
 
 
