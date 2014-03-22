@@ -105,28 +105,67 @@ void JobLoopIterationPartTwo::SpawnJobs(
   GetNewJobID(&job_ids, job_num);
   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
   nimbus::IDSet<nimbus::job_id_t> before, after;
+  int extrapolation_job_num = 2;
+  std::vector<nimbus::job_id_t> extrapolation_job_ids;
+  GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
 
-  // Spawning extrapolation stage over entire block
+  int extrapolate_phi_job_num = 2;
+  std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
+  GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
-  read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
-  write.clear();
-  LoadLogicalIdsInSet(this, &write,
-                      kRegW3Outer[0], APP_FACE_VEL, APP_PHI, NULL);
 
-  nimbus::Parameter extrapolation_params;
-  std::string extrapolation_str;
-  SerializeParameter(frame, time, dt, global_region, global_region,
-                     &extrapolation_str);
-  extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
-  after.clear();
-  after.insert(job_ids[1]);
-  before.clear();
-  SpawnComputeJob(EXTRAPOLATION,
-                  job_ids[0],
-                  read, write,
-                  before, after,
-                  extrapolation_params, true);
+  /*
+   * Spawning extrapolate phi stage over multiple workers.
+   */
+  for (int i = 0; i < extrapolate_phi_job_num; ++i) {
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI,
+                        APP_FACE_VEL, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write,
+                        kRegY2W8CentralWGB[i], APP_PHI,
+                        NULL);
+
+    nimbus::Parameter s_extra_params;
+    std::string s_extra_str;
+    SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i],
+                       &s_extra_str);
+    s_extra_params.set_ser_data(SerializedData(s_extra_str));
+    before.clear();
+    after.clear();
+    SpawnComputeJob(EXTRAPOLATE_PHI,
+                    extrapolate_phi_job_ids[i],
+                    read,
+                    write,
+                    before,
+                    after,
+                    s_extra_params,
+                    true);
+  }
+  /*
+   * Spawning extrapolation stage over multiple workers
+   */
+  for (int i = 0; i < extrapolation_job_num; ++i) {
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i],
+                        APP_FACE_VEL, APP_PHI, NULL);
+    write.clear();
+    LoadLogicalIdsInSet(this, &write, kRegY2W8Central[i],
+                        APP_FACE_VEL, NULL);
+
+    nimbus::Parameter extrapolation_params;
+    std::string extrapolation_str;
+    SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
+                       &extrapolation_str);
+    extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
+    after.clear();
+    before.clear();
+    for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+      before.insert(extrapolate_phi_job_ids[j]);
+    }
+    SpawnComputeJob(EXTRAPOLATION, extrapolation_job_ids[i], read, write,
+                    before, after, extrapolation_params, true);
+  }
 
   if (done) {
     dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
@@ -159,7 +198,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
     iter_params.set_ser_data(SerializedData(iter_str));
     after.clear();
     before.clear();
-    before.insert(job_ids[0]);
+    for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+      before.insert(extrapolation_job_ids[j]);
+    }
     SpawnComputeJob(LOOP_ITERATION,
                     job_ids[1],
                     read, write,
@@ -195,7 +236,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
     after.clear();
     after.insert(loop_job_id[0]);
     before.clear();
-    before.insert(job_ids[0]);
+    for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+      before.insert(extrapolation_job_ids[j]);
+    }
     SpawnComputeJob(WRITE_FRAME,
                     job_ids[1],
                     read, write,
