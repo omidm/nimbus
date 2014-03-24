@@ -84,19 +84,24 @@ bool VersionManager::AddVersionEntry(const VersionEntry& ve) {
 }
 
 bool VersionManager::AddJobVersionTables(JobEntry* job_entry) {
-  if (!job_entry->versioned()) {
-    return false;
-  }
+  bool in = AddJobVersionTableIn(job_entry);
+  bool out = AddJobVersionTableOut(job_entry);
+  return (in && out);
+}
 
-  JobEntry::VersionTable::iterator iter;
-
-  JobEntry::VersionTable  vt_in = job_entry->version_table_in();
-  for (iter = vt_in.begin(); iter != vt_in.end(); ++iter) {
+bool VersionManager::AddJobVersionTableIn(JobEntry* job_entry) {
+  JobEntry::ConstVTIter iter;
+  const JobEntry::VersionTable  *vt_in = job_entry->version_table_in_p();
+  for (iter = vt_in->begin(); iter != vt_in->end(); ++iter) {
     AddVersionEntry(iter->first, iter->second, job_entry, VersionEntry::IN);
   }
+  return true;
+}
 
-  JobEntry::VersionTable  vt_out = job_entry->version_table_out();
-  for (iter = vt_out.begin(); iter != vt_out.end(); ++iter) {
+bool VersionManager::AddJobVersionTableOut(JobEntry* job_entry) {
+  JobEntry::ConstVTIter iter;
+  const JobEntry::VersionTable  *vt_out = job_entry->version_table_out_p();
+  for (iter = vt_out->begin(); iter != vt_out->end(); ++iter) {
     AddVersionEntry(iter->first, iter->second, job_entry, VersionEntry::OUT);
   }
   return true;
@@ -146,19 +151,24 @@ bool VersionManager::RemoveVersionEntry(const VersionEntry& ve) {
 }
 
 bool VersionManager::RemoveJobVersionTables(JobEntry* job_entry) {
-  if (!job_entry->versioned()) {
-    return false;
-  }
+  bool in = RemoveJobVersionTableIn(job_entry);
+  bool out = RemoveJobVersionTableOut(job_entry);
+  return (in && out);
+}
 
-  JobEntry::VersionTable::iterator iter;
-
-  JobEntry::VersionTable  vt_in = job_entry->version_table_in();
-  for (iter = vt_in.begin(); iter != vt_in.end(); ++iter) {
+bool VersionManager::RemoveJobVersionTableIn(JobEntry* job_entry) {
+  JobEntry::ConstVTIter iter;
+  const JobEntry::VersionTable  *vt_in = job_entry->version_table_in_p();
+  for (iter = vt_in->begin(); iter != vt_in->end(); ++iter) {
     RemoveVersionEntry(iter->first, iter->second, job_entry, VersionEntry::IN);
   }
+  return true;
+}
 
-  JobEntry::VersionTable  vt_out = job_entry->version_table_out();
-  for (iter = vt_out.begin(); iter != vt_out.end(); ++iter) {
+bool VersionManager::RemoveJobVersionTableOut(JobEntry* job_entry) {
+  JobEntry::ConstVTIter iter;
+  const JobEntry::VersionTable  *vt_out = job_entry->version_table_out_p();
+  for (iter = vt_out->begin(); iter != vt_out->end(); ++iter) {
     RemoveVersionEntry(iter->first, iter->second, job_entry, VersionEntry::OUT);
   }
   return true;

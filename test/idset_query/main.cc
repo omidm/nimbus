@@ -41,6 +41,7 @@
 #include <iostream>  // NOLINT
 #include <sstream>  // NOLINT
 #include <string>
+#include <map>
 #include "shared/nimbus.h"
 #include "shared/log.h"
 #include "../../application/job_spawner/app.h"
@@ -76,11 +77,29 @@ int main(int argc, const char *argv[]) {
   log.StartTimer();
   set_copy = set;
   log.StopTimer();
-  std::cout << "Time elapsed copy: " << log.timer() << std::endl;
+  std::cout << "Time elapsed idset copy: " << log.timer() << std::endl;
 
   log.StartTimer();
-  set.contains(START_ + elem_num + 1);
+  if (set.contains(START_ + 1)) {
+    log.StopTimer();
+    std::cout << "Time elapsed idset query: " << log.timer() << std::endl;
+  }
+
+  std::map<int, int> map;
+  for (int i = 0; i < elem_num; ++i) {
+    map[START_ + i] = START_ + i;
+  }
+
+  std::map<int, int> map_copy;
+  log.StartTimer();
+  map_copy = map;
   log.StopTimer();
-  std::cout << "Time elapsed query: " << log.timer() << std::endl;
+  std::cout << "Time elapsed map copy: " << log.timer() << std::endl;
+
+  log.StartTimer();
+  if (map.count(START_ + 1)) {
+    log.StopTimer();
+    std::cout << "Time elapsed map query: " << log.timer() << std::endl;
+  }
 }
 

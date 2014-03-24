@@ -67,12 +67,20 @@ class VersionManager {
 
     bool AddJobVersionTables(JobEntry* job_entry);
 
+    bool AddJobVersionTableIn(JobEntry* job_entry);
+
+    bool AddJobVersionTableOut(JobEntry* job_entry);
+
     bool RemoveVersionEntry(logical_data_id_t logical_id, data_version_t version,
         JobEntry* job_entry, VersionEntry::Relation relation);
 
     bool RemoveVersionEntry(const VersionEntry& ve);
 
     bool RemoveJobVersionTables(JobEntry* job_entry);
+
+    bool RemoveJobVersionTableIn(JobEntry* job_entry);
+
+    bool RemoveJobVersionTableOut(JobEntry* job_entry);
 
     size_t GetJobsNeedDataVersion(JobEntryList* result,
         VersionedLogicalData vld);

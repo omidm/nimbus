@@ -333,9 +333,6 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     return true;
   }
 
-  // const JobEntry::VersionTable *version_table_in, *version_table_out, *vt;
-  // version_table_in = job->version_table_in_p();
-
   IDSet<job_id_t> need = job->need_set();
   size_t need_count = need.size();
   size_t remain_count = need_count;
@@ -350,10 +347,13 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
         JobEntry::ConstVTIter it;
         for (it = vt->begin(); it != vt->end(); ++it) {
           if (job->version_table_in_p()->count(it->first) == 0) {
+            version_manager_.AddVersionEntry(it->first, it->second, job, VersionEntry::IN);
             job->set_version_table_in_entry(it->first, it->second);
-          } else {
-            job->set_version_table_in_entry(it->first,
-              std::max((it->second), job->version_table_in_query(it->first)));
+          } else if ((it->second) > (job->version_table_in_query(it->first))) {
+            version_manager_.RemoveVersionEntry(
+                it->first, job->version_table_in_query(it->first), job, VersionEntry::IN);
+            version_manager_.AddVersionEntry(it->first, it->second, job, VersionEntry::IN);
+            job->set_version_table_in_entry(it->first, it->second);
           }
         }
         job->add_job_passed_versions(id);
@@ -370,94 +370,14 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
   }
 
   if (remain_count == 0) {
-    // TODO(omidm) : update the version manager.
     if (job->build_version_table_out_and_check()) {
+      version_manager_.AddJobVersionTableOut(job);
       job->set_versioned(true);
       return true;
-    } else {
-      return false;
-    }
-  } else if (remain_count < need_count) {
-    // TODO(omidm) : update the version manager.
-    return false;
-  } else {
-    return false;
-  }
-
-
-/*
-
-
-  JobEntry* j;
-  JobEntry::VersionTable version_table_in, version_table_out, vt;
-
-  job_id_t parent_id = job->parent_job_id();
-  if (GetJobEntry(parent_id, j)) {
-    if (j->versioned()) {
-      version_table_in = j->version_table_out();
-    } else {
-      dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not versioned yet.\n", parent_id);
-      return false;
-    }
-  } else {
-    dbg(DBG_ERROR, "ERROR: parent job (id: %lu) is not in job graph.\n", parent_id);
-    return false;
-  }
-
-  // Specifically use the before set not the edges in the graph to make sure
-  // that jobs in before set are not removed before job is versioned - omidm
-  IDSet<job_id_t>::IDSetIter iter_job;
-  IDSet<job_id_t> before_set = job->before_set();
-  for (iter_job = before_set.begin(); iter_job != before_set.end(); ++iter_job) {
-    job_id_t id = (*iter_job);
-    if (GetJobEntry(id, j)) {
-      if (j->versioned()) {
-        vt = j->version_table_out();
-        JobEntry::VTIter it = vt.begin();
-        for (; it != vt.end(); ++it) {
-          if (version_table_in.count(it->first) == 0) {
-            version_table_in[it->first] =  (it->second);
-          } else {
-            version_table_in[it->first] =
-              std::max((it->second), version_table_in[it->first]);
-          }
-        }
-      } else {
-        dbg(DBG_SCHED, "Job in befor set (id: %lu) is not versioned yet.\n", id);
-        return false;
-      }
-    } else {
-      dbg(DBG_SCHED, "Job in befor set (id: %lu) is not in the graph.\n", id);
-      return false;
     }
   }
 
-  version_table_out = version_table_in;
-
-  IDSet<logical_data_id_t>::ConstIter iter_data;
-  const IDSet<logical_data_id_t>* read_set_p = job->read_set_p();
-  for (iter_data = read_set_p->begin(); iter_data != read_set_p->end(); ++iter_data) {
-    if (version_table_in.count(*iter_data) == 0) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
-      return false;
-    }
-  }
-  const IDSet<logical_data_id_t>* write_set_p = job->write_set_p();
-  for (iter_data = write_set_p->begin(); iter_data != write_set_p->end(); ++iter_data) {
-    if (version_table_in.count(*iter_data) == 0) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
-      return false;
-    } else {
-      ++version_table_out[*iter_data];
-    }
-  }
-
-  job->set_versioned(true);
-  job->set_version_table_in(version_table_in);
-  job->set_version_table_out(version_table_out);
-  version_manager_.AddJobVersionTables(job);
-  return true;
-*/
+  return false;
 }
 
 size_t JobManager::ResolveVersions() {
