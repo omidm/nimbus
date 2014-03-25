@@ -414,8 +414,6 @@ namespace application {
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         if (step_particles_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST, NULL);
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
@@ -537,8 +535,6 @@ namespace application {
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         if (advect_removed_particles_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
@@ -661,8 +657,6 @@ namespace application {
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         if (modify_levelset_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
@@ -723,8 +717,6 @@ namespace application {
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         if (modify_levelset_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_FACE_VEL, APP_PHI, NULL);
@@ -815,9 +807,6 @@ namespace application {
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         if (delete_particles_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
@@ -875,9 +864,6 @@ namespace application {
 
         // there is just 1 last unique particle id: need to figure out how to
         // handle the case of splitting last unique particle id
-        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-
         if (reincorporate_particles_single) {
             LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
                     APP_PHI, NULL);
