@@ -6,5 +6,4 @@ cp OPENGL_AGL_PBUFFER.cpp ../Public_Library/PhysBAM_Rendering/PhysBAM_OpenGL/Ope
 cp PHOTON_MAP.cpp ../Public_Library/PhysBAM_Rendering/PhysBAM_Ray_Tracing/Rendering/PHOTON_MAP.cpp
 cp THREADED_RIGIDS.h ../Public_Library/PhysBAM_Solids/PhysBAM_Rigids/Parallel_Computation/THREADED_RIGIDS.h
 cp Is_NaN.h ../Public_Library/PhysBAM_Tools/Math_Tools/Is_NaN.h
-cp THREAD_QUEUE.cpp ../Public_Library/PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.cpp
 cp Public_Library.cmake ../Scripts/CMake/Public_Library.cmake
