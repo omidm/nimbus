@@ -117,10 +117,6 @@ namespace application {
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id);
 
-    void LoadReadWriteSets(nimbus::Job* job,
-        nimbus::IDSet<nimbus::logical_data_id_t>* read,
-        nimbus::IDSet<nimbus::logical_data_id_t>* write) __attribute__((deprecated));
-
     void LoadLogicalIdsInSet(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* set,
         const nimbus::GeometricRegion& region, ...);
