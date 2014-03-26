@@ -57,7 +57,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     DataVec main_copy;
     DataSetVec scratch_copies;
-    if (GroupSyncData(this, da, &main_copy, &scratch_copies)) {
+    if (!GroupSyncData(this, da, &main_copy, &scratch_copies)) {
         dbg(DBG_WARN, "Nothing to synchronize\n");
         return;
     }
@@ -67,7 +67,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     for (size_t i = 0; i < main_copy.size(); i++) {
         DataParticleArray *merge_to = dynamic_cast<DataParticleArray *>(main_copy[i]);
         DataVec *scratch = scratch_copies[i];
-        if (merge_to != NULL)
+        if (merge_to != NULL && !scratch->empty())
             merge_to->MergeParticles(*scratch);
         else
             dbg(DBG_WARN, "Passed object is not a particle array\n");

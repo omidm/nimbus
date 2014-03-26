@@ -201,14 +201,14 @@ namespace application {
     GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
     // jobs that touch particles
-    size_t particle_partitions = 1;
+    size_t particle_partitions = 2;
     // step particles
     size_t step_particles_job_num = particle_partitions;
     std::vector<nimbus::job_id_t> step_particles_job_ids;
     GetNewJobID(&step_particles_job_ids, step_particles_job_num);
     bool step_particles_single = (step_particles_job_num == 1);
     // step particles sync
-    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : 4 * kRegY2W3Scratch_len;
+    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : 4 * step_particles_job_num;
     std::vector<nimbus::job_id_t> step_particles_sync_job_ids;
     GetNewJobID(&step_particles_sync_job_ids, step_particles_sync_job_num);
     // advect removed particles
@@ -382,13 +382,13 @@ namespace application {
             before.insert(step_particles_job_ids[i]);
         for (size_t i = 0; i < advect_removed_particles_job_num; i++)
             after.insert(advect_removed_particles_job_ids[i]);
-        for (size_t i = 0; i < kRegY2W3Scratch_len; i++) {
+        for (size_t i = 0; i < kRegY2W3CentralWGB_len; i++) {
             size_t ii = 4*i;
             // positive
             read.clear();
             write.clear();
-            kScratchPosParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_POS_PARTICLES, NULL);
+            kScratchPosParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii],
                     read, write,
@@ -397,8 +397,8 @@ namespace application {
             // negative
             read.clear();
             write.clear();
-            kScratchNegParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_NEG_PARTICLES, NULL);
+            kScratchNegParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_NEG_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+1],
                     read, write,
@@ -407,8 +407,8 @@ namespace application {
             // positive removed
             read.clear();
             write.clear();
-            kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_POS_REM_PARTICLES, NULL);
+            kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_REM_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+2],
                     read, write,
@@ -417,8 +417,8 @@ namespace application {
             // negative removed
             read.clear();
             write.clear();
-            kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3Scratch[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3Scratch[i], APP_NEG_REM_PARTICLES, NULL);
+            kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
+            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_NEG_REM_PARTICLES, NULL);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+3],
                     read, write,
