@@ -161,7 +161,8 @@ bool VersionOperator::CacheMergeResult(
   if (cache_.size() < max_cache_size_) {
     cache_[ids] = merged;
   } else {
-    Cache::iterator iter = cache_.begin();  // + (rand_r(&cache_seed_) % max_cache_size_);
+    Cache::iterator iter = cache_.begin();
+    std::advance(iter, rand_r(&cache_seed_) % max_cache_size_);
     cache_.erase(iter);
     cache_[ids] = merged;
   }
