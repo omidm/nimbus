@@ -94,16 +94,16 @@ namespace application {
         return success;
     }
 
-    bool GroupSyncRWData(const nimbus::Job *job,
-                         const nimbus::DataArray *da,
-                         DataVec *main_copy,
-                         DataList *scratch_copies) {
-        if (da->empty())
+    bool GroupSyncData(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       DataVec *main_copy,
+                       DataSetVec *scratch_copies) {
+        if (da.size() < 2)
             return false;
         IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
         IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
-        for (nimbus::DataArray::const_iterator it = da->begin();
-                it != da->end(); it++) {
+        for (nimbus::DataArray::const_iterator it = da.begin();
+                it != da.end(); it++) {
             nimbus::Data *d = *it;
             if (write_set.contains(d->physical_id()))
                 main_copy->push_back(d);
@@ -111,8 +111,8 @@ namespace application {
         for (size_t i = 0; i < main_copy->size(); i++) {
             nimbus::GeometricRegion region = main_copy->at(i)->region();
             DataVec *scratch = new DataVec();
-            for (nimbus::DataArray::const_iterator it = da->begin();
-                    it != da->end(); it++) {
+            for (nimbus::DataArray::const_iterator it = da.begin();
+                    it != da.end(); it++) {
                 nimbus::Data *d = *it;
                 if (region == d->region() && read_set.contains(d->physical_id()))
                     scratch->push_back(d);

@@ -56,17 +56,20 @@ void DataParticleArray::Create() {
     nimbus::PhysBAMData::Create();
 }
 
-void DataParticleArray::MergeParticles(const std::vector<DataParticleArray * > &scratch) {
+void DataParticleArray::MergeParticles(const std::vector<nimbus::Data *> &scratch) {
     nimbus::int_dimension_t new_size = 0;
-    for (size_t i = 0; i < scratch.size(); i++)
-        new_size += scratch[i]->size();
+    for (size_t i = 0; i < scratch.size(); i++) {
+        DataParticleArray *s = static_cast<DataParticleArray *>(scratch[i]);
+        new_size += s->size();
+    }
     char *new_buffer = new char[new_size];
     char *buf_merged = new_buffer;
     for (size_t i = 0; i < scratch.size(); i++) {
-        if (scratch[i]->size() == 0)
+        DataParticleArray *s = static_cast<DataParticleArray *>(scratch[i]);
+        if (s->size() == 0)
             continue;
-        memcpy(buf_merged, scratch[i]->buffer(), scratch[i]->size());
-        buf_merged += scratch[i]->size();
+        memcpy(buf_merged, s->buffer(), s->size());
+        buf_merged += s->size();
     }
     delete buffer();
     set_buffer(new_buffer, new_size);

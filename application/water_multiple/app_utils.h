@@ -76,7 +76,7 @@ namespace application {
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     typedef std::vector<Data*> DataVec;
-    typedef std::list<DataVec*> DataList;
+    typedef std::vector<DataVec*> DataSetVec;
 
     // application specific parameters and constants
     const int kThreadsNum = 1;
@@ -106,6 +106,10 @@ namespace application {
                            const nimbus::DataArray& da,
                            nimbus::PdiVector *vec,
                            AccessType access_type);
+    bool GroupSyncData(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       DataVec *main_copy,
+                       DataSetVec *scratch_copies);
     void DestroyTranslatorObjects(nimbus::PdiVector *vec);
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,

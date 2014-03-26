@@ -55,39 +55,24 @@ nimbus::Job* JobSynchronizeParticles::Clone() {
 void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing synchronize particles job\n");
 
-    // need at least 2 elements - a data object to merge to, and a data
-    // object to merge from
-    size_t dnum = da.size();
-    if (dnum < 2) {
+    DataVec main_copy;
+    DataSetVec scratch_copies;
+    if (GroupSyncData(this, da, &main_copy, &scratch_copies)) {
         dbg(DBG_WARN, "Nothing to synchronize\n");
         return;
     }
 
-    DataParticleArray *merge_to = dynamic_cast<DataParticleArray * >(da[dnum-1]);
-    if (merge_to == NULL) {
-        dbg(DBG_WARN, "Passed object is not a particle array\n");
-    }
-    GeometricRegion merge_region = merge_to->region();
+    assert(main_copy.size() == scratch_copies.size());
 
-    std::vector<DataParticleArray * > scratch;
-    DataParticleArray *scratch_data;
-    GeometricRegion scratch_region;
-    for (size_t i = 0; i < dnum - 1; i++) {
-        scratch_data = dynamic_cast<DataParticleArray * >(da[i]);
-        if (scratch_data == NULL) {
-            dbg(DBG_WARN, "Ignoring scratch object since it is not a particle array\n");
-            continue;
-        }
-        scratch_region = scratch_data->region();
-        if (scratch_region != merge_region) {
-            dbg(DBG_WARN,
-                "Ignoring scratch object since region does not match with merge region\n");
-            continue;
-        }
-        scratch.push_back(scratch_data);
+    for (size_t i = 0; i < main_copy.size(); i++) {
+        DataParticleArray *merge_to = dynamic_cast<DataParticleArray *>(main_copy[i]);
+        DataVec *scratch = scratch_copies[i];
+        if (merge_to != NULL)
+            merge_to->MergeParticles(*scratch);
+        else
+            dbg(DBG_WARN, "Passed object is not a particle array\n");
+        delete scratch;
     }
-
-    merge_to->MergeParticles(scratch);
 
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }
