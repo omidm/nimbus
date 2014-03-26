@@ -50,10 +50,6 @@
 
 namespace application {
 
-    typedef nimbus::Job Job;
-    typedef nimbus::Data Data;
-    typedef nimbus::DataArray DataArray;
-
     bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
                            const nimbus::DataArray& da,
@@ -65,9 +61,9 @@ namespace application {
         }
         IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
         IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
-        std::set<Data *> ds;
+        std::set<nimbus::Data *> ds;
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
-            Data *d = *it;
+            nimbus::Data *d = *it;
             bool allowed = false;
             if ((access_type == READ_ACCESS) &&
                 read_set.contains(d->physical_id())) {
@@ -84,8 +80,8 @@ namespace application {
         if (ds.empty()) {
             return success;
         }
-        for (std::set<Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
-            Data *d = *it;
+        for (std::set<nimbus::Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
+            nimbus::Data *d = *it;
             std::string name_str = d->name();
             const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
             nimbus::PhysicalDataInstance *pdi = new
@@ -98,15 +94,43 @@ namespace application {
         return success;
     }
 
+    bool GroupSyncRWData(const nimbus::Job *job,
+                         const nimbus::DataArray *da,
+                         DataVec *main_copy,
+                         DataList *scratch_copies) {
+        if (da->empty())
+            return false;
+        IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
+        IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
+        for (nimbus::DataArray::const_iterator it = da->begin();
+                it != da->end(); it++) {
+            nimbus::Data *d = *it;
+            if (write_set.contains(d->physical_id()))
+                main_copy->push_back(d);
+        }
+        for (size_t i = 0; i < main_copy->size(); i++) {
+            nimbus::GeometricRegion region = main_copy->at(i)->region();
+            DataVec *scratch = new DataVec();
+            for (nimbus::DataArray::const_iterator it = da->begin();
+                    it != da->end(); it++) {
+                nimbus::Data *d = *it;
+                if (region == d->region() && read_set.contains(d->physical_id()))
+                    scratch->push_back(d);
+            }
+            scratch_copies->push_back(scratch);
+        }
+        return true;
+    }
+
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,
-                    std::set<Data * > *ds) {
+                    std::set<nimbus::Data * > *ds) {
         bool success = false;
         if (da.empty()) {
             return success;
         }
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
-            Data *d = *it;
+            nimbus::Data *d = *it;
             if (d->name() == name) {
                 ds->insert(*it);
                 success = true;
@@ -121,7 +145,7 @@ namespace application {
             return NULL;
         }
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
-            Data *d = *it;
+            nimbus::Data *d = *it;
             if (d->name() == name) {
                 return d;
             }
@@ -129,20 +153,20 @@ namespace application {
         return NULL;
     }
 
-    Data* GetTheOnlyData(const nimbus::Job *job,
-                         const std::string &name,
-                         const nimbus::DataArray& da,
-                         AccessType access_type) {
+    nimbus::Data* GetTheOnlyData(const nimbus::Job *job,
+                                 const std::string &name,
+                                 const nimbus::DataArray& da,
+                                 AccessType access_type) {
       if (da.empty()) {
         return NULL;
       }
       IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
       IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
-      Data* result = NULL;
+      nimbus::Data* result = NULL;
       for (nimbus::DataArray::const_iterator it = da.begin();
            it != da.end();
            ++it) {
-        Data *d = *it;
+          nimbus::Data *d = *it;
         bool allowed = false;
         if ((access_type == READ_ACCESS) &&
             read_set.contains(d->physical_id())) {
@@ -199,7 +223,6 @@ namespace application {
         job->GetIntersectingLogicalObjects(&result, arg, &region);
         for (size_t i = 0; i < result.size(); ++i) {
           set->insert(result[i]->id());
-          dbg(APP_LOG, "Loaded logical id %d of variable %s to the set.\n", result[i]->id(), arg);
         }
         arg = va_arg(vl, char*);
       }

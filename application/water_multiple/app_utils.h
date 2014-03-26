@@ -41,7 +41,9 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 
+#include <list>
 #include <stdarg.h>
+
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/scratch_data_helper.h"
@@ -72,6 +74,9 @@ namespace application {
     typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
+
+    typedef std::vector<Data*> DataVec;
+    typedef std::list<DataVec*> DataList;
 
     // application specific parameters and constants
     const int kThreadsNum = 1;
