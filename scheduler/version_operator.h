@@ -68,8 +68,8 @@ class VersionOperator {
         boost::shared_ptr<VersionTable> *result);
 
     bool MergeTwoVersionTables(
-        boost::shared_ptr<VersionTable> first,
-        boost::shared_ptr<VersionTable> second,
+        boost::shared_ptr<VersionTable> t1,
+        boost::shared_ptr<VersionTable> t2,
         boost::shared_ptr<VersionTable> *result);
 
     bool MakeRootTable(
@@ -92,7 +92,8 @@ class VersionOperator {
 
   private:
     Cache cache_;
-    size_t cache_size_;
+    size_t max_cache_size_;
+    unsigned int cache_seed_;
     RankTable ranks_;
 };
 
