@@ -50,17 +50,17 @@ VersionTable::VersionTable() {
 VersionTable::~VersionTable() {
 }
 
+version_table_id_t VersionTable::id() {
+  return id_;
+}
+
 boost::shared_ptr<VersionTable> VersionTable::root() {
   return root_;
 }
 
-
 VersionTable* VersionTable::root_raw() {
   return get_pointer(root_);
 }
-
-
-
 
 VersionTable::Map VersionTable::content() {
   return content_;
@@ -77,6 +77,10 @@ bool VersionTable::is_root() {
 bool VersionTable::query_entry(logical_data_id_t l_id, data_version_t *version) {
   // TODO(omidm): implement!
   return false;
+}
+
+void VersionTable::set_id(version_table_id_t id) {
+  id_ = id;
 }
 
 void VersionTable::set_root(boost::shared_ptr<VersionTable> root) {

@@ -33,53 +33,48 @@
  */
 
  /*
-  * Scheduler Version Table. It holds the meta data for logical data version
-  * context of each job. It also implements methods to merge the version tables
-  * to get new version tables for jobs based on dependencies.
+  * Scheduler Version Operator. It is the main class that performs operations
+  * over version tables including merging and making roots out of normal nodes.
+  * This module provides caching to expedite the merging operations over known
+  * previously calculated merges.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_VERSION_TABLE_H_
-#define NIMBUS_SCHEDULER_VERSION_TABLE_H_
+#include "scheduler/version_operator.h"
 
-#include <boost/shared_ptr.hpp>
-#include <map>
-#include "shared/nimbus_types.h"
-#include "scheduler/job_entry.h"
-#include "shared/dbg.h"
+#define VERSION_OPERATOR_CACHE_SIZE 10
 
-namespace nimbus {
+using namespace nimbus; // NOLINT
 
-class VersionTable {
-  public:
-    typedef std::map<logical_data_id_t, data_version_t> Map;
+VersionOperator::VersionOperator() {
+  cache_size_ = VERSION_OPERATOR_CACHE_SIZE;
+}
 
-    VersionTable();
-    virtual ~VersionTable();
+VersionOperator::~VersionOperator() {
+}
 
-    version_table_id_t id();
-    boost::shared_ptr<VersionTable> root();
-    VersionTable* root_raw();
-    Map content();
-    const Map* content_p();
-    bool is_root();
-    bool query_entry(logical_data_id_t l_id, data_version_t *version);
+bool VersionOperator::MergeVersionTables(std::list<boost::shared_ptr<VersionTable> > tables,
+    boost::shared_ptr<VersionTable> *result) {
+  // TODO(omidm): implement!
+  return false;
+}
 
-    void set_id(version_table_id_t id);
-    void set_root(boost::shared_ptr<VersionTable> root);
-    void set_root(VersionTable* root);
-    void set_content(const Map& content);
-    void set_is_root(bool flag);
-    void set_entry(logical_data_id_t l_id, data_version_t version);
+bool VersionOperator::MakeRootTable(boost::shared_ptr<VersionTable> table,
+    boost::shared_ptr<VersionTable> *result) {
+  // TODO(omidm): implement!
+  return false;
+}
 
-  private:
-    boost::shared_ptr<VersionTable> root_;
-    version_table_id_t id_;
-    Map content_;
-    bool is_root_;
-};
+bool VersionOperator::MakeVersionTableOut(boost::shared_ptr<VersionTable> tabel_in,
+    IDSet<logical_data_id_t> write_set,
+    boost::shared_ptr<VersionTable> *teble_out) {
+  // TODO(omidm): implement!
+  return false;
+}
 
+version_table_id_t VersionOperator::GetNewVersionTableId() {
+  static version_table_id_t id = 0;
+  return ++id;
+}
 
-}  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_VERSION_TABLE_H_
