@@ -54,6 +54,8 @@ namespace nimbus {
 class VersionTable {
   public:
     typedef std::map<logical_data_id_t, data_version_t> Map;
+    typedef std::map<logical_data_id_t, data_version_t>::iterator MapIter;
+    typedef std::map<logical_data_id_t, data_version_t>::const_iterator MapConstIter;
 
     VersionTable();
     virtual ~VersionTable();

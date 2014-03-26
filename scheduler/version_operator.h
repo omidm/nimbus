@@ -47,7 +47,7 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <set>
-#include <list>
+#include <vector>
 #include "shared/nimbus_types.h"
 #include "scheduler/version_table.h"
 #include "scheduler/job_entry.h"
@@ -63,15 +63,30 @@ class VersionOperator {
     VersionOperator();
     virtual ~VersionOperator();
 
-    bool MergeVersionTables(std::list<boost::shared_ptr<VersionTable> > tables,
+    bool MergeVersionTables(
+        std::vector<boost::shared_ptr<VersionTable> > tables,
         boost::shared_ptr<VersionTable> *result);
 
-    bool MakeRootTable(boost::shared_ptr<VersionTable> table,
+    bool MergeTwoVersionTables(
+        boost::shared_ptr<VersionTable> first,
+        boost::shared_ptr<VersionTable> second,
         boost::shared_ptr<VersionTable> *result);
 
-    bool MakeVersionTableOut(boost::shared_ptr<VersionTable> tabel_in,
+    bool MakeRootTable(
+        boost::shared_ptr<VersionTable> table,
+        boost::shared_ptr<VersionTable> *result);
+
+    bool MakeVersionTableOut(
+        boost::shared_ptr<VersionTable> tabel_in,
         IDSet<logical_data_id_t> write_set,
         boost::shared_ptr<VersionTable> *teble_out);
+
+    bool LookUpCache(std::set<version_table_id_t> ids,
+        boost::shared_ptr<VersionTable>* result);
+
+    bool CacheMergeResult(
+        std::set<version_table_id_t> ids,
+        boost::shared_ptr<VersionTable> merged);
 
     version_table_id_t GetNewVersionTableId();
 

@@ -45,6 +45,7 @@
 using namespace nimbus; // NOLINT
 
 VersionTable::VersionTable() {
+  is_root_ = false;
 }
 
 VersionTable::~VersionTable() {
