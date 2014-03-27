@@ -101,9 +101,8 @@ bool VersionOperator::MergeTwoVersionTables(
     return true;
   } else {
     dbg(DBG_SCHED, "Version Operator: missed cache.\n");
-    boost::shared_ptr<VersionTable> merged(new VersionTable());
-    merged->set_id(GetNewVersionTableId());
-    if (t1->root_raw()->id() == t2->root_raw()->id()) {
+    boost::shared_ptr<VersionTable> merged(new VersionTable(GetNewVersionTableId()));
+    if (t1->root()->id() == t2->root()->id()) {
       dbg(DBG_SCHED, "Version Operator: roots are the same for merge.\n");
       merged->set_root(t1->root());
       VersionTable::Map content = t1->content();
@@ -129,7 +128,7 @@ bool VersionOperator::MergeTwoVersionTables(
   }
 }
 
-bool VersionOperator::MakeRootTable(
+bool VersionOperator::MakeRootVersionTable(
     boost::shared_ptr<VersionTable> table,
     boost::shared_ptr<VersionTable> *result) {
   // TODO(omidm): implement!
@@ -137,15 +136,29 @@ bool VersionOperator::MakeRootTable(
 }
 
 bool VersionOperator::MakeVersionTableOut(
-    boost::shared_ptr<VersionTable> tabel_in,
-    IDSet<logical_data_id_t> write_set,
-    boost::shared_ptr<VersionTable> *teble_out) {
-  // TODO(omidm): implement!
-  return false;
+    boost::shared_ptr<VersionTable> table_in,
+    const IDSet<logical_data_id_t>& write_set,
+    boost::shared_ptr<VersionTable> *table_out) {
+  boost::shared_ptr<VersionTable> result(new VersionTable(GetNewVersionTableId()));
+  result->set_root(table_in->root());
+  result->set_content(table_in->content());
+  IDSet<logical_data_id_t>::ConstIter iter;
+  for (iter = write_set.begin(); iter != write_set.end(); ++iter) {
+    data_version_t version;
+    if (result->query_entry(*iter, &version)) {
+      result->set_entry(*iter, ++version);
+    } else {
+      dbg(DBG_ERROR, "ERROR: Version Operator, writing to unknown logical id in the context.\n");
+      exit(-1);
+      return false;
+    }
+  }
+  *table_out = result;
+  return true;
 }
 
 bool VersionOperator::LookUpCache(
-    std::set<version_table_id_t> ids,
+    const std::set<version_table_id_t>& ids,
     boost::shared_ptr<VersionTable>* result) {
   Cache::iterator iter = cache_.find(ids);
   if (iter != cache_.end()) {
@@ -156,7 +169,7 @@ bool VersionOperator::LookUpCache(
 }
 
 bool VersionOperator::CacheMergeResult(
-    std::set<version_table_id_t> ids,
+    const std::set<version_table_id_t>& ids,
     boost::shared_ptr<VersionTable> merged) {
   if (cache_.size() < max_cache_size_) {
     cache_[ids] = merged;

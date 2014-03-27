@@ -72,20 +72,21 @@ class VersionOperator {
         boost::shared_ptr<VersionTable> t2,
         boost::shared_ptr<VersionTable> *result);
 
-    bool MakeRootTable(
+    bool MakeRootVersionTable(
         boost::shared_ptr<VersionTable> table,
         boost::shared_ptr<VersionTable> *result);
 
     bool MakeVersionTableOut(
-        boost::shared_ptr<VersionTable> tabel_in,
-        IDSet<logical_data_id_t> write_set,
-        boost::shared_ptr<VersionTable> *teble_out);
+        boost::shared_ptr<VersionTable> table_in,
+        const IDSet<logical_data_id_t>& write_set,
+        boost::shared_ptr<VersionTable> *table_out);
 
-    bool LookUpCache(std::set<version_table_id_t> ids,
+    bool LookUpCache(
+        const std::set<version_table_id_t>& ids,
         boost::shared_ptr<VersionTable>* result);
 
     bool CacheMergeResult(
-        std::set<version_table_id_t> ids,
+        const std::set<version_table_id_t>& ids,
         boost::shared_ptr<VersionTable> merged);
 
     version_table_id_t GetNewVersionTableId();

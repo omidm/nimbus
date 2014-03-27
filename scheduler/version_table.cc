@@ -44,7 +44,8 @@
 
 using namespace nimbus; // NOLINT
 
-VersionTable::VersionTable() {
+VersionTable::VersionTable(version_table_id_t id) {
+  id_ = id;
   is_root_ = false;
 }
 
@@ -57,10 +58,6 @@ version_table_id_t VersionTable::id() {
 
 boost::shared_ptr<VersionTable> VersionTable::root() {
   return root_;
-}
-
-VersionTable* VersionTable::root_raw() {
-  return get_pointer(root_);
 }
 
 VersionTable::Map VersionTable::content() {
@@ -76,7 +73,16 @@ bool VersionTable::is_root() {
 }
 
 bool VersionTable::query_entry(logical_data_id_t l_id, data_version_t *version) {
-  // TODO(omidm): implement!
+  MapConstIter iter = content_.find(l_id);
+  if (iter != content_.end()) {
+    *version = iter->second;
+    return true;
+  }
+  iter = root_->content_p()->find(l_id);
+  if (iter != root_->content_p()->end()) {
+    *version = iter->second;
+    return true;
+  }
   return false;
 }
 
@@ -101,7 +107,7 @@ void VersionTable::set_is_root(bool flag) {
 }
 
 void VersionTable::set_entry(logical_data_id_t l_id, data_version_t version) {
-  // TODO(omidm): implement!
+  content_[l_id] = version;
 }
 
 

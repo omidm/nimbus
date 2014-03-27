@@ -57,12 +57,11 @@ class VersionTable {
     typedef std::map<logical_data_id_t, data_version_t>::iterator MapIter;
     typedef std::map<logical_data_id_t, data_version_t>::const_iterator MapConstIter;
 
-    VersionTable();
+    explicit VersionTable(version_table_id_t id);
     virtual ~VersionTable();
 
     version_table_id_t id();
     boost::shared_ptr<VersionTable> root();
-    VersionTable* root_raw();
     Map content();
     const Map* content_p();
     bool is_root();
