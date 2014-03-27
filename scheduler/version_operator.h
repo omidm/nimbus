@@ -75,7 +75,7 @@ class VersionOperator {
         const IDSet<logical_data_id_t>& write_set,
         boost::shared_ptr<VersionTable> *table_out);
 
-    bool RecomputeRootForVersionTable(
+    bool RecomputeRootForVersionTables(
         std::vector<boost::shared_ptr<VersionTable> > tables);
 
   private:
@@ -85,15 +85,19 @@ class VersionOperator {
     RankTable ranks_;
 
     bool MergeTwoVersionTables(
-        boost::shared_ptr<const VersionTable> t1,
-        boost::shared_ptr<const VersionTable> t2,
+        boost::shared_ptr<const VersionTable> t_1,
+        boost::shared_ptr<const VersionTable> t_2,
         boost::shared_ptr<VersionTable> *result,
         size_t level = CACHE_MERGE_INIT_LEVEL);
 
 
     bool CompareRootDominance(
-        boost::shared_ptr<const VersionTable::Map> r1,
-        boost::shared_ptr<const VersionTable::Map> r2);
+        boost::shared_ptr<const VersionTable::Map> r_1,
+        boost::shared_ptr<const VersionTable::Map> r_2);
+
+    bool ComputeRootForContents(
+        std::vector<boost::shared_ptr<const VersionTable::Map> > contents,
+        boost::shared_ptr<VersionTable::Map> *root);
 
     bool FlattenVersionTable(
         boost::shared_ptr<const VersionTable> table,

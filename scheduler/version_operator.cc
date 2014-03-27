@@ -182,11 +182,76 @@ bool VersionOperator::MakeVersionTableOut(
   return true;
 }
 
-bool VersionOperator::RecomputeRootForVersionTable(
+bool VersionOperator::ComputeRootForContents(
+    std::vector<boost::shared_ptr<const VersionTable::Map> > contents,
+    boost::shared_ptr<VersionTable::Map> *root) {
+  size_t count = contents.size();
+
+  if (count == 0) {
+    return false;
+  }
+
+  boost::shared_ptr<VersionTable::Map> result(new VersionTable::Map());
+
+  bool first_content = true;
+  std::vector<boost::shared_ptr<const VersionTable::Map> >::iterator iter;
+  for (iter = contents.begin(); iter != contents.end(); ++iter) {
+    VersionTable::MapConstIter it;
+    if (first_content) {
+      first_content = false;
+      for (it = (*iter)->begin(); it != (*iter)->end(); ++it) {
+        result->operator[](it->first) = it->second;
+      }
+    } else {
+      for (it = (*iter)->begin(); it != (*iter)->end(); ++it) {
+        VersionTable::MapIter i = result->find(it->first);
+        if (i != result->end()) {
+          if (i->second > it->second) {
+            result->operator[](it->first) = it->second;
+          }
+        }
+      }
+    }
+  }
+
+  *root = result;
+  return true;
+}
+
+bool VersionOperator::RecomputeRootForVersionTables(
     std::vector<boost::shared_ptr<VersionTable> > tables) {
-  // TODO(omidm): implement!
-  FlushCache();
-  return false;
+  std::vector<boost::shared_ptr<const VersionTable::Map> > contents;
+  std::vector<boost::shared_ptr<VersionTable> >::iterator iter;
+  for (iter = tables.begin(); iter != tables.end(); ++iter) {
+    boost::shared_ptr<VersionTable::Map> content;
+    FlattenVersionTable((*iter), &content);
+    contents.push_back(content);
+  }
+
+  boost::shared_ptr<VersionTable::Map> root;
+  ComputeRootForContents(contents, &root);
+
+  std::vector<boost::shared_ptr<const VersionTable::Map> >::iterator content_iter;
+  content_iter = contents.begin();
+  for (iter = tables.begin(); iter != tables.end(); ++iter) {
+    (*iter)->set_root(root);
+    VersionTable::Map new_content;
+    VersionTable::Map::const_iterator it;
+    for (it = (*content_iter)->begin(); it != (*content_iter)->end(); ++it) {
+      VersionTable::MapIter i = root->find(it->first);
+      if (i == root->end()) {
+        new_content[it->first] = it->second;
+      } else if (it->second > i->second) {
+        new_content[it->first] = it->second;
+      }
+    }
+
+    (*iter)->set_content(new_content);
+    ++content_iter;
+  }
+
+  // FlushCache();
+  return true;
 }
 
 bool VersionOperator::CompareRootDominance(
