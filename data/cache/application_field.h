@@ -50,13 +50,13 @@
 namespace nimbus {
 
 class ApplicationField {
-	private:
-		void *field_object_;
-		ApplicationFieldPartitions *field_partitions_;
-} // class ApplicationField
+    private:
+        void *field_object_;
+        ApplicationFieldPartitions *field_partitions_;
+};  // class ApplicationField
 
 typedef std::vector<ApplicationField> ApplicationFields;
 
-} // namespace nimbus
+}  // namespace nimbus
 
 #endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_

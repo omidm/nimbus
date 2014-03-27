@@ -42,15 +42,19 @@
 #ifndef NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
 #define NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
 
+#include <string>
+
+#include "data/cache/application_field.h"
+
 namespace nimbus {
 
 class ApplicationCacheEntry {
-	private:
-		std::string object_type_;
-		void *object_;
-		ApplicationFields *fields_;
-} // class ApplicationCacheEntry
+    private:
+        std::string object_type_;
+        void *object_;
+        ApplicationFields *fields_;
+};  // class ApplicationCacheEntry
 
-} // namespace nimbus
+}  // namespace nimbus
 
 #endif  // NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_

@@ -33,32 +33,14 @@
  */
 
 /*
- * A field partition contains information about cached logical data partitions
- * on a field, and the versions that are contained in the cache object. It also
- * contains information necessary to prevent simultaneous read-writes to a
- * field partition in the cache.
+ * Application field contains a pointer to the field in the cached object, and
+ * a list of field partitions corresponding to logical data partitions for the
+ * field.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
-#define NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
-
-#include <vector>
-
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
+#include "data/cache/application_field.h"
 
 namespace nimbus {
-
-class ApplicationFieldPartition {
-    private:
-        GeometricRegion region_;
-        app_data_version_t version_;
-};  // class ApplicationFieldPartition
-
-typedef std::vector<ApplicationFieldPartition> ApplicationFieldPartitions;
-
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_

@@ -41,24 +41,7 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
-#define NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
-
-#include <vector>
-
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
+#include "data/cache/application_field_partition.h"
 
 namespace nimbus {
-
-class ApplicationFieldPartition {
-    private:
-        GeometricRegion region_;
-        app_data_version_t version_;
-};  // class ApplicationFieldPartition
-
-typedef std::vector<ApplicationFieldPartition> ApplicationFieldPartitions;
-
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_

@@ -49,11 +49,22 @@
 namespace nimbus {
 
 class ApplicationCacheTable {
-	private:
-		bool GeometricRegionLess(GeometricRegion &r1, GeometricRegion &r2);
-		std::map<GeometricRegion, ApplicationCacheEntry *, &GeometricRegionLess> table_;
-} // class ApplicationCacheTable
+    public:
+        ApplicationCacheTable();
+    private:
+        // tyedef CacheMap
+        typedef std::map<GeometricRegion,
+                         ApplicationCacheEntry *,
+                         bool(*)(const GeometricRegion&, // NOLINT
+                                 const GeometricRegion&)>
+                        CacheMap;
+        // key comparator function for CacheMap
+        static bool GeometricRegionLess(const GeometricRegion &r1,
+                                        const GeometricRegion &r2);
+        // table of cache entries
+        CacheMap table_;
+};  // class ApplicationCacheTable
 
-} // namespace nimbus
+}  // namespace nimbus
 
 #endif  // NIMBUS_DATA_CACHE_APPLICATION_CACHE_TABLE_H_
