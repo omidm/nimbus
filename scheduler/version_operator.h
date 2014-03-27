@@ -55,6 +55,9 @@
 
 namespace nimbus {
 
+#define CACHE_MERGE_INIT_LEVEL 0
+#define CACHE_MERGE_MAX_LEVEL 0
+
 class VersionOperator {
   public:
     typedef std::map<std::set<version_table_id_t>, boost::shared_ptr<VersionTable> > Cache;
@@ -65,7 +68,7 @@ class VersionOperator {
 
     bool MergeVersionTables(
         std::vector<boost::shared_ptr<const VersionTable> > tables,
-        boost::shared_ptr<VersionTable> *result);
+        boost::shared_ptr<VersionTable> *result, size_t level);
 
     bool MakeVersionTableOut(
         boost::shared_ptr<const VersionTable> table_in,
@@ -84,14 +87,15 @@ class VersionOperator {
     bool MergeTwoVersionTables(
         boost::shared_ptr<const VersionTable> t1,
         boost::shared_ptr<const VersionTable> t2,
-        boost::shared_ptr<VersionTable> *result);
+        boost::shared_ptr<VersionTable> *result,
+        size_t level = CACHE_MERGE_INIT_LEVEL);
 
 
     bool CompareRootDominance(
         boost::shared_ptr<const VersionTable::Map> r1,
         boost::shared_ptr<const VersionTable::Map> r2);
 
-    bool FlatenVersionTable(
+    bool FlattenVersionTable(
         boost::shared_ptr<const VersionTable> table,
         boost::shared_ptr<VersionTable::Map> *content);
 
