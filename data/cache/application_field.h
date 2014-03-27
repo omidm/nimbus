@@ -33,58 +33,30 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * Application field contains a pointer to the field in the cached object, and
+ * a list of field partitions corresponding to logical data partitions for the
+ * field.
+ *
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
+#define NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
+#include <vector>
 
-#define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
-#define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
-
-#define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
-#define NIMBUS_INIT_DATA_VERSION (data_version_t)(0)
-#define NIMBUS_MAIN_JOB_NAME "main"
+#include "data/cache/application_field_partition.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
 
-  typedef int32_t exit_status_t;
+class ApplicationField {
+	private:
+		void *field_object_;
+		ApplicationFieldPartitions *field_partitions_;
+} // class ApplicationField
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
+typedef std::vector<ApplicationField> ApplicationFields;
 
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
+} // namespace nimbus
 
-  typedef uint64_t app_data_version_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_

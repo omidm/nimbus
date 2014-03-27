@@ -33,58 +33,27 @@
  */
 
 /*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * Cache table for caching application state, to avoid reconstructing the
+ * state and translating data for every job.
+ *
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_DATA_CACHE_APPLICATION_CACHE_TABLE_H_
+#define NIMBUS_DATA_CACHE_APPLICATION_CACHE_TABLE_H_
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
+#include <map>
 
-#define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
-#define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
-
-#define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
-#define NIMBUS_INIT_DATA_VERSION (data_version_t)(0)
-#define NIMBUS_MAIN_JOB_NAME "main"
+#include "data/cache/application_cache_entry.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
 
-  typedef int32_t exit_status_t;
+class ApplicationCacheTable {
+	private:
+		bool GeometricRegionLess(GeometricRegion &r1, GeometricRegion &r2);
+		std::map<GeometricRegion, ApplicationCacheEntry *, &GeometricRegionLess> table_;
+} // class ApplicationCacheTable
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
+} // namespace nimbus
 
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
-
-  typedef uint64_t app_data_version_t;
-
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
-  };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_DATA_CACHE_APPLICATION_CACHE_TABLE_H_
