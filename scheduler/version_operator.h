@@ -72,13 +72,13 @@ class VersionOperator {
         boost::shared_ptr<VersionTable> t2,
         boost::shared_ptr<VersionTable> *result);
 
-    bool RecomputeRootVersionTable(
-        std::vector<boost::shared_ptr<VersionTable> > tables);
-
     bool MakeVersionTableOut(
         boost::shared_ptr<VersionTable> table_in,
         const IDSet<logical_data_id_t>& write_set,
         boost::shared_ptr<VersionTable> *table_out);
+
+    bool RecomputeRootVersionTable(
+        std::vector<boost::shared_ptr<VersionTable> > tables);
 
     bool LookUpCache(
         const std::set<version_table_id_t>& ids,
@@ -97,6 +97,10 @@ class VersionOperator {
     size_t max_cache_size_;
     unsigned int cache_seed_;
     RankTable ranks_;
+
+    bool CompareDominance(
+        boost::shared_ptr<const VersionTable::Map> r1,
+        boost::shared_ptr<const VersionTable::Map> r2);
 };
 
 

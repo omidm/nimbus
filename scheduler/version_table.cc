@@ -46,7 +46,6 @@ using namespace nimbus; // NOLINT
 
 VersionTable::VersionTable(version_table_id_t id) {
   id_ = id;
-  is_root_ = false;
 }
 
 VersionTable::~VersionTable() {
@@ -56,7 +55,7 @@ version_table_id_t VersionTable::id() {
   return id_;
 }
 
-boost::shared_ptr<VersionTable> VersionTable::root() {
+boost::shared_ptr<const VersionTable::Map> VersionTable::root() {
   return root_;
 }
 
@@ -68,18 +67,17 @@ const VersionTable::Map* VersionTable::content_p() {
   return &content_;
 }
 
-bool VersionTable::is_root() {
-  return is_root_;
-}
-
 bool VersionTable::query_entry(logical_data_id_t l_id, data_version_t *version) {
-  MapConstIter iter = content_.find(l_id);
+  MapConstIter iter;
+
+  iter = content_.find(l_id);
   if (iter != content_.end()) {
     *version = iter->second;
     return true;
   }
-  iter = root_->content_p()->find(l_id);
-  if (iter != root_->content_p()->end()) {
+
+  iter = root_->find(l_id);
+  if (iter != root_->end()) {
     *version = iter->second;
     return true;
   }
@@ -90,20 +88,12 @@ void VersionTable::set_id(version_table_id_t id) {
   id_ = id;
 }
 
-void VersionTable::set_root(boost::shared_ptr<VersionTable> root) {
+void VersionTable::set_root(boost::shared_ptr<const Map> root) {
   root_ = root;
-}
-
-void VersionTable::set_root(VersionTable* root) {
-  root_ = boost::shared_ptr<VersionTable>(root);
 }
 
 void VersionTable::set_content(const VersionTable::Map& content) {
   content_= content;
-}
-
-void VersionTable::set_is_root(bool flag) {
-  is_root_ = flag;
 }
 
 void VersionTable::set_entry(logical_data_id_t l_id, data_version_t version) {

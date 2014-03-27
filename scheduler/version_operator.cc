@@ -102,9 +102,8 @@ bool VersionOperator::MergeTwoVersionTables(
   } else {
     dbg(DBG_SCHED, "Version Operator: missed cache.\n");
     boost::shared_ptr<VersionTable> merged(new VersionTable(GetNewVersionTableId()));
-    if (t1->root()->id() == t2->root()->id()) {
+    if (t1->root() == t2->root()) {
       dbg(DBG_SCHED, "Version Operator: roots are the same for merge.\n");
-      merged->set_root(t1->root());
       VersionTable::Map content = t1->content();
       VersionTable::MapConstIter it;
       for (it = t2->content_p()->begin(); it != t2->content_p()->end(); ++it) {
@@ -116,6 +115,7 @@ bool VersionOperator::MergeTwoVersionTables(
         }
       }
       merged->set_content(content);
+      merged->set_root(t1->root());
     } else {
       dbg(DBG_SCHED, "Version Operator: roots are different for merge.\n");
       // TODO(omidm): implement!
@@ -126,13 +126,6 @@ bool VersionOperator::MergeTwoVersionTables(
     *result = merged;
     return true;
   }
-}
-
-bool VersionOperator::RecomputeRootVersionTable(
-    std::vector<boost::shared_ptr<VersionTable> > tables) {
-  // TODO(omidm): implement!
-  FlushCache();
-  return false;
 }
 
 bool VersionOperator::MakeVersionTableOut(
@@ -156,6 +149,46 @@ bool VersionOperator::MakeVersionTableOut(
   *table_out = result;
   return true;
 }
+
+bool VersionOperator::RecomputeRootVersionTable(
+    std::vector<boost::shared_ptr<VersionTable> > tables) {
+  // TODO(omidm): implement!
+  FlushCache();
+  return false;
+}
+
+bool VersionOperator::CompareDominance(
+    boost::shared_ptr<const VersionTable::Map> r1,
+    boost::shared_ptr<const VersionTable::Map> r2) {
+  VersionTable::MapConstIter iter1;
+  VersionTable::MapConstIter iter2;
+
+  int count1 = 0;
+  for (iter1 = r1->begin(); iter1 != r1->end(); ++iter1) {
+    ++count1;
+    iter2 = r2->find(iter1->first);
+    if (iter2 != r2->end()) {
+      if (iter2->second > iter1->second) {
+        --count1;
+      }
+    }
+  }
+
+  int count2 = 0;
+  for (iter2 = r2->begin(); iter2 != r2->end(); ++iter2) {
+    ++count2;
+    iter1 = r1->find(iter2->first);
+    if (iter1 != r1->end()) {
+      if (iter1->second > iter2->second) {
+        --count2;
+      }
+    }
+  }
+
+  return (count1 > count2);
+}
+
+
 
 bool VersionOperator::LookUpCache(
     const std::set<version_table_id_t>& ids,
