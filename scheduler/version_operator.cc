@@ -128,10 +128,10 @@ bool VersionOperator::MergeTwoVersionTables(
   }
 }
 
-bool VersionOperator::MakeRootVersionTable(
-    boost::shared_ptr<VersionTable> table,
-    boost::shared_ptr<VersionTable> *result) {
+bool VersionOperator::RecomputeRootVersionTable(
+    std::vector<boost::shared_ptr<VersionTable> > tables) {
   // TODO(omidm): implement!
+  FlushCache();
   return false;
 }
 
@@ -180,6 +180,10 @@ bool VersionOperator::CacheMergeResult(
     cache_[ids] = merged;
   }
   return true;
+}
+
+void VersionOperator::FlushCache() {
+  cache_.clear();
 }
 
 version_table_id_t VersionOperator::GetNewVersionTableId() {
