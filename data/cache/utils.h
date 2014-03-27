@@ -33,46 +33,24 @@
  */
 
 /*
- * Cache table entry containing object type, a pointer to the cached object,
- * and a list of tables for the fields that the cached object contains.
+ * Helper functions for cache class objects.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
-#define NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
+#ifndef NIMBUS_DATA_CACHE_UTILS_H_
+#define NIMBUS_DATA_CACHE_UTILS_H_
 
-#include <string>
-#include <vector>
-
-#include "data/cache/application_field.h"
-#include "worker/data.h"
-#include "worker/job.h"
+#include "shared/geometric_region.h"
 
 namespace nimbus {
 
-class ApplicationCacheEntry {
-    public:
-        ApplicationCacheEntry();
-
-        /* accessors */
-        std::string object_type();
-        void set_object_type(std::string type);
-        void* object();
-        void set_object(void *object);
-
-        /* get read/ write locks on cache data */
-        void LockData(const Job &job,
-                      const DataArray &da);
-
-    private:
-        std::string object_type_;
-        void *object_;
-        CacheObjectFieldMap *fields_;
-};  // class ApplicationCacheEntry
-
-typedef std::vector<ApplicationCacheEntry> ApplicationCacheEntries;
+/* A comparator for geometric region, for using in maps. */
+typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT
+                                 const GeometricRegion&);
+bool GeometricRegionLess(const GeometricRegion &r1,
+                         const GeometricRegion &r2);
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
+#endif  // NIMBUS_DATA_CACHE_UTILS_H_

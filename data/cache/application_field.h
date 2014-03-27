@@ -43,19 +43,27 @@
 #ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
 #define NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
 
-#include <vector>
+#include <map>
+#include <string>
 
 #include "data/cache/application_field_partition.h"
 
 namespace nimbus {
 
 class ApplicationField {
+    public:
+        ApplicationField();
+
+        /* prevent simultaneous read-writes in cached field partitions. */
+        void LockRead(const GeometricRegion &region);
+        void LockWrite(const GeometricRegion &region);
+
     private:
         void *field_object_;
-        ApplicationFieldPartitions *field_partitions_;
+        AppFieldPartnMap *field_partitions_;
 };  // class ApplicationField
 
-typedef std::vector<ApplicationField> ApplicationFields;
+typedef std::map<std::string, ApplicationField> CacheObjectFieldMap;
 
 }  // namespace nimbus
 

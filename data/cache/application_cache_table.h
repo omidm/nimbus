@@ -43,25 +43,33 @@
 #define NIMBUS_DATA_CACHE_APPLICATION_CACHE_TABLE_H_
 
 #include <map>
+#include <string>
 
 #include "data/cache/application_cache_entry.h"
+#include "data/cache/utils.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
 class ApplicationCacheTable {
     public:
         ApplicationCacheTable();
+
+        /* query application object, with Read and Write accesses specified
+         * through data array. */
+        void* GetCachedObject(const std::string type,
+                              const GeometricRegion &region,
+                              const Job &job,
+                              const DataArray &da);
+
     private:
-        // tyedef CacheMap
+        /* tyedef CacheMap */
         typedef std::map<GeometricRegion,
-                         ApplicationCacheEntry *,
-                         bool(*)(const GeometricRegion&, // NOLINT
-                                 const GeometricRegion&)>
-                        CacheMap;
-        // key comparator function for CacheMap
-        static bool GeometricRegionLess(const GeometricRegion &r1,
-                                        const GeometricRegion &r2);
-        // table of cache entries
+                         ApplicationCacheEntries *,
+                         GRComparisonType> CacheMap;
+
+        /* table of cache entries */
         CacheMap table_;
 };  // class ApplicationCacheTable
 

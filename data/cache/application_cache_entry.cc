@@ -40,6 +40,41 @@
  */
 
 #include "data/cache/application_cache_entry.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
+
+ApplicationCacheEntry::ApplicationCacheEntry()
+    : object_(NULL), fields_(NULL) {}
+
+std::string ApplicationCacheEntry::object_type() {
+    return object_type_;
+}
+
+void ApplicationCacheEntry::set_object_type(std::string type) {
+    object_type_ = type;
+}
+
+void* ApplicationCacheEntry::object() {
+    return object_;
+}
+
+void ApplicationCacheEntry::set_object(void *object) {
+    object_ = object;
+}
+
+void ApplicationCacheEntry::LockData(const Job &job,
+                                     const DataArray &da) {
+    IDSet<nimbus::physical_data_id_t> read_set = job.read_set();
+    IDSet<nimbus::physical_data_id_t> write_set = job.write_set();
+    for (size_t i = 0; i < da.size(); i++) {
+        Data *d = da[i];
+        if (write_set.contains(d->physical_id())) {
+            ApplicationField field = fields_->at(d->name());
+            field.LockWrite(d->region());
+        }
+    }
+}
+
 }  // namespace nimbus

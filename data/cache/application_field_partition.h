@@ -44,8 +44,9 @@
 #ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
 #define NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
 
-#include <vector>
+#include <map>
 
+#include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 
@@ -57,7 +58,9 @@ class ApplicationFieldPartition {
         app_data_version_t version_;
 };  // class ApplicationFieldPartition
 
-typedef std::vector<ApplicationFieldPartition> ApplicationFieldPartitions;
+typedef std::map<GeometricRegion,
+                 ApplicationFieldPartition,
+                 GRComparisonType> AppFieldPartnMap;
 
 }  // namespace nimbus
 

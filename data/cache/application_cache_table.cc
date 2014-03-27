@@ -39,11 +39,34 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <string>
+
+#include "data/cache/application_cache_entry.h"
 #include "data/cache/application_cache_table.h"
+#include "data/cache/utils.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
 ApplicationCacheTable::ApplicationCacheTable()
     : table_(CacheMap(&GeometricRegionLess)) {}
+
+/* query application object, with Read and Write accesses specified
+ * through data array. */
+void* ApplicationCacheTable::GetCachedObject(const std::string type,
+                                             const GeometricRegion &region,
+                                             const Job &job,
+                                             const DataArray &da) {
+    ApplicationCacheEntries *entries = table_[region];
+    for (size_t i = 0; i < entries->size(); i++) {
+        ApplicationCacheEntry entry = entries->at(i);
+        if (entry.object_type() == type) {
+            entry.LockData(job, da);
+            return entry.object();
+        }
+    }
+    return NULL;
+}
 
 }  // namespace nimbus
