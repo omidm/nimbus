@@ -51,23 +51,23 @@ VersionTable::VersionTable(version_table_id_t id) {
 VersionTable::~VersionTable() {
 }
 
-version_table_id_t VersionTable::id() {
+version_table_id_t VersionTable::id() const {
   return id_;
 }
 
-boost::shared_ptr<const VersionTable::Map> VersionTable::root() {
+boost::shared_ptr<const VersionTable::Map> VersionTable::root() const {
   return root_;
 }
 
-VersionTable::Map VersionTable::content() {
+VersionTable::Map VersionTable::content() const {
   return content_;
 }
 
-const VersionTable::Map* VersionTable::content_p() {
+const VersionTable::Map* VersionTable::content_p() const {
   return &content_;
 }
 
-bool VersionTable::query_entry(logical_data_id_t l_id, data_version_t *version) {
+bool VersionTable::query_entry(logical_data_id_t l_id, data_version_t *version) const {
   MapConstIter iter;
 
   iter = content_.find(l_id);

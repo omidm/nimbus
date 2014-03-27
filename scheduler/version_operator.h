@@ -64,33 +64,16 @@ class VersionOperator {
     virtual ~VersionOperator();
 
     bool MergeVersionTables(
-        std::vector<boost::shared_ptr<VersionTable> > tables,
-        boost::shared_ptr<VersionTable> *result);
-
-    bool MergeTwoVersionTables(
-        boost::shared_ptr<VersionTable> t1,
-        boost::shared_ptr<VersionTable> t2,
+        std::vector<boost::shared_ptr<const VersionTable> > tables,
         boost::shared_ptr<VersionTable> *result);
 
     bool MakeVersionTableOut(
-        boost::shared_ptr<VersionTable> table_in,
+        boost::shared_ptr<const VersionTable> table_in,
         const IDSet<logical_data_id_t>& write_set,
         boost::shared_ptr<VersionTable> *table_out);
 
-    bool RecomputeRootVersionTable(
+    bool RecomputeRootForVersionTable(
         std::vector<boost::shared_ptr<VersionTable> > tables);
-
-    bool LookUpCache(
-        const std::set<version_table_id_t>& ids,
-        boost::shared_ptr<VersionTable>* result);
-
-    bool CacheMergeResult(
-        const std::set<version_table_id_t>& ids,
-        boost::shared_ptr<VersionTable> merged);
-
-    void FlushCache();
-
-    version_table_id_t GetNewVersionTableId();
 
   private:
     Cache cache_;
@@ -98,9 +81,31 @@ class VersionOperator {
     unsigned int cache_seed_;
     RankTable ranks_;
 
-    bool CompareDominance(
+    bool MergeTwoVersionTables(
+        boost::shared_ptr<const VersionTable> t1,
+        boost::shared_ptr<const VersionTable> t2,
+        boost::shared_ptr<VersionTable> *result);
+
+
+    bool CompareRootDominance(
         boost::shared_ptr<const VersionTable::Map> r1,
         boost::shared_ptr<const VersionTable::Map> r2);
+
+    bool FlatenVersionTable(
+        boost::shared_ptr<const VersionTable> table,
+        boost::shared_ptr<VersionTable::Map> *content);
+
+    bool LookUpCache(
+        const std::set<version_table_id_t>& ids,
+        boost::shared_ptr<VersionTable>* result);
+
+    bool CacheMergedResult(
+        const std::set<version_table_id_t>& ids,
+        boost::shared_ptr<VersionTable> merged);
+
+    void FlushCache();
+
+    version_table_id_t GetNewVersionTableId();
 };
 
 

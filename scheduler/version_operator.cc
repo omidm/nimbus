@@ -58,7 +58,7 @@ VersionOperator::~VersionOperator() {
 }
 
 bool VersionOperator::MergeVersionTables(
-    std::vector<boost::shared_ptr<VersionTable> > tables,
+    std::vector<boost::shared_ptr<const VersionTable> > tables,
     boost::shared_ptr<VersionTable> *result) {
   size_t count = tables.size();
 
@@ -67,11 +67,13 @@ bool VersionOperator::MergeVersionTables(
   }
 
   if (count == 1) {
-    *result = tables[0];
+    *result = boost::shared_ptr<VersionTable>(new VersionTable(GetNewVersionTableId()));
+    (*result)->set_root(tables[0]->root());
+    (*result)->set_content(tables[0]->content());
     return true;
   }
 
-  std::vector<boost::shared_ptr<VersionTable> > reduced;
+  std::vector<boost::shared_ptr<const VersionTable> > reduced;
   if ((count % 2) == 1) {
     reduced.push_back(tables[count - 1]);
     --count;
@@ -90,46 +92,72 @@ bool VersionOperator::MergeVersionTables(
 }
 
 bool VersionOperator::MergeTwoVersionTables(
-    boost::shared_ptr<VersionTable> t1,
-    boost::shared_ptr<VersionTable> t2,
+    boost::shared_ptr<const VersionTable> t_1,
+    boost::shared_ptr<const VersionTable> t_2,
     boost::shared_ptr<VersionTable> *result) {
   std::set<version_table_id_t> ids;
-  ids.insert(t1->id());
-  ids.insert(t2->id());
+  ids.insert(t_1->id());
+  ids.insert(t_2->id());
   if (LookUpCache(ids, result)) {
     dbg(DBG_SCHED, "Version Operator: hit cache.\n");
     return true;
   } else {
     dbg(DBG_SCHED, "Version Operator: missed cache.\n");
     boost::shared_ptr<VersionTable> merged(new VersionTable(GetNewVersionTableId()));
-    if (t1->root() == t2->root()) {
+    boost::shared_ptr<const VersionTable::Map> root;
+    VersionTable::Map content;
+    VersionTable::MapIter it;
+    VersionTable::MapConstIter it_p;
+
+    if (t_1->root() == t_2->root()) {
       dbg(DBG_SCHED, "Version Operator: roots are the same for merge.\n");
-      VersionTable::Map content = t1->content();
-      VersionTable::MapConstIter it;
-      for (it = t2->content_p()->begin(); it != t2->content_p()->end(); ++it) {
-        VersionTable::MapIter it_p = content.find(it->first);
-        if (it_p == content.end()) {
-          content[it->first] = it->second;
-        } else if (it->second > it_p->second) {
-          it_p->second = it->second;
+      root = t_1->root();
+      content = t_1->content();
+      for (it_p = t_2->content_p()->begin(); it_p != t_2->content_p()->end(); ++it_p) {
+        it = content.find(it_p->first);
+        if (it == content.end()) {
+          content[it_p->first] = it_p->second;
+        } else if (it_p->second > it->second) {
+          it->second = it_p->second;
         }
       }
-      merged->set_content(content);
-      merged->set_root(t1->root());
     } else {
       dbg(DBG_SCHED, "Version Operator: roots are different for merge.\n");
-      // TODO(omidm): implement!
-      exit(-1);
+      boost::shared_ptr<const VersionTable> t_r;
+      boost::shared_ptr<VersionTable::Map> content_p;
+      if (CompareRootDominance(t_1->root(), t_2->root())) {
+        t_r = t_1;
+        FlatenVersionTable(t_2, &content_p);
+      } else {
+        t_r = t_2;
+        FlatenVersionTable(t_1, &content_p);
+      }
+
+      root = t_r->root();
+      content = t_r->content();
+
+      for (it_p = content_p->begin(); it_p != content_p->end(); ++it_p) {
+        data_version_t version;
+        if (t_r->query_entry(it_p->first, &version)) {
+          if (it_p->second > version) {
+            content[it_p->first] = it_p->second;
+          }
+        } else {
+          content[it_p->first] = it_p->second;
+        }
+      }
     }
 
-    CacheMergeResult(ids, merged);
+    merged->set_content(content);
+    merged->set_root(root);
+    CacheMergedResult(ids, merged);
     *result = merged;
     return true;
   }
 }
 
 bool VersionOperator::MakeVersionTableOut(
-    boost::shared_ptr<VersionTable> table_in,
+    boost::shared_ptr<const VersionTable> table_in,
     const IDSet<logical_data_id_t>& write_set,
     boost::shared_ptr<VersionTable> *table_out) {
   boost::shared_ptr<VersionTable> result(new VersionTable(GetNewVersionTableId()));
@@ -150,45 +178,60 @@ bool VersionOperator::MakeVersionTableOut(
   return true;
 }
 
-bool VersionOperator::RecomputeRootVersionTable(
+bool VersionOperator::RecomputeRootForVersionTable(
     std::vector<boost::shared_ptr<VersionTable> > tables) {
   // TODO(omidm): implement!
   FlushCache();
   return false;
 }
 
-bool VersionOperator::CompareDominance(
+bool VersionOperator::CompareRootDominance(
     boost::shared_ptr<const VersionTable::Map> r1,
     boost::shared_ptr<const VersionTable::Map> r2) {
-  VersionTable::MapConstIter iter1;
-  VersionTable::MapConstIter iter2;
+  VersionTable::MapConstIter iter_1;
+  VersionTable::MapConstIter iter_2;
 
-  int count1 = 0;
-  for (iter1 = r1->begin(); iter1 != r1->end(); ++iter1) {
-    ++count1;
-    iter2 = r2->find(iter1->first);
-    if (iter2 != r2->end()) {
-      if (iter2->second > iter1->second) {
-        --count1;
+  int count_1 = 0;
+  for (iter_1 = r1->begin(); iter_1 != r1->end(); ++iter_1) {
+    ++count_1;
+    iter_2 = r2->find(iter_1->first);
+    if (iter_2 != r2->end()) {
+      if (iter_2->second > iter_1->second) {
+        --count_1;
       }
     }
   }
 
-  int count2 = 0;
-  for (iter2 = r2->begin(); iter2 != r2->end(); ++iter2) {
-    ++count2;
-    iter1 = r1->find(iter2->first);
-    if (iter1 != r1->end()) {
-      if (iter1->second > iter2->second) {
-        --count2;
+  int count_2 = 0;
+  for (iter_2 = r2->begin(); iter_2 != r2->end(); ++iter_2) {
+    ++count_2;
+    iter_1 = r1->find(iter_2->first);
+    if (iter_1 != r1->end()) {
+      if (iter_1->second > iter_2->second) {
+        --count_2;
       }
     }
   }
 
-  return (count1 > count2);
+  return (count_1 >= count_2);
 }
 
+bool FlatenVersionTable(
+    boost::shared_ptr<const VersionTable> table,
+    boost::shared_ptr<VersionTable::Map> *result) {
+  VersionTable::MapConstIter iter;
+  boost::shared_ptr<VersionTable::Map> content(new VersionTable::Map());
 
+  for (iter = table->root()->begin(); iter != table->root()->end(); ++iter) {
+    content->operator[](iter->first) = iter->second;
+  }
+  for (iter = table->content_p()->begin(); iter != table->content_p()->end(); ++iter) {
+    content->operator[](iter->first) = iter->second;
+  }
+
+  *result = content;
+  return true;
+}
 
 bool VersionOperator::LookUpCache(
     const std::set<version_table_id_t>& ids,
@@ -201,7 +244,7 @@ bool VersionOperator::LookUpCache(
   return false;
 }
 
-bool VersionOperator::CacheMergeResult(
+bool VersionOperator::CacheMergedResult(
     const std::set<version_table_id_t>& ids,
     boost::shared_ptr<VersionTable> merged) {
   if (cache_.size() < max_cache_size_) {

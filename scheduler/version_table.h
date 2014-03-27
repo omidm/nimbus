@@ -60,11 +60,11 @@ class VersionTable {
     explicit VersionTable(version_table_id_t id);
     virtual ~VersionTable();
 
-    version_table_id_t id();
-    boost::shared_ptr<const Map> root();
-    Map content();
-    const Map* content_p();
-    bool query_entry(logical_data_id_t l_id, data_version_t *version);
+    version_table_id_t id() const;
+    boost::shared_ptr<const Map> root() const;
+    Map content() const;
+    const Map* content_p() const;
+    bool query_entry(logical_data_id_t l_id, data_version_t *version) const;
 
     void set_id(version_table_id_t id);
     void set_root(boost::shared_ptr<const Map> root);
