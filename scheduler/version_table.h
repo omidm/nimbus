@@ -65,16 +65,20 @@ class VersionTable {
     Map content() const;
     const Map* content_p() const;
     bool query_entry(logical_data_id_t l_id, data_version_t *version) const;
+    bool root_is_set() const;
 
     void set_id(version_table_id_t id);
     void set_root(boost::shared_ptr<const Map> root);
     void set_content(const Map& content);
     void set_entry(logical_data_id_t l_id, data_version_t version);
 
+    void Print();
+
   private:
     boost::shared_ptr<const Map> root_;
     version_table_id_t id_;
     Map content_;
+    bool root_is_set_;
 };
 
 

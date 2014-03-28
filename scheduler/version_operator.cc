@@ -69,7 +69,9 @@ bool VersionOperator::MergeVersionTables(
 
   if (count == 1) {
     *result = boost::shared_ptr<VersionTable>(new VersionTable(GetNewVersionTableId()));
-    (*result)->set_root(tables[0]->root());
+    if (tables[0]->root_is_set()) {
+      (*result)->set_root(tables[0]->root());
+    }
     (*result)->set_content(tables[0]->content());
     return true;
   }
@@ -80,7 +82,7 @@ bool VersionOperator::MergeVersionTables(
     --count;
   }
 
-  for (size_t i = 0; i < count; ++i) {
+  for (size_t i = 0; i < count; i = i + 2) {
     boost::shared_ptr<VersionTable> merged;
     if (MergeTwoVersionTables(tables[i], tables[i+1], &merged, level)) {
       reduced.push_back(merged);
@@ -285,14 +287,16 @@ bool VersionOperator::CompareRootDominance(
   return (count_1 >= count_2);
 }
 
-bool FlattenVersionTable(
+bool VersionOperator::FlattenVersionTable(
     boost::shared_ptr<const VersionTable> table,
     boost::shared_ptr<VersionTable::Map> *result) {
   VersionTable::MapConstIter iter;
   boost::shared_ptr<VersionTable::Map> content(new VersionTable::Map());
 
-  for (iter = table->root()->begin(); iter != table->root()->end(); ++iter) {
-    content->operator[](iter->first) = iter->second;
+  if (table->root_is_set()) {
+    for (iter = table->root()->begin(); iter != table->root()->end(); ++iter) {
+      content->operator[](iter->first) = iter->second;
+    }
   }
   for (iter = table->content_p()->begin(); iter != table->content_p()->end(); ++iter) {
     content->operator[](iter->first) = iter->second;

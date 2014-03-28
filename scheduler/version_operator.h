@@ -68,7 +68,8 @@ class VersionOperator {
 
     bool MergeVersionTables(
         std::vector<boost::shared_ptr<const VersionTable> > tables,
-        boost::shared_ptr<VersionTable> *result, size_t level);
+        boost::shared_ptr<VersionTable> *result,
+        size_t level = CACHE_MERGE_INIT_LEVEL);
 
     bool MakeVersionTableOut(
         boost::shared_ptr<const VersionTable> table_in,
@@ -77,6 +78,8 @@ class VersionOperator {
 
     bool RecomputeRootForVersionTables(
         std::vector<boost::shared_ptr<VersionTable> > tables);
+
+    version_table_id_t GetNewVersionTableId();
 
   private:
     Cache cache_;
@@ -112,8 +115,6 @@ class VersionOperator {
         boost::shared_ptr<VersionTable> merged);
 
     void FlushCache();
-
-    version_table_id_t GetNewVersionTableId();
 };
 
 

@@ -46,6 +46,7 @@ using namespace nimbus; // NOLINT
 
 VersionTable::VersionTable(version_table_id_t id) {
   id_ = id;
+  root_is_set_ = false;
 }
 
 VersionTable::~VersionTable() {
@@ -76,12 +77,18 @@ bool VersionTable::query_entry(logical_data_id_t l_id, data_version_t *version) 
     return true;
   }
 
-  iter = root_->find(l_id);
-  if (iter != root_->end()) {
-    *version = iter->second;
-    return true;
+  if (root_is_set_) {
+    iter = root_->find(l_id);
+    if (iter != root_->end()) {
+      *version = iter->second;
+      return true;
+    }
   }
   return false;
+}
+
+bool VersionTable::root_is_set() const {
+  return root_is_set_;
 }
 
 void VersionTable::set_id(version_table_id_t id) {
@@ -90,6 +97,7 @@ void VersionTable::set_id(version_table_id_t id) {
 
 void VersionTable::set_root(boost::shared_ptr<const Map> root) {
   root_ = root;
+  root_is_set_ = true;
 }
 
 void VersionTable::set_content(const VersionTable::Map& content) {
@@ -99,6 +107,22 @@ void VersionTable::set_content(const VersionTable::Map& content) {
 void VersionTable::set_entry(logical_data_id_t l_id, data_version_t version) {
   content_[l_id] = version;
 }
+
+void VersionTable::Print() {
+  MapConstIter iter;
+  std::cout << "Table id: " << id_ << std::endl;
+  std::cout << "Root:\n";
+  if (root_is_set_) {
+    for (iter = root_->begin(); iter != root_->end(); ++iter) {
+      std::cout << iter->first << " -> " << iter->second << std::endl;
+    }
+  }
+  std::cout << "Content:\n";
+  for (iter = content_.begin(); iter != content_.end(); ++iter) {
+    std::cout << iter->first << " -> " << iter->second << std::endl;
+  }
+}
+
 
 
 
