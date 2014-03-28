@@ -44,6 +44,7 @@
 using namespace nimbus; // NOLINT
 
 JobEntry::JobEntry() {
+  Initialize();
 }
 
 JobEntry::JobEntry(const JobType& job_type,
@@ -62,6 +63,7 @@ JobEntry::JobEntry(const JobType& job_type,
   before_set_(before_set), after_set_(after_set),
   parent_job_id_(parent_job_id), params_(params),
   sterile_(sterile) {
+    Initialize();
     union_set_.insert(read_set_);
     union_set_.insert(write_set_);
     partial_versioned_ = false;
@@ -83,6 +85,7 @@ JobEntry::JobEntry(const JobType& job_type,
   parent_job_id_(parent_job_id),
   sterile_(sterile), versioned_(versioned),
   assigned_(assigned) {
+    Initialize();
     partial_versioned_ = versioned;
     done_ = false;
     future_ = false;
@@ -90,14 +93,22 @@ JobEntry::JobEntry(const JobType& job_type,
 
 JobEntry::JobEntry(const job_id_t& job_id)
   : job_id_(job_id) {
-  sterile_ = false;
-  partial_versioned_ = false;
-  versioned_ = false;
-  assigned_ = false;
-  done_ = false;
-  future_ = true;
+    Initialize();
+    sterile_ = false;
+    partial_versioned_ = false;
+    versioned_ = false;
+    assigned_ = false;
+    done_ = false;
+    future_ = true;
 }
 
+void JobEntry::Initialize() {
+  static boost::shared_ptr<nimbus::VersionTable> empty_vtable =
+    boost::shared_ptr<nimbus::VersionTable>(new
+        nimbus::VersionTable(NIMBUS_EMPTY_VERSION_TABLE_ID));
+  vtable_in_ = empty_vtable;
+  vtable_out_ = empty_vtable;
+}
 
 JobEntry::~JobEntry() {
 }
@@ -156,6 +167,14 @@ JobEntry::VersionTable JobEntry::version_table_in() {
 
 JobEntry::VersionTable JobEntry::version_table_out() {
   return version_table_out_;
+}
+
+boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_in() {
+  return vtable_in_;
+}
+
+boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_out() {
+  return vtable_out_;
 }
 
 const JobEntry::VersionTable* JobEntry::version_table_in_p() {
@@ -265,6 +284,14 @@ void JobEntry::set_version_table_out(VersionTable version_table) {
 
 void JobEntry::set_version_table_out_entry(logical_data_id_t l_id, data_version_t version) {
   version_table_out_[l_id] = version;
+}
+
+void JobEntry::set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in) {
+  vtable_in_ = vtable_in;
+}
+
+void JobEntry::set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out) {
+  vtable_out_ = vtable_out;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {

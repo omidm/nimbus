@@ -322,6 +322,13 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
   } else {
     dbg(DBG_WARN, "WARNING: parent of define data with job id %lu is not in the graph.\n", job_id);
   }
+
+
+  if (GetJobEntry(job_id, job)) {
+    boost::shared_ptr<VersionTable> vt;
+    vt = job->vtable_out();
+    vt->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
+  }
 }
 
 bool JobManager::ResolveJobDataVersions(JobEntry* job) {
@@ -334,10 +341,58 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
   }
 
   IDSet<job_id_t> need = job->need_set();
+  IDSet<job_id_t>::IDSetIter iter;
+
+
+
+  Log log;
+
+
+
+  log.StartTimer();
+  size_t need_count_2 = need.size();
+  size_t remain_count_2 = need_count_2;
+
+  std::vector<boost::shared_ptr<const VersionTable> > tables;
+  if (job->partial_versioned()) {
+    tables.push_back(job->vtable_in());
+  }
+  for (iter = need.begin(); iter != need.end(); ++iter) {
+    job_id_t id = (*iter);
+    JobEntry* j;
+    if (GetJobEntry(id, j)) {
+      if (j->versioned()) {
+        tables.push_back(j->vtable_out());
+        remain_count_2--;
+      }
+    }
+  }
+
+  boost::shared_ptr<VersionTable> merged;
+  version_operator_.MergeVersionTables(tables, &merged);
+  if (!job->sterile()) {
+    std::vector<boost::shared_ptr<VersionTable> > merged_vec;
+    merged_vec.push_back(merged);
+    version_operator_.RecomputeRootForVersionTables(merged_vec);
+  }
+  job->set_vtable_in(merged);
+
+  if (remain_count_2 == 0) {
+    boost::shared_ptr<VersionTable> table_out;
+    version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
+    job->set_vtable_out(table_out);
+  }
+  log.StopTimer();
+  std::cout << "New Versioning System: " << job->job_name() << " " << log.timer() << std::endl;
+
+
+
+
+
+  log.StartTimer();
   size_t need_count = need.size();
   size_t remain_count = need_count;
 
-  IDSet<job_id_t>::IDSetIter iter;
   for (iter = need.begin(); iter != need.end(); ++iter) {
     job_id_t id = (*iter);
     JobEntry* j;
@@ -373,9 +428,13 @@ bool JobManager::ResolveJobDataVersions(JobEntry* job) {
     if (job->build_version_table_out_and_check()) {
       version_manager_.AddJobVersionTableOut(job);
       job->set_versioned(true);
+      log.StopTimer();
+      std::cout << "Old Versioning System: " << job->job_name() << " " << log.timer() << std::endl;
       return true;
     }
   }
+  log.StopTimer();
+  std::cout << "Old Versioning System: " << job->job_name() << " " << log.timer() << std::endl;
 
   return false;
 }

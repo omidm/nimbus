@@ -52,6 +52,7 @@
 #include "shared/idset.h"
 #include "shared/parameter.h"
 #include "shared/nimbus_types.h"
+#include "scheduler/version_table.h"
 
 namespace nimbus {
 
@@ -104,6 +105,8 @@ class JobEntry {
     Parameter params();
     VersionTable version_table_in();
     VersionTable version_table_out();
+    boost::shared_ptr<nimbus::VersionTable> vtable_in();
+    boost::shared_ptr<nimbus::VersionTable> vtable_out();
     PhysicalTable physical_table();
     IDSet<job_id_t> jobs_passed_versions();
     IDSet<job_id_t> need_set();
@@ -131,6 +134,8 @@ class JobEntry {
     void set_params(Parameter params);
     void set_version_table_in(VersionTable version_table);
     void set_version_table_out(VersionTable version_table);
+    void set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in);
+    void set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out);
     void set_physical_table(PhysicalTable physical_table);
     void set_jobs_passed_versions(IDSet<job_id_t> jobs);
     void add_job_passed_versions(job_id_t job_id);
@@ -161,6 +166,8 @@ class JobEntry {
     Parameter params_;
     VersionTable version_table_in_;
     VersionTable version_table_out_;
+    boost::shared_ptr<nimbus::VersionTable> vtable_in_;
+    boost::shared_ptr<nimbus::VersionTable> vtable_out_;
     PhysicalTable physical_table_;
     IDSet<job_id_t> jobs_passed_versions_;
     bool sterile_;
@@ -169,6 +176,8 @@ class JobEntry {
     bool assigned_;
     bool done_;
     bool future_;
+
+    void Initialize();
 };
 
 typedef std::map<job_id_t, JobEntry*> JobEntryTable;

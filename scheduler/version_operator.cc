@@ -332,7 +332,7 @@ void VersionOperator::FlushCache() {
 }
 
 version_table_id_t VersionOperator::GetNewVersionTableId() {
-  static version_table_id_t id = 0;
+  static version_table_id_t id = NIMBUS_EMPTY_VERSION_TABLE_ID;
   return ++id;
 }
 

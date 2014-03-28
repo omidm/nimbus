@@ -56,6 +56,7 @@
 #include "shared/graph.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
+#include "scheduler/version_operator.h"
 
 namespace nimbus {
 class JobManager {
@@ -110,6 +111,7 @@ class JobManager {
   private:
     Graph<JobEntry, job_id_t> job_graph_;
     VersionManager version_manager_;
+    VersionOperator version_operator_;
     bool processed_new_job_done_;
 
     bool ResolveJobDataVersions(JobEntry* job);

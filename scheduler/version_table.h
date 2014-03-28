@@ -46,7 +46,6 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include "shared/nimbus_types.h"
-#include "scheduler/job_entry.h"
 #include "shared/dbg.h"
 
 namespace nimbus {
