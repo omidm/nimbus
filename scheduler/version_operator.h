@@ -81,7 +81,7 @@ class VersionOperator {
 
     void FlushCache();
 
-    version_table_id_t GetNewVersionTableId();
+    static version_table_id_t GetNewVersionTableId();
 
   private:
     Cache cache_;

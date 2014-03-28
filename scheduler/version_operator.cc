@@ -69,9 +69,7 @@ bool VersionOperator::MergeVersionTables(
 
   if (count == 1) {
     *result = boost::shared_ptr<VersionTable>(new VersionTable(GetNewVersionTableId()));
-    if (tables[0]->root_is_set()) {
-      (*result)->set_root(tables[0]->root());
-    }
+    (*result)->set_root(tables[0]->root());
     (*result)->set_content(tables[0]->content());
     return true;
   }
@@ -293,10 +291,8 @@ bool VersionOperator::FlattenVersionTable(
   VersionTable::MapConstIter iter;
   boost::shared_ptr<VersionTable::Map> content(new VersionTable::Map());
 
-  if (table->root_is_set()) {
-    for (iter = table->root()->begin(); iter != table->root()->end(); ++iter) {
-      content->operator[](iter->first) = iter->second;
-    }
+  for (iter = table->root()->begin(); iter != table->root()->end(); ++iter) {
+    content->operator[](iter->first) = iter->second;
   }
   for (iter = table->content_p()->begin(); iter != table->content_p()->end(); ++iter) {
     content->operator[](iter->first) = iter->second;
