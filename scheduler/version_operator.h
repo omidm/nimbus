@@ -79,6 +79,8 @@ class VersionOperator {
     bool RecomputeRootForVersionTables(
         std::vector<boost::shared_ptr<VersionTable> > tables);
 
+    void FlushCache();
+
     version_table_id_t GetNewVersionTableId();
 
   private:
@@ -113,8 +115,6 @@ class VersionOperator {
     bool CacheMergedResult(
         const std::set<version_table_id_t>& ids,
         boost::shared_ptr<VersionTable> merged);
-
-    void FlushCache();
 };
 
 

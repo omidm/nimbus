@@ -48,11 +48,15 @@
 #include "scheduler/version_table.h"
 #include "scheduler/version_operator.h"
 
+#define VERSION_RANGE 20
+#define SEED 123
+
 using namespace nimbus; // NOLINT
 
 int main(int argc, const char *argv[]) {
   nimbus_initialize();
   Log log;
+  unsigned int seed = SEED;
 
   if (argc < 2) {
     std::cout << "ERROR: provide an integer!" << std::endl;
@@ -77,7 +81,7 @@ int main(int argc, const char *argv[]) {
 
   log.StartTimer();
   for (int i = 0; i < elem_num; ++i) {
-    t_1->set_entry(i, i + 10);
+    t_1->set_entry(i, rand_r(&seed) % (VERSION_RANGE));
   }
   log.StopTimer();
   std::cout << "Time elapsed insertion: " << log.timer() << std::endl;
@@ -85,20 +89,20 @@ int main(int argc, const char *argv[]) {
   log.StartTimer();
   VersionTable::Map content;
   for (int i = 0; i < elem_num; ++i) {
-    content[i] = i + 10;
+    content[i] = rand_r(&seed) % (VERSION_RANGE);
   }
   t_1->set_content(content);
   log.StopTimer();
   std::cout << "Time elapsed insertion: " << log.timer() << std::endl;
 
   std::cout << "Print before recomputing root:\n";
-  t_1->Print();
+  // t_1->Print();
 
   std::cout << "Print after recomputing root:\n";
   tables.clear();
   tables.push_back(t_1);
   op.RecomputeRootForVersionTables(tables);
-  t_1->Print();
+  // t_1->Print();
 
 
   data_version_t version;
@@ -110,27 +114,45 @@ int main(int argc, const char *argv[]) {
   }
 
   for (int i = 0; i < elem_num; ++i) {
-    t_2->set_entry(i, i + 20);
+    t_2->set_entry(i, rand_r(&seed) % (VERSION_RANGE));
   }
 
   tables.clear();
   tables.push_back(t_2);
   op.RecomputeRootForVersionTables(tables);
-  t_2->Print();
+  // t_2->Print();
 
   const_tables.clear();
   const_tables.push_back(t_1);
   const_tables.push_back(t_2);
   boost::shared_ptr<VersionTable> merge;
+  log.StartTimer();
   op.MergeVersionTables(const_tables, &merge);
-  merge->Print();
+  log.StopTimer();
+  std::cout << "Time elapsed merging: " << log.timer() << std::endl;
+  // merge->Print();
+
+
+  op.FlushCache();
 
   std::cout << "Print after recomputing root for both tables:\n";
   tables.clear();
   tables.push_back(t_1);
   tables.push_back(t_2);
   op.RecomputeRootForVersionTables(tables);
-  t_1->Print();
-  t_2->Print();
+  // t_1->Print();
+  // t_2->Print();
+  std::cout << "Root size: " << t_1->root()->size() << std::endl;
+  std::cout << "content table 1 size: " << t_1->content_p()->size() << std::endl;
+  std::cout << "content table 2 size: " << t_2->content_p()->size() << std::endl;
+
+  const_tables.clear();
+  const_tables.push_back(t_1);
+  const_tables.push_back(t_2);
+  log.StartTimer();
+  op.MergeVersionTables(const_tables, &merge);
+  log.StopTimer();
+  std::cout << "Time elapsed merging: " << log.timer() << std::endl;
+  // merge->Print();
 }
 
