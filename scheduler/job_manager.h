@@ -110,7 +110,7 @@ class JobManager {
 
   private:
     Graph<JobEntry, job_id_t> job_graph_;
-    VersionManager version_manager_;
+    // VersionManager version_manager_;
     VersionOperator version_operator_;
     bool processed_new_job_done_;
 

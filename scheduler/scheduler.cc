@@ -493,13 +493,6 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
-  if (version == 0) {
-    PhysicalData created_data;
-    CreateDataAtWorker(worker, ldo, &created_data);
-    AllocateLdoInstanceToJob(job, ldo, created_data);
-    return true;
-  }
-
   PhysicalDataVector instances_at_worker;
   PhysicalDataVector instances_in_system;
   data_manager_->InstancesByWorkerAndVersion(
@@ -534,6 +527,14 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
+
+  if ((instances_at_worker.size() == 0) && (version == 0)) {
+    PhysicalData created_data;
+    CreateDataAtWorker(worker, ldo, &created_data);
+    AllocateLdoInstanceToJob(job, ldo, created_data);
+    return true;
+  }
+
 
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = instances_in_system[0];
