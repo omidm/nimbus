@@ -72,6 +72,8 @@ namespace nimbus {
   typedef int64_t int_dimension_t;
   typedef double  float_dimension_t;
 
+  typedef uint64_t app_data_version_t;
+
   enum {
     WORKER_ID_NONE = 0,
     WORKER_ID_SCHEDULER = 1

@@ -64,7 +64,7 @@ nimbus::Job* JobModifyLevelsetPartTwo::Clone() {
 
 void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing modify levelset job -- part two\n");
-/*
+
     InitConfig init_config;
     init_config.set_boundary_condition = false;
     T dt;
@@ -93,7 +93,7 @@ void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::D
 
     // free resources
     DestroyExampleAndDriver(example, driver);
-*/
+
     dbg(APP_LOG, "Completed executing modify levelset job -- part two\n");
 }
 

@@ -32,55 +32,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * A Nimbus worker. 
-  *
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
+/*
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
 
-#include <cstdio>
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_
 
-#include "application/fluid-simulation/public/fluid-simulation-app.h"
-#include "worker/experimental/job-worker-factory.h"
-#include "worker/experimental/job-worker-interface.h"
+#include "shared/nimbus.h"
 
-// [TODO] Ugly code... Include class in main file. Reorgnize after discussion.
-class InitJob : public JobWorkerInterface {
+namespace application {
+
+class JobProjectionReduceRho : public nimbus::Job {
  public:
-  InitJob() : argc_(0), argv_(NULL) {}
-  InitJob(int argc, char **argv) : argc_(argc), argv_(argv) {}
-  virtual void Run() {
-    // [TODO] Run could be a non-blocking function, adding the job to the local
-    // worker manager.
-    InitiateApplication(argc_, argv_);
-  }
- private:
-  int argc_;
-  char **argv_;
-};
-class ExecuteJob : public JobWorkerInterface {
- public:
-  ExecuteJob() {}
-  virtual void Run() {
-    RunJob();
-  }
+  explicit JobProjectionReduceRho(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
 };
 
-int main(int argc, char **argv) {
-  JobWorkerFactory job_worker_factory;
-  // [TODO] Parameter should be passed through run function as a parameter blob.
-  InitJob init_job_proto(argc, argv);
-  ExecuteJob execute_job_proto;
-  job_worker_factory.RegisterJob(&init_job_proto, 0);
-  job_worker_factory.RegisterJob(&execute_job_proto, 1);
+}  // namespace application
 
-  // [TODO} Maybe scheduler should give me an initialization interface,
-  // and an execution interface.
-
-  // This is not exactly what we expected finally, job_0 should run job_1.
-  JobWorkerInterface *job_0 = job_worker_factory.New(0);
-  JobWorkerInterface *job_1 = job_worker_factory.New(1);
-  job_0->Run();
-  job_1->Run();
-  return 0;
-}
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_

@@ -32,35 +32,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Worker-side job factory. 
-  *
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
-#include "worker/experimental/job-worker-factory.h"
+/*
+ * Cache table entry containing object type, a pointer to the cached object,
+ * and a list of tables for the fields that the cached object contains.
+ *
+ * Author: Chinmayee Shah <chshah@stanford.edu>
+ */
 
-#include <cstdio>
+#ifndef NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
+#define NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
 
-#include "worker/experimental/job-worker-interface.h"
+#include <string>
+#include <vector>
 
-JobWorkerInterface *JobWorkerFactory::New(const int job_catogory_id) {
-  if (job_catogory_id >= list_length) {
-    return NULL;
-  } else {
-    // [TODO] If it is a prototype class in the list,
-    // we should return a copy of the clas
-    return job_list[job_catogory_id];
-  }
-}
+#include "data/cache/application_field.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
-bool JobWorkerFactory::RegisterJob(
-    JobWorkerInterface *job_worker, const int job_catogory_id) {
-  // [TODO] First assume only add job by increasing job catogory id.
-  if (job_catogory_id != list_length) {
-    return false;
-  } else {
-    job_list[list_length++] = job_worker;
-    return true;
-  }
-}
+namespace nimbus {
 
+class ApplicationCacheEntry {
+    public:
+        ApplicationCacheEntry();
+
+        /* accessors */
+        std::string object_type();
+        void set_object_type(std::string type);
+        void* object();
+        void set_object(void *object);
+
+        /* get read/ write locks on cache data */
+        void LockData(const Job &job,
+                      const DataArray &da);
+
+    private:
+        std::string object_type_;
+        void *object_;
+        CacheObjectFieldMap *fields_;
+};  // class ApplicationCacheEntry
+
+typedef std::vector<ApplicationCacheEntry> ApplicationCacheEntries;
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_

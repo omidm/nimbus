@@ -47,7 +47,9 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 
+#include "data/physbam/translator_physbam.h"
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/options.h"
 
 namespace PhysBAM {
 
@@ -59,99 +61,121 @@ class ProjectionDriver {
   typedef typename T_GRID::VECTOR_T TV;
   typedef typename TV::SCALAR T;
   typedef typename T_GRID::VECTOR_INT TV_INT;
+  typedef application::DataConfig DataConfig;
+  typedef application::InitConfig InitConfig;
 
-  ProjectionDriver(PCG_SPARSE<T>& pcg_input) : pcg(pcg_input) {
-    projection_data.x_interior = NULL;
-    projection_data.temp = NULL;
-    projection_data.temp_interior = NULL;
-    projection_data.p = NULL;
-    projection_data.p_interior = NULL;
-    projection_data.z_interior = NULL;
-    projection_data.b_interior = NULL;
-    projection_data.global_n = 0;
+  ProjectionDriver(
+      PCG_SPARSE<T>& pcg_input,
+      application::InitConfig& init_config_input,
+      application::DataConfig& data_config_input)
+          : pcg(pcg_input),
+            init_config(init_config_input),
+            data_config(data_config_input) {
+    projection_data.local_n = 0;
+    projection_data.interior_n = 0;
+
     projection_data.local_tolerance = 0;
     projection_data.global_tolerance = 0;
-    projection_data.global_desired_iterations = 0;
-    projection_data.alpha = 0;
-    projection_data.beta = 0;
+    projection_data.global_n = 0;
+    projection_data.desired_iterations = 0;
+
+    projection_data.local_rho = 0;
     projection_data.rho = 0;
     projection_data.rho_last = 0;
+    projection_data.local_dot_product_for_alpha = 0;
+    projection_data.alpha = 0;
+    projection_data.beta = 0;
+
+    projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
+    // Conjugate matrix will be deallocate by matrix_a.
+    projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<T>;
   }
 
-  virtual ~ProjectionDriver() {
-    delete projection_data.x_interior;
-    delete projection_data.temp;
-    delete projection_data.temp_interior;
-    delete projection_data.p;
-    delete projection_data.p_interior;
-    delete projection_data.z_interior;
-    delete projection_data.b_interior;
-  }
+  virtual ~ProjectionDriver() {}
 
   class ProjectionData {
    public:
-    typedef VECTOR_ND<T>* P_VECTOR;
+    ARRAY<float, VECTOR<int,3> > pressure;
+    ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
     ARRAY<TV_INT> matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
-    P_VECTOR x_interior;
-    P_VECTOR temp, temp_interior;
-    P_VECTOR p, p_interior;
-    P_VECTOR z_interior;
-    P_VECTOR b_interior;
+    // VECTOR_ND<T> x_interior;
+    VECTOR_ND<T> temp, temp_interior;
+    VECTOR_ND<T> p, p_interior;
+    VECTOR_ND<T> z_interior;
+    VECTOR_ND<T> b_interior;
 
-    // Static config.
-    int global_n;
-    T local_tolerance;
+    int local_n;
+    int interior_n;  // SUM.
+
+    T local_tolerance;  // MAX.
     T global_tolerance;
-    int global_desired_iterations;
+    int global_n;
+    int desired_iterations;
 
-    double rho, rho_last;
-    T beta, alpha;
+    double local_residual;  // SUM.
+    double local_rho, rho, rho_last;  // SUM.
+    double local_dot_product_for_alpha;  // SUM.
+    T alpha;
+    T beta;
+
+    // Not a Nimbus data type.
     T residual;
 
+    // Passed by parameter.
     int iteration;
   } projection_data;
 
+  nimbus::TranslatorPhysBAM<TV> translator;
   PCG_SPARSE<T>& pcg;
-  // [TODO]
+  InitConfig& init_config;
+  DataConfig& data_config;
+
   SPARSE_MATRIX_PARTITION partition;
 
-  // [TODO] Global sum should not use MPI.
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;
   }
-
-  // [TODO] Global max should not use MPI.
   template<class TYPE> TYPE Global_Max(const TYPE& input) {
     return input;
   }
 
-  // [TODO] Ghost cell transmission should not use MPI.
-  virtual void Fill_Ghost_Cells(VECTOR_ND<T>& v) {
-    return;
-  }
-
-  void Initialize();
-  void CommunicateConfig();
-  void Parallel_Solve();
-  void ExchangePressure();
+  void Initialize(int local_n, int interior_n);
+  void LocalInitialize();
+  void GlobalInitialize();
   void InitializeResidual();
   bool SpawnFirstIteration();
   void DoPrecondition();
-  void CalculateBeta();
+  void CalculateLocalRho();
+  void ReduceRho();
   void UpdateSearchVector();
-  void ExchangeSearchVector();
   void UpdateTempVector();
-  void CalculateAlpha();
+  void CalculateLocalAlpha();
+  void ReduceAlpha();
   void UpdateOtherVectors();
-  void CalculateResidual();
+  void CalculateLocalResidual();
   bool DecideToSpawnNextIteration();
+  void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  template<typename TYPE_NAME> void ReadScalarData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, TYPE_NAME& value);
+  void ReadVectorData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, VECTOR_ND<float>& value);
+  template<typename TYPE_NAME> void WriteScalarData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, const TYPE_NAME& value);
+  void WriteVectorData(
+      const nimbus::Job* job, const nimbus::DataArray& da,
+      const char* variable_name, const VECTOR_ND<float>& value);
 };
+
 }  // namespace PhysBAM
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_PROJECTION_DRIVER_H_

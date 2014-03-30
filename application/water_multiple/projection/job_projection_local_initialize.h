@@ -33,30 +33,28 @@
  */
 
 /*
- * This file contains job PROJECTION_CORE that:
- *     performs the implicit method of projection.
- * The parameters of PROJECTION_CORE:
- *     frame number, simulation time, dt.
- * The read set of PROJECTION_CORE:
-       psi_D, psi_N, filled_region_colors, divergence, pressure.
- * The write set(not sure) of PROJECTION_CORE:
- *     pressure.
+ * This file contains job PROJECTION_LOCAL_INITIALIZE that:
+ *     initializes all the data for projection that requires no global
+ *     coordination.
+ * Parameter list:
  *
- * This job should be broken into finer jobs in the future.
+ * The read set:
+ *
+ * The write set:
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOCAL_INITIALIZE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOCAL_INITIALIZE_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobProjectionCore : public nimbus::Job {
+class JobProjectionLocalInitialize : public nimbus::Job {
  public:
-  explicit JobProjectionCore(nimbus::Application *app);
+  explicit JobProjectionLocalInitialize(nimbus::Application *app);
   virtual void Execute(nimbus::Parameter params,
                        const nimbus::DataArray& da);
   virtual nimbus::Job* Clone();
@@ -64,4 +62,4 @@ class JobProjectionCore : public nimbus::Job {
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CORE_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOCAL_INITIALIZE_H_

@@ -33,8 +33,20 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
- * Author: Hang Qu<quhang@stanford.edu>
+ * This class serves as the bridge between WATER_DRIVER and PROJECTION_DRIVER.
+ * It is a wrapper around LAPLACE_COLLIDABLE_UNIFORM so that it can extract
+ * necessary data from WATER_DRIVER/WATER_EXAMPLE and calculates all the data
+ * needed for PROJECTION_DRIVER. After this point, PROJECTION_DRIVER gets all
+ * its data to do projection and WATER_DRIVER is no more needed.
+ *
+ * Application first binds LAPLACE_COLLIDABLE_UNIFORM of WATER_EXAMPLE to this
+ * class, and then calls PrePareProjectionInput. After that, all the data needed
+ * for projection is stored in this class.
+ *
+ * This class is written based on original PhysBAM implementation but is fully
+ * rewritten.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_
@@ -52,19 +64,12 @@ typedef GRID<TV> T_GRID;
 
 class LaplaceSolverWrapper {
  public:
-  LaplaceSolverWrapper() {
-  }
+  LaplaceSolverWrapper() {}
   void BindLaplaceAndInitialize(
-      LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input) {
-    laplace = laplace_input;
-    const int number_of_regions = 1;
-    matrix_index_to_cell_index_array.Resize(number_of_regions);
-    cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
-    A_array.Resize(number_of_regions);
-    b_array.Resize(number_of_regions);
-  }
+      LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input);
   ~LaplaceSolverWrapper() {}
 
+  int local_n, interior_n;
   // region_id -> matrix_id -> (dim_t, dim_t, dim_t)
   ARRAY<ARRAY<TV_INT> > matrix_index_to_cell_index_array;
   // (dim_t, dim_t, dim_t) -> matrix_id
@@ -77,11 +82,10 @@ class LaplaceSolverWrapper {
 
   // Input refers to A, x, b, indexing, tolerance.
   void PrepareProjectionInput();
-  void TransformResult();
  private:
   LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace;
 };
 
 }  // namespace PhysBAM
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_HELPER_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_LAPLACE_SOLVER_WRAPPER_H_

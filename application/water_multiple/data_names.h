@@ -60,9 +60,26 @@
 
 #define APP_MATRIX_A "matrix_a"
 #define APP_VECTOR_B "vector_b"
-#define APP_VECTOR_X "vector_x"
-#define APP_PROJECTION_LOCAL_TOLERANCE "projection_local_tolerance"
 #define APP_INDEX_C2M "index_c2m"
 #define APP_INDEX_M2C "index_m2c"
+#define APP_PROJECTION_LOCAL_N "projection_local_n"
+#define APP_PROJECTION_INTERIOR_N "projection_interior_n"
+
+#define APP_PROJECTION_LOCAL_TOLERANCE "projection_local_tolerance"
+#define APP_PROJECTION_GLOBAL_TOLERANCE "projection_global_tolerance"
+#define APP_PROJECTION_GLOBAL_N "projection_global_n"
+#define APP_PROJECTION_DESIRED_ITERATIONS "projection_desired_iterations"
+
+#define APP_PROJECTION_LOCAL_RESIDUAL "projection_local_residual"
+#define APP_PROJECTION_LOCAL_RHO "projection_local_rho"
+#define APP_PROJECTION_GLOBAL_RHO "projection_global_rho"
+#define APP_PROJECTION_GLOBAL_RHO_OLD "projection_global_rho_old"
+#define APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA "projection_local_dot_product_for_alpha"
+#define APP_PROJECTION_ALPHA "projection_alpha"
+#define APP_PROJECTION_BETA "projection_beta"
+#define APP_MATRIX_C "matrix_c"
+#define APP_VECTOR_Z "vector_z"
+#define APP_VECTOR_P "vector_p"
+#define APP_VECTOR_TEMP "vector_temp"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

@@ -41,7 +41,9 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 
+#include <list>
 #include <stdarg.h>
+
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/scratch_data_helper.h"
@@ -73,6 +75,9 @@ namespace application {
     typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
+    typedef std::vector<Data*> DataVec;
+    typedef std::vector<DataVec*> DataSetVec;
+
     // application specific parameters and constants
     const int kThreadsNum = 1;
     const int kScale = 40;
@@ -101,6 +106,10 @@ namespace application {
                            const nimbus::DataArray& da,
                            nimbus::PdiVector *vec,
                            AccessType access_type);
+    bool GroupSyncData(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       DataVec *main_copy,
+                       DataSetVec *scratch_copies);
     void DestroyTranslatorObjects(nimbus::PdiVector *vec);
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,
@@ -116,10 +125,6 @@ namespace application {
    // read/ write instead of one DataArray passed to a job/ a better indexing
     bool Contains(nimbus::IDSet<nimbus::logical_data_id_t> data_set,
                   nimbus::logical_data_id_t  id);
-
-    void LoadReadWriteSets(nimbus::Job* job,
-        nimbus::IDSet<nimbus::logical_data_id_t>* read,
-        nimbus::IDSet<nimbus::logical_data_id_t>* write) __attribute__((deprecated));
 
     void LoadLogicalIdsInSet(nimbus::Job* job,
         nimbus::IDSet<nimbus::logical_data_id_t>* set,
@@ -141,6 +146,14 @@ namespace application {
         const GeometricRegion& global_region,
         const GeometricRegion& local_region,
         std::string *result);
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const T dt,
+        const GeometricRegion& global_region,
+        const GeometricRegion& local_region,
+        const int iteration,
+        std::string *result);
     bool LoadParameter(
         const std::string str,
         int* frame,
@@ -157,6 +170,14 @@ namespace application {
         T* dt,
         GeometricRegion* global_region,
         GeometricRegion* local_region);
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        T* dt,
+        GeometricRegion* global_region,
+        GeometricRegion* local_region,
+        int* iteration);
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_

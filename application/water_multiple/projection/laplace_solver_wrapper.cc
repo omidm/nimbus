@@ -37,14 +37,26 @@
  */
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/projection/laplace_solver_wrapper.h"
 
 #include "application/water_multiple/projection/data_sparse_matrix.h"
 #include "application/water_multiple/projection/data_raw_array_m2c.h"
 #include "application/water_multiple/projection/data_raw_grid_array.h"
 #include "application/water_multiple/projection/data_raw_vector_nd.h"
+#include "application/water_multiple/projection/projection_helper.h"
+
+#include "application/water_multiple/projection/laplace_solver_wrapper.h"
 
 namespace PhysBAM {
+
+void LaplaceSolverWrapper::BindLaplaceAndInitialize(
+    LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input) {
+  laplace = laplace_input;
+  const int number_of_regions = 1;
+  matrix_index_to_cell_index_array.Resize(number_of_regions);
+  cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
+  A_array.Resize(number_of_regions);
+  b_array.Resize(number_of_regions);
+}
 
 void LaplaceSolverWrapper::PrepareProjectionInput() {
   const int number_of_regions = laplace->number_of_regions;
@@ -73,11 +85,15 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   // laplace_mpi->Find_Matrix_Indices(filled_region_cell_count,
   //                                  cell_index_to_matrix_index,
   //                                  matrix_index_to_cell_index_array);
-  laplace->Compute_Matrix_Indices(
-      laplace->grid.Domain_Indices(1),
-      filled_region_cell_count,
-      matrix_index_to_cell_index_array,
-      cell_index_to_matrix_index);
+
+  FindMatrixIndices(
+      laplace->grid,
+      laplace->filled_region_colors,
+      &filled_region_cell_count,
+      &cell_index_to_matrix_index,
+      &matrix_index_to_cell_index_array(1),
+      &local_n,
+      &interior_n);
 
   RANGE<TV_INT> domain = laplace->grid.Domain_Indices(1);
   // Construct both A and b.
@@ -89,65 +105,12 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
      !laplace->filled_region_touches_dirichlet(color) &&
      laplace->enforce_compatibility);
 
-  ARRAY<TV_INT>& matrix_index_to_cell_index =
-      matrix_index_to_cell_index_array(color);
   SPARSE_MATRIX_FLAT_NXN<T>& A = A_array(color);
   VECTOR_ND<T>& b = b_array(color);
-
-
-  int number_of_unknowns = matrix_index_to_cell_index.m;
   A.Negate();
   b *= (T) -1;
-  x.Resize(number_of_unknowns);
-  VECTOR_ND<T> x(number_of_unknowns);
-  for (int i = 1; i <= number_of_unknowns; i++) {
-    x(i) = laplace->u(matrix_index_to_cell_index(i));
-  }
 
   laplace->Find_Tolerance(b);
-
-  /*
-  application::DataSparseMatrix test("matrix");
-  test.SaveToNimbus(A);
-  test.LoadFromNimbus(&A);
-  test.SaveToNimbus(A);
-  test.LoadFromNimbus(&A);
-  application::DataRawArrayM2C test_array("map");
-  test_array.SaveToNimbus(matrix_index_to_cell_index);
-  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
-  test_array.SaveToNimbus(matrix_index_to_cell_index);
-  test_array.LoadFromNimbus(&matrix_index_to_cell_index);
-  application::DataRawVectorNd test_vector("vect");
-  test_vector.SaveToNimbus(b);
-  test_vector.LoadFromNimbus(&b);
-  test_vector.SaveToNimbus(x);
-  test_vector.LoadFromNimbus(&x);
-  application::DataRawGridArray test_c2m("vect");
-  test_c2m.SaveToNimbus(cell_index_to_matrix_index);
-  test_c2m.LoadFromNimbus(&cell_index_to_matrix_index);
-  */
-}
-
-void LaplaceSolverWrapper::TransformResult() {
-  // Assume only one color.
-  const int color = 1;
-  ARRAY<TV_INT>& matrix_index_to_cell_index =
-      matrix_index_to_cell_index_array(color);
-  int number_of_unknowns = matrix_index_to_cell_index.m;
-  for (int i = 1; i <= number_of_unknowns; i++) {
-    TV_INT cell_index = matrix_index_to_cell_index(i);
-    laplace->u(cell_index) = x(i);
-  }
-  // Set some velocity to zero.
-  // for (typename T_GRID::CELL_ITERATOR iterator(laplace->grid, 1);
-  //     iterator.Valid();
-  //     iterator.Next()) {
-  //  int filled_region_color =
-  //      laplace->filled_region_colors(iterator.Cell_Index());
-  //  if (filled_region_color > 0 &&
-  //      !laplace->filled_region_touches_dirichlet(filled_region_color))
-  //    laplace->u(iterator.Cell_Index()) = 0;
-  // }
 }
 
 }  // namespace PhysBAM

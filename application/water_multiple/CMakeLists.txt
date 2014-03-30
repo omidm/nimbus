@@ -30,6 +30,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
+    ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.cc
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.cc
     ${PROJECT_SOURCE_DIR}/job_delete_particles.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
@@ -56,13 +57,23 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.cc
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_main.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_one.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_two.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.cc
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_core.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.cc
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_local_initialize.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_global_initialize.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_two.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_three.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_alpha.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_four.cc
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
@@ -78,6 +89,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_loop_frame.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.h
+    ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.h
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.h
     ${PROJECT_SOURCE_DIR}/job_delete_particles.h
     ${PROJECT_SOURCE_DIR}/job_main.h
@@ -106,14 +118,24 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_main.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_one.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_two.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.h
-    ${PROJECT_SOURCE_DIR}/projection/job_projection_core.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.h
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.h
     ${PROJECT_SOURCE_DIR}/projection/translator_util.h
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.h
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_local_initialize.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_global_initialize.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_loop_iteration.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_one.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_rho.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_two.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_three.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_reduce_alpha.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_step_four.h
     )
 
 #List the libraries you want to link against - including a higher-level

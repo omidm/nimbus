@@ -36,21 +36,19 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <limits>
 #include <set>
 #include <string>
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_names.h"
 #include "application/water_multiple/reg_def.h"
 #include "data/physbam/physbam_data.h"
+#include "data/physbam/protobuf_compiled/water_parameter.pb.h"
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
 
 namespace application {
-
-    typedef nimbus::Job Job;
-    typedef nimbus::Data Data;
-    typedef nimbus::DataArray DataArray;
 
     bool GetTranslatorData(const nimbus::Job *job,
                            const std::string &name,
@@ -63,9 +61,9 @@ namespace application {
         }
         IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
         IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
-        std::set<Data *> ds;
+        std::set<nimbus::Data *> ds;
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
-            Data *d = *it;
+            nimbus::Data *d = *it;
             bool allowed = false;
             if ((access_type == READ_ACCESS) &&
                 read_set.contains(d->physical_id())) {
@@ -82,8 +80,8 @@ namespace application {
         if (ds.empty()) {
             return success;
         }
-        for (std::set<Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
-            Data *d = *it;
+        for (std::set<nimbus::Data *>::const_iterator it = ds.begin(); it != ds.end(); ++it) {
+            nimbus::Data *d = *it;
             std::string name_str = d->name();
             const nimbus::LogicalDataObject *ldo = job->GetLogicalObject(d->logical_id());
             nimbus::PhysicalDataInstance *pdi = new
@@ -96,15 +94,43 @@ namespace application {
         return success;
     }
 
+    bool GroupSyncData(const nimbus::Job *job,
+                       const nimbus::DataArray &da,
+                       DataVec *main_copy,
+                       DataSetVec *scratch_copies) {
+        if (da.size() < 2)
+            return false;
+        IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
+        IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
+        for (nimbus::DataArray::const_iterator it = da.begin();
+                it != da.end(); it++) {
+            nimbus::Data *d = *it;
+            if (write_set.contains(d->physical_id()))
+                main_copy->push_back(d);
+        }
+        for (size_t i = 0; i < main_copy->size(); i++) {
+            nimbus::GeometricRegion region = main_copy->at(i)->region();
+            DataVec *scratch = new DataVec();
+            for (nimbus::DataArray::const_iterator it = da.begin();
+                    it != da.end(); it++) {
+                nimbus::Data *d = *it;
+                if (region == d->region() && read_set.contains(d->physical_id()))
+                    scratch->push_back(d);
+            }
+            scratch_copies->push_back(scratch);
+        }
+        return true;
+    }
+
     bool GetDataSet(const std::string &name,
                     const nimbus::DataArray &da,
-                    std::set<Data * > *ds) {
+                    std::set<nimbus::Data * > *ds) {
         bool success = false;
         if (da.empty()) {
             return success;
         }
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
-            Data *d = *it;
+            nimbus::Data *d = *it;
             if (d->name() == name) {
                 ds->insert(*it);
                 success = true;
@@ -119,7 +145,7 @@ namespace application {
             return NULL;
         }
         for (nimbus::DataArray::const_iterator it = da.begin(); it != da.end(); ++it) {
-            Data *d = *it;
+            nimbus::Data *d = *it;
             if (d->name() == name) {
                 return d;
             }
@@ -127,20 +153,20 @@ namespace application {
         return NULL;
     }
 
-    Data* GetTheOnlyData(const nimbus::Job *job,
-                         const std::string &name,
-                         const nimbus::DataArray& da,
-                         AccessType access_type) {
+    nimbus::Data* GetTheOnlyData(const nimbus::Job *job,
+                                 const std::string &name,
+                                 const nimbus::DataArray& da,
+                                 AccessType access_type) {
       if (da.empty()) {
         return NULL;
       }
       IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
       IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
-      Data* result = NULL;
+      nimbus::Data* result = NULL;
       for (nimbus::DataArray::const_iterator it = da.begin();
            it != da.end();
            ++it) {
-        Data *d = *it;
+          nimbus::Data *d = *it;
         bool allowed = false;
         if ((access_type == READ_ACCESS) &&
             read_set.contains(d->physical_id())) {
@@ -153,7 +179,7 @@ namespace application {
         if (d->name() == name && allowed) {
           if (result == NULL) {
             result = d;
-          } else {
+          } else if (result != d) {
             dbg(DBG_ERROR, "More than one physical data instances matches, "
                 "but only one is expected.\n");
             // return NULL;
@@ -197,66 +223,10 @@ namespace application {
         job->GetIntersectingLogicalObjects(&result, arg, &region);
         for (size_t i = 0; i < result.size(); ++i) {
           set->insert(result[i]->id());
-          dbg(APP_LOG, "Loaded logical id %d of variable %s to the set.\n", result[i]->id(), arg);
         }
         arg = va_arg(vl, char*);
       }
       va_end(vl);
-    }
-
-    // TODO: Get rid of these calls
-    void LoadReadWriteSets(nimbus::Job* job,
-        nimbus::IDSet<nimbus::logical_data_id_t>* read,
-        nimbus::IDSet<nimbus::logical_data_id_t>* write) {
-      nimbus::CLdoVector result;
-
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL, &kRegW3Central[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_FACE_VEL_GHOST, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_PHI, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_POS_PARTICLES, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_NEG_PARTICLES, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_POS_REM_PARTICLES, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_NEG_REM_PARTICLES, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
-
-      job->GetCoveredLogicalObjects(&result, APP_LAST_UNIQUE_PARTICLE_ID, &kRegW3Outer[0]);
-      for (size_t i = 0; i < result.size(); ++i) {
-        read->insert(result[i]->id());
-        write->insert(result[i]->id());
-      }
     }
 
     // TODO(quhang), this is only for temprory usage.
@@ -278,16 +248,27 @@ namespace application {
       return true;
     }
 
+    void SerializeRegionHelper(
+        const GeometricRegion& region,
+        nimbus_message::WaterParameter::GeometricRegion* output) {
+      output->set_x(region.x());
+      output->set_y(region.y());
+      output->set_z(region.z());
+      output->set_dx(region.dx());
+      output->set_dy(region.dy());
+      output->set_dz(region.dz());
+    }
+
     bool SerializeParameter(
         const int frame,
         const GeometricRegion& global_region,
         std::string* result) {
-      std::stringstream ss;
-      ss << frame;
-      ss << "\n";
-      ss << region_serial_helper(global_region);
-      ss << "\n";
-      *result = ss.str();
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.set_frame(frame);
+      SerializeRegionHelper(
+          global_region,
+          water_parameter.mutable_global_region());
+      water_parameter.SerializeToString(result);
       return true;
     }
 
@@ -296,14 +277,13 @@ namespace application {
         const T time,
         const GeometricRegion& global_region,
         std::string* result) {
-      std::stringstream ss;
-      ss << frame;
-      ss << "\n";
-      ss << time;
-      ss << "\n";
-      ss << region_serial_helper(global_region);
-      ss << "\n";
-      *result = ss.str();
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.set_frame(frame);
+      water_parameter.set_time(time);
+      SerializeRegionHelper(
+          global_region,
+          water_parameter.mutable_global_region());
+      water_parameter.SerializeToString(result);
       return true;
     }
 
@@ -314,36 +294,62 @@ namespace application {
         const GeometricRegion& global_region,
         const GeometricRegion& local_region,
         std::string *result) {
-      std::stringstream ss;
-      ss << frame;
-      ss << "\n";
-      ss << time;
-      ss << "\n";
-      ss << dt;
-      ss << "\n";
-      ss << region_serial_helper(global_region);
-      ss << "\n";
-      ss << region_serial_helper(local_region);
-      ss << "\n";
-      *result = ss.str();
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.set_frame(frame);
+      water_parameter.set_time(time);
+      water_parameter.set_dt(dt);
+      SerializeRegionHelper(
+          global_region,
+          water_parameter.mutable_global_region());
+      SerializeRegionHelper(
+          local_region,
+          water_parameter.mutable_local_region());
+      water_parameter.SerializeToString(result);
       return true;
+    }
+
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const T dt,
+        const GeometricRegion& global_region,
+        const GeometricRegion& local_region,
+        const int iteration,
+        std::string *result) {
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.set_frame(frame);
+      water_parameter.set_time(time);
+      water_parameter.set_dt(dt);
+      water_parameter.set_iteration(iteration);
+      SerializeRegionHelper(
+          global_region,
+          water_parameter.mutable_global_region());
+      SerializeRegionHelper(
+          local_region,
+          water_parameter.mutable_local_region());
+      water_parameter.SerializeToString(result);
+      return true;
+    }
+
+    void DeserializeRegionHelper(
+        const nimbus_message::WaterParameter::GeometricRegion& region,
+        GeometricRegion* output) {
+      output->Rebuild(
+          region.x(), region.y(), region.z(),
+          region.dx(), region.dy(), region.dz());
     }
 
     bool LoadParameter(
         const std::string str,
         int* frame,
         GeometricRegion* global_region) {
-      std::stringstream ss;
-      ss.str(str);
-      ss >> (*frame);
-      if (global_region == NULL) {
-        dbg(DBG_WARN, "Deserialization of job parameter might be wrong.\n");
-      } else {
-        std::string temp;
-        std::getline(ss, temp);
-        std::getline(ss, temp);
-        region_deserial_helper(temp, global_region);
-      }
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.ParseFromString(str);
+      assert(water_parameter.has_frame());
+      *frame = water_parameter.frame();
+      assert(water_parameter.has_global_region());
+      DeserializeRegionHelper(water_parameter.global_region(),
+                              global_region);
       return true;
     }
 
@@ -352,18 +358,15 @@ namespace application {
         int* frame,
         T* time,
         GeometricRegion* global_region) {
-      std::stringstream ss;
-      ss.str(str);
-      ss >> (*frame);
-      ss >> (*time);
-      if (global_region == NULL) {
-        dbg(DBG_WARN, "Deserialization of job parameter might be wrong.\n");
-      } else {
-        std::string temp;
-        std::getline(ss, temp);
-        std::getline(ss, temp);
-        region_deserial_helper(temp, global_region);
-      }
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.ParseFromString(str);
+      assert(water_parameter.has_frame());
+      *frame = water_parameter.frame();
+      assert(water_parameter.has_time());
+      *time = water_parameter.time();
+      assert(water_parameter.has_global_region());
+      DeserializeRegionHelper(water_parameter.global_region(),
+                              global_region);
       return true;
     }
 
@@ -374,26 +377,47 @@ namespace application {
         T* dt,
         GeometricRegion* global_region,
         GeometricRegion* local_region) {
-      std::stringstream ss;
-      ss.str(str);
-      ss >> (*frame);
-      ss >> (*time);
-      ss >> (*dt);
-      if (global_region == NULL) {
-        dbg(DBG_WARN, "Deserialization of job parameter might be wrong.\n");
-      } else {
-        std::string temp;
-        std::getline(ss, temp);
-        std::getline(ss, temp);
-        region_deserial_helper(temp, global_region);
-      }
-      if (local_region == NULL) {
-        dbg(DBG_WARN, "Deserialization of job parameter might be wrong.\n");
-      } else {
-        std::string temp;
-        std::getline(ss, temp);
-        region_deserial_helper(temp, local_region);
-      }
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.ParseFromString(str);
+      assert(water_parameter.has_frame());
+      *frame = water_parameter.frame();
+      assert(water_parameter.has_time());
+      *time = water_parameter.time();
+      assert(water_parameter.has_dt());
+      *dt = water_parameter.dt();
+      assert(water_parameter.has_global_region());
+      DeserializeRegionHelper(water_parameter.global_region(),
+                              global_region);
+      assert(water_parameter.has_local_region());
+      DeserializeRegionHelper(water_parameter.local_region(),
+                              local_region);
+      return true;
+    }
+
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        T* dt,
+        GeometricRegion* global_region,
+        GeometricRegion* local_region,
+        int* iteration) {
+      nimbus_message::WaterParameter water_parameter;
+      water_parameter.ParseFromString(str);
+      assert(water_parameter.has_frame());
+      *frame = water_parameter.frame();
+      assert(water_parameter.has_time());
+      *time = water_parameter.time();
+      assert(water_parameter.has_dt());
+      *dt = water_parameter.dt();
+      assert(water_parameter.has_iteration());
+      *iteration = water_parameter.iteration();
+      assert(water_parameter.has_global_region());
+      DeserializeRegionHelper(water_parameter.global_region(),
+                              global_region);
+      assert(water_parameter.has_local_region());
+      DeserializeRegionHelper(water_parameter.local_region(),
+                              local_region);
       return true;
     }
 

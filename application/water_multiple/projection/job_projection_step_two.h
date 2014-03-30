@@ -32,21 +32,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Interface for a worker-side job.
-  *
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
-#ifndef NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_INTERFACE_H_
-#define NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_INTERFACE_H_
-class JobWorkerFactory;
-class JobWorkerInterface {
- public:
-  JobWorkerInterface() {}
-  // [TODO] Add read data, write data, before set, after set, parameter blob.
+/*
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
 
-  // Run the job in the worker.
-  // [TODO] Add a callback.
-  virtual void Run() = 0;
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_STEP_TWO_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_STEP_TWO_H_
+
+#include "shared/nimbus.h"
+
+namespace application {
+
+class JobProjectionStepTwo : public nimbus::Job {
+ public:
+  explicit JobProjectionStepTwo(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
 };
-#endif  // NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_INTERFACE_H_
+
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_STEP_TWO_H_

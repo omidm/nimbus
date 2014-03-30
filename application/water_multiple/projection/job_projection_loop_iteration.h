@@ -33,37 +33,35 @@
  */
 
 /*
- * This file contains job PROJECTION_CALCULATE_BOUNDARY_CONDITION that:
- *     calculates all the boundary condition required by projection.
- * The parameters of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
- *     frame number, simulation time, dt.
- * The read set of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
- *     velocity, pressure, levelset.
- * The write set(not sure) of PROJECTION_CALCULATE_BOUNDARY_CONDITION:
- *     velocity, pressure, psi_D, psi_N, filled_region_colors, divergence.
+ * This file contains job PROJECTION_LOOP_ITERATION that:
+ *     spawns a new projection loop, or spawns the jobs after projection
+ *     iteration if it finishes.
+ * The parameters:
  *
- * This job should be broken into finer-grained jobs in the future.
- * TODO(quhang), eliminate the read set and the write set.
+ * The read set:
+ *     PROJECTION_LOCAL_RESIDUAL, PROJECTION_GLOBAL_RESIDUAL,
+ *     PROJECTION_DESIRED_ITERATION.
+ * The write set:
+ *     none.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOOP_ITERATION_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOOP_ITERATION_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobProjectionCalculateBoundaryCondition : public nimbus::Job {
+class JobProjectionLoopIteration : public nimbus::Job {
  public:
-  explicit JobProjectionCalculateBoundaryCondition(nimbus::Application *app);
-  virtual void Execute(
-      nimbus::Parameter params,
-      const nimbus::DataArray& da);
+  explicit JobProjectionLoopIteration(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
   virtual nimbus::Job* Clone();
 };
 
-} // namespace application
+}  // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_CALCULATE_BOUNDARY_CONDITION_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PROJECTION_JOB_PROJECTION_LOOP_ITERATION_H_

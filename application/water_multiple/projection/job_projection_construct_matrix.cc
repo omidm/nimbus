@@ -88,16 +88,18 @@ void JobProjectionConstructMatrix::Execute(
   data_config.SetFlag(DataConfig::DIVERGENCE);
   data_config.SetFlag(DataConfig::U_INTERFACE);
   data_config.SetFlag(DataConfig::MATRIX_A);
-  data_config.SetFlag(DataConfig::VECTOR_X);
   data_config.SetFlag(DataConfig::VECTOR_B);
-  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
   data_config.SetFlag(DataConfig::INDEX_C2M);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
   dbg(APP_LOG, "Job PROJECTION_CONSTRUCT_MATRIX starts (dt=%f).\n", dt);
 
+  // TODO(quhang), write to LOCAL_N, INTERIOR_N.
   driver->ProjectionConstructMatrixImpl(this, da, dt);
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 

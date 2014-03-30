@@ -38,73 +38,73 @@
 #include <sstream>
 #include <string>
 
+#include <PhysBAM_Tools/Krylov_Solvers/PCG_SPARSE.h>
+
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple/projection/projection_driver.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/projection/job_projection_calculate_boundary_condition.h"
+#include "data/scalar_data.h"
+#include "application/water_multiple/data_include.h"
+#include "application/water_multiple/projection/job_projection_reduce_rho.h"
 
 namespace application {
 
-JobProjectionCalculateBoundaryCondition::
-    JobProjectionCalculateBoundaryCondition(nimbus::Application *app) {
+JobProjectionReduceRho::JobProjectionReduceRho(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobProjectionCalculateBoundaryCondition::Clone() {
-  return new JobProjectionCalculateBoundaryCondition(application());
+nimbus::Job* JobProjectionReduceRho::Clone() {
+  return new JobProjectionReduceRho(application());
 }
 
-void JobProjectionCalculateBoundaryCondition::Execute(
+void JobProjectionReduceRho::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing PROJECTION_CALCULATE_BOUNDARY_CONDITION job.\n");
+  dbg(APP_LOG, "Executing PROJECTION_REDUCE_RHO job.\n");
 
   InitConfig init_config;
-  init_config.set_boundary_condition = false;
-
   T dt;
+  int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
-
-  // Assume time, dt, frame is ready from here.
-  dbg(APP_LOG,
-      "In PROJECTION_CALCULATE_BOUNDARY_CONDITION: "
-      "Initialize WATER_DRIVER/WATER_EXAMPLE"
-      "(Frame=%d, Time=%f).\n",
-      init_config.frame, init_config.time);
-
-  PhysBAM::WATER_EXAMPLE<TV> *example;
-  PhysBAM::WATER_DRIVER<TV> *driver;
+                &init_config.global_region, &init_config.local_region,
+                &iteration);
 
   DataConfig data_config;
-  data_config.SetFlag(DataConfig::VELOCITY);
-  data_config.SetFlag(DataConfig::LEVELSET);
-  data_config.SetFlag(DataConfig::DIVERGENCE);
-  data_config.SetFlag(DataConfig::PSI_N);
-  data_config.SetFlag(DataConfig::PSI_D);
-  data_config.SetFlag(DataConfig::REGION_COLORS);
-  data_config.SetFlag(DataConfig::PRESSURE);
-  data_config.SetFlag(DataConfig::U_INTERFACE);
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
+  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RHO);
+  data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_RHO);
+  data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_RHO_OLD);
+  data_config.SetFlag(DataConfig::PROJECTION_BETA);
 
-  dbg(APP_LOG,
-      "Job PROJECTION_CALCULATE_BOUNDARY_CONDITION starts (dt=%f).\n", dt);
+  PhysBAM::PCG_SPARSE<float> pcg_temp;
+  pcg_temp.Set_Maximum_Iterations(40);
+  pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
+  pcg_temp.cg_restart_iterations = 0;
+  pcg_temp.Show_Results();
 
-  driver->ProjectionCalculateBoundaryConditionImpl(this, da, dt);
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  PhysBAM::ProjectionDriver projection_driver(
+      pcg_temp, init_config, data_config);
+  projection_driver.projection_data.iteration = iteration;
+  dbg(APP_LOG, "Job PROJECTION_REDUCE_RHO starts (dt=%f).\n", dt);
 
-  // Free resources.
-  DestroyExampleAndDriver(example, driver);
+  projection_driver.LoadFromNimbus(this, da);
 
-  dbg(APP_LOG,
-      "Completed executing PROJECTION_CALCULATE_BOUNDARY_CONDITION job\n");
+  // Read PROJECTION_LOCAL_RHO, PROJECTION_GLOBAL_RHO.
+  // Write PROJECTION_GLOBAL_RHO, PROJECTION_GLOBAL_RHO_OLD, PROJECTION_BETA.
+  // TODO(quhang), seems like rho_old is not needed.
+  projection_driver.ReduceRho();
+
+  projection_driver.SaveToNimbus(this, da);
+
+  dbg(APP_LOG, "Completed executing PROJECTION_REDUCE_RHO job\n");
 }
 
 }  // namespace application

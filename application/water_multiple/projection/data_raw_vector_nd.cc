@@ -76,7 +76,7 @@ bool DataRawVectorNd::LoadFromNimbus(PhysBAM::VECTOR_ND<float>* vector) {
   pointer += sizeof(Header);
   Buffer buffer;
   buffer.pointer = reinterpret_cast<void*>(pointer);
-  buffer.size = header.n * sizeof(TV_INT);
+  buffer.size = header.n * sizeof(float);
   DeserializePhysBAMVector(buffer, vector);
   buffer.Reset();
   return true;

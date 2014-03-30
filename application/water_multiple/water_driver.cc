@@ -2,6 +2,9 @@
 // Copyright 2009, Michael Lentine.
 // This file is part of PhysBAM whose distribution is governed by the license contained in the accompanying file PHYSBAM_COPYRIGHT.txt.
 //#####################################################################
+#include "stdio.h"
+#include "string.h"
+
 #include <PhysBAM_Tools/Grids_Uniform/UNIFORM_GRID_ITERATOR_FACE.h>
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
@@ -23,8 +26,6 @@
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
-#include "stdio.h"
-#include "string.h"
 
 using namespace PhysBAM;
 namespace{
@@ -171,6 +172,7 @@ Initialize(const nimbus::Job *job,
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
     example.particle_levelset_evolution.Make_Signed_Distance();
+    example.projection.p.Fill(0);
     example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
   }
   else {
@@ -544,15 +546,11 @@ WriteFrameImpl(const nimbus::Job *job,
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
-ProjectionCalculateBoundaryConditionImpl (
+ProjectionCalculateBoundaryConditionPartOneImpl (
     const nimbus::Job *job,
     const nimbus::DataArray &da,
     T dt) {
   INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
-  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
-  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
-      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
-          projection.elliptic_solver);
 
   // Sets boundary conditions.
   // Local.
@@ -564,7 +562,29 @@ ProjectionCalculateBoundaryConditionImpl (
   // Read levelset. Write psi_D and pressure.
   incompressible.Set_Dirichlet_Boundary_Conditions(
       &example.particle_levelset_evolution.phi, 0);
+  /*
+     // No filling function calls. Good!
+  T_ARRAYS_BOOL& psi_D=projection.elliptic_solver->psi_D;
+  for (CELL_ITERATOR iterator(projection.p_grid);
+       iterator.Valid();
+       iterator.Next())
+    if ((*phi)(iterator.Cell_Index())>0) {
+      psi_D(iterator.Cell_Index())=true;
+      projection.p(iterator.Cell_Index())=pressure;
+    }
+    */
+  return true;
+}
 
+template<class TV> bool WATER_DRIVER<TV>::
+ProjectionCalculateBoundaryConditionPartTwoImpl (
+    const nimbus::Job *job,
+    const nimbus::DataArray &da,
+    T dt) {
+  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
+  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
+      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+          projection.elliptic_solver);
   // Scales pressure.
   // Read/Write pressure.
   projection.p *= dt;
@@ -641,9 +661,6 @@ ProjectionWrapupImpl(
     const nimbus::Job *job,
     const nimbus::DataArray &da,
     T dt) {
-  // Read matrix_index_to_cell_index and x. Write u.
-  example.laplace_solver_wrapper.TransformResult();
-
   // Applies pressure.
   // Local.
   // Read pressure(u/p), levelset, psi_D, psi_N, u_interface, velocity.
@@ -965,47 +982,6 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles_Nimbus_One(&example.
                                                  face_velocities_ghost);
-    const int ghost_cells = 7;
-    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
-    example.particle_levelset_evolution.particle_levelset.
-        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
-                                            example.particle_levelset_evolution.phi,
-                                            phi_ghost,
-                                            0,
-                                            time,
-                                            ghost_cells);
-    
-    // TODO: this involves redundant copy operations. make this better.
-    // save phi ghost correctly
-//    {
-//        nimbus::int_dimension_t shift[3] = {
-//            local_region.x() - 1,
-//            local_region.y() - 1,
-//            local_region.z() - 1
-//        };
-//        nimbus::GeometricRegion outer_region(local_region.x()-ghost_cells,
-//                                             local_region.y()-ghost_cells,
-//                                             local_region.z()-ghost_cells,
-//                                             local_region.dx()+2*ghost_cells,
-//                                             local_region.dy()+2*ghost_cells,
-//                                             local_region.dz()+2*ghost_cells);
-//        const std::string lsstring = std::string(APP_PHI);
-//        nimbus::PdiVector pdv;
-//        if (application::GetTranslatorData(job, lsstring, da, &pdv,
-//                                           application::WRITE_ACCESS))
-//            example.translator.WriteScalarArrayFloat(&outer_region,
-//                                                     shift,
-//                                                     &pdv,
-//                                                     &phi_ghost);
-//        application::DestroyTranslatorObjects(&pdv);
-//    }
-
-    example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_Two(&example.
-                                                 face_velocities_ghost,
-                                                 &phi_ghost,
-                                                 ghost_cells);
-
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
@@ -1022,26 +998,32 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
 
     const int ghost_cells = 7;
     T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
+    example.particle_levelset_evolution.particle_levelset.
+        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
+                                            example.particle_levelset_evolution.phi,
+                                            phi_ghost,
+                                            0,
+                                            time,
+                                            ghost_cells);
 
-    // TODO: this involves redundant copy operations. make this better.
-    // save phi ghost correctly
+    // TODO: this involves redundant copy operation. can get rid of some/ all
+    // of this after merging with Hang's updates.
     {
         nimbus::int_dimension_t shift[3] = {
             local_region.x() - 1,
             local_region.y() - 1,
             local_region.z() - 1
         };
-        nimbus::GeometricRegion outer_region(local_region.x()-ghost_cells,
-                                             local_region.y()-ghost_cells,
-                                             local_region.z()-ghost_cells,
-                                             local_region.dx()+2*ghost_cells,
-                                             local_region.dy()+2*ghost_cells,
-                                             local_region.dz()+2*ghost_cells);
+        GeometricRegion outer_reg = local_region;
+        outer_reg.Enlarge(7);
+        nimbus::GeometricRegion copy_reg =
+          GeometricRegion::GetIntersection(outer_reg,
+                                           application::kDefaultRegion);
         const std::string lsstring = std::string(APP_PHI);
         nimbus::PdiVector pdv;
         if (application::GetTranslatorData(job, lsstring, da, &pdv,
                                            application::READ_ACCESS))
-            example.translator.ReadScalarArrayFloat(&outer_region,
+            example.translator.ReadScalarArrayFloat(&copy_reg,
                                                     shift,
                                                     &pdv,
                                                     &phi_ghost);

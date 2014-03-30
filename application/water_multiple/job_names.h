@@ -47,6 +47,7 @@
 #define INITIALIZE "initialize"
 #define LOOP_FRAME "loop_frame"
 #define LOOP_ITERATION "loop_iteration"
+#define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
 #define CALCULATE_FRAME "calculate_frame"
 #define WRITE_FRAME "write_frame"
 
@@ -62,12 +63,22 @@
 #define ADJUST_PHI "adjust_phi"
 #define DELETE_PARTICLES "delete_particles"
 #define REINCORPORATE_PARTICLES "reincorporate_particles"
-#define PROJECTION_CALCULATE_BOUNDARY_CONDITION "projection_calculate_boundary_condition"
+#define PROJECTION_MAIN "projection_main"
+#define PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE "projection_calculate_boundary_condition_part_one"
+#define PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO "projection_calculate_boundary_condition_part_two"
 #define PROJECTION_CONSTRUCT_MATRIX "projection_construct_matrix"
-#define PROJECTION_CORE "projection_core"
 #define PROJECTION_WRAPUP "projection_wrapup"
 #define EXTRAPOLATION "extrapolation"
 #define SYNCHRONIZE_PARTICLES "synchronize_particles"
 
+#define PROJECTION_GLOBAL_INITIALIZE "projection_global_initialize"
+#define PROJECTION_LOCAL_INITIALIZE "projection_local_initialize"
+#define PROJECTION_LOOP_ITERATION "projection_loop_iteration"
+#define PROJECTION_STEP_ONE "projection_step_one"
+#define PROJECTION_REDUCE_RHO "projection_reduce_rho"
+#define PROJECTION_STEP_TWO "projection_step_two"
+#define PROJECTION_STEP_THREE "projection_step_three"
+#define PROJECTION_REDUCE_ALPHA "projection_reduce_alpha"
+#define PROJECTION_STEP_FOUR "projection_step_four"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_NAMES_H_

@@ -32,30 +32,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Worker-side job factory maintains a list of all the worker-side jobs.
-  * Worker-side job means a job in the view of the worker.
-  * Application registers their job in the factory.
-  * Scheduler constructs job through the factory.
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
+/*
+ * Application field contains a pointer to the field in the cached object, and
+ * a list of field partitions corresponding to logical data partitions for the
+ * field.
+ *
+ * Author: Chinmayee Shah <chshah@stanford.edu>
+ */
 
-#ifndef NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_FACTORY_H_
-#define NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_FACTORY_H_
-class JobWorkerInterface;
-class JobWorkerFactory {
- public:
-  JobWorkerFactory() : list_length(0) {}
-  // Constuct a job given the type of the job, used by scheduler.
-  // [TODO:omid] Does the job id has hierachy?
-  JobWorkerInterface *New(const int job_catogory_id);
-  // Register a job in the factory, used by application.
-  // [TODO] Pointer type parameter seems not perfect.
-  // The interface here should act as if it is a prototype class. Fix later.
-  bool RegisterJob(JobWorkerInterface *job_worker, const int job_catogory_id);
- private:
-  // [TODO] Use high-level data structure later.
-  int list_length;
-  JobWorkerInterface* job_list[10];
-};
-#endif  // NIMBUS_WORKER_EXPERIMENTAL_JOB_WORKER_FACTORY_H_
+#ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
+#define NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
+
+#include <map>
+#include <string>
+
+#include "data/cache/application_field_partition.h"
+
+namespace nimbus {
+
+class ApplicationField {
+    public:
+        ApplicationField();
+
+        /* prevent simultaneous read-writes in cached field partitions. */
+        void LockRead(const GeometricRegion &region);
+        void LockWrite(const GeometricRegion &region);
+
+    private:
+        void *field_object_;
+        AppFieldPartnMap *field_partitions_;
+};  // class ApplicationField
+
+typedef std::map<std::string, ApplicationField> CacheObjectFieldMap;
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_

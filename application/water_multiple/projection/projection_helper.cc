@@ -77,4 +77,106 @@ bool All_Cell_Faces_Neumann(
   return true;
 }
 
+void Find_Matrix_Indices_In_Region(
+    const T_GRID& local_grid,
+    const int region_index,
+    const RANGE<TV_INT>& region,
+    const ARRAY<int, TV_INT>& filled_region_colors,
+    ARRAY<int, VECTOR<int,1> >* filled_region_cell_count,
+    ARRAY<int, TV_INT>* cell_index_to_matrix_index,
+    ARRAY<TV_INT>* matrix_index_to_cell_index,
+    int* local_n = NULL,
+    int* interior_n = NULL) {
+  typedef UNIFORM_GRID_ITERATOR_CELL<TV> CELL_ITERATOR;
+  for (CELL_ITERATOR iterator(local_grid, region);
+       iterator.Valid();
+       iterator.Next()) {
+    TV_INT c = iterator.Cell_Index();
+    int color = filled_region_colors(c);
+    if (color < 1) {
+      continue;
+    }
+    assert(color == 1);
+    int new_index = ++(*filled_region_cell_count)(color);
+    (*cell_index_to_matrix_index)(c) = new_index;
+    (*matrix_index_to_cell_index)(new_index) = c;
+  }
+  if (region_index == 0) {
+    assert(interior_n != NULL);
+    *interior_n = (*filled_region_cell_count)(1);
+  } else if (region_index == 6) {
+    assert(local_n != NULL);
+    *local_n = (*filled_region_cell_count)(1);
+  }
+}
+
+void FindMatrixIndices(
+    const T_GRID& local_grid,
+    const ARRAY<int, TV_INT>& filled_region_colors,
+    ARRAY<int, VECTOR<int, 1> >* filled_region_cell_count,
+    ARRAY<int, TV_INT>* cell_index_to_matrix_index,
+    ARRAY<TV_INT >* matrix_index_to_cell_index,
+    int* local_n,
+    int* interior_n) {
+  assert(local_grid.Is_MAC_Grid());
+  int m = local_grid.counts.x;
+  int n = local_grid.counts.y;
+  int mn = local_grid.counts.z;
+  dbg(APP_LOG, "Local grid in finding matrix indices: %d,%d,%d.\n",
+      m, n, mn);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      0, RANGE<VECTOR<int,3> >(1,m,1,n,1,mn),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index,
+      NULL,
+      interior_n);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      1, RANGE<VECTOR<int,3> >(0,0,1,n,1,mn),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      2, RANGE<VECTOR<int,3> >(m+1,m+1,1,n,1,mn),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      3, RANGE<VECTOR<int,3> >(1,m,0,0,1,mn),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      4, RANGE<VECTOR<int,3> >(1,m,n+1,n+1,1,mn),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      5, RANGE<VECTOR<int,3> >(1,m,1,n,0,0),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index);
+  Find_Matrix_Indices_In_Region(
+      local_grid,
+      6, RANGE<VECTOR<int,3> >(1,m,1,n,mn+1,mn+1),
+      filled_region_colors,
+      filled_region_cell_count,
+      cell_index_to_matrix_index,
+      matrix_index_to_cell_index,
+      local_n,
+      NULL);
+}
+
 }  // namespace PhysBAM
