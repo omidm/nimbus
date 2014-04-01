@@ -364,7 +364,6 @@ namespace nimbus {
                        const int_dimension_t kScale,
                        bool positive,
                        bool merge = false) {
-      assert(kScale == 40);
       if (positive) {
         dbg(DBG_TRANSLATE,
             TRANSLATE_LOG_H"Start ReadParticles for positive particles\n");
@@ -500,7 +499,6 @@ namespace nimbus {
                         ParticleContainer& particle_container,
                         const int_dimension_t kScale,
                         bool positive) {
-      assert(kScale == 40);
       if (positive) {
         dbg(DBG_TRANSLATE,
             TRANSLATE_LOG_H"Start WriteParticles for positive particles\n");
@@ -642,7 +640,6 @@ particle_buffer.id = (*id)(i);
                               const int_dimension_t kScale,
                               bool positive,
                               bool merge = false) {
-      assert(kScale == 40);
       RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
@@ -750,7 +747,6 @@ particle_buffer.id = (*id)(i);
                                const int_dimension_t kScale,
                                bool positive
                                ) {
-      assert(kScale == 40);
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
