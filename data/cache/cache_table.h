@@ -33,15 +33,37 @@
  */
 
 /*
- * A field partition contains information about cached logical data partitions
- * on a field, and the versions that are contained in the cache object. It also
- * contains information necessary to prevent simultaneous read-writes to a
- * field partition in the cache.
- *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#include "data/cache/application_field_partition.h"
+#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+
+#include <map>
+
+#include "data/cache/cache_object.h"
+#include "data/cache/utils.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
+
+class CacheTable {
+    public:
+        CacheTable();
+
+        void* GetCachedObject(const GeometricRegion &region,
+                              const Job &job,
+                              const DataArray &da);
+
+    private:
+        typedef std::map<nimbus::GeometricRegion region,
+                         CacheObjects *,
+                         GRComparisonType> Table;
+        Table table_;
+};  // class CacheTable
+
+
 }  // namespace nimbus
+
+#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_

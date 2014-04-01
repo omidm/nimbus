@@ -40,31 +40,29 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
-#define NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
+#ifndef NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
+#define NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
 
-#include <map>
 #include <string>
+#include <vector>
 
-#include "data/cache/application_field_partition.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
-class ApplicationField {
+class CacheObject {
     public:
-        ApplicationField();
+        CacheObject();
 
-        /* prevent simultaneous read-writes in cached field partitions. */
-        void LockRead(const GeometricRegion &region);
-        void LockWrite(const GeometricRegion &region);
+        distance_t GetDistance(DataSet &data_set);
+        void LockData(const Job &job, const Data &da);
 
     private:
-        void *field_object_;
-        AppFieldPartnMap *field_partitions_;
-};  // class ApplicationField
+};  // class CacheObject
 
-typedef std::map<std::string, ApplicationField> CacheObjectFieldMap;
+typedef std::vector<CacheObject *> CacheObjects;
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_H_
+#endif  // NIMBUS_DATA_CACHE_CACHE_OBJECT_H_

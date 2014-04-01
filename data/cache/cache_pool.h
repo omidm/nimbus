@@ -33,40 +33,37 @@
  */
 
 /*
- * Cache table for caching application state, to avoid reconstructing the
- * state and translating data for every job.
- *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#ifndef NIMBUS_DATA_CACHE_CACHE_POOL_H_
+#define NIMBUS_DATA_CACHE_CACHE_POOL_H_
+
+#include <map>
 #include <string>
 
-#include "data/cache/application_cache_entry.h"
-#include "data/cache/application_cache_table.h"
-#include "data/cache/utils.h"
+#include "data/cache/cache_table.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-ApplicationCacheTable::ApplicationCacheTable()
-    : table_(CacheMap(&GeometricRegionLess)) {}
+class CachePool {
+    public:
+        CachePool();
 
-/* query application object, with Read and Write accesses specified
- * through data array. */
-void* ApplicationCacheTable::GetCachedObject(const std::string type,
-                                             const GeometricRegion &region,
-                                             const Job &job,
-                                             const DataArray &da) {
-    ApplicationCacheEntries *entries = table_[region];
-    for (size_t i = 0; i < entries->size(); i++) {
-        ApplicationCacheEntry entry = entries->at(i);
-        if (entry.object_type() == type) {
-            entry.LockData(job, da);
-            return entry.object();
-        }
-    }
-    return NULL;
-}
+        void* GetCachedObject(const std::string type,
+                              const GeometricRegion &region,
+                              const Job &job,
+                              const DataArray &da);
+
+    private:
+        typedef std::map<std::string,
+                         CacheTable *> Pool;
+
+        Pool pool_;
+};  // class CachePool
 
 }  // namespace nimbus
+
+#endif  // NIMBUS_DATA_CACHE_CACHE_POOL_H_

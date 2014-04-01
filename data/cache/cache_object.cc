@@ -33,46 +33,23 @@
  */
 
 /*
- * Cache table entry containing object type, a pointer to the cached object,
- * and a list of tables for the fields that the cached object contains.
- *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
-#define NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_
-
-#include <string>
-#include <vector>
-
-#include "data/cache/application_field.h"
+#include "data/cache/cache_object.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-class ApplicationCacheEntry {
-    public:
-        ApplicationCacheEntry();
+CacheObject::CacheObject() {}
 
-        /* accessors */
-        std::string object_type();
-        void set_object_type(std::string type);
-        void* object();
-        void set_object(void *object);
+distance_t CacheObject::GetDistance(DataSet &data_set) {
+    // TODO: find distance
+    return 0;
+}
 
-        /* get read/ write locks on cache data */
-        void LockData(const Job &job,
-                      const DataArray &da);
-
-    private:
-        std::string object_type_;
-        void *object_;
-        CacheObjectFieldMap *fields_;
-};  // class ApplicationCacheEntry
-
-typedef std::vector<ApplicationCacheEntry> ApplicationCacheEntries;
+void CacheObject::LockData(const Job &job, const Data &da) {
+}
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_APPLICATION_CACHE_ENTRY_H_

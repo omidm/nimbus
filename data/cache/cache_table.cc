@@ -33,35 +33,65 @@
  */
 
 /*
- * A field partition contains information about cached logical data partitions
- * on a field, and the versions that are contained in the cache object. It also
- * contains information necessary to prevent simultaneous read-writes to a
- * field partition in the cache.
- *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
-#define NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_
+#include <set>
 
-#include <map>
-
+#include "data/cache/cache_object.h"
+#include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "shared/nimbus_types.h"
+#include "shared/dbg.h"
+#include "shared/dbg_modes.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
-class ApplicationFieldPartition {
-    private:
-        GeometricRegion region_;
-        app_data_version_t version_;
-};  // class ApplicationFieldPartition
+CacheTable::CacheTable() : table_(GeometricRegionLess) {}
 
-typedef std::map<GeometricRegion,
-                 ApplicationFieldPartition,
-                 GRComparisonType> AppFieldPartnMap;
+void* CacheTable::GetCachedObject(const GeometricRegion &region,
+                                  const Job &job,
+                                  const DataArray &da) {
+    CacheObjects *objects;
+    if (table_.find(region) == table_.end()) {
+        objects = new CacheObjects();
+        table_[region] = objects;
+    } else {
+        objects = table_[region];
+    }
+
+    int num_objects = objects->size();
+    distance_t distance_vector(num_objects);
+
+    DataSet data_set;
+    for (size_t i = 0; i < num_objects; i++) {
+        data_set.insert(i);
+    }
+
+    distance_t min_distance = 2*data_set.size();
+    size_t min_index = 0;
+    for (size_t i = 0; i < objects->size(); i++) {
+        distance_vector[i] = objects->at(i)->GetDistance(data_set);
+        if (distance_vector[i] == 0) {
+            min_distance = 0;
+            min_index = i;
+            break;
+        } else if (distance_vector[i] < min_distance) {
+            min_distance = distance_vector[i];
+            min_index = i;
+        }
+    }
+
+    if (min_distance > data_set.size()) {
+        // no cached object available for reuse
+        // TODO: create new object
+        dbg(DBG_WARNING, "Did not find an available object in cache table.\n");
+        exit(-1);
+    } else {
+        objects->at(min_index)->LockData(job, da);
+        return objects->at(min_index);
+    }
+}
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_APPLICATION_FIELD_PARTITION_H_

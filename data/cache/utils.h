@@ -45,6 +45,10 @@
 
 namespace nimbus {
 
+/* Types. */
+typedef uint64_t distance_t;
+typedef std::set<Data *> DataSet;
+
 /* A comparator for geometric region, for using in maps. */
 typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT
                                  const GeometricRegion&);
