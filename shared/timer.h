@@ -52,20 +52,29 @@ class Timer {
   // Started in constructor.
   explicit Timer(const std::string& timer_name);
   ~Timer();
-  void Resume();
-  void Pause();
-  void Stop();
- private:
-  bool on_;
-  struct timeval start_time_;
-  double total_time_;
-  std::string timer_name_;
- public:
-  // Called to initialize timing utility.
   static void Initialize();
-  static void Print();
+  static void Print(const std::string& comment);
+  static void Start(const std::string& timer_name);
+  static void Stop(const std::string& timer_name);
+  static void Reset(const std::string& timer_name);
+
  private:
-  static std::map<std::string, double>* timer_map_;
+  struct TimerState {
+    TimerState() {
+      on = false;
+      total_time = 0;
+    }
+    struct timeval start_time;
+    bool on;
+    double total_time;
+  };
+  std::string timer_name_;
+
+ public:
+  typedef std::map<std::string, TimerState> TimerMap;
+
+ private:
+  static TimerMap* timer_map_;
 };
 
 }  // namespace nimbus

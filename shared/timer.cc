@@ -42,64 +42,67 @@
 
 namespace nimbus {
 
-std::map<std::string, double>* Timer::timer_map_ = NULL;
+Timer::TimerMap* Timer::timer_map_ = NULL;
 
 void Timer::Initialize() {
-  timer_map_ = new std::map<std::string, double>;
+  if (timer_map_ == NULL) {
+    timer_map_ = new TimerMap;
+  }
 }
 
-void Timer::Print() {
+void Timer::Print(const std::string& comment) {
   assert(timer_map_ != NULL);
-  std::ofstream output("timing.out");
-  for (std::map<std::string, double>::iterator iter = timer_map_->begin();
+  std::ofstream output("timing.out", std::ofstream::app);
+  output << comment << std::endl;
+  for (TimerMap::iterator iter = timer_map_->begin();
        iter != timer_map_->end();
        ++iter) {
-    output << iter->first << " : " << iter->second << std::endl;
+    Reset(iter->first);
+    output << iter->first << " : " << iter->second.total_time << std::endl;
   }
   output.close();
 }
 
 Timer::Timer(const std::string& timer_name) {
   assert(timer_map_ != NULL);
-  if (timer_map_->find(timer_name) == timer_map_->end()) {
-    (*timer_map_)[timer_name] = 0;
-  }
+  Start(timer_name);
   timer_name_ = timer_name;
-  on_ = true;
-  gettimeofday(&start_time_, NULL);
-  total_time_ = 0;
 }
 
 Timer::~Timer() {
-  Stop();
+  Stop(timer_name_);
 }
 
-void Timer::Resume() {
-  if (on_) {
-    return;
+void Timer::Start(const std::string& timer_name) {
+  assert(timer_map_ != NULL);
+  TimerState& state = (*timer_map_)[timer_name];
+  if (!state.on) {
+    gettimeofday(&state.start_time, NULL);
+    state.on = true;
   }
-  gettimeofday(&start_time_, NULL);
-  on_ = true;
 }
 
-void Timer::Pause() {
-  if (!on_) {
-    return;
-  }
+void Timer::Stop(const std::string& timer_name) {
+  assert(timer_map_ != NULL);
   struct timeval end_time;
   gettimeofday(&end_time, NULL);
+  TimerState& state = (*timer_map_)[timer_name];
+  assert(state.on);
   double temp =
-      (static_cast<double>(end_time.tv_sec - start_time_.tv_sec)) +
-      .000001 * (static_cast<double>(end_time.tv_usec - start_time_.tv_usec));
-  total_time_ += temp;
-  on_ = false;
+      (static_cast<double>(end_time.tv_sec - state.start_time.tv_sec)) +
+      .000001 *
+      (static_cast<double>(end_time.tv_usec - state.start_time.tv_usec));
+  state.total_time += temp;
+  state.on = false;
 }
 
-void Timer::Stop() {
-  Pause();
-  (*timer_map_)[timer_name_] += total_time_;
-  total_time_ = 0;
-  on_ = false;
+void Timer::Reset(const std::string& timer_name) {
+  assert(timer_map_ != NULL);
+  TimerState& state = (*timer_map_)[timer_name];
+  if (state.on) {
+    Stop(timer_name);
+    Start(timer_name);
+  }
 }
 
 }  // namespace nimbus
