@@ -118,11 +118,11 @@ class JobManager {
     bool ResolveJobDataVersions(JobEntry* job);
     size_t ResolveVersions();
 
-    JobEntryMap jobs_need_versioin_;
+    JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_done_;
     std::map<job_id_t, JobEntryList> pass_version_;
-    JobEntryList explore_to_assign_;
+    std::map<job_id_t, JobEntryList> explore_to_assign_;
 
     size_t ResolveDataVersions();
 
@@ -136,7 +136,7 @@ class JobManager {
     void RemoveJobAssignmentDependency(
         JobEntry *job, const JobEntryList& source_jobs);
 
-    bool JobIsReadyToAssign();
+    bool JobIsReadyToAssign(JobEntry *job);
 };
 
 }  // namespace nimbus

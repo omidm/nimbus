@@ -96,7 +96,7 @@ bool JobManager::AddJobEntry(const JobType& job_type,
       job->set_params(params);
       job->set_sterile(sterile);
       job->set_future(false);
-      dbg(DBG_SCHED, "Filled the information for used to be future job (id: %lu).\n", job_id);
+      dbg(DBG_SCHED, "Filled the information for future job (id: %lu).\n", job_id);
     } else {
       dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
       exit(-1);
@@ -104,21 +104,40 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     }
   }
 
-  bool completed_before_set_edges = true;
+  Edge<JobEntry, job_id_t> *edge;
+  JobEntry *j;
 
+  if (job_graph_.AddEdge(parent_job_id, job_id, &edge)) {
+    j = edge->start_vertex()->entry();
+    if (j->versioned()) {
+      pass_version_[job_id].push_back(j);
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
+        parent_job_id, job_id);
+    exit(-1);
+  }
+
+
+  bool complete_before_set_edges = true;
   IDSet<job_id_t>::ConstIter it;
   for (it = before_set.begin(); it != before_set.end(); ++it) {
-    if (!job_graph_.AddEdge(*it, job_id)) {
+    if (job_graph_.AddEdge(*it, job_id, &edge)) {
+      j = edge->start_vertex()->entry();
+      if (j->versioned()) {
+        pass_version_[job_id].push_back(j);
+      }
+    } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
       AddFutureJobEntry(*it);
       if (!job_graph_.AddEdge(*it, job_id)) {
-        completed_before_set_edges = false;
+        complete_before_set_edges = false;
         break;
       }
     }
   }
 
-  if (!completed_before_set_edges) {
+  if (!complete_before_set_edges) {
     job_graph_.RemoveVertex(job_id);
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
@@ -145,6 +164,23 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     exit(-1);
     return false;
   }
+
+  if (!versioned) {
+    Edge<JobEntry, job_id_t> *edge;
+    JobEntry *j;
+
+    if (job_graph_.AddEdge(parent_job_id, job_id, &edge)) {
+      j = edge->start_vertex()->entry();
+      if (j->versioned()) {
+        pass_version_[job_id].push_back(j);
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
+          parent_job_id, job_id);
+      exit(-1);
+    }
+  }
+
   return true;
 }
 
@@ -591,7 +627,7 @@ size_t JobManager::ResolveDataVersions() {
     job_id_t job_id = iter->first;
     if (GetJobEntry(job_id, job)) {
       PassDataVersionToJob(job, iter->second);
-      jobs_need_versioin_[job_id] = job;
+      jobs_need_version_[job_id] = job;
       if (JobVersionIsComplete(job)) {
         job->set_versioned(true);
         Vertex<JobEntry, job_id_t>* vertex;
@@ -609,6 +645,7 @@ size_t JobManager::ResolveDataVersions() {
     }
   }
 
+  pass_version_.clear();
   pass_version_ = new_pass_version;
   return num;
 }
@@ -652,7 +689,7 @@ void JobManager::RemoveJobAssignmentDependency(
   // TODO(omidm): Implement!
 }
 
-bool JobManager::JobIsReadyToAssign() {
+bool JobManager::JobIsReadyToAssign(JobEntry *job) {
   // TODO(omidm): Implement!
   return false;
 }
