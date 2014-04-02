@@ -75,7 +75,6 @@ bool InitializeExampleAndDriver(
   example->local_region = init_config.local_region;
     // TODO(quhang), this cannot work for no-square global region.
   example->kScale = init_config.global_region.dx();
-  assert(example->kScale == 40);
   example->relative_region.Rebuild(1, 1, 1,
                                    init_config.local_region.dx(),
                                    init_config.local_region.dy(),
