@@ -582,4 +582,40 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 }
 
 
+size_t JobManager::ResolveDataVersions() {
+  // TODO(omidm): Implement!
+  return 0;
+}
+
+void JobManager::PassDataVersionToJob(
+    JobEntry *job, const JobEntryList& from_jobs) {
+  // TODO(omidm): Implement!
+}
+
+bool JobManager::JobVersionIsComplete(JobEntry *job) {
+  // TODO(omidm): Implement!
+  return false;
+}
+
+size_t JobManager::ExploreToAssignJobs() {
+  // TODO(omidm): Implement!
+  return 0;
+}
+
+void JobManager::RemoveJobAssignmentDependency(
+    JobEntry *job, const JobEntryList& from_jobs) {
+  // TODO(omidm): Implement!
+}
+
+bool JobManager::JobIsReadyToAssign() {
+  // TODO(omidm): Implement!
+  return false;
+}
+
+
+
+
+
+
+
 

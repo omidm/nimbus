@@ -48,6 +48,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <list>
 #include <algorithm>
 #include <map>
 #include <set>
@@ -116,6 +117,26 @@ class JobManager {
 
     bool ResolveJobDataVersions(JobEntry* job);
     size_t ResolveVersions();
+
+    JobEntryMap jobs_need_versioin_;
+    JobEntryMap jobs_ready_to_assign_;
+    JobEntryMap jobs_done_;
+    std::map<job_id_t, JobEntryList> pass_version_;
+    JobEntryList explore_to_assign_;
+
+    size_t ResolveDataVersions();
+
+    void PassDataVersionToJob(
+        JobEntry *job, const JobEntryList& from_jobs);
+
+    bool JobVersionIsComplete(JobEntry *job);
+
+    size_t ExploreToAssignJobs();
+
+    void RemoveJobAssignmentDependency(
+        JobEntry *job, const JobEntryList& from_jobs);
+
+    bool JobIsReadyToAssign();
 };
 
 }  // namespace nimbus
