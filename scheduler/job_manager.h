@@ -134,7 +134,7 @@ class JobManager {
     size_t ExploreToAssignJobs();
 
     void RemoveJobAssignmentDependency(
-        JobEntry *job, const JobEntryList& from_jobs);
+        JobEntry *job, const JobEntryList& source_jobs);
 
     bool JobIsReadyToAssign();
 };

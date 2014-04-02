@@ -583,18 +583,63 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 
 
 size_t JobManager::ResolveDataVersions() {
-  // TODO(omidm): Implement!
-  return 0;
+  size_t num = 0;
+  std::map<job_id_t, JobEntryList> new_pass_version;
+  std::map<job_id_t, JobEntryList>::iterator iter;
+  for (iter = pass_version_.begin(); iter != pass_version_.end(); ++iter) {
+    JobEntry *job;
+    job_id_t job_id = iter->first;
+    if (GetJobEntry(job_id, job)) {
+      PassDataVersionToJob(job, iter->second);
+      jobs_need_versioin_[job_id] = job;
+      if (JobVersionIsComplete(job)) {
+        job->set_versioned(true);
+        Vertex<JobEntry, job_id_t>* vertex;
+        job_graph_.GetVertex(job_id, &vertex);
+        typename Edge<JobEntry, job_id_t>::Iter it;
+        for (it = vertex->outgoing_edges()->begin();
+            it != vertex->outgoing_edges()->end(); ++it) {
+          new_pass_version[it->second->end_vertex()->entry()->job_id()].push_back(job);
+        }
+        ++num;
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: Job (id: %lu) is not in the graph to receive the versions.\n", iter->first); // NOLINT
+      exit(-1);
+    }
+  }
+
+  pass_version_ = new_pass_version;
+  return num;
 }
 
 void JobManager::PassDataVersionToJob(
-    JobEntry *job, const JobEntryList& from_jobs) {
-  // TODO(omidm): Implement!
+    JobEntry *job, const JobEntryList& source_jobs) {
+  assert(!job->future() && !job->versioned());
+  assert(source_jobs.size() > 0);
+
+  std::vector<boost::shared_ptr<const VersionTable> > tables;
+  if (job->partial_versioned()) {
+    tables.push_back(job->vtable_in());
+  }
+
+  JobEntryList::const_iterator iter;
+  for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
+    JobEntry* j = (*iter);
+    assert(j->versioned());
+    tables.push_back(j->vtable_out());
+    job->add_job_passed_versions(j->job_id());
+  }
+
+  boost::shared_ptr<VersionTable> merged;
+  version_operator_.MergeVersionTables(tables, &merged);
+  job->set_vtable_in(merged);
+  job->set_partial_versioned(true);
 }
 
 bool JobManager::JobVersionIsComplete(JobEntry *job) {
-  // TODO(omidm): Implement!
-  return false;
+  IDSet<job_id_t> need = job->need_set();
+  return (need.size() == 0);
 }
 
 size_t JobManager::ExploreToAssignJobs() {
