@@ -41,13 +41,26 @@
 #ifndef NIMBUS_DATA_CACHE_UTILS_H_
 #define NIMBUS_DATA_CACHE_UTILS_H_
 
+#include <set>
+#include <string>
+
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
+#include "worker/data.h"
+#include "worker/job.h"
 
 namespace nimbus {
 
 /* Types. */
 typedef uint64_t distance_t;
+typedef std::set<std::string> StringSet;
 typedef std::set<Data *> DataSet;
+typedef IDSet<physical_data_id_t> PIDSet;
+
+struct CacheInstance {
+    physical_data_id_t pid;
+    data_version_t version;
+};
 
 /* A comparator for geometric region, for using in maps. */
 typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT

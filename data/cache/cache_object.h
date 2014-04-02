@@ -43,9 +43,12 @@
 #ifndef NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
 #define NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
 
+#include <map>
 #include <string>
 #include <vector>
 
+#include "data/cache/utils.h"
+#include "shared/nimbus_types.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -55,10 +58,24 @@ class CacheObject {
     public:
         CacheObject();
 
-        distance_t GetDistance(DataSet &data_set);
-        void LockData(const Job &job, const Data &da);
+        bool IsAvailable();
+        distance_t GetDistance(const DataSet &read,
+                               const DataSet &write,
+                               const StringSet &read_var,
+                               const StringSet &write_var);
+        void LockData(const DataSet &read,
+                      const DataSet &write,
+                      const StringSet &read_var,
+                      const StringSet &write_var);
 
     private:
+        int users_;
+        typedef std::map<logical_data_id_t, CacheInstance> CacheInstances;
+        CacheInstances instances_;
+        // TODO(chinmayee): need variable name in data, using application variable names
+        // now
+        std::map<std::string, size_t> locked_read_;
+        std::map<std::string, bool> locked_write_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

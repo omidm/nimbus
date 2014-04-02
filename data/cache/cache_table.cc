@@ -36,19 +36,17 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#include <set>
+#include <vector>
 
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
-#include "shared/dbg.h"
-#include "shared/dbg_modes.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-CacheTable::CacheTable() : table_(GeometricRegionLess) {}
+CacheTable::CacheTable() : table_(Table(GeometricRegionLess)) {}
 
 void* CacheTable::GetCachedObject(const GeometricRegion &region,
                                   const Job &job,
@@ -62,17 +60,68 @@ void* CacheTable::GetCachedObject(const GeometricRegion &region,
     }
 
     int num_objects = objects->size();
-    distance_t distance_vector(num_objects);
+    DataSet read, write;
+    StringSet read_var, write_var;
+    GetReadWrite(job, da, &read, &write, &read_var, &write_var);
 
-    DataSet data_set;
-    for (size_t i = 0; i < num_objects; i++) {
-        data_set.insert(i);
+    if (num_objects == 0) {
+        // faster cache object allocation for common cases
+        // TODO(chinmayee): create new object
+        return NULL;
+    } else if (num_objects == 1 && objects->at(0)->IsAvailable()) {
+        // faster cache object allocation for common cases
+        objects->at(0)->LockData(read, write, read_var, write_var);
+        return objects->at(0);
+    } else {
+        // case with multiple objects in cache
+        int min_index =
+            GetMinDistanceIndex(objects, read, write, read_var, write_var);
+        if (min_index < 0) {
+            // no cached object available for reuse
+            // TODO(chinmayee): create new object
+            return NULL;
+        } else {
+            objects->at(min_index)->
+                LockData(read, write, read_var, write_var);
+            return objects->at(min_index);
+        }
     }
+}
 
-    distance_t min_distance = 2*data_set.size();
-    size_t min_index = 0;
+void CacheTable::GetReadWrite(const Job &job,
+                              const DataArray &da,
+                              DataSet *read,
+                              DataSet *write,
+                              StringSet *read_var,
+                              StringSet *write_var) {
+    size_t num_data = da.size();
+    PIDSet read_ids = job.read_set();
+    PIDSet write_ids = job.write_set();
+    for (size_t i = 0; i < num_data; i++) {
+        if (read_ids.contains(da[i]->physical_id())) {
+            read->insert(da[i]);
+            read_var->insert(da[i]->name());
+        }
+        if (write_ids.contains(da[i]->physical_id())) {
+            write->insert(da[i]);
+            write_var->insert(da[i]->name());
+        }
+    }
+}
+
+int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
+                                    const DataSet &read,
+                                    const DataSet &write,
+                                    const StringSet &read_var,
+                                    const StringSet &write_var) {
+    size_t num_objects = objects->size();
+    std::vector<distance_t> distance_vector(num_objects);
+    distance_t min_distance = 2*read.size();
+    int min_index = -1;
+
     for (size_t i = 0; i < objects->size(); i++) {
-        distance_vector[i] = objects->at(i)->GetDistance(data_set);
+        distance_vector[i] = objects->at(i)->
+            GetDistance(read, write, read_var, write_var);
         if (distance_vector[i] == 0) {
             min_distance = 0;
             min_index = i;
@@ -83,15 +132,7 @@ void* CacheTable::GetCachedObject(const GeometricRegion &region,
         }
     }
 
-    if (min_distance > data_set.size()) {
-        // no cached object available for reuse
-        // TODO: create new object
-        dbg(DBG_WARNING, "Did not find an available object in cache table.\n");
-        exit(-1);
-    } else {
-        objects->at(min_index)->LockData(job, da);
-        return objects->at(min_index);
-    }
+    return min_index;
 }
 
 }  // namespace nimbus

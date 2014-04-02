@@ -36,20 +36,49 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <set>
+
 #include "data/cache/cache_object.h"
+#include "data/cache/utils.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-CacheObject::CacheObject() {}
+CacheObject::CacheObject() : users_(0) {}
 
-distance_t CacheObject::GetDistance(DataSet &data_set) {
-    // TODO: find distance
-    return 0;
+bool CacheObject::IsAvailable() {
+    return (users_ == 0);
 }
 
-void CacheObject::LockData(const Job &job, const Data &da) {
+distance_t CacheObject::GetDistance(const DataSet &read,
+                                    const DataSet &write,
+                                    const StringSet &read_var,
+                                    const StringSet &write_var) {
+    distance_t max_distance = 2 * read.size();
+    for (StringSet::iterator it = read_var.begin();
+            it != read_var.end(); it++) {
+        if (locked_write_.find(*it) != locked_write_.end())
+            return max_distance;
+    }
+    for (StringSet::iterator it = write_var.begin();
+            it != write_var.end(); it++) {
+        if (locked_read_.find(*it) != locked_read_.end() &&
+                locked_write_.find(*it) != locked_write_.end())
+            return max_distance;
+    }
+    distance_t distance = 0;
+    // TODO(chinmayee): implement actual min distance algorithm later
+    return distance;
+}
+
+void CacheObject::LockData(const DataSet &read,
+                           const DataSet &write,
+                           const StringSet &read_var,
+                           const StringSet &write_var) {
+    assert(users_ >= 0);
+    users_++;
+    // TODO(chinmayee): implement locking later
 }
 
 }  // namespace nimbus

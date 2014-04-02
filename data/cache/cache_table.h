@@ -43,6 +43,7 @@
 
 #include "data/cache/cache_object.h"
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -57,7 +58,18 @@ class CacheTable {
                               const DataArray &da);
 
     private:
-        typedef std::map<nimbus::GeometricRegion region,
+        void GetReadWrite(const Job &job,
+                          const DataArray &da,
+                          DataSet *read,
+                          DataSet *write,
+                          StringSet *read_var,
+                          StringSet *write_var);
+        int GetMinDistanceIndex(const CacheObjects *objects,
+                                const DataSet &read,
+                                const DataSet &write,
+                                const StringSet &read_var,
+                                const StringSet &write_var);
+        typedef std::map<nimbus::GeometricRegion,
                          CacheObjects *,
                          GRComparisonType> Table;
         Table table_;
