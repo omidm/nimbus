@@ -109,12 +109,15 @@ namespace nimbus {
 
     partition_id_t max_defined_partition();
 
+    GeometricRegion global_bounding_region();
+
   private:
     PhysicalObjectMap physical_object_map_;
     LdoIndex ldo_index_;
     std::map<logical_data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
     partition_id_t max_defined_partition_;
+    GeometricRegion global_bounding_region_;
   };
 }  // namespace nimbus
 

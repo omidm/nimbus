@@ -245,13 +245,15 @@ void JobEntry::set_job_id(job_id_t job_id) {
 }
 
 void JobEntry::set_read_set(IDSet<logical_data_id_t> read_set) {
-  read_set_ = read_set;
+  union_set_.remove(read_set_);
   union_set_.insert(read_set);
+  read_set_ = read_set;
 }
 
 void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
-  write_set_ = write_set;
+  union_set_.remove(write_set_);
   union_set_.insert(write_set);
+  write_set_ = write_set;
 }
 
 void JobEntry::set_before_set(IDSet<job_id_t> before_set) {

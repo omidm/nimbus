@@ -94,6 +94,8 @@ bool nimbus::DataManager::AddPartition(partition_id_t id,
   } else {
     partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
     max_defined_partition_ = std::max(id, max_defined_partition_);
+    global_bounding_region_ =
+      GeometricRegion::GetBoundingBox(global_bounding_region_, r);
     return true;
   }
 }
@@ -418,6 +420,10 @@ int nimbus::DataManager::InstancesByWorkerAndVersion(LogicalDataObject *object,
 
 partition_id_t DataManager::max_defined_partition() {
   return max_defined_partition_;
+}
+
+GeometricRegion DataManager::global_bounding_region() {
+  return global_bounding_region_;
 }
 
 }  // namespace nimbus
