@@ -44,7 +44,6 @@
 using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
-  processed_new_job_done_ = false;
   // Add the KERNEL job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
   IDSet<job_id_t> job_id_set;
@@ -96,7 +95,7 @@ bool JobManager::AddJobEntry(const JobType& job_type,
       job->set_params(params);
       job->set_sterile(sterile);
       job->set_future(false);
-      dbg(DBG_SCHED, "Filled the information for used to be future job (id: %lu).\n", job_id);
+      dbg(DBG_SCHED, "Filled the information for future job (id: %lu).\n", job_id);
     } else {
       dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
       exit(-1);
@@ -104,21 +103,40 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     }
   }
 
-  bool completed_before_set_edges = true;
+  Edge<JobEntry, job_id_t> *edge;
+  JobEntry *j;
 
+  if (job_graph_.AddEdge(parent_job_id, job_id, &edge)) {
+    j = edge->start_vertex()->entry();
+    if (j->versioned()) {
+      pass_version_[job_id].push_back(j);
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
+        parent_job_id, job_id);
+    exit(-1);
+  }
+
+
+  bool complete_before_set_edges = true;
   IDSet<job_id_t>::ConstIter it;
   for (it = before_set.begin(); it != before_set.end(); ++it) {
-    if (!job_graph_.AddEdge(*it, job_id)) {
+    if (job_graph_.AddEdge(*it, job_id, &edge)) {
+      j = edge->start_vertex()->entry();
+      if (j->versioned()) {
+        pass_version_[job_id].push_back(j);
+      }
+    } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
       AddFutureJobEntry(*it);
       if (!job_graph_.AddEdge(*it, job_id)) {
-        completed_before_set_edges = false;
+        complete_before_set_edges = false;
         break;
       }
     }
   }
 
-  if (!completed_before_set_edges) {
+  if (!complete_before_set_edges) {
     job_graph_.RemoveVertex(job_id);
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
@@ -145,6 +163,23 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     exit(-1);
     return false;
   }
+
+  if (!versioned) {
+    Edge<JobEntry, job_id_t> *edge;
+    JobEntry *j;
+
+    if (job_graph_.AddEdge(parent_job_id, job_id, &edge)) {
+      j = edge->start_vertex()->entry();
+      if (j->versioned()) {
+        pass_version_[job_id].push_back(j);
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
+          parent_job_id, job_id);
+      exit(-1);
+    }
+  }
+
   return true;
 }
 
@@ -196,7 +231,7 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
-  while (ResolveVersions() > 0) {
+  while (ResolveDataVersions() > 0) {
     continue;
   }
 
@@ -267,26 +302,21 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
-  if (!processed_new_job_done_) {
-    return 0;
-  }
-
-  while (ResolveVersions() > 0) {
+  while (ResolveDataVersions() > 0) {
     continue;
   }
 
   size_t num = 0;
-  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
-  for (; (iter != job_graph_.end());) {
-    JobEntry* job = iter->second->entry();
-    job_id_t job_id = job->job_id();
-    ++iter;
-    if (job->done() && (job_id != NIMBUS_KERNEL_JOB_ID)) {
-      RemoveJobEntry(job);
-      dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", job_id);
-      ++num;
-    }
+
+  JobEntryMap::iterator iter;
+  for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
+    assert(iter->second->done());
+    RemoveJobEntry(iter->second);
+    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
+    ++num;
+    jobs_done_.erase(iter++);
   }
+
   return num;
 }
 
@@ -294,7 +324,8 @@ void JobManager::JobDone(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
-    processed_new_job_done_ = true;
+    jobs_done_[job_id] = job;
+    jobs_need_version_.erase(job_id);
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
@@ -503,19 +534,23 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
    */
   size_t num = 0;
   list->clear();
-  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
-  for (; iter != job_graph_.end(); ++iter) {
-    JobEntry* job = iter->second->entry();
-    if ((job->versioned() || job->partial_versioned()) && !job->assigned()) {
-      data_version_t version;
-      if (job->vtable_in()->query_entry(vld.first, &version)) {
-        if ((version == vld.second) &&
-            ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
-          list->push_back(job);
-          ++num;
-        }
+  JobEntryMap::iterator iter = jobs_need_version_.begin();
+  for (; iter != jobs_need_version_.end();) {
+    JobEntry* job = iter->second;
+    assert(job->versioned() || job->partial_versioned());
+    if (job->assigned()) {
+      jobs_need_version_.erase(iter++);
+      continue;
+    }
+    data_version_t version;
+    if (job->vtable_in()->query_entry(vld.first, &version)) {
+      if ((version == vld.second) &&
+          ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
+        list->push_back(job);
+        ++num;
       }
     }
+    ++iter;
   }
   return num;
 
@@ -580,6 +615,96 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
     }
   }
 }
+
+
+size_t JobManager::ResolveDataVersions() {
+  size_t num = 0;
+  std::map<job_id_t, JobEntryList> new_pass_version;
+  std::map<job_id_t, JobEntryList>::iterator iter;
+  for (iter = pass_version_.begin(); iter != pass_version_.end(); ++iter) {
+    JobEntry *job;
+    job_id_t job_id = iter->first;
+    if (GetJobEntry(job_id, job)) {
+      PassDataVersionToJob(job, iter->second);
+      jobs_need_version_[job_id] = job;
+      if (JobVersionIsComplete(job)) {
+        if (!job->sterile()) {
+          boost::shared_ptr<VersionTable> merged;
+          std::vector<boost::shared_ptr<VersionTable> > table_vec;
+          table_vec.push_back(job->vtable_in());
+          version_operator_.RecomputeRootForVersionTables(table_vec);
+        }
+        boost::shared_ptr<VersionTable> table_out;
+        version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
+        job->set_vtable_out(table_out);
+        job->set_versioned(true);
+        Vertex<JobEntry, job_id_t>* vertex;
+        job_graph_.GetVertex(job_id, &vertex);
+        typename Edge<JobEntry, job_id_t>::Iter it;
+        for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+          new_pass_version[it->first].push_back(job);
+        }
+        ++num;
+      }
+    } else {
+      dbg(DBG_ERROR, "ERROR: Job (id: %lu) is not in the graph to receive the versions.\n", iter->first); // NOLINT
+      exit(-1);
+    }
+  }
+
+  pass_version_.clear();
+  pass_version_ = new_pass_version;
+  return num;
+}
+
+void JobManager::PassDataVersionToJob(
+    JobEntry *job, const JobEntryList& source_jobs) {
+  assert(!job->future() && !job->versioned());
+  assert(source_jobs.size() > 0);
+
+  std::vector<boost::shared_ptr<const VersionTable> > tables;
+  if (job->partial_versioned()) {
+    tables.push_back(job->vtable_in());
+  }
+
+  JobEntryList::const_iterator iter;
+  for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
+    JobEntry* j = (*iter);
+    assert(j->versioned());
+    tables.push_back(j->vtable_out());
+    job->add_job_passed_versions(j->job_id());
+  }
+
+  boost::shared_ptr<VersionTable> merged;
+  version_operator_.MergeVersionTables(tables, &merged);
+  job->set_vtable_in(merged);
+  job->set_partial_versioned(true);
+}
+
+bool JobManager::JobVersionIsComplete(JobEntry *job) {
+  IDSet<job_id_t> need = job->need_set();
+  return (need.size() == 0);
+}
+
+size_t JobManager::ExploreToAssignJobs() {
+  // TODO(omidm): Implement!
+  return 0;
+}
+
+void JobManager::RemoveJobAssignmentDependency(
+    JobEntry *job, const JobEntryList& from_jobs) {
+  // TODO(omidm): Implement!
+}
+
+bool JobManager::JobIsReadyToAssign(JobEntry *job) {
+  // TODO(omidm): Implement!
+  return false;
+}
+
+
+
+
+
 
 
 

@@ -82,6 +82,10 @@ class Graph {
 
     virtual bool AddEdge(key_t start_key, key_t end_key);
 
+    virtual bool AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end, Edge<T, key_t>** edge);
+
+    virtual bool AddEdge(key_t start_key, key_t end_key, Edge<T, key_t>** edge);
+
     virtual bool RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end);
 
     virtual bool RemoveEdge(key_t start_key, key_t end_key);
@@ -241,6 +245,47 @@ bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key) {
   Edge<T, key_t>* new_edge = new Edge<T, key_t>(start, end);
   start->AddOutgoingEdge(new_edge);
   end->AddIncomingEdge(new_edge);
+  return true;
+}
+
+
+template<typename T, typename key_t>
+bool Graph<T, key_t>::AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end,
+    Edge<T, key_t>** edge) {
+  if (start->HasOutgoingEdgeTo(end)) {
+    dbg(DBG_WARN, "WARNING: edge from %lu to %lu already exist.\n", start->id(), end->id());
+    return true;
+  }
+
+  Edge<T, key_t>* new_edge = new Edge<T, key_t>(start, end);
+  start->AddOutgoingEdge(new_edge);
+  end->AddIncomingEdge(new_edge);
+  *edge = new_edge;
+  return true;
+}
+
+template<typename T, typename key_t>
+bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key, Edge<T, key_t>** edge) {
+  if (!HasVertex(start_key)) {
+    dbg(DBG_ERROR, "ERROR: start vertex with id %lu does not exist.\n", start_key);
+    return false;
+  }
+  if (!HasVertex(end_key)) {
+    dbg(DBG_ERROR, "ERROR: end vertex with id %lu does not exist.\n", end_key);
+    return false;
+  }
+  Vertex<T, key_t>* start = vertices_[start_key];
+  Vertex<T, key_t>* end = vertices_[end_key];
+
+  if (start->HasOutgoingEdgeTo(end)) {
+    dbg(DBG_WARN, "WARNING: edge from %lu to %lu already exist.\n", start->id(), end->id());
+    return true;
+  }
+
+  Edge<T, key_t>* new_edge = new Edge<T, key_t>(start, end);
+  start->AddOutgoingEdge(new_edge);
+  end->AddIncomingEdge(new_edge);
+  *edge = new_edge;
   return true;
 }
 

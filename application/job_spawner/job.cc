@@ -42,7 +42,7 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define LOOP_COUNTER 3
+#define LOOP_COUNTER 30
 #define LOOP_CONDITION 0
 #define STAGE_NUM 10
 #define JOB_LENGTH_SEC 0

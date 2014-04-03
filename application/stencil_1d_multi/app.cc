@@ -308,13 +308,13 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
     read.clear(); read.insert(d[0]); read.insert(d[1]); read.insert(d[2]); read.insert(d[3]);
     write.clear(); write.insert(d[1]); write.insert(d[2]);
-    before.clear(); before.insert(id().elem());
+    before.clear();  // before.insert(id().elem());
     after.clear(); after.insert(j[2]);
     SpawnComputeJob("applyLeft", j[0], read, write, before, after, par, true);
 
     read.clear(); read.insert(d[3]); read.insert(d[4]); read.insert(d[5]); read.insert(d[2]);
     write.clear(); write.insert(d[3]); write.insert(d[4]);
-    before.clear(); before.insert(id().elem());
+    before.clear();  // before.insert(id().elem());
     after.clear(); after.insert(j[2]);
     SpawnComputeJob("applyRight", j[1], read, write, before, after, par, true);
 
@@ -335,13 +335,13 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
 
     read.clear(); read.insert(d[1]); read.insert(d[2]);
     write.clear();
-    before.clear(); before.insert(id().elem());
+    before.clear();  // before.insert(id().elem());
     after.clear();
     SpawnComputeJob("print", j[0], read, write, before, after, par, true);
 
     read.clear(); read.insert(d[3]); read.insert(d[4]);
     write.clear();
-    before.clear(); before.insert(id().elem());
+    before.clear();  // before.insert(id().elem());
     after.clear();
     SpawnComputeJob("print", j[1], read, write, before, after, par, true);
 
