@@ -232,7 +232,7 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
-  while (ResolveVersions() > 0) {
+  while (ResolveDataVersions() > 0) {
     continue;
   }
 
@@ -307,7 +307,7 @@ size_t JobManager::RemoveObsoleteJobEntries() {
     return 0;
   }
 
-  while (ResolveVersions() > 0) {
+  while (ResolveDataVersions() > 0) {
     continue;
   }
 
@@ -629,13 +629,21 @@ size_t JobManager::ResolveDataVersions() {
       PassDataVersionToJob(job, iter->second);
       jobs_need_version_[job_id] = job;
       if (JobVersionIsComplete(job)) {
+        if (!job->sterile()) {
+          boost::shared_ptr<VersionTable> merged;
+          std::vector<boost::shared_ptr<VersionTable> > table_vec;
+          table_vec.push_back(job->vtable_in());
+          version_operator_.RecomputeRootForVersionTables(table_vec);
+        }
+        boost::shared_ptr<VersionTable> table_out;
+        version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
+        job->set_vtable_out(table_out);
         job->set_versioned(true);
         Vertex<JobEntry, job_id_t>* vertex;
         job_graph_.GetVertex(job_id, &vertex);
         typename Edge<JobEntry, job_id_t>::Iter it;
-        for (it = vertex->outgoing_edges()->begin();
-            it != vertex->outgoing_edges()->end(); ++it) {
-          new_pass_version[it->second->end_vertex()->entry()->job_id()].push_back(job);
+        for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+          new_pass_version[it->first].push_back(job);
         }
         ++num;
       }
