@@ -325,6 +325,7 @@ void JobManager::JobDone(job_id_t job_id) {
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
     jobs_done_[job_id] = job;
+    jobs_need_version_.erase(job_id);
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
@@ -533,19 +534,23 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
    */
   size_t num = 0;
   list->clear();
-  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
-  for (; iter != job_graph_.end(); ++iter) {
-    JobEntry* job = iter->second->entry();
-    if ((job->versioned() || job->partial_versioned()) && !job->assigned()) {
-      data_version_t version;
-      if (job->vtable_in()->query_entry(vld.first, &version)) {
-        if ((version == vld.second) &&
-            ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
-          list->push_back(job);
-          ++num;
-        }
+  JobEntryMap::iterator iter = jobs_need_version_.begin();
+  for (; iter != jobs_need_version_.end();) {
+    JobEntry* job = iter->second;
+    assert(job->versioned() || job->partial_versioned());
+    if (job->assigned()) {
+      jobs_need_version_.erase(iter++);
+      continue;
+    }
+    data_version_t version;
+    if (job->vtable_in()->query_entry(vld.first, &version)) {
+      if ((version == vld.second) &&
+          ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
+        list->push_back(job);
+        ++num;
       }
     }
+    ++iter;
   }
   return num;
 
