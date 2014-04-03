@@ -113,7 +113,7 @@ class JobManager {
     Graph<JobEntry, job_id_t> job_graph_;
     // VersionManager version_manager_;
     VersionOperator version_operator_;
-    bool processed_new_job_done_;
+    // bool processed_new_job_done_;
 
     bool ResolveJobDataVersions(JobEntry* job);
     size_t ResolveVersions();

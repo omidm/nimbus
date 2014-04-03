@@ -44,7 +44,6 @@
 using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
-  processed_new_job_done_ = false;
   // Add the KERNEL job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
   IDSet<job_id_t> job_id_set;
@@ -303,26 +302,21 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
-  if (!processed_new_job_done_) {
-    return 0;
-  }
-
   while (ResolveDataVersions() > 0) {
     continue;
   }
 
   size_t num = 0;
-  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
-  for (; (iter != job_graph_.end());) {
-    JobEntry* job = iter->second->entry();
-    job_id_t job_id = job->job_id();
-    ++iter;
-    if (job->done() && (job_id != NIMBUS_KERNEL_JOB_ID)) {
-      RemoveJobEntry(job);
-      dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", job_id);
-      ++num;
-    }
+
+  JobEntryMap::iterator iter;
+  for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
+    assert(iter->second->done());
+    RemoveJobEntry(iter->second);
+    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
+    ++num;
+    jobs_done_.erase(iter++);
   }
+
   return num;
 }
 
@@ -330,7 +324,7 @@ void JobManager::JobDone(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
-    processed_new_job_done_ = true;
+    jobs_done_[job_id] = job;
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
