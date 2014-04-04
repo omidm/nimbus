@@ -37,16 +37,37 @@
   */
 
 #include "./scheduler_v2.h"
-#define WORKER_NUM 2
 
 SchedulerV2::SchedulerV2(unsigned int p)
 : Scheduler(p) {
+  initialized_domains_ = false;
 }
 
 bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  // Assumption is that partition Ids start from 0, and incrementally go up.
   size_t worker_num = server_->worker_num();
-  size_t chunk = (data_manager_->max_defined_partition() + 1) / worker_num;
+  GeometricRegion global_bounding_region =
+    data_manager_->global_bounding_region();
+
+  if (!initialized_domains_ ||
+      worker_num_ != worker_num ||
+      global_bounding_region_ != global_bounding_region) {
+    global_bounding_region_ = global_bounding_region;
+    worker_num_ = worker_num;
+    worker_domains_.clear();
+    int_dimension_t delta = (int_dimension_t)
+      ((float) (global_bounding_region_.dy()) / (float) (worker_num_)); // NOLINT
+    for (size_t i = 0; i < worker_num_; ++i) {
+      worker_domains_.push_back(GeometricRegion(
+            global_bounding_region_.x(),
+            global_bounding_region_.y() + i * delta,
+            global_bounding_region_.z(),
+            global_bounding_region_.dx(),
+            delta,
+            global_bounding_region_.dz()));
+    }
+    initialized_domains_ = true;
+  }
+
   std::vector<int> workers_rank(worker_num, 0);
 
   IDSet<logical_data_id_t> union_set = job->union_set();
@@ -54,8 +75,11 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
   for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
     const LogicalDataObject* ldo;
     ldo = data_manager_->FindLogicalObject(*iter);
-    size_t poll = std::min((size_t)(ldo->partition()) / chunk, worker_num - 1);
-    workers_rank[poll] = workers_rank[poll] + 1;
+    for (size_t i = 0; i < worker_num; ++i) {
+      if (worker_domains_[i].Intersects(ldo->region())) {
+        ++workers_rank[i];
+      }
+    }
   }
 
   // find the worker that wins the poll.
@@ -68,6 +92,7 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
     }
   }
 
+  std::cout << "Picked worker: " << w_id << " for job: " << job->job_name() << std::endl;
   return server_->GetSchedulerWorkerById(worker, w_id);
 }
 
