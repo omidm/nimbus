@@ -64,10 +64,11 @@ nimbus::Job* JobAdjustPhiWithObjects::Clone() {
 
 void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing adjust phi with objects job.\n");
+  dbg(APP_LOG, "Executing UPDATE_GHOST_VELOCITY job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
+  init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -83,22 +84,18 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
-  data_config.SetFlag(DataConfig::LEVELSET);
-  data_config.SetFlag(DataConfig::PSI_D);
-  data_config.SetFlag(DataConfig::PSI_N);
-  data_config.SetFlag(DataConfig::PRESSURE);
   dbg(APP_LOG, "Begin initialization.\n");
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in adjust phi with objects job.\n");
+  dbg(APP_LOG, "Execute the step in UPDATE_GHOST_VELOCITY job.\n");
   driver->UpdateGhostVelocitiesImpl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing adjust phi with objects job.\n");
+  dbg(APP_LOG, "Completed executing UPDATE_GHOST_VELOCITY job.\n");
 }
 
 }  // namespace application

@@ -107,10 +107,12 @@ namespace application {
     bool done = false;
     T target_time = example->Time_At_Frame(driver->current_frame+1);
     T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
+    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
     T temp_dt =
         example->particle_levelset_evolution.cfl_number
         * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
             example->face_velocities);
+    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", temp_dt);
     if (temp_dt < dt) {
       dt = temp_dt;
     }
@@ -234,12 +236,12 @@ namespace application {
     GetNewJobID(&reincorporate_particles_job_ids, reincorporate_particles_job_num);
     bool reincorporate_particles_single = (reincorporate_particles_job_num == 1);
 
-    /* 
-     * Spawning adjust phi with objects stage over two workrs
+    /*
+     * Spawning UPDATE_GHOST_VELOCITIES stage over two workrs
      */
     for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_PHI, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
 
@@ -257,12 +259,12 @@ namespace application {
     }
 
 
-    /* 
+    /*
      * Spawning first extrapolate phi stage over multiple workers.
      */
     for (int i = 0; i < first_extrapolate_phi_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W8CentralWGB[i], APP_PHI, NULL);
 
@@ -282,7 +284,7 @@ namespace application {
           s_extra_params, true);
     }
 
-    /* 
+    /*
      * Spawning advect phi stage over multiple workers
      */
     for(int i = 0; i < advect_phi_job_num; ++i) {
