@@ -57,6 +57,7 @@ namespace nimbus {
                 virtual void Create();
                 virtual void Destroy();
 
+                virtual uint32_t HashCode();
                 virtual void Copy(Data* from);
                 virtual bool Serialize(SerializedData* ser_data);
                 virtual bool DeSerialize(const SerializedData& ser_data, Data** result);

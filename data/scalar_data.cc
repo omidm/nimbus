@@ -64,8 +64,18 @@ namespace nimbus {
     }
 
     template<class T> bool ScalarData<T>::Serialize(SerializedData* ser_data) {
+      // COMMENT: For floating point numbers, the precision will be lost using
+      // the previous serialization methods, which makes projection not exactly
+      // the same. This implementation is certainly not a good solution. TODO.
+      char* buf = new char[sizeof(scalar_)];
+      memcpy(buf, &scalar_, sizeof(scalar_));
+      ser_data->set_data_ptr(buf);
+      ser_data->set_size(sizeof(scalar_)); // NOLINT
+      return true;
+      /*
         std::ostringstream ser;
         ser << scalar_;
+        assert(ser.good());
         const char *temp = ser.str().c_str();
         size_t len = ser.str().size() + 1;
         char *buf = new char[len];
@@ -73,18 +83,33 @@ namespace nimbus {
         ser_data->set_data_ptr(buf);
         ser_data->set_size(ser.str().size()+1); // NOLINT
         return true;
+        */
     }
 
     template <class T> bool ScalarData<T>::
     DeSerialize(const SerializedData &ser_data, Data **result) {
+      T temp;
+      assert(sizeof(temp) == ser_data.size());
+      memcpy(&temp, ser_data.data_ptr_raw(), sizeof(temp));
+      ScalarData<T>* sd = new ScalarData<T>();
+      sd->set_scalar(temp);
+      *result = sd;
+      return true;
+      /*
         std::string str(ser_data.data_ptr_raw(), ser_data.size());
         std::istringstream ser(str);
         ScalarData<T> * sd  = new ScalarData<T>();
         *result = sd;
         T temp;
         ser >> temp;
+        assert(ser.good());
         sd->set_scalar(temp);
         return true;
+        */
+    }
+
+    template<class T> uint32_t ScalarData<T>::HashCode() {
+      return round(1e9 * abs(scalar_));
     }
 
     template<class T> void ScalarData<T>::set_scalar(T scalar) {
