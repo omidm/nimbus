@@ -40,6 +40,8 @@
 
 #include "data/cache/cache_pool.h"
 #include "data/cache/cache_table.h"
+#include "shared/dbg.h"
+#include "shared/dbg_modes.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -51,14 +53,13 @@ void* CachePool::GetCachedObject(const std::string type,
                                  const GeometricRegion &region,
                                  const Job &job,
                                  const DataArray &da) {
-    CacheTable *table = NULL;
     if (pool_.find(type) == pool_.end()) {
-        table = new CacheTable();
-        pool_[type] = table;
+        dbg(DBG_WARNING, "%s type not registered with nimbus cache\n", type);
+        return NULL;
     } else {
-        table = pool_[type];
+        CacheTable *table = pool_[type];
+        return(table->GetCachedObject(region, job, da));
     }
-    return(table->GetCachedObject(region, job, da));
 }
 
 }  // namespace nimbus

@@ -42,6 +42,7 @@
 #include <map>
 #include <string>
 
+#include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "worker/data.h"
 #include "worker/job.h"
@@ -52,6 +53,8 @@ class CachePool {
     public:
         CachePool();
 
+        void RegisterType(const std::string type,
+                          const CacheObject prototype);
         void* GetCachedObject(const std::string type,
                               const GeometricRegion &region,
                               const Job &job,

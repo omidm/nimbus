@@ -54,28 +54,21 @@
 
 namespace nimbus {
 
+enum CacheAccess { READ, WRITE, READ_WRITE };
+
 class CacheObject {
     public:
         CacheObject();
 
         bool IsAvailable();
-        distance_t GetDistance(const DataSet &read,
-                               const DataSet &write,
-                               const StringSet &read_var,
-                               const StringSet &write_var);
-        void LockData(const DataSet &read,
-                      const DataSet &write,
-                      const StringSet &read_var,
-                      const StringSet &write_var);
+        virtual distance_t GetDistance(const DataSet &data_set);
+        virtual void ConstructFrom(const DataSet &data_set);
 
     private:
+        CacheAccess access_;
         int users_;
         typedef std::map<logical_data_id_t, CacheInstance> CacheInstances;
         CacheInstances instances_;
-        // TODO(chinmayee): need variable name in data, using application variable names
-        // now
-        std::map<std::string, size_t> locked_read_;
-        std::map<std::string, bool> locked_write_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;
