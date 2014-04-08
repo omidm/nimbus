@@ -527,6 +527,8 @@ namespace application {
           s15_params, true);
     }
 
+    // TODO(quhang, omid), there should be an UPDATE_GHOST_VELOCITY job here.
+
     /* 
      * Spawning multiple jobs for apply forces stage
      */
