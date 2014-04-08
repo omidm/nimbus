@@ -160,7 +160,7 @@ void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
   }
 
   char* buffer = connection->read_buffer();
-  memcpy(buffer, (buffer + read_len), remaining);
+  memmove(buffer, (buffer + read_len), remaining);
   connection->set_existing_bytes(remaining);
 
   char* read_start_ptr = buffer + remaining;
