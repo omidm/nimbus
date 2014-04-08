@@ -84,8 +84,6 @@ void JobApplyForces::Execute(nimbus::Parameter params,
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
-  data_config.SetFlag(DataConfig::PSI_D);
-  data_config.SetFlag(DataConfig::PSI_N);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
