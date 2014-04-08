@@ -62,6 +62,8 @@ class PhysBAMData: public Data {
   PhysBAMData();
   virtual ~PhysBAMData() {}
 
+  virtual uint32_t HashCode();
+
   virtual Data* Clone();
   virtual void Create();
   virtual void Destroy();

@@ -73,6 +73,10 @@ class Data {
   virtual void Create() {}
   virtual void Destroy() {}
 
+  virtual uint32_t HashCode() {
+    return 0;
+  }
+
   virtual void Copy(Data* from) {}
   virtual bool Serialize(SerializedData* ser_data) {return false;}
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result) {return false;}

@@ -51,6 +51,22 @@ namespace nimbus {
 */
 PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
 
+uint32_t PhysBAMData::HashCode() {
+  if (buffer_ == NULL) {
+    return 0;
+  }
+  uint32_t hash = 0;
+  for (uint32_t i = 0; i < size_; ++i) {
+    hash += buffer_[i];
+    hash += (hash << 10);
+    hash ^= (hash >> 6);
+  }
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
+  return hash;
+}
+
 char* PhysBAMData::buffer() const {
     return buffer_;
 }
@@ -86,8 +102,10 @@ Data * PhysBAMData::Clone() {
  * \return
 */
 void PhysBAMData::Create() {
-  if (size_ && !buffer_)
+  if (size_ && !buffer_) {
       buffer_ = static_cast<char*>(malloc(size_));
+      memset(buffer_, 0, size_);
+  }
 }
 
 
