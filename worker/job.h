@@ -199,9 +199,11 @@ class RemoteCopyReceiveJob : public Job {
     virtual void Cancel() {}
 
     void set_serialized_data(SerializedData* ser_data);
+    void set_data_version(data_version_t version);
 
   private:
     SerializedData * serialized_data_;
+    data_version_t data_version_;
 };
 
 class LocalCopyJob : public Job {

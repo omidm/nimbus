@@ -178,6 +178,14 @@ void Worker::ExecuteJob(Job* job) {
            job->name().c_str(), job->id().elem(), log_.timer(), log_.GetTime());
   log_.WriteToOutputStream(std::string(buff), LOG_INFO);
 
+  for (iter = write.begin(); iter != write.end(); iter++) {
+    Data *d = data_map_[*iter];
+    data_version_t version = d->version();
+    ++version;
+    d->set_version(version);
+  }
+
+
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params);
   client_->sendCommand(&cm);
