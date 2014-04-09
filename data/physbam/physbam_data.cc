@@ -106,7 +106,7 @@ void PhysBAMData::Create() {
       buffer_ = static_cast<char*>(malloc(size_));
       memset(buffer_, 0, size_);
   }
-  hash = 0;
+  hash = HashCode();
 }
 
 

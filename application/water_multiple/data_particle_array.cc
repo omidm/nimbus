@@ -55,7 +55,6 @@ nimbus::Data* DataParticleArray::Clone() {
 
 void DataParticleArray::Create() {
     set_size(0);
-    hash = 0;
     nimbus::PhysBAMData::Create();
 }
 
