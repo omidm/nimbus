@@ -1064,6 +1064,7 @@ DeleteParticlesImpl(const nimbus::Job *job,
     LOG::Time("Delete Particles ...\n");
 
     // delete particles
+    int lid1 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
     example.particle_levelset_evolution.particle_levelset.
         Delete_Particles_In_Local_Maximum_Phi_Cells(1);
@@ -1077,6 +1078,11 @@ DeleteParticlesImpl(const nimbus::Job *job,
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
+    int lid2 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
+    if (lid1 != lid2) {
+      dbg(APP_LOG, "***** last unique particle id are different, %i and %i\n", lid1, lid2);
+      exit(-1);
+    }
 
     return true;
 }

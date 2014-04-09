@@ -88,6 +88,8 @@ class PhysBAMData: public Data {
   virtual void migrate(Computer sourcer, Computer destination) {}
   virtual void split(Data *, Data *) {}
   virtual void merge(Data *, Data *) {}
+
+  uint32_t hash;
 };
 
 }  // namespace nimbus
