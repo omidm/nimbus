@@ -33,55 +33,44 @@
  */
 
  /*
-  * Parser for Nimbus scheduler protocol. 
+  * A test for hash function. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_PARSER_H_
-#define NIMBUS_SHARED_PARSER_H_
-
-#include <stdint.h>
-#include <boost/tokenizer.hpp>
-#include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
+#include <boost/functional/hash.hpp>
+#include <iostream>  // NOLINT
+#include <sstream>  // NOLINT
 #include <string>
-#include <vector>
-#include <set>
-#include <utility>
-#include "shared/id.h"
-#include "shared/idset.h"
-#include "shared/serialized_data.h"
-#include "shared/scheduler_command_include.h"
-#include "shared/escaper.h"
-#include "shared/parameter.h"
-#include "shared/nimbus_types.h"
+#include <map>
+#include "shared/nimbus.h"
+#include "shared/log.h"
 
-namespace nimbus {
+#define CAL_NUM 1000000
 
-// TODO(omidm): remove obsolete functions, defs.
+using namespace nimbus; // NOLINT
+using boost::hash;
 
-typedef std::set<std::string> CmSet;
-void parseCommand(const std::string& string,
-                  const CmSet& commandSet,
-                  std::string& command,
-                  std::vector<int>& arguments);
+int main(int argc, const char *argv[]) {
+  if (argc < 2) {
+    std::cout << "ERROR: provide an input!" << std::endl;
+    exit(-1);
+  }
 
-int parseCommandFile(const std::string& fname,
-                     CmSet& cs);
+  std::string input(argv[1]);
 
-bool isSet(const std::string& tag);
+  nimbus_initialize();
+  Log log;
+  hash<std::string> hash_function;
+  std:: cout << "Hash value: " << hash_function(input) << std::endl;
 
-int countOccurence(std::string str, std::string substr);
+  size_t result = 0;
+  log.StartTimer();
+  for (int i = 0; i < CAL_NUM; ++i) {
+    result += hash_function(input);
+  }
+  log.StopTimer();
+  std::cout << "result: " << result << std::endl;
+  std::cout << "Time elapsed for " << CAL_NUM << " hash calculations: " << log.timer() << std::endl;
+}
 
-// ********************************************************
-
-
-bool ParseWorkerDataHeader(const std::string& input,
-    job_id_t& job_id, size_t& data_length, data_version_t& version);
-
-
-}  // namespace nimbus
-#endif  // NIMBUS_SHARED_PARSER_H_

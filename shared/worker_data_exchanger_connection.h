@@ -73,12 +73,14 @@ class WorkerDataExchangerConnection {
   size_t existing_bytes();
   size_t read_buffer_max_length();
   size_t data_length();
+  data_version_t data_version();
   size_t remaining_data_length();
   bool middle_of_data();
   bool middle_of_header();
 
   void set_job_id(job_id_t job_id);
   void set_data_length(size_t len);
+  void set_data_version(data_version_t version);
   void set_existing_bytes(size_t len);
   void set_middle_of_data(bool flag);
   void set_middle_of_header(bool flag);
@@ -91,6 +93,7 @@ class WorkerDataExchangerConnection {
   char* read_buffer_;
   size_t existing_bytes_;
   size_t data_length_;
+  data_version_t data_version_;
   size_t remaining_data_length_;
   bool middle_of_data_;
   bool middle_of_header_;

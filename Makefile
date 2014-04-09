@@ -36,16 +36,16 @@ lib: $(LIBRARY)
 
 .PHONY: scheduler_t worker_t data_t shared_t
 scheduler_t: shared_t 
-	cd scheduler; make; cd ..
+	cd scheduler; make -j 12; cd ..
 
 worker_t: shared_t
-	cd worker; make; cd ..
+	cd worker; make -j 12; cd ..
 
 data_t: shared_t
-	cd data; make; cd ..
+	cd data; make -j 12; cd ..
 
 shared_t:
-	cd shared; make; cd ..
+	cd shared; make -j 12; cd ..
 
 $(LIBRARY): shared_t scheduler_t worker_t data_t
 	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)

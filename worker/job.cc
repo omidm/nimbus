@@ -305,7 +305,8 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
-  data_exchanger_->SendSerializedData(receive_job_id().elem(), to_worker_id_.elem(), ser_data);
+  data_exchanger_->SendSerializedData(receive_job_id().elem(),
+      to_worker_id_.elem(), ser_data, da[0]->version());
   // delete ser_data.data_ptr(); // Not needed with shared pointer.
 }
 

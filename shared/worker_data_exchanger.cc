@@ -184,13 +184,15 @@ size_t WorkerDataExchanger::ReadHeader(WorkerDataExchangerConnection* connection
     if (buffer[i] == ';') {
       job_id_t job_id = 0;
       size_t data_length = 0;
+      data_version_t version = 0;
       buffer[i] = '\0';
       std::string input(buffer);
-      ParseWorkerDataHeader(input, job_id, data_length);
+      ParseWorkerDataHeader(input, job_id, data_length, version);
       connection->set_middle_of_data(true);
       connection->set_middle_of_header(false);
       connection->set_job_id(job_id);
       connection->set_data_length(data_length);
+      connection->set_data_version(version);
       connection->AllocateData(data_length);
       return (i + 1);
     }
@@ -210,15 +212,15 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
     connection->set_middle_of_header(true);
     SerializedData* ser_data =
       new SerializedData(connection->data_ptr(), connection->data_length());
-    AddSerializedData(connection->job_id(), ser_data);
+    AddSerializedData(connection->job_id(), ser_data, connection->data_version());
     return remaining;
   }
 }
 
 void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
-    SerializedData* ser_data) {
+    SerializedData* ser_data, data_version_t version) {
   boost::mutex::scoped_lock lock(data_map_mutex_);
-  data_map_[job_id] = ser_data;
+  data_map_[job_id] = std::make_pair(ser_data, version);
 }
 
 void WorkerDataExchanger::RemoveSerializedData(job_id_t job_id) {
@@ -234,7 +236,7 @@ bool WorkerDataExchanger::AddContactInfo(worker_id_t worker_id,
 }
 
 bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
-      SerializedData** ser_data) {
+      SerializedData** ser_data, data_version_t& version) {
   int available;
   {
     boost::mutex::scoped_lock lock(data_map_mutex_);
@@ -244,14 +246,15 @@ bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
   if (!available) {
     return false;
   } else {
-    *ser_data = data_map_[job_id];
+    *ser_data = data_map_[job_id].first;
+    version = data_map_[job_id].second;
     RemoveSerializedData(job_id);
     return true;
   }
 }
 
 bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
-      worker_id_t worker_id, SerializedData& ser_data) {
+      worker_id_t worker_id, SerializedData& ser_data, data_version_t version) {
   boost::shared_ptr<char> buf = ser_data.data_ptr();
   size_t size = ser_data.size();
   boost::mutex::scoped_lock lock1(send_connection_mutex_);
@@ -275,7 +278,10 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
   header += (ss_j.str() + " ");
   std::ostringstream ss_s;
   ss_s << size;
-  header += (ss_s.str() + ";");
+  header += (ss_s.str() + " ");
+  std::ostringstream ss_v;
+  ss_v << version;
+  header += (ss_v.str() + ";");
 
   boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
       boost::asio::transfer_all(), ignored_error);

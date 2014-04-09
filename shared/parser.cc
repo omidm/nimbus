@@ -102,10 +102,11 @@ bool isSet(const std::string& str) {
 // ********************************************************
 
 bool ParseWorkerDataHeader(const std::string& input,
-    job_id_t& job_id, size_t& data_length) {
-  int num = 2;
+    job_id_t& job_id, size_t& data_length, data_version_t& version) {
+  int num = 3;
   job_id_t temp_j;
   size_t temp_d;
+  data_version_t temp_v;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(input, separator);
@@ -143,6 +144,17 @@ bool ParseWorkerDataHeader(const std::string& input,
   } else {
     data_length = temp_d;
   }
+
+  iter++;
+  std::stringstream ss_v(*iter);
+  ss_v >> temp_v;
+  if (ss_v.fail()) {
+    std::cout << "ERROR: wrong element for data length." << std::endl;
+    return false;
+  } else {
+    version = temp_v;
+  }
+
   return true;
 }
 
