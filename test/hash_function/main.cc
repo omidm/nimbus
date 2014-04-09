@@ -33,7 +33,7 @@
  */
 
  /*
-  * A test for idset template class query. 
+  * A test for hash function. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -46,6 +46,7 @@
 #include "shared/nimbus.h"
 #include "shared/log.h"
 
+#define CAL_NUM 1000000
 
 using namespace nimbus; // NOLINT
 using boost::hash;
@@ -61,9 +62,15 @@ int main(int argc, const char *argv[]) {
   nimbus_initialize();
   Log log;
   hash<std::string> hash_function;
-  log.StartTimer();
   std:: cout << "Hash value: " << hash_function(input) << std::endl;
+
+  size_t result = 0;
+  log.StartTimer();
+  for (int i = 0; i < CAL_NUM; ++i) {
+    result += hash_function(input);
+  }
   log.StopTimer();
-  std::cout << "Time elapsed hash calculation: " << log.timer() << std::endl;
+  std::cout << "result: " << result << std::endl;
+  std::cout << "Time elapsed for " << CAL_NUM << " hash calculations: " << log.timer() << std::endl;
 }
 
