@@ -187,6 +187,9 @@ void Worker::ExecuteJob(Job* job) {
     // }
   }
 
+  // DumpVersionInformation(job, da, &version_log_, "version_in");
+
+
   IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {
     da.push_back(data_map_[*iter]);
@@ -202,7 +205,6 @@ void Worker::ExecuteJob(Job* job) {
     // }
   }
 
-  DumpVersionInformation(job, da, &version_log_, "version_in");
 
 
 
