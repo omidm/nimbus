@@ -42,4 +42,5 @@ package nimbus_message;
 message pd_message {
   optional bytes buffer = 1;
   required int64 size = 2;
+  required uint32 hash = 3;
 }

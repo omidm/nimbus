@@ -316,6 +316,7 @@ namespace nimbus {
               }
             }
           }
+          data->hash = data->HashCode();
         }
       }
       return true;
@@ -619,6 +620,7 @@ particle_buffer.id = (*id)(i);
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->CommitTempBuffer();
+        data->hash = data->HashCode();
       }
       return true;
     }
@@ -830,7 +832,10 @@ particle_buffer.id = (*id)(i);
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
+        if (data->logical_id() == 200007)
+          dbg(DBG_ERROR, "Data corrupted yet????????\n");
         data->CommitTempBuffer();
+        data->hash = data->HashCode();
       }
       return true;
     }
@@ -956,6 +961,7 @@ particle_buffer.id = (*id)(i);
                 }
               }
             }
+            data->hash = data->HashCode();
           }
         }
       }
