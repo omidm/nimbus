@@ -66,6 +66,10 @@ GeometricRegion Data::region() {
     return region_;
 }
 
+data_version_t Data::version() {
+  return version_;
+}
+
 void Data::set_logical_id(logical_data_id_t logical_id) {
   logical_id_ = logical_id;
 }
@@ -84,4 +88,10 @@ void Data::set_name(std::string name) {
 void Data::set_region(const GeometricRegion& region) {
     region_ = region;
 }
+
+void Data::set_version(data_version_t version) {
+  version_ = version;
+}
+
+
 

@@ -93,11 +93,13 @@ class Data {
   physical_data_id_t physical_id();
   std::string name();
   GeometricRegion region();
+  data_version_t version();
 
   void set_logical_id(logical_data_id_t logical_id);
   void set_physical_id(physical_data_id_t physical_id);
   void set_name(std::string name);
   void set_region(const GeometricRegion& region);
+  void set_version(data_version_t version);
 
  private:
   logical_data_id_t logical_id_;
@@ -105,6 +107,7 @@ class Data {
   partition_id_t partition_id_;
   GeometricRegion region_;
   std::string name_;
+  data_version_t version_;
   bool advanceData_;
 
   // Set of data ids that could be involved in SYNC jobs with this data.
