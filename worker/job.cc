@@ -347,7 +347,6 @@ void RemoteCopySendJob::set_to_port(ID<port_t> port) {
 }
 
 
-
 RemoteCopyReceiveJob::RemoteCopyReceiveJob() {
 }
 
@@ -358,6 +357,7 @@ void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
+  da[0]->set_version(data_version_);
 
   data_copy->Destroy();
   // delete serialized_data_->data_ptr(); // Not needed with shared pointer.
@@ -372,7 +372,9 @@ void RemoteCopyReceiveJob::set_serialized_data(SerializedData* ser_data) {
   serialized_data_ = ser_data;
 }
 
-
+void RemoteCopyReceiveJob::set_data_version(data_version_t version) {
+  data_version_ = version;
+}
 
 LocalCopyJob::LocalCopyJob() {
 }
@@ -386,6 +388,7 @@ Job* LocalCopyJob::Clone() {
 
 void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
   da[1]->Copy(da[0]);
+  da[1]->set_version(da[0]->version());
 }
 
 
@@ -402,6 +405,7 @@ Job* CreateDataJob::Clone() {
 
 void CreateDataJob::Execute(Parameter params, const DataArray& da) {
   da[0]->Create();
+  da[0]->set_version(NIMBUS_INIT_DATA_VERSION);
 }
 
 
