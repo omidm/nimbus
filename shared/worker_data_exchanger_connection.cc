@@ -102,8 +102,16 @@ size_t WorkerDataExchangerConnection::data_length() {
   return data_length_;
 }
 
+data_version_t WorkerDataExchangerConnection::data_version() {
+  return data_version_;
+}
+
 void WorkerDataExchangerConnection::set_data_length(size_t len) {
   data_length_ = len;
+}
+
+void WorkerDataExchangerConnection::set_data_version(data_version_t version) {
+  data_version_ = version;
 }
 
 job_id_t WorkerDataExchangerConnection::job_id() {

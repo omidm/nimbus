@@ -63,6 +63,9 @@ using boost::asio::ip::tcp;
 
 class WorkerDataExchanger {
  public:
+  typedef std::pair<SerializedData*, data_version_t> DataMapEntry;
+  typedef std::map<job_id_t, DataMapEntry> DataMap;
+
   explicit WorkerDataExchanger(port_t port_no);
   virtual ~WorkerDataExchanger();
 
@@ -72,10 +75,10 @@ class WorkerDataExchanger {
       std::string ip_address, port_t port_no);
 
   virtual bool ReceiveSerializedData(job_id_t job_id,
-      SerializedData** ser_data);
+      SerializedData** ser_data, data_version_t& version);
 
-  virtual bool SendSerializedData(job_id_t job_id,
-      worker_id_t worker_id, SerializedData& ser_data);
+  virtual bool SendSerializedData(job_id_t job_id, worker_id_t worker_id,
+      SerializedData& ser_data, data_version_t version);
 
   WorkerDataExchangerConnectionMap* send_connections();
 
@@ -88,7 +91,7 @@ class WorkerDataExchanger {
   boost::mutex address_book_mutex_;
   AddressBook address_book_;
   boost::mutex data_map_mutex_;
-  SerializedDataMap data_map_;
+  DataMap data_map_;
   boost::mutex send_connection_mutex_;
   WorkerDataExchangerConnectionMap send_connections_;
   boost::mutex receive_connection_mutex_;
@@ -124,7 +127,8 @@ class WorkerDataExchanger {
 
   virtual void AddReceiveConnection(WorkerDataExchangerConnection* connection);
 
-  virtual void AddSerializedData(job_id_t job_id, SerializedData* ser_data);
+  virtual void AddSerializedData(job_id_t job_id,
+      SerializedData* ser_data, data_version_t version);
 
   virtual void RemoveSerializedData(job_id_t job_id);
 };

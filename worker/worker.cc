@@ -114,8 +114,10 @@ void Worker::ScanPendingTransferJobs() {
   JobList::iterator iter;
   for (iter = pending_transfer_jobs_.begin(); iter != pending_transfer_jobs_.end();) {
     SerializedData* ser_data;
-    if (data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data)) {
+    data_version_t version;
+    if (data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data, version)) {
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
+      static_cast<RemoteCopyReceiveJob*>(*iter)->set_data_version(version);
       ready_jobs_.push_back(*iter);
       pending_transfer_jobs_.erase(iter++);
     } else {

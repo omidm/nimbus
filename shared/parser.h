@@ -80,7 +80,7 @@ int countOccurence(std::string str, std::string substr);
 
 
 bool ParseWorkerDataHeader(const std::string& input,
-    job_id_t& job_id, size_t& data_length);
+    job_id_t& job_id, size_t& data_length, data_version_t& version);
 
 
 }  // namespace nimbus
