@@ -139,12 +139,34 @@ void Worker::ExecuteJob(Job* job) {
   IDSet<physical_data_id_t>::IDSetIter iter;
 
   IDSet<physical_data_id_t> read = job->read_set();
-  for (iter = read.begin(); iter != read.end(); iter++)
+  for (iter = read.begin(); iter != read.end(); iter++) {
     da.push_back(data_map_[*iter]);
 
+    // std::string name = job->name();
+    // if (name != "main" && name != "initialize") {
+    //   SerializedData ser_data;
+    //   data_map_[*iter]->Serialize(&ser_data);
+    //   Data * data_copy = NULL;
+    //   data_map_[*iter]->DeSerialize(ser_data, &data_copy);
+    //   data_map_[*iter]->Copy(data_copy);
+    //   data_copy->Destroy();
+    // }
+  }
+
   IDSet<physical_data_id_t> write = job->write_set();
-  for (iter = write.begin(); iter != write.end(); iter++)
+  for (iter = write.begin(); iter != write.end(); iter++) {
     da.push_back(data_map_[*iter]);
+
+    // std::string name = job->name();
+    // if (name != "main" && name != "initialize") {
+    //   SerializedData ser_data;
+    //   data_map_[*iter]->Serialize(&ser_data);
+    //   Data * data_copy = NULL;
+    //   data_map_[*iter]->DeSerialize(ser_data, &data_copy);
+    //   data_map_[*iter]->Copy(data_copy);
+    //   data_copy->Destroy();
+    // }
+  }
 
   log_.StartTimer();
   job->Execute(job->parameters(), da);
@@ -159,7 +181,7 @@ void Worker::ExecuteJob(Job* job) {
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params);
   client_->sendCommand(&cm);
-  ProcessJobDoneCommand(&cm);
+  // ProcessJobDoneCommand(&cm);
   delete job;
 }
 
