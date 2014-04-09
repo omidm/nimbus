@@ -85,6 +85,7 @@ void Log::set_output_stream(std::ostream* os) {
 
 void Log::set_file_name(std::string fname) {
   log_file_name_ = fname;
+  ClearLogFile();
 }
 
 void Log::InitTime() {

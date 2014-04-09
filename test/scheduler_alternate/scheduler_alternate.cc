@@ -63,7 +63,8 @@ bool SchedulerAlternate::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& w
   }
 
   worker_id_t w_id;
-  if (job->job_name() == WRITE_FRAME_NAME) {
+  if ((job->job_name() == WRITE_FRAME_NAME) ||
+      (!job->sterile())) {
     w_id = 1;
   } else {
     w_id  = (rand_r(&seed_) % worker_num) + 1;

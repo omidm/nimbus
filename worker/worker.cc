@@ -38,13 +38,45 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <boost/functional/hash.hpp>
+#include <sstream>
 #include <ctime>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
 
 #define MAX_PARALLEL_JOB 10
 
+using boost::hash;
+
 namespace nimbus {
+
+void DumpVersionInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+  std::string input = "";
+  for (size_t i = 0; i < da.size(); ++i) {
+    std::ostringstream ss_l;
+    ss_l << da[i]->logical_id();
+    input += ss_l.str();
+    input += " : ";
+    // std::ostringstream ss_p;
+    // ss_p << da[i]->physical_id();
+    // input += ss_p.str();
+    // input += " : ";
+    std::ostringstream ss_v;
+    ss_v << da[i]->version();
+    input += ss_v.str();
+    input += " - ";
+  }
+  hash<std::string> hash_function;
+
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "%s name: %s id: %llu  version_hash: %lu versions: %s",
+           tag.c_str(), job->name().c_str(), job->id().elem(),
+           hash_function(input), input.c_str());
+  log->WriteToFile(std::string(buff), LOG_INFO);
+}
+
+
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     port_t listening_port, Application* a)
@@ -170,22 +202,34 @@ void Worker::ExecuteJob(Job* job) {
     // }
   }
 
+  DumpVersionInformation(job, da, &version_log_, "version_in");
+
+
+
   log_.StartTimer();
   job->Execute(job->parameters(), da);
   log_.StopTimer();
 
   char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff),
-      "Execute Job, name: %35s  id: %6lu  length(s): %2.3lf  time(s): %6.3lf",
+      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
            job->name().c_str(), job->id().elem(), log_.timer(), log_.GetTime());
   log_.WriteToOutputStream(std::string(buff), LOG_INFO);
 
-  for (iter = write.begin(); iter != write.end(); iter++) {
-    Data *d = data_map_[*iter];
-    data_version_t version = d->version();
-    ++version;
-    d->set_version(version);
+
+  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
+    for (iter = write.begin(); iter != write.end(); iter++) {
+      Data *d = data_map_[*iter];
+      data_version_t version = d->version();
+      ++version;
+      d->set_version(version);
+    }
   }
+
+
 
 
   Parameter params;
@@ -252,6 +296,10 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 
   id_ = cm->worker_id().elem();
   id_maker_.Initialize(id_);
+
+  std::ostringstream ss;
+  ss << id_;
+  version_log_.set_file_name(ss.str() + "_version_log.txt");
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
