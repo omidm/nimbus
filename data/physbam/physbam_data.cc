@@ -49,22 +49,22 @@ namespace nimbus {
  * \brief Brief description.
  * \return
 */
-PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) {}
+PhysBAMData::PhysBAMData(): size_(0), buffer_(0), temp_buffer_(0) { hash = 0; }
 
 uint32_t PhysBAMData::HashCode() {
   if (buffer_ == NULL) {
     return 0;
   }
-  uint32_t hash = 0;
+  uint32_t hasht = 0;
   for (uint32_t i = 0; i < size_; ++i) {
-    hash += buffer_[i];
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
+    hasht += buffer_[i];
+    hasht += (hasht << 10);
+    hasht ^= (hasht >> 6);
   }
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-  return hash;
+  hasht += (hasht << 3);
+  hasht ^= (hasht >> 11);
+  hasht += (hasht << 15);
+  return hasht;
 }
 
 char* PhysBAMData::buffer() const {
@@ -121,6 +121,7 @@ void PhysBAMData::Destroy() {
     buffer_ = NULL;
   }
   size_ = 0;
+  hash = 0;
 }
 
 
@@ -158,7 +159,7 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
       pd.set_size(0);
   if (hash != this->HashCode()) {
     dbg(DBG_ERROR, "Data %s got corrupted somewhere before serialization!!\n", name().c_str());
-    // assert(false);
+    assert(false);
   }
   pd.set_hash(hash);
   std::string ser;
@@ -206,9 +207,9 @@ bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
     }
     if (pd.hash() != data->HashCode()) {
       dbg(DBG_ERROR, "For %s data sent != data received!!!\n", name().c_str());
-      // assert(false);
+      assert(false);
     } else {
-      hash = pd.hash();
+      data->hash = pd.hash();
     }
     return success;
 }
@@ -237,6 +238,7 @@ int PhysBAMData::CommitTempBuffer() {
   if (temp_buffer_->eof()) {
     dbg(DBG_WARN, "When copying a temporary buffer into the permanent buffer in a PhysBAMData object, the read was incomplete.\n");  // NOLINT
   }
+  hash = HashCode();
   return len;
 }
 
