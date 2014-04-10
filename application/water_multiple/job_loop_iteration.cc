@@ -392,7 +392,10 @@ namespace application {
             read.clear();
             write.clear();
             kScratchPosParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES, NULL);
+            kScratchPosParticles.GetMainForScratchData(this,
+                                                       kRegY2W3CentralWGB[i],
+                                                       kRegY2W3Inner[i],
+                                                       &write);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii],
                     read, write,
@@ -402,7 +405,10 @@ namespace application {
             read.clear();
             write.clear();
             kScratchNegParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_NEG_PARTICLES, NULL);
+            kScratchNegParticles.GetMainForScratchData(this,
+                                                       kRegY2W3CentralWGB[i],
+                                                       kRegY2W3Inner[i],
+                                                       &write);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+1],
                     read, write,
@@ -412,7 +418,10 @@ namespace application {
             read.clear();
             write.clear();
             kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_REM_PARTICLES, NULL);
+            kScratchPosRemParticles.GetMainForScratchData(this,
+                                                          kRegY2W3CentralWGB[i],
+                                                          kRegY2W3Inner[i],
+                                                          &write);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+2],
                     read, write,
@@ -422,7 +431,10 @@ namespace application {
             read.clear();
             write.clear();
             kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
-            LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_NEG_REM_PARTICLES, NULL);
+            kScratchNegRemParticles.GetMainForScratchData(this,
+                                                          kRegY2W3CentralWGB[i],
+                                                          kRegY2W3Inner[i],
+                                                          &write);
             SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+3],
                     read, write,

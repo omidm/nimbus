@@ -91,6 +91,7 @@ class ScratchDataHelper {
         std::string vertex_types_[VERTEX_TYPES];
         std::string edge_types_[EDGE_TYPES];
         std::string face_types_[FACE_TYPES];
+        std::string base_name_;
 
         typedef IDSet<logical_data_id_t> lIDSet;
 
@@ -128,6 +129,11 @@ class ScratchDataHelper {
         /* given a region, this function obtains all the scratch data ids in
          * that region.
          */
+        void GetMainForScratchData(Job *job,
+                                   const GeometricRegion &complete,
+                                   const GeometricRegion &exclude,
+                                   lIDSet *ids,
+                                   bool clear = false) const;
         void GetAllScratchData(Job *job,
                                const GeometricRegion &region,
                                lIDSet *ids,

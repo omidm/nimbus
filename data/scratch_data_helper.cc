@@ -108,6 +108,7 @@ void ScratchDataHelper::SetScratchNames(const ScratchType st,
 }
 
 void ScratchDataHelper::SetScratchBaseName(const std::string b_name) {
+    base_name_ = b_name;
     for (size_t i = 0; i < VERTEX_TYPES; i++) {
         std::stringstream ss;
         ss << b_name << "_vertex_" << i+1;
@@ -225,6 +226,25 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
                 ids->insert(ldos[s]->id());
             n++;
         }
+    }
+}
+
+void ScratchDataHelper::GetMainForScratchData(Job *job,
+                                              const GeometricRegion &complete,
+                                              const GeometricRegion &exclude,
+                                              lIDSet *ids,
+                                              bool clear) const {
+    if (clear)
+        ids->clear();
+
+    CLdoVector ldos_complete, ldos_exclude;
+    job->GetCoveredLogicalObjects(&ldos_complete, base_name_, &complete);
+    job->GetCoveredLogicalObjects(&ldos_exclude, base_name_, &exclude);
+    for (size_t s = 0; s < ldos_complete.size(); s++) {
+        ids->insert(ldos_complete[s]->id());
+    }
+    for (size_t s = 0; s < ldos_exclude.size(); s++) {
+        ids->remove(ldos_exclude[s]->id());
     }
 }
 
