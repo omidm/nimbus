@@ -414,7 +414,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   *from_data = from_data_new;
   *to_data = to_data_new;
 
-  return false;
+  return true;
 }
 
 bool Scheduler::LocalCopyData(SchedulerWorker* worker,

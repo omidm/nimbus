@@ -12,11 +12,11 @@ def find_version_table(file_name, tag):
  
   count = 0;
   table = {}
-  regexp =  '.*' + tag + '.*Compute.*id:\s*(\d+)\s*version_hash:\s*(\d+).*'
+  regexp =  '.*' + tag + '.*Compute:(\w+)\s*id:\s*(\d+)\s*version_hash:\s*(\d+).*'
   for line in content:
     result = re.findall(regexp, line)
     if (len(result) >= 1):
-      table[result[0][0]] = result[0][1]
+      table[(result[0][0] + "-" + result[0][1])] = result[0][2]
       count = count + 1
     # else:
     #   print "ERROR: corrupted line in " + file_name

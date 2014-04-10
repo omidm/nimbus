@@ -198,7 +198,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     iter_params.set_ser_data(SerializedData(iter_str));
     after.clear();
     before.clear();
-    for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+    for (int j = 0; j < extrapolation_job_num; ++j) {
       before.insert(extrapolation_job_ids[j]);
     }
     SpawnComputeJob(LOOP_ITERATION,
@@ -236,7 +236,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     after.clear();
     after.insert(loop_job_id[0]);
     before.clear();
-    for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+    for (int j = 0; j < extrapolation_job_num; ++j) {
       before.insert(extrapolation_job_ids[j]);
     }
     SpawnComputeJob(WRITE_FRAME,
