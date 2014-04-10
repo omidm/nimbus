@@ -75,7 +75,6 @@ void DataParticleArray::MergeParticles(const std::vector<nimbus::Data *> &scratc
     }
     delete buffer();
     set_buffer(new_buffer, new_size);
-    hash = this->HashCode();
     if (this->logical_id() == 200007) {
         dbg(DBG_ERROR, "this data corrupted yet??");
     }

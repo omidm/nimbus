@@ -106,7 +106,6 @@ void PhysBAMData::Create() {
       buffer_ = static_cast<char*>(malloc(size_));
       memset(buffer_, 0, size_);
   }
-  hash = HashCode();
 }
 
 
@@ -121,7 +120,6 @@ void PhysBAMData::Destroy() {
     buffer_ = NULL;
   }
   size_ = 0;
-  hash = 0;
 }
 
 
@@ -137,7 +135,6 @@ void PhysBAMData::Copy(Data *from) {
   size_ = pfrom->size();
   buffer_ = static_cast<char*>(malloc(size_));
   memcpy(buffer_, pfrom->buffer(), size_);
-  hash = pfrom->hash;
 }
 
 
@@ -157,10 +154,6 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
       pd.set_size(size_);
   else
       pd.set_size(0);
-  if (hash != this->HashCode()) {
-    dbg(DBG_ERROR, "Data %s got corrupted somewhere before serialization!!\n", name().c_str());
-    assert(false);
-  }
   pd.set_hash(hash);
   std::string ser;
   bool success = pd.SerializeToString(&ser);
@@ -205,12 +198,6 @@ bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
     } else {
         data->set_buffer(NULL, pd.size());
     }
-    if (pd.hash() != data->HashCode()) {
-      dbg(DBG_ERROR, "For %s data sent != data received!!!\n", name().c_str());
-      assert(false);
-    } else {
-      data->hash = pd.hash();
-    }
     return success;
 }
 
@@ -238,7 +225,6 @@ int PhysBAMData::CommitTempBuffer() {
   if (temp_buffer_->eof()) {
     dbg(DBG_WARN, "When copying a temporary buffer into the permanent buffer in a PhysBAMData object, the read was incomplete.\n");  // NOLINT
   }
-  hash = HashCode();
   return len;
 }
 

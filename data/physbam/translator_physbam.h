@@ -133,10 +133,6 @@ namespace nimbus {
           if (HasOverlap(overlap)) {
             std::string reg_str = region->toString();
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
-            if (data->hash != data->HashCode()) {
-              dbg(DBG_ERROR, "### Reading incosistent data %i, %i\n", data->hash, data->HashCode());
-              assert(false);
-            }
             T* buffer = reinterpret_cast<T*>(data->buffer());
 
             Dimension3Vector src = GetOffset(obj->region(), region);
@@ -320,9 +316,6 @@ namespace nimbus {
               }
             }
           }
-          data->hash = data->HashCode();
-          if (data->logical_id() == 201907)
-            dbg(DBG_ERROR, "Updated face array correctly??\n");
         }
       }
       return true;
@@ -427,10 +420,6 @@ namespace nimbus {
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         ParticleInternal* buffer =
             reinterpret_cast<ParticleInternal*>(data->buffer());
-        if (data->hash != data->HashCode()) {
-          dbg(DBG_ERROR, "### Reading incosistent data %i, %i\n", data->hash, data->HashCode());
-          assert(false);
-        }
         ParticleInternal* buffer_end = buffer + static_cast<int>(data->size())
              / static_cast<int>(sizeof(ParticleInternal));
 
@@ -630,7 +619,6 @@ particle_buffer.id = (*id)(i);
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->CommitTempBuffer();
-        data->hash = data->HashCode();
       }
       return true;
     }
@@ -690,10 +678,6 @@ particle_buffer.id = (*id)(i);
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         RemovedParticleInternal* buffer =
             reinterpret_cast<RemovedParticleInternal*>(data->buffer());
-        if (data->hash != data->HashCode()) {
-          dbg(DBG_ERROR, "### Reading incosistent data %i, %i\n", data->hash, data->HashCode());
-          assert(false);
-        }
         RemovedParticleInternal* buffer_end = buffer
             + static_cast<int>(data->size())
             / static_cast<int>(sizeof(RemovedParticleInternal));
@@ -846,10 +830,7 @@ particle_buffer.id = (*id)(i);
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
-        if (data->logical_id() == 200007)
-          dbg(DBG_ERROR, "Data corrupted yet????????\n");
         data->CommitTempBuffer();
-        data->hash = data->HashCode();
       }
       return true;
     }
@@ -871,10 +852,6 @@ particle_buffer.id = (*id)(i);
           if (HasOverlap(overlap)) {
             PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
             T* buffer  = reinterpret_cast<T*>(data->buffer());
-          if (data->hash != data->HashCode()) {
-            dbg(DBG_ERROR, "### Reading incosistent data %i, %i\n", data->hash, data->HashCode());
-            assert(false);
-          }
 
             Dimension3Vector src  = GetOffset(inst->region(), region);
             Dimension3Vector dest = GetOffset(region, inst->region());
@@ -979,7 +956,6 @@ particle_buffer.id = (*id)(i);
                 }
               }
             }
-            data->hash = data->HashCode();
           }
         }
       }
@@ -1065,7 +1041,6 @@ particle_buffer.id = (*id)(i);
               overlapSize(Z_COORD) > 0);
     }
 };
-
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
