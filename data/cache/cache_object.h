@@ -58,17 +58,28 @@ enum CacheAccess { READ, WRITE, READ_WRITE };
 
 class CacheObject {
     public:
-        CacheObject();
+        explicit CacheObject(std::string type, GeometricRegion &region);
 
-        bool IsAvailable();
-        virtual distance_t GetDistance(const DataSet &data_set);
-        virtual void ConstructFrom(const DataSet &data_set);
+        virtual void Read(const Data &read);
+        void Read(const DataSet &read_set);
+        virtual void Write(Data *write);
+        void WriteBack();
+
+        std::string type();
+        GeometricRegion region();
+        void MarkAccess(CacheAccess access);
+        void MarkWriteBack(DataSet *write);
+        distance_t GetDistance(const DataSet &data_set,
+                               CacheAccess access = WRITE) const;
 
     private:
+        std::string type_;
+        GeometricRegion region_;
         CacheAccess access_;
         int users_;
-        typedef std::map<logical_data_id_t, CacheInstance> CacheInstances;
-        CacheInstances instances_;
+        DataSet write_back_;
+
+        bool IsAvailable();
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

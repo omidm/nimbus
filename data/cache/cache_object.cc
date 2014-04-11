@@ -37,6 +37,7 @@
  */
 
 #include <set>
+#include <string>
 
 #include "data/cache/cache_object.h"
 #include "data/cache/utils.h"
@@ -45,16 +46,59 @@
 
 namespace nimbus {
 
-CacheObject::CacheObject() : users_(0) {}
+CacheObject::CacheObject(std::string type)
+     : type_(type), region_(region), users_(0) {
+}
+
+void CacheObject::Read(const DataSet &read_set) {
+    for (DataSet::iterator it = read_set.begin();
+            it != read.end();
+            ++it) {
+        Data *d = *it;
+        Read(*d);
+    }
+}
+
+void CacheObject::Write(DataSet *write_set) {
+    for (DataSet::iterator it = write_set->begin();
+            it != write_set.end();
+            ++it) {
+        Data *d = *it;
+        Write(d);
+    }
+}
+
+std::string CacheObject::type() {
+    return type_;
+}
+
+GeometricRegion CacheObject::region() {
+    return region;
+}
+
+void CacheObject::MarkAccess(CacheAccess access) {
+    access_ = access;
+    users_++;
+}
+
+void CacheObject::MarkWriteBack(DataSet *write) {
+    write_back_ = *write;
+    for (DataSet::iterator it = write_back_.begin();
+            it != write_back_.end();
+            ++it) {
+        Data *d = *it;
+        d->MarkCacheObject(this);
+    }
+}
+
+distance_t CacheObject::GetDistance(const DataSet &data_set) const {
+    distance_t distance = 0;
+    // TODO(chinmayee): implement actual min distance algorithm
+    return distance;
+}
 
 bool CacheObject::IsAvailable() {
     return (users_ == 0);
-}
-
-distance_t CacheObject::GetDistance(const DataSet &data_set) {
-    distance_t distance = 0;
-    // TODO(chinmayee): implement actual min distance algorithm later
-    return distance;
 }
 
 }  // namespace nimbus

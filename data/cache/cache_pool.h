@@ -44,6 +44,7 @@
 
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
+#include "data/cache/utils.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -53,12 +54,11 @@ class CachePool {
     public:
         CachePool();
 
-        void RegisterType(const std::string type,
-                          const CacheObject prototype);
-        void* GetCachedObject(const std::string type,
-                              const GeometricRegion &region,
-                              const Job &job,
-                              const DataArray &da);
+        CacheObject* GetCachedObject(const Job &job,
+                                     const DataArray &da,
+                                     const GeometricRegion &region,
+                                     const CacheObject &prototype,
+                                     CacheAccess access = WRITE);
 
     private:
         typedef std::map<std::string,
