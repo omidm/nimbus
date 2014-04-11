@@ -105,6 +105,7 @@ class Worker {
  private:
   Log log_;
   Log version_log_;
+  Log data_hash_log_;
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;

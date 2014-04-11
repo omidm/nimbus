@@ -43,6 +43,7 @@
 #include <ctime>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
+#include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
 
@@ -75,6 +76,43 @@ void DumpVersionInformation(Job *job, const DataArray& da, Log *log, std::string
            hash_function(input), input.c_str());
   log->WriteToFile(std::string(buff), LOG_INFO);
 }
+
+void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
+    std::string input = "";
+    for (size_t i = 0; i < da.size(); ++i) {
+      if (dynamic_cast<PhysBAMData*>(da[i]) != NULL) { // NOLINT
+        std::ostringstream ss_l;
+        ss_l << da[i]->logical_id();
+        input += ss_l.str();
+        input += " : ";
+        // std::ostringstream ss_p;
+        // ss_p << da[i]->physical_id();
+        // input += ss_p.str();
+        // input += " : ";
+        std::ostringstream ss_v;
+        ss_v << dynamic_cast<PhysBAMData*>(da[i])->HashCode(); // NOLINT
+        input += ss_v.str();
+        input += " - ";
+      }
+    }
+    hash<std::string> hash_function;
+
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff),
+        "%s name: %s id: %llu  aggregate_hash: %lu hashes: %s",
+        tag.c_str(), job->name().c_str(), job->id().elem(),
+        hash_function(input), input.c_str());
+    log->WriteToFile(std::string(buff), LOG_INFO);
+  }
+}
+
+
+
+
 
 
 
@@ -188,6 +226,7 @@ void Worker::ExecuteJob(Job* job) {
   }
 
   // DumpVersionInformation(job, da, &version_log_, "version_in");
+  DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
 
   IDSet<physical_data_id_t> write = job->write_set();
@@ -302,6 +341,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   std::ostringstream ss;
   ss << id_;
   version_log_.set_file_name(ss.str() + "_version_log.txt");
+  data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
