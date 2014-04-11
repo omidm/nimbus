@@ -52,23 +52,16 @@ namespace nimbus {
 class CacheTable {
     public:
         CacheTable();
-
-        void* GetCachedObject(const GeometricRegion &region,
-                              const Job &job,
-                              const DataArray &da);
+        void AddEntry(const GeometricRegion &region,
+                      const CacheObject *co);
+        CacheObject *GetClosestAvailable(const GeometricRegion &region,
+                                         const DataSet &read,
+                                         CacheAccess access = WRITE) const;
 
     private:
-        void GetReadWrite(const Job &job,
-                          const DataArray &da,
-                          DataSet *read,
-                          DataSet *write,
-                          StringSet *read_var,
-                          StringSet *write_var);
         int GetMinDistanceIndex(const CacheObjects *objects,
                                 const DataSet &read,
-                                const DataSet &write,
-                                const StringSet &read_var,
-                                const StringSet &write_var);
+                                CacheAccess access = WRITE) const;
         typedef std::map<nimbus::GeometricRegion,
                          CacheObjects *,
                          GRComparisonType> Table;
