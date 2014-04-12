@@ -258,6 +258,14 @@ void Worker::ExecuteJob(Job* job) {
   log_.WriteToOutputStream(std::string(buff), LOG_INFO);
 
 
+  DataArray daw;
+  for (iter = write.begin(); iter != write.end(); iter++) {
+    daw.push_back(data_map_[*iter]);
+  }
+  DumpDataHashInformation(job, daw, &data_hash_log_, "hash_out");
+
+
+
   if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
