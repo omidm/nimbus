@@ -41,6 +41,7 @@
 
 #include "data/cache/cache_object.h"
 #include "data/cache/utils.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
@@ -50,6 +51,10 @@ namespace nimbus {
 CacheObject::CacheObject(std::string type,
                          const GeometricRegion &region)
      : type_(type), region_(region), users_(0) {
+}
+
+void CacheObject::Read(const Data &read) {
+    dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
 void CacheObject::Read(const DataSet &read_set,
@@ -62,6 +67,10 @@ void CacheObject::Read(const DataSet &read_set,
     }
 }
 
+void CacheObject::Write(Data *write) const {
+    dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
+}
+
 void CacheObject::Write() const {
     for (DataSet::iterator it = write_back_.begin();
             it != write_back_.end();
@@ -69,6 +78,11 @@ void CacheObject::Write() const {
         Data *d = *it;
         Write(d);
     }
+}
+
+CacheObject *CacheObject::CreateNew() const {
+    dbg(DBG_ERROR, "CacheObject CreateNew method not imlemented\n");
+    return NULL;
 }
 
 std::string CacheObject::type() const {
@@ -99,12 +113,21 @@ void CacheObject::MarkWriteBack(const DataSet &write) {
 
 distance_t CacheObject::GetDistance(const DataSet &data_set,
                                     CacheAccess access) const {
-    distance_t distance = 0;
-    // TODO(chinmayee): implement actual min distance algorithm
-    return distance;
+    distance_t max_distance = 2*data_set.size();
+    distance_t cur_distance = 0;
+    if (!IsAvailable())
+        return max_distance;
+    for (DataSet::iterator it = data_set.begin();
+            it != data_set.end();
+            ++it) {
+        Data *d = *it;
+        if (!pids_.contains(d->physical_id()))
+            cur_distance++;
+    }
+    return cur_distance;
 }
 
-bool CacheObject::IsAvailable() {
+bool CacheObject::IsAvailable() const {
     return (access_ == SHARED || users_ == 1);
 }
 

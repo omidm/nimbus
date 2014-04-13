@@ -80,7 +80,7 @@ int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
     std::vector<distance_t> distance_vector(num_objects);
     distance_t min_distance = 2*read.size();
     int min_index = -1;
-    for (size_t i = 0; i < objects->size(); i++) {
+    for (size_t i = 0; i < objects->size(); ++i) {
         distance_vector[i] = objects->at(i)->GetDistance(read, access);
         if (distance_vector[i] == 0) {
             min_distance = 0;

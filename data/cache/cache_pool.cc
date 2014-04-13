@@ -42,6 +42,7 @@
 #include "data/cache/cache_pool.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
@@ -64,6 +65,10 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
         CacheTable *ct = new CacheTable();
         pool_[prototype.type()] = ct;
         co = prototype.CreateNew();
+        if (co == NULL) {
+            dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
+            exit(-1);
+        }
         ct->AddEntry(region, co);
     } else {
         CacheTable *ct = pool_[prototype.type()];
@@ -81,7 +86,7 @@ void CachePool::GetReadSet(const Job &job,
                            const DataArray &da,
                            DataSet *read) {
     PIDSet read_ids = job.read_set();
-    for (size_t i = 0; i < da.size(); i++) {
+    for (size_t i = 0; i < da.size(); ++i) {
         if (read_ids.contains(da[i]->physical_id())) {
             read->insert(da[i]);
         }
@@ -92,7 +97,7 @@ void CachePool::GetWriteSet(const Job &job,
                             const DataArray &da,
                             DataSet *write) {
     PIDSet write_ids = job.write_set();
-    for (size_t i = 0; i < da.size(); i++) {
+    for (size_t i = 0; i < da.size(); ++i) {
         if (write_ids.contains(da[i]->physical_id())) {
             write->insert(da[i]);
         }

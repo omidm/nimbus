@@ -86,7 +86,14 @@ class CacheObject {
 
         DataSet write_back_;
 
-        bool IsAvailable();
+        /* Currently, cache object contains only physical id information.
+         * Distance (cost) information and validity checks are based on
+         * physical id only.
+         * TODO(chinmayee): change this later to use logical id & version
+         * information.*/
+        PIDSet pids_;
+
+        bool IsAvailable() const;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;
