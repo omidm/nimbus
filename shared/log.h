@@ -48,7 +48,7 @@
 #include <sstream> // NOLINT
 #include <string>
 
-#define LOG_MAX_BUFF_SIZE  256
+#define LOG_MAX_BUFF_SIZE  256000
 
 #ifndef _NIMBUS_NO_LOG
 #define log_Print(...) Print(__VA_ARGS__)
