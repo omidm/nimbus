@@ -48,35 +48,42 @@
 #include <vector>
 
 #include "data/cache/utils.h"
-#include "shared/nimbus_types.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-enum CacheAccess { READ, WRITE, READ_WRITE };
+enum CacheAccess { SHARED, EXCLUSIVE };
 
 class CacheObject {
     public:
-        explicit CacheObject(std::string type, GeometricRegion &region);
+        explicit CacheObject(std::string type,
+                             const GeometricRegion &region);
 
         virtual void Read(const Data &read);
-        void Read(const DataSet &read_set);
-        virtual void Write(Data *write);
-        void WriteBack();
+        void Read(const DataSet &read_set, bool read_only_valid = false);
+        virtual void Write(Data *write) const;
+        void Write() const;
 
-        std::string type();
-        GeometricRegion region();
+        virtual CacheObject *CreateNew() const;
+
+        std::string type() const;
+        GeometricRegion region() const;
         void MarkAccess(CacheAccess access);
-        void MarkWriteBack(DataSet *write);
+        void MarkWriteBack(const DataSet &write);
         distance_t GetDistance(const DataSet &data_set,
-                               CacheAccess access = WRITE) const;
+                               CacheAccess access = EXCLUSIVE) const;
 
     private:
         std::string type_;
         GeometricRegion region_;
+
         CacheAccess access_;
         int users_;
+        bool read_valid_;
+        bool write_valid_;
+
         DataSet write_back_;
 
         bool IsAvailable();

@@ -42,7 +42,6 @@
 #define NIMBUS_DATA_CACHE_UTILS_H_
 
 #include <set>
-#include <string>
 
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -53,7 +52,6 @@ namespace nimbus {
 
 /* Types. */
 typedef uint64_t distance_t;
-typedef std::set<std::string> StringSet;
 typedef std::set<Data *> DataSet;
 typedef IDSet<physical_data_id_t> PIDSet;
 

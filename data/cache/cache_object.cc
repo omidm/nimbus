@@ -41,64 +41,71 @@
 
 #include "data/cache/cache_object.h"
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-CacheObject::CacheObject(std::string type)
+CacheObject::CacheObject(std::string type,
+                         const GeometricRegion &region)
      : type_(type), region_(region), users_(0) {
 }
 
-void CacheObject::Read(const DataSet &read_set) {
+void CacheObject::Read(const DataSet &read_set,
+                       bool read_only_valid) {
     for (DataSet::iterator it = read_set.begin();
-            it != read.end();
+            it != read_set.end();
             ++it) {
         Data *d = *it;
         Read(*d);
     }
 }
 
-void CacheObject::Write(DataSet *write_set) {
-    for (DataSet::iterator it = write_set->begin();
-            it != write_set.end();
+void CacheObject::Write() const {
+    for (DataSet::iterator it = write_back_.begin();
+            it != write_back_.end();
             ++it) {
         Data *d = *it;
         Write(d);
     }
 }
 
-std::string CacheObject::type() {
+std::string CacheObject::type() const {
     return type_;
 }
 
-GeometricRegion CacheObject::region() {
-    return region;
+GeometricRegion CacheObject::region() const {
+    return region_;
 }
 
 void CacheObject::MarkAccess(CacheAccess access) {
     access_ = access;
-    users_++;
+    if (access_ == SHARED)
+        users_++;
+    else
+        users_ = 1;
 }
 
-void CacheObject::MarkWriteBack(DataSet *write) {
-    write_back_ = *write;
+void CacheObject::MarkWriteBack(const DataSet &write) {
+    write_back_ = write;
     for (DataSet::iterator it = write_back_.begin();
             it != write_back_.end();
             ++it) {
         Data *d = *it;
-        d->MarkCacheObject(this);
+        dbg(DBG_ERROR, "%p\n", d);
     }
 }
 
-distance_t CacheObject::GetDistance(const DataSet &data_set) const {
+distance_t CacheObject::GetDistance(const DataSet &data_set,
+                                    CacheAccess access) const {
     distance_t distance = 0;
     // TODO(chinmayee): implement actual min distance algorithm
     return distance;
 }
 
 bool CacheObject::IsAvailable() {
-    return (users_ == 0);
+    return (access_ == SHARED || users_ == 1);
 }
 
 }  // namespace nimbus

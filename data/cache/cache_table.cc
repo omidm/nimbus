@@ -41,6 +41,7 @@
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -49,9 +50,9 @@ namespace nimbus {
 CacheTable::CacheTable() : table_(Table(GeometricRegionLess)) {}
 
 void CacheTable::AddEntry(const GeometricRegion &region,
-                          const CacheObject *co) {
+                          CacheObject *co) {
     CacheObjects *cos = NULL;
-    if(table_.find(region) == table_.end()) {
+    if (table_.find(region) == table_.end()) {
         cos = new CacheObjects();
         table_[region] = cos;
     } else {
@@ -62,14 +63,14 @@ void CacheTable::AddEntry(const GeometricRegion &region,
 
 CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
                                              const DataSet &read,
-                                             CacheAccess access) const {
+                                             CacheAccess access) {
     if (table_.find(region) == table_.end())
         return NULL;
     int min = GetMinDistanceIndex(table_[region], read, access);
     if (min == -1)
         return NULL;
     else
-        return table_[region]->at(i);
+        return table_[region]->at(min);
 }
 
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,

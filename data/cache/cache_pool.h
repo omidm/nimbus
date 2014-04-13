@@ -45,6 +45,7 @@
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -58,13 +59,21 @@ class CachePool {
                                      const DataArray &da,
                                      const GeometricRegion &region,
                                      const CacheObject &prototype,
-                                     CacheAccess access = WRITE);
+                                     CacheAccess access = EXCLUSIVE,
+                                     bool read_only_valid = false);
 
     private:
         typedef std::map<std::string,
                          CacheTable *> Pool;
 
         Pool pool_;
+
+        static void GetReadSet(const Job &job,
+                               const DataArray &da,
+                               DataSet *read);
+        static void GetWriteSet(const Job &job,
+                                const DataArray &da,
+                                DataSet *read);
 };  // class CachePool
 
 }  // namespace nimbus
