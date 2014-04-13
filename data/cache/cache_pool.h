@@ -60,7 +60,7 @@ class CachePool {
                                      const GeometricRegion &region,
                                      const CacheObject &prototype,
                                      CacheAccess access = EXCLUSIVE,
-                                     bool read_only_valid = false);
+                                     bool read_only_keep_valid = false);
 
     private:
         typedef std::map<std::string,

@@ -62,7 +62,7 @@ class CacheObject {
                              const GeometricRegion &region);
 
         virtual void Read(const Data &read);
-        void Read(const DataSet &read_set, bool read_only_valid = false);
+        void Read(const DataSet &read_set);
         virtual void Write(Data *write) const;
         void Write() const;
 
@@ -70,8 +70,14 @@ class CacheObject {
 
         std::string type() const;
         GeometricRegion region() const;
-        void MarkAccess(CacheAccess access);
-        void MarkWriteBack(const DataSet &write);
+
+        void AcquireAccess(CacheAccess access);
+        void ReleaseAccess();
+
+        void SetUpRead(const DataSet &read_set,
+                       bool read_only_keep_valid);
+        void SetUpWrite(const DataSet &write_set);
+
         distance_t GetDistance(const DataSet &data_set,
                                CacheAccess access = EXCLUSIVE) const;
 
@@ -93,7 +99,7 @@ class CacheObject {
          * information.*/
         PIDSet pids_;
 
-        bool IsAvailable() const;
+        bool IsAvailable(CacheAccess access) const;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

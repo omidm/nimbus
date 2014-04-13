@@ -56,7 +56,7 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
                                         const GeometricRegion &region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
-                                        bool read_only_valid) {
+                                        bool read_only_keep_valid) {
     DataSet read,  write;
     GetReadSet(job, da, &read);
     GetWriteSet(job, da, &write);
@@ -76,9 +76,10 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
         if (co == NULL)
             ct->AddEntry(region, co);
     }
-    co->MarkAccess(access);
-    co->Read(read, read_only_valid);
-    co->MarkWriteBack(write);
+    co->AcquireAccess(access);
+    co->Read(read);
+    co->SetUpRead(read, read_only_keep_valid);
+    co->SetUpWrite(write);
     return co;
 }
 

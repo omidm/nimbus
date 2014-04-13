@@ -57,13 +57,13 @@ void CacheObject::Read(const Data &read) {
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
-void CacheObject::Read(const DataSet &read_set,
-                       bool read_only_valid) {
+void CacheObject::Read(const DataSet &read_set) {
     for (DataSet::iterator it = read_set.begin();
             it != read_set.end();
             ++it) {
         Data *d = *it;
-        Read(*d);
+        if (!pids_.contains(d->physical_id()))
+            Read(*d);
     }
 }
 
@@ -77,6 +77,7 @@ void CacheObject::Write() const {
             ++it) {
         Data *d = *it;
         Write(d);
+        // TODO(chinmayee): remove pointer from data to cache object
     }
 }
 
@@ -93,7 +94,7 @@ GeometricRegion CacheObject::region() const {
     return region_;
 }
 
-void CacheObject::MarkAccess(CacheAccess access) {
+void CacheObject::AcquireAccess(CacheAccess access) {
     access_ = access;
     if (access_ == SHARED)
         users_++;
@@ -101,13 +102,33 @@ void CacheObject::MarkAccess(CacheAccess access) {
         users_ = 1;
 }
 
-void CacheObject::MarkWriteBack(const DataSet &write) {
-    write_back_ = write;
+void CacheObject::ReleaseAccess() {
+    users_--;
+}
+
+void CacheObject::SetUpRead(const DataSet &read_set,
+                            bool read_only_keep_valid) {
+    pids_.clear();
+    if (read_only_keep_valid) {
+        for (DataSet::iterator it = read_set.begin();
+                it != read_set.end();
+                ++it) {
+            Data *d = *it;
+            if (read_only_keep_valid) {
+                pids_.insert(d->physical_id());
+            }
+        }
+    }
+}
+
+void CacheObject::SetUpWrite(const DataSet &write_set) {
+    write_back_ = write_set;
     for (DataSet::iterator it = write_back_.begin();
             it != write_back_.end();
             ++it) {
         Data *d = *it;
-        dbg(DBG_ERROR, "%p\n", d);
+        pids_.insert(d->physical_id());
+        // TODO(chinmayee): insert pointer from data to cache object
     }
 }
 
@@ -115,7 +136,7 @@ distance_t CacheObject::GetDistance(const DataSet &data_set,
                                     CacheAccess access) const {
     distance_t max_distance = 2*data_set.size();
     distance_t cur_distance = 0;
-    if (!IsAvailable())
+    if (!IsAvailable(access))
         return max_distance;
     for (DataSet::iterator it = data_set.begin();
             it != data_set.end();
@@ -127,8 +148,9 @@ distance_t CacheObject::GetDistance(const DataSet &data_set,
     return cur_distance;
 }
 
-bool CacheObject::IsAvailable() const {
-    return (access_ == SHARED || users_ == 1);
+bool CacheObject::IsAvailable(CacheAccess access) const {
+    return ((access == EXCLUSIVE && users_ == 0) ||
+            (access == SHARED && access_ == SHARED));
 }
 
 }  // namespace nimbus
