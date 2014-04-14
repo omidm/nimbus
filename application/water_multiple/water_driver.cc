@@ -263,6 +263,8 @@ InitializeIncompressibleProjectionHelper(
             projection->laplace);
     laplace->grid = grid_input;
     laplace->second_order_cut_cell_method = true;
+    // TODO(quhang), u_interface is not handled in an elegent way. It is always
+    // initialized as zero, but still treated as a simulation variable.
     if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
       laplace->u_interface.Resize(grid_input);
     } else {

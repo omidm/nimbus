@@ -139,10 +139,9 @@ void JobProjectionLoopIteration::Execute(
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI,
                           NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PSI_D,
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PSI_D, APP_PSI_N,
                           APP_PRESSURE, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Central[index], APP_PSI_N,
-                          APP_U_INTERFACE, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Central[index], APP_U_INTERFACE, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_FACE_VEL, NULL);
       LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index], APP_PRESSURE, NULL);
