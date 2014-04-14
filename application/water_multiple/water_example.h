@@ -4,7 +4,7 @@
 //#####################################################################
 #ifndef __WATER_EXAMPLE__
 #define __WATER_EXAMPLE__
-#include "data/physbam/translator_physbam.h"
+#include "data/physbam/translator_physbam_old.h"
 #include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>
 #include <PhysBAM_Tools/Grids_Uniform_Boundaries/BOUNDARY_UNIFORM.h>
@@ -73,7 +73,7 @@ public:
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 
-    nimbus::TranslatorPhysBAM<TV> translator;
+    nimbus::TranslatorPhysBAMOld<TV> translator;
 
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;

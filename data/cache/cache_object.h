@@ -61,9 +61,9 @@ class CacheObject {
         explicit CacheObject(std::string type,
                              const GeometricRegion &region);
 
-        virtual void Read(const Data &read);
+        virtual void ReadToCache(const DataSet &read_set);
         void Read(const DataSet &read_set);
-        virtual void Write(Data *write) const;
+        virtual void WriteFromCache(const DataSet &write_set) const;
         void Write() const;
 
         virtual CacheObject *CreateNew() const;

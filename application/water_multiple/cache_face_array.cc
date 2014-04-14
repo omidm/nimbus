@@ -38,11 +38,15 @@
 
 #include <string>
 
+#include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/cache_face_array.h"
+#include "application/water_multiple/data_face_array.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/cache/cache_object.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
+#include "worker/physical_data_instance.h"
 
 namespace application {
 
@@ -52,11 +56,18 @@ CacheFaceArray(std::string type, const nimbus::GeometricRegion &region)
 }
 
 template<typename T> void CacheFaceArray<T>::
-Read(const Data &read) {
+ReadToCache(const nimbus::DataSet &read_set) {
+//    DataFaceArray<T> *d = dynamic_cast<DataFaceArray<T> *>(read); 
+//    if (d == NULL) {
+//        dbg(DBG_WARN, "Cannot cast data %s to DataFaceArray, read unsuccessful\n",
+//                d->name().c_str());
+//        return;
+//    } else {
+//    }
 }
 
 template<typename T> void CacheFaceArray<T>::
-Write(Data *write) const {
+WriteFromCache(const nimbus::DataSet &write_set) const {
 }
 
 template<typename T> nimbus::CacheObject *CacheFaceArray<T>::

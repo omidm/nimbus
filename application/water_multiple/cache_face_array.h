@@ -55,8 +55,8 @@ class CacheFaceArray : public nimbus::CacheObject {
     public:
         explicit CacheFaceArray(std::string type,
                                 const nimbus::GeometricRegion &region);
-        virtual void Read(const Data &read);
-        virtual void Write(Data *write) const;
+        virtual void ReadToCache(const nimbus::DataSet &read_set);
+        virtual void WriteFromCache(const nimbus::DataSet &write_set) const;
         virtual nimbus::CacheObject *CreateNew() const;
     private:
         PhysBAM::ARRAY<T, PhysBAM::FACE_INDEX<TV::dimension> > data_;

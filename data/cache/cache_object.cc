@@ -53,32 +53,29 @@ CacheObject::CacheObject(std::string type,
      : type_(type), region_(region), users_(0) {
 }
 
-void CacheObject::Read(const Data &read) {
+void CacheObject::ReadToCache(const DataSet &read_set) {
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
 void CacheObject::Read(const DataSet &read_set) {
+    DataSet read;
     for (DataSet::iterator it = read_set.begin();
             it != read_set.end();
             ++it) {
         Data *d = *it;
         if (!pids_.contains(d->physical_id()))
-            Read(*d);
+            read.insert(d);;
     }
+    ReadToCache(read);
 }
 
-void CacheObject::Write(Data *write) const {
+void CacheObject::WriteFromCache(const DataSet &write_set) const {
     dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
 }
 
 void CacheObject::Write() const {
-    for (DataSet::iterator it = write_back_.begin();
-            it != write_back_.end();
-            ++it) {
-        Data *d = *it;
-        Write(d);
-        // TODO(chinmayee): remove pointer from data to cache object
-    }
+    // TODO(chinmayee): remove pointer from data to cache object
+    WriteFromCache(write_back_);
 }
 
 CacheObject *CacheObject::CreateNew() const {

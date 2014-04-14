@@ -22,7 +22,7 @@
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_example.h"
-#include "data/physbam/translator_physbam.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
