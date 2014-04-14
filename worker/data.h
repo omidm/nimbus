@@ -117,6 +117,8 @@ class Data {
   IDSet<partition_id_t> neighbor_partitions_;
 };
 
+typedef std::set<Data *> DataSet;
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_WORKER_DATA_H_

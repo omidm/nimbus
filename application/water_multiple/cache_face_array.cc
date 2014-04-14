@@ -43,6 +43,7 @@
 #include "application/water_multiple/data_face_array.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/cache/cache_object.h"
+#include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
