@@ -63,12 +63,11 @@
 
 namespace nimbus {
 
-template <class VECTOR_TYPE> class TranslatorPhysBAM {
+template <class TS> class TranslatorPhysBAM {
     public:
-        typedef VECTOR_TYPE TV;
-        typedef typename TV::template REBIND<int>::TYPE TV_INT;
+        typedef PhysBAM::VECTOR<TS, 3> TV;
+        typedef PhysBAM::VECTOR<int, 3> TV_INT;
         typedef PhysBAM::GRID<TV> Grid;
-        typedef typename TV::SCALAR scalar_t;
         typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
         typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
 
@@ -85,7 +84,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
             RemovedParticleArray;
 
         typedef typename PhysBAM::PARTICLE_LEVELSET<Grid> ParticleLevelset;
-        // typedef typename PhysBAM::ARRAY<scalar_t, TV_INT> ScalarArray;
+        // typedef typename PhysBAM::ARRAY<TS, TV_INT> ScalarArray;
 
         enum {
             X_COORD = 1,
@@ -100,22 +99,22 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
         // Should be changed to protocol buffer later for compatibility.
         // TODO(quhang) .
         struct ParticleInternal {
-            scalar_t position[3];
-            scalar_t radius;
+            TS position[3];
+            TS radius;
             uint16_t quantized_collision_distance;
             int32_t id;
         };
 
         struct RemovedParticleInternal : public ParticleInternal {
-            scalar_t v[3];
+            TS v[3];
         };
 
         /** Take a FaceArray described by region and read its data from the
          *  PhysicalDataInstance objects in the objects array.
          */
-        template<typename T> void ReadFaceArray(
+        template<class T> static void ReadFaceArray(
                 const GeometricRegion &region,
-                const int_dimension_t shift[3],
+                const Coord &shift,
                 const DataSet &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             DataSet::iterator iter = read_set.begin();
@@ -174,9 +173,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                                         source_z * mult_z;
                                     source_index += src_offset;
 
-                                    int dest_x = x + dest(X_COORD) + region.x() - shift[0];
-                                    int dest_y = y + dest(Y_COORD) + region.y() - shift[1];
-                                    int dest_z = z + dest(Z_COORD) + region.z() - shift[2];
+                                    int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                                    int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                                    int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
 
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
@@ -194,20 +193,16 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
             }
         }
 
-        /* Helper function to specify the element type. Implicit template type
-         * inference seems unreliable.
-         */
         void ReadFaceArrayFloat(
                 const GeometricRegion &region,
-                const int_dimension_t shift[3],
+                const Coord shift,
                 const DataSet &read_set,
                 typename PhysBAM::ARRAY<float, FaceIndex>* fa) {
             ReadFaceArray<float>(region, shift, read_set, fa);
         }
-
         void ReadFaceArrayBool(
                 const GeometricRegion &region,
-                const int_dimension_t shift[3],
+                const Coord shift,
                 const DataSet &read_set,
                 typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
             ReadFaceArray<bool>(region, shift, read_set, fa);
@@ -215,9 +210,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
 
         /** Take a FaceArray described by region and write it out to the
          *  PhysicalDataInstance objects in the objects array. */
-        template<typename T> bool WriteFaceArray(
+        template<class T> static void WriteFaceArray(
                 const GeometricRegion &region,
-                const int_dimension_t shift[3],
+                const Coord &shift,
                 const DataSet &write_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             int_dimension_t region_size = 0;
@@ -284,9 +279,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                                     dest_z * mult_z;
                                 destination_index += dst_offset;
 
-                                int source_x = x + src(X_COORD) + region.x() - shift[0];
-                                int source_y = y + src(Y_COORD) + region.y() - shift[1];
-                                int source_z = z + src(Z_COORD) + region.z() - shift[2];
+                                int source_x = x + src(X_COORD) + region.x() - shift.x;
+                                int source_y = y + src(Y_COORD) + region.y() - shift.y;
+                                int source_z = z + src(Z_COORD) + region.z() - shift.z;
 
                                 typename PhysBAM::VECTOR<int, 3>
                                     sourceIndex(source_x, source_y, source_z);
@@ -301,26 +296,6 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                     }
                 }
             }
-            return true;
-        }
-
-        /* Helper function to specify the element type. Implicit template type
-         * inference seems unreliable.
-         */
-        bool WriteFaceArrayFloat(
-                const GeometricRegion &region,
-                const int_dimension_t shift[3],
-                const DataSet &write_set,
-                typename PhysBAM::ARRAY<float, FaceIndex>* fa) {
-            return WriteFaceArray<float>(region, shift, write_set, fa);
-        }
-
-        bool WriteFaceArrayBool(
-                const GeometricRegion &region,
-                const int_dimension_t shift[3],
-                const DataSet &write_set,
-                typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
-            return WriteFaceArray<bool>(region, shift, write_set, fa);
         }
 
         /* Reads the particle data from the PhysicalDataInstances "instances",
@@ -340,8 +315,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
          * into "particle_container-> for the local region:
          *     {-1, -1, -1, 12, 12, 12}.
          */
-        bool ReadParticles(const GeometricRegion &region,
-                const int_dimension_t shift[3],
+        static void ReadParticles(const GeometricRegion &region,
+                const Coord &shift,
                 const DataSet &read_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
@@ -359,7 +334,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
 
             ParticleArray* particles;
             if (positive) {
-                particles = &particle_container->oositive_particles;
+                particles = &particle_container->positive_particles;
             } else {
                 particles = &particle_container->negative_particles;
             }
@@ -377,7 +352,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                             dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                                     x, y, z);
                             // Warning: might be too strict.
-                            return false;
+                            return;
                         }
                         if (!merge) {
                             particle_container->Free_Particle_And_Clear_Pointer(
@@ -391,7 +366,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
 
             if (read_set.empty()) {
                 dbg(DBG_WARN, "Physical data instances are empty.\n");
-                return false;
+                return;
             }
 
             timer.StartTimer();
@@ -406,23 +381,23 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                     / static_cast<int>(sizeof(ParticleInternal));
 
                 for (ParticleInternal* p = buffer; p != buffer_end; ++p) {
-                    VECTOR_TYPE absolute_position;
+                    TV absolute_position;
                     absolute_position.x = p->position[0];
                     absolute_position.y = p->position[1];
                     absolute_position.z = p->position[2];
                     ++counter1;
                     // TODO(quhang) Needs to deal with the particles that lies exactly on
                     // the boundary.
-                    if (absolute_position.x >= region.x() + shift[0] &&
-                            absolute_position.x < region.x() + region.dx() + shift[0] &&
-                            absolute_position.y >= region.y() + shift[1] &&
-                            absolute_position.y < region.y() + region.dy() + shift[1] &&
-                            absolute_position.z >= region.z() + shift[2] &&
-                            absolute_position.z < region.z() + region.dz() + shift[2]) {
+                    if (absolute_position.x >= region.x() + shift.x &&
+                            absolute_position.x < region.x() + region.dx() + shift.x &&
+                            absolute_position.y >= region.y() + shift.y &&
+                            absolute_position.y < region.y() + region.dy() + shift.y &&
+                            absolute_position.z >= region.z() + shift.z &&
+                            absolute_position.z < region.z() + region.dz() + shift.z) {
                         ++counter2;
-                        TV_INT bucket_index(round(absolute_position.x - shift[0]),
-                                round(absolute_position.y - shift[1]),
-                                round(absolute_position.z - shift[2]));
+                        TV_INT bucket_index(round(absolute_position.x - shift.x),
+                                round(absolute_position.y - shift.y),
+                                round(absolute_position.z - shift.z));
                         assert(particles->Valid_Index(bucket_index));
                         if (!(*particles)(bucket_index)) {
                             (*particles)(bucket_index) = particle_container->
@@ -452,7 +427,6 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                     "In ReadParticles, go through %ld particles and read %ld particles"
                     " in %0.2f seconds\n",
                     counter1, counter2, timer.GetTime());
-            return true;
         }
 
 
@@ -471,8 +445,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
          * into the global region of corresponding "instances":
          *     {9, 9, 9, 22, 22, 22}.
          */
-        bool WriteParticles(const GeometricRegion &region,
-                const int_dimension_t shift[3],
+        static void WriteParticles(const GeometricRegion &region,
+                const Coord &shift,
                 const DataSet &write_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
@@ -511,7 +485,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                         if (!particles->Valid_Index(bucket_index)) {
                             dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                                     x, y, z);
-                            return false;
+                            return;
                         }
                         DataSet::iterator iter = write_set.begin();
                         for (; iter != write_set.end(); ++iter) {
@@ -520,17 +494,17 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                             GeometricRegion data_region = data->region();
                             // TODO(quhang) needs to double check the margin setting.
                             const int_dimension_t kMargin = 1;
-                            if (x + shift[0] <
+                            if (x + shift.x <
                                     data_region.x() - kMargin ||
-                                    x + shift[0] >
+                                    x + shift.x >
                                     data_region.x() + data_region.dx() + kMargin ||
-                                    y + shift[1] <
+                                    y + shift.y <
                                     data_region.y() - kMargin ||
-                                    y + shift[1] >
+                                    y + shift.y >
                                     data_region.y() + data_region.dy() + kMargin ||
-                                    z + shift[2] <
+                                    z + shift.z <
                                     data_region.z() - kMargin ||
-                                    z + shift[2] >
+                                    z + shift.z >
                                     data_region.z() + data_region.dz() + kMargin) {
                                 continue;
                             }
@@ -538,8 +512,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                             while (particle_bucket) {
                                 for (int i = 1; i <= particle_bucket->array_collection->Size();
                                         i++) {
-                                    VECTOR_TYPE particle_position = particle_bucket->X(i);
-                                    VECTOR_TYPE absolute_position =
+                                    TV particle_position = particle_bucket->X(i);
+                                    TV absolute_position =
                                         particle_position * (float) kScale + 1.0; // NOLINT
                                     ++counter1;
                                     // TODO(quhang) Needs to deal with the case when the particle
@@ -594,7 +568,6 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 data->CommitTempBuffer();
             }
-            return true;
         }
 
         /* Reads the removed particle data from the PhysicalDataInstances
@@ -607,8 +580,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
          * "merge" option specifies whether to keep original particle data in
          * "particle_container->.
          */
-        bool ReadRemovedParticles(const GeometricRegion &region,
-                const int_dimension_t shift[3],
+        static void ReadRemovedParticles(const GeometricRegion &region,
+                const Coord &shift,
                 const DataSet &read_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
@@ -631,7 +604,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                             dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                                     x, y, z);
                             // Warning: might be too strict.
-                            return false;
+                            return;
                         }
                         if (!merge) {
                             if ((*particles)(bucket_index)) {
@@ -643,7 +616,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
 
             if (read_set.empty()) {
                 dbg(DBG_WARN, "Physical data instances are empty.\n");
-                return false;
+                return;
             }
 
             DataSet::iterator iter = read_set.begin();
@@ -656,19 +629,19 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                 / static_cast<int>(sizeof(RemovedParticleInternal));
 
                 for (RemovedParticleInternal* p = buffer; p != buffer_end; ++p) {
-                VECTOR_TYPE absolute_position;
+                TV absolute_position;
                 absolute_position.x = p->position[0];
                 absolute_position.y = p->position[1];
                 absolute_position.z = p->position[2];
-                if (absolute_position.x >= region.x() + shift[0] &&
-                    absolute_position.x < region.x() + region.dx() + shift[0] &&
-                    absolute_position.y >= region.y() + shift[1] &&
-                    absolute_position.y < region.y() + region.dy() + shift[1] &&
-                    absolute_position.z >= region.z() + shift[2] &&
-                    absolute_position.z < region.z() + region.dz() + shift[2]) {
-                        TV_INT bucket_index(round(absolute_position.x - shift[0]),
-                                round(absolute_position.y - shift[1]),
-                                round(absolute_position.z - shift[2]));
+                if (absolute_position.x >= region.x() + shift.x &&
+                    absolute_position.x < region.x() + region.dx() + shift.x &&
+                    absolute_position.y >= region.y() + shift.y &&
+                    absolute_position.y < region.y() + region.dy() + shift.y &&
+                    absolute_position.z >= region.z() + shift.z &&
+                    absolute_position.z < region.z() + region.dz() + shift.z) {
+                        TV_INT bucket_index(round(absolute_position.x - shift.x),
+                                round(absolute_position.y - shift.y),
+                                round(absolute_position.z - shift.z));
                         assert(particles->Valid_Index(bucket_index));
                         // NOTE(By Chinmayee): Please comment out these changes and don't
                         // delete them when pushing any updates, till we verify that the
@@ -695,13 +668,12 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                                 template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
                             (*id)(index) = p->id;
                         }
-                        particle_bucket->V(index) = VECTOR_TYPE(p->v[0],
+                        particle_bucket->V(index) = TV(p->v[0],
                                 p->v[1],
                                 p->v[2]);
                     }
                 }  // End the loop for buffer.
             }
-            return true;
         }
 
         /* Writes the removed particle data from PhysBAM particle container
@@ -713,8 +685,8 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
          * negative particles.
          */
         // TODO(quhang) The similar optimization in WriteParticles can be put here.
-        bool WriteRemovedParticles(const GeometricRegion &region,
-                const int_dimension_t shift[3],
+        static void WriteRemovedParticles(const GeometricRegion &region,
+                const Coord &shift,
                 const DataSet &write_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
@@ -741,14 +713,14 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                         if (!particles->Valid_Index(bucket_index)) {
                             dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                                     x, y, z);
-                            return false;
+                            return;
                         }
                         RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
                         while (particle_bucket) {
                             for (int i = 1; i <= particle_bucket->array_collection->Size();
                                     i++) {
-                                VECTOR_TYPE particle_position = particle_bucket->X(i);
-                                VECTOR_TYPE absolute_position =
+                                TV particle_position = particle_bucket->X(i);
+                                TV absolute_position =
                                     particle_position * (float) kScale + 1.0; // NOLINT
                                 DataSet::iterator iter = write_set.begin();
                                 // Iterate across instances, checking each one.
@@ -801,15 +773,14 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 data->CommitTempBuffer();
             }
-            return true;
         }
 
         /* Read scalar array from PhysicalDataInstances specified by instances,
          * limited by the GeometricRegion specified by region, into the
          * ScalarArray specified by dest. This allocates a new scalar array. */
-        template<typename T> typename PhysBAM::ARRAY<T, TV_INT>* ReadScalarArray(
+        template<class T> static void ReadScalarArray(
                 const GeometricRegion &region,
-                const int_dimension_t shift[3],
+                const Coord &shift,
                 const DataSet &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
             DataSet::iterator iter = read_set.begin();
@@ -833,9 +804,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                                     (source_z * (data->region().dy() * data->region().dx())) +
                                     (source_y * (data->region().dx())) +
                                     source_x;
-                                int dest_x = x + dest(X_COORD) + region.x() - shift[0];
-                                int dest_y = y + dest(Y_COORD) + region.y() - shift[1];
-                                int dest_z = z + dest(Z_COORD) + region.z() - shift[2];
+                                int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                                int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                                int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
                                 TV_INT destination_index(dest_x, dest_y, dest_z);
                                 assert(source_index < data->size() && source_index >= 0);
                                 (*sa)(destination_index) = buffer[source_index];
@@ -844,41 +815,13 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                     }
                 }
             }
-            return sa;
-        }
-
-        /* Helper function to specify the element type. Implicit template type
-         * inference seems unreliable.
-         */
-        typename PhysBAM::ARRAY<float, TV_INT>* ReadScalarArrayFloat(
-                const GeometricRegion &region,
-                const int_dimension_t shift[3],
-                const DataSet &read_set,
-                typename PhysBAM::ARRAY<float, TV_INT>* sa) {
-            return ReadScalarArray<float>(region, shift, read_set, sa);
-        }
-
-        typename PhysBAM::ARRAY<int, TV_INT>* ReadScalarArrayInt(
-                const GeometricRegion* region,
-                const int_dimension_t shift[3],
-                const DataSet &read_set,
-                typename PhysBAM::ARRAY<int, TV_INT>* sa) {
-            return ReadScalarArray<int>(region, shift, read_set, sa);
-        }
-
-        typename PhysBAM::ARRAY<bool, TV_INT>* ReadScalarArrayBool(
-                const GeometricRegion* region,
-                const int_dimension_t shift[3],
-                const DataSet &read_set,
-                typename PhysBAM::ARRAY<bool, TV_INT>* sa) {
-            return ReadScalarArray<bool>(region, shift, read_set, sa);
         }
 
         /* Write scalar array data into PhysicalDataInstances specified by instances,
          * limited by the GeometricRegion region. This frees the physbam scalar array. */
-        template<typename T> bool WriteScalarArray(
+        template<class T> static void WriteScalarArray(
                 const GeometricRegion &region,
-                const int_dimension_t shift[3],
+                const Coord &shift,
                 DataSet &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
             if (sa->counts != TV_INT(region.dx(), region.dy(), region.dz())) {
@@ -911,9 +854,9 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                                     (dest_z * (data->region().dy() * data->region().dx())) +
                                     (dest_y * (data->region().dx())) +
                                     dest_x;
-                                int source_x = x + src(X_COORD) + region.x() - shift[0];
-                                int source_y = y + src(Y_COORD) + region.y() - shift[1];
-                                int source_z = z + src(Z_COORD) + region.z() - shift[2];
+                                int source_x = x + src(X_COORD) + region.x() - shift.x;
+                                int source_y = y + src(Y_COORD) + region.y() - shift.y;
+                                int source_z = z + src(Z_COORD) + region.z() - shift.z;
                                 TV_INT source_index(source_x, source_y, source_z);
                                 assert(destination_index < data->size() && destination_index >= 0);
                                 buffer[destination_index] = (*sa)(source_index);
@@ -922,41 +865,13 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
                     }
                 }
             }
-            return true;
-        }
-
-        /* Helper function to specify the element type. Implicit template type
-         * inference seems unreliable.
-         */
-        bool WriteScalarArrayFloat(
-                const GeometricRegion &region,
-                const int_dimension_t shift[3],
-                const DataSet &write_set,
-                typename PhysBAM::ARRAY<float, TV_INT>* sa) {
-            return WriteScalarArray<float>(region, shift, write_set, sa);
-        }
-
-        bool WriteScalarArrayInt(
-                const GeometricRegion &region,
-                const int_dimension_t shift[3],
-                const DataSet &write_set,
-                typename PhysBAM::ARRAY<int, TV_INT>* sa) {
-            return WriteScalarArray<int>(region, shift, write_set, sa);
-        }
-
-        bool WriteScalarArrayBool(
-                const GeometricRegion &region,
-                const int_dimension_t shift[3],
-                const DataSet &write_set,
-                typename PhysBAM::ARRAY<bool, TV_INT>* sa) {
-            return WriteScalarArray<bool>(region, shift, write_set, sa);
         }
 
     private:
         /* Return a vector describing what the offset of b
            within a, such that a.x + offset = b.x. If
            offset is negative, return 0. */
-        virtual Dimension3Vector GetOffset(
+        static Dimension3Vector GetOffset(
                 const GeometricRegion &a,
                 const GeometricRegion &b) {
             Dimension3Vector result;
@@ -973,7 +888,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
             return result;
         }
 
-        virtual Dimension3Vector GetOverlapSize(
+        static Dimension3Vector GetOverlapSize(
                 const GeometricRegion &src,
                 const GeometricRegion &dest) {
             Dimension3Vector result;
@@ -1000,7 +915,7 @@ template <class VECTOR_TYPE> class TranslatorPhysBAM {
             return result;
         }
 
-        virtual bool HasOverlap(Dimension3Vector overlapSize) {
+        static bool HasOverlap(Dimension3Vector overlapSize) {
             return (overlapSize(X_COORD) > 0 &&
                     overlapSize(Y_COORD) > 0 &&
                     overlapSize(Z_COORD) > 0);

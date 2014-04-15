@@ -59,7 +59,8 @@ enum CacheAccess { SHARED, EXCLUSIVE };
 class CacheObject {
     public:
         explicit CacheObject(std::string type,
-                             const GeometricRegion &region);
+                             const GeometricRegion &local_region,
+                             const GeometricRegion &global_region);
 
         virtual void ReadToCache(const DataSet &read_set);
         void Read(const DataSet &read_set);
@@ -69,7 +70,8 @@ class CacheObject {
         virtual CacheObject *CreateNew() const;
 
         std::string type() const;
-        GeometricRegion region() const;
+        GeometricRegion local_region() const;
+        GeometricRegion global_region() const;
 
         void AcquireAccess(CacheAccess access);
         void ReleaseAccess();
@@ -81,9 +83,17 @@ class CacheObject {
         distance_t GetDistance(const DataSet &data_set,
                                CacheAccess access = EXCLUSIVE) const;
 
+        virtual void GetReadSet(const Job &job,
+                                const DataArray &da,
+                                DataSet *read) const;
+        virtual void GetWriteSet(const Job &job,
+                                 const DataArray &da,
+                                 DataSet *read) const;
+
     private:
         std::string type_;
-        GeometricRegion region_;
+        GeometricRegion local_region_;
+        GeometricRegion global_region_;
 
         CacheAccess access_;
         int users_;

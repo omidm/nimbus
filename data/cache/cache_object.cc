@@ -49,8 +49,12 @@
 namespace nimbus {
 
 CacheObject::CacheObject(std::string type,
-                         const GeometricRegion &region)
-     : type_(type), region_(region), users_(0) {
+                         const GeometricRegion &local_region,
+                         const GeometricRegion &global_region)
+     : type_(type),
+       local_region_(local_region),
+       global_region_(global_region),
+       users_(0) {
 }
 
 void CacheObject::ReadToCache(const DataSet &read_set) {
@@ -66,7 +70,8 @@ void CacheObject::Read(const DataSet &read_set) {
         if (!pids_.contains(d->physical_id()))
             read.insert(d);;
     }
-    ReadToCache(read);
+    if (!read.empty())
+        ReadToCache(read);
 }
 
 void CacheObject::WriteFromCache(const DataSet &write_set) const {
@@ -87,8 +92,12 @@ std::string CacheObject::type() const {
     return type_;
 }
 
-GeometricRegion CacheObject::region() const {
-    return region_;
+GeometricRegion CacheObject::local_region() const {
+    return local_region_;
+}
+
+GeometricRegion CacheObject::global_region() const {
+    return global_region_;
 }
 
 void CacheObject::AcquireAccess(CacheAccess access) {
@@ -143,6 +152,34 @@ distance_t CacheObject::GetDistance(const DataSet &data_set,
             cur_distance++;
     }
     return cur_distance;
+}
+
+void CacheObject::GetReadSet(const Job &job,
+                             const DataArray &da,
+                             DataSet *read) const {
+    dbg(DBG_WARN, "Using base class implementation for GetReadSet, for %s\n",
+            type_.c_str());
+    PIDSet read_ids = job.read_set();
+    for (size_t i = 0; i < da.size(); ++i) {
+        if (read_ids.contains(da[i]->physical_id()) &&
+                da[i]->name() == type_) {
+            read->insert(da[i]);
+        }
+    }
+}
+
+void CacheObject::GetWriteSet(const Job &job,
+                              const DataArray &da,
+                              DataSet *write) const {
+    dbg(DBG_WARN, "Using base class implementation for GetWriteSet, for %s\n",
+            type_.c_str());
+    PIDSet write_ids = job.write_set();
+    for (size_t i = 0; i < da.size(); ++i) {
+        if (write_ids.contains(da[i]->physical_id()) &&
+                da[i]->name() == type_) {
+            write->insert(da[i]);
+        }
+    }
 }
 
 bool CacheObject::IsAvailable(CacheAccess access) const {

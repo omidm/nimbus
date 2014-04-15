@@ -58,8 +58,8 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
                                         CacheAccess access,
                                         bool read_only_keep_valid) {
     DataSet read,  write;
-    GetReadSet(job, da, &read);
-    GetWriteSet(job, da, &write);
+    prototype.GetReadSet(job, da, &read);
+    prototype.GetWriteSet(job, da, &write);
     CacheObject *co = NULL;
     if (pool_.find(prototype.type()) == pool_.end()) {
         CacheTable *ct = new CacheTable();
@@ -81,28 +81,6 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
     co->SetUpRead(read, read_only_keep_valid);
     co->SetUpWrite(write);
     return co;
-}
-
-void CachePool::GetReadSet(const Job &job,
-                           const DataArray &da,
-                           DataSet *read) {
-    PIDSet read_ids = job.read_set();
-    for (size_t i = 0; i < da.size(); ++i) {
-        if (read_ids.contains(da[i]->physical_id())) {
-            read->insert(da[i]);
-        }
-    }
-}
-
-void CachePool::GetWriteSet(const Job &job,
-                            const DataArray &da,
-                            DataSet *write) {
-    PIDSet write_ids = job.write_set();
-    for (size_t i = 0; i < da.size(); ++i) {
-        if (write_ids.contains(da[i]->physical_id())) {
-            write->insert(da[i]);
-        }
-    }
 }
 
 }  // namespace nimbus

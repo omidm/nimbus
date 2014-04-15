@@ -67,13 +67,6 @@ class CachePool {
                          CacheTable *> Pool;
 
         Pool pool_;
-
-        static void GetReadSet(const Job &job,
-                               const DataArray &da,
-                               DataSet *read);
-        static void GetWriteSet(const Job &job,
-                                const DataArray &da,
-                                DataSet *read);
 };  // class CachePool
 
 }  // namespace nimbus

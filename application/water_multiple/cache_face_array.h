@@ -41,25 +41,34 @@
 
 #include <string>
 
-#include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/cache/cache_object.h"
+#include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
 namespace application {
 
-template<typename T>
+template<class T, class TS = float>
 class CacheFaceArray : public nimbus::CacheObject {
-        typedef PhysBAM::VECTOR<T, 3> TV;
+        typedef typename PhysBAM::VECTOR<TS, 3> TV;
+        typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
+        static Translator translator_;
+
     public:
         explicit CacheFaceArray(std::string type,
-                                const nimbus::GeometricRegion &region);
+                                const nimbus::GeometricRegion &local_region,
+                                const nimbus::GeometricRegion &global_region,
+                                const nimbus::Coord ghost_width);
         virtual void ReadToCache(const nimbus::DataSet &read_set);
         virtual void WriteFromCache(const nimbus::DataSet &write_set) const;
         virtual nimbus::CacheObject *CreateNew() const;
+
     private:
-        PhysBAM::ARRAY<T, PhysBAM::FACE_INDEX<TV::dimension> > data_;
+        nimbus::Coord ghost_width_;
+        nimbus::GeometricRegion data_region_;
+        nimbus::Coord shift_;
+        PhysBAM::ARRAY<bool, PhysBAM::FACE_INDEX<TV::dimension> > *data_;
 }; // class CacheFaceArray
 
 } // namespace application

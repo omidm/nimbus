@@ -38,45 +38,55 @@
 
 #include <string>
 
-#include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/cache_face_array.h"
 #include "application/water_multiple/data_face_array.h"
 #include "application/water_multiple/physbam_include.h"
 #include "data/cache/cache_object.h"
-#include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/physical_data_instance.h"
 
 namespace application {
 
-template<typename T> CacheFaceArray<T>::
-CacheFaceArray(std::string type, const nimbus::GeometricRegion &region)
-    : CacheObject(type, region) {
+//typedef typename PhysBAM::VECTOR<float, 3> TVF;
+//typedef nimbus::TranslatorPhysBAM<float> TranslatorF;
+//typedef PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<TVF::dimension> > FaceArrayF;
+//
+//template void TranslatorF::ReadScalarArray<float>(
+//        const nimbus::GeometricRegion&,
+//        const nimbus::Coord&,
+//        const nimbus::DataSet&,
+//        FaceArrayF*);
+
+template<class T, class TS> CacheFaceArray<T, TS>::
+CacheFaceArray(std::string type,
+               const nimbus::GeometricRegion &local_region,
+               const nimbus::GeometricRegion &global_region,
+               const nimbus::Coord ghost_width)
+    : CacheObject(type, local_region, global_region),
+      ghost_width_(ghost_width),
+      data_region_(local_region) {
+      data_region_.Enlarge(ghost_width_);
+      shift_.x = local_region.x() - global_region.x();
+      shift_.y = local_region.y() - global_region.y();
+      shift_.z = local_region.z() - global_region.z();
 }
 
-template<typename T> void CacheFaceArray<T>::
+template<class T, class TS> void CacheFaceArray<T, TS>::
 ReadToCache(const nimbus::DataSet &read_set) {
-//    DataFaceArray<T> *d = dynamic_cast<DataFaceArray<T> *>(read); 
-//    if (d == NULL) {
-//        dbg(DBG_WARN, "Cannot cast data %s to DataFaceArray, read unsuccessful\n",
-//                d->name().c_str());
-//        return;
-//    } else {
-//    }
+    translator_.ReadFaceArrayBool(data_region_, shift_, read_set, data_);
 }
 
-template<typename T> void CacheFaceArray<T>::
+template<class T, class TS> void CacheFaceArray<T, TS>::
 WriteFromCache(const nimbus::DataSet &write_set) const {
 }
 
-template<typename T> nimbus::CacheObject *CacheFaceArray<T>::
+template<class T, class TS> nimbus::CacheObject *CacheFaceArray<T, TS>::
 CreateNew() const {
     return NULL;
 }
 
-template class CacheFaceArray<float>;
-template class CacheFaceArray<bool>;
+template class CacheFaceArray<float, float>;
+template class CacheFaceArray<bool, float>;
 
 } // namespace application
