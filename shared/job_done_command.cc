@@ -39,6 +39,7 @@
   */
 
 #include "shared/job_done_command.h"
+#include "boost/lexical_cast.hpp"
 
 using namespace nimbus;  // NOLINT
 using boost::tokenizer;
@@ -55,6 +56,19 @@ JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
 : job_id_(job_id), after_set_(after_set), params_(params) {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
+  run_time_ = 0;
+  wait_time_ = 0;
+}
+
+JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
+    const IDSet<job_id_t>& after_set,
+    const Parameter& params,
+    const double run_time,
+    const double wait_time)
+: job_id_(job_id), after_set_(after_set), params_(params),
+  run_time_(run_time), wait_time_(wait_time) {
+  name_ = JOB_DONE_NAME;
+  type_ = JOB_DONE;
 }
 
 JobDoneCommand::~JobDoneCommand() {
@@ -65,7 +79,7 @@ SchedulerCommand* JobDoneCommand::Clone() {
 }
 
 bool JobDoneCommand::Parse(const std::string& params) {
-  int num = 3;
+  int num = 5;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -102,6 +116,13 @@ bool JobDoneCommand::Parse(const std::string& params) {
     return false;
   }
 
+  /* Error handling when reading values of timing? */
+  iter++;
+  run_time_ = boost::lexical_cast<double>(*iter);
+
+  iter++;
+  wait_time_ = boost::lexical_cast<double>(*iter);
+
   return true;
 }
 
@@ -110,8 +131,9 @@ std::string JobDoneCommand::toString() {
   str += (name_ + " ");
   str += (job_id_.toString() + " ");
   str += (after_set_.toString() + " ");
-  str += params_.toString();
-
+  str += (params_.toString() + " ");
+  str += (boost::lexical_cast<std::string>(run_time_) + " ");
+  str += boost::lexical_cast<std::string>(wait_time_);
   return str;
 }
 
@@ -120,7 +142,9 @@ std::string JobDoneCommand::toStringWTags() {
   str += (name_ + " ");
   str += ("id:" + job_id_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_.toString());
+  str += ("params:" + params_.toString() + " ");
+  str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
+  str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_));
   return str;
 }
 
@@ -136,5 +160,12 @@ Parameter JobDoneCommand::params() {
   return params_;
 }
 
+double JobDoneCommand::run_time() {
+  return run_time_;
+}
+
+double JobDoneCommand::wait_time() {
+  return wait_time_;
+}
 
 
