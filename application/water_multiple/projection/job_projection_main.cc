@@ -132,17 +132,16 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
 
     before.clear();
     after.clear();
@@ -162,16 +161,15 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
 
     before.clear();
@@ -193,16 +191,15 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_U_INTERFACE, APP_MATRIX_A,
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
                         APP_INDEX_M2C, APP_INDEX_C2M,
