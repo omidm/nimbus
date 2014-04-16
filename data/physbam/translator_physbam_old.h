@@ -60,7 +60,7 @@
 #include "worker/physical_data_instance.h"
 #include "worker/worker.h"
 
-#define TRANSLATE_LOG_H "[Translator]"
+#define TRANSLATE_OLD_LOG_H "[Translator]"
 
 namespace nimbus {
 
@@ -366,10 +366,10 @@ namespace nimbus {
                        bool merge = false) {
       if (positive) {
         dbg(DBG_TRANSLATE,
-            TRANSLATE_LOG_H"Start ReadParticles for positive particles\n");
+            TRANSLATE_OLD_LOG_H"Start ReadParticles for positive particles\n");
       } else {
         dbg(DBG_TRANSLATE,
-            TRANSLATE_LOG_H"Start ReadParticles for negative particles\n");
+            TRANSLATE_OLD_LOG_H"Start ReadParticles for negative particles\n");
       }
       Log timer;
       int64_t counter, counter1, counter2;
@@ -402,7 +402,7 @@ namespace nimbus {
             }
           }
       dbg(DBG_TRANSLATE,
-          TRANSLATE_LOG_H
+          TRANSLATE_OLD_LOG_H
           "In ReadParticles, clean %ld buckets in %0.2f seconds\n",
           counter, timer.GetTime());
 
@@ -470,7 +470,7 @@ namespace nimbus {
         }  // End the loop for buffer.
       }
       dbg(DBG_TRANSLATE,
-          TRANSLATE_LOG_H
+          TRANSLATE_OLD_LOG_H
           "In ReadParticles, go through %ld particles and read %ld particles"
           " in %0.2f seconds\n",
           counter1, counter2, timer.GetTime());
@@ -501,10 +501,10 @@ namespace nimbus {
                         bool positive) {
       if (positive) {
         dbg(DBG_TRANSLATE,
-            TRANSLATE_LOG_H"Start WriteParticles for positive particles\n");
+            TRANSLATE_OLD_LOG_H"Start WriteParticles for positive particles\n");
       } else {
         dbg(DBG_TRANSLATE,
-            TRANSLATE_LOG_H"Start WriteParticles for negative particles\n");
+            TRANSLATE_OLD_LOG_H"Start WriteParticles for negative particles\n");
       }
       Log timer;
       int64_t counter1, counter2;
@@ -607,7 +607,7 @@ particle_buffer.id = (*id)(i);
           }
 
       dbg(DBG_TRANSLATE,
-          TRANSLATE_LOG_H
+          TRANSLATE_OLD_LOG_H
           "In WriteParticles, scan %ld particles and write %ld particles"
           " in %0.2f seconds\n",
           counter1, counter2, timer.GetTime());

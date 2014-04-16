@@ -52,23 +52,28 @@ namespace application {
 template<class T, class TS = float>
 class CacheFaceArray : public nimbus::CacheObject {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
+        typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
+        typedef typename PhysBAM::RANGE<TV> Range;
+        typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+        typedef typename PhysBAM::ARRAY<T, FaceIndex> PhysBAMFaceArray;
+        typedef typename PhysBAM::GRID<TV> Grid;
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
-        static Translator translator_;
 
     public:
         explicit CacheFaceArray(std::string type,
                                 const nimbus::GeometricRegion &local_region,
                                 const nimbus::GeometricRegion &global_region,
-                                const nimbus::Coord ghost_width);
+                                int ghost_width);
         virtual void ReadToCache(const nimbus::DataSet &read_set);
         virtual void WriteFromCache(const nimbus::DataSet &write_set) const;
         virtual nimbus::CacheObject *CreateNew() const;
 
     private:
-        nimbus::Coord ghost_width_;
+        int ghost_width_;
         nimbus::GeometricRegion data_region_;
         nimbus::Coord shift_;
-        PhysBAM::ARRAY<bool, PhysBAM::FACE_INDEX<TV::dimension> > *data_;
+        PhysBAMFaceArray *data_;
+        Grid mac_grid;
 }; // class CacheFaceArray
 
 } // namespace application

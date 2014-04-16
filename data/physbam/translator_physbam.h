@@ -65,11 +65,11 @@ namespace nimbus {
 
 template <class TS> class TranslatorPhysBAM {
     public:
-        typedef PhysBAM::VECTOR<TS, 3> TV;
-        typedef PhysBAM::VECTOR<int, 3> TV_INT;
-        typedef PhysBAM::GRID<TV> Grid;
+        typedef typename PhysBAM::VECTOR<TS, 3> TV;
+        typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
+        typedef typename PhysBAM::GRID<TV> Grid;
         typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-        typedef PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
+        typedef typename PhysBAM::VECTOR<int_dimension_t, 3> Dimension3Vector;
 
         // Container class for particles and removed particles.
         typedef typename PhysBAM::PARTICLE_LEVELSET_UNIFORM<Grid> ParticleContainer;
@@ -112,7 +112,7 @@ template <class TS> class TranslatorPhysBAM {
         /** Take a FaceArray described by region and read its data from the
          *  PhysicalDataInstance objects in the objects array.
          */
-        template<class T> static void ReadFaceArray(
+        template<typename T> static void ReadFaceArray(
                 const GeometricRegion &region,
                 const Coord &shift,
                 const DataSet &read_set,
@@ -193,24 +193,9 @@ template <class TS> class TranslatorPhysBAM {
             }
         }
 
-        void ReadFaceArrayFloat(
-                const GeometricRegion &region,
-                const Coord shift,
-                const DataSet &read_set,
-                typename PhysBAM::ARRAY<float, FaceIndex>* fa) {
-            ReadFaceArray<float>(region, shift, read_set, fa);
-        }
-        void ReadFaceArrayBool(
-                const GeometricRegion &region,
-                const Coord shift,
-                const DataSet &read_set,
-                typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
-            ReadFaceArray<bool>(region, shift, read_set, fa);
-        }
-
         /** Take a FaceArray described by region and write it out to the
          *  PhysicalDataInstance objects in the objects array. */
-        template<class T> static void WriteFaceArray(
+        template<typename T> static void WriteFaceArray(
                 const GeometricRegion &region,
                 const Coord &shift,
                 const DataSet &write_set,
@@ -778,7 +763,7 @@ template <class TS> class TranslatorPhysBAM {
         /* Read scalar array from PhysicalDataInstances specified by instances,
          * limited by the GeometricRegion specified by region, into the
          * ScalarArray specified by dest. This allocates a new scalar array. */
-        template<class T> static void ReadScalarArray(
+        template<typename T> static void ReadScalarArray(
                 const GeometricRegion &region,
                 const Coord &shift,
                 const DataSet &read_set,
@@ -819,7 +804,7 @@ template <class TS> class TranslatorPhysBAM {
 
         /* Write scalar array data into PhysicalDataInstances specified by instances,
          * limited by the GeometricRegion region. This frees the physbam scalar array. */
-        template<class T> static void WriteScalarArray(
+        template<typename T> static void WriteScalarArray(
                 const GeometricRegion &region,
                 const Coord &shift,
                 DataSet &write_set,
@@ -921,6 +906,9 @@ template <class TS> class TranslatorPhysBAM {
                     overlapSize(Z_COORD) > 0);
         }
 };
+
+template class TranslatorPhysBAM<float>;
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_

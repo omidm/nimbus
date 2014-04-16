@@ -39,8 +39,8 @@
 #include <string>
 
 #include "application/water_multiple/cache_face_array.h"
-#include "application/water_multiple/data_face_array.h"
 #include "application/water_multiple/physbam_include.h"
+#include "application/water_multiple/physbam_tools.h"
 #include "data/cache/cache_object.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
@@ -48,21 +48,11 @@
 
 namespace application {
 
-//typedef typename PhysBAM::VECTOR<float, 3> TVF;
-//typedef nimbus::TranslatorPhysBAM<float> TranslatorF;
-//typedef PhysBAM::ARRAY<float, PhysBAM::FACE_INDEX<TVF::dimension> > FaceArrayF;
-//
-//template void TranslatorF::ReadScalarArray<float>(
-//        const nimbus::GeometricRegion&,
-//        const nimbus::Coord&,
-//        const nimbus::DataSet&,
-//        FaceArrayF*);
-
 template<class T, class TS> CacheFaceArray<T, TS>::
 CacheFaceArray(std::string type,
                const nimbus::GeometricRegion &local_region,
                const nimbus::GeometricRegion &global_region,
-               const nimbus::Coord ghost_width)
+               int ghost_width)
     : CacheObject(type, local_region, global_region),
       ghost_width_(ghost_width),
       data_region_(local_region) {
@@ -70,20 +60,28 @@ CacheFaceArray(std::string type,
       shift_.x = local_region.x() - global_region.x();
       shift_.y = local_region.y() - global_region.y();
       shift_.z = local_region.z() - global_region.z();
+      Range domain = RangeFromRegions<TV>(local_region, global_region);
+      TV_INT count = CountFromRegion(local_region);
+      mac_grid.Initialize(count, domain, true);
+      data_ = new PhysBAMFaceArray(mac_grid, ghost_width, false);
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
 ReadToCache(const nimbus::DataSet &read_set) {
-    translator_.ReadFaceArrayBool(data_region_, shift_, read_set, data_);
+    Translator::template ReadFaceArray<T>(data_region_, shift_, read_set, data_);
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
 WriteFromCache(const nimbus::DataSet &write_set) const {
+    Translator::template WriteFaceArray<T>(data_region_, shift_, write_set, data_);
 }
 
 template<class T, class TS> nimbus::CacheObject *CacheFaceArray<T, TS>::
 CreateNew() const {
-    return NULL;
+    return new CacheFaceArray(type(),
+                              local_region(),
+                              global_region(),
+                              ghost_width_);
 }
 
 template class CacheFaceArray<float, float>;
