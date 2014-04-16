@@ -59,7 +59,7 @@ CacheObject *CacheManager::GetAppObject(const Job &job,
                                         const CacheObject &prototype,
                                         CacheAccess access,
                                         bool read_only_keep_valid) {
-    DataSet read,  write;
+    DataArray read,  write;
     prototype.GetReadSet(job, da, &read);
     prototype.GetWriteSet(job, da, &write);
     CacheObject *co = NULL;

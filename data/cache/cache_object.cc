@@ -57,24 +57,22 @@ CacheObject::CacheObject(std::string type,
        users_(0) {
 }
 
-void CacheObject::ReadToCache(const DataSet &read_set) {
+void CacheObject::ReadToCache(const DataArray &read_set) {
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
-void CacheObject::Read(const DataSet &read_set) {
-    DataSet read;
-    for (DataSet::iterator it = read_set.begin();
-            it != read_set.end();
-            ++it) {
-        Data *d = *it;
+void CacheObject::Read(const DataArray &read_set) {
+    DataArray read;
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set[i];
         if (!pids_.contains(d->physical_id()))
-            read.insert(d);;
+            read.push_back(d);;
     }
     if (!read.empty())
         ReadToCache(read);
 }
 
-void CacheObject::WriteFromCache(const DataSet &write_set) const {
+void CacheObject::WriteFromCache(const DataArray &write_set) const {
     dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
 }
 
@@ -112,14 +110,12 @@ void CacheObject::ReleaseAccess() {
     users_--;
 }
 
-void CacheObject::SetUpRead(const DataSet &read_set,
+void CacheObject::SetUpRead(const DataArray &read_set,
                             bool read_only_keep_valid) {
     pids_.clear();
     if (read_only_keep_valid) {
-        for (DataSet::iterator it = read_set.begin();
-                it != read_set.end();
-                ++it) {
-            Data *d = *it;
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            Data *d = read_set[i];
             if (read_only_keep_valid) {
                 pids_.insert(d->physical_id());
             }
@@ -127,27 +123,23 @@ void CacheObject::SetUpRead(const DataSet &read_set,
     }
 }
 
-void CacheObject::SetUpWrite(const DataSet &write_set) {
+void CacheObject::SetUpWrite(const DataArray &write_set) {
     write_back_ = write_set;
-    for (DataSet::iterator it = write_back_.begin();
-            it != write_back_.end();
-            ++it) {
-        Data *d = *it;
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set[i];
         pids_.insert(d->physical_id());
         // TODO(chinmayee): insert pointer from data to cache object
     }
 }
 
-distance_t CacheObject::GetDistance(const DataSet &data_set,
+distance_t CacheObject::GetDistance(const DataArray &data_set,
                                     CacheAccess access) const {
     distance_t max_distance = 2*data_set.size();
     distance_t cur_distance = 0;
     if (!IsAvailable(access))
         return max_distance;
-    for (DataSet::iterator it = data_set.begin();
-            it != data_set.end();
-            ++it) {
-        Data *d = *it;
+    for (size_t i = 0; i < data_set.size(); ++i) {
+        Data *d = data_set[i];
         if (!pids_.contains(d->physical_id()))
             cur_distance++;
     }
@@ -156,28 +148,28 @@ distance_t CacheObject::GetDistance(const DataSet &data_set,
 
 void CacheObject::GetReadSet(const Job &job,
                              const DataArray &da,
-                             DataSet *read) const {
+                             DataArray *read) const {
     dbg(DBG_WARN, "Using base class implementation for GetReadSet, for %s\n",
             type_.c_str());
     PIDSet read_ids = job.read_set();
     for (size_t i = 0; i < da.size(); ++i) {
         if (read_ids.contains(da[i]->physical_id()) &&
                 da[i]->name() == type_) {
-            read->insert(da[i]);
+            read->push_back(da[i]);
         }
     }
 }
 
 void CacheObject::GetWriteSet(const Job &job,
                               const DataArray &da,
-                              DataSet *write) const {
+                              DataArray *write) const {
     dbg(DBG_WARN, "Using base class implementation for GetWriteSet, for %s\n",
             type_.c_str());
     PIDSet write_ids = job.write_set();
     for (size_t i = 0; i < da.size(); ++i) {
         if (write_ids.contains(da[i]->physical_id()) &&
                 da[i]->name() == type_) {
-            write->insert(da[i]);
+            write->push_back(da[i]);
         }
     }
 }

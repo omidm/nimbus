@@ -55,12 +55,12 @@ class CacheTable {
         void AddEntry(const GeometricRegion &region,
                       CacheObject *co);
         CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataSet &read,
+                                         const DataArray &read,
                                          CacheAccess access = EXCLUSIVE);
 
     private:
         int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataSet &read,
+                                const DataArray &read,
                                 CacheAccess access = EXCLUSIVE) const;
         typedef std::map<nimbus::GeometricRegion,
                          CacheObjects *,

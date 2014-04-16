@@ -62,9 +62,9 @@ class CacheObject {
                              const GeometricRegion &global_region,
                              const GeometricRegion &local_region);
 
-        virtual void ReadToCache(const DataSet &read_set);
-        void Read(const DataSet &read_set);
-        virtual void WriteFromCache(const DataSet &write_set) const;
+        virtual void ReadToCache(const DataArray &read_set);
+        void Read(const DataArray &read_set);
+        virtual void WriteFromCache(const DataArray &write_set) const;
         void Write() const;
 
         virtual CacheObject *CreateNew(const GeometricRegion &local_region) const;
@@ -76,19 +76,19 @@ class CacheObject {
         void AcquireAccess(CacheAccess access);
         void ReleaseAccess();
 
-        void SetUpRead(const DataSet &read_set,
+        void SetUpRead(const DataArray &read_set,
                        bool read_only_keep_valid);
-        void SetUpWrite(const DataSet &write_set);
+        void SetUpWrite(const DataArray &write_set);
 
-        distance_t GetDistance(const DataSet &data_set,
+        distance_t GetDistance(const DataArray &data_set,
                                CacheAccess access = EXCLUSIVE) const;
 
         virtual void GetReadSet(const Job &job,
                                 const DataArray &da,
-                                DataSet *read) const;
+                                DataArray *read) const;
         virtual void GetWriteSet(const Job &job,
                                  const DataArray &da,
-                                 DataSet *read) const;
+                                 DataArray *read) const;
 
     private:
         std::string type_;
@@ -100,7 +100,7 @@ class CacheObject {
         bool read_valid_;
         bool write_valid_;
 
-        DataSet write_back_;
+        DataArray write_back_;
 
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on

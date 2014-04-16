@@ -115,9 +115,9 @@ template <class TS> class TranslatorPhysBAM {
         template<typename T> static void ReadFaceArray(
                 const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &read_set,
+                const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
-            DataSet::iterator iter = read_set.begin();
+            DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData *data = static_cast<PhysBAMData*>(*iter);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
@@ -198,7 +198,7 @@ template <class TS> class TranslatorPhysBAM {
         template<typename T> static void WriteFaceArray(
                 const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &write_set,
+                const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             int_dimension_t region_size = 0;
             region_size += (region.dx() + 1) * region.dy() * region.dz();
@@ -207,7 +207,7 @@ template <class TS> class TranslatorPhysBAM {
             if (region_size != fa->buffer_size) {
                 dbg(DBG_WARN, "WARN: writing a face array of size %i for a region of size %i and the two sizes should be equal. This check is wrong so you can ignore this warning. I need to determine correct check. -pal\n", fa->buffer_size, region_size);  // NOLINT
             }
-            DataSet::iterator iter = write_set.begin();
+            DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
 
@@ -302,7 +302,7 @@ template <class TS> class TranslatorPhysBAM {
          */
         static void ReadParticles(const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &read_set,
+                const DataArray &read_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive,
@@ -357,7 +357,7 @@ template <class TS> class TranslatorPhysBAM {
             timer.StartTimer();
             counter1 = 0;
             counter2 = 0;
-            DataSet::iterator iter = read_set.begin();
+            DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 ParticleInternal* buffer =
@@ -432,7 +432,7 @@ template <class TS> class TranslatorPhysBAM {
          */
         static void WriteParticles(const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &write_set,
+                const DataArray &write_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive) {
@@ -446,7 +446,7 @@ template <class TS> class TranslatorPhysBAM {
             Log timer;
             int64_t counter1, counter2;
 
-            DataSet::iterator iter = write_set.begin();
+            DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 data->ClearTempBuffer();
@@ -472,7 +472,7 @@ template <class TS> class TranslatorPhysBAM {
                                     x, y, z);
                             return;
                         }
-                        DataSet::iterator iter = write_set.begin();
+                        DataArray::const_iterator iter = write_set.begin();
                         for (; iter != write_set.end(); ++iter) {
                             // Iterate across instances, checking each one.
                             PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -567,7 +567,7 @@ template <class TS> class TranslatorPhysBAM {
          */
         static void ReadRemovedParticles(const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &read_set,
+                const DataArray &read_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive,
@@ -604,7 +604,7 @@ template <class TS> class TranslatorPhysBAM {
                 return;
             }
 
-            DataSet::iterator iter = read_set.begin();
+            DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 RemovedParticleInternal* buffer =
@@ -672,12 +672,12 @@ template <class TS> class TranslatorPhysBAM {
         // TODO(quhang) The similar optimization in WriteParticles can be put here.
         static void WriteRemovedParticles(const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &write_set,
+                const DataArray &write_set,
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive
                 ) {
-            DataSet::iterator iter = write_set.begin();
+            DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 data->ClearTempBuffer();
@@ -707,7 +707,7 @@ template <class TS> class TranslatorPhysBAM {
                                 TV particle_position = particle_bucket->X(i);
                                 TV absolute_position =
                                     particle_position * (float) kScale + 1.0; // NOLINT
-                                DataSet::iterator iter = write_set.begin();
+                                DataArray::const_iterator iter = write_set.begin();
                                 // Iterate across instances, checking each one.
                                 for (; iter != write_set.end(); ++iter) {
                                     PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -766,9 +766,9 @@ template <class TS> class TranslatorPhysBAM {
         template<typename T> static void ReadScalarArray(
                 const GeometricRegion &region,
                 const Coord &shift,
-                const DataSet &read_set,
+                const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            DataSet::iterator iter = read_set.begin();
+            DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
@@ -807,7 +807,7 @@ template <class TS> class TranslatorPhysBAM {
         template<typename T> static void WriteScalarArray(
                 const GeometricRegion &region,
                 const Coord &shift,
-                DataSet &write_set,
+                DataArray &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
             if (sa->counts != TV_INT(region.dx(), region.dy(), region.dz())) {
                 dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
@@ -816,7 +816,7 @@ template <class TS> class TranslatorPhysBAM {
                 dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region.dx(), region.dy(), region.dz()); // NOLINT
             }
 
-            DataSet::iterator iter = write_set.begin();
+            DataArray::const_iterator iter = write_set.begin();
 
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);

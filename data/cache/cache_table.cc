@@ -62,7 +62,7 @@ void CacheTable::AddEntry(const GeometricRegion &region,
 }
 
 CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
-                                             const DataSet &read,
+                                             const DataArray &read,
                                              CacheAccess access) {
     if (table_.find(region) == table_.end())
         return NULL;
@@ -74,7 +74,7 @@ CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
 }
 
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
-                                    const DataSet &read,
+                                    const DataArray &read,
                                     CacheAccess access) const {
     size_t num_objects = objects->size();
     std::vector<distance_t> distance_vector(num_objects);

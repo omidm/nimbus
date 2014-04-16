@@ -67,12 +67,12 @@ CacheFaceArray(std::string type,
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
-ReadToCache(const nimbus::DataSet &read_set) {
+ReadToCache(const nimbus::DataArray &read_set) {
     Translator::template ReadFaceArray<T>(data_region_, shift_, read_set, data_);
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
-WriteFromCache(const nimbus::DataSet &write_set) const {
+WriteFromCache(const nimbus::DataArray &write_set) const {
     Translator::template WriteFaceArray<T>(data_region_, shift_, write_set, data_);
 }
 
