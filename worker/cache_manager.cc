@@ -36,39 +36,53 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_POOL_H_
-#define NIMBUS_DATA_CACHE_CACHE_POOL_H_
-
-#include <map>
 #include <string>
 
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
+#include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-class CachePool {
-    public:
-        CachePool();
+CacheManager::CacheManager() {
+    pool_ = new Pool();
+}
 
-        CacheObject* GetCachedObject(const Job &job,
-                                     const DataArray &da,
-                                     const GeometricRegion &region,
-                                     const CacheObject &prototype,
-                                     CacheAccess access = EXCLUSIVE,
-                                     bool read_only_keep_valid = false);
-
-    private:
-        typedef std::map<std::string,
-                         CacheTable *> Pool;
-
-        Pool pool_;
-};  // class CachePool
+CacheObject *CacheManager::GetAppObject(const Job &job,
+                                        const DataArray &da,
+                                        const GeometricRegion &region,
+                                        const CacheObject &prototype,
+                                        CacheAccess access,
+                                        bool read_only_keep_valid) {
+    DataSet read,  write;
+    prototype.GetReadSet(job, da, &read);
+    prototype.GetWriteSet(job, da, &write);
+    CacheObject *co = NULL;
+    if (pool_->find(prototype.type()) == pool_->end()) {
+        CacheTable *ct = new CacheTable();
+        (*pool_)[prototype.type()] = ct;
+        co = prototype.CreateNew(region);
+        if (co == NULL) {
+            dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
+            exit(-1);
+        }
+        ct->AddEntry(region, co);
+    } else {
+        CacheTable *ct = (*pool_)[prototype.type()];
+        co = ct->GetClosestAvailable(region, read, access);
+        if (co == NULL)
+            ct->AddEntry(region, co);
+    }
+    co->AcquireAccess(access);
+    co->Read(read);
+    co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
+    co->SetUpWrite(write);
+    return co;
+}
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_POOL_H_

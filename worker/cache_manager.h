@@ -36,51 +36,39 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#ifndef NIMBUS_WORKER_CACHE_MANAGER_H_
+#define NIMBUS_WORKER_CACHE_MANAGER_H_
+
+#include <map>
 #include <string>
 
 #include "data/cache/cache_object.h"
-#include "data/cache/cache_pool.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
-#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
 namespace nimbus {
 
-CachePool::CachePool() {}
+class CacheManager {
+    public:
+        CacheManager();
 
-CacheObject *CachePool::GetCachedObject(const Job &job,
-                                        const DataArray &da,
-                                        const GeometricRegion &region,
-                                        const CacheObject &prototype,
-                                        CacheAccess access,
-                                        bool read_only_keep_valid) {
-    DataSet read,  write;
-    prototype.GetReadSet(job, da, &read);
-    prototype.GetWriteSet(job, da, &write);
-    CacheObject *co = NULL;
-    if (pool_.find(prototype.type()) == pool_.end()) {
-        CacheTable *ct = new CacheTable();
-        pool_[prototype.type()] = ct;
-        co = prototype.CreateNew(region);
-        if (co == NULL) {
-            dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
-            exit(-1);
-        }
-        ct->AddEntry(region, co);
-    } else {
-        CacheTable *ct = pool_[prototype.type()];
-        co = ct->GetClosestAvailable(region, read, access);
-        if (co == NULL)
-            ct->AddEntry(region, co);
-    }
-    co->AcquireAccess(access);
-    co->Read(read);
-    co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
-    co->SetUpWrite(write);
-    return co;
-}
+        CacheObject *GetAppObject(const Job &job,
+                                  const DataArray &da,
+                                  const GeometricRegion &region,
+                                  const CacheObject &prototype,
+                                  CacheAccess access = EXCLUSIVE,
+                                  bool read_only_keep_valid = false);
+
+    private:
+        typedef std::map<std::string,
+                         CacheTable *> Pool;
+
+        Pool *pool_;
+};  // class CacheManager
 
 }  // namespace nimbus
+
+#endif  // NIMBUS_WORKER_CACHE_MANAGER_H_
