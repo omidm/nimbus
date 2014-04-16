@@ -255,6 +255,14 @@ bool Job::sterile() const {
   return sterile_;
 }
 
+double Job::run_time() const {
+  return run_time_;
+}
+
+double Job::wait_time() const {
+  return wait_time_;
+}
+
 void Job::set_name(std::string name) {
   name_ = name;
 }
@@ -292,7 +300,13 @@ void Job::set_sterile(bool sterile) {
   sterile_ = sterile;
 }
 
+void Job::set_run_time(double run_time) {
+  run_time_ = run_time;
+}
 
+void Job::set_wait_time(double wait_time) {
+  wait_time_ = wait_time;
+}
 
 
 RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da) {

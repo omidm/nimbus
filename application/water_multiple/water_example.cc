@@ -428,7 +428,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (application::GetTranslatorData(job, psi_n_string, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::PSI_N)) {
       translator.WriteFaceArrayBool(
-          &array_reg_central, array_shift, &pdv, &projection.laplace->psi_N);
+          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_N);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating psi_n.\n");
@@ -716,7 +716,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (application::GetTranslatorData(job, psi_n_string, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::PSI_N)) {
       translator.ReadFaceArrayBool(
-          &array_reg_central, array_shift, &pdv, &projection.laplace->psi_N);
+          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_N);
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating psi_n.\n");
