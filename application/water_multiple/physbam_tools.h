@@ -45,8 +45,8 @@
 namespace application {
 
 template<typename TV> typename PhysBAM::RANGE<TV> RangeFromRegions(
-        const nimbus::GeometricRegion& local_region,
-        const nimbus::GeometricRegion& global_region) {
+        const nimbus::GeometricRegion& global_region,
+        const nimbus::GeometricRegion& local_region) {
     TV start, end;
     start(1) = (float)(local_region.x() - 1) / (float)global_region.dx();
     start(2) = (float)(local_region.y() - 1) / (float)global_region.dy();

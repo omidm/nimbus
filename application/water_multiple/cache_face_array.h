@@ -61,12 +61,12 @@ class CacheFaceArray : public nimbus::CacheObject {
 
     public:
         explicit CacheFaceArray(std::string type,
-                                const nimbus::GeometricRegion &local_region,
                                 const nimbus::GeometricRegion &global_region,
-                                int ghost_width);
+                                const int ghost_width = 0,
+                                const nimbus::GeometricRegion &local_region = nimbus::GeometricRegion());
         virtual void ReadToCache(const nimbus::DataSet &read_set);
         virtual void WriteFromCache(const nimbus::DataSet &write_set) const;
-        virtual nimbus::CacheObject *CreateNew() const;
+        virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &lr) const;
 
     private:
         int ghost_width_;

@@ -50,9 +50,9 @@ namespace application {
 
 template<class T, class TS> CacheFaceArray<T, TS>::
 CacheFaceArray(std::string type,
-               const nimbus::GeometricRegion &local_region,
                const nimbus::GeometricRegion &global_region,
-               int ghost_width)
+               const int ghost_width,
+               const nimbus::GeometricRegion &local_region)
     : CacheObject(type, local_region, global_region),
       ghost_width_(ghost_width),
       data_region_(local_region) {
@@ -60,7 +60,7 @@ CacheFaceArray(std::string type,
       shift_.x = local_region.x() - global_region.x();
       shift_.y = local_region.y() - global_region.y();
       shift_.z = local_region.z() - global_region.z();
-      Range domain = RangeFromRegions<TV>(local_region, global_region);
+      Range domain = RangeFromRegions<TV>(global_region, local_region);
       TV_INT count = CountFromRegion(local_region);
       mac_grid.Initialize(count, domain, true);
       data_ = new PhysBAMFaceArray(mac_grid, ghost_width, false);
@@ -77,11 +77,11 @@ WriteFromCache(const nimbus::DataSet &write_set) const {
 }
 
 template<class T, class TS> nimbus::CacheObject *CacheFaceArray<T, TS>::
-CreateNew() const {
+CreateNew(const nimbus::GeometricRegion &lr) const {
     return new CacheFaceArray(type(),
-                              local_region(),
                               global_region(),
-                              ghost_width_);
+                              ghost_width_,
+                              lr);
 }
 
 template class CacheFaceArray<float, float>;
