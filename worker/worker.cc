@@ -111,7 +111,23 @@ void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::strin
 }
 
 
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+  std::string input = "";
+  for (size_t i = 0; i < da.size(); ++i) {
+    std::ostringstream ss_l;
+    ss_l << da[i]->logical_id();
+    input += ss_l.str();
+    input += " - ";
+  }
+  hash<std::string> hash_function;
 
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "%s name: %s id: %llu  order_hash: %lu logical ids: %s",
+           tag.c_str(), job->name().c_str(), job->id().elem(),
+           hash_function(input), input.c_str());
+  log->WriteToFile(std::string(buff), LOG_INFO);
+}
 
 
 
@@ -248,6 +264,7 @@ void Worker::ExecuteJob(Job* job) {
     // }
   }
 
+  DumpDataOrderInformation(job, da, &data_hash_log_, "data_order");
 
 
   log_.StartTimer();
