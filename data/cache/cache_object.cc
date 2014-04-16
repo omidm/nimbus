@@ -49,11 +49,11 @@
 namespace nimbus {
 
 CacheObject::CacheObject(std::string type,
-                         const GeometricRegion &local_region,
-                         const GeometricRegion &global_region)
+                         const GeometricRegion &global_region,
+                         const GeometricRegion &local_region)
      : type_(type),
-       local_region_(local_region),
        global_region_(global_region),
+       local_region_(local_region),
        users_(0) {
 }
 
@@ -83,7 +83,7 @@ void CacheObject::Write() const {
     WriteFromCache(write_back_);
 }
 
-CacheObject *CacheObject::CreateNew() const {
+CacheObject *CacheObject::CreateNew(const GeometricRegion &local_region) const {
     dbg(DBG_ERROR, "CacheObject CreateNew method not imlemented\n");
     return NULL;
 }

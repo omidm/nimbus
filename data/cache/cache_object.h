@@ -59,15 +59,15 @@ enum CacheAccess { SHARED, EXCLUSIVE };
 class CacheObject {
     public:
         explicit CacheObject(std::string type,
-                             const GeometricRegion &local_region,
-                             const GeometricRegion &global_region);
+                             const GeometricRegion &global_region,
+                             const GeometricRegion &local_region);
 
         virtual void ReadToCache(const DataSet &read_set);
         void Read(const DataSet &read_set);
         virtual void WriteFromCache(const DataSet &write_set) const;
         void Write() const;
 
-        virtual CacheObject *CreateNew() const;
+        virtual CacheObject *CreateNew(const GeometricRegion &local_region) const;
 
         std::string type() const;
         GeometricRegion local_region() const;
@@ -92,8 +92,8 @@ class CacheObject {
 
     private:
         std::string type_;
-        GeometricRegion local_region_;
         GeometricRegion global_region_;
+        GeometricRegion local_region_;
 
         CacheAccess access_;
         int users_;

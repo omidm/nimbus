@@ -64,7 +64,7 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
     if (pool_.find(prototype.type()) == pool_.end()) {
         CacheTable *ct = new CacheTable();
         pool_[prototype.type()] = ct;
-        co = prototype.CreateNew();
+        co = prototype.CreateNew(region);
         if (co == NULL) {
             dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
             exit(-1);
