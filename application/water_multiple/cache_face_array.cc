@@ -53,10 +53,10 @@ CacheFaceArray(std::string type,
                const nimbus::GeometricRegion &global_region,
                const int ghost_width,
                const nimbus::GeometricRegion &local_region)
-    : CacheObject(type, local_region, global_region),
+    : CacheObject(type, local_region.NewEnlarged(ghost_width)),
       ghost_width_(ghost_width),
-      data_region_(local_region) {
-      data_region_.Enlarge(ghost_width_);
+      global_region_(global_region),
+      local_region_(local_region) {
       shift_.x = local_region.x() - global_region.x();
       shift_.y = local_region.y() - global_region.y();
       shift_.z = local_region.z() - global_region.z();
@@ -67,19 +67,21 @@ CacheFaceArray(std::string type,
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
-ReadToCache(const nimbus::DataArray &read_set) {
-    Translator::template ReadFaceArray<T>(data_region_, shift_, read_set, data_);
+ReadToCache(const nimbus::DataArray &read_set,
+            const nimbus::GeometricRegion &reg) {
+    Translator::template ReadFaceArray<T>(reg, shift_, read_set, data_);
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
-WriteFromCache(const nimbus::DataArray &write_set) const {
-    Translator::template WriteFaceArray<T>(data_region_, shift_, write_set, data_);
+WriteFromCache(const nimbus::DataArray &write_set,
+               const nimbus::GeometricRegion &reg) const {
+    Translator::template WriteFaceArray<T>(reg, shift_, write_set, data_);
 }
 
 template<class T, class TS> nimbus::CacheObject *CacheFaceArray<T, TS>::
 CreateNew(const nimbus::GeometricRegion &lr) const {
     return new CacheFaceArray(type(),
-                              global_region(),
+                              global_region_,
                               ghost_width_,
                               lr);
 }

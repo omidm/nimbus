@@ -64,13 +64,16 @@ class CacheFaceArray : public nimbus::CacheObject {
                                 const nimbus::GeometricRegion &global_region,
                                 const int ghost_width = 0,
                                 const nimbus::GeometricRegion &local_region = nimbus::GeometricRegion());
-        virtual void ReadToCache(const nimbus::DataArray &read_set);
-        virtual void WriteFromCache(const nimbus::DataArray &write_set) const;
+        virtual void ReadToCache(const nimbus::DataArray &read_set,
+                                 const nimbus::GeometricRegion &reg);
+        virtual void WriteFromCache(const nimbus::DataArray &write_set,
+                                    const nimbus::GeometricRegion &reg) const;
         virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &lr) const;
 
     private:
         int ghost_width_;
-        nimbus::GeometricRegion data_region_;
+        nimbus::GeometricRegion global_region_;
+        nimbus::GeometricRegion local_region_;
         nimbus::Coord shift_;
         PhysBAMFaceArray *data_;
         Grid mac_grid;

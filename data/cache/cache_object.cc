@@ -49,19 +49,19 @@
 namespace nimbus {
 
 CacheObject::CacheObject(std::string type,
-                         const GeometricRegion &global_region,
-                         const GeometricRegion &local_region)
+                         const GeometricRegion &app_object_region)
      : type_(type),
-       global_region_(global_region),
-       local_region_(local_region),
+       app_object_region_(app_object_region),
        users_(0) {
 }
 
-void CacheObject::ReadToCache(const DataArray &read_set) {
+void CacheObject::ReadToCache(const DataArray &read_set,
+                              const GeometricRegion &reg) {
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
-void CacheObject::Read(const DataArray &read_set) {
+void CacheObject::Read(const DataArray &read_set,
+                       const GeometricRegion &reg) {
     DataArray read;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set[i];
@@ -69,19 +69,20 @@ void CacheObject::Read(const DataArray &read_set) {
             read.push_back(d);;
     }
     if (!read.empty())
-        ReadToCache(read);
+        ReadToCache(read, reg);
 }
 
-void CacheObject::WriteFromCache(const DataArray &write_set) const {
+void CacheObject::WriteFromCache(const DataArray &write_set,
+                                 const GeometricRegion &reg) const {
     dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
 }
 
-void CacheObject::Write() const {
+void CacheObject::Write(const GeometricRegion &reg) const {
     // TODO(chinmayee): remove pointer from data to cache object
-    WriteFromCache(write_back_);
+    WriteFromCache(write_back_, reg);
 }
 
-CacheObject *CacheObject::CreateNew(const GeometricRegion &local_region) const {
+CacheObject *CacheObject::CreateNew(const GeometricRegion &app_object_region) const {
     dbg(DBG_ERROR, "CacheObject CreateNew method not imlemented\n");
     return NULL;
 }
@@ -90,12 +91,8 @@ std::string CacheObject::type() const {
     return type_;
 }
 
-GeometricRegion CacheObject::local_region() const {
-    return local_region_;
-}
-
-GeometricRegion CacheObject::global_region() const {
-    return global_region_;
+GeometricRegion CacheObject::app_object_region() const {
+    return app_object_region_;
 }
 
 void CacheObject::AcquireAccess(CacheAccess access) {

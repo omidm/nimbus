@@ -79,7 +79,7 @@ CacheObject *CacheManager::GetAppObject(const Job &job,
             ct->AddEntry(region, co);
     }
     co->AcquireAccess(access);
-    co->Read(read);
+    co->Read(read, region);
     co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
     co->SetUpWrite(write);
     return co;

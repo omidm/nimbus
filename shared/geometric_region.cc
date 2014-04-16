@@ -338,13 +338,25 @@ void GeometricRegion::Enlarge(const int_dimension_t delta) {
   dz_ += 2*delta;
 }
 
-void GeometricRegion::Enlarge(const Coord delta) {
+void GeometricRegion::Enlarge(const Coord &delta) {
   x_ -= delta.x;
   y_ -= delta.y;
   z_ -= delta.z;
   dx_ += 2*delta.x;
   dy_ += 2*delta.y;
   dz_ += 2*delta.z;
+}
+
+GeometricRegion GeometricRegion::NewEnlarged(const int_dimension_t delta) const {
+  GeometricRegion r = *this;
+  r.Enlarge(delta);
+  return r;
+}
+
+GeometricRegion GeometricRegion::NewEnlarged(const Coord &delta) const {
+  GeometricRegion r = *this;
+  r.Enlarge(delta);
+  return r;
 }
 
 /**
