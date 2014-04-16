@@ -78,7 +78,7 @@ CacheObject *CachePool::GetCachedObject(const Job &job,
     }
     co->AcquireAccess(access);
     co->Read(read);
-    co->SetUpRead(read, read_only_keep_valid);
+    co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
     co->SetUpWrite(write);
     return co;
 }
