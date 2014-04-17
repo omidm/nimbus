@@ -166,27 +166,27 @@ namespace application {
     nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // because of Half Region definition this number could be either 1 or 2 for now -omidm
-    int update_ghost_velocities_job_num = 2;
+    int update_ghost_velocities_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> update_ghost_velocities_job_ids;
     GetNewJobID(&update_ghost_velocities_job_ids, update_ghost_velocities_job_num);
 
-    int advect_v_job_num = 2;
+    int advect_v_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> advect_v_job_ids;
     GetNewJobID(&advect_v_job_ids, advect_v_job_num);
 
-    int apply_forces_job_num = 2;
+    int apply_forces_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> apply_forces_job_ids;
     GetNewJobID(&apply_forces_job_ids, apply_forces_job_num);
 
-    int adjust_phi_job_num = 2;
+    int adjust_phi_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> adjust_phi_job_ids;
     GetNewJobID(&adjust_phi_job_ids, adjust_phi_job_num);
 
-    int first_extrapolate_phi_job_num = 2;
+    int first_extrapolate_phi_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> first_extrapolate_phi_job_ids;
     GetNewJobID(&first_extrapolate_phi_job_ids, first_extrapolate_phi_job_num);
 
-    int advect_phi_job_num = 2;
+    int advect_phi_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> advect_phi_job_ids;
     GetNewJobID(&advect_phi_job_ids, advect_phi_job_num);
 
@@ -194,16 +194,16 @@ namespace application {
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    int extrapolation_job_num = 2;
+    int extrapolation_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> extrapolation_job_ids;
     GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
 
-    int extrapolate_phi_job_num = 2;
+    int extrapolate_phi_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
     GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
     // jobs that touch particles
-    size_t particle_partitions = 2;
+    size_t particle_partitions = kAppPartNum;
     // step particles
     size_t step_particles_job_num = particle_partitions;
     std::vector<nimbus::job_id_t> step_particles_job_ids;

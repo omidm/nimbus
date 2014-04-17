@@ -113,7 +113,7 @@ void JobProjectionLoopIteration::Execute(
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    int wrapup_job_num = 2;
+    int wrapup_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> wrapup_job_ids;
     GetNewJobID(&wrapup_job_ids, wrapup_job_num);
 
@@ -185,8 +185,11 @@ void JobProjectionLoopIteration::Execute(
     loop_iteration_part_two_params.set_ser_data(
         SerializedData(loop_iteration_part_two_str));
     before.clear();
-    before.insert(wrapup_job_ids[0]);
-    before.insert(wrapup_job_ids[1]);
+    for (int j = 0; j < wrapup_job_num ; ++j) {
+      before.insert(wrapup_job_ids[j]);
+    }
+    // before.insert(wrapup_job_ids[0]);
+    // before.insert(wrapup_job_ids[1]);
     after.clear();
     SpawnComputeJob(LOOP_ITERATION_PART_TWO, projection_job_ids[1],
                     read, write, before, after, loop_iteration_part_two_params);
@@ -217,19 +220,19 @@ void JobProjectionLoopIteration::Execute(
     std::vector<nimbus::job_id_t> projection_job_ids;
     GetNewJobID(&projection_job_ids, projection_job_num);
 
-    int step_one_job_num = 2;
+    int step_one_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> step_one_job_ids;
     GetNewJobID(&step_one_job_ids, step_one_job_num);
 
-    int step_two_job_num = 2;
+    int step_two_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> step_two_job_ids;
     GetNewJobID(&step_two_job_ids, step_two_job_num);
 
-    int step_three_job_num = 2;
+    int step_three_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> step_three_job_ids;
     GetNewJobID(&step_three_job_ids, step_three_job_num);
 
-    int step_four_job_num = 2;
+    int step_four_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> step_four_job_ids;
     GetNewJobID(&step_four_job_ids, step_four_job_num);
 
@@ -267,11 +270,14 @@ void JobProjectionLoopIteration::Execute(
         APP_PROJECTION_GLOBAL_RHO, APP_PROJECTION_GLOBAL_RHO_OLD,
         APP_PROJECTION_BETA, NULL);
     before.clear();
-    before.insert(step_one_job_ids[0]);
-    before.insert(step_one_job_ids[1]);
+    for (int j = 0; j < step_one_job_num ; ++j) {
+      before.insert(step_one_job_ids[j]);
+    }
+    // before.insert(step_one_job_ids[0]);
+    // before.insert(step_one_job_ids[1]);
     after.clear();
-    after.insert(step_two_job_ids[0]);
-    after.insert(step_two_job_ids[1]);
+    // after.insert(step_two_job_ids[0]);
+    // after.insert(step_two_job_ids[1]);
     SpawnComputeJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
                     read, write, before, after, default_params, true);
 
@@ -290,8 +296,8 @@ void JobProjectionLoopIteration::Execute(
       before.clear();
       before.insert(projection_job_ids[1]);
       after.clear();
-      after.insert(step_three_job_ids[0]);
-      after.insert(step_three_job_ids[1]);
+      // after.insert(step_three_job_ids[0]);
+      // after.insert(step_three_job_ids[1]);
       SpawnComputeJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
                       read, write, before, after, default_part_params[index],
                       true);
@@ -310,8 +316,11 @@ void JobProjectionLoopIteration::Execute(
           this, &write, kRegY2W0Central[index], APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
       before.clear();
-      before.insert(step_two_job_ids[0]);
-      before.insert(step_two_job_ids[1]);
+      for (int j = 0; j < step_two_job_num ; ++j) {
+        before.insert(step_two_job_ids[j]);
+      }
+      // before.insert(step_two_job_ids[0]);
+      // before.insert(step_two_job_ids[1]);
       after.clear();
       after.insert(projection_job_ids[4]);
       SpawnComputeJob(PROJECTION_STEP_THREE, step_three_job_ids[index],
@@ -331,8 +340,11 @@ void JobProjectionLoopIteration::Execute(
     LoadLogicalIdsInSet(
         this, &write, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);
     before.clear();
-    before.insert(step_three_job_ids[0]);
-    before.insert(step_three_job_ids[1]);
+    for (int j = 0; j < step_three_job_num ; ++j) {
+      before.insert(step_three_job_ids[j]);
+    }
+    // before.insert(step_three_job_ids[0]);
+    // before.insert(step_three_job_ids[1]);
     after.clear();
     after.insert(step_four_job_ids[0]);
     after.insert(step_four_job_ids[1]);
@@ -371,8 +383,11 @@ void JobProjectionLoopIteration::Execute(
         NULL);
     write.clear();
     before.clear();
-    before.insert(step_four_job_ids[0]);
-    before.insert(step_four_job_ids[1]);
+    for (int j = 0; j < step_four_job_num ; ++j) {
+      before.insert(step_four_job_ids[j]);
+    }
+    // before.insert(step_four_job_ids[0]);
+    // before.insert(step_four_job_ids[1]);
     after.clear();
     nimbus::Parameter next_iteration_params;
     std::string next_iteration_params_str;
