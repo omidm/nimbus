@@ -122,7 +122,7 @@ class Application {
                                     const std::string& variable,
                                     const GeometricRegion* r);
 
-  CacheManager* cache_manager();
+  CacheManager* cache_manager() const;
 
  private:
   app_id_t id_;

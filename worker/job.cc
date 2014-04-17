@@ -309,7 +309,7 @@ void Job::set_wait_time(double wait_time) {
   wait_time_ = wait_time;
 }
 
-CacheManager* Job::GetCacheManager() {
+CacheManager* Job::GetCacheManager() const {
   return application_->cache_manager();
 }
 

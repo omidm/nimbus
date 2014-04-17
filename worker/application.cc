@@ -205,6 +205,6 @@ int Application::GetIntersectingLogicalObjects(CLdoVector* result,
   }
 }
 
-CacheManager* Application::cache_manager() {
+CacheManager* Application::cache_manager() const {
   return cache_manager_;
 }

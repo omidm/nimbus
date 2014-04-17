@@ -146,7 +146,7 @@ class Job {
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
 
-    CacheManager* GetCacheManager();
+    CacheManager* GetCacheManager() const;
 
   private:
     std::string name_;

@@ -94,6 +94,42 @@ namespace application {
         return success;
     }
 
+    void GetReadData(const nimbus::Job *job,
+                     const std::string &name,
+                     const nimbus::DataArray &da,
+                     nimbus::DataArray *read) {
+        if (da.empty())
+            return;
+        IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
+        size_t rs = read_set.size();
+        for (size_t i = 0; i < rs; ++i) {
+            Data *d = da[i];
+            if (d->name() == name &&
+                    read_set.contains(d->physical_id())) {
+                read->push_back(d);
+            }
+        }
+    }
+
+    void GetWriteData(const nimbus::Job *job,
+                      const std::string &name,
+                      const nimbus::DataArray &da,
+                      nimbus::DataArray *write) {
+        if (da.empty())
+            return;
+        IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
+        IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
+        size_t rs = read_set.size();
+        size_t ws = write_set.size();
+        for (size_t i = rs; i < rs + ws; ++i) {
+            Data *d = da[i];
+            if (d->name() == name &&
+                    read_set.contains(d->physical_id())) {
+                write->push_back(d);
+            }
+        }
+    }
+
     bool GroupSyncData(const nimbus::Job *job,
                        const nimbus::DataArray &da,
                        DataVec *main_copy,

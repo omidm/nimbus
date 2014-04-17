@@ -106,6 +106,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
     }
     co->AcquireAccess(access);
     co->Read(read, read_region);
+    // if access is shared, all data needs to be kept valid!
     co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
     co->SetUpWrite(write);
     return co;
