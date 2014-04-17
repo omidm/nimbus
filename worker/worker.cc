@@ -246,7 +246,7 @@ void Worker::ExecuteJob(Job* job) {
   }
 
   // DumpVersionInformation(job, da, &version_log_, "version_in");
-  DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
+  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
 
   IDSet<physical_data_id_t> write = job->write_set();
@@ -264,7 +264,7 @@ void Worker::ExecuteJob(Job* job) {
     // }
   }
 
-  DumpDataOrderInformation(job, da, &data_hash_log_, "data_order");
+  // DumpDataOrderInformation(job, da, &data_hash_log_, "data_order");
 
 
   log_.StartTimer();
@@ -293,8 +293,6 @@ void Worker::ExecuteJob(Job* job) {
   }
   DumpDataHashInformation(job, daw, &data_hash_log_, "hash_out");
 
-
-
   if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
@@ -306,8 +304,6 @@ void Worker::ExecuteJob(Job* job) {
       d->set_version(version);
     }
   }
-
-
 
 
   Parameter params;
