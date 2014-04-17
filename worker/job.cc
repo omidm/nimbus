@@ -40,6 +40,7 @@
 
 #include "worker/job.h"
 #include "worker/application.h"
+#include "worker/cache_manager.h"
 
 using namespace nimbus; // NOLINT
 
@@ -306,6 +307,10 @@ void Job::set_run_time(double run_time) {
 
 void Job::set_wait_time(double wait_time) {
   wait_time_ = wait_time;
+}
+
+CacheManager* Job::GetCacheManager() {
+  return application_->cache_manager();
 }
 
 

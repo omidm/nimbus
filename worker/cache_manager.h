@@ -47,7 +47,6 @@
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
@@ -55,9 +54,17 @@ class CacheManager {
     public:
         CacheManager();
 
-        CacheObject *GetAppObject(const Job &job,
-                                  const DataArray &da,
+        CacheObject *GetAppObject(const DataArray &read,
+                                  const DataArray &write,
                                   const GeometricRegion &region,
+                                  const CacheObject &prototype,
+                                  CacheAccess access = EXCLUSIVE,
+                                  bool read_only_keep_valid = false);
+
+        CacheObject *GetAppObject(const DataArray &read,
+                                  const DataArray &write,
+                                  const GeometricRegion &data_region,
+                                  const GeometricRegion &read_region,
                                   const CacheObject &prototype,
                                   CacheAccess access = EXCLUSIVE,
                                   bool read_only_keep_valid = false);

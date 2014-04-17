@@ -44,7 +44,6 @@
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
@@ -141,34 +140,6 @@ distance_t CacheObject::GetDistance(const DataArray &data_set,
             cur_distance++;
     }
     return cur_distance;
-}
-
-void CacheObject::GetReadSet(const Job &job,
-                             const DataArray &da,
-                             DataArray *read) const {
-    dbg(DBG_WARN, "Using base class implementation for GetReadSet, for %s\n",
-            type_.c_str());
-    PIDSet read_ids = job.read_set();
-    for (size_t i = 0; i < da.size(); ++i) {
-        if (read_ids.contains(da[i]->physical_id()) &&
-                da[i]->name() == type_) {
-            read->push_back(da[i]);
-        }
-    }
-}
-
-void CacheObject::GetWriteSet(const Job &job,
-                              const DataArray &da,
-                              DataArray *write) const {
-    dbg(DBG_WARN, "Using base class implementation for GetWriteSet, for %s\n",
-            type_.c_str());
-    PIDSet write_ids = job.write_set();
-    for (size_t i = 0; i < da.size(); ++i) {
-        if (write_ids.contains(da[i]->physical_id()) &&
-                da[i]->name() == type_) {
-            write->push_back(da[i]);
-        }
-    }
 }
 
 bool CacheObject::IsAvailable(CacheAccess access) const {

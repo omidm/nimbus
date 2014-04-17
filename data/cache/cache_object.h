@@ -50,7 +50,6 @@
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
@@ -80,13 +79,6 @@ class CacheObject {
 
         distance_t GetDistance(const DataArray &data_set,
                                CacheAccess access = EXCLUSIVE) const;
-
-        virtual void GetReadSet(const Job &job,
-                                const DataArray &da,
-                                DataArray *read) const;
-        virtual void GetWriteSet(const Job &job,
-                                 const DataArray &da,
-                                 DataArray *read) const;
 
     private:
         std::string type_;

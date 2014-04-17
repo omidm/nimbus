@@ -39,11 +39,15 @@
   */
 
 #include "worker/application.h"
+#include "worker/cache_manager.h"
 
 using namespace nimbus; // NOLINT
 
 Application::Application() {
-  app_data_ = NULL;
+}
+
+Application::~Application() {
+  delete cache_manager_;
 }
 
 void Application::Load() {
@@ -57,6 +61,7 @@ void Application::Start(SchedulerClient* client,
   client_ = client;
   id_maker_ = id_maker;
   ldo_map_ = ldo_map;
+  cache_manager_ = new CacheManager();
   Load();
 }
 
@@ -200,10 +205,6 @@ int Application::GetIntersectingLogicalObjects(CLdoVector* result,
   }
 }
 
-void* Application::app_data() {
-    return app_data_;
-}
-
-void Application::set_app_data(void* data) {
-    app_data_ = data;
+CacheManager* Application::cache_manager() {
+  return cache_manager_;
 }

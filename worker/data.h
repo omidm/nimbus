@@ -49,9 +49,10 @@
 #ifndef NIMBUS_WORKER_DATA_H_
 #define NIMBUS_WORKER_DATA_H_
 
-#include <set>
 #include <map>
+#include <set>
 #include <string>
+#include <vector>
 #include "shared/cluster.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
@@ -116,6 +117,8 @@ class Data {
   // Set of partition ids neighbor to this partition.
   IDSet<partition_id_t> neighbor_partitions_;
 };
+
+typedef std::vector<Data*> DataArray;
 
 }  // namespace nimbus
 

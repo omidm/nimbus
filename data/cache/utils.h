@@ -42,8 +42,8 @@
 #define NIMBUS_DATA_CACHE_UTILS_H_
 
 #include "shared/geometric_region.h"
+#include "shared/idset.h"
 #include "shared/nimbus_types.h"
-#include "worker/job.h"
 
 namespace nimbus {
 

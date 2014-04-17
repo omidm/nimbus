@@ -45,7 +45,6 @@
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 

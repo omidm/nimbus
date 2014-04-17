@@ -45,7 +45,6 @@
 #include "shared/geometric_region.h"
 #include "worker/cache_manager.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
@@ -53,15 +52,12 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
 }
 
-CacheObject *CacheManager::GetAppObject(const Job &job,
-                                        const DataArray &da,
+CacheObject *CacheManager::GetAppObject(const DataArray &read,
+                                        const DataArray &write,
                                         const GeometricRegion &region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
                                         bool read_only_keep_valid) {
-    DataArray read,  write;
-    prototype.GetReadSet(job, da, &read);
-    prototype.GetWriteSet(job, da, &write);
     CacheObject *co = NULL;
     if (pool_->find(prototype.type()) == pool_->end()) {
         CacheTable *ct = new CacheTable();
@@ -80,6 +76,36 @@ CacheObject *CacheManager::GetAppObject(const Job &job,
     }
     co->AcquireAccess(access);
     co->Read(read, region);
+    co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
+    co->SetUpWrite(write);
+    return co;
+}
+
+CacheObject *CacheManager::GetAppObject(const DataArray &read,
+                                        const DataArray &write,
+                                        const GeometricRegion &data_region,
+                                        const GeometricRegion &read_region,
+                                        const CacheObject &prototype,
+                                        CacheAccess access,
+                                        bool read_only_keep_valid) {
+    CacheObject *co = NULL;
+    if (pool_->find(prototype.type()) == pool_->end()) {
+        CacheTable *ct = new CacheTable();
+        (*pool_)[prototype.type()] = ct;
+        co = prototype.CreateNew(data_region);
+        if (co == NULL) {
+            dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
+            exit(-1);
+        }
+        ct->AddEntry(data_region, co);
+    } else {
+        CacheTable *ct = (*pool_)[prototype.type()];
+        co = ct->GetClosestAvailable(data_region, read, access);
+        if (co == NULL)
+            ct->AddEntry(data_region, co);
+    }
+    co->AcquireAccess(access);
+    co->Read(read, read_region);
     co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
     co->SetUpWrite(write);
     return co;

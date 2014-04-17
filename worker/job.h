@@ -52,6 +52,7 @@
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
+#include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/worker_ldo_map.h"
 
@@ -62,7 +63,6 @@ class Job;
 typedef std::list<Job*> JobList;
 typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
-typedef std::vector<Data*> DataArray;
 
 class Job {
   public:
@@ -145,6 +145,8 @@ class Job {
     void set_sterile(bool sterile);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
+
+    CacheManager* GetCacheManager();
 
   private:
     std::string name_;
