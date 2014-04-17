@@ -47,6 +47,7 @@
 #include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
+#define CORE_NUMBER 1
 
 using boost::hash;
 
@@ -160,7 +161,7 @@ void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   WorkerManager worker_manager;
   worker_manager.worker_ = this;
-  worker_manager.StartWorkerThreads(1);
+  worker_manager.StartWorkerThreads(CORE_NUMBER);
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();

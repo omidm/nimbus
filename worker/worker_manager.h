@@ -63,6 +63,7 @@ class WorkerManager {
  private:
   std::list<WorkerThread*> worker_thread_list;
   std::list<Job*> job_list_;
+  pthread_mutex_t queue_lock_;
 };
 }  // namespace nimbus
 

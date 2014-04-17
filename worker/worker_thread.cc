@@ -51,10 +51,11 @@ void WorkerThread::Run() {
   Job* job;
   while (true) {
     do {
+      assert(worker_manager_ != NULL);
       job = worker_manager_->PullCalculationJob();
     } while (job == NULL);
     worker_->ExecuteJob(job);
-    delete job;
+    // delete job;
   }
 }
 

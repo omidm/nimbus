@@ -46,22 +46,29 @@
 
 namespace nimbus {
 
-WorkerManager::WorkerManager() {}
+WorkerManager::WorkerManager() {
+  pthread_mutex_init(&queue_lock_, NULL);
+}
 
 WorkerManager::~WorkerManager() {}
 
 Job* WorkerManager::PullCalculationJob() {
+  pthread_mutex_lock(&queue_lock_);
   if (job_list_.empty()) {
+    pthread_mutex_unlock(&queue_lock_);
     return NULL;
   } else {
     Job* temp = job_list_.front();
     job_list_.pop_front();
+    pthread_mutex_unlock(&queue_lock_);
     return temp;
   }
 }
 
 bool WorkerManager::PushCalculationJob(Job* job) {
+  pthread_mutex_lock(&queue_lock_);
   job_list_.push_back(job);
+  pthread_mutex_unlock(&queue_lock_);
   return true;
 }
 
@@ -69,12 +76,14 @@ bool WorkerManager::StartWorkerThreads(int thread_number) {
   for (int i = 0; i < thread_number; ++i) {
     WorkerThread* worker_thread = new WorkerThread(this);
     worker_thread_list.push_back(worker_thread);
+    assert(worker_ != NULL);
     worker_thread->worker_ = worker_;
     int error_code =
         pthread_create(&worker_thread->thread_id, NULL,
                        ThreadEntryPoint, worker_thread);
     assert(error_code == 0);
   }
+  return true;
 }
 
 void* WorkerManager::ThreadEntryPoint(void* parameters) {
