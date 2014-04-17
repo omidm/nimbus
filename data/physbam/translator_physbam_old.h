@@ -125,6 +125,9 @@ namespace nimbus {
         const int_dimension_t shift[3],
         const PdiVector* objects,
         typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+      PhysBAM::ARRAY<T, FaceIndex> flag;
+      flag = *fa;
+      flag.Fill(0);
       if (objects != NULL) {
         PdiVector::const_iterator iter = objects->begin();
         for (; iter != objects->end(); ++iter) {
@@ -193,8 +196,22 @@ namespace nimbus {
                     // The PhysBAM FACE_ARRAY object abstracts away whether
                     // the data is stored in struct of array or array of struct
                     // form (in practice, usually struct of arrays.
-                    assert(source_index < data->size() && source_index >= 0);
-                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                    assert(source_index < data->size() / (int) sizeof(T) // NOLINT
+                           && source_index >= 0);
+                    if (flag(dim, destinationIndex) == 0) {
+                      (*fa)(dim, destinationIndex) = buffer[source_index];
+                      flag(dim, destinationIndex) = 1;
+                    } else if (flag(dim, destinationIndex) == 1) {
+                      if ((*fa)(dim, destinationIndex)
+                          != buffer[source_index]) {
+                        (*fa)(dim, destinationIndex) += buffer[source_index];
+                        (*fa)(dim, destinationIndex) /= 2;
+                      }
+                      flag(dim, destinationIndex) = 2;
+                    } else {
+                      // TODO(quhang) needs a more elegant solution.
+                      assert(false);
+                    }
                   }
                 }
               }
