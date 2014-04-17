@@ -84,53 +84,55 @@ Initialize(const nimbus::Job *job,
   example.boundary=&example.boundary_scalar;
   example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
-  if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
-    example.phi_ghost_bandwidth_seven.Resize(
-        example.mac_grid.Domain_Indices(7));
-    std::cout << "OMID: ALLOcated 7.\n";
-  }
-  if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
-    example.phi_ghost_bandwidth_eight.Resize(
-        example.mac_grid.Domain_Indices(8));
-    std::cout << "OMID: ALLOcated 8.\n";
-  }
-
-  // Allocates array for levelset/particles/removed particles.  --quhang
-  InitializeParticleLevelsetEvolutionHelper(
-      example.data_config,
-      example.mac_grid,
-      &example.particle_levelset_evolution);
-
-  example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-
-  // Allocates array for valid mask and data structures used in projeciton.
-  // --quhang
-  InitializeIncompressibleProjectionHelper(
-      example.data_config,
-      example.mac_grid,
-      &example.incompressible,
-      &example.projection);
-  // This initialization function initializes valid mask, which we
-  // don't know. And this one also calls projection.Initialize_Grid, which is
-  // duplicated.
-  // example.incompressible.Initialize_Grids(example.mac_grid);
-  // I think the only way to debug whether psi_D and psi_N is
-  // passed around is to tune the initialization here. I will break this
-  // function and make it possible to tune whether initialze psi or not. I
-  // asked, but didn't receive a sure answer. Have to figure out ourselves.
-  // example.projection.Initialize_Grid(example.mac_grid);
-
-  example.collision_bodies_affecting_fluid.Initialize_Grids();
-  if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      LOG::Time("Velocity memory allocated.\n");
-      example.face_velocities.Resize(example.mac_grid);
-  }
-  // Initialize the face_velocities_ghoas here, it may not be the best place
-  // when we get to water_multiple though. -omidm
-  if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      LOG::Time("Ghost Velocity memory allocated.\n");
-      example.face_velocities_ghost.Resize(example.incompressible.grid,
-                                           example.number_of_ghost_cells, false);
+  {
+    if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+      example.phi_ghost_bandwidth_seven.Resize(
+          example.mac_grid.Domain_Indices(7));
+      std::cout << "OMID: ALLOcated 7.\n";
+    }
+    if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+      example.phi_ghost_bandwidth_eight.Resize(
+          example.mac_grid.Domain_Indices(8));
+      std::cout << "OMID: ALLOcated 8.\n";
+    }
+  
+    // Allocates array for levelset/particles/removed particles.  --quhang
+    InitializeParticleLevelsetEvolutionHelper(
+        example.data_config,
+        example.mac_grid,
+        &example.particle_levelset_evolution);
+  
+    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
+  
+    // Allocates array for valid mask and data structures used in projeciton.
+    // --quhang
+    InitializeIncompressibleProjectionHelper(
+        example.data_config,
+        example.mac_grid,
+        &example.incompressible,
+        &example.projection);
+    // This initialization function initializes valid mask, which we
+    // don't know. And this one also calls projection.Initialize_Grid, which is
+    // duplicated.
+    // example.incompressible.Initialize_Grids(example.mac_grid);
+    // I think the only way to debug whether psi_D and psi_N is
+    // passed around is to tune the initialization here. I will break this
+    // function and make it possible to tune whether initialze psi or not. I
+    // asked, but didn't receive a sure answer. Have to figure out ourselves.
+    // example.projection.Initialize_Grid(example.mac_grid);
+  
+    example.collision_bodies_affecting_fluid.Initialize_Grids();
+    if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
+        LOG::Time("Velocity memory allocated.\n");
+        example.face_velocities.Resize(example.mac_grid);
+    }
+    // Initialize the face_velocities_ghoas here, it may not be the best place
+    // when we get to water_multiple though. -omidm
+    if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+        LOG::Time("Ghost Velocity memory allocated.\n");
+        example.face_velocities_ghost.Resize(example.incompressible.grid,
+                                             example.number_of_ghost_cells, false);
+    }
   }
 
   example.particle_levelset_evolution.Set_Time(time);
@@ -209,29 +211,24 @@ Initialize(const nimbus::Job *job,
   example.incompressible.Set_Variable_Viscosity(false);
   example.incompressible.projection.Set_Density(1e3);
 
-  if (set_boundary_conditions && init_phase) {
+  if (init_phase) {
     // TODO(quhang): Needs a better understanding what this block is doing. This
     // one is certainly doing something we haven't taken care of.
     ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
-    // example.Set_Boundary_Conditions(time); // get so CFL is correct
-  }
-  if (set_boundary_conditions) {
     example.Set_Boundary_Conditions(time); // get so CFL is correct
-  }
 
-  if (init_phase) {
     example.Save_To_Nimbus(job, da, current_frame);
     Write_Output_Files(example.first_frame);
+  } else {
+    // Comments by quhang:
+    // The collision body should not matter, and the last two parameters should
+    // not matter. So just add them in the initialization part.
+    example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
+    // Don't know why this statement should be here.
+    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   }
-  // Comments by quhang:
-  // The collision body should not matter, and the last two parameters should
-  // not matter. So just add them in the initialization part.
-  example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
-  // Don't know why this statement should be here.
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -564,17 +561,6 @@ ProjectionCalculateBoundaryConditionPartOneImpl (
   // Read levelset. Write psi_D and pressure.
   incompressible.Set_Dirichlet_Boundary_Conditions(
       &example.particle_levelset_evolution.phi, 0);
-  /*
-     // No filling function calls. Good!
-  T_ARRAYS_BOOL& psi_D=projection.elliptic_solver->psi_D;
-  for (CELL_ITERATOR iterator(projection.p_grid);
-       iterator.Valid();
-       iterator.Next())
-    if ((*phi)(iterator.Cell_Index())>0) {
-      psi_D(iterator.Cell_Index())=true;
-      projection.p(iterator.Cell_Index())=pressure;
-    }
-    */
   return true;
 }
 
@@ -625,39 +611,6 @@ ProjectionConstructMatrixImpl (
   return true;
 }
 
-/*
-template<class TV> bool WATER_DRIVER<TV>::
-ProjectionCoreImpl(
-    const nimbus::Job *job,
-    const nimbus::DataArray &da,
-    T dt) {
-  // MPI reference version:
-  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
-  // color only used for MPI version.
-  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
-  PCG_SPARSE<T> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(40);
-  pcg_temp.evolution_solver_type=krylov_solver_cg;
-  pcg_temp.cg_restart_iterations=0;
-  pcg_temp.Show_Results();
-
-  NIMBUS_PCG_SPARSE_MPI pcg_mpi(pcg_temp);
-  pcg_mpi.projection_data.matrix_index_to_cell_index =
-      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
-  pcg_mpi.projection_data.cell_index_to_matrix_index =
-      &laplace_solver_wrapper.cell_index_to_matrix_index;
-  pcg_mpi.projection_data.matrix_a = &laplace_solver_wrapper.A_array(1);
-  pcg_mpi.projection_data.vector_b = &laplace_solver_wrapper.b_array(1);
-  pcg_mpi.projection_data.vector_x = &laplace_solver_wrapper.x;
-  pcg_mpi.projection_data.local_tolerance = laplace_solver.tolerance;
-  pcg_mpi.Initialize();
-  pcg_mpi.CommunicateConfig();
-  pcg_mpi.Parallel_Solve();
-
-  return true;
-}
-*/
-
 template<class TV> bool WATER_DRIVER<TV>::
 ProjectionWrapupImpl(
     const nimbus::Job *job,
@@ -675,133 +628,10 @@ ProjectionWrapupImpl(
   return true;
 }
 
-/*
-template<class TV> bool WATER_DRIVER<TV>::
-ProjectionImpl(const nimbus::Job *job,
-               const nimbus::DataArray &da,
-               T dt) {
-  INCOMPRESSIBLE_UNIFORM<GRID<TV> >& incompressible = example.incompressible;
-  PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection = example.projection;
-  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>& laplace_solver =
-      *dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
-          projection.elliptic_solver);
-  LaplaceSolverWrapper laplace_solver_wrapper(&laplace_solver);
-
-  // [START] Code before entering INCOMPRESSIBLE.
-
-  // Sets boundary conditions.
-  // Local.
-  // Read velocity and pressure. Write velocity, pressure, psi_D, and psi_N.
-  example.Set_Boundary_Conditions(time);
-
-  // Sets dirichlet boundary conditions in the air.
-  // Remote: exchange psi_D and pressure afterwards.
-  // Read levelset. Write psi_D and pressure.
-  incompressible.Set_Dirichlet_Boundary_Conditions(
-      &example.particle_levelset_evolution.phi, 0);
-  // Scales pressure.
-  // Read/Write pressure.
-  projection.p *= dt;
-
-  // [END] Code before entering INCOMPRESSIBLE.
-
-
-  // [START] Code in INCOMPRESSIBLE:
-  //     example.incompressible.Advance_One_Time_Step_Implicit_Part(
-  //       example.face_velocities, dt, time, true);
-
-  // Averaging common face of face_velocities.
-  // incompressible.boundary->Apply_Boundary_Condition_Face(
-  //    incompressible.projection.p_grid,
-  //    example.face_velocities,
-  //    time + dt);
-
-  // [END] Code in INCOMPRESSIBLE.
-
-
-  // [START] Code in PROJECTION:
-  //    projection.Make_Divergence_Free(face_velocities, dt, time);
-
-  typedef typename INTERPOLATION_POLICY<GRID<TV> >::FACE_LOOKUP
-      T_FACE_LOOKUP;
-  // Computes divergence.
-  // Local.
-  // Read velocity. Write divergence(solver->f).
-  projection.Compute_Divergence(
-      T_FACE_LOOKUP(example.face_velocities),
-      &laplace_solver);
-
-  // Coloring.
-  // Local.
-  // Read psi_D, psi_N.
-  // Write filled_region_colors.
-  FillUniformRegionColor(
-      laplace_solver.grid,
-      laplace_solver.psi_D, laplace_solver.psi_N,
-      false, &laplace_solver.filled_region_colors);
-
-  // projection.elliptic_solver->Solve(time,true);
-  // Read psi_N, psi_D, filled_region_colors, divergence, pressure.
-  // Write A, b, x, tolerance, indexing.
-  laplace_solver_wrapper.PrepareProjectionInput();
-
-  // MPI reference version:
-  // laplace_mpi->Solve(A, x, b, q, s, r, k, z, tolerance, color);
-  // color only used for MPI version.
-  // laplace->pcg.Solve(A, x, b, q, s, r, k, z, laplace->tolerance);
-  NIMBUS_PCG_SPARSE_MPI pcg_mpi(laplace_solver.pcg);
-  pcg_mpi.projection_data.matrix_index_to_cell_index =
-      &laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
-  pcg_mpi.projection_data.cell_index_to_matrix_index =
-      &laplace_solver_wrapper.cell_index_to_matrix_index;
-  pcg_mpi.projection_data.matrix_a = &laplace_solver_wrapper.A_array(1);
-  pcg_mpi.projection_data.vector_b = &laplace_solver_wrapper.b_array(1);
-  pcg_mpi.projection_data.vector_x = &laplace_solver_wrapper.x;
-  pcg_mpi.projection_data.local_tolerance = laplace_solver.tolerance;
-  pcg_mpi.Initialize();
-  pcg_mpi.CommunicateConfig();
-  pcg_mpi.Parallel_Solve();
-
-  // Read matrix_index_to_cell_index and x. Write u.
-  laplace_solver_wrapper.TransformResult();
-
-  // Applies pressure.
-  // Not clear.
-  // pressure, psi_D, psi_N, u_interface is needed.
-  projection.Apply_Pressure(example.face_velocities, dt, time);
-
-  // [END] Code in PROJECTION.
-
-  // Scales pressure.
-  // Read/Write pressure.
-  projection.p *= (1/dt);
-
-  // incompressible.boundary->Apply_Boundary_Condition_Face(
-  //    incompressible.grid,
-  //    example.face_velocities,
-  //    time + dt);
-
-  return true;
-}
-*/
-
 template<class TV> bool WATER_DRIVER<TV>::
 ExtrapolationImpl (const nimbus::Job *job,
                  const nimbus::DataArray &da,
                  T dt) {
-/*
-  T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
-  example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
-      example.mac_grid,
-      example.particle_levelset_evolution.phi,
-      exchanged_phi_ghost,
-      0, time+dt, 8);
-  example.incompressible.Extrapolate_Velocity_Across_Interface(
-      example.face_velocities,
-      exchanged_phi_ghost,
-      false, 3, 0, TV());
-*/
-
   example.incompressible.Extrapolate_Velocity_Across_Interface(
       example.face_velocities,
       example.phi_ghost_bandwidth_eight,
@@ -832,24 +662,6 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
   // example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
   {
-/*
-    typedef typename LEVELSET_ADVECTION_POLICY<GRID<TV> >
-        ::FAST_LEVELSET_ADVECTION_T T_FAST_LEVELSET_ADVECTION;
-    typedef typename LEVELSET_POLICY<GRID<TV> >
-        ::FAST_LEVELSET_T T_FAST_LEVELSET;
-    T_FAST_LEVELSET_ADVECTION& levelset_advection =
-        example.particle_levelset_evolution.levelset_advection;
-    GRID<TV>& grid = ((T_FAST_LEVELSET*)levelset_advection.levelset)->grid;
-    T_ARRAYS_SCALAR& phi = ((T_FAST_LEVELSET*)levelset_advection.levelset)->phi;
-    assert(grid.Is_MAC_Grid() && levelset_advection.advection);
-    T_ARRAYS_SCALAR phi_ghost(grid.Domain_Indices(
-            example.particle_levelset_evolution.particle_levelset.
-            number_of_ghost_cells));
-    ((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary->Fill_Ghost_Cells(
-        grid, phi, phi_ghost, dt, time,
-        example.particle_levelset_evolution.particle_levelset.number_of_ghost_cells);
-    T_ARRAYS_SCALAR::Copy(phi_ghost, phi);
-*/
     example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
         example.mac_grid,
         example.particle_levelset_evolution.phi,
@@ -896,14 +708,6 @@ AdvectPhiImpl(const nimbus::Job *job,
     ((T_FAST_LEVELSET*)levelset_advection.levelset)->boundary->Apply_Boundary_Condition(
         grid, phi, time + dt);
   }
-  /*
-  example.particle_levelset_evolution.levelset_advection.Euler_Step(
-      example.face_velocities,
-      dt, time,
-      example.particle_levelset_evolution.particle_levelset.
-      number_of_ghost_cells);
-  example.phi_boundary_water.Use_Extrapolation_Mode(true);
-  */
 
   // Save State.
   example.Save_To_Nimbus(job, da, current_frame + 1);

@@ -567,18 +567,18 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-    nimbus::CacheManager *cm = job->GetCacheManager();
+//    nimbus::CacheManager *cm = job->GetCacheManager();
 
     // mac velocities
     {
-        nimbus::DataArray read, write;
+//        nimbus::DataArray read, write;
         const std::string fvstring = std::string(APP_FACE_VEL);
-        application::GetReadData(job, fvstring, da, &read);
-        application::GetWriteData(job, fvstring, da, &write);
-        cm->GetAppObject(read, write, array_reg_central,
-                         application::kCacheFaceVel,
-                         nimbus::EXCLUSIVE,
-                         write.empty());
+//        application::GetReadData(job, fvstring, da, &read);
+//        application::GetWriteData(job, fvstring, da, &write);
+//        cm->GetAppObject(read, write, array_reg_central,
+//                         application::kCacheFaceVel,
+//                         nimbus::EXCLUSIVE,
+//                         write.empty());
         if (application::GetTranslatorData(job, fvstring, da, &pdv, application::READ_ACCESS)
             && data_config.GetFlag(DataConfig::VELOCITY)) {
           translator.ReadFaceArrayFloat(
