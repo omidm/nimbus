@@ -74,9 +74,22 @@ namespace application {
               allowed = true;
             }
             if (d->name() == name && allowed) {
-                ds.insert(*it);
+                if (ds.count(*it) == 0) {
+                  nimbus::Data *d = *it;
+                  std::string name_str = d->name();
+                  const nimbus::LogicalDataObject *ldo =
+                      job->GetLogicalObject(d->logical_id());
+                  nimbus::PhysicalDataInstance *pdi = new
+                      nimbus::PhysicalDataInstance(d->physical_id(),
+                                                   ldo, d,
+                                                   nimbus::data_version_t(0));
+                  vec->push_back(pdi);
+                  ds.insert(*it);
+                }
+                success = true;
             }
         }
+        /*
         if (ds.empty()) {
             return success;
         }
@@ -91,6 +104,7 @@ namespace application {
             vec->push_back(pdi);
             success = true;
         }
+        */
         return success;
     }
 
