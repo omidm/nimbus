@@ -145,6 +145,8 @@ class Job {
     void set_sterile(bool sterile);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
+    // TODO(quhang) should add accesssors.
+    DataArray data_array;
 
   private:
     std::string name_;
