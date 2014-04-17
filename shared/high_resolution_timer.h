@@ -32,51 +32,46 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Job done command to signal completion of a job.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*                                                                                                     
+ * High resolution timer for profiling job times.
+ *                                                                                                     
+ * Author: Andrew Lim <alim16@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_JOB_DONE_COMMAND_H_
-#define NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#ifndef NIMBUS_SHARED_HIGH_RESOLUTION_TIMER_H_
+#define NIMBUS_SHARED_HIGH_RESOLUTION_TIMER_H_
 
-
-#include <string>
-#include "shared/scheduler_command.h"
+#include <sys/time.h>
+#include <map>
+#include "shared/id.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
-class JobDoneCommand : public SchedulerCommand {
-  public:
-    JobDoneCommand();
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params);
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params,
-        double run_time,
-        double wait_time);
-    ~JobDoneCommand();
 
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    ID<job_id_t> job_id();
-    IDSet<job_id_t> after_set();
-    Parameter params();
-    double run_time();
-    double wait_time();
+class HighResolutionTimer {
+ public:
+  explicit HighResolutionTimer();
+  ~HighResolutionTimer();
+  void Start(job_id_t id);
+  double Stop(job_id_t id);
 
-  private:
-    ID<job_id_t> job_id_;
-    IDSet<job_id_t> after_set_;
-    Parameter params_;
-    double run_time_;
-    double wait_time_;
+ private:
+  struct HighResolutionTimerState {
+    HighResolutionTimerState() {
+      on = false;
+    }
+    bool on;
+    struct timespec start_time;
+  };
+
+ private:
+  typedef std::map<job_id_t, HighResolutionTimerState> HighResolutionTimerMap;
+  static double Diff(timespec *start_time, timespec *end_time);
+
+ private:
+  HighResolutionTimerMap* timer_map_;
 };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#endif  // NIMBUS_SHARED_HIGH_RESOLUTION_TIMER_H_
