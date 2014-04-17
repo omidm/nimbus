@@ -239,7 +239,7 @@ void Worker::ResolveDataArray(Job* job) {
     job->data_array.push_back(data_map_[*iter]);
   }
   // DumpVersionInformation(job, da, &version_log_, "version_in");
-  DumpDataHashInformation(job, job->data_array, &data_hash_log_, "hash_in");
+  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
   IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {

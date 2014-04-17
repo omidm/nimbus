@@ -108,20 +108,20 @@ void JobProjectionMain::SpawnJobs(
       &default_right_params_str);
   default_part_params[1].set_ser_data(SerializedData(default_right_params_str));
 
-  int construct_matrix_job_num = 2;
+  int construct_matrix_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> construct_matrix_job_ids;
   GetNewJobID(&construct_matrix_job_ids, construct_matrix_job_num);
 
-  int local_initialize_job_num = 2;
+  int local_initialize_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> local_initialize_job_ids;
   GetNewJobID(&local_initialize_job_ids, local_initialize_job_num);
 
-  int calculate_boundary_condition_part_one_job_num = 2;
+  int calculate_boundary_condition_part_one_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> calculate_boundary_condition_part_one_job_ids;
   GetNewJobID(&calculate_boundary_condition_part_one_job_ids,
               calculate_boundary_condition_part_one_job_num);
 
-  int calculate_boundary_condition_part_two_job_num = 2;
+  int calculate_boundary_condition_part_two_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> calculate_boundary_condition_part_two_job_ids;
   GetNewJobID(&calculate_boundary_condition_part_two_job_ids,
               calculate_boundary_condition_part_two_job_num);
@@ -173,11 +173,14 @@ void JobProjectionMain::SpawnJobs(
                         APP_U_INTERFACE, NULL);
 
     before.clear();
-    before.insert(calculate_boundary_condition_part_one_job_ids[0]);
-    before.insert(calculate_boundary_condition_part_one_job_ids[1]);
+    for (int j = 0; j < calculate_boundary_condition_part_one_job_num ; ++j) {
+      before.insert(calculate_boundary_condition_part_one_job_ids[j]);
+    }
+    // before.insert(calculate_boundary_condition_part_one_job_ids[0]);
+    // before.insert(calculate_boundary_condition_part_one_job_ids[1]);
     after.clear();
-    after.insert(construct_matrix_job_ids[0]);
-    after.insert(construct_matrix_job_ids[1]);
+    // after.insert(construct_matrix_job_ids[0]);
+    // after.insert(construct_matrix_job_ids[1]);
 
     SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
                     calculate_boundary_condition_part_two_job_ids[index],
@@ -207,8 +210,11 @@ void JobProjectionMain::SpawnJobs(
                         NULL);
 
     before.clear();
-    before.insert(calculate_boundary_condition_part_two_job_ids[0]);
-    before.insert(calculate_boundary_condition_part_two_job_ids[1]);
+    for (int j = 0; j < calculate_boundary_condition_part_two_job_num ; ++j) {
+      before.insert(calculate_boundary_condition_part_two_job_ids[j]);
+    }
+    // before.insert(calculate_boundary_condition_part_two_job_ids[0]);
+    // before.insert(calculate_boundary_condition_part_two_job_ids[1]);
     after.clear();
     after.insert(local_initialize_job_ids[0]);
     after.insert(local_initialize_job_ids[1]);
@@ -232,8 +238,11 @@ void JobProjectionMain::SpawnJobs(
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
                         APP_VECTOR_TEMP, APP_VECTOR_P, APP_VECTOR_Z, NULL);
     before.clear();
-    before.insert(construct_matrix_job_ids[0]);
-    before.insert(construct_matrix_job_ids[1]);
+    for (int j = 0; j < construct_matrix_job_num ; ++j) {
+      before.insert(construct_matrix_job_ids[j]);
+    }
+    // before.insert(construct_matrix_job_ids[0]);
+    // before.insert(construct_matrix_job_ids[1]);
     after.clear();
     after.insert(projection_job_ids[3]);
     SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
@@ -254,8 +263,11 @@ void JobProjectionMain::SpawnJobs(
                       APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS, NULL);
   before.clear();
-  before.insert(local_initialize_job_ids[0]);
-  before.insert(local_initialize_job_ids[1]);
+  for (int j = 0; j < local_initialize_job_num ; ++j) {
+    before.insert(local_initialize_job_ids[j]);
+  }
+  // before.insert(local_initialize_job_ids[0]);
+  // before.insert(local_initialize_job_ids[1]);
   after.clear();
   after.insert(projection_job_ids[4]);
   SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
