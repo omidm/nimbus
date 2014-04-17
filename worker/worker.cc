@@ -43,6 +43,7 @@
 #include <ctime>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
+#include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
 
@@ -75,6 +76,59 @@ void DumpVersionInformation(Job *job, const DataArray& da, Log *log, std::string
            hash_function(input), input.c_str());
   log->WriteToFile(std::string(buff), LOG_INFO);
 }
+
+void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
+    std::string input = "";
+    for (size_t i = 0; i < da.size(); ++i) {
+      if (dynamic_cast<PhysBAMData*>(da[i]) != NULL) { // NOLINT
+        std::ostringstream ss_l;
+        ss_l << da[i]->logical_id();
+        input += ss_l.str();
+        input += " : ";
+        // std::ostringstream ss_p;
+        // ss_p << da[i]->physical_id();
+        // input += ss_p.str();
+        // input += " : ";
+        std::ostringstream ss_v;
+        ss_v << dynamic_cast<PhysBAMData*>(da[i])->HashCode(); // NOLINT
+        input += ss_v.str();
+        input += " - ";
+      }
+    }
+    hash<std::string> hash_function;
+
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff),
+        "%s name: %s id: %llu  aggregate_hash: %lu hashes: %s",
+        tag.c_str(), job->name().c_str(), job->id().elem(),
+        hash_function(input), input.c_str());
+    log->WriteToFile(std::string(buff), LOG_INFO);
+  }
+}
+
+
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+  std::string input = "";
+  for (size_t i = 0; i < da.size(); ++i) {
+    std::ostringstream ss_l;
+    ss_l << da[i]->logical_id();
+    input += ss_l.str();
+    input += " - ";
+  }
+  hash<std::string> hash_function;
+
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "%s name: %s id: %llu  order_hash: %lu logical ids: %s",
+           tag.c_str(), job->name().c_str(), job->id().elem(),
+           hash_function(input), input.c_str());
+  log->WriteToFile(std::string(buff), LOG_INFO);
+}
+
 
 
 
@@ -135,6 +189,10 @@ void Worker::ScanBlockedJobs() {
       } else {
         pending_transfer_jobs_.push_back(*iter);
       }
+
+      double wait_time =  timer_.Stop((*iter)->id().elem());
+      (*iter)->set_wait_time(wait_time);
+
       blocked_jobs_.erase(iter++);
     } else {
       ++iter;
@@ -188,6 +246,7 @@ void Worker::ExecuteJob(Job* job) {
   }
 
   // DumpVersionInformation(job, da, &version_log_, "version_in");
+  DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
 
   IDSet<physical_data_id_t> write = job->write_set();
@@ -205,18 +264,35 @@ void Worker::ExecuteJob(Job* job) {
     // }
   }
 
-
+  DumpDataOrderInformation(job, da, &data_hash_log_, "data_order");
 
 
   log_.StartTimer();
+  timer_.Start(job->id().elem());
   job->Execute(job->parameters(), da);
+  double run_time = timer_.Stop(job->id().elem());
   log_.StopTimer();
+
+  job->set_run_time(run_time);
 
   char buff[LOG_MAX_BUFF_SIZE];
   snprintf(buff, sizeof(buff),
       "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
            job->name().c_str(), job->id().elem(), log_.timer(), log_.GetTime());
   log_.WriteToOutputStream(std::string(buff), LOG_INFO);
+
+  char time_buff[LOG_MAX_BUFF_SIZE];
+  snprintf(time_buff, sizeof(time_buff),
+      "Queue Time: %2.9lf, Run Time: %2.9lf",
+      job->wait_time(), job->run_time());
+  log_.WriteToOutputStream(std::string(time_buff), LOG_INFO);
+
+  DataArray daw;
+  for (iter = write.begin(); iter != write.end(); iter++) {
+    daw.push_back(data_map_[*iter]);
+  }
+  DumpDataHashInformation(job, daw, &data_hash_log_, "hash_out");
+
 
 
   if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
@@ -235,7 +311,7 @@ void Worker::ExecuteJob(Job* job) {
 
 
   Parameter params;
-  JobDoneCommand cm(job->id(), job->after_set(), params);
+  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
   client_->sendCommand(&cm);
   // ProcessJobDoneCommand(&cm);
   delete job;
@@ -302,6 +378,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   std::ostringstream ss;
   ss << id_;
   version_log_.set_file_name(ss.str() + "_version_log.txt");
+  data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
 }
 
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
@@ -323,6 +400,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_after_set(cm->after_set());
   job->set_parameters(cm->params());
   job->set_sterile(cm->sterile());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -344,6 +422,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -362,6 +441,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -374,6 +454,7 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -389,6 +470,7 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 

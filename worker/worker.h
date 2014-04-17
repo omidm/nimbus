@@ -56,6 +56,7 @@
 #include "shared/cluster.h"
 #include "shared/parser.h"
 #include "shared/log.h"
+#include "shared/high_resolution_timer.h"
 
 namespace nimbus {
 
@@ -105,6 +106,7 @@ class Worker {
  private:
   Log log_;
   Log version_log_;
+  Log data_hash_log_;
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
@@ -113,6 +115,7 @@ class Worker {
   JobList blocked_jobs_;
   JobList pending_transfer_jobs_;
   Application* application_;
+  HighResolutionTimer timer_;
 
   virtual void SetupSchedulerInterface();
 

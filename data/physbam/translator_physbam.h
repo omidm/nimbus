@@ -125,6 +125,9 @@ namespace nimbus {
         const int_dimension_t shift[3],
         const PdiVector* objects,
         typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+      PhysBAM::ARRAY<T, FaceIndex> flag;
+      flag = *fa;
+      flag.Fill(0);
       if (objects != NULL) {
         PdiVector::const_iterator iter = objects->begin();
         for (; iter != objects->end(); ++iter) {
@@ -197,8 +200,22 @@ namespace nimbus {
                     // The PhysBAM FACE_ARRAY object abstracts away whether
                     // the data is stored in struct of array or array of struct
                     // form (in practice, usually struct of arrays.
-                    assert(source_index < data->size() && source_index >= 0);
-                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                    assert(source_index < data->size() / (int) sizeof(T) // NOLINT
+                           && source_index >= 0);
+                    if (flag(dim, destinationIndex) == 0) {
+                      (*fa)(dim, destinationIndex) = buffer[source_index];
+                      flag(dim, destinationIndex) = 1;
+                    } else if (flag(dim, destinationIndex) == 1) {
+                      if ((*fa)(dim, destinationIndex)
+                          != buffer[source_index]) {
+                        (*fa)(dim, destinationIndex) += buffer[source_index];
+                        (*fa)(dim, destinationIndex) /= 2;
+                      }
+                      flag(dim, destinationIndex) = 2;
+                    } else {
+                      // TODO(quhang) needs a more elegant solution.
+                      assert(false);
+                    }
                   }
                 }
               }
@@ -255,6 +272,7 @@ namespace nimbus {
 
           PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
           T* buffer = reinterpret_cast<T*>(data->buffer());
+          assert(buffer != NULL);
 
           Dimension3Vector src = GetOffset(region, obj->region());
           Dimension3Vector dest = GetOffset(obj->region(), region);
@@ -314,7 +332,8 @@ namespace nimbus {
                   // The PhysBAM FACE_ARRAY object abstracts away whether
                   // the data is stored in struct of array or array of struct
                   // form (in practice, usually struct of arrays
-                  assert(destination_index < data->size() && destination_index >= 0);
+                  assert(destination_index < data->size() / (int) sizeof(T) // NOLINT
+                         && destination_index >= 0);
                   buffer[destination_index] = (*fa)(dim, sourceIndex);
                 }
               }
@@ -893,7 +912,8 @@ particle_buffer.id = (*id)(i);
                   int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
                   int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
                   Int3Vector destination_index(dest_x, dest_y, dest_z);
-                  assert(source_index < data->size() && source_index >= 0);
+                  assert(source_index < data->size() / (int) sizeof(T)  // NOLINT
+                         && source_index >= 0);
                   (*sa)(destination_index) = buffer[source_index];
                 }
               }
@@ -956,6 +976,7 @@ particle_buffer.id = (*id)(i);
           if (HasOverlap(overlap)) {
             PhysBAMData* data = static_cast<PhysBAMData*>(inst->data());
             T* buffer  = reinterpret_cast<T*>(data->buffer());
+            assert(buffer != NULL);
 
             Dimension3Vector src  = GetOffset(region, inst->region());
             Dimension3Vector dest = GetOffset(inst->region(), region);
@@ -974,7 +995,8 @@ particle_buffer.id = (*id)(i);
                   int source_y = y + src(Y_COORD) + region->y() - shift[1];
                   int source_z = z + src(Z_COORD) + region->z() - shift[2];
                   Int3Vector source_index(source_x, source_y, source_z);
-                  assert(destination_index < data->size() && destination_index >= 0);
+                  assert(destination_index < data->size() / (int) sizeof(T)  // NOLINT
+                         && destination_index >= 0);
                   buffer[destination_index] = (*sa)(source_index);
                 }
               }

@@ -79,8 +79,7 @@ namespace application {
         LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-        LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegW0Central[0], APP_PSI_N, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D, APP_PSI_N, NULL);
         write.clear();
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
         LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
