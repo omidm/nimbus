@@ -70,6 +70,13 @@ class CacheFaceArray : public nimbus::CacheObject {
                                     const nimbus::GeometricRegion &reg) const;
         virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &lr) const;
 
+        PhysBAMFaceArray *data() {
+            return data_;
+        }
+        void set_data(PhysBAMFaceArray *d) {
+            data_ = d;
+        }
+
     private:
         int ghost_width_;
         nimbus::GeometricRegion global_region_;

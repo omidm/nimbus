@@ -51,6 +51,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
+    cache_fv = NULL;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -270,31 +271,13 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
-    GeometricRegion array_reg_central(local_region.x(),
-                                    local_region.y(),
-                                    local_region.z(),
-                                    local_region.dx(),
-                                    local_region.dy(),
-                                    local_region.dz());
 
-    GeometricRegion array_reg_outer_7(array_reg_central);
-    array_reg_outer_7.Enlarge(7);
-    GeometricRegion array_reg_outer_8(array_reg_central);
-    array_reg_outer_8.Enlarge(8);
+    GeometricRegion array_reg_central(local_region);
+    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
+    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
-    GeometricRegion array_reg_outer(local_region.x()-application::kGhostNum,
-                                    local_region.y()-application::kGhostNum,
-                                    local_region.z()-application::kGhostNum,
-                                    local_region.dx()+2*application::kGhostNum,
-                                    local_region.dy()+2*application::kGhostNum,
-                                    local_region.dz()+2*application::kGhostNum);
-
-    GeometricRegion array_reg_thin_outer(local_region.x()-1,
-                                         local_region.y()-1,
-                                         local_region.z()-1,
-                                         local_region.dx()+2,
-                                         local_region.dy()+2,
-                                         local_region.dz()+2);
+    GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
+    GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,
@@ -303,21 +286,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-    bool levelset_extrapolation_mode =
-        data_config.GetFlag(DataConfig::LEVELSET) &&
-        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
-         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
-    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
-             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
-
     // mac velocities
-    const std::string fvstring = std::string(APP_FACE_VEL);
-    if (application::GetTranslatorData(job, fvstring, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::VELOCITY)) {
-      translator.WriteFaceArrayFloat(
-          &array_reg_central, array_shift, &pdv, &face_velocities);
+    if (cache_fv) {
+        T_FACE_ARRAY *fv = cache_fv->data();
+        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+        cache_fv->Write(array_reg_central);
     }
-    application::DestroyTranslatorObjects(&pdv);
 
     // mac velocities ghost
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
@@ -332,6 +306,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
+    bool levelset_extrapolation_mode =
+        data_config.GetFlag(DataConfig::LEVELSET) &&
+        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
+         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
+    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
+             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
     const std::string lsstring = std::string(APP_PHI);
     if (!levelset_extrapolation_mode) {
       if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -567,24 +547,30 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-//    nimbus::CacheManager *cm = job->GetCacheManager();
+    nimbus::CacheManager *cm = job->GetCacheManager();
 
     // mac velocities
+    if (data_config.GetFlag(DataConfig::VELOCITY))
     {
-//        nimbus::DataArray read, write;
+        nimbus::DataArray read, write;
         const std::string fvstring = std::string(APP_FACE_VEL);
-//        application::GetReadData(job, fvstring, da, &read);
-//        application::GetWriteData(job, fvstring, da, &write);
-//        cm->GetAppObject(read, write, array_reg_central,
-//                         application::kCacheFaceVel,
-//                         nimbus::EXCLUSIVE,
-//                         write.empty());
-        if (application::GetTranslatorData(job, fvstring, da, &pdv, application::READ_ACCESS)
-            && data_config.GetFlag(DataConfig::VELOCITY)) {
-          translator.ReadFaceArrayFloat(
-              &array_reg_central, array_shift, &pdv, &face_velocities);
-        }
-        application::DestroyTranslatorObjects(&pdv);
+        application::GetReadData(job, fvstring, da, &read);
+        application::GetWriteData(job, fvstring, da, &write);
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read, write, array_reg_central,
+                application::kCacheFaceVel,
+                nimbus::EXCLUSIVE,
+                write.empty());
+        cache_fv = dynamic_cast<TCacheFaceArray *>(cache_obj);
+        assert(cache_fv != NULL);
+        T_FACE_ARRAY *fv = cache_fv->data();
+        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+        //if (application::GetTranslatorData(job, fvstring, da, &pdv, application::READ_ACCESS)
+        //    && data_config.GetFlag(DataConfig::VELOCITY)) {
+        //  translator.ReadFaceArrayFloat(
+        //      &array_reg_central, array_shift, &pdv, &face_velocities);
+        //}
+        //application::DestroyTranslatorObjects(&pdv);
         dbg(APP_LOG, "Finish translating velocity.\n");
     }
 

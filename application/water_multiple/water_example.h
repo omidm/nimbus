@@ -4,7 +4,6 @@
 //#####################################################################
 #ifndef __WATER_EXAMPLE__
 #define __WATER_EXAMPLE__
-#include "data/physbam/translator_physbam_old.h"
 #include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>
 #include <PhysBAM_Tools/Grids_Uniform_Boundaries/BOUNDARY_UNIFORM.h>
@@ -20,8 +19,11 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
+#include "application/water_multiple/cache_data_include.h"
+#include "application/water_multiple/cache_face_array.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "shared/nimbus.h"
 namespace PhysBAM{
 
@@ -38,6 +40,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef typename LEVELSET_POLICY<GRID<TV> >::PARTICLE_LEVELSET T_PARTICLE_LEVELSET;
     typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
     typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
+    typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
     enum workaround1{d=TV::m};
 
 public:
@@ -77,6 +80,11 @@ public:
 
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
+
+
+    // cache objects
+    typedef typename application::CacheFaceArray<T> TCacheFaceArray;
+    TCacheFaceArray *cache_fv;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();
