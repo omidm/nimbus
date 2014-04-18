@@ -43,9 +43,11 @@
 #include <ctime>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
+#include "worker/worker_manager.h"
 #include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
+#define CORE_NUMBER 1
 
 using boost::hash;
 
@@ -111,7 +113,23 @@ void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::strin
 }
 
 
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+  std::string input = "";
+  for (size_t i = 0; i < da.size(); ++i) {
+    std::ostringstream ss_l;
+    ss_l << da[i]->logical_id();
+    input += ss_l.str();
+    input += " - ";
+  }
+  hash<std::string> hash_function;
 
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "%s name: %s id: %llu  order_hash: %lu logical ids: %s",
+           tag.c_str(), job->name().c_str(), job->id().elem(),
+           hash_function(input), input.c_str());
+  log->WriteToFile(std::string(buff), LOG_INFO);
+}
 
 
 
@@ -141,6 +159,9 @@ void Worker::Run() {
 
 void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
+  WorkerManager worker_manager;
+  worker_manager.worker_ = this;
+  worker_manager.StartWorkerThreads(CORE_NUMBER);
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
@@ -155,12 +176,7 @@ void Worker::WorkerCoreProcessor() {
 
     ScanPendingTransferJobs();
 
-    JobList jobs_to_run;
-    GetJobsToRun(&jobs_to_run, (size_t)(MAX_PARALLEL_JOB));
-    JobList::iterator iter = jobs_to_run.begin();
-    for (; iter != jobs_to_run.end(); iter++) {
-      ExecuteJob(*iter);
-    }
+    GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
   }
 }
 
@@ -173,6 +189,10 @@ void Worker::ScanBlockedJobs() {
       } else {
         pending_transfer_jobs_.push_back(*iter);
       }
+
+      double wait_time =  timer_.Stop((*iter)->id().elem());
+      (*iter)->set_wait_time(wait_time);
+
       blocked_jobs_.erase(iter++);
     } else {
       ++iter;
@@ -196,75 +216,49 @@ void Worker::ScanPendingTransferJobs() {
   }
 }
 
-void Worker::GetJobsToRun(JobList* list, size_t max_num) {
-  list->clear();
+
+// Extracts at most "max_num" jobs from queue "ready_jobs", resolves their data
+// array, and push them to the worker manager.
+void Worker::GetJobsToRun(WorkerManager* worker_manager, size_t max_num) {
   size_t ready_num = ready_jobs_.size();
   for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
     Job* job = ready_jobs_.front();
-    list->push_back(job);
     ready_jobs_.pop_front();
+    ResolveDataArray(job);
+    int success_flag = worker_manager->PushCalculationJob(job);
+    assert(success_flag);
   }
 }
 
-void Worker::ExecuteJob(Job* job) {
-  DataArray da;
+// Extracts data objects from the read/write set to data array.
+void Worker::ResolveDataArray(Job* job) {
+  job->data_array.clear();
   IDSet<physical_data_id_t>::IDSetIter iter;
 
   IDSet<physical_data_id_t> read = job->read_set();
   for (iter = read.begin(); iter != read.end(); iter++) {
-    da.push_back(data_map_[*iter]);
-
-    // std::string name = job->name();
-    // if (name != "main" && name != "initialize") {
-    //   SerializedData ser_data;
-    //   data_map_[*iter]->Serialize(&ser_data);
-    //   Data * data_copy = NULL;
-    //   data_map_[*iter]->DeSerialize(ser_data, &data_copy);
-    //   data_map_[*iter]->Copy(data_copy);
-    //   data_copy->Destroy();
-    // }
+    job->data_array.push_back(data_map_[*iter]);
   }
-
   // DumpVersionInformation(job, da, &version_log_, "version_in");
-  DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
-
+  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
   IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {
-    da.push_back(data_map_[*iter]);
-
-    // std::string name = job->name();
-    // if (name != "main" && name != "initialize") {
-    //   SerializedData ser_data;
-    //   data_map_[*iter]->Serialize(&ser_data);
-    //   Data * data_copy = NULL;
-    //   data_map_[*iter]->DeSerialize(ser_data, &data_copy);
-    //   data_map_[*iter]->Copy(data_copy);
-    //   data_copy->Destroy();
-    // }
+    job->data_array.push_back(data_map_[*iter]);
   }
+  DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
+}
 
-
-
-
-  log_.StartTimer();
-  job->Execute(job->parameters(), da);
-  log_.StopTimer();
-
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
-           job->name().c_str(), job->id().elem(), log_.timer(), log_.GetTime());
-  log_.WriteToOutputStream(std::string(buff), LOG_INFO);
-
-
+// TODO(quhang) operation on shared data structure "data_map" should be
+// synchronized.
+void Worker::UpdateDataVersion(Job* job) {
   DataArray daw;
+  IDSet<physical_data_id_t> write = job->write_set();
+  IDSet<physical_data_id_t>::IDSetIter iter;
   for (iter = write.begin(); iter != write.end(); iter++) {
     daw.push_back(data_map_[*iter]);
   }
   DumpDataHashInformation(job, daw, &data_hash_log_, "hash_out");
-
-
 
   if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
@@ -278,18 +272,37 @@ void Worker::ExecuteJob(Job* job) {
     }
   }
 
-
-
-
   Parameter params;
-  JobDoneCommand cm(job->id(), job->after_set(), params);
+  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
   client_->sendCommand(&cm);
   // ProcessJobDoneCommand(&cm);
   delete job;
 }
 
+void Worker::ExecuteJob(Job* job) {
+  log_.StartTimer();
+  timer_.Start(job->id().elem());
+  job->Execute(job->parameters(), job->data_array);
+  double run_time = timer_.Stop(job->id().elem());
+  log_.StopTimer();
 
+  job->set_run_time(run_time);
 
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
+           job->name().c_str(), job->id().elem(), log_.timer(), log_.GetTime());
+  log_.WriteToOutputStream(std::string(buff), LOG_INFO);
+
+  char time_buff[LOG_MAX_BUFF_SIZE];
+  snprintf(time_buff, sizeof(time_buff),
+      "Queue Time: %2.9lf, Run Time: %2.9lf",
+      job->wait_time(), job->run_time());
+  log_.WriteToOutputStream(std::string(time_buff), LOG_INFO);
+
+  // TODO(quhang) to be removed from here.
+  UpdateDataVersion(job);
+}
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {
@@ -371,6 +384,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_after_set(cm->after_set());
   job->set_parameters(cm->params());
   job->set_sterile(cm->sterile());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -392,6 +406,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -410,6 +425,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -422,6 +438,7 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 
@@ -437,6 +454,7 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+  timer_.Start(job->id().elem());
   blocked_jobs_.push_back(job);
 }
 

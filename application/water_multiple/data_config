@@ -13,7 +13,7 @@ DataParticleArray : pos_rem_particles, neg_rem_particles  : (40, 40, 40), (1, 2,
 # boolean.
 DataScalarArray   : psi_d                : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
 # boolean.
-DataFaceArray     : psi_n                : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
+DataFaceArray     : psi_n                : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
 # float.
 DataScalarArray   : pressure             : (40, 40, 40), (1, 2, 1), (1, 1, 1) : include_boundary
 # int.

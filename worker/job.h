@@ -131,6 +131,8 @@ class Job {
     Parameter parameters() const;
     Application* application() const;
     bool  sterile() const;
+    double run_time() const;
+    double wait_time() const;
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
@@ -141,6 +143,10 @@ class Job {
     void set_parameters(Parameter parameters);
     void set_application(Application* app);
     void set_sterile(bool sterile);
+    void set_run_time(double run_time);
+    void set_wait_time(double wait_time);
+    // TODO(quhang) should add accesssors.
+    DataArray data_array;
 
   private:
     std::string name_;
@@ -153,6 +159,8 @@ class Job {
     Application* application_;
     bool sterile_;
     bool app_is_set_;
+    double run_time_;
+    double wait_time_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

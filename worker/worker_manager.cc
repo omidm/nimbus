@@ -33,50 +33,63 @@
  */
 
  /*
-  * Job done command to signal completion of a job.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_JOB_DONE_COMMAND_H_
-#define NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#include <pthread.h>
+#include <list>
 
+#include "shared/nimbus.h"
+#include "worker/worker_thread.h"
 
-#include <string>
-#include "shared/scheduler_command.h"
+#include "worker/worker_manager.h"
 
 namespace nimbus {
-class JobDoneCommand : public SchedulerCommand {
-  public:
-    JobDoneCommand();
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params);
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params,
-        double run_time,
-        double wait_time);
-    ~JobDoneCommand();
 
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    ID<job_id_t> job_id();
-    IDSet<job_id_t> after_set();
-    Parameter params();
-    double run_time();
-    double wait_time();
+WorkerManager::WorkerManager() {
+  pthread_mutex_init(&queue_lock_, NULL);
+}
 
-  private:
-    ID<job_id_t> job_id_;
-    IDSet<job_id_t> after_set_;
-    Parameter params_;
-    double run_time_;
-    double wait_time_;
-};
+WorkerManager::~WorkerManager() {}
+
+Job* WorkerManager::PullCalculationJob() {
+  pthread_mutex_lock(&queue_lock_);
+  if (job_list_.empty()) {
+    pthread_mutex_unlock(&queue_lock_);
+    return NULL;
+  } else {
+    Job* temp = job_list_.front();
+    job_list_.pop_front();
+    pthread_mutex_unlock(&queue_lock_);
+    return temp;
+  }
+}
+
+bool WorkerManager::PushCalculationJob(Job* job) {
+  pthread_mutex_lock(&queue_lock_);
+  job_list_.push_back(job);
+  pthread_mutex_unlock(&queue_lock_);
+  return true;
+}
+
+bool WorkerManager::StartWorkerThreads(int thread_number) {
+  for (int i = 0; i < thread_number; ++i) {
+    WorkerThread* worker_thread = new WorkerThread(this);
+    worker_thread_list.push_back(worker_thread);
+    assert(worker_ != NULL);
+    worker_thread->worker_ = worker_;
+    int error_code =
+        pthread_create(&worker_thread->thread_id, NULL,
+                       ThreadEntryPoint, worker_thread);
+    assert(error_code == 0);
+  }
+  return true;
+}
+
+void* WorkerManager::ThreadEntryPoint(void* parameters) {
+  WorkerThread* worker_thread = reinterpret_cast<WorkerThread*>(parameters);
+  worker_thread->Run();
+  assert(false);
+}
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_JOB_DONE_COMMAND_H_

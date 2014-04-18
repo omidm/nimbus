@@ -33,50 +33,28 @@
  */
 
  /*
-  * Job done command to signal completion of a job.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_JOB_DONE_COMMAND_H_
-#define NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#ifndef NIMBUS_WORKER_WORKER_THREAD_H_
+#define NIMBUS_WORKER_WORKER_THREAD_H_
 
-
-#include <string>
-#include "shared/scheduler_command.h"
-
+#include "shared/nimbus.h"
 namespace nimbus {
-class JobDoneCommand : public SchedulerCommand {
-  public:
-    JobDoneCommand();
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params);
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params,
-        double run_time,
-        double wait_time);
-    ~JobDoneCommand();
-
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    ID<job_id_t> job_id();
-    IDSet<job_id_t> after_set();
-    Parameter params();
-    double run_time();
-    double wait_time();
-
-  private:
-    ID<job_id_t> job_id_;
-    IDSet<job_id_t> after_set_;
-    Parameter params_;
-    double run_time_;
-    double wait_time_;
+class WorkerManager;
+class Worker;
+class WorkerThread {
+ public:
+  explicit WorkerThread(WorkerManager* worker_manager);
+  virtual ~WorkerThread();
+  void Run();
+  // TODO(quhang) data member accessor.
+  pthread_t thread_id;
+  Worker* worker_;
+ private:
+  WorkerManager* worker_manager_;
+  void ExecuteJob(Job* job);
 };
-
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#endif  // NIMBUS_WORKER_WORKER_THREAD_H_

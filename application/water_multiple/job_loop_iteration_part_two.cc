@@ -105,11 +105,11 @@ void JobLoopIterationPartTwo::SpawnJobs(
   GetNewJobID(&job_ids, job_num);
   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
   nimbus::IDSet<nimbus::job_id_t> before, after;
-  int extrapolation_job_num = 2;
+  int extrapolation_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> extrapolation_job_ids;
   GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
 
-  int extrapolate_phi_job_num = 2;
+  int extrapolate_phi_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
   GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
 
@@ -216,6 +216,8 @@ void JobLoopIterationPartTwo::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
                         APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+                        APP_PSI_N, NULL);
     LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,

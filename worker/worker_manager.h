@@ -33,50 +33,38 @@
  */
 
  /*
-  * Job done command to signal completion of a job.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_JOB_DONE_COMMAND_H_
-#define NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#ifndef NIMBUS_WORKER_WORKER_MANAGER_H_
+#define NIMBUS_WORKER_WORKER_MANAGER_H_
 
-
-#include <string>
-#include "shared/scheduler_command.h"
+#include <list>
+#include "shared/nimbus.h"
 
 namespace nimbus {
-class JobDoneCommand : public SchedulerCommand {
-  public:
-    JobDoneCommand();
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params);
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params,
-        double run_time,
-        double wait_time);
-    ~JobDoneCommand();
+class WorkerThread;
+class Worker;
 
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    ID<job_id_t> job_id();
-    IDSet<job_id_t> after_set();
-    Parameter params();
-    double run_time();
-    double wait_time();
+class WorkerManager {
+ public:
+  WorkerManager();
+  ~WorkerManager();
 
-  private:
-    ID<job_id_t> job_id_;
-    IDSet<job_id_t> after_set_;
-    Parameter params_;
-    double run_time_;
-    double wait_time_;
+  Job* PullCalculationJob();
+  bool PushCalculationJob(Job* job);
+  Job* PullDoneJob() { return NULL; }
+  bool PushDoneJob(Job* job) { return true; }
+
+  bool StartWorkerThreads(int thread_number);
+  static void* ThreadEntryPoint(void* parameters);
+ public:
+  Worker* worker_;
+ private:
+  std::list<WorkerThread*> worker_thread_list;
+  std::list<Job*> job_list_;
+  pthread_mutex_t queue_lock_;
 };
-
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_JOB_DONE_COMMAND_H_
+#endif  // NIMBUS_WORKER_WORKER_MANAGER_H_

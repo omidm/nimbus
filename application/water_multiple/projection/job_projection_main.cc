@@ -38,6 +38,7 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_names.h"
@@ -96,32 +97,30 @@ void JobProjectionMain::SpawnJobs(
       &default_params_str);
   default_params.set_ser_data(SerializedData(default_params_str));
 
-  nimbus::Parameter default_part_params[2];
-  std::string default_left_params_str;
-  SerializeParameter(
-      frame, time, dt, global_region, kRegY2W0Central[0],
-      &default_left_params_str);
-  default_part_params[0].set_ser_data(SerializedData(default_left_params_str));
-  std::string default_right_params_str;
-  SerializeParameter(
-      frame, time, dt, global_region, kRegY2W0Central[1],
-      &default_right_params_str);
-  default_part_params[1].set_ser_data(SerializedData(default_right_params_str));
+  std::vector<nimbus::Parameter> default_part_params;
+  default_part_params.resize(kAppPartNum);
+  for (int i = 0; i < kAppPartNum; ++i) {
+    std::string default_params_str;
+    SerializeParameter(
+        frame, time, dt, global_region, kRegY2W0Central[i],
+        &default_params_str);
+    default_part_params[i].set_ser_data(SerializedData(default_params_str));
+  }
 
-  int construct_matrix_job_num = 2;
+  int construct_matrix_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> construct_matrix_job_ids;
   GetNewJobID(&construct_matrix_job_ids, construct_matrix_job_num);
 
-  int local_initialize_job_num = 2;
+  int local_initialize_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> local_initialize_job_ids;
   GetNewJobID(&local_initialize_job_ids, local_initialize_job_num);
 
-  int calculate_boundary_condition_part_one_job_num = 2;
+  int calculate_boundary_condition_part_one_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> calculate_boundary_condition_part_one_job_ids;
   GetNewJobID(&calculate_boundary_condition_part_one_job_ids,
               calculate_boundary_condition_part_one_job_num);
 
-  int calculate_boundary_condition_part_two_job_num = 2;
+  int calculate_boundary_condition_part_two_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> calculate_boundary_condition_part_two_job_ids;
   GetNewJobID(&calculate_boundary_condition_part_two_job_ids,
               calculate_boundary_condition_part_two_job_num);
@@ -132,22 +131,19 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
 
     before.clear();
     after.clear();
-    after.insert(calculate_boundary_condition_part_two_job_ids[0]);
-    after.insert(calculate_boundary_condition_part_two_job_ids[1]);
 
     SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                     calculate_boundary_condition_part_one_job_ids[index],
@@ -162,24 +158,22 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
 
     before.clear();
-    before.insert(calculate_boundary_condition_part_one_job_ids[0]);
-    before.insert(calculate_boundary_condition_part_one_job_ids[1]);
+    for (int j = 0; j < calculate_boundary_condition_part_one_job_num ; ++j) {
+      before.insert(calculate_boundary_condition_part_one_job_ids[j]);
+    }
     after.clear();
-    after.insert(construct_matrix_job_ids[0]);
-    after.insert(construct_matrix_job_ids[1]);
 
     SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
                     calculate_boundary_condition_part_two_job_ids[index],
@@ -193,16 +187,15 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_PSI_N,
-                        APP_U_INTERFACE, NULL);
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[index], APP_FACE_VEL, APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-                        APP_DIVERGENCE, APP_PSI_D, APP_FILLED_REGION_COLORS,
-                        APP_PRESSURE, NULL);
-    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_PSI_N,
+                        APP_DIVERGENCE, APP_PSI_D, APP_PSI_N,
+                        APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
+    LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_U_INTERFACE, APP_MATRIX_A,
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_TOLERANCE,
                         APP_INDEX_M2C, APP_INDEX_C2M,
@@ -210,11 +203,10 @@ void JobProjectionMain::SpawnJobs(
                         NULL);
 
     before.clear();
-    before.insert(calculate_boundary_condition_part_two_job_ids[0]);
-    before.insert(calculate_boundary_condition_part_two_job_ids[1]);
+    for (int j = 0; j < calculate_boundary_condition_part_two_job_num ; ++j) {
+      before.insert(calculate_boundary_condition_part_two_job_ids[j]);
+    }
     after.clear();
-    after.insert(local_initialize_job_ids[0]);
-    after.insert(local_initialize_job_ids[1]);
     SpawnComputeJob(PROJECTION_CONSTRUCT_MATRIX,
                     construct_matrix_job_ids[index],
                     read, write,
@@ -235,10 +227,10 @@ void JobProjectionMain::SpawnJobs(
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
                         APP_VECTOR_TEMP, APP_VECTOR_P, APP_VECTOR_Z, NULL);
     before.clear();
-    before.insert(construct_matrix_job_ids[0]);
-    before.insert(construct_matrix_job_ids[1]);
+    for (int j = 0; j < construct_matrix_job_num ; ++j) {
+      before.insert(construct_matrix_job_ids[j]);
+    }
     after.clear();
-    after.insert(projection_job_ids[3]);
     SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
                     local_initialize_job_ids[index],
                     read, write,
@@ -257,10 +249,12 @@ void JobProjectionMain::SpawnJobs(
                       APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS, NULL);
   before.clear();
-  before.insert(local_initialize_job_ids[0]);
-  before.insert(local_initialize_job_ids[1]);
+  for (int j = 0; j < local_initialize_job_num ; ++j) {
+    before.insert(local_initialize_job_ids[j]);
+  }
+  // before.insert(local_initialize_job_ids[0]);
+  // before.insert(local_initialize_job_ids[1]);
   after.clear();
-  after.insert(projection_job_ids[4]);
   SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
                   projection_job_ids[3],
                   read, write,

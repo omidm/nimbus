@@ -63,6 +63,7 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
 
   InitConfig init_config;
+  init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());

@@ -25,7 +25,7 @@ DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
 
 
-LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf
+LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf -lrt -lpthread
 SHARED_FLAGS = -shared -fPIC
 
 ifdef OS_DARWIN
@@ -48,7 +48,7 @@ shared_t:
 	cd shared; make -j 12; cd ..
 
 $(LIBRARY): shared_t scheduler_t worker_t data_t
-	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
+	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG) $(LFLAGS)
 
 clean: clean-files
 	\rm -f */*.o */*~ */\#*
