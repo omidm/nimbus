@@ -819,10 +819,12 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         const std::string fvstring = std::string(APP_FACE_VEL);
         application::GetReadData(job, fvstring, da, &read);
         application::GetWriteData(job, fvstring, da, &write);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into face array for region %s\n",
+            read.size(), array_reg_central.toString().c_str());
         nimbus::CacheObject *cache_obj =
             cm->GetAppObject(read, write, array_reg_central,
                 application::kCacheFaceVel,
-                nimbus::EXCLUSIVE, false);
+                nimbus::EXCLUSIVE, write.empty());
         cache_fv = dynamic_cast<TCacheFaceArray *>(cache_obj);
         assert(cache_fv != NULL);
         T_FACE_ARRAY *fv = cache_fv->data();

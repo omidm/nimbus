@@ -67,6 +67,7 @@ void CacheObject::Read(const DataArray &read_set,
         if (!pids_.contains(d->physical_id()))
             read.push_back(d);;
     }
+    dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
     if (!read.empty())
         ReadToCache(read, reg);
 }
@@ -79,6 +80,7 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
     // TODO(chinmayee): remove pointer from data to cache object
     WriteFromCache(write_back_, reg);
+    write_back_.clear();
     if (release)
         ReleaseAccess();
 }
