@@ -33,26 +33,29 @@
  */
 
  /*
-  * Author: Hang Qu <quhang@stanford.edu>
+  * Utilities related to logging information dumping are moved here.
+  * Not sure if the functions are thread-safe.  --Hang Qu
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "worker/worker_manager.h"
-#include "worker/worker_thread.h"
+#ifndef NIMBUS_WORKER_UTIL_DUMPING_H_
+#define NIMBUS_WORKER_UTIL_DUMPING_H_
+
+#include <string>
+#include "worker/worker.h"
+
 namespace nimbus {
 
-WorkerThread::WorkerThread(WorkerManager* worker_manager) {
-  worker_manager_ = worker_manager;
-}
+void DumpVersionInformation(Job *job, const DataArray& da, Log *log,
+                            std::string tag);
 
-WorkerThread::~WorkerThread() {}
+void DumpDataHashInformation(Job *job, const DataArray& da, Log *log,
+                             std::string tag);
 
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
-  timer_ = timer;
-}
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
+                              std::string tag);
 
 }  // namespace nimbus
+
+#endif  // NIMBUS_WORKER_UTIL_DUMPING_H_

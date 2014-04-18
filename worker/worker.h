@@ -76,7 +76,7 @@ class Worker {
 
   virtual void GetJobsToRun(WorkerManager* worker_manager, size_t max_num);
 
-  virtual void ExecuteJob(Job* job);
+  // virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
   virtual void ProcessComputeJobCommand(ComputeJobCommand* command);
   virtual void ProcessCreateDataCommand(CreateDataCommand* command);
@@ -94,6 +94,11 @@ class Worker {
   worker_id_t id();
   void set_id(worker_id_t id);
   virtual PhysicalDataMap* data_map();
+
+  // TODO(quhang) maybe not a good interface.
+  void SendCommand(SchedulerCommand* command) {
+    client_->sendCommand(command);
+  }
 
  protected:
   SchedulerClient* client_;
@@ -131,7 +136,7 @@ class Worker {
  public:
   // TODO(quhang) figure out the right access control.
   void ResolveDataArray(Job* job);
-  void UpdateDataVersion(Job* job);
+  // void UpdateDataVersion(Job* job);
 };
 
 }  // namespace nimbus

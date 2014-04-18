@@ -36,23 +36,56 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <string>
+
+#include "worker/worker.h"
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
+#include "worker/worker_thread_computation.h"
+
 namespace nimbus {
 
-WorkerThread::WorkerThread(WorkerManager* worker_manager) {
-  worker_manager_ = worker_manager;
+WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
+    : WorkerThread(worker_manager) {
 }
 
-WorkerThread::~WorkerThread() {}
+WorkerThreadComputation::~WorkerThreadComputation() {
+}
 
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
-  timer_ = timer;
+void WorkerThreadComputation::Run() {
+  Job* job;
+  while (true) {
+    do {
+      assert(worker_manager_ != NULL);
+      job = worker_manager_->PullComputationJob();
+    } while (job == NULL);
+    ExecuteJob(job);
+    bool success_flag = worker_manager_->PushFinishJob(job);
+    assert(success_flag);
+  }
+}
+
+void WorkerThreadComputation::ExecuteJob(Job* job) {
+  log_->StartTimer();
+  timer_->Start(job->id().elem());
+  job->Execute(job->parameters(), job->data_array);
+  double run_time = timer_->Stop(job->id().elem());
+  log_->StopTimer();
+
+  job->set_run_time(run_time);
+
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
+           job->name().c_str(), job->id().elem(),
+           log_->timer(), log_->GetTime());
+  log_->WriteToOutputStream(std::string(buff), LOG_INFO);
+
+  char time_buff[LOG_MAX_BUFF_SIZE];
+  snprintf(time_buff, sizeof(time_buff),
+      "Queue Time: %2.9lf, Run Time: %2.9lf",
+      job->wait_time(), job->run_time());
+  log_->WriteToOutputStream(std::string(time_buff), LOG_INFO);
 }
 
 }  // namespace nimbus

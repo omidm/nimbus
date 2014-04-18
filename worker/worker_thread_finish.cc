@@ -36,23 +36,64 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <string>
+
+#include "worker/worker.h"
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
+#include "worker/worker_thread_finish.h"
+#include "worker/util_dumping.h"
+
 namespace nimbus {
 
-WorkerThread::WorkerThread(WorkerManager* worker_manager) {
-  worker_manager_ = worker_manager;
+WorkerThreadFinish::WorkerThreadFinish(
+    WorkerManager* worker_manager, PhysicalDataMap* data_map)
+    : WorkerThread(worker_manager) {
+  data_map_ = data_map;
+  assert(data_map_ != NULL);
 }
 
-WorkerThread::~WorkerThread() {}
+WorkerThreadFinish::~WorkerThreadFinish() {
+}
 
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
-  timer_ = timer;
+void WorkerThreadFinish::Run() {
+  Job* job;
+  while (true) {
+    do {
+      assert(worker_manager_ != NULL);
+      job = worker_manager_->PullFinishJob();
+    } while (job == NULL);
+    ProcessJob(job);
+    delete job;
+  }
+}
+
+void WorkerThreadFinish::ProcessJob(Job* job) {
+  DataArray daw;
+  IDSet<physical_data_id_t> write = job->write_set();
+  IDSet<physical_data_id_t>::IDSetIter iter;
+  for (iter = write.begin(); iter != write.end(); iter++) {
+    daw.push_back((*data_map_)[*iter]);
+  }
+  // TODO(quhang) no sychronization effort here.
+  // DumpDataHashInformation(job, daw, data_hash_log_, "hash_out");
+
+  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
+    for (iter = write.begin(); iter != write.end(); iter++) {
+      // TODO(quhang) assume no sychronization effort for now.
+      Data *d = (*data_map_)[*iter];
+      data_version_t version = d->version();
+      ++version;
+      d->set_version(version);
+    }
+  }
+
+  Parameter params;
+  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
+  worker_manager_->SendCommand(&cm);
 }
 
 }  // namespace nimbus

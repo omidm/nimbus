@@ -33,6 +33,8 @@
  */
 
  /*
+  * The worker manager extracts jobs from the ready queue, and dispatches jobs
+  * to different worker threads.
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
@@ -40,9 +42,12 @@
 #define NIMBUS_WORKER_WORKER_MANAGER_H_
 
 #include <list>
+#include "shared/high_resolution_timer.h"
+#include "shared/log.h"
 #include "shared/nimbus.h"
 
 namespace nimbus {
+class SchedulerCommand;
 class WorkerThread;
 class Worker;
 
@@ -51,19 +56,39 @@ class WorkerManager {
   WorkerManager();
   ~WorkerManager();
 
-  Job* PullCalculationJob();
-  bool PushCalculationJob(Job* job);
-  Job* PullDoneJob() { return NULL; }
-  bool PushDoneJob(Job* job) { return true; }
+  void SetLoggingInterface(
+      Log* log, Log* version_log, Log* data_hash_log,
+      HighResolutionTimer* timer);
+
+  Job* PullComputationJob();
+  bool PushComputationJob(Job* job);
+  Job* PullFinishJob();
+  bool PushFinishJob(Job* job);
+
+  bool SendCommand(SchedulerCommand* command);
 
   bool StartWorkerThreads(int thread_number);
   static void* ThreadEntryPoint(void* parameters);
+
  public:
+  // TODO(quhang) Not sure if maintaining such a pointer is good or not.
   Worker* worker_;
+
  private:
   std::list<WorkerThread*> worker_thread_list;
-  std::list<Job*> job_list_;
-  pthread_mutex_t queue_lock_;
+
+  pthread_mutex_t computation_job_queue_lock_;
+  std::list<Job*> computation_job_list_;
+
+  pthread_mutex_t finish_job_queue_lock_;
+  std::list<Job*> finish_job_list_;
+
+  // Logging data structures.
+  bool log_ready_;
+  Log* log_;
+  Log* version_log_;
+  Log* data_hash_log_;
+  HighResolutionTimer* timer_;
 };
 }  // namespace nimbus
 
