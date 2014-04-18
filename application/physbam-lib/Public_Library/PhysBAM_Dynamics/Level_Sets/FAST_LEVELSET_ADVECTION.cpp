@@ -46,7 +46,9 @@ Euler_Step(const T_FACE_ARRAYS_SCALAR& V,const T dt,const T time,const int numbe
     T_ARRAYS_SCALAR& phi=((T_FAST_LEVELSET*)levelset)->phi;
     
     assert(grid.Is_MAC_Grid() && advection); // for now use advection in base class
+    LOG::Time("Advect Phi Exchange");
     T_ARRAYS_SCALAR phi_ghost(grid.Domain_Indices(number_of_ghost_cells));((T_FAST_LEVELSET*)levelset)->boundary->Fill_Ghost_Cells(grid,phi,phi_ghost,dt,time,number_of_ghost_cells);
+    LOG::Time("Advect Phi");
     advection->Update_Advection_Equation_Cell(grid,phi,phi_ghost,V,*((T_FAST_LEVELSET*)levelset)->boundary,dt,time);
     ((T_FAST_LEVELSET*)levelset)->boundary->Apply_Boundary_Condition(grid,phi,time+dt);
 }
