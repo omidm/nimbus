@@ -76,7 +76,7 @@ void WorkerThreadFinish::ProcessJob(Job* job) {
     daw.push_back((*data_map_)[*iter]);
   }
   // TODO(quhang) no sychronization effort here.
-  // DumpDataHashInformation(job, daw, data_hash_log_, "hash_out");
+  DumpDataHashInformation(job, daw, data_hash_log_, "hash_out");
 
   if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT

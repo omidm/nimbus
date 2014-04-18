@@ -51,6 +51,7 @@ namespace nimbus {
 
 void DumpVersionInformation(
     Job *job, const DataArray& da, Log *log, std::string tag) {
+#ifndef MUTE_LOG
   std::string input = "";
   for (size_t i = 0; i < da.size(); ++i) {
     std::ostringstream ss_l;
@@ -74,9 +75,11 @@ void DumpVersionInformation(
            tag.c_str(), job->name().c_str(), job->id().elem(),
            hash_function(input), input.c_str());
   log->WriteToFile(std::string(buff), LOG_INFO);
+#endif
 }
 
 void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
+#ifndef MUTE_LOG
   if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
       (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
@@ -107,11 +110,13 @@ void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::strin
         hash_function(input), input.c_str());
     log->WriteToFile(std::string(buff), LOG_INFO);
   }
+#endif
 }
 
 
 void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
                               std::string tag) {
+#ifndef MUTE_LOG
   std::string input = "";
   for (size_t i = 0; i < da.size(); ++i) {
     std::ostringstream ss_l;
@@ -127,6 +132,7 @@ void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
            tag.c_str(), job->name().c_str(), job->id().elem(),
            hash_function(input), input.c_str());
   log->WriteToFile(std::string(buff), LOG_INFO);
+#endif
 }
 
 }  // namespace nimbus

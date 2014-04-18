@@ -41,6 +41,10 @@
 #ifndef NIMBUS_WORKER_WORKER_H_
 #define NIMBUS_WORKER_WORKER_H_
 
+#ifndef MUTE_LOG
+#define MUTE_LOG
+#endif  // MUTE_LOG
+
 #include <boost/thread.hpp>
 #include <string>
 #include <vector>
