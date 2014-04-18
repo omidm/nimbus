@@ -38,10 +38,10 @@
 
 #include <string>
 
+#include "data/cache/cache_object.h"
 #include "data/cache/cache_pool.h"
 #include "data/cache/cache_table.h"
-#include "shared/dbg.h"
-#include "shared/dbg_modes.h"
+#include "data/cache/utils.h"
 #include "worker/data.h"
 #include "worker/job.h"
 
@@ -49,17 +49,31 @@ namespace nimbus {
 
 CachePool::CachePool() {}
 
-void* CachePool::GetCachedObject(const std::string type,
-                                 const GeometricRegion &region,
-                                 const Job &job,
-                                 const DataArray &da) {
-    if (pool_.find(type) == pool_.end()) {
-        dbg(DBG_WARNING, "%s type not registered with nimbus cache\n", type);
-        return NULL;
+CacheObject *CachePool::GetCachedObject(const Job &job,
+                                        const DataArray &da,
+                                        const GeometricRegion &region,
+                                        const CacheObject &prototype,
+                                        CacheAccess access) {
+    DataSet read;
+    GetReadSet(job, da, &read);
+    CacheObject *co = NULL;
+    if (pool_.find(prototype.type()) == pool_.end()) {
+        CacheTable *ct = new CacheTable();
+        pool_[prototype.type()] = ct;
+        co = prototype.CreateNew();
+        ct->AddEntry(region, cos);
     } else {
-        CacheTable *table = pool_[type];
-        return(table->GetCachedObject(region, job, da));
+        CacheTable *ct = pool_[type];
+        co = ct->GetClosestAvailable(region, read, access);
+        if (co == NULL)
+            ct->AddEntry(region, cos);
     }
+    co->MarkAccess(access);
+    co->Read(read);
+    DataSet write;
+    GetWriteSet(job, da, &write);
+    co->MarkWriteBack(write);
+    return co;
 }
 
 }  // namespace nimbus

@@ -38,6 +38,7 @@
 
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_names.h"
@@ -96,17 +97,15 @@ void JobProjectionMain::SpawnJobs(
       &default_params_str);
   default_params.set_ser_data(SerializedData(default_params_str));
 
-  nimbus::Parameter default_part_params[2];
-  std::string default_left_params_str;
-  SerializeParameter(
-      frame, time, dt, global_region, kRegY2W0Central[0],
-      &default_left_params_str);
-  default_part_params[0].set_ser_data(SerializedData(default_left_params_str));
-  std::string default_right_params_str;
-  SerializeParameter(
-      frame, time, dt, global_region, kRegY2W0Central[1],
-      &default_right_params_str);
-  default_part_params[1].set_ser_data(SerializedData(default_right_params_str));
+  std::vector<nimbus::Parameter> default_part_params;
+  default_part_params.resize(kAppPartNum);
+  for (int i = 0; i < kAppPartNum; ++i) {
+    std::string default_params_str;
+    SerializeParameter(
+        frame, time, dt, global_region, kRegY2W0Central[i],
+        &default_params_str);
+    default_part_params[i].set_ser_data(SerializedData(default_params_str));
+  }
 
   int construct_matrix_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> construct_matrix_job_ids;
@@ -145,8 +144,6 @@ void JobProjectionMain::SpawnJobs(
 
     before.clear();
     after.clear();
-    after.insert(calculate_boundary_condition_part_two_job_ids[0]);
-    after.insert(calculate_boundary_condition_part_two_job_ids[1]);
 
     SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                     calculate_boundary_condition_part_one_job_ids[index],
@@ -176,11 +173,7 @@ void JobProjectionMain::SpawnJobs(
     for (int j = 0; j < calculate_boundary_condition_part_one_job_num ; ++j) {
       before.insert(calculate_boundary_condition_part_one_job_ids[j]);
     }
-    // before.insert(calculate_boundary_condition_part_one_job_ids[0]);
-    // before.insert(calculate_boundary_condition_part_one_job_ids[1]);
     after.clear();
-    // after.insert(construct_matrix_job_ids[0]);
-    // after.insert(construct_matrix_job_ids[1]);
 
     SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
                     calculate_boundary_condition_part_two_job_ids[index],
@@ -213,11 +206,7 @@ void JobProjectionMain::SpawnJobs(
     for (int j = 0; j < calculate_boundary_condition_part_two_job_num ; ++j) {
       before.insert(calculate_boundary_condition_part_two_job_ids[j]);
     }
-    // before.insert(calculate_boundary_condition_part_two_job_ids[0]);
-    // before.insert(calculate_boundary_condition_part_two_job_ids[1]);
     after.clear();
-    after.insert(local_initialize_job_ids[0]);
-    after.insert(local_initialize_job_ids[1]);
     SpawnComputeJob(PROJECTION_CONSTRUCT_MATRIX,
                     construct_matrix_job_ids[index],
                     read, write,
@@ -241,10 +230,7 @@ void JobProjectionMain::SpawnJobs(
     for (int j = 0; j < construct_matrix_job_num ; ++j) {
       before.insert(construct_matrix_job_ids[j]);
     }
-    // before.insert(construct_matrix_job_ids[0]);
-    // before.insert(construct_matrix_job_ids[1]);
     after.clear();
-    after.insert(projection_job_ids[3]);
     SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
                     local_initialize_job_ids[index],
                     read, write,
@@ -269,7 +255,6 @@ void JobProjectionMain::SpawnJobs(
   // before.insert(local_initialize_job_ids[0]);
   // before.insert(local_initialize_job_ids[1]);
   after.clear();
-  after.insert(projection_job_ids[4]);
   SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
                   projection_job_ids[3],
                   read, write,
