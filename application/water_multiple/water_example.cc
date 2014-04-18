@@ -290,7 +290,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_fv) {
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
-        cache_fv->Write(array_reg_central);
+        cache_fv->Write(array_reg_central, true);
     }
 
     // mac velocities ghost

@@ -63,7 +63,7 @@ class CacheObject {
         virtual void ReadToCache(const DataArray &read_set, const GeometricRegion &reg);
         void Read(const DataArray &read_set, const GeometricRegion &reg);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
-        void Write(const GeometricRegion &reg) const;
+        void Write(const GeometricRegion &reg, bool release = true);
 
         virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
 

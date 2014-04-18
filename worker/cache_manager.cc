@@ -71,8 +71,14 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
     } else {
         CacheTable *ct = (*pool_)[prototype.type()];
         co = ct->GetClosestAvailable(region, read, access);
-        if (co == NULL)
+        if (co == NULL) {
+            co = prototype.CreateNew(region);
+            if (co == NULL) {
+                dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
+                exit(-1);
+            }
             ct->AddEntry(region, co);
+        }
     }
     co->AcquireAccess(access);
     co->Read(read, region);
@@ -101,8 +107,14 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
     } else {
         CacheTable *ct = (*pool_)[prototype.type()];
         co = ct->GetClosestAvailable(data_region, read, access);
-        if (co == NULL)
+        if (co == NULL) {
+            co = prototype.CreateNew(data_region);
+            if (co == NULL) {
+                dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
+                exit(-1);
+            }
             ct->AddEntry(data_region, co);
+        }
     }
     co->AcquireAccess(access);
     co->Read(read, read_region);

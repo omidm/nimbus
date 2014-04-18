@@ -76,9 +76,11 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
     dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
 }
 
-void CacheObject::Write(const GeometricRegion &reg) const {
+void CacheObject::Write(const GeometricRegion &reg, bool release) {
     // TODO(chinmayee): remove pointer from data to cache object
     WriteFromCache(write_back_, reg);
+    if (release)
+        ReleaseAccess();
 }
 
 CacheObject *CacheObject::CreateNew(const GeometricRegion &app_object_region) const {
