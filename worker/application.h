@@ -51,7 +51,6 @@
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command_include.h"
-#include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/job.h"
 #include "worker/worker_ldo_map.h"
@@ -60,6 +59,9 @@ namespace nimbus {
 
 class Application;
 typedef std::map<int, Application*> AppMap;
+
+// forward declaration
+class CacheManager;
 
 class Application {
  public:

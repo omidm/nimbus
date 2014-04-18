@@ -49,6 +49,7 @@
 
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 #include "worker/data.h"
 
 namespace nimbus {
@@ -76,6 +77,7 @@ class CacheObject {
         void SetUpRead(const DataArray &read_set,
                        bool read_keep_valid);
         void SetUpWrite(const DataArray &write_set);
+        void InvalidateCacheObject(physical_data_id_t pid);
 
         distance_t GetDistance(const DataArray &data_set,
                                CacheAccess access = EXCLUSIVE) const;

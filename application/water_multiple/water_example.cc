@@ -555,6 +555,15 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_fv->Write(array_reg_central, true);
     }
 
+
+//    // mac velocities ghost
+//    const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
+//    if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::WRITE_ACCESS)
+//        && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+//      translator.WriteFaceArrayFloat(
+//          &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
+//    }
+//    application::DestroyTranslatorObjects(&pdv);
     // mac velocities ghost
     if (cache_fvg) {
         T_FACE_ARRAY *fvg = cache_fvg->data();
@@ -815,7 +824,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         const std::string fvstring = std::string(APP_FACE_VEL);
         application::GetReadData(job, fvstring, da, &read);
         application::GetWriteData(job, fvstring, da, &write);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into face array for region %s\n",
+        dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity for region %s\n",
             read.size(), array_reg_central.toString().c_str());
         nimbus::CacheObject *cache_obj =
             cm->GetAppObject(read, write, array_reg_central,
@@ -828,6 +837,15 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         dbg(APP_LOG, "Finish translating velocity.\n");
     }
 
+
+    // mac velocities ghost
+//    const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
+//    if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::READ_ACCESS)
+//        && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
+//      translator.ReadFaceArrayFloat(
+//          &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
+//    }
+//    application::DestroyTranslatorObjects(&pdv);
     // mac velocities ghost
     if (data_config.GetFlag(DataConfig::VELOCITY_GHOST))
     {
@@ -835,12 +853,13 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
         application::GetReadData(job, fvgstring, da, &read);
         application::GetWriteData(job, fvgstring, da, &write);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into face array ghost for region %s\n",
-            read.size(), array_reg_central.toString().c_str());
+        dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity ghost for region %s\n",
+            read.size(), array_reg_outer.toString().c_str());
         nimbus::CacheObject *cache_obj =
-            cm->GetAppObject(read, write, array_reg_outer,
+            cm->GetAppObject(read, write,
+                array_reg_central, array_reg_outer,
                 application::kCacheFaceVelGhost,
-                nimbus::EXCLUSIVE, write.empty());
+                nimbus::EXCLUSIVE, false);
         cache_fvg = dynamic_cast<TCacheFaceArray *>(cache_obj);
         assert(cache_fvg != NULL);
         T_FACE_ARRAY *fvg = cache_fvg->data();

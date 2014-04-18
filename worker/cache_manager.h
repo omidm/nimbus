@@ -63,7 +63,7 @@ class CacheManager {
 
         CacheObject *GetAppObject(const DataArray &read,
                                   const DataArray &write,
-                                  const GeometricRegion &data_region,
+                                  const GeometricRegion &local_region,
                                   const GeometricRegion &read_region,
                                   const CacheObject &prototype,
                                   CacheAccess access = EXCLUSIVE,

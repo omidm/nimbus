@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include "data/cache/cache_object.h"
 #include "worker/data.h"
 
 using namespace nimbus; // NOLINT
@@ -93,5 +94,13 @@ void Data::set_version(data_version_t version) {
   version_ = version;
 }
 
+void Data::InvalidateCacheObjects() {
+  for (size_t i = 0; i < cache_objects_.size(); ++i) {
+    cache_objects_[i]->InvalidateCacheObject(physical_id_);
+  }
+  cache_objects_.clear();
+}
 
-
+void Data::SetUpCacheObject(CacheObject *co) {
+  cache_objects_.push_back(co);
+}

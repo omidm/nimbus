@@ -50,6 +50,7 @@ namespace application {
 
 CacheFaceArray<T> kCacheFaceVel(APP_FACE_VEL, kDefaultRegion, 0);
 CacheFaceArray<T> kCacheFaceVelGhost(APP_FACE_VEL_GHOST, kDefaultRegion, kGhostNum);
+CacheFaceArray<bool> kCachePsiN(APP_PSI_N, kDefaultRegion, 1);
 
 } // namespace application
 

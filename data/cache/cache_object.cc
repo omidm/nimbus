@@ -117,6 +117,7 @@ void CacheObject::SetUpRead(const DataArray &read_set,
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
             pids_.insert(d->physical_id());
+            d->SetUpCacheObject(this);
         }
     }
 }
@@ -126,8 +127,13 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
         pids_.insert(d->physical_id());
-        // TODO(chinmayee): insert pointer from data to cache object
+        d->InvalidateCacheObjects();
+        d->SetUpCacheObject(this);
     }
+}
+
+void CacheObject::InvalidateCacheObject(physical_data_id_t pid) {
+    pids_.remove(pid);
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set,

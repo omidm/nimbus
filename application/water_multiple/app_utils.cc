@@ -140,7 +140,7 @@ namespace application {
         for (size_t i = rs; i < rs + ws; ++i) {
             Data *d = da[i];
             if (d->name() == name &&
-                    read_set.contains(d->physical_id())) {
+                    write_set.contains(d->physical_id())) {
                 write->push_back(d);
             }
         }
