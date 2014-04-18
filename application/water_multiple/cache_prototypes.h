@@ -49,7 +49,7 @@
 namespace application {
 
 CacheFaceArray<T> kCacheFaceVel(APP_FACE_VEL, kDefaultRegion, 0);
-CacheFaceArray<T> kCacheFaceVelOld(APP_FACE_VEL, kDefaultRegion, kGhostNum);
+CacheFaceArray<T> kCacheFaceVelGhost(APP_FACE_VEL_GHOST, kDefaultRegion, kGhostNum);
 
 } // namespace application
 

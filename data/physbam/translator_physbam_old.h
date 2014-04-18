@@ -327,7 +327,7 @@ namespace nimbus {
                   // The PhysBAM FACE_ARRAY object abstracts away whether
                   // the data is stored in struct of array or array of struct
                   // form (in practice, usually struct of arrays
-                  assert(destination_index < data->size() && destination_index >= 0);
+                  assert(destination_index < data->size() / (int) sizeof(T) && destination_index >= 0); // NOLINT
                   buffer[destination_index] = (*fa)(dim, sourceIndex);
                 }
               }
@@ -887,7 +887,7 @@ particle_buffer.id = (*id)(i);
                   int dest_y = y + dest(Y_COORD) + region->y() - shift[1];
                   int dest_z = z + dest(Z_COORD) + region->z() - shift[2];
                   Int3Vector destination_index(dest_x, dest_y, dest_z);
-                  assert(source_index < data->size() && source_index >= 0);
+                  assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
                   (*sa)(destination_index) = buffer[source_index];
                 }
               }
@@ -968,7 +968,7 @@ particle_buffer.id = (*id)(i);
                   int source_y = y + src(Y_COORD) + region->y() - shift[1];
                   int source_z = z + src(Z_COORD) + region->z() - shift[2];
                   Int3Vector source_index(source_x, source_y, source_z);
-                  assert(destination_index < data->size() && destination_index >= 0);
+                  assert(destination_index < data->size() / (int) sizeof(T) && destination_index >= 0); // NOLINT
                   buffer[destination_index] = (*sa)(source_index);
                 }
               }

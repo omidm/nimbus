@@ -112,6 +112,7 @@ namespace application {
                      const std::string &name,
                      const nimbus::DataArray &da,
                      nimbus::DataArray *read) {
+        read->clear();
         if (da.empty())
             return;
         IDSet<nimbus::physical_data_id_t> read_set = job->read_set();
@@ -129,6 +130,7 @@ namespace application {
                       const std::string &name,
                       const nimbus::DataArray &da,
                       nimbus::DataArray *write) {
+        write->clear();
         if (da.empty())
             return;
         IDSet<nimbus::physical_data_id_t> read_set = job->read_set();

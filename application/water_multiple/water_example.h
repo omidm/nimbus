@@ -85,6 +85,7 @@ public:
     // cache objects
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
     TCacheFaceArray *cache_fv;
+    TCacheFaceArray *cache_fvg;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();

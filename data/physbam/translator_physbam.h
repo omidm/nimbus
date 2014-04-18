@@ -117,6 +117,9 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            PhysBAM::ARRAY<T, FaceIndex> flag;
+            flag = *fa;
+            flag.Fill(0);
             DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData *data = static_cast<PhysBAMData*>(*iter);
@@ -183,8 +186,21 @@ template <class TS> class TranslatorPhysBAM {
                                     // The PhysBAM FACE_ARRAY object abstracts away whether
                                     // the data is stored in struct of array or array of struct
                                     // form (in practice, usually struct of arrays.
-                                    assert(source_index < data->size() && source_index >= 0);
-                                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                                    assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                    if (flag(dim, destinationIndex) == 0) {
+                                        (*fa)(dim, destinationIndex) = buffer[source_index];
+                                        flag(dim, destinationIndex) = 1;
+                                    } else if (flag(dim, destinationIndex) == 1) {
+                                        if ((*fa)(dim, destinationIndex)
+                                                != buffer[source_index]) {
+                                            (*fa)(dim, destinationIndex) += buffer[source_index];
+                                            (*fa)(dim, destinationIndex) /= 2;
+                                        }
+                                        flag(dim, destinationIndex) = 2;
+                                    } else {
+                                        // TODO(quhang) needs a more elegant solution.
+                                        assert(false);
+                                    }
                                 }
                             }
                         }
@@ -274,7 +290,7 @@ template <class TS> class TranslatorPhysBAM {
                                 // The PhysBAM FACE_ARRAY object abstracts away whether
                                 // the data is stored in struct of array or array of struct
                                 // form (in practice, usually struct of arrays
-                                assert(destination_index < data->size() && destination_index >= 0);
+                                assert(destination_index < data->size() / (int) sizeof(T) && destination_index >= 0); // NOLINT
                                 buffer[destination_index] = (*fa)(dim, sourceIndex);
                             }
                         }
@@ -608,22 +624,22 @@ template <class TS> class TranslatorPhysBAM {
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
                 RemovedParticleInternal* buffer =
-                reinterpret_cast<RemovedParticleInternal*>(data->buffer());
+                    reinterpret_cast<RemovedParticleInternal*>(data->buffer());
                 RemovedParticleInternal* buffer_end = buffer
-                + static_cast<int>(data->size())
-                / static_cast<int>(sizeof(RemovedParticleInternal));
+                    + static_cast<int>(data->size())
+                    / static_cast<int>(sizeof(RemovedParticleInternal));
 
                 for (RemovedParticleInternal* p = buffer; p != buffer_end; ++p) {
-                TV absolute_position;
-                absolute_position.x = p->position[0];
-                absolute_position.y = p->position[1];
-                absolute_position.z = p->position[2];
-                if (absolute_position.x >= region.x() + shift.x &&
-                    absolute_position.x < region.x() + region.dx() + shift.x &&
-                    absolute_position.y >= region.y() + shift.y &&
-                    absolute_position.y < region.y() + region.dy() + shift.y &&
-                    absolute_position.z >= region.z() + shift.z &&
-                    absolute_position.z < region.z() + region.dz() + shift.z) {
+                    TV absolute_position;
+                    absolute_position.x = p->position[0];
+                    absolute_position.y = p->position[1];
+                    absolute_position.z = p->position[2];
+                    if (absolute_position.x >= region.x() + shift.x &&
+                            absolute_position.x < region.x() + region.dx() + shift.x &&
+                            absolute_position.y >= region.y() + shift.y &&
+                            absolute_position.y < region.y() + region.dy() + shift.y &&
+                            absolute_position.z >= region.z() + shift.z &&
+                            absolute_position.z < region.z() + region.dz() + shift.z) {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
@@ -714,17 +730,17 @@ template <class TS> class TranslatorPhysBAM {
                                     GeometricRegion data_region = data->region();
                                     // If it's inside the region of the physical data instance.
                                     if (absolute_position.x >=
-                                        data_region.x() &&
-                                        absolute_position.x <
-                                        (data_region.x() + data_region.dx()) &&
-                                        absolute_position.y >=
-                                        data_region.y() &&
-                                        absolute_position.y <
-                                        (data_region.y() + data_region.dy()) &&
-                                        absolute_position.z >=
-                                        data_region.z() &&
-                                        absolute_position.z <
-                                        (data_region.z() + data_region.dz())) {
+                                            data_region.x() &&
+                                            absolute_position.x <
+                                            (data_region.x() + data_region.dx()) &&
+                                            absolute_position.y >=
+                                            data_region.y() &&
+                                            absolute_position.y <
+                                            (data_region.y() + data_region.dy()) &&
+                                            absolute_position.z >=
+                                            data_region.z() &&
+                                            absolute_position.z <
+                                            (data_region.z() + data_region.dz())) {
                                         RemovedParticleInternal particle_buffer;
                                         particle_buffer.position[0] = absolute_position.x;
                                         particle_buffer.position[1] = absolute_position.y;
@@ -793,7 +809,7 @@ template <class TS> class TranslatorPhysBAM {
                                 int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
                                 int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
                                 TV_INT destination_index(dest_x, dest_y, dest_z);
-                                assert(source_index < data->size() && source_index >= 0);
+                                assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
                                 (*sa)(destination_index) = buffer[source_index];
                             }
                         }
@@ -843,7 +859,7 @@ template <class TS> class TranslatorPhysBAM {
                                 int source_y = y + src(Y_COORD) + region.y() - shift.y;
                                 int source_z = z + src(Z_COORD) + region.z() - shift.z;
                                 TV_INT source_index(source_x, source_y, source_z);
-                                assert(destination_index < data->size() && destination_index >= 0);
+                                assert(destination_index < data->size() / (int) sizeof(T) && destination_index >= 0); // NOLINT
                                 buffer[destination_index] = (*sa)(source_index);
                             }
                         }
@@ -908,7 +924,6 @@ template <class TS> class TranslatorPhysBAM {
 };
 
 template class TranslatorPhysBAM<float>;
-
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
