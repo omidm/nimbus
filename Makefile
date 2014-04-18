@@ -25,7 +25,7 @@ DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
 
 
-LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf -lrt
+LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf -lrt -lpthread
 SHARED_FLAGS = -shared -fPIC
 
 ifdef OS_DARWIN

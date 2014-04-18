@@ -61,6 +61,7 @@
 namespace nimbus {
 
 class Worker;
+class WorkerManager;
 typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
@@ -72,7 +73,9 @@ class Worker {
   virtual void WorkerCoreProcessor();
   virtual void ScanBlockedJobs();
   virtual void ScanPendingTransferJobs();
-  virtual void GetJobsToRun(JobList* list, size_t max_num);
+
+  virtual void GetJobsToRun(WorkerManager* worker_manager, size_t max_num);
+
   virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
   virtual void ProcessComputeJobCommand(ComputeJobCommand* command);
@@ -124,6 +127,11 @@ class Worker {
   virtual void AddData(Data* data);
   virtual void DeleteData(physical_data_id_t physical_data_id);
   virtual void LoadSchedulerCommands();
+
+ public:
+  // TODO(quhang) figure out the right access control.
+  void ResolveDataArray(Job* job);
+  void UpdateDataVersion(Job* job);
 };
 
 }  // namespace nimbus
