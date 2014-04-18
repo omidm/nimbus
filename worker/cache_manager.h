@@ -59,7 +59,7 @@ class CacheManager {
                                   const GeometricRegion &region,
                                   const CacheObject &prototype,
                                   CacheAccess access = EXCLUSIVE,
-                                  bool read_only_keep_valid = false);
+                                  bool read_keep_valid = false);
 
         CacheObject *GetAppObject(const DataArray &read,
                                   const DataArray &write,
@@ -67,7 +67,7 @@ class CacheManager {
                                   const GeometricRegion &read_region,
                                   const CacheObject &prototype,
                                   CacheAccess access = EXCLUSIVE,
-                                  bool read_only_keep_valid = false);
+                                  bool read_keep_valid = false);
 
     private:
         typedef std::map<std::string,

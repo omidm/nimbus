@@ -109,14 +109,12 @@ void CacheObject::ReleaseAccess() {
 }
 
 void CacheObject::SetUpRead(const DataArray &read_set,
-                            bool read_only_keep_valid) {
+                            bool read_keep_valid) {
     pids_.clear();
-    if (read_only_keep_valid) {
+    if (read_keep_valid) {
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            if (read_only_keep_valid) {
-                pids_.insert(d->physical_id());
-            }
+            pids_.insert(d->physical_id());
         }
     }
 }

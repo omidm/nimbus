@@ -219,8 +219,8 @@ Initialize(const nimbus::Job *job,
     example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
     example.Set_Boundary_Conditions(time); // get so CFL is correct
 
-    example.Save_To_Nimbus(job, da, current_frame);
     Write_Output_Files(example.first_frame);
+    example.Save_To_Nimbus_No_Cache(job, da, current_frame);
   } else {
     // Comments by quhang:
     // The collision body should not matter, and the last two parameters should

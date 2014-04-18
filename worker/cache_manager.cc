@@ -57,7 +57,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
                                         const GeometricRegion &region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
-                                        bool read_only_keep_valid) {
+                                        bool read_keep_valid) {
     CacheObject *co = NULL;
     if (pool_->find(prototype.type()) == pool_->end()) {
         CacheTable *ct = new CacheTable();
@@ -82,7 +82,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
     }
     co->AcquireAccess(access);
     co->Read(read, region);
-    co->SetUpRead(read, read_only_keep_valid | (access == SHARED));
+    co->SetUpRead(read, read_keep_valid | (access == SHARED));
     co->SetUpWrite(write);
     return co;
 }
@@ -93,7 +93,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
                                         const GeometricRegion &read_region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
-                                        bool read_only_keep_valid) {
+                                        bool read_keep_valid) {
     CacheObject *co = NULL;
     if (pool_->find(prototype.type()) == pool_->end()) {
         CacheTable *ct = new CacheTable();
@@ -119,7 +119,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
     co->AcquireAccess(access);
     co->Read(read, read_region);
     // if access is shared, all data needs to be kept valid!
-    co->SetUpRead(read, read_only_keep_valid | (access != EXCLUSIVE));
+    co->SetUpRead(read, read_keep_valid | (access != EXCLUSIVE));
     co->SetUpWrite(write);
     return co;
 }
