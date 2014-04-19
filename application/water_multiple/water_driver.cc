@@ -18,6 +18,7 @@
 
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_names.h"
+#include "application/water_multiple/job_names.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
@@ -168,6 +169,7 @@ Initialize(const nimbus::Job *job,
   example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
   if (init_phase) {
+    // physbam init
     example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
     example.collision_bodies_affecting_fluid.Rasterize_Objects();
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
@@ -178,7 +180,6 @@ Initialize(const nimbus::Job *job,
     example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
   }
   else {
-    // physbam init
     example.Load_From_Nimbus(job, da, current_frame);
     example.collision_bodies_affecting_fluid.Rasterize_Objects();
     example.collision_bodies_affecting_fluid.
@@ -524,6 +525,7 @@ CalculateFrameImpl(const nimbus::Job *job,
 // Operation on time should be solved carefully. --quhang
 template<class TV> void WATER_DRIVER<TV>::
 WriteFrameImpl(const nimbus::Job *job,
+
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
                const T dt) {
@@ -541,7 +543,7 @@ WriteFrameImpl(const nimbus::Job *job,
   Write_Output_Files(++output_number);
 
   //Save State
-  example.Save_To_Nimbus(job, da, current_frame+1);
+  example.Save_To_Nimbus_No_Cache(job, da, current_frame+1);
 }
 
 template<class TV> bool WATER_DRIVER<TV>::

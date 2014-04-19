@@ -124,12 +124,12 @@ void CacheObject::SetUpRead(const DataArray &read_set,
 
 void CacheObject::SetUpWrite(const DataArray &write_set) {
     write_back_ = write_set;
-    for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set[i];
-        pids_.insert(d->physical_id());
-        d->InvalidateCacheObjects();
-        d->SetUpCacheObject(this);
-    }
+//    for (size_t i = 0; i < write_set.size(); ++i) {
+//        Data *d = write_set[i];
+//        d->InvalidateCacheObjects();
+//        d->SetUpCacheObject(this);
+//        pids_.insert(d->physical_id());
+//    }
 }
 
 void CacheObject::InvalidateCacheObject(physical_data_id_t pid) {

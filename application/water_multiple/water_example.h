@@ -108,6 +108,7 @@ public:
 
     void Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
 
 //#####################################################################

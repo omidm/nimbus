@@ -271,21 +271,31 @@ template <class TS> class TranslatorPhysBAM {
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
                                     assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                    if (flag(dim, destinationIndex) == 0) {
-                                        (*fa)(dim, destinationIndex) = buffer[source_index];
-                                        flag(dim, destinationIndex) = 1;
-                                    } else {
-                                        if ((flag(dim, destinationIndex) == 1) ||
-                                            (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
-                                            (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
-                                            (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
+                                    if ( (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
+                                         (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
+                                         (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
                                             typename PhysBAM::VECTOR<int, 3>
                                                 destinationIndex(dest_x, dest_y, dest_z);
                                             assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                            (*fa)(dim, destinationIndex) += buffer[source_index];
+                                            (*fa)(dim, destinationIndex) +=
+                                                buffer[source_index];
                                             (*fa)(dim, destinationIndex) /= 2;
+                                            flag(dim, destinationIndex) = 2;
+                                    } else {
+                                        if (flag(dim, destinationIndex) == 0) {
+                                            (*fa)(dim, destinationIndex) = buffer[source_index];
+                                            flag(dim, destinationIndex) = 1;
                                         } else {
-                                            assert(false);
+                                            if ((flag(dim, destinationIndex) == 1)) {
+                                                typename PhysBAM::VECTOR<int, 3>
+                                                    destinationIndex(dest_x, dest_y, dest_z);
+                                                assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                                (*fa)(dim, destinationIndex) +=
+                                                    buffer[source_index];
+                                                (*fa)(dim, destinationIndex) /= 2;
+                                            } else {
+                                                assert(false);
+                                            }
                                         }
                                     }
                                 }

@@ -137,6 +137,7 @@ namespace application {
         IDSet<nimbus::physical_data_id_t> write_set = job->write_set();
         size_t rs = read_set.size();
         size_t ws = write_set.size();
+        assert(rs+ws == da.size());
         for (size_t i = rs; i < rs + ws; ++i) {
             Data *d = da[i];
             if (d->name() == name &&
