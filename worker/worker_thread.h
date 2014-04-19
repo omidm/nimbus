@@ -33,6 +33,10 @@
  */
 
  /*
+  * The abstraction of a worker thread. A worker thread keeps pulling job from
+  * the worker manager and executes them.
+  * Now, they are implemented as busy-waiting.
+  *
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
@@ -40,20 +44,28 @@
 #define NIMBUS_WORKER_WORKER_THREAD_H_
 
 #include "shared/nimbus.h"
+#include "shared/high_resolution_timer.h"
+#include "shared/log.h"
+
 namespace nimbus {
 class WorkerManager;
-class Worker;
 class WorkerThread {
  public:
   explicit WorkerThread(WorkerManager* worker_manager);
   virtual ~WorkerThread();
-  void Run();
+  void SetLoggingInterface(
+      Log* log, Log* version_log, Log* data_hash_log,
+      HighResolutionTimer* timer);
+  virtual void Run() = 0;
   // TODO(quhang) data member accessor.
   pthread_t thread_id;
-  Worker* worker_;
- private:
+ protected:
   WorkerManager* worker_manager_;
-  void ExecuteJob(Job* job);
+  // Logging data structures.
+  Log* log_;
+  Log* version_log_;
+  Log* data_hash_log_;
+  HighResolutionTimer* timer_;
 };
 }  // namespace nimbus
 

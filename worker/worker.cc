@@ -44,95 +44,30 @@
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
 #include "worker/worker_manager.h"
+#include "worker/util_dumping.h"
 #include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
+// Configures the number of threads used to run jobs.
 #define CORE_NUMBER 1
 
 using boost::hash;
 
 namespace nimbus {
 
-void DumpVersionInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
-  std::string input = "";
-  for (size_t i = 0; i < da.size(); ++i) {
-    std::ostringstream ss_l;
-    ss_l << da[i]->logical_id();
-    input += ss_l.str();
-    input += " : ";
-    // std::ostringstream ss_p;
-    // ss_p << da[i]->physical_id();
-    // input += ss_p.str();
-    // input += " : ";
-    std::ostringstream ss_v;
-    ss_v << da[i]->version();
-    input += ss_v.str();
-    input += " - ";
-  }
-  hash<std::string> hash_function;
+/*
+// Comment(quhang): I moved these three functions to a seperate file:
+// worker/util_dumping.cc.
+// So that these utilities can be called outside "Worker" class.
+void DumpVersionInformation(Job *job, const DataArray& da, Log *log,
+                            std::string tag);
 
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "%s name: %s id: %llu  version_hash: %lu versions: %s",
-           tag.c_str(), job->name().c_str(), job->id().elem(),
-           hash_function(input), input.c_str());
-  log->WriteToFile(std::string(buff), LOG_INFO);
-}
+void DumpDataHashInformation(Job *job, const DataArray& da, Log *log,
+                             std::string tag);
 
-void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
-  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
-    std::string input = "";
-    for (size_t i = 0; i < da.size(); ++i) {
-      if (dynamic_cast<PhysBAMData*>(da[i]) != NULL) { // NOLINT
-        std::ostringstream ss_l;
-        ss_l << da[i]->logical_id();
-        input += ss_l.str();
-        input += " : ";
-        // std::ostringstream ss_p;
-        // ss_p << da[i]->physical_id();
-        // input += ss_p.str();
-        // input += " : ";
-        std::ostringstream ss_v;
-        ss_v << dynamic_cast<PhysBAMData*>(da[i])->HashCode(); // NOLINT
-        input += ss_v.str();
-        input += " - ";
-      }
-    }
-    hash<std::string> hash_function;
-
-    char buff[LOG_MAX_BUFF_SIZE];
-    snprintf(buff, sizeof(buff),
-        "%s name: %s id: %llu  aggregate_hash: %lu hashes: %s",
-        tag.c_str(), job->name().c_str(), job->id().elem(),
-        hash_function(input), input.c_str());
-    log->WriteToFile(std::string(buff), LOG_INFO);
-  }
-}
-
-
-void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
-  std::string input = "";
-  for (size_t i = 0; i < da.size(); ++i) {
-    std::ostringstream ss_l;
-    ss_l << da[i]->logical_id();
-    input += ss_l.str();
-    input += " - ";
-  }
-  hash<std::string> hash_function;
-
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "%s name: %s id: %llu  order_hash: %lu logical ids: %s",
-           tag.c_str(), job->name().c_str(), job->id().elem(),
-           hash_function(input), input.c_str());
-  log->WriteToFile(std::string(buff), LOG_INFO);
-}
-
-
-
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
+                              std::string tag);
+ */
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     port_t listening_port, Application* a)
@@ -161,6 +96,8 @@ void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   WorkerManager worker_manager;
   worker_manager.worker_ = this;
+  worker_manager.SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
+                                     &timer_);
   worker_manager.StartWorkerThreads(CORE_NUMBER);
 
   while (true) {
@@ -225,7 +162,7 @@ void Worker::GetJobsToRun(WorkerManager* worker_manager, size_t max_num) {
     Job* job = ready_jobs_.front();
     ready_jobs_.pop_front();
     ResolveDataArray(job);
-    int success_flag = worker_manager->PushCalculationJob(job);
+    int success_flag = worker_manager->PushComputationJob(job);
     assert(success_flag);
   }
 }
@@ -249,6 +186,10 @@ void Worker::ResolveDataArray(Job* job) {
   DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
 }
 
+/*
+// Comment(quhang) the function is moved to:
+// Line 70 (worker_thread_finish.cc).
+// So that the worker core process doesn't need to clean up a job.
 // TODO(quhang) operation on shared data structure "data_map" should be
 // synchronized.
 void Worker::UpdateDataVersion(Job* job) {
@@ -278,7 +219,11 @@ void Worker::UpdateDataVersion(Job* job) {
   // ProcessJobDoneCommand(&cm);
   delete job;
 }
+*/
 
+// Comment(quhang): This funciton is moved to
+// Line 66, worker_thread_computation.cc.
+/*
 void Worker::ExecuteJob(Job* job) {
   log_.StartTimer();
   timer_.Start(job->id().elem());
@@ -300,9 +245,8 @@ void Worker::ExecuteJob(Job* job) {
       job->wait_time(), job->run_time());
   log_.WriteToOutputStream(std::string(time_buff), LOG_INFO);
 
-  // TODO(quhang) to be removed from here.
-  UpdateDataVersion(job);
 }
+*/
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {

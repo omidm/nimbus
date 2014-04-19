@@ -41,43 +41,96 @@
 
 #include "shared/nimbus.h"
 #include "worker/worker_thread.h"
+#include "worker/worker_thread_computation.h"
+#include "worker/worker_thread_finish.h"
 
 #include "worker/worker_manager.h"
 
 namespace nimbus {
 
 WorkerManager::WorkerManager() {
-  pthread_mutex_init(&queue_lock_, NULL);
+  log_ready_ = false;
+  pthread_mutex_init(&computation_job_queue_lock_, NULL);
+  pthread_mutex_init(&finish_job_queue_lock_, NULL);
+}
+
+void WorkerManager::SetLoggingInterface(
+    Log* log, Log* version_log, Log* data_hash_log,
+    HighResolutionTimer* timer) {
+  log_ = log;
+  version_log_ = version_log;
+  data_hash_log_ = data_hash_log_;
+  timer_ = timer;
+  log_ready_ = true;
 }
 
 WorkerManager::~WorkerManager() {}
 
-Job* WorkerManager::PullCalculationJob() {
-  pthread_mutex_lock(&queue_lock_);
-  if (job_list_.empty()) {
-    pthread_mutex_unlock(&queue_lock_);
+Job* WorkerManager::PullComputationJob() {
+  pthread_mutex_lock(&computation_job_queue_lock_);
+  if (computation_job_list_.empty()) {
+    pthread_mutex_unlock(&computation_job_queue_lock_);
     return NULL;
   } else {
-    Job* temp = job_list_.front();
-    job_list_.pop_front();
-    pthread_mutex_unlock(&queue_lock_);
+    Job* temp = computation_job_list_.front();
+    computation_job_list_.pop_front();
+    pthread_mutex_unlock(&computation_job_queue_lock_);
     return temp;
   }
 }
 
-bool WorkerManager::PushCalculationJob(Job* job) {
-  pthread_mutex_lock(&queue_lock_);
-  job_list_.push_back(job);
-  pthread_mutex_unlock(&queue_lock_);
+bool WorkerManager::PushComputationJob(Job* job) {
+  pthread_mutex_lock(&computation_job_queue_lock_);
+  computation_job_list_.push_back(job);
+  pthread_mutex_unlock(&computation_job_queue_lock_);
+  return true;
+}
+
+Job* WorkerManager::PullFinishJob() {
+  pthread_mutex_lock(&finish_job_queue_lock_);
+  if (finish_job_list_.empty()) {
+    pthread_mutex_unlock(&finish_job_queue_lock_);
+    return NULL;
+  } else {
+    Job* temp = finish_job_list_.front();
+    finish_job_list_.pop_front();
+    pthread_mutex_unlock(&finish_job_queue_lock_);
+    return temp;
+  }
+}
+
+bool WorkerManager::PushFinishJob(Job* job) {
+  pthread_mutex_lock(&finish_job_queue_lock_);
+  finish_job_list_.push_back(job);
+  pthread_mutex_unlock(&finish_job_queue_lock_);
+  return true;
+}
+
+// TODO(quhang) sychronization effort needed?
+bool WorkerManager::SendCommand(SchedulerCommand* command) {
+  assert(worker_ != NULL);
+  worker_->SendCommand(command);
   return true;
 }
 
 bool WorkerManager::StartWorkerThreads(int thread_number) {
+  WorkerThread* worker_thread =
+      new WorkerThreadFinish(this, worker_->data_map());
+  worker_thread_list.push_back(worker_thread);
+  assert(log_ready_);
+  worker_thread->SetLoggingInterface(
+      log_, version_log_, data_hash_log_, timer_);
+  int error_code =
+      pthread_create(&worker_thread->thread_id, NULL,
+                     ThreadEntryPoint, worker_thread);
+  assert(error_code == 0);
+
   for (int i = 0; i < thread_number; ++i) {
-    WorkerThread* worker_thread = new WorkerThread(this);
+    WorkerThread* worker_thread = new WorkerThreadComputation(this);
     worker_thread_list.push_back(worker_thread);
-    assert(worker_ != NULL);
-    worker_thread->worker_ = worker_;
+    assert(log_ready_);
+    worker_thread->SetLoggingInterface(
+        log_, version_log_, data_hash_log_, timer_);
     int error_code =
         pthread_create(&worker_thread->thread_id, NULL,
                        ThreadEntryPoint, worker_thread);
