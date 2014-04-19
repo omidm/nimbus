@@ -31,7 +31,7 @@ def copy_nodes_file_to_hosts(ip_addresses):
   make_nodes_file_content(ip_addresses)
 
   for ip in ip_addresses:
-    subprocess.call(['scp', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+    subprocess.call(['scp', '-i', '/Users/omidm/.ssh/' + config.KEY_NAME + '.pem',
         '-o', 'StrictHostKeyChecking=no',
         temp_file_name, 'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
         physbam_config.NODES_FILE_NAME])
@@ -48,6 +48,24 @@ def run_experiment(ip):
   command += ' -np ' + str(config.INSTANCE_NUM)
   command += ' ./Water -scale 20 -e 10'
 
-  subprocess.call(['ssh', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+  subprocess.call(['ssh', '-i', '/Users/omidm/.ssh/' + config.KEY_NAME + '.pem',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + ip, command])
+
+
+def collect_output_data(ip_addresses):
+
+  subprocess.call(['rm', '-rf', physbam_config.OUTPUT_PATH])
+  subprocess.call(['mkdir', '-p', physbam_config.OUTPUT_PATH])
+
+  process_num = 0
+  for ip in ip_addresses:
+    process_num += 1
+    subprocess.call(['scp', '-r', '-i', '/Users/omidm/.ssh/' + config.KEY_NAME + '.pem',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
+        physbam_config.OUTPUT_PATH + str(process_num),
+        physbam_config.OUTPUT_PATH])
+
+
+

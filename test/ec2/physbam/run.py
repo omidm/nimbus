@@ -22,8 +22,8 @@ utils.wait_for_instances_to_start();
 ip_addresses = utils.get_ip_addresses();
 physbam_utils.copy_nodes_file_to_hosts(ip_addresses)
 physbam_utils.run_experiment(ip_addresses[0])
+physbam_utils.collect_output_data(ip_addresses)
 
-time.sleep(60)
-# TODO(omidm): need to collect the data from instances before termination.
+
 
 utils.terminate_instances();

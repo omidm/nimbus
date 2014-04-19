@@ -4,4 +4,5 @@
 
 DIRECTORY_PATH = 'test/src/physbam/'
 NODES_FILE_NAME = 'test_nodes.txt' 
+OUTPUT_PATH = 'output/' 
 
