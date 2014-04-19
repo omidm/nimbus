@@ -17,6 +17,7 @@ def make_nodes_file_content(ip_addresses):
 
   string = ""
   for ip in ip_addresses:
+    print ip
     string = string + ip + " cpu=1\n"
 
   file = open(temp_file_name, 'w+')
@@ -31,8 +32,11 @@ def copy_nodes_file_to_hosts(ip_addresses):
 
   for ip in ip_addresses:
     subprocess.call(['scp', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+        '-o', 'StrictHostKeyChecking=no',
         temp_file_name, 'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
         physbam_config.NODES_FILE_NAME])
+
+  subprocess.call(['rm', temp_file_name])
 
 
 def run_experiment(ip):
@@ -45,4 +49,5 @@ def run_experiment(ip):
   command += ' ./Water -scale 20 -e 10'
 
   subprocess.call(['ssh', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+      '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + ip, command])

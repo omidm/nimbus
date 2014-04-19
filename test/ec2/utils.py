@@ -12,7 +12,7 @@ def run_instances():
   ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
 
   ec2.run_instances(
-      NIMBUS_AMI,
+      config.NIMBUS_AMI,
       min_count = config.INSTANCE_NUM,
       max_count = config.INSTANCE_NUM,
       key_name = config.KEY_NAME,
@@ -73,7 +73,8 @@ def get_ip_addresses():
   ip_list = []
   instances = ec2.get_only_instances()
   for inst in instances:
-    ip_list.append(inst.ip_address)
+    if inst.state == 'running':
+      ip_list.append(inst.ip_address)
   return ip_list
     
 
@@ -84,7 +85,8 @@ def get_dns_names():
   dns_list = []
   instances = ec2.get_only_instances()
   for inst in instances:
-    dns_list.append(inst.public_dns_name)
+    if inst.state == 'running':
+      dns_list.append(inst.public_dns_name)
   return dns_list
     
 
