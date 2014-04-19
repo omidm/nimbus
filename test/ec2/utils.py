@@ -66,3 +66,25 @@ def terminate_instances():
     ec2.terminate_instances(instance_ids=[inst.id])
     
 
+def get_ip_addresses():
+
+  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+
+  ip_list = []
+  instances = ec2.get_only_instances()
+  for inst in instances:
+    ip_list.append(inst.ip_address)
+  return ip_list
+    
+
+def get_dns_names():
+
+  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+
+  dns_list = []
+  instances = ec2.get_only_instances()
+  for inst in instances:
+    dns_list.append(inst.public_dns_name)
+  return dns_list
+    
+
