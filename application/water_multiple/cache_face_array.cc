@@ -70,7 +70,7 @@ template<class T, class TS> void CacheFaceArray<T, TS>::
 ReadToCache(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &reg) {
     dbg(DBG_WARN, "\n--- Reading %i elements into face array for region %s\n", read_set.size(), reg.toString().c_str());
-    Translator::template ReadFaceArray<T>(reg, shift_, read_set, data_);
+    Translator::template ReadFaceArray<T>(reg, local_region_, shift_, read_set, data_);
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
