@@ -118,6 +118,9 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            PhysBAM::ARRAY<T, FaceIndex> flag;
+            flag = *fa;
+            flag.Fill(0);
             DataArray read_inner;
             DataArray read_outer;
             for (size_t i = 0; i < read_set.size(); ++i) {
@@ -183,7 +186,20 @@ template <class TS> class TranslatorPhysBAM {
                                     typename PhysBAM::VECTOR<int, 3>
                                         destinationIndex(dest_x, dest_y, dest_z);
                                     assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                                    if (flag(dim, destinationIndex) == 0) {
+                                        (*fa)(dim, destinationIndex) = buffer[source_index];
+                                        flag(dim, destinationIndex) = 1;
+                                    } else if (flag(dim, destinationIndex) == 1) {
+                                        if ((*fa)(dim, destinationIndex)
+                                                != buffer[source_index]) {
+                                            (*fa)(dim, destinationIndex) += buffer[source_index];
+                                            (*fa)(dim, destinationIndex) /= 2;
+                                        }
+                                        flag(dim, destinationIndex) = 2;
+                                    } else {
+                                        // TODO(quhang) needs a more elegant solution.
+                                        assert(false);
+                                    }
                                 }
                             }
                         }
@@ -252,19 +268,25 @@ template <class TS> class TranslatorPhysBAM {
                                     int dest_x = loc_x - shift.x;
                                     int dest_y = loc_y - shift.y;
                                     int dest_z = loc_z - shift.z;
-                                    if ( (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
-                                         (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
-                                         (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
-                                        typename PhysBAM::VECTOR<int, 3>
-                                            destinationIndex(dest_x, dest_y, dest_z);
-                                        assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
-                                        (*fa)(dim, destinationIndex) += buffer[source_index];
-                                        (*fa)(dim, destinationIndex) /= 2;
-                                    } else {
-                                        typename PhysBAM::VECTOR<int, 3>
-                                            destinationIndex(dest_x, dest_y, dest_z);
-                                        assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                    typename PhysBAM::VECTOR<int, 3>
+                                        destinationIndex(dest_x, dest_y, dest_z);
+                                    assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                    if (flag(dim, destinationIndex) == 0) {
                                         (*fa)(dim, destinationIndex) = buffer[source_index];
+                                        flag(dim, destinationIndex) = 1;
+                                    } else {
+                                        if ((flag(dim, destinationIndex) == 1) ||
+                                            (dim == X_COORD && (loc_x == cx1 || loc_x == cx2)) ||
+                                            (dim == Y_COORD && (loc_y == cy1 || loc_y == cy2)) ||
+                                            (dim == Z_COORD && (loc_z == cz1 || loc_z == cz2)) ) {
+                                            typename PhysBAM::VECTOR<int, 3>
+                                                destinationIndex(dest_x, dest_y, dest_z);
+                                            assert(source_index < data->size() / (int) sizeof(T) && source_index >= 0); // NOLINT
+                                            (*fa)(dim, destinationIndex) += buffer[source_index];
+                                            (*fa)(dim, destinationIndex) /= 2;
+                                        } else {
+                                            assert(false);
+                                        }
                                     }
                                 }
                             }
