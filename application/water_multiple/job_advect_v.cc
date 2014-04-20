@@ -68,6 +68,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
+  init_config.use_cache = true;
   T dt;
   init_config.set_boundary_condition = false;
   std::string params_str(params.ser_data().data_ptr_raw(),

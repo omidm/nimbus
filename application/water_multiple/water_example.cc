@@ -51,6 +51,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
+    use_cache = false;
     cache_fv = NULL;
     cache_fvg = NULL;
     Initialize_Particles();
@@ -529,8 +530,13 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, bool use_cache)
 {
+    if (use_cache) {
+      Save_To_Nimbus_No_Cache(job, da, frame);
+      return;
+    }
+
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
@@ -1051,8 +1057,13 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, bool use_cache)
 {
+    if (use_cache) {
+      Load_From_Nimbus_No_Cache(job, da, frame);
+      return;
+    }
+
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;

@@ -64,7 +64,7 @@ void CacheObject::Read(const DataArray &read_set,
     DataArray read;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set[i];
-        if (!pids_.contains(d->physical_id()))
+        // if (!pids_.contains(d->physical_id()))
             read.push_back(d);;
     }
     dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());

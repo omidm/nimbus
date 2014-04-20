@@ -59,8 +59,7 @@ template<class TV> WATER_DRIVER<TV>::
 // controlled by Nimbus.
 template<class TV> void WATER_DRIVER<TV>::
 Initialize(const nimbus::Job *job,
-           const nimbus::DataArray &da,
-           const bool set_boundary_conditions)
+           const nimbus::DataArray &da)
 {
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);

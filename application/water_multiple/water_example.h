@@ -81,8 +81,8 @@ public:
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
 
-
     // cache objects
+    bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
@@ -107,9 +107,9 @@ public:
     void Read_Output_Files(const int frame);
 
     void Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
-    void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, bool use_cache = false);
     void Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
-    void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame, bool use_cache = false);
 
 //#####################################################################
 };
