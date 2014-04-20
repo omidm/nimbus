@@ -64,7 +64,7 @@ void CacheObject::Read(const DataArray &read_set,
     DataArray read;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set[i];
-        // if (!pids_.contains(d->physical_id()))
+        if (!pids_.contains(d->physical_id()))
             read.push_back(d);;
     }
     dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
@@ -78,7 +78,6 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
 }
 
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
-    // TODO(chinmayee): remove pointer from data to cache object
     WriteFromCache(write_back_, reg);
     write_back_.clear();
     if (release)
@@ -124,12 +123,12 @@ void CacheObject::SetUpRead(const DataArray &read_set,
 
 void CacheObject::SetUpWrite(const DataArray &write_set) {
     write_back_ = write_set;
-//    for (size_t i = 0; i < write_set.size(); ++i) {
-//        Data *d = write_set[i];
-//        d->InvalidateCacheObjects();
-//        d->SetUpCacheObject(this);
-//        pids_.insert(d->physical_id());
-//    }
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set[i];
+        d->InvalidateCacheObjects();
+        d->SetUpCacheObject(this);
+        pids_.insert(d->physical_id());
+    }
 }
 
 void CacheObject::InvalidateCacheObject(physical_data_id_t pid) {

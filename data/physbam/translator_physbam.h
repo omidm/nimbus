@@ -130,8 +130,8 @@ template <class TS> class TranslatorPhysBAM {
                 else
                     read_outer.push_back(read_set[i]);
             }
-            for (size_t i = 0; i < read_set.size(); ++i) {
-                PhysBAMData *data = static_cast<PhysBAMData*>(read_set[i]);
+            for (size_t i = 0; i < read_inner.size(); ++i) {
+                PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
                 if (HasOverlap(overlap)) {
                     T* buffer = reinterpret_cast<T*>(data->buffer());
@@ -206,7 +206,6 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
-            /*
             int cx1 = inner.x();
             int cx2 = inner.x() + inner.dx();
             int cy1 = inner.y();
@@ -304,7 +303,7 @@ template <class TS> class TranslatorPhysBAM {
                         }
                     }
                 }
-            }*/
+            }
         }
 
         /** Take a FaceArray described by region and write it out to the
