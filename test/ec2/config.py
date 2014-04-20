@@ -9,6 +9,6 @@ KEY_NAME = 'omidm-sing-key-pair-us-west-1'
 SG_GROUP = 'nimbus_sg_uswest1'
 INSTANCE_TYPE = 't1.micro'
 
-INSTANCE_NUM = 2
+INSTANCE_NUM = 8
 
 

@@ -1,79 +1,132 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import re
 import numpy
 from decimal import *
 
 
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+import config
+
+
+
+force_mean_time = []
+force_std_time = []
+advect_phi_mean_time = []
+advect_phi_std_time = []
+advect_removed_particles_mean_time = []
+advect_removed_particles_std_time = []
+
+for i in range(1, config.INSTANCE_NUM + 1):
+  print 'Reading the file for sub grid ' + str(i)
+
+  file_name = sys.argv[1] + '/' + str(i) + '/common/log.txt'
+  f = open(file_name, 'r')
+  content = f.readlines()
+  
+  force = []
+  advect_phi = []
+  advect_removed_particles = []
+  
+  collect = False
+  for line in content:
+    if not collect:
+      result = re.findall('.*Calculate Dt.*', line)
+      if len(result) > 0:
+        force_time = 0
+        advect_phi_time = 0
+        advect_removed_particles_time = 0
+        collect = True
+        continue
+    else:
+      result = re.findall('.*Project.*', line)
+      if len(result) > 0:
+        force.append(force_time)
+        advect_phi.append(advect_phi_time)
+        advect_removed_particles.append(advect_removed_particles_time)
+        collect = False
+        continue
+  
+      result = re.findall('.*Forces\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        force_time += float(result[0]) * 1000
+        continue
+  
+      result = re.findall('.*Advect Phi\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        advect_phi_time += float(result[0]) * 1000
+        continue
+  
+      result = re.findall('.*Advect Removed Particles\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        advect_removed_particles_time += float(result[0]) * 1000
+        continue
+  
+  f.close()
+  
+  
+  force_mean_time.append(numpy.mean(force))
+  force_std_time.append(numpy.std(force))
+  
+  advect_phi_mean_time.append(numpy.mean(advect_phi))
+  advect_phi_std_time.append(numpy.std(advect_phi))
+  
+  advect_removed_particles_mean_time.append(numpy.mean(advect_removed_particles))
+  advect_removed_particles_std_time.append(numpy.std(advect_removed_particles))
 
 
 
 
-regexp = '.*Advect V.*time value=\"(\d+\.\d+).*'
-f = open(sys.argv[1], 'r')
-
-# f = open('log.txt', 'r')
-content = f.readlines()
-
-force = []
-advect_phi = []
-advect_removed_particles = []
-
-collect = False
-for line in content:
-  if not collect:
-    result = re.findall('.*Calculate Dt.*', line)
-    if len(result) > 0:
-      force_time = 0
-      advect_phi_time = 0
-      advect_removed_particles_time = 0
-      collect = True
-      continue
-  else:
-    result = re.findall('.*Project.*', line)
-    if len(result) > 0:
-      force.append(force_time)
-      advect_phi.append(advect_phi_time)
-      advect_removed_particles.append(advect_removed_particles_time)
-      collect = False
-      continue
-
-    result = re.findall('.*Forces\".*(\d+\.\d+)', line)
-    if len(result) > 0:
-      force_time += float(result[0])
-      continue
-
-    result = re.findall('.*Advect Phi\".*(\d+\.\d+)', line)
-    if len(result) > 0:
-      advect_phi_time += float(result[0])
-      continue
-
-    result = re.findall('.*Advect Removed Particles\".*(\d+\.\d+)', line)
-    if len(result) > 0:
-      advect_removed_particles_time += float(result[0])
-      continue
 
 
-print 'Force:'
-print numpy.mean(force)
-print numpy.std(force)
+import numpy as np
+import matplotlib.pyplot as plt
+from decimal import *
+getcontext().prec = 2
 
-print 'Advect Phi:'
-print numpy.mean(advect_phi)
-print numpy.std(advect_phi)
+n_groups = config.INSTANCE_NUM
+y_ticks = 3
+index = np.arange(n_groups)
 
-print 'Advect Removed Particles:'
-print numpy.mean(advect_removed_particles)
-print numpy.std(advect_removed_particles)
+# mean_time = (np.mean(force), np.mean(advect_phi), np.mean(advect_removed_particles))
+# std_time = (np.std(force), np.std(advect_phi), np.std(advect_removed_particles))
 
+mean_time = force_mean_time
+std_time = force_std_time
 
+fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, sharex=True)
 
+error_config = {'ecolor': '1'}
 
+ax0.errorbar(index, force_mean_time, yerr=force_std_time, fmt='o')
+ax0.set_title('Apply Force Job')
+# ax0.set_yscale('log')
+ax0.locator_params(axis = 'y', nbins = y_ticks)
 
+# y_min = min(force_mean_time) - max(force_std_time)
+# y_max = max(force_mean_time) + max(force_std_time)
+# y_step = (y_max - y_min) / float(y_ticks)
+# ax0.yaxis.set_ticks(np.arange(y_min, y_max, y_step))
 
+ax1.errorbar(index, advect_phi_mean_time, yerr=advect_phi_std_time, fmt='o')
+ax1.set_title('Advect Phi Job')
+# ax1.set_yscale('log')
+ax1.locator_params(axis = 'y', nbins = y_ticks)
 
+ax2.errorbar(index, advect_removed_particles_mean_time, yerr=advect_removed_particles_std_time, fmt='o')
+ax2.set_title('Advect Removed Particles Job')
+# ax2.set_yscale('log')
+ax2.locator_params(axis = 'y', nbins = y_ticks)
 
+plt.xlim((-1, n_groups))
+plt.xlabel('Partition')
+plt.xticks(index, ('I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'))
+
+# plt.grid()
+plt.savefig("test.png")
+plt.show()
 
 
 
