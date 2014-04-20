@@ -1103,7 +1103,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         nimbus::CacheObject *cache_obj =
             cm->GetAppObject(read, write, array_reg_central,
                 application::kCacheFaceVel,
-                nimbus::EXCLUSIVE, false);
+                nimbus::EXCLUSIVE, write.empty());
         cache_fv = dynamic_cast<TCacheFaceArray *>(cache_obj);
         assert(cache_fv != NULL);
         T_FACE_ARRAY *fv = cache_fv->data();
@@ -1133,7 +1133,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
             cm->GetAppObject(read, write,
                 array_reg_central, array_reg_outer,
                 application::kCacheFaceVelGhost,
-                nimbus::EXCLUSIVE, false);
+                nimbus::EXCLUSIVE, write.empty());
         cache_fvg = dynamic_cast<TCacheFaceArray *>(cache_obj);
         assert(cache_fvg != NULL);
         T_FACE_ARRAY *fvg = cache_fvg->data();
