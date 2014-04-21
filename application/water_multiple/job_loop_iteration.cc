@@ -62,6 +62,7 @@
 #include "application/water_multiple/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "worker/job_query.h"
 #include <sstream>
 #include <string>
 
@@ -157,6 +158,7 @@ namespace application {
   void JobLoopIteration::SpawnWithBreakAllGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da,
       const GeometricRegion& global_region) {
+    nimbus::JobQuery job_query(this);
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
     int job_num = 13;
@@ -251,13 +253,14 @@ namespace application {
       s11_params.set_ser_data(SerializedData(s11_str));
       before.clear();
       after.clear();
-      SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+      job_query.SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
           update_ghost_velocities_job_ids[i],
           read, write,
           before, after,
           s11_params, true);
     }
 
+    job_query.CommitStagedJobs();
 
     /*
      * Spawning first extrapolate phi stage over multiple workers.
@@ -278,12 +281,14 @@ namespace application {
         before.insert(update_ghost_velocities_job_ids[j]);
       }
       after.clear();
-      SpawnComputeJob(EXTRAPOLATE_PHI,
+      job_query.SpawnComputeJob(EXTRAPOLATE_PHI,
           first_extrapolate_phi_job_ids[i],
           read, write,
           before, after,
           s_extra_params, true);
     }
+
+    job_query.CommitStagedJobs();
 
     /*
      * Spawning advect phi stage over multiple workers
@@ -304,13 +309,14 @@ namespace application {
         before.insert(first_extrapolate_phi_job_ids[j]);
       }
       after.clear();
-      SpawnComputeJob(ADVECT_PHI,
+      job_query.SpawnComputeJob(ADVECT_PHI,
           advect_phi_job_ids[i],
           read, write,
           before, after,
           s12_params, true);
     }
 
+    job_query.CommitStagedJobs();
     
     /* 
      * Spawning step particles.
@@ -368,12 +374,14 @@ namespace application {
                 after.insert(step_particles_sync_job_ids[i]);
         }
 
-        SpawnComputeJob(STEP_PARTICLES,
+        job_query.SpawnComputeJob(STEP_PARTICLES,
                 step_particles_job_ids[sj],
                 read, write,
                 before, after,
                 step_particles_params, true);
     }
+
+    job_query.CommitStagedJobs();
 
     /*
      * Conditionally spawn synchronize jobs.
@@ -396,7 +404,7 @@ namespace application {
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii],
                     read, write,
                     before, after,
@@ -409,7 +417,7 @@ namespace application {
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+1],
                     read, write,
                     before, after,
@@ -422,7 +430,7 @@ namespace application {
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+2],
                     read, write,
                     before, after,
@@ -435,7 +443,7 @@ namespace application {
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+3],
                     read, write,
                     before, after,
@@ -443,6 +451,7 @@ namespace application {
         }
     }
 
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning advect removed particles.
@@ -499,13 +508,14 @@ namespace application {
         for (int j = 0; j < advect_v_job_num; ++j) {
           after.insert(advect_v_job_ids[j]);
         }
-        SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
+        job_query.SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
             advect_removed_particles_job_ids[sj],
             read, write,
             before, after,
             advect_rem_particles_params, true);
     }
 
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning multiple jobs for Advect V stage
@@ -531,12 +541,14 @@ namespace application {
       for (int j = 0; j < apply_forces_job_num; ++j) {
         after.insert(apply_forces_job_ids[j]);
       }
-      SpawnComputeJob(ADVECT_V,
+      job_query.SpawnComputeJob(ADVECT_V,
           advect_v_job_ids[i],
           read, write,
           before, after,
           s15_params, true);
     }
+
+    job_query.CommitStagedJobs();
 
     // TODO(quhang, omid), there should be an UPDATE_GHOST_VELOCITY job here.
 
@@ -558,13 +570,14 @@ namespace application {
         before.insert(advect_v_job_ids[j]);
       }
       after.clear();
-      SpawnComputeJob(APPLY_FORCES,
+      job_query.SpawnComputeJob(APPLY_FORCES,
           apply_forces_job_ids[i],
           read, write,
           before, after,
           s16_params, true);
     }
 
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning modify levelset -- part one.
@@ -619,12 +632,14 @@ namespace application {
         for (size_t j = 0; j < modify_levelset_job_num; ++j) {
           after.insert(modify_levelset_part_two_job_ids[j]);
         }
-        SpawnComputeJob(MODIFY_LEVELSET_PART_ONE,
+        job_query.SpawnComputeJob(MODIFY_LEVELSET_PART_ONE,
             modify_levelset_part_one_job_ids[mj],
             read, write,
             before, after,
             modify_levelset_params, true);
     }
+
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning modify levelset -- part two.
@@ -680,12 +695,14 @@ namespace application {
         for (int j = 0; j < adjust_phi_job_num; ++j) {
           after.insert(adjust_phi_job_ids[j]);
         }
-        SpawnComputeJob(MODIFY_LEVELSET_PART_TWO,
+        job_query.SpawnComputeJob(MODIFY_LEVELSET_PART_TWO,
             modify_levelset_part_two_job_ids[mj],
             read, write,
             before, after,
             modify_levelset_params, true);
     }
+
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning adjust phi stage for multiple workers.
@@ -707,13 +724,14 @@ namespace application {
       before.clear();
       for (size_t j = 0; j < modify_levelset_job_num; j++)
         before.insert(modify_levelset_part_two_job_ids[j]);
-      SpawnComputeJob(ADJUST_PHI,
+      job_query.SpawnComputeJob(ADJUST_PHI,
           adjust_phi_job_ids[i],
           read, write,
           before, after,
           adjust_phi_params, true);
     }
 
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning delete particles.
@@ -764,13 +782,14 @@ namespace application {
         for (size_t rj = 0; rj < reincorporate_particles_job_num; rj++)
             after.insert(reincorporate_particles_job_ids[rj]);
         // before.insert(job_ids[7]);
-        SpawnComputeJob(DELETE_PARTICLES,
+        job_query.SpawnComputeJob(DELETE_PARTICLES,
             delete_particles_job_ids[dj],
             read, write,
             before, after,
             delete_particles_params, true);
     }
 
+    job_query.CommitStagedJobs();
 
     /* 
      * Spawning reincorporate particles stage over entire block
@@ -821,12 +840,14 @@ namespace application {
           before.insert(delete_particles_job_ids[dj]);
         }
         // before.insert(job_ids[7]);
-        SpawnComputeJob(REINCORPORATE_PARTICLES,
+        job_query.SpawnComputeJob(REINCORPORATE_PARTICLES,
             reincorporate_particles_job_ids[rj],
             read, write,
             before, after,
             reincorporate_particles_params, true);
     }
+
+    job_query.CommitStagedJobs();
 
     /*
      * Loop iteration part two.
@@ -846,11 +867,16 @@ namespace application {
       before.insert(reincorporate_particles_job_ids[rj]);
     }
     after.clear();
-    SpawnComputeJob(PROJECTION_MAIN,
+    job_query.SpawnLastJob(PROJECTION_MAIN,
                     job_ids[10],
                     read, write,
                     before, after,
                     projection_main_params);
+    job_query.CommitStagedJobs();
+    if (time == 0) {
+      dbg(APP_LOG, "Print job dependency figure.\n");
+      job_query.GenerateDotFigure("result.dot");
+    }
   }
 
 

@@ -47,8 +47,10 @@ namespace nimbus {
 JobQuery::JobQuery(Job* job) {
   job_ = job;
   RESOLVE_WAW = true;
-  RESOLVE_WAR = true;
-  DISABLE = false;
+  // RESOLVE_WAR = true;
+  // RESOLVE_WAW = false;
+  RESOLVE_WAR = false;
+  DISABLE = true;
 }
 JobQuery::~JobQuery() {}
 
@@ -190,6 +192,9 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
       if (temp.find(index->id) != temp.end()) {
         before->remove(index->id);
       }
+      temp.insert(index->id);
+    }
+    if (temp.find(index->id) != temp.end()) {
       for (IDSet<job_id_t>::IDSetIter job_iter = index->before.begin();
            job_iter != index->before.end();
            job_iter++) {
