@@ -32,42 +32,60 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * An Example application that spawns a lot of jobs in the 3d space.
- *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#include <vector>
-#include "./app.h"
-#include "./job.h"
-#include "./data.h"
+#include <string>
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
-  chunk_size_ = chunk_size;
-  bandwidth_ = bandwidth;
-};
+#include "worker/worker.h"
+#include "worker/worker_manager.h"
+#include "worker/worker_thread.h"
+#include "worker/worker_thread_computation.h"
 
-Stencil1DApp::~Stencil1DApp() {
-};
+namespace nimbus {
 
-void Stencil1DApp::Load() {
-  std::cout << "Start Creating Data and Job Tables" << std::endl;
+WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
+    : WorkerThread(worker_manager) {
+}
 
-  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
-  RegisterJob(INIT_JOB_NAME, new Init());
-  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
-  RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
+WorkerThreadComputation::~WorkerThreadComputation() {
+}
 
-  RegisterData(DATA_NAME, new Vec());
+void WorkerThreadComputation::Run() {
+  Job* job;
+  while (true) {
+    do {
+      assert(worker_manager_ != NULL);
+      job = worker_manager_->PullComputationJob();
+    } while (job == NULL);
+    ExecuteJob(job);
+    bool success_flag = worker_manager_->PushFinishJob(job);
+    assert(success_flag);
+  }
+}
 
-  std::cout << "Finished Creating Data and Job Tables" << std::endl;
-};
+void WorkerThreadComputation::ExecuteJob(Job* job) {
+  log_->StartTimer();
+  timer_->Start(job->id().elem());
+  job->Execute(job->parameters(), job->data_array);
+  double run_time = timer_->Stop(job->id().elem());
+  log_->StopTimer();
 
+  job->set_run_time(run_time);
 
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff),
+      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
+           job->name().c_str(), job->id().elem(),
+           log_->timer(), log_->GetTime());
+  log_->WriteToOutputStream(std::string(buff), LOG_INFO);
 
+  char time_buff[LOG_MAX_BUFF_SIZE];
+  snprintf(time_buff, sizeof(time_buff),
+      "Queue Time: %2.9lf, Run Time: %2.9lf",
+      job->wait_time(), job->run_time());
+  log_->WriteToOutputStream(std::string(time_buff), LOG_INFO);
+}
+
+}  // namespace nimbus

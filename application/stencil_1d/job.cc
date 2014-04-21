@@ -42,15 +42,16 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define LOOP_COUNTER 150
+#define LOOP_COUNTER static_cast<Stencil1DApp*>(application())->counter_
 #define LOOP_CONDITION 0
-#define PART_NUM 4
-#define CHUNK_NUM 16
-#define CHUNK_SIZE 5
-#define BANDWIDTH 1
+#define PART_NUM static_cast<Stencil1DApp*>(application())->part_num_
+#define CHUNK_PER_PART static_cast<Stencil1DApp*>(application())->chunk_per_part_
+#define CHUNK_SIZE static_cast<Stencil1DApp*>(application())->chunk_size_
+#define BANDWIDTH static_cast<Stencil1DApp*>(application())->bandwidth_
 
 #define STENCIL_SIZE (2*BANDWIDTH)+1
-#define PART_SIZE (CHUNK_NUM/PART_NUM)*CHUNK_SIZE
+#define PART_SIZE (CHUNK_PER_PART)*CHUNK_SIZE
+#define CHUNK_NUM PART_NUM*CHUNK_PER_PART
 
 Main::Main(Application* app) {
   set_application(app);
@@ -82,7 +83,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
    */
   GetNewLogicalDataID(&d, CHUNK_NUM * 3);
 
-  for (int i = 0; i < CHUNK_NUM; ++i) {
+  for (size_t i = 0; i < CHUNK_NUM; ++i) {
     GeometricRegion r_l(i * CHUNK_SIZE, 0, 0,
                         BANDWIDTH, 1, 1);
     ID<partition_id_t> p_l(i * 3);
@@ -108,7 +109,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   GetNewJobID(&job_ids, CHUNK_NUM * 3 + 1);
 
   // Spawning inti jobs
-  for (int i = 0; i < CHUNK_NUM; ++i) {
+  for (size_t i = 0; i < CHUNK_NUM; ++i) {
     read.clear(); read.insert(d[i * 3]);
     write.clear(); write.insert(d[i * 3]);
     before.clear();
@@ -135,7 +136,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
   read.clear();
   write.clear();
   before.clear();
-  for (int j = 0; j < CHUNK_NUM * 3; ++j) {
+  for (size_t j = 0; j < CHUNK_NUM * 3; ++j) {
     before.insert(job_ids[j]);
   }
   after.clear();
@@ -168,7 +169,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     // Spawn the batch of jobs in each stencil
     std::vector<job_id_t> stencil_job_ids;
     GetNewJobID(&stencil_job_ids, PART_NUM);
-    for (int i = 0; i < PART_NUM; ++i) {
+    for (size_t i = 0; i < PART_NUM; ++i) {
       read.clear();
       GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
           PART_SIZE + 2 * BANDWIDTH, 1, 1);
@@ -187,7 +188,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     // Spawning the print jobs at the end of each loop
     std::vector<job_id_t> print_job_ids;
     GetNewJobID(&print_job_ids, PART_NUM);
-    for (int i = 0; i < PART_NUM; ++i) {
+    for (size_t i = 0; i < PART_NUM; ++i) {
       read.clear();
       GeometricRegion r(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
       LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
@@ -204,7 +205,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     read.clear();
     write.clear();
     before.clear();
-    for (int j = 0; j < PART_NUM; ++j) {
+    for (size_t j = 0; j < PART_NUM; ++j) {
       before.insert(print_job_ids[j]);
     }
     after.clear();

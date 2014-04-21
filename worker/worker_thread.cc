@@ -32,42 +32,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * An Example application that spawns a lot of jobs in the 3d space.
- *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#include <vector>
-#include "./app.h"
-#include "./job.h"
-#include "./data.h"
+#include "worker/worker_manager.h"
+#include "worker/worker_thread.h"
+namespace nimbus {
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
-  chunk_size_ = chunk_size;
-  bandwidth_ = bandwidth;
-};
+WorkerThread::WorkerThread(WorkerManager* worker_manager) {
+  worker_manager_ = worker_manager;
+}
 
-Stencil1DApp::~Stencil1DApp() {
-};
+WorkerThread::~WorkerThread() {}
 
-void Stencil1DApp::Load() {
-  std::cout << "Start Creating Data and Job Tables" << std::endl;
+void WorkerThread::SetLoggingInterface(
+    Log* log, Log* version_log, Log* data_hash_log,
+    HighResolutionTimer* timer) {
+  log_ = log;
+  version_log_ = version_log;
+  data_hash_log_ = data_hash_log_;
+  timer_ = timer;
+}
 
-  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
-  RegisterJob(INIT_JOB_NAME, new Init());
-  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
-  RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
-
-  RegisterData(DATA_NAME, new Vec());
-
-  std::cout << "Finished Creating Data and Job Tables" << std::endl;
-};
-
-
-
+}  // namespace nimbus

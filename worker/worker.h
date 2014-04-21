@@ -41,6 +41,10 @@
 #ifndef NIMBUS_WORKER_WORKER_H_
 #define NIMBUS_WORKER_WORKER_H_
 
+#ifndef MUTE_LOG
+#define MUTE_LOG
+#endif  // MUTE_LOG
+
 #include <boost/thread.hpp>
 #include <string>
 #include <vector>
@@ -61,6 +65,7 @@
 namespace nimbus {
 
 class Worker;
+class WorkerManager;
 typedef std::map<int, Worker*> WorkerMap;
 
 class Worker {
@@ -72,8 +77,10 @@ class Worker {
   virtual void WorkerCoreProcessor();
   virtual void ScanBlockedJobs();
   virtual void ScanPendingTransferJobs();
-  virtual void GetJobsToRun(JobList* list, size_t max_num);
-  virtual void ExecuteJob(Job* job);
+
+  virtual void GetJobsToRun(WorkerManager* worker_manager, size_t max_num);
+
+  // virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
   virtual void ProcessComputeJobCommand(ComputeJobCommand* command);
   virtual void ProcessCreateDataCommand(CreateDataCommand* command);
@@ -90,7 +97,13 @@ class Worker {
 
   worker_id_t id();
   void set_id(worker_id_t id);
+  void set_ip_address(std::string ip);
   virtual PhysicalDataMap* data_map();
+
+  // TODO(quhang) maybe not a good interface.
+  void SendCommand(SchedulerCommand* command) {
+    client_->sendCommand(command);
+  }
 
  protected:
   SchedulerClient* client_;
@@ -99,6 +112,7 @@ class Worker {
   IDMaker id_maker_;
   SchedulerCommand::PrototypeTable scheduler_command_table_;
   worker_id_t id_;
+  std::string ip_address_;
   std::string scheduler_ip_;
   port_t scheduler_port_;
   port_t listening_port_;
@@ -124,6 +138,11 @@ class Worker {
   virtual void AddData(Data* data);
   virtual void DeleteData(physical_data_id_t physical_data_id);
   virtual void LoadSchedulerCommands();
+
+ public:
+  // TODO(quhang) figure out the right access control.
+  void ResolveDataArray(Job* job);
+  // void UpdateDataVersion(Job* job);
 };
 
 }  // namespace nimbus

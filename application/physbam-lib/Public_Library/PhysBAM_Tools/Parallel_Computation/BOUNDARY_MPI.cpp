@@ -88,7 +88,9 @@ template<class T_GRID,class T2> void BOUNDARY_MPI<T_GRID,T2>::
 Apply_Boundary_Condition_Face(const T_GRID& grid,T_FACE_ARRAYS_T2& u,const T time)
 {
     boundary.Apply_Boundary_Condition_Face(grid,u,time);
+    LOG::Time("Forces Exchange");
     mpi_grid->Average_Common_Face_Data(u);
+    LOG::Time("Forces");
 }
 template class BOUNDARY_MPI<GRID<VECTOR<float,1> >,VECTOR<float,1> >;
 template class BOUNDARY_MPI<GRID<VECTOR<float,1> >,VECTOR<float,3> >;

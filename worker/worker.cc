@@ -43,94 +43,31 @@
 #include <ctime>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
+#include "worker/worker_manager.h"
+#include "worker/util_dumping.h"
 #include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
+// Configures the number of threads used to run jobs.
+#define CORE_NUMBER 1
 
 using boost::hash;
 
 namespace nimbus {
 
-void DumpVersionInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
-  std::string input = "";
-  for (size_t i = 0; i < da.size(); ++i) {
-    std::ostringstream ss_l;
-    ss_l << da[i]->logical_id();
-    input += ss_l.str();
-    input += " : ";
-    // std::ostringstream ss_p;
-    // ss_p << da[i]->physical_id();
-    // input += ss_p.str();
-    // input += " : ";
-    std::ostringstream ss_v;
-    ss_v << da[i]->version();
-    input += ss_v.str();
-    input += " - ";
-  }
-  hash<std::string> hash_function;
+/*
+// Comment(quhang): I moved these three functions to a seperate file:
+// worker/util_dumping.cc.
+// So that these utilities can be called outside "Worker" class.
+void DumpVersionInformation(Job *job, const DataArray& da, Log *log,
+                            std::string tag);
 
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "%s name: %s id: %llu  version_hash: %lu versions: %s",
-           tag.c_str(), job->name().c_str(), job->id().elem(),
-           hash_function(input), input.c_str());
-  log->WriteToFile(std::string(buff), LOG_INFO);
-}
+void DumpDataHashInformation(Job *job, const DataArray& da, Log *log,
+                             std::string tag);
 
-void DumpDataHashInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
-  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
-    std::string input = "";
-    for (size_t i = 0; i < da.size(); ++i) {
-      if (dynamic_cast<PhysBAMData*>(da[i]) != NULL) { // NOLINT
-        std::ostringstream ss_l;
-        ss_l << da[i]->logical_id();
-        input += ss_l.str();
-        input += " : ";
-        // std::ostringstream ss_p;
-        // ss_p << da[i]->physical_id();
-        // input += ss_p.str();
-        // input += " : ";
-        std::ostringstream ss_v;
-        ss_v << dynamic_cast<PhysBAMData*>(da[i])->HashCode(); // NOLINT
-        input += ss_v.str();
-        input += " - ";
-      }
-    }
-    hash<std::string> hash_function;
-
-    char buff[LOG_MAX_BUFF_SIZE];
-    snprintf(buff, sizeof(buff),
-        "%s name: %s id: %llu  aggregate_hash: %lu hashes: %s",
-        tag.c_str(), job->name().c_str(), job->id().elem(),
-        hash_function(input), input.c_str());
-    log->WriteToFile(std::string(buff), LOG_INFO);
-  }
-}
-
-
-void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log, std::string tag) {
-  std::string input = "";
-  for (size_t i = 0; i < da.size(); ++i) {
-    std::ostringstream ss_l;
-    ss_l << da[i]->logical_id();
-    input += ss_l.str();
-    input += " - ";
-  }
-  hash<std::string> hash_function;
-
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "%s name: %s id: %llu  order_hash: %lu logical ids: %s",
-           tag.c_str(), job->name().c_str(), job->id().elem(),
-           hash_function(input), input.c_str());
-  log->WriteToFile(std::string(buff), LOG_INFO);
-}
-
-
-
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
+                              std::string tag);
+ */
 
 Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     port_t listening_port, Application* a)
@@ -140,6 +77,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   application_(a) {
     log_.InitTime();
     id_ = -1;
+    ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
 }
 
 void Worker::Run() {
@@ -157,6 +95,11 @@ void Worker::Run() {
 
 void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
+  WorkerManager worker_manager;
+  worker_manager.worker_ = this;
+  worker_manager.SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
+                                     &timer_);
+  worker_manager.StartWorkerThreads(CORE_NUMBER);
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
@@ -171,12 +114,7 @@ void Worker::WorkerCoreProcessor() {
 
     ScanPendingTransferJobs();
 
-    JobList jobs_to_run;
-    GetJobsToRun(&jobs_to_run, (size_t)(MAX_PARALLEL_JOB));
-    JobList::iterator iter = jobs_to_run.begin();
-    for (; iter != jobs_to_run.end(); iter++) {
-      ExecuteJob(*iter);
-    }
+    GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
   }
 }
 
@@ -216,60 +154,81 @@ void Worker::ScanPendingTransferJobs() {
   }
 }
 
-void Worker::GetJobsToRun(JobList* list, size_t max_num) {
-  list->clear();
+
+// Extracts at most "max_num" jobs from queue "ready_jobs", resolves their data
+// array, and push them to the worker manager.
+void Worker::GetJobsToRun(WorkerManager* worker_manager, size_t max_num) {
   size_t ready_num = ready_jobs_.size();
   for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
     Job* job = ready_jobs_.front();
-    list->push_back(job);
     ready_jobs_.pop_front();
+    ResolveDataArray(job);
+    int success_flag = worker_manager->PushComputationJob(job);
+    assert(success_flag);
   }
 }
 
-void Worker::ExecuteJob(Job* job) {
-  DataArray da;
+// Extracts data objects from the read/write set to data array.
+void Worker::ResolveDataArray(Job* job) {
+  job->data_array.clear();
   IDSet<physical_data_id_t>::IDSetIter iter;
 
   IDSet<physical_data_id_t> read = job->read_set();
   for (iter = read.begin(); iter != read.end(); iter++) {
-    da.push_back(data_map_[*iter]);
-
-    // std::string name = job->name();
-    // if (name != "main" && name != "initialize") {
-    //   SerializedData ser_data;
-    //   data_map_[*iter]->Serialize(&ser_data);
-    //   Data * data_copy = NULL;
-    //   data_map_[*iter]->DeSerialize(ser_data, &data_copy);
-    //   data_map_[*iter]->Copy(data_copy);
-    //   data_copy->Destroy();
-    // }
+    job->data_array.push_back(data_map_[*iter]);
   }
-
   // DumpVersionInformation(job, da, &version_log_, "version_in");
-  DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
-
+  // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
   IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {
-    da.push_back(data_map_[*iter]);
+    job->data_array.push_back(data_map_[*iter]);
+  }
+  DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
+}
 
-    // std::string name = job->name();
-    // if (name != "main" && name != "initialize") {
-    //   SerializedData ser_data;
-    //   data_map_[*iter]->Serialize(&ser_data);
-    //   Data * data_copy = NULL;
-    //   data_map_[*iter]->DeSerialize(ser_data, &data_copy);
-    //   data_map_[*iter]->Copy(data_copy);
-    //   data_copy->Destroy();
-    // }
+/*
+// Comment(quhang) the function is moved to:
+// Line 70 (worker_thread_finish.cc).
+// So that the worker core process doesn't need to clean up a job.
+// TODO(quhang) operation on shared data structure "data_map" should be
+// synchronized.
+void Worker::UpdateDataVersion(Job* job) {
+  DataArray daw;
+  IDSet<physical_data_id_t> write = job->write_set();
+  IDSet<physical_data_id_t>::IDSetIter iter;
+  for (iter = write.begin(); iter != write.end(); iter++) {
+    daw.push_back(data_map_[*iter]);
+  }
+  DumpDataHashInformation(job, daw, &data_hash_log_, "hash_out");
+
+  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
+      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
+    for (iter = write.begin(); iter != write.end(); iter++) {
+      Data *d = data_map_[*iter];
+      data_version_t version = d->version();
+      ++version;
+      d->set_version(version);
+    }
   }
 
-  DumpDataOrderInformation(job, da, &data_hash_log_, "data_order");
+  Parameter params;
+  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
+  client_->sendCommand(&cm);
+  // ProcessJobDoneCommand(&cm);
+  delete job;
+}
+*/
 
-
+// Comment(quhang): This funciton is moved to
+// Line 66, worker_thread_computation.cc.
+/*
+void Worker::ExecuteJob(Job* job) {
   log_.StartTimer();
   timer_.Start(job->id().elem());
-  job->Execute(job->parameters(), da);
+  job->Execute(job->parameters(), job->data_array);
   double run_time = timer_.Stop(job->id().elem());
   log_.StopTimer();
 
@@ -287,38 +246,8 @@ void Worker::ExecuteJob(Job* job) {
       job->wait_time(), job->run_time());
   log_.WriteToOutputStream(std::string(time_buff), LOG_INFO);
 
-  DataArray daw;
-  for (iter = write.begin(); iter != write.end(); iter++) {
-    daw.push_back(data_map_[*iter]);
-  }
-  DumpDataHashInformation(job, daw, &data_hash_log_, "hash_out");
-
-
-
-  if ((dynamic_cast<CreateDataJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<LocalCopyJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<RemoteCopySendJob*>(job) == NULL) && // NOLINT
-      (dynamic_cast<RemoteCopyReceiveJob*>(job) == NULL)) { // NOLINT
-    for (iter = write.begin(); iter != write.end(); iter++) {
-      Data *d = data_map_[*iter];
-      data_version_t version = d->version();
-      ++version;
-      d->set_version(version);
-    }
-  }
-
-
-
-
-  Parameter params;
-  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
-  client_->sendCommand(&cm);
-  // ProcessJobDoneCommand(&cm);
-  delete job;
 }
-
-
-
+*/
 
 void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {
@@ -369,7 +298,8 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   ID<port_t> port(listening_port_);
   HandshakeCommand new_cm = HandshakeCommand(cm->worker_id(),
       // boost::asio::ip::host_name(), port);
-      "127.0.0.1", port);
+      // "127.0.0.1", port);
+      ip_address_, port);
   client_->sendCommand(&new_cm);
 
   id_ = cm->worker_id().elem();
@@ -547,6 +477,10 @@ worker_id_t Worker::id() {
 
 void Worker::set_id(worker_id_t id) {
   id_ = id;
+}
+
+void Worker::set_ip_address(std::string ip) {
+  ip_address_ = ip;
 }
 
 PhysicalDataMap* Worker::data_map() {

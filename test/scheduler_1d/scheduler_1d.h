@@ -32,42 +32,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * An Example application that spawns a lot of jobs in the 3d space.
- *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
- */
+ /*
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
+#ifndef NIMBUS_TEST_SCHEDULER_1D_SCHEDULER_1D_H_
+#define NIMBUS_TEST_SCHEDULER_1D_SCHEDULER_1D_H_
+
+#define DEBUG_MODE
+
+#include <boost/thread.hpp>
+#include <iostream> // NOLINT
+#include <fstream> // NOLINT
+#include <sstream>
+#include <string>
 #include <vector>
-#include "./app.h"
-#include "./job.h"
-#include "./data.h"
+#include <map>
+#include <set>
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+#include "shared/scheduler_server.h"
+#include "shared/cluster.h"
+#include "shared/geometric_region.h"
+#include "shared/parser.h"
+#include "scheduler/scheduler.h"
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
-  chunk_size_ = chunk_size;
-  bandwidth_ = bandwidth;
+using namespace nimbus; // NOLINT
+
+class Scheduler1D : public Scheduler {
+  public:
+    explicit Scheduler1D(unsigned int listening_port);
+
+    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+
+  private:
+    GeometricRegion global_bounding_region_;
+    size_t worker_num_;
+    bool initialized_domains_;
+    std::vector<GeometricRegion> worker_domains_;
 };
 
-Stencil1DApp::~Stencil1DApp() {
-};
-
-void Stencil1DApp::Load() {
-  std::cout << "Start Creating Data and Job Tables" << std::endl;
-
-  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
-  RegisterJob(INIT_JOB_NAME, new Init());
-  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
-  RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
-
-  RegisterData(DATA_NAME, new Vec());
-
-  std::cout << "Finished Creating Data and Job Tables" << std::endl;
-};
-
-
-
+#endif  // NIMBUS_TEST_SCHEDULER_1D_SCHEDULER_1D_H_

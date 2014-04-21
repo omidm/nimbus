@@ -32,42 +32,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * An Example application that spawns a lot of jobs in the 3d space.
- *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
- */
+ /*
+  * Utilities related to logging information dumping are moved here.
+  * Not sure if the functions are thread-safe.  --Hang Qu
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#include <vector>
-#include "./app.h"
-#include "./job.h"
-#include "./data.h"
+#ifndef NIMBUS_WORKER_UTIL_DUMPING_H_
+#define NIMBUS_WORKER_UTIL_DUMPING_H_
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
-  chunk_size_ = chunk_size;
-  bandwidth_ = bandwidth;
-};
+#include <string>
+#include "worker/worker.h"
 
-Stencil1DApp::~Stencil1DApp() {
-};
+namespace nimbus {
 
-void Stencil1DApp::Load() {
-  std::cout << "Start Creating Data and Job Tables" << std::endl;
+void DumpVersionInformation(Job *job, const DataArray& da, Log *log,
+                            std::string tag);
 
-  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
-  RegisterJob(INIT_JOB_NAME, new Init());
-  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
-  RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
+void DumpDataHashInformation(Job *job, const DataArray& da, Log *log,
+                             std::string tag);
 
-  RegisterData(DATA_NAME, new Vec());
+void DumpDataOrderInformation(Job *job, const DataArray& da, Log *log,
+                              std::string tag);
 
-  std::cout << "Finished Creating Data and Job Tables" << std::endl;
-};
+}  // namespace nimbus
 
-
-
+#endif  // NIMBUS_WORKER_UTIL_DUMPING_H_

@@ -32,42 +32,64 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * An Example application that spawns a lot of jobs in the 3d space.
- *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
- */
+ /*
+  * The worker manager extracts jobs from the ready queue, and dispatches jobs
+  * to different worker threads.
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#include <vector>
-#include "./app.h"
-#include "./job.h"
-#include "./data.h"
+#ifndef NIMBUS_WORKER_WORKER_MANAGER_H_
+#define NIMBUS_WORKER_WORKER_MANAGER_H_
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
-  chunk_size_ = chunk_size;
-  bandwidth_ = bandwidth;
+#include <list>
+#include "shared/high_resolution_timer.h"
+#include "shared/log.h"
+#include "shared/nimbus.h"
+
+namespace nimbus {
+class SchedulerCommand;
+class WorkerThread;
+class Worker;
+
+class WorkerManager {
+ public:
+  WorkerManager();
+  ~WorkerManager();
+
+  void SetLoggingInterface(
+      Log* log, Log* version_log, Log* data_hash_log,
+      HighResolutionTimer* timer);
+
+  Job* PullComputationJob();
+  bool PushComputationJob(Job* job);
+  Job* PullFinishJob();
+  bool PushFinishJob(Job* job);
+
+  bool SendCommand(SchedulerCommand* command);
+
+  bool StartWorkerThreads(int thread_number);
+  static void* ThreadEntryPoint(void* parameters);
+
+ public:
+  // TODO(quhang) Not sure if maintaining such a pointer is good or not.
+  Worker* worker_;
+
+ private:
+  std::list<WorkerThread*> worker_thread_list;
+
+  pthread_mutex_t computation_job_queue_lock_;
+  std::list<Job*> computation_job_list_;
+
+  pthread_mutex_t finish_job_queue_lock_;
+  std::list<Job*> finish_job_list_;
+
+  // Logging data structures.
+  bool log_ready_;
+  Log* log_;
+  Log* version_log_;
+  Log* data_hash_log_;
+  HighResolutionTimer* timer_;
 };
+}  // namespace nimbus
 
-Stencil1DApp::~Stencil1DApp() {
-};
-
-void Stencil1DApp::Load() {
-  std::cout << "Start Creating Data and Job Tables" << std::endl;
-
-  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
-  RegisterJob(INIT_JOB_NAME, new Init());
-  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
-  RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
-
-  RegisterData(DATA_NAME, new Vec());
-
-  std::cout << "Finished Creating Data and Job Tables" << std::endl;
-};
-
-
-
+#endif  // NIMBUS_WORKER_WORKER_MANAGER_H_

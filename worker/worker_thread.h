@@ -32,42 +32,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * An Example application that spawns a lot of jobs in the 3d space.
- *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
- */
+ /*
+  * The abstraction of a worker thread. A worker thread keeps pulling job from
+  * the worker manager and executes them.
+  * Now, they are implemented as busy-waiting.
+  *
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#include <vector>
-#include "./app.h"
-#include "./job.h"
-#include "./data.h"
+#ifndef NIMBUS_WORKER_WORKER_THREAD_H_
+#define NIMBUS_WORKER_WORKER_THREAD_H_
 
-Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
-    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
-  counter_ = counter;
-  part_num_ = part_num;
-  chunk_per_part_ = chunk_per_part;
-  chunk_size_ = chunk_size;
-  bandwidth_ = bandwidth;
+#include "shared/nimbus.h"
+#include "shared/high_resolution_timer.h"
+#include "shared/log.h"
+
+namespace nimbus {
+class WorkerManager;
+class WorkerThread {
+ public:
+  explicit WorkerThread(WorkerManager* worker_manager);
+  virtual ~WorkerThread();
+  void SetLoggingInterface(
+      Log* log, Log* version_log, Log* data_hash_log,
+      HighResolutionTimer* timer);
+  virtual void Run() = 0;
+  // TODO(quhang) data member accessor.
+  pthread_t thread_id;
+ protected:
+  WorkerManager* worker_manager_;
+  // Logging data structures.
+  Log* log_;
+  Log* version_log_;
+  Log* data_hash_log_;
+  HighResolutionTimer* timer_;
 };
+}  // namespace nimbus
 
-Stencil1DApp::~Stencil1DApp() {
-};
-
-void Stencil1DApp::Load() {
-  std::cout << "Start Creating Data and Job Tables" << std::endl;
-
-  RegisterJob(NIMBUS_MAIN_JOB_NAME, new Main(this));
-  RegisterJob(INIT_JOB_NAME, new Init());
-  RegisterJob(LOOP_JOB_NAME, new ForLoop(this));
-  RegisterJob(PRINT_JOB_NAME, new Print());
-  RegisterJob(STENCIL_JOB_NAME, new Stencil(this));
-
-  RegisterData(DATA_NAME, new Vec());
-
-  std::cout << "Finished Creating Data and Job Tables" << std::endl;
-};
-
-
-
+#endif  // NIMBUS_WORKER_WORKER_THREAD_H_
