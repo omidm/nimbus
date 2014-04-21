@@ -60,4 +60,9 @@ typename PhysBAM::VECTOR<int, 3> CountFromRegion(
                                            local_region.dz()));
 }
 
+typedef typename PhysBAM::VECTOR<float, 3> TVF;
+template typename PhysBAM::RANGE<TVF> RangeFromRegions(
+        const nimbus::GeometricRegion& global_region,
+        const nimbus::GeometricRegion& local_region);
+
 }  // namespace application
