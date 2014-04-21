@@ -64,7 +64,10 @@ void WorkerManager::SetLoggingInterface(
   log_ready_ = true;
 }
 
-WorkerManager::~WorkerManager() {}
+WorkerManager::~WorkerManager() {
+  pthread_mutex_destroy(&computation_job_queue_lock_);
+  pthread_mutex_destroy(&finish_job_queue_lock_);
+}
 
 Job* WorkerManager::PullComputationJob() {
   pthread_mutex_lock(&computation_job_queue_lock_);
