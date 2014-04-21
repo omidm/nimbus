@@ -17,9 +17,8 @@ def run_instances():
       max_count = config.INSTANCE_NUM,
       key_name = config.KEY_NAME,
       security_groups = [config.SG_GROUP],
+      placement_group = config.PLACEMENT_GROUP,
       instance_type = config.INSTANCE_TYPE)
-
-
 
 
 def wait_for_instances_to_start():
