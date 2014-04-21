@@ -83,6 +83,7 @@ void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::D
     data_config.SetFlag(DataConfig::VELOCITY);
     data_config.SetFlag(DataConfig::VELOCITY_GHOST);
     data_config.SetFlag(DataConfig::LEVELSET);
+    data_config.SetFlag(DataConfig::LEVELSET_BW_SEVEN);
     data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
     data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);

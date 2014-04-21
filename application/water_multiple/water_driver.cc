@@ -803,44 +803,12 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
                           T dt) {
     LOG::Time("Modify Levelset Part two ...\n");
 
-    const int ghost_cells = 7;
-    T_ARRAYS_SCALAR phi_ghost(example.mac_grid.Domain_Indices(ghost_cells));
-    example.particle_levelset_evolution.particle_levelset.
-        levelset.boundary->Fill_Ghost_Cells(example.mac_grid,
-                                            example.particle_levelset_evolution.phi,
-                                            phi_ghost,
-                                            0,
-                                            time,
-                                            ghost_cells);
-
     // TODO: this involves redundant copy operation. can get rid of some/ all
     // of this after merging with Hang's updates.
-    {
-        nimbus::int_dimension_t shift[3] = {
-            local_region.x() - 1,
-            local_region.y() - 1,
-            local_region.z() - 1
-        };
-        GeometricRegion outer_reg = local_region;
-        outer_reg.Enlarge(7);
-        nimbus::GeometricRegion copy_reg =
-          GeometricRegion::GetIntersection(outer_reg,
-                                           application::kDefaultRegion);
-        const std::string lsstring = std::string(APP_PHI);
-        nimbus::PdiVector pdv;
-        if (application::GetTranslatorData(job, lsstring, da, &pdv,
-                                           application::READ_ACCESS))
-            example.translator.ReadScalarArrayFloat(&copy_reg,
-                                                    shift,
-                                                    &pdv,
-                                                    &phi_ghost);
-        application::DestroyTranslatorObjects(&pdv);
-    }
-
+    int ghost_cells = 7;
     example.particle_levelset_evolution.
-        Modify_Levelset_And_Particles_Nimbus_Two(&example.
-                                                 face_velocities_ghost,
-                                                 &phi_ghost,
+        Modify_Levelset_And_Particles_Nimbus_Two(&example.face_velocities_ghost,
+                                                 &example.phi_ghost_bandwidth_seven,
                                                  ghost_cells);
 
     // save state

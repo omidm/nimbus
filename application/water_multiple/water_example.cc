@@ -334,15 +334,6 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
       application::DestroyTranslatorObjects(&pdv);
     } else {
       // In levelset_extrapolation_mode.
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_outer_7,
-            array_shift,
-            &pdv,
-            &phi_ghost_bandwidth_seven);
-        std::cout << "OMID: write 7.\n";
-      }
       application::DestroyTranslatorObjects(&pdv);
       if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
           && data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
@@ -567,6 +558,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
         cache_fv->Write(array_reg_central, true);
+        cache_fv = NULL;
     }
 
     // mac velocities ghost
@@ -575,6 +567,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
         cache_fvg->Write(array_reg_outer, true);
+        cache_fvg = NULL;
     }
 
     // particle leveset quantities
@@ -586,12 +579,21 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         T_SCALAR_ARRAY *phi3 = cache_phi3->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
         cache_phi3->Write(array_reg_outer, true);
+        cache_phi3 = NULL;
     }
     dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
     if (cache_phi8) {
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
         cache_phi8->Write(array_reg_outer_8, true);
+        cache_phi8 = NULL;
+    }
+    dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
+    if (cache_phi7) {
+        T_SCALAR_ARRAY *phi7 = cache_phi7->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+        cache_phi7->Write(array_reg_outer_7, true);
+        cache_phi7 = NULL;
     }
 
     // positive particles
@@ -657,6 +659,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
         cache_psi_n->Write(array_reg_thin_outer, true);
+        cache_psi_n = NULL;
     }
 
     // pressure.
@@ -816,8 +819,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     // levelset
     bool levelset_extrapolation_mode =
         data_config.GetFlag(DataConfig::LEVELSET) &&
-        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
-         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
+        data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT);
     assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
              data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
     const std::string lsstring = std::string(APP_PHI);
@@ -831,16 +833,17 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
       std::cout << "OMID: Read 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
+    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_outer_7,
+          array_shift,
+          &pdv,
+          &phi_ghost_bandwidth_seven);
+      std::cout << "OMID: Read 7.\n";
+    }
+    application::DestroyTranslatorObjects(&pdv);
     if (!levelset_extrapolation_mode) {
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_outer_7,
-            array_shift,
-            &pdv,
-            &phi_ghost_bandwidth_seven);
-        std::cout << "OMID: Read 7.\n";
-      }
       application::DestroyTranslatorObjects(&pdv);
       if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
           && data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
@@ -1098,7 +1101,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       // Currently, set read/ write sets correctly for the diff levelset
       // objects.
       const std::string lsstring = std::string(APP_PHI);
-      nimbus::DataArray read3, read8, write3, write8;
+      nimbus::DataArray read3, read7, read8, write3, write7, write8;
       if (data_config.GetFlag(DataConfig::LEVELSET) &&
           data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
         application::GetReadData(job, lsstring, da, &read3);
@@ -1142,6 +1145,21 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
           dbg(APP_LOG, "Finish translating levelset 8.\n");
+      }
+      if (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+        application::GetReadData(job, lsstring, da, &read7);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 7 for region %s\n",
+            read7.size(), array_reg_outer_7.toString().c_str());
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read7, write7,
+                array_reg_outer_7,
+                application::kCachePhi7,
+                nimbus::EXCLUSIVE, false);
+        cache_phi7 = dynamic_cast<TCacheScalarArray *>(cache_obj);
+        assert(cache_phi7 != NULL);
+        T_SCALAR_ARRAY *phi7 = cache_phi7->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+        dbg(APP_LOG, "Finish translating velocity levelset 7.\n");
       }
     }
 
