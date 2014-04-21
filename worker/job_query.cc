@@ -36,6 +36,8 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <set>
+
 #include "shared/nimbus.h"
 
 #include "worker/job_query.h"
@@ -137,6 +139,7 @@ bool JobQuery::CommitStagedJobs() {
        iterator != staged_jobs_.end();
        iterator++) {
     // TODO(quhang) eliminate redundent dependencies.
+    Eliminate(&iterator->before);
     job_->SpawnComputeJob(
         iterator->name, iterator->id, iterator->read, iterator->write,
         iterator->before, IDSet<job_id_t>(), iterator->params,
@@ -174,6 +177,26 @@ bool JobQuery::CommitJob(const job_id_t& id) {
   // TODO(quhang) not implemented.
   assert(false);
   return true;
+}
+
+// TODO(quhang) too much overhead.
+void JobQuery::Eliminate(IDSet<job_id_t>* before) {
+  std::set<job_id_t> temp;
+  for (std::list<ShortJobEntry>::reverse_iterator index =
+       query_results_.rbegin();
+       index != query_results_.rend();
+       index++) {
+    if (before->contains(index->id)) {
+      if (temp.find(index->id) != temp.end()) {
+        before->remove(index->id);
+      }
+      for (IDSet<job_id_t>::IDSetIter job_iter = index->before.begin();
+           job_iter != index->before.end();
+           job_iter++) {
+        temp.insert(*job_iter);
+      }
+    }  // contain statement end
+  }
 }
 
 void JobQuery::GenerateDotFigure(const std::string& file_name) {

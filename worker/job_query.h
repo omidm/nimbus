@@ -87,6 +87,7 @@ class JobQuery {
   void GenerateDotFigure(const std::string& file_name);
 
  private:
+  void Eliminate(IDSet<job_id_t>* before);
   bool RESOLVE_WAW;
   bool RESOLVE_WAR;
   bool DISABLE;
