@@ -97,6 +97,7 @@ class Worker {
 
   worker_id_t id();
   void set_id(worker_id_t id);
+  void set_ip_address(std::string ip);
   virtual PhysicalDataMap* data_map();
 
   // TODO(quhang) maybe not a good interface.
@@ -111,6 +112,7 @@ class Worker {
   IDMaker id_maker_;
   SchedulerCommand::PrototypeTable scheduler_command_table_;
   worker_id_t id_;
+  std::string ip_address_;
   std::string scheduler_ip_;
   port_t scheduler_port_;
   port_t listening_port_;

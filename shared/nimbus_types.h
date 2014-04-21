@@ -52,6 +52,8 @@
 #define NIMBUS_INIT_DATA_VERSION (data_version_t)(0)
 #define NIMBUS_MAIN_JOB_NAME "main"
 
+#define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
+
 namespace nimbus {
   typedef uint32_t port_t;
   typedef uint32_t worker_id_t;

@@ -77,6 +77,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   application_(a) {
     log_.InitTime();
     id_ = -1;
+    ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
 }
 
 void Worker::Run() {
@@ -297,7 +298,8 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   ID<port_t> port(listening_port_);
   HandshakeCommand new_cm = HandshakeCommand(cm->worker_id(),
       // boost::asio::ip::host_name(), port);
-      "127.0.0.1", port);
+      // "127.0.0.1", port);
+      ip_address_, port);
   client_->sendCommand(&new_cm);
 
   id_ = cm->worker_id().elem();
@@ -475,6 +477,10 @@ worker_id_t Worker::id() {
 
 void Worker::set_id(worker_id_t id) {
   id_ = id;
+}
+
+void Worker::set_ip_address(std::string ip) {
+  ip_address_ = ip;
 }
 
 PhysicalDataMap* Worker::data_map() {

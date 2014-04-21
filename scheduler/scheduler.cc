@@ -208,9 +208,14 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
         dbg(DBG_SCHED, "Worker already registered, id: %lu IP: %s port: %lu.\n",
             (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port());
       } else {
-        // std::string ip =
-        //   (*iter)->connection()->socket()->remote_endpoint().address().to_string();
-        (*iter)->set_ip(cm->ip());
+        std::string ip;
+        if (cm->ip() == NIMBUS_RECEIVER_KNOWN_IP) {
+          ip =
+            (*iter)->connection()->socket()->remote_endpoint().address().to_string();
+        } else {
+          ip = cm->ip();
+        }
+        (*iter)->set_ip(ip);
         (*iter)->set_port(cm->port().elem());
         (*iter)->set_handshake_done(true);
         ++registered_worker_num_;

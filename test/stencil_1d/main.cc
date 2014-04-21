@@ -39,36 +39,78 @@
   */
 
 #include <iostream>  // NOLINT
+#include <sstream> // NOLINT
 #include "shared/nimbus.h"
 #include "../../application/stencil_1d/app.h"
 
 using namespace nimbus; // NOLINT
 
+void PrintUsage() {
+  std::cout << "ERROR: wrong arguments\n";
+  std::cout << "Usage:\n";
+  std::cout << "./worker\n";
+  std::cout << "REQUIRED ARGUMENTS:\n";
+  std::cout << "\t-sip [scheduler ip] -sport [scheduler port] -port [listening port]\n";
+  std::cout << "OPTIONIAL:\n";
+  std::cout << "\t-ip [ip address]\n";
+}
+
 int main(int argc, char *argv[]) {
-  port_t listening_port;
-  if (argc < 2) {
-    std::cout << "ERROR: provide an integer (1 to 4)." <<
-      std::endl;
+  port_t listening_port, scheduler_port;
+  std::string scheduler_ip, ip_address;
+  bool ip_address_given = false;
+  bool listening_port_given = false;
+  bool scheduler_ip_given = false;
+  bool scheduler_port_given = false;
+
+  if (((argc - 1) % 2 != 0) || (argc < 3)) {
+    PrintUsage();
     exit(-1);
   }
-  if (*argv[1] == '1') {
-    listening_port = WORKER_PORT_1;
-  } else if (*argv[1] == '2') {
-    listening_port = WORKER_PORT_2;
-  } else if (*argv[1] == '3') {
-    listening_port = WORKER_PORT_3;
-  } else if (*argv[1] == '4') {
-    listening_port = WORKER_PORT_4;
-  } else {
-    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
-      std::endl;
+
+  for (int i = 1; i < argc; i = i + 2) {
+    std::string tag = argv[i];
+    std::string val = argv[i+1];
+    if (tag == "-sip") {
+      scheduler_ip = val;
+      scheduler_ip_given = true;
+    } else if (tag == "-ip") {
+      ip_address = val;
+      ip_address_given = true;
+    } else if (tag == "-sport") {
+      std::stringstream ss(val);
+      ss >> scheduler_port;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      scheduler_port_given = true;
+    } else if (tag == "-port") {
+      std::stringstream ss(val);
+      ss >> listening_port;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      listening_port_given = true;
+    } else {
+      PrintUsage();
+      exit(-1);
+    }
+  }
+
+  if (!scheduler_ip_given || !scheduler_port_given || !listening_port_given) {
+    PrintUsage();
     exit(-1);
   }
+
   nimbus_initialize();
   std::cout << "Job spawner worker is up!" << std::endl;
   Stencil1DApp * app = new Stencil1DApp();
-  Worker * w = new Worker(NIMBUS_SCHEDULER_IP,
-      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  Worker * w = new Worker(scheduler_ip, scheduler_port, listening_port, app);
+  if (ip_address_given) {
+    w->set_ip_address(ip_address);
+  }
   w->Run();
 }
 
