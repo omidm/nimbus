@@ -57,7 +57,8 @@ bool JobQuery::StageJob(
     const IDSet<job_id_t>& before,
     const IDSet<job_id_t>& after,
     const Parameter& params,
-    const bool& sterile) {
+    const bool sterile,
+    const bool barrier) {
   if (DISABLE) {
     job_->SpawnComputeJob(
         name, id, read, write, before, after, params, sterile);
@@ -95,13 +96,31 @@ bool JobQuery::StageJob(
       }  // WAR
     }
   }
+  if (barrier) {
+    for (OutstandingAccessorsMap::iterator index =
+         outstanding_accessors_map_.begin();
+         index != outstanding_accessors_map_.end();
+         index++) {
+      if (index->second.has_outstanding_writer) {
+        query_results.insert(index->second.outstanding_writer);
+      }
+      typedef std::list<job_id_t> ReaderList;
+      for (ReaderList::const_iterator read_job_index =
+           index->second.outstanding_reader_list.begin();
+           read_job_index != index->second.outstanding_reader_list.end();
+           read_job_index++) {
+        query_results.insert(*read_job_index);
+      }
+    }
+  }
   // Put the result in staged areas.
   // TODO(quhang) redundent copy happens.
   staged_jobs_.push_back(JobEntry());
   JobEntry& job_entry = staged_jobs_.back();
   job_entry.name = name;
   job_entry.id = id;
-  job_entry.read = write;
+  job_entry.read = read;
+  job_entry.write = write;
   job_entry.before = query_results;
   job_entry.params = params;
   job_entry.sterile = sterile;

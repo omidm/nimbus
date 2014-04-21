@@ -51,6 +51,28 @@ class JobQuery {
  public:
   explicit JobQuery(Job* job);
   ~JobQuery();
+  bool SpawnComputeJob(
+      const std::string& name, const job_id_t& id,
+      const IDSet<logical_data_id_t>& read,
+      const IDSet<logical_data_id_t>& write,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      const Parameter& params,
+      const bool sterile = false) {
+    return StageJob(name, id, read, write, before, after, params, sterile,
+                    false);
+  }
+  bool SpawnLastJob(
+      const std::string& name, const job_id_t& id,
+      const IDSet<logical_data_id_t>& read,
+      const IDSet<logical_data_id_t>& write,
+      const IDSet<job_id_t>& before,
+      const IDSet<job_id_t>& after,
+      const Parameter& params,
+      const bool sterile = false) {
+    return StageJob(name, id, read, write, before, after, params, sterile,
+                    true);
+  }
   bool StageJob(
       const std::string& name, const job_id_t& id,
       const IDSet<logical_data_id_t>& read,
@@ -58,7 +80,8 @@ class JobQuery {
       const IDSet<job_id_t>& before,
       const IDSet<job_id_t>& after,
       const Parameter& params,
-      const bool& sterile = false);
+      const bool sterile = false,
+      const bool barrier = false);
   bool CommitStagedJobs();
   bool CommitJob(const job_id_t& id);
   void GenerateDotFigure(const std::string& file_name);
