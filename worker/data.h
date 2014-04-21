@@ -49,9 +49,10 @@
 #ifndef NIMBUS_WORKER_DATA_H_
 #define NIMBUS_WORKER_DATA_H_
 
-#include <set>
 #include <map>
+#include <set>
 #include <string>
+#include <vector>
 #include "shared/cluster.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
@@ -63,6 +64,9 @@ typedef std::set<Data*> Neighbors;
 typedef std::map<logical_data_id_t, Data*> LogicalDataMap;
 typedef std::map<physical_data_id_t, Data*> PhysicalDataMap;
 typedef std::map<std::string, Data*> DataTable;
+
+// forward declaration
+class CacheObject;
 
 class Data {
  public:
@@ -101,6 +105,9 @@ class Data {
   void set_region(const GeometricRegion& region);
   void set_version(data_version_t version);
 
+  void InvalidateCacheObjects();
+  void SetUpCacheObject(CacheObject *co);
+
  private:
   logical_data_id_t logical_id_;
   physical_data_id_t physical_id_;
@@ -115,7 +122,12 @@ class Data {
 
   // Set of partition ids neighbor to this partition.
   IDSet<partition_id_t> neighbor_partitions_;
+
+  // Set of cache objects that this data corresponds to
+  std::vector<CacheObject *> cache_objects_;
 };
+
+typedef std::vector<Data*> DataArray;
 
 }  // namespace nimbus
 

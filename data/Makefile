@@ -1,4 +1,4 @@
-all: check data_t  physbam
+all: check data_t physbam cache
 
 NIMBUS_ROOT = ..
 include $(NIMBUS_ROOT)/Makeinclude
@@ -19,9 +19,13 @@ data_t: $(OBJFILES) $(HFILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	echo "  cleaning physbam/"; cd physbam; make clean; cd ..
+	echo "  cleaning physbam/"; cd physbam; make clean; cd ../cache; make clean; cd ..
 
 .PHONY: physbam
+.PHONY: cache
 
 physbam: 
 	cd physbam; make; cd ..
+
+cache:
+	cd cache; make; cd ..

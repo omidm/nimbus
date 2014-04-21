@@ -47,7 +47,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 
-#include "data/physbam/translator_physbam.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/options.h"
 
@@ -131,7 +131,7 @@ class ProjectionDriver {
     int iteration;
   } projection_data;
 
-  nimbus::TranslatorPhysBAM<TV> translator;
+  nimbus::TranslatorPhysBAMOld<TV> translator;
   PCG_SPARSE<T>& pcg;
   InitConfig& init_config;
   DataConfig& data_config;

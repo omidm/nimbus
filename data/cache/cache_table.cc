@@ -41,87 +41,46 @@
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
 CacheTable::CacheTable() : table_(Table(GeometricRegionLess)) {}
 
-void* CacheTable::GetCachedObject(const GeometricRegion &region,
-                                  const Job &job,
-                                  const DataArray &da) {
-    CacheObjects *objects;
+void CacheTable::AddEntry(const GeometricRegion &region,
+                          CacheObject *co) {
+    CacheObjects *cos = NULL;
     if (table_.find(region) == table_.end()) {
-        objects = new CacheObjects();
-        table_[region] = objects;
+        cos = new CacheObjects();
+        table_[region] = cos;
     } else {
-        objects = table_[region];
+        cos = table_[region];
     }
-
-    int num_objects = objects->size();
-    DataSet read, write;
-    StringSet read_var, write_var;
-    GetReadWrite(job, da, &read, &write, &read_var, &write_var);
-
-    if (num_objects == 0) {
-        // faster cache object allocation for common cases
-        // TODO(chinmayee): create new object
-        return NULL;
-    } else if (num_objects == 1 && objects->at(0)->IsAvailable()) {
-        // faster cache object allocation for common cases
-        objects->at(0)->LockData(read, write, read_var, write_var);
-        return objects->at(0);
-    } else {
-        // case with multiple objects in cache
-        int min_index =
-            GetMinDistanceIndex(objects, read, write, read_var, write_var);
-        if (min_index < 0) {
-            // no cached object available for reuse
-            // TODO(chinmayee): create new object
-            return NULL;
-        } else {
-            objects->at(min_index)->
-                LockData(read, write, read_var, write_var);
-            return objects->at(min_index);
-        }
-    }
+    cos->push_back(co);
 }
 
-void CacheTable::GetReadWrite(const Job &job,
-                              const DataArray &da,
-                              DataSet *read,
-                              DataSet *write,
-                              StringSet *read_var,
-                              StringSet *write_var) {
-    size_t num_data = da.size();
-    PIDSet read_ids = job.read_set();
-    PIDSet write_ids = job.write_set();
-    for (size_t i = 0; i < num_data; i++) {
-        if (read_ids.contains(da[i]->physical_id())) {
-            read->insert(da[i]);
-            read_var->insert(da[i]->name());
-        }
-        if (write_ids.contains(da[i]->physical_id())) {
-            write->insert(da[i]);
-            write_var->insert(da[i]->name());
-        }
-    }
+CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
+                                             const DataArray &read,
+                                             CacheAccess access) {
+    if (table_.find(region) == table_.end())
+        return NULL;
+    int min = GetMinDistanceIndex(table_[region], read, access);
+    if (min == -1)
+        return NULL;
+    else
+        return table_[region]->at(min);
 }
 
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
-                                    const DataSet &read,
-                                    const DataSet &write,
-                                    const StringSet &read_var,
-                                    const StringSet &write_var) {
+                                    const DataArray &read,
+                                    CacheAccess access) const {
     size_t num_objects = objects->size();
     std::vector<distance_t> distance_vector(num_objects);
     distance_t min_distance = 2*read.size();
     int min_index = -1;
-
-    for (size_t i = 0; i < objects->size(); i++) {
-        distance_vector[i] = objects->at(i)->
-            GetDistance(read, write, read_var, write_var);
+    for (size_t i = 0; i < objects->size(); ++i) {
+        distance_vector[i] = objects->at(i)->GetDistance(read, access);
         if (distance_vector[i] == 0) {
             min_distance = 0;
             min_index = i;
@@ -131,7 +90,6 @@ int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
             min_index = i;
         }
     }
-
     return min_index;
 }
 

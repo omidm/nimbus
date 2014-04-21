@@ -10,7 +10,7 @@ CFLAGS += -fPIC
 
 SCHED_CFILES  = $(wildcard scheduler/*.cc)
 WORKER_CFILES = $(wildcard worker/*.cc)
-DATA_CFILES   = $(wildcard data/*.cc) $(wildcard data/physbam/*.cc)
+DATA_CFILES   = $(wildcard data/*.cc) $(wildcard data/physbam/*.cc) $(wildcard data/cache/*.cc)
 SHARED_CFILES = $(wildcard shared/*.cc)
 
 CFILES = $(SCHED_CFILES) $(WORKER_CFILES) $(DATA_CFILES) $(SHARED_CFILES) $(SHARED_BUF_CFILES)
@@ -25,11 +25,13 @@ DATA_PROTO_OBJECT_FILES = $(wildcard data/physbam/protobuf_compiled/*.pb.o)
 OBJFILES += $(DATA_PROTO_OBJECT_FILES)
 
 
-LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf
+LFLAGS += -lboost_thread-mt -lboost_system-mt -lprotobuf -lpthread
 SHARED_FLAGS = -shared -fPIC
 
 ifdef OS_DARWIN
   LINK_FLAG = -install_name @rpath/$(LIBRARY)
+else
+  LFLAGS += -lrt
 endif
 
 lib: $(LIBRARY)
@@ -48,7 +50,7 @@ shared_t:
 	cd shared; make -j 12; cd ..
 
 $(LIBRARY): shared_t scheduler_t worker_t data_t
-	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG)
+	$(CPP) $(SHARED_FLAGS) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJFILES) -o $(LIBRARY) $(LINK_FLAG) $(LFLAGS)
 
 clean: clean-files
 	\rm -f */*.o */*~ */\#*

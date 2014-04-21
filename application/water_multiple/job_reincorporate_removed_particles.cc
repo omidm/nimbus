@@ -66,6 +66,7 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     dbg(APP_LOG, "Executing reincorporate particles job\n");
 
     InitConfig init_config;
+    init_config.use_cache = true;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());

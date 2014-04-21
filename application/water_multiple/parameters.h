@@ -33,40 +33,47 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Definitions and typedef useful for application, data and jobs.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_POOL_H_
-#define NIMBUS_DATA_CACHE_CACHE_POOL_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
 
-#include <map>
-#include <string>
+#include "application/water_multiple/physbam_include.h"
+#include "shared/dbg.h"
+#include "shared/geometric_region.h"
 
-#include "data/cache/cache_object.h"
-#include "data/cache/cache_table.h"
-#include "worker/data.h"
-#include "worker/job.h"
+#define APP_LOG DBG_TEMP
+#define APP_LOG_STR "temp"
+#define TRANSLATE_STR "translate"
 
-namespace nimbus {
+namespace application {
 
-class CachePool {
-    public:
-        CachePool();
+    // simulation dimension
+    const int kDimension = 3;
 
-        void RegisterType(const std::string type,
-                          const CacheObject prototype);
-        void* GetCachedObject(const std::string type,
-                              const GeometricRegion &region,
-                              const Job &job,
-                              const DataArray &da);
+    // typedefs
+    typedef float T;
+    typedef float RW;
+    typedef PhysBAM::VECTOR<T,   kDimension> TV;
+    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
+    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
-    private:
-        typedef std::map<std::string,
-                         CacheTable *> Pool;
+    // application specific parameters and constants
+    const int kThreadsNum = 1;
+    const int kScale = 40;
+    const int kAppPartNum = 2;
+    const int kGhostNum = 3;
+    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
+    const int kPressureGhostNum = 1;
+    const int kLastFrame = 15;
+    const std::string kOutputDir = "output";
+    // follow physbam convenctions here, otherwise translator becomes messy
+    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
 
-        Pool pool_;
-};  // class CachePool
+} // namespace application
 
-}  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_POOL_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_

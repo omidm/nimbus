@@ -57,6 +57,7 @@ struct InitConfig {
   bool set_boundary_condition;
   GeometricRegion global_region;
   GeometricRegion local_region;
+  bool use_cache;
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
@@ -66,6 +67,7 @@ struct InitConfig {
     time = 0;
     init_phase = false;
     set_boundary_condition = true;
+    use_cache = false;
   }
 };
 

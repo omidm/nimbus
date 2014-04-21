@@ -182,7 +182,9 @@ template<class TV> void WATER_DRIVER<TV>::
 Run(RANGE<TV_INT>& domain,const T dt,const T time)
 {
     T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,3,false);
+    LOG::Time("Advect Removed Particles Exchange");
     example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
+    LOG::Time("Advect Removed Particles");
     LINEAR_INTERPOLATION_UNIFORM<GRID<TV>,TV> interpolation;
     PARTICLE_LEVELSET_UNIFORM<GRID<TV> >& pls=example.particle_levelset_evolution.particle_levelset;
     if(pls.use_removed_positive_particles) for(typename GRID<TV>::NODE_ITERATOR iterator(example.mac_grid,domain);iterator.Valid();iterator.Next()) if(pls.removed_positive_particles(iterator.Node_Index())){
@@ -245,8 +247,9 @@ Advance_To_Target_Time(const T target_time)
         example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
         
         //Advect removed particles (Parallelized)
-        LOG::Time("Advect Removed Particles");
+        LOG::Time("Advect Removed Particles Exchange");
         example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
+        LOG::Time("Advect Removed Particles");
         RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
         DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
 

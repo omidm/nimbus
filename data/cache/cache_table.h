@@ -45,30 +45,22 @@
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
 class CacheTable {
     public:
         CacheTable();
-
-        void* GetCachedObject(const GeometricRegion &region,
-                              const Job &job,
-                              const DataArray &da);
+        void AddEntry(const GeometricRegion &region,
+                      CacheObject *co);
+        CacheObject *GetClosestAvailable(const GeometricRegion &region,
+                                         const DataArray &read,
+                                         CacheAccess access = EXCLUSIVE);
 
     private:
-        void GetReadWrite(const Job &job,
-                          const DataArray &da,
-                          DataSet *read,
-                          DataSet *write,
-                          StringSet *read_var,
-                          StringSet *write_var);
         int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataSet &read,
-                                const DataSet &write,
-                                const StringSet &read_var,
-                                const StringSet &write_var);
+                                const DataArray &read,
+                                CacheAccess access = EXCLUSIVE) const;
         typedef std::map<nimbus::GeometricRegion,
                          CacheObjects *,
                          GRComparisonType> Table;

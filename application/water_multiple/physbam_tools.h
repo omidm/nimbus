@@ -33,33 +33,24 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include <string>
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
 
-#include "data/cache/cache_pool.h"
-#include "data/cache/cache_table.h"
-#include "shared/dbg.h"
-#include "shared/dbg_modes.h"
-#include "worker/data.h"
-#include "worker/job.h"
+#include "application/water_multiple/physbam_include.h"
+#include "shared/geometric_region.h"
 
-namespace nimbus {
+namespace application {
 
-CachePool::CachePool() {}
+template<typename TV> typename PhysBAM::RANGE<TV> RangeFromRegions(
+        const nimbus::GeometricRegion& global_region,
+        const nimbus::GeometricRegion& local_region);
 
-void* CachePool::GetCachedObject(const std::string type,
-                                 const GeometricRegion &region,
-                                 const Job &job,
-                                 const DataArray &da) {
-    if (pool_.find(type) == pool_.end()) {
-        dbg(DBG_WARNING, "%s type not registered with nimbus cache\n", type);
-        return NULL;
-    } else {
-        CacheTable *table = pool_[type];
-        return(table->GetCachedObject(region, job, da));
-    }
-}
+typename PhysBAM::VECTOR<int, 3> CountFromRegion(
+    const nimbus::GeometricRegion& local_region);
 
-}  // namespace nimbus
+}  // namespace application
+
+#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
