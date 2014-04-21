@@ -43,7 +43,13 @@
 #include "./job.h"
 #include "./data.h"
 
-Stencil1DApp::Stencil1DApp() {
+Stencil1DApp::Stencil1DApp(size_t counter, size_t part_num,
+    size_t chunk_per_part, size_t chunk_size, size_t bandwidth) {
+  counter_ = counter;
+  part_num_ = part_num;
+  chunk_per_part_ = chunk_per_part;
+  chunk_size_ = chunk_size;
+  bandwidth_ = bandwidth;
 };
 
 Stencil1DApp::~Stencil1DApp() {
