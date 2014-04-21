@@ -66,6 +66,7 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     dbg(APP_LOG, "Executing delete particles job\n");
 
     InitConfig init_config;
+    init_config.use_cache = true;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());

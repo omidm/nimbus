@@ -66,6 +66,7 @@ void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::D
     dbg(APP_LOG, "Executing modify levelset job -- part one\n");
 
     InitConfig init_config;
+    init_config.use_cache = true;
     init_config.set_boundary_condition = false;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),

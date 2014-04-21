@@ -48,38 +48,59 @@
 #include <vector>
 
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
-enum CacheAccess { READ, WRITE, READ_WRITE };
+enum CacheAccess { SHARED, EXCLUSIVE };
 
 class CacheObject {
     public:
-        explicit CacheObject(std::string type, GeometricRegion &region);
+        explicit CacheObject(std::string type,
+                             const GeometricRegion &app_object_region);
 
-        virtual void Read(const Data &read);
-        void Read(const DataSet &read_set);
-        virtual void Write(Data *write);
-        void WriteBack();
+        virtual void ReadToCache(const DataArray &read_set, const GeometricRegion &reg);
+        void Read(const DataArray &read_set, const GeometricRegion &reg);
+        virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
+        void Write(const GeometricRegion &reg, bool release = true);
 
-        std::string type();
-        GeometricRegion region();
-        void MarkAccess(CacheAccess access);
-        void MarkWriteBack(DataSet *write);
-        distance_t GetDistance(const DataSet &data_set,
-                               CacheAccess access = WRITE) const;
+        virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
+
+        std::string type() const;
+        GeometricRegion app_object_region() const;
+
+        void AcquireAccess(CacheAccess access);
+        void ReleaseAccess();
+
+        void SetUpRead(const DataArray &read_set,
+                       bool read_keep_valid);
+        void SetUpWrite(const DataArray &write_set);
+        void InvalidateCacheObject(physical_data_id_t pid);
+
+        distance_t GetDistance(const DataArray &data_set,
+                               CacheAccess access = EXCLUSIVE) const;
 
     private:
         std::string type_;
-        GeometricRegion region_;
+        GeometricRegion app_object_region_;
+
         CacheAccess access_;
         int users_;
-        DataSet write_back_;
+        bool read_valid_;
+        bool write_valid_;
 
-        bool IsAvailable();
+        DataArray write_back_;
+
+        /* Currently, cache object contains only physical id information.
+         * Distance (cost) information and validity checks are based on
+         * physical id only.
+         * TODO(chinmayee): change this later to use logical id & version
+         * information.*/
+        PIDSet pids_;
+
+        bool IsAvailable(CacheAccess access) const;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

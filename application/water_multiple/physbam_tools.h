@@ -33,40 +33,24 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_POOL_H_
-#define NIMBUS_DATA_CACHE_CACHE_POOL_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
 
-#include <map>
-#include <string>
+#include "application/water_multiple/physbam_include.h"
+#include "shared/geometric_region.h"
 
-#include "data/cache/cache_object.h"
-#include "data/cache/cache_table.h"
-#include "data/cache/utils.h"
-#include "worker/data.h"
-#include "worker/job.h"
+namespace application {
 
-namespace nimbus {
+template<typename TV> typename PhysBAM::RANGE<TV> RangeFromRegions(
+        const nimbus::GeometricRegion& global_region,
+        const nimbus::GeometricRegion& local_region);
 
-class CachePool {
-    public:
-        CachePool();
+typename PhysBAM::VECTOR<int, 3> CountFromRegion(
+    const nimbus::GeometricRegion& local_region);
 
-        CacheObject* GetCachedObject(const Job &job,
-                                     const DataArray &da,
-                                     const GeometricRegion &region,
-                                     const CacheObject &prototype,
-                                     CacheAccess access = WRITE);
+}  // namespace application
 
-    private:
-        typedef std::map<std::string,
-                         CacheTable *> Pool;
-
-        Pool pool_;
-};  // class CachePool
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_POOL_H_
+#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_

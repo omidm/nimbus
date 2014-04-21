@@ -109,7 +109,9 @@ namespace nimbus {
 
     /* Increase the size of geometric region along each dimension and side. */
     void Enlarge(const int_dimension_t delta);
-    void Enlarge(const Coord delta);
+    void Enlarge(const Coord &delta);
+    GeometricRegion NewEnlarged(const int_dimension_t delta) const;
+    GeometricRegion NewEnlarged(const Coord &delta) const;
 
     /* Covers returns whether this region covers (encompasses) the argument. */
     virtual bool Covers(GeometricRegion* region) const;

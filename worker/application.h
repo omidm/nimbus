@@ -51,8 +51,8 @@
 #include "shared/nimbus_types.h"
 #include "shared/scheduler_client.h"
 #include "shared/scheduler_command_include.h"
-#include "worker/job.h"
 #include "worker/data.h"
+#include "worker/job.h"
 #include "worker/worker_ldo_map.h"
 
 namespace nimbus {
@@ -60,10 +60,13 @@ namespace nimbus {
 class Application;
 typedef std::map<int, Application*> AppMap;
 
+// forward declaration
+class CacheManager;
+
 class Application {
  public:
   Application();
-  ~Application() {}
+  ~Application();
 
   virtual void Load();
   virtual void Start(SchedulerClient* client, IDMaker* id_maker, WorkerLdoMap* ldo_map);
@@ -120,8 +123,8 @@ class Application {
   int GetIntersectingLogicalObjects(CLdoVector* result,
                                     const std::string& variable,
                                     const GeometricRegion* r);
-  void* app_data();
-  void set_app_data(void* data);
+
+  CacheManager* cache_manager() const;
 
  private:
   app_id_t id_;
@@ -131,7 +134,7 @@ class Application {
   SchedulerClient* client_;
   IDMaker* id_maker_;
   WorkerLdoMap* ldo_map_;
-  void* app_data_;
+  CacheManager* cache_manager_;
 };
 
 }  //  namespace nimbus

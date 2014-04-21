@@ -75,13 +75,6 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver);
-bool InitializeExampleAndDriverForAdvectV(
-    const InitConfig& init_config,
-    const DataConfig& data_config,
-    const nimbus::Job* job,
-    const nimbus::DataArray& da,
-    PhysBAM::WATER_EXAMPLE<TV>*& example,
-    PhysBAM::WATER_DRIVER<TV>*& driver);
 
 // Destroys WATER_EXAMPLE and WATER_DRIVER.
 void DestroyExampleAndDriver(

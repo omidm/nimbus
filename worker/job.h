@@ -52,6 +52,7 @@
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
 #include "shared/worker_data_exchanger.h"
+#include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/worker_ldo_map.h"
 
@@ -62,7 +63,6 @@ class Job;
 typedef std::list<Job*> JobList;
 typedef std::map<job_id_t, Job*> JobMap;
 typedef std::map<std::string, Job*> JobTable;
-typedef std::vector<Data*> DataArray;
 
 class Job {
   public:
@@ -147,6 +147,8 @@ class Job {
     void set_wait_time(double wait_time);
     // TODO(quhang) should add accesssors.
     DataArray data_array;
+
+    CacheManager* GetCacheManager() const;
 
   private:
     std::string name_;

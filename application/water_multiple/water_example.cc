@@ -19,10 +19,11 @@
 #include <PhysBAM_Dynamics/Geometry/GENERAL_GEOMETRY_FORWARD.h>
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_example.h"
-#include "data/physbam/translator_physbam.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
@@ -50,6 +51,10 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
+    use_cache = false;
+    cache_fv = NULL;
+    cache_fvg = NULL;
+    cache_psi_n = NULL;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -264,36 +269,17 @@ Read_Output_Files(const int frame)
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
-    GeometricRegion array_reg_central(local_region.x(),
-                                    local_region.y(),
-                                    local_region.z(),
-                                    local_region.dx(),
-                                    local_region.dy(),
-                                    local_region.dz());
 
-    GeometricRegion array_reg_outer_7(array_reg_central);
-    array_reg_outer_7.Enlarge(7);
-    GeometricRegion array_reg_outer_8(array_reg_central);
-    array_reg_outer_8.Enlarge(8);
-
-    GeometricRegion array_reg_outer(local_region.x()-application::kGhostNum,
-                                    local_region.y()-application::kGhostNum,
-                                    local_region.z()-application::kGhostNum,
-                                    local_region.dx()+2*application::kGhostNum,
-                                    local_region.dy()+2*application::kGhostNum,
-                                    local_region.dz()+2*application::kGhostNum);
-
-    GeometricRegion array_reg_thin_outer(local_region.x()-1,
-                                         local_region.y()-1,
-                                         local_region.z()-1,
-                                         local_region.dx()+2,
-                                         local_region.dy()+2,
-                                         local_region.dz()+2);
+    GeometricRegion array_reg_central(local_region);
+    GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
+    GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
+    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
+    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,
@@ -302,14 +288,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-    bool levelset_extrapolation_mode =
-        data_config.GetFlag(DataConfig::LEVELSET) &&
-        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
-         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
-    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
-             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
-
-    // mac velocities
+    // mac velocities ghost
     const std::string fvstring = std::string(APP_FACE_VEL);
     if (application::GetTranslatorData(job, fvstring, da, &pdv, application::WRITE_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY)) {
@@ -331,6 +310,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
+    bool levelset_extrapolation_mode =
+        data_config.GetFlag(DataConfig::LEVELSET) &&
+        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
+         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
+    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
+             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
     const std::string lsstring = std::string(APP_PHI);
     if (!levelset_extrapolation_mode) {
       if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
@@ -546,36 +531,22 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    if (true) {
+      Save_To_Nimbus_No_Cache(job, da, frame);
+      return;
+    }
+
     nimbus::int_dimension_t array_shift[3] = {
         local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
-    GeometricRegion array_reg_central(local_region.x(),
-                                    local_region.y(),
-                                    local_region.z(),
-                                    local_region.dx(),
-                                    local_region.dy(),
-                                    local_region.dz());
 
-    GeometricRegion array_reg_outer_7(array_reg_central);
-    array_reg_outer_7.Enlarge(7);
-    GeometricRegion array_reg_outer_8(array_reg_central);
-    array_reg_outer_8.Enlarge(8);
-
-    GeometricRegion array_reg_outer(local_region.x()-application::kGhostNum,
-                                    local_region.y()-application::kGhostNum,
-                                    local_region.z()-application::kGhostNum,
-                                    local_region.dx()+2*application::kGhostNum,
-                                    local_region.dy()+2*application::kGhostNum,
-                                    local_region.dz()+2*application::kGhostNum);
-
-    GeometricRegion array_reg_thin_outer(local_region.x()-1,
-                                         local_region.y()-1,
-                                         local_region.z()-1,
-                                         local_region.dx()+2,
-                                         local_region.dy()+2,
-                                         local_region.dz()+2);
+    GeometricRegion array_reg_central(local_region);
+    GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
+    GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
+    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
+    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,
@@ -584,12 +555,267 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
+    dbg(DBG_WARN, "\n--- *** --- SAVE \n");
+
+    // mac velocities
+    dbg(DBG_WARN, "\n--- Writing face velocities back \n");
+    if (cache_fv) {
+        T_FACE_ARRAY *fv = cache_fv->data();
+        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+        cache_fv->Write(array_reg_central, true);
+    }
+
+    // mac velocities ghost
+    dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
+    if (cache_fvg) {
+        T_FACE_ARRAY *fvg = cache_fvg->data();
+        T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
+        cache_fvg->Write(array_reg_outer, true);
+    }
+
+    // particle leveset quantities
+    T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
+
+    // levelset
     bool levelset_extrapolation_mode =
         data_config.GetFlag(DataConfig::LEVELSET) &&
         (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
          data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
     assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
              data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
+    const std::string lsstring = std::string(APP_PHI);
+    if (!levelset_extrapolation_mode) {
+      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
+          && data_config.GetFlag(DataConfig::LEVELSET)) {
+        translator.WriteScalarArrayFloat(
+            &array_reg_outer,
+            array_shift,
+            &pdv,
+            &particle_levelset.levelset.phi);
+        std::cout << "OMID: write 3.\n";
+      }
+      application::DestroyTranslatorObjects(&pdv);
+    } else {
+      // In levelset_extrapolation_mode.
+      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
+          && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+        translator.WriteScalarArrayFloat(
+            &array_reg_outer_7,
+            array_shift,
+            &pdv,
+            &phi_ghost_bandwidth_seven);
+        std::cout << "OMID: write 7.\n";
+      }
+      application::DestroyTranslatorObjects(&pdv);
+      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
+          && data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+        translator.WriteScalarArrayFloat(
+            &array_reg_outer_8,
+            array_shift,
+            &pdv,
+            &phi_ghost_bandwidth_eight);
+        std::cout << "OMID: write 8.\n";
+      }
+      application::DestroyTranslatorObjects(&pdv);
+    }
+
+    // positive particles
+    const std::string ppstring = std::string(APP_POS_PARTICLES);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      translator.WriteParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, true);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+
+    // negative particles
+    const std::string npstring = std::string(APP_NEG_PARTICLES);
+    if (application::GetTranslatorData(job, npstring, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      translator.WriteParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, false);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+
+    // Removed positive particles.
+    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.WriteRemovedParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, true);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+
+    // Removed negative particles.
+    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.WriteRemovedParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, false);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+
+    // last unique particle id
+    const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
+    if (Data *d = application::GetFirstData(lupistring, da)) {
+        nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
+        sd->set_scalar(particle_levelset.last_unique_particle_id);
+    }
+
+    // psi_d.
+    const std::string psi_d_string = std::string(APP_PSI_D);
+    if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::PSI_D)) {
+      translator.WriteScalarArrayBool(
+          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_D);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating psi_d.\n");
+
+    // psi_n.
+    dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
+    if (cache_psi_n) {
+        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        cache_psi_n->Write(array_reg_thin_outer, true);
+    }
+
+    // pressure.
+    const std::string pressure_string = std::string(APP_PRESSURE);
+    if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::PRESSURE)) {
+      translator.WriteScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv, &projection.p);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating pressure.\n");
+    // filled_region_colors.
+    const std::string filled_region_colors_string =
+        std::string(APP_FILLED_REGION_COLORS);
+    if (application::GetTranslatorData(job, filled_region_colors_string, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::REGION_COLORS)) {
+      dbg(APP_LOG, "filled_region_colors is being written to Nimbus.\n");
+      translator.WriteScalarArrayInt(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection.laplace->filled_region_colors);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating filled_region_colors.\n");
+    // divergence.
+    const std::string divergence_string =
+        std::string(APP_DIVERGENCE);
+    if (application::GetTranslatorData(job, divergence_string, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::DIVERGENCE)) {
+      translator.WriteScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection.laplace->f);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating divergence.\n");
+
+    typedef nimbus::Data Data;
+    if (data_config.GetFlag(DataConfig::MATRIX_A)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_MATRIX_A), da, application::WRITE_ACCESS);
+      if (data_temp) {
+        application::DataSparseMatrix* data_real =
+            dynamic_cast<application::DataSparseMatrix*>(data_temp);
+        data_real->SaveToNimbus(laplace_solver_wrapper.A_array(1));
+        dbg(APP_LOG, "Finish writing MATRIX_A.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::VECTOR_B)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_VECTOR_B), da, application::WRITE_ACCESS);
+      if (data_temp) {
+        application::DataRawVectorNd* data_real =
+            dynamic_cast<application::DataRawVectorNd*>(data_temp);
+        data_real->SaveToNimbus(laplace_solver_wrapper.b_array(1));
+        dbg(APP_LOG, "Finish writing VECTOR_B.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS);
+      if (data_temp) {
+        application::DataRawGridArray* data_real =
+            dynamic_cast<application::DataRawGridArray*>(data_temp);
+        data_real->SaveToNimbus(
+            laplace_solver_wrapper.cell_index_to_matrix_index);
+        dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_INDEX_M2C), da, application::WRITE_ACCESS);
+      if (data_temp) {
+        application::DataRawArrayM2C* data_real =
+            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
+        data_real->SaveToNimbus(
+            laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
+        dbg(APP_LOG, "Finish writing INDEX_M2C.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_PROJECTION_LOCAL_TOLERANCE),
+          da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<float>* data_real =
+            dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+        data_real->set_scalar(projection.elliptic_solver->tolerance);
+        dbg(APP_LOG, "Finish writing PROJECTION_LOCAL_TOLERANCE.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_PROJECTION_LOCAL_N),
+          da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<int>* data_real =
+            dynamic_cast<nimbus::ScalarData<int>*>(data_temp);
+        data_real->set_scalar(laplace_solver_wrapper.local_n);
+        dbg(APP_LOG, "Finish writing PROJECTION_LOCAL_N.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_PROJECTION_INTERIOR_N),
+          da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<int>* data_real =
+            dynamic_cast<nimbus::ScalarData<int>*>(data_temp);
+        data_real->set_scalar(laplace_solver_wrapper.interior_n);
+        dbg(APP_LOG, "Finish writing PROJECTION_INTERIOR_N.\n");
+      }
+    }
+}
+//#####################################################################
+// Write_Output_Files
+//#####################################################################
+template<class TV> void WATER_EXAMPLE<TV>::
+Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+{
+    nimbus::int_dimension_t array_shift[3] = {
+        local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
+    nimbus::PdiVector pdv;
+
+    GeometricRegion array_reg_central(local_region);
+    GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
+    GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
+    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
+    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
+
+    GeometricRegion enlarge(1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            local_region.dx()+2*application::kGhostNum,
+                            local_region.dy()+2*application::kGhostNum,
+                            local_region.dz()+2*application::kGhostNum);
 
     // mac velocities
     const std::string fvstring = std::string(APP_FACE_VEL);
@@ -599,9 +825,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &array_reg_central, array_shift, &pdv, &face_velocities);
     }
     application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating velocity.\n");
 
-    // mac velocities
+    // mac velocities ghost
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
     if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
@@ -609,12 +834,17 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
           &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
     }
     application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating ghost velocity.\n");
 
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
+    bool levelset_extrapolation_mode =
+        data_config.GetFlag(DataConfig::LEVELSET) &&
+        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
+         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
+    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
+             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
     const std::string lsstring = std::string(APP_PHI);
     if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::LEVELSET)) {
@@ -720,6 +950,295 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating psi_n.\n");
+    // pressure.
+    const std::string pressure_string = std::string(APP_PRESSURE);
+    if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::PRESSURE)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv, &projection.p);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating pressure.\n");
+    // filled_region_colors.
+    const std::string filled_region_colors_string =
+        std::string(APP_FILLED_REGION_COLORS);
+    if (application::GetTranslatorData(job, filled_region_colors_string, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::REGION_COLORS)) {
+      dbg(APP_LOG, "filled_region_colors is being read from Nimbus.\n");
+      translator.ReadScalarArrayInt(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection.laplace->filled_region_colors);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating filled_region_colors.\n");
+    // divergence.
+    const std::string divergence_string =
+        std::string(APP_DIVERGENCE);
+    if (application::GetTranslatorData(job, divergence_string, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::DIVERGENCE)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection.laplace->f);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating divergence.\n");
+
+    typedef nimbus::Data Data;
+    if (data_config.GetFlag(DataConfig::MATRIX_A)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_MATRIX_A), da, application::READ_ACCESS);
+      if (data_temp) {
+        application::DataSparseMatrix* data_real =
+            dynamic_cast<application::DataSparseMatrix*>(data_temp);
+        data_real->LoadFromNimbus(&laplace_solver_wrapper.A_array(1));
+        dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::VECTOR_B)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
+      if (data_temp) {
+        application::DataRawVectorNd* data_real =
+            dynamic_cast<application::DataRawVectorNd*>(data_temp);
+        data_real->LoadFromNimbus(&laplace_solver_wrapper.b_array(1));
+        dbg(APP_LOG, "Finish reading VECTOR_B.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
+      if (data_temp) {
+        application::DataRawGridArray* data_real =
+            dynamic_cast<application::DataRawGridArray*>(data_temp);
+        data_real->LoadFromNimbus(
+            &laplace_solver_wrapper.cell_index_to_matrix_index);
+        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
+      if (data_temp) {
+        application::DataRawArrayM2C* data_real =
+            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
+        data_real->LoadFromNimbus(
+            &laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
+        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
+      }
+    }
+    if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_PROJECTION_LOCAL_TOLERANCE),
+          da, application::READ_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<float>* data_real =
+            dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+        projection.elliptic_solver->tolerance = data_real->scalar();
+        dbg(APP_LOG, "Finish reading PROJECTION_LOCAL_TOLERANCE.\n");
+      }
+    }
+}
+//#####################################################################
+// Write_Output_Files
+//#####################################################################
+template<class TV> void WATER_EXAMPLE<TV>::
+Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
+{
+    if (true) {
+      Load_From_Nimbus_No_Cache(job, da, frame);
+      return;
+    }
+
+    nimbus::int_dimension_t array_shift[3] = {
+        local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
+    nimbus::PdiVector pdv;
+
+    GeometricRegion array_reg_central(local_region);
+    GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
+    GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
+    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
+    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
+
+    GeometricRegion enlarge(1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            1-application::kGhostNum,
+                            local_region.dx()+2*application::kGhostNum,
+                            local_region.dy()+2*application::kGhostNum,
+                            local_region.dz()+2*application::kGhostNum);
+
+    nimbus::CacheManager *cm = job->GetCacheManager();
+
+    dbg(DBG_WARN, "\n--- *** --- LOAD \n");
+
+    // mac velocities
+    if (data_config.GetFlag(DataConfig::VELOCITY))
+    {
+        nimbus::DataArray read, write;
+        const std::string fvstring = std::string(APP_FACE_VEL);
+        application::GetReadData(job, fvstring, da, &read);
+        application::GetWriteData(job, fvstring, da, &write);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity for region %s\n",
+            read.size(), array_reg_central.toString().c_str());
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read, write, array_reg_central,
+                application::kCacheFaceVel,
+                nimbus::EXCLUSIVE, write.empty());
+        cache_fv = dynamic_cast<TCacheFaceArray *>(cache_obj);
+        assert(cache_fv != NULL);
+        T_FACE_ARRAY *fv = cache_fv->data();
+        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+        dbg(APP_LOG, "Finish translating velocity.\n");
+    }
+
+    // mac velocities ghost
+    if (data_config.GetFlag(DataConfig::VELOCITY_GHOST))
+    {
+        nimbus::DataArray read, write;
+        const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
+        application::GetReadData(job, fvgstring, da, &read);
+        application::GetWriteData(job, fvgstring, da, &write);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity ghost for region %s\n",
+            read.size(), array_reg_outer.toString().c_str());
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read, write,
+                array_reg_central, array_reg_outer,
+                application::kCacheFaceVelGhost,
+                nimbus::EXCLUSIVE, write.empty());
+        cache_fvg = dynamic_cast<TCacheFaceArray *>(cache_obj);
+        assert(cache_fvg != NULL);
+        T_FACE_ARRAY *fvg = cache_fvg->data();
+        T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
+        dbg(APP_LOG, "Finish translating velocity.\n");
+    }
+
+    // particle leveset quantities
+    T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
+
+    // levelset
+    bool levelset_extrapolation_mode =
+        data_config.GetFlag(DataConfig::LEVELSET) &&
+        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
+         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
+    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
+             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
+    const std::string lsstring = std::string(APP_PHI);
+    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::LEVELSET)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_outer,
+          array_shift,
+          &pdv,
+          &particle_levelset.levelset.phi);
+      std::cout << "OMID: Read 3.\n";
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    if (!levelset_extrapolation_mode) {
+      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
+          && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+        translator.ReadScalarArrayFloat(
+            &array_reg_outer_7,
+            array_shift,
+            &pdv,
+            &phi_ghost_bandwidth_seven);
+        std::cout << "OMID: Read 7.\n";
+      }
+      application::DestroyTranslatorObjects(&pdv);
+      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
+          && data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+        translator.ReadScalarArrayFloat(
+            &array_reg_outer_8,
+            array_shift,
+            &pdv,
+            &phi_ghost_bandwidth_eight);
+        std::cout << "OMID: Read 8.\n";
+      }
+      application::DestroyTranslatorObjects(&pdv);
+    }
+    dbg(APP_LOG, "Finish translating levelset.\n");
+
+    // positive particles
+    const std::string ppstring = std::string(APP_POS_PARTICLES);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      translator.ReadParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, true);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating positive particles.\n");
+
+    // negative particles
+    const std::string npstring = std::string(APP_NEG_PARTICLES);
+    if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      translator.ReadParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, false);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating negative particles.\n");
+
+    // Removed positive particles.
+    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.ReadRemovedParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, true);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating remove positive particles.\n");
+
+    // Removed negative particles.
+    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+      translator.ReadRemovedParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, false);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating remove negative particles.\n");
+
+    // last unique particle id
+    const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
+    if (Data *d = application::GetFirstData(lupistring, da)) {
+        nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
+        particle_levelset.last_unique_particle_id = sd->scalar();
+    }
+    dbg(APP_LOG, "Finish translating particle id.\n");
+
+    // psi_d.
+    const std::string psi_d_string = std::string(APP_PSI_D);
+    if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::PSI_D)) {
+      translator.ReadScalarArrayBool(
+          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_D);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating psi_d.\n");
+
+    // psi_n.
+    if (data_config.GetFlag(DataConfig::PSI_N))
+    {
+        nimbus::DataArray read, write;
+        const std::string psi_n_string = std::string(APP_PSI_N);
+        application::GetReadData(job, psi_n_string, da, &read);
+        application::GetWriteData(job, psi_n_string, da, &write);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into psi_n for region %s\n",
+            read.size(), array_reg_thin_outer.toString().c_str());
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read, write,
+                array_reg_central, array_reg_thin_outer,
+                application::kCachePsiN,
+                nimbus::EXCLUSIVE, write.empty());
+        cache_psi_n = dynamic_cast<BoolCacheFaceArray *>(cache_obj);
+        assert(cache_psi_n != NULL);
+        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        dbg(APP_LOG, "Finish translating psi_n.\n");
+    }
+
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::READ_ACCESS)

@@ -45,17 +45,12 @@
 #include <stdarg.h>
 
 #include "application/water_multiple/data_names.h"
-#include "application/water_multiple/physbam_include.h"
+#include "application/water_multiple/parameters.h"
 #include "data/scratch_data_helper.h"
-#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
 #include "worker/physical_data_instance.h"
-
-#define APP_LOG DBG_TEMP
-#define APP_LOG_STR "temp"
-#define TRANSLATE_STR "translate"
 
 using nimbus::Data;
 using nimbus::GeometricRegion;
@@ -63,32 +58,8 @@ using nimbus::IDSet;
 using nimbus::SerializedData;
 
 namespace application {
-
-    // simulation dimension
-    const int kDimension = 3;
-
-    // typedefs
-    typedef float T;
-    typedef float RW;
-    typedef PhysBAM::VECTOR<T,   kDimension> TV;
-    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
-    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
-
     typedef std::vector<Data*> DataVec;
     typedef std::vector<DataVec*> DataSetVec;
-
-    // application specific parameters and constants
-    const int kThreadsNum = 1;
-    const int kScale = 40;
-    const int kAppPartNum = 2;
-    const int kGhostNum = 3;
-    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
-    const int kPressureGhostNum = 1;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-    // follow physbam convenctions here, otherwise translator becomes messy
-    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
 
     // scratch data helpers
     const nimbus::ScratchDataHelper kScratchPosParticles(kGhostW, APP_POS_PARTICLES);
@@ -107,6 +78,14 @@ namespace application {
                            const nimbus::DataArray& da,
                            nimbus::PdiVector *vec,
                            AccessType access_type);
+    void GetReadData(const nimbus::Job *job,
+                     const std::string &name,
+                     const nimbus::DataArray &da,
+                     nimbus::DataArray *read);
+    void GetWriteData(const nimbus::Job *job,
+                      const std::string &name,
+                      const nimbus::DataArray &da,
+                      nimbus::DataArray *read);
     bool GroupSyncData(const nimbus::Job *job,
                        const nimbus::DataArray &da,
                        DataVec *main_copy,

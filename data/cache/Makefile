@@ -14,4 +14,3 @@ cache_t: $(OBJFILES) $(HFILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
 clean: clean-files
-	cd $(PDIR_SOURCE); make clean; cd ..

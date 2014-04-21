@@ -44,8 +44,7 @@ public:
     virtual ~WATER_DRIVER();
 
     void Initialize(const nimbus::Job *job,
-                    const nimbus::DataArray &da,
-                    bool set_boundary_conditions = true);
+                    const nimbus::DataArray &da);
 
     bool InitializeIncompressibleProjectionHelper(
         const application::DataConfig& data_config,

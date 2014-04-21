@@ -4,7 +4,6 @@
 //#####################################################################
 #ifndef __WATER_EXAMPLE__
 #define __WATER_EXAMPLE__
-#include "data/physbam/translator_physbam.h"
 #include <PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h>
 #include <PhysBAM_Tools/Grids_Uniform_Arrays/ARRAYS_ND.h>
 #include <PhysBAM_Tools/Grids_Uniform_Boundaries/BOUNDARY_UNIFORM.h>
@@ -20,8 +19,11 @@
 #include <PhysBAM_Dynamics/Boundaries/BOUNDARY_PHI_WATER.h>
 #include <PhysBAM_Dynamics/Level_Sets/LEVELSET_CALLBACKS.h>
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
+#include "application/water_multiple/cache_data_include.h"
+#include "application/water_multiple/cache_face_array.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "shared/nimbus.h"
 namespace PhysBAM{
 
@@ -39,6 +41,10 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
     typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
     enum workaround1{d=TV::m};
+
+    // data types
+    typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
+    typedef ARRAY<bool,FACE_INDEX<TV::dimension> > BOOL_FACE_ARRAY;
 
 public:
     nimbus::int_dimension_t kScale;
@@ -73,10 +79,18 @@ public:
     ARRAY<IMPLICIT_OBJECT<TV>*> sources;
     LaplaceSolverWrapper laplace_solver_wrapper;
 
-    nimbus::TranslatorPhysBAM<TV> translator;
+    nimbus::TranslatorPhysBAMOld<TV> translator;
 
     ARRAY<T, TV_INT> phi_ghost_bandwidth_seven;
     ARRAY<T, TV_INT> phi_ghost_bandwidth_eight;
+
+    // cache objects
+    bool use_cache;
+    typedef typename application::CacheFaceArray<T> TCacheFaceArray;
+    typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
+    TCacheFaceArray *cache_fv;
+    TCacheFaceArray *cache_fvg;
+    BoolCacheFaceArray *cache_psi_n;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();
@@ -97,7 +111,9 @@ public:
     void Write_Output_Files(const int frame);
     void Read_Output_Files(const int frame);
 
+    void Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
+    void Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
     void Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);
 
 //#####################################################################

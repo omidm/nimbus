@@ -33,47 +33,47 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Definitions and typedef useful for application, data and jobs.
+ *
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#include <string>
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
 
-#include "data/cache/cache_object.h"
-#include "data/cache/cache_pool.h"
-#include "data/cache/cache_table.h"
-#include "data/cache/utils.h"
-#include "worker/data.h"
-#include "worker/job.h"
+#include "application/water_multiple/physbam_include.h"
+#include "shared/dbg.h"
+#include "shared/geometric_region.h"
 
-namespace nimbus {
+#define APP_LOG DBG_TEMP
+#define APP_LOG_STR "temp"
+#define TRANSLATE_STR "translate"
 
-CachePool::CachePool() {}
+namespace application {
 
-CacheObject *CachePool::GetCachedObject(const Job &job,
-                                        const DataArray &da,
-                                        const GeometricRegion &region,
-                                        const CacheObject &prototype,
-                                        CacheAccess access) {
-    DataSet read;
-    GetReadSet(job, da, &read);
-    CacheObject *co = NULL;
-    if (pool_.find(prototype.type()) == pool_.end()) {
-        CacheTable *ct = new CacheTable();
-        pool_[prototype.type()] = ct;
-        co = prototype.CreateNew();
-        ct->AddEntry(region, cos);
-    } else {
-        CacheTable *ct = pool_[type];
-        co = ct->GetClosestAvailable(region, read, access);
-        if (co == NULL)
-            ct->AddEntry(region, cos);
-    }
-    co->MarkAccess(access);
-    co->Read(read);
-    DataSet write;
-    GetWriteSet(job, da, &write);
-    co->MarkWriteBack(write);
-    return co;
-}
+    // simulation dimension
+    const int kDimension = 3;
 
-}  // namespace nimbus
+    // typedefs
+    typedef float T;
+    typedef float RW;
+    typedef PhysBAM::VECTOR<T,   kDimension> TV;
+    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
+    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
+    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
+
+    // application specific parameters and constants
+    const int kThreadsNum = 1;
+    const int kScale = 40;
+    const int kAppPartNum = 2;
+    const int kGhostNum = 3;
+    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
+    const int kPressureGhostNum = 1;
+    const int kLastFrame = 15;
+    const std::string kOutputDir = "output";
+    // follow physbam convenctions here, otherwise translator becomes messy
+    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
+
+} // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_

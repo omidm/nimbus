@@ -32,75 +32,50 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Nimbus abstraction of data. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Author: Chinmayee Shah <chshah@stanford.edu>
+ */
+
+#ifndef NIMBUS_WORKER_CACHE_MANAGER_H_
+#define NIMBUS_WORKER_CACHE_MANAGER_H_
+
+#include <map>
+#include <string>
 
 #include "data/cache/cache_object.h"
+#include "data/cache/cache_table.h"
+#include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
 
-Data::Data() {}
+class CacheManager {
+    public:
+        CacheManager();
 
-Data* Data::Clone() {
-  std::cout << "cloning the base data\n";
-  Data* d = new Data();
-  return d;
-}
+        CacheObject *GetAppObject(const DataArray &read,
+                                  const DataArray &write,
+                                  const GeometricRegion &region,
+                                  const CacheObject &prototype,
+                                  CacheAccess access = EXCLUSIVE,
+                                  bool read_keep_valid = false);
 
-logical_data_id_t Data::logical_id() {
-  return logical_id_;
-}
+        CacheObject *GetAppObject(const DataArray &read,
+                                  const DataArray &write,
+                                  const GeometricRegion &local_region,
+                                  const GeometricRegion &read_region,
+                                  const CacheObject &prototype,
+                                  CacheAccess access = EXCLUSIVE,
+                                  bool read_keep_valid = false);
 
-physical_data_id_t Data::physical_id() {
-  return physical_id_;
-}
+    private:
+        typedef std::map<std::string,
+                         CacheTable *> Pool;
 
-std::string Data::name() {
-    return name_;
-}
+        Pool *pool_;
+};  // class CacheManager
 
-GeometricRegion Data::region() {
-    return region_;
-}
+}  // namespace nimbus
 
-data_version_t Data::version() {
-  return version_;
-}
-
-void Data::set_logical_id(logical_data_id_t logical_id) {
-  logical_id_ = logical_id;
-}
-
-void Data::set_physical_id(physical_data_id_t physical_id) {
-  physical_id_ = physical_id;
-}
-int Data::get_debug_info() {
-    return -1;
-}
-
-void Data::set_name(std::string name) {
-    name_ = name;
-}
-
-void Data::set_region(const GeometricRegion& region) {
-    region_ = region;
-}
-
-void Data::set_version(data_version_t version) {
-  version_ = version;
-}
-
-void Data::InvalidateCacheObjects() {
-  for (size_t i = 0; i < cache_objects_.size(); ++i) {
-    cache_objects_[i]->InvalidateCacheObject(physical_id_);
-  }
-  cache_objects_.clear();
-}
-
-void Data::SetUpCacheObject(CacheObject *co) {
-  cache_objects_.push_back(co);
-}
+#endif  // NIMBUS_WORKER_CACHE_MANAGER_H_

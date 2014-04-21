@@ -32,75 +32,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Nimbus abstraction of data. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Author: Chinmayee Shah <chshah@stanford.edu>
+ */
 
-#include "data/cache/cache_object.h"
-#include "worker/data.h"
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
 
-using namespace nimbus; // NOLINT
+#include "application/water_multiple/cache_face_array.h"
 
-Data::Data() {}
-
-Data* Data::Clone() {
-  std::cout << "cloning the base data\n";
-  Data* d = new Data();
-  return d;
-}
-
-logical_data_id_t Data::logical_id() {
-  return logical_id_;
-}
-
-physical_data_id_t Data::physical_id() {
-  return physical_id_;
-}
-
-std::string Data::name() {
-    return name_;
-}
-
-GeometricRegion Data::region() {
-    return region_;
-}
-
-data_version_t Data::version() {
-  return version_;
-}
-
-void Data::set_logical_id(logical_data_id_t logical_id) {
-  logical_id_ = logical_id;
-}
-
-void Data::set_physical_id(physical_data_id_t physical_id) {
-  physical_id_ = physical_id;
-}
-int Data::get_debug_info() {
-    return -1;
-}
-
-void Data::set_name(std::string name) {
-    name_ = name;
-}
-
-void Data::set_region(const GeometricRegion& region) {
-    region_ = region;
-}
-
-void Data::set_version(data_version_t version) {
-  version_ = version;
-}
-
-void Data::InvalidateCacheObjects() {
-  for (size_t i = 0; i < cache_objects_.size(); ++i) {
-    cache_objects_[i]->InvalidateCacheObject(physical_id_);
-  }
-  cache_objects_.clear();
-}
-
-void Data::SetUpCacheObject(CacheObject *co) {
-  cache_objects_.push_back(co);
-}
+#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_

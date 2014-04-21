@@ -32,75 +32,37 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Nimbus abstraction of data. 
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ */
 
-#include "data/cache/cache_object.h"
-#include "worker/data.h"
+#include "application/water_multiple/physbam_tools.h"
 
-using namespace nimbus; // NOLINT
+namespace application {
 
-Data::Data() {}
-
-Data* Data::Clone() {
-  std::cout << "cloning the base data\n";
-  Data* d = new Data();
-  return d;
+template<typename TV> typename PhysBAM::RANGE<TV> RangeFromRegions(
+        const nimbus::GeometricRegion& global_region,
+        const nimbus::GeometricRegion& local_region) {
+    TV start, end;
+    start(1) = (float)(local_region.x() - 1) / (float)global_region.dx();
+    start(2) = (float)(local_region.y() - 1) / (float)global_region.dy();
+    start(3) = (float)(local_region.z() - 1) / (float)global_region.dz();
+    end(1) =  (float)(local_region.x() + local_region.dx() - 1) / (float)global_region.dx();
+    end(2) =  (float)(local_region.y() + local_region.dy() - 1) / (float)global_region.dy();
+    end(3) =  (float)(local_region.z() + local_region.dz() - 1) / (float)global_region.dz();
+    return (typename PhysBAM::RANGE<TV>(start, end));
 }
 
-logical_data_id_t Data::logical_id() {
-  return logical_id_;
+typename PhysBAM::VECTOR<int, 3> CountFromRegion(
+    const nimbus::GeometricRegion& local_region) {
+  return (typename PhysBAM::VECTOR<int, 3>(local_region.dx(),
+                                           local_region.dy(), 
+                                           local_region.dz()));
 }
 
-physical_data_id_t Data::physical_id() {
-  return physical_id_;
-}
+typedef typename PhysBAM::VECTOR<float, 3> TVF;
+template typename PhysBAM::RANGE<TVF> RangeFromRegions(
+        const nimbus::GeometricRegion& global_region,
+        const nimbus::GeometricRegion& local_region);
 
-std::string Data::name() {
-    return name_;
-}
-
-GeometricRegion Data::region() {
-    return region_;
-}
-
-data_version_t Data::version() {
-  return version_;
-}
-
-void Data::set_logical_id(logical_data_id_t logical_id) {
-  logical_id_ = logical_id;
-}
-
-void Data::set_physical_id(physical_data_id_t physical_id) {
-  physical_id_ = physical_id;
-}
-int Data::get_debug_info() {
-    return -1;
-}
-
-void Data::set_name(std::string name) {
-    name_ = name;
-}
-
-void Data::set_region(const GeometricRegion& region) {
-    region_ = region;
-}
-
-void Data::set_version(data_version_t version) {
-  version_ = version;
-}
-
-void Data::InvalidateCacheObjects() {
-  for (size_t i = 0; i < cache_objects_.size(); ++i) {
-    cache_objects_[i]->InvalidateCacheObject(physical_id_);
-  }
-  cache_objects_.clear();
-}
-
-void Data::SetUpCacheObject(CacheObject *co) {
-  cache_objects_.push_back(co);
-}
+}  // namespace application

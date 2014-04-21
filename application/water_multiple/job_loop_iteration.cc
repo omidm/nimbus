@@ -152,6 +152,7 @@ namespace application {
     }
 
     // Free resources.
+    // example->Save_To_Nimbus(this, da, frame+1);
     DestroyExampleAndDriver(example, driver);
   }
 

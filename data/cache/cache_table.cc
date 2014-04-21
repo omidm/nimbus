@@ -41,17 +41,17 @@
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/utils.h"
+#include "shared/geometric_region.h"
 #include "worker/data.h"
-#include "worker/job.h"
 
 namespace nimbus {
 
 CacheTable::CacheTable() : table_(Table(GeometricRegionLess)) {}
 
 void CacheTable::AddEntry(const GeometricRegion &region,
-                          const CacheObject *co) {
+                          CacheObject *co) {
     CacheObjects *cos = NULL;
-    if(table_.find(region) == table_.end()) {
+    if (table_.find(region) == table_.end()) {
         cos = new CacheObjects();
         table_[region] = cos;
     } else {
@@ -61,25 +61,25 @@ void CacheTable::AddEntry(const GeometricRegion &region,
 }
 
 CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
-                                             const DataSet &read,
-                                             CacheAccess access) const {
+                                             const DataArray &read,
+                                             CacheAccess access) {
     if (table_.find(region) == table_.end())
         return NULL;
     int min = GetMinDistanceIndex(table_[region], read, access);
     if (min == -1)
         return NULL;
     else
-        return table_[region]->at(i);
+        return table_[region]->at(min);
 }
 
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
-                                    const DataSet &read,
+                                    const DataArray &read,
                                     CacheAccess access) const {
     size_t num_objects = objects->size();
     std::vector<distance_t> distance_vector(num_objects);
     distance_t min_distance = 2*read.size();
     int min_index = -1;
-    for (size_t i = 0; i < objects->size(); i++) {
+    for (size_t i = 0; i < objects->size(); ++i) {
         distance_vector[i] = objects->at(i)->GetDistance(read, access);
         if (distance_vector[i] == 0) {
             min_distance = 0;
