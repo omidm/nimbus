@@ -48,6 +48,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+// Comment(quhang): I added the lock for sending commmand.
+#include <pthread.h>
 #include "shared/scheduler_client.h"
 
 using boost::asio::ip::tcp;
@@ -61,9 +63,12 @@ SchedulerClient::SchedulerClient(std::string scheduler_ip,
   io_service_ = new boost::asio::io_service();
   socket_ = new tcp::socket(*io_service_);
   command_num_ = 0;
+  pthread_mutex_init(&send_lock_, NULL);
 }
 
-SchedulerClient::~SchedulerClient() {}
+SchedulerClient::~SchedulerClient() {
+  pthread_mutex_destroy(&send_lock_);
+}
 
 SchedulerCommand* SchedulerClient::receiveCommand() {
   // boost::asio::read_until(*socket, *read_buffer, ';');
@@ -104,8 +109,10 @@ void SchedulerClient::sendCommand(SchedulerCommand* command) {
   std::string msg = command->toString() + ";";
   dbg(DBG_NET, "Client sending command %s.\n", msg.c_str());
   boost::system::error_code ignored_error;
+  pthread_mutex_lock(&send_lock_);
   boost::asio::write(*socket_, boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
+  pthread_mutex_unlock(&send_lock_);
 }
 
 void SchedulerClient::createNewConnections() {

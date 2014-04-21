@@ -78,6 +78,8 @@ class SchedulerClient {
   int command_num_;
   SchedulerCommand::PrototypeTable* scheduler_command_table_;
 
+  pthread_mutex_t send_lock_;
+
   void createNewConnections();
 };
 
