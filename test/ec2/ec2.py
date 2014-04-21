@@ -7,39 +7,39 @@ import time
 
 import config
 
-def run_instances():
+def run_instances(location, ami, num, key, sg, pg, it):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region(location)
 
   ec2.run_instances(
-      config.NIMBUS_AMI,
-      min_count = config.INSTANCE_NUM,
-      max_count = config.INSTANCE_NUM,
-      key_name = config.KEY_NAME,
-      security_groups = [config.SG_GROUP],
-      placement_group = config.PLACEMENT_GROUP,
-      instance_type = config.INSTANCE_TYPE)
+      ami,
+      min_count = num,
+      max_count = num,
+      key_name = key,
+      security_groups = [sg],
+      placement_group = pg,
+      instance_type = it)
 
 
-def wait_for_instances_to_start():
+def wait_for_instances_to_start(location, num):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region(location)
 
   ready_count = 0
-  while (ready_count < config.INSTANCE_NUM):
+  while (ready_count < num):
     ready_count = 0;
     instances = ec2.get_only_instances()
     for inst in instances:
       if inst.state == 'running':
         ready_count += 1
-    print "-> number of ready instances: " + str(ready_count) + " (out of " + str(config.INSTANCE_NUM) + ") ..."
-    time.sleep(10)
+    print "-> number of ready instances: " + str(ready_count) + " (out of " + str(num) + ") ..."
+    time.sleep(5)
 
 
 
-def start_instances():
+def start_instances(location):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region()
 
   instances = ec2.get_only_instances()
   for inst in instances:
@@ -47,27 +47,27 @@ def start_instances():
  
 
 
-def stop_instances():
+def stop_instances(location):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region(location)
 
   instances = ec2.get_only_instances()
   for inst in instances:
     ec2.stop_instances(instance_ids=[inst.id])
     
 
-def terminate_instances():
+def terminate_instances(location):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region(location)
 
   instances = ec2.get_only_instances()
   for inst in instances:
     ec2.terminate_instances(instance_ids=[inst.id])
     
 
-def get_ip_addresses():
+def get_ip_addresses(location):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region(location)
 
   ip_list = []
   instances = ec2.get_only_instances()
@@ -77,9 +77,9 @@ def get_ip_addresses():
   return ip_list
     
 
-def get_dns_names():
+def get_dns_names(location):
 
-  ec2 = boto.ec2.connect_to_region(config.EC2_LOCATION)
+  ec2 = boto.ec2.connect_to_region(location)
 
   dns_list = []
   instances = ec2.get_only_instances()

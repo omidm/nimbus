@@ -6,10 +6,10 @@ import sys
 import os
 import subprocess
 
-import physbam_config
+import config
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-import config
+import ec2
 
 temp_file_name = '_temp_file_'
 
@@ -31,25 +31,23 @@ def copy_nodes_file_to_hosts(ip_addresses):
   make_nodes_file_content(ip_addresses)
 
   for ip in ip_addresses:
-    subprocess.call(['scp', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
-        temp_file_name, 'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
-        physbam_config.NODES_FILE_NAME])
+        temp_file_name,
+        'ubuntu@' + ip + ':~/' + config.DIRECTORY_PATH + config.NODES_FILE_NAME])
 
   subprocess.call(['rm', temp_file_name])
 
 
 def run_experiment(ip):
-  print "omid"
-
-
-  command =  'cd ' + physbam_config.DIRECTORY_PATH + ';'
-  command += 'mpirun -hostfile ' + physbam_config.NODES_FILE_NAME
+  command =  'cd ' + config.DIRECTORY_PATH + ';'
+  command += 'mpirun -hostfile ' + config.NODES_FILE_NAME
   command += ' -np ' + str(config.INSTANCE_NUM)
-  command += ' ./Water -scale 128 -e 40'
+  command += ' ./Water -scale ' + str(config.SCALE)
+  command += ' -e ' + str(config.FRAME_NUM)
 
-  subprocess.call(['ssh', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+  subprocess.call(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + ip, command])
@@ -57,18 +55,17 @@ def run_experiment(ip):
 
 def collect_output_data(ip_addresses):
 
-  subprocess.call(['rm', '-rf', physbam_config.OUTPUT_PATH])
-  subprocess.call(['mkdir', '-p', physbam_config.OUTPUT_PATH])
+  subprocess.call(['rm', '-rf', config.OUTPUT_NAME])
+  subprocess.call(['mkdir', '-p', config.OUTPUT_NAME])
 
   process_num = 0
   for ip in ip_addresses:
     process_num += 1
-    subprocess.call(['scp', '-r', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+    subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
-        physbam_config.OUTPUT_PATH + str(process_num),
-        physbam_config.OUTPUT_PATH])
+        'ubuntu@' + ip + ':~/' + config.DIRECTORY_PATH + config.OUTPUT_NAME + str(process_num),
+        config.OUTPUT_NAME])
 
 
 
