@@ -89,7 +89,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
 
 CacheObject *CacheManager::GetAppObject(const DataArray &read,
                                         const DataArray &write,
-                                        const GeometricRegion &local_region,
+                                        const GeometricRegion &region,
                                         const GeometricRegion &read_region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
@@ -98,22 +98,22 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
     if (pool_->find(prototype.type()) == pool_->end()) {
         CacheTable *ct = new CacheTable();
         (*pool_)[prototype.type()] = ct;
-        co = prototype.CreateNew(local_region);
+        co = prototype.CreateNew(region);
         if (co == NULL) {
             dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
             exit(-1);
         }
-        ct->AddEntry(local_region, co);
+        ct->AddEntry(region, co);
     } else {
         CacheTable *ct = (*pool_)[prototype.type()];
-        co = ct->GetClosestAvailable(local_region, read, access);
+        co = ct->GetClosestAvailable(region, read, access);
         if (co == NULL) {
-            co = prototype.CreateNew(local_region);
+            co = prototype.CreateNew(region);
             if (co == NULL) {
                 dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
                 exit(-1);
             }
-            ct->AddEntry(local_region, co);
+            ct->AddEntry(region, co);
         }
     }
     co->AcquireAccess(access);

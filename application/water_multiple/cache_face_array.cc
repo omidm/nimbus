@@ -52,18 +52,20 @@ template<class T, class TS> CacheFaceArray<T, TS>::
 CacheFaceArray(std::string type,
                const nimbus::GeometricRegion &global_region,
                const int ghost_width,
-               const nimbus::GeometricRegion &local_region)
-    : CacheObject(type, local_region.NewEnlarged(ghost_width)),
+               const nimbus::GeometricRegion &app_region)
+    : CacheObject(type, app_region),
       ghost_width_(ghost_width),
       global_region_(global_region),
-      local_region_(local_region) {
-      shift_.x = local_region.x() - global_region.x();
-      shift_.y = local_region.y() - global_region.y();
-      shift_.z = local_region.z() - global_region.z();
-      Range domain = RangeFromRegions<TV>(global_region, local_region);
-      TV_INT count = CountFromRegion(local_region);
-      mac_grid.Initialize(count, domain, true);
-      data_ = new PhysBAMFaceArray(mac_grid, ghost_width, false);
+      local_region_(app_region.NewEnlarged(-ghost_width_)) {
+      shift_.x = local_region_.x() - global_region.x();
+      shift_.y = local_region_.y() - global_region.y();
+      shift_.z = local_region_.z() - global_region.z();
+      if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
+        Range domain = RangeFromRegions<TV>(global_region, local_region_);
+        TV_INT count = CountFromRegion(local_region_);
+        mac_grid.Initialize(count, domain, true);
+        data_ = new PhysBAMFaceArray(mac_grid, ghost_width, false);
+      }
 }
 
 template<class T, class TS> void CacheFaceArray<T, TS>::
@@ -81,11 +83,11 @@ WriteFromCache(const nimbus::DataArray &write_set,
 }
 
 template<class T, class TS> nimbus::CacheObject *CacheFaceArray<T, TS>::
-CreateNew(const nimbus::GeometricRegion &lr) const {
+CreateNew(const nimbus::GeometricRegion &ar) const {
     return new CacheFaceArray(type(),
                               global_region_,
                               ghost_width_,
-                              lr);
+                              ar);
 }
 
 template class CacheFaceArray<float, float>;

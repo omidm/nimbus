@@ -55,6 +55,10 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     cache_fv = NULL;
     cache_fvg = NULL;
     cache_psi_n = NULL;
+    cache_phi3 = NULL;
+    cache_phi7 = NULL;
+    cache_phi8 = NULL;
+    cache_psi_d = NULL;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -533,7 +537,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    if (true) {
+    if (!use_cache) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
     }
@@ -577,46 +581,17 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
-    bool levelset_extrapolation_mode =
-        data_config.GetFlag(DataConfig::LEVELSET) &&
-        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
-         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
-    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
-             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
-    const std::string lsstring = std::string(APP_PHI);
-    if (!levelset_extrapolation_mode) {
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_outer,
-            array_shift,
-            &pdv,
-            &particle_levelset.levelset.phi);
-        std::cout << "OMID: write 3.\n";
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    } else {
-      // In levelset_extrapolation_mode.
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_outer_7,
-            array_shift,
-            &pdv,
-            &phi_ghost_bandwidth_seven);
-        std::cout << "OMID: write 7.\n";
-      }
-      application::DestroyTranslatorObjects(&pdv);
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_outer_8,
-            array_shift,
-            &pdv,
-            &phi_ghost_bandwidth_eight);
-        std::cout << "OMID: write 8.\n";
-      }
-      application::DestroyTranslatorObjects(&pdv);
+    dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
+    if (cache_phi3) {
+        T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+        cache_phi3->Write(array_reg_outer, true);
+    }
+    dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
+    if (cache_phi8) {
+        T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+        cache_phi8->Write(array_reg_outer_8, true);
     }
 
     // positive particles
@@ -1044,7 +1019,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    if (true) {
+    if (!use_cache) {
       Load_From_Nimbus_No_Cache(job, da, frame);
       return;
     }
@@ -1101,7 +1076,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
             read.size(), array_reg_outer.toString().c_str());
         nimbus::CacheObject *cache_obj =
             cm->GetAppObject(read, write,
-                array_reg_central, array_reg_outer,
+                array_reg_outer,
                 application::kCacheFaceVelGhost,
                 nimbus::EXCLUSIVE, write.empty());
         cache_fvg = dynamic_cast<TCacheFaceArray *>(cache_obj);
@@ -1115,46 +1090,60 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
-    bool levelset_extrapolation_mode =
-        data_config.GetFlag(DataConfig::LEVELSET) &&
-        (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) ||
-         data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT));
-    assert(!(data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN) &&
-             data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)));
-    const std::string lsstring = std::string(APP_PHI);
-    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::LEVELSET)) {
-      translator.ReadScalarArrayFloat(
-          &array_reg_outer,
-          array_shift,
-          &pdv,
-          &particle_levelset.levelset.phi);
-      std::cout << "OMID: Read 3.\n";
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    if (!levelset_extrapolation_mode) {
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_outer_7,
-            array_shift,
-            &pdv,
-            &phi_ghost_bandwidth_seven);
-        std::cout << "OMID: Read 7.\n";
+    {
+      // TODO(everyone - not urgent): Change data_config to say read/ write
+      // access to diff parameters (LEVELSET_READ, LEVELSET_WRITE etc). This
+      // way of dealing with read and write is really confusing, error prone
+      // and not easy to modify.
+      // Currently, set read/ write sets correctly for the diff levelset
+      // objects.
+      const std::string lsstring = std::string(APP_PHI);
+      nimbus::DataArray read3, read8, write3, write8;
+      if (data_config.GetFlag(DataConfig::LEVELSET) &&
+          data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+        application::GetReadData(job, lsstring, da, &read3);
+        application::GetWriteData(job, lsstring, da, &write8);
+      } else {
+        if (data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+          application::GetReadData(job, lsstring, da, &read8);
+        } else {
+          if (data_config.GetFlag(DataConfig::LEVELSET)) {
+            application::GetReadData(job, lsstring, da, &read3);
+            application::GetWriteData(job, lsstring, da, &write3);
+          }
+        }
       }
-      application::DestroyTranslatorObjects(&pdv);
-      if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
-          && data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_outer_8,
-            array_shift,
-            &pdv,
-            &phi_ghost_bandwidth_eight);
-        std::cout << "OMID: Read 8.\n";
+      if (!(read3.empty() && write3.empty()))
+      {
+          dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 3 for region %s\n",
+              read3.size(), array_reg_outer.toString().c_str());
+          nimbus::CacheObject *cache_obj =
+              cm->GetAppObject(read3, write3,
+                  array_reg_outer,
+                  application::kCachePhi3,
+                  nimbus::EXCLUSIVE, write3.empty() && write8.empty());
+          cache_phi3 = dynamic_cast<TCacheScalarArray *>(cache_obj);
+          assert(cache_phi3 != NULL);
+          T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+          T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+          dbg(APP_LOG, "Finish translating velocity levelset 3.\n");
       }
-      application::DestroyTranslatorObjects(&pdv);
+      if (!(read8.empty() && write8.empty()))
+      {
+          dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 8 for region %s\n",
+              read8.size(), array_reg_outer_8.toString().c_str());
+          nimbus::CacheObject *cache_obj =
+              cm->GetAppObject(read8, write8,
+                  array_reg_outer_8,
+                  application::kCachePhi8,
+                  nimbus::EXCLUSIVE, false);
+          cache_phi8 = dynamic_cast<TCacheScalarArray *>(cache_obj);
+          assert(cache_phi8 != NULL);
+          T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+          T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+          dbg(APP_LOG, "Finish translating levelset 8.\n");
+      }
     }
-    dbg(APP_LOG, "Finish translating levelset.\n");
 
     // positive particles
     const std::string ppstring = std::string(APP_POS_PARTICLES);
@@ -1229,7 +1218,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
             read.size(), array_reg_thin_outer.toString().c_str());
         nimbus::CacheObject *cache_obj =
             cm->GetAppObject(read, write,
-                array_reg_central, array_reg_thin_outer,
+                array_reg_thin_outer,
                 application::kCachePsiN,
                 nimbus::EXCLUSIVE, write.empty());
         cache_psi_n = dynamic_cast<BoolCacheFaceArray *>(cache_obj);

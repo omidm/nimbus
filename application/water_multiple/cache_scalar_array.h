@@ -62,12 +62,12 @@ class CacheScalarArray : public nimbus::CacheObject {
         explicit CacheScalarArray(std::string type,
                                 const nimbus::GeometricRegion &global_region,
                                 const int ghost_width = 0,
-                                const nimbus::GeometricRegion &local_region = nimbus::GeometricRegion());
+                                const nimbus::GeometricRegion &app_region = nimbus::GeometricRegion());
         virtual void ReadToCache(const nimbus::DataArray &read_set,
                                  const nimbus::GeometricRegion &reg);
         virtual void WriteFromCache(const nimbus::DataArray &write_set,
                                     const nimbus::GeometricRegion &reg) const;
-        virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &lr) const;
+        virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &ar) const;
 
         PhysBAMScalarArray *data() {
             return data_;

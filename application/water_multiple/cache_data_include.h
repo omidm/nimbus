@@ -40,5 +40,6 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
 
 #include "application/water_multiple/cache_face_array.h"
+#include "application/water_multiple/cache_scalar_array.h"
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_

@@ -45,6 +45,9 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     // data types
     typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
     typedef ARRAY<bool,FACE_INDEX<TV::dimension> > BOOL_FACE_ARRAY;
+    typedef ARRAY<T,TV_INT> T_SCALAR_ARRAY;
+    typedef ARRAY<bool,TV_INT> BOOL_SCALAR_ARRAY;
+    typedef ARRAY<int,TV_INT> INT_SCALAR_ARRAY;
 
 public:
     nimbus::int_dimension_t kScale;
@@ -88,9 +91,13 @@ public:
     bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
     typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
+    typedef typename application::CacheScalarArray<T> TCacheScalarArray;
+    typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
+    TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
+    BoolCacheScalarArray *cache_psi_d;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();
