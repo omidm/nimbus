@@ -49,6 +49,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_extrapolation.cc
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
     ${PROJECT_SOURCE_DIR}/job_write_frame.cc
+    ${PROJECT_SOURCE_DIR}/physbam_tools.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/reg_def.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc

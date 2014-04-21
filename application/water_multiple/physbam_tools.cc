@@ -36,21 +36,28 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
-
-#include "application/water_multiple/physbam_include.h"
-#include "shared/geometric_region.h"
+#include "application/water_multiple/physbam_tools.h"
 
 namespace application {
 
 template<typename TV> typename PhysBAM::RANGE<TV> RangeFromRegions(
         const nimbus::GeometricRegion& global_region,
-        const nimbus::GeometricRegion& local_region);
+        const nimbus::GeometricRegion& local_region) {
+    TV start, end;
+    start(1) = (float)(local_region.x() - 1) / (float)global_region.dx();
+    start(2) = (float)(local_region.y() - 1) / (float)global_region.dy();
+    start(3) = (float)(local_region.z() - 1) / (float)global_region.dz();
+    end(1) =  (float)(local_region.x() + local_region.dx() - 1) / (float)global_region.dx();
+    end(2) =  (float)(local_region.y() + local_region.dy() - 1) / (float)global_region.dy();
+    end(3) =  (float)(local_region.z() + local_region.dz() - 1) / (float)global_region.dz();
+    return (typename PhysBAM::RANGE<TV>(start, end));
+}
 
 typename PhysBAM::VECTOR<int, 3> CountFromRegion(
-    const nimbus::GeometricRegion& local_region);
+    const nimbus::GeometricRegion& local_region) {
+  return (typename PhysBAM::VECTOR<int, 3>(local_region.dx(),
+                                           local_region.dy(), 
+                                           local_region.dz()));
+}
 
 }  // namespace application
-
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_PHYSBAM_TOOLS_H_
