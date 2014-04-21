@@ -881,9 +881,8 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            DataArray::const_iterator iter = read_set.begin();
-            for (; iter != read_set.end(); ++iter) {
-                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
 
                 if (HasOverlap(overlap)) {
@@ -920,7 +919,7 @@ template <class TS> class TranslatorPhysBAM {
         template<typename T> static void WriteScalarArray(
                 const GeometricRegion &region,
                 const Coord &shift,
-                DataArray &write_set,
+                const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
             if (sa->counts != TV_INT(region.dx(), region.dy(), region.dz())) {
                 dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
@@ -929,10 +928,8 @@ template <class TS> class TranslatorPhysBAM {
                 dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region.dx(), region.dy(), region.dz()); // NOLINT
             }
 
-            DataArray::const_iterator iter = write_set.begin();
-
-            for (; iter != write_set.end(); ++iter) {
-                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+            for (size_t i = 0; i < write_set.size(); ++i) {
+                PhysBAMData* data = static_cast<PhysBAMData*>(write_set[i]);
                 GeometricRegion temp = data->region();
                 Dimension3Vector overlap = GetOverlapSize(temp, region);
 

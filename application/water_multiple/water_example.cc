@@ -54,6 +54,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     use_cache = false;
     cache_fv = NULL;
     cache_fvg = NULL;
+    cache_psi_n = NULL;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -555,14 +556,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                             local_region.dz()+2*application::kGhostNum);
 
     dbg(DBG_WARN, "\n--- *** --- SAVE \n");
-    // mac velocities ghost
-//    const std::string fvstring = std::string(APP_FACE_VEL);
-//    if (application::GetTranslatorData(job, fvstring, da, &pdv, application::WRITE_ACCESS)
-//        && data_config.GetFlag(DataConfig::VELOCITY)) {
-//      translator.WriteFaceArrayFloat(
-//          &array_reg_outer, array_shift, &pdv, &face_velocities);
-//    }
-//    application::DestroyTranslatorObjects(&pdv);
+
     // mac velocities
     dbg(DBG_WARN, "\n--- Writing face velocities back \n");
     if (cache_fv) {
@@ -571,15 +565,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_fv->Write(array_reg_central, true);
     }
 
-
-    // mac velocities ghost
-//    const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-//    if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::WRITE_ACCESS)
-//        && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-//      translator.WriteFaceArrayFloat(
-//          &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
-//    }
-//    application::DestroyTranslatorObjects(&pdv);
     // mac velocities ghost
     dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
     if (cache_fvg) {
@@ -690,15 +675,15 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating psi_d.\n");
+
     // psi_n.
-    const std::string psi_n_string = std::string(APP_PSI_N);
-    if (application::GetTranslatorData(job, psi_n_string, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::PSI_N)) {
-      translator.WriteFaceArrayBool(
-          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_N);
+    dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
+    if (cache_psi_n) {
+        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        cache_psi_n->Write(array_reg_thin_outer, true);
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating psi_n.\n");
+
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::WRITE_ACCESS)
@@ -1084,14 +1069,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     nimbus::CacheManager *cm = job->GetCacheManager();
 
     dbg(DBG_WARN, "\n--- *** --- LOAD \n");
+
     // mac velocities
-//    const std::string fvstring = std::string(APP_FACE_VEL);
-//    if (application::GetTranslatorData(job, fvstring, da, &pdv, application::READ_ACCESS)
-//        && data_config.GetFlag(DataConfig::VELOCITY)) {
-//      translator.ReadFaceArrayFloat(
-//          &array_reg_central, array_shift, &pdv, &face_velocities);
-//    }
-//    application::DestroyTranslatorObjects(&pdv);
     if (data_config.GetFlag(DataConfig::VELOCITY))
     {
         nimbus::DataArray read, write;
@@ -1111,15 +1090,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         dbg(APP_LOG, "Finish translating velocity.\n");
     }
 
-
-    // mac velocities ghost
-//    const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-//    if (application::GetTranslatorData(job, fvgstring, da, &pdv, application::READ_ACCESS)
-//        && data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-//      translator.ReadFaceArrayFloat(
-//          &array_reg_outer, array_shift, &pdv, &face_velocities_ghost);
-//    }
-//    application::DestroyTranslatorObjects(&pdv);
     // mac velocities ghost
     if (data_config.GetFlag(DataConfig::VELOCITY_GHOST))
     {
@@ -1247,15 +1217,28 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating psi_d.\n");
+
     // psi_n.
-    const std::string psi_n_string = std::string(APP_PSI_N);
-    if (application::GetTranslatorData(job, psi_n_string, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::PSI_N)) {
-      translator.ReadFaceArrayBool(
-          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_N);
+    if (data_config.GetFlag(DataConfig::PSI_N))
+    {
+        nimbus::DataArray read, write;
+        const std::string psi_n_string = std::string(APP_PSI_N);
+        application::GetReadData(job, psi_n_string, da, &read);
+        application::GetWriteData(job, psi_n_string, da, &write);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into psi_n for region %s\n",
+            read.size(), array_reg_thin_outer.toString().c_str());
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read, write,
+                array_reg_central, array_reg_thin_outer,
+                application::kCachePsiN,
+                nimbus::EXCLUSIVE, write.empty());
+        cache_psi_n = dynamic_cast<BoolCacheFaceArray *>(cache_obj);
+        assert(cache_psi_n != NULL);
+        BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
+        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        dbg(APP_LOG, "Finish translating psi_n.\n");
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating psi_n.\n");
+
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::READ_ACCESS)

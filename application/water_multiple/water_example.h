@@ -40,8 +40,11 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef typename LEVELSET_POLICY<GRID<TV> >::PARTICLE_LEVELSET T_PARTICLE_LEVELSET;
     typedef typename GEOMETRY_BOUNDARY_POLICY<GRID<TV> >::BOUNDARY_PHI_WATER T_BOUNDARY_PHI_WATER;
     typedef typename COLLISION_GEOMETRY_COLLECTION_POLICY<GRID<TV> >::GRID_BASED_COLLISION_GEOMETRY T_GRID_BASED_COLLISION_GEOMETRY;
-    typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
     enum workaround1{d=TV::m};
+
+    // data types
+    typedef ARRAY<T,FACE_INDEX<TV::dimension> > T_FACE_ARRAY;
+    typedef ARRAY<bool,FACE_INDEX<TV::dimension> > BOOL_FACE_ARRAY;
 
 public:
     nimbus::int_dimension_t kScale;
@@ -84,8 +87,10 @@ public:
     // cache objects
     bool use_cache;
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
+    typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
+    BoolCacheFaceArray *cache_psi_n;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     virtual ~WATER_EXAMPLE();
