@@ -85,12 +85,14 @@ Initialize(const nimbus::Job *job,
   example.boundary->Set_Constant_Extrapolation(domain_open_boundaries);
 
   {
-    if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN)) {
+    if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_READ) ||
+        example.data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_WRITE)) {
       example.phi_ghost_bandwidth_seven.Resize(
           example.mac_grid.Domain_Indices(7));
       std::cout << "OMID: ALLOcated 7.\n";
     }
-    if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT)) {
+    if (example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT_READ) ||
+        example.data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT_WRITE)) {
       example.phi_ghost_bandwidth_eight.Resize(
           example.mac_grid.Domain_Indices(8));
       std::cout << "OMID: ALLOcated 8.\n";

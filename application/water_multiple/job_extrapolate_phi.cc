@@ -82,8 +82,8 @@ void JobExtrapolatePhi::Execute(nimbus::Parameter params,
   DataConfig data_config;
   // COMMENT(quhang): velocity is needed here.
   data_config.SetFlag(DataConfig::VELOCITY);
-  data_config.SetFlag(DataConfig::LEVELSET);
-  data_config.SetFlag(DataConfig::LEVELSET_BW_EIGHT);
+  data_config.SetFlag(DataConfig::LEVELSET_READ);
+  data_config.SetFlag(DataConfig::LEVELSET_BW_EIGHT_WRITE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

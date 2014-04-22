@@ -79,8 +79,12 @@ struct DataConfig {
     VELOCITY = 0,
     VELOCITY_GHOST,
     LEVELSET,  // Default is bandwidth 3.
-    LEVELSET_BW_SEVEN,
-    LEVELSET_BW_EIGHT,
+    LEVELSET_READ,
+    LEVELSET_WRITE,
+    LEVELSET_BW_SEVEN_READ,
+    LEVELSET_BW_SEVEN_WRITE,
+    LEVELSET_BW_EIGHT_READ,
+    LEVELSET_BW_EIGHT_WRITE,
     POSITIVE_PARTICLE,
     NEGATIVE_PARTICLE,
     REMOVED_POSITIVE_PARTICLE,
@@ -133,8 +137,12 @@ struct DataConfig {
   }
   void SetAll() {
     SetHelper(true);
-    UnsetFlag(LEVELSET_BW_SEVEN);
-    UnsetFlag(LEVELSET_BW_EIGHT);
+    UnsetFlag(LEVELSET_READ);
+    UnsetFlag(LEVELSET_WRITE);
+    UnsetFlag(LEVELSET_BW_SEVEN_READ);
+    UnsetFlag(LEVELSET_BW_SEVEN_WRITE);
+    UnsetFlag(LEVELSET_BW_EIGHT_READ);
+    UnsetFlag(LEVELSET_BW_EIGHT_WRITE);
   }
   void SetHelper(bool value) {
     for (int i = 0; i < NUM_VARIABLE; ++i)
