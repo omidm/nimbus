@@ -99,6 +99,7 @@ namespace application {
     PhysBAM::WATER_EXAMPLE<TV>* example;
     PhysBAM::WATER_DRIVER<TV>* driver;
     init_config.set_boundary_condition = true;
+    init_config.use_cache = true;
     DataConfig data_config;
     data_config.SetAll();
     InitializeExampleAndDriver(init_config, data_config,
@@ -150,6 +151,9 @@ namespace application {
         exit(-1);
         break;
     }
+
+    if (kUseCache)
+      example->Save_To_Nimbus(this, da, frame);
 
     // Free resources.
     // example->Save_To_Nimbus(this, da, frame+1);
