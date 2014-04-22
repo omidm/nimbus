@@ -15,14 +15,14 @@ import ec2
 
 
 
-ec2.run_instances(
-    config.EC2_LOCATION,
-    config.NIMBUS_AMI,
-    config.INSTANCE_NUM,
-    config.KEY_NAME,
-    config.SECURITY_GROUP,
-    config.PLACEMENT_GROUP,
-    config.INSTANCE_TYPE);
+# ec2.run_instances(
+#     config.EC2_LOCATION,
+#     config.NIMBUS_AMI,
+#     config.INSTANCE_NUM,
+#     config.KEY_NAME,
+#     config.SECURITY_GROUP,
+#     config.PLACEMENT_GROUP,
+#     config.INSTANCE_TYPE);
 
 ec2.wait_for_instances_to_start(
     config.EC2_LOCATION,
@@ -30,8 +30,8 @@ ec2.wait_for_instances_to_start(
 
 ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-utils.copy_nodes_file_to_hosts(ip_addresses)
-utils.run_experiment(ip_addresses[0])
-utils.collect_output_data(ip_addresses)
+utils.copy_binary_folder_to_hosts(ip_addresses)
+# utils.run_experiment(ip_addresses[0])
+# utils.collect_output_data(ip_addresses)
 
-ec2.terminate_instances(config.EC2_LOCATION); 
+# ec2.terminate_instances(config.EC2_LOCATION);

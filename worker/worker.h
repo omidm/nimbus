@@ -124,6 +124,10 @@ class Worker {
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
+  // TODO(quhang) a strong assumption is made that the data map is never changed
+  // during the runtime. Indeed, for now, it is only changed at the very
+  // beginning of the simulation, so it keeps the same during the simulation,
+  // which might break in the future.
   PhysicalDataMap data_map_;
   JobList ready_jobs_;
   JobList blocked_jobs_;

@@ -6,10 +6,7 @@ import re
 import numpy
 from decimal import *
 
-
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 import config
-
 
 
 force_mean_time = []
