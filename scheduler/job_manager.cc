@@ -686,6 +686,33 @@ bool JobManager::JobVersionIsComplete(JobEntry *job) {
   return (need.size() == 0);
 }
 
+bool JobManager::CausingUnwantedSerialization(JobEntry* job,
+    const logical_data_id_t& l_id, const PhysicalData& pd) {
+  bool result = false;
+
+  if (!job->write_set_p()->contains(l_id)) {
+    return result;
+  }
+
+  IDSet<job_id_t> before_set = job->before_set();
+  IDSet<job_id_t> list_job_read = pd.list_job_read();
+  IDSet<job_id_t>::IDSetIter iter;
+  for (iter = list_job_read.begin(); iter != list_job_read.end(); iter++) {
+    JobEntry *j;
+    if (GetJobEntry(*iter, j)) {
+      if ((!j->done()) &&
+          (j->job_type() == JOB_COMP) &&
+          (!before_set.contains(*iter))) {
+        result = true;
+        break;
+      }
+    }
+  }
+
+  return result;
+}
+
+
 size_t JobManager::ExploreToAssignJobs() {
   // TODO(omidm): Implement!
   return 0;

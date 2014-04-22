@@ -494,6 +494,11 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   if (!reading) {
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
+
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
+
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
@@ -514,12 +519,22 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
   if (instances_at_worker.size() > 1) {
     PhysicalData target_instance = instances_at_worker[0];
+
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
+
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
 
   if ((instances_at_worker.size() == 1) && !writing_needed_version) {
     PhysicalData target_instance = instances_at_worker[0];
+
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
+
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
@@ -529,6 +544,11 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData copy_data;
     GetFreeDataAtWorker(worker, ldo, &copy_data);
     LocalCopyData(worker, ldo, &target_instance, &copy_data);
+
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
+
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
@@ -536,6 +556,11 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   if ((instances_at_worker.size() == 0) && (version == 0)) {
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
+
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, created_data)) {
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
+
     AllocateLdoInstanceToJob(job, ldo, created_data);
     return true;
   }
@@ -552,6 +577,11 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
     RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance);
+
+    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
+      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
+    }
+
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
   }
