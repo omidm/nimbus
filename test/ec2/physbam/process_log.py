@@ -8,6 +8,15 @@ from decimal import *
 
 import config
 
+force_agg = 0;
+advect_phi_agg = 0;
+advect_removed_particles_agg = 0;
+
+exchange_force_agg = 0;
+exchange_advect_phi_agg = 0;
+exchange_advect_removed_particles_agg = 0;
+
+
 
 force_mean_time = []
 force_std_time = []
@@ -49,18 +58,39 @@ for i in range(1, config.INSTANCE_NUM + 1):
       result = re.findall('.*Forces\".*(\d+\.\d+)', line)
       if len(result) > 0:
         force_time += float(result[0]) * 1000
+        force_agg += float(result[0])
         continue
   
       result = re.findall('.*Advect Phi\".*(\d+\.\d+)', line)
       if len(result) > 0:
         advect_phi_time += float(result[0]) * 1000
+        advect_phi_agg += float(result[0])
         continue
   
       result = re.findall('.*Advect Removed Particles\".*(\d+\.\d+)', line)
       if len(result) > 0:
         advect_removed_particles_time += float(result[0]) * 1000
+        advect_removed_particles_agg += float(result[0])
+        continue
+   
+      result = re.findall('.*Forces Exchange\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        force_time += float(result[0]) * 1000
+        exchange_force_agg += float(result[0])
         continue
   
+      result = re.findall('.*Advect Phi Exchange\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        advect_phi_time += float(result[0]) * 1000
+        exchange_advect_phi_agg += float(result[0])
+        continue
+  
+      result = re.findall('.*Advect Removed Particles Exchange\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        advect_removed_particles_time += float(result[0]) * 1000
+        exchange_advect_removed_particles_agg += float(result[0])
+        continue
+ 
   f.close()
   
   
@@ -72,6 +102,11 @@ for i in range(1, config.INSTANCE_NUM + 1):
   
   advect_removed_particles_mean_time.append(numpy.mean(advect_removed_particles))
   advect_removed_particles_std_time.append(numpy.std(advect_removed_particles))
+
+
+print "force communication: " + str(exchange_force_agg / float(force_agg))
+print "advect phi communication: " + str(exchange_advect_phi_agg / float(advect_phi_agg))
+print "advect removed particles communication: " + str(exchange_advect_removed_particles_agg / float(advect_removed_particles_agg))
 
 
 
@@ -119,10 +154,10 @@ for i in np.arange(len(advect_removed_particles_std_time)):
 
 ax2.errorbar(index, advect_removed_particles_mean_time, yerr=advect_removed_particles_std_time, fmt='o')
 ax2.set_title('Advect Removed Particles Job', fontproperties=font)
-ax2.set_yscale('log')
-ax2.set_ylabel('log time(ms)', fontproperties=font)
-# ax2.locator_params(axis = 'y', nbins = y_ticks)
-# ax2.set_ylabel('time(ms)', fontproperties=font)
+# ax2.set_yscale('log')
+# ax2.set_ylabel('log time(ms)', fontproperties=font)
+ax2.locator_params(axis = 'y', nbins = y_ticks)
+ax2.set_ylabel('time(ms)', fontproperties=font)
 
 plt.xlim((-1, n_groups))
 plt.xlabel('Partition', fontproperties=font)
