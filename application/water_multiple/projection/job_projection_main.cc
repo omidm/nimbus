@@ -47,6 +47,7 @@
 #include "application/water_multiple/reg_def.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "worker/job_query.h"
 
 #include "application/water_multiple/projection/job_projection_main.h"
 
@@ -84,11 +85,11 @@ void JobProjectionMain::Execute(
 void JobProjectionMain::SpawnJobs(
     int frame, T time, T dt, const nimbus::DataArray& da,
     const nimbus::GeometricRegion& global_region) {
+  nimbus::JobQuery job_query(this);
   int projection_job_num = 5;
   std::vector<nimbus::job_id_t> projection_job_ids;
   GetNewJobID(&projection_job_ids, projection_job_num);
   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-  nimbus::IDSet<nimbus::job_id_t> before, after;
 
   nimbus::Parameter default_params;
   std::string default_params_str;
@@ -142,15 +143,12 @@ void JobProjectionMain::SpawnJobs(
                         APP_FILLED_REGION_COLORS, APP_PRESSURE, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], APP_U_INTERFACE, NULL);
 
-    before.clear();
-    after.clear();
-
-    SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
-                    calculate_boundary_condition_part_one_job_ids[index],
-                    read, write,
-                    before, after,
-                    default_part_params[index], true);
+    job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
+                       calculate_boundary_condition_part_one_job_ids[index],
+                       read, write,
+                       default_part_params[index], true);
   }
+  job_query.CommitStagedJobs();
 
   for (int index = 0;
        index < calculate_boundary_condition_part_two_job_num;
@@ -169,18 +167,12 @@ void JobProjectionMain::SpawnJobs(
     LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_U_INTERFACE, NULL);
 
-    before.clear();
-    for (int j = 0; j < calculate_boundary_condition_part_one_job_num ; ++j) {
-      before.insert(calculate_boundary_condition_part_one_job_ids[j]);
-    }
-    after.clear();
-
-    SpawnComputeJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
-                    calculate_boundary_condition_part_two_job_ids[index],
-                    read, write,
-                    before, after,
-                    default_part_params[index], true);
+    job_query.StageJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
+                       calculate_boundary_condition_part_two_job_ids[index],
+                       read, write,
+                       default_part_params[index], true);
   }
+  job_query.CommitStagedJobs();
 
   // Construct matrix.
   for (int index = 0; index < construct_matrix_job_num; ++index) {
@@ -202,17 +194,12 @@ void JobProjectionMain::SpawnJobs(
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         NULL);
 
-    before.clear();
-    for (int j = 0; j < calculate_boundary_condition_part_two_job_num ; ++j) {
-      before.insert(calculate_boundary_condition_part_two_job_ids[j]);
-    }
-    after.clear();
-    SpawnComputeJob(PROJECTION_CONSTRUCT_MATRIX,
-                    construct_matrix_job_ids[index],
-                    read, write,
-                    before, after,
-                    default_part_params[index], true);
+    job_query.StageJob(PROJECTION_CONSTRUCT_MATRIX,
+                       construct_matrix_job_ids[index],
+                       read, write,
+                       default_part_params[index], true);
   }
+  job_query.CommitStagedJobs();
 
   // Local initialize.
   for (int index = 0; index < local_initialize_job_num; ++index) {
@@ -228,17 +215,12 @@ void JobProjectionMain::SpawnJobs(
     LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
                         APP_VECTOR_TEMP, APP_VECTOR_P, APP_VECTOR_Z, NULL);
-    before.clear();
-    for (int j = 0; j < construct_matrix_job_num ; ++j) {
-      before.insert(construct_matrix_job_ids[j]);
-    }
-    after.clear();
-    SpawnComputeJob(PROJECTION_LOCAL_INITIALIZE,
-                    local_initialize_job_ids[index],
-                    read, write,
-                    before, after,
-                    default_part_params[index], true);
+    job_query.StageJob(PROJECTION_LOCAL_INITIALIZE,
+                       local_initialize_job_ids[index],
+                       read, write,
+                       default_part_params[index], true);
   }
+  job_query.CommitStagedJobs();
 
   // Global initialize.
   read.clear();
@@ -250,18 +232,11 @@ void JobProjectionMain::SpawnJobs(
                       APP_PROJECTION_GLOBAL_N,
                       APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS, NULL);
-  before.clear();
-  for (int j = 0; j < local_initialize_job_num ; ++j) {
-    before.insert(local_initialize_job_ids[j]);
-  }
-  // before.insert(local_initialize_job_ids[0]);
-  // before.insert(local_initialize_job_ids[1]);
-  after.clear();
-  SpawnComputeJob(PROJECTION_GLOBAL_INITIALIZE,
-                  projection_job_ids[3],
-                  read, write,
-                  before, after,
-                  default_params, true);
+  job_query.StageJob(PROJECTION_GLOBAL_INITIALIZE,
+                     projection_job_ids[3],
+                     read, write,
+                     default_params, true);
+  job_query.CommitStagedJobs();
 
   // Projection loop.
   read.clear();
@@ -271,9 +246,6 @@ void JobProjectionMain::SpawnJobs(
                       APP_PROJECTION_DESIRED_ITERATIONS,
                       NULL);
   write.clear();
-  before.clear();
-  before.insert(projection_job_ids[3]);
-  after.clear();
   nimbus::Parameter projection_loop_iteration_params;
   std::string projection_loop_iteration_str;
   SerializeParameter(
@@ -281,11 +253,17 @@ void JobProjectionMain::SpawnJobs(
       &projection_loop_iteration_str);
   projection_loop_iteration_params.set_ser_data(
       SerializedData(projection_loop_iteration_str));
-  SpawnComputeJob(PROJECTION_LOOP_ITERATION,
-                  projection_job_ids[4],
-                  read, write,
-                  before, after,
-                  projection_loop_iteration_params);
+  job_query.StageJob(PROJECTION_LOOP_ITERATION,
+                     projection_job_ids[4],
+                     read, write,
+                     projection_loop_iteration_params, false, true);
+  job_query.CommitStagedJobs();
+
+  if (time == 0) {
+    dbg(APP_LOG, "Print job dependency figure.\n");
+    job_query.GenerateDotFigure("projection_main.dot");
+  }
+
 }
 
 
