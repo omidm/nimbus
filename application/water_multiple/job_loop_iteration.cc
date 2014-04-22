@@ -807,7 +807,7 @@ namespace application {
     job_query.CommitStagedJobs();
     if (time == 0) {
       dbg(APP_LOG, "Print job dependency figure.\n");
-      job_query.GenerateDotFigure("result.dot");
+      job_query.GenerateDotFigure("loop_iteration.dot");
     }
   }
 

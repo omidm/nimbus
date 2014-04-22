@@ -847,7 +847,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
       std::cout << "OMID: Read 3.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
-    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::WRITE_ACCESS)
+    if (application::GetTranslatorData(job, lsstring, da, &pdv, application::READ_ACCESS)
         && data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_READ)) {
       translator.ReadScalarArrayFloat(
           &array_reg_outer_7,

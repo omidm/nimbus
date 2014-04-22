@@ -45,6 +45,7 @@
 #include "application/water_multiple/water_example.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "worker/job_query.h"
 #include <sstream>
 #include <string>
 
@@ -88,6 +89,8 @@ void JobLoopIterationPartTwo::Execute(
   if (time + dt >= example->Time_At_Frame(frame + 1)) {
     done = true;
   }
+  
+  done = true;
 
   delete example;
 
@@ -99,12 +102,12 @@ void JobLoopIterationPartTwo::Execute(
 void JobLoopIterationPartTwo::SpawnJobs(
     bool done, int frame, T time, T dt, const nimbus::DataArray& da,
     const nimbus::GeometricRegion& global_region) {
+  nimbus::JobQuery job_query(this);
 
   int job_num = 2;
   std::vector<nimbus::job_id_t> job_ids;
   GetNewJobID(&job_ids, job_num);
   nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-  nimbus::IDSet<nimbus::job_id_t> before, after;
   int extrapolation_job_num = kAppPartNum;
   std::vector<nimbus::job_id_t> extrapolation_job_ids;
   GetNewJobID(&extrapolation_job_ids, extrapolation_job_num);
@@ -131,17 +134,13 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i],
                        &s_extra_str);
     s_extra_params.set_ser_data(SerializedData(s_extra_str));
-    before.clear();
-    after.clear();
-    SpawnComputeJob(EXTRAPOLATE_PHI,
-                    extrapolate_phi_job_ids[i],
-                    read,
-                    write,
-                    before,
-                    after,
-                    s_extra_params,
-                    true);
+    job_query.StageJob(EXTRAPOLATE_PHI, extrapolate_phi_job_ids[i],
+                       read, write,
+                       s_extra_params, true);
   }
+
+  job_query.CommitStagedJobs();
+
   /*
    * Spawning extrapolation stage over multiple workers
    */
@@ -158,14 +157,12 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
                        &extrapolation_str);
     extrapolation_params.set_ser_data(SerializedData(extrapolation_str));
-    after.clear();
-    before.clear();
-    for (int j = 0; j < extrapolate_phi_job_num; ++j) {
-      before.insert(extrapolate_phi_job_ids[j]);
-    }
-    SpawnComputeJob(EXTRAPOLATION, extrapolation_job_ids[i], read, write,
-                    before, after, extrapolation_params, true);
+    job_query.StageJob(EXTRAPOLATION, extrapolation_job_ids[i],
+                       read, write,
+                       extrapolation_params, true);
   }
+
+  job_query.CommitStagedJobs();
 
   if (done) {
     dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
@@ -196,16 +193,11 @@ void JobLoopIterationPartTwo::SpawnJobs(
     std::string iter_str;
     SerializeParameter(frame, time + dt, global_region, &iter_str);
     iter_params.set_ser_data(SerializedData(iter_str));
-    after.clear();
-    before.clear();
-    for (int j = 0; j < extrapolation_job_num; ++j) {
-      before.insert(extrapolation_job_ids[j]);
-    }
-    SpawnComputeJob(LOOP_ITERATION,
-                    job_ids[1],
-                    read, write,
-                    before, after,
-                    iter_params);
+    job_query.StageJob(LOOP_ITERATION, job_ids[1],
+                       read, write,
+                       iter_params, false, true);
+    job_query.CommitStagedJobs();
+
   } else {
 
     std::vector<nimbus::job_id_t> loop_job_id;
@@ -235,17 +227,10 @@ void JobLoopIterationPartTwo::SpawnJobs(
     SerializeParameter(frame, time + dt, 0,
                        global_region, global_region, &write_str);
     write_params.set_ser_data(SerializedData(write_str));
-    after.clear();
-    after.insert(loop_job_id[0]);
-    before.clear();
-    for (int j = 0; j < extrapolation_job_num; ++j) {
-      before.insert(extrapolation_job_ids[j]);
-    }
-    SpawnComputeJob(WRITE_FRAME,
-                    job_ids[1],
-                    read, write,
-                    before, after,
-                    write_params, true);
+    job_query.StageJob(WRITE_FRAME, job_ids[1],
+                       read, write,
+                       write_params, true);
+    job_query.CommitStagedJobs();
 
     // Spawning loop frame to compute next frame.
 
@@ -256,15 +241,15 @@ void JobLoopIterationPartTwo::SpawnJobs(
     std::string frame_str;
     SerializeParameter(frame + 1, global_region, &frame_str);
     frame_params.set_ser_data(SerializedData(frame_str));
-    after.clear();
-    before.clear();
-    before.insert(job_ids[1]);
-    SpawnComputeJob(LOOP_FRAME,
-                    loop_job_id[0],
-                    read, write,
-                    before, after,
-                    frame_params);
+    job_query.StageJob(LOOP_FRAME, loop_job_id[0],
+                       read, write,
+                       frame_params, false, true);
+    job_query.CommitStagedJobs();
 
+    if (time == 0) {
+      dbg(APP_LOG, "Print job dependency figure.\n");
+      job_query.GenerateDotFigure("loop_iteration_part_two.dot");
+    }
   }  // end loop "if (done)".
 }
 
