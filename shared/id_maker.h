@@ -33,7 +33,7 @@
  */
 
  /*
-  * Class for producing unique job and data id.
+  * Class for producing unique job and data id. Thread-safe.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SHARED_ID_MAKER_H_
 #define NIMBUS_SHARED_ID_MAKER_H_
 
+#include <pthread.h>
 #include <iostream> // NOLINT
 #include <vector>
 #include <string>
@@ -60,6 +61,7 @@ class IDMaker {
     bool GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num);
 
   private:
+    pthread_mutex_t lock_;
     bool initialized_;
     worker_id_t worker_id_;
     job_id_t first_job_id_;

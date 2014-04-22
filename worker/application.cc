@@ -44,10 +44,14 @@
 using namespace nimbus; // NOLINT
 
 Application::Application() {
+  pthread_mutex_init(&lock_job_table_, NULL);
+  pthread_mutex_init(&lock_data_table_, NULL);
 }
 
 Application::~Application() {
   delete cache_manager_;
+  pthread_mutex_destroy(&lock_job_table_);
+  pthread_mutex_destroy(&lock_data_table_);
 }
 
 void Application::Load() {
@@ -65,14 +69,19 @@ void Application::Start(SchedulerClient* client,
   Load();
 }
 
+// Thread-safe.
 void Application::RegisterJob(std::string name, Job* j) {
+  LockGuard lock(&lock_job_table_);
   job_table_[name] = j;
 }
 
+// Thread-safe.
 void Application::RegisterData(std::string name, Data* d) {
+  LockGuard lock(&lock_data_table_);
   data_table_[name] = d;
 }
 
+// Thread-safe.
 void Application::SpawnComputeJob(const std::string& name,
     const job_id_t& id,
     const IDSet<logical_data_id_t>& read,
@@ -88,6 +97,7 @@ void Application::SpawnComputeJob(const std::string& name,
   client_->sendCommand(&cm);
 }
 
+// Thread-safe.
 void Application::SpawnCopyJob(const job_id_t& id,
     const logical_data_id_t& from_logical_id,
     const logical_data_id_t& to_logical_id,
@@ -101,6 +111,7 @@ void Application::SpawnCopyJob(const job_id_t& id,
   client_->sendCommand(&cm);
 }
 
+// Thread-safe.
 void Application::DefineData(const std::string& name,
     const logical_data_id_t& logical_data_id,
     const partition_id_t& partition_id,
@@ -117,6 +128,7 @@ void Application::DefineData(const std::string& name,
   client_->sendCommand(&cm);
 }
 
+// Thread-safe.
 void Application::DefinePartition(const ID<partition_id_t>& partition_id,
      const GeometricRegion& r,
      const Parameter& params) {
@@ -125,13 +137,16 @@ void Application::DefinePartition(const ID<partition_id_t>& partition_id,
   client_->sendCommand(&cm);
 }
 
+// Thread-safe.
 void Application::TerminateApplication(const exit_status_t& exit_status) {
   TerminateCommand*  cm = new TerminateCommand(ID<exit_status_t>(exit_status));
   client_->sendCommand(cm);
   delete cm;
 }
 
+// Thread-safe.
 Job* Application::CloneJob(std::string name) {
+  LockGuard lock(&lock_job_table_);
   if (job_table_.count(name) == 0) {
     dbg(DBG_ERROR, "ERROR: job name %s is not registered in the application.\n", name.c_str()); // NOLINT
     exit(-1);
@@ -140,7 +155,9 @@ Job* Application::CloneJob(std::string name) {
   }
 }
 
+// Thread-safe.
 Data* Application::CloneData(std::string name) {
+  LockGuard lock(&lock_data_table_);
   if (data_table_.count(name) == 0) {
     dbg(DBG_ERROR, "ERROR: data name %s is not registered in the application.\n", name.c_str()); // NOLINT
     exit(-1);
@@ -149,14 +166,17 @@ Data* Application::CloneData(std::string name) {
   }
 }
 
+// Thread-safe.
 bool Application::GetNewJobID(std::vector<job_id_t>* result, size_t req_num) {
   return id_maker_->GetNewJobID(result, req_num);
 }
 
+// Thread-safe.
 bool Application::GetNewLogicalDataID(std::vector<logical_data_id_t>* result, size_t req_num) {
   return id_maker_->GetNewLogicalDataID(result, req_num);
 }
 
+// Thread-safe.
 bool Application::GetPartition(partition_id_t id, GeometricRegion* r) {
   if (ldo_map_ == NULL) {
     std::cout << "Error: GetLogicalObject, ldo_map_ has not been set." << std::endl;
@@ -166,6 +186,7 @@ bool Application::GetPartition(partition_id_t id, GeometricRegion* r) {
   }
 }
 
+// Thread-safe.
 const LogicalDataObject* Application::GetLogicalObject(logical_data_id_t id) {
   if (ldo_map_ == NULL) {
     std::cout << "Error: GetLogicalObject, ldo_map_ has not been set." << std::endl;
@@ -175,6 +196,7 @@ const LogicalDataObject* Application::GetLogicalObject(logical_data_id_t id) {
   }
 }
 
+// Thread-safe.
 int Application::GetCoveredLogicalObjects(CLdoVector* result,
      const std::string& variable,
      const GeometricRegion* r) {
@@ -185,6 +207,7 @@ int Application::GetCoveredLogicalObjects(CLdoVector* result,
   }
 }
 
+// Thread-safe.
 int Application::GetAdjacentLogicalObjects(CLdoVector* result,
     const std::string& variable,
     const GeometricRegion* r) {
@@ -195,6 +218,7 @@ int Application::GetAdjacentLogicalObjects(CLdoVector* result,
   }
 }
 
+// Thread-safe.
 int Application::GetIntersectingLogicalObjects(CLdoVector* result,
     const std::string& variable,
     const GeometricRegion* r) {
