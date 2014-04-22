@@ -121,15 +121,15 @@ void CacheObject::SetUpRead(const DataArray &read_set,
             Data *d = read_set[i];
             logical_data_id_t lid = d->logical_id();
             physical_data_id_t pid = d->physical_id();
-            if (!pids_.contains(pid)) {
-                if (element_map_.find(lid) != element_map_.end()) {
-                    pids_.remove(element_map_[lid]);
-                }
-                element_map_[lid] = pid;
-                pids_.insert(pid);
-            }
+            if (element_map_.find(lid) != element_map_.end())
+                pids_.remove(element_map_[lid]);
+            element_map_[lid] = pid;
+            pids_.insert(pid);
             d->SetUpCacheObject(this);
         }
+    } else {
+        element_map_.clear();
+        pids_.clear();
     }
 }
 
@@ -139,16 +139,10 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
         Data *d = write_set[i];
         logical_data_id_t lid = d->logical_id();
         physical_data_id_t pid = d->physical_id();
-        if (!pids_.contains(pid)) {
-            if (element_map_.find(lid) != element_map_.end()) {
-                pids_.remove(element_map_[lid]);
-            }
-            element_map_[lid] = pid;
-            pids_.insert(pid);
-        }
         d->InvalidateCacheObjects();
+        element_map_[lid] = pid;
+        pids_.insert(pid);
         d->SetUpCacheObject(this);
-        pids_.insert(d->physical_id());
     }
 }
 
