@@ -75,19 +75,16 @@ for i in range(1, config.INSTANCE_NUM + 1):
    
       result = re.findall('.*Forces Exchange\".*(\d+\.\d+)', line)
       if len(result) > 0:
-        force_time += float(result[0]) * 1000
         exchange_force_agg += float(result[0])
         continue
   
       result = re.findall('.*Advect Phi Exchange\".*(\d+\.\d+)', line)
       if len(result) > 0:
-        advect_phi_time += float(result[0]) * 1000
         exchange_advect_phi_agg += float(result[0])
         continue
   
       result = re.findall('.*Advect Removed Particles Exchange\".*(\d+\.\d+)', line)
       if len(result) > 0:
-        advect_removed_particles_time += float(result[0]) * 1000
         exchange_advect_removed_particles_agg += float(result[0])
         continue
  
