@@ -791,6 +791,11 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles_Nimbus_One(&example.
                                                  face_velocities_ghost);
+    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(
+        example.mac_grid,
+        example.particle_levelset_evolution.phi,
+        example.phi_ghost_bandwidth_seven,
+        0, time+dt, 7);
 
     // save state
     example.Save_To_Nimbus(job, da, current_frame+1);
