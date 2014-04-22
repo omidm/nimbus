@@ -73,7 +73,7 @@ CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
 }
 
 CacheObject *CacheTable::GetAvailable(const GeometricRegion &region,
-                                      CacheAccess access = EXCLUSIVE) {
+                                      CacheAccess access) {
     if (table_.find(region) == table_.end())
         return NULL;
     CacheObjects *objects = table_[region];

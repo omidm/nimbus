@@ -96,11 +96,15 @@ void Data::set_version(data_version_t version) {
 
 void Data::InvalidateCacheObjects() {
   for (size_t i = 0; i < cache_objects_.size(); ++i) {
-    cache_objects_[i]->InvalidateCacheObject(physical_id_);
+    cache_objects_[i]->InvalidateCacheObject(this);
   }
   cache_objects_.clear();
 }
 
 void Data::SetUpCacheObject(CacheObject *co) {
+  for (size_t i = 0; i < cache_objects_.size(); ++i) {
+    if (cache_objects_[i] == co)
+      return;
+  }
   cache_objects_.push_back(co);
 }
