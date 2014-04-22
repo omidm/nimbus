@@ -51,6 +51,7 @@ class JobQuery {
  public:
   explicit JobQuery(Job* job);
   ~JobQuery();
+  /*
   bool SpawnComputeJob(
       const std::string& name, const job_id_t& id,
       const IDSet<logical_data_id_t>& read,
@@ -73,6 +74,14 @@ class JobQuery {
     return StageJob(name, id, read, write, before, after, params, sterile,
                     true);
   }
+  */
+  bool StageJob(
+      const std::string& name, const job_id_t& id,
+      const IDSet<logical_data_id_t>& read,
+      const IDSet<logical_data_id_t>& write,
+      const Parameter& params,
+      const bool sterile,
+      const bool barrier = false);
   bool StageJob(
       const std::string& name, const job_id_t& id,
       const IDSet<logical_data_id_t>& read,

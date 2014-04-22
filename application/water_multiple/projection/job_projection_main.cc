@@ -219,9 +219,11 @@ void JobProjectionMain::SpawnJobs(
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
-                        APP_PRESSURE, APP_INDEX_M2C,
+                        APP_INDEX_M2C,
                         APP_VECTOR_B,
                         APP_MATRIX_A, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PRESSURE,
+                        NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
