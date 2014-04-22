@@ -47,7 +47,15 @@ namespace nimbus {
  * \brief Brief description.
  * \return
 */
-nimbus::WorkerLdoMap::WorkerLdoMap() {}
+nimbus::WorkerLdoMap::WorkerLdoMap() {
+  pthread_mutexattr_init(&lockattr_ldo_index_);
+  pthread_mutexattr_settype(&lockattr_ldo_index_, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&lock_ldo_index_, &lockattr_ldo_index_);
+
+  pthread_mutexattr_init(&lockattr_partition_map_);
+  pthread_mutexattr_settype(&lockattr_partition_map_, PTHREAD_MUTEX_RECURSIVE);
+  pthread_mutex_init(&lock_partition_map_, &lockattr_partition_map_);
+}
 
 
 /**
@@ -63,6 +71,10 @@ nimbus::WorkerLdoMap::~WorkerLdoMap() {
     const LogicalDataObject* obj = *it;
     delete obj;
   }
+  pthread_mutexattr_destroy(&lockattr_ldo_index_);
+  pthread_mutex_destroy(&lock_ldo_index_);
+  pthread_mutexattr_destroy(&lockattr_partition_map_);
+  pthread_mutex_destroy(&lock_partition_map_);
 }
 
 
@@ -76,6 +88,7 @@ nimbus::WorkerLdoMap::~WorkerLdoMap() {
 */
 bool nimbus::WorkerLdoMap::AddPartition(partition_id_t id,
                                        GeometricRegion r) {
+  LockGuard lock(&lock_partition_map_);
   dbg(DBG_DATA_OBJECTS, "Adding %llu partition.\n", id);
   if (HasPartition(id)) {
     GeometricRegion r_p;
@@ -100,6 +113,7 @@ bool nimbus::WorkerLdoMap::AddPartition(partition_id_t id,
  * \return
 */
 bool nimbus::WorkerLdoMap::RemovePartition(partition_id_t id) {
+  LockGuard lock(&lock_partition_map_);
   dbg(DBG_DATA_OBJECTS, "Removing partition %llu.\n", id);
   if (!HasPartition(id)) {
     dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried removing non-existent partition %llu.\n", id); // NOLINT
@@ -118,6 +132,7 @@ bool nimbus::WorkerLdoMap::RemovePartition(partition_id_t id) {
  * \return
 */
 bool nimbus::WorkerLdoMap::HasPartition(partition_id_t id) {
+  LockGuard lock(&lock_partition_map_);
   return partition_map_.find(id) != partition_map_.end();
 }
 
@@ -129,6 +144,7 @@ bool nimbus::WorkerLdoMap::HasPartition(partition_id_t id) {
  * \return
 */
 bool nimbus::WorkerLdoMap::FindPartition(partition_id_t id, GeometricRegion* r) {
+  LockGuard lock(&lock_partition_map_);
   if (HasPartition(id)) {
     *r =  partition_map_[id];
     return true;
@@ -152,6 +168,7 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                             std::string variable,
                                             GeometricRegion region,
                                             partition_id_t partition) {
+  LockGuard lock(&lock_ldo_index_);
   if (ldo_index_.HasObject(id)) {
     LogicalDataObject* ldo = ldo_index_.SpecificObject(id);
     if (ldo->variable() == variable && region.IsEqual(ldo->region())) {
@@ -180,6 +197,7 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
 bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
                                            std::string variable,
                                            partition_id_t partition) {
+  LockGuard lock(&lock_ldo_index_);
   dbg(DBG_DATA_OBJECTS, "Adding %llu as type %s.\n", id, variable.c_str());
   if (!HasPartition(partition)) {
     dbg(DBG_DATA_OBJECTS|DBG_ERROR, "  - FAIL WorkerLdoMap: tried adding object %llu with invalid partition %llu.\n", id, partition); // NOLINT
@@ -198,6 +216,7 @@ bool nimbus::WorkerLdoMap::AddLogicalObject(logical_data_id_t id,
  * \return
 */
 bool nimbus::WorkerLdoMap::RemoveLogicalObject(logical_data_id_t id) {
+  LockGuard lock(&lock_ldo_index_);
   if (!ldo_index_.HasObject(id)) {
     return false;
   } else {
@@ -216,6 +235,7 @@ bool nimbus::WorkerLdoMap::RemoveLogicalObject(logical_data_id_t id) {
  * \return
 */
 const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(logical_data_id_t id) {
+  LockGuard lock(&lock_ldo_index_);
   return ldo_index_.SpecificObject(id);
 }
 
@@ -230,6 +250,7 @@ const LogicalDataObject * nimbus::WorkerLdoMap::FindLogicalObject(logical_data_i
 */
 int nimbus::WorkerLdoMap::FindLogicalObjects(const std::string& variable,
                                              CLdoVector *dest) {
+  LockGuard lock(&lock_ldo_index_);
   return ldo_index_.AllObjects(variable, dest);
 }
 
@@ -248,6 +269,7 @@ int nimbus::WorkerLdoMap::FindIntersectingLogicalObjects(
     const std::string& variable,
     const GeometricRegion* region,
     CLdoVector *dest) {
+  LockGuard lock(&lock_ldo_index_);
   return ldo_index_.IntersectingObjects(variable, region, dest);
 }
 
@@ -266,6 +288,7 @@ int nimbus::WorkerLdoMap::FindCoveredLogicalObjects(
     const std::string& variable,
     const GeometricRegion* region,
     CLdoVector *dest) {
+  LockGuard lock(&lock_ldo_index_);
   return ldo_index_.CoveredObjects(variable, region, dest);
 }
 
@@ -284,6 +307,7 @@ int nimbus::WorkerLdoMap::FindAdjacentLogicalObjects(
     const std::string& variable,
     const GeometricRegion* region,
     CLdoVector *dest) {
+  LockGuard lock(&lock_ldo_index_);
   return ldo_index_.AdjacentObjects(variable, region, dest);
 }
 

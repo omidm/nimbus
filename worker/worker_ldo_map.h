@@ -36,11 +36,13 @@
   * The Data Manager maintains the controller's metadata on what
   * logical data objects are in the system as well as their physical
   * instances.
+  * The Data Manager is thread-safe.
   */
 
 #ifndef NIMBUS_WORKER_WORKER_LDO_MAP_H_
 #define NIMBUS_WORKER_WORKER_LDO_MAP_H_
 
+#include <pthread.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -89,8 +91,27 @@ class WorkerLdoMap {
                                    CLdoVector* dest);
 
   private:
+    // Protects ldo_index_.
+    pthread_mutexattr_t lockattr_ldo_index_;
+    pthread_mutex_t lock_ldo_index_;
     LdoIndex ldo_index_;
+    // Protects partition_map_.
+    pthread_mutexattr_t lockattr_partition_map_;
+    pthread_mutex_t lock_partition_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
+
+    class LockGuard {
+     public:
+      explicit LockGuard(pthread_mutex_t* lock) {
+        pthread_mutex_lock(lock);
+        lock_ = lock;
+      }
+      virtual ~LockGuard() {
+        pthread_mutex_unlock(lock_);
+      }
+     private:
+      pthread_mutex_t* lock_;
+    };
   };
 }  // namespace nimbus
 
