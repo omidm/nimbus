@@ -537,7 +537,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    if (!use_cache) {
+    if (true) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
     }
@@ -1032,7 +1032,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    if (!use_cache) {
+    if (true) {
       Load_From_Nimbus_No_Cache(job, da, frame);
       return;
     }
