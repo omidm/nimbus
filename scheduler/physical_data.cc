@@ -102,7 +102,7 @@ nimbus::PhysicalData::~PhysicalData() {}
  * \brief Brief description.
  * \return
 */
-physical_data_id_t nimbus::PhysicalData::id() {
+physical_data_id_t nimbus::PhysicalData::id() const {
   return id_;
 }
 
@@ -112,7 +112,7 @@ physical_data_id_t nimbus::PhysicalData::id() {
  * \brief Brief description.
  * \return
 */
-worker_id_t nimbus::PhysicalData::worker() {
+worker_id_t nimbus::PhysicalData::worker() const {
   return worker_;
 }
 
@@ -122,12 +122,12 @@ worker_id_t nimbus::PhysicalData::worker() {
  * \brief Brief description.
  * \return
 */
-data_version_t nimbus::PhysicalData::version() {
+data_version_t nimbus::PhysicalData::version() const {
   return version_;
 }
 
 
-IDSet<job_id_t> nimbus::PhysicalData::list_job_read() {
+IDSet<job_id_t> nimbus::PhysicalData::list_job_read() const {
   return list_job_read_;
 }
 
@@ -136,7 +136,7 @@ IDSet<job_id_t> nimbus::PhysicalData::list_job_read() {
  * \brief Brief description.
  * \return
 */
-job_id_t nimbus::PhysicalData::last_job_write() {
+job_id_t nimbus::PhysicalData::last_job_write() const {
   return last_job_write_;
 }
 

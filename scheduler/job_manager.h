@@ -58,6 +58,7 @@
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
 #include "scheduler/version_operator.h"
+#include "scheduler/physical_data.h"
 
 namespace nimbus {
 class JobManager {
@@ -108,6 +109,9 @@ class JobManager {
     void UpdateJobBeforeSet(JobEntry* job);
 
     void UpdateBeforeSet(IDSet<job_id_t>* before_set);
+
+    bool CausingUnwantedSerialization(JobEntry* job,
+        const logical_data_id_t& l_id, const PhysicalData& pd);
 
   private:
     Graph<JobEntry, job_id_t> job_graph_;
