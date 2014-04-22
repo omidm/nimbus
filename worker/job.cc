@@ -321,6 +321,7 @@ RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da) {
 RemoteCopySendJob::~RemoteCopySendJob() {
 }
 
+// TODO(quhang) data exchanger is thread-safe?
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);

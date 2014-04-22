@@ -36,6 +36,7 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <unistd.h>
 #include <string>
 
 #include "worker/worker.h"
@@ -52,11 +53,13 @@ WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
 WorkerThreadComputation::~WorkerThreadComputation() {
 }
 
+// TODO(quhang) busy waiting is not good.
 void WorkerThreadComputation::Run() {
   Job* job;
   while (true) {
     do {
       assert(worker_manager_ != NULL);
+      usleep(1000);
       job = worker_manager_->PullComputationJob();
     } while (job == NULL);
     ExecuteJob(job);
@@ -66,9 +69,16 @@ void WorkerThreadComputation::Run() {
 }
 
 void WorkerThreadComputation::ExecuteJob(Job* job) {
+#ifndef MUTE_LOG
   log_->StartTimer();
   timer_->Start(job->id().elem());
+#endif  // MUTE_LOG
+  dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
+      job->name().c_str(), job->id().elem());
   job->Execute(job->parameters(), job->data_array);
+  dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing job, name=%s, id=%lld. \n",
+      job->name().c_str(), job->id().elem());
+#ifndef MUTE_LOG
   double run_time = timer_->Stop(job->id().elem());
   log_->StopTimer();
 
@@ -86,6 +96,7 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
       "Queue Time: %2.9lf, Run Time: %2.9lf",
       job->wait_time(), job->run_time());
   log_->WriteToOutputStream(std::string(time_buff), LOG_INFO);
+#endif  // MUTE_LOG
 }
 
 }  // namespace nimbus

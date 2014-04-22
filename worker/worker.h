@@ -128,6 +128,8 @@ class Worker {
   // during the runtime. Indeed, for now, it is only changed at the very
   // beginning of the simulation, so it keeps the same during the simulation,
   // which might break in the future.
+
+  pthread_rwlock_t lock_data_map_;
   PhysicalDataMap data_map_;
   JobList ready_jobs_;
   JobList blocked_jobs_;

@@ -78,6 +78,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
+    pthread_rwlock_init(&lock_data_map_, NULL);
 }
 
 void Worker::Run() {
@@ -128,8 +129,10 @@ void Worker::ScanBlockedJobs() {
         pending_transfer_jobs_.push_back(*iter);
       }
 
+#ifndef MUTE_LOG
       double wait_time =  timer_.Stop((*iter)->id().elem());
       (*iter)->set_wait_time(wait_time);
+#endif  // MUTE_LOG
 
       blocked_jobs_.erase(iter++);
     } else {
@@ -174,6 +177,7 @@ void Worker::ResolveDataArray(Job* job) {
   IDSet<physical_data_id_t>::IDSetIter iter;
 
   IDSet<physical_data_id_t> read = job->read_set();
+  pthread_rwlock_rdlock(&lock_data_map_);
   for (iter = read.begin(); iter != read.end(); iter++) {
     job->data_array.push_back(data_map_[*iter]);
   }
@@ -184,6 +188,7 @@ void Worker::ResolveDataArray(Job* job) {
   for (iter = write.begin(); iter != write.end(); iter++) {
     job->data_array.push_back(data_map_[*iter]);
   }
+  pthread_rwlock_unlock(&lock_data_map_);
   DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
 }
 
@@ -294,6 +299,8 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
   }
 }
 
+// Processes handshake command. Configures the worker based on the handshake
+// command and responds by sending another handshake command.
 void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
   ID<port_t> port(listening_port_);
   HandshakeCommand new_cm = HandshakeCommand(cm->worker_id(),
@@ -307,10 +314,13 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 
   std::ostringstream ss;
   ss << id_;
+  // TODO(quhang) thread-safety(log).
   version_log_.set_file_name(ss.str() + "_version_log.txt");
   data_hash_log_.set_file_name(ss.str() + "_data_hash_log.txt");
 }
 
+// Processes jobdone command. Moves a job from blocked queue to ready queue if
+// its before set is satisfied.
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   JobList::iterator iter;
   for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end(); iter++) {
@@ -320,8 +330,10 @@ void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   }
 }
 
+// Processes computejob command. Generates the corresponding job and pushes it
+// to the blocking queue.
 void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
-  Job * job = application_->CloneJob(cm->job_name());
+  Job* job = application_->CloneJob(cm->job_name());
   job->set_name("Compute:" + cm->job_name());
   job->set_id(cm->job_id());
   job->set_read_set(cm->read_set());
@@ -330,10 +342,14 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_after_set(cm->after_set());
   job->set_parameters(cm->params());
   job->set_sterile(cm->sterile());
+#ifndef MUTE_LOG
   timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
   blocked_jobs_.push_back(job);
 }
 
+// Processes createdata command. Generates the corresponding data and pushes a
+// data creation job to the blocking queue.
 void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   Data * data = application_->CloneData(cm->data_name());
   data->set_logical_id(cm->logical_data_id().elem());
@@ -342,6 +358,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   const LogicalDataObject* ldo;
   ldo = ldo_map_->FindLogicalObject(cm->logical_data_id().elem());
   data->set_region(*(ldo->region()));
+  // TODO(quhang) thread-safety(data_map).
   AddData(data);
 
   Job * job = new CreateDataJob();
@@ -352,7 +369,9 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+#ifndef MUTE_LOG
   timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
   blocked_jobs_.push_back(job);
 }
 
@@ -371,7 +390,9 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+#ifndef MUTE_LOG
   timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
   blocked_jobs_.push_back(job);
 }
 
@@ -384,7 +405,9 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+#ifndef MUTE_LOG
   timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
   blocked_jobs_.push_back(job);
 }
 
@@ -400,7 +423,9 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
+#ifndef MUTE_LOG
   timer_.Start(job->id().elem());
+#endif  // MUTE_LOG
   blocked_jobs_.push_back(job);
 }
 
@@ -464,11 +489,15 @@ void Worker::LoadSchedulerCommands() {
 }
 
 void Worker::AddData(Data* data) {
+  pthread_rwlock_wrlock(&lock_data_map_);
   data_map_[data->physical_id()] = data;
+  pthread_rwlock_unlock(&lock_data_map_);
 }
 
 void Worker::DeleteData(physical_data_id_t physical_data_id) {
+  pthread_rwlock_wrlock(&lock_data_map_);
   data_map_.erase(physical_data_id);
+  pthread_rwlock_unlock(&lock_data_map_);
 }
 
 worker_id_t Worker::id() {
@@ -483,6 +512,7 @@ void Worker::set_ip_address(std::string ip) {
   ip_address_ = ip;
 }
 
+// TODO(quhang) thread-safety not guaranteed.
 PhysicalDataMap* Worker::data_map() {
   return &data_map_;
 }
