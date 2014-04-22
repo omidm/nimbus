@@ -5,6 +5,7 @@
 import sys
 import os
 import subprocess
+import time
 
 import config
 
@@ -43,7 +44,6 @@ def create_folder_of_binaries():
 
 
 def copy_binary_folder_to_hosts(ip_addresses):
-
   temp_folder = create_folder_of_binaries()
 
   for ip in ip_addresses:
@@ -57,62 +57,76 @@ def copy_binary_folder_to_hosts(ip_addresses):
 
 
 
-def make_nodes_file_content(ip_addresses):
+def run_experiment(scheduler_ip, worker_ips):
 
-  string = ""
-  for ip in ip_addresses:
-    print ip
-    string = string + ip + " cpu=1\n"
+  worker_num = len(worker_ips)
 
-  file = open(temp_file_name, 'w+')
-  file.write(string)
-  file.close()
+  print '** Scheduler'
+  print scheduler_ip
+  print '***'
+  scheduler_command =  'cd ' + config.EC2_FOLDER_NAME + config.REL_SCHEDULER_PATH + ';'
+  scheduler_command += './scheduler'
+  scheduler_command += ' -port ' + str(config.FIRST_PORT)
+  scheduler_command += ' -wn ' + str(worker_num)
+  scheduler_command += ' > ' + config.LOG_FILE_NAME
 
-
-
-def copy_nodes_file_to_hosts(ip_addresses):
-
-  make_nodes_file_content(ip_addresses)
-
-  for ip in ip_addresses:
-    subprocess.call(['scp', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        temp_file_name, 'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
-        physbam_config.NODES_FILE_NAME])
-
-  subprocess.call(['rm', temp_file_name])
-
-
-def run_experiment(ip):
-  print "omid"
-
-
-  command =  'cd ' + physbam_config.DIRECTORY_PATH + ';'
-  command += 'mpirun -hostfile ' + physbam_config.NODES_FILE_NAME
-  command += ' -np ' + str(config.INSTANCE_NUM)
-  command += ' ./Water -scale 128 -e 40'
-
-  subprocess.call(['ssh', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+  subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + ip, command])
+      'ubuntu@' + scheduler_ip, scheduler_command])
+
+  time.sleep(10)
+
+  num = 0;
+  for ip in worker_ips:
+    time.sleep(5)
+    print '** Worker'
+    print ip
+    print '***'
+    num += 1
+    worker_command =  'cd ' + config.EC2_FOLDER_NAME + config.REL_WORKER_PATH + ';'
+    worker_command += './worker'
+    worker_command += ' -port ' + str(config.FIRST_PORT + num)
+    worker_command += ' -ip ' + ip
+    worker_command += ' -sip ' + scheduler_ip
+    worker_command += ' -sport ' + str(config.FIRST_PORT)
+    worker_command += './worker -port ' + str(config.FIRST_PORT + num)
+    worker_command += ' > ' + str(num) + '_' + config.LOG_FILE_NAME
+
+ 
+    if num == len(worker_ips):
+      subprocess.call(['ssh', '-i', config.PRIVATE_KEY,
+          '-o', 'UserKnownHostsFile=/dev/null',
+          '-o', 'StrictHostKeyChecking=no',
+          'ubuntu@' + ip, worker_command])
+    else:
+      subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
+          '-o', 'UserKnownHostsFile=/dev/null',
+          '-o', 'StrictHostKeyChecking=no',
+          'ubuntu@' + ip, worker_command])
 
 
-def collect_output_data(ip_addresses):
+def collect_output_data(scheduler_ip, worker_ips):
 
-  subprocess.call(['rm', '-rf', physbam_config.OUTPUT_PATH])
-  subprocess.call(['mkdir', '-p', physbam_config.OUTPUT_PATH])
+  subprocess.call(['rm', '-rf', config.OUTPUT_PATH])
+  subprocess.call(['mkdir', '-p', config.OUTPUT_PATH])
 
-  process_num = 0
-  for ip in ip_addresses:
-    process_num += 1
-    subprocess.call(['scp', '-r', '-i', '/home/omidm/.ssh/' + config.KEY_NAME + '.pem',
+  subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip + ':~/' + config.EC2_FOLDER_NAME +
+      config.REL_SCHEDULER_PATH + config.LOG_FILE_NAME,
+      config.OUTPUT_PATH])
+
+  num = 0
+  for ip in worker_ips:
+    num += 1
+    subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':~/' + physbam_config.DIRECTORY_PATH +
-        physbam_config.OUTPUT_PATH + str(process_num),
-        physbam_config.OUTPUT_PATH])
+        'ubuntu@' + ip + ':~/' + config.EC2_FOLDER_NAME +
+        config.REL_WORKER_PATH + str(num) + '_' + config.LOG_FILE_NAME,
+        config.OUTPUT_PATH])
 
 
 

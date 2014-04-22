@@ -33,7 +33,7 @@ def wait_for_instances_to_start(location, num):
       if inst.state == 'running':
         ready_count += 1
     print "-> number of ready instances: " + str(ready_count) + " (out of " + str(num) + ") ..."
-    time.sleep(5)
+    time.sleep(10)
 
 
 

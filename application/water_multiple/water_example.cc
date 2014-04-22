@@ -537,7 +537,8 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    if (true) {
+    use_cache = false;
+    if (!use_cache) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
     }
@@ -653,17 +654,16 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     // psi_d.
-    const std::string psi_d_string = std::string(APP_PSI_D);
-    if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::PSI_D)) {
-      translator.WriteScalarArrayBool(
-          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_D);
+    dbg(DBG_WARN, "\n--- Writing psi_d back \n");
+    if (cache_psi_d) {
+        BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
+        BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+        cache_psi_d->Write(array_reg_thin_outer, true);
+        cache_psi_d = NULL;
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating psi_d.\n");
 
     // psi_n.
-    dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
+    dbg(DBG_WARN, "\n--- Writing psi_n back \n");
     if (cache_psi_n) {
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
@@ -1032,7 +1032,8 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    if (true) {
+    use_cache = false;
+    if (!use_cache) {
       Load_From_Nimbus_No_Cache(job, da, frame);
       return;
     }
@@ -1234,14 +1235,25 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     dbg(APP_LOG, "Finish translating particle id.\n");
 
     // psi_d.
-    const std::string psi_d_string = std::string(APP_PSI_D);
-    if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::PSI_D)) {
-      translator.ReadScalarArrayBool(
-          &array_reg_thin_outer, array_shift, &pdv, &projection.laplace->psi_D);
+    if (data_config.GetFlag(DataConfig::PSI_D))
+    {
+        nimbus::DataArray read, write;
+        const std::string psi_d_string = std::string(APP_PSI_D);
+        application::GetReadData(job, psi_d_string, da, &read);
+        application::GetWriteData(job, psi_d_string, da, &write);
+        dbg(DBG_WARN, "\n--- Requesting %i elements into psi_d for region %s\n",
+            read.size(), array_reg_thin_outer.toString().c_str());
+        nimbus::CacheObject *cache_obj =
+            cm->GetAppObject(read, write,
+                array_reg_thin_outer,
+                application::kCachePsiD,
+                nimbus::EXCLUSIVE, write.empty());
+        cache_psi_d = dynamic_cast<BoolCacheScalarArray *>(cache_obj);
+        assert(cache_psi_d != NULL);
+        BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
+        BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+        dbg(APP_LOG, "Finish translating psi_d.\n");
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating psi_d.\n");
 
     // psi_n.
     if (data_config.GetFlag(DataConfig::PSI_N))
