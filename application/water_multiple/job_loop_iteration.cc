@@ -166,7 +166,6 @@ namespace application {
     std::vector<nimbus::job_id_t> job_ids;
     GetNewJobID(&job_ids, job_num);
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-    nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // because of Half Region definition this number could be either 1 or 2 for now -omidm
     int update_ghost_velocities_job_num = kAppPartNum;
@@ -252,12 +251,9 @@ namespace application {
       std::string s11_str;
       SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s11_str);
       s11_params.set_ser_data(SerializedData(s11_str));
-      before.clear();
-      after.clear();
-      job_query.SpawnComputeJob(UPDATE_GHOST_VELOCITIES,
+      job_query.StageJob(UPDATE_GHOST_VELOCITIES,
           update_ghost_velocities_job_ids[i],
           read, write,
-          before, after,
           s11_params, true);
     }
 
@@ -277,15 +273,9 @@ namespace application {
       std::string s_extra_str;
       SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s_extra_str);
       s_extra_params.set_ser_data(SerializedData(s_extra_str));
-      before.clear();
-      for (int j = 0; j < update_ghost_velocities_job_num; ++j) {
-        before.insert(update_ghost_velocities_job_ids[j]);
-      }
-      after.clear();
-      job_query.SpawnComputeJob(EXTRAPOLATE_PHI,
+      job_query.StageJob(EXTRAPOLATE_PHI,
           first_extrapolate_phi_job_ids[i],
           read, write,
-          before, after,
           s_extra_params, true);
     }
 
@@ -305,21 +295,15 @@ namespace application {
       std::string s12_str;
       SerializeParameter(frame, time, dt, global_region, kRegY2W8Central[i], &s12_str);
       s12_params.set_ser_data(SerializedData(s12_str));
-      before.clear();
-      for (int j = 0; j < first_extrapolate_phi_job_num; ++j) {
-        before.insert(first_extrapolate_phi_job_ids[j]);
-      }
-      after.clear();
-      job_query.SpawnComputeJob(ADVECT_PHI,
+      job_query.StageJob(ADVECT_PHI,
           advect_phi_job_ids[i],
           read, write,
-          before, after,
           s12_params, true);
     }
 
     job_query.CommitStagedJobs();
-    
-    /* 
+
+    /*
      * Spawning step particles.
      */
     for (size_t sj = 0; sj < step_particles_job_num; sj++) {
@@ -362,23 +346,9 @@ namespace application {
         nimbus::Parameter step_particles_params;
         step_particles_params.set_ser_data(SerializedData(step_particles_str));
 
-        before.clear();
-        after.clear();
-        for (int j = 0; j < advect_phi_job_num; ++j) {
-          before.insert(advect_phi_job_ids[j]);
-        }
-        if (step_particles_single) {
-            for (size_t i = 0; i < advect_removed_particles_job_num; i++)
-                after.insert(advect_removed_particles_job_ids[i]);
-        } else {
-            for (size_t i = 0; i < step_particles_sync_job_num; i++)
-                after.insert(step_particles_sync_job_ids[i]);
-        }
-
-        job_query.SpawnComputeJob(STEP_PARTICLES,
+        job_query.StageJob(STEP_PARTICLES,
                 step_particles_job_ids[sj],
                 read, write,
-                before, after,
                 step_particles_params, true);
     }
 
@@ -389,12 +359,6 @@ namespace application {
      */
     if (!step_particles_single) {
         nimbus::Parameter step_particles_sync_params;
-        before.clear();
-        after.clear();
-        for (size_t i = 0; i < step_particles_job_num; i++)
-            before.insert(step_particles_job_ids[i]);
-        for (size_t i = 0; i < advect_removed_particles_job_num; i++)
-            after.insert(advect_removed_particles_job_ids[i]);
         for (size_t i = 0; i < kRegY2W3CentralWGB_len; i++) {
             size_t ii = 4*i;
             // positive
@@ -405,10 +369,9 @@ namespace application {
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii],
                     read, write,
-                    before, after,
                     step_particles_sync_params, true);
             // negative
             read.clear();
@@ -418,10 +381,9 @@ namespace application {
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+1],
                     read, write,
-                    before, after,
                     step_particles_sync_params, true);
             // positive removed
             read.clear();
@@ -431,10 +393,9 @@ namespace application {
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+2],
                     read, write,
-                    before, after,
                     step_particles_sync_params, true);
             // negative removed
             read.clear();
@@ -444,10 +405,9 @@ namespace application {
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            job_query.SpawnComputeJob(SYNCHRONIZE_PARTICLES,
+            job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+3],
                     read, write,
-                    before, after,
                     step_particles_sync_params, true);
         }
     }
@@ -496,23 +456,9 @@ namespace application {
         nimbus::Parameter advect_rem_particles_params;
         advect_rem_particles_params.set_ser_data(SerializedData(advect_rem_particles_str));
 
-        before.clear();
-        after.clear();
-        if (step_particles_single) {
-            for (size_t i = 0; i < step_particles_job_num; i++)
-                before.insert(step_particles_job_ids[i]);
-        } else {
-            for (size_t i = 0; i < step_particles_sync_job_num; i++)
-                before.insert(step_particles_sync_job_ids[i]);
-        }
-        // after.insert(job_ids[4]);
-        for (int j = 0; j < advect_v_job_num; ++j) {
-          after.insert(advect_v_job_ids[j]);
-        }
-        job_query.SpawnComputeJob(ADVECT_REMOVED_PARTICLES,
+        job_query.StageJob(ADVECT_REMOVED_PARTICLES,
             advect_removed_particles_job_ids[sj],
             read, write,
-            before, after,
             advect_rem_particles_params, true);
     }
 
@@ -534,24 +480,39 @@ namespace application {
       std::string s15_str;
       SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s15_str);
       s15_params.set_ser_data(SerializedData(s15_str));
-      before.clear();
-      for (size_t j = 0; j < advect_removed_particles_job_num; j++)
-        before.insert(advect_removed_particles_job_ids[j]);
-      after.clear();
-      // after.insert(job_ids[5]);
-      for (int j = 0; j < apply_forces_job_num; ++j) {
-        after.insert(apply_forces_job_ids[j]);
-      }
-      job_query.SpawnComputeJob(ADVECT_V,
+      job_query.StageJob(ADVECT_V,
           advect_v_job_ids[i],
           read, write,
-          before, after,
           s15_params, true);
     }
 
     job_query.CommitStagedJobs();
 
-    // TODO(quhang, omid), there should be an UPDATE_GHOST_VELOCITY job here.
+    {
+      std::vector<nimbus::job_id_t> temp_job_ids;
+      GetNewJobID(&temp_job_ids, kAppPartNum);
+      /*
+       * Spawning UPDATE_GHOST_VELOCITIES stage over two workrs
+       */
+      for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+        write.clear();
+        LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+
+        nimbus::Parameter temp_params;
+        std::string temp_str;
+        SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
+                           &temp_str);
+        temp_params.set_ser_data(SerializedData(temp_str));
+        job_query.StageJob(UPDATE_GHOST_VELOCITIES,
+                           temp_job_ids[i],
+                           read, write,
+                           temp_params, true);
+      }
+      job_query.CommitStagedJobs();
+    }
+
 
     /* 
      * Spawning multiple jobs for apply forces stage
@@ -566,19 +527,39 @@ namespace application {
       std::string s16_str;
       SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &s16_str);
       s16_params.set_ser_data(SerializedData(s16_str));
-      before.clear();
-      for (int j = 0; j < advect_v_job_num; ++j) {
-        before.insert(advect_v_job_ids[j]);
-      }
-      after.clear();
-      job_query.SpawnComputeJob(APPLY_FORCES,
+      job_query.StageJob(APPLY_FORCES,
           apply_forces_job_ids[i],
           read, write,
-          before, after,
           s16_params, true);
     }
 
     job_query.CommitStagedJobs();
+
+
+    {
+      std::vector<nimbus::job_id_t> temp_job_ids;
+      GetNewJobID(&temp_job_ids, kAppPartNum);
+      /*
+       * Spawning UPDATE_GHOST_VELOCITIES stage over two workrs
+       */
+      for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+        write.clear();
+        LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+
+        nimbus::Parameter temp_params;
+        std::string temp_str;
+        SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],
+                           &temp_str);
+        temp_params.set_ser_data(SerializedData(temp_str));
+        job_query.StageJob(UPDATE_GHOST_VELOCITIES,
+                           temp_job_ids[i],
+                           read, write,
+                           temp_params, true);
+      }
+      job_query.CommitStagedJobs();
+    }
 
     /* 
      * Spawning modify levelset -- part one.
@@ -623,20 +604,9 @@ namespace application {
         nimbus::Parameter modify_levelset_params;
         modify_levelset_params.set_ser_data(SerializedData(modify_levelset_part_one_str));
 
-        before.clear();
-        after.clear();
-        // before.insert(job_ids[5]);
-        for (int j = 0; j < apply_forces_job_num; ++j) {
-          before.insert(apply_forces_job_ids[j]);
-        }
-        // after.insert(job_ids[7]);
-        for (size_t j = 0; j < modify_levelset_job_num; ++j) {
-          after.insert(modify_levelset_part_two_job_ids[j]);
-        }
-        job_query.SpawnComputeJob(MODIFY_LEVELSET_PART_ONE,
+        job_query.StageJob(MODIFY_LEVELSET_PART_ONE,
             modify_levelset_part_one_job_ids[mj],
             read, write,
-            before, after,
             modify_levelset_params, true);
     }
 
@@ -686,20 +656,9 @@ namespace application {
         nimbus::Parameter modify_levelset_params;
         modify_levelset_params.set_ser_data(SerializedData(modify_levelset_part_two_str));
 
-        before.clear();
-        after.clear();
-        // before.insert(job_ids[5]);
-        for (size_t j = 0; j < modify_levelset_job_num; ++j) {
-          before.insert(modify_levelset_part_one_job_ids[j]);
-        }
-        // after.insert(job_ids[7]);
-        for (int j = 0; j < adjust_phi_job_num; ++j) {
-          after.insert(adjust_phi_job_ids[j]);
-        }
-        job_query.SpawnComputeJob(MODIFY_LEVELSET_PART_TWO,
+        job_query.StageJob(MODIFY_LEVELSET_PART_TWO,
             modify_levelset_part_two_job_ids[mj],
             read, write,
-            before, after,
             modify_levelset_params, true);
     }
 
@@ -719,16 +678,9 @@ namespace application {
       std::string adjust_phi_str;
       SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &adjust_phi_str);
       adjust_phi_params.set_ser_data(SerializedData(adjust_phi_str));
-      after.clear();
-      for (size_t dj = 0; dj < delete_particles_job_num; dj++)
-          after.insert(delete_particles_job_ids[dj]);
-      before.clear();
-      for (size_t j = 0; j < modify_levelset_job_num; j++)
-        before.insert(modify_levelset_part_two_job_ids[j]);
-      job_query.SpawnComputeJob(ADJUST_PHI,
+      job_query.StageJob(ADJUST_PHI,
           adjust_phi_job_ids[i],
           read, write,
-          before, after,
           adjust_phi_params, true);
     }
 
@@ -776,17 +728,9 @@ namespace application {
         nimbus::Parameter delete_particles_params;
         delete_particles_params.set_ser_data(SerializedData(delete_particles_str));
 
-        before.clear();
-        for (int j = 0; j < adjust_phi_job_num; ++j) 
-            before.insert(adjust_phi_job_ids[j]);
-        after.clear();
-        for (size_t rj = 0; rj < reincorporate_particles_job_num; rj++)
-            after.insert(reincorporate_particles_job_ids[rj]);
-        // before.insert(job_ids[7]);
-        job_query.SpawnComputeJob(DELETE_PARTICLES,
+        job_query.StageJob(DELETE_PARTICLES,
             delete_particles_job_ids[dj],
             read, write,
-            before, after,
             delete_particles_params, true);
     }
 
@@ -834,17 +778,9 @@ namespace application {
         nimbus::Parameter reincorporate_particles_params;
         reincorporate_particles_params.set_ser_data(SerializedData(reincorporate_particles_str));
 
-        before.clear();
-        after.clear();
-        after.insert(job_ids[10]);
-        for (size_t dj = 0; dj < delete_particles_job_num; ++dj) {
-          before.insert(delete_particles_job_ids[dj]);
-        }
-        // before.insert(job_ids[7]);
-        job_query.SpawnComputeJob(REINCORPORATE_PARTICLES,
+        job_query.StageJob(REINCORPORATE_PARTICLES,
             reincorporate_particles_job_ids[rj],
             read, write,
-            before, after,
             reincorporate_particles_params, true);
     }
 
@@ -863,16 +799,11 @@ namespace application {
                        &projection_main_str);
     projection_main_params.set_ser_data(
         SerializedData(projection_main_str));
-    before.clear();
-    for (size_t rj = 0; rj < reincorporate_particles_job_num; rj++) {
-      before.insert(reincorporate_particles_job_ids[rj]);
-    }
-    after.clear();
-    job_query.SpawnLastJob(PROJECTION_MAIN,
+    job_query.StageJob(PROJECTION_MAIN,
                     job_ids[10],
                     read, write,
-                    before, after,
-                    projection_main_params);
+                    projection_main_params,
+                    false, true);
     job_query.CommitStagedJobs();
     if (time == 0) {
       dbg(APP_LOG, "Print job dependency figure.\n");

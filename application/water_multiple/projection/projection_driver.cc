@@ -269,7 +269,7 @@ void ProjectionDriver::LoadFromNimbus(
     if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
                                        application::READ_ACCESS)) {
       translator.ReadScalarArrayFloat(
-          &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+          &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
       dbg(APP_LOG, "Finish reading PRESSURE.\n");
     } else {
       dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");

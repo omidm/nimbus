@@ -47,13 +47,22 @@ namespace nimbus {
 JobQuery::JobQuery(Job* job) {
   job_ = job;
   RESOLVE_WAW = true;
-  // RESOLVE_WAR = true;
-  // RESOLVE_WAW = false;
   RESOLVE_WAR = false;
-  DISABLE = true;
+  DISABLE = false;
 }
 JobQuery::~JobQuery() {}
 
+bool JobQuery::StageJob(
+    const std::string& name, const job_id_t& id,
+    const IDSet<logical_data_id_t>& read,
+    const IDSet<logical_data_id_t>& write,
+    const Parameter& params,
+    const bool sterile,
+    const bool barrier) {
+  return StageJob(name, id, read, write,
+                  IDSet<job_id_t>(), IDSet<job_id_t>(),
+                  params, sterile, barrier);
+}
 bool JobQuery::StageJob(
     const std::string& name, const job_id_t& id,
     const IDSet<logical_data_id_t>& read,
