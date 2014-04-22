@@ -62,7 +62,7 @@ class CacheObject {
                              const GeometricRegion &app_object_region);
 
         virtual void ReadToCache(const DataArray &read_set, const GeometricRegion &reg);
-        void Read(const DataArray &read_set, const GeometricRegion &reg);
+        void Read(const DataArray &read_set, const GeometricRegion &reg, bool read_all = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
         void Write(const GeometricRegion &reg, bool release = true);
 
@@ -79,6 +79,7 @@ class CacheObject {
         void SetUpWrite(const DataArray &write_set);
         void InvalidateCacheObject(physical_data_id_t pid);
 
+        bool IsAvailable(CacheAccess access) const;
         distance_t GetDistance(const DataArray &data_set,
                                CacheAccess access = EXCLUSIVE) const;
 
@@ -99,8 +100,6 @@ class CacheObject {
          * TODO(chinmayee): change this later to use logical id & version
          * information.*/
         PIDSet pids_;
-
-        bool IsAvailable(CacheAccess access) const;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

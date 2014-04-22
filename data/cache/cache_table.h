@@ -56,6 +56,8 @@ class CacheTable {
         CacheObject *GetClosestAvailable(const GeometricRegion &region,
                                          const DataArray &read,
                                          CacheAccess access = EXCLUSIVE);
+        CacheObject *GetAvailable(const GeometricRegion &region,
+                                  CacheAccess access = EXCLUSIVE);
 
     private:
         int GetMinDistanceIndex(const CacheObjects *objects,

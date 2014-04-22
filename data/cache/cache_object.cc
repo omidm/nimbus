@@ -60,16 +60,21 @@ void CacheObject::ReadToCache(const DataArray &read_set,
 }
 
 void CacheObject::Read(const DataArray &read_set,
-                       const GeometricRegion &reg) {
-    DataArray read;
-    for (size_t i = 0; i < read_set.size(); ++i) {
-        Data *d = read_set[i];
-        if (!pids_.contains(d->physical_id()))
-            read.push_back(d);;
+                       const GeometricRegion &reg,
+                       bool read_all) {
+    if (read_all) {
+        ReadToCache(read_set, reg);
+    } else {
+        DataArray read;
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            Data *d = read_set[i];
+            if (!pids_.contains(d->physical_id()))
+                read.push_back(d);
+        }
+        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
+        if (!read.empty())
+            ReadToCache(read, reg);
     }
-    dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
-    if (!read.empty())
-        ReadToCache(read, reg);
 }
 
 void CacheObject::WriteFromCache(const DataArray &write_set,
