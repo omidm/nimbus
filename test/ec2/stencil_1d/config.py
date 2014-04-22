@@ -9,9 +9,10 @@ NIMBUS_AMI = 'ami-50201815'
 UBUNTU_AMI = 'ami-660c3023'
 KEY_NAME = 'omidm-sing-key-pair-us-west-1'
 SECURITY_GROUP = 'nimbus_sg_uswest1'
-INSTANCE_TYPE = 't1.micro'
+# INSTANCE_TYPE = 't1.micro'
+INSTANCE_TYPE = 'c3.xlarge'
 PLACEMENT_GROUP = None
-INSTANCE_NUM = 2
+INSTANCE_NUM = 3
 
 
 # US West (Oregon) Region
@@ -40,6 +41,10 @@ SCHEDULER_BINARY = 'scheduler'
 WORKER_BINARY = 'worker'
 
 EC2_FOLDER_NAME = 'nimbus/'
+
+FIRST_PORT = 5900
+LOG_FILE_NAME = 'ec2_log.txt'
+OUTPUT_PATH = 'output/'
 
 
 
