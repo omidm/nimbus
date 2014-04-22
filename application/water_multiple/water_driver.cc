@@ -324,7 +324,9 @@ InitializeParticleLevelsetEvolutionHelper(
   assert(grid_input.Is_MAC_Grid());
   particle_levelset_evolution->grid = grid_input;
   // Resizes phi here.
-  if (data_config.GetFlag(DataConfig::LEVELSET)) {
+  if (data_config.GetFlag(DataConfig::LEVELSET)
+      || data_config.GetFlag(DataConfig::LEVELSET_READ)
+      || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
     particle_levelset_evolution->phi.Resize(
         grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
   }
