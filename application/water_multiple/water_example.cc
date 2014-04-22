@@ -21,6 +21,7 @@
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_include.h"
+#include "application/water_multiple/parameters.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_example.h"
 #include "data/physbam/translator_physbam_old.h"
@@ -537,8 +538,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    use_cache = false;
-    if (!use_cache) {
+    if (!(use_cache && application::kUseCache)) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
     }
@@ -1032,8 +1032,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
-    use_cache = false;
-    if (!use_cache) {
+    if (!(use_cache && application::kUseCache)) {
       Load_From_Nimbus_No_Cache(job, da, frame);
       return;
     }
