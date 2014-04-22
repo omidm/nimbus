@@ -60,16 +60,21 @@ void CacheObject::ReadToCache(const DataArray &read_set,
 }
 
 void CacheObject::Read(const DataArray &read_set,
-                       const GeometricRegion &reg) {
-    DataArray read;
-    for (size_t i = 0; i < read_set.size(); ++i) {
-        Data *d = read_set[i];
-        if (!pids_.contains(d->physical_id()))
-            read.push_back(d);;
+                       const GeometricRegion &reg,
+                       bool read_all) {
+    if (read_all) {
+        ReadToCache(read_set, reg);
+    } else {
+        DataArray read;
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            Data *d = read_set[i];
+            if (!pids_.contains(d->physical_id()))
+                read.push_back(d);
+        }
+        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
+        if (!read.empty())
+            ReadToCache(read, reg);
     }
-    dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
-    if (!read.empty())
-        ReadToCache(read, reg);
 }
 
 void CacheObject::WriteFromCache(const DataArray &write_set,
@@ -111,13 +116,20 @@ void CacheObject::ReleaseAccess() {
 
 void CacheObject::SetUpRead(const DataArray &read_set,
                             bool read_keep_valid) {
-    pids_.clear();
     if (read_keep_valid) {
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            pids_.insert(d->physical_id());
+            logical_data_id_t lid = d->logical_id();
+            physical_data_id_t pid = d->physical_id();
+            if (element_map_.find(lid) != element_map_.end())
+                pids_.remove(element_map_[lid]);
+            element_map_[lid] = pid;
+            pids_.insert(pid);
             d->SetUpCacheObject(this);
         }
+    } else {
+        element_map_.clear();
+        pids_.clear();
     }
 }
 
@@ -125,14 +137,18 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
     write_back_ = write_set;
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
+        logical_data_id_t lid = d->logical_id();
+        physical_data_id_t pid = d->physical_id();
         d->InvalidateCacheObjects();
+        element_map_[lid] = pid;
+        pids_.insert(pid);
         d->SetUpCacheObject(this);
-        pids_.insert(d->physical_id());
     }
 }
 
-void CacheObject::InvalidateCacheObject(physical_data_id_t pid) {
-    pids_.remove(pid);
+void CacheObject::InvalidateCacheObject(Data *d) {
+    element_map_.erase(d->logical_id());
+    pids_.remove(d->physical_id());
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set,

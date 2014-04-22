@@ -63,6 +63,10 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     }
 
     assert(main_copy.size() == scratch_copies.size());
+    if (main_copy.size() == 0) {
+        dbg(DBG_ERROR, "No particles passed to synchronize job!\n");
+        exit(-1);
+    }
 
     for (size_t i = 0; i < main_copy.size(); i++) {
         DataParticleArray *merge_to = dynamic_cast<DataParticleArray *>(main_copy[i]);

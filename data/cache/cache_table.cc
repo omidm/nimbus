@@ -72,6 +72,18 @@ CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
         return table_[region]->at(min);
 }
 
+CacheObject *CacheTable::GetAvailable(const GeometricRegion &region,
+                                      CacheAccess access) {
+    if (table_.find(region) == table_.end())
+        return NULL;
+    CacheObjects *objects = table_[region];
+    for (size_t i = 0; i < objects->size(); ++i) {
+        if (objects->at(i)->IsAvailable(access))
+            return objects->at(i);
+    }
+    return NULL;
+}
+
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
                                     const DataArray &read,
                                     CacheAccess access) const {

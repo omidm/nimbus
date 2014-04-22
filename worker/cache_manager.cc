@@ -57,7 +57,8 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
                                         const GeometricRegion &region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
-                                        bool read_keep_valid) {
+                                        bool read_keep_valid,
+                                        bool read_all) {
     CacheObject *co = NULL;
     if (pool_->find(prototype.type()) == pool_->end()) {
         CacheTable *ct = new CacheTable();
@@ -70,7 +71,11 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
         ct->AddEntry(region, co);
     } else {
         CacheTable *ct = (*pool_)[prototype.type()];
-        co = ct->GetClosestAvailable(region, read, access);
+        if (read_all) {
+            co = ct->GetAvailable(region, access);
+        } else {
+            co = ct->GetClosestAvailable(region, read, access);
+        }
         if (co == NULL) {
             co = prototype.CreateNew(region);
             if (co == NULL) {
@@ -81,7 +86,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
         }
     }
     co->AcquireAccess(access);
-    co->Read(read, region);
+    co->Read(read, region, read_all);
     co->SetUpRead(read, read_keep_valid | (access == SHARED));
     co->SetUpWrite(write);
     return co;
@@ -93,7 +98,8 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
                                         const GeometricRegion &read_region,
                                         const CacheObject &prototype,
                                         CacheAccess access,
-                                        bool read_keep_valid) {
+                                        bool read_keep_valid,
+                                        bool read_all) {
     CacheObject *co = NULL;
     if (pool_->find(prototype.type()) == pool_->end()) {
         CacheTable *ct = new CacheTable();
@@ -106,7 +112,11 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
         ct->AddEntry(region, co);
     } else {
         CacheTable *ct = (*pool_)[prototype.type()];
-        co = ct->GetClosestAvailable(region, read, access);
+        if (read_all) {
+            co = ct->GetAvailable(region, access);
+        } else {
+            co = ct->GetClosestAvailable(region, read, access);
+        }
         if (co == NULL) {
             co = prototype.CreateNew(region);
             if (co == NULL) {
@@ -117,7 +127,7 @@ CacheObject *CacheManager::GetAppObject(const DataArray &read,
         }
     }
     co->AcquireAccess(access);
-    co->Read(read, read_region);
+    co->Read(read, read_region, read_all);
     // if access is shared, all data needs to be kept valid!
     co->SetUpRead(read, read_keep_valid | (access != EXCLUSIVE));
     co->SetUpWrite(write);
