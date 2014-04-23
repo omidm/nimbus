@@ -36,6 +36,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <math.h>
 #include "./scheduler_v2.h"
 
 SchedulerV2::SchedulerV2(unsigned int p)
@@ -43,27 +44,43 @@ SchedulerV2::SchedulerV2(unsigned int p)
   initialized_domains_ = false;
 }
 
+void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z);
+
 bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   size_t worker_num = server_->worker_num();
   GeometricRegion global_bounding_region =
     data_manager_->global_bounding_region();
 
-  if (!initialized_domains_ ||
-      worker_num_ != worker_num ||
-      global_bounding_region_ != global_bounding_region) {
+  if ((!initialized_domains_) ||
+      (worker_num_ != worker_num) ||
+      (global_bounding_region_ != global_bounding_region)) {
     global_bounding_region_ = global_bounding_region;
     worker_num_ = worker_num;
     worker_domains_.clear();
-    int_dimension_t delta = (int_dimension_t)
-      ((float) (global_bounding_region_.dy()) / (float) (worker_num_)); // NOLINT
-    for (size_t i = 0; i < worker_num_; ++i) {
-      worker_domains_.push_back(GeometricRegion(
-            global_bounding_region_.x(),
-            global_bounding_region_.y() + i * delta,
-            global_bounding_region_.z(),
-            global_bounding_region_.dx(),
-            delta,
-            global_bounding_region_.dz()));
+
+    float num_x, num_y, num_z;
+    SplitDimensions(worker_num, &num_x, &num_y, &num_z);
+
+    int_dimension_t dx =
+      static_cast<int_dimension_t>(global_bounding_region_.dx() / num_x);
+    int_dimension_t dy =
+      static_cast<int_dimension_t>(global_bounding_region_.dy() / num_y);
+    int_dimension_t dz =
+      static_cast<int_dimension_t>(global_bounding_region_.dz() / num_z);
+
+
+    for (size_t i = 0; i < num_x; ++i) {
+      for (size_t j = 0; j < num_y; ++j) {
+        for (size_t k = 0; k < num_z; ++k) {
+          worker_domains_.push_back(GeometricRegion(
+                global_bounding_region_.x() + i * dx,
+                global_bounding_region_.y() + j * dy,
+                global_bounding_region_.z() + k * dz,
+                dx,
+                dy,
+                dz));
+        }
+      }
     }
     initialized_domains_ = true;
   }
@@ -94,5 +111,54 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
 
   std::cout << "Picked worker: " << w_id << " for job: " << job->job_name() << std::endl;
   return server_->GetSchedulerWorkerById(worker, w_id);
+}
+
+
+void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z) {
+  switch (worker_num) {
+    case 1 :
+      *num_x = 1;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 2 :
+      *num_x = 1;
+      *num_y = 2;
+      *num_z = 1;
+      break;
+    case 3 :
+      *num_x = 1;
+      *num_y = 3;
+      *num_z = 1;
+      break;
+    case 4 :
+      *num_x = 2;
+      *num_y = 2;
+      *num_z = 1;
+      break;
+    case 5 :
+      *num_x = 1;
+      *num_y = 5;
+      *num_z = 1;
+      break;
+    case 6 :
+      *num_x = 2;
+      *num_y = 3;
+      *num_z = 1;
+      break;
+    case 7 :
+      *num_x = 1;
+      *num_y = 7;
+      *num_z = 1;
+      break;
+    case 8 :
+      *num_x = 1;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    default:
+      dbg(DBG_ERROR, "ERROR: Do not know how to split!");
+      exit(-1);
+  }
 }
 
