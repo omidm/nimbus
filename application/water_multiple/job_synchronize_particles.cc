@@ -59,7 +59,8 @@ nimbus::Job* JobSynchronizeParticles::Clone() {
 void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing synchronize particles job\n");
 
-    if (kUseCache) {
+    bool sync_new = false;
+    if (kUseCache && sync_new) {
         nimbus::DataArray read, write;
         GetReadData(this, da, &read);
         GetWriteData(this, da, &write);
