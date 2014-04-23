@@ -159,7 +159,7 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
       pd.set_size(0);
   if (hash != this->HashCode()) {
     dbg(DBG_ERROR, "Data %s got corrupted somewhere before serialization!!\n", name().c_str());
-    assert(false);
+    // assert(false);
   }
   pd.set_hash(hash);
   std::string ser;
@@ -207,7 +207,7 @@ bool PhysBAMData::DeSerialize(const SerializedData &ser_data,
     }
     if (pd.hash() != data->HashCode()) {
       dbg(DBG_ERROR, "For %s data sent != data received!!!\n", name().c_str());
-      assert(false);
+      // assert(false);
     } else {
       data->hash = pd.hash();
     }
