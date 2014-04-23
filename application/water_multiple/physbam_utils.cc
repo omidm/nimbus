@@ -67,36 +67,42 @@ bool InitializeExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
   dbg(APP_LOG, "Enter initialize_example_driver.\n");
-  dbg(APP_LOG, "Global region: %s\n",
-      init_config.global_region.toString().c_str());
-  dbg(APP_LOG, "Local region: %s\n",
-      init_config.local_region.toString().c_str());
-  example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
-  // parameters for nimbus
-  example->local_region = init_config.local_region;
-    // TODO(quhang), this cannot work for no-square global region.
-  example->kScale = init_config.global_region.dx();
-  example->relative_region.Rebuild(1, 1, 1,
-                                   init_config.local_region.dx(),
-                                   init_config.local_region.dy(),
-                                   init_config.local_region.dz());
-  example->use_cache = init_config.use_cache;
-  // physbam intiialization
-  example->Initialize_Grid(
-      TV_INT(init_config.local_region.dx(),
-             init_config.local_region.dy(),
-             init_config.local_region.dz()),
-      GridToRange(init_config.global_region, init_config.local_region));
-  PhysBAM::WaterSources::Add_Source(example);
-  example->data_config.Set(data_config);
-  driver= new PhysBAM::WATER_DRIVER<TV>(*example);
-  // parameters
-  driver->init_phase = init_config.init_phase;
-  driver->current_frame = init_config.frame;
-  driver->time = init_config.time;
-  dbg(APP_LOG, "Before enter driver->Initialize.\n");
-  // physbam initialization
-  driver->Initialize(job, da);
+  dbg(APP_LOG, "Global region: %s\n", init_config.global_region.toString().c_str());
+  dbg(APP_LOG, "Local region: %s\n", init_config.local_region.toString().c_str());
+
+  {
+    example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+    // parameters for nimbus
+    example->local_region = init_config.local_region;
+    example->kScale = init_config.global_region.dx();
+    example->relative_region.Rebuild(1, 1, 1,
+        init_config.local_region.dx(),
+        init_config.local_region.dy(),
+        init_config.local_region.dz());
+    example->use_cache = init_config.use_cache;
+    // physbam intiialization
+    example->Initialize_Grid(
+        TV_INT(init_config.local_region.dx(),
+          init_config.local_region.dy(),
+          init_config.local_region.dz()),
+        GridToRange(init_config.global_region, init_config.local_region));
+    PhysBAM::WaterSources::Add_Source(example);
+    example->data_config.Set(data_config);
+  }
+  {
+    driver= new PhysBAM::WATER_DRIVER<TV>(*example);
+    // parameters
+    driver->init_phase = init_config.init_phase;
+    driver->current_frame = init_config.frame;
+    driver->time = init_config.time;
+    dbg(APP_LOG, "Before enter driver->Initialize.\n");
+    // physbam initialization
+    if (init_config.init_phase)
+      driver->Initialize_First(job, da);
+    else
+      driver->Initialize(job, da);
+  }
+
   dbg(APP_LOG, "Exit initialize_example_driver.\n");
   return true;
 }

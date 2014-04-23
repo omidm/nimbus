@@ -43,6 +43,8 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
 
+    void Initialize_First(const nimbus::Job *job,
+                          const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da);
 

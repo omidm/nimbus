@@ -54,6 +54,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/reg_def.cc
     ${PROJECT_SOURCE_DIR}/water_app.cc
     ${PROJECT_SOURCE_DIR}/water_driver.cc
+    ${PROJECT_SOURCE_DIR}/water_driver_initializers.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     ${PROJECT_SOURCE_DIR}/water_sources.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.cc
