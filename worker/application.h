@@ -37,12 +37,18 @@
   * write various application served by Nimbus.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  *
+  * A job should interact with Nimbus runtime system through interface in
+  * application. And the methods offered in applicaiton class are expected to be
+  * thread-safe.  --quhang
+  *
   */
 
 
 #ifndef NIMBUS_WORKER_APPLICATION_H_
 #define NIMBUS_WORKER_APPLICATION_H_
 
+#include <pthread.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -129,12 +135,28 @@ class Application {
  private:
   app_id_t id_;
   size_t priority_;
+  // Protects job table.
+  pthread_mutex_t lock_job_table_;
   JobTable job_table_;
+  // Protects data table.
+  pthread_mutex_t lock_data_table_;
   DataTable data_table_;
   SchedulerClient* client_;
   IDMaker* id_maker_;
   WorkerLdoMap* ldo_map_;
   CacheManager* cache_manager_;
+  class LockGuard {
+   public:
+    explicit LockGuard(pthread_mutex_t* lock) {
+      pthread_mutex_lock(lock);
+      lock_ = lock;
+    }
+    virtual ~LockGuard() {
+      pthread_mutex_unlock(lock_);
+    }
+   private:
+    pthread_mutex_t* lock_;
+  };
 };
 
 }  //  namespace nimbus
