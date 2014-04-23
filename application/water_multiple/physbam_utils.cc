@@ -237,7 +237,7 @@ bool InitializeExampleAndDriver(
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.toString().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.toString().c_str());
   {
-    if (init_config.use_cache) {
+    if (init_config.use_cache && kUseCache) {
       AppCacheObjects cache;
       GetAppCacheObjects(init_config, data_config, *job, da, &cache);
       example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), &cache);
@@ -271,7 +271,7 @@ bool InitializeExampleAndDriver(
     dbg(APP_LOG, "Before enter driver->Initialize.\n");
     // physbam initialization
     if (init_config.init_phase)
-      driver->Initialize_First(job, da);
+      driver->InitializeFirst(job, da);
     else
       driver->Initialize(job, da);
   }
