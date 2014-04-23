@@ -284,7 +284,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   // allocates array for levelset/ particles/ removed particles
   {
     example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
-    InitializeParticleLevelsetEvolutionHelper(
+    InitializeParticleLevelsetEvolutionHelperUseCache(
         example.data_config,
         example.mac_grid,
         &example.particle_levelset_evolution);
@@ -501,13 +501,6 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     &particle_levelset_evolution->particle_levelset;
   assert(grid_input.Is_MAC_Grid());
   particle_levelset_evolution->grid = grid_input;
-  // Resizes phi here.
-  if (data_config.GetFlag(DataConfig::LEVELSET)
-      || data_config.GetFlag(DataConfig::LEVELSET_READ)
-      || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
-    particle_levelset_evolution->phi.Resize(
-        grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
-  }
   // Resizes particles.
   if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
     particle_levelset->positive_particles.Resize(
