@@ -137,40 +137,41 @@ Initialize(const nimbus::Job *job,
     }
   }
 
-  example.particle_levelset_evolution.Set_Time(time);
-  example.particle_levelset_evolution.Set_CFL_Number((T).9);
-
-  example.incompressible.Set_Custom_Advection(example.advection_scalar);
-  example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
-
-  example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-  example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
-  example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
-
-  example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
-  example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
-  example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
-  example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
-  example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
-  example.particle_levelset_evolution.Use_Particle_Levelset(true);
-  example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
-  example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
-  example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
-
-  example.incompressible.Set_Custom_Boundary(*example.boundary);
-  example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
-  example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
-  example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
-  example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
-  example.incompressible.projection.elliptic_solver->pcg.Show_Results();
-  example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
-  LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
-      dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
-          example.projection.elliptic_solver);
-  example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
-
   if (init_phase) {
     // physbam init
+
+    example.particle_levelset_evolution.Set_Time(time);
+    example.particle_levelset_evolution.Set_CFL_Number((T).9);
+
+    example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+
+    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
+    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
+
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
+    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
+    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
+    example.particle_levelset_evolution.Use_Particle_Levelset(true);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
+    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
+
+    example.incompressible.Set_Custom_Boundary(*example.boundary);
+    example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
+    example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
+    example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
+    example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
+    example.incompressible.projection.elliptic_solver->pcg.Show_Results();
+    example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
+    LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
+        dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+            example.projection.elliptic_solver);
+    example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
+
     example.collision_bodies_affecting_fluid.Update_Intersection_Acceleration_Structures(false);
     example.collision_bodies_affecting_fluid.Rasterize_Objects();
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
@@ -179,41 +180,32 @@ Initialize(const nimbus::Job *job,
     example.particle_levelset_evolution.Make_Signed_Distance();
     example.projection.p.Fill(0);
     example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
-  }
-  else {
-    example.Load_From_Nimbus(job, da, current_frame);
-    example.collision_bodies_affecting_fluid.Rasterize_Objects();
-    example.collision_bodies_affecting_fluid.
-        Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
-  }
 
-  example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
-  example.particle_levelset_evolution.Set_Seed(2606);
-  if (init_phase) {
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+    example.particle_levelset_evolution.Set_Seed(2606);
+
     example.particle_levelset_evolution.Seed_Particles(time);
     // Comment: seems that particle should be not updated if loaded from
     // Nimbus.  -quhang
     example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
-  }
 
-  //add forces
-  example.incompressible.Set_Gravity();
-  example.incompressible.Set_Body_Force(true);
-  example.incompressible.projection.Use_Non_Zero_Divergence(false);
-  // We don't want to deal with the additional burden caused by newmann regions.
-  // Just set it to false.  --quhang
-  example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
-  example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
-  example.incompressible.Use_Explicit_Part_Of_Implicit_Viscosity(false);
-  example.incompressible.Set_Maximum_Implicit_Viscosity_Iterations(40);
-  example.incompressible.Use_Variable_Vorticity_Confinement(false);
-  example.incompressible.Set_Surface_Tension(0);
-  example.incompressible.Set_Variable_Surface_Tension(false);
-  example.incompressible.Set_Viscosity(0);
-  example.incompressible.Set_Variable_Viscosity(false);
-  example.incompressible.projection.Set_Density(1e3);
+    //add forces
+    example.incompressible.Set_Gravity();
+    example.incompressible.Set_Body_Force(true);
+    example.incompressible.projection.Use_Non_Zero_Divergence(false);
+    // We don't want to deal with the additional burden caused by newmann regions.
+    // Just set it to false.  --quhang
+    example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
+    example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
+    example.incompressible.Use_Explicit_Part_Of_Implicit_Viscosity(false);
+    example.incompressible.Set_Maximum_Implicit_Viscosity_Iterations(40);
+    example.incompressible.Use_Variable_Vorticity_Confinement(false);
+    example.incompressible.Set_Surface_Tension(0);
+    example.incompressible.Set_Variable_Surface_Tension(false);
+    example.incompressible.Set_Viscosity(0);
+    example.incompressible.Set_Variable_Viscosity(false);
+    example.incompressible.projection.Set_Density(1e3);
 
-  if (init_phase) {
     // TODO(quhang): Needs a better understanding what this block is doing. This
     // one is certainly doing something we haven't taken care of.
     ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
@@ -223,7 +215,64 @@ Initialize(const nimbus::Job *job,
 
     Write_Output_Files(example.first_frame);
     example.Save_To_Nimbus_No_Cache(job, da, current_frame);
-  } else {
+  }
+  else {
+    example.particle_levelset_evolution.Set_CFL_Number((T).9);
+    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
+    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
+    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
+    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
+    example.particle_levelset_evolution.Use_Particle_Levelset(true);
+    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
+  
+    example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
+    example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
+    example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
+    example.incompressible.projection.elliptic_solver->pcg.cg_restart_iterations=0;
+    example.incompressible.projection.elliptic_solver->pcg.Show_Results();
+
+    example.Load_From_Nimbus(job, da, current_frame);
+
+    example.particle_levelset_evolution.Set_Time(time);
+    example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
+    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
+    example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
+    example.particle_levelset_evolution.Set_Seed(2606);
+
+    example.collision_bodies_affecting_fluid.Rasterize_Objects();
+    example.collision_bodies_affecting_fluid.
+        Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
+    example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
+
+    example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    example.incompressible.Set_Custom_Boundary(*example.boundary);
+    example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
+    LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
+        dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
+            example.projection.elliptic_solver);
+    example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
+
+    //add forces
+    example.incompressible.Set_Gravity();
+    example.incompressible.Set_Body_Force(true);
+    example.incompressible.projection.Use_Non_Zero_Divergence(false);
+    // We don't want to deal with the additional burden caused by newmann regions.
+    // Just set it to false.  --quhang
+    example.incompressible.projection.elliptic_solver->Solve_Neumann_Regions(false);
+    example.incompressible.projection.elliptic_solver->solve_single_cell_neumann_regions=false;
+    example.incompressible.Use_Explicit_Part_Of_Implicit_Viscosity(false);
+    example.incompressible.Set_Maximum_Implicit_Viscosity_Iterations(40);
+    example.incompressible.Use_Variable_Vorticity_Confinement(false);
+    example.incompressible.Set_Surface_Tension(0);
+    example.incompressible.Set_Variable_Surface_Tension(false);
+    example.incompressible.Set_Viscosity(0);
+    example.incompressible.Set_Variable_Viscosity(false);
+    example.incompressible.projection.Set_Density(1e3);
+
     // Comments by quhang:
     // The collision body should not matter, and the last two parameters should
     // not matter. So just add them in the initialization part.

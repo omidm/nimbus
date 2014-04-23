@@ -36,9 +36,13 @@
  */
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/data_particle_array.h"
 #include "application/water_multiple/job_synchronize_particles.h"
 #include "application/water_multiple/job_names.h"
-#include "application/water_multiple/data_particle_array.h"
+#include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple/water_driver.h"
+#include "application/water_multiple/water_example.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
@@ -55,29 +59,31 @@ nimbus::Job* JobSynchronizeParticles::Clone() {
 void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing synchronize particles job\n");
 
-    DataVec main_copy;
-    DataSetVec scratch_copies;
-    if (!GroupSyncData(this, da, &main_copy, &scratch_copies)) {
-        dbg(DBG_WARN, "Nothing to synchronize\n");
-        return;
-    }
+    bool sync_new = false;
+    if (kUseCache && sync_new) {
+        nimbus::DataArray read, write;
+        GetReadData(this, da, &read);
+        GetWriteData(this, da, &write);
+//        PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >
+//            particle_levelset_evolution(mac_grid, kGhostNum);
+    } else {
+        DataVec main_copy;
+        DataSetVec scratch_copies;
+        if (!GroupSyncData(this, da, &main_copy, &scratch_copies)) {
+            dbg(DBG_WARN, "Nothing to synchronize\n");
+            return;
+        }
 
-    assert(main_copy.size() == scratch_copies.size());
-    if (main_copy.size() == 0) {
-        dbg(DBG_ERROR, "No particles passed to synchronize job!\n");
-        exit(-1);
+        for (size_t i = 0; i < main_copy.size(); i++) {
+            DataParticleArray *merge_to = dynamic_cast<DataParticleArray *>(main_copy[i]);
+            DataVec *scratch = scratch_copies[i];
+            if (merge_to != NULL && !scratch->empty())
+                merge_to->MergeParticles(*scratch);
+            else
+                dbg(DBG_WARN, "Passed object is not a particle array\n");
+            delete scratch;
+        }
     }
-
-    for (size_t i = 0; i < main_copy.size(); i++) {
-        DataParticleArray *merge_to = dynamic_cast<DataParticleArray *>(main_copy[i]);
-        DataVec *scratch = scratch_copies[i];
-        if (merge_to != NULL && !scratch->empty())
-            merge_to->MergeParticles(*scratch);
-        else
-            dbg(DBG_WARN, "Passed object is not a particle array\n");
-        delete scratch;
-    }
-
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }
 
