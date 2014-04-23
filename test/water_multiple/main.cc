@@ -135,8 +135,10 @@ int main(int argc, char *argv[]) {
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   application::WaterApp *app = new application::WaterApp();
-  SimpleWorker * w = new SimpleWorker(NIMBUS_SCHEDULER_IP,
-      NIMBUS_SCHEDULER_PORT, listening_port, app);
+  SimpleWorker * w = new SimpleWorker(scheduler_ip, scheduler_port, listening_port, app);
+  if (ip_address_given) {
+    w->set_ip_address(ip_address);
+  }
   w->Run();
 }
 
