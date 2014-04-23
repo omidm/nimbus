@@ -48,14 +48,14 @@
 
 namespace application {
 
-CacheFaceArray<T> kCacheFaceVel(APP_FACE_VEL, kDefaultRegion, 0);
-CacheFaceArray<T> kCacheFaceVelGhost(APP_FACE_VEL_GHOST, kDefaultRegion, kGhostNum);
-CacheFaceArray<bool> kCachePsiN(APP_PSI_N, kDefaultRegion, 1);
+const CacheFaceArray<T> kCacheFaceVel(APP_FACE_VEL, kDefaultRegion, 0);
+const CacheFaceArray<T> kCacheFaceVelGhost(APP_FACE_VEL_GHOST, kDefaultRegion, kGhostNum);
+const CacheFaceArray<bool> kCachePsiN(APP_PSI_N, kDefaultRegion, 1);
 
-CacheScalarArray<T> kCachePhi3(APP_PHI, kDefaultRegion, 3);
-CacheScalarArray<T> kCachePhi7(APP_PHI, kDefaultRegion, 7);
-CacheScalarArray<T> kCachePhi8(APP_PHI, kDefaultRegion, 8);
-CacheScalarArray<bool> kCachePsiD(APP_PSI_D, kDefaultRegion, 1);
+const CacheScalarArray<T> kCachePhi3(APP_PHI, kDefaultRegion, 3);
+const CacheScalarArray<T> kCachePhi7(APP_PHI, kDefaultRegion, 7);
+const CacheScalarArray<T> kCachePhi8(APP_PHI, kDefaultRegion, 8);
+const CacheScalarArray<bool> kCachePsiD(APP_PSI_D, kDefaultRegion, 1);
 
 } // namespace application
 

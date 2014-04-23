@@ -33,48 +33,37 @@
  */
 
 /*
- * Definitions and typedef useful for application, data and jobs.
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
 
-#include "application/water_multiple/physbam_include.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-
-#define APP_LOG DBG_TEMP
-#define APP_LOG_STR "temp"
-#define TRANSLATE_STR "translate"
+#include "application/water_multiple/cache_data_include.h"
+#include "application/water_multiple/cache_prototypes.h"
 
 namespace application {
 
-    // simulation dimension
-    const int kDimension = 3;
+struct AppCacheObjects {
+  CacheFaceArray<T> *fv;
+  CacheFaceArray<T> *fvg;
+  CacheFaceArray<bool> *psi_n;
+  CacheScalarArray<T> *phi3;
+  CacheScalarArray<T> *phi7;
+  CacheScalarArray<T> *phi8;
+  CacheScalarArray<bool> *psi_d;
 
-    // typedefs
-    typedef float T;
-    typedef float RW;
-    typedef PhysBAM::VECTOR<T,   kDimension> TV;
-    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
-    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
+  AppCacheObjects() {
+    fv    = NULL;
+    fvg   = NULL;
+    psi_n = NULL;
+    phi3  = NULL;
+    phi7  = NULL;
+    phi8  = NULL;
+    psi_d = NULL;
+  }
+};
 
-    // application specific parameters and constants
-    const bool kUseCache = false;
-    const int kThreadsNum = 1;
-    const int kScale = 40;
-    const int kAppPartNum = 2;
-    const int kGhostNum = 3;
-    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
-    const int kPressureGhostNum = 1;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-    // follow physbam convenctions here, otherwise translator becomes messy
-    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
+}  // namespace application
 
-} // namespace application
-
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_

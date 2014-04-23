@@ -62,8 +62,8 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     bool sync_new = false;
     if (kUseCache && sync_new) {
         nimbus::DataArray read, write;
-        GetReadData(this, da, &read);
-        GetWriteData(this, da, &write);
+        GetReadData(*this, da, &read);
+        GetWriteData(*this, da, &write);
 //        PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >
 //            particle_levelset_evolution(mac_grid, kGhostNum);
     } else {
