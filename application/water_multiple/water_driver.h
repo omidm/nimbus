@@ -43,9 +43,11 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
 
-    void Initialize_First(const nimbus::Job *job,
+    void InitializeFirst(const nimbus::Job *job,
                           const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
+                    const nimbus::DataArray &da);
+    void InitializeUseCache(const nimbus::Job *job,
                     const nimbus::DataArray &da);
 
     bool InitializeIncompressibleProjectionHelper(
@@ -55,6 +57,11 @@ public:
         PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >* projection);
 
     bool InitializeParticleLevelsetEvolutionHelper(
+        const application::DataConfig& data_config,
+        const GRID<TV>& grid_input,
+        PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*
+        particle_levelset_evolution);
+    bool InitializeParticleLevelsetEvolutionHelperUseCache(
         const application::DataConfig& data_config,
         const GRID<TV>& grid_input,
         PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >*

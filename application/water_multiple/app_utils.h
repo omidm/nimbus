@@ -78,17 +78,17 @@ namespace application {
                            const nimbus::DataArray& da,
                            nimbus::PdiVector *vec,
                            AccessType access_type);
-    void GetReadData(const nimbus::Job *job,
+    void GetReadData(const nimbus::Job &job,
                      const nimbus::DataArray &da,
                      nimbus::DataArray *read);
-    void GetWriteData(const nimbus::Job *job,
+    void GetWriteData(const nimbus::Job &job,
                       const nimbus::DataArray &da,
                       nimbus::DataArray *read);
-    void GetReadData(const nimbus::Job *job,
+    void GetReadData(const nimbus::Job &job,
                      const std::string &name,
                      const nimbus::DataArray &da,
                      nimbus::DataArray *read);
-    void GetWriteData(const nimbus::Job *job,
+    void GetWriteData(const nimbus::Job &job,
                       const std::string &name,
                       const nimbus::DataArray &da,
                       nimbus::DataArray *read);

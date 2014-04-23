@@ -83,8 +83,9 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
     ${PROJECT_SOURCE_DIR}/cache_data_include.h
     ${PROJECT_SOURCE_DIR}/cache_face_array.h
-    ${PROJECT_SOURCE_DIR}/cache_scalar_array.h
+    ${PROJECT_SOURCE_DIR}/cache_options.h
     ${PROJECT_SOURCE_DIR}/cache_prototypes.h
+    ${PROJECT_SOURCE_DIR}/cache_scalar_array.h
     ${PROJECT_SOURCE_DIR}/data_include.h
     ${PROJECT_SOURCE_DIR}/data_names.h
     ${PROJECT_SOURCE_DIR}/data_def.h

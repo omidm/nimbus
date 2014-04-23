@@ -36,27 +36,34 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
-
-#include <string>
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_
 
 #include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/data_names.h"
-#include "application/water_multiple/parameters.h"
-#include "shared/geometric_region.h"
+#include "application/water_multiple/cache_prototypes.h"
 
 namespace application {
 
-const CacheFaceArray<T> kCacheFaceVel(APP_FACE_VEL, kDefaultRegion, 0);
-const CacheFaceArray<T> kCacheFaceVelGhost(APP_FACE_VEL_GHOST, kDefaultRegion, kGhostNum);
-const CacheFaceArray<bool> kCachePsiN(APP_PSI_N, kDefaultRegion, 1);
+struct AppCacheObjects {
+  CacheFaceArray<T> *fv;
+  CacheFaceArray<T> *fvg;
+  CacheFaceArray<bool> *psi_n;
+  CacheScalarArray<T> *phi3;
+  CacheScalarArray<T> *phi7;
+  CacheScalarArray<T> *phi8;
+  CacheScalarArray<bool> *psi_d;
 
-const CacheScalarArray<T> kCachePhi3(APP_PHI, kDefaultRegion, 3);
-const CacheScalarArray<T> kCachePhi7(APP_PHI, kDefaultRegion, 7);
-const CacheScalarArray<T> kCachePhi8(APP_PHI, kDefaultRegion, 8);
-const CacheScalarArray<bool> kCachePsiD(APP_PSI_D, kDefaultRegion, 1);
+  AppCacheObjects() {
+    fv    = NULL;
+    fvg   = NULL;
+    psi_n = NULL;
+    phi3  = NULL;
+    phi7  = NULL;
+    phi8  = NULL;
+    psi_d = NULL;
+  }
+};
 
-} // namespace application
+}  // namespace application
 
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_OPTIONS_H_

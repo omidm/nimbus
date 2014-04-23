@@ -20,7 +20,9 @@
 
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/cache_options.h"
 #include "application/water_multiple/data_include.h"
+#include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_example.h"
@@ -52,14 +54,47 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
-    use_cache = false;
-    cache_fv = NULL;
-    cache_fvg = NULL;
+    use_cache   = false;
+    cache_fv    = NULL;
+    cache_fvg   = NULL;
     cache_psi_n = NULL;
-    cache_phi3 = NULL;
-    cache_phi7 = NULL;
-    cache_phi8 = NULL;
+    cache_phi3  = NULL;
+    cache_phi7  = NULL;
+    cache_phi8  = NULL;
     cache_psi_d = NULL;
+    Initialize_Particles();
+    Initialize_Read_Write_General_Structures();
+}
+//#####################################################################
+// WATER_EXAMPLE
+//#####################################################################
+template<class TV> WATER_EXAMPLE<TV>::
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects *cache) :
+    stream_type(stream_type_input),
+    initial_time(0),
+    first_frame(0),
+    last_frame(application::kLastFrame),
+    frame_rate(24),
+    write_substeps_level(-1),
+    write_output_files(true),
+    output_directory(application::kOutputDir),
+    number_of_ghost_cells(application::kGhostNum),
+    cfl(1),
+    mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    particle_levelset_evolution(mac_grid,number_of_ghost_cells),
+    incompressible(mac_grid,projection),
+    boundary(0),
+    collision_bodies_affecting_fluid(mac_grid)
+{
+    use_cache   = false;
+    cache_fv    = cache->fv;
+    cache_fvg   = cache->fvg;
+    cache_psi_n = cache->psi_n;
+    cache_phi3  = cache->phi3;
+    cache_phi7  = cache->phi7;
+    cache_phi8  = cache->phi8;
+    cache_psi_d = cache->psi_d;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -1054,131 +1089,38 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
-    nimbus::CacheManager *cm = job->GetCacheManager();
-
-    dbg(DBG_WARN, "\n--- *** --- LOAD \n");
-
     // mac velocities
-    if (data_config.GetFlag(DataConfig::VELOCITY))
+    if (cache_fv)
     {
-        nimbus::DataArray read, write;
-        const std::string fvstring = std::string(APP_FACE_VEL);
-        application::GetReadData(job, fvstring, da, &read);
-        application::GetWriteData(job, fvstring, da, &write);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity for region %s\n",
-            read.size(), array_reg_central.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-            cm->GetAppObject(read, write, array_reg_central,
-                application::kCacheFaceVel,
-                nimbus::EXCLUSIVE, write.empty());
-        cache_fv = dynamic_cast<TCacheFaceArray *>(cache_obj);
-        assert(cache_fv != NULL);
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
-        dbg(APP_LOG, "Finish translating velocity.\n");
     }
 
     // mac velocities ghost
-    if (data_config.GetFlag(DataConfig::VELOCITY_GHOST))
+    if (cache_fvg)
     {
-        nimbus::DataArray read, write;
-        const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-        application::GetReadData(job, fvgstring, da, &read);
-        application::GetWriteData(job, fvgstring, da, &write);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity ghost for region %s\n",
-            read.size(), array_reg_outer.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-            cm->GetAppObject(read, write,
-                array_reg_outer,
-                application::kCacheFaceVelGhost,
-                nimbus::EXCLUSIVE, write.empty());
-        cache_fvg = dynamic_cast<TCacheFaceArray *>(cache_obj);
-        assert(cache_fvg != NULL);
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
-        dbg(APP_LOG, "Finish translating velocity.\n");
     }
 
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
+    if (cache_phi3)
     {
-      const std::string lsstring = std::string(APP_PHI);
-      nimbus::DataArray read3, read7, read8, write3, write7, write8;
-      nimbus::DataArray read, write;
-      bool l = data_config.GetFlag(DataConfig::LEVELSET);
-      bool lr = data_config.GetFlag(DataConfig::LEVELSET_READ);
-      bool lw = data_config.GetFlag(DataConfig::LEVELSET_WRITE);
-      bool l7r = data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_READ);
-      bool l7w = data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_WRITE);
-      bool l8r = data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT_READ);
-      bool l8w = data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT_WRITE);
-      if (l || lr || lw || l7r || l7w || l8r || l8w) {
-        application::GetReadData(job, lsstring, da, &read);
-        application::GetWriteData(job, lsstring, da, &write);
-      }
-      if (l) {
-        read3 = read;
-        write3 = write;
-      }
-      if (lr)
-        read3 = read;
-      if (lw)
-        write3 = write;
-      if (l7r)
-        read7 = read;
-      if (l7w)
-        write7 = write;
-      if (l8r)
-        read8 = read;
-      if (l8w)
-        write8 = write;
-      if (!(read3.empty() && write3.empty()))
-      {
-          dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 3 for region %s\n",
-              read3.size(), array_reg_outer.toString().c_str());
-          nimbus::CacheObject *cache_obj =
-              cm->GetAppObject(read3, write3,
-                  array_reg_outer,
-                  application::kCachePhi3,
-                  nimbus::EXCLUSIVE, write3.empty() && write7.empty() && write8.empty());
-          cache_phi3 = dynamic_cast<TCacheScalarArray *>(cache_obj);
-          assert(cache_phi3 != NULL);
-          T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-          T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          dbg(APP_LOG, "Finish translating velocity levelset 3.\n");
-      }
-      if (!(read7.empty() && write7.empty())) {
-        application::GetReadData(job, lsstring, da, &read7);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 7 for region %s\n",
-            read7.size(), array_reg_outer_7.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-            cm->GetAppObject(read7, write7,
-                array_reg_outer_7,
-                application::kCachePhi7,
-                nimbus::EXCLUSIVE, false);
-        cache_phi7 = dynamic_cast<TCacheScalarArray *>(cache_obj);
-        assert(cache_phi7 != NULL);
+        T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+    }
+    if (cache_phi7)
+    {
         T_SCALAR_ARRAY *phi7 = cache_phi7->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-        dbg(APP_LOG, "Finish translating velocity levelset 7.\n");
-      }
-      if (!(read8.empty() && write8.empty()))
-      {
-          dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 8 for region %s\n",
-              read8.size(), array_reg_outer_8.toString().c_str());
-          nimbus::CacheObject *cache_obj =
-              cm->GetAppObject(read8, write8,
-                  array_reg_outer_8,
-                  application::kCachePhi8,
-                  nimbus::EXCLUSIVE, false);
-          cache_phi8 = dynamic_cast<TCacheScalarArray *>(cache_obj);
-          assert(cache_phi8 != NULL);
-          T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-          T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          dbg(APP_LOG, "Finish translating levelset 8.\n");
-      }
+    }
+    if (cache_phi8)
+    {
+        T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
     }
 
     // positive particles
@@ -1234,45 +1176,17 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     dbg(APP_LOG, "Finish translating particle id.\n");
 
     // psi_d.
-    if (data_config.GetFlag(DataConfig::PSI_D))
+    if (cache_psi_d)
     {
-        nimbus::DataArray read, write;
-        const std::string psi_d_string = std::string(APP_PSI_D);
-        application::GetReadData(job, psi_d_string, da, &read);
-        application::GetWriteData(job, psi_d_string, da, &write);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into psi_d for region %s\n",
-            read.size(), array_reg_thin_outer.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-            cm->GetAppObject(read, write,
-                array_reg_thin_outer,
-                application::kCachePsiD,
-                nimbus::EXCLUSIVE, write.empty());
-        cache_psi_d = dynamic_cast<BoolCacheScalarArray *>(cache_obj);
-        assert(cache_psi_d != NULL);
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
-        dbg(APP_LOG, "Finish translating psi_d.\n");
     }
 
     // psi_n.
-    if (data_config.GetFlag(DataConfig::PSI_N))
+    if (cache_psi_n)
     {
-        nimbus::DataArray read, write;
-        const std::string psi_n_string = std::string(APP_PSI_N);
-        application::GetReadData(job, psi_n_string, da, &read);
-        application::GetWriteData(job, psi_n_string, da, &write);
-        dbg(DBG_WARN, "\n--- Requesting %i elements into psi_n for region %s\n",
-            read.size(), array_reg_thin_outer.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-            cm->GetAppObject(read, write,
-                array_reg_thin_outer,
-                application::kCachePsiN,
-                nimbus::EXCLUSIVE, write.empty());
-        cache_psi_n = dynamic_cast<BoolCacheFaceArray *>(cache_obj);
-        assert(cache_psi_n != NULL);
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
-        dbg(APP_LOG, "Finish translating psi_n.\n");
     }
 
     // pressure.

@@ -21,6 +21,7 @@
 #include <PhysBAM_Dynamics/Level_Sets/PARTICLE_LEVELSET_EVOLUTION_UNIFORM.h>
 #include "application/water_multiple/cache_data_include.h"
 #include "application/water_multiple/cache_face_array.h"
+#include "application/water_multiple/cache_options.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "data/physbam/translator_physbam_old.h"
@@ -100,6 +101,7 @@ public:
     BoolCacheScalarArray *cache_psi_d;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
+    WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects *cache);
     virtual ~WATER_EXAMPLE();
     
     T Time_At_Frame(const int frame) const
