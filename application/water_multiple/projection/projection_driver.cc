@@ -103,6 +103,10 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
 
 // Projection is broken to "smallest" code piece to allow future changes.
 void ProjectionDriver::LocalInitialize() {
+  if (projection_data.local_n == 0) {
+    projection_data.local_residual = 0;
+    return;
+  }
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
   projection_data.vector_x.Resize(projection_data.local_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
@@ -149,6 +153,9 @@ void ProjectionDriver::GlobalInitialize() {
 }
 
 void ProjectionDriver::DoPrecondition() {
+  if (projection_data.local_n == 0) {
+    return;
+  }
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
@@ -158,6 +165,10 @@ void ProjectionDriver::DoPrecondition() {
 }
 
 void ProjectionDriver::CalculateLocalRho() {
+  if (projection_data.local_n == 0) {
+    projection_data.local_rho = 0;
+    return;
+  }
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   projection_data.local_rho =
@@ -175,6 +186,9 @@ void ProjectionDriver::ReduceRho() {
 }
 
 void ProjectionDriver::UpdateSearchVector() {
+  if (projection_data.local_n == 0) {
+    return;
+  }
   int interior_n = partition.interior_indices.Size() + 1;
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
@@ -187,6 +201,9 @@ void ProjectionDriver::UpdateSearchVector() {
 }
 
 void ProjectionDriver::UpdateTempVector() {
+  if (projection_data.local_n == 0) {
+    return;
+  }
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& p = projection_data.p;
@@ -194,6 +211,10 @@ void ProjectionDriver::UpdateTempVector() {
 }
 
 void ProjectionDriver::CalculateLocalAlpha() {
+  if (projection_data.local_n == 0) {
+    projection_data.local_dot_product_for_alpha = 0;
+    return;
+  }
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
   projection_data.local_dot_product_for_alpha =
@@ -207,6 +228,9 @@ void ProjectionDriver::ReduceAlpha() {
 }
 
 void ProjectionDriver::UpdateOtherVectors() {
+  if (projection_data.local_n == 0) {
+    return;
+  }
   int interior_n = partition.interior_indices.Size()+1;
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
@@ -221,6 +245,10 @@ void ProjectionDriver::UpdateOtherVectors() {
 }
 
 void ProjectionDriver::CalculateLocalResidual() {
+  if (projection_data.local_n == 0) {
+    projection_data.local_residual = 0;
+    return;
+  }
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   projection_data.local_residual = b_interior.Max_Abs();
 }

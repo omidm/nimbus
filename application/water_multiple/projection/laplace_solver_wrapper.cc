@@ -96,21 +96,26 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
       &interior_n);
 
   RANGE<TV_INT> domain = laplace->grid.Domain_Indices(1);
-  // Construct both A and b.
-  laplace->Find_A(
-      domain, A_array, b_array,
-      filled_region_cell_count, cell_index_to_matrix_index);
 
-  laplace->pcg.Enforce_Compatibility(
-     !laplace->filled_region_touches_dirichlet(color) &&
-     laplace->enforce_compatibility);
+  if (local_n != 0) {
+    // Construct both A and b.
+    laplace->Find_A(
+        domain, A_array, b_array,
+        filled_region_cell_count, cell_index_to_matrix_index);
 
-  SPARSE_MATRIX_FLAT_NXN<T>& A = A_array(color);
-  VECTOR_ND<T>& b = b_array(color);
-  A.Negate();
-  b *= (T) -1;
+    laplace->pcg.Enforce_Compatibility(
+        !laplace->filled_region_touches_dirichlet(color) &&
+        laplace->enforce_compatibility);
 
-  laplace->Find_Tolerance(b);
+    SPARSE_MATRIX_FLAT_NXN<T>& A = A_array(color);
+    VECTOR_ND<T>& b = b_array(color);
+    A.Negate();
+    b *= (T) -1;
+
+    laplace->Find_Tolerance(b);
+  } else {
+    dbg(APP_LOG, "No water in this region!\n");
+  }
 }
 
 }  // namespace PhysBAM

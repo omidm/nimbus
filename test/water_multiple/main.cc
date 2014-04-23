@@ -47,26 +47,91 @@
 #include "simple_worker.h"
 #include "worker/application.h"
 
+
+void PrintUsage() {
+  std::cout << "ERROR: wrong arguments\n";
+  std::cout << "Usage:\n";
+  std::cout << "./worker\n";
+  std::cout << "REQUIRED ARGUMENTS:\n";
+  std::cout << "\t-sip [scheduler ip] -sport [scheduler port] -port [listening port]\n";
+  std::cout << "OPTIONIAL:\n";
+  std::cout << "\t-ip [ip address]\n";
+  std::cout << "\t-s [loop counter]\n";
+  std::cout << "\t-pn [part num]\n";
+}
+
 int main(int argc, char *argv[]) {
-  port_t listening_port;
-  if (argc < 2) {
-    std::cout << "ERROR: provide an integer (1 to 4)." <<
-      std::endl;
+  port_t listening_port, scheduler_port;
+  std::string scheduler_ip, ip_address;
+  bool ip_address_given = false;
+  bool listening_port_given = false;
+  bool scheduler_ip_given = false;
+  bool scheduler_port_given = false;
+
+  // TODO(omidm): currently not used.
+  size_t scale = 40;
+  size_t part_num = 64;
+
+  if (((argc - 1) % 2 != 0) || (argc < 3)) {
+    PrintUsage();
     exit(-1);
   }
-  if (*argv[1] == '1') {
-    listening_port = WORKER_PORT_1;
-  } else if (*argv[1] == '2') {
-    listening_port = WORKER_PORT_2;
-  } else if (*argv[1] == '3') {
-    listening_port = WORKER_PORT_3;
-  } else if (*argv[1] == '4') {
-    listening_port = WORKER_PORT_4;
-  } else {
-    std::cout << "ERROR: argument should be an integer (1 to 4)." <<
-      std::endl;
+
+  for (int i = 1; i < argc; i = i + 2) {
+    std::string tag = argv[i];
+    std::string val = argv[i+1];
+    if (tag == "-sip") {
+      scheduler_ip = val;
+      scheduler_ip_given = true;
+    } else if (tag == "-ip") {
+      ip_address = val;
+      ip_address_given = true;
+    } else if (tag == "-sport") {
+      std::stringstream ss(val);
+      ss >> scheduler_port;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      scheduler_port_given = true;
+    } else if (tag == "-port") {
+      std::stringstream ss(val);
+      ss >> listening_port;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      listening_port_given = true;
+    } else if (tag == "-s") {
+      std::stringstream ss(val);
+      ss >> scale;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+    } else if (tag == "-pn") {
+      std::stringstream ss(val);
+      ss >> part_num;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+    } else {
+      PrintUsage();
+      exit(-1);
+    }
+  }
+
+  if (!scheduler_ip_given || !scheduler_port_given || !listening_port_given) {
+    PrintUsage();
     exit(-1);
   }
+
+
+
+
+
+
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   application::WaterApp *app = new application::WaterApp();
