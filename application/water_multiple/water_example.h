@@ -70,7 +70,7 @@ public:
     GRID<TV> mac_grid;
     MPI_UNIFORM_GRID<GRID<TV> > *mpi_grid;
     PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >& projection;
-    PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > particle_levelset_evolution;
+    PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >& particle_levelset_evolution;
     INCOMPRESSIBLE_UNIFORM<GRID<TV> > incompressible;
     ARRAY<T,FACE_INDEX<TV::dimension> > face_velocities;
     ARRAY<T,FACE_INDEX<TV::dimension> > face_velocities_ghost;

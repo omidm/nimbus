@@ -285,6 +285,8 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
+  // if (!(example->use_cache && kUseCache))
+  delete &example->particle_levelset_evolution;
   delete example;
   example = NULL;
   delete driver;
