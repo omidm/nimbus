@@ -272,6 +272,8 @@ bool InitializeExampleAndDriver(
     // physbam initialization
     if (init_config.init_phase)
       driver->InitializeFirst(job, da);
+    else if (init_config.use_cache && kUseCache)
+      driver->InitializeUseCache(job, da);
     else
       driver->Initialize(job, da);
   }
@@ -283,6 +285,8 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
+  // if (!(example->use_cache && kUseCache))
+  delete &example->particle_levelset_evolution;
   delete example;
   example = NULL;
   delete driver;

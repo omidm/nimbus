@@ -61,9 +61,16 @@ void CacheObject::ReadToCache(const DataArray &read_set,
 
 void CacheObject::Read(const DataArray &read_set,
                        const GeometricRegion &reg,
-                       bool read_all) {
-    if (read_all) {
-        ReadToCache(read_set, reg);
+                       bool read_all_or_none) {
+    if (read_all_or_none) {
+        bool read = false;
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            Data *d = read_set[i];
+            if (!pids_.contains(d->physical_id()))
+                read = true;
+        }
+        if (read)
+            ReadToCache(read_set, reg);
     } else {
         DataArray read;
         for (size_t i = 0; i < read_set.size(); ++i) {

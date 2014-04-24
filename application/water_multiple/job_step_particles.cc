@@ -82,6 +82,7 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
 
+  typedef application::DataConfig DataConfig;
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
@@ -92,7 +93,7 @@ void JobStepParticles::Execute(nimbus::Parameter params,
                              this, da, example, driver);
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in step particles job.");
+  dbg(APP_LOG, "Execute the step in step particles job.\n");
   driver->StepParticlesImpl(this, da, dt);
 
   // Free resources.

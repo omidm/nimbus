@@ -359,9 +359,18 @@ namespace application {
      * Conditionally spawn synchronize jobs.
      */
     if (!step_particles_single) {
-        nimbus::Parameter step_particles_sync_params;
         for (size_t i = 0; i < kRegY2W3CentralWGB_len; i++) {
             size_t ii = 4*i;
+            std::string sync_particles_str;
+            SerializeParameter(frame,
+                               time,
+                               dt,
+                               global_region,
+                               kRegW3Central[i],
+                               &sync_particles_str);
+            nimbus::Parameter sync_particles_params;
+            sync_particles_params.set_ser_data(SerializedData(sync_particles_str));
+
             // positive
             read.clear();
             write.clear();
@@ -373,7 +382,7 @@ namespace application {
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii],
                     read, write,
-                    step_particles_sync_params, true);
+                    sync_particles_params, true);
             // negative
             read.clear();
             write.clear();
@@ -385,7 +394,7 @@ namespace application {
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+1],
                     read, write,
-                    step_particles_sync_params, true);
+                    sync_particles_params, true);
             // positive removed
             read.clear();
             write.clear();
@@ -397,7 +406,7 @@ namespace application {
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+2],
                     read, write,
-                    step_particles_sync_params, true);
+                    sync_particles_params, true);
             // negative removed
             read.clear();
             write.clear();
@@ -409,7 +418,7 @@ namespace application {
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[ii+3],
                     read, write,
-                    step_particles_sync_params, true);
+                    sync_particles_params, true);
         }
     }
 

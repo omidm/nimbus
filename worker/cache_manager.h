@@ -60,7 +60,7 @@ class CacheManager {
                                   const CacheObject &prototype,
                                   CacheAccess access,
                                   bool read_keep_valid,
-                                  bool read_all = false);
+                                  bool read_all_or_none = false);
 
         CacheObject *GetAppObject(const DataArray &read,
                                   const DataArray &write,
@@ -69,7 +69,7 @@ class CacheManager {
                                   const CacheObject &prototype,
                                   CacheAccess access,
                                   bool read_keep_valid,
-                                  bool read_all = false);
+                                  bool read_all_or_none = false);
 
     private:
         typedef std::map<std::string,
