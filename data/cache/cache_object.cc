@@ -59,18 +59,27 @@ void CacheObject::ReadToCache(const DataArray &read_set,
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
+void CacheObject::ReadDiffToCache(const DataArray &read_set,
+                                  const DataArray &diff,
+                                  const GeometricRegion &reg) {
+    dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
+}
+
 void CacheObject::Read(const DataArray &read_set,
                        const GeometricRegion &reg,
                        bool read_all_or_none) {
     if (read_all_or_none) {
         bool read = false;
+        DataArray diff;
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            if (!pids_.contains(d->physical_id()))
+            if (!pids_.contains(d->physical_id())) {
                 read = true;
+                diff.push_back(d);
+            }
         }
         if (read)
-            ReadToCache(read_set, reg);
+            ReadDiffToCache(read_set, diff, reg);
     } else {
         DataArray read;
         for (size_t i = 0; i < read_set.size(); ++i) {
@@ -135,8 +144,13 @@ void CacheObject::SetUpRead(const DataArray &read_set,
             d->SetUpCacheObject(this);
         }
     } else {
-        element_map_.clear();
-        pids_.clear();
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            Data *d = read_set[i];
+            logical_data_id_t lid = d->logical_id();
+            physical_data_id_t pid = d->physical_id();
+            element_map_.erase(lid);
+            pids_.insert(pid);
+        }
     }
 }
 

@@ -248,7 +248,7 @@ void GetAppCacheObjects(
       cm->GetAppObject(read, write,
           array_reg_outer_3,
           application::kCachePLE,
-          nimbus::EXCLUSIVE, true, true);
+          nimbus::EXCLUSIVE, write.empty(), true);
     cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<float> *>(cache_obj);
     assert(cache->ple != NULL);
     dbg(APP_LOG, "Finish translating particles.\n");
