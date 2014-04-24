@@ -44,7 +44,7 @@
 
 namespace nimbus {
 
-#define WORKER_BUFSIZE 40960
+#define WORKER_BUFSIZE 409600
 
 SchedulerWorker::SchedulerWorker(worker_id_t id,
                                  SchedulerServerConnection* conn,

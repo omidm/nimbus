@@ -3,6 +3,7 @@ Nimbus Installation Dependencies - Linux
 =========================================
 
 sudo apt-get install libprotoc-dev
+sudo apt-get install protobuf-compiler
 sudo apt-get install libboost1.48-all-dev
 
 
