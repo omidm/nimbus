@@ -909,6 +909,50 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     }
     application::DestroyTranslatorObjects(&pdv);
 
+    // positive particles
+    const std::string ppstring = std::string(APP_POS_PARTICLES);
+    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      translator.ReadParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, true);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating positive particles.\n");
+
+    // negative particles
+    const std::string npstring = std::string(APP_NEG_PARTICLES);
+    if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      translator.ReadParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, false);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating negative particles.\n");
+
+    // Removed positive particles.
+    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      translator.ReadRemovedParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, true);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating remove positive particles.\n");
+
+    // Removed negative particles.
+    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+      translator.ReadRemovedParticles(
+          &enlarge, array_shift,
+          &pdv, particle_levelset, kScale, false);
+    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating remove negative particles.\n");
+
     // last unique particle id
     const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
     if (Data *d = application::GetFirstData(lupistring, da)) {
@@ -1084,50 +1128,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
     }
-
-    // positive particles
-    const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-      translator.ReadParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, true);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating positive particles.\n");
-
-    // negative particles
-    const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-      translator.ReadParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, false);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating negative particles.\n");
-
-    // Removed positive particles.
-    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-      translator.ReadRemovedParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, true);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating remove positive particles.\n");
-
-    // Removed negative particles.
-    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-      translator.ReadRemovedParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, false);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating remove negative particles.\n");
 
     // last unique particle id
     const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
