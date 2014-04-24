@@ -111,6 +111,7 @@ CacheParticleLevelsetEvolution(std::string type,
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
 ReadToCache(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &reg) {
+    dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < read_set.size(); ++i) {
         nimbus::Data *d = read_set[i];
@@ -134,6 +135,7 @@ ReadToCache(const nimbus::DataArray &read_set,
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
+    dbg(DBG_WARN, "\n Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < write_set.size(); ++i) {
         nimbus::Data *d = write_set[i];
