@@ -135,28 +135,28 @@ void FindMatrixIndices(
       interior_n);
   Find_Matrix_Indices_In_Region(
       local_grid,
-      1, RANGE<VECTOR<int,3> >(0,0,1,n,1,mn),
+      1, RANGE<VECTOR<int,3> >(0,0,0,n+1,0,mn+1),
       filled_region_colors,
       filled_region_cell_count,
       cell_index_to_matrix_index,
       matrix_index_to_cell_index);
   Find_Matrix_Indices_In_Region(
       local_grid,
-      2, RANGE<VECTOR<int,3> >(m+1,m+1,1,n,1,mn),
+      2, RANGE<VECTOR<int,3> >(m+1,m+1,0,n+1,0,mn+1),
       filled_region_colors,
       filled_region_cell_count,
       cell_index_to_matrix_index,
       matrix_index_to_cell_index);
   Find_Matrix_Indices_In_Region(
       local_grid,
-      3, RANGE<VECTOR<int,3> >(1,m,0,0,1,mn),
+      3, RANGE<VECTOR<int,3> >(1,m,0,0,0,mn+1),
       filled_region_colors,
       filled_region_cell_count,
       cell_index_to_matrix_index,
       matrix_index_to_cell_index);
   Find_Matrix_Indices_In_Region(
       local_grid,
-      4, RANGE<VECTOR<int,3> >(1,m,n+1,n+1,1,mn),
+      4, RANGE<VECTOR<int,3> >(1,m,n+1,n+1,0,mn+1),
       filled_region_colors,
       filled_region_cell_count,
       cell_index_to_matrix_index,

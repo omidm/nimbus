@@ -68,6 +68,18 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   for (typename T_GRID::CELL_ITERATOR iterator(laplace->grid, 1);
        iterator.Valid();
        iterator.Next()) {
+    /*
+    // TODO(quhang) I am not sure whether the areas specified in this if
+    // statement are handled well.
+    if ((iterator.Cell_Index().x <= 0)
+       + (iterator.Cell_Index().x > laplace->grid.counts.x)
+       + (iterator.Cell_Index().y <= 0)
+       + (iterator.Cell_Index().y > laplace->grid.counts.y)
+       + (iterator.Cell_Index().z <= 0)
+       + (iterator.Cell_Index().z > laplace->grid.counts.z) >= 2) {
+      laplace->filled_region_colors(iterator.Cell_Index()) = -1;
+    }
+    */
     filled_region_cell_count(
         laplace->filled_region_colors(iterator.Cell_Index()))++;
   }
@@ -77,6 +89,9 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
 
   matrix_index_to_cell_index_array(color).Resize(
       filled_region_cell_count(color));
+
+  int temp1 = filled_region_cell_count(-1);
+  int temp2 = filled_region_cell_count(1);
 
   // Reusing this array in order to make the indirection arrays.
   filled_region_cell_count.Fill(0);
@@ -97,7 +112,10 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
 
   RANGE<TV_INT> domain = laplace->grid.Domain_Indices(1);
 
-  if (local_n != 0) {
+  dbg(APP_LOG, "[DEBUG] local_n = %d, interior_n = %d,"
+     " color#(-1) = %d, color#(1) = %d.\n",
+     local_n, interior_n, temp1, temp2);
+  if (interior_n != 0) {
     // Construct both A and b.
     laplace->Find_A(
         domain, A_array, b_array,
