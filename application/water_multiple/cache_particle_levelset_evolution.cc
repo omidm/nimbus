@@ -92,23 +92,7 @@ CacheParticleLevelsetEvolution(std::string type,
             particle_levelset->removed_negative_particles.Resize(
                     particle_levelset->levelset.grid.Block_Indices(
                         particle_levelset->number_of_ghost_cells));
-            particle_levelset->Set_Minimum_Particle_Radius(
-                    (TS).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
-            particle_levelset->Set_Maximum_Particle_Radius(
-                    (TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
-            if (particle_levelset->half_band_width &&
-                    particle_levelset->levelset.grid.Minimum_Edge_Length()) {
-                particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
-                        ((TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
-            } else {
-                particle_levelset->Set_Band_Width();
             }
-            particle_levelset->levelset.Initialize_Levelset_Grid_Values();
-            if (data_->
-                    levelset_advection.semi_lagrangian_collidable) {
-                particle_levelset->levelset.Initialize_Valid_Masks(mac_grid);
-            }
-        }
         {
             // policies etc
             data_->Set_CFL_Number((TS).9);

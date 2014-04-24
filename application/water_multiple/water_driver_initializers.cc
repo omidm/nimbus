@@ -197,15 +197,6 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
   }
   {
     // policies etc
-    example.particle_levelset_evolution.Set_CFL_Number((T).9);
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
-    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
-    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
-    example.particle_levelset_evolution.Use_Particle_Levelset(true);
-    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
     example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
     example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
@@ -499,28 +490,40 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
         grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
   }
   // Resizes particles.
-  if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-    particle_levelset->positive_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-          particle_levelset->number_of_ghost_cells));
-  }
-  if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-    particle_levelset->negative_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-          particle_levelset->number_of_ghost_cells));
-  }
-  particle_levelset->use_removed_positive_particles=true;
-  particle_levelset->use_removed_negative_particles=true;
-  // Resizes removed particles.
-  if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-    particle_levelset->removed_positive_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-          particle_levelset->number_of_ghost_cells));
-  }
-  if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-    particle_levelset->removed_negative_particles.Resize(
-        particle_levelset->levelset.grid.Block_Indices(
-          particle_levelset->number_of_ghost_cells));
+  if (example.create_destroy_ple) {
+    particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
+    if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      particle_levelset->positive_particles.Resize(
+          particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+    }
+    if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      particle_levelset->negative_particles.Resize(
+          particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+    }
+    particle_levelset->use_removed_positive_particles=true;
+    particle_levelset->use_removed_negative_particles=true;
+    // Resizes removed particles.
+    if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      particle_levelset->removed_positive_particles.Resize(
+          particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+    }
+    if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+      particle_levelset->removed_negative_particles.Resize(
+          particle_levelset->levelset.grid.Block_Indices(
+            particle_levelset->number_of_ghost_cells));
+    }
+    particle_levelset_evolution->Set_CFL_Number((T).9);
+    particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
+    particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
+    particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
+    particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
+    particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
+    particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
+    particle_levelset_evolution->Use_Particle_Levelset(true);
+    particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
   }
   particle_levelset->Set_Minimum_Particle_Radius(
       (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());

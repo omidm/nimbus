@@ -246,7 +246,7 @@ void GetAppCacheObjects(
         read.size(), array_reg_outer_3.toString().c_str());
     nimbus::CacheObject *cache_obj =
       cm->GetAppObject(read, write,
-          array_reg_outer_1,
+          array_reg_outer_3,
           application::kCachePLE,
           nimbus::EXCLUSIVE, write.empty(), true);
     cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<float> *>(cache_obj);
@@ -320,7 +320,7 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-  if (example->destroy_ple)
+  if (example->create_destroy_ple)
     delete &example->particle_levelset_evolution;
   delete example;
   example = NULL;

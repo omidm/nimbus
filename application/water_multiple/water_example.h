@@ -101,7 +101,7 @@ public:
     TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
-    bool destroy_ple;
+    bool create_destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,

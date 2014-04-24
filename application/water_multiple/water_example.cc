@@ -63,7 +63,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     cache_phi8  = NULL;
     cache_psi_d = NULL;
     cache_ple   = NULL;
-    destroy_ple = true;
+    create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -98,7 +98,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
-    destroy_ple = true;
+    create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -135,7 +135,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
-    destroy_ple = false;
+    create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
