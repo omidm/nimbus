@@ -57,14 +57,15 @@ WorkerThreadComputation::~WorkerThreadComputation() {
 void WorkerThreadComputation::Run() {
   Job* job;
   while (true) {
-    do {
+    job = worker_manager_->PullComputationJob();
+    while (job != NULL) {
+      ExecuteJob(job);
       assert(worker_manager_ != NULL);
-      usleep(1000);
+      bool success_flag = worker_manager_->PushFinishJob(job);
+      assert(success_flag);
       job = worker_manager_->PullComputationJob();
-    } while (job == NULL);
-    ExecuteJob(job);
-    bool success_flag = worker_manager_->PushFinishJob(job);
-    assert(success_flag);
+    }
+    usleep(1);
   }
 }
 
