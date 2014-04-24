@@ -68,6 +68,7 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
     int_dimension_t dz =
       static_cast<int_dimension_t>(global_bounding_region_.dz() / num_z);
 
+    worker_domains_.clear();
 
     for (size_t i = 0; i < num_x; ++i) {
       for (size_t j = 0; j < num_y; ++j) {
