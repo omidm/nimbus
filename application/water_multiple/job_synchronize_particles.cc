@@ -39,6 +39,7 @@
 #include "application/water_multiple/data_particle_array.h"
 #include "application/water_multiple/job_synchronize_particles.h"
 #include "application/water_multiple/job_names.h"
+#include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/water_driver.h"
@@ -60,12 +61,41 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     dbg(APP_LOG, "Executing synchronize particles job\n");
 
     bool sync_new = false;
-    if (kUseCache && sync_new) {
-        nimbus::DataArray read, write;
-        GetReadData(*this, da, &read);
-        GetWriteData(*this, da, &write);
-//        PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >
-//            particle_levelset_evolution(mac_grid, kGhostNum);
+    if (sync_new) {
+        // get time, dt, frame from the parameters.
+        InitConfig init_config;
+        init_config.use_cache = false;
+        init_config.set_boundary_condition = false;
+        T dt;
+        std::string params_str(params.ser_data().data_ptr_raw(),
+                               params.ser_data().size());
+        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+                      &init_config.global_region, &init_config.local_region);
+        dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
+            init_config.frame, init_config.time, dt);
+
+        // initializing the example and driver with state and configuration variables
+        PhysBAM::WATER_EXAMPLE<TV> *example;
+        PhysBAM::WATER_DRIVER<TV> *driver;
+        typedef application::DataConfig DataConfig;
+        DataConfig data_config;
+        assert(da.size() > 0);
+        if (da[0]->name() == APP_POS_PARTICLES) {
+            data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+        } else if (da[0]->name() == APP_NEG_PARTICLES) {
+            data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+        } else if(da[0]->name() == APP_POS_REM_PARTICLES) {
+            data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+        } else if(da[0]->name() == APP_NEG_REM_PARTICLES) {
+            data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+        } else {
+            dbg(DBG_ERROR, "Merge particles fail!!!\n");
+            exit(-1);
+        }
+        InitializeExampleAndDriver(init_config, data_config,
+                                   this, da, example, driver);
+        example->Save_To_Nimbus(this, da, init_config.frame + 1);
+        DestroyExampleAndDriver(example, driver);
     } else {
         DataVec main_copy;
         DataSetVec scratch_copies;

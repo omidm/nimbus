@@ -598,8 +598,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     dbg(DBG_WARN, "\n--- *** --- SAVE \n");
 
     // mac velocities
-    dbg(DBG_WARN, "\n--- Writing face velocities back \n");
     if (cache_fv) {
+        dbg(DBG_WARN, "\n--- Writing face velocities back \n");
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
         cache_fv->Write(array_reg_central, true);
@@ -607,8 +607,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     // mac velocities ghost
-    dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
     if (cache_fvg) {
+        dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
         cache_fvg->Write(array_reg_outer, true);
@@ -619,26 +619,26 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
 
     // levelset
-    dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
     if (cache_phi3) {
+        dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
         T_SCALAR_ARRAY *phi3 = cache_phi3->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
         cache_phi3->Write(array_reg_outer, true);
         cache_phi3 = NULL;
     }
-    dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
-    if (cache_phi8) {
-        T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-        cache_phi8->Write(array_reg_outer_8, true);
-        cache_phi8 = NULL;
-    }
-    dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
     if (cache_phi7) {
+        dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
         T_SCALAR_ARRAY *phi7 = cache_phi7->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
         cache_phi7->Write(array_reg_outer_7, true);
         cache_phi7 = NULL;
+    }
+    if (cache_phi8) {
+        dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
+        T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+        cache_phi8->Write(array_reg_outer_8, true);
+        cache_phi8 = NULL;
     }
 
     // positive particles
@@ -689,8 +689,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     // psi_d.
-    dbg(DBG_WARN, "\n--- Writing psi_d back \n");
     if (cache_psi_d) {
+        dbg(DBG_WARN, "\n--- Writing psi_d back \n");
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
         cache_psi_d->Write(array_reg_thin_outer, true);
@@ -698,8 +698,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     // psi_n.
-    dbg(DBG_WARN, "\n--- Writing psi_n back \n");
     if (cache_psi_n) {
+        dbg(DBG_WARN, "\n--- Writing psi_n back \n");
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
         cache_psi_n->Write(array_reg_thin_outer, true);
