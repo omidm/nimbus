@@ -104,6 +104,26 @@ void Worker::WorkerCoreProcessor() {
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
+    // Batching job done command so that we can be faster.  --quhang
+    if (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
+      IDSet<job_id_t> remove_set;
+      while (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
+        std::cout << "Received command: " << comm->toStringWTags()
+            << std::endl;
+        remove_set.insert(
+            reinterpret_cast<JobDoneCommand*>(comm)->job_id().elem());
+        delete comm;
+        comm = client_->receiveCommand();
+      }
+      JobList::iterator iter;
+      for (iter = blocked_jobs_.begin();
+           iter != blocked_jobs_.end();
+           iter++) {
+        IDSet<job_id_t> req = (*iter)->before_set();
+        req.remove(remove_set);
+        (*iter)->set_before_set(req);
+      }
+    }  // Finish batching job done command.
     if (comm != NULL) {
       std::cout << "Received command: " << comm->toStringWTags()
         << std::endl;
