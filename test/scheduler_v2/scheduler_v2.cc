@@ -153,8 +153,8 @@ void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z
       *num_z = 1;
       break;
     case 8 :
-      *num_x = 2;
-      *num_y = 4;
+      *num_x = 8;
+      *num_y = 1;
       *num_z = 1;
       break;
     default:
