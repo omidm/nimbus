@@ -103,7 +103,7 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
 
 // Projection is broken to "smallest" code piece to allow future changes.
 void ProjectionDriver::LocalInitialize() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     projection_data.local_residual = 0;
     return;
   }
@@ -153,7 +153,7 @@ void ProjectionDriver::GlobalInitialize() {
 }
 
 void ProjectionDriver::DoPrecondition() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     return;
   }
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
@@ -165,7 +165,7 @@ void ProjectionDriver::DoPrecondition() {
 }
 
 void ProjectionDriver::CalculateLocalRho() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     projection_data.local_rho = 0;
     return;
   }
@@ -186,7 +186,7 @@ void ProjectionDriver::ReduceRho() {
 }
 
 void ProjectionDriver::UpdateSearchVector() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     return;
   }
   int interior_n = partition.interior_indices.Size() + 1;
@@ -201,7 +201,7 @@ void ProjectionDriver::UpdateSearchVector() {
 }
 
 void ProjectionDriver::UpdateTempVector() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     return;
   }
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
@@ -211,7 +211,7 @@ void ProjectionDriver::UpdateTempVector() {
 }
 
 void ProjectionDriver::CalculateLocalAlpha() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     projection_data.local_dot_product_for_alpha = 0;
     return;
   }
@@ -228,7 +228,7 @@ void ProjectionDriver::ReduceAlpha() {
 }
 
 void ProjectionDriver::UpdateOtherVectors() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     return;
   }
   int interior_n = partition.interior_indices.Size()+1;
@@ -245,7 +245,7 @@ void ProjectionDriver::UpdateOtherVectors() {
 }
 
 void ProjectionDriver::CalculateLocalResidual() {
-  if (projection_data.local_n == 0) {
+  if (projection_data.interior_n == 0) {
     projection_data.local_residual = 0;
     return;
   }
