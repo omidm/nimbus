@@ -224,6 +224,35 @@ void GetAppCacheObjects(
     assert(cache->psi_n != NULL);
     dbg(APP_LOG, "Finish translating psi_n.\n");
   }
+  if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE) ||
+      data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE) ||
+      data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE) ||
+      data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE))
+  {
+    nimbus::DataArray read, write;
+    const std::string pp_string = std::string(APP_POS_PARTICLES);
+    GetReadData(job, pp_string, da, &read, false);
+    GetWriteData(job, pp_string, da, &write, false);
+    const std::string np_string = std::string(APP_NEG_PARTICLES);
+    GetReadData(job, np_string, da, &read, false);
+    GetWriteData(job, np_string, da, &write, false);
+    const std::string prp_string = std::string(APP_POS_REM_PARTICLES);
+    GetReadData(job, prp_string, da, &read, false);
+    GetWriteData(job, prp_string, da, &write, false);
+    const std::string nrp_string = std::string(APP_NEG_REM_PARTICLES);
+    GetReadData(job, nrp_string, da, &read, false);
+    GetWriteData(job, nrp_string, da, &write, false);
+    dbg(DBG_WARN, "\n--- Requesting %i elements into psi_n for region %s\n",
+        read.size(), array_reg_outer_3.toString().c_str());
+    nimbus::CacheObject *cache_obj =
+      cm->GetAppObject(read, write,
+          array_reg_outer_1,
+          application::kCachePLE,
+          nimbus::EXCLUSIVE, write.empty(), true);
+    cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<float> *>(cache_obj);
+    assert(cache->ple != NULL);
+    dbg(APP_LOG, "Finish translating psi_n.\n");
+  }
 }
 
 bool InitializeExampleAndDriver(
@@ -240,7 +269,13 @@ bool InitializeExampleAndDriver(
     if (init_config.use_cache && kUseCache) {
       AppCacheObjects cache;
       GetAppCacheObjects(init_config, data_config, *job, da, &cache);
-      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), &cache);
+      if (cache.ple)
+        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+                                                 &cache,
+                                                 cache.ple->data());
+      else
+        example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+                                                 &cache);
       example->use_cache = true;
     } else {
       example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
@@ -285,8 +320,8 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-  // if (!(example->use_cache && kUseCache))
-  delete &example->particle_levelset_evolution;
+  if (example->destroy_ple)
+    delete &example->particle_levelset_evolution;
   delete example;
   example = NULL;
   delete driver;

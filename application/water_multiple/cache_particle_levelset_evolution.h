@@ -48,7 +48,7 @@
 #include "worker/data.h"
 
 namespace application {
-template<class T, class TS = float>
+template<class TS = float>
 class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
         typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
@@ -71,10 +71,10 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
                                     const nimbus::GeometricRegion &reg) const;
         virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &ar) const;
 
-        PhysBAMParticleArray *data() {
+        PhysBAMPLE *data() {
             return data_;
         }
-        void set_data(PhysBAMParticleArray *d) {
+        void set_data(PhysBAMPLE *d) {
             data_ = d;
         }
 
@@ -85,6 +85,9 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
         nimbus::Coord shift_;
         PhysBAMPLE *data_;
         Grid mac_grid;
+
+        nimbus::GeometricRegion enlarge_;
+        int scale_;
 }; // class CacheParticleLevelsetEvolution
 } // namespace application
 

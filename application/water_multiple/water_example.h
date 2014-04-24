@@ -94,14 +94,21 @@ public:
     typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
     typedef typename application::CacheScalarArray<T> TCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
+    typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
     TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
     BoolCacheScalarArray *cache_psi_d;
+    TCachePLE *cache_ple;
+    bool destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects *cache);
+    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+                  application::AppCacheObjects *cache);
+    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+                  application::AppCacheObjects *cache,
+                  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple);
     virtual ~WATER_EXAMPLE();
     
     T Time_At_Frame(const int frame) const

@@ -283,7 +283,6 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   }
   // allocates array for levelset/ particles/ removed particles
   {
-    example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
     InitializeParticleLevelsetEvolutionHelperUseCache(
         example.data_config,
         example.mac_grid,
@@ -297,15 +296,6 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
   }
   {
     // policies etc
-    example.particle_levelset_evolution.Set_CFL_Number((T).9);
-    example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
-    example.particle_levelset_evolution.Bias_Towards_Negative_Particles(false);
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Positive_Particles();
-    example.particle_levelset_evolution.particle_levelset.Use_Removed_Negative_Particles();
-    example.particle_levelset_evolution.particle_levelset.Store_Unique_Particle_Id();
-    example.particle_levelset_evolution.Use_Particle_Levelset(true);
-    example.particle_levelset_evolution.particle_levelset.Set_Collision_Distance_Factors(.1,1);
     example.incompressible.projection.elliptic_solver->Set_Relative_Tolerance(1e-8);
     example.incompressible.projection.elliptic_solver->pcg.Set_Maximum_Iterations(40);
     example.incompressible.projection.elliptic_solver->pcg.evolution_solver_type=krylov_solver_cg;
@@ -501,6 +491,13 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     &particle_levelset_evolution->particle_levelset;
   assert(grid_input.Is_MAC_Grid());
   particle_levelset_evolution->grid = grid_input;
+  // Resizes phi here.
+  if (data_config.GetFlag(DataConfig::LEVELSET)
+      || data_config.GetFlag(DataConfig::LEVELSET_READ)
+      || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
+    particle_levelset_evolution->phi.Resize(
+        grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
+  }
   // Resizes particles.
   if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
     particle_levelset->positive_particles.Resize(

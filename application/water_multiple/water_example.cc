@@ -62,6 +62,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     cache_phi7  = NULL;
     cache_phi8  = NULL;
     cache_psi_d = NULL;
+    cache_ple   = NULL;
+    destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -95,6 +97,45 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     cache_phi7  = cache->phi7;
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
+    cache_ple   = cache->ple;
+    destroy_ple = true;
+    Initialize_Particles();
+    Initialize_Read_Write_General_Structures();
+}
+//#####################################################################
+// WATER_EXAMPLE
+//#####################################################################
+template<class TV> WATER_EXAMPLE<TV>::
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+              application::AppCacheObjects *cache,
+              PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple) :
+    stream_type(stream_type_input),
+    initial_time(0),
+    first_frame(0),
+    last_frame(application::kLastFrame),
+    frame_rate(24),
+    write_substeps_level(-1),
+    write_output_files(true),
+    output_directory(application::kOutputDir),
+    number_of_ghost_cells(application::kGhostNum),
+    cfl(1),
+    mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    particle_levelset_evolution(*ple),
+    incompressible(mac_grid,projection),
+    boundary(0),
+    collision_bodies_affecting_fluid(mac_grid)
+{
+    use_cache   = false;
+    cache_fv    = cache->fv;
+    cache_fvg   = cache->fvg;
+    cache_psi_n = cache->psi_n;
+    cache_phi3  = cache->phi3;
+    cache_phi7  = cache->phi7;
+    cache_phi8  = cache->phi8;
+    cache_psi_d = cache->psi_d;
+    cache_ple   = cache->ple;
+    destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -615,77 +656,42 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_fvg = NULL;
     }
 
-    // particle leveset quantities
-    T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
-
-    // levelset
-    if (cache_phi3) {
-        dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
-        T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-        cache_phi3->Write(array_reg_outer, true);
-        cache_phi3 = NULL;
-    }
-    if (cache_phi7) {
-        dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
-        T_SCALAR_ARRAY *phi7 = cache_phi7->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-        cache_phi7->Write(array_reg_outer_7, true);
-        cache_phi7 = NULL;
-    }
-    if (cache_phi8) {
-        dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
-        T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-        cache_phi8->Write(array_reg_outer_8, true);
-        cache_phi8 = NULL;
-    }
-
-    // positive particles
-    const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-      translator.WriteParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, true);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-
-    // negative particles
-    const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-      translator.WriteParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, false);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-
-    // Removed positive particles.
-    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-      translator.WriteRemovedParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, true);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-
-    // Removed negative particles.
-    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-      translator.WriteRemovedParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, false);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-
-    // last unique particle id
-    const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
-    if (Data *d = application::GetFirstData(lupistring, da)) {
-        nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
-        sd->set_scalar(particle_levelset.last_unique_particle_id);
+    {
+      // particle leveset quantities
+      T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
+      // levelset
+      if (cache_phi3) {
+          dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
+          T_SCALAR_ARRAY *phi3 = cache_phi3->data();
+          T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+          cache_phi3->Write(array_reg_outer, true);
+          cache_phi3 = NULL;
+      }
+      if (cache_phi7) {
+          dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
+          T_SCALAR_ARRAY *phi7 = cache_phi7->data();
+          T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+          cache_phi7->Write(array_reg_outer_7, true);
+          cache_phi7 = NULL;
+      }
+      if (cache_phi8) {
+          dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
+          T_SCALAR_ARRAY *phi8 = cache_phi8->data();
+          T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+          cache_phi8->Write(array_reg_outer_8, true);
+          cache_phi8 = NULL;
+      }
+      // last unique particle id
+      const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);
+      if (Data *d = application::GetFirstData(lupistring, da)) {
+          nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
+          sd->set_scalar(particle_levelset.last_unique_particle_id);
+      }
+      // ** there should not be any accesses to particle levelset after this **
+      if (cache_ple) {
+          dbg(DBG_WARN, "\n--- Writing particles back \n");
+          cache_ple->Write(array_reg_outer, true);
+      }
     }
 
     // psi_d.
@@ -902,50 +908,6 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
       std::cout << "OMID: Read 8.\n";
     }
     application::DestroyTranslatorObjects(&pdv);
-
-    // positive particles
-    const std::string ppstring = std::string(APP_POS_PARTICLES);
-    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-      translator.ReadParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, true);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating positive particles.\n");
-
-    // negative particles
-    const std::string npstring = std::string(APP_NEG_PARTICLES);
-    if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-      translator.ReadParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, false);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating negative particles.\n");
-
-    // Removed positive particles.
-    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-      translator.ReadRemovedParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, true);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating remove positive particles.\n");
-
-    // Removed negative particles.
-    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-      translator.ReadRemovedParticles(
-          &enlarge, array_shift,
-          &pdv, particle_levelset, kScale, false);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating remove negative particles.\n");
 
     // last unique particle id
     const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);

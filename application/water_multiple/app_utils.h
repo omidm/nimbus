@@ -80,18 +80,22 @@ namespace application {
                            AccessType access_type);
     void GetReadData(const nimbus::Job &job,
                      const nimbus::DataArray &da,
-                     nimbus::DataArray *read);
+                     nimbus::DataArray *read,
+                     bool clear = true);
     void GetWriteData(const nimbus::Job &job,
                       const nimbus::DataArray &da,
-                      nimbus::DataArray *read);
+                      nimbus::DataArray *read,
+                      bool clear = true);
     void GetReadData(const nimbus::Job &job,
                      const std::string &name,
                      const nimbus::DataArray &da,
-                     nimbus::DataArray *read);
+                     nimbus::DataArray *read,
+                     bool clear = true);
     void GetWriteData(const nimbus::Job &job,
                       const std::string &name,
                       const nimbus::DataArray &da,
-                      nimbus::DataArray *read);
+                      nimbus::DataArray *read,
+                      bool clear = true);
     bool GroupSyncData(const nimbus::Job *job,
                        const nimbus::DataArray &da,
                        DataVec *main_copy,

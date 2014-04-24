@@ -213,7 +213,7 @@ namespace application {
     GetNewJobID(&step_particles_job_ids, step_particles_job_num);
     bool step_particles_single = (step_particles_job_num == 1);
     // step particles sync
-    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : 4 * step_particles_job_num;
+    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : step_particles_job_num;
     std::vector<nimbus::job_id_t> step_particles_sync_job_ids;
     GetNewJobID(&step_particles_sync_job_ids, step_particles_sync_job_num);
     // advect removed particles
@@ -359,14 +359,13 @@ namespace application {
      * Conditionally spawn synchronize jobs.
      */
     if (!step_particles_single) {
-        for (size_t i = 0; i < kRegY2W3CentralWGB_len; i++) {
-            size_t ii = 4*i;
+        for (size_t i = 0; i < step_particles_sync_job_num; ++i) {
             std::string sync_particles_str;
             SerializeParameter(frame,
                                time,
                                dt,
                                global_region,
-                               kRegW3Central[i],
+                               kRegY2W3Central[i],
                                &sync_particles_str);
             nimbus::Parameter sync_particles_params;
             sync_particles_params.set_ser_data(SerializedData(sync_particles_str));
@@ -379,44 +378,23 @@ namespace application {
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii],
-                    read, write,
-                    sync_particles_params, true);
-            // negative
-            read.clear();
-            write.clear();
             kScratchNegParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
             kScratchNegParticles.GetMainForScratchData(this,
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii+1],
-                    read, write,
-                    sync_particles_params, true);
-            // positive removed
-            read.clear();
-            write.clear();
             kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
             kScratchPosRemParticles.GetMainForScratchData(this,
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii+2],
-                    read, write,
-                    sync_particles_params, true);
-            // negative removed
-            read.clear();
-            write.clear();
             kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
             kScratchNegRemParticles.GetMainForScratchData(this,
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii+3],
+                    step_particles_sync_job_ids[i],
                     read, write,
                     sync_particles_params, true);
         }
