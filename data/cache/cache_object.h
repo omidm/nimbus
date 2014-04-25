@@ -99,7 +99,6 @@ class CacheObject {
         bool write_valid_;
 
         DataArray write_back_;
-        std::set<Data *> data_;
 
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on

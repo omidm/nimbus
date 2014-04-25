@@ -146,15 +146,7 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
     // TODO(Chinmayee): something faster??
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     if (read_outer_only) {
-        nimbus::GeometricRegion inner(1, 1, 1, local_region_.dx(), local_region_.dy(), local_region_.dz());
-        if (!pos.empty())
-            Translator::DeleteParticlesOutsideGrid(enlarge_, inner, particle_levelset, true);
-        if (!neg.empty())
-            Translator::DeleteParticlesOutsideGrid(enlarge_, inner, particle_levelset, false);
-        if (!pos_rem.empty())
-            Translator::DeleteRemovedParticlesOutsideGrid(enlarge_, inner, particle_levelset, true);
-        if (!neg.empty())
-            Translator::DeleteRemovedParticlesOutsideGrid(enlarge_, inner, particle_levelset, false);
+        data_->Delete_Particles_Outside_Grid();
         dbg(DBG_WARN, "\n--- Finally reading %i elements into particles for region %s\n", final_read.size(), reg.toString().c_str());
     }
     Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true, read_outer_only);

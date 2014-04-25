@@ -139,10 +139,10 @@ void CacheObject::SetUpRead(const DataArray &read_set,
         }
     } else {
         for (size_t i = 0; i < read_set.size(); ++i) {
+            // TODO(Chinmayee): this is broken. Use physical data map at the
+            // worker if this really needs to be taken care of.
             Data *d = read_set[i];
-            if (data_.find(d) == data_.end())
-                continue;
-            d->UnsetCacheObject(this);
+            UnsetCacheObject(d);
         }
     }
 }
@@ -163,13 +163,11 @@ void CacheObject::SetUpCacheObject(Data *d) {
         pids_.remove(element_map_[lid]);
     element_map_[lid] = pid;
     pids_.insert(pid);
-    data_.insert(d);
 }
 
 void CacheObject::UnsetCacheObject(Data *d) {
     pids_.remove(d->physical_id());
     element_map_.erase(d->logical_id());
-    data_.erase(d);
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set,
