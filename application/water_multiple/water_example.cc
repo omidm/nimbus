@@ -691,6 +691,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       if (cache_ple) {
           dbg(DBG_WARN, "\n--- Writing particles back \n");
           cache_ple->Write(array_reg_outer, true);
+          cache_ple = NULL;
       }
     }
 
