@@ -95,16 +95,20 @@ void Data::set_version(data_version_t version) {
 }
 
 void Data::InvalidateCacheObjects() {
-  for (size_t i = 0; i < cache_objects_.size(); ++i) {
-    cache_objects_[i]->InvalidateCacheObject(this);
+  std::set<CacheObject *>::iterator iter = cache_objects_.begin();
+  for (; iter != cache_objects_.end(); ++iter) {
+    CacheObject *c = *iter;
+    c->UnsetCacheObject(this);
   }
   cache_objects_.clear();
 }
 
 void Data::SetUpCacheObject(CacheObject *co) {
-  for (size_t i = 0; i < cache_objects_.size(); ++i) {
-    if (cache_objects_[i] == co)
-      return;
-  }
-  cache_objects_.push_back(co);
+  cache_objects_.insert(co);
+  co->SetUpCacheObject(this);
+}
+
+void Data::UnsetCacheObject(CacheObject *co) {
+  cache_objects_.erase(co);
+  co->UnsetCacheObject(this);
 }

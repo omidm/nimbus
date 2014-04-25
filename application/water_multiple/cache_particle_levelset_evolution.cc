@@ -115,20 +115,18 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
                 const nimbus::GeometricRegion &reg) {
     dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
     bool read_outer_only = true;
-    nimbus::DataArray outer_read;
     for (size_t i = 0; i < diff.size(); ++i) {
         nimbus::Data *d = diff[i];
         nimbus::GeometricRegion dr = d->region();
         if (local_region_.Covers(&dr)) {
             read_outer_only = false;
             break;
-        } else {
-            outer_read.push_back(d);
         }
     }
     nimbus::DataArray final_read;
     if (read_outer_only) {
-        final_read = outer_read;
+        for (size_t i = 0; i < read_set.size(); ++i)
+            final_read.push_back(read_set[i]);
     } else {
         final_read = read_set;
     }

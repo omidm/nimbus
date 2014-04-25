@@ -44,6 +44,7 @@
 #define NIMBUS_DATA_CACHE_CACHE_OBJECT_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -81,7 +82,8 @@ class CacheObject {
         void SetUpRead(const DataArray &read_set,
                        bool read_keep_valid);
         void SetUpWrite(const DataArray &write_set);
-        void InvalidateCacheObject(Data *d);
+        void SetUpCacheObject(Data *d);
+        void UnsetCacheObject(Data *d);
 
         bool IsAvailable(CacheAccess access) const;
         distance_t GetDistance(const DataArray &data_set,
@@ -97,6 +99,7 @@ class CacheObject {
         bool write_valid_;
 
         DataArray write_back_;
+        std::set<Data *> data_;
 
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on
