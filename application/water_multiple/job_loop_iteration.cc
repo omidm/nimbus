@@ -775,6 +775,15 @@ namespace application {
     job_query.CommitStagedJobs();
 
     /*
+    job_query.StageJob(BARRIER_JOB,
+                       id,
+                       read, write,
+                       params,
+                       false, true);
+    job_query.CommitStagedJobs();
+    */
+
+    /*
      * Loop iteration part two.
      */
 

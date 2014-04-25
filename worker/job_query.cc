@@ -49,6 +49,7 @@ JobQuery::JobQuery(Job* job) {
   RESOLVE_WAW = true;
   RESOLVE_WAR = false;
   DISABLE = false;
+  has_last_barrier_job_ = false;
 }
 JobQuery::~JobQuery() {}
 
@@ -109,6 +110,9 @@ bool JobQuery::StageJob(
       }  // WAR
     }
   }
+  if (has_last_barrier_job_) {
+    query_results.insert(last_barrier_job_id_);
+  }
   if (barrier) {
     for (OutstandingAccessorsMap::iterator index =
          outstanding_accessors_map_.begin();
@@ -125,6 +129,8 @@ bool JobQuery::StageJob(
         query_results.insert(*read_job_index);
       }
     }
+    has_last_barrier_job_ = true;
+    last_barrier_job_id_ = id;
   }
   // Put the result in staged areas.
   // TODO(quhang) redundent copy happens.
@@ -149,7 +155,6 @@ bool JobQuery::CommitStagedJobs() {
   for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
        iterator != staged_jobs_.end();
        iterator++) {
-    // TODO(quhang) eliminate redundent dependencies.
     Eliminate(&iterator->before);
     job_->SpawnComputeJob(
         iterator->name, iterator->id, iterator->read, iterator->write,
@@ -162,6 +167,7 @@ bool JobQuery::CommitStagedJobs() {
     temp.before = iterator->before;
   }
   // Cleans up outstanding accessor map.
+  // TODO(quhang) should have better cleanup function for barrier job.
   for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
        iterator != staged_jobs_.end();
        iterator++) {
