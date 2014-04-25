@@ -63,7 +63,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     cache_phi8  = NULL;
     cache_psi_d = NULL;
     cache_ple   = NULL;
-    destroy_ple = true;
+    create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -98,7 +98,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
-    destroy_ple = true;
+    create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -135,7 +135,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
-    destroy_ple = false;
+    create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -688,9 +688,52 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           sd->set_scalar(particle_levelset.last_unique_particle_id);
       }
       // ** there should not be any accesses to particle levelset after this **
+
+//      // positive particles
+//      const std::string ppstring = std::string(APP_POS_PARTICLES);
+//      if (application::GetTranslatorData(job, ppstring, da, &pdv, application::WRITE_ACCESS)
+//          && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+//        translator.WriteParticles(
+//            &enlarge, array_shift,
+//            &pdv, particle_levelset, kScale, true);
+//      }
+//      application::DestroyTranslatorObjects(&pdv);
+//
+//      // negative particles
+//      const std::string npstring = std::string(APP_NEG_PARTICLES);
+//      if (application::GetTranslatorData(job, npstring, da, &pdv, application::WRITE_ACCESS)
+//          && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+//        translator.WriteParticles(
+//            &enlarge, array_shift,
+//            &pdv, particle_levelset, kScale, false);
+//      }
+//      application::DestroyTranslatorObjects(&pdv);
+//
+//      // Removed positive particles.
+//      const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+//      if (application::GetTranslatorData(job, prpstring, da, &pdv, application::WRITE_ACCESS)
+//          && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+//        translator.WriteRemovedParticles(
+//            &enlarge, array_shift,
+//            &pdv, particle_levelset, kScale, true);
+//      }
+//      application::DestroyTranslatorObjects(&pdv);
+//
+//      // Removed negative particles.
+//      const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+//      if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::WRITE_ACCESS)
+//          && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+//        translator.WriteRemovedParticles(
+//            &enlarge, array_shift,
+//            &pdv, particle_levelset, kScale, false);
+//      }
+//
+//      application::DestroyTranslatorObjects(&pdv);
+
       if (cache_ple) {
           dbg(DBG_WARN, "\n--- Writing particles back \n");
           cache_ple->Write(array_reg_outer, true);
+          cache_ple = NULL;
       }
     }
 
@@ -1128,6 +1171,50 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
         T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
     }
+
+//    // positive particles
+//    const std::string ppstring = std::string(APP_POS_PARTICLES);
+//    if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
+//        && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+//      translator.ReadParticles(
+//          &enlarge, array_shift,
+//          &pdv, particle_levelset, kScale, true);
+//    }
+//    application::DestroyTranslatorObjects(&pdv);
+//    dbg(APP_LOG, "Finish translating positive particles.\n");
+//
+//    // negative particles
+//    const std::string npstring = std::string(APP_NEG_PARTICLES);
+//    if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
+//        && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+//      translator.ReadParticles(
+//          &enlarge, array_shift,
+//          &pdv, particle_levelset, kScale, false);
+//    }
+//    application::DestroyTranslatorObjects(&pdv);
+//    dbg(APP_LOG, "Finish translating negative particles.\n");
+//
+//    // Removed positive particles.
+//    const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
+//    if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
+//        && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+//      translator.ReadRemovedParticles(
+//          &enlarge, array_shift,
+//          &pdv, particle_levelset, kScale, true);
+//    }
+//    application::DestroyTranslatorObjects(&pdv);
+//    dbg(APP_LOG, "Finish translating remove positive particles.\n");
+//
+//    // Removed negative particles.
+//    const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
+//    if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
+//        && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+//      translator.ReadRemovedParticles(
+//          &enlarge, array_shift,
+//          &pdv, particle_levelset, kScale, false);
+//    }
+//    application::DestroyTranslatorObjects(&pdv);
+//    dbg(APP_LOG, "Finish translating remove negative particles.\n");
 
     // last unique particle id
     const std::string lupistring = std::string(APP_LAST_UNIQUE_PARTICLE_ID);

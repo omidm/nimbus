@@ -242,16 +242,16 @@ void GetAppCacheObjects(
     const std::string nrp_string = std::string(APP_NEG_REM_PARTICLES);
     GetReadData(job, nrp_string, da, &read, false);
     GetWriteData(job, nrp_string, da, &write, false);
-    dbg(DBG_WARN, "\n--- Requesting %i elements into psi_n for region %s\n",
+    dbg(DBG_WARN, "\n--- Requesting %i elements into particles for region %s\n",
         read.size(), array_reg_outer_3.toString().c_str());
     nimbus::CacheObject *cache_obj =
       cm->GetAppObject(read, write,
-          array_reg_outer_1,
+          array_reg_outer_3,
           application::kCachePLE,
           nimbus::EXCLUSIVE, write.empty(), true);
     cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<float> *>(cache_obj);
     assert(cache->ple != NULL);
-    dbg(APP_LOG, "Finish translating psi_n.\n");
+    dbg(APP_LOG, "Finish translating particles.\n");
   }
 }
 
@@ -320,7 +320,7 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-  if (example->destroy_ple)
+  if (example->create_destroy_ple)
     delete &example->particle_levelset_evolution;
   delete example;
   example = NULL;

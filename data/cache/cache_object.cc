@@ -59,18 +59,27 @@ void CacheObject::ReadToCache(const DataArray &read_set,
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
+void CacheObject::ReadDiffToCache(const DataArray &read_set,
+                                  const DataArray &diff,
+                                  const GeometricRegion &reg) {
+    dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
+}
+
 void CacheObject::Read(const DataArray &read_set,
                        const GeometricRegion &reg,
                        bool read_all_or_none) {
     if (read_all_or_none) {
         bool read = false;
+        DataArray diff;
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            if (!pids_.contains(d->physical_id()))
+            if (!pids_.contains(d->physical_id())) {
                 read = true;
+                diff.push_back(d);
+            }
         }
         if (read)
-            ReadToCache(read_set, reg);
+            ReadDiffToCache(read_set, diff, reg);
     } else {
         DataArray read;
         for (size_t i = 0; i < read_set.size(); ++i) {
@@ -126,17 +135,15 @@ void CacheObject::SetUpRead(const DataArray &read_set,
     if (read_keep_valid) {
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            logical_data_id_t lid = d->logical_id();
-            physical_data_id_t pid = d->physical_id();
-            if (element_map_.find(lid) != element_map_.end())
-                pids_.remove(element_map_[lid]);
-            element_map_[lid] = pid;
-            pids_.insert(pid);
             d->SetUpCacheObject(this);
         }
     } else {
-        element_map_.clear();
-        pids_.clear();
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            // TODO(Chinmayee): this is broken. Use physical data map at the
+            // worker if this really needs to be taken care of.
+            Data *d = read_set[i];
+            UnsetCacheObject(d);
+        }
     }
 }
 
@@ -144,18 +151,23 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
     write_back_ = write_set;
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
-        logical_data_id_t lid = d->logical_id();
-        physical_data_id_t pid = d->physical_id();
         d->InvalidateCacheObjects();
-        element_map_[lid] = pid;
-        pids_.insert(pid);
         d->SetUpCacheObject(this);
     }
 }
 
-void CacheObject::InvalidateCacheObject(Data *d) {
-    element_map_.erase(d->logical_id());
+void CacheObject::SetUpCacheObject(Data *d) {
+    logical_data_id_t lid = d->logical_id();
+    physical_data_id_t pid = d->physical_id();
+    if (element_map_.find(lid) != element_map_.end())
+        pids_.remove(element_map_[lid]);
+    element_map_[lid] = pid;
+    pids_.insert(pid);
+}
+
+void CacheObject::UnsetCacheObject(Data *d) {
     pids_.remove(d->physical_id());
+    element_map_.erase(d->logical_id());
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set,

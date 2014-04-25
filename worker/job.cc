@@ -408,6 +408,7 @@ Job* LocalCopyJob::Clone() {
 }
 
 void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
+  da[1]->InvalidateCacheObjects();
   da[1]->Copy(da[0]);
   da[1]->set_version(da[0]->version());
 }

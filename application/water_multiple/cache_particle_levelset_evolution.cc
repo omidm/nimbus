@@ -73,9 +73,13 @@ CacheParticleLevelsetEvolution(std::string type,
         mac_grid.Initialize(count, domain, true);
         data_ = new PhysBAMPLE(mac_grid, ghost_width);
         {
+            data_->grid = mac_grid;
             PhysBAMParticleContainer *particle_levelset =
                 &data_->particle_levelset;
             particle_levelset->Set_Band_Width(6);
+            // Resize phi
+            data_->phi.Resize(mac_grid.
+                    Domain_Indices(particle_levelset->number_of_ghost_cells));
             // Resizes particles.
             particle_levelset->positive_particles.Resize(
                     particle_levelset->levelset.grid.Block_Indices(
@@ -93,22 +97,21 @@ CacheParticleLevelsetEvolution(std::string type,
                     particle_levelset->levelset.grid.Block_Indices(
                         particle_levelset->number_of_ghost_cells));
             particle_levelset->Set_Minimum_Particle_Radius(
-                    (TS).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+                (TS).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
             particle_levelset->Set_Maximum_Particle_Radius(
-                    (TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
+                (TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
             if (particle_levelset->half_band_width &&
-                    particle_levelset->levelset.grid.Minimum_Edge_Length()) {
-                particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
-                        ((TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+                particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+              particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+                  ((TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
             } else {
-                particle_levelset->Set_Band_Width();
+              particle_levelset->Set_Band_Width();
             }
             particle_levelset->levelset.Initialize_Levelset_Grid_Values();
-            if (data_->
-                    levelset_advection.semi_lagrangian_collidable) {
-                particle_levelset->levelset.Initialize_Valid_Masks(mac_grid);
+            if (data_->levelset_advection.semi_lagrangian_collidable) {
+              particle_levelset->levelset.Initialize_Valid_Masks(mac_grid);
             }
-        }
+            }
         {
             // policies etc
             data_->Set_CFL_Number((TS).9);
@@ -125,8 +128,11 @@ CacheParticleLevelsetEvolution(std::string type,
 }
 
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
-ReadToCache(const nimbus::DataArray &read_set,
-            const nimbus::GeometricRegion &reg) {
+ReadDiffToCache(const nimbus::DataArray &read_set,
+                const nimbus::DataArray &diff,
+                const nimbus::GeometricRegion &reg) {
+    dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
+    PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < read_set.size(); ++i) {
         nimbus::Data *d = read_set[i];
@@ -140,7 +146,6 @@ ReadToCache(const nimbus::DataArray &read_set,
             neg_rem.push_back(d);
         }
     }
-    PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true);
     Translator::ReadParticles(enlarge_, shift_, neg, particle_levelset, scale_, false);
     Translator::ReadRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true);
@@ -150,6 +155,7 @@ ReadToCache(const nimbus::DataArray &read_set,
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
+    dbg(DBG_WARN, "\n Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < write_set.size(); ++i) {
         nimbus::Data *d = write_set[i];
@@ -172,6 +178,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
 
 template<class TS> nimbus::CacheObject *CacheParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ar) const {
+    dbg(DBG_WARN, "#### NEW CACHE OBJECT PLE\n");
     return new CacheParticleLevelsetEvolution(type(),
                               global_region_,
                               ghost_width_,

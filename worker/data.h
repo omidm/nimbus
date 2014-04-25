@@ -107,6 +107,7 @@ class Data {
 
   void InvalidateCacheObjects();
   void SetUpCacheObject(CacheObject *co);
+  void UnsetCacheObject(CacheObject *co);
 
  private:
   logical_data_id_t logical_id_;
@@ -124,7 +125,7 @@ class Data {
   IDSet<partition_id_t> neighbor_partitions_;
 
   // Set of cache objects that this data corresponds to
-  std::vector<CacheObject *> cache_objects_;
+  std::set<CacheObject *> cache_objects_;
 };
 
 typedef std::vector<Data*> DataArray;

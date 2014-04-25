@@ -429,7 +429,7 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_POS_REM_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
@@ -701,7 +701,7 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
@@ -751,7 +751,7 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_FACE_VEL,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);

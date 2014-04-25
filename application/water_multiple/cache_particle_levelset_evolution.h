@@ -65,8 +65,9 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
                                 const nimbus::GeometricRegion &global_region,
                                 const int ghost_width = 0,
                                 const nimbus::GeometricRegion &app_region = nimbus::GeometricRegion());
-        virtual void ReadToCache(const nimbus::DataArray &read_set,
-                                 const nimbus::GeometricRegion &reg);
+        virtual void ReadDiffToCache(const nimbus::DataArray &read_set,
+                                     const nimbus::DataArray &diff,
+                                     const nimbus::GeometricRegion &reg);
         virtual void WriteFromCache(const nimbus::DataArray &write_set,
                                     const nimbus::GeometricRegion &reg) const;
         virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &ar) const;

@@ -107,8 +107,7 @@ void Worker::WorkerCoreProcessor() {
     if (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
       IDSet<job_id_t> remove_set;
       while (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
-        std::cout << "Received command: " << comm->toStringWTags()
-            << std::endl;
+        dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
         remove_set.insert(
             reinterpret_cast<JobDoneCommand*>(comm)->job_id().elem());
         delete comm;
@@ -124,8 +123,7 @@ void Worker::WorkerCoreProcessor() {
       }
     }  // Finish batching job done command.
     if (comm != NULL) {
-      std::cout << "Received command: " << comm->toStringWTags()
-        << std::endl;
+      dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
       ProcessSchedulerCommand(comm);
       delete comm;
     }
