@@ -490,16 +490,16 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
   PARTICLE_LEVELSET_UNIFORM<GRID<TV> >* particle_levelset =
     &particle_levelset_evolution->particle_levelset;
   assert(grid_input.Is_MAC_Grid());
-  particle_levelset_evolution->grid = grid_input;
-  // Resizes phi here.
-  if (data_config.GetFlag(DataConfig::LEVELSET)
-      || data_config.GetFlag(DataConfig::LEVELSET_READ)
-      || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
-    particle_levelset_evolution->phi.Resize(
-        grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
-  }
-  // Resizes particles.
   if (example.create_destroy_ple) {
+    particle_levelset_evolution->grid = grid_input;
+    // Resizes phi here.
+    if (data_config.GetFlag(DataConfig::LEVELSET)
+        || data_config.GetFlag(DataConfig::LEVELSET_READ)
+        || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
+      particle_levelset_evolution->phi.Resize(
+          grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
+    }
+    // Resizes particles.
     particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
     if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
       particle_levelset->positive_particles.Resize(
@@ -524,22 +524,31 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
     }
-  }
-  particle_levelset->Set_Minimum_Particle_Radius(
-      (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
-  particle_levelset->Set_Maximum_Particle_Radius(
-      (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
-  if (particle_levelset->half_band_width &&
-      particle_levelset->levelset.grid.Minimum_Edge_Length()) {
-    particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
-        ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
-  } else {
-    particle_levelset->Set_Band_Width();
-  }
-  particle_levelset->levelset.Initialize_Levelset_Grid_Values();
-  if (particle_levelset_evolution->
-      levelset_advection.semi_lagrangian_collidable) {
-    particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
+    particle_levelset->Set_Minimum_Particle_Radius(
+        (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+    particle_levelset->Set_Maximum_Particle_Radius(
+        (T).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
+    if (particle_levelset->half_band_width &&
+        particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+      particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+          ((T).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+    } else {
+      particle_levelset->Set_Band_Width();
+    }
+    particle_levelset->levelset.Initialize_Levelset_Grid_Values();
+    if (particle_levelset_evolution->
+        levelset_advection.semi_lagrangian_collidable) {
+      particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
+    }
+    particle_levelset_evolution->Set_CFL_Number((T).9);
+    particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
+    particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
+    particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
+    particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
+    particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
+    particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
+    particle_levelset_evolution->Use_Particle_Levelset(true);
+    particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
   }
   return true;
 }

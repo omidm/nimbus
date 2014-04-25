@@ -77,6 +77,9 @@ CacheParticleLevelsetEvolution(std::string type,
             PhysBAMParticleContainer *particle_levelset =
                 &data_->particle_levelset;
             particle_levelset->Set_Band_Width(6);
+            // Resize phi
+            data_->phi.Resize(mac_grid.
+                    Domain_Indices(particle_levelset->number_of_ghost_cells));
             // Resizes particles.
             particle_levelset->positive_particles.Resize(
                     particle_levelset->levelset.grid.Block_Indices(
@@ -93,6 +96,21 @@ CacheParticleLevelsetEvolution(std::string type,
             particle_levelset->removed_negative_particles.Resize(
                     particle_levelset->levelset.grid.Block_Indices(
                         particle_levelset->number_of_ghost_cells));
+            particle_levelset->Set_Minimum_Particle_Radius(
+                (TS).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+            particle_levelset->Set_Maximum_Particle_Radius(
+                (TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
+            if (particle_levelset->half_band_width &&
+                particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+              particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+                  ((TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+            } else {
+              particle_levelset->Set_Band_Width();
+            }
+            particle_levelset->levelset.Initialize_Levelset_Grid_Values();
+            if (data_->levelset_advection.semi_lagrangian_collidable) {
+              particle_levelset->levelset.Initialize_Valid_Masks(mac_grid);
+            }
             }
         {
             // policies etc
@@ -114,25 +132,10 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
                 const nimbus::DataArray &diff,
                 const nimbus::GeometricRegion &reg) {
     dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
-    bool read_outer_only = true;
-    for (size_t i = 0; i < diff.size(); ++i) {
-        nimbus::Data *d = diff[i];
-        nimbus::GeometricRegion dr = d->region();
-        if (local_region_.Covers(&dr)) {
-            read_outer_only = false;
-            break;
-        }
-    }
-    nimbus::DataArray final_read;
-    if (read_outer_only) {
-        for (size_t i = 0; i < read_set.size(); ++i)
-            final_read.push_back(read_set[i]);
-    } else {
-        final_read = read_set;
-    }
+    bool read_outer_only = false;
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
-    for (size_t i = 0; i < final_read.size(); ++i) {
-        nimbus::Data *d = final_read[i];
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        nimbus::Data *d = read_set[i];
         if (d->name() == APP_POS_PARTICLES) {
             pos.push_back(d);
         } else if (d->name() == APP_NEG_PARTICLES) {
@@ -143,12 +146,41 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
             neg_rem.push_back(d);
         }
     }
-    // TODO(Chinmayee): something faster??
+//    bool read_outer_only = true;
+//    for (size_t i = 0; i < diff.size(); ++i) {
+//        nimbus::Data *d = diff[i];
+//        nimbus::GeometricRegion dr = d->region();
+//        if (local_region_.Covers(&dr)) {
+//            read_outer_only = false;
+//            break;
+//        }
+//    }
+//    nimbus::DataArray final_read;
+//    if (read_outer_only) {
+//        for (size_t i = 0; i < read_set.size(); ++i)
+//            final_read.push_back(read_set[i]);
+//    } else {
+//        final_read = read_set;
+//    }
+//    nimbus::DataArray pos, neg, pos_rem, neg_rem;
+//    for (size_t i = 0; i < final_read.size(); ++i) {
+//        nimbus::Data *d = final_read[i];
+//        if (d->name() == APP_POS_PARTICLES) {
+//            pos.push_back(d);
+//        } else if (d->name() == APP_NEG_PARTICLES) {
+//            neg.push_back(d);
+//        } else if (d->name() == APP_POS_REM_PARTICLES) {
+//            pos_rem.push_back(d);
+//        } else if (d->name() == APP_NEG_REM_PARTICLES) {
+//            neg_rem.push_back(d);
+//        }
+//    }
+//    // TODO(Chinmayee): something faster??
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
-    if (read_outer_only) {
-        data_->Delete_Particles_Outside_Grid();
-        dbg(DBG_WARN, "\n--- Finally reading %i elements into particles for region %s\n", final_read.size(), reg.toString().c_str());
-    }
+//    if (read_outer_only) {
+//        data_->Delete_Particles_Outside_Grid();
+//        dbg(DBG_WARN, "\n--- Finally reading %i elements into particles for region %s\n", final_read.size(), reg.toString().c_str());
+//    }
     Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true, read_outer_only);
     Translator::ReadParticles(enlarge_, shift_, neg, particle_levelset, scale_, false, read_outer_only);
     Translator::ReadRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true, read_outer_only);
@@ -181,6 +213,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
 
 template<class TS> nimbus::CacheObject *CacheParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ar) const {
+    dbg(DBG_WARN, "#### NEW CACHE OBJECT PLE\n");
     return new CacheParticleLevelsetEvolution(type(),
                               global_region_,
                               ghost_width_,
