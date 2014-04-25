@@ -26,6 +26,7 @@ def build_binaries(ip_address):
 # Thing you need to do onj source host:
 #  In application/water_multiple:
 #     generate the data_def and region_def files
+#     update parameter.h
 #     create the make file with ccmake
 
   command = ''
@@ -94,7 +95,10 @@ def distribute_binaries(source_ip, dest_ips):
 
 
 
-
+# command to automate
+# ./worker -sip <scheduler ip> -sport 5900 -port 5901 -ip <worker ip>
+# ./scheduler -port 5900 -wn 8
+# ssh -i omidm-sing-key-pair-us-west-2.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@<ip>
 
 
 

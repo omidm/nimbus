@@ -59,12 +59,14 @@ WorkerThreadFinish::~WorkerThreadFinish() {
 void WorkerThreadFinish::Run() {
   Job* job;
   while (true) {
-    do {
+    job = worker_manager_->PullFinishJob();
+    while (job != NULL) {
       assert(worker_manager_ != NULL);
+      ProcessJob(job);
+      delete job;
       job = worker_manager_->PullFinishJob();
-    } while (job == NULL);
-    ProcessJob(job);
-    delete job;
+    }
+    usleep(1);
   }
 }
 
