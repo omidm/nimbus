@@ -231,9 +231,11 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
+  log_version_.ResetTimer();
   while (ResolveDataVersions() > 0) {
     continue;
   }
+  std::cout << "Versioning in get ready jobs: " << log_version_.timer() << std::endl;
 
   size_t num = 0;
   list->clear();
@@ -302,9 +304,11 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
+  log_version_.ResetTimer();
   while (ResolveDataVersions() > 0) {
     continue;
   }
+  std::cout << "Versioning in remove obsolete jobs: " << log_version_.timer() << std::endl;
 
   size_t num = 0;
 
@@ -316,7 +320,6 @@ size_t JobManager::RemoveObsoleteJobEntries() {
     ++num;
     jobs_done_.erase(iter++);
   }
-
   return num;
 }
 
@@ -618,6 +621,8 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 
 
 size_t JobManager::ResolveDataVersions() {
+  log_version_.ResumeTimer();
+
   size_t num = 0;
   std::map<job_id_t, JobEntryList> new_pass_version;
   std::map<job_id_t, JobEntryList>::iterator iter;
@@ -654,6 +659,9 @@ size_t JobManager::ResolveDataVersions() {
 
   pass_version_.clear();
   pass_version_ = new_pass_version;
+
+  log_version_.StopTimer();
+
   return num;
 }
 
