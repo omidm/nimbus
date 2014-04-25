@@ -107,6 +107,9 @@ class CacheObject {
          * TODO(chinmayee): change this later to use logical id & version
          * information.*/
         PIDSet pids_;
+
+        // TODO(Chinmayee): change this to region-pid map (because of
+        // scratches)
         std::map<logical_data_id_t, physical_data_id_t> element_map_;
 };  // class CacheObject
 

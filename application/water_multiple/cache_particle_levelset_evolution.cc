@@ -56,7 +56,8 @@ CacheParticleLevelsetEvolution(std::string type,
     : CacheObject(type, app_region),
       ghost_width_(ghost_width),
       global_region_(global_region),
-      local_region_(app_region.NewEnlarged(-ghost_width_)) {
+      local_region_(app_region.NewEnlarged(-ghost_width_)),
+      inner_region_(app_region.NewEnlarged(-2*ghost_width_)) {
     {
         nimbus::int_dimension_t x = local_region_.x();
         nimbus::int_dimension_t y = local_region_.y();
@@ -170,16 +171,16 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
         nimbus::Data *d = diff[i];
         nimbus::GeometricRegion dr = d->region();
         nimbus::GeometricRegion ar = app_object_region();
-        if ((!wgb_region_.Covers(&dr)) || local_region_.Covers(&dr)) {
-            merge = false;
-            break;
-        }
-        if (wbg_region_.Covers(&dr) && !local_region_.Covers(&dr)) {
+        // TODO(Chinmayee): Do something smarter like check if stray ids for
+        // this to be robust. Need to change lid-pid map to region-pid map in
+        // cache object for this.
+        if (wgb_region_.Covers(&dr) && !inner_region_.Covers(&dr))
             continue;
+        merge = false;
     }
     nimbus::DataArray final_read;
     if (merge) {
-        dbg(DBG_WARN, "\n--- Mering %i of %i particles\n", diff.size(), read_set.size());
+        dbg(DBG_WARN, "\n--- Merging %i of %i particles\n", diff.size(), read_set.size());
         final_read = diff;
     } else {
         final_read = read_set;
