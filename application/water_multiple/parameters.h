@@ -63,7 +63,7 @@ namespace application {
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     // application specific parameters and constants
-    const bool kUseCache = true;
+    const bool kUseCache = false;
     const int kThreadsNum = 1;
     const int kScale = 40;
     const int kAppPartNum = 2;
