@@ -142,7 +142,7 @@ void CacheObject::SetUpRead(const DataArray &read_set,
             // TODO(Chinmayee): this is broken. Use physical data map at the
             // worker if this really needs to be taken care of.
             Data *d = read_set[i];
-            UnsetCacheObject(d);
+            d->UnsetCacheObject(this);
         }
     }
 }
@@ -156,7 +156,7 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
     }
 }
 
-void CacheObject::SetUpCacheObject(Data *d) {
+void CacheObject::SetUpData(Data *d) {
     logical_data_id_t lid = d->logical_id();
     physical_data_id_t pid = d->physical_id();
     if (element_map_.find(lid) != element_map_.end())
@@ -165,9 +165,17 @@ void CacheObject::SetUpCacheObject(Data *d) {
     pids_.insert(pid);
 }
 
-void CacheObject::UnsetCacheObject(Data *d) {
+void CacheObject::UnsetData(Data *d) {
     pids_.remove(d->physical_id());
     element_map_.erase(d->logical_id());
+}
+
+void CacheObject::InvalidateCacheObject() {
+    // TODO(Chinmayee): Handle this again during write back implementation
+    Write(app_object_region_, false);
+    write_back_.clear();
+    element_map_.clear();
+    pids_.clear();
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set,

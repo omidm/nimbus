@@ -63,9 +63,9 @@ CacheScalarArray(std::string type,
       if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
         Range domain = RangeFromRegions<TV>(global_region, local_region_);
         TV_INT count = CountFromRegion(local_region_);
-        mac_grid.Initialize(count, domain, true);
+        mac_grid_.Initialize(count, domain, true);
         data_ = new PhysBAMScalarArray();
-        data_->Resize(mac_grid.Domain_Indices(ghost_width));
+        data_->Resize(mac_grid_.Domain_Indices(ghost_width));
       }
 }
 

@@ -82,8 +82,9 @@ class CacheObject {
         void SetUpRead(const DataArray &read_set,
                        bool read_keep_valid);
         void SetUpWrite(const DataArray &write_set);
-        void SetUpCacheObject(Data *d);
-        void UnsetCacheObject(Data *d);
+        void SetUpData(Data *d);
+        void UnsetData(Data *d);
+        void InvalidateCacheObject();
 
         bool IsAvailable(CacheAccess access) const;
         distance_t GetDistance(const DataArray &data_set,

@@ -83,9 +83,10 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
         int ghost_width_;
         nimbus::GeometricRegion global_region_;
         nimbus::GeometricRegion local_region_;
+        nimbus::GeometricRegion wgb_region_;
         nimbus::Coord shift_;
         PhysBAMPLE *data_;
-        Grid mac_grid;
+        Grid mac_grid_;
 
         nimbus::GeometricRegion enlarge_;
         int scale_;

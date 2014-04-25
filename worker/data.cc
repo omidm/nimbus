@@ -98,17 +98,17 @@ void Data::InvalidateCacheObjects() {
   std::set<CacheObject *>::iterator iter = cache_objects_.begin();
   for (; iter != cache_objects_.end(); ++iter) {
     CacheObject *c = *iter;
-    c->UnsetCacheObject(this);
+    c->UnsetData(this);
   }
   cache_objects_.clear();
 }
 
 void Data::SetUpCacheObject(CacheObject *co) {
   cache_objects_.insert(co);
-  co->SetUpCacheObject(this);
+  co->SetUpData(this);
 }
 
 void Data::UnsetCacheObject(CacheObject *co) {
   cache_objects_.erase(co);
-  co->UnsetCacheObject(this);
+  co->UnsetData(this);
 }
