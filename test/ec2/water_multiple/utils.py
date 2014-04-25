@@ -26,6 +26,7 @@ def build_binaries(ip_address):
 # Thing you need to do onj source host:
 #  In application/water_multiple:
 #     generate the data_def and region_def files
+#     update parameter.h
 #     create the make file with ccmake
 
   command = ''
