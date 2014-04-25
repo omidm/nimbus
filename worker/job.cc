@@ -375,6 +375,7 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
+  da[0]->InvalidateCacheObjects();
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
