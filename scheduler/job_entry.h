@@ -176,6 +176,8 @@ class JobEntry {
     bool assigned_;
     bool done_;
     bool future_;
+    boost::mutex version_mutex_;
+
 
     void Initialize();
 };

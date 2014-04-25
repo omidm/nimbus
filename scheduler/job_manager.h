@@ -128,12 +128,19 @@ class JobManager {
     std::map<job_id_t, JobEntryList> pass_version_;
     std::map<job_id_t, JobEntryList> explore_to_assign_;
 
+    boost::mutex pass_version_mutex_;
+    boost::condition_variable pass_version_put_cond_;
+    boost::condition_variable pass_version_draw_cond_;
+    size_t pass_version_in_progress_;
+
     size_t ResolveDataVersions();
 
     void PassDataVersionToJob(
         JobEntry *job, const JobEntryList& from_jobs);
 
     bool JobVersionIsComplete(JobEntry *job);
+
+    void WaitToPassAllVersions();
 
     size_t ExploreToAssignJobs();
 

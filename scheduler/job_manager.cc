@@ -57,6 +57,7 @@ JobManager::JobManager() {
   } else {
     job->set_done(true);
   }
+  pass_version_in_progress_ = 0;
 }
 
 JobManager::~JobManager() {
@@ -711,6 +712,19 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
 
   return result;
 }
+
+
+void JobManager::WaitToPassAllVersions() {
+  // boost::lock_guard<boost::mutex> l(mtx);
+  boost::unique_lock<boost::mutex> lock(pass_version_mutex_);
+  while (pass_version_in_progress_ > 0 ||
+         pass_version_.size() > 0) {
+    pass_version_cond_.wait(lock);
+  }
+}
+
+
+
 
 
 size_t JobManager::ExploreToAssignJobs() {
