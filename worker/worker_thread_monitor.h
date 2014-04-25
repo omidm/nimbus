@@ -36,24 +36,17 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#include "worker/worker_manager.h"
-#include "worker/worker_thread.h"
+#ifndef NIMBUS_WORKER_WORKER_THREAD_MONITOR_H_
+#define NIMBUS_WORKER_WORKER_THREAD_MONITOR_H_
+
+#include "shared/nimbus.h"
 namespace nimbus {
-
-WorkerThread::WorkerThread(WorkerManager* worker_manager) {
-  worker_manager_ = worker_manager;
-  idle = true;
-}
-
-WorkerThread::~WorkerThread() {}
-
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
-  timer_ = timer;
-}
-
+class WorkerThreadMonitor : public WorkerThread {
+ public:
+  explicit WorkerThreadMonitor(WorkerManager* worker_manager);
+  virtual ~WorkerThreadMonitor();
+  virtual void Run();
+};
 }  // namespace nimbus
+
+#endif  // NIMBUS_WORKER_WORKER_THREAD_MONITOR_H_

@@ -3,3 +3,5 @@ opengl_3d
 *output*
 *.o
 worker
+*.dot
+*.pdf

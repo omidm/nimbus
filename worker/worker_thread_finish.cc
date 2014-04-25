@@ -57,16 +57,18 @@ WorkerThreadFinish::~WorkerThreadFinish() {
 }
 
 void WorkerThreadFinish::Run() {
-  Job* job;
+  std::list<Job*> finish_job_list;
   while (true) {
-    job = worker_manager_->PullFinishJob();
-    while (job != NULL) {
-      assert(worker_manager_ != NULL);
-      ProcessJob(job);
-      delete job;
-      job = worker_manager_->PullFinishJob();
+    bool success_flag = worker_manager_->PullFinishJobs(this, &finish_job_list);
+    assert(success_flag);
+    assert(worker_manager_ != NULL);
+    for (std::list<Job*>::iterator index = finish_job_list.begin();
+         index != finish_job_list.end();
+         index++) {
+      ProcessJob(*index);
+      delete *index;
     }
-    usleep(1);
+    finish_job_list.clear();
   }
 }
 

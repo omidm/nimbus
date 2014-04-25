@@ -779,6 +779,19 @@ namespace application {
     job_query.CommitStagedJobs();
 
     /*
+    std::vector<nimbus::job_id_t> barrier_job_ids;
+    GetNewJobID(&barrier_job_ids, )1;
+    read.clear();
+    write.clear();
+    job_query.StageJob(BARRIER_JOB,
+                       barrier_job_ids[0],
+                       read, write,
+                       params,
+                       false, true);
+    job_query.CommitStagedJobs();
+    */
+
+    /*
      * Loop iteration part two.
      */
 

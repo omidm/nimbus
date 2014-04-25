@@ -32,28 +32,27 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
+/*
+ * This file contains advect v job which is one of the sub
+ * jobs in the iteration of computing a simulation frame.
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
+ */
 
-#include "worker/worker_manager.h"
-#include "worker/worker_thread.h"
-namespace nimbus {
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_BARRIER_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_BARRIER_H_
 
-WorkerThread::WorkerThread(WorkerManager* worker_manager) {
-  worker_manager_ = worker_manager;
-  idle = true;
-}
+#include "shared/nimbus.h"
 
-WorkerThread::~WorkerThread() {}
+namespace application {
 
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
-  timer_ = timer;
-}
+    class JobBarrier : public nimbus::Job {
+        public:
+            explicit JobBarrier(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
-}  // namespace nimbus
+} // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_BARRIER_H_

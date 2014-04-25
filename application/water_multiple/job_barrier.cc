@@ -32,28 +32,40 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
+/*
+ * This file contains advect v job which is one of the sub
+ * jobs in the iteration of computing a simulation frame.
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
+ */
 
-#include "worker/worker_manager.h"
-#include "worker/worker_thread.h"
-namespace nimbus {
+#include <sstream>
+#include <string>
 
-WorkerThread::WorkerThread(WorkerManager* worker_manager) {
-  worker_manager_ = worker_manager;
-  idle = true;
+#include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple/water_driver.h"
+#include "application/water_multiple/water_example.h"
+#include "application/water_multiple/water_sources.h"
+#include "shared/dbg.h"
+#include "shared/nimbus.h"
+
+#include "application/water_multiple/job_barrier.h"
+
+namespace application {
+
+JobBarrier::JobBarrier(nimbus::Application *app) {
+  set_application(app);
+};
+
+nimbus::Job* JobBarrier::Clone() {
+  return new JobBarrier(application());
 }
 
-WorkerThread::~WorkerThread() {}
-
-void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
-    HighResolutionTimer* timer) {
-  log_ = log;
-  version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
-  timer_ = timer;
+void JobBarrier::Execute(nimbus::Parameter params,
+                        const nimbus::DataArray& da) {
+  dbg(APP_LOG, "Executing job barrier.\n");
 }
 
-}  // namespace nimbus
+}  // namespace application
+

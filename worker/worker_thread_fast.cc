@@ -36,64 +36,46 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#include <unistd.h>
 #include <string>
 
 #include "worker/worker.h"
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
-#include "worker/worker_thread_computation.h"
+#include "worker/worker_thread_fast.h"
+#include "worker/util_dumping.h"
 
 namespace nimbus {
 
-WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
+WorkerThreadFast::WorkerThreadFast(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
 }
 
-WorkerThreadComputation::~WorkerThreadComputation() {
+WorkerThreadFast::~WorkerThreadFast() {
 }
 
-void WorkerThreadComputation::Run() {
-  Job* job;
+void WorkerThreadFast::Run() {
+  std::list<Job*> fast_job_list;
   while (true) {
-    job = worker_manager_->PullComputationJob(this);
-    assert(job != NULL);
-    ExecuteJob(job);
-    assert(worker_manager_ != NULL);
-    bool success_flag = worker_manager_->PushFinishJob(job);
+    bool success_flag = worker_manager_->PullFastJobs(this, &fast_job_list);
     assert(success_flag);
+    assert(worker_manager_ != NULL);
+    for (std::list<Job*>::iterator index = fast_job_list.begin();
+         index != fast_job_list.end();
+         index++) {
+      ProcessJob(*index);
+      bool success_flag = worker_manager_->PushFinishJob(*index);
+      assert(success_flag);
+    }
+    fast_job_list.clear();
   }
 }
 
-void WorkerThreadComputation::ExecuteJob(Job* job) {
-#ifndef MUTE_LOG
-  log_->StartTimer();
-  timer_->Start(job->id().elem());
-#endif  // MUTE_LOG
-  dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
+void WorkerThreadFast::ProcessJob(Job* job) {
+  dbg(DBG_WORKER, "[WORKER_THREAD] Execute fast job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
   job->Execute(job->parameters(), job->data_array);
-  dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing job, name=%s, id=%lld. \n",
-      job->name().c_str(), job->id().elem());
-#ifndef MUTE_LOG
-  double run_time = timer_->Stop(job->id().elem());
-  log_->StopTimer();
-
-  job->set_run_time(run_time);
-
-  char buff[LOG_MAX_BUFF_SIZE];
-  snprintf(buff, sizeof(buff),
-      "Execute Job, name: %35s  id: %6llu  length(s): %2.3lf  time(s): %6.3lf",
-           job->name().c_str(), job->id().elem(),
-           log_->timer(), log_->GetTime());
-  log_->WriteToOutputStream(std::string(buff), LOG_INFO);
-
-  char time_buff[LOG_MAX_BUFF_SIZE];
-  snprintf(time_buff, sizeof(time_buff),
-      "Queue Time: %2.9lf, Run Time: %2.9lf",
-      job->wait_time(), job->run_time());
-  log_->WriteToOutputStream(std::string(time_buff), LOG_INFO);
-#endif  // MUTE_LOG
+  dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing fast job, "
+      "name=%s, id=%lld. \n", job->name().c_str(), job->id().elem());
 }
 
 }  // namespace nimbus

@@ -59,6 +59,7 @@ class WorkerThread {
   virtual void Run() = 0;
   // TODO(quhang) data member accessor.
   pthread_t thread_id;
+  bool idle;
  protected:
   WorkerManager* worker_manager_;
   // Logging data structures.
