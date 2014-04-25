@@ -48,8 +48,7 @@
 #include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
-// Configures the number of threads used to run jobs.
-#define CORE_NUMBER 1
+#define MULTITHREADED_WORKER false
 
 using boost::hash;
 
@@ -96,11 +95,11 @@ void Worker::Run() {
 
 void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
-  WorkerManager worker_manager;
+  WorkerManager worker_manager(MULTITHREADED_WORKER);
   worker_manager.worker_ = this;
   worker_manager.SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
                                      &timer_);
-  worker_manager.StartWorkerThreads(CORE_NUMBER);
+  worker_manager.StartWorkerThreads();
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
@@ -186,7 +185,7 @@ void Worker::GetJobsToRun(WorkerManager* worker_manager, size_t max_num) {
     Job* job = ready_jobs_.front();
     ready_jobs_.pop_front();
     ResolveDataArray(job);
-    int success_flag = worker_manager->PushComputationJob(job);
+    int success_flag = worker_manager->PushJob(job);
     assert(success_flag);
   }
 }

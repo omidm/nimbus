@@ -43,6 +43,7 @@
 #ifndef NIMBUS_WORKER_WORKER_THREAD_FINISH_H_
 #define NIMBUS_WORKER_WORKER_THREAD_FINISH_H_
 
+#include <list>
 #include "shared/nimbus.h"
 namespace nimbus {
 class WorkerThreadFinish : public WorkerThread {

@@ -48,27 +48,39 @@
 
 namespace nimbus {
 class SchedulerCommand;
+class WorkerThreadMonitor;
 class WorkerThread;
 class Worker;
 
 class WorkerManager {
+  friend class WorkerThreadMonitor;
  public:
-  WorkerManager();
+  explicit WorkerManager(bool multi_threaded);
   ~WorkerManager();
 
   void SetLoggingInterface(
       Log* log, Log* version_log, Log* data_hash_log,
       HighResolutionTimer* timer);
 
-  Job* PullComputationJob();
-  bool PushComputationJob(Job* job);
-  Job* PullFinishJob();
+  Job* PullComputationJob(WorkerThread* worker_thread);
+  bool PushJob(Job* job);
   bool PushFinishJob(Job* job);
+
+  bool PullFinishJobs(WorkerThread* worker_thread,
+                      std::list<Job*>* list_buffer);
+  bool PullFastJobs(WorkerThread* worker_thread,
+                    std::list<Job*>* list_buffer);
 
   bool SendCommand(SchedulerCommand* command);
 
-  bool StartWorkerThreads(int thread_number);
+  bool StartWorkerThreads();
   static void* ThreadEntryPoint(void* parameters);
+
+  void ScheduleProcessNewJob();
+  void ScheduleProcessNeedJob();
+
+  int computation_thread_num;
+  int fast_thread_num;
 
  public:
   // TODO(quhang) Not sure if maintaining such a pointer is good or not.
@@ -78,10 +90,18 @@ class WorkerManager {
   std::list<WorkerThread*> worker_thread_list;
 
   pthread_mutex_t computation_job_queue_lock_;
+  pthread_cond_t computation_job_queue_any_cond_;
   std::list<Job*> computation_job_list_;
 
   pthread_mutex_t finish_job_queue_lock_;
+  pthread_cond_t finish_job_queue_any_cond_;
   std::list<Job*> finish_job_list_;
+
+  pthread_mutex_t fast_job_queue_lock_;
+  pthread_cond_t fast_job_queue_any_cond_;
+  std::list<Job*> fast_job_list_;
+
+  int64_t processed_computation_job_count_;
 
   // Logging data structures.
   bool log_ready_;

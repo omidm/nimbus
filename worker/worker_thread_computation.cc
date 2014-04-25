@@ -53,19 +53,15 @@ WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
 WorkerThreadComputation::~WorkerThreadComputation() {
 }
 
-// TODO(quhang) busy waiting is not good.
 void WorkerThreadComputation::Run() {
   Job* job;
   while (true) {
-    job = worker_manager_->PullComputationJob();
-    while (job != NULL) {
-      ExecuteJob(job);
-      assert(worker_manager_ != NULL);
-      bool success_flag = worker_manager_->PushFinishJob(job);
-      assert(success_flag);
-      job = worker_manager_->PullComputationJob();
-    }
-    usleep(1);
+    job = worker_manager_->PullComputationJob(this);
+    assert(job != NULL);
+    ExecuteJob(job);
+    assert(worker_manager_ != NULL);
+    bool success_flag = worker_manager_->PushFinishJob(job);
+    assert(success_flag);
   }
 }
 

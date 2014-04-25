@@ -42,6 +42,7 @@ namespace nimbus {
 
 WorkerThread::WorkerThread(WorkerManager* worker_manager) {
   worker_manager_ = worker_manager;
+  idle = true;
 }
 
 WorkerThread::~WorkerThread() {}
