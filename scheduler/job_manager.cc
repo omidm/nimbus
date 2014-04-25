@@ -235,7 +235,9 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   while (ResolveDataVersions() > 0) {
     continue;
   }
-  std::cout << "Versioning in get ready jobs: " << log_version_.timer() << std::endl;
+  if (log_version_.timer() > 0.01) {
+    std::cout << "Versioning in get ready jobs: " << log_version_.timer() << std::endl;
+  }
 
   size_t num = 0;
   list->clear();
@@ -308,7 +310,9 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   while (ResolveDataVersions() > 0) {
     continue;
   }
-  std::cout << "Versioning in remove obsolete jobs: " << log_version_.timer() << std::endl;
+  if (log_version_.timer() > 0.01) {
+    std::cout << "Versioning in remove obsolete jobs: " << log_version_.timer() << std::endl;
+  }
 
   size_t num = 0;
 
@@ -661,7 +665,6 @@ size_t JobManager::ResolveDataVersions() {
   pass_version_ = new_pass_version;
 
   log_version_.StopTimer();
-
   return num;
 }
 
