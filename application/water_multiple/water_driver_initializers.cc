@@ -469,6 +469,15 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
       levelset_advection.semi_lagrangian_collidable) {
     particle_levelset->levelset.Initialize_Valid_Masks(grid_input);
   }
+  particle_levelset_evolution->Set_CFL_Number((T).9);
+  particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
+  particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
+  particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
+  particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
+  particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
+  particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
+  particle_levelset_evolution->Use_Particle_Levelset(true);
+  particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
   return true;
 }
 
@@ -515,15 +524,6 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
     }
-    particle_levelset_evolution->Set_CFL_Number((T).9);
-    particle_levelset_evolution->Set_Number_Particles_Per_Cell(16);
-    particle_levelset_evolution->Initialize_FMM_Initialization_Iterative_Solver(true);
-    particle_levelset_evolution->Bias_Towards_Negative_Particles(false);
-    particle_levelset_evolution->particle_levelset.Use_Removed_Positive_Particles();
-    particle_levelset_evolution->particle_levelset.Use_Removed_Negative_Particles();
-    particle_levelset_evolution->particle_levelset.Store_Unique_Particle_Id();
-    particle_levelset_evolution->Use_Particle_Levelset(true);
-    particle_levelset_evolution->particle_levelset.Set_Collision_Distance_Factors(.1,1);
   }
   particle_levelset->Set_Minimum_Particle_Radius(
       (T).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
