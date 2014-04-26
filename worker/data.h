@@ -108,6 +108,7 @@ class Data {
   void InvalidateCacheObjectsDataMapping();
   void SetUpCacheObjectDataMapping(CacheObject *co);
   void UnsetCacheObjectDataMapping(CacheObject *co);
+  void UpdateData();
 
   void set_dirty_cache_object(CacheObject *co);
   void clear_dirty_cache_object();

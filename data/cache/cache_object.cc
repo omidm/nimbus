@@ -72,28 +72,33 @@ void CacheObject::Read(const DataArray &read_set,
         dbg(DBG_ERROR, "Cache object being shared!");
         exit(-1);
     }
-    if (read_all_or_none) {
-        bool read = false;
-        DataArray diff;
-        for (size_t i = 0; i < read_set.size(); ++i) {
-            Data *d = read_set[i];
-            if (!pids_.contains(d->physical_id())) {
-                read = true;
-                diff.push_back(d);
+    if (!write_back_.empty()) {
+        DataArray flush;
+        std::set<Data *>::iterator iter = write_back_.begin();
+        std::set<Data *> read_unique(write_back_.begin(), write_back_.end());
+        for (; iter != write_back_.end(); ++iter) {
+            Data *d = *iter;
+            if (read_unique.find(d) == read_unique.end()) {
+                flush.push_back(d);
             }
         }
-        if (read)
+        FlushDiffCache(flush);
+    }
+    DataArray diff;
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set[i];
+        if (!pids_.contains(d->physical_id())) {
+            diff.push_back(d);
+            d->UpdateData();
+        }
+    }
+    if (read_all_or_none) {
+        if (!diff.empty())
             ReadDiffToCache(read_set, diff, reg);
     } else {
-        DataArray read;
-        for (size_t i = 0; i < read_set.size(); ++i) {
-            Data *d = read_set[i];
-            if (!pids_.contains(d->physical_id()))
-                read.push_back(d);
-        }
-        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
-        if (!read.empty())
-            ReadToCache(read, reg);
+        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", diff.size(), read_set.size());
+        if (!diff.empty())
+            ReadToCache(diff, reg);
     }
 }
 
@@ -103,16 +108,33 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
 }
 
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
+    write_region_ = reg;
+    // FlushCache();
+    if (release)
+        ReleaseAccess();
+}
+
+void CacheObject::FlushDiffCache(const DataArray &diff) {
+    WriteFromCache(diff, write_region_);
+    for (size_t i = 0; i < diff.size(); ++i) {
+        Data *d = diff[i];
+        d->clear_dirty_cache_object();
+        write_back_.erase(d);
+    }
+}
+
+void CacheObject::FlushCache() {
+    if (write_back_.empty()) {
+        return;
+    }
     DataArray write_set(write_back_.begin(), write_back_.end());
-    WriteFromCache(write_set, reg);
+    WriteFromCache(write_set, write_region_);
     std::set<Data *>::iterator iter = write_back_.begin();
     for (; iter != write_back_.end(); ++iter) {
         Data *d = *iter;
         d->clear_dirty_cache_object();
     }
     write_back_.clear();
-    if (release)
-        ReleaseAccess();
 }
 
 void CacheObject::PullIntoData(Data *d) {
@@ -143,6 +165,10 @@ GeometricRegion CacheObject::app_object_region() const {
 }
 
 void CacheObject::AcquireAccess(CacheAccess access) {
+    if (users_ != 0 && (access == EXCLUSIVE || access_ == EXCLUSIVE)) {
+        dbg(DBG_ERROR, "Error acquiring cache object!!\n");
+        exit(-1);
+    }
     access_ = access;
     users_++;
 }
@@ -169,13 +195,6 @@ void CacheObject::SetUpRead(const DataArray &read_set,
 }
 
 void CacheObject::SetUpWrite(const DataArray &write_set) {
-    if (!write_back_.empty()) {
-        dbg(DBG_ERROR, "Error setting up write, still need to flush out data\n");
-        dbg(DBG_ERROR, "Write back still contains %i items\n", write_back_.size());
-        dbg(DBG_ERROR, "Cache type : %s , region : %s \n",
-                type().c_str(), app_object_region().toString().c_str());
-        exit(-1);
-    }
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
         d->InvalidateCacheObjectsDataMapping();
@@ -202,7 +221,13 @@ void CacheObject::UnsetData(Data *d) {
 void CacheObject::InvalidateCacheObject() {
     // TODO(Chinmayee): Handle this again during write back implementation
     Write(app_object_region_, false);
-    write_back_.clear();
+    if (!write_back_.empty()) {
+        dbg(DBG_ERROR, "Error setting up write, still need to flush out data\n");
+        dbg(DBG_ERROR, "Write back still contains %i items\n", write_back_.size());
+        dbg(DBG_ERROR, "Cache type : %s , region : %s \n",
+                type().c_str(), app_object_region().toString().c_str());
+        exit(-1);
+    }
     element_map_.clear();
     pids_.clear();
 }

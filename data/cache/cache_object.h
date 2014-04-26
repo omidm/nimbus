@@ -70,6 +70,8 @@ class CacheObject {
                   bool read_all_or_none = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
         void Write(const GeometricRegion &reg, bool release = true);
+        void FlushDiffCache(const DataArray &diff);
+        void FlushCache();
         void PullIntoData(Data *d);
 
         virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
@@ -96,9 +98,8 @@ class CacheObject {
 
         CacheAccess access_;
         int users_;
-        bool read_valid_;
-        bool write_valid_;
 
+        GeometricRegion write_region_;
         std::set<Data *> write_back_;
 
         /* Currently, cache object contains only physical id information.
