@@ -88,8 +88,7 @@ class CacheObject {
         void InvalidateCacheObject();
 
         bool IsAvailable(CacheAccess access) const;
-        distance_t GetDistance(const DataArray &data_set,
-                               CacheAccess access = EXCLUSIVE) const;
+        distance_t GetDistance(const DataArray &data_set) const;
 
     private:
         std::string type_;

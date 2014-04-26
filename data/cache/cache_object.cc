@@ -68,6 +68,10 @@ void CacheObject::ReadDiffToCache(const DataArray &read_set,
 void CacheObject::Read(const DataArray &read_set,
                        const GeometricRegion &reg,
                        bool read_all_or_none) {
+    if (users_ > 1) {
+        dbg(DBG_ERROR, "Cache object being shared!");
+        exit(-1);
+    }
     if (read_all_or_none) {
         bool read = false;
         DataArray diff;
@@ -140,10 +144,7 @@ GeometricRegion CacheObject::app_object_region() const {
 
 void CacheObject::AcquireAccess(CacheAccess access) {
     access_ = access;
-    if (access_ == SHARED)
-        users_++;
-    else
-        users_ = 1;
+    users_++;
 }
 
 void CacheObject::ReleaseAccess() {
@@ -206,12 +207,8 @@ void CacheObject::InvalidateCacheObject() {
     pids_.clear();
 }
 
-distance_t CacheObject::GetDistance(const DataArray &data_set,
-                                    CacheAccess access) const {
-    distance_t max_distance = 2*data_set.size();
+distance_t CacheObject::GetDistance(const DataArray &data_set) const {
     distance_t cur_distance = 0;
-    if (!IsAvailable(access))
-        return max_distance;
     for (size_t i = 0; i < data_set.size(); ++i) {
         Data *d = data_set[i];
         if (!pids_.contains(d->physical_id()))

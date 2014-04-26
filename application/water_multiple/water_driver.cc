@@ -227,7 +227,7 @@ WriteFrameImpl(const nimbus::Job *job,
   Write_Output_Files(++output_number);
 
   //Save State
-  example.Save_To_Nimbus_No_Cache(job, da, current_frame+1);
+  example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
