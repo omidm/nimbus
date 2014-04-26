@@ -99,10 +99,30 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
 }
 
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
-    WriteFromCache(write_back_, reg);
+    DataArray write_set(write_back_.begin(), write_back_.end());
+    WriteFromCache(write_set, reg);
+    std::set<Data *>::iterator iter = write_back_.begin();
+    for (; iter != write_back_.end(); ++iter) {
+        Data *d = *iter;
+        d->clear_dirty_cache_object();
+    }
     write_back_.clear();
     if (release)
         ReleaseAccess();
+}
+
+void CacheObject::PullIntoData(Data *d) {
+    AcquireAccess(EXCLUSIVE);
+    if (write_back_.find(d) == write_back_.end()) {
+        dbg(DBG_ERROR, "Write back set does not contain data that needs to be pulled\n");
+        exit(-1);
+    }
+    DataArray write;
+    write.push_back(d);
+    GeometricRegion dreg = d->region();
+    WriteFromCache(write, dreg);
+    d->clear_dirty_cache_object();
+    ReleaseAccess();
 }
 
 CacheObject *CacheObject::CreateNew(const GeometricRegion &app_object_region) const {
@@ -135,24 +155,32 @@ void CacheObject::SetUpRead(const DataArray &read_set,
     if (read_keep_valid) {
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            d->SetUpCacheObject(this);
+            d->SetUpCacheObjectDataMapping(this);
         }
     } else {
         for (size_t i = 0; i < read_set.size(); ++i) {
             // TODO(Chinmayee): this is broken. Use physical data map at the
             // worker if this really needs to be taken care of.
             Data *d = read_set[i];
-            d->UnsetCacheObject(this);
+            d->UnsetCacheObjectDataMapping(this);
         }
     }
 }
 
 void CacheObject::SetUpWrite(const DataArray &write_set) {
-    write_back_ = write_set;
+    if (!write_back_.empty()) {
+        dbg(DBG_ERROR, "Error setting up write, still need to flush out data\n");
+        dbg(DBG_ERROR, "Write back still contains %i items\n", write_back_.size());
+        dbg(DBG_ERROR, "Cache type : %s , region : %s \n",
+                type().c_str(), app_object_region().toString().c_str());
+        exit(-1);
+    }
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
-        d->InvalidateCacheObjects();
-        d->SetUpCacheObject(this);
+        d->InvalidateCacheObjectsDataMapping();
+        d->SetUpCacheObjectDataMapping(this);
+        d->set_dirty_cache_object(this);
+        write_back_.insert(d);
     }
 }
 

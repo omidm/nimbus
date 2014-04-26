@@ -70,6 +70,7 @@ class CacheObject {
                   bool read_all_or_none = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
         void Write(const GeometricRegion &reg, bool release = true);
+        void PullIntoData(Data *d);
 
         virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
 
@@ -99,7 +100,7 @@ class CacheObject {
         bool read_valid_;
         bool write_valid_;
 
-        DataArray write_back_;
+        std::set<Data *> write_back_;
 
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on

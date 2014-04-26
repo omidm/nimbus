@@ -105,9 +105,12 @@ class Data {
   void set_region(const GeometricRegion& region);
   void set_version(data_version_t version);
 
-  void InvalidateCacheObjects();
-  void SetUpCacheObject(CacheObject *co);
-  void UnsetCacheObject(CacheObject *co);
+  void InvalidateCacheObjectsDataMapping();
+  void SetUpCacheObjectDataMapping(CacheObject *co);
+  void UnsetCacheObjectDataMapping(CacheObject *co);
+
+  void set_dirty_cache_object(CacheObject *co);
+  void clear_dirty_cache_object();
 
  private:
   logical_data_id_t logical_id_;
@@ -126,6 +129,7 @@ class Data {
 
   // Set of cache objects that this data corresponds to
   std::set<CacheObject *> cache_objects_;
+  CacheObject *dirty_cache_object_;
 };
 
 typedef std::vector<Data*> DataArray;

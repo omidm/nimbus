@@ -375,7 +375,7 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
-  da[0]->InvalidateCacheObjects();
+  da[0]->InvalidateCacheObjectsDataMapping();
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
@@ -409,7 +409,7 @@ Job* LocalCopyJob::Clone() {
 }
 
 void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
-  da[1]->InvalidateCacheObjects();
+  da[1]->InvalidateCacheObjectsDataMapping();
   da[1]->Copy(da[0]);
   da[1]->set_version(da[0]->version());
 }
