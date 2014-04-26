@@ -33,21 +33,38 @@
  */
 
  /*
-  * Job Ancestor List.
+  * Job Ancestor Entry.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/ancestor_list.h"
+#ifndef NIMBUS_SCHEDULER_ANCESTOR_ENTRY_H_
+#define NIMBUS_SCHEDULER_ANCESTOR_ENTRY_H_
 
-using namespace nimbus; // NOLINT
+#include <boost/shared_ptr.hpp>
+#include <map>
+#include <list>
+#include "shared/nimbus_types.h"
+#include "shared/dbg.h"
+#include "scheduler/version_map.h"
 
-AncestorList::AncestorList() {
-}
+namespace nimbus {
 
-AncestorList::~AncestorList() {
-}
+class AncestorEntry {
+  public:
+    typedef std::list<AncestorEntry> List;
+
+    AncestorEntry(job_id_t id, boost::shared_ptr<VersionMap> version_map);
+    virtual ~AncestorEntry();
+
+    job_id_t id();
+    boost::shared_ptr<VersionMap> version_map();
+
+  private:
+    job_id_t id_;
+    boost::shared_ptr<VersionMap> version_map_;
+};
 
 
-
-
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_ANCESTOR_ENTRY_H_

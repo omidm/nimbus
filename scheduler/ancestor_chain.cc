@@ -33,58 +33,30 @@
  */
 
  /*
-  * Version Map.
+  * Job Ancestor Chain.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/version_map.h"
+#include "scheduler/ancestor_chain.h"
 
 using namespace nimbus; // NOLINT
 
-VersionMap::VersionMap() {
+AncestorChain::AncestorChain() {
 }
 
-VersionMap::~VersionMap() {
+AncestorChain::~AncestorChain() {
 }
 
-VersionMap::Map VersionMap::content() const {
-  return content_;
-}
 
-const VersionMap::Map* VersionMap::content_p() const {
-  return &content_;
-}
-
-bool VersionMap::query_entry(logical_data_id_t l_id, data_version_t *version) const {
-  ConstIter iter;
-
-  iter = content_.find(l_id);
-  if (iter != content_.end()) {
-    *version = iter->second;
-    return true;
-  }
-
+bool AncestorChain::MergeAncestorChains(std::list<AncestorChain> list,
+    AncestorChain* result) {
   return false;
 }
 
-void VersionMap::set_content(const VersionMap::Map& content) {
-  content_= content;
+bool AncestorChain::AncestorChain::LookUpVersion(logical_data_id_t l_id,
+    data_version_t *version) {
+  return false;
 }
-
-void VersionMap::set_entry(logical_data_id_t l_id, data_version_t version) {
-  content_[l_id] = version;
-}
-
-void VersionMap::Print() const {
-  ConstIter iter;
-
-  std::cout << "Content:\n";
-  for (iter = content_.begin(); iter != content_.end(); ++iter) {
-    std::cout << iter->first << " -> " << iter->second << std::endl;
-  }
-}
-
-
 
 

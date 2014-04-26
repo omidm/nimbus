@@ -33,58 +33,40 @@
  */
 
  /*
-  * Version Map.
+  * Job Ancestor Chain.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#include "scheduler/version_map.h"
+#ifndef NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_
+#define NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_
 
-using namespace nimbus; // NOLINT
+#include <boost/shared_ptr.hpp>
+#include <map>
+#include <list>
+#include "shared/nimbus_types.h"
+#include "shared/dbg.h"
+#include "scheduler/ancestor_entry.h"
 
-VersionMap::VersionMap() {
-}
+namespace nimbus {
 
-VersionMap::~VersionMap() {
-}
+class AncestorChain {
+  public:
+    typedef std::list<AncestorEntry> Pool;
+    typedef std::list<Pool> Chain;
 
-VersionMap::Map VersionMap::content() const {
-  return content_;
-}
+    AncestorChain();
+    virtual ~AncestorChain();
 
-const VersionMap::Map* VersionMap::content_p() const {
-  return &content_;
-}
+    static bool MergeAncestorChains(std::list<AncestorChain> list,
+        AncestorChain* result);
 
-bool VersionMap::query_entry(logical_data_id_t l_id, data_version_t *version) const {
-  ConstIter iter;
+    bool LookUpVersion(logical_data_id_t l_id, data_version_t* version);
 
-  iter = content_.find(l_id);
-  if (iter != content_.end()) {
-    *version = iter->second;
-    return true;
-  }
-
-  return false;
-}
-
-void VersionMap::set_content(const VersionMap::Map& content) {
-  content_= content;
-}
-
-void VersionMap::set_entry(logical_data_id_t l_id, data_version_t version) {
-  content_[l_id] = version;
-}
-
-void VersionMap::Print() const {
-  ConstIter iter;
-
-  std::cout << "Content:\n";
-  for (iter = content_.begin(); iter != content_.end(); ++iter) {
-    std::cout << iter->first << " -> " << iter->second << std::endl;
-  }
-}
+  private:
+    Chain chain_;
+};
 
 
-
-
+}  // namespace nimbus
+#endif  // NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_
