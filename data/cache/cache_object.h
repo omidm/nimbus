@@ -70,7 +70,9 @@ class CacheObject {
                   bool read_all_or_none = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
         void Write(const GeometricRegion &reg, bool release = true);
-        void PullIntoData(Data *d);
+        void FlushDiffCache(const DataArray &diff);
+        void FlushCache();
+        void PullIntoData(Data *d, bool lock_co);
 
         virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
 
@@ -85,6 +87,8 @@ class CacheObject {
         void SetUpWrite(const DataArray &write_set);
         void SetUpData(Data *d);
         void UnsetData(Data *d);
+
+        // Use with care
         void InvalidateCacheObject();
 
         bool IsAvailable(CacheAccess access) const;
@@ -96,21 +100,25 @@ class CacheObject {
 
         CacheAccess access_;
         int users_;
-        bool read_valid_;
-        bool write_valid_;
 
+        GeometricRegion write_region_;
         std::set<Data *> write_back_;
 
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on
          * physical id only.
-         * TODO(chinmayee): change this later to use logical id & version
+         * TODO(Chinmayee): change this later to use logical id & version
          * information.*/
+        // TODO(Chinmayee): change this to use pid-data map.
+        std::set<Data *> data_;
         PIDSet pids_;
 
         // TODO(Chinmayee): change this to region-pid map (because of
         // scratches)
-        std::map<logical_data_id_t, physical_data_id_t> element_map_;
+        typedef std::map<GeometricRegion,
+                         physical_data_id_t,
+                         GRComparisonType> DMap;
+        DMap element_map_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

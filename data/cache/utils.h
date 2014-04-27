@@ -50,6 +50,7 @@ namespace nimbus {
 /* Types. */
 typedef uint64_t distance_t;
 typedef IDSet<physical_data_id_t> PIDSet;
+typedef IDSet<logical_data_id_t> LIDSet;
 
 struct CacheInstance {
     physical_data_id_t pid;
