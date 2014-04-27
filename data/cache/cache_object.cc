@@ -47,6 +47,8 @@
 
 namespace nimbus {
 
+static std::string cphi7 = "phi";
+
 CacheObject::CacheObject(std::string type,
                          const GeometricRegion &app_object_region)
      : type_(type),
@@ -130,8 +132,10 @@ void CacheObject::WriteImmediately(const DataArray &write_set,
     }
     write_region_ = reg;
     FlushCacheData(final_write);
+    dbg(DBG_WARN, "Flushed %i data to %s\n", final_write.size(), type().c_str());
     if (release)
         ReleaseAccess();
+    dbg(DBG_WARN, "Write back left %i pid size %i\n", write_back_.size(), pids_.size());
 }
 
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
@@ -165,6 +169,7 @@ void CacheObject::FlushCache() {
 }
 
 void CacheObject::PullIntoData(Data *d, bool lock_co) {
+    assert(false);
     if (lock_co)
         AcquireAccess(EXCLUSIVE);
     if (write_back_.find(d) == write_back_.end()) {
@@ -229,6 +234,9 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
         Data *d = write_set[i];
         d->InvalidateCacheObjectsDataMapping();
         d->SetUpCacheObjectDataMapping(this);
+        if (d->physical_id() >= 6526 &&
+                d->physical_id() <= 6536)
+            dbg(DBG_WARN, "What is happening??\n");
         d->set_dirty_cache_object(this);
         write_back_.insert(d);
     }
