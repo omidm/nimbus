@@ -743,7 +743,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
               if (!wgb_region.Covers(&dreg))
                 ghost_data.push_back(write_set[k]);
             }
-            cache_ple->WriteImmediately(ghost_data, array_reg_outer, true);
+            cache_ple->WriteImmediately(ghost_data, array_reg_outer, false);
             cache_ple->InvalidateCacheObject(ghost_data);
           }
           cache_ple->WriteImmediately(write_set, array_reg_outer, true);
