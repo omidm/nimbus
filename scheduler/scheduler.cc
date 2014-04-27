@@ -491,6 +491,22 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
         l_id, job->job_name().c_str());
   }
 
+
+  // Checking correctness of the new versioning system
+  data_version_t version_c;
+  if (reading) {
+    assert(job->vmap_read_in()->query_entry(l_id, &version_c));
+    assert(version_c == version);
+  }
+  if (writing) {
+    assert(job->vmap_write_out()->query_entry(l_id, &version_c));
+    assert(version_c == (version + 1));
+  }
+
+
+
+
+
   if (!reading) {
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);

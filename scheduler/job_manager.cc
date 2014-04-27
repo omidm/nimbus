@@ -823,7 +823,7 @@ void JobManager::WaitToPassAllVersions() {
   boost::unique_lock<boost::mutex> lock(pass_version_mutex_);
   while (pass_version_in_progress_ > 0 ||
          pass_version_.size() > 0) {
-    pass_version_cond_.wait(lock);
+    pass_version_draw_cond_.wait(lock);
   }
 }
 
