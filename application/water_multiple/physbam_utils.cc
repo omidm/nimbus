@@ -148,6 +148,8 @@ void GetAppCacheObjects(
       read8 = read;
     if (l8w)
       write8 = write;
+    // TODO(Chinmayee): revisit this design later. Multiple cache objects for
+    // same physical data.
     int order[3];
     if (!write3.empty()) {
       order[0] = 7; order[1] = 8; order[2] = 3;

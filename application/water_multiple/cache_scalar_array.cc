@@ -89,7 +89,6 @@ WriteFromCache(const nimbus::DataArray &write_set,
 
 template<class T, class TS> nimbus::CacheObject *CacheScalarArray<T, TS>::
 CreateNew(const nimbus::GeometricRegion &lr) const {
-    dbg(DBG_WARN, "\n--- Create new SCALAR ARRAY\n");
     return new CacheScalarArray(type(),
                               global_region_,
                               ghost_width_,

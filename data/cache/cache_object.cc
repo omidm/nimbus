@@ -47,8 +47,6 @@
 
 namespace nimbus {
 
-static std::string cphi7 = "phi";
-
 CacheObject::CacheObject(std::string type,
                          const GeometricRegion &app_object_region)
      : type_(type),
@@ -169,7 +167,6 @@ void CacheObject::FlushCache() {
 }
 
 void CacheObject::PullIntoData(Data *d, bool lock_co) {
-    assert(false);
     if (lock_co)
         AcquireAccess(EXCLUSIVE);
     if (write_back_.find(d) == write_back_.end()) {
@@ -234,15 +231,9 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
         Data *d = write_set[i];
         d->InvalidateCacheObjectsDataMapping();
         d->SetUpCacheObjectDataMapping(this);
-        if (d->physical_id() >= 6526 &&
-                d->physical_id() <= 6536)
-            dbg(DBG_WARN, "What is happening??\n");
         d->set_dirty_cache_object(this);
         write_back_.insert(d);
     }
-    std::string ple = "particle_levelset_evolution";
-    if (type_ == ple)
-        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
 }
 
 void CacheObject::SetUpData(Data *d) {
@@ -268,9 +259,6 @@ void CacheObject::InvalidateCacheObject(const DataArray &da) {
         Data *d = da[i];
         d->UnsetCacheObjectDataMapping(this);
     }
-    std::string ple = "particle_levelset_evolution";
-    if (type_ == ple)
-        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
 }
 
 void CacheObject::InvalidateCacheObjectComplete() {
@@ -280,9 +268,6 @@ void CacheObject::InvalidateCacheObjectComplete() {
         Data *d = *iter;
         d->UnsetCacheObjectDataMapping(this);
     }
-    std::string ple = "particle_levelset_evolution";
-    if (type_ == ple)
-        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set) const {
