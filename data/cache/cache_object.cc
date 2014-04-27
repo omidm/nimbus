@@ -61,7 +61,8 @@ void CacheObject::ReadToCache(const DataArray &read_set,
 
 void CacheObject::ReadDiffToCache(const DataArray &read_set,
                                   const DataArray &diff,
-                                  const GeometricRegion &reg) {
+                                  const GeometricRegion &reg,
+                                  bool all_lids_diff) {
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
@@ -93,16 +94,19 @@ void CacheObject::Read(const DataArray &read_set,
         FlushCacheData(flush);
     }
     DataArray diff;
+    bool all_lids_diff = true;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set[i];
         if (!pids_.contains(d->physical_id())) {
             diff.push_back(d);
             d->UpdateData(false);
         }
+        if (element_map_.find(d->logical_id()) != element_map_.end())
+            all_lids_diff = false;
     }
     if (read_all_or_none) {
         if (!diff.empty())
-            ReadDiffToCache(read_set, diff, reg);
+            ReadDiffToCache(read_set, diff, reg, all_lids_diff);
     } else {
         dbg(DBG_WARN, "\n--- Reading %i out of %i\n", diff.size(), read_set.size());
         if (!diff.empty())
@@ -254,6 +258,18 @@ void CacheObject::UnsetData(Data *d) {
 void CacheObject::InvalidateCacheObject(const DataArray &da) {
     for (size_t i = 0; i < da.size(); ++i) {
         Data *d = da[i];
+        d->UnsetCacheObjectDataMapping(this);
+    }
+    std::string ple = "particle_levelset_evolution";
+    if (type_ == ple)
+        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
+}
+
+void CacheObject::InvalidateCacheObjectComplete() {
+    std::set<Data *> temp = data_;
+    std::set<Data *>::iterator iter = temp.begin();
+    for (; iter != temp.end(); ++iter) {
+        Data *d = *iter;
         d->UnsetCacheObjectDataMapping(this);
     }
     std::string ple = "particle_levelset_evolution";

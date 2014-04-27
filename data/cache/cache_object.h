@@ -65,7 +65,8 @@ class CacheObject {
         virtual void ReadToCache(const DataArray &read_set, const GeometricRegion &reg);
         virtual void ReadDiffToCache(const DataArray &read_set,
                                      const DataArray &diff,
-                                     const GeometricRegion &reg);
+                                     const GeometricRegion &reg,
+                                     bool all_lids_diff);
         void Read(const DataArray &read_set, const GeometricRegion &reg,
                   bool read_all_or_none = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
@@ -91,6 +92,7 @@ class CacheObject {
 
         // Use with care
         void InvalidateCacheObject(const DataArray &da);
+        void InvalidateCacheObjectComplete();
 
         bool IsAvailable(CacheAccess access) const;
         distance_t GetDistance(const DataArray &data_set) const;
