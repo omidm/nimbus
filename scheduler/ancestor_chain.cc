@@ -161,9 +161,26 @@ bool AncestorChain::MergeTwoAncestorChains(
   return true;
 }
 
-bool AncestorChain::AncestorChain::LookUpVersion(logical_data_id_t l_id,
+bool AncestorChain::AncestorChain::LookUpVersion(
+    logical_data_id_t l_id,
     data_version_t *version) {
-  return false;
+  bool found = false;
+  Chain::iterator iter;
+  for (iter = chain_.begin(); iter != chain_.end(); ++iter) {
+    Pool pool = *iter;
+    Pool::iterator it;
+    for (it = pool.begin(); it != pool.end(); ++it) {
+      if (it->version_map()->query_entry(l_id, version)) {
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      break;
+    }
+  }
+
+  return found;
 }
 
 
