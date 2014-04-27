@@ -32,44 +32,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#ifndef NIMBUS_WORKER_WORKER_THREAD_FAST_H_
+#define NIMBUS_WORKER_WORKER_THREAD_FAST_H_
 
-#include <map>
-
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
-
+#include <list>
+#include "shared/nimbus.h"
 namespace nimbus {
-
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
-
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
-
-
+class WorkerThreadFast : public WorkerThread {
+ public:
+  explicit WorkerThreadFast(WorkerManager* worker_manager);
+  virtual ~WorkerThreadFast();
+  virtual void Run();
+ private:
+  void ProcessJob(Job* job);
+};
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#endif  // NIMBUS_WORKER_WORKER_THREAD_FAST_H_

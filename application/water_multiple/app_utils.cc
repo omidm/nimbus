@@ -110,8 +110,10 @@ namespace application {
 
     void GetReadData(const nimbus::Job &job,
                      const nimbus::DataArray &da,
-                     nimbus::DataArray *read) {
-        read->clear();
+                     nimbus::DataArray *read,
+                     bool clear) {
+        if (clear)
+            read->clear();
         if (da.empty())
             return;
         IDSet<nimbus::physical_data_id_t> read_set = job.read_set();
@@ -126,8 +128,10 @@ namespace application {
 
     void GetWriteData(const nimbus::Job &job,
                       const nimbus::DataArray &da,
-                      nimbus::DataArray *write) {
-        write->clear();
+                      nimbus::DataArray *write,
+                      bool clear) {
+        if (clear)
+            write->clear();
         if (da.empty())
             return;
         IDSet<nimbus::physical_data_id_t> read_set = job.read_set();
@@ -146,8 +150,10 @@ namespace application {
     void GetReadData(const nimbus::Job &job,
                      const std::string &name,
                      const nimbus::DataArray &da,
-                     nimbus::DataArray *read) {
-        read->clear();
+                     nimbus::DataArray *read,
+                     bool clear) {
+        if (clear)
+            read->clear();
         if (da.empty())
             return;
         IDSet<nimbus::physical_data_id_t> read_set = job.read_set();
@@ -164,8 +170,10 @@ namespace application {
     void GetWriteData(const nimbus::Job &job,
                       const std::string &name,
                       const nimbus::DataArray &da,
-                      nimbus::DataArray *write) {
-        write->clear();
+                      nimbus::DataArray *write,
+                      bool clear) {
+        if (clear)
+            write->clear();
         if (da.empty())
             return;
         IDSet<nimbus::physical_data_id_t> read_set = job.read_set();

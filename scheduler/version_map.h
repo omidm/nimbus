@@ -32,44 +32,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Version Map.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#ifndef NIMBUS_SCHEDULER_VERSION_MAP_H_
+#define NIMBUS_SCHEDULER_VERSION_MAP_H_
 
+#include <boost/shared_ptr.hpp>
 #include <map>
-
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "shared/nimbus_types.h"
+#include "shared/dbg.h"
 
 namespace nimbus {
 
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
+class VersionMap {
+  public:
+    typedef std::map<logical_data_id_t, data_version_t> Map;
+    typedef std::map<logical_data_id_t, data_version_t>::iterator Iter;
+    typedef std::map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
 
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
+    VersionMap();
+    VersionMap(const VersionMap& other);
+    virtual ~VersionMap();
+
+    Map content() const;
+    const Map* content_p() const;
+    bool query_entry(logical_data_id_t l_id, data_version_t *version) const;
+
+    void set_content(const Map& content);
+    void set_entry(logical_data_id_t l_id, data_version_t version);
+
+    void Print() const;
+
+    VersionMap& operator=(const VersionMap& right);
+
+  private:
+    Map content_;
+};
 
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#endif  // NIMBUS_SCHEDULER_VERSION_MAP_H_

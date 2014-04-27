@@ -119,6 +119,8 @@ class JobManager {
     VersionOperator version_operator_;
     // bool processed_new_job_done_;
 
+    Log log_version_;
+
     bool ResolveJobDataVersions(JobEntry* job);
     size_t ResolveVersions();
 

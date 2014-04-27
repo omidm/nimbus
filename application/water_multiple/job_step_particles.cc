@@ -64,11 +64,13 @@ nimbus::Job* JobStepParticles::Clone() {
 
 void JobStepParticles::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing step particles job.\n");
+  dbg(APP_LOG, "--- Executing step particles job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   init_config.use_cache = true;
+  init_config.clear_shared_particles_read = true;
+  init_config.clear_ghost_particles_write = true;
   init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),

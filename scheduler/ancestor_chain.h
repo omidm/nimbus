@@ -32,44 +32,56 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Job Ancestor Chain.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#ifndef NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_
+#define NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_
 
-#include <map>
-
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include <boost/shared_ptr.hpp>
+#include <vector>
+#include <set>
+#include <list>
+#include "shared/nimbus_types.h"
+#include "shared/dbg.h"
+#include "scheduler/ancestor_entry.h"
 
 namespace nimbus {
 
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
+class AncestorChain {
+  public:
+    typedef std::list<AncestorEntry> Pool;
+    typedef std::list<Pool> Chain;
 
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
+    AncestorChain();
+    AncestorChain(const AncestorChain& other);
+    virtual ~AncestorChain();
+
+    Chain chain() const;
+    const Chain* chain_p() const;
+
+    void set_chain(Chain chain);
+
+    static bool MergeAncestorChains(
+        std::vector<boost::shared_ptr<const AncestorChain> > chains,
+        boost::shared_ptr<AncestorChain> *result);
+
+    bool LookUpVersion(logical_data_id_t l_id, data_version_t* version);
+
+    AncestorChain& operator=(const AncestorChain& right);
+
+  private:
+    Chain chain_;
+
+    static bool MergeTwoAncestorChains(
+        boost::shared_ptr<const AncestorChain> c_1,
+        boost::shared_ptr<const AncestorChain> c_2,
+        boost::shared_ptr<AncestorChain> *result);
+};
 
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#endif  // NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_

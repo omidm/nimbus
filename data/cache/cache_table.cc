@@ -87,18 +87,19 @@ CacheObject *CacheTable::GetAvailable(const GeometricRegion &region,
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
                                     const DataArray &read,
                                     CacheAccess access) const {
-    size_t num_objects = objects->size();
-    std::vector<distance_t> distance_vector(num_objects);
     distance_t min_distance = 2*read.size();
     int min_index = -1;
+    distance_t dist;
     for (size_t i = 0; i < objects->size(); ++i) {
-        distance_vector[i] = objects->at(i)->GetDistance(read, access);
-        if (distance_vector[i] == 0) {
+        if (!objects->at(i)->IsAvailable(access))
+            continue;
+        dist = objects->at(i)->GetDistance(read);
+        if (dist == 0) {
             min_distance = 0;
             min_index = i;
             break;
-        } else if (distance_vector[i] < min_distance) {
-            min_distance = distance_vector[i];
+        } else if (dist < min_distance) {
+            min_distance = dist;
             min_index = i;
         }
     }

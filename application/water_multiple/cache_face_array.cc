@@ -63,8 +63,8 @@ CacheFaceArray(std::string type,
       if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
         Range domain = RangeFromRegions<TV>(global_region, local_region_);
         TV_INT count = CountFromRegion(local_region_);
-        mac_grid.Initialize(count, domain, true);
-        data_ = new PhysBAMFaceArray(mac_grid, ghost_width, false);
+        mac_grid_.Initialize(count, domain, true);
+        data_ = new PhysBAMFaceArray(mac_grid_, ghost_width, false);
       }
 }
 

@@ -213,7 +213,7 @@ namespace application {
     GetNewJobID(&step_particles_job_ids, step_particles_job_num);
     bool step_particles_single = (step_particles_job_num == 1);
     // step particles sync
-    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : 4 * step_particles_job_num;
+    size_t step_particles_sync_job_num = (step_particles_job_num == 1)? 0 : step_particles_job_num;
     std::vector<nimbus::job_id_t> step_particles_sync_job_ids;
     GetNewJobID(&step_particles_sync_job_ids, step_particles_sync_job_num);
     // advect removed particles
@@ -359,14 +359,13 @@ namespace application {
      * Conditionally spawn synchronize jobs.
      */
     if (!step_particles_single) {
-        for (size_t i = 0; i < kRegY2W3CentralWGB_len; i++) {
-            size_t ii = 4*i;
+        for (size_t i = 0; i < step_particles_sync_job_num; ++i) {
             std::string sync_particles_str;
             SerializeParameter(frame,
                                time,
                                dt,
                                global_region,
-                               kRegW3Central[i],
+                               kRegY2W3Central[i],
                                &sync_particles_str);
             nimbus::Parameter sync_particles_params;
             sync_particles_params.set_ser_data(SerializedData(sync_particles_str));
@@ -379,44 +378,27 @@ namespace application {
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii],
-                    read, write,
-                    sync_particles_params, true);
-            // negative
-            read.clear();
-            write.clear();
             kScratchNegParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
             kScratchNegParticles.GetMainForScratchData(this,
                                                        kRegY2W3CentralWGB[i],
                                                        kRegY2W3Inner[i],
                                                        &write);
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii+1],
-                    read, write,
-                    sync_particles_params, true);
-            // positive removed
-            read.clear();
-            write.clear();
             kScratchPosRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
             kScratchPosRemParticles.GetMainForScratchData(this,
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
-            job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii+2],
-                    read, write,
-                    sync_particles_params, true);
-            // negative removed
-            read.clear();
-            write.clear();
             kScratchNegRemParticles.GetAllScratchData(this, kRegY2W3CentralWGB[i], &read);
             kScratchNegRemParticles.GetMainForScratchData(this,
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Inner[i],
+                APP_POS_PARTICLES, APP_NEG_PARTICLES,
+                APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
-                    step_particles_sync_job_ids[ii+3],
+                    step_particles_sync_job_ids[i],
                     read, write,
                     sync_particles_params, true);
         }
@@ -451,7 +433,7 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[sj], APP_POS_REM_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[sj], APP_POS_REM_PARTICLES,
                 APP_NEG_REM_PARTICLES,  NULL);
@@ -723,7 +705,7 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_FACE_VEL_GHOST,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[dj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[dj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
@@ -773,7 +755,7 @@ namespace application {
         } else {
             LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_FACE_VEL,
                     APP_PHI, NULL);
-            LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[rj], APP_POS_PARTICLES,
+            LoadLogicalIdsInSet(this, &read, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
             LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[rj], APP_POS_PARTICLES,
                 APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
@@ -795,6 +777,19 @@ namespace application {
     }
 
     job_query.CommitStagedJobs();
+
+    /*
+    std::vector<nimbus::job_id_t> barrier_job_ids;
+    GetNewJobID(&barrier_job_ids, )1;
+    read.clear();
+    write.clear();
+    job_query.StageJob(BARRIER_JOB,
+                       barrier_job_ids[0],
+                       read, write,
+                       params,
+                       false, true);
+    job_query.CommitStagedJobs();
+    */
 
     /*
      * Loop iteration part two.

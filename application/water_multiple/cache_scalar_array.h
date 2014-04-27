@@ -82,7 +82,7 @@ class CacheScalarArray : public nimbus::CacheObject {
         nimbus::GeometricRegion local_region_;
         nimbus::Coord shift_;
         PhysBAMScalarArray *data_;
-        Grid mac_grid;
+        Grid mac_grid_;
 }; // class CacheScalarArray
 
 } // namespace application

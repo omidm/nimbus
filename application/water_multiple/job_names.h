@@ -50,6 +50,7 @@
 #define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
 #define CALCULATE_FRAME "calculate_frame"
 #define WRITE_FRAME "write_frame"
+#define JOB_BARRIER "job_barrier"
 
 #define UPDATE_GHOST_VELOCITIES "update_ghost_velocities"
 #define EXTRAPOLATE_PHI "extrapolate_phi"

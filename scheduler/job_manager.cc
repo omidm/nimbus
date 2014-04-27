@@ -232,8 +232,12 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
+  log_version_.ResetTimer();
   while (ResolveDataVersions() > 0) {
     continue;
+  }
+  if (log_version_.timer() > 0.01) {
+    std::cout << "Versioning in get ready jobs: " << log_version_.timer() << std::endl;
   }
 
   size_t num = 0;
@@ -303,8 +307,12 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
+  log_version_.ResetTimer();
   while (ResolveDataVersions() > 0) {
     continue;
+  }
+  if (log_version_.timer() > 0.01) {
+    std::cout << "Versioning in remove obsolete jobs: " << log_version_.timer() << std::endl;
   }
 
   size_t num = 0;
@@ -317,7 +325,6 @@ size_t JobManager::RemoveObsoleteJobEntries() {
     ++num;
     jobs_done_.erase(iter++);
   }
-
   return num;
 }
 
@@ -361,6 +368,19 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
     data_version_t version;
     if (!job->vtable_out()->query_entry(ldid, &version)) {
       job->vtable_out()->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
+    } else {
+      dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+      exit(-1);
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
+    exit(-1);
+  }
+
+  if (GetJobEntry(job_id, job)) {
+    data_version_t version;
+    if (!job->ancestor_chain()->LookUpVersion(ldid, &version)) {
+      job->vmap_write_out()->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
     } else {
       dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
       exit(-1);
@@ -619,6 +639,8 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 
 
 size_t JobManager::ResolveDataVersions() {
+  log_version_.ResumeTimer();
+
   size_t num = 0;
   std::map<job_id_t, JobEntryList> new_pass_version;
   std::map<job_id_t, JobEntryList>::iterator iter;
@@ -635,6 +657,47 @@ size_t JobManager::ResolveDataVersions() {
           table_vec.push_back(job->vtable_in());
           version_operator_.RecomputeRootForVersionTables(table_vec);
         }
+
+
+
+
+
+
+        boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+        IDSet<logical_data_id_t>::ConstIter itw;
+        for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
+          data_version_t version;
+          if (job->vmap_read_in()->query_entry(*itw, &version)) {
+            vmap->set_entry(*itw, version + 1);
+          } else if (job->ancestor_chain()->LookUpVersion(*itw, &version)) {
+            vmap->set_entry(*itw, version);
+          } else {
+            dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+            exit(-1);
+          }
+        }
+        job->set_vmap_write_out(vmap);
+
+        AncestorChain::Chain chain = job->ancestor_chain()->chain();
+        AncestorEntry ancestor_entry(job->job_id(), vmap);
+        AncestorChain::Pool pool;
+        pool.push_back(ancestor_entry);
+        chain.push_front(pool);
+        boost::shared_ptr<AncestorChain> ac =
+          boost::shared_ptr<AncestorChain>(new AncestorChain());
+        ac->set_chain(chain);
+        job->set_ancestor_chain_to_pass(ac);
+
+
+
+
+
+
+
+
+
+
+
         boost::shared_ptr<VersionTable> table_out;
         version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
         job->set_vtable_out(table_out);
@@ -655,6 +718,8 @@ size_t JobManager::ResolveDataVersions() {
 
   pass_version_.clear();
   pass_version_ = new_pass_version;
+
+  log_version_.StopTimer();
   return num;
 }
 
@@ -675,6 +740,45 @@ void JobManager::PassDataVersionToJob(
     tables.push_back(j->vtable_out());
     job->add_job_passed_versions(j->job_id());
   }
+
+
+
+
+
+
+
+  std::vector<boost::shared_ptr<const AncestorChain> > chains;
+  if (job->partial_versioned()) {
+    chains.push_back(job->ancestor_chain());
+  }
+
+  for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
+    JobEntry* j = (*iter);
+    assert(j->versioned());
+    chains.push_back(j->ancestor_chain_to_pass());
+    job->add_job_passed_versions(j->job_id());
+  }
+
+  boost::shared_ptr<AncestorChain> chain;
+  AncestorChain::MergeAncestorChains(chains, &chain);
+  job->set_ancestor_chain(chain);
+  job->set_partial_versioned(true);
+
+  boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+  IDSet<logical_data_id_t>::ConstIter it;
+  for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+    data_version_t version;
+    if (job->ancestor_chain()->LookUpVersion(*it, &version)) {
+      vmap->set_entry(*it, version);
+    }
+  }
+  job->set_vmap_read_in(vmap);
+
+
+
+
+
+
 
   boost::shared_ptr<VersionTable> merged;
   version_operator_.MergeVersionTables(tables, &merged);

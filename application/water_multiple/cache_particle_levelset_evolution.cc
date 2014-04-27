@@ -39,6 +39,7 @@
 #include <string>
 
 #include "application/water_multiple/cache_particle_levelset_evolution.h"
+#include "application/water_multiple/data_names.h"
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_tools.h"
 #include "data/cache/cache_object.h"
@@ -47,7 +48,7 @@
 #include "worker/data.h"
 
 namespace application {
-template<class T, class TS> CacheParticleLevelsetEvolution<T, TS>::
+template<class TS> CacheParticleLevelsetEvolution<TS>::
 CacheParticleLevelsetEvolution(std::string type,
                const nimbus::GeometricRegion &global_region,
                const int ghost_width,
@@ -55,33 +56,194 @@ CacheParticleLevelsetEvolution(std::string type,
     : CacheObject(type, app_region),
       ghost_width_(ghost_width),
       global_region_(global_region),
-      local_region_(app_region.NewEnlarged(-ghost_width_)) {
-      shift_.x = local_region_.x() - global_region.x();
-      shift_.y = local_region_.y() - global_region.y();
-      shift_.z = local_region_.z() - global_region.z();
-      if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
+      local_region_(app_region.NewEnlarged(-ghost_width_)),
+      inner_region_(app_region.NewEnlarged(-2*ghost_width_)) {
+    {
+        nimbus::int_dimension_t x = local_region_.x();
+        nimbus::int_dimension_t y = local_region_.y();
+        nimbus::int_dimension_t z = local_region_.z();
+        nimbus::int_dimension_t dx = local_region_.dx();
+        nimbus::int_dimension_t dy = local_region_.dy();
+        nimbus::int_dimension_t dz = local_region_.dz();
+        if (local_region_.x() == global_region_.x()) {
+            x -= ghost_width_;
+            dx += ghost_width_;
+        }
+        if (local_region_.x() + local_region_.dx() ==
+            global_region_.x() + global_region_.dx()) {
+            dx += ghost_width_;
+        }
+        if (local_region_.y() == global_region_.y()) {
+            y -= ghost_width_;
+            dy += ghost_width_;
+        }
+        if (local_region_.y() + local_region_.dy() ==
+            global_region_.y() + global_region_.dy()) {
+            dy += ghost_width_;
+        }
+        if (local_region_.z() == global_region_.z()) {
+            z -= ghost_width_;
+            dz += ghost_width_;
+        }
+        if (local_region_.z() + local_region_.dz() ==
+            global_region_.z() + global_region_.dz()) {
+            dz += ghost_width_;
+        }
+        wgb_region_ = nimbus::GeometricRegion(x, y, z, dx, dy, dz);
+    }
+    shift_.x = local_region_.x() - global_region.x();
+    shift_.y = local_region_.y() - global_region.y();
+    shift_.z = local_region_.z() - global_region.z();
+    enlarge_ =  nimbus::GeometricRegion(1-ghost_width_,
+                                        1-ghost_width_,
+                                        1-ghost_width_,
+                                        local_region_.dx()+2*ghost_width_,
+                                        local_region_.dy()+2*ghost_width_,
+                                        local_region_.dz()+2*ghost_width_);
+    scale_ = global_region_.dx();
+    if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
         Range domain = RangeFromRegions<TV>(global_region, local_region_);
         TV_INT count = CountFromRegion(local_region_);
-        mac_grid.Initialize(count, domain, true);
-        data_ = new PhysBAMPLE(mac_grid, ghost_width);
-      }
+        mac_grid_.Initialize(count, domain, true);
+        data_ = new PhysBAMPLE(mac_grid_, ghost_width);
+        {
+            data_->grid = mac_grid_;
+            PhysBAMParticleContainer *particle_levelset =
+                &data_->particle_levelset;
+            particle_levelset->Set_Band_Width(6);
+            // Resize phi
+            data_->phi.Resize(mac_grid_.
+                    Domain_Indices(particle_levelset->number_of_ghost_cells));
+            // Resizes particles.
+            particle_levelset->positive_particles.Resize(
+                    particle_levelset->levelset.grid.Block_Indices(
+                        particle_levelset->number_of_ghost_cells));
+            particle_levelset->negative_particles.Resize(
+                    particle_levelset->levelset.grid.Block_Indices(
+                        particle_levelset->number_of_ghost_cells));
+            particle_levelset->use_removed_positive_particles=true;
+            particle_levelset->use_removed_negative_particles=true;
+            // Resizes removed particles.
+            particle_levelset->removed_positive_particles.Resize(
+                    particle_levelset->levelset.grid.Block_Indices(
+                        particle_levelset->number_of_ghost_cells));
+            particle_levelset->removed_negative_particles.Resize(
+                    particle_levelset->levelset.grid.Block_Indices(
+                        particle_levelset->number_of_ghost_cells));
+            particle_levelset->Set_Minimum_Particle_Radius(
+                (TS).1*particle_levelset->levelset.grid.Minimum_Edge_Length());
+            particle_levelset->Set_Maximum_Particle_Radius(
+                (TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length());
+            if (particle_levelset->half_band_width &&
+                particle_levelset->levelset.grid.Minimum_Edge_Length()) {
+              particle_levelset->Set_Band_Width(particle_levelset->half_band_width /
+                  ((TS).5*particle_levelset->levelset.grid.Minimum_Edge_Length()));
+            } else {
+              particle_levelset->Set_Band_Width();
+            }
+            particle_levelset->levelset.Initialize_Levelset_Grid_Values();
+            if (data_->levelset_advection.semi_lagrangian_collidable) {
+              particle_levelset->levelset.Initialize_Valid_Masks(mac_grid_);
+            }
+            }
+        {
+            // policies etc
+            data_->Set_CFL_Number((TS).9);
+            data_->Set_Number_Particles_Per_Cell(16);
+            data_->Initialize_FMM_Initialization_Iterative_Solver(true);
+            data_->Bias_Towards_Negative_Particles(false);
+            data_->particle_levelset.Use_Removed_Positive_Particles();
+            data_->particle_levelset.Use_Removed_Negative_Particles();
+            data_->particle_levelset.Store_Unique_Particle_Id();
+            data_->Use_Particle_Levelset(true);
+            data_->particle_levelset.Set_Collision_Distance_Factors(.1,1);
+        }
+    }
 }
 
-template<class T, class TS> void CacheParticleLevelsetEvolution<T, TS>::
-ReadToCache(const nimbus::DataArray &read_set,
-            const nimbus::GeometricRegion &reg) {
+template<class TS> void CacheParticleLevelsetEvolution<TS>::
+ReadDiffToCache(const nimbus::DataArray &read_set,
+                const nimbus::DataArray &diff,
+                const nimbus::GeometricRegion &reg) {
+    dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
+    bool merge = false;
+    nimbus::DataArray final_read = read_set;
+    dbg(DBG_WARN, "--- Diff is %i\n", diff.size());
+    //bool merge = true;
+    //for (size_t i = 0; i < diff.size(); ++i) {
+    //    nimbus::Data *d = diff[i];
+    //    nimbus::GeometricRegion dr = d->region();
+    //    nimbus::GeometricRegion ar = app_object_region();
+    //    // TODO(Chinmayee): Do something smarter like check if stray ids for
+    //    // this to be robust. Need to change lid-pid map to region-pid map in
+    //    // cache object for this.
+    //    if (wgb_region_.Covers(&dr) && !inner_region_.Covers(&dr))
+    //        continue;
+    //    merge = false;
+    //}
+    //nimbus::DataArray final_read;
+    //if (merge) {
+    //    dbg(DBG_WARN, "\n--- Merging %i of %i particles\n", diff.size(), read_set.size());
+    //    final_read = diff;
+    //} else {
+    //    dbg(DBG_WARN, "\n--- Diff is %i, reading all %i particles\n", diff.size(), read_set.size());
+    //    final_read = read_set;
+    //    FlushCache();
+    //    this->InvalidateCacheObject();
+    //}
+    PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
+    nimbus::DataArray pos, neg, pos_rem, neg_rem;
+    for (size_t i = 0; i < final_read.size(); ++i) {
+        nimbus::Data *d = final_read[i];
+        if (d->name() == APP_POS_PARTICLES) {
+            pos.push_back(d);
+        } else if (d->name() == APP_NEG_PARTICLES) {
+            neg.push_back(d);
+        } else if (d->name() == APP_POS_REM_PARTICLES) {
+            pos_rem.push_back(d);
+        } else if (d->name() == APP_NEG_REM_PARTICLES) {
+            neg_rem.push_back(d);
+        }
+    }
+    Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true, merge);
+    Translator::ReadParticles(enlarge_, shift_, neg, particle_levelset, scale_, false, merge);
+    Translator::ReadRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true, merge);
+    Translator::ReadRemovedParticles(enlarge_, shift_, neg_rem, particle_levelset, scale_, false, merge);
 }
 
-template<class T, class TS> void CacheParticleLevelsetEvolution<T, TS>::
+template<class TS> void CacheParticleLevelsetEvolution<TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
+    dbg(DBG_WARN, "\n Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
+    nimbus::DataArray pos, neg, pos_rem, neg_rem;
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        nimbus::Data *d = write_set[i];
+        if (d->name() == APP_POS_PARTICLES) {
+            pos.push_back(d);
+        } else if (d->name() == APP_NEG_PARTICLES) {
+            neg.push_back(d);
+        } else if (d->name() == APP_POS_REM_PARTICLES) {
+            pos_rem.push_back(d);
+        } else if (d->name() == APP_NEG_REM_PARTICLES) {
+            neg_rem.push_back(d);
+        }
+    }
+    PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
+    Translator::WriteParticles(enlarge_, shift_, pos, particle_levelset, scale_, true);
+    Translator::WriteParticles(enlarge_, shift_, neg, particle_levelset, scale_, false);
+    Translator::WriteRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true);
+    Translator::WriteRemovedParticles(enlarge_, shift_, neg_rem, particle_levelset, scale_, false);
 }
 
-template<class T, class TS> nimbus::CacheObject *CacheParticleLevelsetEvolution<T, TS>::
+template<class TS> nimbus::CacheObject *CacheParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ar) const {
+    dbg(DBG_WARN, "#### NEW CACHE OBJECT PLE\n");
     return new CacheParticleLevelsetEvolution(type(),
                               global_region_,
                               ghost_width_,
                               ar);
 }
+
+template class CacheParticleLevelsetEvolution<float>;
+
 } // namespace application

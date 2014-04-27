@@ -58,62 +58,41 @@ nimbus::Job* JobSynchronizeParticles::Clone() {
 }
 
 void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing synchronize particles job\n");
+    dbg(APP_LOG, "--- Executing synchronize particles job\n");
 
-    bool sync_new = false;
-    if (sync_new) {
-        // get time, dt, frame from the parameters.
-        InitConfig init_config;
-        init_config.use_cache = false;
-        init_config.set_boundary_condition = false;
-        T dt;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-                               params.ser_data().size());
-        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                      &init_config.global_region, &init_config.local_region);
-        dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
-            init_config.frame, init_config.time, dt);
+    // get time, dt, frame from the parameters.
+    InitConfig init_config;
+    init_config.use_cache = true;
+    init_config.clear_shared_particles_read = true;
+    init_config.set_boundary_condition = false;
+    T dt;
+    std::string params_str(params.ser_data().data_ptr_raw(),
+                           params.ser_data().size());
+    LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+                  &init_config.global_region, &init_config.local_region);
+    dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
+        init_config.frame, init_config.time, dt);
 
-        // initializing the example and driver with state and configuration variables
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
-        typedef application::DataConfig DataConfig;
-        DataConfig data_config;
-        assert(da.size() > 0);
-        if (da[0]->name() == APP_POS_PARTICLES) {
-            data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
-        } else if (da[0]->name() == APP_NEG_PARTICLES) {
-            data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
-        } else if(da[0]->name() == APP_POS_REM_PARTICLES) {
-            data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
-        } else if(da[0]->name() == APP_NEG_REM_PARTICLES) {
-            data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-        } else {
-            dbg(DBG_ERROR, "Merge particles fail!!!\n");
-            exit(-1);
-        }
-        InitializeExampleAndDriver(init_config, data_config,
-                                   this, da, example, driver);
-        example->Save_To_Nimbus(this, da, init_config.frame + 1);
-        DestroyExampleAndDriver(example, driver);
-    } else {
-        DataVec main_copy;
-        DataSetVec scratch_copies;
-        if (!GroupSyncData(this, da, &main_copy, &scratch_copies)) {
-            dbg(DBG_WARN, "Nothing to synchronize\n");
-            return;
-        }
+    // initializing the example and driver with state and configuration variables
+    PhysBAM::WATER_EXAMPLE<TV> *example;
+    PhysBAM::WATER_DRIVER<TV> *driver;
+    typedef application::DataConfig DataConfig;
+    DataConfig data_config;
+    assert(da.size() > 0);
+    dbg(APP_LOG, "Syncing over region = %s\n", init_config.local_region.toString().c_str());
+    data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+    dbg(APP_LOG, "Syncing pos particles...\n");
+    data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+    dbg(APP_LOG, "Syncing neg particles...\n");
+    data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+    dbg(APP_LOG, "Syncing pos removed particles...\n");
+    data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+    dbg(APP_LOG, "Syncing neg removed particles...\n");
+    InitializeExampleAndDriver(init_config, data_config,
+                               this, da, example, driver);
 
-        for (size_t i = 0; i < main_copy.size(); i++) {
-            DataParticleArray *merge_to = dynamic_cast<DataParticleArray *>(main_copy[i]);
-            DataVec *scratch = scratch_copies[i];
-            if (merge_to != NULL && !scratch->empty())
-                merge_to->MergeParticles(*scratch);
-            else
-                dbg(DBG_WARN, "Passed object is not a particle array\n");
-            delete scratch;
-        }
-    }
+    example->Save_To_Nimbus(this, da, init_config.frame + 1);
+    DestroyExampleAndDriver(example, driver);
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }
 

@@ -57,6 +57,9 @@ const CacheScalarArray<T> kCachePhi7(APP_PHI, kDefaultRegion, 7);
 const CacheScalarArray<T> kCachePhi8(APP_PHI, kDefaultRegion, 8);
 const CacheScalarArray<bool> kCachePsiD(APP_PSI_D, kDefaultRegion, 1);
 
+const CacheParticleLevelsetEvolution<float> kCachePLE(APP_PLE,
+                                                      kDefaultRegion, 3);
+
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_

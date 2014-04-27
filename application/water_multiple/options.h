@@ -58,6 +58,8 @@ struct InitConfig {
   GeometricRegion global_region;
   GeometricRegion local_region;
   bool use_cache;
+  bool clear_shared_particles_read;
+  bool clear_ghost_particles_write;
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
@@ -68,6 +70,8 @@ struct InitConfig {
     init_phase = false;
     set_boundary_condition = true;
     use_cache = false;
+    clear_shared_particles_read = false;
+    clear_ghost_particles_write = false;
   }
 };
 

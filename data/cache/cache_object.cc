@@ -59,28 +59,54 @@ void CacheObject::ReadToCache(const DataArray &read_set,
     dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
 }
 
+void CacheObject::ReadDiffToCache(const DataArray &read_set,
+                                  const DataArray &diff,
+                                  const GeometricRegion &reg) {
+    dbg(DBG_ERROR, "CacheObject Read method not imlemented\n");
+}
+
 void CacheObject::Read(const DataArray &read_set,
                        const GeometricRegion &reg,
                        bool read_all_or_none) {
+    if (users_ > 1) {
+        dbg(DBG_ERROR, "Cache object being shared!");
+        exit(-1);
+    }
+    if (!write_back_.empty()) {
+        DataArray flush;
+        // TODO(Chinmayee): this is terrible. we cannot change to region
+        // because of particles (4 different types of particles share a
+        // region). To change to region, we need a group type instead of a
+        // simple cache object.
+        LIDSet read_lids;
+        for (size_t k = 0; k < read_set.size(); ++k) {
+            Data *dd = read_set[k];
+            read_lids.insert(dd->logical_id());
+        }
+        std::set<Data *>::iterator iter = write_back_.begin();
+        for (; iter != write_back_.end(); ++iter) {
+            Data *d = *iter;
+            if (read_lids.contains(d->logical_id())) {
+                flush.push_back(d);
+            }
+        }
+        FlushCacheData(flush);
+    }
+    DataArray diff;
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set[i];
+        if (!pids_.contains(d->physical_id())) {
+            diff.push_back(d);
+            d->UpdateData(false);
+        }
+    }
     if (read_all_or_none) {
-        bool read = false;
-        for (size_t i = 0; i < read_set.size(); ++i) {
-            Data *d = read_set[i];
-            if (!pids_.contains(d->physical_id()))
-                read = true;
-        }
-        if (read)
-            ReadToCache(read_set, reg);
+        if (!diff.empty())
+            ReadDiffToCache(read_set, diff, reg);
     } else {
-        DataArray read;
-        for (size_t i = 0; i < read_set.size(); ++i) {
-            Data *d = read_set[i];
-            if (!pids_.contains(d->physical_id()))
-                read.push_back(d);
-        }
-        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", read.size(), read_set.size());
-        if (!read.empty())
-            ReadToCache(read, reg);
+        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", diff.size(), read_set.size());
+        if (!diff.empty())
+            ReadToCache(diff, reg);
     }
 }
 
@@ -89,10 +115,65 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
     dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
 }
 
-void CacheObject::Write(const GeometricRegion &reg, bool release) {
-    WriteFromCache(write_back_, reg);
-    write_back_.clear();
+void CacheObject::WriteImmediately(const DataArray &write_set,
+                                   const GeometricRegion &reg,
+                                   bool release) {
+    DataArray final_write;
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        if (write_back_.find(write_set[i]) != write_back_.end()) {
+            final_write.push_back(write_set[i]);
+        }
+    }
+    write_region_ = reg;
+    FlushCacheData(final_write);
     if (release)
+        ReleaseAccess();
+}
+
+void CacheObject::Write(const GeometricRegion &reg, bool release) {
+    write_region_ = reg;
+    // FlushCache();
+    if (release)
+        ReleaseAccess();
+}
+
+void CacheObject::FlushCacheData(const DataArray &diff) {
+    WriteFromCache(diff, write_region_);
+    for (size_t i = 0; i < diff.size(); ++i) {
+        Data *d = diff[i];
+        d->clear_dirty_cache_object();
+        write_back_.erase(d);
+    }
+}
+
+void CacheObject::FlushCache() {
+    if (write_back_.empty()) {
+        return;
+    }
+    DataArray write_set(write_back_.begin(), write_back_.end());
+    WriteFromCache(write_set, write_region_);
+    std::set<Data *>::iterator iter = write_back_.begin();
+    for (; iter != write_back_.end(); ++iter) {
+        Data *d = *iter;
+        d->clear_dirty_cache_object();
+    }
+    write_back_.clear();
+}
+
+void CacheObject::PullIntoData(Data *d, bool lock_co) {
+    if (lock_co)
+        AcquireAccess(EXCLUSIVE);
+    if (write_back_.find(d) == write_back_.end()) {
+        dbg(DBG_ERROR, "Write back set does not contain data that needs to be pulled\n");
+        exit(-1);
+    }
+    DataArray write;
+    write.push_back(d);
+    GeometricRegion dreg = d->region();
+    WriteFromCache(write, dreg);
+    d->clear_dirty_cache_object();
+    write_back_.erase(d);
+    if (lock_co)
         ReleaseAccess();
 }
 
@@ -110,11 +191,12 @@ GeometricRegion CacheObject::app_object_region() const {
 }
 
 void CacheObject::AcquireAccess(CacheAccess access) {
+    if (users_ != 0 && (access == EXCLUSIVE || access_ == EXCLUSIVE)) {
+        dbg(DBG_ERROR, "Error acquiring cache object!!\n");
+        assert(false);
+    }
     access_ = access;
-    if (access_ == SHARED)
-        users_++;
-    else
-        users_ = 1;
+    users_++;
 }
 
 void CacheObject::ReleaseAccess() {
@@ -126,44 +208,61 @@ void CacheObject::SetUpRead(const DataArray &read_set,
     if (read_keep_valid) {
         for (size_t i = 0; i < read_set.size(); ++i) {
             Data *d = read_set[i];
-            logical_data_id_t lid = d->logical_id();
-            physical_data_id_t pid = d->physical_id();
-            if (element_map_.find(lid) != element_map_.end())
-                pids_.remove(element_map_[lid]);
-            element_map_[lid] = pid;
-            pids_.insert(pid);
-            d->SetUpCacheObject(this);
+            d->SetUpCacheObjectDataMapping(this);
         }
     } else {
-        element_map_.clear();
-        pids_.clear();
+        for (size_t i = 0; i < read_set.size(); ++i) {
+            // TODO(Chinmayee): this is broken. Use physical data map at the
+            // worker if this really needs to be taken care of.
+            Data *d = read_set[i];
+            d->UnsetCacheObjectDataMapping(this);
+        }
     }
 }
 
 void CacheObject::SetUpWrite(const DataArray &write_set) {
-    write_back_ = write_set;
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set[i];
-        logical_data_id_t lid = d->logical_id();
-        physical_data_id_t pid = d->physical_id();
-        d->InvalidateCacheObjects();
-        element_map_[lid] = pid;
-        pids_.insert(pid);
-        d->SetUpCacheObject(this);
+        d->InvalidateCacheObjectsDataMapping();
+        d->SetUpCacheObjectDataMapping(this);
+        d->set_dirty_cache_object(this);
+        write_back_.insert(d);
     }
+    std::string ple = "particle_levelset_evolution";
+    if (type_ == ple)
+        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
 }
 
-void CacheObject::InvalidateCacheObject(Data *d) {
-    element_map_.erase(d->logical_id());
-    pids_.remove(d->physical_id());
+void CacheObject::SetUpData(Data *d) {
+    logical_data_id_t lid = d->logical_id();
+    physical_data_id_t pid = d->physical_id();
+    if (element_map_.find(lid) != element_map_.end())
+        pids_.remove(element_map_[lid]);
+    element_map_[lid] = pid;
+    pids_.insert(pid);
+    data_.insert(d);
 }
 
-distance_t CacheObject::GetDistance(const DataArray &data_set,
-                                    CacheAccess access) const {
-    distance_t max_distance = 2*data_set.size();
+void CacheObject::UnsetData(Data *d) {
+    logical_data_id_t lid = d->logical_id();
+    physical_data_id_t pid = d->physical_id();
+    pids_.remove(pid);
+    element_map_.erase(lid);
+    data_.erase(d);
+}
+
+void CacheObject::InvalidateCacheObject(const DataArray &da) {
+    for (size_t i = 0; i < da.size(); ++i) {
+        Data *d = da[i];
+        d->UnsetCacheObjectDataMapping(this);
+    }
+    std::string ple = "particle_levelset_evolution";
+    if (type_ == ple)
+        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
+}
+
+distance_t CacheObject::GetDistance(const DataArray &data_set) const {
     distance_t cur_distance = 0;
-    if (!IsAvailable(access))
-        return max_distance;
     for (size_t i = 0; i < data_set.size(); ++i) {
         Data *d = data_set[i];
         if (!pids_.contains(d->physical_id()))

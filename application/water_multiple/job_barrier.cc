@@ -33,7 +33,7 @@
  */
 
 /*
- * This file contains advect removed particles job which is one of the sub
+ * This file contains advect v job which is one of the sub
  * jobs in the iteration of computing a simulation frame.
  *
  * Author: Omid Mashayekhi <omidm@stanford.edu>
@@ -50,55 +50,21 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/job_advect_removed_particles.h"
+#include "application/water_multiple/job_barrier.h"
 
 namespace application {
 
-JobAdvectRemovedParticles::JobAdvectRemovedParticles(nimbus::Application *app) {
+JobBarrier::JobBarrier(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobAdvectRemovedParticles::Clone() {
-  return new JobAdvectRemovedParticles(application());
+nimbus::Job* JobBarrier::Clone() {
+  return new JobBarrier(application());
 }
 
-void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
+void JobBarrier::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "--- Executing advect removed particles job.\n");
-
-  // get time, dt, frame from the parameters.
-  InitConfig init_config;
-  init_config.set_boundary_condition = false;
-  init_config.use_cache = true;
-  T dt;
-  std::string params_str(params.ser_data().data_ptr_raw(),
-                         params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-                &init_config.global_region, &init_config.local_region);
-  dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
-      init_config.frame, init_config.time, dt);
-
-  // Initializing the example and driver with state and configuration variables.
-  PhysBAM::WATER_EXAMPLE<TV> *example;
-  PhysBAM::WATER_DRIVER<TV> *driver;
-
-
-  DataConfig data_config;
-  data_config.SetFlag(DataConfig::VELOCITY_GHOST);
-  data_config.SetFlag(DataConfig::LEVELSET);
-  data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
-  data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
-
-  // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in advect removed particles job.");
-  driver->AdvectRemovedParticlesImpl(this, da, dt);
-
-  // Free resources.
-  DestroyExampleAndDriver(example, driver);
-
-  dbg(APP_LOG, "Completed executing advect removed particles.\n");
+  dbg(APP_LOG, "Executing job barrier.\n");
 }
 
 }  // namespace application

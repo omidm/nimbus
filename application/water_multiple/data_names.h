@@ -50,6 +50,7 @@
 #define APP_POS_REM_PARTICLES "pos_rem_particles"
 #define APP_NEG_REM_PARTICLES "neg_rem_particles"
 #define APP_LAST_UNIQUE_PARTICLE_ID "last_unique_particle_id"
+#define APP_PLE "particle_levelset_evolution"
 
 #define APP_PSI_D "psi_d"
 #define APP_PSI_N "psi_n"

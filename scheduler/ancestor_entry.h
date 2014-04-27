@@ -32,44 +32,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Job Ancestor Entry.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#ifndef NIMBUS_SCHEDULER_ANCESTOR_ENTRY_H_
+#define NIMBUS_SCHEDULER_ANCESTOR_ENTRY_H_
 
+#include <boost/shared_ptr.hpp>
 #include <map>
-
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include <list>
+#include "shared/nimbus_types.h"
+#include "shared/dbg.h"
+#include "scheduler/version_map.h"
 
 namespace nimbus {
 
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
+class AncestorEntry {
+  public:
+    typedef std::list<AncestorEntry> List;
 
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
+    AncestorEntry(job_id_t id, boost::shared_ptr<VersionMap> version_map);
+    AncestorEntry(const AncestorEntry& other);
+    virtual ~AncestorEntry();
+
+    job_id_t id() const;
+    boost::shared_ptr<VersionMap> version_map() const;
+
+    AncestorEntry& operator=(const AncestorEntry& right);
+
+  private:
+    job_id_t id_;
+    boost::shared_ptr<VersionMap> version_map_;
+};
 
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#endif  // NIMBUS_SCHEDULER_ANCESTOR_ENTRY_H_

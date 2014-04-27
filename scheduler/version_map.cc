@@ -32,44 +32,67 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Version Map.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#include "scheduler/version_map.h"
 
-#include <map>
+using namespace nimbus; // NOLINT
 
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+VersionMap::VersionMap() {
+}
 
-namespace nimbus {
+VersionMap::VersionMap(const VersionMap& other) {
+  content_ = other.content_;
+}
 
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
+VersionMap::~VersionMap() {
+}
 
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
+VersionMap::Map VersionMap::content() const {
+  return content_;
+}
+
+const VersionMap::Map* VersionMap::content_p() const {
+  return &content_;
+}
+
+bool VersionMap::query_entry(logical_data_id_t l_id, data_version_t *version) const {
+  ConstIter iter;
+
+  iter = content_.find(l_id);
+  if (iter != content_.end()) {
+    *version = iter->second;
+    return true;
+  }
+
+  return false;
+}
+
+void VersionMap::set_content(const VersionMap::Map& content) {
+  content_= content;
+}
+
+void VersionMap::set_entry(logical_data_id_t l_id, data_version_t version) {
+  content_[l_id] = version;
+}
+
+void VersionMap::Print() const {
+  ConstIter iter;
+
+  std::cout << "Content:\n";
+  for (iter = content_.begin(); iter != content_.end(); ++iter) {
+    std::cout << iter->first << " -> " << iter->second << std::endl;
+  }
+}
 
 
-}  // namespace nimbus
+VersionMap& VersionMap::operator=(const VersionMap& right) {
+  content_ = right.content_;
+  return (*this);
+}
 
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+

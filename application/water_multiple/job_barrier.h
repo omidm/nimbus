@@ -33,43 +33,26 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * This file contains advect v job which is one of the sub
+ * jobs in the iteration of computing a simulation frame.
+ *
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_BARRIER_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_BARRIER_H_
 
-#include <map>
+#include "shared/nimbus.h"
 
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+namespace application {
 
-namespace nimbus {
+    class JobBarrier : public nimbus::Job {
+        public:
+            explicit JobBarrier(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
+} // namespace application
 
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
-
-
-}  // namespace nimbus
-
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_BARRIER_H_
