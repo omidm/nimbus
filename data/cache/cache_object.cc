@@ -244,8 +244,10 @@ void CacheObject::SetUpData(Data *d) {
 }
 
 void CacheObject::UnsetData(Data *d) {
-    pids_.remove(d->physical_id());
-    element_map_.erase(d->logical_id());
+    logical_data_id_t lid = d->logical_id();
+    physical_data_id_t pid = d->physical_id();
+    pids_.remove(pid);
+    element_map_.erase(lid);
     data_.erase(d);
 }
 
