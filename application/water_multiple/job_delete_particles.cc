@@ -63,7 +63,7 @@ nimbus::Job* JobDeleteParticles::Clone() {
 }
 
 void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing delete particles job\n");
+    dbg(APP_LOG, "--- Executing delete particles job\n");
 
     InitConfig init_config;
     init_config.use_cache = true;

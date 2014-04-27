@@ -51,8 +51,7 @@ CacheObject::CacheObject(std::string type,
                          const GeometricRegion &app_object_region)
      : type_(type),
        app_object_region_(app_object_region),
-       users_(0),
-       element_map_(DMap(GeometricRegionLess)) {
+       users_(0) {
 }
 
 void CacheObject::ReadToCache(const DataArray &read_set,
@@ -75,21 +74,23 @@ void CacheObject::Read(const DataArray &read_set,
     }
     if (!write_back_.empty()) {
         DataArray flush;
-        typedef std::set<GeometricRegion, GRComparisonType> GSet;
-        GSet read_regs(GeometricRegionLess);
+        // TODO(Chinmayee): this is terrible. we cannot change to region
+        // because of particles (4 different types of particles share a
+        // region). To change to region, we need a group type instead of a
+        // simple cache object.
+        LIDSet read_lids;
         for (size_t k = 0; k < read_set.size(); ++k) {
             Data *dd = read_set[k];
-            GeometricRegion ddreg = dd->region();
-            read_regs.insert(ddreg);
+            read_lids.insert(dd->logical_id());
         }
         std::set<Data *>::iterator iter = write_back_.begin();
         for (; iter != write_back_.end(); ++iter) {
             Data *d = *iter;
-            if (read_regs.find(d->region()) != read_regs.end()) {
+            if (read_lids.contains(d->logical_id())) {
                 flush.push_back(d);
             }
         }
-        FlushDiffCache(flush);
+        FlushCacheData(flush);
     }
     DataArray diff;
     for (size_t i = 0; i < read_set.size(); ++i) {
@@ -114,6 +115,21 @@ void CacheObject::WriteFromCache(const DataArray &write_set,
     dbg(DBG_ERROR, "CacheObject Write method not imlemented\n");
 }
 
+void CacheObject::WriteImmediately(const DataArray &write_set,
+                                   const GeometricRegion &reg,
+                                   bool release) {
+    DataArray final_write;
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        if (write_back_.find(write_set[i]) != write_back_.end()) {
+            final_write.push_back(write_set[i]);
+        }
+    }
+    write_region_ = reg;
+    FlushCacheData(final_write);
+    if (release)
+        ReleaseAccess();
+}
+
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
     write_region_ = reg;
     // FlushCache();
@@ -121,7 +137,7 @@ void CacheObject::Write(const GeometricRegion &reg, bool release) {
         ReleaseAccess();
 }
 
-void CacheObject::FlushDiffCache(const DataArray &diff) {
+void CacheObject::FlushCacheData(const DataArray &diff) {
     WriteFromCache(diff, write_region_);
     for (size_t i = 0; i < diff.size(); ++i) {
         Data *d = diff[i];
@@ -212,31 +228,37 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
         d->set_dirty_cache_object(this);
         write_back_.insert(d);
     }
+    std::string ple = "particle_levelset_evolution";
+    if (type_ == ple)
+        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
 }
 
 void CacheObject::SetUpData(Data *d) {
-    nimbus::GeometricRegion dreg = d->region();
+    logical_data_id_t lid = d->logical_id();
     physical_data_id_t pid = d->physical_id();
-    if (element_map_.find(dreg) != element_map_.end())
-        pids_.remove(element_map_[dreg]);
-    element_map_[dreg] = pid;
+    if (element_map_.find(lid) != element_map_.end())
+        pids_.remove(element_map_[lid]);
+    element_map_[lid] = pid;
     pids_.insert(pid);
     data_.insert(d);
 }
 
 void CacheObject::UnsetData(Data *d) {
-    pids_.remove(d->physical_id());
-    element_map_.erase(d->region());
+    logical_data_id_t lid = d->logical_id();
+    physical_data_id_t pid = d->physical_id();
+    pids_.remove(pid);
+    element_map_.erase(lid);
     data_.erase(d);
 }
 
-void CacheObject::InvalidateCacheObject() {
-    std::set<Data *> temp(data_.begin(), data_.end());
-    std::set<Data *>::iterator iter = temp.begin();
-    for (; iter != temp.end(); ++iter) {
-        Data *d = *iter;
+void CacheObject::InvalidateCacheObject(const DataArray &da) {
+    for (size_t i = 0; i < da.size(); ++i) {
+        Data *d = da[i];
         d->UnsetCacheObjectDataMapping(this);
     }
+    std::string ple = "particle_levelset_evolution";
+    if (type_ == ple)
+        dbg(DBG_WARN, "---PLE contains %i ids in the end\n", pids_.size());
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set) const {

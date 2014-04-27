@@ -64,7 +64,7 @@ nimbus::Job* JobAdvectRemovedParticles::Clone() {
 
 void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing advect removed particles job.\n");
+  dbg(APP_LOG, "--- Executing advect removed particles job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;

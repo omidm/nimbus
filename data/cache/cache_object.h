@@ -69,8 +69,9 @@ class CacheObject {
         void Read(const DataArray &read_set, const GeometricRegion &reg,
                   bool read_all_or_none = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
+        void WriteImmediately(const DataArray &write_set, const GeometricRegion &reg, bool release);
         void Write(const GeometricRegion &reg, bool release = true);
-        void FlushDiffCache(const DataArray &diff);
+        void FlushCacheData(const DataArray &diff);
         void FlushCache();
         void PullIntoData(Data *d, bool lock_co);
 
@@ -89,7 +90,7 @@ class CacheObject {
         void UnsetData(Data *d);
 
         // Use with care
-        void InvalidateCacheObject();
+        void InvalidateCacheObject(const DataArray &da);
 
         bool IsAvailable(CacheAccess access) const;
         distance_t GetDistance(const DataArray &data_set) const;
@@ -115,10 +116,7 @@ class CacheObject {
 
         // TODO(Chinmayee): change this to region-pid map (because of
         // scratches)
-        typedef std::map<GeometricRegion,
-                         physical_data_id_t,
-                         GRComparisonType> DMap;
-        DMap element_map_;
+        std::map<logical_data_id_t, physical_data_id_t> element_map_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;
