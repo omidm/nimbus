@@ -166,30 +166,31 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
                 const nimbus::DataArray &diff,
                 const nimbus::GeometricRegion &reg) {
     dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
-    //bool merge = false;
-    //nimbus::DataArray final_read = read_set;
+    bool merge = false;
+    nimbus::DataArray final_read = read_set;
     dbg(DBG_WARN, "--- Diff is %i\n", diff.size());
-    bool merge = true;
-    for (size_t i = 0; i < diff.size(); ++i) {
-        nimbus::Data *d = diff[i];
-        nimbus::GeometricRegion dr = d->region();
-        nimbus::GeometricRegion ar = app_object_region();
-        // TODO(Chinmayee): Do something smarter like check if stray ids for
-        // this to be robust. Need to change lid-pid map to region-pid map in
-        // cache object for this.
-        if (wgb_region_.Covers(&dr) && !inner_region_.Covers(&dr))
-            continue;
-        merge = false;
-    }
-    nimbus::DataArray final_read;
-    if (merge) {
-        dbg(DBG_WARN, "\n--- Merging %i of %i particles\n", diff.size(), read_set.size());
-        final_read = diff;
-    } else {
-        dbg(DBG_WARN, "\n--- Diff is %i, reading all %i particles\n", diff.size(), read_set.size());
-        final_read = read_set;
-        FlushCache();
-    }
+    //bool merge = true;
+    //for (size_t i = 0; i < diff.size(); ++i) {
+    //    nimbus::Data *d = diff[i];
+    //    nimbus::GeometricRegion dr = d->region();
+    //    nimbus::GeometricRegion ar = app_object_region();
+    //    // TODO(Chinmayee): Do something smarter like check if stray ids for
+    //    // this to be robust. Need to change lid-pid map to region-pid map in
+    //    // cache object for this.
+    //    if (wgb_region_.Covers(&dr) && !inner_region_.Covers(&dr))
+    //        continue;
+    //    merge = false;
+    //}
+    //nimbus::DataArray final_read;
+    //if (merge) {
+    //    dbg(DBG_WARN, "\n--- Merging %i of %i particles\n", diff.size(), read_set.size());
+    //    final_read = diff;
+    //} else {
+    //    dbg(DBG_WARN, "\n--- Diff is %i, reading all %i particles\n", diff.size(), read_set.size());
+    //    final_read = read_set;
+    //    FlushCache();
+    //    this->InvalidateCacheObject();
+    //}
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < final_read.size(); ++i) {
