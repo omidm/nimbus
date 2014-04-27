@@ -108,6 +108,12 @@ void JobEntry::Initialize() {
         nimbus::VersionTable(NIMBUS_EMPTY_VERSION_TABLE_ID));
   vtable_in_ = empty_vtable;
   vtable_out_ = empty_vtable;
+
+  static boost::shared_ptr<AncestorChain> empty_chain =
+    boost::shared_ptr<AncestorChain>(new AncestorChain());
+
+  ancestor_chain_ = empty_chain;
+  ancestor_chain_to_pass_ = empty_chain;
 }
 
 JobEntry::~JobEntry() {
@@ -187,6 +193,10 @@ boost::shared_ptr<VersionMap> JobEntry::vmap_write_out() {
 
 boost::shared_ptr<AncestorChain> JobEntry::ancestor_chain() {
   return ancestor_chain_;
+}
+
+boost::shared_ptr<AncestorChain> JobEntry::ancestor_chain_to_pass() {
+  return ancestor_chain_to_pass_;
 }
 
 const JobEntry::VersionTable* JobEntry::version_table_in_p() {
@@ -319,6 +329,10 @@ void JobEntry::set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out) 
 
 void JobEntry::set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain) {
   ancestor_chain_ = ancestor_chain;
+}
+
+void JobEntry::set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass) {
+  ancestor_chain_to_pass_ = ancestor_chain_to_pass;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
