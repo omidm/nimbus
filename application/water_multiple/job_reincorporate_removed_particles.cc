@@ -63,7 +63,7 @@ nimbus::Job* JobReincorporateRemovedParticles::Clone() {
 }
 
 void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing reincorporate particles job\n");
+    dbg(APP_LOG, "--- Executing reincorporate particles job\n");
 
     InitConfig init_config;
     init_config.use_cache = true;
