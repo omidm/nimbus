@@ -124,8 +124,8 @@ class JobManager {
 
     Log log_version_;
 
-    bool ResolveJobDataVersions(JobEntry* job);
-    size_t ResolveVersions();
+    // bool ResolveJobDataVersions(JobEntry* job);
+    // size_t ResolveVersions();
 
     JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;

@@ -363,20 +363,21 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 //  }
 
 
-  JobEntry* job;
-  if (GetJobEntry(job_id, job)) {
-    data_version_t version;
-    if (!job->vtable_out()->query_entry(ldid, &version)) {
-      job->vtable_out()->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
-    } else {
-      dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
-      exit(-1);
-    }
-  } else {
-    dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
-    exit(-1);
-  }
+//   JobEntry* job;
+//   if (GetJobEntry(job_id, job)) {
+//     data_version_t version;
+//     if (!job->vtable_out()->query_entry(ldid, &version)) {
+//       job->vtable_out()->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
+//     } else {
+//       dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+//       exit(-1);
+//     }
+//   } else {
+//     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id); // NOLINT
+//     exit(-1);
+//   }
 
+  JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     data_version_t version;
     if (!job->ancestor_chain()->LookUpVersion(ldid, &version)) {
@@ -391,135 +392,136 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
   }
 }
 
-bool JobManager::ResolveJobDataVersions(JobEntry* job) {
-  if (job->future()) {
-    return false;
-  }
-
-  if (job->versioned()) {
-    return true;
-  }
-
-  IDSet<job_id_t> need = job->need_set();
-  IDSet<job_id_t>::IDSetIter iter;
-
-  Log log;
-  log.StartTimer();
-  size_t need_count = need.size();
-  size_t remain_count = need_count;
-
-  std::vector<boost::shared_ptr<const VersionTable> > tables;
-  if (job->partial_versioned()) {
-    tables.push_back(job->vtable_in());
-  }
-  for (iter = need.begin(); iter != need.end(); ++iter) {
-    job_id_t id = (*iter);
-    JobEntry* j;
-    if (GetJobEntry(id, j)) {
-      if (j->versioned()) {
-        tables.push_back(j->vtable_out());
-        job->add_job_passed_versions(id);
-        job->set_partial_versioned(true);
-        --remain_count;
-      }
-    } else {
-      dbg(DBG_ERROR, "ERROR: Job in need set (id: %lu) is not in the graph.\n", id);
-      exit(-1);
-      return false;
-    }
-  }
-
-  if (tables.size() > 0) {
-    boost::shared_ptr<VersionTable> merged;
-    version_operator_.MergeVersionTables(tables, &merged);
-    job->set_vtable_in(merged);
-  }
-
-  if (remain_count == 0) {
-    if (!job->sterile()) {
-      boost::shared_ptr<VersionTable> merged;
-      std::vector<boost::shared_ptr<VersionTable> > table_vec;
-      table_vec.push_back(job->vtable_in());
-      version_operator_.RecomputeRootForVersionTables(table_vec);
-    }
-    boost::shared_ptr<VersionTable> table_out;
-    version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
-    job->set_vtable_out(table_out);
-    job->set_versioned(true);
-    log.StopTimer();
-    dbg(DBG_SCHED, "Versioning for %s took %f.\n", job->job_name().c_str(), log.timer());
-    return true;
-  }
-
-  return false;
-
-
-//  IDSet<job_id_t> need = job->need_set();
-//  IDSet<job_id_t>::IDSetIter iter;
+// bool JobManager::ResolveJobDataVersions(JobEntry* job) {
+//   if (job->future()) {
+//     return false;
+//   }
 //
-//  Log log;
-//  log.StartTimer();
-//  size_t need_count = need.size();
-//  size_t remain_count = need_count;
+//   if (job->versioned()) {
+//     return true;
+//   }
 //
-//  for (iter = need.begin(); iter != need.end(); ++iter) {
-//    job_id_t id = (*iter);
-//    JobEntry* j;
-//    if (GetJobEntry(id, j)) {
-//      if (j->versioned()) {
-//        const JobEntry::VersionTable *vt = j->version_table_out_p();
-//        JobEntry::ConstVTIter it;
-//        for (it = vt->begin(); it != vt->end(); ++it) {
-//          if (job->version_table_in_p()->count(it->first) == 0) {
-//            // version_manager_.AddVersionEntry(it->first, it->second, job, VersionEntry::IN);
-//            job->set_version_table_in_entry(it->first, it->second);
-//          } else if ((it->second) > (job->version_table_in_query(it->first))) {
-//            // version_manager_.RemoveVersionEntry(
-//            //     it->first, job->version_table_in_query(it->first), job, VersionEntry::IN);
-//            // version_manager_.AddVersionEntry(it->first, it->second, job, VersionEntry::IN);
-//            job->set_version_table_in_entry(it->first, it->second);
-//          }
-//        }
-//        job->add_job_passed_versions(id);
-//        job->set_partial_versioned(true);
-//        remain_count--;
-//      } else {
-//        dbg(DBG_SCHED, "Job in need set (id: %lu) is not versioned yet.\n", id);
-//        return false;
-//      }
-//    } else {
-//      dbg(DBG_ERROR, "ERROR: Job in need set (id: %lu) is not in the graph.\n", id);
-//      return false;
-//    }
-//  }
+//   IDSet<job_id_t> need = job->need_set();
+//   IDSet<job_id_t>::IDSetIter iter;
 //
-//  if (remain_count == 0) {
-//    if (job->build_version_table_out_and_check()) {
-//      // version_manager_.AddJobVersionTableOut(job);
-//      job->set_versioned(true);
-//      log.StopTimer();
-//      std::cout << "Old Versioning System: " << job->job_name() << " " << log.timer() << std::endl; // NOLINT
-//      return true;
-//    }
-//  }
-//  log.StopTimer();
-//  std::cout << "Old Versioning System: " << job->job_name() << " " << log.timer() << std::endl;
+//   Log log;
+//   log.StartTimer();
+//   size_t need_count = need.size();
+//   size_t remain_count = need_count;
 //
-//  return false;
-}
+//   std::vector<boost::shared_ptr<const VersionTable> > tables;
+//   if (job->partial_versioned()) {
+//     tables.push_back(job->vtable_in());
+//   }
+//   for (iter = need.begin(); iter != need.end(); ++iter) {
+//     job_id_t id = (*iter);
+//     JobEntry* j;
+//     if (GetJobEntry(id, j)) {
+//       if (j->versioned()) {
+//         tables.push_back(j->vtable_out());
+//         job->add_job_passed_versions(id);
+//         job->set_partial_versioned(true);
+//         --remain_count;
+//       }
+//     } else {
+//       dbg(DBG_ERROR, "ERROR: Job in need set (id: %lu) is not in the graph.\n", id);
+//       exit(-1);
+//       return false;
+//     }
+//   }
+//
+//   if (tables.size() > 0) {
+//     boost::shared_ptr<VersionTable> merged;
+//     version_operator_.MergeVersionTables(tables, &merged);
+//     job->set_vtable_in(merged);
+//   }
+//
+//   if (remain_count == 0) {
+//     if (!job->sterile()) {
+//       boost::shared_ptr<VersionTable> merged;
+//       std::vector<boost::shared_ptr<VersionTable> > table_vec;
+//       table_vec.push_back(job->vtable_in());
+//       version_operator_.RecomputeRootForVersionTables(table_vec);
+//     }
+//     boost::shared_ptr<VersionTable> table_out;
+//     version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
+//     job->set_vtable_out(table_out);
+//     job->set_versioned(true);
+//     log.StopTimer();
+//     dbg(DBG_SCHED, "Versioning for %s took %f.\n", job->job_name().c_str(), log.timer());
+//     return true;
+//   }
+//
+//   return false;
+//
+//
+// //  IDSet<job_id_t> need = job->need_set();
+// //  IDSet<job_id_t>::IDSetIter iter;
+// //
+// //  Log log;
+// //  log.StartTimer();
+// //  size_t need_count = need.size();
+// //  size_t remain_count = need_count;
+// //
+// //  for (iter = need.begin(); iter != need.end(); ++iter) {
+// //    job_id_t id = (*iter);
+// //    JobEntry* j;
+// //    if (GetJobEntry(id, j)) {
+// //      if (j->versioned()) {
+// //        const JobEntry::VersionTable *vt = j->version_table_out_p();
+// //        JobEntry::ConstVTIter it;
+// //        for (it = vt->begin(); it != vt->end(); ++it) {
+// //          if (job->version_table_in_p()->count(it->first) == 0) {
+// //            // version_manager_.AddVersionEntry(it->first, it->second, job, VersionEntry::IN);
+// //            job->set_version_table_in_entry(it->first, it->second);
+// //          } else if ((it->second) > (job->version_table_in_query(it->first))) {
+// //            // version_manager_.RemoveVersionEntry(
+// //            //     it->first, job->version_table_in_query(it->first), job, VersionEntry::IN);
+// //            // version_manager_.AddVersionEntry(it->first, it->second, job, VersionEntry::IN);
+// //            job->set_version_table_in_entry(it->first, it->second);
+// //          }
+// //        }
+// //        job->add_job_passed_versions(id);
+// //        job->set_partial_versioned(true);
+// //        remain_count--;
+// //      } else {
+// //        dbg(DBG_SCHED, "Job in need set (id: %lu) is not versioned yet.\n", id);
+// //        return false;
+// //      }
+// //    } else {
+// //      dbg(DBG_ERROR, "ERROR: Job in need set (id: %lu) is not in the graph.\n", id);
+// //      return false;
+// //    }
+// //  }
+// //
+// //  if (remain_count == 0) {
+// //    if (job->build_version_table_out_and_check()) {
+// //      // version_manager_.AddJobVersionTableOut(job);
+// //      job->set_versioned(true);
+// //      log.StopTimer();
+// //      std::cout << "Old Versioning System: " << job->job_name() << " " << log.timer() << std::endl; // NOLINT
+// //      return true;
+// //    }
+// //  }
+// //  log.StopTimer();
+// //  std::cout << "Old Versioning System: " << job->job_name() << " " << log.timer() << std::endl;
+// //
+// //  return false;
+// }
 
-size_t JobManager::ResolveVersions() {
-  size_t num_new_versioned = 0;
 
-  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
-  for (; iter != job_graph_.end(); ++iter) {
-    if ((!iter->second->entry()->versioned())) {
-      if (ResolveJobDataVersions(iter->second->entry()))
-        ++num_new_versioned;
-    }
-  }
-  return num_new_versioned;
-}
+// size_t JobManager::ResolveVersions() {
+//   size_t num_new_versioned = 0;
+//
+//   typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+//   for (; iter != job_graph_.end(); ++iter) {
+//     if ((!iter->second->entry()->versioned())) {
+//       if (ResolveJobDataVersions(iter->second->entry()))
+//         ++num_new_versioned;
+//     }
+//   }
+//   return num_new_versioned;
+// }
 
 
 size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
@@ -551,7 +553,33 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 
 
   /*
-   * Job graph aproach with new version table
+   * Job graph aproach with new version table (root/change)
+   */
+//   size_t num = 0;
+//   list->clear();
+//   JobEntryMap::iterator iter = jobs_need_version_.begin();
+//   for (; iter != jobs_need_version_.end();) {
+//     JobEntry* job = iter->second;
+//     assert(job->versioned() || job->partial_versioned());
+//     if (job->assigned()) {
+//       jobs_need_version_.erase(iter++);
+//       continue;
+//     }
+//     data_version_t version;
+//     if (job->vtable_in()->query_entry(vld.first, &version)) {
+//       if ((version == vld.second) &&
+//           ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
+//         list->push_back(job);
+//         ++num;
+//       }
+//     }
+//     ++iter;
+//   }
+//   return num;
+
+
+  /*
+   * Job graph aproach with ancestor chain versioning
    */
   size_t num = 0;
   list->clear();
@@ -564,9 +592,10 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
       continue;
     }
     data_version_t version;
-    if (job->vtable_in()->query_entry(vld.first, &version)) {
-      if ((version == vld.second) &&
-          ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
+    if (job->vmap_read_in()->query_entry(vld.first, &version)) {
+      if ((version == vld.second)) {
+        // if it is in the vmap_read_in then either reading or non sterile. -omidm
+        // && ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
         list->push_back(job);
         ++num;
       }
@@ -574,6 +603,8 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     ++iter;
   }
   return num;
+
+
 
   /*
    * Obsolete slow approach
@@ -651,16 +682,24 @@ size_t JobManager::ResolveDataVersions() {
       PassDataVersionToJob(job, iter->second);
       jobs_need_version_[job_id] = job;
       if (JobVersionIsComplete(job)) {
-        if (!job->sterile()) {
-          boost::shared_ptr<VersionTable> merged;
-          std::vector<boost::shared_ptr<VersionTable> > table_vec;
-          table_vec.push_back(job->vtable_in());
-          version_operator_.RecomputeRootForVersionTables(table_vec);
-        }
+        // if (!job->sterile()) {
+        //   boost::shared_ptr<VersionTable> merged;
+        //   std::vector<boost::shared_ptr<VersionTable> > table_vec;
+        //   table_vec.push_back(job->vtable_in());
+        //   version_operator_.RecomputeRootForVersionTables(table_vec);
+        // }
 
-
-
-
+        // boost::shared_ptr<VersionTable> table_out;
+        // version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
+        // job->set_vtable_out(table_out);
+        // job->set_versioned(true);
+        // Vertex<JobEntry, job_id_t>* vertex;
+        // job_graph_.GetVertex(job_id, &vertex);
+        // typename Edge<JobEntry, job_id_t>::Iter it;
+        // for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) { // NOLINT
+        //   new_pass_version[it->first].push_back(job);
+        // }
+        // ++num;
 
 
         if (job->sterile()) {
@@ -714,18 +753,6 @@ size_t JobManager::ResolveDataVersions() {
           job->set_ancestor_chain_to_pass(ac);
         }
 
-
-
-
-
-
-
-
-
-
-        boost::shared_ptr<VersionTable> table_out;
-        version_operator_.MakeVersionTableOut(job->vtable_in(), job->write_set(), &table_out);
-        job->set_vtable_out(table_out);
         job->set_versioned(true);
         Vertex<JobEntry, job_id_t>* vertex;
         job_graph_.GetVertex(job_id, &vertex);
@@ -753,23 +780,23 @@ void JobManager::PassDataVersionToJob(
   assert(!job->future() && !job->versioned());
   assert(source_jobs.size() > 0);
 
-  std::vector<boost::shared_ptr<const VersionTable> > tables;
-  if (job->partial_versioned()) {
-    tables.push_back(job->vtable_in());
-  }
+  // std::vector<boost::shared_ptr<const VersionTable> > tables;
+  // if (job->partial_versioned()) {
+  //   tables.push_back(job->vtable_in());
+  // }
 
-  JobEntryList::const_iterator iter;
-  for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
-    JobEntry* j = (*iter);
-    assert(j->versioned());
-    tables.push_back(j->vtable_out());
-    job->add_job_passed_versions(j->job_id());
-  }
+  // JobEntryList::const_iterator iter;
+  // for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
+  //   JobEntry* j = (*iter);
+  //   assert(j->versioned());
+  //   tables.push_back(j->vtable_out());
+  //   job->add_job_passed_versions(j->job_id());
+  // }
 
-
-
-
-
+  // boost::shared_ptr<VersionTable> merged;
+  // version_operator_.MergeVersionTables(tables, &merged);
+  // job->set_vtable_in(merged);
+  // job->set_partial_versioned(true);
 
 
   std::vector<boost::shared_ptr<const AncestorChain> > chains;
@@ -777,6 +804,7 @@ void JobManager::PassDataVersionToJob(
     chains.push_back(job->ancestor_chain());
   }
 
+  JobEntryList::const_iterator iter;
   for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
     JobEntry* j = (*iter);
     assert(j->versioned());
@@ -787,7 +815,6 @@ void JobManager::PassDataVersionToJob(
   boost::shared_ptr<AncestorChain> chain;
   AncestorChain::MergeAncestorChains(chains, &chain);
   job->set_ancestor_chain(chain);
-  job->set_partial_versioned(true);
 
   if (job->sterile()) {
     boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
@@ -811,15 +838,6 @@ void JobManager::PassDataVersionToJob(
     job->set_vmap_read_in(vmap);
   }
 
-
-
-
-
-
-
-  boost::shared_ptr<VersionTable> merged;
-  version_operator_.MergeVersionTables(tables, &merged);
-  job->set_vtable_in(merged);
   job->set_partial_versioned(true);
 }
 

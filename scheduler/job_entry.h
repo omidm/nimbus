@@ -107,8 +107,8 @@ class JobEntry {
     Parameter params();
     VersionTable version_table_in();
     VersionTable version_table_out();
-    boost::shared_ptr<nimbus::VersionTable> vtable_in();
-    boost::shared_ptr<nimbus::VersionTable> vtable_out();
+    // boost::shared_ptr<nimbus::VersionTable> vtable_in();
+    // boost::shared_ptr<nimbus::VersionTable> vtable_out();
     boost::shared_ptr<VersionMap> vmap_read_in();
     boost::shared_ptr<VersionMap> vmap_write_out();
     boost::shared_ptr<AncestorChain> ancestor_chain();
@@ -140,8 +140,8 @@ class JobEntry {
     void set_params(Parameter params);
     void set_version_table_in(VersionTable version_table);
     void set_version_table_out(VersionTable version_table);
-    void set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in);
-    void set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out);
+    // void set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in);
+    // void set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out);
     void set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in);
     void set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out);
     void set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain);
@@ -176,8 +176,8 @@ class JobEntry {
     Parameter params_;
     VersionTable version_table_in_;
     VersionTable version_table_out_;
-    boost::shared_ptr<nimbus::VersionTable> vtable_in_;
-    boost::shared_ptr<nimbus::VersionTable> vtable_out_;
+    // boost::shared_ptr<nimbus::VersionTable> vtable_in_;
+    // boost::shared_ptr<nimbus::VersionTable> vtable_out_;
     boost::shared_ptr<VersionMap> vmap_read_in_;
     boost::shared_ptr<VersionMap> vmap_write_out_;
     boost::shared_ptr<AncestorChain> ancestor_chain_;

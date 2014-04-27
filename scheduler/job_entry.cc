@@ -103,11 +103,11 @@ JobEntry::JobEntry(const job_id_t& job_id)
 }
 
 void JobEntry::Initialize() {
-  static boost::shared_ptr<nimbus::VersionTable> empty_vtable =
-    boost::shared_ptr<nimbus::VersionTable>(new
-        nimbus::VersionTable(NIMBUS_EMPTY_VERSION_TABLE_ID));
-  vtable_in_ = empty_vtable;
-  vtable_out_ = empty_vtable;
+//   static boost::shared_ptr<nimbus::VersionTable> empty_vtable =
+//     boost::shared_ptr<nimbus::VersionTable>(new
+//         nimbus::VersionTable(NIMBUS_EMPTY_VERSION_TABLE_ID));
+//   vtable_in_ = empty_vtable;
+//   vtable_out_ = empty_vtable;
 
   static boost::shared_ptr<AncestorChain> empty_chain =
     boost::shared_ptr<AncestorChain>(new AncestorChain());
@@ -175,13 +175,13 @@ JobEntry::VersionTable JobEntry::version_table_out() {
   return version_table_out_;
 }
 
-boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_in() {
-  return vtable_in_;
-}
+// boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_in() {
+//   return vtable_in_;
+// }
 
-boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_out() {
-  return vtable_out_;
-}
+// boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_out() {
+//   return vtable_out_;
+// }
 
 boost::shared_ptr<VersionMap> JobEntry::vmap_read_in() {
   return vmap_read_in_;
@@ -310,13 +310,13 @@ void JobEntry::set_version_table_out_entry(logical_data_id_t l_id, data_version_
   version_table_out_[l_id] = version;
 }
 
-void JobEntry::set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in) {
-  vtable_in_ = vtable_in;
-}
+// void JobEntry::set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in) {
+//   vtable_in_ = vtable_in;
+// }
 
-void JobEntry::set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out) {
-  vtable_out_ = vtable_out;
-}
+// void JobEntry::set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out) {
+//   vtable_out_ = vtable_out;
+// }
 
 
 void JobEntry::set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in) {
