@@ -663,31 +663,56 @@ size_t JobManager::ResolveDataVersions() {
 
 
 
-        boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
-        IDSet<logical_data_id_t>::ConstIter itw;
-        for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
-          data_version_t version;
-          if (job->vmap_read_in()->query_entry(*itw, &version)) {
-            vmap->set_entry(*itw, version + 1);
-          } else if (job->ancestor_chain()->LookUpVersion(*itw, &version)) {
-            vmap->set_entry(*itw, version + 1);
-          } else {
-            dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
-            exit(-1);
+        if (job->sterile()) {
+          boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+          IDSet<logical_data_id_t>::ConstIter itw;
+          for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
+            data_version_t version;
+            if (job->vmap_read_in()->query_entry(*itw, &version)) {
+              vmap->set_entry(*itw, version + 1);
+            } else if (job->ancestor_chain()->LookUpVersion(*itw, &version)) {
+              vmap->set_entry(*itw, version + 1);
+            } else {
+              dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+              exit(-1);
+            }
           }
+          job->set_vmap_write_out(vmap);
+
+          AncestorChain::Chain chain = job->ancestor_chain()->chain();
+          AncestorEntry ancestor_entry(job->job_id(), vmap);
+          AncestorChain::Pool pool;
+          pool.push_back(ancestor_entry);
+          chain.push_front(pool);
+          boost::shared_ptr<AncestorChain> ac =
+            boost::shared_ptr<AncestorChain>(new AncestorChain());
+          ac->set_chain(chain);
+          job->set_ancestor_chain_to_pass(ac);
+        } else {
+          boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+          vmap->set_content(job->vmap_read_in()->content());
+          IDSet<logical_data_id_t>::ConstIter itw;
+          for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
+            data_version_t version;
+            if (job->vmap_read_in()->query_entry(*itw, &version)) {
+              vmap->set_entry(*itw, version + 1);
+            } else {
+              dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+              exit(-1);
+            }
+          }
+          job->set_vmap_write_out(vmap);
+
+          AncestorChain::Chain chain;
+          AncestorEntry ancestor_entry(job->job_id(), vmap);
+          AncestorChain::Pool pool;
+          pool.push_back(ancestor_entry);
+          chain.push_front(pool);
+          boost::shared_ptr<AncestorChain> ac =
+            boost::shared_ptr<AncestorChain>(new AncestorChain());
+          ac->set_chain(chain);
+          job->set_ancestor_chain_to_pass(ac);
         }
-        job->set_vmap_write_out(vmap);
-
-        AncestorChain::Chain chain = job->ancestor_chain()->chain();
-        AncestorEntry ancestor_entry(job->job_id(), vmap);
-        AncestorChain::Pool pool;
-        pool.push_back(ancestor_entry);
-        chain.push_front(pool);
-        boost::shared_ptr<AncestorChain> ac =
-          boost::shared_ptr<AncestorChain>(new AncestorChain());
-        ac->set_chain(chain);
-        job->set_ancestor_chain_to_pass(ac);
-
 
 
 
@@ -764,15 +789,27 @@ void JobManager::PassDataVersionToJob(
   job->set_ancestor_chain(chain);
   job->set_partial_versioned(true);
 
-  boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
-  IDSet<logical_data_id_t>::ConstIter it;
-  for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-    data_version_t version;
-    if (job->ancestor_chain()->LookUpVersion(*it, &version)) {
-      vmap->set_entry(*it, version);
+  if (job->sterile()) {
+    boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->ancestor_chain()->LookUpVersion(*it, &version)) {
+        vmap->set_entry(*it, version);
+      }
     }
+    job->set_vmap_read_in(vmap);
+  } else {
+    boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->ancestor_chain()->LookUpVersion(it->first, &version)) {
+        vmap->set_entry(it->first, version);
+      }
+    }
+    job->set_vmap_read_in(vmap);
   }
-  job->set_vmap_read_in(vmap);
 
 
 
