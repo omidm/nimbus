@@ -817,6 +817,11 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
   return result;
 }
 
+void JobManager::set_ldo_map_p(
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
+  ldo_map_p_ = ldo_map_p;
+}
+
 
 void JobManager::WaitToPassAllVersions() {
   // boost::lock_guard<boost::mutex> l(mtx);

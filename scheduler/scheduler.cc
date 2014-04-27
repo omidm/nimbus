@@ -71,6 +71,8 @@ void Scheduler::Run() {
 
   SetupWorkerInterface();
   // SetupUserInterface();
+  // First data manager should be instantiated then job manager, because of
+  // ldo_map pointer that job manager needs to get from data manager.
   SetupDataManager();
   SetupJobManager();
   id_maker_.Initialize(0);
@@ -799,6 +801,7 @@ void Scheduler::SetupDataManager() {
 
 void Scheduler::SetupJobManager() {
   job_manager_ = new JobManager();
+  job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
 }
 
 void Scheduler::LoadWorkerCommands() {

@@ -113,11 +113,14 @@ class JobManager {
     bool CausingUnwantedSerialization(JobEntry* job,
         const logical_data_id_t& l_id, const PhysicalData& pd);
 
+    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
+
   private:
     Graph<JobEntry, job_id_t> job_graph_;
     // VersionManager version_manager_;
     VersionOperator version_operator_;
     // bool processed_new_job_done_;
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 
     Log log_version_;
 
