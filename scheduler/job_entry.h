@@ -112,6 +112,7 @@ class JobEntry {
     boost::shared_ptr<VersionMap> vmap_read_in();
     boost::shared_ptr<VersionMap> vmap_write_out();
     boost::shared_ptr<AncestorChain> ancestor_chain();
+    boost::shared_ptr<AncestorChain> ancestor_chain_to_pass();
     PhysicalTable physical_table();
     IDSet<job_id_t> jobs_passed_versions();
     IDSet<job_id_t> need_set();
@@ -144,6 +145,7 @@ class JobEntry {
     void set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in);
     void set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out);
     void set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain);
+    void set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass);
     void set_physical_table(PhysicalTable physical_table);
     void set_jobs_passed_versions(IDSet<job_id_t> jobs);
     void add_job_passed_versions(job_id_t job_id);
@@ -179,6 +181,7 @@ class JobEntry {
     boost::shared_ptr<VersionMap> vmap_read_in_;
     boost::shared_ptr<VersionMap> vmap_write_out_;
     boost::shared_ptr<AncestorChain> ancestor_chain_;
+    boost::shared_ptr<AncestorChain> ancestor_chain_to_pass_;
     PhysicalTable physical_table_;
     IDSet<job_id_t> jobs_passed_versions_;
     bool sterile_;
