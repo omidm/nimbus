@@ -55,6 +55,7 @@ class VersionMap {
     typedef std::map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
 
     VersionMap();
+    VersionMap(const VersionMap& other);
     virtual ~VersionMap();
 
     Map content() const;
@@ -65,6 +66,8 @@ class VersionMap {
     void set_entry(logical_data_id_t l_id, data_version_t version);
 
     void Print() const;
+
+    VersionMap& operator=(const VersionMap& right);
 
   private:
     Map content_;

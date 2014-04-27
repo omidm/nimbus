@@ -177,6 +177,18 @@ boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_out() {
   return vtable_out_;
 }
 
+boost::shared_ptr<VersionMap> JobEntry::vmap_read_in() {
+  return vmap_read_in_;
+}
+
+boost::shared_ptr<VersionMap> JobEntry::vmap_write_out() {
+  return vmap_write_out_;
+}
+
+boost::shared_ptr<AncestorChain> JobEntry::ancestor_chain() {
+  return ancestor_chain_;
+}
+
 const JobEntry::VersionTable* JobEntry::version_table_in_p() {
   return &version_table_in_;
 }
@@ -294,6 +306,19 @@ void JobEntry::set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in) 
 
 void JobEntry::set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out) {
   vtable_out_ = vtable_out;
+}
+
+
+void JobEntry::set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in) {
+  vmap_read_in_ = vmap_read_in;
+}
+
+void JobEntry::set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out) {
+  vmap_write_out_ = vmap_write_out;
+}
+
+void JobEntry::set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain) {
+  ancestor_chain_ = ancestor_chain;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
