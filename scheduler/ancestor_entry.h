@@ -57,8 +57,8 @@ class AncestorEntry {
     AncestorEntry(job_id_t id, boost::shared_ptr<VersionMap> version_map);
     virtual ~AncestorEntry();
 
-    job_id_t id();
-    boost::shared_ptr<VersionMap> version_map();
+    job_id_t id() const;
+    boost::shared_ptr<VersionMap> version_map() const;
 
   private:
     job_id_t id_;

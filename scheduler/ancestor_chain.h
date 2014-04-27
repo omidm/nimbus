@@ -42,7 +42,8 @@
 #define NIMBUS_SCHEDULER_ANCESTOR_CHAIN_H_
 
 #include <boost/shared_ptr.hpp>
-#include <map>
+#include <vector>
+#include <set>
 #include <list>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
@@ -56,15 +57,29 @@ class AncestorChain {
     typedef std::list<Pool> Chain;
 
     AncestorChain();
+    AncestorChain(const AncestorChain& other);
     virtual ~AncestorChain();
 
-    static bool MergeAncestorChains(std::list<AncestorChain> list,
-        AncestorChain* result);
+    Chain chain() const;
+    const Chain* chain_p() const;
+
+    void set_chain(Chain chain);
+
+    static bool MergeAncestorChains(
+        std::vector<boost::shared_ptr<const AncestorChain> > chains,
+        boost::shared_ptr<AncestorChain> *result);
 
     bool LookUpVersion(logical_data_id_t l_id, data_version_t* version);
 
+    AncestorChain& operator=(const AncestorChain& right);
+
   private:
     Chain chain_;
+
+    static bool MergeTwoAncestorChains(
+        boost::shared_ptr<const AncestorChain> c_1,
+        boost::shared_ptr<const AncestorChain> c_2,
+        boost::shared_ptr<AncestorChain> *result);
 };
 
 

@@ -51,11 +51,11 @@ AncestorEntry::AncestorEntry(job_id_t id,
 AncestorEntry::~AncestorEntry() {
 }
 
-job_id_t AncestorEntry::id() {
+job_id_t AncestorEntry::id() const {
   return id_;
 }
 
-boost::shared_ptr<VersionMap> AncestorEntry::version_map() {
+boost::shared_ptr<VersionMap> AncestorEntry::version_map() const {
   return version_map_;
 }
 
