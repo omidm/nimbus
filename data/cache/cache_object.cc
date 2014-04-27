@@ -51,7 +51,8 @@ CacheObject::CacheObject(std::string type,
                          const GeometricRegion &app_object_region)
      : type_(type),
        app_object_region_(app_object_region),
-       users_(0) {
+       users_(0),
+       element_map_(DMap(GeometricRegionLess)) {
 }
 
 void CacheObject::ReadToCache(const DataArray &read_set,
@@ -74,15 +75,17 @@ void CacheObject::Read(const DataArray &read_set,
     }
     if (!write_back_.empty()) {
         DataArray flush;
-        LIDSet read_lids;
+        typedef std::set<GeometricRegion, GRComparisonType> GSet;
+        GSet read_regs(GeometricRegionLess);
         for (size_t k = 0; k < read_set.size(); ++k) {
             Data *dd = read_set[k];
-            read_lids.insert(dd->logical_id());
+            GeometricRegion ddreg = dd->region();
+            read_regs.insert(ddreg);
         }
         std::set<Data *>::iterator iter = write_back_.begin();
         for (; iter != write_back_.end(); ++iter) {
             Data *d = *iter;
-            if (read_lids.contains(d->logical_id())) {
+            if (read_regs.find(d->region()) != read_regs.end()) {
                 flush.push_back(d);
             }
         }
@@ -212,18 +215,18 @@ void CacheObject::SetUpWrite(const DataArray &write_set) {
 }
 
 void CacheObject::SetUpData(Data *d) {
-    logical_data_id_t lid = d->logical_id();
+    nimbus::GeometricRegion dreg = d->region();
     physical_data_id_t pid = d->physical_id();
-    if (element_map_.find(lid) != element_map_.end())
-        pids_.remove(element_map_[lid]);
-    element_map_[lid] = pid;
+    if (element_map_.find(dreg) != element_map_.end())
+        pids_.remove(element_map_[dreg]);
+    element_map_[dreg] = pid;
     pids_.insert(pid);
     data_.insert(d);
 }
 
 void CacheObject::UnsetData(Data *d) {
     pids_.remove(d->physical_id());
-    element_map_.erase(d->logical_id());
+    element_map_.erase(d->region());
     data_.erase(d);
 }
 

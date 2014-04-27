@@ -63,7 +63,7 @@ class CacheTable {
         int GetMinDistanceIndex(const CacheObjects *objects,
                                 const DataArray &read,
                                 CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<nimbus::GeometricRegion,
+        typedef std::map<GeometricRegion,
                          CacheObjects *,
                          GRComparisonType> Table;
         Table table_;

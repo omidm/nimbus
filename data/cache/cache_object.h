@@ -115,7 +115,10 @@ class CacheObject {
 
         // TODO(Chinmayee): change this to region-pid map (because of
         // scratches)
-        std::map<logical_data_id_t, physical_data_id_t> element_map_;
+        typedef std::map<GeometricRegion,
+                         physical_data_id_t,
+                         GRComparisonType> DMap;
+        DMap element_map_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;
