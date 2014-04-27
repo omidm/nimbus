@@ -301,6 +301,7 @@ bool InitializeExampleAndDriver(
         init_config.local_region.dy(),
         init_config.local_region.dz());
     example->clear_ghost_particles_write = init_config.clear_ghost_particles_write;
+    example->flush_shared_particles_write = init_config.flush_shared_particles_write;
     // physbam intiialization
     example->Initialize_Grid(
         TV_INT(init_config.local_region.dx(),

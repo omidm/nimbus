@@ -64,6 +64,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     cache_psi_d = NULL;
     cache_ple   = NULL;
     create_destroy_ple = true;
+    flush_shared_particles_write = false;
     clear_ghost_particles_write = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -100,6 +101,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
     create_destroy_ple = true;
+    flush_shared_particles_write = false;
     clear_ghost_particles_write = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -138,6 +140,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
     create_destroy_ple = false;
+    flush_shared_particles_write = false;
     clear_ghost_particles_write = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -648,8 +651,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_FACE_VEL, da, &write_set, false);
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
-        //cache_fv->WriteImmediately(write_set, array_reg_central, true);
-        cache_fv->Write(array_reg_central, true);
+        cache_fv->WriteImmediately(write_set, array_reg_central, true);
+        //cache_fv->Write(array_reg_central, true);
         cache_fv = NULL;
     }
 
@@ -660,8 +663,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_FACE_VEL_GHOST, da, &write_set, false);
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
-        //cache_fvg->WriteImmediately(write_set, array_reg_outer, true);
-        cache_fvg->Write(array_reg_outer, true);
+        cache_fvg->WriteImmediately(write_set, array_reg_outer, true);
+        //cache_fvg->Write(array_reg_outer, true);
         cache_fvg = NULL;
     }
 
@@ -675,24 +678,24 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          //cache_phi3->WriteImmediately(write_set, array_reg_outer, true);
-          cache_phi3->Write(array_reg_outer, true);
+          cache_phi3->WriteImmediately(write_set, array_reg_outer, true);
+          //cache_phi3->Write(array_reg_outer, true);
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-          //cache_phi7->WriteImmediately(write_set, array_reg_outer_7, true);
-          cache_phi7->Write(array_reg_outer_7, true);
+          cache_phi7->WriteImmediately(write_set, array_reg_outer_7, true);
+          //cache_phi7->Write(array_reg_outer_7, true);
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          //cache_phi8->WriteImmediately(write_set, array_reg_outer_8, true);
-          cache_phi8->Write(array_reg_outer_8, true);
+          cache_phi8->WriteImmediately(write_set, array_reg_outer_8, true);
+          //cache_phi8->Write(array_reg_outer_8, true);
           cache_phi8 = NULL;
       }
       // last unique particle id
@@ -709,9 +712,11 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           application::GetWriteData(*job, APP_NEG_PARTICLES, da, &write_set, false);
           application::GetWriteData(*job, APP_POS_REM_PARTICLES, da, &write_set, false);
           application::GetWriteData(*job, APP_NEG_REM_PARTICLES, da, &write_set, false);
-          if (clear_ghost_particles_write) {
+          if (flush_shared_particles_write && clear_ghost_particles_write) {
             nimbus::DataArray ghost_data;
+            nimbus::DataArray shared_data;
             nimbus::GeometricRegion global_region(application::kDefaultRegion);
+             nimbus::GeometricRegion inner(array_reg_central.NewEnlarged(-3));
             nimbus::int_dimension_t x = local_region.x();
             nimbus::int_dimension_t y = local_region.y();
             nimbus::int_dimension_t z = local_region.z();
@@ -747,15 +752,17 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
               nimbus::GeometricRegion dreg = write_set[k]->region();
               if (!wgb_region.Covers(&dreg))
                 ghost_data.push_back(write_set[k]);
+              if (!inner.Covers(&dreg))
+                shared_data.push_back(write_set[k]);
             }
-            cache_ple->WriteImmediately(ghost_data, array_reg_outer, false);
+            cache_ple->WriteImmediately(shared_data, array_reg_outer, false);
             cache_ple->InvalidateCacheObject(ghost_data);
-            cache_ple->ReleaseAccess();
+            //cache_ple->ReleaseAccess();
           }
           else {
-            cache_ple->Write(array_reg_outer, true);
+            //cache_ple->Write(array_reg_outer, true);
           }
-          //cache_ple->WriteImmediately(write_set, array_reg_outer, true);
+          cache_ple->WriteImmediately(write_set, array_reg_outer, true);
           cache_ple = NULL;
       }
     }
@@ -767,8 +774,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_PSI_D, da, &write_set, false);
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
-        //cache_psi_d->WriteImmediately(write_set, array_reg_thin_outer, true);
-        cache_psi_d->Write(array_reg_thin_outer, true);
+        cache_psi_d->WriteImmediately(write_set, array_reg_thin_outer, true);
+        //cache_psi_d->Write(array_reg_thin_outer, true);
         cache_psi_d = NULL;
     }
 
@@ -779,8 +786,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_PSI_N, da, &write_set, false);
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
-        //cache_psi_n->WriteImmediately(write_set, array_reg_thin_outer, true);
-        cache_psi_n->Write(array_reg_thin_outer, true);
+        cache_psi_n->WriteImmediately(write_set, array_reg_thin_outer, true);
+        //cache_psi_n->Write(array_reg_thin_outer, true);
         cache_psi_n = NULL;
     }
 

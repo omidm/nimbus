@@ -70,6 +70,7 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   InitConfig init_config;
   init_config.use_cache = true;
   init_config.clear_shared_particles_read = true;
+  init_config.flush_shared_particles_write = true;
   init_config.clear_ghost_particles_write = true;
   init_config.set_boundary_condition = false;
   T dt;
