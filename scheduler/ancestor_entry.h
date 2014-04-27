@@ -55,10 +55,13 @@ class AncestorEntry {
     typedef std::list<AncestorEntry> List;
 
     AncestorEntry(job_id_t id, boost::shared_ptr<VersionMap> version_map);
+    AncestorEntry(const AncestorEntry& other);
     virtual ~AncestorEntry();
 
     job_id_t id() const;
     boost::shared_ptr<VersionMap> version_map() const;
+
+    AncestorEntry& operator=(const AncestorEntry& right);
 
   private:
     job_id_t id_;

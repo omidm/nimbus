@@ -45,6 +45,10 @@ using namespace nimbus; // NOLINT
 VersionMap::VersionMap() {
 }
 
+VersionMap::VersionMap(const VersionMap& other) {
+  content_ = other.content_;
+}
+
 VersionMap::~VersionMap() {
 }
 
@@ -86,5 +90,9 @@ void VersionMap::Print() const {
 }
 
 
+VersionMap& VersionMap::operator=(const VersionMap& right) {
+  content_ = right.content_;
+  return (*this);
+}
 
 

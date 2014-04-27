@@ -48,6 +48,11 @@ AncestorEntry::AncestorEntry(job_id_t id,
   version_map_ = version_map;
 }
 
+AncestorEntry::AncestorEntry(const AncestorEntry& other) {
+  id_ = other.id_;
+  version_map_ = other.version_map_;
+}
+
 AncestorEntry::~AncestorEntry() {
 }
 
@@ -57,6 +62,12 @@ job_id_t AncestorEntry::id() const {
 
 boost::shared_ptr<VersionMap> AncestorEntry::version_map() const {
   return version_map_;
+}
+
+AncestorEntry& AncestorEntry::operator=(const AncestorEntry& right) {
+  id_ = right.id_;
+  version_map_ = right.version_map_;
+  return (*this);
 }
 
 
