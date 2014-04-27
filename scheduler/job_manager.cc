@@ -670,7 +670,7 @@ size_t JobManager::ResolveDataVersions() {
           if (job->vmap_read_in()->query_entry(*itw, &version)) {
             vmap->set_entry(*itw, version + 1);
           } else if (job->ancestor_chain()->LookUpVersion(*itw, &version)) {
-            vmap->set_entry(*itw, version);
+            vmap->set_entry(*itw, version + 1);
           } else {
             dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
             exit(-1);
