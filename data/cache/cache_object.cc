@@ -74,11 +74,15 @@ void CacheObject::Read(const DataArray &read_set,
     }
     if (!write_back_.empty()) {
         DataArray flush;
+        LIDSet read_lids;
+        for (size_t k = 0; k < read_set.size(); ++k) {
+            Data *dd = read_set[k];
+            read_lids.insert(dd->logical_id());
+        }
         std::set<Data *>::iterator iter = write_back_.begin();
-        std::set<Data *> read_unique(write_back_.begin(), write_back_.end());
         for (; iter != write_back_.end(); ++iter) {
             Data *d = *iter;
-            if (read_unique.find(d) == read_unique.end()) {
+            if (read_lids.contains(d->logical_id())) {
                 flush.push_back(d);
             }
         }
@@ -89,7 +93,7 @@ void CacheObject::Read(const DataArray &read_set,
         Data *d = read_set[i];
         if (!pids_.contains(d->physical_id())) {
             diff.push_back(d);
-            d->UpdateData();
+            d->UpdateData(false);
         }
     }
     if (read_all_or_none) {
@@ -137,8 +141,9 @@ void CacheObject::FlushCache() {
     write_back_.clear();
 }
 
-void CacheObject::PullIntoData(Data *d) {
-    AcquireAccess(EXCLUSIVE);
+void CacheObject::PullIntoData(Data *d, bool lock_co) {
+    if (lock_co)
+        AcquireAccess(EXCLUSIVE);
     if (write_back_.find(d) == write_back_.end()) {
         dbg(DBG_ERROR, "Write back set does not contain data that needs to be pulled\n");
         exit(-1);
@@ -148,7 +153,9 @@ void CacheObject::PullIntoData(Data *d) {
     GeometricRegion dreg = d->region();
     WriteFromCache(write, dreg);
     d->clear_dirty_cache_object();
-    ReleaseAccess();
+    write_back_.erase(d);
+    if (lock_co)
+        ReleaseAccess();
 }
 
 CacheObject *CacheObject::CreateNew(const GeometricRegion &app_object_region) const {
@@ -167,7 +174,7 @@ GeometricRegion CacheObject::app_object_region() const {
 void CacheObject::AcquireAccess(CacheAccess access) {
     if (users_ != 0 && (access == EXCLUSIVE || access_ == EXCLUSIVE)) {
         dbg(DBG_ERROR, "Error acquiring cache object!!\n");
-        exit(-1);
+        assert(false);
     }
     access_ = access;
     users_++;
@@ -211,25 +218,22 @@ void CacheObject::SetUpData(Data *d) {
         pids_.remove(element_map_[lid]);
     element_map_[lid] = pid;
     pids_.insert(pid);
+    data_.insert(d);
 }
 
 void CacheObject::UnsetData(Data *d) {
     pids_.remove(d->physical_id());
     element_map_.erase(d->logical_id());
+    data_.erase(d);
 }
 
 void CacheObject::InvalidateCacheObject() {
-    // TODO(Chinmayee): Handle this again during write back implementation
-    Write(app_object_region_, false);
-    if (!write_back_.empty()) {
-        dbg(DBG_ERROR, "Error setting up write, still need to flush out data\n");
-        dbg(DBG_ERROR, "Write back still contains %i items\n", write_back_.size());
-        dbg(DBG_ERROR, "Cache type : %s , region : %s \n",
-                type().c_str(), app_object_region().toString().c_str());
-        exit(-1);
+    std::set<Data *> temp(data_.begin(), data_.end());
+    std::set<Data *>::iterator iter = temp.begin();
+    for (; iter != temp.end(); ++iter) {
+        Data *d = *iter;
+        d->UnsetCacheObjectDataMapping(this);
     }
-    element_map_.clear();
-    pids_.clear();
 }
 
 distance_t CacheObject::GetDistance(const DataArray &data_set) const {

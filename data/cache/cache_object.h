@@ -72,7 +72,7 @@ class CacheObject {
         void Write(const GeometricRegion &reg, bool release = true);
         void FlushDiffCache(const DataArray &diff);
         void FlushCache();
-        void PullIntoData(Data *d);
+        void PullIntoData(Data *d, bool lock_co);
 
         virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
 
@@ -87,6 +87,8 @@ class CacheObject {
         void SetUpWrite(const DataArray &write_set);
         void SetUpData(Data *d);
         void UnsetData(Data *d);
+
+        // Use with care
         void InvalidateCacheObject();
 
         bool IsAvailable(CacheAccess access) const;
@@ -105,8 +107,10 @@ class CacheObject {
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on
          * physical id only.
-         * TODO(chinmayee): change this later to use logical id & version
+         * TODO(Chinmayee): change this later to use logical id & version
          * information.*/
+        // TODO(Chinmayee): change this to use pid-data map.
+        std::set<Data *> data_;
         PIDSet pids_;
 
         // TODO(Chinmayee): change this to region-pid map (because of

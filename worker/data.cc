@@ -115,9 +115,9 @@ void Data::UnsetCacheObjectDataMapping(CacheObject *co) {
   co->UnsetData(this);
 }
 
-void Data::UpdateData() {
+void Data::UpdateData(bool lock_co) {
   if (dirty_cache_object_)
-    dirty_cache_object_->PullIntoData(this);
+    dirty_cache_object_->PullIntoData(this, lock_co);
   if (dirty_cache_object_ != NULL) {
     dbg(DBG_ERROR, "Data is still not in sync with cache!!\n");
     exit(-1);

@@ -63,6 +63,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     // get time, dt, frame from the parameters.
     InitConfig init_config;
     init_config.use_cache = true;
+    init_config.clear_scratch = true;
     init_config.set_boundary_condition = false;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
@@ -89,9 +90,9 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     dbg(APP_LOG, "Syncing neg removed particles...\n");
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+
     example->Save_To_Nimbus(this, da, init_config.frame + 1);
     DestroyExampleAndDriver(example, driver);
-
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }
 

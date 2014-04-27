@@ -183,8 +183,10 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
         dbg(DBG_WARN, "\n--- Merging %i of %i particles\n", diff.size(), read_set.size());
         final_read = diff;
     } else {
+        dbg(DBG_WARN, "\n--- Diff is %i, reading all %i particles\n", diff.size(), read_set.size());
         final_read = read_set;
-        InvalidateCacheObject();
+        FlushCache();
+        this->InvalidateCacheObject();
     }
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
