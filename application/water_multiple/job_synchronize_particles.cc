@@ -172,7 +172,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
       cm->GetAppObject(read_inner, write,
           array_outer,
           application::kCachePLE,
-          nimbus::EXCLUSIVE, true, true);
+          nimbus::EXCLUSIVE, false, true);
 
     CacheParticleLevelsetEvolution<T> *cache_ple =
         dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_obj);
@@ -205,7 +205,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     // TODO(Chinmayee): get rid off flush call once delete option is available.
     // Flush call is needed since we are not merging immediately, but clearning
     // cache object before reading in the particles.
-    cache_ple->FlushCache();
+    // cache_ple->FlushCache();
     // TODO(Chinmayee): get rid of all inner statements once delete is
     // implemented
     Translator::ReadParticles(enlarge, shift, read_inner_p, particle_levelset, scale, true);
