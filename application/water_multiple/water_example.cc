@@ -64,8 +64,6 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     cache_psi_d = NULL;
     cache_ple   = NULL;
     create_destroy_ple = true;
-    flush_shared_particles_write = false;
-    clear_ghost_particles_write = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -101,8 +99,6 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
     create_destroy_ple = true;
-    flush_shared_particles_write = false;
-    clear_ghost_particles_write = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -140,8 +136,6 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
     create_destroy_ple = false;
-    flush_shared_particles_write = false;
-    clear_ghost_particles_write = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
 }
@@ -712,55 +706,21 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           application::GetWriteData(*job, APP_NEG_PARTICLES, da, &write_set, false);
           application::GetWriteData(*job, APP_POS_REM_PARTICLES, da, &write_set, false);
           application::GetWriteData(*job, APP_NEG_REM_PARTICLES, da, &write_set, false);
-          if (flush_shared_particles_write && clear_ghost_particles_write) {
-            nimbus::DataArray ghost_data;
-            nimbus::DataArray shared_data;
-            nimbus::GeometricRegion global_region(application::kDefaultRegion);
-             nimbus::GeometricRegion inner(array_reg_central.NewEnlarged(-3));
-            nimbus::int_dimension_t x = local_region.x();
-            nimbus::int_dimension_t y = local_region.y();
-            nimbus::int_dimension_t z = local_region.z();
-            nimbus::int_dimension_t dx = local_region.dx();
-            nimbus::int_dimension_t dy = local_region.dy();
-            nimbus::int_dimension_t dz = local_region.dz();
-            if (local_region.x() == global_region.x()) {
-                x -= 3;
-                dx += 3;
+
+          // TODO(Chinmayee): clean this once we have app object groups
+          if (data_config.GetFlag(DataConfig::FLUSH_ALL_SHARED_PARTICLES)) {
+            nimbus::GeometricRegion inner_reg(
+                array_reg_central.NewEnlarged(-application::kGhostNum));
+            nimbus::DataArray shared;
+            for (size_t i = 0; i < write_set.size(); ++i) {
+              nimbus::Data *d = write_set[i];
+              nimbus::GeometricRegion dr = d->region();
+              if (!inner_reg.Covers(&dr)) {
+                shared.push_back(d);
+              }
             }
-            if (local_region.x() + local_region.dx() ==
-                global_region.x() + global_region.dx()) {
-                dx += 3;
-            }
-            if (local_region.y() == global_region.y()) {
-                y -= 3;
-                dy += 3;
-            }
-            if (local_region.y() + local_region.dy() ==
-                global_region.y() + global_region.dy()) {
-                dy += 3;
-            }
-            if (local_region.z() == global_region.z()) {
-                z -= 3;
-                dz += 3;
-            }
-            if (local_region.z() + local_region.dz() ==
-                global_region.z() + global_region.dz()) {
-                dz += 3;
-            }
-            nimbus::GeometricRegion wgb_region(x, y, z, dx, dy, dz);
-            for (size_t k = 0; k < write_set.size(); ++k) {
-              nimbus::GeometricRegion dreg = write_set[k]->region();
-              if (!wgb_region.Covers(&dreg))
-                ghost_data.push_back(write_set[k]);
-              if (!inner.Covers(&dreg))
-                shared_data.push_back(write_set[k]);
-            }
-            cache_ple->WriteImmediately(shared_data, array_reg_outer, false);
-            cache_ple->InvalidateCacheObject(ghost_data);
-            //cache_ple->ReleaseAccess();
-          }
-          else {
-            //cache_ple->Write(array_reg_outer, true);
+            cache_ple->WriteImmediately(shared, array_reg_outer, false);
+            cache_ple->InvalidateCacheObject(shared);
           }
           cache_ple->WriteImmediately(write_set, array_reg_outer, true);
           cache_ple = NULL;

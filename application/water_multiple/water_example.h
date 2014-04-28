@@ -102,8 +102,6 @@ public:
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
     bool create_destroy_ple;
-    bool flush_shared_particles_write;
-    bool clear_ghost_particles_write;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,

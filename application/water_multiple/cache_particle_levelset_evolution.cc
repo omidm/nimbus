@@ -169,7 +169,7 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
     dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
     bool merge = false;
     nimbus::DataArray final_read = read_set;
-    //dbg(DBG_WARN, "--- Diff is %i\n", diff.size());
+    dbg(DBG_WARN, "--- Diff is %i\n", diff.size());
     //bool merge = true;
     //// This is kind of a hack right now. Clean this up later.
     //if (all_lids_diff) {
@@ -211,10 +211,14 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
             neg_rem.push_back(d);
         }
     }
-    Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true, merge);
-    Translator::ReadParticles(enlarge_, shift_, neg, particle_levelset, scale_, false, merge);
-    Translator::ReadRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true, merge);
-    Translator::ReadRemovedParticles(enlarge_, shift_, neg_rem, particle_levelset, scale_, false, merge);
+    if (!pos.empty())
+        Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true, merge);
+    if (!neg.empty())
+        Translator::ReadParticles(enlarge_, shift_, neg, particle_levelset, scale_, false, merge);
+    if (!pos_rem.empty())
+        Translator::ReadRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true, merge);
+    if (!neg_rem.empty())
+        Translator::ReadRemovedParticles(enlarge_, shift_, neg_rem, particle_levelset, scale_, false, merge);
 }
 
 template<class TS> void CacheParticleLevelsetEvolution<TS>::

@@ -72,7 +72,6 @@ class CacheObject {
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
         void WriteImmediately(const DataArray &write_set, const GeometricRegion &reg, bool release);
         void Write(const GeometricRegion &reg, bool release = true);
-        void FlushCacheData(const DataArray &diff);
         void FlushCache();
         void PullIntoData(Data *d, bool lock_co);
 
@@ -98,6 +97,8 @@ class CacheObject {
         distance_t GetDistance(const DataArray &data_set) const;
 
     private:
+        void FlushCacheData(const DataArray &diff);
+
         std::string type_;
         GeometricRegion app_object_region_;
 

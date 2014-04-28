@@ -47,6 +47,8 @@
 
 namespace nimbus {
 
+static std::string cphi7 = "phi";
+
 CacheObject::CacheObject(std::string type,
                          const GeometricRegion &app_object_region)
      : type_(type),
@@ -73,26 +75,6 @@ void CacheObject::Read(const DataArray &read_set,
         dbg(DBG_ERROR, "Cache object being shared!");
         exit(-1);
     }
-    if (!write_back_.empty()) {
-        DataArray flush;
-        // TODO(Chinmayee): this is terrible. we cannot change to region
-        // because of particles (4 different types of particles share a
-        // region). To change to region, we need a group type instead of a
-        // simple cache object.
-        LIDSet read_lids;
-        for (size_t k = 0; k < read_set.size(); ++k) {
-            Data *dd = read_set[k];
-            read_lids.insert(dd->logical_id());
-        }
-        std::set<Data *>::iterator iter = write_back_.begin();
-        for (; iter != write_back_.end(); ++iter) {
-            Data *d = *iter;
-            if (read_lids.contains(d->logical_id())) {
-                flush.push_back(d);
-            }
-        }
-        FlushCacheData(flush);
-    }
     DataArray diff;
     bool all_lids_diff = true;
     for (size_t i = 0; i < read_set.size(); ++i) {
@@ -104,13 +86,35 @@ void CacheObject::Read(const DataArray &read_set,
         if (element_map_.find(d->logical_id()) != element_map_.end())
             all_lids_diff = false;
     }
+    if (diff.empty())
+        return;
     if (read_all_or_none) {
-        if (!diff.empty())
-            ReadDiffToCache(read_set, diff, reg, all_lids_diff);
+        // TODO(Chinmayee): should get rid of this after the delete
+        // particles call is implemented successfully
+        FlushCache();
+        ReadDiffToCache(read_set, diff, reg, all_lids_diff);
     } else {
-        dbg(DBG_WARN, "\n--- Reading %i out of %i\n", diff.size(), read_set.size());
-        if (!diff.empty())
-            ReadToCache(diff, reg);
+        if (!write_back_.empty()) {
+            DataArray flush;
+            // TODO(Chinmayee): this is terrible. we cannot change to region
+            // because of particles (4 different types of particles share a
+            // region). To change to region, we need a group type instead of a
+            // simple cache object.
+            LIDSet read_lids;
+            for (size_t k = 0; k < diff.size(); ++k) {
+                Data *dd = diff[k];
+                read_lids.insert(dd->logical_id());
+            }
+            std::set<Data *>::iterator iter = write_back_.begin();
+            for (; iter != write_back_.end(); ++iter) {
+                Data *d = *iter;
+                if (read_lids.contains(d->logical_id())) {
+                    flush.push_back(d);
+                }
+            }
+            FlushCacheData(flush);
+        }
+        ReadToCache(diff, reg);
     }
 }
 
@@ -130,10 +134,8 @@ void CacheObject::WriteImmediately(const DataArray &write_set,
     }
     write_region_ = reg;
     FlushCacheData(final_write);
-    dbg(DBG_WARN, "Flushed %i data to %s\n", final_write.size(), type().c_str());
     if (release)
         ReleaseAccess();
-    dbg(DBG_WARN, "Write back left %i pid size %i\n", write_back_.size(), pids_.size());
 }
 
 void CacheObject::Write(const GeometricRegion &reg, bool release) {
@@ -221,6 +223,7 @@ void CacheObject::SetUpRead(const DataArray &read_set,
             // TODO(Chinmayee): this is broken. Use physical data map at the
             // worker if this really needs to be taken care of.
             Data *d = read_set[i];
+            d->UpdateData(false);
             d->UnsetCacheObjectDataMapping(this);
         }
     }

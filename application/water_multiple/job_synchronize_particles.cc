@@ -41,9 +41,9 @@
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_utils.h"
-#include "application/water_multiple/water_driver.h"
-#include "application/water_multiple/water_example.h"
+#include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
@@ -63,8 +63,6 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     // get time, dt, frame from the parameters.
     InitConfig init_config;
     init_config.use_cache = true;
-    init_config.clear_shared_particles_read = true;
-    init_config.set_boundary_condition = false;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());
@@ -74,25 +72,132 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         init_config.frame, init_config.time, dt);
 
     // initializing the example and driver with state and configuration variables
-    PhysBAM::WATER_EXAMPLE<TV> *example;
-    PhysBAM::WATER_DRIVER<TV> *driver;
-    typedef application::DataConfig DataConfig;
-    DataConfig data_config;
-    assert(da.size() > 0);
-    dbg(APP_LOG, "Syncing over region = %s\n", init_config.local_region.toString().c_str());
-    data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
-    dbg(APP_LOG, "Syncing pos particles...\n");
-    data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
-    dbg(APP_LOG, "Syncing neg particles...\n");
-    data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
-    dbg(APP_LOG, "Syncing pos removed particles...\n");
-    data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-    dbg(APP_LOG, "Syncing neg removed particles...\n");
-    InitializeExampleAndDriver(init_config, data_config,
-                               this, da, example, driver);
 
-    example->Save_To_Nimbus(this, da, init_config.frame + 1);
-    DestroyExampleAndDriver(example, driver);
+    nimbus::GeometricRegion array_inner(
+            init_config.local_region.NewEnlarged(-kGhostNum));
+    nimbus::GeometricRegion array_outer(
+            init_config.local_region.NewEnlarged(kGhostNum));
+
+    nimbus::DataArray readp, readn, readpr, readnr;
+    nimbus::DataArray write;
+
+    const std::string pp_string = std::string(APP_POS_PARTICLES);
+    GetReadData(*this, pp_string, da, &readp);
+    GetWriteData(*this, pp_string, da, &write, false);
+    const std::string np_string = std::string(APP_NEG_PARTICLES);
+    GetReadData(*this, np_string, da, &readn);
+    GetWriteData(*this, np_string, da, &write, false);
+    const std::string prp_string = std::string(APP_POS_REM_PARTICLES);
+    GetReadData(*this, prp_string, da, &readpr);
+    GetWriteData(*this, prp_string, da, &write, false);
+    const std::string nrp_string = std::string(APP_NEG_REM_PARTICLES);
+    GetReadData(*this, nrp_string, da, &readnr);
+    GetWriteData(*this, nrp_string, da, &write, false);
+
+    // read_inner. Simply delete particles outside.
+    nimbus::DataArray read_inner, read_outer,
+        read_inner_p, read_inner_n,
+        read_inner_pr, read_inner_nr,
+        read_outer_p, read_outer_n,
+        read_outer_pr, read_outer_nr;
+
+    for (size_t i = 0; i < readp.size(); ++i) {
+        nimbus::Data *d = readp[i];
+        nimbus::GeometricRegion dr = d->region();
+        if (array_inner.Covers(&dr)) {
+            read_inner.push_back(d);
+            read_inner_p.push_back(d);
+        } else {
+            read_outer.push_back(d);
+            read_outer_p.push_back(d);;
+        }
+    }
+    for (size_t i = 0; i < readn.size(); ++i) {
+        nimbus::Data *d = readn[i];
+        nimbus::GeometricRegion dr = d->region();
+        if (array_inner.Covers(&dr)) {
+            read_inner.push_back(d);
+            read_inner_n.push_back(d);
+    } else {
+            read_outer.push_back(d);
+            read_outer_n.push_back(d);
+        }
+    }
+    for (size_t i = 0; i < readpr.size(); ++i) {
+        nimbus::Data *d = readpr[i];
+        nimbus::GeometricRegion dr = d->region();
+        if (array_inner.Covers(&dr)) {
+            read_inner.push_back(d);
+            read_inner_pr.push_back(d);
+    } else {
+            read_outer.push_back(d);
+            read_outer_pr.push_back(d);
+        }
+    }
+    for (size_t i = 0; i < readnr.size(); ++i) {
+        nimbus::Data *d = readnr[i];
+        nimbus::GeometricRegion dr = d->region();
+        if (array_inner.Covers(&dr)) {
+            read_inner.push_back(d);
+            read_inner_nr.push_back(d);
+    } else {
+            read_outer.push_back(d);
+            read_outer_nr.push_back(d);
+        }
+    }
+
+    nimbus::CacheManager *cm = GetCacheManager();
+    dbg(DBG_WARN, "\n--- Sync particles for region %s, requesting read %i, write %i\n",
+        init_config.local_region.toString().c_str(), read_inner.size(), write.size());
+    nimbus::CacheObject *cache_obj =
+      cm->GetAppObject(read_inner, write,
+          array_outer,
+          application::kCachePLE,
+          nimbus::EXCLUSIVE, true, true);
+
+    CacheParticleLevelsetEvolution<T> *cache_ple =
+        dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_obj);
+    assert(cache_ple != NULL);
+
+    PhysBAM::PARTICLE_LEVELSET_EVOLUTION_UNIFORM<PhysBAM::GRID<TV> >
+        *particle_levelset_evolution = cache_ple->data();
+    PhysBAM::PARTICLE_LEVELSET_UNIFORM<PhysBAM::GRID<TV> >
+        *particle_levelset = &particle_levelset_evolution->particle_levelset;
+
+    typedef typename nimbus::TranslatorPhysBAM<T> Translator;
+    nimbus::GeometricRegion local_region = init_config.local_region;
+    nimbus::GeometricRegion global_region = init_config.global_region;
+    nimbus::GeometricRegion enlarge(1-kGhostNum,
+                                    1-kGhostNum,
+                                    1-kGhostNum,
+                                    local_region.dx()+2*kGhostNum,
+                                    local_region.dy()+2*kGhostNum,
+                                    local_region.dz()+2*kGhostNum);
+    nimbus::Coord shift;
+    shift.x = local_region.x() - global_region.x();
+    shift.y = local_region.y() - global_region.y();
+    shift.z = local_region.z() - global_region.z();
+    int scale = global_region.dx();
+
+    dbg(DBG_WARN, "--- inner_p %i, inner_n %i, outer_p %i, outer_n %i\n",
+            read_inner_p.size(), read_inner_n.size(),
+            read_outer_p.size(), read_outer_n.size());
+
+    // TODO(Chinmayee): get rid of all inner statements once delete is
+    // implemented
+    Translator::ReadParticles(enlarge, shift, read_inner_p, particle_levelset, scale, true);
+    Translator::ReadParticles(enlarge, shift, read_inner_n, particle_levelset, scale, false);
+    Translator::ReadRemovedParticles(enlarge, shift, read_inner_pr, particle_levelset, scale, true);
+    Translator::ReadRemovedParticles(enlarge, shift, read_inner_nr, particle_levelset, scale, false);
+    Translator::ReadParticles(enlarge, shift, read_outer_p, particle_levelset, scale, true, true);
+    Translator::ReadParticles(enlarge, shift, read_outer_n, particle_levelset, scale, false, true);
+    Translator::ReadRemovedParticles(enlarge, shift, read_outer_pr, particle_levelset, scale, true, true);
+    Translator::ReadRemovedParticles(enlarge, shift, read_outer_nr, particle_levelset, scale, false, true);
+
+    cache_ple->WriteImmediately(write, array_outer, true);
+
+    dbg(APP_LOG, "Finish translating particles.\n");
+
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }
 

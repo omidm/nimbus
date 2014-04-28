@@ -261,20 +261,20 @@ void GetAppCacheObjects(
           array_reg_outer_3,
           application::kCachePLE,
           nimbus::EXCLUSIVE, true, true);
-    cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<float> *>(cache_obj);
-    // TODO(Chinmayee): This is terrible!! Fix this after OSDI, with cache
-    // object groups.
-    if (init_config.clear_shared_particles_read) {
-      nimbus::GeometricRegion inner(array_reg.NewEnlarged(-3));
-      nimbus::DataArray shared_data;
-      for (size_t k = 0; k < read.size(); k++) {
-        nimbus::GeometricRegion dreg = read[k]->region();
-        if (!inner.Covers(&dreg))
-          shared_data.push_back(read[k]);
-      }
-      cache->ple->InvalidateCacheObject(shared_data);
-    }
+    cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_obj);
     assert(cache->ple != NULL);
+
+    if (init_config.clear_read_shared_particles) {
+      nimbus::GeometricRegion inner_reg(array_reg.NewEnlarged(-3));
+      nimbus::DataArray shared;
+      for (size_t k = 0; k < read.size(); ++k) {
+        nimbus::Data *d = read[k];
+        nimbus::GeometricRegion dr = d->region();
+        if (!inner_reg.Covers(&dr))
+          shared.push_back(d);
+      }
+      cache->ple->InvalidateCacheObject(shared);
+    }
     dbg(APP_LOG, "Finish translating particles.\n");
   }
 }
@@ -312,8 +312,6 @@ bool InitializeExampleAndDriver(
         init_config.local_region.dx(),
         init_config.local_region.dy(),
         init_config.local_region.dz());
-    example->clear_ghost_particles_write = init_config.clear_ghost_particles_write;
-    example->flush_shared_particles_write = init_config.flush_shared_particles_write;
     // physbam intiialization
     example->Initialize_Grid(
         TV_INT(init_config.local_region.dx(),
