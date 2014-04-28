@@ -73,6 +73,7 @@ void WorkerThreadFinish::Run() {
 }
 
 void WorkerThreadFinish::ProcessJob(Job* job) {
+  /*
   DataArray daw;
   IDSet<physical_data_id_t> write = job->write_set();
   IDSet<physical_data_id_t>::IDSetIter iter;
@@ -94,6 +95,7 @@ void WorkerThreadFinish::ProcessJob(Job* job) {
       d->set_version(version);
     }
   }
+  */
 
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());

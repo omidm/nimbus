@@ -62,10 +62,14 @@ class WorkerManager {
       Log* log, Log* version_log, Log* data_hash_log,
       HighResolutionTimer* timer);
 
-  Job* PullComputationJob(WorkerThread* worker_thread);
+  // Computation job: computation-intensive job.
+  // Finish job: the process happening at the end of a job.
+  // Fast job: non-computation-intensive job.
+
+  Job* NextComputationJobToRun(WorkerThread* worker_thread);
+
   bool PushJob(Job* job);
   bool PushFinishJob(Job* job);
-
   bool PullFinishJobs(WorkerThread* worker_thread,
                       std::list<Job*>* list_buffer);
   bool PullFastJobs(WorkerThread* worker_thread,
@@ -73,12 +77,10 @@ class WorkerManager {
 
   bool SendCommand(SchedulerCommand* command);
 
+  // Starts all the worker threads and the scheduling thread.
   bool StartWorkerThreads();
-  static void* ThreadEntryPoint(void* parameters);
 
-  void ScheduleProcessNewJob();
-  void ScheduleProcessNeedJob();
-
+  // Configuration for the number of threads used.
   int computation_thread_num;
   int fast_thread_num;
 
@@ -87,21 +89,49 @@ class WorkerManager {
   Worker* worker_;
 
  private:
-  std::list<WorkerThread*> worker_thread_list;
+  // Thread scheduling algorithm.
+  void ScheduleComputationJobs();
+
+  pthread_mutex_t scheduling_needed_lock_;
+  pthread_cond_t scheduling_needed_cond_;
+  // Protected by scheduling_needed_lock_.
+  bool scheduling_needed_;
+  // Triggers the scheduling algorithm.
+  void TriggerScheduling();
+
+  std::list<WorkerThread*> worker_thread_list_;
+  bool LaunchThread(WorkerThread* worker_thread);
+  // Entry point for each worker thread.
+  static void* ThreadEntryPoint(void* parameters);
+
+  pthread_t scheduling_id_;
+  // Entry point for the scheduling thread.
+  static void* SchedulingEntryPoint(void* parameters);
+
+  pthread_mutex_t scheduling_critical_section_lock_;
 
   pthread_mutex_t computation_job_queue_lock_;
-  pthread_cond_t computation_job_queue_any_cond_;
+  // Protected by computation_job_queue_lock.
   std::list<Job*> computation_job_list_;
+
+  std::list<Job*> computation_job_to_schedule_list_;
 
   pthread_mutex_t finish_job_queue_lock_;
   pthread_cond_t finish_job_queue_any_cond_;
+  // Protected by finish_job_queue_lock_.
   std::list<Job*> finish_job_list_;
 
   pthread_mutex_t fast_job_queue_lock_;
   pthread_cond_t fast_job_queue_any_cond_;
+  // Protected by fast_job_queue_lock_.
   std::list<Job*> fast_job_list_;
 
-  int64_t processed_computation_job_count_;
+  // Measures running states of the worker.
+  int64_t dispatched_computation_job_count_;
+  int64_t dispatched_finish_job_count_;
+  int64_t dispatched_fast_job_count_;
+  int idle_computation_threads_;
+  int64_t ready_jobs_count_;
 
   // Logging data structures.
   bool log_ready_;

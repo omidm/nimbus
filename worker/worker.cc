@@ -49,6 +49,7 @@
 
 #define MAX_PARALLEL_JOB 10
 #define MULTITHREADED_WORKER false
+#define SCHEDULER_COMMAND_GROUP_QUOTA 10
 
 using boost::hash;
 
@@ -103,29 +104,30 @@ void Worker::WorkerCoreProcessor() {
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
-    // Batching job done command so that we can be faster.  --quhang
-    if (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
-      IDSet<job_id_t> remove_set;
-      while (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
-        dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
+    int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
+    IDSet<job_id_t> remove_set;
+    while (comm != NULL) {
+      dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
+      if (comm->type() == SchedulerCommand::JOB_DONE) {
         remove_set.insert(
             reinterpret_cast<JobDoneCommand*>(comm)->job_id().elem());
-        delete comm;
-        comm = client_->receiveCommand();
+      } else {
+        ProcessSchedulerCommand(comm);
       }
+      delete comm;
+      --quota;
+      if (quota == 0) {
+        break;
+      }
+      comm = client_->receiveCommand();
+    }
+    if (remove_set.size() != 0) {
       JobList::iterator iter;
-      for (iter = blocked_jobs_.begin();
-           iter != blocked_jobs_.end();
-           iter++) {
+      for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end(); iter++) {
         IDSet<job_id_t> req = (*iter)->before_set();
         req.remove(remove_set);
         (*iter)->set_before_set(req);
       }
-    }  // Finish batching job done command.
-    if (comm != NULL) {
-      dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
-      ProcessSchedulerCommand(comm);
-      delete comm;
     }
 
     ScanBlockedJobs();
@@ -151,7 +153,7 @@ void Worker::ScanBlockedJobs() {
       (*iter)->set_wait_time(wait_time);
 #endif  // MUTE_LOG
 
-      blocked_jobs_.erase(iter++);
+      iter = blocked_jobs_.erase(iter);
     } else {
       ++iter;
     }
@@ -167,7 +169,7 @@ void Worker::ScanPendingTransferJobs() {
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_data_version(version);
       ready_jobs_.push_back(*iter);
-      pending_transfer_jobs_.erase(iter++);
+      iter = pending_transfer_jobs_.erase(iter);
     } else {
       ++iter;
     }
