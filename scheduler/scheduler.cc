@@ -505,6 +505,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     if (!job->vmap_read_in()->query_entry(l_id, &version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
           l_id, job->job_name().c_str());
+      exit(-1);
     }
   }
 
@@ -514,6 +515,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
           l_id, job->job_name().c_str());
+      exit(-1);
     }
   }
 
@@ -738,9 +740,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
   GetWorkerToAssignJob(job, worker);
 
   bool prepared_data = true;
-  IDSet<logical_data_id_t> union_set = job->union_set();
-  IDSet<logical_data_id_t>::IDSetIter it;
-  for (it = union_set.begin(); it != union_set.end(); ++it) {
+  IDSet<logical_data_id_t>::ConstIter it;
+  for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
     if (!PrepareDataForJobAtWorker(job, worker, *it)) {
       prepared_data = false;
       break;
@@ -756,6 +757,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
   } else {
     dbg(DBG_ERROR, "ERROR: could not assign job %s (id: %lu).\n", job->job_name().c_str(), job->job_id()); // NOLINT
     log_assign_.StopTimer();
+    exit(-1);
     return false;
   }
 }

@@ -124,6 +124,7 @@ class JobEntry {
     bool future();
     const IDSet<logical_data_id_t>* read_set_p();
     const IDSet<logical_data_id_t>* write_set_p();
+    const IDSet<logical_data_id_t>* union_set_p();
     const VersionTable* version_table_in_p();
     const VersionTable* version_table_out_p();
     data_version_t version_table_in_query(logical_data_id_t l_id);
