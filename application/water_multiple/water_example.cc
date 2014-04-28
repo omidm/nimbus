@@ -722,7 +722,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
             cache_ple->WriteImmediately(shared, array_reg_outer, false);
             cache_ple->InvalidateCacheObject(shared);
           }
-          cache_ple->WriteImmediately(write_set, array_reg_outer, true);
+          cache_ple->Write(array_reg_outer, true);
           cache_ple = NULL;
       }
     }

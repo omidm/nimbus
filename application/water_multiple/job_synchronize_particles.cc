@@ -183,6 +183,10 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
             read_inner_p.size(), read_inner_n.size(),
             read_outer_p.size(), read_outer_n.size());
 
+    // TODO(Chinmayee): get rid off flush call once delete option is available.
+    // Flush call is needed since we are not merging immediately, but clearning
+    // cache object before reading in the particles.
+    cache_ple->FlushCache();
     // TODO(Chinmayee): get rid of all inner statements once delete is
     // implemented
     Translator::ReadParticles(enlarge, shift, read_inner_p, particle_levelset, scale, true);
@@ -194,7 +198,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::ReadRemovedParticles(enlarge, shift, read_outer_pr, particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(enlarge, shift, read_outer_nr, particle_levelset, scale, false, true);
 
-    cache_ple->WriteImmediately(write, array_outer, true);
+    cache_ple->Write(array_outer, true);
 
     dbg(APP_LOG, "Finish translating particles.\n");
 
