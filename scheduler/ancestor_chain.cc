@@ -117,7 +117,8 @@ bool AncestorChain::MergeTwoAncestorChains(
   }
 
   Chain chain;
-  std::set<job_id_t> already_in_chain;
+  // std::set<job_id_t> already_in_chain;
+  boost::unordered_set<job_id_t> already_in_chain;
 
   size_t diff = deeper->size() - shallower->size();
   Chain::const_reverse_iterator d_iter = deeper->rbegin();
