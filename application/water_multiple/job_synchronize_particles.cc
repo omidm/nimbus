@@ -88,6 +88,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
                                    da, example, driver);
 
         example->Save_To_Nimbus(this, da, init_config.frame + 1);
+        DestroyExampleAndDriver(example, driver);
         return;
     }
 
