@@ -83,7 +83,7 @@ class CacheFaceArray : public nimbus::CacheObject {
         nimbus::GeometricRegion local_region_;
         nimbus::Coord shift_;
         PhysBAMFaceArray *data_;
-        Grid mac_grid;
+        Grid mac_grid_;
 }; // class CacheFaceArray
 
 } // namespace application

@@ -63,7 +63,7 @@ nimbus::Job* JobModifyLevelsetPartOne::Clone() {
 }
 
 void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
-    dbg(APP_LOG, "Executing modify levelset job -- part one\n");
+    dbg(APP_LOG, "--- Executing modify levelset job -- part one\n");
 
     InitConfig init_config;
     init_config.use_cache = true;

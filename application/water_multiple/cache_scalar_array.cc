@@ -63,9 +63,9 @@ CacheScalarArray(std::string type,
       if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
         Range domain = RangeFromRegions<TV>(global_region, local_region_);
         TV_INT count = CountFromRegion(local_region_);
-        mac_grid.Initialize(count, domain, true);
+        mac_grid_.Initialize(count, domain, true);
         data_ = new PhysBAMScalarArray();
-        data_->Resize(mac_grid.Domain_Indices(ghost_width));
+        data_->Resize(mac_grid_.Domain_Indices(ghost_width));
       }
 }
 
@@ -73,14 +73,18 @@ template<class T, class TS> void CacheScalarArray<T, TS>::
 ReadToCache(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &reg) {
     dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.toString().c_str());
-    Translator::template ReadScalarArray<T>(reg, shift_, read_set, data_);
+    nimbus::GeometricRegion app_reg = app_object_region();
+    nimbus::GeometricRegion read_reg = nimbus::GeometricRegion::GetIntersection(reg, app_reg);
+    Translator::template ReadScalarArray<T>(read_reg, shift_, read_set, data_);
 }
 
 template<class T, class TS> void CacheScalarArray<T, TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
     dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.toString().c_str());
-    Translator::template WriteScalarArray<T>(reg, shift_, write_set, data_);
+    nimbus::GeometricRegion app_reg = app_object_region();
+    nimbus::GeometricRegion write_reg = nimbus::GeometricRegion::GetIntersection(reg, app_reg);
+    Translator::template WriteScalarArray<T>(write_reg, shift_, write_set, data_);
 }
 
 template<class T, class TS> nimbus::CacheObject *CacheScalarArray<T, TS>::

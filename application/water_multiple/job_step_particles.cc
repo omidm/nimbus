@@ -64,12 +64,13 @@ nimbus::Job* JobStepParticles::Clone() {
 
 void JobStepParticles::Execute(nimbus::Parameter params,
                         const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing step particles job.\n");
+  dbg(APP_LOG, "--- Executing step particles job.\n");
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
+  init_config.clear_read_shared_particles = true;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -89,6 +90,9 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+  // TODO(Chinmayee): remove this hack when we add object groups, so that we
+  // can change lid-pid map to region-pid map
+  data_config.SetFlag(DataConfig::FLUSH_ALL_SHARED_PARTICLES);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

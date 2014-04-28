@@ -641,18 +641,24 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // mac velocities
     if (cache_fv) {
         dbg(DBG_WARN, "\n--- Writing face velocities back \n");
+        nimbus::DataArray write_set;
+        application::GetWriteData(*job, APP_FACE_VEL, da, &write_set, false);
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
-        cache_fv->Write(array_reg_central, true);
+        cache_fv->WriteImmediately(write_set, array_reg_central, true);
+        //cache_fv->Write(array_reg_central, true);
         cache_fv = NULL;
     }
 
     // mac velocities ghost
     if (cache_fvg) {
         dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
+        nimbus::DataArray write_set;
+        application::GetWriteData(*job, APP_FACE_VEL_GHOST, da, &write_set, false);
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
-        cache_fvg->Write(array_reg_outer, true);
+        cache_fvg->WriteImmediately(write_set, array_reg_outer, true);
+        //cache_fvg->Write(array_reg_outer, true);
         cache_fvg = NULL;
     }
 
@@ -660,25 +666,30 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       // particle leveset quantities
       T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
       // levelset
+      nimbus::DataArray write_set;
+      application::GetWriteData(*job, APP_PHI, da, &write_set, false);
       if (cache_phi3) {
           dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          cache_phi3->Write(array_reg_outer, true);
+          cache_phi3->WriteImmediately(write_set, array_reg_outer, true);
+          //cache_phi3->Write(array_reg_outer, true);
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-          cache_phi7->Write(array_reg_outer_7, true);
+          cache_phi7->WriteImmediately(write_set, array_reg_outer_7, true);
+          //cache_phi7->Write(array_reg_outer_7, true);
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          cache_phi8->Write(array_reg_outer_8, true);
+          cache_phi8->WriteImmediately(write_set, array_reg_outer_8, true);
+          //cache_phi8->Write(array_reg_outer_8, true);
           cache_phi8 = NULL;
       }
       // last unique particle id
@@ -688,51 +699,30 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           sd->set_scalar(particle_levelset.last_unique_particle_id);
       }
       // ** there should not be any accesses to particle levelset after this **
-
-//      // positive particles
-//      const std::string ppstring = std::string(APP_POS_PARTICLES);
-//      if (application::GetTranslatorData(job, ppstring, da, &pdv, application::WRITE_ACCESS)
-//          && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-//        translator.WriteParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, true);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//
-//      // negative particles
-//      const std::string npstring = std::string(APP_NEG_PARTICLES);
-//      if (application::GetTranslatorData(job, npstring, da, &pdv, application::WRITE_ACCESS)
-//          && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-//        translator.WriteParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, false);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//
-//      // Removed positive particles.
-//      const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-//      if (application::GetTranslatorData(job, prpstring, da, &pdv, application::WRITE_ACCESS)
-//          && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-//        translator.WriteRemovedParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, true);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//
-//      // Removed negative particles.
-//      const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-//      if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::WRITE_ACCESS)
-//          && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-//        translator.WriteRemovedParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, false);
-//      }
-//
-//      application::DestroyTranslatorObjects(&pdv);
-
       if (cache_ple) {
           dbg(DBG_WARN, "\n--- Writing particles back \n");
-          cache_ple->Write(array_reg_outer, true);
+          nimbus::DataArray write_set;
+          application::GetWriteData(*job, APP_POS_PARTICLES, da, &write_set, false);
+          application::GetWriteData(*job, APP_NEG_PARTICLES, da, &write_set, false);
+          application::GetWriteData(*job, APP_POS_REM_PARTICLES, da, &write_set, false);
+          application::GetWriteData(*job, APP_NEG_REM_PARTICLES, da, &write_set, false);
+
+          // TODO(Chinmayee): clean this once we have app object groups
+          if (data_config.GetFlag(DataConfig::FLUSH_ALL_SHARED_PARTICLES)) {
+            nimbus::GeometricRegion inner_reg(
+                array_reg_central.NewEnlarged(-application::kGhostNum));
+            nimbus::DataArray shared;
+            for (size_t i = 0; i < write_set.size(); ++i) {
+              nimbus::Data *d = write_set[i];
+              nimbus::GeometricRegion dr = d->region();
+              if (!inner_reg.Covers(&dr)) {
+                shared.push_back(d);
+              }
+            }
+            cache_ple->WriteImmediately(shared, array_reg_outer, false);
+            cache_ple->InvalidateCacheObject(shared);
+          }
+          cache_ple->WriteImmediately(write_set, array_reg_outer, true);
           cache_ple = NULL;
       }
     }
@@ -740,18 +730,24 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // psi_d.
     if (cache_psi_d) {
         dbg(DBG_WARN, "\n--- Writing psi_d back \n");
+        nimbus::DataArray write_set;
+        application::GetWriteData(*job, APP_PSI_D, da, &write_set, false);
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
-        cache_psi_d->Write(array_reg_thin_outer, true);
+        cache_psi_d->WriteImmediately(write_set, array_reg_thin_outer, true);
+        //cache_psi_d->Write(array_reg_thin_outer, true);
         cache_psi_d = NULL;
     }
 
     // psi_n.
     if (cache_psi_n) {
         dbg(DBG_WARN, "\n--- Writing psi_n back \n");
+        nimbus::DataArray write_set;
+        application::GetWriteData(*job, APP_PSI_N, da, &write_set, false);
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
-        cache_psi_n->Write(array_reg_thin_outer, true);
+        cache_psi_n->WriteImmediately(write_set, array_reg_thin_outer, true);
+        //cache_psi_n->Write(array_reg_thin_outer, true);
         cache_psi_n = NULL;
     }
 

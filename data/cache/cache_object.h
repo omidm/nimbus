@@ -65,11 +65,16 @@ class CacheObject {
         virtual void ReadToCache(const DataArray &read_set, const GeometricRegion &reg);
         virtual void ReadDiffToCache(const DataArray &read_set,
                                      const DataArray &diff,
-                                     const GeometricRegion &reg);
+                                     const GeometricRegion &reg,
+                                     bool all_lids_diff);
         void Read(const DataArray &read_set, const GeometricRegion &reg,
                   bool read_all_or_none = false);
         virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
+        void WriteImmediately(const DataArray &write_set, const GeometricRegion &reg, bool release);
         void Write(const GeometricRegion &reg, bool release = true);
+        void FlushCache();
+        void PullIntoData(Data *d, bool lock_co);
+        void RemoveFromWriteBack(Data *d);
 
         virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
 
@@ -82,31 +87,38 @@ class CacheObject {
         void SetUpRead(const DataArray &read_set,
                        bool read_keep_valid);
         void SetUpWrite(const DataArray &write_set);
-        void SetUpCacheObject(Data *d);
-        void UnsetCacheObject(Data *d);
+        void SetUpData(Data *d);
+        void UnsetData(Data *d);
+
+        // Use with care
+        void InvalidateCacheObject(const DataArray &da);
+        void InvalidateCacheObjectComplete();
 
         bool IsAvailable(CacheAccess access) const;
-        distance_t GetDistance(const DataArray &data_set,
-                               CacheAccess access = EXCLUSIVE) const;
+        distance_t GetDistance(const DataArray &data_set) const;
 
     private:
+        void FlushCacheData(const DataArray &diff);
+
         std::string type_;
         GeometricRegion app_object_region_;
 
         CacheAccess access_;
         int users_;
-        bool read_valid_;
-        bool write_valid_;
 
-        DataArray write_back_;
+        GeometricRegion write_region_;
+        std::set<Data *> write_back_;
 
         /* Currently, cache object contains only physical id information.
          * Distance (cost) information and validity checks are based on
          * physical id only.
-         * TODO(chinmayee): change this later to use logical id & version
          * information.*/
-        PIDSet pids_;
+        // TODO(Chinmayee): change this to region-pid map (because of
+        // scratches)
         std::map<logical_data_id_t, physical_data_id_t> element_map_;
+        std::map<logical_data_id_t, Data*> data_map_;
+        std::set<Data *> data_;
+        PIDSet pids_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

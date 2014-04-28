@@ -43,7 +43,9 @@
 
 using namespace nimbus; // NOLINT
 
-Data::Data() {}
+Data::Data() {
+  dirty_cache_object_ = NULL;
+}
 
 Data* Data::Clone() {
   std::cout << "cloning the base data\n";
@@ -94,21 +96,41 @@ void Data::set_version(data_version_t version) {
   version_ = version;
 }
 
-void Data::InvalidateCacheObjects() {
+void Data::InvalidateCacheObjectsDataMapping() {
   std::set<CacheObject *>::iterator iter = cache_objects_.begin();
   for (; iter != cache_objects_.end(); ++iter) {
     CacheObject *c = *iter;
-    c->UnsetCacheObject(this);
+    c->UnsetData(this);
   }
   cache_objects_.clear();
+  if (dirty_cache_object_)
+    dirty_cache_object_->RemoveFromWriteBack(this);
+  dirty_cache_object_ = NULL;
 }
 
-void Data::SetUpCacheObject(CacheObject *co) {
+void Data::SetUpCacheObjectDataMapping(CacheObject *co) {
   cache_objects_.insert(co);
-  co->SetUpCacheObject(this);
+  co->SetUpData(this);
 }
 
-void Data::UnsetCacheObject(CacheObject *co) {
+void Data::UnsetCacheObjectDataMapping(CacheObject *co) {
   cache_objects_.erase(co);
-  co->UnsetCacheObject(this);
+  co->UnsetData(this);
+}
+
+void Data::UpdateData(bool lock_co) {
+  if (dirty_cache_object_)
+    dirty_cache_object_->PullIntoData(this, lock_co);
+  if (dirty_cache_object_ != NULL) {
+    dbg(DBG_ERROR, "Data is still not in sync with cache!!\n");
+    exit(-1);
+  }
+}
+
+void Data::set_dirty_cache_object(CacheObject *co) {
+  dirty_cache_object_ = co;
+}
+
+void Data::clear_dirty_cache_object() {
+  dirty_cache_object_ = NULL;
 }

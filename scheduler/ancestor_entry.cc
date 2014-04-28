@@ -32,44 +32,43 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Job Ancestor Entry.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_CACHE_TABLE_H_
-#define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
+#include "scheduler/ancestor_entry.h"
 
-#include <map>
+using namespace nimbus; // NOLINT
 
-#include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+AncestorEntry::AncestorEntry(job_id_t id,
+    boost::shared_ptr<VersionMap> version_map) {
+  id_ = id;
+  version_map_ = version_map;
+}
 
-namespace nimbus {
+AncestorEntry::AncestorEntry(const AncestorEntry& other) {
+  id_ = other.id_;
+  version_map_ = other.version_map_;
+}
 
-class CacheTable {
-    public:
-        CacheTable();
-        void AddEntry(const GeometricRegion &region,
-                      CacheObject *co);
-        CacheObject *GetClosestAvailable(const GeometricRegion &region,
-                                         const DataArray &read,
-                                         CacheAccess access = EXCLUSIVE);
-        CacheObject *GetAvailable(const GeometricRegion &region,
-                                  CacheAccess access = EXCLUSIVE);
+AncestorEntry::~AncestorEntry() {
+}
 
-    private:
-        int GetMinDistanceIndex(const CacheObjects *objects,
-                                const DataArray &read,
-                                CacheAccess access = EXCLUSIVE) const;
-        typedef std::map<GeometricRegion,
-                         CacheObjects *,
-                         GRComparisonType> Table;
-        Table table_;
-};  // class CacheTable
+job_id_t AncestorEntry::id() const {
+  return id_;
+}
+
+boost::shared_ptr<VersionMap> AncestorEntry::version_map() const {
+  return version_map_;
+}
+
+AncestorEntry& AncestorEntry::operator=(const AncestorEntry& right) {
+  id_ = right.id_;
+  version_map_ = right.version_map_;
+  return (*this);
+}
 
 
-}  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_CACHE_TABLE_H_

@@ -396,6 +396,25 @@ template <class TS> class TranslatorPhysBAM {
             }
         }
 
+        /*
+         * Interface for deleting particles - delete particles corresponding to
+         * the regions covered by da. May change DataArray to a region array
+         * instead.
+         */
+        static void DeleteParticles(
+                const Coord &shift,
+                const DataArray &da,
+                ParticleContainer *particle_container,
+                bool positive) {
+        }
+
+        static void DeleteRemovedParticles(
+                const Coord &shift,
+                const DataArray &da,
+                ParticleContainer *particle_container,
+                bool positive) {
+        }
+
 
         /* Reads the particle data from the PhysicalDataInstances "instances",
          * limited by the corresponding global region calculated from shifting the

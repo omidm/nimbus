@@ -323,6 +323,7 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 
 // TODO(quhang) data exchanger is thread-safe?
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
+  da[0]->UpdateData();
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(),
@@ -375,6 +376,7 @@ RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
+  da[0]->InvalidateCacheObjectsDataMapping();
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
@@ -408,7 +410,8 @@ Job* LocalCopyJob::Clone() {
 }
 
 void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
-  da[1]->InvalidateCacheObjects();
+  da[0]->UpdateData();
+  da[1]->InvalidateCacheObjectsDataMapping();
   da[1]->Copy(da[0]);
   da[1]->set_version(da[0]->version());
 }

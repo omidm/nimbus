@@ -393,6 +393,10 @@ namespace application {
                                                           kRegY2W3CentralWGB[i],
                                                           kRegY2W3Inner[i],
                                                           &write);
+            LoadLogicalIdsInSet(this, &read, kRegY2W3Inner[i],
+                APP_POS_PARTICLES, APP_NEG_PARTICLES,
+                APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+
             job_query.StageJob(SYNCHRONIZE_PARTICLES,
                     step_particles_sync_job_ids[i],
                     read, write,

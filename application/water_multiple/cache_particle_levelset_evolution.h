@@ -67,7 +67,8 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
                                 const nimbus::GeometricRegion &app_region = nimbus::GeometricRegion());
         virtual void ReadDiffToCache(const nimbus::DataArray &read_set,
                                      const nimbus::DataArray &diff,
-                                     const nimbus::GeometricRegion &reg);
+                                     const nimbus::GeometricRegion &reg,
+                                     bool all_lids_diff);
         virtual void WriteFromCache(const nimbus::DataArray &write_set,
                                     const nimbus::GeometricRegion &reg) const;
         virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &ar) const;
@@ -83,9 +84,11 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
         int ghost_width_;
         nimbus::GeometricRegion global_region_;
         nimbus::GeometricRegion local_region_;
+        nimbus::GeometricRegion wgb_region_;
+        nimbus::GeometricRegion inner_region_;
         nimbus::Coord shift_;
         PhysBAMPLE *data_;
-        Grid mac_grid;
+        Grid mac_grid_;
 
         nimbus::GeometricRegion enlarge_;
         int scale_;
