@@ -276,7 +276,7 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
   assert(job->versioned());
-  IDSet<job_id_t> before_set = job->before_set();
+  // IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
 
   // data_version_t v_in, // v_out;
@@ -291,10 +291,12 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     pd_new.set_version(v_out);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
-    before_set.insert(pd.list_job_read());
+    // before_set.insert(pd.list_job_read());
+    job->before_set_p()->insert(pd.list_job_read());
     // become ancestor of last job write if not already ,so that read access
     // is safe for the jobs in list job read cleared by the previous write job - omidm
-    before_set.insert(pd.last_job_write());
+    // before_set.insert(pd.last_job_write());
+    job->before_set_p()->insert(pd.last_job_write());
   }
 
   if (job->read_set_p()->contains(ldo->id())) {
@@ -303,11 +305,12 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     job->vmap_read_in()->query_entry(ldo->id(), &v_in);
     assert(v_in == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
-    before_set.insert(pd.last_job_write());
+    // before_set.insert(pd.last_job_write());
+    job->before_set_p()->insert(pd.last_job_write());
   }
 
   job->set_physical_table_entry(ldo->id(), pd.id());
-  job->set_before_set(before_set);
+  // job->set_before_set(before_set);
 
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);

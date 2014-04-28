@@ -159,6 +159,14 @@ IDSet<job_id_t> JobEntry::before_set() {
   return before_set_;
 }
 
+IDSet<job_id_t>* JobEntry::before_set_p() {
+  return &before_set_;
+}
+
+const IDSet<job_id_t>* JobEntry::before_set_p() const {
+  return &before_set_;
+}
+
 IDSet<job_id_t> JobEntry::after_set() {
   return after_set_;
 }
