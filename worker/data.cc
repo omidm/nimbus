@@ -103,6 +103,9 @@ void Data::InvalidateCacheObjectsDataMapping() {
     c->UnsetData(this);
   }
   cache_objects_.clear();
+  if (dirty_cache_object_)
+    dirty_cache_object_->RemoveFromWriteBack(this);
+  dirty_cache_object_ = NULL;
 }
 
 void Data::SetUpCacheObjectDataMapping(CacheObject *co) {

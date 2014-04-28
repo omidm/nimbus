@@ -43,6 +43,8 @@
 #include "application/water_multiple/parameters.h"
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple/water_driver.h"
+#include "application/water_multiple/water_example.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
@@ -71,7 +73,23 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     dbg(APP_LOG, " Loaded parameters (Frame=%d, Time=%f, dt=%f).\n",
         init_config.frame, init_config.time, dt);
 
-    // initializing the example and driver with state and configuration variables
+
+    if (!kUseCache) {
+        // initializing the example and driver with state and configuration variables
+        PhysBAM::WATER_EXAMPLE<TV> *example;
+        PhysBAM::WATER_DRIVER<TV> *driver;
+        typedef application::DataConfig DataConfig;
+        DataConfig data_config;
+        data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+        data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+        data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+        data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+        InitializeExampleAndDriver(init_config, data_config, this,
+                                   da, example, driver);
+
+        example->Save_To_Nimbus(this, da, init_config.frame + 1);
+        return;
+    }
 
     nimbus::GeometricRegion array_inner(
             init_config.local_region.NewEnlarged(-kGhostNum));
@@ -198,7 +216,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::ReadRemovedParticles(enlarge, shift, read_outer_pr, particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(enlarge, shift, read_outer_nr, particle_levelset, scale, false, true);
 
-    cache_ple->Write(array_outer, true);
+    cache_ple->WriteImmediately(write, array_outer, true);
 
     dbg(APP_LOG, "Finish translating particles.\n");
 

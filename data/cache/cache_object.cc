@@ -92,6 +92,7 @@ void CacheObject::Read(const DataArray &read_set,
         // TODO(Chinmayee): should get rid of this after the delete
         // particles call is implemented successfully
         FlushCache();
+        InvalidateCacheObjectComplete();
         ReadDiffToCache(read_set, diff, reg, all_lids_diff);
     } else {
         if (!write_back_.empty()) {
@@ -112,6 +113,8 @@ void CacheObject::Read(const DataArray &read_set,
                     flush.push_back(d);
                 }
             }
+            // flush ids that will be replaces - same logical id but different
+            // physcial id for all non-particle data
             FlushCacheData(flush);
         }
         ReadToCache(diff, reg);
@@ -185,6 +188,10 @@ void CacheObject::PullIntoData(Data *d, bool lock_co) {
         ReleaseAccess();
 }
 
+void CacheObject::RemoveFromWriteBack(Data *d) {
+    write_back_.erase(d);
+}
+
 CacheObject *CacheObject::CreateNew(const GeometricRegion &app_object_region) const {
     dbg(DBG_ERROR, "CacheObject CreateNew method not imlemented\n");
     return NULL;
@@ -253,8 +260,10 @@ void CacheObject::UnsetData(Data *d) {
     logical_data_id_t lid = d->logical_id();
     physical_data_id_t pid = d->physical_id();
     pids_.remove(pid);
-    element_map_.erase(lid);
-    data_.erase(d);
+    if (pids_.contains(lid)) {
+        element_map_.erase(lid);
+        data_.erase(d);
+    }
 }
 
 void CacheObject::InvalidateCacheObject(const DataArray &da) {
