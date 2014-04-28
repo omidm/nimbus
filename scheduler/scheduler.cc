@@ -97,6 +97,7 @@ void Scheduler::SchedulerCoreProcessor() {
     log_.StartTimer();
     log_assign_.ResetTimer();
     log_table_.ResetTimer();
+    log_allocate_.ResetTimer();
 
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
@@ -108,8 +109,10 @@ void Scheduler::SchedulerCoreProcessor() {
     if (log_.timer() > .01) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.3lf  assign: %2.3lf table: %2.3lf time: %6.3lf",
-          log_.timer(), log_assign_.timer(), log_table_.timer(), log_.GetTime());
+          "loop: %2.3lf  assign: %2.3lf table: %2.3lf allocate: %2.3lf time: %6.3lf",
+          log_.timer(), log_assign_.timer(), log_table_.timer(),
+          log_allocate_.timer(), log_.GetTime());
+
       log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
@@ -275,6 +278,7 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
+  log_allocate_.ResumeTimer();
   assert(job->versioned());
   // IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
@@ -315,6 +319,7 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);
 
+  log_allocate_.StopTimer();
   return true;
 }
 
