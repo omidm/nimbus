@@ -672,24 +672,21 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          cache_phi3->WriteImmediately(write_set, array_reg_outer, true);
-          //cache_phi3->Write(array_reg_outer, true);
+          cache_phi3->Write(array_reg_outer, true);
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           dbg(DBG_WARN, "\n--- Writing levelset 7 back \n");
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-          cache_phi7->WriteImmediately(write_set, array_reg_outer_7, true);
-          //cache_phi7->Write(array_reg_outer_7, true);
+          cache_phi7->Write(array_reg_outer_7, true);
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           dbg(DBG_WARN, "\n--- Writing levelset 8 back \n");
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          cache_phi8->WriteImmediately(write_set, array_reg_outer_8, true);
-          //cache_phi8->Write(array_reg_outer_8, true);
+          cache_phi8->Write(array_reg_outer_8, true);
           cache_phi8 = NULL;
       }
       // last unique particle id
@@ -721,8 +718,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
             }
             cache_ple->WriteImmediately(shared, array_reg_outer, false);
             cache_ple->InvalidateCacheObject(shared);
+            // TODO: clean this after we have delete particles function. Right
+            // now, we need to make sure that inner data is flushed out
+            // correctly.
+            cache_ple->WriteImmediately(write_set, array_reg_outer, false);
           }
-          cache_ple->WriteImmediately(write_set, array_reg_outer, true);
+          cache_ple->Write(array_reg_outer, true);
           cache_ple = NULL;
       }
     }
@@ -734,8 +735,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         application::GetWriteData(*job, APP_PSI_D, da, &write_set, false);
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
-        cache_psi_d->WriteImmediately(write_set, array_reg_thin_outer, true);
-        //cache_psi_d->Write(array_reg_thin_outer, true);
+        cache_psi_d->Write(array_reg_thin_outer, true);
         cache_psi_d = NULL;
     }
 
