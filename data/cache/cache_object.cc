@@ -47,8 +47,6 @@
 
 namespace nimbus {
 
-static std::string cphi7 = "phi";
-
 CacheObject::CacheObject(std::string type,
                          const GeometricRegion &app_object_region)
      : type_(type),
