@@ -539,7 +539,6 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive) {
-
             if (write_set.empty())
                 return;
 
