@@ -721,8 +721,12 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
             }
             cache_ple->WriteImmediately(shared, array_reg_outer, false);
             cache_ple->InvalidateCacheObject(shared);
+            // TODO: clean this after we have delete particles function. Right
+            // now, we need to make sure that inner data is flushed out
+            // correctly.
+            cache_ple->WriteImmediately(write_set, array_reg_outer, false);
           }
-          cache_ple->WriteImmediately(write_set, array_reg_outer, true);
+          cache_ple->Write(array_reg_outer, true);
           cache_ple = NULL;
       }
     }
