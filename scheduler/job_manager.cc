@@ -237,6 +237,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   log_lookup_.ResetTimer();
   log_sterile_.ResetTimer();
   log_nonsterile_.ResetTimer();
+  lookup_count_ = 0;
   while (ResolveDataVersions() > 0) {
     continue;
   }
@@ -244,6 +245,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
       " lookup: " << log_lookup_.timer() <<
+      " lookup_count: " << lookup_count_ <<
       " sterile: " << log_sterile_.timer() <<
       " nonsterile: " << log_nonsterile_.timer() << std::endl;
   }
@@ -320,6 +322,7 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   log_lookup_.ResetTimer();
   log_sterile_.ResetTimer();
   log_nonsterile_.ResetTimer();
+  lookup_count_ = 0;
   while (ResolveDataVersions() > 0) {
     continue;
   }
@@ -327,6 +330,7 @@ size_t JobManager::RemoveObsoleteJobEntries() {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
       " lookup: " << log_lookup_.timer() <<
+      " lookup_count: " << lookup_count_ <<
       " sterile: " << log_sterile_.timer() <<
       " nonsterile: " << log_nonsterile_.timer() << std::endl;
   }
@@ -728,6 +732,7 @@ size_t JobManager::ResolveDataVersions() {
               vmap->set_entry(*itw, version + 1);
             } else {
               log_lookup_.ResumeTimer();
+              lookup_count_++;
               bool found = job->ancestor_chain()->LookUpVersion(*itw, &version);
               log_lookup_.StopTimer();
               if (found) {
@@ -850,6 +855,7 @@ void JobManager::PassDataVersionToJob(
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       data_version_t version;
       log_lookup_.ResumeTimer();
+      lookup_count_++;
       bool found = job->ancestor_chain()->LookUpVersion(*it, &version);
       log_lookup_.StopTimer();
       if (found) {
@@ -865,6 +871,7 @@ void JobManager::PassDataVersionToJob(
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
       log_lookup_.ResumeTimer();
+      lookup_count_++;
       bool found = job->ancestor_chain()->LookUpVersion(it->first, &version);
       log_lookup_.StopTimer();
       if (found) {

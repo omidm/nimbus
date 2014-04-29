@@ -127,6 +127,7 @@ class JobManager {
     Log log_lookup_;
     Log log_sterile_;
     Log log_nonsterile_;
+    size_t lookup_count_;
 
     // bool ResolveJobDataVersions(JobEntry* job);
     // size_t ResolveVersions();
