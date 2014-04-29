@@ -641,24 +641,22 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // mac velocities
     if (cache_fv) {
         dbg(DBG_WARN, "\n--- Writing face velocities back \n");
-        nimbus::DataArray write_set;
-        application::GetWriteData(*job, APP_FACE_VEL, da, &write_set, false);
+        //nimbus::DataArray write_set;
+        //application::GetWriteData(*job, APP_FACE_VEL, da, &write_set, false);
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
-        cache_fv->WriteImmediately(write_set, array_reg_central, true);
-        //cache_fv->Write(array_reg_central, true);
+        cache_fv->Write(array_reg_central, true);
         cache_fv = NULL;
     }
 
     // mac velocities ghost
     if (cache_fvg) {
         dbg(DBG_WARN, "\n--- Writing ghost face velocities back \n");
-        nimbus::DataArray write_set;
-        application::GetWriteData(*job, APP_FACE_VEL_GHOST, da, &write_set, false);
+        //nimbus::DataArray write_set;
+        //application::GetWriteData(*job, APP_FACE_VEL_GHOST, da, &write_set, false);
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
-        cache_fvg->WriteImmediately(write_set, array_reg_outer, true);
-        //cache_fvg->Write(array_reg_outer, true);
+        cache_fvg->Write(array_reg_outer, true);
         cache_fvg = NULL;
     }
 
@@ -666,8 +664,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       // particle leveset quantities
       T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
       // levelset
-      nimbus::DataArray write_set;
-      application::GetWriteData(*job, APP_PHI, da, &write_set, false);
+      //nimbus::DataArray write_set;
+      //application::GetWriteData(*job, APP_PHI, da, &write_set, false);
       if (cache_phi3) {
           dbg(DBG_WARN, "\n--- Writing levelset 3 back \n");
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
@@ -731,8 +729,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // psi_d.
     if (cache_psi_d) {
         dbg(DBG_WARN, "\n--- Writing psi_d back \n");
-        nimbus::DataArray write_set;
-        application::GetWriteData(*job, APP_PSI_D, da, &write_set, false);
+        //nimbus::DataArray write_set;
+        //application::GetWriteData(*job, APP_PSI_D, da, &write_set, false);
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
         cache_psi_d->Write(array_reg_thin_outer, true);
@@ -742,12 +740,11 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // psi_n.
     if (cache_psi_n) {
         dbg(DBG_WARN, "\n--- Writing psi_n back \n");
-        nimbus::DataArray write_set;
-        application::GetWriteData(*job, APP_PSI_N, da, &write_set, false);
+        //nimbus::DataArray write_set;
+        //application::GetWriteData(*job, APP_PSI_N, da, &write_set, false);
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
-        cache_psi_n->WriteImmediately(write_set, array_reg_thin_outer, true);
-        //cache_psi_n->Write(array_reg_thin_outer, true);
+        cache_psi_n->Write(array_reg_thin_outer, true);
         cache_psi_n = NULL;
     }
 
