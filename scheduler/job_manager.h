@@ -123,6 +123,10 @@ class JobManager {
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 
     Log log_version_;
+    Log log_merge_;
+    Log log_lookup_;
+    Log log_sterile_;
+    Log log_nonsterile_;
 
     // bool ResolveJobDataVersions(JobEntry* job);
     // size_t ResolveVersions();
