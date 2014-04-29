@@ -83,7 +83,7 @@ bool SchedulerServer::Initialize() {
 
 bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
                                       size_t maxCommands) {
-  boost::mutex::scoped_lock lock(command_mutex_);
+  boost::mutex::scoped_lock lock(command_queue_mutex_);
   uint32_t pending = received_commands_.size();
   if (pending == 0) {
     return false;
@@ -104,6 +104,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
 
 void SchedulerServer::SendCommand(SchedulerWorker* worker,
                                   SchedulerCommand* command) {
+  boost::mutex::scoped_lock lock(send_command_mutex_);
   SchedulerServerConnection* connection = worker->connection();
   std::string msg = command->toString() + ";";
   dbg(DBG_NET, "Sending command %s.\n", msg.c_str());
@@ -192,7 +193,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       if (SchedulerCommand::GenerateSchedulerCommandChild(
           input, worker_command_table_, command)) {
         dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
-        boost::mutex::scoped_lock lock(command_mutex_);
+        boost::mutex::scoped_lock lock(command_queue_mutex_);
         received_commands_.push_back(command);
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());

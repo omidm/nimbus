@@ -71,6 +71,8 @@ void Scheduler::Run() {
 
   SetupWorkerInterface();
   // SetupUserInterface();
+  // First data manager should be instantiated then job manager, because of
+  // ldo_map pointer that job manager needs to get from data manager.
   SetupDataManager();
   SetupJobManager();
   id_maker_.Initialize(0);
@@ -95,6 +97,7 @@ void Scheduler::SchedulerCoreProcessor() {
     log_.StartTimer();
     log_assign_.ResetTimer();
     log_table_.ResetTimer();
+    log_allocate_.ResetTimer();
 
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
@@ -106,8 +109,10 @@ void Scheduler::SchedulerCoreProcessor() {
     if (log_.timer() > .01) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.3lf  assign: %2.3lf table: %2.3lf time: %6.3lf",
-          log_.timer(), log_assign_.timer(), log_table_.timer(), log_.GetTime());
+          "loop: %2.3lf  assign: %2.3lf table: %2.3lf allocate: %2.3lf time: %6.3lf",
+          log_.timer(), log_assign_.timer(), log_table_.timer(),
+          log_allocate_.timer(), log_.GetTime());
+
       log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
@@ -273,39 +278,48 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
+  log_allocate_.ResumeTimer();
   assert(job->versioned());
-  IDSet<job_id_t> before_set = job->before_set();
+  // IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
 
-  data_version_t v_in, v_out;
-  job->vtable_in()->query_entry(ldo->id(), &v_in);
-  job->vtable_out()->query_entry(ldo->id(), &v_out);
+  // data_version_t v_in, // v_out;
+  // job->vtable_in()->que// ry_entry(ldo->id(), &v_in);
+  // job->vtable_out()->qu// ery_entry(ldo->id(), &v_out);
 
   // Because of the clear_list_job_read the order of if blocks are important.
   if (job->write_set_p()->contains(ldo->id())) {
     // pd_new.set_version(job->version_table_out_query(ldo->id()));
+    data_version_t v_out;
+    job->vmap_write_out()->query_entry(ldo->id(), &v_out);
     pd_new.set_version(v_out);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
-    before_set.insert(pd.list_job_read());
+    // before_set.insert(pd.list_job_read());
+    job->before_set_p()->insert(pd.list_job_read());
     // become ancestor of last job write if not already ,so that read access
     // is safe for the jobs in list job read cleared by the previous write job - omidm
-    before_set.insert(pd.last_job_write());
+    // before_set.insert(pd.last_job_write());
+    job->before_set_p()->insert(pd.last_job_write());
   }
 
   if (job->read_set_p()->contains(ldo->id())) {
     // assert(job->version_table_in_query(ldo->id()) == pd.version());
+    data_version_t v_in;
+    job->vmap_read_in()->query_entry(ldo->id(), &v_in);
     assert(v_in == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
-    before_set.insert(pd.last_job_write());
+    // before_set.insert(pd.last_job_write());
+    job->before_set_p()->insert(pd.last_job_write());
   }
 
   job->set_physical_table_entry(ldo->id(), pd.id());
-  job->set_before_set(before_set);
+  // job->set_before_set(before_set);
 
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);
 
+  log_allocate_.StopTimer();
   return true;
 }
 
@@ -484,12 +498,46 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
+
+
   // data_version_t version = job->version_table_in_query(l_id);
+
+  // data_version_t version;
+  // if (!job->vtable_in()->query_entry(l_id, &version)) {
+  //   dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the context of %s.\n",
+  //       l_id, job->job_name().c_str());
+  // }
+
   data_version_t version;
-  if (!job->vtable_in()->query_entry(l_id, &version)) {
-    dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the context of %s.\n",
-        l_id, job->job_name().c_str());
+  if (reading) {
+    if (!job->vmap_read_in()->query_entry(l_id, &version)) {
+      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
+          l_id, job->job_name().c_str());
+      exit(-1);
+    }
   }
+
+  // Just for checking
+  data_version_t unused_version;
+  if (writing) {
+    if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
+      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
+          l_id, job->job_name().c_str());
+      exit(-1);
+    }
+  }
+
+  // Checking correctness of the new versioning system
+  // data_version_t version_c;
+  // if (reading) {
+  //   assert(job->vmap_read_in()->query_entry(l_id, &version_c));
+  //   assert(version_c == version);
+  // }
+  // if (writing) {
+  //   assert(job->vmap_write_out()->query_entry(l_id, &version_c));
+  //   assert(version_c == (version + 1));
+  // }
+
 
   if (!reading) {
     PhysicalData target_instance;
@@ -700,9 +748,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
   GetWorkerToAssignJob(job, worker);
 
   bool prepared_data = true;
-  IDSet<logical_data_id_t> union_set = job->union_set();
-  IDSet<logical_data_id_t>::IDSetIter it;
-  for (it = union_set.begin(); it != union_set.end(); ++it) {
+  IDSet<logical_data_id_t>::ConstIter it;
+  for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
     if (!PrepareDataForJobAtWorker(job, worker, *it)) {
       prepared_data = false;
       break;
@@ -718,6 +765,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
   } else {
     dbg(DBG_ERROR, "ERROR: could not assign job %s (id: %lu).\n", job->job_name().c_str(), job->job_id()); // NOLINT
     log_assign_.StopTimer();
+    exit(-1);
     return false;
   }
 }
@@ -783,6 +831,7 @@ void Scheduler::SetupDataManager() {
 
 void Scheduler::SetupJobManager() {
   job_manager_ = new JobManager();
+  job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
 }
 
 void Scheduler::LoadWorkerCommands() {

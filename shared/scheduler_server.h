@@ -115,7 +115,8 @@ class SchedulerServer {
 
  private:
   port_t listening_port_;
-  boost::mutex command_mutex_;
+  boost::mutex command_queue_mutex_;
+  boost::mutex send_command_mutex_;
   SchedulerCommandList received_commands_;
   boost::mutex worker_mutex_;
   SchedulerWorkerList workers_;

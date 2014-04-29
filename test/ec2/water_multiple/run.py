@@ -35,7 +35,7 @@ scheduler_ip = ip_addresses[0]
 worker_ips = list(ip_addresses)
 worker_ips.pop(0)
 
-# utils.build_binaries(scheduler_ip);
+utils.build_binaries(scheduler_ip);
 utils.distribute_binaries(scheduler_ip, worker_ips);
  
 # utils.copy_binary_folder_to_hosts(ip_addresses)

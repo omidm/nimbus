@@ -42,6 +42,7 @@
 #define NIMBUS_SHARED_IDSET_H_
 
 #include <boost/tokenizer.hpp>
+#include <boost/unordered_set.hpp>
 #include <sstream> // NOLINT
 #include <iostream> // NOLINT
 #include <string>
@@ -56,9 +57,12 @@ namespace nimbus {
 template<typename T>
 class IDSet {
  public:
-  typedef typename std::list<T> IDSetContainer;
-  typedef typename std::list<T>::iterator IDSetIter;
-  typedef typename std::list<T>::const_iterator ConstIter;
+  // typedef typename std::list<T> IDSetContainer;
+  // typedef typename std::list<T>::iterator IDSetIter;
+  // typedef typename std::list<T>::const_iterator ConstIter;
+  typedef typename boost::unordered_set<T> IDSetContainer;
+  typedef typename boost::unordered_set<T>::iterator IDSetIter;
+  typedef typename boost::unordered_set<T>::const_iterator ConstIter;
 
   IDSet();
   explicit IDSet(const IDSetContainer& ids);
@@ -66,7 +70,7 @@ class IDSet {
   virtual ~IDSet();
 
   // TODO(omidm): remove this obsolete constructor.
-  explicit IDSet(std::string s);
+  // explicit IDSet(std::string s);
 
   bool Parse(const std::string& input);
   virtual std::string toString();
@@ -77,7 +81,7 @@ class IDSet {
   virtual void remove(const IDSet<T>& remove_set);
   virtual void clear();
   virtual bool contains(T entry) const;
-  virtual int size();
+  virtual int size() const;
 
   IDSetIter begin();
   IDSetIter end();

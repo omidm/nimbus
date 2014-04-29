@@ -426,4 +426,9 @@ GeometricRegion DataManager::global_bounding_region() {
   return global_bounding_region_;
 }
 
+
+const std::map<logical_data_id_t, LogicalDataObject*>* DataManager::ldo_map_p() {
+  return &ldo_map_;
+}
+
 }  // namespace nimbus

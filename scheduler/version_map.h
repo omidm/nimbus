@@ -42,6 +42,7 @@
 #define NIMBUS_SCHEDULER_VERSION_MAP_H_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <map>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
@@ -50,9 +51,12 @@ namespace nimbus {
 
 class VersionMap {
   public:
-    typedef std::map<logical_data_id_t, data_version_t> Map;
-    typedef std::map<logical_data_id_t, data_version_t>::iterator Iter;
-    typedef std::map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
+    // typedef std::map<logical_data_id_t, data_version_t> Map;
+    // typedef std::map<logical_data_id_t, data_version_t>::iterator Iter;
+    // typedef std::map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
+    typedef boost::unordered_map<logical_data_id_t, data_version_t> Map;
+    typedef boost::unordered_map<logical_data_id_t, data_version_t>::iterator Iter;
+    typedef boost::unordered_map<logical_data_id_t, data_version_t>::const_iterator ConstIter;
 
     VersionMap();
     VersionMap(const VersionMap& other);

@@ -111,6 +111,8 @@ namespace nimbus {
 
     GeometricRegion global_bounding_region();
 
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p();
+
   private:
     PhysicalObjectMap physical_object_map_;
     LdoIndex ldo_index_;

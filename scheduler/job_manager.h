@@ -113,16 +113,19 @@ class JobManager {
     bool CausingUnwantedSerialization(JobEntry* job,
         const logical_data_id_t& l_id, const PhysicalData& pd);
 
+    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
+
   private:
     Graph<JobEntry, job_id_t> job_graph_;
     // VersionManager version_manager_;
     VersionOperator version_operator_;
     // bool processed_new_job_done_;
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 
     Log log_version_;
 
-    bool ResolveJobDataVersions(JobEntry* job);
-    size_t ResolveVersions();
+    // bool ResolveJobDataVersions(JobEntry* job);
+    // size_t ResolveVersions();
 
     JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;
@@ -130,12 +133,19 @@ class JobManager {
     std::map<job_id_t, JobEntryList> pass_version_;
     std::map<job_id_t, JobEntryList> explore_to_assign_;
 
+    boost::mutex pass_version_mutex_;
+    boost::condition_variable pass_version_put_cond_;
+    boost::condition_variable pass_version_draw_cond_;
+    size_t pass_version_in_progress_;
+
     size_t ResolveDataVersions();
 
     void PassDataVersionToJob(
         JobEntry *job, const JobEntryList& from_jobs);
 
     bool JobVersionIsComplete(JobEntry *job);
+
+    void WaitToPassAllVersions();
 
     size_t ExploreToAssignJobs();
 

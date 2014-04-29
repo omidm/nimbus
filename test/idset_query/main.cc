@@ -38,10 +38,12 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <boost/unordered_set.hpp>
 #include <iostream>  // NOLINT
 #include <sstream>  // NOLINT
 #include <string>
 #include <map>
+#include <set>
 #include "shared/nimbus.h"
 #include "shared/log.h"
 #include "../../application/job_spawner/app.h"
@@ -68,27 +70,37 @@ int main(int argc, const char *argv[]) {
   nimbus_initialize();
   Log log;
 
-  IDSet<job_id_t> set;
+  log.StartTimer();
+  // IDSet<job_id_t> set;
+  // std::set<job_id_t> set;
+  boost::unordered_set<job_id_t> set;
   for (int i = 0; i < elem_num; ++i) {
     set.insert(START_ + i);
   }
+  log.StopTimer();
+  std::cout << "Time elapsed idset insertion: " << log.timer() << std::endl;
 
-  IDSet<job_id_t> set_copy;
+  // IDSet<job_id_t> set_copy;
+  // std::set<job_id_t> set_copy;
+  boost::unordered_set<job_id_t> set_copy;
   log.StartTimer();
   set_copy = set;
   log.StopTimer();
   std::cout << "Time elapsed idset copy: " << log.timer() << std::endl;
 
-  log.StartTimer();
-  if (set.contains(START_ + 1)) {
-    log.StopTimer();
-    std::cout << "Time elapsed idset query: " << log.timer() << std::endl;
-  }
+//   log.StartTimer();
+//   if (set.contains(START_ + 1)) {
+//     log.StopTimer();
+//     std::cout << "Time elapsed idset query: " << log.timer() << std::endl;
+//   }
 
+  log.StartTimer();
   std::map<int, int> map;
   for (int i = 0; i < elem_num; ++i) {
     map[START_ + i] = START_ + i;
   }
+  log.StopTimer();
+  std::cout << "Time elapsed map insertion: " << log.timer() << std::endl;
 
   std::map<int, int> map_copy;
   log.StartTimer();
