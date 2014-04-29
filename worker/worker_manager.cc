@@ -151,11 +151,10 @@ Job* WorkerManager::NextComputationJobToRun(WorkerThread* worker_thread) {
   worker_thread->idle = false;
   --idle_computation_threads_;
   worker_thread->job_assigned = false;
-  pthread_mutex_unlock(&scheduling_critical_section_lock_);
-
   Job* temp = worker_thread->next_job_to_run;
   assert(temp != NULL);
   worker_thread->next_job_to_run = NULL;
+  pthread_mutex_unlock(&scheduling_critical_section_lock_);
 
   return temp;
 }
