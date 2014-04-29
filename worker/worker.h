@@ -52,6 +52,7 @@
 #include "worker/data.h"
 #include "worker/job.h"
 #include "worker/application.h"
+#include "worker/physical_data_map.h"
 #include "shared/nimbus_types.h"
 #include "shared/id_maker.h"
 #include "shared/scheduler_client.h"
@@ -129,7 +130,6 @@ class Worker {
   // beginning of the simulation, so it keeps the same during the simulation,
   // which might break in the future.
 
-  pthread_rwlock_t lock_data_map_;
   PhysicalDataMap data_map_;
   JobList ready_jobs_;
   JobList blocked_jobs_;
@@ -141,8 +141,10 @@ class Worker {
 
   virtual void SetupDataExchangerInterface();
 
+  /*
   virtual void AddData(Data* data);
   virtual void DeleteData(physical_data_id_t physical_data_id);
+  */
   virtual void LoadSchedulerCommands();
 
  public:

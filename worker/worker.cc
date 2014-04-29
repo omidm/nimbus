@@ -48,7 +48,7 @@
 #include "data/physbam/physbam_data.h"
 
 #define MAX_PARALLEL_JOB 10
-#define MULTITHREADED_WORKER false
+#define MULTITHREADED_WORKER true
 #define SCHEDULER_COMMAND_GROUP_QUOTA 10
 
 using boost::hash;
@@ -78,7 +78,6 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
-    pthread_rwlock_init(&lock_data_map_, NULL);
 }
 
 void Worker::Run() {
@@ -192,22 +191,33 @@ void Worker::GetJobsToRun(WorkerManager* worker_manager, size_t max_num) {
 
 // Extracts data objects from the read/write set to data array.
 void Worker::ResolveDataArray(Job* job) {
+  if ((dynamic_cast<CreateDataJob*>(job) != NULL)) { // NOLINT
+    assert(job->read_set().size() == 0);
+    assert(job->write_set().size() == 1);
+    job->data_array.clear();
+    job->data_array.push_back(
+        data_map_.AcquireAccess(*job->write_set().begin(), job->id().elem(),
+                                PhysicalDataMap::INIT));
+    return;
+  }
   job->data_array.clear();
   IDSet<physical_data_id_t>::IDSetIter iter;
 
   IDSet<physical_data_id_t> read = job->read_set();
-  pthread_rwlock_rdlock(&lock_data_map_);
   for (iter = read.begin(); iter != read.end(); iter++) {
-    job->data_array.push_back(data_map_[*iter]);
+    job->data_array.push_back(
+        data_map_.AcquireAccess(*iter, job->id().elem(),
+                                PhysicalDataMap::READ));
   }
   // DumpVersionInformation(job, da, &version_log_, "version_in");
   // DumpDataHashInformation(job, da, &data_hash_log_, "hash_in");
 
   IDSet<physical_data_id_t> write = job->write_set();
   for (iter = write.begin(); iter != write.end(); iter++) {
-    job->data_array.push_back(data_map_[*iter]);
+    job->data_array.push_back(
+        data_map_.AcquireAccess(*iter, job->id().elem(),
+                                PhysicalDataMap::WRITE));
   }
-  pthread_rwlock_unlock(&lock_data_map_);
   DumpDataOrderInformation(job, job->data_array, &data_hash_log_, "data_order");
 }
 
@@ -377,8 +387,8 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   const LogicalDataObject* ldo;
   ldo = ldo_map_->FindLogicalObject(cm->logical_data_id().elem());
   data->set_region(*(ldo->region()));
-  // TODO(quhang) thread-safety(data_map).
-  AddData(data);
+
+  data_map_.AddMapping(data->physical_id(), data);
 
   Job * job = new CreateDataJob();
   job->set_name("CreateData:" + cm->data_name());
@@ -507,8 +517,10 @@ void Worker::LoadSchedulerCommands() {
   scheduler_command_table_.push_back(new TerminateCommand());
 }
 
+/*
 void Worker::AddData(Data* data) {
   pthread_rwlock_wrlock(&lock_data_map_);
+  assert(data != NULL);
   data_map_[data->physical_id()] = data;
   pthread_rwlock_unlock(&lock_data_map_);
 }
@@ -518,6 +530,7 @@ void Worker::DeleteData(physical_data_id_t physical_data_id) {
   data_map_.erase(physical_data_id);
   pthread_rwlock_unlock(&lock_data_map_);
 }
+*/
 
 worker_id_t Worker::id() {
   return id_;
@@ -531,7 +544,6 @@ void Worker::set_ip_address(std::string ip) {
   ip_address_ = ip;
 }
 
-// TODO(quhang) thread-safety not guaranteed.
 PhysicalDataMap* Worker::data_map() {
   return &data_map_;
 }
