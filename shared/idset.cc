@@ -57,40 +57,38 @@ using boost::char_separator;
 
 // TODO(omidm): make sure that these are not used anymore and then remove.
 
-void tempParseIDSetFromString(const std::string& input,
-    IDSet<uint64_t>::IDSetContainer& list) {
-  int num;
-  std::string str = input.substr(1, input.length() - 2);
-  char_separator<char> separator(",");
-  tokenizer<char_separator<char> > tokens(str, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (; iter != tokens.end(); ++iter) {
-    std::stringstream ss(*iter);
-    ss >> num;
-    list.push_back(num);
-  }
-}
-
-void tempParseIDSetFromString(const std::string& input,
-    IDSet<uint32_t>::IDSetContainer& list) {
-  int num;
-  std::string str = input.substr(1, input.length() - 2);
-  char_separator<char> separator(",");
-  tokenizer<char_separator<char> > tokens(str, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (; iter != tokens.end(); ++iter) {
-    std::stringstream ss(*iter);
-    ss >> num;
-    list.push_back(num);
-  }
-}
-
-template<typename T>
-IDSet<T>::IDSet(std::string s) {
-  tempParseIDSetFromString(s, identifiers_);
-}
-
-
+// void tempParseIDSetFromString(const std::string& input,
+//     IDSet<uint64_t>::IDSetContainer& list) {
+//   int num;
+//   std::string str = input.substr(1, input.length() - 2);
+//   char_separator<char> separator(",");
+//   tokenizer<char_separator<char> > tokens(str, separator);
+//   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+//   for (; iter != tokens.end(); ++iter) {
+//     std::stringstream ss(*iter);
+//     ss >> num;
+//     list.push_back(num);
+//   }
+// }
+//
+// void tempParseIDSetFromString(const std::string& input,
+//     IDSet<uint32_t>::IDSetContainer& list) {
+//   int num;
+//   std::string str = input.substr(1, input.length() - 2);
+//   char_separator<char> separator(",");
+//   tokenizer<char_separator<char> > tokens(str, separator);
+//   tokenizer<char_separator<char> >::iterator iter = tokens.begin();
+//   for (; iter != tokens.end(); ++iter) {
+//     std::stringstream ss(*iter);
+//     ss >> num;
+//     list.push_back(num);
+//   }
+// }
+//
+// template<typename T>
+// IDSet<T>::IDSet(std::string s) {
+//   tempParseIDSetFromString(s, identifiers_);
+// }
 
 
 template<typename T>
@@ -129,7 +127,8 @@ bool IDSet<T>::Parse(const std::string& input) {
       identifiers_.clear();
       return false;
     }
-    identifiers_.push_back(num);
+    // identifiers_.push_back(num);
+    identifiers_.insert(num);
   }
   return true;
 }
@@ -155,13 +154,14 @@ std::string IDSet<T>::toString() {
 
 template<typename T>
 void IDSet<T>::insert(T n) {
-  IDSetIter iter =  identifiers_.begin();
-  for (; iter !=  identifiers_.end(); ++iter) {
-    if (*iter == n) {
-      return;
-    }
-  }
-  identifiers_.push_back(n);
+  // IDSetIter iter =  identifiers_.begin();
+  // for (; iter !=  identifiers_.end(); ++iter) {
+  //   if (*iter == n) {
+  //     return;
+  //   }
+  // }
+  // identifiers_.push_back(n);
+  identifiers_.insert(n);
 }
 
 template<typename T>
@@ -175,13 +175,14 @@ void IDSet<T>::insert(const IDSet<T>& add_set) {
 
 template<typename T>
 void IDSet<T>::remove(T n) {
-  IDSetIter iter =  identifiers_.begin();
-  for (; iter !=  identifiers_.end(); ++iter) {
-    if (*iter == n) {
-      identifiers_.erase(iter);
-      break;
-    }
-  }
+  // IDSetIter iter =  identifiers_.begin();
+  // for (; iter !=  identifiers_.end(); ++iter) {
+  //   if (*iter == n) {
+  //     identifiers_.erase(iter);
+  //     break;
+  //   }
+  // }
+  identifiers_.erase(n);
 }
 
 template<typename T>
@@ -205,16 +206,17 @@ void IDSet<T>::clear() {
 
 template<typename T>
 bool IDSet<T>::contains(T n) const {
-  ConstIter iter =  identifiers_.begin();
-  for (; iter !=  identifiers_.end(); ++iter) {
-    if (*iter == n)
-      return true;
-  }
-  return false;
+  // ConstIter iter =  identifiers_.begin();
+  // for (; iter !=  identifiers_.end(); ++iter) {
+  //   if (*iter == n)
+  //     return true;
+  // }
+  // return false;
+  return (identifiers_.count(n) != 0);
 }
 
 template<typename T>
-int IDSet<T>::size() {
+int IDSet<T>::size() const {
   return identifiers_.size();
 }
 

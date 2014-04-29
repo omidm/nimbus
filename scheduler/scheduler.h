@@ -123,6 +123,7 @@ class Scheduler {
     Log log_;
     Log log_assign_;
     Log log_table_;
+    Log log_allocate_;
 
   private:
     virtual bool AssignJob(JobEntry* job);
