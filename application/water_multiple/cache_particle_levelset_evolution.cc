@@ -166,10 +166,9 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
                 const nimbus::DataArray &diff,
                 const nimbus::GeometricRegion &reg,
                 bool all_lids_diff) {
-    dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
+    //dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
     bool merge = false;
     nimbus::DataArray final_read = read_set;
-    dbg(DBG_WARN, "--- Diff is %i\n", diff.size());
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < final_read.size(); ++i) {
@@ -197,7 +196,7 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
-    dbg(DBG_WARN, "\n Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
+    //dbg(DBG_WARN, "\n Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < write_set.size(); ++i) {
         nimbus::Data *d = write_set[i];
@@ -220,7 +219,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
 
 template<class TS> nimbus::CacheObject *CacheParticleLevelsetEvolution<TS>::
 CreateNew(const nimbus::GeometricRegion &ar) const {
-    dbg(DBG_WARN, "#### NEW CACHE OBJECT PLE\n");
+    //dbg(DBG_WARN, "#### NEW CACHE OBJECT PLE\n");
     return new CacheParticleLevelsetEvolution(type(),
                               global_region_,
                               ghost_width_,

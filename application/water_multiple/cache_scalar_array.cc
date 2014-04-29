@@ -72,7 +72,7 @@ CacheScalarArray(std::string type,
 template<class T, class TS> void CacheScalarArray<T, TS>::
 ReadToCache(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &reg) {
-    dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.toString().c_str());
+    //dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.toString().c_str());
     nimbus::GeometricRegion app_reg = app_object_region();
     nimbus::GeometricRegion read_reg = nimbus::GeometricRegion::GetIntersection(reg, app_reg);
     Translator::template ReadScalarArray<T>(read_reg, shift_, read_set, data_);
@@ -81,7 +81,7 @@ ReadToCache(const nimbus::DataArray &read_set,
 template<class T, class TS> void CacheScalarArray<T, TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
-    dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.toString().c_str());
+    //dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.toString().c_str());
     nimbus::GeometricRegion app_reg = app_object_region();
     nimbus::GeometricRegion write_reg = nimbus::GeometricRegion::GetIntersection(reg, app_reg);
     Translator::template WriteScalarArray<T>(write_reg, shift_, write_set, data_);
