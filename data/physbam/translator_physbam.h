@@ -118,6 +118,8 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            if (read_set.empty())
+                return;
             PhysBAM::ARRAY<T, FaceIndex> flag;
             flag = *fa;
             flag.Fill(0);
@@ -313,6 +315,8 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            if (write_set.empty())
+                return;
             int_dimension_t region_size = 0;
             region_size += (region.dx() + 1) * region.dy() * region.dz();
             region_size += region.dx() * (region.dy() + 1) * region.dz();
@@ -440,16 +444,8 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
-            if (positive) {
-                dbg(DBG_TRANSLATE,
-                        TRANSLATE_LOG_H"Start ReadParticles for positive particles\n");
-            } else {
-                dbg(DBG_TRANSLATE,
-                        TRANSLATE_LOG_H"Start ReadParticles for negative particles\n");
-            }
-            Log timer;
-            int64_t counter, counter1, counter2;
-
+            if (read_set.empty())
+                return;
             ParticleArray* particles;
             if (positive) {
                 particles = &particle_container->positive_particles;
@@ -457,39 +453,20 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
-            timer.StartTimer();
-            counter = 0;
             // Checks whether the geometric region in the particle array is valid, and
             // clears corresponding buckets inside the geometric region if necessary.
-            for (int z = region.z(); z <= region.z() + region.dz(); z++)
-                for (int y = region.y(); y <= region.y() + region.dy(); y++)
-                    for (int x = region.x(); x <= region.x() + region.dx(); x++) {
-                        ++counter;
-                        TV_INT bucket_index(x, y, z);
-                        if (!particles->Valid_Index(bucket_index)) {
-                            dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
-                                    x, y, z);
-                            // Warning: might be too strict.
-                            return;
-                        }
-                        if (!merge) {
+            if (!merge) {
+                for (int z = region.z(); z <= region.z() + region.dz(); z++) {
+                    for (int y = region.y(); y <= region.y() + region.dy(); y++) {
+                        for (int x = region.x(); x <= region.x() + region.dx(); x++) {
+                            TV_INT bucket_index(x, y, z);
                             particle_container->Free_Particle_And_Clear_Pointer(
                                     (*particles)(bucket_index));
                         }
                     }
-            dbg(DBG_TRANSLATE,
-                    TRANSLATE_LOG_H
-                    "In ReadParticles, clean %ld buckets in %0.2f seconds\n",
-                    counter, timer.GetTime());
-
-            if (read_set.empty()) {
-                dbg(DBG_WARN, "Physical data instances are empty.\n");
-                return;
+                }
             }
 
-            timer.StartTimer();
-            counter1 = 0;
-            counter2 = 0;
             DataArray::const_iterator iter = read_set.begin();
             for (; iter != read_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -503,7 +480,6 @@ template <class TS> class TranslatorPhysBAM {
                     absolute_position.x = p->position[0];
                     absolute_position.y = p->position[1];
                     absolute_position.z = p->position[2];
-                    ++counter1;
                     // TODO(quhang) Needs to deal with the particles that lies exactly on
                     // the boundary.
                     if (absolute_position.x >= region.x() + shift.x &&
@@ -512,7 +488,6 @@ template <class TS> class TranslatorPhysBAM {
                             absolute_position.y < region.y() + region.dy() + shift.y &&
                             absolute_position.z >= region.z() + shift.z &&
                             absolute_position.z < region.z() + region.dz() + shift.z) {
-                        ++counter2;
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
@@ -540,11 +515,6 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }  // End the loop for buffer.
             }
-            dbg(DBG_TRANSLATE,
-                    TRANSLATE_LOG_H
-                    "In ReadParticles, go through %ld particles and read %ld particles"
-                    " in %0.2f seconds\n",
-                    counter1, counter2, timer.GetTime());
         }
 
 
@@ -569,15 +539,9 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive) {
-            if (positive) {
-                dbg(DBG_TRANSLATE,
-                        TRANSLATE_LOG_H"Start WriteParticles for positive particles\n");
-            } else {
-                dbg(DBG_TRANSLATE,
-                        TRANSLATE_LOG_H"Start WriteParticles for negative particles\n");
-            }
-            Log timer;
-            int64_t counter1, counter2;
+
+            if (write_set.empty())
+                return;
 
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
@@ -592,19 +556,11 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
-            timer.StartTimer();
-            counter1 = 0;
-            counter2 = 0;
             // Loop through each particle bucket in the specified region.
             for (int z = region.z(); z <= region.z() + region.dz(); z++)
                 for (int y = region.y(); y <= region.y() + region.dy(); y++)
                     for (int x = region.x(); x <= region.x() + region.dx(); x++) {
                         TV_INT bucket_index(x, y, z);
-                        if (!particles->Valid_Index(bucket_index)) {
-                            dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
-                                    x, y, z);
-                            return;
-                        }
                         DataArray::const_iterator iter = write_set.begin();
                         for (; iter != write_set.end(); ++iter) {
                             // Iterate across instances, checking each one.
@@ -633,7 +589,6 @@ template <class TS> class TranslatorPhysBAM {
                                     TV particle_position = particle_bucket->X(i);
                                     TV absolute_position =
                                         particle_position * (float) kScale + 1.0; // NOLINT
-                                    ++counter1;
                                     // TODO(quhang) Needs to deal with the case when the particle
                                     // lies exactly on the boundary.
                                     // If it's inside the region of the physical data instance.
@@ -649,7 +604,6 @@ template <class TS> class TranslatorPhysBAM {
                                             data_region.z() &&
                                             absolute_position.z <
                                             (data_region.z() + data_region.dz())) {
-                                        ++counter2;
                                         ParticleInternal particle_buffer;
                                         particle_buffer.position[0] = absolute_position.x;
                                         particle_buffer.position[1] = absolute_position.y;
@@ -672,12 +626,6 @@ template <class TS> class TranslatorPhysBAM {
                             }  // Finish looping through all particles.
                         }
                     }
-
-            dbg(DBG_TRANSLATE,
-                    TRANSLATE_LOG_H
-                    "In WriteParticles, scan %ld particles and write %ld particles"
-                    " in %0.2f seconds\n",
-                    counter1, counter2, timer.GetTime());
 
             // Now that we've copied particles into the temporary data buffers,
             // commit the results.
@@ -705,6 +653,8 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            if (read_set.empty())
+                return;
             RemovedParticleArray* particles;
             if (positive) {
                 particles = &particle_container->removed_positive_particles;
@@ -714,23 +664,19 @@ template <class TS> class TranslatorPhysBAM {
 
             // Checks whether the geometric region in the particle array is valid, and
             // clears corresponding buckets inside the geometric region if necessary.
-            for (int z = region.z(); z <= region.z() + region.dz(); z++)
-                for (int y = region.y(); y <= region.y() + region.dy(); y++)
-                    for (int x = region.x(); x <= region.x() + region.dx(); x++) {
-                        TV_INT bucket_index(x, y, z);
-                        if (!particles->Valid_Index(bucket_index)) {
-                            dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
-                                    x, y, z);
-                            // Warning: might be too strict.
-                            return;
-                        }
-                        if (!merge) {
+            if (!merge) {
+                for (int z = region.z(); z <= region.z() + region.dz(); z++) {
+                    for (int y = region.y(); y <= region.y() + region.dy(); y++) {
+                        for (int x = region.x(); x <= region.x() + region.dx(); x++) {
+                            TV_INT bucket_index(x, y, z);
                             if ((*particles)(bucket_index)) {
                                 delete (*particles)(bucket_index);
                                 (*particles)(bucket_index) = NULL;
                             }
                         }
                     }
+                }
+            }
 
             if (read_set.empty()) {
                 dbg(DBG_WARN, "Physical data instances are empty.\n");
@@ -810,6 +756,8 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive
                 ) {
+            if (write_set.empty())
+                return;
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -828,11 +776,6 @@ template <class TS> class TranslatorPhysBAM {
                 for (int y = region.y(); y <= region.y() + region.dy(); y++)
                     for (int x = region.x(); x <= region.x() + region.dx(); x++) {
                         TV_INT bucket_index(x, y, z);
-                        if (!particles->Valid_Index(bucket_index)) {
-                            dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
-                                    x, y, z);
-                            return;
-                        }
                         RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
                         while (particle_bucket) {
                             for (int i = 1; i <= particle_bucket->array_collection->Size();
@@ -901,6 +844,8 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
+            if (read_set.empty())
+                return;
             for (size_t i = 0; i < read_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
@@ -941,13 +886,8 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            if (sa->counts != TV_INT(region.dx(), region.dy(), region.dz())) {
-                dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
-                TV_INT cp = sa->counts;
-                dbg(DBG_WARN, "WARN: physbam array has size %i, %i, %i\n", cp.x, cp.y, cp.z);
-                dbg(DBG_WARN, "WARN: original array has size %llu, %llu, %llu\n", region.dx(), region.dy(), region.dz()); // NOLINT
-            }
-
+            if (write_set.empty())
+                return;
             for (size_t i = 0; i < write_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(write_set[i]);
                 GeometricRegion temp = data->region();
