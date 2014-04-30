@@ -79,6 +79,8 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   dispatched_finish_job_count_ = 0;
   dispatched_fast_job_count_= 0;
   ready_jobs_count_ = 0;
+  finish_job_list_length_ = 0;
+  fast_job_list_length_ = 0;
 }
 
 WorkerManager::~WorkerManager() {
@@ -114,6 +116,7 @@ bool WorkerManager::PushJob(Job* job) {
       dynamic_cast<RemoteCopyReceiveJob*>(job)))) { // NOLINT
     pthread_mutex_lock(&fast_job_queue_lock_);
     fast_job_list_.push_back(job);
+    ++fast_job_list_length_;
     pthread_cond_signal(&fast_job_queue_any_cond_);
     pthread_mutex_unlock(&fast_job_queue_lock_);
   } else {
@@ -129,6 +132,7 @@ bool WorkerManager::PushJob(Job* job) {
 bool WorkerManager::PushFinishJob(Job* job) {
   pthread_mutex_lock(&finish_job_queue_lock_);
   finish_job_list_.push_back(job);
+  ++finish_job_list_length_;
   pthread_cond_signal(&finish_job_queue_any_cond_);
   pthread_mutex_unlock(&finish_job_queue_lock_);
   return true;
@@ -169,6 +173,7 @@ bool WorkerManager::PullFinishJobs(WorkerThread* worker_thread,
   }
   list_buffer->clear();
   list_buffer->swap(finish_job_list_);
+  finish_job_list_length_ = 0;
   dispatched_finish_job_count_ += list_buffer->size();
   worker_thread->idle = false;
   pthread_mutex_unlock(&finish_job_queue_lock_);
@@ -189,6 +194,7 @@ bool WorkerManager::PullFastJobs(WorkerThread* worker_thread,
   while (!fast_job_list_.empty() && count > 0) {
     list_buffer->push_back(fast_job_list_.front());
     fast_job_list_.pop_front();
+    --fast_job_list_length_;
     --count;
     ++dispatched_fast_job_count_;
   }

@@ -120,11 +120,13 @@ class WorkerManager {
   pthread_cond_t finish_job_queue_any_cond_;
   // Protected by finish_job_queue_lock_.
   std::list<Job*> finish_job_list_;
+  int64_t finish_job_list_length_;
 
   pthread_mutex_t fast_job_queue_lock_;
   pthread_cond_t fast_job_queue_any_cond_;
   // Protected by fast_job_queue_lock_.
   std::list<Job*> fast_job_list_;
+  int64_t fast_job_list_length_;
 
   // Measures running states of the worker.
   int64_t dispatched_computation_job_count_;

@@ -55,9 +55,6 @@ WorkerThreadMonitor::~WorkerThreadMonitor() {
 }
 
 void WorkerThreadMonitor::Run() {
-  while (true) {
-    continue;
-  }
   std::ofstream output("worker_state.log");
   int64_t dispatched_computation_job_count_last = 0;
   int64_t dispatched_finish_job_count_last = 0;
@@ -91,9 +88,8 @@ void WorkerThreadMonitor::Run() {
 
     idle_computation_threads = worker_manager_->idle_computation_threads_;
     ready_job_queue_length = worker_manager_->ready_jobs_count_;
-    // TODO(quhang) this is not synchronized.
-    finish_job_queue_length = worker_manager_->finish_job_list_.size();
-    fast_job_queue_length = worker_manager_->fast_job_list_.size();
+    finish_job_queue_length = worker_manager_->finish_job_list_length_;
+    fast_job_queue_length = worker_manager_->fast_job_list_length_;
 
     output << dispatched_computation_job_count
               - dispatched_computation_job_count_last
