@@ -59,7 +59,10 @@ class WorkerThread {
   virtual void Run() = 0;
   // TODO(quhang) data member accessor.
   pthread_t thread_id;
+  pthread_cond_t thread_can_start;
+  Job* next_job_to_run;
   bool idle;
+  bool job_assigned;
  protected:
   WorkerManager* worker_manager_;
   // Logging data structures.

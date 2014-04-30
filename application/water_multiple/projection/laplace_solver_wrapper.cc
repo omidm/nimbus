@@ -132,6 +132,7 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
 
     laplace->Find_Tolerance(b);
   } else {
+    laplace->tolerance = 0;
     dbg(APP_LOG, "No water in this region!\n");
   }
 }

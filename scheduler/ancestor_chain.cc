@@ -168,9 +168,8 @@ bool AncestorChain::AncestorChain::LookUpVersion(
   bool found = false;
   Chain::iterator iter;
   for (iter = chain_.begin(); iter != chain_.end(); ++iter) {
-    Pool pool = *iter;
     Pool::iterator it;
-    for (it = pool.begin(); it != pool.end(); ++it) {
+    for (it = iter->begin(); it != iter->end(); ++it) {
       if (it->version_map()->query_entry(l_id, version)) {
         found = true;
         break;
