@@ -50,6 +50,13 @@ bool IsEmptyString(std::string str) {
   return false;
 }
 
+/*
+ *
+ * Important: The order of escaping and unescaping is important.
+ * we should unescape in the reverse order that we escape. -omidm
+ *
+ */
+
 void EscapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%", "%0");
   boost::algorithm::replace_all(*input, ";", "%1");
