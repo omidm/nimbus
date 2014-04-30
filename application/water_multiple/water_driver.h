@@ -47,7 +47,8 @@ public:
     void InitializeFirst(const nimbus::Job *job,
                           const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
-                    const nimbus::DataArray &da);
+                    const nimbus::DataArray &da,
+                    bool set_boundary_condition);
     void InitializeUseCache(const nimbus::Job *job,
                     const nimbus::DataArray &da);
 
