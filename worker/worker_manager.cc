@@ -68,7 +68,7 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
   if (multi_threaded) {
-    computation_thread_num = 10;
+    computation_thread_num = 2;
     fast_thread_num = 1;
   } else {
     computation_thread_num = 1;
@@ -239,6 +239,7 @@ bool WorkerManager::StartWorkerThreads() {
 void WorkerManager::ScheduleComputationJobs() {
   // Try not to block the worker core thread when scheduling algorithm is
   // running.
+  /*
   pthread_mutex_lock(&computation_job_queue_lock_);
   computation_job_to_schedule_list_.insert(
       computation_job_to_schedule_list_.end(),
@@ -246,12 +247,14 @@ void WorkerManager::ScheduleComputationJobs() {
       computation_job_list_.end());
   computation_job_list_.clear();
   pthread_mutex_unlock(&computation_job_queue_lock_);
+  */
 
+  pthread_mutex_lock(&computation_job_queue_lock_);
   pthread_mutex_lock(&scheduling_critical_section_lock_);
   for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
        index != worker_thread_list_.end();
        ++index) {
-    if (computation_job_to_schedule_list_.empty()) {
+    if (computation_job_list_.empty()) {
       break;
     }
     // TODO(quhang) RTTI is not good.
@@ -260,8 +263,8 @@ void WorkerManager::ScheduleComputationJobs() {
     if (worker_thread != NULL
         && worker_thread->idle && !worker_thread->job_assigned) {
       worker_thread->next_job_to_run =
-          computation_job_to_schedule_list_.front();
-      computation_job_to_schedule_list_.pop_front();
+          computation_job_list_.front();
+      computation_job_list_.pop_front();
       worker_thread->job_assigned = true;
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;
@@ -269,6 +272,7 @@ void WorkerManager::ScheduleComputationJobs() {
     }
   }
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
+  pthread_mutex_unlock(&computation_job_queue_lock_);
 }
 
 void* WorkerManager::ThreadEntryPoint(void* parameters) {

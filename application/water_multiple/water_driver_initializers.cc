@@ -138,8 +138,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirst(
 
 template<class TV> void WATER_DRIVER<TV>::Initialize(
     const nimbus::Job *job,
-    const nimbus::DataArray &da,
-    bool set_boundary_condition)
+    const nimbus::DataArray &da)
 {
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
@@ -246,9 +245,6 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
 
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,0,0);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-    if (set_boundary_condition) {
-      example.Set_Boundary_Conditions(time); // get so CFL is correct
-    }
   }
 }
 
