@@ -41,6 +41,7 @@
 #include <boost/functional/hash.hpp>
 #include <sstream>
 #include <ctime>
+#include <list>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
 #include "worker/worker_manager.h"
@@ -134,7 +135,45 @@ void Worker::WorkerCoreProcessor() {
 
     ScanPendingTransferJobs();
 
-    GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
+    if (MULTITHREADED_WORKER) {
+      GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
+    } else {
+      RunJobs(10);
+    }
+  }
+}
+
+void Worker::RunJobs(size_t max_num) {
+  std::list<Job*> list;
+  size_t ready_num = ready_jobs_.size();
+  for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
+    Job* job = ready_jobs_.front();
+    list.push_back(job);
+    ready_jobs_.pop_front();
+  }
+  JobList::iterator iter = list.begin();
+  for (; iter != list.end(); iter++) {
+    Job* job = *iter;
+
+    job->data_array.clear();
+    IDSet<physical_data_id_t>::IDSetIter iter;
+
+    IDSet<physical_data_id_t> read = job->read_set();
+    for (iter = read.begin(); iter != read.end(); iter++) {
+      job->data_array.push_back(data_map_[*iter]);
+    }
+
+    IDSet<physical_data_id_t> write = job->write_set();
+    for (iter = write.begin(); iter != write.end(); iter++) {
+      job->data_array.push_back(data_map_[*iter]);
+    }
+
+    job->Execute(job->parameters(), job->data_array);
+
+    Parameter params;
+    JobDoneCommand cm(job->id(), job->after_set(), params);
+    client_->sendCommand(&cm);
+    delete job;
   }
 }
 
