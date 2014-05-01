@@ -53,6 +53,7 @@
 #include "worker/job.h"
 #include "worker/application.h"
 #include "worker/physical_data_map.h"
+#include "worker/worker_job_graph/worker_job_graph.h"
 #include "shared/nimbus_types.h"
 #include "shared/id_maker.h"
 #include "shared/scheduler_client.h"
@@ -119,6 +120,7 @@ class Worker {
   port_t listening_port_;
 
  private:
+  WorkerJobGraph worker_job_graph_;
   Log log_;
   Log version_log_;
   Log data_hash_log_;
@@ -132,8 +134,6 @@ class Worker {
 
   PhysicalDataMap data_map_;
   JobList ready_jobs_;
-  JobList blocked_jobs_;
-  JobList pending_transfer_jobs_;
   Application* application_;
   HighResolutionTimer timer_;
 
@@ -141,10 +141,6 @@ class Worker {
 
   virtual void SetupDataExchangerInterface();
 
-  /*
-  virtual void AddData(Data* data);
-  virtual void DeleteData(physical_data_id_t physical_data_id);
-  */
   virtual void LoadSchedulerCommands();
 
  public:

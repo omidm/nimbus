@@ -68,7 +68,7 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
   if (multi_threaded) {
-    computation_thread_num = 2;
+    computation_thread_num = 8;
     fast_thread_num = 1;
   } else {
     computation_thread_num = 1;
