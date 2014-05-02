@@ -39,11 +39,17 @@
 #include "worker/worker_job_graph/worker_job_entry.h"
 
 namespace nimbus {
+
+WorkerJobEntry::WorkerJobEntry() {
+  job_id_ = 0;
+  job_ = NULL;
+  state_ = INIT;
+}
+
 WorkerJobEntry::WorkerJobEntry(const job_id_t job_id, Job* job, State state) {
   job_id_ = job_id;
   job_ = job;
   state_ = state;
 }
 
-}
-
+}  // namespace nimbus

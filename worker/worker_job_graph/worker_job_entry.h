@@ -33,21 +33,13 @@
  */
 
  /*
-  * Job entry in the job table of the job manager. Each entry holds the
-  * meta data of the compute and copy jobs received by the scheduler.   
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
 #ifndef NIMBUS_WORKER_WORKER_JOB_GRAPH_WORKER_JOB_ENTRY_H_
 #define NIMBUS_WORKER_WORKER_JOB_GRAPH_WORKER_JOB_ENTRY_H_
 
-#include <vector>
-#include <string>
-#include <set>
-#include <list>
-#include <utility>
-#include <map>
+#include <limits>
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
@@ -57,13 +49,14 @@ class Job;
 class WorkerJobEntry {
  public:
   enum State {
+    INIT,
     CONTROL,  // For internal usage.
     PENDING,  // Not received yet.
-    IO_BLOCKED,  // Receiving pending.
     BLOCKED,  // Blocked by other jobs.
     READY,  // Ready to run.  Should no more exist in the graph.
   };
 
+  WorkerJobEntry();
   WorkerJobEntry(const job_id_t job_id, Job* job, State state = PENDING);
   virtual ~WorkerJobEntry() {}
 
@@ -82,7 +75,7 @@ class WorkerJobEntry {
   void set_job(Job* job) {
     job_ = job;
   }
-  void set_state_(State state) {
+  void set_state(State state) {
     state_ = state;
   }
 

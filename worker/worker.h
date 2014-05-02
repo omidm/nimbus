@@ -74,13 +74,10 @@ class Worker {
  public:
   Worker(std::string scheuler_ip, port_t scheduler_port,
       port_t listening_port_, Application* application);
+  virtual ~Worker();
 
   virtual void Run();
   virtual void WorkerCoreProcessor();
-  virtual void ScanBlockedJobs();
-  virtual void ScanPendingTransferJobs();
-
-  virtual void GetJobsToRun(WorkerManager* worker_manager, size_t max_num);
 
   // virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
@@ -135,6 +132,8 @@ class Worker {
   PhysicalDataMap data_map_;
   JobList ready_jobs_;
   Application* application_;
+  job_id_t DUMB_JOB_ID;
+  WorkerManager* worker_manager_;
   HighResolutionTimer timer_;
 
   virtual void SetupSchedulerInterface();
@@ -143,10 +142,12 @@ class Worker {
 
   virtual void LoadSchedulerCommands();
 
+  virtual void AddJobToGraph(Job* job);
+  virtual void NotifyJobDone(job_id_t job_id);
+  virtual void NotifyTransmissionDone(job_id_t job_id);
+
  public:
-  // TODO(quhang) figure out the right access control.
   void ResolveDataArray(Job* job);
-  // void UpdateDataVersion(Job* job);
 };
 
 }  // namespace nimbus

@@ -40,15 +40,17 @@
 
 #include <boost/functional/hash.hpp>
 #include <sstream>
+#include <list>
 #include <ctime>
+#include <limits>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
 #include "worker/worker_manager.h"
 #include "worker/util_dumping.h"
 #include "data/physbam/physbam_data.h"
 
-#define MAX_PARALLEL_JOB 10
-#define MULTITHREADED_WORKER true
+// #define MULTITHREADED_WORKER true
+#define MULTITHREADED_WORKER false
 #define SCHEDULER_COMMAND_GROUP_QUOTA 10
 
 using boost::hash;
@@ -78,6 +80,17 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
+    worker_manager_ = new WorkerManager(MULTITHREADED_WORKER);
+    DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
+    worker_job_graph_.AddVertex(
+        DUMB_JOB_ID,
+        new WorkerJobEntry(
+            DUMB_JOB_ID, NULL, WorkerJobEntry::CONTROL));
+}
+
+Worker::~Worker() {
+  worker_job_graph_.RemoveVertex(DUMB_JOB_ID);
+  delete worker_manager_;
 }
 
 void Worker::Run() {
@@ -95,16 +108,14 @@ void Worker::Run() {
 
 void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
-  WorkerManager worker_manager(MULTITHREADED_WORKER);
-  worker_manager.worker_ = this;
-  worker_manager.SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
+  worker_manager_->worker_ = this;
+  worker_manager_->SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
                                      &timer_);
-  worker_manager.StartWorkerThreads();
+  worker_manager_->StartWorkerThreads();
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
     int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
-    IDSet<job_id_t> remove_set;
     while (comm != NULL) {
       dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
       ProcessSchedulerCommand(comm);
@@ -114,67 +125,7 @@ void Worker::WorkerCoreProcessor() {
       }
       comm = client_->receiveCommand();
     }
-
-    ScanBlockedJobs();
-
-    ScanPendingTransferJobs();
-
-    GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
-  }
-}
-
-// TODO(no need to scan).
-void Worker::ScanBlockedJobs() {
-  JobList::iterator iter;
-  for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end();) {
-    if ((*iter)->before_set().size() == 0) {
-      if (dynamic_cast<RemoteCopyReceiveJob*>(*iter) == NULL) { // NOLINT
-        ready_jobs_.push_back(*iter);
-      } else {
-        pending_transfer_jobs_.push_back(*iter);
-      }
-
-#ifndef MUTE_LOG
-      double wait_time =  timer_.Stop((*iter)->id().elem());
-      (*iter)->set_wait_time(wait_time);
-#endif  // MUTE_LOG
-
-      iter = blocked_jobs_.erase(iter);
-    } else {
-      ++iter;
-    }
-  }
-}
-
-// TODO(quhang) polling used for now.
-void Worker::ScanPendingTransferJobs() {
-  JobList::iterator iter;
-  for (iter = pending_transfer_jobs_.begin(); iter != pending_transfer_jobs_.end();) {
-    SerializedData* ser_data;
-    data_version_t version;
-    if (data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data, version)) {
-      static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
-      static_cast<RemoteCopyReceiveJob*>(*iter)->set_data_version(version);
-      ready_jobs_.push_back(*iter);
-      iter = pending_transfer_jobs_.erase(iter);
-    } else {
-      ++iter;
-    }
-  }
-}
-
-
-// TODO(quhang) no need to run.
-// Extracts at most "max_num" jobs from queue "ready_jobs", resolves their data
-// array, and push them to the worker manager.
-void Worker::GetJobsToRun(WorkerManager* worker_manager, size_t max_num) {
-  size_t ready_num = ready_jobs_.size();
-  for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
-    Job* job = ready_jobs_.front();
-    ready_jobs_.pop_front();
-    ResolveDataArray(job);
-    int success_flag = worker_manager->PushJob(job);
-    assert(success_flag);
+    // Polling for pending transfer jobs.
   }
 }
 
@@ -296,7 +247,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
-  PushBlockedJob(job);
+  AddJobToGraph(job);
 }
 
 // Processes createdata command. Generates the corresponding data and pushes a
@@ -323,7 +274,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
-  PushBlockedJob(job);
+  AddJobToGraph(job);
 }
 
 void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
@@ -344,7 +295,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
-  PushBlockedJob(job);
+  AddJobToGraph(job);
 }
 
 void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
@@ -359,7 +310,7 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
-  PushBlockedJob(job);
+  AddJobToGraph(job);
 }
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
@@ -377,7 +328,7 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
-  PushBlockedJob(job);
+  AddJobToGraph(job);
 }
 
 void Worker::ProcessLdoAddCommand(LdoAddCommand* cm) {
@@ -455,35 +406,94 @@ PhysicalDataMap* Worker::data_map() {
   return &data_map_;
 }
 
-void Worker::FinishJobDependency(Job* job) {
-  ResolveDataArray(job);
-  int success_flag = worker_manager->PushJob(job);
-  assert(success_flag);
-  worker_job_graph_.RemoveVertex();
-}
-
 void Worker::AddJobToGraph(Job* job) {
-  job_id_t job_id = job->id()->elem();
-  // if before set empty, and not pending receiving. ready!
-  // FinishJobDependency(job);
-  WorkerJobVertex* vertex;
-  if (worker_job_graph_.HasVertex(job->id()->elem())) {
+  assert(job != NULL);
+  job_id_t job_id = job->id().elem();
+  assert(job_id != DUMB_JOB_ID);
+  // Add vertex for the new job.
+  WorkerJobVertex* vertex = NULL;
+  if (worker_job_graph_.HasVertex(job_id)) {
+    // The job is pending.
     worker_job_graph_.GetVertex(job_id, &vertex);
+    assert(vertex->entry()->get_state() == WorkerJobEntry::PENDING);
+    assert(vertex->entry()->get_job() == NULL);
   } else {
-    worker_job_graph_.AddVertex(job->id()->elem(), new WorkerJobEntry(/**/))
-    worker_job_graph_.GetVertex(job->id()->elem(), &vertex);
+    // The job is new.
+    worker_job_graph_.AddVertex(job_id, new WorkerJobEntry());
+    worker_job_graph_.GetVertex(job_id, &vertex);
   }
-  if (dynamic_cast<RemoteCopyReceiveJob*>(*iter)) { // NOLINT
-    // Add a dump edge.
+  vertex->entry()->set_job_id(job_id);
+  vertex->entry()->set_job(job);
+  vertex->entry()->set_state(WorkerJobEntry::BLOCKED);
+  // Add edges for the new job.
+  IDSet<job_id_t> before_set = job->before_set();
+  for (IDSet<job_id_t>::IDSetIter iter = before_set.begin();
+       iter != before_set.end();
+       ++iter) {
+    job_id_t before_job_id = *iter;
+    WorkerJobVertex* before_job_vertex = NULL;
+    if (worker_job_graph_.HasVertex(before_job_id)) {
+      // The job is already know.
+      worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
+    } else {
+      // The job is new.
+      worker_job_graph_.AddVertex(before_job_id, new WorkerJobEntry());
+      worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
+      before_job_vertex->entry()->set_job_id(before_job_id);
+      before_job_vertex->entry()->set_job(NULL);
+      before_job_vertex->entry()->set_state(WorkerJobEntry::PENDING);
+    }
+    worker_job_graph_.AddEdge(before_job_vertex, vertex);
   }
-  // Fill in the content.
-  // Fill in all the edges.
+  // If the job depends on transmission events, add a dumb edge.
+  if (dynamic_cast<RemoteCopyReceiveJob*>(job)) { // NOLINT
+    worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
+  }
+  // If the job has no dependency, it is ready.
+  if (vertex->incoming_edges()->empty()) {
+    vertex->entry()->set_state(WorkerJobEntry::READY);
+    ResolveDataArray(job);
+    int success_flag = worker_manager_->PushJob(job);
+    vertex->entry()->set_job(NULL);
+    assert(success_flag);
+  }
 }
 
 void Worker::NotifyJobDone(job_id_t job_id) {
-  // Find the job.
-  // Clean the edges.
-  // FinishJobDenendency() if needed.
+  // Job done for unknown job is not handled.
+  if (!worker_job_graph_.HasVertex(job_id)) {
+    return;
+  }
+  WorkerJobVertex* vertex = NULL;
+  worker_job_graph_.GetVertex(job_id, &vertex);
+  assert(vertex->incoming_edges()->empty());
+  WorkerJobEdge::Map* outgoing_edges = vertex->outgoing_edges();
+  printf("quhang %d\n", outgoing_edges->size());
+  // Deletion inside loop is dangerous.
+  std::list<WorkerJobVertex*> deletion_list;
+  for (WorkerJobEdge::Iter iter = outgoing_edges->begin();
+       iter != outgoing_edges->end();
+       ++iter) {
+    WorkerJobVertex* after_job_vertex = (iter->second)->end_vertex();
+    assert(after_job_vertex != NULL);
+    deletion_list.push_back(after_job_vertex);
+  }
+  for (std::list<WorkerJobVertex*>::iterator iter = deletion_list.begin();
+       iter != deletion_list.end();
+       ++iter) {
+    WorkerJobVertex* after_job_vertex = *iter;
+    worker_job_graph_.RemoveEdge(vertex, after_job_vertex);
+    if (after_job_vertex->incoming_edges()->empty()) {
+      after_job_vertex->entry()->set_state(WorkerJobEntry::READY);
+      assert(after_job_vertex->entry()->get_job() != NULL);
+      ResolveDataArray(after_job_vertex->entry()->get_job());
+      int success_flag =
+          worker_manager_->PushJob(after_job_vertex->entry()->get_job());
+      after_job_vertex->entry()->set_job(NULL);
+      assert(success_flag);
+    }
+  }
+  worker_job_graph_.RemoveVertex(job_id);
 }
 
 void Worker::NotifyTransmissionDone(job_id_t job_id) {

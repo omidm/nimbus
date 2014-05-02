@@ -70,8 +70,8 @@ void UnescapeString(std::string* input) {
   boost::algorithm::replace_all(*input, "%5", "\r");
   boost::algorithm::replace_all(*input, "%6", ",");
   boost::algorithm::replace_all(*input, "%7", ":");
-  boost::algorithm::replace_all(*input, "%0", "%");
   boost::algorithm::replace_all(*input, "%8", "\b");
+  boost::algorithm::replace_all(*input, "%0", "%");
 }
 
 }  // namespace nimbus
