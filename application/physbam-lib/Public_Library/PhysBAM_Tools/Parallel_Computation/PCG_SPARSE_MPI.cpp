@@ -126,6 +126,7 @@ Parallel_Solve(SPARSE_MATRIX_FLAT_NXN<T>& A,VECTOR_ND<T>& x,VECTOR_ND<T>& b,cons
 
     double rho=0,rho_old=0;
     for(int iteration=1;;iteration++){
+        LOG::Time("Enter iteration.");
         if(pcg.incomplete_cholesky){
             // solve Mz=r
             A.C->Solve_Forward_Substitution(b_interior,temp_interior,true); // diagonal should be treated as the identity
@@ -133,23 +134,61 @@ Parallel_Solve(SPARSE_MATRIX_FLAT_NXN<T>& A,VECTOR_ND<T>& x,VECTOR_ND<T>& b,cons
         else z_interior=b_interior; // set z=r when there is no preconditioner
 
         // for Neumann boundary conditions only, make sure z sums to zero
-        if(pcg.enforce_compatibility) z_interior-=(T)(Global_Sum(z_interior.Sum_Double_Precision())/global_n);
+        double temp_1 = z_interior.Sum_Double_Precision();
+        if(pcg.enforce_compatibility) {
+          // Barrier.
+          LOG::Time("Before first barrier.");
+          T result_1 = (T)(Global_Sum(temp_1)/global_n);
+          LOG::Time("After first barrier.");
+          z_interior -= result_1;
+        }
 
         // update search direction
-        rho_old=rho;rho=Global_Sum(VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior,b_interior));
-        T beta=0;if(iteration==1) p_interior=z_interior;else{beta=(T)(rho/rho_old);for(int i=1;i<=interior_n;i++) p_interior(i)=z_interior(i)+beta*p_interior(i);} // when iteration=1, beta=0
+        rho_old=rho;
+        double temp_2 =
+            VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior,b_interior);
+        // Barrier.
+        LOG::Time("Before second barrier.");
+        rho=Global_Sum(temp_2);
+        LOG::Time("After second barrier.");
+        T beta=0;
+        if(iteration==1) {
+          p_interior=z_interior;
+        } else {
+          beta=(T)(rho/rho_old);
+          for(int i=1;i<=interior_n;i++) p_interior(i)=z_interior(i)+beta*p_interior(i);
+        } // when iteration=1, beta=0
 
         // update solution and residual
+        // Barrier.
+        LOG::Time("Before third barrier.");
         Fill_Ghost_Cells(p);
+        LOG::Time("After third barrier.");
         A.Times(p,temp);
-        T alpha=(T)(rho/Global_Sum(VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior,temp_interior)));
+        double temp_3
+            = VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior,temp_interior);
+        // Barrier.
+        LOG::Time("Before fourth barrier.");
+        T alpha=(T)(rho/Global_Sum(temp_3));
+        LOG::Time("After fourth barrier.");
         for(int i=1;i<=interior_n;i++){x_interior(i)+=alpha*p_interior(i);b_interior(i)-=alpha*temp_interior(i);}
 
         // remove null space component of b before computing residual norm because we might have converged up to the null space but have some null space component left due to roundoff
-        if(pcg.enforce_compatibility) b_interior-=(T)(Global_Sum(b_interior.Sum_Double_Precision())/global_n);
+        double temp_4 = b_interior.Sum_Double_Precision();
+        if(pcg.enforce_compatibility) {
+          // Barrier.
+          LOG::Time("Before fifth barrier.");
+          T result_4 = (T)(Global_Sum(temp_4)/global_n);
+          LOG::Time("After fifth barrier.");
+          b_interior -= result_4;
+        }
 
 #ifndef COMPILE_WITHOUT_READ_WRITE_SUPPORT
-        T residual=Global_Max(b_interior.Max_Abs());
+        T temp_5 = b_interior.Max_Abs();
+        // Barrier.
+        LOG::Time("Before sixth barrier.");
+        T residual = Global_Max(temp_5);
+        LOG::Time("After sixth barrier.");
 
         // check for convergence
         std::stringstream ss;
