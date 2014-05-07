@@ -435,8 +435,8 @@ template <class TS> class TranslatorPhysBAM {
                             if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
                                   y == region.y() || y == region.y() + region.dy() - 1 ||
                                   z == region.z() || z == region.z() + region.dz() - 1)) {
-                            particle_container->Free_Particle_And_Clear_Pointer(
-                                    (*particles)(bucket_index));
+                                particle_container->Free_Particle_And_Clear_Pointer(
+                                        (*particles)(bucket_index));
                             } else {
                                 ParticleBucket *particle_bucket = (*particles)(bucket_index);
                                 if (!particle_bucket)
