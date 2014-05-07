@@ -432,9 +432,9 @@ template <class TS> class TranslatorPhysBAM {
                         for (int x = region.x(); x < region.x() + region.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
 
-                            if (x == region.x() || x == region.x() + region.dx() - 1 ||
-                                y == region.y() || y == region.y() + region.dy() - 1 ||
-                                z == region.z() || z == region.z() + region.dz() - 1) {
+                            if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
+                                  y == region.y() || y == region.y() + region.dy() - 1 ||
+                                  z == region.z() || z == region.z() + region.dz() - 1)) {
                             particle_container->Free_Particle_And_Clear_Pointer(
                                     (*particles)(bucket_index));
                             } else {
@@ -523,9 +523,9 @@ template <class TS> class TranslatorPhysBAM {
                         for (int x = region.x() + 1; x < region.x() + region.dx() - 1; ++x) {
                             TV_INT bucket_index(x, y, z);
 
-                            if (x == region.x() || x == region.x() + region.dx() - 1 ||
-                                y == region.y() || y == region.y() + region.dy() - 1 ||
-                                z == region.z() || z == region.z() + region.dz() - 1) {
+                            if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
+                                  y == region.y() || y == region.y() + region.dy() - 1 ||
+                                  z == region.z() || z == region.z() + region.dz() - 1)) {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
