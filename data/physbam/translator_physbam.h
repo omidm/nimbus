@@ -40,7 +40,9 @@
  * represents a point in space. The class derives the scalar type
  * (typically float) from this VECTOR, as well as the dimensionality.
  *
- * Author: Philip Levis <pal@cs.stanford.edu>
+ * Author: Philip Levis <pal@cs.stanford.edu>,
+ *         Chinmayee Shah <chshah@stanford.edu>,
+ *         Hang Qu <quhang@stanford.edu>
  */
 
 #ifndef NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_
@@ -49,6 +51,7 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <vector>
 
 #include "data/physbam/physbam_include.h"
 #include "data/physbam/physbam_data.h"
@@ -141,7 +144,7 @@ template <class TS> class TranslatorPhysBAM {
                     Dimension3Vector dest = GetOffset(region, data->region());
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
-                    for (int dim = X_COORD; dim <= Z_COORD; dim++) {
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                         int mult_x = 1;
                         int mult_y = data->region().dx();
                         int mult_z = data->region().dy() * data->region().dx();
@@ -172,9 +175,9 @@ template <class TS> class TranslatorPhysBAM {
                                      (data->region().dz()));
                                 break;
                         }
-                        for (int z = 0; z < range_z; z++) {
-                            for (int y = 0; y < range_y; y++) {
-                                for (int x = 0; x < range_x; x++) {
+                        for (int z = 0; z < range_z; ++z) {
+                            for (int y = 0; y < range_y; ++y) {
+                                for (int x = 0; x < range_x; ++x) {
                                     int source_x = x + src(X_COORD);
                                     int source_y = y + src(Y_COORD);
                                     int source_z = z + src(Z_COORD);
@@ -223,7 +226,7 @@ template <class TS> class TranslatorPhysBAM {
                     Dimension3Vector dest = GetOffset(region, data->region());
                     //  x, y and z values are stored separately due to the
                     // difference in number of x, y and z values in face arrays
-                    for (int dim = X_COORD; dim <= Z_COORD; dim++) {
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                         int mult_x = 1;
                         int mult_y = data->region().dx();
                         int mult_z = data->region().dy() * data->region().dx();
@@ -254,9 +257,9 @@ template <class TS> class TranslatorPhysBAM {
                                      (data->region().dz()));
                                 break;
                         }
-                        for (int z = 0; z < range_z; z++) {
-                            for (int y = 0; y < range_y; y++) {
-                                for (int x = 0; x < range_x; x++) {
+                        for (int z = 0; z < range_z; ++z) {
+                            for (int y = 0; y < range_y; ++y) {
+                                for (int x = 0; x < range_x; ++x) {
                                     int source_x = x + src(X_COORD);
                                     int source_y = y + src(Y_COORD);
                                     int source_z = z + src(Z_COORD);
@@ -338,7 +341,7 @@ template <class TS> class TranslatorPhysBAM {
 
                 //  x, y and z values are stored separately due to the
                 // difference in number of x, y and z values in face arrays
-                for (int dim = X_COORD; dim <= Z_COORD; dim++) {
+                for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
                     int mult_x = 1;
                     int mult_y = data->region().dx();
                     int mult_z = data->region().dy() * data->region().dx();
@@ -369,9 +372,9 @@ template <class TS> class TranslatorPhysBAM {
                                  (data->region().dz()));
                             break;
                     }
-                    for (int z = 0; z < range_z; z++) {
-                        for (int y = 0; y < range_y; y++) {
-                            for (int x = 0; x < range_x; x++) {
+                    for (int z = 0; z < range_z; ++z) {
+                        for (int y = 0; y < range_y; ++y) {
+                            for (int x = 0; x < range_x; ++x) {
                                 int dest_x = x + dest(X_COORD);
                                 int dest_y = y + dest(Y_COORD);
                                 int dest_z = z + dest(Z_COORD);
@@ -407,9 +410,96 @@ template <class TS> class TranslatorPhysBAM {
          */
         static void DeleteParticles(
                 const Coord &shift,
-                const DataArray &da,
+                const std::vector<GeometricRegion> &regions,
                 ParticleContainer *particle_container,
+                const int_dimension_t scale,
                 bool positive) {
+            ParticleArray *particles;
+            if (positive) {
+                particles = &particle_container->positive_particles;
+            } else {
+                particles = &particle_container->negative_particles;
+            }
+
+
+            for (size_t r = 0; r < regions.size(); ++r) {
+                GeometricRegion region = regions[r];
+
+                for (int z = region.z() + 1; z < region.z() + region.dz() - 1; ++z) {
+                    for (int y = region.y() + 1; y < region.y() + region.dy() - 1; ++y) {
+                        for (int x = region.x() + 1; x < region.x() + region.dx() - 1; ++x) {
+                            TV_INT bucket_index(x, y, z);
+                            particle_container->Free_Particle_And_Clear_Pointer(
+                                    (*particles)(bucket_index));
+                        }
+                    }
+                }
+
+                int xr[2] = {region.x(), region.x() + region.dx() - 1};
+                int yr[2] = {region.y(), region.y() + region.dy() - 1};
+                int zr[2] = {region.z(), region.z() + region.dz() - 1};
+
+                for (size_t zd = 0; zd < 2; ++zd) {
+                    for (size_t yd = 0; yd < 2; ++yd) {
+                        for (size_t xd = 0; xd < 2; ++xd) {
+                            TV_INT bucket_index(xr[xd], yr[yd], zr[zd]);
+                            ParticleBucket *particle_bucket = (*particles)(bucket_index);
+                            if (!particle_bucket)
+                                continue;
+
+                            ParticleBucket *particle_bucket_history = particle_bucket;
+                            (*particles)(bucket_index) = NULL;
+                            bool new_particles_alloc = false;
+                            ParticleBucket *particle_new_bucket = NULL;
+
+                            while (particle_bucket) {
+                                for (int i = 1;
+                                        i < particle_bucket->array_collection->Size();
+                                        ++i) {
+                                    TV particle_position = particle_bucket->X(i);
+                                    TV absolute_position = particle_position *
+                                        static_cast<float>(scale) + 1.0;
+                                    if (absolute_position.x >= region.x() &&
+                                        absolute_position.x < region.x() + region.dx() &&
+                                        absolute_position.y >= region.y() &&
+                                        absolute_position.y < region.y() + region.dy() &&
+                                        absolute_position.z >= region.z() &&
+                                        absolute_position.z < region.z() + region.dz()) {
+                                        if (!new_particles_alloc) {
+                                            new_particles_alloc = true;
+                                            (*particles)(bucket_index) =
+                                                particle_container->
+                                                Allocate_Particles(particle_container->template_particles); // NOLINT
+                                            particle_new_bucket = (*particles)(bucket_index);
+                                        }
+
+                                        int index = particle_container->
+                                            Add_Particle(particle_new_bucket);
+                                        particle_new_bucket->X(index) = particle_bucket->X(i);
+                                        particle_new_bucket->radius(index) =
+                                            particle_bucket->radius(i);
+                                        particle_new_bucket->quantized_collision_distance(index) =
+                                            particle_bucket->quantized_collision_distance(i);
+                                        if (particle_container->store_unique_particle_id) {
+                                            PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                particle_new_bucket->array_collection->
+                                                template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+                                            PhysBAM::ARRAY_VIEW<int> *id =
+                                                particle_bucket->array_collection->
+                                                template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
+                                            (*new_id)(index) = (*id)(i);
+                                        }
+                                    }
+                                }
+                                particle_bucket = particle_bucket->next;
+                            }
+                        // Delete the original bucket.
+                        particle_container->
+                            Free_Particle_And_Clear_Pointer(particle_bucket_history);
+                        }
+                    }
+                }
+            }
         }
 
         static void DeleteRemovedParticles(
@@ -456,9 +546,9 @@ template <class TS> class TranslatorPhysBAM {
             // Checks whether the geometric region in the particle array is valid, and
             // clears corresponding buckets inside the geometric region if necessary.
             if (!merge) {
-                for (int z = region.z(); z <= region.z() + region.dz(); z++) {
-                    for (int y = region.y(); y <= region.y() + region.dy(); y++) {
-                        for (int x = region.x(); x <= region.x() + region.dx(); x++) {
+                for (int z = region.z(); z <= region.z() + region.dz(); ++z) {
+                    for (int y = region.y(); y <= region.y() + region.dy(); ++y) {
+                        for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
                             particle_container->Free_Particle_And_Clear_Pointer(
                                     (*particles)(bucket_index));
@@ -556,9 +646,9 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             // Loop through each particle bucket in the specified region.
-            for (int z = region.z(); z <= region.z() + region.dz(); z++)
-                for (int y = region.y(); y <= region.y() + region.dy(); y++)
-                    for (int x = region.x(); x <= region.x() + region.dx(); x++) {
+            for (int z = region.z(); z <= region.z() + region.dz(); ++z)
+                for (int y = region.y(); y <= region.y() + region.dy(); ++y)
+                    for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
                         TV_INT bucket_index(x, y, z);
                         DataArray::const_iterator iter = write_set.begin();
                         for (; iter != write_set.end(); ++iter) {
@@ -583,8 +673,9 @@ template <class TS> class TranslatorPhysBAM {
                             }
                             ParticleBucket* particle_bucket = (*particles)(bucket_index);
                             while (particle_bucket) {
-                                for (int i = 1; i <= particle_bucket->array_collection->Size();
-                                        i++) {
+                                for (int i = 1;
+                                        i <= particle_bucket->array_collection->Size();
+                                        ++i) {
                                     TV particle_position = particle_bucket->X(i);
                                     TV absolute_position =
                                         particle_position * (float) kScale + 1.0; // NOLINT
@@ -664,9 +755,9 @@ template <class TS> class TranslatorPhysBAM {
             // Checks whether the geometric region in the particle array is valid, and
             // clears corresponding buckets inside the geometric region if necessary.
             if (!merge) {
-                for (int z = region.z(); z <= region.z() + region.dz(); z++) {
-                    for (int y = region.y(); y <= region.y() + region.dy(); y++) {
-                        for (int x = region.x(); x <= region.x() + region.dx(); x++) {
+                for (int z = region.z(); z <= region.z() + region.dz(); ++z) {
+                    for (int y = region.y(); y <= region.y() + region.dy(); ++y) {
+                        for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
                             if ((*particles)(bucket_index)) {
                                 delete (*particles)(bucket_index);
@@ -771,14 +862,15 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             // Loop through each particle bucket in the specified region.
-            for (int z = region.z(); z <= region.z() + region.dz(); z++)
-                for (int y = region.y(); y <= region.y() + region.dy(); y++)
-                    for (int x = region.x(); x <= region.x() + region.dx(); x++) {
+            for (int z = region.z(); z <= region.z() + region.dz(); ++z)
+                for (int y = region.y(); y <= region.y() + region.dy(); ++y)
+                    for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
                         TV_INT bucket_index(x, y, z);
                         RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
                         while (particle_bucket) {
-                            for (int i = 1; i <= particle_bucket->array_collection->Size();
-                                    i++) {
+                            for (int i = 1;
+                                    i <= particle_bucket->array_collection->Size();
+                                    ++i) {
                                 TV particle_position = particle_bucket->X(i);
                                 TV absolute_position =
                                     particle_position * (float) kScale + 1.0; // NOLINT
@@ -855,9 +947,9 @@ template <class TS> class TranslatorPhysBAM {
                     Dimension3Vector src  = GetOffset(data->region(), region);
                     Dimension3Vector dest = GetOffset(region, data->region());
 
-                    for (int z = 0; z < overlap(Z_COORD); z++) {
-                        for (int y = 0; y < overlap(Y_COORD); y++) {
-                            for (int x = 0; x < overlap(X_COORD); x++) {
+                    for (int z = 0; z < overlap(Z_COORD); ++z) {
+                        for (int y = 0; y < overlap(Y_COORD); ++y) {
+                            for (int x = 0; x < overlap(X_COORD); ++x) {
                                 int source_x = x + src(X_COORD);
                                 int source_y = y + src(Y_COORD);
                                 int source_z = z + src(Z_COORD);
@@ -898,9 +990,9 @@ template <class TS> class TranslatorPhysBAM {
                     Dimension3Vector src  = GetOffset(region, data->region());
                     Dimension3Vector dest = GetOffset(data->region(), region);
 
-                    for (int z = 0; z < overlap(Z_COORD); z++) {
-                        for (int y = 0; y < overlap(Y_COORD); y++) {
-                            for (int x = 0; x < overlap(X_COORD); x++) {
+                    for (int z = 0; z < overlap(Z_COORD); ++z) {
+                        for (int y = 0; y < overlap(Y_COORD); ++y) {
+                            for (int x = 0; x < overlap(X_COORD); ++x) {
                                 int dest_x = x + dest(X_COORD);
                                 int dest_y = y + dest(Y_COORD);
                                 int dest_z = z + dest(Z_COORD);
