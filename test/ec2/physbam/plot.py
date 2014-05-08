@@ -51,7 +51,7 @@ for line in content:
 
 n_groups = len(D[0])
 index = np.arange(n_groups)
-y_ticks = 3
+y_ticks = 5
 font = FontProperties()
 font.set_family('serif')
 
@@ -70,6 +70,7 @@ for idx in np.arange(len(AX)):
   # AX[idx].set_ylabel('log time(ms)', fontproperties=font)
   AX[idx].locator_params(axis = 'y', nbins = y_ticks)
   AX[idx].set_ylabel('time(ms)', fontproperties=font)
+  AX[idx].set_ylim(0, max(data + error) * 1.1)
 
   idx += 1
 
