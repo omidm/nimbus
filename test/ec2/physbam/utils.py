@@ -13,6 +13,21 @@ import ec2
 
 temp_file_name = '_temp_file_'
 
+
+def copy_binary_file_to_hosts(ip_addresses):
+
+  for ip in ip_addresses:
+    command = ''
+    command += ' scp -i ' + config.PRIVATE_KEY
+    command += ' -o UserKnownHostsFile=/dev/null '
+    command += ' -o StrictHostKeyChecking=no '
+    command +=  config.SOURCE_PATH + 'Water '
+    command += ' ubuntu@' + ip + ':' + config.REMOTE_PATH
+
+    subprocess.call(command, shell=True)
+
+
+
 def make_nodes_file_content(ip_addresses):
 
   string = ""
@@ -25,32 +40,37 @@ def make_nodes_file_content(ip_addresses):
   file.close()
 
 
-
 def copy_nodes_file_to_hosts(ip_addresses):
-
   make_nodes_file_content(ip_addresses)
 
   for ip in ip_addresses:
-    subprocess.call(['scp', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        temp_file_name,
-        'ubuntu@' + ip + ':~/' + config.DIRECTORY_PATH + config.NODES_FILE_NAME])
+    command = ''
+    command += ' scp -i ' + config.PRIVATE_KEY
+    command += ' -o UserKnownHostsFile=/dev/null '
+    command += ' -o StrictHostKeyChecking=no '
+    command += temp_file_name
+    command += ' ubuntu@' + ip + ':' + config.REMOTE_PATH + config.NODES_FILE_NAME
+
+    subprocess.call(command, shell=True)
 
   subprocess.call(['rm', temp_file_name])
 
 
 def run_experiment(ip):
-  command =  'cd ' + config.DIRECTORY_PATH + ';'
-  command += 'mpirun -hostfile ' + config.NODES_FILE_NAME
+  command = ''
+  command += ' ssh -i ' + config.PRIVATE_KEY
+  command += ' -o UserKnownHostsFile=/dev/null '
+  command += ' -o StrictHostKeyChecking=no '
+  command += ' ubuntu@' + ip
+  command += ' \"cd ' + config.REMOTE_PATH + '; '
+  command += ' mpirun -hostfile ' + config.NODES_FILE_NAME
   command += ' -np ' + str(config.INSTANCE_NUM)
   command += ' ./Water -scale ' + str(config.SCALE)
-  command += ' -e ' + str(config.FRAME_NUM)
+  command += ' -e ' + str(config.FRAME_NUM) + '\" '
 
-  subprocess.call(['ssh', '-i', config.PRIVATE_KEY,
-      '-o', 'UserKnownHostsFile=/dev/null',
-      '-o', 'StrictHostKeyChecking=no',
-      'ubuntu@' + ip, command])
+  print command
+
+  subprocess.call(command, shell=True)
 
 
 def collect_output_data(ip_addresses):
@@ -61,11 +81,14 @@ def collect_output_data(ip_addresses):
   process_num = 0
   for ip in ip_addresses:
     process_num += 1
-    subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        'ubuntu@' + ip + ':~/' + config.DIRECTORY_PATH + config.OUTPUT_NAME + str(process_num),
-        config.OUTPUT_NAME])
+    command = ''
+    command += ' scp -r -i ' + config.PRIVATE_KEY
+    command += ' -o UserKnownHostsFile=/dev/null '
+    command += ' -o StrictHostKeyChecking=no '
+    command += ' ubuntu@' + ip + ':' + config.REMOTE_PATH + config.OUTPUT_NAME + str(process_num)
+    command += ' ' + config.OUTPUT_NAME
+
+    subprocess.call(command,  shell=True)
 
 
 
