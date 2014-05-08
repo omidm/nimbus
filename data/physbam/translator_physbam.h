@@ -427,78 +427,72 @@ template <class TS> class TranslatorPhysBAM {
             for (size_t r = 0; r < regions.size(); ++r) {
                 GeometricRegion region = regions[r];
 
-                for (int z = region.z() + 1; z < region.z() + region.dz() - 1; ++z) {
-                    for (int y = region.y() + 1; y < region.y() + region.dy() - 1; ++y) {
-                        for (int x = region.x() + 1; x < region.x() + region.dx() - 1; ++x) {
+                for (int z = region.z(); z < region.z() + region.dz(); ++z) {
+                    for (int y = region.y(); y < region.y() + region.dy() ; ++y) {
+                        for (int x = region.x(); x < region.x() + region.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
+
+                            if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
+                                  y == region.y() || y == region.y() + region.dy() - 1 ||
+                                  z == region.z() || z == region.z() + region.dz() - 1)) {
                             particle_container->Free_Particle_And_Clear_Pointer(
                                     (*particles)(bucket_index));
-                        }
-                    }
-                }
+                            } else {
+                                ParticleBucket *particle_bucket = (*particles)(bucket_index);
+                                if (!particle_bucket)
+                                    continue;
 
-                int xr[2] = {region.x(), region.x() + region.dx() - 1};
-                int yr[2] = {region.y(), region.y() + region.dy() - 1};
-                int zr[2] = {region.z(), region.z() + region.dz() - 1};
+                                ParticleBucket *particle_bucket_history = particle_bucket;
+                                (*particles)(bucket_index) = NULL;
+                                bool new_particles_alloc = false;
+                                ParticleBucket *particle_new_bucket = NULL;
 
-                for (size_t zd = 0; zd < 2; ++zd) {
-                    for (size_t yd = 0; yd < 2; ++yd) {
-                        for (size_t xd = 0; xd < 2; ++xd) {
-                            TV_INT bucket_index(xr[xd], yr[yd], zr[zd]);
-                            ParticleBucket *particle_bucket = (*particles)(bucket_index);
-                            if (!particle_bucket)
-                                continue;
+                                while (particle_bucket) {
+                                    for (int i = 1;
+                                            i < particle_bucket->array_collection->Size();
+                                            ++i) {
+                                        TV particle_position = particle_bucket->X(i);
+                                        TV absolute_position = particle_position *
+                                            static_cast<float>(scale) + 1.0;
+                                        if (absolute_position.x >= region.x() &&
+                                            absolute_position.x < region.x() + region.dx() &&
+                                            absolute_position.y >= region.y() &&
+                                            absolute_position.y < region.y() + region.dy() &&
+                                            absolute_position.z >= region.z() &&
+                                            absolute_position.z < region.z() + region.dz()) {
+                                            if (!new_particles_alloc) {
+                                                new_particles_alloc = true;
+                                                (*particles)(bucket_index) =
+                                                    particle_container->
+                                                    Allocate_Particles(particle_container->
+                                                            template_particles);
+                                                particle_new_bucket = (*particles)(bucket_index);
+                                            }
 
-                            ParticleBucket *particle_bucket_history = particle_bucket;
-                            (*particles)(bucket_index) = NULL;
-                            bool new_particles_alloc = false;
-                            ParticleBucket *particle_new_bucket = NULL;
-
-                            while (particle_bucket) {
-                                for (int i = 1;
-                                        i < particle_bucket->array_collection->Size();
-                                        ++i) {
-                                    TV particle_position = particle_bucket->X(i);
-                                    TV absolute_position = particle_position *
-                                        static_cast<float>(scale) + 1.0;
-                                    if (absolute_position.x >= region.x() &&
-                                        absolute_position.x < region.x() + region.dx() &&
-                                        absolute_position.y >= region.y() &&
-                                        absolute_position.y < region.y() + region.dy() &&
-                                        absolute_position.z >= region.z() &&
-                                        absolute_position.z < region.z() + region.dz()) {
-                                        if (!new_particles_alloc) {
-                                            new_particles_alloc = true;
-                                            (*particles)(bucket_index) =
-                                                particle_container->
-                                                Allocate_Particles(particle_container->
-                                                        template_particles);
-                                            particle_new_bucket = (*particles)(bucket_index);
-                                        }
-
-                                        int index = particle_container->
-                                            Add_Particle(particle_new_bucket);
-                                        particle_new_bucket->X(index) = particle_bucket->X(i);
-                                        particle_new_bucket->radius(index) =
-                                            particle_bucket->radius(i);
-                                        particle_new_bucket->quantized_collision_distance(index) =
-                                            particle_bucket->quantized_collision_distance(i);
-                                        if (particle_container->store_unique_particle_id) {
-                                            PhysBAM::ARRAY_VIEW<int> *new_id =
-                                                particle_new_bucket->array_collection->
-                                                template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
-                                            PhysBAM::ARRAY_VIEW<int> *id =
-                                                particle_bucket->array_collection->
-                                                template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
-                                            (*new_id)(index) = (*id)(i);
+                                            int index = particle_container->
+                                                Add_Particle(particle_new_bucket);
+                                            particle_new_bucket->X(index) = particle_bucket->X(i);
+                                            particle_new_bucket->radius(index) =
+                                                particle_bucket->radius(i);
+                                            particle_new_bucket->quantized_collision_distance(index) = // NOLINT
+                                                particle_bucket->quantized_collision_distance(i);
+                                            if (particle_container->store_unique_particle_id) {
+                                                PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                    particle_new_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                PhysBAM::ARRAY_VIEW<int> *id =
+                                                    particle_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                (*new_id)(index) = (*id)(i);
+                                            }
                                         }
                                     }
+                                    particle_bucket = particle_bucket->next;
                                 }
-                                particle_bucket = particle_bucket->next;
+                                // Delete the original bucket.
+                                particle_container->
+                                    Free_Particle_And_Clear_Pointer(particle_bucket_history);
                             }
-                        // Delete the original bucket.
-                        particle_container->
-                            Free_Particle_And_Clear_Pointer(particle_bucket_history);
                         }
                     }
                 }
@@ -528,74 +522,68 @@ template <class TS> class TranslatorPhysBAM {
                     for (int y = region.y() + 1; y < region.y() + region.dy() - 1; ++y) {
                         for (int x = region.x() + 1; x < region.x() + region.dx() - 1; ++x) {
                             TV_INT bucket_index(x, y, z);
-                            particle_container->Free_Particle_And_Clear_Pointer(
-                                    (*particles)(bucket_index));
-                        }
-                    }
-                }
 
-                int xr[2] = {region.x(), region.x() + region.dx() - 1};
-                int yr[2] = {region.y(), region.y() + region.dy() - 1};
-                int zr[2] = {region.z(), region.z() + region.dz() - 1};
+                            if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
+                                  y == region.y() || y == region.y() + region.dy() - 1 ||
+                                  z == region.z() || z == region.z() + region.dz() - 1)) {
+                                particle_container->Free_Particle_And_Clear_Pointer(
+                                        (*particles)(bucket_index));
+                            } else {
+                                RemovedParticleBucket *particle_bucket = (*particles)(bucket_index); // NOLINT
+                                if (!particle_bucket)
+                                    continue;
 
-                for (size_t zd = 0; zd < 2; ++zd) {
-                    for (size_t yd = 0; yd < 2; ++yd) {
-                        for (size_t xd = 0; xd < 2; ++xd) {
-                            TV_INT bucket_index(xr[xd], yr[yd], zr[zd]);
-                            RemovedParticleBucket *particle_bucket = (*particles)(bucket_index);
-                            if (!particle_bucket)
-                                continue;
+                                RemovedParticleBucket *particle_bucket_history = particle_bucket;
+                                (*particles)(bucket_index) = NULL;
+                                bool new_particles_alloc = false;
+                                RemovedParticleBucket *particle_new_bucket = NULL;
 
-                            RemovedParticleBucket *particle_bucket_history = particle_bucket;
-                            (*particles)(bucket_index) = NULL;
-                            bool new_particles_alloc = false;
-                            RemovedParticleBucket *particle_new_bucket = NULL;
+                                while (particle_bucket) {
+                                    for (int i = 1;
+                                            i < particle_bucket->array_collection->Size();
+                                            ++i) {
+                                        TV particle_position = particle_bucket->X(i);
+                                        TV absolute_position = particle_position *
+                                            static_cast<float>(scale) + 1.0;
+                                        if (absolute_position.x >= region.x() &&
+                                            absolute_position.x < region.x() + region.dx() &&
+                                            absolute_position.y >= region.y() &&
+                                            absolute_position.y < region.y() + region.dy() &&
+                                            absolute_position.z >= region.z() &&
+                                            absolute_position.z < region.z() + region.dz()) {
+                                            if (!new_particles_alloc) {
+                                                new_particles_alloc = true;
+                                                (*particles)(bucket_index) =
+                                                    particle_container->
+                                                    Allocate_Particles(particle_container->
+                                                            template_removed_particles);
+                                                particle_new_bucket = (*particles)(bucket_index);
+                                            }
 
-                            while (particle_bucket) {
-                                for (int i = 1;
-                                        i < particle_bucket->array_collection->Size();
-                                        ++i) {
-                                    TV particle_position = particle_bucket->X(i);
-                                    TV absolute_position = particle_position *
-                                        static_cast<float>(scale) + 1.0;
-                                    if (absolute_position.x >= region.x() &&
-                                        absolute_position.x < region.x() + region.dx() &&
-                                        absolute_position.y >= region.y() &&
-                                        absolute_position.y < region.y() + region.dy() &&
-                                        absolute_position.z >= region.z() &&
-                                        absolute_position.z < region.z() + region.dz()) {
-                                        if (!new_particles_alloc) {
-                                            new_particles_alloc = true;
-                                            (*particles)(bucket_index) =
-                                                particle_container->
-                                                Allocate_Particles(particle_container->
-                                                        template_removed_particles);
-                                            particle_new_bucket = (*particles)(bucket_index);
-                                        }
-
-                                        int index = particle_container->
-                                            Add_Particle(particle_new_bucket);
-                                        particle_new_bucket->X(index) = particle_bucket->X(i);
-                                        particle_new_bucket->radius(index) =
-                                            particle_bucket->radius(i);
-                                        particle_new_bucket->quantized_collision_distance(index) =
-                                            particle_bucket->quantized_collision_distance(i);
-                                        if (particle_container->store_unique_particle_id) {
-                                            PhysBAM::ARRAY_VIEW<int> *new_id =
-                                                particle_new_bucket->array_collection->
-                                                template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
-                                            PhysBAM::ARRAY_VIEW<int> *id =
-                                                particle_bucket->array_collection->
-                                                template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID);
-                                            (*new_id)(index) = (*id)(i);
+                                            int index = particle_container->
+                                                Add_Particle(particle_new_bucket);
+                                            particle_new_bucket->X(index) = particle_bucket->X(i);
+                                            particle_new_bucket->radius(index) =
+                                                particle_bucket->radius(i);
+                                            particle_new_bucket->quantized_collision_distance(index) = // NOLINT
+                                                particle_bucket->quantized_collision_distance(i);
+                                            if (particle_container->store_unique_particle_id) {
+                                                PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                    particle_new_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                PhysBAM::ARRAY_VIEW<int> *id =
+                                                    particle_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                (*new_id)(index) = (*id)(i);
+                                            }
                                         }
                                     }
+                                    particle_bucket = particle_bucket->next;
                                 }
-                                particle_bucket = particle_bucket->next;
+                                // Delete the original bucket.
+                                particle_container->
+                                    Free_Particle_And_Clear_Pointer(particle_bucket_history);
                             }
-                        // Delete the original bucket.
-                        particle_container->
-                            Free_Particle_And_Clear_Pointer(particle_bucket_history);
                         }
                     }
                 }
