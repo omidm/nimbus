@@ -167,46 +167,44 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
                 const nimbus::DataArray &diff,
                 const nimbus::GeometricRegion &reg,
                 bool all_lids_diff) {
-    //dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
-    //std::vector<nimbus::GeometricRegion> regions;
-    //nimbus::Coord neg_shift(-shift.x, -shift.y, -shift.z);
-    //for (size_t i = 0; i < diff.size(); ++i) {
-    //    nimbus::GeometricRegion data_reg = diff[i]->region();
-    //    data_reg.Translate(neg_shift);
-    //    regions.push_back(diff[i]->region());
-    //}
-    //bool merge = true;
-    //nimbus::DataArray final_read = diff;
+    dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
+    // bool merge = true;
+    // nimbus::DataArray final_read = diff;
     bool merge = false;
     nimbus::DataArray final_read = read_set;
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
+    std::vector<nimbus::GeometricRegion> pos_reg, neg_reg, pos_rem_reg, neg_rem_reg;
     for (size_t i = 0; i < final_read.size(); ++i) {
         nimbus::Data *d = final_read[i];
         if (d->name() == APP_POS_PARTICLES) {
             pos.push_back(d);
+            pos_reg.push_back(d->region());
         } else if (d->name() == APP_NEG_PARTICLES) {
             neg.push_back(d);
+            neg_reg.push_back(d->region());
         } else if (d->name() == APP_POS_REM_PARTICLES) {
             pos_rem.push_back(d);
+            pos_rem_reg.push_back(d->region());
         } else if (d->name() == APP_NEG_REM_PARTICLES) {
             neg_rem.push_back(d);
+            neg_rem_reg.push_back(d->region());
         }
     }
     if (!pos.empty()) {
-        //Translator::DeleteParticles(shift_, regions, particle_levelset, scale_, true);
+        // Translator::DeleteParticles(shift_, pos_reg, particle_levelset, scale_, true);
         Translator::ReadParticles(app_object_region(), shift_, pos, particle_levelset, scale_, true, merge);
     }
     if (!neg.empty()) {
-        //Translator::DeleteParticles(shift_, regions, particle_levelset, scale_, false);
+        // Translator::DeleteParticles(shift_, neg_reg, particle_levelset, scale_, false);
         Translator::ReadParticles(app_object_region(), shift_, neg, particle_levelset, scale_, false, merge);
     }
     if (!pos_rem.empty()) {
-        //Translator::DeleteRemovedParticles(shift_, regions, particle_levelset, scale_, true);
+        // Translator::DeleteRemovedParticles(shift_, pos_rem_reg, particle_levelset, scale_, true);
         Translator::ReadRemovedParticles(app_object_region(), shift_, pos_rem, particle_levelset, scale_, true, merge);
     }
     if (!neg_rem.empty()) {
-        //Translator::DeleteRemovedParticles(shift_, regions, particle_levelset, scale_, false);
+        // Translator::DeleteRemovedParticles(shift_, neg_rem_reg, particle_levelset, scale_, false);
         Translator::ReadRemovedParticles(app_object_region(), shift_, neg_rem, particle_levelset, scale_, false, merge);
     }
 }
@@ -214,7 +212,7 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &reg) const {
-    //dbg(DBG_WARN, "\n Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
+    dbg(DBG_WARN, "\n--- Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
     nimbus::DataArray pos, neg, pos_rem, neg_rem;
     for (size_t i = 0; i < write_set.size(); ++i) {
         nimbus::Data *d = write_set[i];
