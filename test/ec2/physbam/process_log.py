@@ -185,10 +185,10 @@ string += '\nt: Advect Removed Particles Job\n'
 string += 'End\n'
 
 
-string += "force communication: " + str(exchange_force_agg / float(force_agg))
-string += "advect phi communication: " + str(exchange_advect_phi_agg / float(advect_phi_agg))
-string += "advect v communication: " + str(exchange_advect_v_agg / float(advect_v_agg))
-string +=  "advect removed particles communication: " + str(exchange_advect_removed_particles_agg / float(advect_removed_particles_agg))
+string += "force communication: " + str(exchange_force_agg / float(force_agg)) + '\n'
+string += "advect phi communication: " + str(exchange_advect_phi_agg / float(advect_phi_agg)) + '\n'
+string += "advect v communication: " + str(exchange_advect_v_agg / float(advect_v_agg)) + '\n'
+string +=  "advect removed particles communication: " + str(exchange_advect_removed_particles_agg / float(advect_removed_particles_agg)) + '\n'
 
 
 f = open(sys.argv[2], 'w+')

@@ -22,7 +22,7 @@ import ec2
 #     config.SECURITY_GROUP,
 #     config.PLACEMENT_GROUP,
 #     config.INSTANCE_TYPE);
-
+ 
 # ec2.wait_for_instances_to_start(
 #     config.EC2_LOCATION,
 #     config.INSTANCE_NUM);
