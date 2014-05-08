@@ -424,17 +424,21 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+
             for (size_t r = 0; r < regions.size(); ++r) {
                 GeometricRegion region = regions[r];
+                GeometricRegion pregion = regions[r];
+                pregion.Translate(neg_shift);
 
-                for (int z = region.z(); z < region.z() + region.dz(); ++z) {
-                    for (int y = region.y(); y < region.y() + region.dy() ; ++y) {
-                        for (int x = region.x(); x < region.x() + region.dx(); ++x) {
+                for (int z = pregion.z(); z < pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y(); y < pregion.y() + pregion.dy() ; ++y) {
+                        for (int x = pregion.x(); x < pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
 
-                            if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
-                                  y == region.y() || y == region.y() + region.dy() - 1 ||
-                                  z == region.z() || z == region.z() + region.dz() - 1)) {
+                            if (!(x == pregion.x() || x == pregion.x() + pregion.dx() - 1 ||
+                                  y == pregion.y() || y == pregion.y() + pregion.dy() - 1 ||
+                                  z == pregion.z() || z == pregion.z() + pregion.dz() - 1)) {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
@@ -515,12 +519,16 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->removed_negative_particles;
             }
 
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+
             for (size_t r = 0; r < regions.size(); ++r) {
                 GeometricRegion region = regions[r];
+                GeometricRegion pregion = regions[r];
+                pregion.Translate(neg_shift);
 
-                for (int z = region.z() + 1; z < region.z() + region.dz() - 1; ++z) {
-                    for (int y = region.y() + 1; y < region.y() + region.dy() - 1; ++y) {
-                        for (int x = region.x() + 1; x < region.x() + region.dx() - 1; ++x) {
+                for (int z = pregion.z(); z < pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y(); y < pregion.y() + pregion.dy() ; ++y) {
+                        for (int x = pregion.x(); x < pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
 
                             if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
@@ -600,13 +608,6 @@ template <class TS> class TranslatorPhysBAM {
          * negative particles.
          * "merge" option specifies whether to keep original particle data in
          * "particle_container->.
-         *
-         * More explanation for the region calculation, if,
-         *     region = {-1, -1, -1, 12, 12, 12}, shift = {10, 10, 10},
-         * then we will copy the data in "instances" limited by global region:
-         *     {9, 9, 9, 22, 22, 22}
-         * into "particle_container-> for the local region:
-         *     {-1, -1, -1, 12, 12, 12}.
          */
         static void ReadParticles(const GeometricRegion &region,
                 const Coord &shift,
@@ -615,8 +616,6 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
-            if (read_set.empty())
-                return;
             ParticleArray* particles;
             if (positive) {
                 particles = &particle_container->positive_particles;
@@ -624,12 +623,16 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pregion = region;
+            pregion.Translate(neg_shift);
+
             // Checks whether the geometric region in the particle array is valid, and
             // clears corresponding buckets inside the geometric region if necessary.
             if (!merge) {
-                for (int z = region.z(); z <= region.z() + region.dz(); ++z) {
-                    for (int y = region.y(); y <= region.y() + region.dy(); ++y) {
-                        for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
+                for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y) {
+                        for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
                             particle_container->Free_Particle_And_Clear_Pointer(
                                     (*particles)(bucket_index));
@@ -653,12 +656,12 @@ template <class TS> class TranslatorPhysBAM {
                     absolute_position.z = p->position[2];
                     // TODO(quhang) Needs to deal with the particles that lies exactly on
                     // the boundary.
-                    if (absolute_position.x >= region.x() + shift.x &&
-                            absolute_position.x < region.x() + region.dx() + shift.x &&
-                            absolute_position.y >= region.y() + shift.y &&
-                            absolute_position.y < region.y() + region.dy() + shift.y &&
-                            absolute_position.z >= region.z() + shift.z &&
-                            absolute_position.z < region.z() + region.dz() + shift.z) {
+                    if (absolute_position.x >= region.x() &&
+                            absolute_position.x < region.x() + region.dx() &&
+                            absolute_position.y >= region.y() &&
+                            absolute_position.y < region.y() + region.dy() &&
+                            absolute_position.z >= region.z() &&
+                            absolute_position.z < region.z() + region.dz()) {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
@@ -696,13 +699,6 @@ template <class TS> class TranslatorPhysBAM {
          *
          * "positive" option specifies whether to work on positive particles or
          * negative particles.
-         *
-         * More explanation for the region calculation, if,
-         *     region = {-1, -1, -1, 12, 12, 12}, shift = {10, 10, 10},
-         * then we will copy the data of "particle_container-> in the local region:
-         *     {-1, -1, -1, 12, 12, 12}
-         * into the global region of corresponding "instances":
-         *     {9, 9, 9, 22, 22, 22}.
          */
         static void WriteParticles(const GeometricRegion &region,
                 const Coord &shift,
@@ -726,10 +722,14 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pregion = region;
+            pregion.Translate(neg_shift);
+
             // Loop through each particle bucket in the specified region.
-            for (int z = region.z(); z <= region.z() + region.dz(); ++z)
-                for (int y = region.y(); y <= region.y() + region.dy(); ++y)
-                    for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
+            for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z)
+                for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y)
+                    for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                         TV_INT bucket_index(x, y, z);
                         DataArray::const_iterator iter = write_set.begin();
                         for (; iter != write_set.end(); ++iter) {
@@ -824,8 +824,6 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
-            if (read_set.empty())
-                return;
             RemovedParticleArray* particles;
             if (positive) {
                 particles = &particle_container->removed_positive_particles;
@@ -833,12 +831,16 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->removed_negative_particles;
             }
 
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pregion = region;
+            pregion.Translate(neg_shift);
+
             // Checks whether the geometric region in the particle array is valid, and
             // clears corresponding buckets inside the geometric region if necessary.
             if (!merge) {
-                for (int z = region.z(); z <= region.z() + region.dz(); ++z) {
-                    for (int y = region.y(); y <= region.y() + region.dy(); ++y) {
-                        for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
+                for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y) {
+                        for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
                             if ((*particles)(bucket_index)) {
                                 delete (*particles)(bucket_index);
@@ -868,12 +870,12 @@ template <class TS> class TranslatorPhysBAM {
                     absolute_position.x = p->position[0];
                     absolute_position.y = p->position[1];
                     absolute_position.z = p->position[2];
-                    if (absolute_position.x >= region.x() + shift.x &&
-                            absolute_position.x < region.x() + region.dx() + shift.x &&
-                            absolute_position.y >= region.y() + shift.y &&
-                            absolute_position.y < region.y() + region.dy() + shift.y &&
-                            absolute_position.z >= region.z() + shift.z &&
-                            absolute_position.z < region.z() + region.dz() + shift.z) {
+                    if (absolute_position.x >= region.x() &&
+                            absolute_position.x < region.x() + region.dx() &&
+                            absolute_position.y >= region.y() &&
+                            absolute_position.y < region.y() + region.dy() &&
+                            absolute_position.z >= region.z() &&
+                            absolute_position.z < region.z() + region.dz()) {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
@@ -942,10 +944,14 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->removed_negative_particles;
             }
 
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pregion = region;
+            pregion.Translate(neg_shift);
+
             // Loop through each particle bucket in the specified region.
-            for (int z = region.z(); z <= region.z() + region.dz(); ++z)
-                for (int y = region.y(); y <= region.y() + region.dy(); ++y)
-                    for (int x = region.x(); x <= region.x() + region.dx(); ++x) {
+            for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z)
+                for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y)
+                    for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                         TV_INT bucket_index(x, y, z);
                         RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
                         while (particle_bucket) {

@@ -186,12 +186,6 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     typedef typename nimbus::TranslatorPhysBAM<T> Translator;
     nimbus::GeometricRegion local_region = init_config.local_region;
     nimbus::GeometricRegion global_region = init_config.global_region;
-    nimbus::GeometricRegion enlarge(1-kGhostNum,
-                                    1-kGhostNum,
-                                    1-kGhostNum,
-                                    local_region.dx()+2*kGhostNum,
-                                    local_region.dy()+2*kGhostNum,
-                                    local_region.dz()+2*kGhostNum);
     nimbus::Coord shift;
     shift.x = local_region.x() - global_region.x();
     shift.y = local_region.y() - global_region.y();
@@ -204,14 +198,14 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // TODO(Chinmayee): get rid of all inner statements once delete is
     // implemented
-    Translator::ReadParticles(enlarge, shift, read_inner_p, particle_levelset, scale, true);
-    Translator::ReadParticles(enlarge, shift, read_inner_n, particle_levelset, scale, false);
-    Translator::ReadRemovedParticles(enlarge, shift, read_inner_pr, particle_levelset, scale, true);
-    Translator::ReadRemovedParticles(enlarge, shift, read_inner_nr, particle_levelset, scale, false);
-    Translator::ReadParticles(enlarge, shift, read_outer_p, particle_levelset, scale, true, true);
-    Translator::ReadParticles(enlarge, shift, read_outer_n, particle_levelset, scale, false, true);
-    Translator::ReadRemovedParticles(enlarge, shift, read_outer_pr, particle_levelset, scale, true, true);
-    Translator::ReadRemovedParticles(enlarge, shift, read_outer_nr, particle_levelset, scale, false, true);
+    Translator::ReadParticles(array_outer, shift, read_inner_p, particle_levelset, scale, true);
+    Translator::ReadParticles(array_outer, shift, read_inner_n, particle_levelset, scale, false);
+    Translator::ReadRemovedParticles(array_outer, shift, read_inner_pr, particle_levelset, scale, true);
+    Translator::ReadRemovedParticles(array_outer, shift, read_inner_nr, particle_levelset, scale, false);
+    Translator::ReadParticles(array_outer, shift, read_outer_p, particle_levelset, scale, true, true);
+    Translator::ReadParticles(array_outer, shift, read_outer_n, particle_levelset, scale, false, true);
+    Translator::ReadRemovedParticles(array_outer, shift, read_outer_pr, particle_levelset, scale, true, true);
+    Translator::ReadRemovedParticles(array_outer, shift, read_outer_nr, particle_levelset, scale, false, true);
 
     cache_ple->Write(array_outer, true);
 

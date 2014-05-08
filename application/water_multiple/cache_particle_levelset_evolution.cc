@@ -37,6 +37,7 @@
  */
 
 #include <string>
+#include <vector>
 
 #include "application/water_multiple/cache_particle_levelset_evolution.h"
 #include "application/water_multiple/data_names.h"
@@ -167,6 +168,15 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
                 const nimbus::GeometricRegion &reg,
                 bool all_lids_diff) {
     //dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
+    //std::vector<nimbus::GeometricRegion> regions;
+    //nimbus::Coord neg_shift(-shift.x, -shift.y, -shift.z);
+    //for (size_t i = 0; i < diff.size(); ++i) {
+    //    nimbus::GeometricRegion data_reg = diff[i]->region();
+    //    data_reg.Translate(neg_shift);
+    //    regions.push_back(diff[i]->region());
+    //}
+    //bool merge = true;
+    //nimbus::DataArray final_read = diff;
     bool merge = false;
     nimbus::DataArray final_read = read_set;
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
@@ -183,14 +193,22 @@ ReadDiffToCache(const nimbus::DataArray &read_set,
             neg_rem.push_back(d);
         }
     }
-    if (!pos.empty())
-        Translator::ReadParticles(enlarge_, shift_, pos, particle_levelset, scale_, true, merge);
-    if (!neg.empty())
-        Translator::ReadParticles(enlarge_, shift_, neg, particle_levelset, scale_, false, merge);
-    if (!pos_rem.empty())
-        Translator::ReadRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true, merge);
-    if (!neg_rem.empty())
-        Translator::ReadRemovedParticles(enlarge_, shift_, neg_rem, particle_levelset, scale_, false, merge);
+    if (!pos.empty()) {
+        //Translator::DeleteParticles(shift_, regions, particle_levelset, scale_, true);
+        Translator::ReadParticles(app_object_region(), shift_, pos, particle_levelset, scale_, true, merge);
+    }
+    if (!neg.empty()) {
+        //Translator::DeleteParticles(shift_, regions, particle_levelset, scale_, false);
+        Translator::ReadParticles(app_object_region(), shift_, neg, particle_levelset, scale_, false, merge);
+    }
+    if (!pos_rem.empty()) {
+        //Translator::DeleteRemovedParticles(shift_, regions, particle_levelset, scale_, true);
+        Translator::ReadRemovedParticles(app_object_region(), shift_, pos_rem, particle_levelset, scale_, true, merge);
+    }
+    if (!neg_rem.empty()) {
+        //Translator::DeleteRemovedParticles(shift_, regions, particle_levelset, scale_, false);
+        Translator::ReadRemovedParticles(app_object_region(), shift_, neg_rem, particle_levelset, scale_, false, merge);
+    }
 }
 
 template<class TS> void CacheParticleLevelsetEvolution<TS>::
@@ -211,10 +229,10 @@ WriteFromCache(const nimbus::DataArray &write_set,
         }
     }
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
-    Translator::WriteParticles(enlarge_, shift_, pos, particle_levelset, scale_, true);
-    Translator::WriteParticles(enlarge_, shift_, neg, particle_levelset, scale_, false);
-    Translator::WriteRemovedParticles(enlarge_, shift_, pos_rem, particle_levelset, scale_, true);
-    Translator::WriteRemovedParticles(enlarge_, shift_, neg_rem, particle_levelset, scale_, false);
+    Translator::WriteParticles(app_object_region(), shift_, pos, particle_levelset, scale_, true);
+    Translator::WriteParticles(app_object_region(), shift_, neg, particle_levelset, scale_, false);
+    Translator::WriteRemovedParticles(app_object_region(), shift_, pos_rem, particle_levelset, scale_, true);
+    Translator::WriteRemovedParticles(app_object_region(), shift_, neg_rem, particle_levelset, scale_, false);
 }
 
 template<class TS> nimbus::CacheObject *CacheParticleLevelsetEvolution<TS>::

@@ -113,6 +113,10 @@ namespace nimbus {
     GeometricRegion NewEnlarged(const int_dimension_t delta) const;
     GeometricRegion NewEnlarged(const Coord &delta) const;
 
+    /* Translate a geometric region in space. */
+    void Translate(const int_dimension_t delta);
+    void Translate(const Coord &delta);
+
     /* Covers returns whether this region covers (encompasses) the argument. */
     virtual bool Covers(GeometricRegion* region) const;
     virtual bool Intersects(GeometricRegion* region) const;

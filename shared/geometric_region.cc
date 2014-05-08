@@ -359,6 +359,18 @@ GeometricRegion GeometricRegion::NewEnlarged(const Coord &delta) const {
   return r;
 }
 
+void GeometricRegion::Translate(const int_dimension_t delta) {
+  x_ += delta;
+  y_ += delta;
+  z_ += delta;
+}
+
+void GeometricRegion::Translate(const Coord &delta) {
+  x_ += delta.x;
+  y_ += delta.y;
+  z_ += delta.z;
+}
+
 /**
  * \fn int_dimension_t GeometricRegion::fillInValues()
  * \brief Fills in six parameters from array.
