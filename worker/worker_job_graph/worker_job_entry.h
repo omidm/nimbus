@@ -51,7 +51,8 @@ class WorkerJobEntry {
   enum State {
     INIT,
     CONTROL,  // For internal usage.
-    PENDING,  // Not received yet.
+    PENDING,  // Job not received yet.
+    PENDING_DATA_RECEIVED,  // Job not received yet, but data received.
     BLOCKED,  // Blocked by other jobs.
     READY,  // Ready to run.  Should no more exist in the graph.
   };

@@ -50,7 +50,7 @@
 #include "data/physbam/physbam_data.h"
 
 // #define MULTITHREADED_WORKER true
-#define MULTITHREADED_WORKER false
+#define MULTITHREADED_WORKER true
 #define SCHEDULER_COMMAND_GROUP_QUOTA 10
 
 using boost::hash;
@@ -114,6 +114,7 @@ void Worker::WorkerCoreProcessor() {
   worker_manager_->StartWorkerThreads();
 
   while (true) {
+    // Process command.
     SchedulerCommand* comm = client_->receiveCommand();
     int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
     while (comm != NULL) {
@@ -125,13 +126,17 @@ void Worker::WorkerCoreProcessor() {
       }
       comm = client_->receiveCommand();
     }
-    // Polling for pending transfer jobs.
+    // Poll jobs that finish receiving.
+    job_id_t receive_job_id;
+    while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
+      NotifyTransmissionDone(receive_job_id);
+    }
   }
 }
 
 // Extracts data objects from the read/write set to data array.
 void Worker::ResolveDataArray(Job* job) {
-  if ((dynamic_cast<CreateDataJob*>(job) != NULL)) { // NOLINT
+  if ((dynamic_cast<CreateDataJob*>(job) != NULL)) {  // NOLINT
     assert(job->read_set().size() == 0);
     assert(job->write_set().size() == 1);
     job->data_array.clear();
@@ -413,14 +418,43 @@ void Worker::AddJobToGraph(Job* job) {
   // Add vertex for the new job.
   WorkerJobVertex* vertex = NULL;
   if (worker_job_graph_.HasVertex(job_id)) {
-    // The job is pending.
+    // The job is in the graph but not received.
     worker_job_graph_.GetVertex(job_id, &vertex);
-    assert(vertex->entry()->get_state() == WorkerJobEntry::PENDING);
     assert(vertex->entry()->get_job() == NULL);
+    switch (vertex->entry()->get_state()) {
+      case WorkerJobEntry::PENDING: {
+        // If the job is a receive job, add a dumb edge.
+        if (dynamic_cast<RemoteCopyReceiveJob*>(job)) {  // NOLINT
+          worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
+        }
+        break;
+      }
+      case WorkerJobEntry::PENDING_DATA_RECEIVED: {
+        // Flag shows that the data is already received.
+        SerializedData* ser_data = NULL;
+        data_version_t version;
+        if (data_exchanger_->ReceiveSerializedData(
+                job_id, &ser_data, version)) {
+          RemoteCopyReceiveJob* receive_job
+              = dynamic_cast<RemoteCopyReceiveJob*>(job);  // NOLINT
+          assert(receive_job != NULL);
+          receive_job->set_serialized_data(ser_data);
+          receive_job->set_data_version(version);
+        } else {
+          assert(false);
+        }
+        break;
+      }
+      default:
+        assert(false);
+    }
   } else {
     // The job is new.
     worker_job_graph_.AddVertex(job_id, new WorkerJobEntry());
     worker_job_graph_.GetVertex(job_id, &vertex);
+    if (dynamic_cast<RemoteCopyReceiveJob*>(job)) {  // NOLINT
+      worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
+    }
   }
   vertex->entry()->set_job_id(job_id);
   vertex->entry()->set_job(job);
@@ -433,10 +467,10 @@ void Worker::AddJobToGraph(Job* job) {
     job_id_t before_job_id = *iter;
     WorkerJobVertex* before_job_vertex = NULL;
     if (worker_job_graph_.HasVertex(before_job_id)) {
-      // The job is already know.
+      // The job is already known.
       worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
     } else {
-      // The job is new.
+      // The job is unknown.
       worker_job_graph_.AddVertex(before_job_id, new WorkerJobEntry());
       worker_job_graph_.GetVertex(before_job_id, &before_job_vertex);
       before_job_vertex->entry()->set_job_id(before_job_id);
@@ -444,10 +478,6 @@ void Worker::AddJobToGraph(Job* job) {
       before_job_vertex->entry()->set_state(WorkerJobEntry::PENDING);
     }
     worker_job_graph_.AddEdge(before_job_vertex, vertex);
-  }
-  // If the job depends on transmission events, add a dumb edge.
-  if (dynamic_cast<RemoteCopyReceiveJob*>(job)) { // NOLINT
-    worker_job_graph_.AddEdge(DUMB_JOB_ID, job_id);
   }
   // If the job has no dependency, it is ready.
   if (vertex->incoming_edges()->empty()) {
@@ -468,7 +498,6 @@ void Worker::NotifyJobDone(job_id_t job_id) {
   worker_job_graph_.GetVertex(job_id, &vertex);
   assert(vertex->incoming_edges()->empty());
   WorkerJobEdge::Map* outgoing_edges = vertex->outgoing_edges();
-  printf("quhang %d\n", outgoing_edges->size());
   // Deletion inside loop is dangerous.
   std::list<WorkerJobVertex*> deletion_list;
   for (WorkerJobEdge::Iter iter = outgoing_edges->begin();
@@ -501,12 +530,60 @@ void Worker::NotifyTransmissionDone(job_id_t job_id) {
   /*
     SerializedData* ser_data;
     data_version_t version;
+    // job_id, serialized_data, data_version.
     if(data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data, version)) {
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_data_version(version);
       */
   // Clean the edges.
   // FinishJobDenendency() if needed.
+  SerializedData* ser_data = NULL;
+  data_version_t version;
+  WorkerJobVertex* vertex = NULL;
+  // Can a receive-job receives multiple data?
+  if (worker_job_graph_.HasVertex(job_id)) {
+    worker_job_graph_.GetVertex(job_id, &vertex);
+    switch (vertex->entry()->get_state()) {
+      case WorkerJobEntry::PENDING: {
+        // The job is already in the graph and not received.
+        vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
+        break;
+      }
+      case WorkerJobEntry::BLOCKED: {
+        // The job is already in the graph and received.
+        assert(vertex->entry()->get_job() != NULL);
+        RemoteCopyReceiveJob* receive_job =
+            dynamic_cast<RemoteCopyReceiveJob*>(vertex->entry()->get_job());  // NOLINT
+        assert(receive_job != NULL);
+        if (data_exchanger_->ReceiveSerializedData(
+                job_id, &ser_data, version)) {
+          receive_job->set_serialized_data(ser_data);
+          receive_job->set_data_version(version);
+        } else {
+          assert(false);
+        }
+        // Remove edge and should be ready now.
+        worker_job_graph_.RemoveEdge(DUMB_JOB_ID, job_id);
+        if (vertex->incoming_edges()->empty()) {
+          vertex->entry()->set_state(WorkerJobEntry::READY);
+          ResolveDataArray(receive_job);
+          int success_flag = worker_manager_->PushJob(receive_job);
+          vertex->entry()->set_job(NULL);
+          assert(success_flag);
+        }
+        break;
+      }
+      default:
+        assert(false);
+    }  // End switch.
+  } else {
+    // The job is not in the graph and not received.
+    worker_job_graph_.AddVertex(job_id, new WorkerJobEntry());
+    worker_job_graph_.GetVertex(job_id, &vertex);
+    vertex->entry()->set_job_id(job_id);
+    vertex->entry()->set_job(NULL);
+    vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
+  }
 }
 
 }  // namespace nimbus
