@@ -87,10 +87,31 @@ void CacheObject::Read(const DataArray &read_set,
     if (diff.empty())
         return;
     if (read_all_or_none) {
-        // TODO(Chinmayee): should get rid of this after the delete
-        // particles call is implemented successfully
+        // // TODO(Chinmayee): should get rid of this after the delete
+        // // particles call is implemented successfully
+        // // FlushCache();
+        // // InvalidateCacheObjectComplete();
+        // DataArray flush;
+        // // TODO(Chinmayee): this is terrible. we cannot change to region
+        // // because of particles (4 different types of particles share a
+        // // region). To change to region, we need a group type instead of a
+        // // simple cache object.
+        // LIDSet read_lids;
+        // for (size_t k = 0; k < diff.size(); ++k) {
+        //     Data *dd = diff[k];
+        //     read_lids.insert(dd->logical_id());
+        // }
+        // std::set<Data *>::iterator iter = write_back_.begin();
+        // for (; iter != write_back_.end(); ++iter) {
+        //     Data *d = *iter;
+        //     if (read_lids.contains(d->logical_id())) {
+        //         flush.push_back(d);
+        //     }
+        // }
+        // flush ids that will be replaces - same logical id but different
+        // physcial id for all non-particle data
+        // FlushCacheData(flush);
         FlushCache();
-        InvalidateCacheObjectComplete();
         ReadDiffToCache(read_set, diff, reg, all_lids_diff);
     } else {
         if (!write_back_.empty()) {

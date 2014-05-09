@@ -35,6 +35,8 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <vector>
+
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/data_particle_array.h"
 #include "application/water_multiple/job_synchronize_particles.h"
@@ -47,6 +49,7 @@
 #include "application/water_multiple/water_example.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
 namespace application {
@@ -119,6 +122,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         read_inner_pr, read_inner_nr,
         read_outer_p, read_outer_n,
         read_outer_pr, read_outer_nr;
+    std::vector<nimbus::GeometricRegion> pos_reg, neg_reg, pos_rem_reg, neg_rem_reg;
 
     for (size_t i = 0; i < readp.size(); ++i) {
         nimbus::Data *d = readp[i];
@@ -129,6 +133,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         } else {
             read_outer.push_back(d);
             read_outer_p.push_back(d);;
+            pos_reg.push_back(d->region());
         }
     }
     for (size_t i = 0; i < readn.size(); ++i) {
@@ -140,6 +145,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     } else {
             read_outer.push_back(d);
             read_outer_n.push_back(d);
+            neg_reg.push_back(d->region());
         }
     }
     for (size_t i = 0; i < readpr.size(); ++i) {
@@ -151,6 +157,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     } else {
             read_outer.push_back(d);
             read_outer_pr.push_back(d);
+            pos_rem_reg.push_back(d->region());
         }
     }
     for (size_t i = 0; i < readnr.size(); ++i) {
@@ -162,6 +169,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     } else {
             read_outer.push_back(d);
             read_outer_nr.push_back(d);
+            neg_rem_reg.push_back(d->region());
         }
     }
 
@@ -198,10 +206,14 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // TODO(Chinmayee): get rid of all inner statements once delete is
     // implemented
-    Translator::ReadParticles(array_outer, shift, read_inner_p, particle_levelset, scale, true);
-    Translator::ReadParticles(array_outer, shift, read_inner_n, particle_levelset, scale, false);
-    Translator::ReadRemovedParticles(array_outer, shift, read_inner_pr, particle_levelset, scale, true);
-    Translator::ReadRemovedParticles(array_outer, shift, read_inner_nr, particle_levelset, scale, false);
+    // Translator::ReadParticles(array_outer, shift, read_inner_p, particle_levelset, scale, true);
+    // Translator::ReadParticles(array_outer, shift, read_inner_n, particle_levelset, scale, false);
+    // Translator::ReadRemovedParticles(array_outer, shift, read_inner_pr, particle_levelset, scale, true);
+    // Translator::ReadRemovedParticles(array_outer, shift, read_inner_nr, particle_levelset, scale, false);
+    Translator::DeleteParticles(shift, pos_reg, particle_levelset, scale, true);
+    Translator::DeleteParticles(shift, neg_reg, particle_levelset, scale, false);
+    Translator::DeleteRemovedParticles(shift, pos_rem_reg, particle_levelset, scale, true);
+    Translator::DeleteParticles(shift, neg_rem_reg, particle_levelset, scale, false);
     Translator::ReadParticles(array_outer, shift, read_outer_p, particle_levelset, scale, true, true);
     Translator::ReadParticles(array_outer, shift, read_outer_n, particle_levelset, scale, false, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer_pr, particle_levelset, scale, true, true);

@@ -458,12 +458,12 @@ template <class TS> class TranslatorPhysBAM {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x >= region.x() &&
-                                            absolute_position.x < region.x() + region.dx() &&
-                                            absolute_position.y >= region.y() &&
-                                            absolute_position.y < region.y() + region.dy() &&
-                                            absolute_position.z >= region.z() &&
-                                            absolute_position.z < region.z() + region.dz()) {
+                                        if (absolute_position.x < region.x() &&
+                                            absolute_position.x >= region.x() + region.dx() &&
+                                            absolute_position.y < region.y() &&
+                                            absolute_position.y >= region.y() + region.dy() &&
+                                            absolute_position.z < region.z() &&
+                                            absolute_position.z >= region.z() + region.dz()) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
                                                 (*particles)(bucket_index) =
@@ -553,12 +553,12 @@ template <class TS> class TranslatorPhysBAM {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x >= region.x() &&
-                                            absolute_position.x < region.x() + region.dx() &&
-                                            absolute_position.y >= region.y() &&
-                                            absolute_position.y < region.y() + region.dy() &&
-                                            absolute_position.z >= region.z() &&
-                                            absolute_position.z < region.z() + region.dz()) {
+                                        if (absolute_position.x < region.x() &&
+                                            absolute_position.x >= region.x() + region.dx() &&
+                                            absolute_position.y < region.y() &&
+                                            absolute_position.y >= region.y() + region.dy() &&
+                                            absolute_position.z < region.z() &&
+                                            absolute_position.z >= region.z() + region.dz()) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
                                                 (*particles)(bucket_index) =
