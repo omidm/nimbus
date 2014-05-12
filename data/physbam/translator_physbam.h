@@ -453,7 +453,7 @@ template <class TS> class TranslatorPhysBAM {
 
                                 while (particle_bucket) {
                                     for (int i = 1;
-                                            i < particle_bucket->array_collection->Size();
+                                            i <= particle_bucket->array_collection->Size();
                                             ++i) {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
@@ -548,7 +548,7 @@ template <class TS> class TranslatorPhysBAM {
 
                                 while (particle_bucket) {
                                     for (int i = 1;
-                                            i < particle_bucket->array_collection->Size();
+                                            i <= particle_bucket->array_collection->Size();
                                             ++i) {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
