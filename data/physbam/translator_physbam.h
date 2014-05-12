@@ -531,9 +531,9 @@ template <class TS> class TranslatorPhysBAM {
                         for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
 
-                            if (!(x == region.x() || x == region.x() + region.dx() ||
-                                  y == region.y() || y == region.y() + region.dy() ||
-                                  z == region.z() || z == region.z() + region.dz())) {
+                            if (!(x == pregion.x() || x == pregion.x() + pregion.dx() ||
+                                  y == pregion.y() || y == pregion.y() + pregion.dy() ||
+                                  z == pregion.z() || z == pregion.z() + pregion.dz())) {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
@@ -584,6 +584,7 @@ template <class TS> class TranslatorPhysBAM {
                                                     template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
                                                 (*new_id)(index) = (*id)(i);
                                             }
+                                            particle_new_bucket->V(index) = particle_bucket->V(i);
                                         }
                                     }
                                     particle_bucket = particle_bucket->next;

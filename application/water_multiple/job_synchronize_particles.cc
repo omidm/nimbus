@@ -206,20 +206,20 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // TODO(Chinmayee): get rid of all inner statements once delete is
     // implemented
-    // Translator::ReadParticles(array_outer, shift, read_inner_p, particle_levelset, scale, true);
-    // Translator::ReadParticles(array_outer, shift, read_inner_n, particle_levelset, scale, false);
-    // Translator::ReadRemovedParticles(array_outer, shift, read_inner_pr, particle_levelset, scale, true);
-    // Translator::ReadRemovedParticles(array_outer, shift, read_inner_nr, particle_levelset, scale, false);
-    Translator::DeleteParticles(shift, pos_reg, particle_levelset, scale, true);
-    Translator::DeleteParticles(shift, neg_reg, particle_levelset, scale, false);
-    Translator::DeleteRemovedParticles(shift, pos_rem_reg, particle_levelset, scale, true);
-    Translator::DeleteParticles(shift, neg_rem_reg, particle_levelset, scale, false);
+    Translator::ReadParticles(array_outer, shift, read_inner_p, particle_levelset, scale, true);
+    Translator::ReadParticles(array_outer, shift, read_inner_n, particle_levelset, scale, false);
+    Translator::ReadRemovedParticles(array_outer, shift, read_inner_pr, particle_levelset, scale, true);
+    Translator::ReadRemovedParticles(array_outer, shift, read_inner_nr, particle_levelset, scale, false);
+    // Translator::DeleteParticles(shift, pos_reg, particle_levelset, scale, true);
+    // Translator::DeleteParticles(shift, neg_reg, particle_levelset, scale, false);
+    // Translator::DeleteRemovedParticles(shift, pos_rem_reg, particle_levelset, scale, true);
+    // Translator::DeleteRemovedParticles(shift, neg_rem_reg, particle_levelset, scale, false);
     Translator::ReadParticles(array_outer, shift, read_outer_p, particle_levelset, scale, true, true);
     Translator::ReadParticles(array_outer, shift, read_outer_n, particle_levelset, scale, false, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer_pr, particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer_nr, particle_levelset, scale, false, true);
 
-    cache_ple->Write(array_outer, true);
+    cache_ple->WriteImmediately(write, array_outer, true);
 
     dbg(APP_LOG, "Finish translating particles.\n");
 
