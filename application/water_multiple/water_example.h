@@ -22,6 +22,7 @@
 #include "application/water_multiple/cache_data_include.h"
 #include "application/water_multiple/cache_face_array.h"
 #include "application/water_multiple/cache_options.h"
+#include "application/water_multiple/nimbus_thread_queue.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "data/physbam/translator_physbam_old.h"
@@ -51,6 +52,8 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef ARRAY<int,TV_INT> INT_SCALAR_ARRAY;
 
 public:
+    // TODO(quhang) should be passed by worker.
+    nimbus::NimbusThreadQueue nimbus_thread_queue;
     nimbus::int_dimension_t kScale;
     GeometricRegion local_region;
     GeometricRegion relative_region;

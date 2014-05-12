@@ -31,6 +31,8 @@
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
 
+// TODO(quhang) In three places where nimbus_thread_queu is introduced.
+
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE
@@ -48,7 +50,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,&nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection),
     boundary(0),
@@ -83,7 +85,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,&nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
     incompressible(mac_grid,projection),
     boundary(0),
@@ -120,7 +122,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,&nimbus_thread_queue)),
     particle_levelset_evolution(*ple),
     incompressible(mac_grid,projection),
     boundary(0),
