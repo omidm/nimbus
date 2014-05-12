@@ -73,6 +73,7 @@ void WorkerThreadFinish::Run() {
 }
 
 void WorkerThreadFinish::ProcessJob(Job* job) {
+#ifndef MUTE_DATA_ACCESS_CHECK
   IDSet<physical_data_id_t>::IDSetIter iter;
 
   IDSet<physical_data_id_t> read = job->read_set();
@@ -84,6 +85,7 @@ void WorkerThreadFinish::ProcessJob(Job* job) {
   for (iter = write.begin(); iter != write.end(); iter++) {
     data_map_->ReleaseAccess(*iter, job->id().elem(), PhysicalDataMap::WRITE);
   }
+#endif
   /*
   DataArray daw;
   IDSet<physical_data_id_t> write = job->write_set();

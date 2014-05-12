@@ -46,6 +46,10 @@
 
 #include "shared/nimbus_types.h"
 
+#ifndef MUTE_DATA_ACCESS_CHECK
+#define MUTE_DATA_ACCESS_CHECK
+#endif
+
 namespace nimbus {
 class Data;
 class PhysicalDataMap {

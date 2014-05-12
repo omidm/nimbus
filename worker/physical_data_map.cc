@@ -53,6 +53,10 @@ Data* PhysicalDataMap::AcquireAccess(
     physical_data_id_t physical_data_id,
     job_id_t job_id,
     AccessPattern access_pattern) {
+#ifdef MUTE_DATA_ACCESS_CHECK
+  assert(internal_map_.find(physical_data_id) != internal_map_.end());
+  return internal_map_[physical_data_id].data;
+#else
   pthread_mutex_lock(&lock_);
   assert(internal_map_.find(physical_data_id) != internal_map_.end());
   AccessState& access_state = internal_map_[physical_data_id];
@@ -100,12 +104,16 @@ Data* PhysicalDataMap::AcquireAccess(
   }
   pthread_mutex_unlock(&lock_);
   return result;
+#endif
 }
 
 bool PhysicalDataMap::ReleaseAccess(
     physical_data_id_t physical_data_id,
     job_id_t job_id,
     AccessPattern access_pattern) {
+#ifdef MUTE_DATA_ACCESS_CHECK
+  return true;
+#else
   pthread_mutex_lock(&lock_);
   assert(internal_map_.find(physical_data_id) != internal_map_.end());
   AccessState& access_state = internal_map_[physical_data_id];
@@ -152,6 +160,7 @@ bool PhysicalDataMap::ReleaseAccess(
   }
   pthread_mutex_unlock(&lock_);
   return true;
+#endif
 }
 
 bool PhysicalDataMap::AddMapping(
