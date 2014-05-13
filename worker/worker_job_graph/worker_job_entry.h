@@ -53,8 +53,9 @@ class WorkerJobEntry {
     CONTROL,  // For internal usage.
     PENDING,  // Job not received yet.
     PENDING_DATA_RECEIVED,  // Job not received yet, but data received.
-    BLOCKED,  // Blocked by other jobs.
-    READY,  // Ready to run.  Should no more exist in the graph.
+    BLOCKED,  // Blocked by other jobs/IO event.
+    READY,  // Ready to run.
+    FINISH  // Finished, but has not been deleted.
   };
 
   WorkerJobEntry();

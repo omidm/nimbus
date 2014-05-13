@@ -143,13 +143,15 @@ class Worker {
   virtual void LoadSchedulerCommands();
 
   virtual void AddJobToGraph(Job* job);
+  virtual void NotifyLocalJobDone(Job* job);
   virtual void NotifyJobDone(job_id_t job_id);
+  virtual void ClearAfterSet(WorkerJobVertex* vertex);
   virtual void NotifyTransmissionDone(job_id_t job_id);
+  virtual void PrintWorkerJobGraph();
 
  public:
   void ResolveDataArray(Job* job);
 };
-
 }  // namespace nimbus
 
 #endif  // NIMBUS_WORKER_WORKER_H_

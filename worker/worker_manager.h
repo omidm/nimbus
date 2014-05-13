@@ -77,6 +77,8 @@ class WorkerManager {
 
   bool SendCommand(SchedulerCommand* command);
 
+  bool GetLocalJobDoneList(JobList* buffer);
+
   // Starts all the worker threads and the scheduling thread.
   bool StartWorkerThreads();
 
@@ -121,6 +123,10 @@ class WorkerManager {
   // Protected by finish_job_queue_lock_.
   std::list<Job*> finish_job_list_;
   int64_t finish_job_list_length_;
+
+  pthread_mutex_t local_job_done_list_lock_;
+  // Protected by local_job_done_queue_lock_.
+  JobList local_job_done_list_;
 
   pthread_mutex_t fast_job_queue_lock_;
   pthread_cond_t fast_job_queue_any_cond_;

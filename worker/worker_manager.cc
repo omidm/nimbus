@@ -64,11 +64,13 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   pthread_mutex_init(&finish_job_queue_lock_, NULL);
   pthread_cond_init(&finish_job_queue_any_cond_, NULL);
 
+  pthread_mutex_init(&local_job_done_list_lock_, NULL);
+
   pthread_mutex_init(&fast_job_queue_lock_, NULL);
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
   if (multi_threaded) {
-    computation_thread_num = 8;
+    computation_thread_num = 4;
     fast_thread_num = 1;
   } else {
     computation_thread_num = 1;
@@ -130,11 +132,24 @@ bool WorkerManager::PushJob(Job* job) {
 }
 
 bool WorkerManager::PushFinishJob(Job* job) {
+  pthread_mutex_lock(&local_job_done_list_lock_);
+  local_job_done_list_.push_back(job);
+  pthread_mutex_unlock(&local_job_done_list_lock_);
+  /*
   pthread_mutex_lock(&finish_job_queue_lock_);
   finish_job_list_.push_back(job);
   ++finish_job_list_length_;
   pthread_cond_signal(&finish_job_queue_any_cond_);
   pthread_mutex_unlock(&finish_job_queue_lock_);
+  */
+  return true;
+}
+
+bool WorkerManager::GetLocalJobDoneList(JobList* buffer) {
+  pthread_mutex_lock(&local_job_done_list_lock_);
+  local_job_done_list_.swap(*buffer);
+  local_job_done_list_.clear();
+  pthread_mutex_unlock(&local_job_done_list_lock_);
   return true;
 }
 

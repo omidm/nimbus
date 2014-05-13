@@ -106,6 +106,18 @@ void Worker::Run() {
   WorkerCoreProcessor();
 }
 
+void Worker::PrintWorkerJobGraph() {
+  for (WorkerJobVertex::Iter index = worker_job_graph_.begin();
+       index != worker_job_graph_.end();
+       ++index) {
+    if ((*index).second->entry() != NULL &&
+        (*index).second->entry()->get_job() != NULL)
+      printf("name: %s #before set: %d\n",
+             (*index).second->entry()->get_job()->name().c_str(),
+             static_cast<int>((*index).second->incoming_edges()->size()));
+  }
+}
+
 void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
@@ -113,6 +125,7 @@ void Worker::WorkerCoreProcessor() {
                                      &timer_);
   worker_manager_->StartWorkerThreads();
 
+  JobList local_job_done_list;
   while (true) {
     // Process command.
     SchedulerCommand* comm = client_->receiveCommand();
@@ -131,6 +144,15 @@ void Worker::WorkerCoreProcessor() {
     while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
       NotifyTransmissionDone(receive_job_id);
     }
+    // Job done processing.
+    worker_manager_->GetLocalJobDoneList(&local_job_done_list);
+    for (JobList::iterator index = local_job_done_list.begin();
+         index != local_job_done_list.end();
+         ++index) {
+      NotifyLocalJobDone(*index);
+    }
+    local_job_done_list.clear();
+    PrintWorkerJobGraph();
   }
 }
 
@@ -477,7 +499,10 @@ void Worker::AddJobToGraph(Job* job) {
       before_job_vertex->entry()->set_job(NULL);
       before_job_vertex->entry()->set_state(WorkerJobEntry::PENDING);
     }
-    worker_job_graph_.AddEdge(before_job_vertex, vertex);
+    // If that job is not finished.
+    if (before_job_vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
+      worker_job_graph_.AddEdge(before_job_vertex, vertex);
+    }
   }
   // If the job has no dependency, it is ready.
   if (vertex->incoming_edges()->empty()) {
@@ -489,14 +514,7 @@ void Worker::AddJobToGraph(Job* job) {
   }
 }
 
-void Worker::NotifyJobDone(job_id_t job_id) {
-  // Job done for unknown job is not handled.
-  if (!worker_job_graph_.HasVertex(job_id)) {
-    return;
-  }
-  WorkerJobVertex* vertex = NULL;
-  worker_job_graph_.GetVertex(job_id, &vertex);
-  assert(vertex->incoming_edges()->empty());
+void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
   WorkerJobEdge::Map* outgoing_edges = vertex->outgoing_edges();
   // Deletion inside loop is dangerous.
   std::list<WorkerJobVertex*> deletion_list;
@@ -522,21 +540,39 @@ void Worker::NotifyJobDone(job_id_t job_id) {
       assert(success_flag);
     }
   }
+}
+
+void Worker::NotifyLocalJobDone(Job* job) {
+  Parameter params;
+  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
+  client_->sendCommand(&cm);
+  job_id_t job_id = job->id().elem();
+  // Job done for unknown job is not handled.
+  if (!worker_job_graph_.HasVertex(job_id)) {
+    return;
+  }
+  WorkerJobVertex* vertex = NULL;
+  worker_job_graph_.GetVertex(job_id, &vertex);
+  assert(vertex->incoming_edges()->empty());
+  ClearAfterSet(vertex);
+  vertex->entry()->set_state(WorkerJobEntry::FINISH);
+}
+
+void Worker::NotifyJobDone(job_id_t job_id) {
+  // Job done for unknown job is not handled.
+  if (!worker_job_graph_.HasVertex(job_id)) {
+    return;
+  }
+  WorkerJobVertex* vertex = NULL;
+  worker_job_graph_.GetVertex(job_id, &vertex);
+  assert(vertex->incoming_edges()->empty());
+  if (vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
+    ClearAfterSet(vertex);
+  }
   worker_job_graph_.RemoveVertex(job_id);
 }
 
 void Worker::NotifyTransmissionDone(job_id_t job_id) {
-  // Find the job.
-  /*
-    SerializedData* ser_data;
-    data_version_t version;
-    // job_id, serialized_data, data_version.
-    if(data_exchanger_->ReceiveSerializedData((*iter)->id().elem(), &ser_data, version)) {
-      static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
-      static_cast<RemoteCopyReceiveJob*>(*iter)->set_data_version(version);
-      */
-  // Clean the edges.
-  // FinishJobDenendency() if needed.
   SerializedData* ser_data = NULL;
   data_version_t version;
   WorkerJobVertex* vertex = NULL;
