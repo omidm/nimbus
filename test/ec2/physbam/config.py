@@ -9,9 +9,10 @@
 # UBUNTU_AMI = 'ami-660c3023'
 # KEY_NAME = 'omidm-sing-key-pair-us-west-1'
 # SECURITY_GROUP = 'nimbus_sg_uswest1'
-# INSTANCE_TYPE = 't1.micro'
+# # INSTANCE_TYPE = 't1.micro'
+# INSTANCE_TYPE = 'c3.xlarge'
 # PLACEMENT_GROUP = None
-# INSTANCE_NUM = 1
+# INSTANCE_NUM = 4
 
 
 # US West (Oregon) Region
@@ -20,8 +21,6 @@ NIMBUS_AMI = 'ami-5a45306a'
 UBUNTU_AMI = 'ami-fa9cf1ca'
 KEY_NAME = 'omidm-sing-key-pair-us-west-2'
 SECURITY_GROUP = 'nimbus_sg_uswest2'
-# INSTANCE_TYPE = 't1.micro'
-# PLACEMENT_GROUP = None
 INSTANCE_TYPE = 'c3.xlarge'
 PLACEMENT_GROUP = 'nimbus-cluster'
 INSTANCE_NUM = 8
@@ -29,8 +28,9 @@ INSTANCE_NUM = 8
 
 
 
-PRIVATE_KEY = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-DIRECTORY_PATH = 'test/src/physbam/'
+PRIVATE_KEY = '~/.ssh/' + KEY_NAME + '.pem'
+REMOTE_PATH = '~/test/src/physbam/'
+SOURCE_PATH = '~/cloud/src/nimbus/application/physbam-app/water/'
 NODES_FILE_NAME = 'test_nodes.txt' 
 OUTPUT_NAME = 'output/' 
 SCALE = 256

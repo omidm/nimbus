@@ -56,7 +56,7 @@ WorkerThreadComputation::~WorkerThreadComputation() {
 void WorkerThreadComputation::Run() {
   Job* job;
   while (true) {
-    job = worker_manager_->PullComputationJob(this);
+    job = worker_manager_->NextComputationJobToRun(this);
     assert(job != NULL);
     ExecuteJob(job);
     assert(worker_manager_ != NULL);

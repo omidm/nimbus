@@ -145,6 +145,8 @@ class Worker {
   virtual void DeleteData(physical_data_id_t physical_data_id);
   virtual void LoadSchedulerCommands();
 
+  void RunJobs(size_t max_num);
+
  public:
   // TODO(quhang) figure out the right access control.
   void ResolveDataArray(Job* job);

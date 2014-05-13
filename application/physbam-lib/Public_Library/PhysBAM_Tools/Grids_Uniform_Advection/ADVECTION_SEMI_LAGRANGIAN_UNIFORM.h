@@ -27,6 +27,9 @@ public:
     template<class T3> struct REBIND{typedef ADVECTION_SEMI_LAGRANGIAN_UNIFORM<T_GRID,T3,T_AVERAGING,typename T_INTERPOLATION::template REBIND<T3>::TYPE> TYPE;};
     template<class T_INTERPOLATION_2> struct REBIND_INTERPOLATION{typedef ADVECTION_SEMI_LAGRANGIAN_UNIFORM<T_GRID,T2,T_AVERAGING,T_INTERPOLATION_2> TYPE;};
 
+    T_ARRAYS_SCALAR *phi;
+    bool advect_only_fluid;
+
 //#####################################################################
     ADVECTION_SEMI_LAGRANGIAN_UNIFORM();
     void Update_Advection_Equation_Node(const T_GRID& grid,T_ARRAYS_T2& Z,const T_ARRAYS_T2& Z_ghost,

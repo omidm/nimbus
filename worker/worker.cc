@@ -41,6 +41,7 @@
 #include <boost/functional/hash.hpp>
 #include <sstream>
 #include <ctime>
+#include <list>
 #include "worker/worker.h"
 #include "worker/worker_ldo_map.h"
 #include "worker/worker_manager.h"
@@ -49,6 +50,7 @@
 
 #define MAX_PARALLEL_JOB 10
 #define MULTITHREADED_WORKER false
+#define SCHEDULER_COMMAND_GROUP_QUOTA 10
 
 using boost::hash;
 
@@ -103,36 +105,75 @@ void Worker::WorkerCoreProcessor() {
 
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
-    // Batching job done command so that we can be faster.  --quhang
-    if (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
-      IDSet<job_id_t> remove_set;
-      while (comm != NULL && comm->type() == SchedulerCommand::JOB_DONE) {
-        dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
+    int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
+    IDSet<job_id_t> remove_set;
+    while (comm != NULL) {
+      dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
+      if (comm->type() == SchedulerCommand::JOB_DONE) {
         remove_set.insert(
             reinterpret_cast<JobDoneCommand*>(comm)->job_id().elem());
-        delete comm;
-        comm = client_->receiveCommand();
+      } else {
+        ProcessSchedulerCommand(comm);
       }
+      delete comm;
+      --quota;
+      if (quota == 0) {
+        break;
+      }
+      comm = client_->receiveCommand();
+    }
+    if (remove_set.size() != 0) {
       JobList::iterator iter;
-      for (iter = blocked_jobs_.begin();
-           iter != blocked_jobs_.end();
-           iter++) {
+      for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end(); iter++) {
         IDSet<job_id_t> req = (*iter)->before_set();
         req.remove(remove_set);
         (*iter)->set_before_set(req);
       }
-    }  // Finish batching job done command.
-    if (comm != NULL) {
-      dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
-      ProcessSchedulerCommand(comm);
-      delete comm;
     }
 
     ScanBlockedJobs();
 
     ScanPendingTransferJobs();
 
-    GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
+    if (MULTITHREADED_WORKER) {
+      GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
+    } else {
+      RunJobs(10);
+    }
+  }
+}
+
+void Worker::RunJobs(size_t max_num) {
+  std::list<Job*> list;
+  size_t ready_num = ready_jobs_.size();
+  for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
+    Job* job = ready_jobs_.front();
+    list.push_back(job);
+    ready_jobs_.pop_front();
+  }
+  JobList::iterator iter = list.begin();
+  for (; iter != list.end(); iter++) {
+    Job* job = *iter;
+
+    job->data_array.clear();
+    IDSet<physical_data_id_t>::IDSetIter iter;
+
+    IDSet<physical_data_id_t> read = job->read_set();
+    for (iter = read.begin(); iter != read.end(); iter++) {
+      job->data_array.push_back(data_map_[*iter]);
+    }
+
+    IDSet<physical_data_id_t> write = job->write_set();
+    for (iter = write.begin(); iter != write.end(); iter++) {
+      job->data_array.push_back(data_map_[*iter]);
+    }
+
+    job->Execute(job->parameters(), job->data_array);
+
+    Parameter params;
+    JobDoneCommand cm(job->id(), job->after_set(), params);
+    client_->sendCommand(&cm);
+    delete job;
   }
 }
 
@@ -151,7 +192,7 @@ void Worker::ScanBlockedJobs() {
       (*iter)->set_wait_time(wait_time);
 #endif  // MUTE_LOG
 
-      blocked_jobs_.erase(iter++);
+      iter = blocked_jobs_.erase(iter);
     } else {
       ++iter;
     }
@@ -167,7 +208,7 @@ void Worker::ScanPendingTransferJobs() {
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_serialized_data(ser_data);
       static_cast<RemoteCopyReceiveJob*>(*iter)->set_data_version(version);
       ready_jobs_.push_back(*iter);
-      pending_transfer_jobs_.erase(iter++);
+      iter = pending_transfer_jobs_.erase(iter);
     } else {
       ++iter;
     }

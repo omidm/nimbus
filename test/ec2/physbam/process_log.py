@@ -10,10 +10,12 @@ import config
 
 force_agg = 0;
 advect_phi_agg = 0;
+advect_v_agg = 0;
 advect_removed_particles_agg = 0;
 
 exchange_force_agg = 0;
 exchange_advect_phi_agg = 0;
+exchange_advect_v_agg = 0;
 exchange_advect_removed_particles_agg = 0;
 
 
@@ -22,6 +24,8 @@ force_mean_time = []
 force_std_time = []
 advect_phi_mean_time = []
 advect_phi_std_time = []
+advect_v_mean_time = []
+advect_v_std_time = []
 advect_removed_particles_mean_time = []
 advect_removed_particles_std_time = []
 
@@ -34,6 +38,7 @@ for i in range(1, config.INSTANCE_NUM + 1):
   
   force = []
   advect_phi = []
+  advect_v = []
   advect_removed_particles = []
   
   collect = False
@@ -43,6 +48,7 @@ for i in range(1, config.INSTANCE_NUM + 1):
       if len(result) > 0:
         force_time = 0
         advect_phi_time = 0
+        advect_v_time = 0
         advect_removed_particles_time = 0
         collect = True
         continue
@@ -51,6 +57,7 @@ for i in range(1, config.INSTANCE_NUM + 1):
       if len(result) > 0:
         force.append(force_time)
         advect_phi.append(advect_phi_time)
+        advect_v.append(advect_v_time)
         advect_removed_particles.append(advect_removed_particles_time)
         collect = False
         continue
@@ -67,6 +74,12 @@ for i in range(1, config.INSTANCE_NUM + 1):
         advect_phi_agg += float(result[0])
         continue
   
+      result = re.findall('.*Advect V\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        advect_v_time += float(result[0]) * 1000
+        advect_v_agg += float(result[0])
+        continue
+ 
       result = re.findall('.*Advect Removed Particles\".*(\d+\.\d+)', line)
       if len(result) > 0:
         advect_removed_particles_time += float(result[0]) * 1000
@@ -81,6 +94,11 @@ for i in range(1, config.INSTANCE_NUM + 1):
       result = re.findall('.*Advect Phi Exchange\".*(\d+\.\d+)', line)
       if len(result) > 0:
         exchange_advect_phi_agg += float(result[0])
+        continue
+   
+      result = re.findall('.*Advect V Exchange\".*(\d+\.\d+)', line)
+      if len(result) > 0:
+        exchange_advect_v_agg += float(result[0])
         continue
   
       result = re.findall('.*Advect Removed Particles Exchange\".*(\d+\.\d+)', line)
@@ -97,6 +115,9 @@ for i in range(1, config.INSTANCE_NUM + 1):
   advect_phi_mean_time.append(numpy.mean(advect_phi))
   advect_phi_std_time.append(numpy.std(advect_phi))
   
+  advect_v_mean_time.append(numpy.mean(advect_v))
+  advect_v_std_time.append(numpy.std(advect_v))
+  
   advect_removed_particles_mean_time.append(numpy.mean(advect_removed_particles))
   advect_removed_particles_std_time.append(numpy.std(advect_removed_particles))
 
@@ -110,6 +131,10 @@ for i in numpy.arange(len(force_std_time)):
 for i in numpy.arange(len(advect_phi_std_time)):
   if (advect_phi_mean_time[i] <= advect_phi_std_time[i]):
     advect_phi_std_time[i] = advect_phi_mean_time[i] - 1
+
+for i in numpy.arange(len(advect_v_std_time)):
+  if (advect_v_mean_time[i] <= advect_v_std_time[i]):
+    advect_v_std_time[i] = advect_v_mean_time[i] - 1
 
 for i in numpy.arange(len(advect_removed_particles_std_time)):
   if (advect_removed_particles_mean_time[i] <= advect_removed_particles_std_time[i]):
@@ -140,6 +165,17 @@ string += 'End\n'
 
 string += 'Start\n'
 string += 'd: '
+for data in advect_v_mean_time:
+  string += str(data) + ' '
+string += '\ne: '
+for error in advect_v_std_time:
+  string += str(error) + ' '
+string += '\nt: Advect V Job\n'
+string += 'End\n'
+
+
+string += 'Start\n'
+string += 'd: '
 for data in advect_removed_particles_mean_time:
   string += str(data) + ' '
 string += '\ne: '
@@ -149,9 +185,10 @@ string += '\nt: Advect Removed Particles Job\n'
 string += 'End\n'
 
 
-string += "force communication: " + str(exchange_force_agg / float(force_agg))
-string += "advect phi communication: " + str(exchange_advect_phi_agg / float(advect_phi_agg))
-string +=  "advect removed particles communication: " + str(exchange_advect_removed_particles_agg / float(advect_removed_particles_agg))
+string += "force communication: " + str(exchange_force_agg / float(force_agg)) + '\n'
+string += "advect phi communication: " + str(exchange_advect_phi_agg / float(advect_phi_agg)) + '\n'
+string += "advect v communication: " + str(exchange_advect_v_agg / float(advect_v_agg)) + '\n'
+string +=  "advect removed particles communication: " + str(exchange_advect_removed_particles_agg / float(advect_removed_particles_agg)) + '\n'
 
 
 f = open(sys.argv[2], 'w+')

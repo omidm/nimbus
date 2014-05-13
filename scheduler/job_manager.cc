@@ -233,11 +233,21 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   log_version_.ResetTimer();
+  log_merge_.ResetTimer();
+  log_lookup_.ResetTimer();
+  log_sterile_.ResetTimer();
+  log_nonsterile_.ResetTimer();
+  lookup_count_ = 0;
   while (ResolveDataVersions() > 0) {
     continue;
   }
   if (log_version_.timer() > 0.01) {
-    std::cout << "Versioning in get ready jobs: " << log_version_.timer() << std::endl;
+    std::cout << "Versioning in get ready jobs: versioning: " <<
+      log_version_.timer() << " merge: " << log_merge_.timer() <<
+      " lookup: " << log_lookup_.timer() <<
+      " lookup_count: " << lookup_count_ <<
+      " sterile: " << log_sterile_.timer() <<
+      " nonsterile: " << log_nonsterile_.timer() << std::endl;
   }
 
   size_t num = 0;
@@ -308,11 +318,21 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 
 size_t JobManager::RemoveObsoleteJobEntries() {
   log_version_.ResetTimer();
+  log_merge_.ResetTimer();
+  log_lookup_.ResetTimer();
+  log_sterile_.ResetTimer();
+  log_nonsterile_.ResetTimer();
+  lookup_count_ = 0;
   while (ResolveDataVersions() > 0) {
     continue;
   }
   if (log_version_.timer() > 0.01) {
-    std::cout << "Versioning in remove obsolete jobs: " << log_version_.timer() << std::endl;
+    std::cout << "Versioning in get ready jobs: versioning: " <<
+      log_version_.timer() << " merge: " << log_merge_.timer() <<
+      " lookup: " << log_lookup_.timer() <<
+      " lookup_count: " << lookup_count_ <<
+      " sterile: " << log_sterile_.timer() <<
+      " nonsterile: " << log_nonsterile_.timer() << std::endl;
   }
 
   size_t num = 0;
@@ -703,17 +723,24 @@ size_t JobManager::ResolveDataVersions() {
 
 
         if (job->sterile()) {
+          log_sterile_.ResumeTimer();
           boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
           IDSet<logical_data_id_t>::ConstIter itw;
           for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
             data_version_t version;
             if (job->vmap_read_in()->query_entry(*itw, &version)) {
               vmap->set_entry(*itw, version + 1);
-            } else if (job->ancestor_chain()->LookUpVersion(*itw, &version)) {
-              vmap->set_entry(*itw, version + 1);
             } else {
-              dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
-              exit(-1);
+              log_lookup_.ResumeTimer();
+              lookup_count_++;
+              bool found = job->ancestor_chain()->LookUpVersion(*itw, &version);
+              log_lookup_.StopTimer();
+              if (found) {
+                vmap->set_entry(*itw, version + 1);
+              } else {
+                dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+                exit(-1);
+              }
             }
           }
           job->set_vmap_write_out(vmap);
@@ -727,7 +754,9 @@ size_t JobManager::ResolveDataVersions() {
             boost::shared_ptr<AncestorChain>(new AncestorChain());
           ac->set_chain(chain);
           job->set_ancestor_chain_to_pass(ac);
+          log_sterile_.StopTimer();
         } else {
+          log_nonsterile_.ResumeTimer();
           boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
           vmap->set_content(job->vmap_read_in()->content());
           IDSet<logical_data_id_t>::ConstIter itw;
@@ -751,6 +780,7 @@ size_t JobManager::ResolveDataVersions() {
             boost::shared_ptr<AncestorChain>(new AncestorChain());
           ac->set_chain(chain);
           job->set_ancestor_chain_to_pass(ac);
+          log_nonsterile_.StopTimer();
         }
 
         job->set_versioned(true);
@@ -813,29 +843,43 @@ void JobManager::PassDataVersionToJob(
   }
 
   boost::shared_ptr<AncestorChain> chain;
+  log_merge_.ResumeTimer();
   AncestorChain::MergeAncestorChains(chains, &chain);
+  log_merge_.StopTimer();
   job->set_ancestor_chain(chain);
 
   if (job->sterile()) {
+    log_sterile_.ResumeTimer();
     boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       data_version_t version;
-      if (job->ancestor_chain()->LookUpVersion(*it, &version)) {
+      log_lookup_.ResumeTimer();
+      lookup_count_++;
+      bool found = job->ancestor_chain()->LookUpVersion(*it, &version);
+      log_lookup_.StopTimer();
+      if (found) {
         vmap->set_entry(*it, version);
       }
     }
     job->set_vmap_read_in(vmap);
+    log_sterile_.StopTimer();
   } else {
+    log_nonsterile_.ResumeTimer();
     boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
     std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
-      if (job->ancestor_chain()->LookUpVersion(it->first, &version)) {
+      log_lookup_.ResumeTimer();
+      lookup_count_++;
+      bool found = job->ancestor_chain()->LookUpVersion(it->first, &version);
+      log_lookup_.StopTimer();
+      if (found) {
         vmap->set_entry(it->first, version);
       }
     }
     job->set_vmap_read_in(vmap);
+    log_nonsterile_.StopTimer();
   }
 
   job->set_partial_versioned(true);

@@ -18,8 +18,9 @@
 namespace PhysBAM {
 
 template<class T_GRID,class T2,class T_AVERAGING,class T_INTERPOLATION> ADVECTION_SEMI_LAGRANGIAN_UNIFORM<T_GRID,T2,T_AVERAGING,T_INTERPOLATION>::
-ADVECTION_SEMI_LAGRANGIAN_UNIFORM()
-{}
+ADVECTION_SEMI_LAGRANGIAN_UNIFORM() : phi(NULL), advect_only_fluid(false)
+{
+}
 
 template<class T_GRID,class T2,class T_AVERAGING,class T_INTERPOLATION> void ADVECTION_SEMI_LAGRANGIAN_UNIFORM<T_GRID,T2,T_AVERAGING,T_INTERPOLATION>::
 Update_Advection_Equation_Node(const T_GRID& grid,T_ARRAYS_T2& Z,const T_ARRAYS_T2& Z_ghost,
@@ -75,14 +76,52 @@ Update_Advection_Equation_Face_Lookup(const T_GRID& grid,T_FACE_ARRAYS_SCALAR& Z
     const T_FACE_LOOKUP* Z_min_ghost,const T_FACE_LOOKUP* Z_max_ghost,T_FACE_ARRAYS_SCALAR* Z_min,T_FACE_ARRAYS_SCALAR* Z_max)
 {
     T_INTERPOLATION interpolation;T_AVERAGING averaging;
-    if(Z_min && Z_max) for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()){
-        TV_INT face=iterator.Face_Index();int axis=iterator.Axis();TV X=iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities);
-        Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),X);
-        VECTOR<T,2> extrema=interpolation.Extrema_Clamped_To_Array_Face_Component(axis,grid,Z_min_ghost->Starting_Point_Face(axis,face),Z_max_ghost->Starting_Point_Face(axis,face),X);
-        (*Z_min).Component(axis)(face)=extrema.x;(*Z_max).Component(axis)(face)=extrema.y;}
-    else for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()){TV_INT face=iterator.Face_Index();int axis=iterator.Axis();
-        Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),
-            iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities));}
+    if (advect_only_fluid && phi) {
+        if(Z_min && Z_max) {
+            for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()) {
+                if ((*phi)(iterator.First_Cell_Index())>=grid.min_dX*2.)
+                    continue;
+                TV_INT face=iterator.Face_Index();
+                int axis=iterator.Axis();
+                TV X=iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities);
+                Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),X);
+                VECTOR<T,2> extrema=interpolation.Extrema_Clamped_To_Array_Face_Component(axis,grid,Z_min_ghost->Starting_Point_Face(axis,face),Z_max_ghost->Starting_Point_Face(axis,face),X);
+                (*Z_min).Component(axis)(face)=extrema.x;(*Z_max).Component(axis)(face)=extrema.y;
+            }
+        }
+        else
+        {
+            for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()) {
+                if ((*phi)(iterator.First_Cell_Index())>=grid.min_dX*2.)
+                    continue;
+                TV_INT face=iterator.Face_Index();
+                int axis=iterator.Axis();
+                Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),
+                    iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities));
+            }
+        }
+    }
+    else {
+        if(Z_min && Z_max) {
+            for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()) {
+                TV_INT face=iterator.Face_Index();
+                int axis=iterator.Axis();
+                TV X=iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities);
+                Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),X);
+                VECTOR<T,2> extrema=interpolation.Extrema_Clamped_To_Array_Face_Component(axis,grid,Z_min_ghost->Starting_Point_Face(axis,face),Z_max_ghost->Starting_Point_Face(axis,face),X);
+                (*Z_min).Component(axis)(face)=extrema.x;(*Z_max).Component(axis)(face)=extrema.y;
+            }
+        }
+        else
+        {
+            for(FACE_ITERATOR iterator(grid);iterator.Valid();iterator.Next()) {
+                TV_INT face=iterator.Face_Index();
+                int axis=iterator.Axis();
+                Z.Component(axis)(face)=interpolation.Clamped_To_Array_Face_Component(axis,grid,Z_ghost.Starting_Point_Face(axis,face),
+                    iterator.Location()-dt*averaging.Face_To_Face_Vector(grid,axis,face,face_velocities));
+            }
+        }
+    }
 }
 
 }
