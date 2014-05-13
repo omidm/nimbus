@@ -60,7 +60,7 @@ void WorkerThreadComputation::Run() {
     assert(job != NULL);
     ExecuteJob(job);
     assert(worker_manager_ != NULL);
-    bool success_flag = worker_manager_->PushFinishJob(job);
+    bool success_flag = worker_manager_->FinishJob(job);
     assert(success_flag);
   }
 }

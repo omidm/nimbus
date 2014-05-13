@@ -63,15 +63,12 @@ class WorkerManager {
       HighResolutionTimer* timer);
 
   // Computation job: computation-intensive job.
-  // Finish job: the process happening at the end of a job.
   // Fast job: non-computation-intensive job.
 
   Job* NextComputationJobToRun(WorkerThread* worker_thread);
 
   bool PushJob(Job* job);
-  bool PushFinishJob(Job* job);
-  bool PullFinishJobs(WorkerThread* worker_thread,
-                      std::list<Job*>* list_buffer);
+  bool FinishJob(Job* job);
   bool PullFastJobs(WorkerThread* worker_thread,
                     std::list<Job*>* list_buffer);
 
@@ -118,12 +115,6 @@ class WorkerManager {
 
   std::list<Job*> computation_job_to_schedule_list_;
 
-  pthread_mutex_t finish_job_queue_lock_;
-  pthread_cond_t finish_job_queue_any_cond_;
-  // Protected by finish_job_queue_lock_.
-  std::list<Job*> finish_job_list_;
-  int64_t finish_job_list_length_;
-
   pthread_mutex_t local_job_done_list_lock_;
   // Protected by local_job_done_queue_lock_.
   JobList local_job_done_list_;
@@ -136,7 +127,6 @@ class WorkerManager {
 
   // Measures running states of the worker.
   int64_t dispatched_computation_job_count_;
-  int64_t dispatched_finish_job_count_;
   int64_t dispatched_fast_job_count_;
   int idle_computation_threads_;
   int64_t ready_jobs_count_;

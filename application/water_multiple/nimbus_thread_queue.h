@@ -39,21 +39,23 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_THREAD_QUEUE_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_THREAD_QUEUE_H_
 
-#include <sys/types.h>
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
 
 namespace nimbus {
 
-class NimbusThreadQueue : PhysBAM::THREAD_QUEUE {
+class NimbusThreadQueue : public PhysBAM::THREAD_QUEUE {
  public:
-  NimbusThreadQueue() {}
+  using PhysBAM::THREAD_QUEUE::TASK;
+  NimbusThreadQueue() : THREAD_QUEUE(-1) {}
   virtual ~NimbusThreadQueue() {}
 
   virtual void Queue(TASK* task) {
-    task->Run(gettid());
+    printf("NIMBUS_THREADING: new task received\n");
+    task->Run(999);
     delete task;
   }
   virtual void Wait() {
+    printf("NIMBUS_THREADING: sync\n");
     return;
   }
   virtual int Number_Of_Threads() {

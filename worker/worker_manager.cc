@@ -43,7 +43,6 @@
 #include "worker/worker_thread.h"
 #include "worker/worker_thread_computation.h"
 #include "worker/worker_thread_fast.h"
-#include "worker/worker_thread_finish.h"
 #include "worker/worker_thread_monitor.h"
 
 #include "worker/worker_manager.h"
@@ -61,9 +60,6 @@ WorkerManager::WorkerManager(bool multi_threaded) {
 
   pthread_mutex_init(&computation_job_queue_lock_, NULL);
 
-  pthread_mutex_init(&finish_job_queue_lock_, NULL);
-  pthread_cond_init(&finish_job_queue_any_cond_, NULL);
-
   pthread_mutex_init(&local_job_done_list_lock_, NULL);
 
   pthread_mutex_init(&fast_job_queue_lock_, NULL);
@@ -78,10 +74,8 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   }
   idle_computation_threads_ = 0;
   dispatched_computation_job_count_ = 0;
-  dispatched_finish_job_count_ = 0;
   dispatched_fast_job_count_= 0;
   ready_jobs_count_ = 0;
-  finish_job_list_length_ = 0;
   fast_job_list_length_ = 0;
 }
 
@@ -92,9 +86,6 @@ WorkerManager::~WorkerManager() {
   pthread_mutex_destroy(&scheduling_critical_section_lock_);
 
   pthread_mutex_destroy(&computation_job_queue_lock_);
-
-  pthread_mutex_destroy(&finish_job_queue_lock_);
-  pthread_cond_destroy(&finish_job_queue_any_cond_);
 
   pthread_mutex_destroy(&fast_job_queue_lock_);
   pthread_cond_destroy(&fast_job_queue_any_cond_);
@@ -131,17 +122,10 @@ bool WorkerManager::PushJob(Job* job) {
   return true;
 }
 
-bool WorkerManager::PushFinishJob(Job* job) {
+bool WorkerManager::FinishJob(Job* job) {
   pthread_mutex_lock(&local_job_done_list_lock_);
   local_job_done_list_.push_back(job);
   pthread_mutex_unlock(&local_job_done_list_lock_);
-  /*
-  pthread_mutex_lock(&finish_job_queue_lock_);
-  finish_job_list_.push_back(job);
-  ++finish_job_list_length_;
-  pthread_cond_signal(&finish_job_queue_any_cond_);
-  pthread_mutex_unlock(&finish_job_queue_lock_);
-  */
   return true;
 }
 
@@ -176,23 +160,6 @@ Job* WorkerManager::NextComputationJobToRun(WorkerThread* worker_thread) {
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
 
   return temp;
-}
-
-bool WorkerManager::PullFinishJobs(WorkerThread* worker_thread,
-                                  std::list<Job*>* list_buffer) {
-  pthread_mutex_lock(&finish_job_queue_lock_);
-  worker_thread->idle = true;
-  while (finish_job_list_.empty()) {
-    pthread_cond_wait(&finish_job_queue_any_cond_,
-                      &finish_job_queue_lock_);
-  }
-  list_buffer->clear();
-  list_buffer->swap(finish_job_list_);
-  finish_job_list_length_ = 0;
-  dispatched_finish_job_count_ += list_buffer->size();
-  worker_thread->idle = false;
-  pthread_mutex_unlock(&finish_job_queue_lock_);
-  return true;
 }
 
 bool WorkerManager::PullFastJobs(WorkerThread* worker_thread,
@@ -238,7 +205,6 @@ bool WorkerManager::LaunchThread(WorkerThread* worker_thread) {
 
 bool WorkerManager::StartWorkerThreads() {
   LaunchThread(new WorkerThreadMonitor(this));
-  LaunchThread(new WorkerThreadFinish(this, worker_->data_map()));
   for (int i = 0; i < fast_thread_num; ++i) {
     LaunchThread(new WorkerThreadFast(this));
   }

@@ -63,7 +63,7 @@ void WorkerThreadFast::Run() {
          index != fast_job_list.end();
          index++) {
       ProcessJob(*index);
-      bool success_flag = worker_manager_->PushFinishJob(*index);
+      bool success_flag = worker_manager_->FinishJob(*index);
       assert(success_flag);
     }
     fast_job_list.clear();

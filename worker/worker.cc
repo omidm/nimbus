@@ -543,6 +543,21 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 }
 
 void Worker::NotifyLocalJobDone(Job* job) {
+  /*
+#ifndef MUTE_DATA_ACCESS_CHECK
+  IDSet<physical_data_id_t>::IDSetIter iter;
+
+  IDSet<physical_data_id_t> read = job->read_set();
+  for (iter = read.begin(); iter != read.end(); iter++) {
+    data_map_->ReleaseAccess(*iter, job->id().elem(), PhysicalDataMap::READ);
+  }
+
+  IDSet<physical_data_id_t> write = job->write_set();
+  for (iter = write.begin(); iter != write.end(); iter++) {
+    data_map_->ReleaseAccess(*iter, job->id().elem(), PhysicalDataMap::WRITE);
+  }
+#endif
+*/
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
   client_->sendCommand(&cm);
