@@ -43,6 +43,18 @@
 
 using namespace nimbus; // NOLINT
 
+
+bool LookUpVersion(LogicalDataLineage::Lineage lineage,
+    boost::shared_ptr<MetaBeforeSet> mbs,
+    data_version_t *version) {
+  LogicalDataLineage::Lineage::reverse_iterator iter;
+  for (iter = lineage.rbegin(); iter != lineage.rend(); ++iter) {
+  }
+  // TODO(omidm): to implement this.
+  return false;
+}
+
+
 JobManager::JobManager() {
   // Add the KERNEL job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
@@ -111,6 +123,11 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     j = edge->start_vertex()->entry();
     if (j->versioned()) {
       pass_version_[job_id].push_back(j);
+      job->set_logical_data_lineage(j->logical_data_lineage());
+    } else {
+      dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
+          parent_job_id, job_id);
+      exit(-1);
     }
   } else {
     dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
@@ -173,6 +190,11 @@ bool JobManager::AddJobEntry(const JobType& job_type,
       j = edge->start_vertex()->entry();
       if (j->versioned()) {
         pass_version_[job_id].push_back(j);
+        job->set_logical_data_lineage(j->logical_data_lineage());
+      } else {
+        dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
+            parent_job_id, job_id);
+        exit(-1);
       }
     } else {
       dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
@@ -829,40 +851,113 @@ void JobManager::PassDataVersionToJob(
   // job->set_partial_versioned(true);
 
 
-  std::vector<boost::shared_ptr<const AncestorChain> > chains;
+
+
+  // std::vector<boost::shared_ptr<const AncestorChain> > chains;
+  // if (job->partial_versioned()) {
+  //   chains.push_back(job->ancestor_chain());
+  // }
+
+  // JobEntryList::const_iterator iter;
+  // for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
+  //   JobEntry* j = (*iter);
+  //   assert(j->versioned());
+  //   chains.push_back(j->ancestor_chain_to_pass());
+  //   job->add_job_passed_versions(j->job_id());
+  // }
+
+  // boost::shared_ptr<AncestorChain> chain;
+  // log_merge_.ResumeTimer();
+  // AncestorChain::MergeAncestorChains(chains, &chain);
+  // log_merge_.StopTimer();
+  // job->set_ancestor_chain(chain);
+
+  // if (job->sterile()) {
+  //   log_sterile_.ResumeTimer();
+  //   boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+  //   IDSet<logical_data_id_t>::ConstIter it;
+  //   for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+  //     data_version_t version;
+  //     log_lookup_.ResumeTimer();
+  //     lookup_count_++;
+  //     bool found = job->ancestor_chain()->LookUpVersion(*it, &version);
+  //     log_lookup_.StopTimer();
+  //     if (found) {
+  //       vmap->set_entry(*it, version);
+  //     }
+  //   }
+  //   job->set_vmap_read_in(vmap);
+  //   log_sterile_.StopTimer();
+  // } else {
+  //   log_nonsterile_.ResumeTimer();
+  //   boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+  //   std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+  //   for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+  //     data_version_t version;
+  //     log_lookup_.ResumeTimer();
+  //     lookup_count_++;
+  //     bool found = job->ancestor_chain()->LookUpVersion(it->first, &version);
+  //     log_lookup_.StopTimer();
+  //     if (found) {
+  //       vmap->set_entry(it->first, version);
+  //     }
+  //   }
+  //   job->set_vmap_read_in(vmap);
+  //   log_nonsterile_.StopTimer();
+  // }
+
+  // job->set_partial_versioned(true);
+
+
+
   if (job->partial_versioned()) {
-    chains.push_back(job->ancestor_chain());
+    job->meta_before_set()->InvalidateNegativeQueryCache();
+  } else {
+    job->set_vmap_read(
+        boost::shared_ptr<VersionMap>(new VersionMap()));
+    job->set_meta_before_set(
+        boost::shared_ptr<MetaBeforeSet>(new MetaBeforeSet()));
   }
 
+  std::map<job_id_t, boost::shared_ptr<LogicalDataLineage> > lineages;
   JobEntryList::const_iterator iter;
   for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
     JobEntry* j = (*iter);
     assert(j->versioned());
-    chains.push_back(j->ancestor_chain_to_pass());
+    job->meta_before_set()->table_p()->insert(
+        std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), job->meta_before_set()));
+    lineages[j->logical_data_lineage()->parent_id()] = j->logical_data_lineage();
     job->add_job_passed_versions(j->job_id());
   }
 
-  boost::shared_ptr<AncestorChain> chain;
+  // TODO(omidm): take care of multiple lineages.
+  // (in case of jobs from different parents appear in a job's before set)
+  //
+  // for each logical id merge all lineages to get one lineage, there could be
+  // missing jobs in the lineage but what matters is it should have the order.
+
+  if (lineages.size() > 1) {
+    dbg(DBG_ERROR, "ERROR: we do not support multiple lineage for now!\n");
+    exit(-1);
+  }
   log_merge_.ResumeTimer();
-  AncestorChain::MergeAncestorChains(chains, &chain);
+  boost::shared_ptr<LogicalDataLineage> ldl = lineages.begin()->second;
   log_merge_.StopTimer();
-  job->set_ancestor_chain(chain);
+
 
   if (job->sterile()) {
     log_sterile_.ResumeTimer();
-    boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = job->ancestor_chain()->LookUpVersion(*it, &version);
+      bool found = LookUpVersion(ldl->table_p()->operator[](*it), job->meta_before_set(), &version);
       log_lookup_.StopTimer();
       if (found) {
-        vmap->set_entry(*it, version);
+        job->vmap_read()->set_entry(*it, version);
       }
     }
-    job->set_vmap_read_in(vmap);
     log_sterile_.StopTimer();
   } else {
     log_nonsterile_.ResumeTimer();
@@ -872,13 +967,12 @@ void JobManager::PassDataVersionToJob(
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = job->ancestor_chain()->LookUpVersion(it->first, &version);
+      bool found = LookUpVersion(ldl->table_p()->operator[](it->first), job->meta_before_set(), &version);
       log_lookup_.StopTimer();
       if (found) {
-        vmap->set_entry(it->first, version);
+        job->vmap_read()->set_entry(it->first, version);
       }
     }
-    job->set_vmap_read_in(vmap);
     log_nonsterile_.StopTimer();
   }
 
