@@ -56,6 +56,7 @@
 #include "scheduler/version_map.h"
 #include "scheduler/ancestor_chain.h"
 #include "scheduler/meta_before_set.h"
+#include "scheduler/logical_data_lineage.h"
 
 namespace nimbus {
 
@@ -117,6 +118,7 @@ class JobEntry {
     boost::shared_ptr<VersionMap> vmap_read();
     boost::shared_ptr<VersionMap> vmap_write();
     boost::shared_ptr<MetaBeforeSet> meta_before_set();
+    boost::shared_ptr<LogicalDataLineage> logical_data_lineage();
     PhysicalTable physical_table();
     IDSet<job_id_t> jobs_passed_versions();
     IDSet<job_id_t> need_set();
@@ -156,6 +158,7 @@ class JobEntry {
     void set_vmap_read(boost::shared_ptr<VersionMap> vmap_read);
     void set_vmap_write(boost::shared_ptr<VersionMap> vmap_write);
     void set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set);
+    void set_logical_data_lineage(boost::shared_ptr<LogicalDataLineage> logical_data_lineage);
     void set_physical_table(PhysicalTable physical_table);
     void set_jobs_passed_versions(IDSet<job_id_t> jobs);
     void add_job_passed_versions(job_id_t job_id);
@@ -195,6 +198,7 @@ class JobEntry {
     boost::shared_ptr<VersionMap> vmap_read_;
     boost::shared_ptr<VersionMap> vmap_write_;
     boost::shared_ptr<MetaBeforeSet> meta_before_set_;
+    boost::shared_ptr<LogicalDataLineage> logical_data_lineage_;
     PhysicalTable physical_table_;
     IDSet<job_id_t> jobs_passed_versions_;
     bool sterile_;

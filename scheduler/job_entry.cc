@@ -223,6 +223,10 @@ boost::shared_ptr<MetaBeforeSet> JobEntry::meta_before_set() {
   return meta_before_set_;
 }
 
+boost::shared_ptr<LogicalDataLineage> JobEntry::logical_data_lineage() {
+  return logical_data_lineage_;
+}
+
 const JobEntry::VersionTable* JobEntry::version_table_in_p() {
   return &version_table_in_;
 }
@@ -369,6 +373,11 @@ void JobEntry::set_vmap_write(boost::shared_ptr<VersionMap> vmap_write) {
 
 void JobEntry::set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set) {
   meta_before_set_ = meta_before_set;
+}
+
+void JobEntry::set_logical_data_lineage(
+    boost::shared_ptr<LogicalDataLineage> logical_data_lineage) {
+  logical_data_lineage_ = logical_data_lineage;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
