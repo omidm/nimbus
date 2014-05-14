@@ -33,9 +33,8 @@
  */
 
 /*
- * Application field contains a pointer to the field in the cached object, and
- * a list of field partitions corresponding to logical data partitions for the
- * field.
+ * A CacheStruct is an pplication object corresponding to a set of nimbus
+ * variables cached by the cache manager.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
@@ -55,25 +54,39 @@
 
 namespace nimbus {
 
+typedef int type_id_t;
+
+/**
+ * \class CacheStruct
+ * \details Application object corresponding to a set of nimbus variables cached
+ * by the cache manager. A CacheStruct can have num_variables number of
+ * different nimbus variables, and must be defined over a geometric region.
+ */
 class CacheStruct {
     public:
         /**
-         * \fn CacheStruct::CacheStruct(std::string type,
-         *                              size_t num_variables,
-         *                              const GeometricRegion *struct_region)
-         * \param type specifies the application object/ variable name
-         * \param num_variables states the number of different application
+         * \fn CacheStruct::CacheStruct(size_t num_variables)
+         * \brief Creates a CacheStruct
+         * \param num_variables indicates number of different application
          * variables that the CacheStruct instance contains
+         * \return Constructed CacheStruct instance
+         */
+        explicit CacheStruct(size_t num_variables);
+
+        /**
+         * \fn CacheStruct::CacheStruct(size_t num_variables,
+         *                              const GeometricRegion *struct_region)
+         * \brief Constructs a CacheStruct
          * \param struct_region specifies the spatial domain of the CacheStruct
          * instance
          * \return Constructed CacheStruct instance
          */
-        explicit CacheStruct(std::string type,
-                             size_t num_variables,
-                             const GeometricRegion &struct_region);
+        explicit CacheStruct(const GeometricRegion &struct_region);
 
         /**
          * \fn CacheStruct::CreateNew(const GeometricRegion &struct_region) const
+         * \brief Creates a new CacheStruct instance using current instance
+         * parameters
          * \param struct_region specifies the spatial domain of the CacheStruct
          * instance
          * \return Returns a pointer to the newly allocated CacheStruct instance
@@ -81,48 +94,45 @@ class CacheStruct {
         virtual CacheStruct *CreateNew(const GeometricRegion &struct_region) const;
 
         /**
-         * \fn CacheStruct::ReadToCache(const Data
+         * \fn CacheStruct::UpdateCache(const std::vector<type_id_t> var_type,
+         *                              const std::vector<DataArray *> read_sets,
+         *                              const GeometricRegion &read_region)
+         * \brief Updates CacheStruct with data from read_sets - performs update
+         * only for those physical data that have changed since the CacheStruct
+         * instance was created
+         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param read_sets is a list of read_sets corresponding to nimbus variables
+         * \param read_region is the geometric region to read
          */
-        virtual void ReadToCache(const DataArray &read_set,
-                                 const GeometricRegion &read_region);
-        virtual void WriteFromCache(const DataArray &write_set,
-                                    const GeometricRegion &reg) const;
+        void UpdateCache(const std::vector<type_id_t> var_type,
+                         const std::vector<DataArray *> read_sets,
+                         const GeometricRegion &read_region);
+        /**
+         * \fn CacheStruct::CompleteWrite(const GeometricRegion &write_region)
+         * \param write_region is the geometric region to write
+         * \brief Indicates that write to CacheStruct instance is complete
+         */
+        void Write(const GeometricRegion &write_region);
 
-        void Read(const DataArray &read_set,
-                  const GeometricRegion &read_region,
-                  bool release = false);
-        void WriteImmediately(const DataArray &write_set,
-                              const GeometricRegion &write_region,
-                              bool release = true);
-        void Write(const GeometricRegion &write_region,
-                   bool release = true);
-
-        // update data
-        void FlushCache();
-        void PullIntoData(Data *d);
-        void RemoveFromWriteBack(Data *d);
-
-        std::string type() const;
-        GeometricRegion app_object_region() const;
+        void FlushToData(Data *d);
 
         void AcquireAccess(CacheAccess access);
         void ReleaseAccess();
+        bool IsAvailable(CacheAccess access) const;
 
-        void SetUpRead(const DataArray &read_set,
-                       bool read_keep_valid);
+        distance_t GetDistance(const DataArray &data_set) const;
+
+        void SetUpRead(const std::vector<type_id_t> var_type,
+                       const std::vector<DataArray *> read_sets);
         void SetUpWrite(const DataArray &write_set);
+
         void SetUpData(Data *d);
         void UnsetData(Data *d);
 
-        // Use with care
-        void InvalidateCacheStruct(const DataArray &da);
-        void InvalidateCacheStructComplete();
-
-        bool IsAvailable(CacheAccess access) const;
-        distance_t GetDistance(const DataArray &data_set) const;
+        GeometricRegion struct_region() const;
 
     private:
-        void FlushCacheData(const DataArray &diff);
+        void FlushCache(const DataArray &diff);
 
         std::string type_;
         GeometricRegion app_object_region_;
@@ -143,6 +153,33 @@ class CacheStruct {
         std::map<logical_data_id_t, Data*> data_map_;
         std::set<Data *> data_;
         PIDSet pids_;
+
+    protected:
+        /**
+         * \fn CacheStruct::ReadToCache(const std::vector<type_id_t> var_type,
+         *                              const std::vector<DataArray *> read_sets,
+         *                              const GeometricRegion &read_region)
+         * \brief Reads data from read_sets into CacheStruct instance
+         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param read_sets is a list of read_sets corresponding to nimbus variables
+         * \param read_region is the geometric region to read
+         */
+        virtual void ReadToCache(const std::vector<type_id_t> var_type,
+                                 const std::vector<DataArray *> read_sets,
+                                 const GeometricRegion &read_region);
+
+        /**
+         * \fn CacheStruct::WriteFromCache(const std::vector<type_id_t> var_type,
+         *                                 const std::vector<DataArray *> write_sets,
+         *                                 const GeometricRegion &write_region)
+         * \brief Writes data from CacheStruct instance to write_sets
+         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param write_sets is a list of write_sets corresponding to nimbus variables
+         * \param write_region is the geometric region to be write
+         */
+        virtual void WriteFromCache(const std::vector<type_id_t> var_type,
+                                    const std::vector<DataArray *> read_sets,
+                                    const GeometricRegion &write_region);
 };  // class CacheStruct
 
 typedef std::vector<CacheStruct *> CacheStructs;
