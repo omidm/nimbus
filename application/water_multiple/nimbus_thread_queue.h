@@ -40,27 +40,82 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_THREAD_QUEUE_H_
 
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
+#include "shared/nimbus.h"
+#include <list>
+#include <vector>
 
 namespace nimbus {
 
+class NimbusTaskThread;
+
 class NimbusThreadQueue : public PhysBAM::THREAD_QUEUE {
+  friend class NimbusTaskThread;
  public:
   using PhysBAM::THREAD_QUEUE::TASK;
-  NimbusThreadQueue() : THREAD_QUEUE(-1) {}
-  virtual ~NimbusThreadQueue() {}
+  NimbusThreadQueue(int thread_count = 1);
+  virtual ~NimbusThreadQueue();
 
-  virtual void Queue(TASK* task) {
-    printf("NIMBUS_THREADING: new task received\n");
-    task->Run(999);
-    delete task;
+  virtual void Queue(TASK* task);
+  virtual void Wait();
+  virtual int Number_Of_Threads();
+
+  struct EXITER : public TASK {
+    void Run(const int threadid) {
+      pthread_exit(0);
+    }
+  };
+ private:
+  int queue_length_;
+  std::vector<NimbusTaskThread*> task_threads;
+  std::list<TASK*> queue;
+  pthread_attr_t attr;
+  pthread_mutex_t queue_lock;
+  pthread_cond_t done_condition, todo_condition;
+  int active_threads, inactive_threads;
+  int blocked_threads, thread_quota;
+};
+
+class NimbusTaskThread {
+ public:
+  NimbusTaskThread(NimbusThreadQueue* nimbus_thread_queue, int thread_rank) {
+    queue_ = nimbus_thread_queue;
+    thread_rank_ = thread_rank;
   }
-  virtual void Wait() {
-    printf("NIMBUS_THREADING: sync\n");
-    return;
+  ~NimbusTaskThread() {};
+  static void* ThreadRoutine(void* parameter) {
+    NimbusTaskThread* nimbus_task_thread =
+        static_cast<NimbusTaskThread*>(parameter);
+    nimbus_task_thread->Run();
+    assert(false);
+    return NULL;
   }
-  virtual int Number_Of_Threads() {
-    return 1;
+  void Run() {
+    while (1) {
+      pthread_mutex_lock(&queue_->queue_lock);
+      while (queue_->queue.empty() ||
+             queue_->active_threads > queue_->thread_quota){
+        queue_->active_threads--;
+        if (queue_->active_threads == 0) {
+          pthread_cond_signal(&queue_->done_condition);
+        }
+        queue_->inactive_threads++;
+        pthread_cond_wait(&queue_->todo_condition, &queue_->queue_lock);
+        queue_->active_threads++;
+        queue_->inactive_threads--;
+      }
+      dbg(DBG_WORKER, "execute task.\n");
+      NimbusThreadQueue::TASK* task = queue_->queue.front();
+      queue_->queue.pop_front();
+      pthread_mutex_unlock(&queue_->queue_lock);
+      // PhysBAM rank starts from 1.
+      task->Run(thread_rank_ + 1);
+      delete task;
+    }
   }
+  pthread_t pthread_control_handler;
+ private:
+  int thread_rank_;
+  NimbusThreadQueue* queue_;
 };
 
 }  // namespace nimbus
