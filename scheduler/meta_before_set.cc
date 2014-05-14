@@ -33,12 +33,11 @@
  */
 
  /*
-  * This class keeps the lineage information about how logical data evolves as
-  * it is written by jobs.
+  * Meta before set information used to keep track of immediate and indirect
+  * before set of a job.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
-
 
 #include "scheduler/meta_before_set.h"
 
@@ -123,6 +122,32 @@ MetaBeforeSet& MetaBeforeSet::operator= (const MetaBeforeSet& right) {
 }
 
 bool MetaBeforeSet::LookUpBeforeSetChain(job_id_t job_id) {
+  if (is_root_) {
+    dbg(DBG_ERROR, "ERROR, it should not get to the root in the meta before set look up.\n");
+    exit(-1);
+  }
+
+  if (table_.count(job_id) > 0) {
+    return true;
+  }
+
+  if (positive_query_.count(job_id) > 0) {
+    return true;
+  }
+
+  if (negative_query_.count(job_id) > 0) {
+    return false;
+  }
+
+  Table::iterator iter;
+  for (iter = table_.begin(); iter != table_.end(); ++iter) {
+    if (iter->second->LookUpBeforeSetChain(job_id)) {
+      positive_query_.insert(job_id);
+      return true;
+    }
+  }
+
+  negative_query_.insert(job_id);
   return false;
 }
 
