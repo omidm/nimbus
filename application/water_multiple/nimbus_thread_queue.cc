@@ -92,7 +92,8 @@ void NimbusThreadQueue::Queue(TASK* task) {
 }
 void NimbusThreadQueue::Wait() {
   pthread_mutex_lock(&queue_lock);
-  dbg(DBG_WORKER, "%d tasks before the sync.\n");
+  dbg(DBG_WORKER_BD,
+      DBG_WORKER_BD_S"%d tasks before the sync.\n", queue_length_);
   queue_length_ = 0;
   --active_threads;
   ++blocked_threads;

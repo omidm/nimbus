@@ -66,6 +66,14 @@
 
 namespace nimbus {
 
+#ifndef DBG_WORKER_FD_S
+#define DBG_WORKER_FD_S "\n[WORKER_FD] "
+#endif  // DBG_WORKER_FD_S
+
+#ifndef DBG_WORKER_BD_S
+#define DBG_WORKER_BD_S "\n[WORKER_BD] "
+#endif  // DBG_WORKER_BD_S
+
 class Worker;
 class WorkerManager;
 typedef std::map<int, Worker*> WorkerMap;
@@ -147,7 +155,6 @@ class Worker {
   virtual void NotifyJobDone(job_id_t job_id);
   virtual void ClearAfterSet(WorkerJobVertex* vertex);
   virtual void NotifyTransmissionDone(job_id_t job_id);
-  virtual void PrintWorkerJobGraph();
 
  public:
   void ResolveDataArray(Job* job);

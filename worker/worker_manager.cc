@@ -66,7 +66,7 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
   if (multi_threaded) {
-    computation_thread_num = 4;
+    computation_thread_num = 1;
     fast_thread_num = 1;
   } else {
     computation_thread_num = 1;
@@ -246,6 +246,9 @@ void WorkerManager::ScheduleComputationJobs() {
       worker_thread->next_job_to_run =
           computation_job_list_.front();
       computation_job_list_.pop_front();
+      dbg(DBG_WORKER_BD, DBG_WORKER_BD_S"Job(name %s, #%d) dispatched.\n",
+          worker_thread->next_job_to_run->name().c_str(),
+          worker_thread->next_job_to_run->id().elem());
       worker_thread->job_assigned = true;
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;

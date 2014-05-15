@@ -106,24 +106,14 @@ void Worker::Run() {
   WorkerCoreProcessor();
 }
 
-void Worker::PrintWorkerJobGraph() {
-  for (WorkerJobVertex::Iter index = worker_job_graph_.begin();
-       index != worker_job_graph_.end();
-       ++index) {
-    if ((*index).second->entry() != NULL &&
-        (*index).second->entry()->get_job() != NULL)
-      printf("name: %s #before set: %d\n",
-             (*index).second->entry()->get_job()->name().c_str(),
-             static_cast<int>((*index).second->incoming_edges()->size()));
-  }
-}
-
 void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   worker_manager_->SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
                                      &timer_);
+  dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
+  dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
 
   JobList local_job_done_list;
   while (true) {
@@ -131,7 +121,11 @@ void Worker::WorkerCoreProcessor() {
     SchedulerCommand* comm = client_->receiveCommand();
     int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
     while (comm != NULL) {
-      dbg(DBG_WORKER, "Received command: %s\n", comm->toStringWTags().c_str());
+      dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
+          comm->toStringWTags().c_str());
+      dbg(DBG_WORKER_FD,
+          DBG_WORKER_FD_S"Scheduler command arrives(%s).\n",
+          comm->name().c_str());
       ProcessSchedulerCommand(comm);
       delete comm;
       if (--quota == 0) {
@@ -142,6 +136,9 @@ void Worker::WorkerCoreProcessor() {
     // Poll jobs that finish receiving.
     job_id_t receive_job_id;
     while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
+      dbg(DBG_WORKER_FD,
+          DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
+          receive_job_id);
       NotifyTransmissionDone(receive_job_id);
     }
     // Job done processing.
@@ -149,15 +146,19 @@ void Worker::WorkerCoreProcessor() {
     for (JobList::iterator index = local_job_done_list.begin();
          index != local_job_done_list.end();
          ++index) {
+      dbg(DBG_WORKER_FD,
+          DBG_WORKER_FD_S"Local job-done notification arrives(job #%d).\n",
+          *index);
       NotifyLocalJobDone(*index);
     }
     local_job_done_list.clear();
-    PrintWorkerJobGraph();
   }
 }
 
 // Extracts data objects from the read/write set to data array.
 void Worker::ResolveDataArray(Job* job) {
+  dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Job(name %s, #%d) ready to run.\n",
+      job->name().c_str(), job->id().elem());
   if ((dynamic_cast<CreateDataJob*>(job) != NULL)) {  // NOLINT
     assert(job->read_set().size() == 0);
     assert(job->write_set().size() == 1);
@@ -436,6 +437,9 @@ PhysicalDataMap* Worker::data_map() {
 void Worker::AddJobToGraph(Job* job) {
   assert(job != NULL);
   job_id_t job_id = job->id().elem();
+  dbg(DBG_WORKER_FD,
+      DBG_WORKER_FD_S"Job(%s, #%d) is added to the local job graph.\n",
+      job->name().c_str(), job_id);
   assert(job_id != DUMB_JOB_ID);
   // Add vertex for the new job.
   WorkerJobVertex* vertex = NULL;
@@ -543,21 +547,6 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 }
 
 void Worker::NotifyLocalJobDone(Job* job) {
-  /*
-#ifndef MUTE_DATA_ACCESS_CHECK
-  IDSet<physical_data_id_t>::IDSetIter iter;
-
-  IDSet<physical_data_id_t> read = job->read_set();
-  for (iter = read.begin(); iter != read.end(); iter++) {
-    data_map_->ReleaseAccess(*iter, job->id().elem(), PhysicalDataMap::READ);
-  }
-
-  IDSet<physical_data_id_t> write = job->write_set();
-  for (iter = write.begin(); iter != write.end(); iter++) {
-    data_map_->ReleaseAccess(*iter, job->id().elem(), PhysicalDataMap::WRITE);
-  }
-#endif
-*/
   Parameter params;
   JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
   client_->sendCommand(&cm);
@@ -574,6 +563,8 @@ void Worker::NotifyLocalJobDone(Job* job) {
 }
 
 void Worker::NotifyJobDone(job_id_t job_id) {
+  dbg(DBG_WORKER_FD,
+      DBG_WORKER_FD_S"Job(#%d) is removed in the local job graph.\n", job_id);
   // Job done for unknown job is not handled.
   if (!worker_job_graph_.HasVertex(job_id)) {
     return;

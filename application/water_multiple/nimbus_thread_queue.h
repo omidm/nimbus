@@ -52,7 +52,7 @@ class NimbusThreadQueue : public PhysBAM::THREAD_QUEUE {
   friend class NimbusTaskThread;
  public:
   using PhysBAM::THREAD_QUEUE::TASK;
-  NimbusThreadQueue(int thread_count = 1);
+  NimbusThreadQueue(int thread_count = 8);
   virtual ~NimbusThreadQueue();
 
   virtual void Queue(TASK* task);
@@ -103,7 +103,6 @@ class NimbusTaskThread {
         queue_->active_threads++;
         queue_->inactive_threads--;
       }
-      dbg(DBG_WORKER, "execute task.\n");
       NimbusThreadQueue::TASK* task = queue_->queue.front();
       queue_->queue.pop_front();
       pthread_mutex_unlock(&queue_->queue_lock);
