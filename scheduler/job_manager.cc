@@ -429,7 +429,7 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 //       exit(-1);
 //     }
 //   } else {
-//     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
+//     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id); // NOLINT
 //     exit(-1);
 //   }
 
@@ -934,14 +934,19 @@ void JobManager::PassDataVersionToJob(
         boost::shared_ptr<MetaBeforeSet>(new MetaBeforeSet()));
   }
 
+  job_depth_t depth = (*source_jobs.begin())->job_depth();
   JobEntryList::const_iterator iter;
   for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
     JobEntry* j = (*iter);
     assert(j->versioned());
     job->meta_before_set()->table_p()->insert(
-        std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), job->meta_before_set()));
+        std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), job->meta_before_set())); // NOLINT
+    if (depth < j->job_depth()) {
+      depth = j->job_depth();
+    }
     job->add_job_passed_versions(j->job_id());
   }
+  job->set_job_depth(depth + 1);
 
   if (job->sterile()) {
     log_sterile_.ResumeTimer();
@@ -965,7 +970,8 @@ void JobManager::PassDataVersionToJob(
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = LookUpVersion(ldl_.table_p()->operator[](it->first), job->meta_before_set(), &version);
+      bool found = LookUpVersion(
+          ldl_.table_p()->operator[](it->first), job->meta_before_set(), &version);
       log_lookup_.StopTimer();
       if (found) {
         job->vmap_read()->set_entry(it->first, version);

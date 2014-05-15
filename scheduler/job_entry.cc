@@ -227,6 +227,10 @@ boost::shared_ptr<LogicalDataLineage> JobEntry::logical_data_lineage() {
   return logical_data_lineage_;
 }
 
+job_depth_t JobEntry::job_depth() const {
+  return job_depth_;
+}
+
 const JobEntry::VersionTable* JobEntry::version_table_in_p() {
   return &version_table_in_;
 }
@@ -378,6 +382,10 @@ void JobEntry::set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_
 void JobEntry::set_logical_data_lineage(
     boost::shared_ptr<LogicalDataLineage> logical_data_lineage) {
   logical_data_lineage_ = logical_data_lineage;
+}
+
+void JobEntry::set_job_depth(job_depth_t job_depth) {
+  job_depth_ = job_depth;
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {
