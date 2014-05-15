@@ -83,23 +83,24 @@ void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
             dbg(DBG_WARN, "Invalid type %u passed to UpdateCache, ignoring it\n", type);
             continue;
         }
-        DataArray *diff_t = &diff[t];
-        DataArray *flush_t = &flush[t];
-        DMap *data_map_t = &data_maps_[type];
-        DataSet *write_back_t = &write_backs_[type];
-        for (size_t i = 0; i < read_sets[t].size(); ++i) {
-            Data *d = read_sets[t].at(i);
+        const DataArray &read_set_t = read_sets[t];
+        DataArray &diff_t = diff[t];
+        DataArray &flush_t = flush[t];
+        DMap &data_map_t = data_maps_[type];
+        const DataSet &write_back_t = write_backs_[type];
+        for (size_t i = 0; i < read_set_t.size(); ++i) {
+            Data *d = read_set_t.at(i);
             GeometricRegion dreg = d->region();
-            DMap::iterator it = data_map_t->find(dreg);
-            if (it == data_map_t->end()) {
-                diff_t->push_back(d);
+            DMap::iterator it = data_map_t.find(dreg);
+            if (it == data_map_t.end()) {
+                diff_t.push_back(d);
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
-                    diff_t->push_back(d);
+                    diff_t.push_back(d);
                     // d_old->UnsetCacheObjectMapping(this);
-                    if (write_back_t->find(d) != write_back_t->end()) {
-                        flush_t->push_back(d);
+                    if (write_back_t.find(d) != write_back_t.end()) {
+                        flush_t.push_back(d);
                     }
                 }
             }
@@ -109,12 +110,12 @@ void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
     ReadToCache(var_type, diff, read_region);
     for (size_t t = 0; t < num_vars; ++t) {
         type_id_t type = var_type[t];
-        DataArray *diff_t = &diff[t];
-        DMap *data_map_t = &data_maps_[type];
-        for (size_t i = 0; i < diff_t->size(); ++i) {
-            Data *d = diff_t->at(i);
+        const DataArray &diff_t = diff[t];
+        DMap &data_map_t = data_maps_[type];
+        for (size_t i = 0; i < diff_t.size(); ++i) {
+            Data *d = diff_t.at(i);
             GeometricRegion dreg = d->region();
-            (*data_map_t)[dreg] = d;
+            data_map_t[dreg] = d;
             // d->SetUpCacheObjectMapping(this);
         }
     }
@@ -142,23 +143,24 @@ void CacheStruct::SetUpWrite(const std::vector<type_id_t> &var_type,
             dbg(DBG_WARN, "Invalid type %u passed to SetUpWrite, ignoring it\n", type);
             continue;
         }
-        DataArray *diff_t = &diff[t];
-        DataArray *flush_t = &flush[t];
-        DMap *data_map_t = &data_maps_[type];
-        DataSet *write_back_t = &write_backs_[type];
-        for (size_t i = 0; i < write_sets[t].size(); ++i) {
-            Data *d = write_sets[t].at(i);
+        const DataArray &write_set_t = write_sets[t];
+        DataArray &diff_t = diff[t];
+        DataArray &flush_t = flush[t];
+        DMap &data_map_t = data_maps_[type];
+        DataSet &write_back_t = write_backs_[type];
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t.at(i);
             GeometricRegion dreg = d->region();
-            DMap::iterator it = data_map_t->find(dreg);
-            if (it == data_map_t->end()) {
-                diff_t->push_back(d);
+            DMap::iterator it = data_map_t.find(dreg);
+            if (it == data_map_t.end()) {
+                diff_t.push_back(d);
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
-                    diff_t->push_back(d);
+                    diff_t.push_back(d);
                     // d_old->UnsetCacheObjectMapping(this);
-                    if (write_back_t->find(d) != write_back_t->end()) {
-                        flush_t->push_back(d);
+                    if (write_back_t.find(d) != write_back_t.end()) {
+                        flush_t.push_back(d);
                     }
                 }
             }
@@ -167,18 +169,75 @@ void CacheStruct::SetUpWrite(const std::vector<type_id_t> &var_type,
     FlushCache(var_type, flush);
     for (size_t t = 0; t < num_vars; ++t) {
         type_id_t type = var_type[t];
-        DataArray *diff_t = &diff[t];
-        DMap *data_map_t = &data_maps_[type];
-        DataSet *write_back_t = &write_backs_[type];
-        for (size_t i = 0; i < diff_t->size(); ++i) {
-            Data *d = diff_t->at(i);
+        const DataArray &diff_t = diff[t];
+        DMap &data_map_t = data_maps_[type];
+        DataSet &write_back_t = write_backs_[type];
+        for (size_t i = 0; i < diff_t.size(); ++i) {
+            Data *d = diff_t.at(i);
             GeometricRegion dreg = d->region();
-            (*data_map_t)[dreg] = d;
-            write_back_t->insert(d);
+            data_map_t[dreg] = d;
+            write_back_t.insert(d);
             // d->SetUpCacheObjectMapping(this);
             // d->SetUpDirtyCacheObjectMapping(this);
         }
     }
+}
+
+/**
+ * \details PullData(...) pulls data from cache, after locking the struct. This
+ * is like FlushToData(...), except that it also locks the struct. When data
+ * needs to be updated from outside CacheStruct, use PullData. PullData(...)
+ * checks each write_back set in the list write_backs_, and finds out which
+ * type this data corresponds to. This may be a bad idea, but with twin copy
+ * implementation, I expect the overhead to be small. -- Chinmayee
+ */
+void CacheStruct::PullData(Data *d) {
+    AcquireAccess(EXCLUSIVE);
+    for (size_t t = 0; t < num_variables_; ++t) {
+        DataSet &write_back_t = write_backs_[t];
+        if (write_back_t.find(d) == write_back_t.end())
+            continue;
+        std::vector<type_id_t> var_type(1, t);
+        std::vector<DataArray> write_sets(1, DataArray(1, d));
+        GeometricRegion dreg = d->region();
+        GeometricRegion wreg = GeometricRegion::
+            GetIntersection(write_region_, dreg);
+        WriteFromCache(var_type, write_sets, wreg);
+        d->clear_dirty_cache_object();
+        write_back_t.erase(d);
+        break;
+    }
+    ReleaseAccess();
+}
+
+/**
+ * \details GetDistance(...) gives the cost of using the CacheStruct instance,
+ * given the read set. Current cost function is the sum of geometric sizes of
+ * data in the read set.
+ * The function does not have a separate argument for write set
+ * - if you want write set included in the cost function, either add  another
+ * argument or append it to read set that is passed to GetDistance.
+ */
+cache::distance_t CacheStruct::GetDistance(const std::vector<type_id_t> &var_type,
+                                           const std::vector<DataArray> &read_sets) const {
+    cache::distance_t cur_distance = 0;
+    for (size_t t = 0; t < num_variables_; ++t) {
+        type_id_t type = var_type[t];
+        if (type > num_variables_) {
+            dbg(DBG_WARN, "Invalid type %u passed to SetUpWrite, ignoring it\n", type);
+            continue;
+        }
+        const DMap &data_map_t = data_maps_[type];
+        for (size_t i = 0; i < read_sets[t].size(); ++i) {
+            Data *d = read_sets[t].at(i);
+            GeometricRegion dreg = d->region();
+            DMap::const_iterator it = data_map_t.find(dreg);
+            if (it->second == d)
+                continue;
+            cur_distance += dreg.dx() * dreg.dy() & dreg.dz();
+        }
+    }
+    return cur_distance;
 }
 
 }  // namespace nimbus

@@ -82,7 +82,7 @@ class CacheObject {
          * mapping
          * \param d is data to flush to
          */
-        virtual void FlushToData(Data *d) = 0;
+        virtual void PullData(Data *d) = 0;
 
         /**
          * \brief Acquires access to CacheObject instance

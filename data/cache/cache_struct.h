@@ -111,11 +111,11 @@ class CacheStruct : public CacheObject {
                         const GeometricRegion &write_region);
 
         /**
-         * \brief Flushes data from cache, removes corresponding dirty data
-         * mapping
+         * \brief Pulls data from cache, removes corresponding dirty data
+         * mapping. Locks the cache object when pulling the data.
          * \param d is data to flush to
          */
-        virtual void FlushToData(Data *d);
+        virtual void PullData(Data *d);
 
         /**
          * \brief Calculates distance of a CacheStruct, from the given list of
@@ -142,6 +142,13 @@ class CacheStruct : public CacheObject {
         void UnsetData(Data *d);
 
     private:
+        /**
+         * \brief Flushes data from cache, removes corresponding dirty data
+         * mapping
+         * \param d is data to flush to
+         */
+        virtual void FlushToData(Data *d);
+
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
          * \param var_type is a list of type_ids corresponding to nimbus variables
