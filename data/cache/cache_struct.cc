@@ -93,10 +93,12 @@ void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             DMap::iterator it = data_map_t.find(dreg);
             if (it == data_map_t.end()) {
+                // d->FlushToData(this);
                 diff_t.push_back(d);
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
+                    // d->FlushToData(this);
                     diff_t.push_back(d);
                     // d_old->UnsetCacheObjectMapping(this);
                     if (write_back_t.find(d) != write_back_t.end()) {
@@ -234,10 +236,26 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<type_id_t> &var_typ
             DMap::const_iterator it = data_map_t.find(dreg);
             if (it->second == d)
                 continue;
-            cur_distance += dreg.dx() * dreg.dy() & dreg.dz();
+            cur_distance += dreg.dx() * dreg.dy() * dreg.dz();
         }
     }
     return cur_distance;
+}
+
+/**
+ * \details UnsetData(...) removes data d from data_maps_. It checks every data
+ * map in data_maps_ for the data d, since no prior type information is
+ * available (just like PullData).
+ */
+void CacheStruct::UnsetData(Data *d) {
+    GeometricRegion dreg = d->region();
+    for (size_t t = 0; t < num_variables_; ++t) {
+        DMap &data_map_t = data_maps_[t];
+        if (data_map_t.find(dreg) != data_map_t.end()) {
+            data_map_t.erase(dreg);
+            break;
+        }
+    }
 }
 
 }  // namespace nimbus

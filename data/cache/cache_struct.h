@@ -129,19 +129,19 @@ class CacheStruct : public CacheObject {
                                       const std::vector<DataArray> &read_sets) const;
 
         /**
+         * \brief Unsets mapping between data and CacheStruct instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d);
+
+    private:
+        /**
          * \brief Sets up mapping between data and CacheStruct instance
          * \param d denotes the data to map to
          * \param t denotes the type of nimbus variable
          */
         void SetUpData(Data *d, type_id_t t);
 
-        /**
-         * \brief Unsets mapping between data and CacheStruct instance
-         * \param d denotes the data to unmap
-         */
-        void UnsetData(Data *d);
-
-    private:
         /**
          * \brief Flushes data from cache, removes corresponding dirty data
          * mapping
