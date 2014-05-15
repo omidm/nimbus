@@ -100,10 +100,15 @@ class CacheStruct : public CacheObject {
                          const GeometricRegion &read_region);
 
         /**
-         * \brief Indicates that write to CacheStruct instance is complete
+         * \brief Sets up mappings for data in write_sets, and also sets up the
+         * write region
+         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param write_sets is a list of data arrays corresponding to nimbus variables
          * \param write_region is the geometric region to write
          */
-        void MarkWritten(const GeometricRegion &write_region);
+        void SetUpWrite(const std::vector<type_id_t> &var_type,
+                        const std::vector<DataArray> &write_sets,
+                        const GeometricRegion &write_region);
 
         /**
          * \brief Flushes data from cache, removes corresponding dirty data
@@ -122,14 +127,6 @@ class CacheStruct : public CacheObject {
          */
         cache::distance_t GetDistance(const std::vector<type_id_t> &var_type,
                                       const std::vector<DataArray> &read_sets) const;
-
-        /**
-         * \brief Sets up mappings for data in write_sets
-         * \param var_type is a list of type_ids corresponding to nimbus variables
-         * \param write_sets is a list of data arrays corresponding to nimbus variables
-         */
-        void SetUpWrite(const std::vector<type_id_t> &var_type,
-                        const std::vector<DataArray> &write_sets);
 
         /**
          * \brief Sets up mapping between data and CacheStruct instance
