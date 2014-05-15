@@ -1090,6 +1090,7 @@ bool JobManager::LookUpVersion(JobEntry *job,
     if (GetJobEntry(iter->first, j)) {
       if (mbs->LookUpBeforeSetChain(j)) {
         *version = iter->second;
+        return true;
       }
     } else {
       // TODO(omidm): should not need job entry pointer.
