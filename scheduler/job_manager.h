@@ -132,6 +132,8 @@ class JobManager {
     // bool ResolveJobDataVersions(JobEntry* job);
     // size_t ResolveVersions();
 
+    LogicalDataLineage ldl_;
+
     JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_done_;

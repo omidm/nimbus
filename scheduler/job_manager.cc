@@ -44,10 +44,11 @@
 using namespace nimbus; // NOLINT
 
 
-bool LookUpVersion(LogicalDataLineage::Lineage lineage,
+bool LookUpVersion(
+    const LogicalDataLineage::Lineage& lineage,
     boost::shared_ptr<MetaBeforeSet> mbs,
     data_version_t *version) {
-  LogicalDataLineage::Lineage::reverse_iterator iter;
+  LogicalDataLineage::Lineage::const_reverse_iterator iter;
   for (iter = lineage.rbegin(); iter != lineage.rend(); ++iter) {
   }
   // TODO(omidm): to implement this.
@@ -123,7 +124,6 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     j = edge->start_vertex()->entry();
     if (j->versioned()) {
       pass_version_[job_id].push_back(j);
-      job->set_logical_data_lineage(j->logical_data_lineage());
     } else {
       dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
           parent_job_id, job_id);
@@ -190,7 +190,6 @@ bool JobManager::AddJobEntry(const JobType& job_type,
       j = edge->start_vertex()->entry();
       if (j->versioned()) {
         pass_version_[job_id].push_back(j);
-        job->set_logical_data_lineage(j->logical_data_lineage());
       } else {
         dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
             parent_job_id, job_id);
@@ -419,11 +418,27 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 //     exit(-1);
 //   }
 
+
+//   JobEntry* job;
+//   if (GetJobEntry(job_id, job)) {
+//     data_version_t version;
+//     if (!job->ancestor_chain()->LookUpVersion(ldid, &version)) {
+//       job->vmap_write_out()->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
+//     } else {
+//       dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+//       exit(-1);
+//     }
+//   } else {
+//     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
+//     exit(-1);
+//   }
+
+
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
-    data_version_t version;
-    if (!job->ancestor_chain()->LookUpVersion(ldid, &version)) {
-      job->vmap_write_out()->set_entry(ldid, NIMBUS_INIT_DATA_VERSION);
+    if (ldl_.table_p()->count(ldid) == 0) {
+      ldl_.table_p()->operator[](ldid).push_back(
+          std::pair<job_id_t, data_version_t> (job_id, NIMBUS_INIT_DATA_VERSION));
     } else {
       dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
       exit(-1);
@@ -919,31 +934,14 @@ void JobManager::PassDataVersionToJob(
         boost::shared_ptr<MetaBeforeSet>(new MetaBeforeSet()));
   }
 
-  std::map<job_id_t, boost::shared_ptr<LogicalDataLineage> > lineages;
   JobEntryList::const_iterator iter;
   for (iter = source_jobs.begin(); iter != source_jobs.end(); ++iter) {
     JobEntry* j = (*iter);
     assert(j->versioned());
     job->meta_before_set()->table_p()->insert(
         std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), job->meta_before_set()));
-    lineages[j->logical_data_lineage()->parent_id()] = j->logical_data_lineage();
     job->add_job_passed_versions(j->job_id());
   }
-
-  // TODO(omidm): take care of multiple lineages.
-  // (in case of jobs from different parents appear in a job's before set)
-  //
-  // for each logical id merge all lineages to get one lineage, there could be
-  // missing jobs in the lineage but what matters is it should have the order.
-
-  if (lineages.size() > 1) {
-    dbg(DBG_ERROR, "ERROR: we do not support multiple lineage for now!\n");
-    exit(-1);
-  }
-  log_merge_.ResumeTimer();
-  boost::shared_ptr<LogicalDataLineage> ldl = lineages.begin()->second;
-  log_merge_.StopTimer();
-
 
   if (job->sterile()) {
     log_sterile_.ResumeTimer();
@@ -952,7 +950,7 @@ void JobManager::PassDataVersionToJob(
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = LookUpVersion(ldl->table_p()->operator[](*it), job->meta_before_set(), &version);
+      bool found = LookUpVersion(ldl_.table_p()->operator[](*it), job->meta_before_set(), &version);
       log_lookup_.StopTimer();
       if (found) {
         job->vmap_read()->set_entry(*it, version);
@@ -967,7 +965,7 @@ void JobManager::PassDataVersionToJob(
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = LookUpVersion(ldl->table_p()->operator[](it->first), job->meta_before_set(), &version);
+      bool found = LookUpVersion(ldl_.table_p()->operator[](it->first), job->meta_before_set(), &version);
       log_lookup_.StopTimer();
       if (found) {
         job->vmap_read()->set_entry(it->first, version);
