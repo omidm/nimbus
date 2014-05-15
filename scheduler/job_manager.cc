@@ -44,18 +44,6 @@
 using namespace nimbus; // NOLINT
 
 
-bool LookUpVersion(
-    const LogicalDataLineage::Lineage& lineage,
-    boost::shared_ptr<MetaBeforeSet> mbs,
-    data_version_t *version) {
-  LogicalDataLineage::Lineage::const_reverse_iterator iter;
-  for (iter = lineage.rbegin(); iter != lineage.rend(); ++iter) {
-  }
-  // TODO(omidm): to implement this.
-  return false;
-}
-
-
 JobManager::JobManager() {
   // Add the KERNEL job which is the parent of main, create and copy jobs that
   // are spawned by the scheduler.
@@ -940,7 +928,7 @@ void JobManager::PassDataVersionToJob(
     JobEntry* j = (*iter);
     assert(j->versioned());
     job->meta_before_set()->table_p()->insert(
-        std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), job->meta_before_set())); // NOLINT
+        std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), j->meta_before_set())); // NOLINT
     if (depth < j->job_depth()) {
       depth = j->job_depth();
     }
@@ -955,7 +943,7 @@ void JobManager::PassDataVersionToJob(
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = LookUpVersion(ldl_.table_p()->operator[](*it), job->meta_before_set(), &version);
+      bool found = LookUpVersion(job, *it, &version);
       log_lookup_.StopTimer();
       if (found) {
         job->vmap_read()->set_entry(*it, version);
@@ -970,8 +958,7 @@ void JobManager::PassDataVersionToJob(
       data_version_t version;
       log_lookup_.ResumeTimer();
       lookup_count_++;
-      bool found = LookUpVersion(
-          ldl_.table_p()->operator[](it->first), job->meta_before_set(), &version);
+      bool found = LookUpVersion(job, it->first, &version);
       log_lookup_.StopTimer();
       if (found) {
         job->vmap_read()->set_entry(it->first, version);
@@ -982,6 +969,30 @@ void JobManager::PassDataVersionToJob(
 
   job->set_partial_versioned(true);
 }
+
+bool JobManager::LookUpVersion(JobEntry *job,
+    logical_data_id_t ldid, data_version_t *version) {
+  LogicalDataLineage::Lineage lineage = ldl_.table_p()->operator[](ldid);
+  boost::shared_ptr<MetaBeforeSet> mbs = job->meta_before_set();
+
+  LogicalDataLineage::Lineage::const_reverse_iterator iter;
+  for (iter = lineage.rbegin(); iter != lineage.rend(); ++iter) {
+    JobEntry *j;
+    if (GetJobEntry(iter->first, j)) {
+      if (mbs->LookUpBeforeSetChain(j)) {
+        *version = iter->second;
+      }
+    } else {
+      // TODO(omidm): should not need job entry pointer.
+
+      dbg(DBG_ERROR, "ERROR, we do not handle this now!");
+      exit(-1);
+    }
+  }
+  return false;
+}
+
+
 
 bool JobManager::JobVersionIsComplete(JobEntry *job) {
   IDSet<job_id_t> need = job->need_set();

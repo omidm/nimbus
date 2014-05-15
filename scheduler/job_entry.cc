@@ -386,6 +386,7 @@ void JobEntry::set_logical_data_lineage(
 
 void JobEntry::set_job_depth(job_depth_t job_depth) {
   job_depth_ = job_depth;
+  meta_before_set_->set_job_depth(job_depth);
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {

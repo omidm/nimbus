@@ -40,6 +40,7 @@
   */
 
 #include "scheduler/meta_before_set.h"
+#include "scheduler/job_entry.h"
 
 namespace nimbus {
 
@@ -97,6 +98,10 @@ bool MetaBeforeSet::is_root() const {
   return is_root_;
 }
 
+job_depth_t MetaBeforeSet::job_depth() {
+  return job_depth_;
+}
+
 void MetaBeforeSet::set_table(const Table& table) {
   table_ = table;
 }
@@ -113,6 +118,10 @@ void MetaBeforeSet::set_is_root(bool flag) {
   is_root_ = flag;
 }
 
+void MetaBeforeSet::set_job_depth(job_depth_t job_depth) {
+  job_depth_ = job_depth;
+}
+
 MetaBeforeSet& MetaBeforeSet::operator= (const MetaBeforeSet& right) {
   table_ = right.table_;
   positive_query_ = right.positive_query_;
@@ -121,11 +130,12 @@ MetaBeforeSet& MetaBeforeSet::operator= (const MetaBeforeSet& right) {
   return *this;
 }
 
-bool MetaBeforeSet::LookUpBeforeSetChain(job_id_t job_id) {
-  if (is_root_) {
-    dbg(DBG_ERROR, "ERROR, it should not get to the root in the meta before set look up.\n");
-    exit(-1);
+bool MetaBeforeSet::LookUpBeforeSetChain(JobEntry *job) {
+  if (is_root_ || (job_depth_ <= job->job_depth())) {
+    return false;
   }
+
+  job_id_t job_id = job->job_id();
 
   if (table_.count(job_id) > 0) {
     return true;
@@ -141,7 +151,7 @@ bool MetaBeforeSet::LookUpBeforeSetChain(job_id_t job_id) {
 
   Table::iterator iter;
   for (iter = table_.begin(); iter != table_.end(); ++iter) {
-    if (iter->second->LookUpBeforeSetChain(job_id)) {
+    if (iter->second->LookUpBeforeSetChain(job)) {
       positive_query_.insert(job_id);
       return true;
     }

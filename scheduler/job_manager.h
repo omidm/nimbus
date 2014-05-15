@@ -151,6 +151,9 @@ class JobManager {
     void PassDataVersionToJob(
         JobEntry *job, const JobEntryList& from_jobs);
 
+    bool LookUpVersion(JobEntry *job,
+        logical_data_id_t ldid, data_version_t *version);
+
     bool JobVersionIsComplete(JobEntry *job);
 
     void WaitToPassAllVersions();

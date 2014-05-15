@@ -52,6 +52,8 @@
 
 namespace nimbus {
 
+  class JobEntry;
+
   class MetaBeforeSet {
   public:
     typedef boost::unordered_set<job_id_t> Cache;
@@ -73,15 +75,17 @@ namespace nimbus {
     const Cache* negative_query_p() const;
     Cache* negative_query_p();
     bool is_root() const;
+    job_depth_t job_depth();
 
     void set_table(const Table& table);
     void set_positive_query(const Cache& positive_query);
     void set_negative_query(const Cache& negative_query);
     void set_is_root(bool flag);
+    void set_job_depth(job_depth_t job_depth);
 
     MetaBeforeSet& operator= (const MetaBeforeSet& right);
 
-    bool LookUpBeforeSetChain(job_id_t job_id);
+    bool LookUpBeforeSetChain(JobEntry *job);
 
     void InvalidateNegativeQueryCache();
 
@@ -90,6 +94,7 @@ namespace nimbus {
     Cache positive_query_;
     Cache negative_query_;
     bool is_root_;
+    job_depth_t job_depth_;
   };
 
 }  // namespace nimbus
