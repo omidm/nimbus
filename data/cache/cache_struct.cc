@@ -46,8 +46,10 @@
 
 #include "data/cache/cache_struct.h"
 #include "data/cache/utils.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
+#include "worker/data.h"
 
 namespace nimbus {
 
@@ -62,6 +64,78 @@ CacheStruct::CacheStruct(size_t num_variables) : id_(0),
                                                  users_(0),
                                                  data_maps_(num_variables),
                                                  write_backs_(num_variables) {
+}
+
+/**
+ * \details MakePrototype() increases ids_allocated_ for CacheStruct
+ * prototypes, and allocates a new id to the prototype. A prototype is used by
+ * application when requesting an application object. CacheManager uses
+ * prototype id to put all instances of a prototype together - if a cached
+ * instance satisfies requested region and prototype id, the CacheManager can
+ * return the instance (after updating to reflect the read set), provided the
+ * instance is available.
+ */
+void CacheStruct::MakePrototype() {
+    id_ = ++ids_allocated_;
+}
+
+/**
+ * \details UpdateCache(...) finds out what data is in read_sets and not in
+ * CacheStruct instance, and calls a ReadToCache(...) on the diff. Before
+ * reading the diff, UpdateCache(...) flushes out data that will be replaced
+ * (which is found based on geometric region of the data in cache and in
+ * read_sets.
+ */
+void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
+                              const std::vector<DataArray> &read_sets,
+                              const GeometricRegion &read_region) {
+    size_t num_vars = var_type.size();
+    if (read_sets.size() != num_vars) {
+        dbg(DBG_ERROR, "Mismatch in number of variable types passed to UpdateCache\n");
+        exit(-1);
+    }
+    std::vector<DataArray> diff(num_vars), replace(num_vars), flush(num_vars);
+    for (size_t t = 0; t < num_vars; ++t) {
+        type_id_t type = var_type[t];
+        if (type > num_variables_) {
+            dbg(DBG_WARN, "Invalid type %u passed to UpdateCache, ignoring it\n", type);
+            continue;
+        }
+        DataArray *diff_t = &diff[t];
+        DataArray *flush_t = &flush[t];
+        DMap *data_map_t = &data_maps_[type];
+        DataSet *write_back_t = &write_backs_[type];
+        for (size_t i = 0; i < read_sets[t].size(); ++i) {
+            Data *d = read_sets[t].at(i);
+            GeometricRegion dreg = d->region();
+            DMap::iterator it = data_map_t->find(dreg);
+            if (it == data_map_t->end()) {
+                diff_t->push_back(d);
+            } else {
+                Data *d_old = it->second;
+                if (d_old != d) {
+                    diff_t->push_back(d);
+                    // d_old->UnsetCacheObjectMapping(this);
+                    if (write_back_t->find(d) != write_back_t->end()) {
+                        flush_t->push_back(d);
+                    }
+                }
+            }
+        }
+    }
+    FlushCache(var_type, flush);
+    ReadToCache(var_type, diff, read_region);
+    for (size_t t = 0; t < num_vars; ++t) {
+        type_id_t type = var_type[t];
+        DataArray *diff_t = &diff[t];
+        DMap *data_map_t = &data_maps_[type];
+        for (size_t i = 0; i < diff_t->size(); ++i) {
+            Data *d = diff_t->at(i);
+            GeometricRegion dreg = d->region();
+            (*data_map_t)[dreg] = d;
+            // d->SetUpCacheObjectMapping(this);
+        }
+    }
 }
 
 }  // namespace nimbus

@@ -53,9 +53,12 @@ namespace cache {
 
 /* Types. */
 typedef uint64_t distance_t;
+
+// TODO(Chinmayee): delete these
 typedef IDSet<physical_data_id_t> PIDSet;
 typedef IDSet<logical_data_id_t> LIDSet;
 
+// TODO(Chinmayee): delete these
 /* A comparator for geometric region, for using in maps. */
 typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT
                                  const GeometricRegion&);

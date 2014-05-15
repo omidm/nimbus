@@ -50,12 +50,11 @@
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
+#include "worker/data.h"
 
 namespace nimbus {
 
-typedef int type_id_t;
-class Data;
-typedef std::vector<Data *> DataArray;
+typedef size_t type_id_t;
 typedef std::set<Data *> DataSet;
 
 /**
@@ -75,7 +74,8 @@ class CacheStruct {
         explicit CacheStruct(size_t num_variables);
 
         /**
-         * \brief Makes this instance a prototype
+         * \brief Makes this instance a prototype. The application writer must
+         * make a prototype for every application object he/ she plans to use.
          */
          void MakePrototype();
 
@@ -85,8 +85,12 @@ class CacheStruct {
          * \param struct_region specifies the spatial domain of the CacheStruct
          * instance
          * \return Returns a pointer to the newly allocated CacheStruct instance
+         * \details This is a virtual function that must be over-written by application
+         * writer. When CacheManager cannot satisfy an application object request,
+         * using the instances it has already cached, it calls CreateNew(..) on the
+         * prototype passed in the request.
          */
-        virtual CacheStruct *CreateNew(const GeometricRegion &struct_region) const;
+        virtual CacheStruct *CreateNew(const GeometricRegion &struct_region) const = 0;
 
         /**
          * \brief Updates CacheStruct with data from read_sets - performs update
@@ -96,8 +100,8 @@ class CacheStruct {
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \param read_region is the geometric region to read
          */
-        void UpdateCache(const std::vector<type_id_t> var_type,
-                         const std::vector<DataArray *> read_sets,
+        void UpdateCache(const std::vector<type_id_t> &var_type,
+                         const std::vector<DataArray> &read_sets,
                          const GeometricRegion &read_region);
 
         /**
@@ -141,32 +145,26 @@ class CacheStruct {
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \return Returns distance (cost)
          */
-        cache::distance_t GetDistance(const std::vector<type_id_t> var_type,
-                                      const std::vector<DataArray *> read_sets) const;
-
-        /**
-         * \brief Sets up mappings for data in read_sets
-         * \param var_type is a list of type_ids corresponding to nimbus variables
-         * \param read_sets is a list of data arrays corresponding to nimbus variables
-         */
-        void SetUpRead(const std::vector<type_id_t> var_type,
-                       const std::vector<DataArray *> read_sets);
+        cache::distance_t GetDistance(const std::vector<type_id_t> &var_type,
+                                      const std::vector<DataArray> &read_sets) const;
 
         /**
          * \brief Sets up mappings for data in write_sets
          * \param var_type is a list of type_ids corresponding to nimbus variables
-         * \param read_sets is a list of data arrays corresponding to nimbus variables
+         * \param write_sets is a list of data arrays corresponding to nimbus variables
          */
-        void SetUpWrite(const DataArray &write_set);
+        void SetUpWrite(const std::vector<type_id_t> &var_type,
+                        const std::vector<DataArray> &write_sets);
 
         /**
          * \brief Sets up mapping between data and CacheStruct instance
          * \param d denotes the data to map to
+         * \param t denotes the type of nimbus variable
          */
-        void SetUpData(Data *d);
+        void SetUpData(Data *d, type_id_t t);
 
         /**
-         * \brief Removes mapping between data and CacheStruct instance
+         * \brief Unsets mapping between data and CacheStruct instance
          * \param d denotes the data to unmap
          */
         void UnsetData(Data *d);
@@ -179,7 +177,7 @@ class CacheStruct {
 
         /**
          * \brief Setter for struct_region_ member
-         * \param struct_region, of type GeometricRegion
+         * \param struct_region is of type GeometricRegion
          */
         void set_struct_region(const GeometricRegion &struct_region);
 
@@ -189,8 +187,8 @@ class CacheStruct {
          * \param var_type is a list of type_ids corresponding to nimbus variables
          * \param flush_sets is a list of data arrays corresponding to nimbus variables
          */
-        void FlushCache(const std::vector<type_id_t> var_type,
-                        const std::vector<DataArray *> read_sets);
+        void FlushCache(const std::vector<type_id_t> &var_type,
+                        const std::vector<DataArray> &read_sets);
 
         /**
          * \brief Setter for id_ member
@@ -215,10 +213,9 @@ class CacheStruct {
 
         // cache-data mappings
         typedef std::map<GeometricRegion,
-                         Data *,
-                         cache::GRComparisonType> DMap;
-        std::vector<DMap *> data_maps_;
-        std::vector<DataSet *> write_backs_;
+                         Data *> DMap;
+        std::vector<DMap> data_maps_;
+        std::vector<DataSet> write_backs_;
 
     protected:
         /**
@@ -226,20 +223,26 @@ class CacheStruct {
          * \param var_type is a list of type_ids corresponding to nimbus variables
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \param read_region is the geometric region to read
+         * \details This function must be overwritten by the application
+         * writer. It provides the transformation from a set of nimbus data to
+         * (application) cached instance.
          */
-        virtual void ReadToCache(const std::vector<type_id_t> var_type,
-                                 const std::vector<DataArray *> read_sets,
-                                 const GeometricRegion &read_region);
+        virtual void ReadToCache(const std::vector<type_id_t> &var_type,
+                                 const std::vector<DataArray> &read_sets,
+                                 const GeometricRegion &read_region) = 0;
 
         /**
          * \brief Writes data from CacheStruct instance to write_sets
          * \param var_type is a list of type_ids corresponding to nimbus variables
          * \param write_sets is a list of data arrays corresponding to nimbus variables
          * \param write_region is the geometric region to be write
+         * \details This function must be overwritten by the application
+         * writer. It provides the transformation from (application) cached
+         * instance to nimbus data.
          */
-        virtual void WriteFromCache(const std::vector<type_id_t> var_type,
-                                    const std::vector<DataArray *> read_sets,
-                                    const GeometricRegion &write_region);
+        virtual void WriteFromCache(const std::vector<type_id_t> &var_type,
+                                    const std::vector<DataArray> &write_sets,
+                                    const GeometricRegion &write_region) = 0;
 };  // class CacheStruct
 
 typedef std::vector<CacheStruct *> CacheStructs;
