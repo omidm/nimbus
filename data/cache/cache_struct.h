@@ -47,6 +47,7 @@
 #include <string>
 #include <vector>
 
+#include "data/cache/cache_object.h"
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -63,7 +64,7 @@ typedef std::set<Data *> DataSet;
  * by the cache manager. A CacheStruct can have num_variables number of
  * different nimbus variables, and must be defined over a geometric region.
  */
-class CacheStruct {
+class CacheStruct : public CacheObject {
     public:
         /**
          * \brief Creates a CacheStruct
@@ -72,12 +73,6 @@ class CacheStruct {
          * \return Constructed CacheStruct instance
          */
         explicit CacheStruct(size_t num_variables);
-
-        /**
-         * \brief Makes this instance a prototype. The application writer must
-         * make a prototype for every application object he/ she plans to use.
-         */
-         void MakePrototype();
 
         /**
          * \brief Creates a new CacheStruct instance using current instance
@@ -115,27 +110,7 @@ class CacheStruct {
          * mapping
          * \param d is data to flush to
          */
-        void FlushToData(Data *d);
-
-        /**
-         * \brief Acquires access to CacheStruct instance
-         * \param access can be EXCLUSIVE or SHARED
-         */
-        void AcquireAccess(CacheAccess access);
-
-        /**
-         * \brief Releases access to CacheStruct instance
-         */
-        void ReleaseAccess();
-
-        /**
-         * \brief Checks if CacheStruct instance is available for use in access
-         * mode
-         * \param access denotes the mode (EXCLUSIVE/ SHARED) that application
-         * wants
-         * \return Boolean indicating if the instance is available
-         */
-        bool IsAvailable(CacheAccess access) const;
+        virtual void FlushToData(Data *d);
 
         /**
          * \brief Calculates distance of a CacheStruct, from the given list of
@@ -169,18 +144,6 @@ class CacheStruct {
          */
         void UnsetData(Data *d);
 
-        /**
-         * \brief Accessor for struct_region_ member
-         * \return Instance's struct_region_, of type GeometricRegion
-         */
-        GeometricRegion struct_region() const;
-
-        /**
-         * \brief Setter for struct_region_ member
-         * \param struct_region is of type GeometricRegion
-         */
-        void set_struct_region(const GeometricRegion &struct_region);
-
     private:
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
@@ -190,26 +153,8 @@ class CacheStruct {
         void FlushCache(const std::vector<type_id_t> &var_type,
                         const std::vector<DataArray> &read_sets);
 
-        /**
-         * \brief Setter for id_ member
-         * \param id, of type size_t
-         */
-        void set_id(size_t id);
-
-        // prototype information
-        static size_t ids_allocated_;
-        size_t id_;
-
         // number of nimbus variables
         size_t num_variables_;
-
-        // access information
-        CacheAccess access_;
-        int users_;
-
-        // read/ write/ struct region information
-        GeometricRegion struct_region_;
-        GeometricRegion write_region_;
 
         // cache-data mappings
         typedef std::map<GeometricRegion,

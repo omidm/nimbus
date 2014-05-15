@@ -53,30 +53,12 @@
 
 namespace nimbus {
 
-size_t CacheStruct::ids_allocated_ = 0;
-
 /**
  * \details
  */
-CacheStruct::CacheStruct(size_t num_variables) : id_(0),
-                                                 num_variables_(num_variables),
-                                                 access_(SHARED),
-                                                 users_(0),
+CacheStruct::CacheStruct(size_t num_variables) : num_variables_(num_variables),
                                                  data_maps_(num_variables),
                                                  write_backs_(num_variables) {
-}
-
-/**
- * \details MakePrototype() increases ids_allocated_ for CacheStruct
- * prototypes, and allocates a new id to the prototype. A prototype is used by
- * application when requesting an application object. CacheManager uses
- * prototype id to put all instances of a prototype together - if a cached
- * instance satisfies requested region and prototype id, the CacheManager can
- * return the instance (after updating to reflect the read set), provided the
- * instance is available.
- */
-void CacheStruct::MakePrototype() {
-    id_ = ++ids_allocated_;
 }
 
 /**
