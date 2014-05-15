@@ -291,7 +291,8 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   if (job->write_set_p()->contains(ldo->id())) {
     // pd_new.set_version(job->version_table_out_query(ldo->id()));
     data_version_t v_out;
-    job->vmap_write_out()->query_entry(ldo->id(), &v_out);
+    // job->vmap_write_out()->query_entry(ldo->id(), &v_out);
+    job->vmap_write()->query_entry(ldo->id(), &v_out);
     pd_new.set_version(v_out);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
@@ -306,7 +307,8 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   if (job->read_set_p()->contains(ldo->id())) {
     // assert(job->version_table_in_query(ldo->id()) == pd.version());
     data_version_t v_in;
-    job->vmap_read_in()->query_entry(ldo->id(), &v_in);
+    // job->vmap_read_in()->query_entry(ldo->id(), &v_in);
+    job->vmap_read()->query_entry(ldo->id(), &v_in);
     assert(v_in == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
     // before_set.insert(pd.last_job_write());
@@ -508,9 +510,30 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   //       l_id, job->job_name().c_str());
   // }
 
+//  data_version_t version;
+//  if (reading) {
+//    if (!job->vmap_read_in()->query_entry(l_id, &version)) {
+//      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
+//          l_id, job->job_name().c_str());
+//      exit(-1);
+//    }
+//  }
+//
+//  // Just for checking
+//  data_version_t unused_version;
+//  if (writing) {
+//    if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
+//      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
+//          l_id, job->job_name().c_str());
+//      exit(-1);
+//    }
+//  }
+
+
+
   data_version_t version;
   if (reading) {
-    if (!job->vmap_read_in()->query_entry(l_id, &version)) {
+    if (!job->vmap_read()->query_entry(l_id, &version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
           l_id, job->job_name().c_str());
       exit(-1);
@@ -520,12 +543,14 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   // Just for checking
   data_version_t unused_version;
   if (writing) {
-    if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
+    if (!job->vmap_write()->query_entry(l_id, &unused_version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
           l_id, job->job_name().c_str());
       exit(-1);
     }
   }
+
+
 
   // Checking correctness of the new versioning system
   // data_version_t version_c;

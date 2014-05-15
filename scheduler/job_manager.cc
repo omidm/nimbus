@@ -57,6 +57,9 @@ JobManager::JobManager() {
     dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.\n");
   } else {
     job->set_done(true);
+    job->set_meta_before_set(
+        boost::shared_ptr<MetaBeforeSet> (new MetaBeforeSet()));
+    job->set_job_depth(NIMBUS_INIT_JOB_DEPTH);
   }
   pass_version_in_progress_ = 0;
 }
@@ -577,7 +580,7 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 //  return version_manager_.GetJobsNeedDataVersion(list, vld);
 
   /*
-   * Job graph aproach with old version table
+   * Job graph approach with old version table
    */
 //  size_t num = 0;
 //  list->clear();
@@ -598,7 +601,7 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 
 
   /*
-   * Job graph aproach with new version table (root/change)
+   * Job graph approach with new version table (root/change)
    */
 //   size_t num = 0;
 //   list->clear();
@@ -624,7 +627,34 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 
 
   /*
-   * Job graph aproach with ancestor chain versioning
+   * Job graph apiproach with ancestor chain versioning
+   */
+//   size_t num = 0;
+//   list->clear();
+//   JobEntryMap::iterator iter = jobs_need_version_.begin();
+//   for (; iter != jobs_need_version_.end();) {
+//     JobEntry* job = iter->second;
+//     assert(job->versioned() || job->partial_versioned());
+//     if (job->assigned()) {
+//       jobs_need_version_.erase(iter++);
+//       continue;
+//     }
+//     data_version_t version;
+//     if (job->vmap_read_in()->query_entry(vld.first, &version)) {
+//       if ((version == vld.second)) {
+//         // if it is in the vmap_read_in then either reading or non sterile. -omidm
+//         // && ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
+//         list->push_back(job);
+//         ++num;
+//       }
+//     }
+//     ++iter;
+//   }
+//   return num;
+
+
+  /*
+   * Logical data lineage approach with meta before set.
    */
   size_t num = 0;
   list->clear();
@@ -637,9 +667,9 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
       continue;
     }
     data_version_t version;
-    if (job->vmap_read_in()->query_entry(vld.first, &version)) {
+    if (job->vmap_read()->query_entry(vld.first, &version)) {
       if ((version == vld.second)) {
-        // if it is in the vmap_read_in then either reading or non sterile. -omidm
+        // if it is in the vmap_read then either reading or non sterile. -omidm
         // && ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
         list->push_back(job);
         ++num;
@@ -648,7 +678,6 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     ++iter;
   }
   return num;
-
 
 
   /*
@@ -747,20 +776,104 @@ size_t JobManager::ResolveDataVersions() {
         // ++num;
 
 
+
+        /*
+         * Job graph approach with ancestor chain.
+         */
+
+//        if (job->sterile()) {
+//          log_sterile_.ResumeTimer();
+//          boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+//          IDSet<logical_data_id_t>::ConstIter itw;
+//          for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
+//            data_version_t version;
+//            if (job->vmap_read_in()->query_entry(*itw, &version)) {
+//              vmap->set_entry(*itw, version + 1);
+//            } else {
+//              log_lookup_.ResumeTimer();
+//              lookup_count_++;
+//              bool found = job->ancestor_chain()->LookUpVersion(*itw, &version);
+//              log_lookup_.StopTimer();
+//              if (found) {
+//                vmap->set_entry(*itw, version + 1);
+//              } else {
+//                dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+//                exit(-1);
+//              }
+//            }
+//          }
+//          job->set_vmap_write_out(vmap);
+//
+//          AncestorChain::Chain chain = job->ancestor_chain()->chain();
+//          AncestorEntry ancestor_entry(job->job_id(), vmap);
+//          AncestorChain::Pool pool;
+//          pool.push_back(ancestor_entry);
+//          chain.push_front(pool);
+//          boost::shared_ptr<AncestorChain> ac =
+//            boost::shared_ptr<AncestorChain>(new AncestorChain());
+//          ac->set_chain(chain);
+//          job->set_ancestor_chain_to_pass(ac);
+//          log_sterile_.StopTimer();
+//        } else {
+//          log_nonsterile_.ResumeTimer();
+//          boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+//          vmap->set_content(job->vmap_read_in()->content());
+//          IDSet<logical_data_id_t>::ConstIter itw;
+//          for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
+//            data_version_t version;
+//            if (job->vmap_read_in()->query_entry(*itw, &version)) {
+//              vmap->set_entry(*itw, version + 1);
+//            } else {
+//              dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+//              exit(-1);
+//            }
+//          }
+//          job->set_vmap_write_out(vmap);
+//
+//          AncestorChain::Chain chain;
+//          AncestorEntry ancestor_entry(job->job_id(), vmap);
+//          AncestorChain::Pool pool;
+//          pool.push_back(ancestor_entry);
+//          chain.push_front(pool);
+//          boost::shared_ptr<AncestorChain> ac =
+//            boost::shared_ptr<AncestorChain>(new AncestorChain());
+//          ac->set_chain(chain);
+//          job->set_ancestor_chain_to_pass(ac);
+//          log_nonsterile_.StopTimer();
+//        }
+//
+//        job->set_versioned(true);
+//        Vertex<JobEntry, job_id_t>* vertex;
+//        job_graph_.GetVertex(job_id, &vertex);
+//        typename Edge<JobEntry, job_id_t>::Iter it;
+//        for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) { // NOLINT
+//          new_pass_version[it->first].push_back(job);
+//        }
+//        ++num;
+
+
+        /*
+         * Logical data lineage approach with meta before set.
+         */
+
         if (job->sterile()) {
           log_sterile_.ResumeTimer();
           boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
           IDSet<logical_data_id_t>::ConstIter itw;
           for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
             data_version_t version;
-            if (job->vmap_read_in()->query_entry(*itw, &version)) {
+            if (job->vmap_read()->query_entry(*itw, &version)) {
+              ldl_.table_p()->operator[](*itw).push_back(
+                  std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
               vmap->set_entry(*itw, version + 1);
             } else {
               log_lookup_.ResumeTimer();
               lookup_count_++;
-              bool found = job->ancestor_chain()->LookUpVersion(*itw, &version);
+              bool found = LookUpVersion(job, *itw, &version);
               log_lookup_.StopTimer();
               if (found) {
+                ldl_.table_p()->operator[](*itw).push_back(
+                    std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
                 vmap->set_entry(*itw, version + 1);
               } else {
                 dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
@@ -768,43 +881,39 @@ size_t JobManager::ResolveDataVersions() {
               }
             }
           }
-          job->set_vmap_write_out(vmap);
+          job->set_vmap_write(vmap);
 
-          AncestorChain::Chain chain = job->ancestor_chain()->chain();
-          AncestorEntry ancestor_entry(job->job_id(), vmap);
-          AncestorChain::Pool pool;
-          pool.push_back(ancestor_entry);
-          chain.push_front(pool);
-          boost::shared_ptr<AncestorChain> ac =
-            boost::shared_ptr<AncestorChain>(new AncestorChain());
-          ac->set_chain(chain);
-          job->set_ancestor_chain_to_pass(ac);
           log_sterile_.StopTimer();
         } else {
           log_nonsterile_.ResumeTimer();
           boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
-          vmap->set_content(job->vmap_read_in()->content());
+          vmap->set_content(job->vmap_read()->content());
           IDSet<logical_data_id_t>::ConstIter itw;
           for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
             data_version_t version;
-            if (job->vmap_read_in()->query_entry(*itw, &version)) {
+            if (job->vmap_read()->query_entry(*itw, &version)) {
+              ldl_.table_p()->operator[](*itw).push_back(
+                  std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
               vmap->set_entry(*itw, version + 1);
             } else {
-              dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
-              exit(-1);
+              log_lookup_.ResumeTimer();
+              lookup_count_++;
+              bool found = LookUpVersion(job, *itw, &version);
+              log_lookup_.StopTimer();
+              if (found) {
+                ldl_.table_p()->operator[](*itw).push_back(
+                    std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
+                vmap->set_entry(*itw, version + 1);
+              } else {
+                dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
+                exit(-1);
+              }
             }
           }
-          job->set_vmap_write_out(vmap);
+          job->set_vmap_write(vmap);
 
-          AncestorChain::Chain chain;
-          AncestorEntry ancestor_entry(job->job_id(), vmap);
-          AncestorChain::Pool pool;
-          pool.push_back(ancestor_entry);
-          chain.push_front(pool);
-          boost::shared_ptr<AncestorChain> ac =
-            boost::shared_ptr<AncestorChain>(new AncestorChain());
-          ac->set_chain(chain);
-          job->set_ancestor_chain_to_pass(ac);
+          // TODO(omidm): clear meta before set and update the ldl.
+
           log_nonsterile_.StopTimer();
         }
 
