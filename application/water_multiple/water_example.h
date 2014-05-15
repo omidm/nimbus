@@ -52,8 +52,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef ARRAY<int,TV_INT> INT_SCALAR_ARRAY;
 
 public:
-    // TODO(quhang) should be passed by worker.
-    nimbus::NimbusThreadQueue nimbus_thread_queue;
+    nimbus::NimbusThreadQueue* nimbus_thread_queue;
     nimbus::int_dimension_t kScale;
     GeometricRegion local_region;
     GeometricRegion relative_region;
@@ -106,12 +105,18 @@ public:
     TCachePLE *cache_ple;
     bool create_destroy_ple;
 
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
-                  application::AppCacheObjects *cache);
+                  bool use_threading,
+                  int core_quota);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
-                  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple);
+                  bool use_threading,
+                  int core_quota);
+    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+                  application::AppCacheObjects *cache,
+                  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
+                  bool use_threading,
+                  int core_quota);
     virtual ~WATER_EXAMPLE();
     
     T Time_At_Frame(const int frame) const

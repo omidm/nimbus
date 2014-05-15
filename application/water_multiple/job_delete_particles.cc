@@ -67,6 +67,9 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
 
     InitConfig init_config;
     init_config.use_cache = true;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
                            params.ser_data().size());

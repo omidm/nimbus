@@ -64,6 +64,9 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // get time, dt, frame from the parameters.
     InitConfig init_config;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     init_config.use_cache = true;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),

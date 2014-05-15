@@ -250,6 +250,8 @@ void WorkerManager::ScheduleComputationJobs() {
           worker_thread->next_job_to_run->name().c_str(),
           worker_thread->next_job_to_run->id().elem());
       worker_thread->job_assigned = true;
+      worker_thread->set_use_threading(true);
+      worker_thread->set_core_quota(3);
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;
       pthread_cond_signal(&worker_thread->thread_can_start);

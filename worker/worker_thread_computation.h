@@ -48,7 +48,21 @@ class WorkerThreadComputation : public WorkerThread {
   explicit WorkerThreadComputation(WorkerManager* worker_manager);
   virtual ~WorkerThreadComputation();
   virtual void Run();
+  void set_core_quota(int core_quota) {
+    core_quota_ = core_quota;
+  }
+  int core_quota() {
+    return core_quota_;
+  }
+  void set_use_threading(bool use_threading) {
+    use_threading_ = use_threading;
+  }
+  bool use_threading() {
+    return use_threading_;
+  }
  private:
+  int core_quota_;
+  bool use_threading_;
   void ExecuteJob(Job* job);
 };
 }  // namespace nimbus

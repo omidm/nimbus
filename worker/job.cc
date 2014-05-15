@@ -47,6 +47,8 @@ using namespace nimbus; // NOLINT
 Job::Job() {
   app_is_set_ = false;
   sterile_ = true;
+  use_threading_ = false;
+  core_quota_ = 1;
 }
 
 Job::~Job() {

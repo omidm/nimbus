@@ -111,5 +111,12 @@ void NimbusThreadQueue::Wait() {
 int NimbusThreadQueue::Number_Of_Threads() {
   return task_threads.size();
 }
+int NimbusThreadQueue::get_active_threads() {
+  int result;
+  pthread_mutex_lock(&queue_lock);
+  result = active_threads;
+  pthread_mutex_unlock(&queue_lock);
+  return result;
+}
 
 }  // namespace nimbus

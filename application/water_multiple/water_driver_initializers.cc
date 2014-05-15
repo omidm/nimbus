@@ -207,12 +207,14 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
     example.Load_From_Nimbus(job, da, current_frame);
 
     // For threading.
-    ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar
-        =new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(&example.nimbus_thread_queue);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
-    example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
-    example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(&example.nimbus_thread_queue);
-    example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=&example.nimbus_thread_queue;
+    if (example.nimbus_thread_queue) {
+      ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar
+          =new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
+      example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
+      example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=example.nimbus_thread_queue;
+    }
 
     // example specific init
     example.particle_levelset_evolution.Set_Time(time);
@@ -305,12 +307,14 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     example.Load_From_Nimbus(job, da, current_frame);
 
     // For threading.
-    ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar
-        =new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(&example.nimbus_thread_queue);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
-    example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
-    example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(&example.nimbus_thread_queue);
-    example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=&example.nimbus_thread_queue;
+    if (example.nimbus_thread_queue) {
+      ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar
+          =new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
+      example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
+      example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=example.nimbus_thread_queue;
+    }
 
     // example specific init
     example.particle_levelset_evolution.Set_Time(time);

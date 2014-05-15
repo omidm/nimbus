@@ -64,6 +64,7 @@ class NimbusThreadQueue : public PhysBAM::THREAD_QUEUE {
       pthread_exit(0);
     }
   };
+  int get_active_threads();
  private:
   int queue_length_;
   std::vector<NimbusTaskThread*> task_threads;

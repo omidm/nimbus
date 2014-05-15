@@ -83,6 +83,9 @@ namespace application {
 
     // Get parameters: frame, time
     InitConfig init_config;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     std::string params_str(params.ser_data().data_ptr_raw(),
         params.ser_data().size());
     LoadParameter(params_str, &init_config.frame, &init_config.time,

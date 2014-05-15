@@ -59,6 +59,9 @@ struct InitConfig {
   GeometricRegion local_region;
   bool use_cache;
   bool clear_read_shared_particles;
+  // For threading.
+  bool use_threading;
+  int core_quota;
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
@@ -70,6 +73,8 @@ struct InitConfig {
     set_boundary_condition = true;
     use_cache = false;
     clear_read_shared_particles = false;
+    use_threading = false;
+    core_quota = 1;
   }
 };
 

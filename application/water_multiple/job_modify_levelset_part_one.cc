@@ -66,6 +66,9 @@ void JobModifyLevelsetPartOne::Execute(nimbus::Parameter params, const nimbus::D
     dbg(APP_LOG, "--- Executing modify levelset job -- part one\n");
 
     InitConfig init_config;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     init_config.use_cache = true;
     init_config.set_boundary_condition = false;
     T dt;
