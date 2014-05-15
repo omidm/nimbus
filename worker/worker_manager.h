@@ -91,6 +91,8 @@ class WorkerManager {
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
 
+  int ActiveComputationThreads();
+
   pthread_mutex_t scheduling_needed_lock_;
   pthread_cond_t scheduling_needed_cond_;
   // Protected by scheduling_needed_lock_.

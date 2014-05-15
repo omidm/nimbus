@@ -91,11 +91,13 @@ void JobApplyForces::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in apply forces job.");
   driver->ApplyForcesImpl(this, da, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

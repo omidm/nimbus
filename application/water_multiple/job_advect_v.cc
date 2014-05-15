@@ -97,6 +97,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
 
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
   //InitializeExampleAndDriver(init_config, data_config,
   //                           this, da, example, driver);
 
@@ -104,6 +105,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Execute the step in advect v job.");
   driver->AdvectVImpl(this, da, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

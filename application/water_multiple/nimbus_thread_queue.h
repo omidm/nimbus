@@ -40,19 +40,21 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_THREAD_QUEUE_H_
 
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
-#include "shared/nimbus.h"
 #include <list>
 #include <vector>
+#include "shared/nimbus.h"
+#include "worker/thread_queue_proto.h"
 
 namespace nimbus {
 
 class NimbusTaskThread;
 
-class NimbusThreadQueue : public PhysBAM::THREAD_QUEUE {
+class NimbusThreadQueue
+    : public PhysBAM::THREAD_QUEUE, public ThreadQueueProto {
   friend class NimbusTaskThread;
  public:
   using PhysBAM::THREAD_QUEUE::TASK;
-  NimbusThreadQueue(int thread_count = 8);
+  NimbusThreadQueue(int thread_count);
   virtual ~NimbusThreadQueue();
 
   virtual void Queue(TASK* task);

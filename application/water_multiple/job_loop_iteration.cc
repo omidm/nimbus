@@ -107,6 +107,7 @@ namespace application {
     data_config.SetAll();
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
     // check whether the frame is done or not
     bool done = false;
@@ -157,6 +158,7 @@ namespace application {
 
     // Free resources.
     example->Save_To_Nimbus(this, da, frame+1);
+    *thread_queue_hook() = NULL;
     DestroyExampleAndDriver(example, driver);
   }
 

@@ -89,8 +89,10 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
         InitializeExampleAndDriver(init_config, data_config, this,
                                    da, example, driver);
+        *thread_queue_hook() = example->nimbus_thread_queue;
 
         example->Save_To_Nimbus(this, da, init_config.frame + 1);
+        *thread_queue_hook() = NULL;
         DestroyExampleAndDriver(example, driver);
         return;
     }

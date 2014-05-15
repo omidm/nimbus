@@ -92,11 +92,13 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::PRESSURE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect phi job.");
   driver->AdvectPhiImpl(this, da, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

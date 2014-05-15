@@ -87,12 +87,14 @@ void JobExtrapolation::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::LEVELSET_BW_EIGHT_READ);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Job EXTRAPOLATION starts (dt=%f).\n", dt);
 
   driver->ExtrapolationImpl(this, da, dt);
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

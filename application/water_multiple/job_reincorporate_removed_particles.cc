@@ -93,9 +93,11 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     data_config.SetFlag(DataConfig::PRESSURE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
     driver->ReincorporateParticlesImpl(this, da, dt);
 
+    *thread_queue_hook() = NULL;
     // free resources
     DestroyExampleAndDriver(example, driver);
 

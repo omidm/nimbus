@@ -76,7 +76,9 @@ namespace application {
         data_config.SetAll();
         InitializeExampleAndDriver(init_config, data_config,
                                    this, da, example, driver);
+        *thread_queue_hook() = example->nimbus_thread_queue;
 
+        *thread_queue_hook() = NULL;
         // Free resources.
         DestroyExampleAndDriver(example, driver);
 

@@ -86,12 +86,14 @@ void JobCalculateFrame::Execute(nimbus::Parameter params,
   data_config.SetAll();
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Simulation starts(dt=%f).\n", dt);
 
   // Move forward time "dt" without reseeding and writing frames.
   driver->CalculateFrameImpl(this, da, true, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

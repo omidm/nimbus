@@ -72,7 +72,7 @@ void WorkerThreadMonitor::Run() {
       << "fast_job_queue_length "
       << std::endl;
   while (true) {
-    usleep(100000);
+    usleep(10000);
 
     dispatched_computation_job_count =
         worker_manager_->dispatched_computation_job_count_;
@@ -89,7 +89,7 @@ void WorkerThreadMonitor::Run() {
            << dispatched_fast_job_count
               - dispatched_fast_job_count_last
            << " "
-           << worker_manager_->computation_thread_num - idle_computation_threads
+           << worker_manager_->ActiveComputationThreads()
            << " "
            << ready_job_queue_length
            << " "

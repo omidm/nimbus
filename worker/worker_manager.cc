@@ -261,6 +261,20 @@ void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_unlock(&computation_job_queue_lock_);
 }
 
+int WorkerManager::ActiveComputationThreads() {
+  int result = 0;
+  for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
+       index != worker_thread_list_.end();
+       ++index) {
+    WorkerThreadComputation* worker_thread =
+        dynamic_cast<WorkerThreadComputation*>(*index);  // NOLINT
+    if (worker_thread && !worker_thread->idle) {
+      ThreadQueueProto* thread_queue = worker_thread->thread_queue;
+      result += (thread_queue ? thread_queue->get_active_threads() : 1);
+    }
+  }
+  return result;
+}
 void* WorkerManager::ThreadEntryPoint(void* parameters) {
   WorkerThread* worker_thread = reinterpret_cast<WorkerThread*>(parameters);
   worker_thread->Run();

@@ -89,11 +89,13 @@ void JobExtrapolatePhi::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::LEVELSET_BW_EIGHT_WRITE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in extrapolate phi job.");
   driver->ExtrapolatePhiImpl(this, da, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

@@ -85,11 +85,13 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
   data_config.SetAll();
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
   // Reseed particles and write frame.
   driver->WriteFrameImpl(this, da, true, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

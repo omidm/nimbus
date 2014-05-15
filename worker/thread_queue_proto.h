@@ -33,43 +33,18 @@
  */
 
  /*
-  * A worker thread that executes computation jobs that is dispatched by the
-  * worker manager.
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_WORKER_THREAD_COMPUTATION_H_
-#define NIMBUS_WORKER_WORKER_THREAD_COMPUTATION_H_
+#ifndef NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
+#define NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
 
-#include "shared/nimbus.h"
-#include "worker/thread_queue_proto.h"
-
+#include "shared/nimbus_types.h"
 namespace nimbus {
-class WorkerThreadComputation : public WorkerThread {
+class ThreadQueueProto {
  public:
-  explicit WorkerThreadComputation(WorkerManager* worker_manager);
-  virtual ~WorkerThreadComputation();
-  virtual void Run();
-  void set_core_quota(int core_quota) {
-    core_quota_ = core_quota;
-  }
-  int core_quota() {
-    return core_quota_;
-  }
-  void set_use_threading(bool use_threading) {
-    use_threading_ = use_threading;
-  }
-  bool use_threading() {
-    return use_threading_;
-  }
-  // The worker thread maintains a pointer to the thread_pool so that it can
-  // observe the running status of the job.
-  ThreadQueueProto* thread_queue;
- private:
-  int core_quota_;
-  bool use_threading_;
-  void ExecuteJob(Job* job);
+  virtual int get_active_threads() = 0;
 };
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_WORKER_THREAD_COMPUTATION_H_
+#endif  // NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_

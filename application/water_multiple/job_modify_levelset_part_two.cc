@@ -94,9 +94,11 @@ void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::D
     data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
     driver->ModifyLevelSetPartTwoImpl(this, da, init_config.local_region, dt);
 
+    *thread_queue_hook() = NULL;
     // free resources
     DestroyExampleAndDriver(example, driver);
 

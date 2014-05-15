@@ -91,11 +91,13 @@ void JobAdjustPhiWithObjects::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Begin initialization.\n");
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in UPDATE_GHOST_VELOCITY job.\n");
   driver->UpdateGhostVelocitiesImpl(this, da, dt);
 
+  *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

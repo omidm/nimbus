@@ -93,9 +93,11 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
     data_config.SetAll();
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
     driver->DeleteParticlesImpl(this, da, dt);
 
+    *thread_queue_hook() = NULL;
     // free resources
     DestroyExampleAndDriver(example, driver);
 

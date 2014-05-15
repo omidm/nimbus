@@ -88,8 +88,11 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
     data_config.SetFlag(DataConfig::LEVELSET);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
     driver->AdjustPhiImpl(this, da, dt);
+
+    *thread_queue_hook() = NULL;
 
     // free resources
     DestroyExampleAndDriver(example, driver);
