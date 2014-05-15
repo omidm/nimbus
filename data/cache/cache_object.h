@@ -55,8 +55,6 @@
 
 namespace nimbus {
 
-enum CacheAccess { SHARED, EXCLUSIVE };
-
 class CacheObject {
     public:
         explicit CacheObject(std::string type,
@@ -95,7 +93,7 @@ class CacheObject {
         void InvalidateCacheObjectComplete();
 
         bool IsAvailable(CacheAccess access) const;
-        distance_t GetDistance(const DataArray &data_set) const;
+        cache::distance_t GetDistance(const DataArray &data_set) const;
 
     private:
         void FlushCacheData(const DataArray &diff);
@@ -118,7 +116,7 @@ class CacheObject {
         std::map<logical_data_id_t, physical_data_id_t> element_map_;
         std::map<logical_data_id_t, Data*> data_map_;
         std::set<Data *> data_;
-        PIDSet pids_;
+        cache::PIDSet pids_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

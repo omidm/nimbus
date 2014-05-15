@@ -47,15 +47,14 @@
 
 namespace nimbus {
 
+enum CacheAccess { SHARED, EXCLUSIVE };
+
+namespace cache {
+
 /* Types. */
 typedef uint64_t distance_t;
 typedef IDSet<physical_data_id_t> PIDSet;
 typedef IDSet<logical_data_id_t> LIDSet;
-
-struct CacheInstance {
-    physical_data_id_t pid;
-    data_version_t version;
-};
 
 /* A comparator for geometric region, for using in maps. */
 typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT
@@ -63,6 +62,7 @@ typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT
 bool GeometricRegionLess(const GeometricRegion &r1,
                          const GeometricRegion &r2);
 
+}  // namespace cache
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_CACHE_UTILS_H_

@@ -96,7 +96,7 @@ void CacheObject::Read(const DataArray &read_set,
         // // because of particles (4 different types of particles share a
         // // region). To change to region, we need a group type instead of a
         // // simple cache object.
-        // LIDSet read_lids;
+        // cache::LIDSet read_lids;
         // for (size_t k = 0; k < diff.size(); ++k) {
         //     Data *dd = diff[k];
         //     read_lids.insert(dd->logical_id());
@@ -120,7 +120,7 @@ void CacheObject::Read(const DataArray &read_set,
             // because of particles (4 different types of particles share a
             // region). To change to region, we need a group type instead of a
             // simple cache object.
-            LIDSet read_lids;
+            cache::LIDSet read_lids;
             for (size_t k = 0; k < diff.size(); ++k) {
                 Data *dd = diff[k];
                 read_lids.insert(dd->logical_id());
@@ -301,8 +301,8 @@ void CacheObject::InvalidateCacheObjectComplete() {
     }
 }
 
-distance_t CacheObject::GetDistance(const DataArray &data_set) const {
-    distance_t cur_distance = 0;
+cache::distance_t CacheObject::GetDistance(const DataArray &data_set) const {
+    cache::distance_t cur_distance = 0;
     for (size_t i = 0; i < data_set.size(); ++i) {
         Data *d = data_set[i];
         if (!pids_.contains(d->physical_id()))

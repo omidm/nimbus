@@ -33,35 +33,35 @@
  */
 
 /*
- * Helper functions for cache class objects.
+ * A CacheStruct is an application object corresponding to a set of nimbus
+ * variables cached by the cache manager.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
+#include "data/cache/cache_struct.h"
 #include "data/cache/utils.h"
 #include "shared/geometric_region.h"
+#include "shared/nimbus_types.h"
 
 namespace nimbus {
 
-namespace cache {
+size_t CacheStruct::ids_allocated_ = 0;
 
-/* A comparator for geometric region, for using in maps. */
-bool GeometricRegionLess(const GeometricRegion &r1,
-                         const GeometricRegion &r2) {
-    if (r1.x() != r2.x())
-        return r1.x() < r2.x();
-    if (r1.y() != r2.y())
-        return r1.y() < r2.y();
-    if (r1.z() != r2.z())
-        return r1.z() < r2.z();
-    if (r1.dx() != r2.dx())
-        return r1.dx() < r2.dx();
-    if (r1.dy() != r2.dy())
-        return r1.dy() < r2.dy();
-    if (r1.dz() != r2.dz())
-        return r1.dz() < r2.dz();
-    return false;
+/**
+ * \details
+ */
+CacheStruct::CacheStruct(size_t num_variables) : id_(0),
+                                                 num_variables_(num_variables),
+                                                 access_(SHARED),
+                                                 users_(0),
+                                                 data_maps_(num_variables),
+                                                 write_backs_(num_variables) {
 }
 
-}  // namespace cache
 }  // namespace nimbus

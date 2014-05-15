@@ -65,7 +65,7 @@ class CacheTable {
                                 CacheAccess access = EXCLUSIVE) const;
         typedef std::map<GeometricRegion,
                          CacheObjects *,
-                         GRComparisonType> Table;
+                         cache::GRComparisonType> Table;
         Table table_;
 };  // class CacheTable
 

@@ -46,7 +46,7 @@
 
 namespace nimbus {
 
-CacheTable::CacheTable() : table_(Table(GeometricRegionLess)) {}
+CacheTable::CacheTable() : table_(Table(cache::GeometricRegionLess)) {}
 
 void CacheTable::AddEntry(const GeometricRegion &region,
                           CacheObject *co) {
@@ -87,9 +87,9 @@ CacheObject *CacheTable::GetAvailable(const GeometricRegion &region,
 int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
                                     const DataArray &read,
                                     CacheAccess access) const {
-    distance_t min_distance = 2*read.size();
+    cache::distance_t min_distance = 2*read.size();
     int min_index = -1;
-    distance_t dist;
+    cache::distance_t dist;
     for (size_t i = 0; i < objects->size(); ++i) {
         if (!objects->at(i)->IsAvailable(access))
             continue;
