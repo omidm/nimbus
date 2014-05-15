@@ -76,4 +76,50 @@ void CacheObject::MakePrototype() {
     id_ = ++ids_allocated_;
 }
 
+/**
+ * \details AcquireAccess(...) ensures that only one request in EXCLUSIVE mode
+ * holds the object, otherwise the object is in SHARED mode. It sets object
+ * access mode to requested access mode, and increases the number of users by
+ * one.
+ */
+void CacheObject::AcquireAccess(CacheAccess access) {
+    assert(users_ != 0 && (access == EXCLUSIVE || access_ == EXCLUSIVE));
+    access_ = access;
+    users_++;
+}
+
+/**
+ * \details ReleaseAccess() decreases the number of users by one. A request
+ * (example, application job) must release an object when it is done reading/
+ * writing.
+ */
+void CacheObject::ReleaseAccess() {
+    users_--;
+}
+
+/**
+ * \details IsAvailable(...) returns true if an object is available, otherwise
+ * it returns false. An object is available in EXCLUSIVE mode if the number of
+ * users using it is zero. An object is available in SHARED mode if number of
+ * users is zero, or the current access mode for the object is SHARED.
+ */
+bool CacheObject::IsAvailable(CacheAccess access) const {
+    return ((access == EXCLUSIVE && users_ == 0) ||
+            (users_ == 0 || (access == SHARED && access_ == SHARED)));
+}
+
+/**
+ * \details
+ */
+GeometricRegion CacheObject::object_region() const {
+    return object_region_;
+}
+
+/**
+ * \details
+ */
+void CacheObject::set_object_region(const GeometricRegion &object_region) {
+    object_region_ = object_region;
+}
+
 }  // namespace nimbus
