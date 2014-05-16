@@ -47,35 +47,62 @@
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/idset.h"
+#include "shared/ldo_entry.h"
 
 namespace nimbus {
 
   class LogicalDataLineage {
   public:
-    typedef std::pair<job_id_t, data_version_t> Entry;
-    typedef std::list<Entry> Lineage;
-    typedef boost::unordered_map<logical_data_id_t, Lineage> Table;
+    typedef std::list<LdlEntry> Chain;
+    typedef std::list<Chain::iterator> Index; 
 
     LogicalDataLineage();
-    LogicalDataLineage(const job_id_t& parent_id, const Table& table);
+    explicit LogicalDataLineage(
+        const logical_data_id_t& ldid);
+    LogicalDataLineage(
+        const logical_data_id_t& ldid,
+        const Chain& chain,
+        const Index& parents_index);
 
-    LogicalDataLineage(const LogicalDataLineage& other);
+    LogicalDataLineage(
+        const LogicalDataLineage& other);
 
     virtual ~LogicalDataLineage();
 
-    job_id_t parent_id() const;
-    Table table() const;
-    const Table* table_p() const;
-    Table* table_p();
+    logical_data_id_t ldid() const;
+    Chain chain() const;
+    const Chain* chain_p() const;
+    Chain* chain_p();
+    Index parents_index() const;
+    const Index* parents_index_p() const;
+    Index* parents_index_p();
 
-    void set_parent_id(const job_id_t& parent_id);
-    void set_table(const Table& table);
+    void set_ldid(const logical_data_id_t& ldid);
+    void set_chain(const Chain& chain);
+    void set_parents_index(const Index& parents_index);
 
-    LogicalDataLineage& operator= (const LogicalDataLineage& right);
+    LogicalDataLineage& operator= (
+        const LogicalDataLineage& right);
+
+    bool AppendLdlEntry(
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth,
+        const bool& flag);
+
+    bool InsertParentLdlEntry(
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth,
+        const bool& flag);
+
+    bool CleanChain(
+        const IDSet<job_id_t>& live_parents);
 
   private:
-    job_id_t parent_id_;
-    Table table_;
+    logical_data_id_t ldid_;
+    Chain chain_;
+    Index parents_index_;
   };
 
 }  // namespace nimbus
