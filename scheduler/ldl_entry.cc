@@ -50,11 +50,11 @@ LdlEntry::LdlEntry() {
 LdlEntry::LdlEntry(const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth,
-    const bool& flag) :
+    const bool& sterile) :
   job_id_(job_id),
   version_(version),
   job_depth_(job_depth),
-  sterile_(flag) {
+  sterile_(sterile) {
 }
 
 LdlEntry::LdlEntry(const LdlEntry& other) {
@@ -95,8 +95,8 @@ void LdlEntry::set_job_depth(const job_depth_t& job_depth) {
   job_depth_ = job_depth;
 }
 
-void LdlEntry::set_sterile(const bool& flag) {
-  sterile_ = flag;
+void LdlEntry::set_sterile(const bool& sterile) {
+  sterile_ = sterile;
 }
 
 LdlEntry& LdlEntry::operator= (const LdlEntry& right) {

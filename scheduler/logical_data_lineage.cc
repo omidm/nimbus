@@ -122,16 +122,47 @@ bool LogicalDataLineage::AppendLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth,
-    const bool& flag) {
-  return false;
+    const bool& sterile) {
+  if (LastVersionInChain() >= version) {
+    dbg(DBG_ERROR, "ERROR: appending an entry with lower version than the existing one in lineage.\n"); // NOLINT
+    exit(-1);
+    return false;
+  }
+
+  chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
+
+  if (!sterile) {
+    parents_index_.push_back(--chain_.end());
+
+  }
+
+  return true;
 }
 
 bool LogicalDataLineage::InsertParentLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth,
-    const bool& flag) {
-  return false;
+    const bool& sterile) {
+  assert(!sterile);
+
+  Chain::reverse_iterator it = chain_.rbegin();
+  for (; it != chain_.rend(); ++it) {
+    if (it->version() <= version) {
+      break;
+    }
+  }
+  chain_.insert(it.base(), LdlEntry(job_id, version, job_depth, sterile));
+
+  Index::reverse_iterator iit = parents_index_.rbegin();
+  for (; iit != parents_index_.rend(); ++iit) {
+    if ((*iit)->version() <= version) {
+      break;
+    }
+  }
+  parents_index_.insert(iit.base(), --it.base());
+
+  return true;
 }
 
 bool LogicalDataLineage::CleanChain(
@@ -139,5 +170,8 @@ bool LogicalDataLineage::CleanChain(
   return false;
 }
 
+data_version_t LogicalDataLineage::LastVersionInChain() {
+  return chain_.rbegin()->version();
+}
 
 }  // namespace nimbus

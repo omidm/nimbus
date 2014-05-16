@@ -56,7 +56,7 @@ namespace nimbus {
     LdlEntry(const job_id_t& job_id,
         const data_version_t& version,
         const job_depth_t& job_depth,
-        const bool& flag);
+        const bool& sterile);
 
     LdlEntry(const LdlEntry& other);
 
@@ -70,7 +70,7 @@ namespace nimbus {
     void set_job_id(const job_id_t& job_id);
     void set_version(const data_version_t& version);
     void set_job_depth(const job_depth_t& job_depth);
-    void set_sterile(const bool& flag);
+    void set_sterile(const bool& sterile);
 
     LdlEntry& operator= (const LdlEntry& right);
 

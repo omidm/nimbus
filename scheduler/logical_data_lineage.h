@@ -47,6 +47,7 @@
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/idset.h"
+#include "shared/dbg.h"
 #include "scheduler/ldl_entry.h"
 
 namespace nimbus {
@@ -88,16 +89,18 @@ namespace nimbus {
         const job_id_t& job_id,
         const data_version_t& version,
         const job_depth_t& job_depth,
-        const bool& flag);
+        const bool& sterile);
 
     bool InsertParentLdlEntry(
         const job_id_t& job_id,
         const data_version_t& version,
         const job_depth_t& job_depth,
-        const bool& flag);
+        const bool& sterile);
 
     bool CleanChain(
         const IDSet<job_id_t>& live_parents);
+
+    data_version_t LastVersionInChain();
 
   private:
     logical_data_id_t ldid_;
