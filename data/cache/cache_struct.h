@@ -63,6 +63,9 @@ typedef std::set<Data *> DataSet;
  * \details Application object corresponding to a set of nimbus variables cached
  * by the cache manager. A CacheStruct can have num_variables number of
  * different nimbus variables, and must be defined over a geometric region.
+ * Read and write calls contain a type, corresponding to each read/ write set/
+ * data. This type is an integer, between zero (inclusive) and num_variables_
+ * (exclusive).
  */
 class CacheStruct : public CacheObject {
     public:
@@ -136,26 +139,22 @@ class CacheStruct : public CacheObject {
 
     private:
         /**
-         * \brief Sets up mapping between data and CacheStruct instance
-         * \param d denotes the data to map to
-         * \param t denotes the type of nimbus variable
-         */
-        void SetUpData(Data *d, type_id_t t);
-
-        /**
          * \brief Flushes data from cache, removes corresponding dirty data
          * mapping
          * \param d is data to flush to
+         * \param t denotes the type of nimbus variable,
+         * as explained in the class description
          */
-        virtual void FlushToData(Data *d);
+        void FlushToData(Data *d, type_id_t t);
 
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
-         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param var_type is a list of type_ids corresponding to nimbus variables,
+         * as explained in the class description
          * \param flush_sets is a list of data arrays corresponding to nimbus variables
          */
         void FlushCache(const std::vector<type_id_t> &var_type,
-                        const std::vector<DataArray> &read_sets);
+                        const std::vector<DataArray> &flush_sets);
 
         // number of nimbus variables
         size_t num_variables_;
@@ -169,7 +168,8 @@ class CacheStruct : public CacheObject {
     protected:
         /**
          * \brief Reads data from read_sets into CacheStruct instance
-         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param var_type is a list of type_ids corresponding to nimbus variables,
+         * as explained in the class description
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \param read_region is the geometric region to read
          * \details This function must be overwritten by the application
@@ -182,7 +182,8 @@ class CacheStruct : public CacheObject {
 
         /**
          * \brief Writes data from CacheStruct instance to write_sets
-         * \param var_type is a list of type_ids corresponding to nimbus variables
+         * \param var_type is a list of type_ids corresponding to nimbus variables,
+         * as explained in the class description
          * \param write_sets is a list of data arrays corresponding to nimbus variables
          * \param write_region is the geometric region to be write
          * \details This function must be overwritten by the application

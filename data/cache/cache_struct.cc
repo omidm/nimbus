@@ -205,7 +205,7 @@ void CacheStruct::PullData(Data *d) {
         GeometricRegion wreg = GeometricRegion::
             GetIntersection(write_region_, dreg);
         WriteFromCache(var_type, write_sets, wreg);
-        d->clear_dirty_cache_object();
+        // d->clear_dirty_cache_object(this);
         write_back_t.erase(d);
         break;
     }
@@ -254,6 +254,49 @@ void CacheStruct::UnsetData(Data *d) {
         if (data_map_t.find(dreg) != data_map_t.end()) {
             data_map_t.erase(dreg);
             break;
+        }
+    }
+}
+
+/**
+ * \details FlushToData(...) flushes data from struct to given data. This
+ * function does not provide any locking, and also needs type information as an
+ * argument. This function is like PullData(...), except that it avoids some
+ * checks, and locking. It should be used by methods of CacheStruct only.
+ */
+void CacheStruct::FlushToData(Data *d, type_id_t t) {
+    DataSet &write_back_t = write_backs_[t];
+    std::vector<type_id_t> var_type(1, t);
+    std::vector<DataArray> write_sets(1, DataArray(1, d));
+    GeometricRegion dreg = d->region();
+    GeometricRegion wreg = GeometricRegion::
+        GetIntersection(write_region_, dreg);
+    WriteFromCache(var_type, write_sets, wreg);
+    // d->clear_dirty_cache_object(this);
+    write_back_t.erase(d);
+}
+
+/**
+ * \details FlushCache(...) flushes all data passed to it, The assumptions and
+ * semantics are similar to FlushToData(...). This function should be used by
+ * methods of CacheStruct only.
+ */
+void CacheStruct::FlushCache(const std::vector<type_id_t> &var_type,
+                             const std::vector<DataArray> &flush_sets) {
+    size_t num_vars = var_type.size();
+    if (flush_sets.size() != num_vars) {
+        dbg(DBG_ERROR, "Mismatch in number of variable types passed to FlushCache\n");
+        exit(-1);
+    }
+    WriteFromCache(var_type, flush_sets, write_region_);
+    for (size_t t = 0; t < num_vars; ++t) {
+        const DataArray &flush_t = flush_sets[t];
+        type_id_t type = var_type[t];
+        DataSet &write_back_t = write_backs_[type];
+        for (size_t i = 0; i < flush_t.size(); ++i) {
+            Data *d = flush_t[i];
+            // d->clear_dirty_cache_object(this);
+            write_back_t.erase(d);
         }
     }
 }

@@ -67,7 +67,7 @@ class CacheObject {
     public:
         /**
          * \brief Creates a CacheObject
-         * \return Conobjected CacheObject instance
+         * \return Constructed CacheObject instance
          */
         explicit CacheObject();
 
