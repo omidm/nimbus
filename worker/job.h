@@ -134,6 +134,9 @@ class Job {
     bool  sterile() const;
     double run_time() const;
     double wait_time() const;
+    size_t max_alloc() const {
+      return max_alloc_;
+    }
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
@@ -146,6 +149,9 @@ class Job {
     void set_sterile(bool sterile);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
+    void set_max_alloc(size_t max_alloc) {
+      max_alloc_ = max_alloc;
+    }
     // TODO(quhang) should add accesssors.
     DataArray data_array;
 
@@ -186,6 +192,7 @@ class Job {
     bool app_is_set_;
     double run_time_;
     double wait_time_;
+    size_t max_alloc_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

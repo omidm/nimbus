@@ -38,8 +38,10 @@
 
 #include <pthread.h>
 #include <list>
+#include <vector>
 
 #include "shared/nimbus.h"
+#include "shared/profiler_malloc.h"
 #include "worker/worker_thread.h"
 #include "worker/worker_thread_computation.h"
 #include "worker/worker_thread_fast.h"
@@ -66,7 +68,7 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
   if (multi_threaded) {
-    computation_thread_num = 1;
+    computation_thread_num = 2;
     fast_thread_num = 1;
   } else {
     computation_thread_num = 1;
@@ -214,6 +216,13 @@ bool WorkerManager::StartWorkerThreads() {
   int error_code = pthread_create(
       &scheduling_id_, NULL, SchedulingEntryPoint, this);
   assert(error_code == 0);
+  std::vector<pthread_t> tids;
+  for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
+       index != worker_thread_list_.end();
+       ++index) {
+    tids.insert(tids.begin(), (*index)->thread_id);
+  }
+  ProfilerMalloc::RegisterThreads(tids);
   return true;
 }
 
@@ -250,8 +259,12 @@ void WorkerManager::ScheduleComputationJobs() {
           worker_thread->next_job_to_run->name().c_str(),
           worker_thread->next_job_to_run->id().elem());
       worker_thread->job_assigned = true;
+      /*
       worker_thread->set_use_threading(true);
       worker_thread->set_core_quota(3);
+      */
+      worker_thread->set_use_threading(false);
+      worker_thread->set_core_quota(1);
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;
       pthread_cond_signal(&worker_thread->thread_can_start);

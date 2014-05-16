@@ -63,6 +63,7 @@
 #include "shared/parser.h"
 #include "shared/log.h"
 #include "shared/high_resolution_timer.h"
+#include "shared/profiler.h"
 
 namespace nimbus {
 
@@ -132,6 +133,7 @@ class Worker {
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
+  boost::thread* profiler_thread_;
   // TODO(quhang) a strong assumption is made that the data map is never changed
   // during the runtime. Indeed, for now, it is only changed at the very
   // beginning of the simulation, so it keeps the same during the simulation,
@@ -143,6 +145,7 @@ class Worker {
   job_id_t DUMB_JOB_ID;
   WorkerManager* worker_manager_;
   HighResolutionTimer timer_;
+  Profiler profiler_;
 
   virtual void SetupSchedulerInterface();
 

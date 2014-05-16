@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <string>
 
+#include "shared/profiler_malloc.h"
 #include "worker/worker.h"
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
@@ -78,11 +79,15 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   log_->StartTimer();
   timer_->Start(job->id().elem());
 #endif  // MUTE_LOG
+  ProfilerMalloc::ResetThreadStatisticsByTid(pthread_self());
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
   job->Execute(job->parameters(), job->data_array);
   dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
+  size_t max_alloc = ProfilerMalloc::AllocMaxTid(pthread_self());
+  job->set_max_alloc(max_alloc);
+
 #ifndef MUTE_LOG
   double run_time = timer_->Stop(job->id().elem());
   log_->StopTimer();
