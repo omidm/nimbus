@@ -301,7 +301,7 @@ namespace nimbus {
       ThreadAllocState& state = (*thread_alloc_map_)[*tid];
       state.on = true;
     }
-    // enabled_ = true;
+    enabled_ = true;
     pthread_mutex_unlock(&mutex_);
   }
 

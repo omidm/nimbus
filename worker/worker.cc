@@ -555,7 +555,8 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   Parameter params;
-  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time());
+  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time(),
+                    job->max_alloc());
   client_->sendCommand(&cm);
   job_id_t job_id = job->id().elem();
   // Job done for unknown job is not handled.
