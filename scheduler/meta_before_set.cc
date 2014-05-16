@@ -40,7 +40,6 @@
   */
 
 #include "scheduler/meta_before_set.h"
-#include "scheduler/job_entry.h"
 
 namespace nimbus {
 
@@ -130,12 +129,10 @@ MetaBeforeSet& MetaBeforeSet::operator= (const MetaBeforeSet& right) {
   return *this;
 }
 
-bool MetaBeforeSet::LookUpBeforeSetChain(JobEntry *job) {
-  if (is_root_ || (job_depth_ <= job->job_depth())) {
+bool MetaBeforeSet::LookUpBeforeSetChain(job_id_t job_id, job_depth_t job_depth) {
+  if (is_root_ || (job_depth_ <= job_depth)) {
     return false;
   }
-
-  job_id_t job_id = job->job_id();
 
   if (table_.count(job_id) > 0) {
     return true;
@@ -151,7 +148,7 @@ bool MetaBeforeSet::LookUpBeforeSetChain(JobEntry *job) {
 
   Table::iterator iter;
   for (iter = table_.begin(); iter != table_.end(); ++iter) {
-    if (iter->second->LookUpBeforeSetChain(job)) {
+    if (iter->second->LookUpBeforeSetChain(job_id, job_depth)) {
       positive_query_.insert(job_id);
       return true;
     }

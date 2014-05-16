@@ -196,4 +196,17 @@ data_version_t LogicalDataLineage::LastVersionInChain() {
   return chain_.rbegin()->version();
 }
 
+bool LogicalDataLineage::LookUpVersion(
+    boost::shared_ptr<MetaBeforeSet> mbs,
+    data_version_t *version) {
+  Chain::const_reverse_iterator iter;
+  for (iter = chain_.rbegin(); iter != chain_.rend(); ++iter) {
+    if (mbs->LookUpBeforeSetChain(iter->job_id(), iter->job_depth())) {
+      *version = iter->version();
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace nimbus

@@ -52,8 +52,6 @@
 
 namespace nimbus {
 
-  class JobEntry;
-
   class MetaBeforeSet {
   public:
     typedef boost::unordered_set<job_id_t> Cache;
@@ -85,7 +83,7 @@ namespace nimbus {
 
     MetaBeforeSet& operator= (const MetaBeforeSet& right);
 
-    bool LookUpBeforeSetChain(JobEntry *job);
+    bool LookUpBeforeSetChain(job_id_t job_id, job_depth_t job_depth);
 
     void InvalidateNegativeQueryCache();
 

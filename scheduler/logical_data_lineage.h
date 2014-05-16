@@ -49,6 +49,7 @@
 #include "shared/idset.h"
 #include "shared/dbg.h"
 #include "scheduler/ldl_entry.h"
+#include "scheduler/meta_before_set.h"
 
 namespace nimbus {
 
@@ -99,6 +100,11 @@ namespace nimbus {
 
     bool CleanChain(
         const IDSet<job_id_t>& live_parents);
+
+
+    bool LookUpVersion(
+        boost::shared_ptr<MetaBeforeSet> mbs,
+        data_version_t *version);
 
     data_version_t LastVersionInChain();
 
