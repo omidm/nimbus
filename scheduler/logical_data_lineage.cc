@@ -123,16 +123,12 @@ bool LogicalDataLineage::AppendLdlEntry(
     const data_version_t& version,
     const job_depth_t& job_depth,
     const bool& sterile) {
-  if (LastVersionInChain() >= version) {
-    dbg(DBG_ERROR, "ERROR: appending an entry with lower version than the existing one in lineage.\n"); // NOLINT
-    exit(-1);
-    return false;
-  }
+  assert(LastVersionInChain() < version);
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
   if (!sterile) {
-    parents_index_.push_back(--chain_.end());
+    parents_index_.push_back(--(chain_.end()));
 
   }
 
@@ -160,14 +156,40 @@ bool LogicalDataLineage::InsertParentLdlEntry(
       break;
     }
   }
-  parents_index_.insert(iit.base(), --it.base());
+  parents_index_.insert(iit.base(), it.base());
+
+  // TODO(omidm) : remove this check!
+  for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
+    assert(!(*iit)->sterile());
+  }
 
   return true;
 }
 
 bool LogicalDataLineage::CleanChain(
     const IDSet<job_id_t>& live_parents) {
-  return false;
+  if (live_parents.size() == 0) {
+    chain_.clear();
+    parents_index_.clear();
+    return true;
+  }
+
+  IDSet<job_id_t> temp = live_parents;
+
+  Index::reverse_iterator iit = parents_index_.rbegin();
+  for (; iit != parents_index_.rend(); ++iit) {
+    temp.remove((*iit)->job_id());
+    if (temp.size() == 0) {
+      break;
+    }
+  }
+
+  assert(temp.size() == 0);
+
+  parents_index_.erase(parents_index_.begin(), --(iit.base()));
+  chain_.erase(chain_.begin(), *iit);
+
+  return true;
 }
 
 data_version_t LogicalDataLineage::LastVersionInChain() {
