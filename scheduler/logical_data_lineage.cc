@@ -48,48 +48,96 @@ LogicalDataLineage::LogicalDataLineage() {
 }
 
 LogicalDataLineage::LogicalDataLineage(
-    const job_id_t& parent_id, const Table& table) {
-  parent_id_ = parent_id;
-  table_ = table;
+    const logical_data_id_t& ldid) :
+  ldid_(ldid) {
 }
 
-LogicalDataLineage::LogicalDataLineage(const LogicalDataLineage& other) {
-  parent_id_ = other.parent_id_;
-  table_ = other.table_;
+LogicalDataLineage::LogicalDataLineage(
+    const logical_data_id_t& ldid,
+    const Chain& chain,
+    const Index& parents_index) :
+  ldid_(ldid), chain_(chain),
+  parents_index_(parents_index) {
+}
+
+LogicalDataLineage::LogicalDataLineage(
+    const LogicalDataLineage& other) {
+  ldid_ = other.ldid_;
+  chain_ = other.chain_;
+  parents_index_ = other.parents_index_;
 }
 
 LogicalDataLineage::~LogicalDataLineage() {
 }
 
-job_id_t LogicalDataLineage::parent_id() const {
-  return parent_id_;
+logical_data_id_t LogicalDataLineage::ldid() const {
+  return ldid_;
 }
 
-LogicalDataLineage::Table LogicalDataLineage::table() const {
-  return table_;
+LogicalDataLineage::Chain LogicalDataLineage::chain() const {
+  return chain_;
 }
 
-const LogicalDataLineage::Table* LogicalDataLineage::table_p() const {
-  return &table_;
+const LogicalDataLineage::Chain* LogicalDataLineage::chain_p() const {
+  return &chain_;
 }
 
-LogicalDataLineage::Table* LogicalDataLineage::table_p() {
-  return &table_;
+LogicalDataLineage::Chain* LogicalDataLineage::chain_p() {
+  return &chain_;
 }
 
-void LogicalDataLineage::set_parent_id(const job_id_t& parent_id) {
-  parent_id_ = parent_id;
+LogicalDataLineage::Index LogicalDataLineage::parents_index() const {
+  return parents_index_;
 }
 
-void LogicalDataLineage::set_table(const Table& table) {
-  table_ = table;
+const LogicalDataLineage::Index* LogicalDataLineage::parents_index_p() const {
+  return &parents_index_;
+}
+
+LogicalDataLineage::Index* LogicalDataLineage::parents_index_p() {
+  return &parents_index_;
+}
+
+void LogicalDataLineage::set_ldid(const logical_data_id_t& ldid) {
+  ldid_ = ldid;
+}
+
+void LogicalDataLineage::set_chain(const Chain& chain) {
+  chain_ = chain;
+}
+
+void LogicalDataLineage::set_parents_index(const Index& parents_index) {
+  parents_index_ = parents_index;
 }
 
 LogicalDataLineage& LogicalDataLineage::operator= (
     const LogicalDataLineage& right) {
-  parent_id_ = right.parent_id_;
-  table_ = right.table_;
+  ldid_ = right.ldid_;
+  chain_ = right.chain_;
+  parents_index_ = right.parents_index_;
   return *this;
 }
+
+bool LogicalDataLineage::AppendLdlEntry(
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth,
+    const bool& flag) {
+  return false;
+}
+
+bool LogicalDataLineage::InsertParentLdlEntry(
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth,
+    const bool& flag) {
+  return false;
+}
+
+bool LogicalDataLineage::CleanChain(
+    const IDSet<job_id_t>& live_parents) {
+  return false;
+}
+
 
 }  // namespace nimbus

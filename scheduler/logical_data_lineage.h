@@ -47,7 +47,7 @@
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/idset.h"
-#include "shared/ldo_entry.h"
+#include "scheduler/ldl_entry.h"
 
 namespace nimbus {
 
