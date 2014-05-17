@@ -129,7 +129,6 @@ bool LogicalDataLineage::AppendLdlEntry(
 
   if (!sterile) {
     parents_index_.push_back(--(chain_.end()));
-
   }
 
   return true;

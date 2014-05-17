@@ -39,81 +39,42 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_LOGICAL_DATA_LINEAGE_H_
-#define NIMBUS_SCHEDULER_LOGICAL_DATA_LINEAGE_H_
+#ifndef NIMBUS_SCHEDULER_LDL_MAP_H_
+#define NIMBUS_SCHEDULER_LDL_MAP_H_
 
 #include <boost/unordered_map.hpp>
 #include <list>
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/idset.h"
-#include "shared/dbg.h"
-#include "scheduler/ldl_entry.h"
+#include "scheduler/logical_data_lineage.h"
 #include "scheduler/meta_before_set.h"
 
 namespace nimbus {
 
-  class LogicalDataLineage {
+  class LdlMap {
   public:
-    typedef std::list<LdlEntry> Chain;
-    typedef std::list<Chain::iterator> Index;
+    typedef boost::unordered_map<logical_data_id_t, LogicalDataLineage> Table;
 
-    LogicalDataLineage();
-    explicit LogicalDataLineage(
-        const logical_data_id_t& ldid);
-    LogicalDataLineage(
-        const logical_data_id_t& ldid,
-        const Chain& chain,
-        const Index& parents_index);
+    LdlMap();
+    explicit LdlMap(const Table& table);
 
-    LogicalDataLineage(
-        const LogicalDataLineage& other);
+    LdlMap(const LdlMap& other);
 
-    virtual ~LogicalDataLineage();
+    virtual ~LdlMap();
 
-    logical_data_id_t ldid() const;
-    Chain chain() const;
-    const Chain* chain_p() const;
-    Chain* chain_p();
-    Index parents_index() const;
-    const Index* parents_index_p() const;
-    Index* parents_index_p();
+    Table table() const;
+    const Table* table_p() const;
+    Table* table_p();
 
-    void set_ldid(const logical_data_id_t& ldid);
-    void set_chain(const Chain& chain);
-    void set_parents_index(const Index& parents_index);
+    void set_table(const Table& table);
 
-    LogicalDataLineage& operator= (
-        const LogicalDataLineage& right);
-
-    bool AppendLdlEntry(
-        const job_id_t& job_id,
-        const data_version_t& version,
-        const job_depth_t& job_depth,
-        const bool& sterile);
-
-    bool InsertParentLdlEntry(
-        const job_id_t& job_id,
-        const data_version_t& version,
-        const job_depth_t& job_depth,
-        const bool& sterile);
-
-    bool CleanChain(
-        const IDSet<job_id_t>& live_parents);
-
-
-    bool LookUpVersion(
-        boost::shared_ptr<MetaBeforeSet> mbs,
-        data_version_t *version);
-
-    data_version_t LastVersionInChain();
+    LdlMap& operator= (const LdlMap& right);
 
   private:
-    logical_data_id_t ldid_;
-    Chain chain_;
-    Index parents_index_;
+    Table table_;
   };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SCHEDULER_LOGICAL_DATA_LINEAGE_H_
+#endif  // NIMBUS_SCHEDULER_LDL_MAP_H_
