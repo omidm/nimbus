@@ -354,7 +354,7 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
@@ -389,7 +389,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Receive part
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), true, true, true); // NOLINT
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
@@ -412,7 +412,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Send Part.
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -448,7 +448,7 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -650,7 +650,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
 
-  if ((instances_at_worker.size() == 0) && (version == 0)) {
+  if ((instances_at_worker.size() == 0) && (version == NIMBUS_INIT_DATA_VERSION)) {
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
 
@@ -715,7 +715,7 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
-  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
   return true;
 }
 
