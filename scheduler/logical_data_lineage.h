@@ -112,6 +112,7 @@ namespace nimbus {
     logical_data_id_t ldid_;
     Chain chain_;
     Index parents_index_;
+    data_version_t last_version_;
   };
 
 }  // namespace nimbus

@@ -49,7 +49,8 @@
 #define NIMBUS_EMPTY_VERSION_TABLE_ID (version_table_id_t)(0)
 
 #define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
-#define NIMBUS_INIT_DATA_VERSION (data_version_t)(0)
+#define NIMBUS_INIT_DATA_VERSION (data_version_t)(1)
+#define NIMBUS_UNDEFINED_DATA_VERSION (data_version_t)(0)
 #define NIMBUS_INIT_JOB_DEPTH (job_depth_t)(0)
 #define NIMBUS_MAIN_JOB_NAME "main"
 

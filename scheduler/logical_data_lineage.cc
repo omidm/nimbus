@@ -45,11 +45,13 @@
 namespace nimbus {
 
 LogicalDataLineage::LogicalDataLineage() {
+  last_version_ = NIMBUS_UNDEFINED_DATA_VERSION;
 }
 
 LogicalDataLineage::LogicalDataLineage(
     const logical_data_id_t& ldid) :
   ldid_(ldid) {
+  last_version_ = NIMBUS_UNDEFINED_DATA_VERSION;
 }
 
 LogicalDataLineage::LogicalDataLineage(
@@ -58,6 +60,7 @@ LogicalDataLineage::LogicalDataLineage(
     const Index& parents_index) :
   ldid_(ldid), chain_(chain),
   parents_index_(parents_index) {
+  last_version_ = NIMBUS_UNDEFINED_DATA_VERSION;
 }
 
 LogicalDataLineage::LogicalDataLineage(
@@ -65,6 +68,7 @@ LogicalDataLineage::LogicalDataLineage(
   ldid_ = other.ldid_;
   chain_ = other.chain_;
   parents_index_ = other.parents_index_;
+  last_version_ = other.last_version_;
 }
 
 LogicalDataLineage::~LogicalDataLineage() {
@@ -115,6 +119,7 @@ LogicalDataLineage& LogicalDataLineage::operator= (
   ldid_ = right.ldid_;
   chain_ = right.chain_;
   parents_index_ = right.parents_index_;
+  last_version_ = right.last_version_;
   return *this;
 }
 
@@ -123,7 +128,7 @@ bool LogicalDataLineage::AppendLdlEntry(
     const data_version_t& version,
     const job_depth_t& job_depth,
     const bool& sterile) {
-  assert(LastVersionInChain() < version);
+  assert(last_version_ < version);
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
@@ -191,8 +196,8 @@ bool LogicalDataLineage::CleanChain(
   return true;
 }
 
-data_version_t LogicalDataLineage::LastVersionInChain() {
-  return chain_.rbegin()->version();
+data_version_t LogicalDataLineage::last_version() {
+  return last_version_;
 }
 
 bool LogicalDataLineage::LookUpVersion(
