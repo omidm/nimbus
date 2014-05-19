@@ -71,6 +71,12 @@ namespace nimbus {
 
     LdlMap& operator= (const LdlMap& right);
 
+    bool DefineData(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const job_depth_t& job_depth,
+        const bool& sterile);
+
     bool AppendLdlEntry(
         const logical_data_id_t ldid,
         const job_id_t& job_id,

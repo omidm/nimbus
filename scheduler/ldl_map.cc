@@ -80,6 +80,22 @@ LdlMap& LdlMap::operator= (
   return *this;
 }
 
+bool LdlMap::DefineData(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const job_depth_t& job_depth,
+    const bool& sterile) {
+  if (table_.count(ldid) == 0) {
+    LogicalDataLineage ldl(ldid);
+    ldl.AppendLdlEntry(job_id, NIMBUS_INIT_DATA_VERSION, job_depth, sterile);
+    table_[ldid] = ldl;
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+    exit(-1);
+    return false;
+  }
+}
 
 bool LdlMap::AppendLdlEntry(
     const logical_data_id_t ldid,
@@ -92,7 +108,7 @@ bool LdlMap::AppendLdlEntry(
   if (iter != table_.end()) {
     return iter->second.AppendLdlEntry(job_id, version, job_depth, sterile);
   } else {
-    dbg(DBG_ERROR, "ERROR: ldid %lu does not exist in the ldl_map");
+    dbg(DBG_ERROR, "ERROR: ldid %lu does not exist in the ldl_map.\n");
     exit(-1);
     return false;
   }
