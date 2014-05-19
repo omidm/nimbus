@@ -103,6 +103,7 @@ void Scheduler::SchedulerCoreProcessor() {
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
     RemoveObsoleteJobEntries();
+    // CleanLdlMap();
     TerminationProcedure();
 
     log_.StopTimer();

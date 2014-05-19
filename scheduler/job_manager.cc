@@ -911,7 +911,19 @@ size_t JobManager::ResolveDataVersions() {
           }
           job->set_vmap_write(vmap);
 
-          // TODO(omidm): clear meta before set and update the ldl.
+          // Clear meta before set and update the ldl.
+          log_merge_.ResumeTimer();
+
+          job->meta_before_set()->Clear();
+
+          std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+          for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+            data_version_t v_out;
+            vmap->query_entry(it->first, &v_out);
+            ldl_map_.InsertParentLdlEntry(
+                it->first, job->job_id(), v_out, job->job_depth(), job->sterile());
+          }
+          log_merge_.StopTimer();
 
           log_nonsterile_.StopTimer();
         }

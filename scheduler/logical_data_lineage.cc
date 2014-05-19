@@ -134,6 +134,7 @@ bool LogicalDataLineage::AppendLdlEntry(
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
   if (!sterile) {
+    std::cout << (--(chain_.end()))->version() << std::endl;
     parents_index_.push_back(--(chain_.end()));
   }
 
@@ -161,6 +162,7 @@ bool LogicalDataLineage::InsertParentLdlEntry(
 
   Index::reverse_iterator iit = parents_index_.rbegin();
   for (; iit != parents_index_.rend(); ++iit) {
+    std::cout << (*iit)->version() << std::endl;
     if ((*iit)->version() <= version) {
       break;
     }
@@ -169,6 +171,7 @@ bool LogicalDataLineage::InsertParentLdlEntry(
 
   // TODO(omidm) : remove this check!
   for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
+    std::cout << (*iit)->job_id() << std::endl;
     assert(!(*iit)->sterile());
   }
 

@@ -87,6 +87,8 @@ namespace nimbus {
 
     void InvalidateNegativeQueryCache();
 
+    void Clear();
+
   private:
     Table table_;
     Cache positive_query_;

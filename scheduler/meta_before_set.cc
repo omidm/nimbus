@@ -162,5 +162,11 @@ void MetaBeforeSet::InvalidateNegativeQueryCache() {
   negative_query_.clear();
 }
 
+void MetaBeforeSet::Clear() {
+  table_.clear();
+  positive_query_.clear();
+  negative_query_.clear();
+  is_root_ = true;
+}
 
 }  // namespace nimbus
