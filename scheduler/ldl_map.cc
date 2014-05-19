@@ -80,4 +80,55 @@ LdlMap& LdlMap::operator= (
   return *this;
 }
 
+
+bool LdlMap::AppendLdlEntry(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth,
+    const bool& sterile) {
+  Table::iterator iter;
+  iter = table_.find(ldid);
+  if (iter != table_.end()) {
+    return iter->second.AppendLdlEntry(job_id, version, job_depth, sterile);
+  } else {
+    dbg(DBG_ERROR, "ERROR: ldid %lu does not exist in the ldl_map");
+    exit(-1);
+    return false;
+  }
+}
+
+bool LdlMap::InsertParentLdlEntry(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth,
+    const bool& sterile) {
+  Table::iterator iter;
+  iter = table_.find(ldid);
+  if (iter != table_.end()) {
+    return iter->second.InsertParentLdlEntry(job_id, version, job_depth, sterile);
+  } else {
+    dbg(DBG_ERROR, "ERROR: ldid %lu does not exist in the ldl_map");
+    exit(-1);
+    return false;
+  }
+}
+
+bool LdlMap::CleanTable(
+    const IDSet<job_id_t>& live_parents) {
+  Table::iterator iter;
+  for (iter = table_.begin(); iter != table_.end(); ++iter) {
+    iter->second.CleanChain(live_parents);
+  }
+  return true;
+}
+
+bool LdlMap::LookUpVersion(
+    logical_data_id_t ldid,
+    boost::shared_ptr<MetaBeforeSet> mbs,
+    data_version_t *version) {
+  return table_[ldid].LookUpVersion(mbs, version);
+}
+
 }  // namespace nimbus

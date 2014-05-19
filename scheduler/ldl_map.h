@@ -71,6 +71,28 @@ namespace nimbus {
 
     LdlMap& operator= (const LdlMap& right);
 
+    bool AppendLdlEntry(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth,
+        const bool& sterile);
+
+    bool InsertParentLdlEntry(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth,
+        const bool& sterile);
+
+    bool CleanTable(
+        const IDSet<job_id_t>& live_parents);
+
+    bool LookUpVersion(
+        logical_data_id_t ldid,
+        boost::shared_ptr<MetaBeforeSet> mbs,
+        data_version_t *version);
+
   private:
     Table table_;
   };
