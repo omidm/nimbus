@@ -106,7 +106,7 @@ namespace nimbus {
         boost::shared_ptr<MetaBeforeSet> mbs,
         data_version_t *version);
 
-    data_version_t LastVersionInChain();
+    data_version_t last_version();
 
   private:
     logical_data_id_t ldid_;

@@ -129,6 +129,7 @@ bool LogicalDataLineage::AppendLdlEntry(
     const job_depth_t& job_depth,
     const bool& sterile) {
   assert(last_version_ < version);
+  last_version_ = version;
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
@@ -145,6 +146,10 @@ bool LogicalDataLineage::InsertParentLdlEntry(
     const job_depth_t& job_depth,
     const bool& sterile) {
   assert(!sterile);
+
+  if (version > last_version_) {
+    last_version_ = version;
+  }
 
   Chain::reverse_iterator it = chain_.rbegin();
   for (; it != chain_.rend(); ++it) {
