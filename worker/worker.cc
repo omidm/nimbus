@@ -385,9 +385,9 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 }
 
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
-  profiler_thread_->interrupt();
-  profiler_thread_->join();
-  ProfilerMalloc::Exit();
+  // profiler_thread_->interrupt();
+  // profiler_thread_->join();
+  // ProfilerMalloc::Exit();
   exit(cm->exit_status().elem());
 }
 
@@ -405,8 +405,8 @@ void Worker::SetupSchedulerInterface() {
   // client_thread_ = new boost::thread(
   //     boost::bind(&SchedulerClient::run, client_));
 
-  profiler_thread_ = new boost::thread(
-      boost::bind(&Profiler::Run, &profiler_, client_, id_));
+  // profiler_thread_ = new boost::thread(
+  //     boost::bind(&Profiler::Run, &profiler_, client_, id_));
 }
 
 void Worker::LoadSchedulerCommands() {

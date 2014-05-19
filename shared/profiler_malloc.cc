@@ -54,13 +54,14 @@ namespace nimbus {
 
   static pthread_mutex_t mutex_ = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
+  /*
   extern "C"
   void *malloc(size_t size) {
     static void *(*mallocp)(size_t size);
     char *error;
     void *ptr;
 
-    /* get address of libc malloc */
+    // get address of libc malloc.
     if (!mallocp) {
       mallocp = reinterpret_cast<void *(*)(size_t size)>(dlsym(RTLD_NEXT, "malloc"));
       if ((error = dlerror()) != NULL) {
@@ -93,7 +94,7 @@ namespace nimbus {
     static void (*freep)(void *ptr);
     char *error;
 
-    /* get address of libc free */
+    // get address of libc free.
     if (!freep) {
       freep = reinterpret_cast<void (*)(void *ptr)>(dlsym(RTLD_NEXT, "free"));
       if ((error = dlerror()) != NULL) {
@@ -118,6 +119,7 @@ namespace nimbus {
     }
     freep(ptr);
   }
+  */
 
   bool ProfilerMalloc::IsInit() {
     return init_;
