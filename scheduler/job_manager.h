@@ -60,6 +60,7 @@
 #include "scheduler/version_manager.h"
 #include "scheduler/version_operator.h"
 #include "scheduler/physical_data.h"
+#include "scheduler/ldl_map.h"
 
 namespace nimbus {
 class JobManager {
@@ -133,7 +134,7 @@ class JobManager {
     // bool ResolveJobDataVersions(JobEntry* job);
     // size_t ResolveVersions();
 
-    LogicalDataLineage ldl_;
+    LdlMap ldl_map_;
 
     JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;

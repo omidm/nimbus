@@ -427,12 +427,11 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
-    if (ldl_.table_p()->count(ldid) == 0) {
-      ldl_.table_p()->operator[](ldid).push_back(
-          std::pair<job_id_t, data_version_t> (job_id, NIMBUS_INIT_DATA_VERSION));
-    } else {
-      dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
-      exit(-1);
+    if (job->sterile()) {
+      dbg(DBG_ERROR, "ERROR: sterile job cannot define data.\n");
+    }
+    if (!ldl_map_.DefineData(ldid, job_id, job->job_depth(), job->sterile())) {
+      dbg(DBG_ERROR, "ERROR: could not define data in ldl_map for ldid %lu.\n", ldid);
     }
   } else {
     dbg(DBG_ERROR, "ERROR: parent of define data with job id %lu is not in the graph.\n", job_id);
@@ -863,8 +862,8 @@ size_t JobManager::ResolveDataVersions() {
           for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
             data_version_t version;
             if (job->vmap_read()->query_entry(*itw, &version)) {
-              ldl_.table_p()->operator[](*itw).push_back(
-                  std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
+              ldl_map_.AppendLdlEntry(
+                  *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
               vmap->set_entry(*itw, version + 1);
             } else {
               log_lookup_.ResumeTimer();
@@ -872,8 +871,8 @@ size_t JobManager::ResolveDataVersions() {
               bool found = LookUpVersion(job, *itw, &version);
               log_lookup_.StopTimer();
               if (found) {
-                ldl_.table_p()->operator[](*itw).push_back(
-                    std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
+                ldl_map_.AppendLdlEntry(
+                    *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
                 vmap->set_entry(*itw, version + 1);
               } else {
                 dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
@@ -892,8 +891,8 @@ size_t JobManager::ResolveDataVersions() {
           for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
             data_version_t version;
             if (job->vmap_read()->query_entry(*itw, &version)) {
-              ldl_.table_p()->operator[](*itw).push_back(
-                  std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
+              ldl_map_.AppendLdlEntry(
+                  *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
               vmap->set_entry(*itw, version + 1);
             } else {
               log_lookup_.ResumeTimer();
@@ -901,8 +900,8 @@ size_t JobManager::ResolveDataVersions() {
               bool found = LookUpVersion(job, *itw, &version);
               log_lookup_.StopTimer();
               if (found) {
-                ldl_.table_p()->operator[](*itw).push_back(
-                    std::pair<job_id_t, data_version_t> (job->job_id(), version + 1));
+                ldl_map_.AppendLdlEntry(
+                    *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
                 vmap->set_entry(*itw, version + 1);
               } else {
                 dbg(DBG_ERROR, "ERROR: could not resolve data id: %lu.\n", *itw); // NOLINT
@@ -1081,25 +1080,8 @@ void JobManager::PassDataVersionToJob(
 
 bool JobManager::LookUpVersion(JobEntry *job,
     logical_data_id_t ldid, data_version_t *version) {
-  LogicalDataLineage::Lineage lineage = ldl_.table_p()->operator[](ldid);
-  boost::shared_ptr<MetaBeforeSet> mbs = job->meta_before_set();
-
-  LogicalDataLineage::Lineage::const_reverse_iterator iter;
-  for (iter = lineage.rbegin(); iter != lineage.rend(); ++iter) {
-    JobEntry *j;
-    if (GetJobEntry(iter->first, j)) {
-      if (mbs->LookUpBeforeSetChain(j)) {
-        *version = iter->second;
-        return true;
-      }
-    } else {
-      // TODO(omidm): should not need job entry pointer.
-
-      dbg(DBG_ERROR, "ERROR, we do not handle this now!");
-      exit(-1);
-    }
-  }
-  return false;
+  return ldl_map_.LookUpVersion(
+      ldid, job->meta_before_set(), version);
 }
 
 
