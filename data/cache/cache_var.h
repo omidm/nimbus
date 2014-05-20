@@ -90,11 +90,18 @@ class CacheVar : public CacheObject {
          * instance was last updated
          * \param read_set is a data array corresponding to nimbus variables
          * \param read_region is the geometric region to read
+         * \param write_region is the geometric region to write (used if
+         * invalidate_read_minus_write = true)
+         * \param invalidate_read_mibus_write indicates whether to keep the
+         * data read into cache object, outside requested write_region valid.
+         * This is needed because some application functions will write to
+         * cache object regions that are not in the application job's write
+         * set.
          */
         void UpdateCache(const DataArray &read_set,
                          const GeometricRegion &read_region,
                          const GeometricRegion &write_region,
-                         bool invalidate_read_minus_write);
+                         bool invalidate_read_minus_write = false);
 
         /**
          * \brief Sets up mappings for data in write_sets, and also sets up the
