@@ -68,7 +68,7 @@ CacheStruct::CacheStruct(size_t num_variables) : num_variables_(num_variables),
  * (which is found based on geometric region of the data in cache and in
  * read_sets.
  */
-void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
+void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
                               const std::vector<DataArray> &read_sets,
                               const GeometricRegion &read_region) {
     size_t num_vars = var_type.size();
@@ -78,7 +78,7 @@ void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
     }
     std::vector<DataArray> diff(num_vars), flush(num_vars);
     for (size_t t = 0; t < num_vars; ++t) {
-        type_id_t type = var_type[t];
+        cache::type_id_t type = var_type[t];
         if (type > num_variables_) {
             dbg(DBG_WARN, "Invalid type %u passed to UpdateCache, ignoring it\n", type);
             continue;
@@ -111,7 +111,7 @@ void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
     FlushCache(var_type, flush);
     ReadToCache(var_type, diff, read_region);
     for (size_t t = 0; t < num_vars; ++t) {
-        type_id_t type = var_type[t];
+        cache::type_id_t type = var_type[t];
         const DataArray &diff_t = diff[t];
         DMap &data_map_t = data_maps_[type];
         for (size_t i = 0; i < diff_t.size(); ++i) {
@@ -129,7 +129,7 @@ void CacheStruct::UpdateCache(const std::vector<type_id_t> &var_type,
  * instance. Later, when the instance is released, these mappings and write
  * region are used to pull data into nimbus data instances when needed.
  */
-void CacheStruct::SetUpWrite(const std::vector<type_id_t> &var_type,
+void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                              const std::vector<DataArray> &write_sets,
                              const GeometricRegion &write_region) {
     size_t num_vars = var_type.size();
@@ -140,7 +140,7 @@ void CacheStruct::SetUpWrite(const std::vector<type_id_t> &var_type,
     // TODO(Chinmayee): Twin data - imeplementation incomplete
     std::vector<DataArray> diff(num_vars), flush(num_vars);
     for (size_t t = 0; t < num_vars; ++t) {
-        type_id_t type = var_type[t];
+        cache::type_id_t type = var_type[t];
         if (type > num_variables_) {
             dbg(DBG_WARN, "Invalid type %u passed to SetUpWrite, ignoring it\n", type);
             continue;
@@ -170,7 +170,7 @@ void CacheStruct::SetUpWrite(const std::vector<type_id_t> &var_type,
     }
     FlushCache(var_type, flush);
     for (size_t t = 0; t < num_vars; ++t) {
-        type_id_t type = var_type[t];
+        cache::type_id_t type = var_type[t];
         const DataArray &diff_t = diff[t];
         DMap &data_map_t = data_maps_[type];
         DataSet &write_back_t = write_backs_[type];
@@ -199,7 +199,7 @@ void CacheStruct::PullData(Data *d) {
         DataSet &write_back_t = write_backs_[t];
         if (write_back_t.find(d) == write_back_t.end())
             continue;
-        std::vector<type_id_t> var_type(1, t);
+        std::vector<cache::type_id_t> var_type(1, t);
         std::vector<DataArray> write_sets(1, DataArray(1, d));
         GeometricRegion dreg = d->region();
         GeometricRegion wreg = GeometricRegion::
@@ -220,11 +220,11 @@ void CacheStruct::PullData(Data *d) {
  * - if you want write set included in the cost function, either add  another
  * argument or append it to read set that is passed to GetDistance.
  */
-cache::distance_t CacheStruct::GetDistance(const std::vector<type_id_t> &var_type,
+cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &var_type,
                                            const std::vector<DataArray> &read_sets) const {
     cache::distance_t cur_distance = 0;
     for (size_t t = 0; t < num_variables_; ++t) {
-        type_id_t type = var_type[t];
+        cache::type_id_t type = var_type[t];
         if (type > num_variables_) {
             dbg(DBG_WARN, "Invalid type %u passed to SetUpWrite, ignoring it\n", type);
             continue;
@@ -264,9 +264,9 @@ void CacheStruct::UnsetData(Data *d) {
  * argument. This function is like PullData(...), except that it avoids some
  * checks, and locking. It should be used by methods of CacheStruct only.
  */
-void CacheStruct::FlushToData(Data *d, type_id_t t) {
+void CacheStruct::FlushToData(Data *d, cache::type_id_t t) {
     DataSet &write_back_t = write_backs_[t];
-    std::vector<type_id_t> var_type(1, t);
+    std::vector<cache::type_id_t> var_type(1, t);
     std::vector<DataArray> write_sets(1, DataArray(1, d));
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
@@ -281,7 +281,7 @@ void CacheStruct::FlushToData(Data *d, type_id_t t) {
  * semantics are similar to FlushToData(...). This function should be used by
  * methods of CacheStruct only.
  */
-void CacheStruct::FlushCache(const std::vector<type_id_t> &var_type,
+void CacheStruct::FlushCache(const std::vector<cache::type_id_t> &var_type,
                              const std::vector<DataArray> &flush_sets) {
     size_t num_vars = var_type.size();
     if (flush_sets.size() != num_vars) {
@@ -291,7 +291,7 @@ void CacheStruct::FlushCache(const std::vector<type_id_t> &var_type,
     WriteFromCache(var_type, flush_sets, write_region_);
     for (size_t t = 0; t < num_vars; ++t) {
         const DataArray &flush_t = flush_sets[t];
-        type_id_t type = var_type[t];
+        cache::type_id_t type = var_type[t];
         DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < flush_t.size(); ++i) {
             Data *d = flush_t[i];

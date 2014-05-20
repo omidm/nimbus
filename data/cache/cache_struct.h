@@ -55,7 +55,6 @@
 
 namespace nimbus {
 
-typedef size_t type_id_t;
 typedef std::set<Data *> DataSet;
 
 /**
@@ -98,7 +97,7 @@ class CacheStruct : public CacheObject {
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \param read_region is the geometric region to read
          */
-        void UpdateCache(const std::vector<type_id_t> &var_type,
+        void UpdateCache(const std::vector<cache::type_id_t> &var_type,
                          const std::vector<DataArray> &read_sets,
                          const GeometricRegion &read_region);
 
@@ -109,7 +108,7 @@ class CacheStruct : public CacheObject {
          * \param write_sets is a list of data arrays corresponding to nimbus variables
          * \param write_region is the geometric region to write
          */
-        void SetUpWrite(const std::vector<type_id_t> &var_type,
+        void SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                         const std::vector<DataArray> &write_sets,
                         const GeometricRegion &write_region);
 
@@ -128,7 +127,7 @@ class CacheStruct : public CacheObject {
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \return Returns distance (cost)
          */
-        cache::distance_t GetDistance(const std::vector<type_id_t> &var_type,
+        cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
                                       const std::vector<DataArray> &read_sets) const;
 
         /**
@@ -145,7 +144,7 @@ class CacheStruct : public CacheObject {
          * \param t denotes the type of nimbus variable,
          * as explained in the class description
          */
-        void FlushToData(Data *d, type_id_t t);
+        void FlushToData(Data *d, cache::type_id_t t);
 
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
@@ -153,7 +152,7 @@ class CacheStruct : public CacheObject {
          * as explained in the class description
          * \param flush_sets is a list of data arrays corresponding to nimbus variables
          */
-        void FlushCache(const std::vector<type_id_t> &var_type,
+        void FlushCache(const std::vector<cache::type_id_t> &var_type,
                         const std::vector<DataArray> &flush_sets);
 
         // number of nimbus variables
@@ -176,7 +175,7 @@ class CacheStruct : public CacheObject {
          * writer. It provides the transformation from a set of nimbus data to
          * (application) cached instance.
          */
-        virtual void ReadToCache(const std::vector<type_id_t> &var_type,
+        virtual void ReadToCache(const std::vector<cache::type_id_t> &var_type,
                                  const std::vector<DataArray> &read_sets,
                                  const GeometricRegion &read_region) = 0;
 
@@ -190,7 +189,7 @@ class CacheStruct : public CacheObject {
          * writer. It provides the transformation from (application) cached
          * instance to nimbus data.
          */
-        virtual void WriteFromCache(const std::vector<type_id_t> &var_type,
+        virtual void WriteFromCache(const std::vector<cache::type_id_t> &var_type,
                                     const std::vector<DataArray> &write_sets,
                                     const GeometricRegion &write_region) = 0;
 };  // class CacheStruct
