@@ -92,7 +92,9 @@ class CacheVar : public CacheObject {
          * \param read_region is the geometric region to read
          */
         void UpdateCache(const DataArray &read_set,
-                         const GeometricRegion &read_region);
+                         const GeometricRegion &read_region,
+                         const GeometricRegion &write_region,
+                         bool invalidate_read_minus_write);
 
         /**
          * \brief Sets up mappings for data in write_sets, and also sets up the

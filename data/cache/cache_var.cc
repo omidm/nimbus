@@ -66,34 +66,47 @@ CacheVar::CacheVar() {}
  * read_set.
  */
 void CacheVar::UpdateCache(const DataArray &read_set,
-                           const GeometricRegion &read_region) {
-    DataArray diff, flush;
+                           const GeometricRegion &read_region,
+                           const GeometricRegion &write_region,
+                           bool invalidate_read_minus_write) {
+    DataArray diff, flush, to_map;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it == data_map_.end()) {
-            // d->FlushToData(this);
+            // d->SyncData();
             diff.push_back(d);
+            if (!invalidate_read_minus_write ||
+                write_region.Covers(&dreg)) {
+                to_map.push_back(d);
+            }
         } else {
             Data *d_old = it->second;
             if (d_old != d) {
-                // d->FlushToData(this);
+                // d->SyncData();
                 diff.push_back(d);
-                // d_old->UnsetCacheObjectMapping(this);
                 if (write_back_.find(d) != write_back_.end()) {
                     flush.push_back(d);
                 }
+                if (!invalidate_read_minus_write ||
+                    write_region.Covers(&dreg)) {
+                    to_map.push_back(d);
+                }
+                data_map_.erase(it);
+                // d_old->UnsetCacheObjectMapping(this);
             }
         }
     }
     FlushCache(flush);
     ReadToCache(diff, read_region);
-    for (size_t i = 0; i < diff.size(); ++i) {
-        Data *d = diff.at(i);
+    for (size_t i = 0; i < to_map.size(); ++i) {
+        Data *d = to_map.at(i);
         GeometricRegion dreg = d->region();
-        data_map_[dreg] = d;
-        // d->SetUpCacheObjectMapping(this);
+        if (!invalidate_read_minus_write || write_region.Covers(&dreg)) {
+            data_map_[dreg] = d;
+            // d->SetUpCacheObjectMapping(this);
+        }
     }
 }
 
@@ -117,10 +130,11 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
             Data *d_old = it->second;
             if (d_old != d) {
                 diff.push_back(d);
-                // d_old->UnsetCacheObjectMapping(this);
                 if (write_back_.find(d) != write_back_.end()) {
                     flush.push_back(d);
                 }
+                data_map_.erase(it);
+                // d_old->UnsetCacheObjectMapping(this);
             }
         }
     }

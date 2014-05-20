@@ -111,6 +111,13 @@ bool CacheObject::IsAvailable(CacheAccess access) const {
 /**
  * \details
  */
+cache::co_id_t CacheObject::id() const {
+    return id_;
+}
+
+/**
+ * \details
+ */
 GeometricRegion CacheObject::object_region() const {
     return object_region_;
 }

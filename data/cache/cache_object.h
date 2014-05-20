@@ -111,6 +111,12 @@ class CacheObject {
         virtual void UnsetData(Data *d) = 0;
 
         /**
+         * \brief Accessor for id_ member
+         * \return Instance's prototype id, type co_id_t
+         */
+        cache::co_id_t id() const;
+
+        /**
          * \brief Accessor for object_region_ member
          * \return Instance's object_region_, of type GeometricRegion
          */

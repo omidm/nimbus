@@ -100,7 +100,9 @@ class CacheStruct : public CacheObject {
          */
         void UpdateCache(const std::vector<cache::type_id_t> &var_type,
                          const std::vector<DataArray> &read_sets,
-                         const GeometricRegion &read_region);
+                         const GeometricRegion &read_region,
+                         const GeometricRegion &write_region,
+                         bool invalidate_read_minus_write);
 
         /**
          * \brief Sets up mappings for data in write_sets, and also sets up the
