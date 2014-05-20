@@ -54,7 +54,7 @@ namespace nimbus {
 
   class LdlMap {
   public:
-    typedef boost::unordered_map<logical_data_id_t, LogicalDataLineage> Table;
+    typedef boost::unordered_map<logical_data_id_t, LogicalDataLineage*> Table;
 
     LdlMap();
     explicit LdlMap(const Table& table);
