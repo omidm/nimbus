@@ -40,6 +40,7 @@
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_THREAD_QUEUE_H_
 
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
+#include <exception>
 #include <list>
 #include <vector>
 #include "shared/nimbus.h"
@@ -48,6 +49,9 @@
 namespace nimbus {
 
 class NimbusTaskThread;
+
+class ExceptionNimbusTaskThreadFinish : public std::exception {
+};
 
 class NimbusThreadQueue
     : public PhysBAM::THREAD_QUEUE, public ThreadQueueProto {
@@ -64,6 +68,7 @@ class NimbusThreadQueue
   struct EXITER : public TASK {
     void Run(const int threadid) {
       pthread_exit(0);
+      // throw ExceptionNimbusTaskThreadFinish();
     }
   };
   int get_active_threads();
@@ -84,16 +89,16 @@ class NimbusTaskThread {
     queue_ = nimbus_thread_queue;
     thread_rank_ = thread_rank;
   }
+  NimbusTaskThread() {}
   ~NimbusTaskThread() {};
   static void* ThreadRoutine(void* parameter) {
     NimbusTaskThread* nimbus_task_thread =
         static_cast<NimbusTaskThread*>(parameter);
     nimbus_task_thread->Run();
-    assert(false);
     return NULL;
   }
   void Run() {
-    while (1) {
+    while (true) {
       pthread_mutex_lock(&queue_->queue_lock);
       while (queue_->queue.empty() ||
              queue_->active_threads > queue_->thread_quota){
@@ -111,6 +116,14 @@ class NimbusTaskThread {
       pthread_mutex_unlock(&queue_->queue_lock);
       // PhysBAM rank starts from 1.
       task->Run(thread_rank_ + 1);
+      /*
+      try {
+        task->Run(thread_rank_ + 1);
+      } catch (ExceptionNimbusTaskThreadFinish finish_exception) {
+        // Task will be deleted elsewhere.
+        break;
+      }
+      */
       delete task;
     }
   }
@@ -119,6 +132,36 @@ class NimbusTaskThread {
   int thread_rank_;
   NimbusThreadQueue* queue_;
 };
+
+/*
+class NimbusTaskThreadPool {
+ public:
+  NimbusTaskThreadPool() {
+    pthread_mutex_init(&list_lock_, NULL);
+  }
+  ~NimbusTaskThreadPool() {
+    pthread_mutex_destroy(&list_lock_);
+  }
+  bool LaunchThread(NimbusThreadQueue* thread_queue, int thread_rank) {
+    pthread_mutex_lock(&list_lock_);
+    if (free_list_.empty()) {
+      free_list_.push_front(new NimbusTaskThread());
+    }
+    NimbusTaskThread* nimbus_task_thread = free_list_.front();
+    free_list_.pop_front();
+    pthread_mutex_unlock(&list_lock_);
+    nimbus_task_thread->SetParameterAndTrigger(this, thread_queue, thread_rank);
+  }
+  void ReturnThread(NimbusTaskThread* nimbus_task_thread) {
+    pthread_mutex_lock(&list_lock_);
+    free_list_.push_front(nimbus_task_thread);
+    pthread_mutex_unlock(&list_lock_);
+  }
+ private:
+  pthread_mutex_t list_lock_;
+  std::list<NimbusTaskThreadPool*> free_list_;
+};
+*/
 
 }  // namespace nimbus
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_THREAD_QUEUE_H_

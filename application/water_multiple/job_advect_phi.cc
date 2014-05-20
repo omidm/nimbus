@@ -96,7 +96,10 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect phi job.");
-  driver->AdvectPhiImpl(this, da, dt);
+  {
+    nimbus::Timer timer(std::string("advect_phi_") + id().toString());
+    driver->AdvectPhiImpl(this, da, dt);
+  }
 
   *thread_queue_hook() = NULL;
   // Free resources.

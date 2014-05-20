@@ -96,7 +96,11 @@ void JobModifyLevelsetPartTwo::Execute(nimbus::Parameter params, const nimbus::D
                                this, da, example, driver);
     *thread_queue_hook() = example->nimbus_thread_queue;
 
-    driver->ModifyLevelSetPartTwoImpl(this, da, init_config.local_region, dt);
+    {
+      nimbus::Timer timer(std::string("modify_levelset_part_two_")
+                          + id().toString());
+      driver->ModifyLevelSetPartTwoImpl(this, da, init_config.local_region, dt);
+    }
 
     *thread_queue_hook() = NULL;
     // free resources

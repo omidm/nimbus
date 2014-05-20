@@ -95,7 +95,10 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
                                this, da, example, driver);
     *thread_queue_hook() = example->nimbus_thread_queue;
 
-    driver->DeleteParticlesImpl(this, da, dt);
+    {
+      nimbus::Timer timer(std::string("delete_particles_") + id().toString());
+      driver->DeleteParticlesImpl(this, da, dt);
+    }
 
     *thread_queue_hook() = NULL;
     // free resources

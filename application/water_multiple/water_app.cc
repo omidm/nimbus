@@ -47,6 +47,7 @@
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
+#include "shared/timer.h"
 #include "stdio.h"
 
 namespace application {
@@ -57,6 +58,7 @@ namespace application {
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
     void WaterApp::Load() {
+        nimbus::Timer::Initialize();
 
         dbg_add_mode(APP_LOG_STR);
         dbg_add_mode(TRANSLATE_STR);
