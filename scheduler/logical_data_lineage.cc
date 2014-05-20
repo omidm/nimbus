@@ -128,14 +128,46 @@ bool LogicalDataLineage::AppendLdlEntry(
     const data_version_t& version,
     const job_depth_t& job_depth,
     const bool& sterile) {
+  if (ldid_ == 100001)
+    std::cout << "1xxxxxxxx1\n";
   assert(last_version_ < version);
   last_version_ = version;
+
+  // TODO(omidm) : remove this check!
+  Chain::reverse_iterator it;
+  for (it = chain_.rbegin(); it != chain_.rend(); ++it) {
+    if (it->version() <= version) {
+      break;
+    }
+  }
+
+  Index::reverse_iterator iit;
+  for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
+    std::cout << (*iit)->job_id() << std::endl;
+    std::cout << (*iit)->version() << std::endl;
+    std::cout << (*iit)->job_depth() << std::endl;
+    assert(!(*iit)->sterile());
+  }
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
   if (!sterile) {
     std::cout << (--(chain_.end()))->version() << std::endl;
     parents_index_.push_back(--(chain_.end()));
+  }
+
+  // TODO(omidm) : remove this check!
+  for (it = chain_.rbegin(); it != chain_.rend(); ++it) {
+    if (it->version() <= version) {
+      break;
+    }
+  }
+
+  for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
+    std::cout << (*iit)->job_id() << std::endl;
+    std::cout << (*iit)->version() << std::endl;
+    std::cout << (*iit)->job_depth() << std::endl;
+    assert(!(*iit)->sterile());
   }
 
   return true;
@@ -158,16 +190,21 @@ bool LogicalDataLineage::InsertParentLdlEntry(
       break;
     }
   }
+  Chain::iterator it1 = it.base();
   chain_.insert(it.base(), LdlEntry(job_id, version, job_depth, sterile));
 
   Index::reverse_iterator iit = parents_index_.rbegin();
   for (; iit != parents_index_.rend(); ++iit) {
     std::cout << (*iit)->version() << std::endl;
+    std::cout << (*iit)->job_id() << std::endl;
+    std::cout << (*iit)->job_depth() << std::endl;
     if ((*iit)->version() <= version) {
       break;
     }
   }
-  parents_index_.insert(iit.base(), it.base());
+
+  Chain::iterator it2 = it.base();
+  parents_index_.insert(iit.base(), --it.base());
 
   // TODO(omidm) : remove this check!
   for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
