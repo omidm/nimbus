@@ -38,8 +38,8 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_DATA_CACHE_UTILS_H_
-#define NIMBUS_DATA_CACHE_UTILS_H_
+#ifndef NIMBUS_DATA_CACHE_CACHE_DEFS_H_
+#define NIMBUS_DATA_CACHE_CACHE_DEFS_H_
 
 #include "shared/geometric_region.h"
 #include "shared/idset.h"
@@ -54,9 +54,10 @@ namespace cache {
 
 /* Types. */
 typedef size_t type_id_t;
+typedef size_t co_id_t;
 typedef uint64_t distance_t;
 
 }  // namespace cache
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_UTILS_H_
+#endif  // NIMBUS_DATA_CACHE_CACHE_DEFS_H_

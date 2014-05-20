@@ -38,11 +38,11 @@
 
 #include <vector>
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_struct.h"
 #include "data/cache/cache_table.h"
 #include "data/cache/cache_var.h"
-#include "data/cache/utils.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 

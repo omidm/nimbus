@@ -47,16 +47,16 @@
 #include <string>
 #include <vector>
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
-#include "worker/data.h"
 
 namespace nimbus {
 
-typedef size_t type_id_t;
+class Data;
+typedef std::vector<Data *> DataArray;
 typedef std::set<Data *> DataSet;
+class GeometricRegion;
 
 /**
  * \class CacheVar

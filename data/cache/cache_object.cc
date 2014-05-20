@@ -44,8 +44,8 @@
 #include <string>
 #include <vector>
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
-#include "data/cache/utils.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
@@ -53,7 +53,7 @@
 
 namespace nimbus {
 
-size_t CacheObject::ids_allocated_ = 0;
+cache::co_id_t CacheObject::ids_allocated_ = 0;
 
 /**
  * \details

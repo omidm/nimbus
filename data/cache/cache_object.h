@@ -47,15 +47,15 @@
 #include <string>
 #include <vector>
 
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
+#include "data/cache/cache_defs.h"
 #include "shared/nimbus_types.h"
-#include "worker/data.h"
 
 namespace nimbus {
 
-typedef size_t type_id_t;
+class Data;
+typedef std::vector<Data *> DataArray;
 typedef std::set<Data *> DataSet;
+class GeometricRegion;
 
 /**
  * \class CacheObject
@@ -125,13 +125,13 @@ class CacheObject {
     private:
         /**
          * \brief Setter for id_ member
-         * \param id, of type size_t
+         * \param id, of type cache::co_id_t
          */
-        void set_id(size_t id);
+        void set_id(cache::co_id_t id);
 
         // prototype information
-        static size_t ids_allocated_;
-        size_t id_;
+        static cache::co_id_t ids_allocated_;
+        cache::co_id_t id_;
 
         // access information
         CacheAccess access_;
