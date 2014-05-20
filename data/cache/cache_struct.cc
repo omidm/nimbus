@@ -107,8 +107,8 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
                 if (d_old != d) {
                     // d->SyncData(this);
                     diff_t.push_back(d);
-                    if (write_back_t.find(d) != write_back_t.end()) {
-                        flush_t.push_back(d);
+                    if (write_back_t.find(d_old) != write_back_t.end()) {
+                        flush_t.push_back(d_old);
                     }
                     if (!invalidate_read_minus_write ||
                         write_region.Covers(&dreg)) {
@@ -174,10 +174,11 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                 Data *d_old = it->second;
                 if (d_old != d) {
                     diff_t.push_back(d);
-                    // d_old->UnsetCacheObjectMapping(this);
-                    if (write_back_t.find(d) != write_back_t.end()) {
-                        flush_t.push_back(d);
+                    if (write_back_t.find(d_old) != write_back_t.end()) {
+                        flush_t.push_back(d_old);
                     }
+                    data_map_.erase(it);
+                    // d_old->UnsetCacheObjectMapping(this);
                 }
             }
         }

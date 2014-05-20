@@ -86,8 +86,8 @@ void CacheVar::UpdateCache(const DataArray &read_set,
             if (d_old != d) {
                 // d->SyncData();
                 diff.push_back(d);
-                if (write_back_.find(d) != write_back_.end()) {
-                    flush.push_back(d);
+                if (write_back_.find(d_old) != write_back_.end()) {
+                    flush.push_back(d_old);
                 }
                 if (!invalidate_read_minus_write ||
                     write_region.Covers(&dreg)) {
@@ -130,8 +130,8 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
             Data *d_old = it->second;
             if (d_old != d) {
                 diff.push_back(d);
-                if (write_back_.find(d) != write_back_.end()) {
-                    flush.push_back(d);
+                if (write_back_.find(d_old) != write_back_.end()) {
+                    flush.push_back(d_old);
                 }
                 data_map_.erase(it);
                 // d_old->UnsetCacheObjectMapping(this);
@@ -219,7 +219,8 @@ void CacheVar::FlushToData(Data *d) {
 /**
  * \details FlushCache(...) flushes all data passed to it, The assumptions and
  * semantics are similar to FlushToData(...). This function should be used by
- * methods of CacheVar only.
+ * methods of CacheVar only. However, this function does not check if data in
+ * flush_set is in the write_back_ set, making it unsafe.
  */
 void CacheVar::FlushCache(const DataArray &flush_set) {
     WriteFromCache(flush_set, write_region_);
