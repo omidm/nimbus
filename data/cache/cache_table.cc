@@ -33,6 +33,9 @@
  */
 
 /*
+ * A CacheTable contains a map from geometric region to application cache
+ * objects.
+ *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 

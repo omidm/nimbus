@@ -33,6 +33,9 @@
  */
 
 /*
+ * CacheManager is the interface for application jobs to cache. Application
+ * jobs send their request for application objects to the cache manager.
+ *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
@@ -49,10 +52,24 @@
 
 namespace nimbus {
 
+/**
+ * \details
+ */
 CacheManager::CacheManager() {
     pool_ = new Pool();
 }
 
+/**
+ * \details CacheManager checks if an instance with requested application
+ * object region and prototype id is present and available for use. If not, it
+ * creates a new instance, and adds the instance to its 2-level map. It then
+ * updates the instance as being used in access mode, updates the instance to
+ * refelct any unread data, and sets up write set (flush data that may be
+ * replaced, set dirty mappings etc.)
+ * \note it is assumed that an application job will never write to
+ * regions that are not in it's read + write set. If this assumption proves to
+ * be false, then we should change invalidate_read_minus_write accordingly.
+ */
 CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   const GeometricRegion &read_region,
                                   const DataArray &write_set,
@@ -85,6 +102,17 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     return cv;
 }
 
+/**
+ * \details CacheManager checks if an instance with requested application
+ * object region and prototype id is present and available for use. If not, it
+ * creates a new instance, and adds the instance to its 2-level map. It then
+ * updates the instance as being used in access mode, updates the instance to
+ * refelct any unread data, and sets up write set (flush data that may be
+ * replaced, set dirty mappings etc.)
+ * \note it is assumed that an application job will never write to
+ * regions that are not in it's read + write set. If this assumption proves to
+ * be false, then we should change invalidate_read_minus_write accordingly.
+ */
 CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var_type,
                                         const std::vector<DataArray> &read_sets,
                                         const GeometricRegion &read_region,

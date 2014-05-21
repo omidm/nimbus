@@ -58,13 +58,14 @@ class GeometricRegion;
 
 /**
  * \class CacheTable
- * \details A CacheTable contains 2 maps - one from geometric regions to
- * CacheStructs, and another from geometric regions to CacheVars. However,
- * since a CacheTable really only corresponds to one CacheObject prototype,
- * only one of these will be populated and used. 
+ * \details CacheTable contains the second level map managed by Nimbus -
+ * from geometric regions to CacheStructs or CacheVars. The methods of this
+ * class are visible to only CacheManager.
  */
 class CacheTable {
-    public:
+    friend class CacheManager;
+
+    private:
         /**
          * \brief Creates a CacheTable
          * \param cache::CacheTType specifies whether to create a table of
@@ -127,7 +128,6 @@ class CacheTable {
                                          const std::vector<DataArray> &read_sets,
                                          cache::CacheAccess access = cache::EXCVLUSIVE);
 
-    private:
         /**
          * \brief Returns index corresponding to closest cache var instance,
          * from the given list of cache vars \- cvs
