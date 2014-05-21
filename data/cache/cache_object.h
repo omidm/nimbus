@@ -76,7 +76,7 @@ class CacheObject {
          * \param  ob_reg specifies application object region
          * \return Constructed CacheObject instance
          */
-        explicit CacheObject(GeometricRegion ob_reg);
+        explicit CacheObject(const GeometricRegion &ob_reg);
 
         /**
          * \brief Makes this instance a prototype. The application writer must

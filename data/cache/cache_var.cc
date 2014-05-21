@@ -61,7 +61,8 @@ CacheVar::CacheVar() {}
 /**
  * \details
  */
-CacheVar::CacheVar(GeometricRegion ob_reg) : CacheObject(ob_reg) {}
+CacheVar::CacheVar(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
+}
 
 /**
  * \details UpdateCache(...) finds out what data is in read_sets and not in

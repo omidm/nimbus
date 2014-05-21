@@ -76,7 +76,7 @@ class CacheVar : public CacheObject {
          * \param  ob_reg specifies application object (CacheVar) region
          * \return Constructed CacheVar instance
          */
-        explicit CacheVar(GeometricRegion ob_reg);
+        explicit CacheVar(const GeometricRegion &ob_reg);
 
         /**
          * \brief Creates a new CacheVar instance using current instance

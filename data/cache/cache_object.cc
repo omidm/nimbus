@@ -59,17 +59,14 @@ cache::co_id_t CacheObject::ids_allocated_ = 0;
  * \details
  */
 CacheObject::CacheObject() : id_(0),
-                             access_(cache::SHARED),
-                             users_(0)  {
+    access_(cache::SHARED), users_(0)  {
 }
 
 /**
  * \details
  */
-CacheObject::CacheObject(GeometricRegion ob_reg) : id_(0),
-                                                   access_(cache::SHARED),
-                                                   users_(0),
-                                                   object_region_(ob_reg) {
+CacheObject::CacheObject(const GeometricRegion &ob_reg) : id_(0),
+    access_(cache::SHARED), users_(0), object_region_(ob_reg) {
 }
 
 /**

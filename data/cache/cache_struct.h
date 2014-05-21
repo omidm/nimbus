@@ -82,7 +82,7 @@ class CacheStruct : public CacheObject {
          * \param  ob_reg specifies application object (CacheStruct) region
          * \return Constructed CacheStruct instance
          */
-        explicit CacheStruct(GeometricRegion ob_reg);
+        explicit CacheStruct(const GeometricRegion &ob_reg);
 
         /**
          * \brief Creates a new CacheStruct instance using current instance
