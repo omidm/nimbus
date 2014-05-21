@@ -140,7 +140,7 @@ class CacheStruct : public CacheObject {
          * instance
          * \param d denotes the data to unmap
          */
-        virtual void UnsetDirtyData(Data *d) = 0;
+        virtual void UnsetDirtyData(Data *d);
 
         /**
          * \brief Pulls data from cache, removes corresponding dirty data
