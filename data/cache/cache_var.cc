@@ -75,7 +75,7 @@ void CacheVar::UpdateCache(const DataArray &read_set,
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it == data_map_.end()) {
-            // d->SyncData();
+            d->SyncData();
             diff.push_back(d);
             if (!invalidate_read_minus_write ||
                 write_region.Covers(&dreg)) {
@@ -84,7 +84,7 @@ void CacheVar::UpdateCache(const DataArray &read_set,
         } else {
             Data *d_old = it->second;
             if (d_old != d) {
-                // d->SyncData();
+                d->SyncData();
                 diff.push_back(d);
                 if (write_back_.find(d_old) != write_back_.end()) {
                     flush.push_back(d_old);
@@ -94,7 +94,7 @@ void CacheVar::UpdateCache(const DataArray &read_set,
                     to_map.push_back(d);
                 }
                 data_map_.erase(it);
-                // d_old->UnsetCacheObjectMapping(this);
+                d_old->UnsetCacheObject(this);
             }
         }
     }
@@ -105,7 +105,7 @@ void CacheVar::UpdateCache(const DataArray &read_set,
         GeometricRegion dreg = d->region();
         if (!invalidate_read_minus_write || write_region.Covers(&dreg)) {
             data_map_[dreg] = d;
-            // d->SetUpCacheObjectMapping(this);
+            d->SetUpCacheObject(this);
         }
     }
 }
@@ -134,7 +134,7 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
                     flush.push_back(d_old);
                 }
                 data_map_.erase(it);
-                // d_old->UnsetCacheObjectMapping(this);
+                d_old->UnsetCacheObject(this);
             }
         }
     }
@@ -144,8 +144,8 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
         GeometricRegion dreg = d->region();
         data_map_[dreg] = d;
         write_back_.insert(d);
-        // d->SetUpCacheObjectMapping(this);
-        // d->SetUpDirtyCacheObjectMapping(this);
+        d->SetUpCacheObject(this);
+        d->SetUpDirtyCacheObject(this);
     }
 }
 
@@ -178,7 +178,7 @@ void CacheVar::PullData(Data *d) {
         GeometricRegion wreg = GeometricRegion::
             GetIntersection(write_region_, dreg);
         WriteFromCache(write_set, wreg);
-        // d->clear_dirty_cache_object(this);
+        d->UnsetDirtyCacheObject(this);
         write_back_.erase(d);
     }
     ReleaseAccess();
@@ -215,7 +215,7 @@ void CacheVar::FlushCache(const DataArray &flush_set) {
     WriteFromCache(flush_set, write_region_);
     for (size_t i = 0; i < flush_set.size(); ++i) {
         Data *d = flush_set[i];
-        // d->clear_dirty_cache_object(this);
+        d->UnsetDirtyCacheObject(this);
         write_back_.erase(d);
     }
 }

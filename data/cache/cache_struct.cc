@@ -96,7 +96,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             DMap::iterator it = data_map_t.find(dreg);
             if (it == data_map_t.end()) {
-                // d->SyncData(this);
+                d->SyncData();
                 diff_t.push_back(d);
                 if (!invalidate_read_minus_write ||
                     write_region.Covers(&dreg)) {
@@ -105,7 +105,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
-                    // d->SyncData(this);
+                    d->SyncData();
                     diff_t.push_back(d);
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
@@ -115,7 +115,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
                         to_map_t.push_back(d);
                     }
                     data_map_t.erase(it);
-                    // d_old->UnsetCacheObjectMapping(this);
+                    d_old->UnsetCacheObject(this);
                 }
             }
         }
@@ -131,7 +131,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             if (!invalidate_read_minus_write || write_region.Covers(&dreg)) {
                 data_map_t[dreg] = d;
-                // d->SetUpCacheObjectMapping(this);
+                d->SetUpCacheObject(this);
             }
         }
     }
@@ -178,7 +178,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                         flush_t.push_back(d_old);
                     }
                     data_map_t.erase(it);
-                    // d_old->UnsetCacheObjectMapping(this);
+                    d_old->UnsetCacheObject(this);
                 }
             }
         }
@@ -194,8 +194,8 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             data_map_t[dreg] = d;
             write_back_t.insert(d);
-            // d->SetUpCacheObjectMapping(this);
-            // d->SetUpDirtyCacheObjectMapping(this);
+            d->SetUpCacheObject(this);
+            d->SetUpDirtyCacheObject(this);
         }
     }
 }
@@ -250,7 +250,7 @@ void CacheStruct::PullData(Data *d) {
         GeometricRegion wreg = GeometricRegion::
             GetIntersection(write_region_, dreg);
         WriteFromCache(var_type, write_sets, wreg);
-        // d->clear_dirty_cache_object(this);
+        d->UnsetDirtyCacheObject(this);
         write_back_t.erase(d);
         break;
     }
@@ -307,7 +307,7 @@ void CacheStruct::FlushCache(const std::vector<cache::type_id_t> &var_type,
         DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < flush_t.size(); ++i) {
             Data *d = flush_t[i];
-            // d->clear_dirty_cache_object(this);
+            d->UnsetDirtyCacheObject(this);
             write_back_t.erase(d);
         }
     }

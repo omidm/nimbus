@@ -96,8 +96,19 @@ void Data::set_version(data_version_t version) {
   version_ = version;
 }
 
-void Data::InvalidateCacheObjectsDataMapping() {
-  /*
+/**
+ * \details
+ */
+void Data::SyncData() {
+  if (dirty_cache_object_)
+    dirty_cache_object_->PullData(this);
+  assert(!dirty_cache_object_);
+}
+
+/**
+ * \details
+ */
+void Data::InvalidateCacheData() {
   std::set<CacheObject *>::iterator iter = cache_objects_.begin();
   for (; iter != cache_objects_.end(); ++iter) {
     CacheObject *c = *iter;
@@ -105,44 +116,35 @@ void Data::InvalidateCacheObjectsDataMapping() {
   }
   cache_objects_.clear();
   if (dirty_cache_object_)
-    dirty_cache_object_->RemoveFromWriteBack(this);
+    dirty_cache_object_->UnsetDirtyData(this);
   dirty_cache_object_ = NULL;
-  */
 }
 
-void Data::SetUpCacheObjectDataMapping(CacheObject *co) {
-  /*
+/**
+ * \details
+ */
+void Data::SetUpCacheObject(CacheObject *co) {
   cache_objects_.insert(co);
-  co->SetUpData(this);
-  */
 }
 
-void Data::UnsetCacheObjectDataMapping(CacheObject *co) {
-  /*
+/**
+ * \details
+ */
+void Data::UnsetCacheObject(CacheObject *co) {
   cache_objects_.erase(co);
-  co->UnsetData(this);
-  */
 }
 
-void Data::UpdateData(bool lock_co) {
-  /*
-  if (dirty_cache_object_)
-    dirty_cache_object_->PullIntoData(this, lock_co);
-  if (dirty_cache_object_ != NULL) {
-    dbg(DBG_ERROR, "Data is still not in sync with cache!!\n");
-    exit(-1);
-  }
-  */
-}
-
-void Data::set_dirty_cache_object(CacheObject *co) {
-  /*
+/**
+ * \details
+ */
+void Data::SetUpDirtyCacheObject(CacheObject *co) {
   dirty_cache_object_ = co;
-  */
 }
 
-void Data::clear_dirty_cache_object() {
-  /*
+/**
+ * \details
+ */
+void Data::UnsetDirtyCacheObject(CacheObject *co) {
+  assert(dirty_cache_object_ == co);
   dirty_cache_object_ = NULL;
-  */
 }

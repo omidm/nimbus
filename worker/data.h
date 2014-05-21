@@ -105,13 +105,43 @@ class Data {
   void set_region(const GeometricRegion& region);
   void set_version(data_version_t version);
 
-  void InvalidateCacheObjectsDataMapping();
-  void SetUpCacheObjectDataMapping(CacheObject *co);
-  void UnsetCacheObjectDataMapping(CacheObject *co);
-  void UpdateData(bool lock_co = true);
+  /**
+   * \brief Writes back data from cached instance, if the data instance is
+   * dirty
+   */
+  void SyncData();
 
-  void set_dirty_cache_object(CacheObject *co);
-  void clear_dirty_cache_object();
+  /**
+   * \brief Removes all mappings between this data instance and all other cache
+   * instances (dirty and non-dirty)
+   */
+  void InvalidateCacheData();
+
+  /**
+   * \brief Inserts a mapping between this data instance and cache object co
+   * \param co is the cache object to map to
+   */
+  void SetUpCacheObject(CacheObject *co);
+
+  /**
+   * \brief Removes mapping between this data instance and cache object co
+   * \param co is the cache object to unmap
+   */
+  void UnsetCacheObject(CacheObject *co);
+
+  /**
+   * \brief Inserts a dirty object mapping between this data instance and cache
+   * object co
+   * \param co is the cache object to map to
+   */
+  void SetUpDirtyCacheObject(CacheObject *co);
+
+  /**
+   * \brief Removes dirty object mapping between this data instance and cache
+   * object co
+   * \param co is the cache object to unmap
+   */
+  void UnsetDirtyCacheObject(CacheObject *co);
 
  private:
   logical_data_id_t logical_id_;
