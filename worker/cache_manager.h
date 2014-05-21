@@ -40,41 +40,45 @@
 #define NIMBUS_WORKER_CACHE_MANAGER_H_
 
 #include <map>
-#include <string>
+#include <vector>
 
-#include "data/cache/cache_object.h"
+#include "data/cache/cache_defs.h"
+#include "data/cache/cache_struct.h"
 #include "data/cache/cache_table.h"
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
-#include "worker/data.h"
+#include "data/cache/cache_var.h"
 
 namespace nimbus {
+
+class Data;
+typedef std::vector<Data *> DataArray;
+class GeometricRegion;
 
 class CacheManager {
     public:
         CacheManager();
 
-        CacheObject *GetAppObject(const DataArray &read,
-                                  const DataArray &write,
-                                  const GeometricRegion &region,
-                                  const CacheObject &prototype,
-                                  CacheAccess access,
-                                  bool read_keep_valid,
-                                  bool read_all_or_none = false);
+        CacheVar *GetAppVar(const DataArray &read_set,
+                            const GeometricRegion &read_region,
+                            const DataArray &write_set,
+                            const GeometricRegion &write_region,
+                            const CacheVar &prototype,
+                            const GeometricRegion &region,
+                            cache::CacheAccess access,
+                            bool invalidate_read_minus_write = false);
 
-        CacheObject *GetAppObject(const DataArray &read,
-                                  const DataArray &write,
-                                  const GeometricRegion &region,
+        CacheStruct *GetAppStruct(const std::vector<cache::type_id_t> &var_type,
+                                  const std::vector<DataArray> &read_sets,
                                   const GeometricRegion &read_region,
-                                  const CacheObject &prototype,
-                                  CacheAccess access,
-                                  bool read_keep_valid,
-                                  bool read_all_or_none = false);
+                                  const std::vector<DataArray> &write_sets,
+                                  const GeometricRegion &write_region,
+                                  const CacheStruct &prototype,
+                                  const GeometricRegion &region,
+                                  cache::CacheAccess access,
+                                  bool invalidate_read_minus_write = false);
 
     private:
-        typedef std::map<std::string,
+        typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;
-
         Pool *pool_;
 };  // class CacheManager
 

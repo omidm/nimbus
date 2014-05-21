@@ -36,11 +36,12 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#include <string>
+#include <map>
+#include <vector>
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
 #include "data/cache/cache_table.h"
-#include "data/cache/utils.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/cache_manager.h"
@@ -52,78 +53,69 @@ CacheManager::CacheManager() {
     pool_ = new Pool();
 }
 
-CacheObject *CacheManager::GetAppObject(const DataArray &read,
-                                        const DataArray &write,
-                                        const GeometricRegion &region,
-                                        const CacheObject &prototype,
-                                        CacheAccess access,
-                                        bool read_keep_valid,
-                                        bool read_all_or_none) {
-    CacheObject *co = NULL;
-    if (pool_->find(prototype.type()) == pool_->end()) {
-        CacheTable *ct = new CacheTable();
-        (*pool_)[prototype.type()] = ct;
-        co = prototype.CreateNew(region);
-        if (co == NULL) {
-            dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
-            exit(-1);
-        }
-        ct->AddEntry(region, co);
+CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
+                                  const GeometricRegion &read_region,
+                                  const DataArray &write_set,
+                                  const GeometricRegion &write_region,
+                                  const CacheVar &prototype,
+                                  const GeometricRegion &region,
+                                  cache::CacheAccess access,
+                                  bool invalidate_read_minus_write) {
+    CacheVar *cv = NULL;
+    if (pool_->find(prototype.id()) == pool_->end()) {
+        CacheTable *ct = new CacheTable(cache::VAR);
+        (*pool_)[prototype.id()] = ct;
+        cv = prototype.CreateNew(region);
+        assert(cv != NULL);
+        ct->AddEntry(region, cv);
     } else {
-        CacheTable *ct = (*pool_)[prototype.type()];
-        co = ct->GetClosestAvailable(region, read, access);
-        if (co == NULL) {
-            co = prototype.CreateNew(region);
-            if (co == NULL) {
-                dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
-                exit(-1);
-            }
-            ct->AddEntry(region, co);
+        CacheTable *ct = (*pool_)[prototype.id()];
+        cv = ct->GetClosestAvailable(region, read_set, access);
+        if (cv == NULL) {
+            cv = prototype.CreateNew(region);
+            assert(cv != NULL);
+            ct->AddEntry(region, cv);
         }
     }
-    co->AcquireAccess(access);
-    co->Read(read, region, read_all_or_none);
-    co->SetUpRead(read, read_keep_valid | (access == SHARED));
-    co->SetUpWrite(write);
-    return co;
+    cv->AcquireAccess(access);
+    cv->UpdateCache(read_set, read_region,
+                    write_region,
+                    invalidate_read_minus_write);
+    cv->SetUpWrite(write_set, write_region);
+    return cv;
 }
 
-CacheObject *CacheManager::GetAppObject(const DataArray &read,
-                                        const DataArray &write,
-                                        const GeometricRegion &region,
+CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var_type,
+                                        const std::vector<DataArray> &read_sets,
                                         const GeometricRegion &read_region,
-                                        const CacheObject &prototype,
-                                        CacheAccess access,
-                                        bool read_keep_valid,
-                                        bool read_all_or_none) {
-    CacheObject *co = NULL;
-    if (pool_->find(prototype.type()) == pool_->end()) {
-        CacheTable *ct = new CacheTable();
-        (*pool_)[prototype.type()] = ct;
-        co = prototype.CreateNew(region);
-        if (co == NULL) {
-            dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
-            exit(-1);
-        }
-        ct->AddEntry(region, co);
+                                        const std::vector<DataArray> &write_sets,
+                                        const GeometricRegion &write_region,
+                                        const CacheStruct &prototype,
+                                        const GeometricRegion &region,
+                                        cache::CacheAccess access,
+                                        bool invalidate_read_minus_write) {
+    CacheStruct *cs = NULL;
+    if (pool_->find(prototype.id()) == pool_->end()) {
+        CacheTable *ct = new CacheTable(cache::STRUCT);
+        (*pool_)[prototype.id()] = ct;
+        cs = prototype.CreateNew(region);
+        assert(cs != NULL);
+        ct->AddEntry(region, cs);
     } else {
-        CacheTable *ct = (*pool_)[prototype.type()];
-        co = ct->GetClosestAvailable(region, read, access);
-        if (co == NULL) {
-            co = prototype.CreateNew(region);
-            if (co == NULL) {
-                dbg(DBG_ERROR, "Tried to create a cache object for an unimplemented prototype. Exiting ...\n"); // NOLINT
-                exit(-1);
-            }
-            ct->AddEntry(region, co);
+        CacheTable *ct = (*pool_)[prototype.id()];
+        cs = ct->GetClosestAvailable(region, var_type, read_sets, access);
+        if (cs == NULL) {
+            cs = prototype.CreateNew(region);
+            assert(cs != NULL);
+            ct->AddEntry(region, cs);
         }
     }
-    co->AcquireAccess(access);
-    co->Read(read, read_region, read_all_or_none);
-    // if access is shared, all data needs to be kept valid!
-    co->SetUpRead(read, read_keep_valid | (access != EXCLUSIVE));
-    co->SetUpWrite(write);
-    return co;
+    cs->AcquireAccess(access);
+    cs->UpdateCache(var_type, read_sets, read_region,
+                    write_region,
+                    invalidate_read_minus_write);
+    cs->SetUpWrite(var_type, write_sets, write_region);
+    return cs;
 }
 
 }  // namespace nimbus

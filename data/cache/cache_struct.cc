@@ -177,7 +177,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
                     }
-                    data_map_.erase(it);
+                    data_map_t.erase(it);
                     // d_old->UnsetCacheObjectMapping(this);
                 }
             }
@@ -209,7 +209,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
  * implementation, I expect the overhead to be small. -- Chinmayee
  */
 void CacheStruct::PullData(Data *d) {
-    AcquireAccess(EXCLUSIVE);
+    AcquireAccess(cache::EXCVLUSIVE);
     for (size_t t = 0; t < num_variables_; ++t) {
         DataSet &write_back_t = write_backs_[t];
         if (write_back_t.find(d) == write_back_t.end())

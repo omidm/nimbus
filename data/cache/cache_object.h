@@ -86,9 +86,9 @@ class CacheObject {
 
         /**
          * \brief Acquires access to CacheObject instance
-         * \param access can be EXCLUSIVE or SHARED
+         * \param access can be cache::EXCVLUSIVE or cache::SHARED
          */
-        void AcquireAccess(CacheAccess access);
+        void AcquireAccess(cache::CacheAccess access);
 
         /**
          * \brief Releases access to CacheObject instance
@@ -98,11 +98,11 @@ class CacheObject {
         /**
          * \brief Checks if CacheObject instance is available for use in access
          * mode
-         * \param access denotes the mode (EXCLUSIVE/ SHARED) that application
+         * \param access denotes the mode (cache::EXCVLUSIVE/ cache::SHARED) that application
          * wants
          * \return Boolean indicating if the instance is available
          */
-        bool IsAvailable(CacheAccess access) const;
+        bool IsAvailable(cache::CacheAccess access) const;
 
         /**
          * \brief Unsets mapping between data and CacheObject instance
@@ -140,7 +140,7 @@ class CacheObject {
         cache::co_id_t id_;
 
         // access information
-        CacheAccess access_;
+        cache::CacheAccess access_;
         int users_;
 
     protected:

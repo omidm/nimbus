@@ -49,11 +49,11 @@
 namespace nimbus {
 
 /**
- * \details If ttype equals VAR, tstruct_ is set to NULL. Similarly, is ttype
- * equals STRUCT, tvar_ is set to NULL.
+ * \details If ttype equals cache::VAR, tstruct_ is set to NULL. Similarly, is ttype
+ * equals cache::STRUCT, tvar_ is set to NULL.
  */
-CacheTable::CacheTable(CacheTType ttype) {
-    if (ttype == VAR) {
+CacheTable::CacheTable(cache::CacheTType ttype) {
+    if (ttype == cache::VAR) {
         tvar_ = new TVar();
         tstruct_ = NULL;
     } else {
@@ -105,7 +105,7 @@ void CacheTable::AddEntry(const GeometricRegion &region,
  */
 CacheVar *CacheTable::GetClosestAvailable(const GeometricRegion &region,
                                           const DataArray &read_set,
-                                          CacheAccess access) {
+                                          cache::CacheAccess access) {
     if (tvar_->find(region) == tvar_->end())
         return NULL;
     int min = GetMinDistanceIndex(*tvar_->at(region), read_set, access);
@@ -123,7 +123,7 @@ CacheVar *CacheTable::GetClosestAvailable(const GeometricRegion &region,
 CacheStruct *CacheTable::GetClosestAvailable(const GeometricRegion &region,
                                              const std::vector<cache::type_id_t> &var_type,
                                              const std::vector<DataArray> &read_sets,
-                                             CacheAccess access) {
+                                             cache::CacheAccess access) {
     if (tstruct_->find(region) == tstruct_->end())
         return NULL;
     int min = GetMinDistanceIndex(*tstruct_->at(region), var_type, read_sets, access);
@@ -138,7 +138,7 @@ CacheStruct *CacheTable::GetClosestAvailable(const GeometricRegion &region,
  */
 int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
                                     const DataArray &read_set,
-                                    CacheAccess access) const {
+                                    cache::CacheAccess access) const {
     int min_index = -1;
     if (cvs.size() == 0 || !cvs.at(0)->IsAvailable(access))
         return min_index;
@@ -166,7 +166,7 @@ int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
 int CacheTable::GetMinDistanceIndex(const CacheStructs &css,
                                     const std::vector<cache::type_id_t> &var_type,
                                     const std::vector<DataArray> &read_sets,
-                                    CacheAccess access) const {
+                                    cache::CacheAccess access) const {
     int min_index = -1;
     if (css.size() == 0 || !css.at(0)->IsAvailable(access))
         return min_index;

@@ -67,11 +67,11 @@ class CacheTable {
     public:
         /**
          * \brief Creates a CacheTable
-         * \param CacheTType specifies whether to create a table of
+         * \param cache::CacheTType specifies whether to create a table of
          * CacheStructs or CacheVars
          * \return Constructed CacheTable isntance
          */
-        explicit CacheTable(CacheTType ttype);
+        explicit CacheTable(cache::CacheTType ttype);
 
         /**
          * \brief Adds cache variable to the map of region\-to\-variables
@@ -98,14 +98,14 @@ class CacheTable {
          * \param region specifies the geometric region of requested cache var
          * \param read_set specifies data that should be read into cache var
          * instance
-         * \param access indicates the access mode for the request (SHARED or
-         * EXCLUSIVE)
+         * \param access indicates the access mode for the request (cache::SHARED or
+         * cache::EXCVLUSIVE)
          * \return Returns a cache var instance that can be used, or NULL in
          * case no usable instance is available
          */
         CacheVar *GetClosestAvailable(const GeometricRegion &region,
                                       const DataArray &read_set,
-                                      CacheAccess access = EXCLUSIVE);
+                                      cache::CacheAccess access = cache::EXCVLUSIVE);
 
         /**
          * \brief Returns closest cache struct instance from existing
@@ -117,15 +117,15 @@ class CacheTable {
          * read_sets
          * \param read_sets specifies data that should be read into cache
          * struct instance
-         * \param access indicates the access mode for the request (SHARED or
-         * EXCLUSIVE)
+         * \param access indicates the access mode for the request (cache::SHARED or
+         * cache::EXCVLUSIVE)
          * \return Returns a cache struct instance that can be used, or NULL in
          * case no usable instance is available
          */
         CacheStruct *GetClosestAvailable(const GeometricRegion &region,
                                          const std::vector<cache::type_id_t> &var_type,
                                          const std::vector<DataArray> &read_sets,
-                                         CacheAccess access = EXCLUSIVE);
+                                         cache::CacheAccess access = cache::EXCVLUSIVE);
 
     private:
         /**
@@ -134,15 +134,15 @@ class CacheTable {
          * \param cvs is the list of cache vars to inspect
          * \param read_set specifies data that should be read into cache var
          * instance
-         * \param access indicates the access mode for the request (SHARED or
-         * EXCLUSIVE)
+         * \param access indicates the access mode for the request (cache::SHARED or
+         * cache::EXCVLUSIVE)
          * \return Returns a non-negative number (index) into cvs corresponding
          * to the cache var instance, that is closest to the given read set. If
          * no instances in cvs are usable, the method returns -1.
          */
         int GetMinDistanceIndex(const CacheVars &cvs,
                                 const DataArray &read_set,
-                                CacheAccess access = EXCLUSIVE) const;
+                                cache::CacheAccess access = cache::EXCVLUSIVE) const;
 
         /**
          * \brief Returns index corresponding to closest cache struct instance,
@@ -152,8 +152,8 @@ class CacheTable {
          * read_sets
          * \param read_sets specifies data that should be read into cache
          * struct nstance
-         * \param access indicates the access mode for the request (SHARED or
-         * EXCLUSIVE)
+         * \param access indicates the access mode for the request (cache::SHARED or
+         * cache::EXCVLUSIVE)
          * \return Returns a non-negative number (index) into css corresponding
          * to the cache struct instance, that is closest to list of given read
          * sets. If no instances in css are usable, the method returns -1.
@@ -161,7 +161,7 @@ class CacheTable {
         int GetMinDistanceIndex(const CacheStructs &css,
                                 const std::vector<cache::type_id_t> &var_type,
                                 const std::vector<DataArray> &read_sets,
-                                CacheAccess access = EXCLUSIVE) const;
+                                cache::CacheAccess access = cache::EXCVLUSIVE) const;
 
         typedef std::map<GeometricRegion, CacheVars *> TVar;
         typedef std::map<GeometricRegion, CacheStructs *> TStruct;

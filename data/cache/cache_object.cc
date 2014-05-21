@@ -59,7 +59,7 @@ cache::co_id_t CacheObject::ids_allocated_ = 0;
  * \details
  */
 CacheObject::CacheObject() : id_(0),
-                             access_(SHARED),
+                             access_(cache::SHARED),
                              users_(0)  {
 }
 
@@ -77,13 +77,13 @@ void CacheObject::MakePrototype() {
 }
 
 /**
- * \details AcquireAccess(...) ensures that only one request in EXCLUSIVE mode
- * holds the object, otherwise the object is in SHARED mode. It sets object
+ * \details AcquireAccess(...) ensures that only one request in cache::EXCVLUSIVE mode
+ * holds the object, otherwise the object is in cache::SHARED mode. It sets object
  * access mode to requested access mode, and increases the number of users by
  * one.
  */
-void CacheObject::AcquireAccess(CacheAccess access) {
-    assert(users_ != 0 && (access == EXCLUSIVE || access_ == EXCLUSIVE));
+void CacheObject::AcquireAccess(cache::CacheAccess access) {
+    assert(users_ != 0 && (access == cache::EXCVLUSIVE || access_ == cache::EXCVLUSIVE));
     access_ = access;
     users_++;
 }
@@ -99,13 +99,13 @@ void CacheObject::ReleaseAccess() {
 
 /**
  * \details IsAvailable(...) returns true if an object is available, otherwise
- * it returns false. An object is available in EXCLUSIVE mode if the number of
- * users using it is zero. An object is available in SHARED mode if number of
- * users is zero, or the current access mode for the object is SHARED.
+ * it returns false. An object is available in cache::EXCVLUSIVE mode if the number of
+ * users using it is zero. An object is available in cache::SHARED mode if number of
+ * users is zero, or the current access mode for the object is cache::SHARED.
  */
-bool CacheObject::IsAvailable(CacheAccess access) const {
-    return ((access == EXCLUSIVE && users_ == 0) ||
-            (users_ == 0 || (access == SHARED && access_ == SHARED)));
+bool CacheObject::IsAvailable(cache::CacheAccess access) const {
+    return ((access == cache::EXCVLUSIVE && users_ == 0) ||
+            (users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED)));
 }
 
 /**

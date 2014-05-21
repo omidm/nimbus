@@ -155,7 +155,7 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
  * needs to be updated from outside CacheVar, use PullData.
  */
 void CacheVar::PullData(Data *d) {
-    AcquireAccess(EXCLUSIVE);
+    AcquireAccess(cache::EXCVLUSIVE);
     if (write_back_.find(d) != write_back_.end()) {
         DataArray write_set(1, d);
         GeometricRegion dreg = d->region();

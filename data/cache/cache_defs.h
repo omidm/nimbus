@@ -46,17 +46,12 @@
 #include "shared/nimbus_types.h"
 
 namespace nimbus {
-
-enum CacheAccess { SHARED, EXCLUSIVE };
-enum CacheTType { VAR, STRUCT };
-
 namespace cache {
-
-/* Types. */
+enum CacheAccess { SHARED, EXCVLUSIVE };
+enum CacheTType { VAR, STRUCT };
 typedef size_t type_id_t;
 typedef size_t co_id_t;
 typedef uint64_t distance_t;
-
 }  // namespace cache
 }  // namespace nimbus
 
