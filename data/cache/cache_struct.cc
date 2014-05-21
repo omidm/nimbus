@@ -209,7 +209,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
  * implementation, I expect the overhead to be small. -- Chinmayee
  */
 void CacheStruct::PullData(Data *d) {
-    AcquireAccess(cache::EXCVLUSIVE);
+    AcquireAccess(cache::EXCLUSIVE);
     for (size_t t = 0; t < num_variables_; ++t) {
         DataSet &write_back_t = write_backs_[t];
         if (write_back_t.find(d) == write_back_t.end())

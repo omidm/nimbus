@@ -86,7 +86,7 @@ class CacheObject {
 
         /**
          * \brief Acquires access to CacheObject instance
-         * \param access can be cache::EXCVLUSIVE or cache::SHARED
+         * \param access can be cache::EXCLUSIVE or cache::SHARED
          */
         void AcquireAccess(cache::CacheAccess access);
 
@@ -98,7 +98,7 @@ class CacheObject {
         /**
          * \brief Checks if CacheObject instance is available for use in access
          * mode
-         * \param access denotes the mode (cache::EXCVLUSIVE/ cache::SHARED) that application
+         * \param access denotes the mode (cache::EXCLUSIVE/ cache::SHARED) that application
          * wants
          * \return Boolean indicating if the instance is available
          */

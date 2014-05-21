@@ -77,13 +77,13 @@ void CacheObject::MakePrototype() {
 }
 
 /**
- * \details AcquireAccess(...) ensures that only one request in cache::EXCVLUSIVE mode
+ * \details AcquireAccess(...) ensures that only one request in cache::EXCLUSIVE mode
  * holds the object, otherwise the object is in cache::SHARED mode. It sets object
  * access mode to requested access mode, and increases the number of users by
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
-    assert(users_ != 0 && (access == cache::EXCVLUSIVE || access_ == cache::EXCVLUSIVE));
+    assert(users_ != 0 && (access == cache::EXCLUSIVE || access_ == cache::EXCLUSIVE));
     access_ = access;
     users_++;
 }
@@ -99,12 +99,12 @@ void CacheObject::ReleaseAccess() {
 
 /**
  * \details IsAvailable(...) returns true if an object is available, otherwise
- * it returns false. An object is available in cache::EXCVLUSIVE mode if the number of
+ * it returns false. An object is available in cache::EXCLUSIVE mode if the number of
  * users using it is zero. An object is available in cache::SHARED mode if number of
  * users is zero, or the current access mode for the object is cache::SHARED.
  */
 bool CacheObject::IsAvailable(cache::CacheAccess access) const {
-    return ((access == cache::EXCVLUSIVE && users_ == 0) ||
+    return ((access == cache::EXCLUSIVE && users_ == 0) ||
             (users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED)));
 }
 
