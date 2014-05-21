@@ -64,6 +64,15 @@ CacheObject::CacheObject() : id_(0),
 }
 
 /**
+ * \details
+ */
+CacheObject::CacheObject(GeometricRegion ob_reg) : id_(0),
+                                                   access_(cache::SHARED),
+                                                   users_(0),
+                                                   object_region_(ob_reg) {
+}
+
+/**
  * \details MakePrototype() increases ids_allocated_ for CacheObject
  * prototypes, and allocates a new id to the prototype. A prototype is used by
  * application when requesting an application object. CacheManager uses

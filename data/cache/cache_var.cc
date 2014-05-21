@@ -59,6 +59,11 @@ namespace nimbus {
 CacheVar::CacheVar() {}
 
 /**
+ * \details
+ */
+CacheVar::CacheVar(GeometricRegion ob_reg) : CacheObject(ob_reg) {}
+
+/**
  * \details UpdateCache(...) finds out what data is in read_sets and not in
  * CacheVar instance, and calls a ReadToCache(...) on the diff. Before
  * reading the diff, UpdateCache(...) flushes out data that will be replaced

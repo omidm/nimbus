@@ -72,6 +72,13 @@ class CacheVar : public CacheObject {
         explicit CacheVar();
 
         /**
+         * \brief Creates a CacheVar
+         * \param  ob_reg specifies application object (CacheVar) region
+         * \return Constructed CacheVar instance
+         */
+        explicit CacheVar(GeometricRegion ob_reg);
+
+        /**
          * \brief Creates a new CacheVar instance using current instance
          * parameters
          * \param struct_region specifies the spatial domain of the CacheVar
@@ -175,7 +182,7 @@ class CacheVar : public CacheObject {
          * instance to nimbus data.
          */
         virtual void WriteFromCache(const DataArray &write_set,
-                                    const GeometricRegion &write_region) = 0;
+                                    const GeometricRegion &write_region) const = 0;
 };  // class CacheVar
 
 typedef std::vector<CacheVar *> CacheVars;

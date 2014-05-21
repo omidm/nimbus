@@ -78,6 +78,13 @@ class CacheStruct : public CacheObject {
         explicit CacheStruct(size_t num_variables);
 
         /**
+         * \brief Creates a CacheStruct
+         * \param  ob_reg specifies application object (CacheStruct) region
+         * \return Constructed CacheStruct instance
+         */
+        explicit CacheStruct(GeometricRegion ob_reg);
+
+        /**
          * \brief Creates a new CacheStruct instance using current instance
          * parameters
          * \param struct_region specifies the spatial domain of the CacheStruct
@@ -199,7 +206,7 @@ class CacheStruct : public CacheObject {
          */
         virtual void WriteFromCache(const std::vector<cache::type_id_t> &var_type,
                                     const std::vector<DataArray> &write_sets,
-                                    const GeometricRegion &write_region) = 0;
+                                    const GeometricRegion &write_region) const = 0;
 };  // class CacheStruct
 
 typedef std::vector<CacheStruct *> CacheStructs;

@@ -75,7 +75,7 @@ class CacheTable {
         explicit CacheTable(cache::CacheTType ttype);
 
         /**
-         * \brief Adds cache variable to the map of region\-to\-variables
+         * \brief Adds cache variable to the map of region-to-variables
          * \param region specifies a key in the map, which is the region
          * corresponding to the CacheVar object
          * \param cv is the CacheVar value for given region key
@@ -84,7 +84,7 @@ class CacheTable {
                       CacheVar *cv);
 
         /**
-         * \brief Adds cache struct to the map of region\-to\-structs
+         * \brief Adds cache struct to the map of region-to-structs
          * \param region specifies a key in the map, which is the region
          * corresponding to the CacheStruct object
          * \param cs is the CacheStruct value for given region key
@@ -130,7 +130,7 @@ class CacheTable {
 
         /**
          * \brief Returns index corresponding to closest cache var instance,
-         * from the given list of cache vars \- cvs
+         * from the given list of cache vars - cvs
          * \param cvs is the list of cache vars to inspect
          * \param read_set specifies data that should be read into cache var
          * instance
@@ -146,7 +146,7 @@ class CacheTable {
 
         /**
          * \brief Returns index corresponding to closest cache struct instance,
-         * from the given list of cache structs \- css
+         * from the given list of cache structs - css
          * \param css is the list of cache structs to inspect
          * \param indicates the data types corresponding to read sets in
          * read_sets

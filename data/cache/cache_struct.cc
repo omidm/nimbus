@@ -62,6 +62,11 @@ CacheStruct::CacheStruct(size_t num_variables) : num_variables_(num_variables),
 }
 
 /**
+ * \details
+ */
+CacheStruct::CacheStruct(GeometricRegion ob_reg) : CacheObject(ob_reg) {}
+
+/**
  * \details UpdateCache(...) finds out what data is in read_sets and not in
  * CacheStruct instance, and calls a ReadToCache(...) on the diff. Before
  * reading the diff, UpdateCache(...) flushes out data that will be replaced

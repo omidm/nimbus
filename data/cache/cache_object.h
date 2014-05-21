@@ -72,6 +72,13 @@ class CacheObject {
         explicit CacheObject();
 
         /**
+         * \brief Creates a CacheObject
+         * \param  ob_reg specifies application object region
+         * \return Constructed CacheObject instance
+         */
+        explicit CacheObject(GeometricRegion ob_reg);
+
+        /**
          * \brief Makes this instance a prototype. The application writer must
          * make a prototype for every application object he/ she plans to use.
          */
