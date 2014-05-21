@@ -66,7 +66,6 @@ class GeometricRegion;
  */
 class CacheManager {
     public:
-
         /**
          * \brief Creates a CacheManager instance
          * \return Constructed CacheManager instance

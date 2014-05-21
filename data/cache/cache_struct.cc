@@ -201,9 +201,9 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
 }
 
 /**
- * \details PullData(...) pulls data from cache, after locking the struct. This
- * is like FlushToData(...), except that it also locks the struct. When data
- * needs to be updated from outside CacheStruct, use PullData. PullData(...)
+ * \details PullData(...) pulls data from cache, after locking the struct.
+ * When data needs to be updated from outside CacheStruct, use PullData.
+ * PullData(...)
  * checks each write_back set in the list write_backs_, and finds out which
  * type this data corresponds to. This may be a bad idea, but with twin copy
  * implementation, I expect the overhead to be small. -- Chinmayee
@@ -274,27 +274,10 @@ void CacheStruct::UnsetData(Data *d) {
 }
 
 /**
- * \details FlushToData(...) flushes data from struct to given data. This
- * function does not provide any locking, and also needs type information as an
- * argument. This function is like PullData(...), except that it avoids some
- * checks, and locking. It should be used by methods of CacheStruct only.
- */
-void CacheStruct::FlushToData(Data *d, cache::type_id_t t) {
-    DataSet &write_back_t = write_backs_[t];
-    std::vector<cache::type_id_t> var_type(1, t);
-    std::vector<DataArray> write_sets(1, DataArray(1, d));
-    GeometricRegion dreg = d->region();
-    GeometricRegion wreg = GeometricRegion::
-        GetIntersection(write_region_, dreg);
-    WriteFromCache(var_type, write_sets, wreg);
-    // d->clear_dirty_cache_object(this);
-    write_back_t.erase(d);
-}
-
-/**
- * \details FlushCache(...) flushes all data passed to it, The assumptions and
- * semantics are similar to FlushToData(...). This function should be used by
- * methods of CacheStruct only.
+ * \details FlushCache(...) flushes all data passed to it, and unsets
+ * corresponding dirty object mappings. This function should be used by
+ * methods of CacheVar only. It does not check if data in flush_sets is in
+ * write_backs_, making it unsafe. It also provides no locking.
  */
 void CacheStruct::FlushCache(const std::vector<cache::type_id_t> &var_type,
                              const std::vector<DataArray> &flush_sets) {

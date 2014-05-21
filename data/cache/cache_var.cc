@@ -150,9 +150,8 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
 }
 
 /**
- * \details PullData(...) pulls data from cache, after locking the struct. This
- * is like FlushToData(...), except that it also locks the struct. When data
- * needs to be updated from outside CacheVar, use PullData.
+ * \details PullData(...) pulls data from cache, after locking the struct.
+ * When data needs to be updated from outside CacheVar, use PullData.
  */
 void CacheVar::PullData(Data *d) {
     AcquireAccess(cache::EXCVLUSIVE);
@@ -200,27 +199,10 @@ void CacheVar::UnsetData(Data *d) {
 }
 
 /**
- * \details FlushToData(...) flushes data from struct to given data. This
- * function does not provide any locking.
- * It should be used by methods of CacheVar only.
- */
-void CacheVar::FlushToData(Data *d) {
-    if (write_back_.find(d) != write_back_.end()) {
-        DataArray write_set(1, d);
-        GeometricRegion dreg = d->region();
-        GeometricRegion wreg = GeometricRegion::
-            GetIntersection(write_region_, dreg);
-        WriteFromCache(write_set, wreg);
-        // d->clear_dirty_cache_object(this);
-        write_back_.erase(d);
-    }
-}
-
-/**
- * \details FlushCache(...) flushes all data passed to it, The assumptions and
- * semantics are similar to FlushToData(...). This function should be used by
- * methods of CacheVar only. However, this function does not check if data in
- * flush_set is in the write_back_ set, making it unsafe.
+ * \details FlushCache(...) flushes all data passed to it, and unsets
+ * corresponding dirty object mappings. This function should be used by
+ * methods of CacheVar only. It does not check if data in flush_set is in
+ * the write_back_ set, making it unsafe. It also provides no locking.
  */
 void CacheVar::FlushCache(const DataArray &flush_set) {
     WriteFromCache(flush_set, write_region_);

@@ -136,13 +136,6 @@ class CacheVar : public CacheObject {
 
     private:
         /**
-         * \brief Flushes data from cache, removes corresponding dirty data
-         * mapping
-         * \param d is data to flush to
-         */
-        void FlushToData(Data *d);
-
-        /**
          * \brief Flushes data from cache to data in flush_set (immediately)
          * \param flush_set is a data array corresponding to nimbus variables
          */

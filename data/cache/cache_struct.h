@@ -148,15 +148,6 @@ class CacheStruct : public CacheObject {
 
     private:
         /**
-         * \brief Flushes data from cache, removes corresponding dirty data
-         * mapping
-         * \param d is data to flush to
-         * \param t denotes the type of nimbus variable,
-         * as explained in the class description
-         */
-        void FlushToData(Data *d, cache::type_id_t t);
-
-        /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
          * \param var_type is a list of type_ids corresponding to nimbus variables,
          * as explained in the class description
