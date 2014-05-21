@@ -123,6 +123,19 @@ class CacheStruct : public CacheObject {
                         const GeometricRegion &write_region);
 
         /**
+         * \brief Unsets mapping between data and CacheStruct instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d);
+
+        /**
+         * \brief Unsets dirty data mapping between data and CacheStruct
+         * instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d) = 0;
+
+        /**
          * \brief Pulls data from cache, removes corresponding dirty data
          * mapping. Locks the cache object when pulling the data.
          * \param d is data to flush to
@@ -139,12 +152,6 @@ class CacheStruct : public CacheObject {
          */
         cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
                                       const std::vector<DataArray> &read_sets) const;
-
-        /**
-         * \brief Unsets mapping between data and CacheStruct instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetData(Data *d);
 
     private:
         /**

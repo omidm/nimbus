@@ -85,6 +85,19 @@ class CacheObject {
         virtual void PullData(Data *d) = 0;
 
         /**
+         * \brief Unsets mapping between data and CacheObject instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d) = 0;
+
+        /**
+         * \brief Unsets dirty data mapping between data and CacheObject
+         * instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d) = 0;
+
+        /**
          * \brief Acquires access to CacheObject instance
          * \param access can be cache::EXCLUSIVE or cache::SHARED
          */
@@ -103,12 +116,6 @@ class CacheObject {
          * \return Boolean indicating if the instance is available
          */
         bool IsAvailable(cache::CacheAccess access) const;
-
-        /**
-         * \brief Unsets mapping between data and CacheObject instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetData(Data *d) = 0;
 
         /**
          * \brief Accessor for id_ member

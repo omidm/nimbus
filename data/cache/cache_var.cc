@@ -150,6 +150,23 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
 }
 
 /**
+ * \details UnsetData(...) removes data d from data_map_.
+ */
+void CacheVar::UnsetData(Data *d) {
+    GeometricRegion dreg = d->region();
+    if (data_map_.find(dreg) != data_map_.end()) {
+        data_map_.erase(dreg);
+    }
+}
+
+/**
+ * \details UnsetDirtyData(...) removes d from write_back_.
+ */
+void CacheVar::UnsetDirtyData(Data *d) {
+    write_back_.erase(d);
+}
+
+/**
  * \details PullData(...) pulls data from cache, after locking the struct.
  * When data needs to be updated from outside CacheVar, use PullData.
  */
@@ -186,16 +203,6 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
         cur_distance += dreg.dx() * dreg.dy() * dreg.dz();
     }
     return cur_distance;
-}
-
-/**
- * \details UnsetData(...) removes data d from data_map_.
- */
-void CacheVar::UnsetData(Data *d) {
-    GeometricRegion dreg = d->region();
-    if (data_map_.find(dreg) != data_map_.end()) {
-        data_map_.erase(dreg);
-    }
 }
 
 /**

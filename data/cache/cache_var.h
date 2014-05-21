@@ -113,6 +113,19 @@ class CacheVar : public CacheObject {
                         const GeometricRegion &write_region);
 
         /**
+         * \brief Unsets mapping between data and CacheVar instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d);
+
+        /**
+         * \brief Unsets dirty data mapping between data and CacheVar
+         * instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d);
+
+        /**
          * \brief Pulls data from cache, removes corresponding dirty data
          * mapping. Locks the cache object when pulling the data.
          * \param d is data to flush to
@@ -127,12 +140,6 @@ class CacheVar : public CacheObject {
          * \return Returns distance (cost)
          */
         cache::distance_t GetDistance(const DataArray &read_set) const;
-
-        /**
-         * \brief Unsets mapping between data and CacheVar instance
-         * \param d denotes the data to unmap
-         */
-        virtual void UnsetData(Data *d);
 
     private:
         /**

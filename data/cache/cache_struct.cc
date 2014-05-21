@@ -201,6 +201,36 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
 }
 
 /**
+ * \details UnsetData(...) removes data d from data_maps_. It checks every data
+ * map in data_maps_ for the data d, since no prior type information is
+ * available (just like PullData).
+ */
+void CacheStruct::UnsetData(Data *d) {
+    GeometricRegion dreg = d->region();
+    for (size_t t = 0; t < num_variables_; ++t) {
+        DMap &data_map_t = data_maps_[t];
+        if (data_map_t.find(dreg) != data_map_t.end()) {
+            data_map_t.erase(dreg);
+            break;
+        }
+    }
+}
+
+/**
+ * \details UnsetDirtyData(...) removes d from write_backs_.
+ */
+void CacheStruct::UnsetDirtyData(Data *d) {
+    for (size_t t = 0; t < num_variables_; ++t) {
+        DataSet &write_back_t = write_backs_[t];
+        DataSet::iterator it = write_back_t.find(d);
+        if (it != write_back_t.end()) {
+            write_back_t.erase(it);
+            break;
+        }
+    }
+}
+
+/**
  * \details PullData(...) pulls data from cache, after locking the struct.
  * When data needs to be updated from outside CacheStruct, use PullData.
  * PullData(...)
@@ -255,22 +285,6 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
         }
     }
     return cur_distance;
-}
-
-/**
- * \details UnsetData(...) removes data d from data_maps_. It checks every data
- * map in data_maps_ for the data d, since no prior type information is
- * available (just like PullData).
- */
-void CacheStruct::UnsetData(Data *d) {
-    GeometricRegion dreg = d->region();
-    for (size_t t = 0; t < num_variables_; ++t) {
-        DMap &data_map_t = data_maps_[t];
-        if (data_map_t.find(dreg) != data_map_t.end()) {
-            data_map_t.erase(dreg);
-            break;
-        }
-    }
 }
 
 /**
