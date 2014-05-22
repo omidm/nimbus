@@ -107,6 +107,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
     nimbus::Timer timer(std::string("advect_v_") + id().toString());
     driver->AdvectVImpl(this, da, dt);
   }
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   *thread_queue_hook() = NULL;
   // Free resources.

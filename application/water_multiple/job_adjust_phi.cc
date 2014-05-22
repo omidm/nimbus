@@ -94,6 +94,8 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
 
     *thread_queue_hook() = NULL;
 
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+
     // free resources
     DestroyExampleAndDriver(example, driver);
 

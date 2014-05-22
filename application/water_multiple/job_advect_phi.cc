@@ -102,6 +102,7 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
   }
 
   *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

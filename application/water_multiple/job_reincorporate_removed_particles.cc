@@ -102,6 +102,7 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     }
 
     *thread_queue_hook() = NULL;
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
     // free resources
     DestroyExampleAndDriver(example, driver);
 

@@ -96,6 +96,7 @@ void JobExtrapolatePhi::Execute(nimbus::Parameter params,
   driver->ExtrapolatePhiImpl(this, da, dt);
 
   *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
