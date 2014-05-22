@@ -51,7 +51,10 @@
 
 namespace nimbus {
 
-WorkerManager::WorkerManager(bool multi_threaded) {
+int WorkerManager::inside_job_parallism = 0;
+int WorkerManager::across_job_parallism = 0;
+
+WorkerManager::WorkerManager() {
   pthread_mutex_init(&scheduling_needed_lock_, NULL);
   pthread_cond_init(&scheduling_needed_cond_, NULL);
   scheduling_needed_ = false;
@@ -67,12 +70,12 @@ WorkerManager::WorkerManager(bool multi_threaded) {
   pthread_mutex_init(&fast_job_queue_lock_, NULL);
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
-  if (multi_threaded) {
-    computation_thread_num = 2;
-    fast_thread_num = 1;
-  } else {
+  if (across_job_parallism <= 0) {
     computation_thread_num = 1;
     fast_thread_num = 0;
+  } else {
+    computation_thread_num = across_job_parallism;
+    fast_thread_num = 1;
   }
   idle_computation_threads_ = 0;
   dispatched_computation_job_count_ = 0;
@@ -259,12 +262,13 @@ void WorkerManager::ScheduleComputationJobs() {
           worker_thread->next_job_to_run->name().c_str(),
           worker_thread->next_job_to_run->id().elem());
       worker_thread->job_assigned = true;
-      /*
-      worker_thread->set_use_threading(true);
-      worker_thread->set_core_quota(3);
-      */
-      worker_thread->set_use_threading(false);
-      worker_thread->set_core_quota(1);
+      if (inside_job_parallism <= 0) {
+        worker_thread->set_use_threading(false);
+        worker_thread->set_core_quota(1);
+      } else {
+        worker_thread->set_use_threading(true);
+        worker_thread->set_core_quota(inside_job_parallism);
+      }
       ++dispatched_computation_job_count_;
       --ready_jobs_count_;
       pthread_cond_signal(&worker_thread->thread_can_start);
@@ -282,6 +286,7 @@ int WorkerManager::ActiveComputationThreads() {
     WorkerThreadComputation* worker_thread =
         dynamic_cast<WorkerThreadComputation*>(*index);  // NOLINT
     if (worker_thread && !worker_thread->idle) {
+      // TODO(quhang) Race condition still might happen.
       ThreadQueueProto* thread_queue = worker_thread->thread_queue;
       result += (thread_queue ? thread_queue->get_active_threads() : 1);
     }

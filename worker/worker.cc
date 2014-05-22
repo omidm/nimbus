@@ -50,8 +50,6 @@
 #include "worker/util_dumping.h"
 #include "data/physbam/physbam_data.h"
 
-// #define MULTITHREADED_WORKER true
-#define MULTITHREADED_WORKER true
 #define SCHEDULER_COMMAND_GROUP_QUOTA 10
 
 using boost::hash;
@@ -81,7 +79,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
-    worker_manager_ = new WorkerManager(MULTITHREADED_WORKER);
+    worker_manager_ = new WorkerManager();
     DUMB_JOB_ID = std::numeric_limits<job_id_t>::max();
     worker_job_graph_.AddVertex(
         DUMB_JOB_ID,

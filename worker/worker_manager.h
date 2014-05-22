@@ -55,7 +55,9 @@ class Worker;
 class WorkerManager {
   friend class WorkerThreadMonitor;
  public:
-  explicit WorkerManager(bool multi_threaded);
+  static int inside_job_parallism;
+  static int across_job_parallism;
+  explicit WorkerManager();
   ~WorkerManager();
 
   void SetLoggingInterface(
