@@ -89,12 +89,13 @@ void GetAppCacheObjects(
     GetWriteData(job, fvstring, da, &write);
     dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity for region %s\n",
         read.size(), array_reg.toString().c_str());
-    nimbus::CacheObject *cache_obj =
-      cm->GetAppObject(read, write,
-          array_reg,
-          application::kCacheFaceVel,
-          nimbus::EXCLUSIVE, write.empty());
-    cache->fv = dynamic_cast<CacheFaceArray<T> *>(cache_obj);
+    nimbus::CacheVar *cache_var =
+      cm->GetAppVar(
+          read, array_reg,
+          write, array_reg,
+          application::kCacheFaceVel, array_reg,
+          nimbus::EXCLUSIVE, !write.empty());
+    cache->fv = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fv != NULL);
     dbg(APP_LOG, "Finish translating velocity.\n");
   }
@@ -107,12 +108,13 @@ void GetAppCacheObjects(
     GetWriteData(job, fvgstring, da, &write);
     dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity ghost for region %s\n",
         read.size(), array_reg_outer_3.toString().c_str());
-    nimbus::CacheObject *cache_obj =
-      cm->GetAppObject(read, write,
-          array_reg_outer_3,
-          application::kCacheFaceVelGhost,
-          nimbus::EXCLUSIVE, write.empty());
-    cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_obj);
+    nimbus::CacheObject *cache_var =
+      cm->GetAppVar(
+          read, array_reg_outer_3,
+          write, array_reg_outer_3,
+          application::kCacheFaceVelGhost, array_reg_outer_3,
+          nimbus::EXCLUSIVE, !write.empty());
+    cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fvg != NULL);
     dbg(APP_LOG, "Finish translating ghost velocity.\n");
   }
@@ -132,73 +134,58 @@ void GetAppCacheObjects(
       GetReadData(job, lsstring, da, &read);
       GetWriteData(job, lsstring, da, &write);
     }
-    if (l) {
-      read3 = read;
-      write3 = write;
+    if (l || lr) read3 = read;
+    if (l || lw) write3 = write;
+    if (l7r) read7 = read;
+    if (l7w) write7 = write;
+    if (l8r) read8 = read;
+    if (l8w) write8 = write;
+    DataArray write_empty;
+    if (l || lr || lw) {
+      dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 3 for region %s\n",
+          read3.size(), array_reg_outer_3.toString().c_str());
+      nimbus::CacheVar *cache_var =
+        cm->GetAppObject(
+            read3, array_reg_outer_3,
+            write_empty, array_reg_outer_3,
+            application::kCachePhi3, array_reg_outer_3,
+            nimbus::EXCLUSIVE, !write3.empty());
+      cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+      assert(cache->phi3 != NULL);
+      dbg(APP_LOG, "Finish translating velocity levelset 3.\n");
     }
-    if (lr)
-      read3 = read;
-    if (lw)
-      write3 = write;
-    if (l7r)
-      read7 = read;
-    if (l7w)
-      write7 = write;
-    if (l8r)
-      read8 = read;
-    if (l8w)
-      write8 = write;
-    // TODO(Chinmayee): revisit this design later. Multiple cache objects for
-    // same physical data.
-    int order[3];
-    if (!write3.empty()) {
-      order[0] = 7; order[1] = 8; order[2] = 3;
+    if (l7r || l7w) {
+      dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 7 for region %s\n",
+          read7.size(), array_reg_outer_7.toString().c_str());
+      nimbus::CacheObject *cache_var =
+        cm->GetAppObject(
+            read7, array_reg_outer_7,
+            write7, array_reg_outer_7,
+            application::kCachePhi7, array_reg_outer_7,
+            nimbus::EXCLUSIVE, !write_7.empty());
+      cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+      assert(cache->phi7 != NULL);
+      dbg(APP_LOG, "Finish translating velocity levelset 7.\n");
     }
-    else if (!write7.empty()) {
-      order[0] = 3; order[1] = 8; order[2] = 7;
+    if (l8r || l8w) {
+      dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 8 for region %s\n",
+          read8.size(), array_reg_outer_8.toString().c_str());
+      nimbus::CacheObject *cache_var =
+        cm->GetAppObject(
+            read8, array_reg_outer_8,
+            write8, array_reg_outer_8,
+            application::kCachePhi8, array_reg_outer_8,
+            nimbus::EXCLUSIVE, !write_8.empty());
+      cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
+      assert(cache->phi8 != NULL);
+      dbg(APP_LOG, "Finish translating levelset 8.\n");
     }
-    else {
-      order[0] = 3; order[1] = 7; order[2] = 8;
-    }
-    for (size_t i = 0; i < 3; ++i) {
-      if ((!(read3.empty() && write3.empty())) && order[i] == 3)
-      {
-        dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 3 for region %s\n",
-            read3.size(), array_reg_outer_3.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-          cm->GetAppObject(read3, write3,
-              array_reg_outer_3,
-              application::kCachePhi3,
-              nimbus::EXCLUSIVE, write3.empty() && write7.empty() && write8.empty());
-        cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_obj);
-        assert(cache->phi3 != NULL);
-        dbg(APP_LOG, "Finish translating velocity levelset 3.\n");
-      }
-      if ((!(read7.empty() && write7.empty())) && order[i] == 7) {
-        dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 7 for region %s\n",
-            read7.size(), array_reg_outer_7.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-          cm->GetAppObject(read7, write7,
-              array_reg_outer_7,
-              application::kCachePhi7,
-              nimbus::EXCLUSIVE, false);
-        cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_obj);
-        assert(cache->phi7 != NULL);
-        dbg(APP_LOG, "Finish translating velocity levelset 7.\n");
-      }
-      if ((!(read8.empty() && write8.empty())) && order[i] == 8) {
-        dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 8 for region %s\n",
-            read8.size(), array_reg_outer_8.toString().c_str());
-        nimbus::CacheObject *cache_obj =
-          cm->GetAppObject(read8, write8,
-              array_reg_outer_8,
-              application::kCachePhi8,
-              nimbus::EXCLUSIVE, false);
-        cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_obj);
-        assert(cache->phi8 != NULL);
-        dbg(APP_LOG, "Finish translating levelset 8.\n");
-      }
-    }
+    if (!write3.empty())
+      cache->phi3->SetUpWrite(write3, array_reg_outer_3);
+    if (!write7.empty())
+      cache->phi7->SetUpWrite(write7, array_reg_outer_7);
+    if (!write8.empty())
+      cache->phi8->SetUpWrite(write8, array_reg_outer_8);
   }
   // psi_d.
   if (data_config.GetFlag(DataConfig::PSI_D))

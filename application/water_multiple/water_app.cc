@@ -36,6 +36,8 @@
  */
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/cache_data_include.h"
+#include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/job_include.h"
 #include "application/water_multiple/reg_def.h"
@@ -46,6 +48,7 @@
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 
@@ -253,6 +256,25 @@ namespace application {
         RegisterJob(PROJECTION_REDUCE_ALPHA,
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
+
+        nimbus::GeometricRegion zero_reg;
+        CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, zero_reg);
+        CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, zero_reg, kGhostNum);
+        CacheFaceArray<bool> kCachePsiN(kDefaultRegion, zero_reg, 1);
+        CacheScalarArray<T> kCachePhi3(kDefaultRegion, zero_reg, 3);
+        CacheScalarArray<T> kCachePhi7(kDefaultRegion, zero_reg, 7);
+        CacheScalarArray<T> kCachePhi8(kDefaultRegion, zero_reg, 8);
+        CacheScalarArray<bool> kCachePsiD(kDefaultRegion, zero_reg, 1);
+        CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, zero_reg, 3);
+
+        kCacheFaceVel.MakePrototype();
+        kCacheFaceVelGhost.MakePrototype();
+        kCachePsiN.MakePrototype();
+        kCachePhi3.MakePrototype();
+        kCachePhi7.MakePrototype();
+        kCachePhi8.MakePrototype();
+        kCachePsiD.MakePrototype();
+        kCachePLE.MakePrototype();
 
         dbg(APP_LOG, "Completed loading water application\n");
     }
