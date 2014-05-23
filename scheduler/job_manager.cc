@@ -61,6 +61,7 @@ JobManager::JobManager() {
         boost::shared_ptr<MetaBeforeSet> (new MetaBeforeSet()));
     job->set_job_depth(NIMBUS_INIT_JOB_DEPTH);
   }
+  parent_removed_ = false;
   pass_version_in_progress_ = 0;
 }
 
@@ -153,6 +154,10 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     return false;
   }
 
+  if (!sterile) {
+    live_parents_.insert(job_id);
+  }
+
   return true;
 }
 
@@ -191,6 +196,10 @@ bool JobManager::AddJobEntry(const JobType& job_type,
           parent_job_id, job_id);
       exit(-1);
     }
+  }
+
+  if (!sterile) {
+    live_parents_.insert(job_id);
   }
 
   return true;
@@ -352,12 +361,27 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   JobEntryMap::iterator iter;
   for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
     assert(iter->second->done());
+    if (!(iter->second->sterile())) {
+      live_parents_.remove(iter->second->job_id());
+      parent_removed_ = true;
+    }
     RemoveJobEntry(iter->second);
     dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
     ++num;
     jobs_done_.erase(iter++);
   }
   return num;
+}
+
+void JobManager::CleanLdlMap() {
+  if (parent_removed_) {
+    Log log;
+    log.StartTimer();
+    ldl_map_.CleanTable(live_parents_);
+    parent_removed_ = false;
+    log.StopTimer();
+    std::cout << "Clean ldl map: " << log.timer() << std::endl;
+  }
 }
 
 void JobManager::JobDone(job_id_t job_id) {

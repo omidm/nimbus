@@ -103,7 +103,7 @@ void Scheduler::SchedulerCoreProcessor() {
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
     RemoveObsoleteJobEntries();
-    // CleanLdlMap();
+    CleanLdlMap();
     TerminationProcedure();
 
     log_.StopTimer();
@@ -275,6 +275,10 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
 
 size_t Scheduler::RemoveObsoleteJobEntries() {
   return job_manager_->RemoveObsoleteJobEntries();
+}
+
+void Scheduler::CleanLdlMap() {
+  job_manager_->CleanLdlMap();
 }
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,

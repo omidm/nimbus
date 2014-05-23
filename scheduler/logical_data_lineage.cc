@@ -134,7 +134,6 @@ bool LogicalDataLineage::AppendLdlEntry(
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
   if (!sterile) {
-    std::cout << (--(chain_.end()))->version() << std::endl;
     parents_index_.push_back(--(chain_.end()));
   }
 
