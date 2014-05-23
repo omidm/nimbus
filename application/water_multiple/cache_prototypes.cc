@@ -36,25 +36,26 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
+#include <string>
 
 #include "application/water_multiple/cache_data_include.h"
+#include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/parameters.h"
 
 namespace application {
 
-extern CacheFaceArray<T> kCacheFaceVel;
-extern CacheFaceArray<T> kCacheFaceVelGhost;
-extern CacheFaceArray<bool> kCachePsiN;
+nimbus::GeometricRegion zero_reg;
 
-extern CacheScalarArray<T> kCachePhi3;
-extern CacheScalarArray<T> kCachePhi7;
-extern CacheScalarArray<T> kCachePhi8;
-extern CacheScalarArray<bool> kCachePsiD;
+CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, zero_reg);
+CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, zero_reg, kGhostNum);
+CacheFaceArray<bool> kCachePsiN(kDefaultRegion, zero_reg, 1);
 
-extern CacheParticleLevelsetEvolution<float> kCachePLE;
+CacheScalarArray<T> kCachePhi3(kDefaultRegion, zero_reg, 3);
+CacheScalarArray<T> kCachePhi7(kDefaultRegion, zero_reg, 7);
+CacheScalarArray<T> kCachePhi8(kDefaultRegion, zero_reg, 8);
+CacheScalarArray<bool> kCachePsiD(kDefaultRegion, zero_reg, 1);
+
+CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, zero_reg, 3);
 
 } // namespace application
 
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_

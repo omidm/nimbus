@@ -257,16 +257,6 @@ namespace application {
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
 
-        nimbus::GeometricRegion zero_reg;
-        CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, zero_reg);
-        CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, zero_reg, kGhostNum);
-        CacheFaceArray<bool> kCachePsiN(kDefaultRegion, zero_reg, 1);
-        CacheScalarArray<T> kCachePhi3(kDefaultRegion, zero_reg, 3);
-        CacheScalarArray<T> kCachePhi7(kDefaultRegion, zero_reg, 7);
-        CacheScalarArray<T> kCachePhi8(kDefaultRegion, zero_reg, 8);
-        CacheScalarArray<bool> kCachePsiD(kDefaultRegion, zero_reg, 1);
-        CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, zero_reg, 3);
-
         kCacheFaceVel.MakePrototype();
         kCacheFaceVelGhost.MakePrototype();
         kCachePsiN.MakePrototype();
