@@ -89,7 +89,7 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
-    assert(users_ != 0 && (access == cache::EXCLUSIVE || access_ == cache::EXCLUSIVE));
+    assert(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED));
     access_ = access;
     users_++;
 }
