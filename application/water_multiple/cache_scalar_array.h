@@ -59,6 +59,11 @@ class CacheScalarArray : public nimbus::CacheVar {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
+        explicit CacheScalarArray(const nimbus::GeometricRegion &global_reg,
+                                  const nimbus::GeometricRegion &ob_reg =
+                                  nimbus::GeometricRegion(),
+                                  const int ghost_width = 0);
+
         PhysBAMScalarArray *data() {
             return data_;
         }
@@ -67,11 +72,6 @@ class CacheScalarArray : public nimbus::CacheVar {
         }
 
     protected:
-        explicit CacheScalarArray(const nimbus::GeometricRegion &global_reg,
-                                  const nimbus::GeometricRegion &ob_reg =
-                                  nimbus::GeometricRegion(),
-                                  const int ghost_width = 0);
-
         virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
         virtual void ReadToCache(const nimbus::DataArray &read_set,

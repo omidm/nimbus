@@ -36,7 +36,11 @@
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
  */
 
+#include <string>
+#include <vector>
+
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/cache_data_include.h"
 #include "application/water_multiple/cache_options.h"
 #include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_names.h"
@@ -73,11 +77,10 @@ void GetAppCacheObjects(
   nimbus::GeometricRegion local_region = init_config.local_region;
   nimbus::GeometricRegion array_reg(local_region);
   nimbus::GeometricRegion array_reg_outer_1(array_reg.NewEnlarged(1));
-  nimbus::GeometricRegion array_reg_outer_3(array_reg.NewEnlarged(application::kGhostNum));
+  nimbus::GeometricRegion array_reg_outer_3(array_reg.NewEnlarged(kGhostNum));
   nimbus::GeometricRegion array_reg_outer_7(array_reg.NewEnlarged(7));
   nimbus::GeometricRegion array_reg_outer_8(array_reg.NewEnlarged(8));
 
-  dbg(DBG_WARN, "\n--- *** --- LOAD \n");
   nimbus::CacheManager *cm = job.GetCacheManager();
 
   // mac velocities
@@ -87,17 +90,14 @@ void GetAppCacheObjects(
     const std::string fvstring = std::string(APP_FACE_VEL);
     GetReadData(job, fvstring, da, &read);
     GetWriteData(job, fvstring, da, &write);
-    dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity for region %s\n",
-        read.size(), array_reg.toString().c_str());
     nimbus::CacheVar *cache_var =
       cm->GetAppVar(
           read, array_reg,
           write, array_reg,
-          application::kCacheFaceVel, array_reg,
-          nimbus::EXCLUSIVE, !write.empty());
+          kCacheFaceVel, array_reg,
+          nimbus::cache::EXCLUSIVE, !write.empty());
     cache->fv = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fv != NULL);
-    dbg(APP_LOG, "Finish translating velocity.\n");
   }
   // mac velocities ghost
   if (data_config.GetFlag(DataConfig::VELOCITY_GHOST))
@@ -106,17 +106,14 @@ void GetAppCacheObjects(
     const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
     GetReadData(job, fvgstring, da, &read);
     GetWriteData(job, fvgstring, da, &write);
-    dbg(DBG_WARN, "\n--- Requesting %i elements into face velocity ghost for region %s\n",
-        read.size(), array_reg_outer_3.toString().c_str());
     nimbus::CacheObject *cache_var =
       cm->GetAppVar(
           read, array_reg_outer_3,
           write, array_reg_outer_3,
-          application::kCacheFaceVelGhost, array_reg_outer_3,
-          nimbus::EXCLUSIVE, !write.empty());
+          kCacheFaceVelGhost, array_reg_outer_3,
+          nimbus::cache::EXCLUSIVE, !write.empty());
     cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fvg != NULL);
-    dbg(APP_LOG, "Finish translating ghost velocity.\n");
   }
   // levelset
   {
@@ -140,45 +137,36 @@ void GetAppCacheObjects(
     if (l7w) write7 = write;
     if (l8r) read8 = read;
     if (l8w) write8 = write;
-    DataArray write_empty;
+    nimbus::DataArray write_empty;
     if (l || lr || lw) {
-      dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 3 for region %s\n",
-          read3.size(), array_reg_outer_3.toString().c_str());
       nimbus::CacheVar *cache_var =
-        cm->GetAppObject(
+        cm->GetAppVar(
             read3, array_reg_outer_3,
             write_empty, array_reg_outer_3,
-            application::kCachePhi3, array_reg_outer_3,
-            nimbus::EXCLUSIVE, !write3.empty());
+            kCachePhi3, array_reg_outer_3,
+            nimbus::cache::EXCLUSIVE, !write3.empty());
       cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi3 != NULL);
-      dbg(APP_LOG, "Finish translating velocity levelset 3.\n");
     }
     if (l7r || l7w) {
-      dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 7 for region %s\n",
-          read7.size(), array_reg_outer_7.toString().c_str());
-      nimbus::CacheObject *cache_var =
-        cm->GetAppObject(
+      nimbus::CacheVar *cache_var =
+        cm->GetAppVar(
             read7, array_reg_outer_7,
             write7, array_reg_outer_7,
-            application::kCachePhi7, array_reg_outer_7,
-            nimbus::EXCLUSIVE, !write_7.empty());
+            kCachePhi7, array_reg_outer_7,
+            nimbus::cache::EXCLUSIVE, !write7.empty());
       cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi7 != NULL);
-      dbg(APP_LOG, "Finish translating velocity levelset 7.\n");
     }
     if (l8r || l8w) {
-      dbg(DBG_WARN, "\n--- Requesting %i elements into levelset 8 for region %s\n",
-          read8.size(), array_reg_outer_8.toString().c_str());
-      nimbus::CacheObject *cache_var =
-        cm->GetAppObject(
+      nimbus::CacheVar *cache_var =
+        cm->GetAppVar(
             read8, array_reg_outer_8,
             write8, array_reg_outer_8,
-            application::kCachePhi8, array_reg_outer_8,
-            nimbus::EXCLUSIVE, !write_8.empty());
+            kCachePhi8, array_reg_outer_8,
+            nimbus::cache::EXCLUSIVE, !write8.empty());
       cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi8 != NULL);
-      dbg(APP_LOG, "Finish translating levelset 8.\n");
     }
     if (!write3.empty())
       cache->phi3->SetUpWrite(write3, array_reg_outer_3);
@@ -194,16 +182,14 @@ void GetAppCacheObjects(
     const std::string psi_d_string = std::string(APP_PSI_D);
     GetReadData(job, psi_d_string, da, &read);
     GetWriteData(job, psi_d_string, da, &write);
-    dbg(DBG_WARN, "\n--- Requesting %i elements into psi_d for region %s\n",
-        read.size(), array_reg_outer_1.toString().c_str());
-    nimbus::CacheObject *cache_obj =
-      cm->GetAppObject(read, write,
-          array_reg_outer_1,
-          application::kCachePsiD,
-          nimbus::EXCLUSIVE, write.empty());
-    cache->psi_d = dynamic_cast<CacheScalarArray<bool> *>(cache_obj);
+    nimbus::CacheVar *cache_var =
+      cm->GetAppVar(
+          read, array_reg_outer_1,
+          write, array_reg_outer_1,
+          kCachePsiD, array_reg_outer_1,
+          nimbus::cache::EXCLUSIVE, !write.empty());
+    cache->psi_d = dynamic_cast<CacheScalarArray<bool> *>(cache_var);
     assert(cache->psi_d != NULL);
-    dbg(APP_LOG, "Finish translating psi_d.\n");
   }
   // psi_n.
   if (data_config.GetFlag(DataConfig::PSI_N))
@@ -212,57 +198,47 @@ void GetAppCacheObjects(
     const std::string psi_n_string = std::string(APP_PSI_N);
     GetReadData(job, psi_n_string, da, &read);
     GetWriteData(job, psi_n_string, da, &write);
-    dbg(DBG_WARN, "\n--- Requesting %i elements into psi_n for region %s\n",
-        read.size(), array_reg_outer_1.toString().c_str());
-    nimbus::CacheObject *cache_obj =
-      cm->GetAppObject(read, write,
-          array_reg_outer_1,
-          application::kCachePsiN,
-          nimbus::EXCLUSIVE, write.empty());
-    cache->psi_n = dynamic_cast<CacheFaceArray<bool> *>(cache_obj);
+    nimbus::CacheVar *cache_var =
+      cm->GetAppVar(
+          read, array_reg_outer_1,
+          write, array_reg_outer_1,
+          kCachePsiN, array_reg_outer_1,
+          nimbus::cache::EXCLUSIVE, !write.empty());
+    cache->psi_n = dynamic_cast<CacheFaceArray<bool> *>(cache_var);
     assert(cache->psi_n != NULL);
-    dbg(APP_LOG, "Finish translating psi_n.\n");
   }
-  if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE) ||
-      data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE) ||
-      data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE) ||
-      data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE))
-  {
-    nimbus::DataArray read, write;
-    const std::string pp_string = std::string(APP_POS_PARTICLES);
-    GetReadData(job, pp_string, da, &read, false);
-    GetWriteData(job, pp_string, da, &write, false);
-    const std::string np_string = std::string(APP_NEG_PARTICLES);
-    GetReadData(job, np_string, da, &read, false);
-    GetWriteData(job, np_string, da, &write, false);
-    const std::string prp_string = std::string(APP_POS_REM_PARTICLES);
-    GetReadData(job, prp_string, da, &read, false);
-    GetWriteData(job, prp_string, da, &write, false);
-    const std::string nrp_string = std::string(APP_NEG_REM_PARTICLES);
-    GetReadData(job, nrp_string, da, &read, false);
-    GetWriteData(job, nrp_string, da, &write, false);
-    dbg(DBG_WARN, "\n--- Requesting %i elements into particles for region %s\n",
-        read.size(), array_reg_outer_3.toString().c_str());
-    nimbus::CacheObject *cache_obj =
-      cm->GetAppObject(read, write,
-          array_reg_outer_3,
-          application::kCachePLE,
-          nimbus::EXCLUSIVE, false, true);
-    cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_obj);
-    assert(cache->ple != NULL);
-
-    if (init_config.clear_read_shared_particles) {
-      nimbus::GeometricRegion inner_reg(array_reg.NewEnlarged(-3));
-      nimbus::DataArray shared;
-      for (size_t k = 0; k < read.size(); ++k) {
-        nimbus::Data *d = read[k];
-        nimbus::GeometricRegion dr = d->region();
-        if (!inner_reg.Covers(&dr))
-          shared.push_back(d);
-      }
-      cache->ple->InvalidateCacheObject(shared);
+  bool dflag[] = {  data_config.GetFlag(DataConfig::POSITIVE_PARTICLE),
+                    data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE),
+                    data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE),
+                    data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)
+                 };
+  if (dflag[POS] || dflag[NEG] || dflag[POS_REM] || dflag[NEG_REM]) {
+    nimbus::cache::type_id_t vars[] = {POS, NEG, POS_REM, NEG_REM};
+    std::vector<nimbus::cache::type_id_t> var_type(
+        vars, vars + sizeof(vars)/sizeof(nimbus::cache::type_id_t));
+    std::vector<nimbus::DataArray> read(4), write(4);
+    std::string dtype[] = { APP_POS_PARTICLES,
+                            APP_NEG_PARTICLES,
+                            APP_POS_REM_PARTICLES,
+                            APP_NEG_REM_PARTICLES
+                          };
+    for (size_t t = 0; t < NUM_PARTICLE_TYPES; ++t) {
+      if (!dflag[t])
+        continue;
+      GetReadData(job, dtype[t], da, &read[t], false);
+      GetWriteData(job, dtype[t], da, &write[t], false);
     }
-    dbg(APP_LOG, "Finish translating particles.\n");
+    nimbus::CacheStruct *cache_struct =
+      cm->GetAppStruct(
+          var_type,
+          read, array_reg_outer_3,
+          write, array_reg_outer_3,
+          kCachePLE, array_reg_outer_3,
+          nimbus::cache::EXCLUSIVE,
+          !(write[POS].empty() || write[NEG].empty() ||
+            write[POS_REM].empty() || write[NEG_REM].empty()));
+    cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
+    assert(cache->ple != NULL);
   }
 }
 

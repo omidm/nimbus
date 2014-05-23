@@ -77,8 +77,8 @@ CacheStruct::CacheStruct(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
 void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
                               const std::vector<DataArray> &read_sets,
                               const GeometricRegion &read_region,
-                              const GeometricRegion &write_region,
-                              bool invalidate_read_minus_write) {
+                              const GeometricRegion &valid_region,
+                              bool invalidate_read_minus_valid) {
     size_t num_vars = var_type.size();
     if (read_sets.size() != num_vars) {
         dbg(DBG_ERROR, "Mismatch in number of variable types passed to UpdateCache\n");
@@ -104,8 +104,8 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             if (it == data_map_t.end()) {
                 d->SyncData();
                 diff_t.push_back(d);
-                if (!invalidate_read_minus_write ||
-                    write_region.Covers(&dreg)) {
+                if (!invalidate_read_minus_valid ||
+                    valid_region.Covers(&dreg)) {
                     to_map_t.push_back(d);
                 }
             } else {
@@ -116,8 +116,8 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
                     }
-                    if (!invalidate_read_minus_write ||
-                        write_region.Covers(&dreg)) {
+                    if (!invalidate_read_minus_valid ||
+                        valid_region.Covers(&dreg)) {
                         to_map_t.push_back(d);
                     }
                     data_map_t.erase(it);
@@ -135,7 +135,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
         for (size_t i = 0; i < diff_t.size(); ++i) {
             Data *d = diff_t.at(i);
             GeometricRegion dreg = d->region();
-            if (!invalidate_read_minus_write || write_region.Covers(&dreg)) {
+            if (!invalidate_read_minus_valid || valid_region.Covers(&dreg)) {
                 data_map_t[dreg] = d;
                 d->SetUpCacheObject(this);
             }

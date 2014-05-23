@@ -53,7 +53,8 @@ enum Particles {
     POS,
     NEG,
     POS_REM,
-    NEG_REM
+    NEG_REM,
+    NUM_PARTICLE_TYPES
 };
 
 template<class TS = float>

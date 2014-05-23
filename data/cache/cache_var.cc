@@ -73,8 +73,8 @@ CacheVar::CacheVar(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
  */
 void CacheVar::UpdateCache(const DataArray &read_set,
                            const GeometricRegion &read_region,
-                           const GeometricRegion &write_region,
-                           bool invalidate_read_minus_write) {
+                           const GeometricRegion &valid_region,
+                           bool invalidate_read_minus_valid) {
     DataArray diff, flush, to_map;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
@@ -83,8 +83,8 @@ void CacheVar::UpdateCache(const DataArray &read_set,
         if (it == data_map_.end()) {
             d->SyncData();
             diff.push_back(d);
-            if (!invalidate_read_minus_write ||
-                write_region.Covers(&dreg)) {
+            if (!invalidate_read_minus_valid ||
+                valid_region.Covers(&dreg)) {
                 to_map.push_back(d);
             }
         } else {
@@ -95,8 +95,8 @@ void CacheVar::UpdateCache(const DataArray &read_set,
                 if (write_back_.find(d_old) != write_back_.end()) {
                     flush.push_back(d_old);
                 }
-                if (!invalidate_read_minus_write ||
-                    write_region.Covers(&dreg)) {
+                if (!invalidate_read_minus_valid ||
+                    valid_region.Covers(&dreg)) {
                     to_map.push_back(d);
                 }
                 data_map_.erase(it);
@@ -109,7 +109,7 @@ void CacheVar::UpdateCache(const DataArray &read_set,
     for (size_t i = 0; i < to_map.size(); ++i) {
         Data *d = to_map.at(i);
         GeometricRegion dreg = d->region();
-        if (!invalidate_read_minus_write || write_region.Covers(&dreg)) {
+        if (!invalidate_read_minus_valid || valid_region.Covers(&dreg)) {
             data_map_[dreg] = d;
             d->SetUpCacheObject(this);
         }

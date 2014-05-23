@@ -104,10 +104,10 @@ class CacheStruct : public CacheObject {
          * \param var_type is a list of type_ids corresponding to nimbus variables
          * \param read_sets is a list of data arrays corresponding to nimbus variables
          * \param read_region is the geometric region to read
-         * \param write_region is the geometric region to write (used if
-         * invalidate_read_minus_write = true)
-         * \param invalidate_read_mibus_write indicates whether to keep the
-         * data read into cache object, outside requested write_region valid.
+         * \param valid_region is the geometric region to keep mappings valid
+         * (invalidate rest), used in invalidate_read_minus_valid is true
+         * \param invalidate_read_minus_valid indicates whether to keep the
+         * data read into cache object, outside requested valid_region valid.
          * This is needed because some application functions will write to
          * cache object regions that are not in the application job's write
          * set.
@@ -115,8 +115,8 @@ class CacheStruct : public CacheObject {
         void UpdateCache(const std::vector<cache::type_id_t> &var_type,
                          const std::vector<DataArray> &read_sets,
                          const GeometricRegion &read_region,
-                         const GeometricRegion &write_region,
-                         bool invalidate_read_minus_write = false);
+                         const GeometricRegion &valid_region,
+                         bool invalidate_read_minus_valid = false);
 
         /**
          * \brief Sets up mappings for data in write_sets, and also sets up the

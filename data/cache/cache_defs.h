@@ -49,8 +49,8 @@ namespace nimbus {
 namespace cache {
 enum CacheAccess { SHARED, EXCLUSIVE };
 enum CacheTType { VAR, STRUCT };
-typedef size_t type_id_t;
-typedef size_t co_id_t;
+typedef uint64_t type_id_t;
+typedef uint64_t co_id_t;
 typedef uint64_t distance_t;
 }  // namespace cache
 }  // namespace nimbus
