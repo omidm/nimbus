@@ -64,7 +64,11 @@ CacheStruct::CacheStruct(size_t num_variables) : num_variables_(num_variables),
 /**
  * \details
  */
-CacheStruct::CacheStruct(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
+CacheStruct::CacheStruct(size_t num_variables, const GeometricRegion &ob_reg)
+    : CacheObject(ob_reg),
+      num_variables_(num_variables),
+      data_maps_(num_variables),
+      write_backs_(num_variables) {
 }
 
 /**

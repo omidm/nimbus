@@ -79,10 +79,12 @@ class CacheStruct : public CacheObject {
 
         /**
          * \brief Creates a CacheStruct
+         * \param num_variables indicates number of different application
+         * variables that the CacheStruct instance contains
          * \param  ob_reg specifies application object (CacheStruct) region
          * \return Constructed CacheStruct instance
          */
-        explicit CacheStruct(const GeometricRegion &ob_reg);
+        explicit CacheStruct(size_t num_variables, const GeometricRegion &ob_reg);
 
         /**
          * \brief Creates a new CacheStruct instance using current instance
@@ -161,6 +163,11 @@ class CacheStruct : public CacheObject {
                                       const std::vector<DataArray> &read_sets) const;
 
     private:
+        /**
+         * \brief Disallow calling constructor with no arguments
+         */
+        CacheStruct() {}
+
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
          * \param var_type is a list of type_ids corresponding to nimbus variables,

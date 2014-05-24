@@ -49,12 +49,20 @@
 #include "worker/data.h"
 
 namespace application {
+
+template<class TS> CacheParticleLevelsetEvolution<TS>::
+CacheParticleLevelsetEvolution(bool make_proto)
+: CacheStruct(NUM_PARTICLE_TYPES) {
+    if (make_proto)
+        MakePrototype();
+}
+
 template<class TS> CacheParticleLevelsetEvolution<TS>::
 CacheParticleLevelsetEvolution(
         const nimbus::GeometricRegion &global_reg,
         const nimbus::GeometricRegion &ob_reg,
         const int ghost_width)
-    : CacheStruct(ob_reg),
+    : CacheStruct(NUM_PARTICLE_TYPES, ob_reg),
       global_region_(global_reg),
       local_region_(ob_reg.NewEnlarged(-ghost_width)),
       inner_region_(ob_reg.NewEnlarged(-2*ghost_width)),

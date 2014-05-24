@@ -46,16 +46,16 @@ namespace application {
 
 nimbus::GeometricRegion zero_reg;
 
-CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, zero_reg);
-CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, zero_reg, kGhostNum);
-CacheFaceArray<bool> kCachePsiN(kDefaultRegion, zero_reg, 1);
+CacheFaceArray<T> kCacheFaceVel(true);
+CacheFaceArray<T> kCacheFaceVelGhost(true);
+CacheFaceArray<bool> kCachePsiN(true);
 
-CacheScalarArray<T> kCachePhi3(kDefaultRegion, zero_reg, 3);
-CacheScalarArray<T> kCachePhi7(kDefaultRegion, zero_reg, 7);
-CacheScalarArray<T> kCachePhi8(kDefaultRegion, zero_reg, 8);
-CacheScalarArray<bool> kCachePsiD(kDefaultRegion, zero_reg, 1);
+CacheScalarArray<T> kCachePhi3(true);
+CacheScalarArray<T> kCachePhi7(true);
+CacheScalarArray<T> kCachePhi8(true);
+CacheScalarArray<bool> kCachePsiD(true);
 
-CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, zero_reg, 3);
+CacheParticleLevelsetEvolution<float> kCachePLE(true);
 
 } // namespace application
 
