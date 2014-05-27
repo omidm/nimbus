@@ -153,6 +153,7 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
         d->SetUpCacheObject(this);
         d->SetUpDirtyCacheObject(this);
     }
+    write_region_ = write_region;
 }
 
 /**

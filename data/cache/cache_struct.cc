@@ -208,6 +208,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
             d->SetUpDirtyCacheObject(this);
         }
     }
+    write_region_ = write_region;
 }
 
 /**
