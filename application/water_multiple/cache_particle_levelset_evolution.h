@@ -70,7 +70,10 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
-        explicit CacheParticleLevelsetEvolution(bool make_proto = false);
+        explicit CacheParticleLevelsetEvolution(
+                const nimbus::GeometricRegion &global_reg,
+                int ghost_width,
+                bool make_proto = false);
 
         PhysBAMPLE *data() {
             return data_;
@@ -80,7 +83,8 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         }
 
     protected:
-        virtual nimbus::CacheStruct *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+        virtual nimbus::CacheStruct *CreateNew(
+                const nimbus::GeometricRegion &ob_reg) const;
 
         virtual void ReadToCache(
                 const std::vector<nimbus::cache::type_id_t> &var_type,
@@ -94,9 +98,8 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
     private:
         explicit CacheParticleLevelsetEvolution(
                 const nimbus::GeometricRegion &global_reg,
-                const nimbus::GeometricRegion &ob_reg =
-                nimbus::GeometricRegion(),
-                const int ghost_width = 0);
+                const nimbus::GeometricRegion &ob_reg,
+                const int ghost_width);
 
         nimbus::GeometricRegion global_region_;
         nimbus::GeometricRegion local_region_;

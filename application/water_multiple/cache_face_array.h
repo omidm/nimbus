@@ -60,7 +60,9 @@ class CacheFaceArray : public nimbus::CacheVar {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
-        explicit CacheFaceArray(bool make_proto = false);
+        explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
+                                const int ghost_width,
+                                bool make_proto = false);
 
         PhysBAMFaceArray *data() {
             return data_;
@@ -72,7 +74,7 @@ class CacheFaceArray : public nimbus::CacheVar {
     protected:
         explicit CacheFaceArray(const nimbus::GeometricRegion &global_reg,
                                 const nimbus::GeometricRegion &ob_reg,
-                                const int ghost_width = 0);
+                                const int ghost_width);
 
         virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 

@@ -49,7 +49,11 @@
 namespace application {
 
 template<class T, class TS> CacheScalarArray<T, TS>::
-CacheScalarArray(bool make_proto) {
+CacheScalarArray(const nimbus::GeometricRegion &global_reg,
+                 const int ghost_width,
+                 bool make_proto)
+    : global_region_(global_reg),
+      ghost_width_(ghost_width) {
     if (make_proto)
         MakePrototype();
 }

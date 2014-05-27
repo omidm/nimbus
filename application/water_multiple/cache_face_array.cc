@@ -49,7 +49,11 @@
 namespace application {
 
 template<class T, class TS> CacheFaceArray<T, TS>::
-CacheFaceArray(bool make_proto) {
+CacheFaceArray(const nimbus::GeometricRegion &global_reg,
+               const int ghost_width,
+               bool make_proto)
+    : global_region_(global_reg),
+      ghost_width_(ghost_width) {
     if (make_proto)
         MakePrototype();
 }
@@ -62,16 +66,16 @@ CacheFaceArray(const nimbus::GeometricRegion &global_reg,
       global_region_(global_reg),
       local_region_(ob_reg.NewEnlarged(-ghost_width)),
       ghost_width_(ghost_width) {
-      shift_.x = local_region_.x() - global_reg.x();
-      shift_.y = local_region_.y() - global_reg.y();
-      shift_.z = local_region_.z() - global_reg.z();
-      if (local_region_.dx() > 0 && local_region_.dy() > 0 &&
-          local_region_.dz() > 0) {
-        Range domain = RangeFromRegions<TV>(global_reg, local_region_);
-        TV_INT count = CountFromRegion(local_region_);
-        mac_grid_.Initialize(count, domain, true);
-        data_ = new PhysBAMFaceArray(mac_grid_, ghost_width, false);
-      }
+    shift_.x = local_region_.x() - global_reg.x();
+    shift_.y = local_region_.y() - global_reg.y();
+    shift_.z = local_region_.z() - global_reg.z();
+    if (local_region_.dx() > 0 && local_region_.dy() > 0 &&
+        local_region_.dz() > 0) {
+      Range domain = RangeFromRegions<TV>(global_reg, local_region_);
+      TV_INT count = CountFromRegion(local_region_);
+      mac_grid_.Initialize(count, domain, true);
+      data_ = new PhysBAMFaceArray(mac_grid_, ghost_width, false);
+    }
 }
 
 template<class T, class TS> nimbus::CacheVar *CacheFaceArray<T, TS>::

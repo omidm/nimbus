@@ -25,7 +25,6 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/job_barrier.cc
         ${PROJECT_SOURCE_DIR}/cache_face_array.cc
         ${PROJECT_SOURCE_DIR}/cache_particle_levelset_evolution.cc
-        ${PROJECT_SOURCE_DIR}/cache_prototypes.cc
         ${PROJECT_SOURCE_DIR}/cache_scalar_array.cc
         ${PROJECT_SOURCE_DIR}/data_def.cc
         ${PROJECT_SOURCE_DIR}/data_face_array.cc

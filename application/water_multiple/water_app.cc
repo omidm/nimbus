@@ -257,15 +257,6 @@ namespace application {
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
 
-        kCacheFaceVel.MakePrototype();
-        kCacheFaceVelGhost.MakePrototype();
-        kCachePsiN.MakePrototype();
-        kCachePhi3.MakePrototype();
-        kCachePhi7.MakePrototype();
-        kCachePhi8.MakePrototype();
-        kCachePsiD.MakePrototype();
-        kCachePLE.MakePrototype();
-
         dbg(APP_LOG, "Completed loading water application\n");
     }
 

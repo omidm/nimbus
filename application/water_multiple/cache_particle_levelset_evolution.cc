@@ -51,8 +51,13 @@
 namespace application {
 
 template<class TS> CacheParticleLevelsetEvolution<TS>::
-CacheParticleLevelsetEvolution(bool make_proto)
-: CacheStruct(NUM_PARTICLE_TYPES) {
+CacheParticleLevelsetEvolution(
+        const nimbus::GeometricRegion &global_reg,
+        int ghost_width,
+        bool make_proto)
+    : CacheStruct(NUM_PARTICLE_TYPES),
+      global_region_(global_reg),
+      ghost_width_(ghost_width) {
     if (make_proto)
         MakePrototype();
 }

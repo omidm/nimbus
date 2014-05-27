@@ -44,16 +44,16 @@
 
 namespace application {
 
-extern CacheFaceArray<T> kCacheFaceVel;
-extern CacheFaceArray<T> kCacheFaceVelGhost;
-extern CacheFaceArray<bool> kCachePsiN;
+const CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true);
+const CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true);
+const CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true);
 
-extern CacheScalarArray<T> kCachePhi3;
-extern CacheScalarArray<T> kCachePhi7;
-extern CacheScalarArray<T> kCachePhi8;
-extern CacheScalarArray<bool> kCachePsiD;
+const CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true);
+const CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true);
+const CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true);
+const CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
 
-extern CacheParticleLevelsetEvolution<float> kCachePLE;
+const CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
 
 } // namespace application
 
