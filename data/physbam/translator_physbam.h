@@ -716,41 +716,29 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
-            Coord neg_shift(-shift.x, -shift.y, -shift.z);
-            GeometricRegion pregion = region;
-            pregion.Translate(neg_shift);
+            const Coord neg_shift(-shift.x, -shift.y, -shift.z);
 
-            // Loop through each particle bucket in the specified region.
-            for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z)
-                for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y)
-                    for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
-                        TV_INT bucket_index(x, y, z);
-                        DataArray::const_iterator iter = write_set.begin();
-                        for (; iter != write_set.end(); ++iter) {
-                            // Iterate across instances, checking each one.
-                            PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
-                            GeometricRegion data_region = data->region();
-                            // TODO(quhang) needs to double check the margin setting.
-                            const int_dimension_t kMargin = 1;
-                            if (x + shift.x <
-                                data_region.x() - kMargin ||
-                                x + shift.x >
-                                data_region.x() + data_region.dx() + kMargin ||
-                                y + shift.y <
-                                data_region.y() - kMargin ||
-                                y + shift.y >
-                                data_region.y() + data_region.dy() + kMargin ||
-                                z + shift.z <
-                                data_region.z() - kMargin ||
-                                z + shift.z >
-                                data_region.z() + data_region.dz() + kMargin) {
-                                continue;
-                            }
+            // Iterate across instances
+            iter = write_set.begin();
+            for (; iter != write_set.end(); ++iter) {
+                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                GeometricRegion data_region = data->region();
+                GeometricRegion pregion = data_region;
+                pregion.Translate(neg_shift);
+
+                // Loop through each particle bucket in the specified region.
+                for (int z = pregion.z();
+                     z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y();
+                         y <= pregion.y() + pregion.dy(); ++y) {
+                        for (int x = pregion.x();
+                             x <= pregion.x() + pregion.dx(); ++x) {
+                            TV_INT bucket_index(x, y, z);
                             ParticleBucket* particle_bucket = (*particles)(bucket_index);
-                            while (particle_bucket) {
+                            while (particle_bucket != NULL) {
                                 for (int i = 1;
-                                        i <= particle_bucket->array_collection->Size();
-                                        ++i) {
+                                     i <= particle_bucket->array_collection->Size();
+                                     ++i) {
                                     TV particle_position = particle_bucket->X(i);
                                     TV absolute_position =
                                         particle_position * (float) kScale + 1.0; // NOLINT
@@ -786,17 +774,13 @@ template <class TS> class TranslatorPhysBAM {
                                                 reinterpret_cast<char*>(&particle_buffer),
                                                 sizeof(particle_buffer));
                                     }
-                                }
+                                } // Finish looping through all particles.
                                 particle_bucket = particle_bucket->next;
-                            }  // Finish looping through all particles.
+                            }
                         }
                     }
-
-            // Now that we've copied particles into the temporary data buffers,
-            // commit the results.
-            iter = write_set.begin();
-            for (; iter != write_set.end(); ++iter) {
-                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                }
+                // commit the result
                 data->CommitTempBuffer();
             }
         }
@@ -939,27 +923,31 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             Coord neg_shift(-shift.x, -shift.y, -shift.z);
-            GeometricRegion pregion = region;
-            pregion.Translate(neg_shift);
 
-            // Loop through each particle bucket in the specified region.
-            for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z)
-                for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y)
-                    for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
-                        TV_INT bucket_index(x, y, z);
-                        RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
-                        while (particle_bucket) {
-                            for (int i = 1;
+            // Iterate across instances
+            iter = write_set.begin();
+            for (; iter != write_set.end(); ++iter) {
+                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                GeometricRegion data_region = data->region();
+                GeometricRegion pregion = data_region;
+                pregion.Translate(neg_shift);
+
+                // Loop through each particle bucket in the specified region.
+                for (int z = pregion.z();
+                     z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y();
+                         y <= pregion.y() + pregion.dy(); ++y) {
+                        for (int x = pregion.x();
+                             x <= pregion.x() + pregion.dx(); ++x) {
+                            TV_INT bucket_index(x, y, z);
+                            RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
+                            while (particle_bucket != NULL) {
+                                for (int i = 1;
                                     i <= particle_bucket->array_collection->Size();
                                     ++i) {
-                                TV particle_position = particle_bucket->X(i);
-                                TV absolute_position =
-                                    particle_position * (float) kScale + 1.0; // NOLINT
-                                DataArray::const_iterator iter = write_set.begin();
-                                // Iterate across instances, checking each one.
-                                for (; iter != write_set.end(); ++iter) {
-                                    PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
-                                    GeometricRegion data_region = data->region();
+                                    TV particle_position = particle_bucket->X(i);
+                                    TV absolute_position =
+                                        particle_position * (float) kScale + 1.0; // NOLINT
                                     // If it's inside the region of the physical data instance.
                                     if (absolute_position.x >=
                                         data_region.x() &&
@@ -993,17 +981,13 @@ template <class TS> class TranslatorPhysBAM {
                                                 reinterpret_cast<char*>(&particle_buffer),
                                                 sizeof(particle_buffer));
                                     }
-                                }
+                                } // Finish looping through all particles.
+                                particle_bucket = particle_bucket->next;
                             }
-                            particle_bucket = particle_bucket->next;
                         }
                     }
-
-            // Now that we've copied particles into the temporary data buffers,
-            // commit the results.
-            iter = write_set.begin();
-            for (; iter != write_set.end(); ++iter) {
-                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                }
+                // commit the result
                 data->CommitTempBuffer();
             }
         }
