@@ -258,7 +258,8 @@ namespace application {
 //
 //        nimbus::Parameter write_params;
 //        std::string write_str;
-//        SerializeParameter(frame, time + dt, 0, kDefaultRegion, kDefaultRegion, &write_str);
+//        int write_frame = frame - 1;
+//        SerializeParameter(write_frame, time + dt, 0, kDefaultRegion, kDefaultRegion, &write_str);
 //        write_params.set_ser_data(SerializedData(write_str));
 //
 //          dbg(APP_LOG, "Spawning Write Frame\n");
@@ -292,7 +293,7 @@ namespace application {
 //            read, write,
 //            before, after,
 //            loop_params);
-//
+
 
 
 
