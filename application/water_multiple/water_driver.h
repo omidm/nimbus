@@ -76,6 +76,11 @@ public:
                             const bool set_boundary_conditions,
                             const T dt);
 
+    void ReseedParticlesImpl(const nimbus::Job *job,
+                        const nimbus::DataArray &da,
+                        const bool set_boundary_conditions,
+                        const T dt);
+
     void WriteFrameImpl(const nimbus::Job *job,
                         const nimbus::DataArray &da,
                         const bool set_boundary_conditions,
