@@ -143,8 +143,10 @@ int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
                                     const DataArray &read_set,
                                     cache::CacheAccess access) const {
     int min_index = -1;
-    if (cvs.size() == 0 || !cvs.at(0)->IsAvailable(access))
+    if (cvs.size() == 0 ||
+        (cvs.size() == 1 && !cvs.at(0)->IsAvailable(access)))
         return min_index;
+    min_index = 0;
     cache::distance_t min_distance = cvs.at(0)->GetDistance(read_set);
     cache::distance_t dist;
     for (size_t i = 1; i < cvs.size(); ++i) {
@@ -171,8 +173,10 @@ int CacheTable::GetMinDistanceIndex(const CacheStructs &css,
                                     const std::vector<DataArray> &read_sets,
                                     cache::CacheAccess access) const {
     int min_index = -1;
-    if (css.size() == 0 || !css.at(0)->IsAvailable(access))
+    if (css.size() == 0 ||
+        (css.size() == 1 && !css.at(0)->IsAvailable(access)))
         return min_index;
+    min_index = 0;
     cache::distance_t min_distance = css.at(0)->GetDistance(var_type, read_sets);
     cache::distance_t dist;
     for (size_t i = 1; i < css.size(); ++i) {

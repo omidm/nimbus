@@ -111,7 +111,7 @@ void CacheObject::ReleaseAccess() {
  */
 bool CacheObject::IsAvailable(cache::CacheAccess access) const {
     return ((access == cache::EXCLUSIVE && users_ == 0) ||
-            (users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED)));
+            (access == cache::SHARED && (access_ == cache::SHARED || users_ == 0)));
 }
 
 /**
