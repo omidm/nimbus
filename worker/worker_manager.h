@@ -42,6 +42,7 @@
 #define NIMBUS_WORKER_WORKER_MANAGER_H_
 
 #include <list>
+#include <string>
 #include "shared/high_resolution_timer.h"
 #include "shared/log.h"
 #include "shared/nimbus.h"
@@ -90,6 +91,11 @@ class WorkerManager {
   Worker* worker_;
 
  private:
+  std::string FindGroupJobName();
+  Job* FindANonThreadedJob();
+  bool IsThreadedJob(const Job& job);
+  bool DispatchJobToComputationThread(WorkerThreadComputation* worker_thread,
+                                      Job* job);
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
 

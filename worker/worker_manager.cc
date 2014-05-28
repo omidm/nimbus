@@ -38,6 +38,8 @@
 
 #include <pthread.h>
 #include <list>
+#include <map>
+#include <string>
 #include <vector>
 
 #include "shared/nimbus.h"
@@ -229,21 +231,117 @@ bool WorkerManager::StartWorkerThreads() {
   return true;
 }
 
-void WorkerManager::ScheduleComputationJobs() {
-  // Try not to block the worker core thread when scheduling algorithm is
-  // running.
-  /*
-  pthread_mutex_lock(&computation_job_queue_lock_);
-  computation_job_to_schedule_list_.insert(
-      computation_job_to_schedule_list_.end(),
-      computation_job_list_.begin(),
-      computation_job_list_.end());
-  computation_job_list_.clear();
-  pthread_mutex_unlock(&computation_job_queue_lock_);
-  */
+bool WorkerManager::IsThreadedJob(const Job& job) {
+  return (job.name() == "advect_phi")
+      || (job.name() == "advect_v")
+      || (job.name() == "apply_forces")
+      || (job.name() == "delete_particles")
+      || (job.name() == "modify_levelset_part_one")
+      || (job.name() == "modify_levelset_part_two")
+      || (job.name() == "reincorporate_particle")
+      || (job.name() == "step_particle");
+}
 
+Job* WorkerManager::FindANonThreadedJob() {
+  Job* result = NULL;
+  for (std::list<Job*>::iterator index = computation_job_list_.begin();
+       index != computation_job_list_.end();
+       ++index) {
+    if (!IsThreadedJob(*(*index))) {
+      result = *index;
+      index = computation_job_list_.erase(index);
+      break;
+    }
+  }
+  return result;
+}
+
+std::string WorkerManager::FindGroupJobName() {
+  std::map<std::string, int> name_map;
+  for (std::list<Job*>::iterator index = computation_job_list_.begin();
+       index != computation_job_list_.end();
+       ++index) {
+    if (name_map.find((*index)->name()) == name_map.end()) {
+      name_map[(*index)->name()] = 0;
+    }
+    ++name_map[(*index)->name()];
+  }
+  for (std::map<std::string, int>::iterator index = name_map.begin();
+       index != name_map.end();
+       ++index) {
+    if (index->second == 3)
+      return index->first;
+  }
+  return std::string();
+}
+
+bool WorkerManager::DispatchJobToComputationThread(
+    WorkerThreadComputation* worker_thread,
+    Job* job) {
+  worker_thread->next_job_to_run = job;
+  dbg(DBG_WORKER_BD, DBG_WORKER_BD_S"Job(name %s, #%d) dispatched.\n",
+      worker_thread->next_job_to_run->name().c_str(),
+      worker_thread->next_job_to_run->id().elem());
+  worker_thread->job_assigned = true;
+  if (inside_job_parallism <= 0) {
+    worker_thread->set_use_threading(false);
+    worker_thread->set_core_quota(1);
+  } else {
+    worker_thread->set_use_threading(true);
+    worker_thread->set_core_quota(inside_job_parallism);
+  }
+  ++dispatched_computation_job_count_;
+  --ready_jobs_count_;
+  pthread_cond_signal(&worker_thread->thread_can_start);
+  return true;
+}
+
+void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_lock(&computation_job_queue_lock_);
   pthread_mutex_lock(&scheduling_critical_section_lock_);
+  // If there is threaded implementation, wait until there are only the three
+  // jobs in the queue. Run.
+  std::list<WorkerThreadComputation*> idle_threads;
+  for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
+       index != worker_thread_list_.end();
+       ++index) {
+    // TODO(quhang) RTTI is not good.
+    WorkerThreadComputation* worker_thread =
+        dynamic_cast<WorkerThreadComputation*>(*index);  // NOLINT
+    if (worker_thread != NULL
+        && worker_thread->idle && !worker_thread->job_assigned) {
+      Job* temp_job = FindANonThreadedJob();
+      if (!temp_job) {
+        idle_threads.push_back(worker_thread);
+      } else {
+        DispatchJobToComputationThread(worker_thread, temp_job);
+      }
+    }
+  }
+  if (idle_threads.size() == 3) {
+    std::string group_name = FindGroupJobName();
+    if (group_name != std::string()) {
+      dbg(DBG_WORKER_BD, DBG_WORKER_BD_S"Dispatch in group Job(name%s).\n",
+          group_name.c_str());
+      for (std::list<Job*>::iterator index = computation_job_list_.begin();
+           index != computation_job_list_.end();
+           ++index) {
+        if ((*index)->name() == group_name) {
+          DispatchJobToComputationThread(idle_threads.front(), *index);
+          idle_threads.pop_front();
+        }
+      }
+    }
+  }
+  pthread_mutex_unlock(&scheduling_critical_section_lock_);
+  pthread_mutex_unlock(&computation_job_queue_lock_);
+}
+/*
+void WorkerManager::ScheduleComputationJobs() {
+  pthread_mutex_lock(&computation_job_queue_lock_);
+  pthread_mutex_lock(&scheduling_critical_section_lock_);
+  // If there is threaded implementation, wait until there are only the three
+  // jobs in the queue. Run.
   for (std::list<WorkerThread*>::iterator index = worker_thread_list_.begin();
        index != worker_thread_list_.end();
        ++index) {
@@ -277,6 +375,7 @@ void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
   pthread_mutex_unlock(&computation_job_queue_lock_);
 }
+*/
 
 int WorkerManager::ActiveComputationThreads() {
   int result = 0;
