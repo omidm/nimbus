@@ -331,6 +331,7 @@ bool InitializeExampleAndDriver(
     // physbam initialization
     if (init_config.init_phase)
       driver->InitializeFirst(job, da);
+      // driver->InitializeFirstDistributed(job, da);
     else if (init_config.use_cache && kUseCache)
       driver->InitializeUseCache(job, da);
     else

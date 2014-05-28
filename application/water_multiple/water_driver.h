@@ -46,6 +46,9 @@ public:
 
     void InitializeFirst(const nimbus::Job *job,
                           const nimbus::DataArray &da);
+    void InitializeFirstDistributed(
+        const nimbus::Job *job,
+        const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da);
     void InitializeUseCache(const nimbus::Job *job,
