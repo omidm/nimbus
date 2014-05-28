@@ -209,7 +209,7 @@ CalculateFrameImpl(const nimbus::Job *job,
 
 // Substep for reseeding particles
 template<class TV> void WATER_DRIVER<TV>::
-WriteFrameImpl(const nimbus::Job *job,
+ReseedParticlesImpl(const nimbus::Job *job,
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
                const T dt) {
