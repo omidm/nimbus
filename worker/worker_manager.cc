@@ -72,6 +72,7 @@ WorkerManager::WorkerManager() {
   pthread_mutex_init(&fast_job_queue_lock_, NULL);
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
+  /*
   if (across_job_parallism <= 0) {
     computation_thread_num = 1;
     fast_thread_num = 0;
@@ -79,6 +80,9 @@ WorkerManager::WorkerManager() {
     computation_thread_num = across_job_parallism;
     fast_thread_num = 1;
   }
+  */
+  computation_thread_num = 3;
+  fast_thread_num = 0;
   idle_computation_threads_ = 0;
   dispatched_computation_job_count_ = 0;
   dispatched_fast_job_count_= 0;
@@ -232,14 +236,14 @@ bool WorkerManager::StartWorkerThreads() {
 }
 
 bool WorkerManager::IsThreadedJob(const Job& job) {
-  return (job.name() == "advect_phi")
-      || (job.name() == "advect_v")
-      || (job.name() == "apply_forces")
-      || (job.name() == "delete_particles")
-      || (job.name() == "modify_levelset_part_one")
-      || (job.name() == "modify_levelset_part_two")
-      || (job.name() == "reincorporate_particle")
-      || (job.name() == "step_particle");
+  return (job.name() == "Compute:advect_phi")
+      || (job.name() == "Compute:advect_v")
+      || (job.name() == "Compute:apply_forces")
+      || (job.name() == "Compute:delete_particles")
+      || (job.name() == "Compute:modify_levelset_part_one")
+      || (job.name() == "Compute:modify_levelset_part_two")
+      || (job.name() == "Compute:reincorporate_particle")
+      || (job.name() == "Compute:step_particle");
 }
 
 Job* WorkerManager::FindANonThreadedJob() {
@@ -324,11 +328,13 @@ void WorkerManager::ScheduleComputationJobs() {
       dbg(DBG_WORKER_BD, DBG_WORKER_BD_S"Dispatch in group Job(name%s).\n",
           group_name.c_str());
       for (std::list<Job*>::iterator index = computation_job_list_.begin();
-           index != computation_job_list_.end();
-           ++index) {
+           index != computation_job_list_.end();) {
         if ((*index)->name() == group_name) {
           DispatchJobToComputationThread(idle_threads.front(), *index);
           idle_threads.pop_front();
+          index = computation_job_list_.erase(index);
+        } else {
+          ++index;
         }
       }
     }

@@ -51,6 +51,7 @@ namespace nimbus {
 class SchedulerCommand;
 class WorkerThreadMonitor;
 class WorkerThread;
+class WorkerThreadComputation;
 class Worker;
 
 class WorkerManager {
