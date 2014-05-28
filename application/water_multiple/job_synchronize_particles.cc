@@ -135,12 +135,11 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     nimbus::CacheStruct *cache_struct =
       cm->GetAppStruct(
               var_type,
-              read_inner, array_inner,
+              read_inner, array_outer,
               write, array_outer,
               kCachePLE, array_outer,
               nimbus::cache::EXCLUSIVE,
-              !(write[POS].empty() || write[NEG].empty() ||
-                write[POS_REM].empty() || write[NEG_REM].empty()));
+              false);
     CacheParticleLevelsetEvolution<T> *cache_ple =
         dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
     assert(cache_ple != NULL);
@@ -168,7 +167,6 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[POS_REM], particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[NEG_REM], particle_levelset, scale, false, true);
 
-    cache_ple->FlushCache(var_type, write);
     cache_ple->ReleaseAccess();
 
     dbg(APP_LOG, "Completed executing synchronize particles job\n");

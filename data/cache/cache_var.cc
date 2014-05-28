@@ -149,6 +149,7 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
         FlushCache(flush);
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
+        d->InvalidateCacheData();
         GeometricRegion dreg = d->region();
         data_map_[dreg] = d;
         write_back_.insert(d);

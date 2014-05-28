@@ -640,12 +640,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_fv) {
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
-        if (data_config.GetFlag(DataConfig::VELOCITY)) {
-            nimbus::DataArray write;
-            const std::string fvstring = std::string(APP_FACE_VEL);
-            application::GetWriteData(*job, fvstring, da, &write);
-            cache_fv->FlushCache(write);
-        }
         cache_fv->ReleaseAccess();
         cache_fv = NULL;
     }
@@ -654,12 +648,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_fvg) {
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
-        if (data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-            nimbus::DataArray write;
-            const std::string fvgstring = std::string(APP_FACE_VEL_GHOST);
-            application::GetWriteData(*job, fvgstring, da, &write);
-            cache_fvg->FlushCache(write);
-        }
         cache_fvg->ReleaseAccess();
         cache_fvg = NULL;
     }
@@ -667,32 +655,22 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     {
       // particle leveset quantities
       T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
-      nimbus::DataArray write;
-      const std::string lsstring = std::string(APP_PHI);
-      application::GetWriteData(*job, lsstring, da, &write);
       // levelset
       if (cache_phi3) {
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          if (data_config.GetFlag(DataConfig::LEVELSET) ||
-              data_config.GetFlag(DataConfig::LEVELSET_WRITE))
-              cache_phi3->FlushCache(write);
           cache_phi3->ReleaseAccess();
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-          if (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_WRITE))
-              cache_phi7->FlushCache(write);
           cache_phi7->ReleaseAccess();
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          if (data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT_WRITE))
-              cache_phi8->FlushCache(write);
           cache_phi8->ReleaseAccess();
           cache_phi8 = NULL;
       }
@@ -704,31 +682,35 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       }
       // ** there should not be any accesses to particle levelset after this **
       if (cache_ple) {
-          bool dflag[] = {  data_config.GetFlag(DataConfig::POSITIVE_PARTICLE),
-                            data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE),
-                            data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE),
-                            data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)
-                         };
-          if (dflag[application::POS] || dflag[application::NEG] ||
-              dflag[application::POS_REM] || dflag[application::NEG_REM]) {
+          if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
               nimbus::cache::type_id_t vars[] = { application::POS,
                                                   application::NEG,
                                                   application::POS_REM,
                                                   application::NEG_REM };
               std::vector<nimbus::cache::type_id_t> var_type(
-              vars, vars + sizeof(vars)/sizeof(nimbus::cache::type_id_t));
-              std::vector<nimbus::DataArray> write(4);
+                  vars, vars + sizeof(vars)/sizeof(nimbus::cache::type_id_t));
+              std::vector<nimbus::DataArray> write(4), shared(4);
               std::string dtype[] = { APP_POS_PARTICLES,
                                       APP_NEG_PARTICLES,
                                       APP_POS_REM_PARTICLES,
                                       APP_NEG_REM_PARTICLES
                                     };
-              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t) {
-                  if (!dflag[t])
-                      continue;
+              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t)
                   application::GetWriteData(*job, dtype[t], da, &write[t], false);
+              nimbus::GeometricRegion inner_reg(
+                  array_reg_central.NewEnlarged(-application::kGhostNum));
+              for (size_t t = 0; t < application::NUM_PARTICLE_TYPES; ++t) {
+                  nimbus::DataArray &write_t = write[t];
+                  nimbus::DataArray &shared_t = shared[t];
+                  for (size_t i = 0; i < write_t.size(); ++i) {
+                      nimbus::Data *d = write_t[i];
+                      nimbus::GeometricRegion dr = d->region();
+                      if (!inner_reg.Covers(&dr)) {
+                          shared_t.push_back(d);
+                      }
+                  }
               }
-              cache_ple->FlushCache(var_type, write);
+              cache_ple->WriteImmediately(var_type, shared);
           }
           cache_ple->ReleaseAccess();
           cache_ple = NULL;
@@ -739,12 +721,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_psi_d) {
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
-        if (data_config.GetFlag(DataConfig::PSI_D)) {
-            nimbus::DataArray write;
-            const std::string psidstring = std::string(APP_PSI_D);
-            application::GetWriteData(*job, psidstring, da, &write);
-            cache_psi_d->FlushCache(write);
-        }
         cache_psi_d->ReleaseAccess();
         cache_psi_d = NULL;
     }
@@ -753,12 +729,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_psi_n) {
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
-        if (data_config.GetFlag(DataConfig::PSI_N)) {
-            nimbus::DataArray write;
-            const std::string psinstring = std::string(APP_PSI_N);
-            application::GetWriteData(*job, psinstring, da, &write);
-            cache_psi_n->FlushCache(write);
-        }
         cache_psi_n->ReleaseAccess();
         cache_psi_n = NULL;
     }

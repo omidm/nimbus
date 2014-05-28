@@ -89,6 +89,7 @@ struct DataConfig {
     NEGATIVE_PARTICLE,
     REMOVED_POSITIVE_PARTICLE,
     REMOVED_NEGATIVE_PARTICLE,
+    SHARED_PARTICLES_FLUSH,
     VALID_MASK,
     DIVERGENCE,
     PSI_N,
@@ -143,6 +144,7 @@ struct DataConfig {
     UnsetFlag(LEVELSET_BW_SEVEN_WRITE);
     UnsetFlag(LEVELSET_BW_EIGHT_READ);
     UnsetFlag(LEVELSET_BW_EIGHT_WRITE);
+    UnsetFlag(SHARED_PARTICLES_FLUSH);
   }
   void SetHelper(bool value) {
     for (int i = 0; i < NUM_VARIABLE; ++i)

@@ -89,6 +89,7 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::SHARED_PARTICLES_FLUSH);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

@@ -106,6 +106,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             DMap::iterator it = data_map_t.find(dreg);
             if (it == data_map_t.end()) {
+                // assert(write_back_t.find(d) == write_back_t.end());
                 d->SyncData();
                 diff_t.push_back(d);
                 if (!invalidate_read_minus_valid ||
@@ -115,6 +116,7 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
+                    // assert(write_back_t.find(d) == write_back_t.end());
                     d->SyncData();
                     diff_t.push_back(d);
                     if (write_back_t.find(d_old) != write_back_t.end()) {
@@ -215,6 +217,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
         DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < write_set_t.size(); ++i) {
             Data *d = write_set_t.at(i);
+            d->InvalidateCacheData();
             GeometricRegion dreg = d->region();
             data_map_t[dreg] = d;
             write_back_t.insert(d);
@@ -231,28 +234,36 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
  * available (just like PullData).
  */
 void CacheStruct::UnsetData(Data *d) {
+    bool success = false;
     GeometricRegion dreg = d->region();
     for (size_t t = 0; t < num_variables_; ++t) {
         DMap &data_map_t = data_maps_[t];
         if (data_map_t.find(dreg) != data_map_t.end()) {
-            data_map_t.erase(dreg);
-            break;
+            if (data_map_t[dreg] == d) {
+                data_map_t.erase(dreg);
+                success = true;
+                break;
+            }
         }
     }
+    assert(success);
 }
 
 /**
  * \details UnsetDirtyData(...) removes d from write_backs_.
  */
 void CacheStruct::UnsetDirtyData(Data *d) {
+    bool success = false;
     for (size_t t = 0; t < num_variables_; ++t) {
         DataSet &write_back_t = write_backs_[t];
         DataSet::iterator it = write_back_t.find(d);
         if (it != write_back_t.end()) {
             write_back_t.erase(it);
+            success = true;
             break;
         }
     }
+    assert(success);
 }
 
 /**
@@ -264,7 +275,6 @@ void CacheStruct::UnsetDirtyData(Data *d) {
  * implementation, I expect the overhead to be small. -- Chinmayee
  */
 void CacheStruct::PullData(Data *d) {
-    assert(false);
     AcquireAccess(cache::EXCLUSIVE);
     for (size_t t = 0; t < num_variables_; ++t) {
         DataSet &write_back_t = write_backs_[t];
@@ -297,7 +307,7 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
     for (size_t t = 0; t < num_variables_; ++t) {
         cache::type_id_t type = var_type[t];
         if (type > num_variables_) {
-            dbg(DBG_WARN, "Invalid type %u passed to SetUpWrite, ignoring it\n", type);
+            dbg(DBG_WARN, "Invalid type %u passed to GetDistance, ignoring it\n", type);
             continue;
         }
         const DMap &data_map_t = data_maps_[type];
@@ -311,6 +321,28 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
         }
     }
     return cur_distance;
+}
+
+void CacheStruct::WriteImmediately(const std::vector<cache::type_id_t> &var_type,
+                                   const std::vector<DataArray> &write_sets) {
+    size_t num_vars = var_type.size();
+    if (write_sets.size() != num_vars) {
+        dbg(DBG_ERROR, "Mismatch in number of variable types passed to FlushCache\n");
+        exit(-1);
+    }
+    std::vector<DataArray> flush_sets(num_vars);
+    for (size_t t = 0; t < num_vars; ++t) {
+        DataArray &flush_t = flush_sets[t];
+        const DataArray &write_set_t = write_sets[t];
+        cache::type_id_t type = var_type[t];
+        DataSet &write_back_t = write_backs_[type];
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t[i];
+            if (write_back_t.find(d) != write_back_t.end())
+                flush_t.push_back(d);
+        }
+    }
+    FlushCache(var_type, flush_sets);
 }
 
 /**

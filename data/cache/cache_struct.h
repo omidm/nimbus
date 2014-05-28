@@ -162,6 +162,9 @@ class CacheStruct : public CacheObject {
         cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
                                       const std::vector<DataArray> &read_sets) const;
 
+        void WriteImmediately(const std::vector<cache::type_id_t> &var_type,
+                              const std::vector<DataArray> &flush_sets);
+
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
          * \param var_type is a list of type_ids corresponding to nimbus variables,
