@@ -320,13 +320,6 @@ template <class TS> class TranslatorPhysBAM {
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             if (write_set.empty())
                 return;
-            int_dimension_t region_size = 0;
-            region_size += (region.dx() + 1) * region.dy() * region.dz();
-            region_size += region.dx() * (region.dy() + 1) * region.dz();
-            region_size += region.dx() * region.dy() * (region.dz() + 1);
-            if (region_size != fa->buffer_size) {
-                dbg(DBG_WARN, "WARN: writing a face array of size %i for a region of size %i and the two sizes should be equal. This check is wrong so you can ignore this warning. I need to determine correct check. -pal\n", fa->buffer_size, region_size);  // NOLINT
-            }
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);

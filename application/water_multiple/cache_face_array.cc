@@ -92,6 +92,7 @@ ReadToCache(const nimbus::DataArray &read_set,
     nimbus::GeometricRegion ob_reg = object_region();
     nimbus::GeometricRegion final_read_reg =
         nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
+    assert(final_read_reg.dx() > 0 && final_read_reg.dy() > 0 && final_read_reg.dz() > 0);
     Translator::template
         ReadFaceArray<T>(final_read_reg, local_region_, shift_, read_set, data_);
 }
@@ -103,6 +104,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
     nimbus::GeometricRegion ob_reg = object_region();
     nimbus::GeometricRegion final_write_reg =
         nimbus::GeometricRegion::GetIntersection(write_reg, ob_reg);
+    assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
     Translator::template
         WriteFaceArray<T>(final_write_reg, shift_, write_set, data_);
 }

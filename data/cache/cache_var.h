@@ -148,13 +148,13 @@ class CacheVar : public CacheObject {
          */
         cache::distance_t GetDistance(const DataArray &read_set) const;
 
-    private:
         /**
          * \brief Flushes data from cache to data in flush_set (immediately)
          * \param flush_set is a data array corresponding to nimbus variables
          */
         void FlushCache(const DataArray &flush_set);
 
+    private:
         // cache-data mappings
         typedef std::map<GeometricRegion,
                          Data *> DMap;

@@ -138,6 +138,7 @@ void Data::UnsetCacheObject(CacheObject *co) {
  * \details
  */
 void Data::SetUpDirtyCacheObject(CacheObject *co) {
+  assert(dirty_cache_object_ == NULL || dirty_cache_object_ == co);
   dirty_cache_object_ = co;
 }
 
@@ -145,6 +146,8 @@ void Data::SetUpDirtyCacheObject(CacheObject *co) {
  * \details
  */
 void Data::UnsetDirtyCacheObject(CacheObject *co) {
+  if (dirty_cache_object_ != co)
+    dbg(DBG_ERROR, "Data drity co %p, passed co %p\n", dirty_cache_object_, co);
   assert(dirty_cache_object_ == co);
   dirty_cache_object_ = NULL;
 }

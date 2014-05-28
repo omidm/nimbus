@@ -187,13 +187,12 @@ ReadToCache(
     bool merge = true;
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     for (size_t t = 0; t < var_type.size(); ++t) {
-        nimbus::cache::type_id_t typ = var_type[t];
         const nimbus::DataArray &read_set = read_sets[t];
         std::vector<nimbus::GeometricRegion> regs;
         for (size_t i = 0; i < read_set.size(); ++i) {
             regs.push_back(read_set[i]->region());
         }
-        switch (typ) {
+        switch (var_type[t]) {
             case POS:
                 Translator::DeleteParticles(
                         shift_, regs, particle_levelset, scale_, true);
@@ -237,9 +236,8 @@ WriteFromCache(
     // dbg(DBG_WARN, "\n--- Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     for (size_t t = 0; t < var_type.size(); ++t) {
-        nimbus::cache::type_id_t typ = var_type[t];
         const nimbus::DataArray &write_set = write_sets[t];
-        switch (typ) {
+        switch (var_type[t]) {
             case POS:
                 Translator::WriteParticles(
                         object_region(), shift_, write_set,

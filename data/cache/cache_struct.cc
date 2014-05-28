@@ -130,7 +130,14 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             }
         }
     }
-    FlushCache(var_type, flush);
+    bool flush_flag = false;
+    for (size_t t = 0; t < num_vars; ++t) {
+        if (!flush[t].empty())
+            flush_flag = true;
+        break;
+    }
+    if (flush_flag)
+        FlushCache(var_type, flush);
     ReadToCache(var_type, diff, read_region);
     for (size_t t = 0; t < num_vars; ++t) {
         cache::type_id_t type = var_type[t];
@@ -193,14 +200,21 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
             }
         }
     }
-    FlushCache(var_type, flush);
+    bool flush_flag = false;
+    for (size_t t = 0; t < num_vars; ++t) {
+        if (!flush[t].empty())
+            flush_flag = true;
+        break;
+    }
+    if (flush_flag)
+        FlushCache(var_type, flush);
     for (size_t t = 0; t < num_vars; ++t) {
         cache::type_id_t type = var_type[t];
-        const DataArray &diff_t = diff[t];
+        const DataArray &write_set_t = write_sets[t];
         DMap &data_map_t = data_maps_[type];
         DataSet &write_back_t = write_backs_[type];
-        for (size_t i = 0; i < diff_t.size(); ++i) {
-            Data *d = diff_t.at(i);
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t.at(i);
             GeometricRegion dreg = d->region();
             data_map_t[dreg] = d;
             write_back_t.insert(d);
@@ -250,6 +264,7 @@ void CacheStruct::UnsetDirtyData(Data *d) {
  * implementation, I expect the overhead to be small. -- Chinmayee
  */
 void CacheStruct::PullData(Data *d) {
+    assert(false);
     AcquireAccess(cache::EXCLUSIVE);
     for (size_t t = 0; t < num_variables_; ++t) {
         DataSet &write_back_t = write_backs_[t];

@@ -104,7 +104,8 @@ void CacheVar::UpdateCache(const DataArray &read_set,
             }
         }
     }
-    FlushCache(flush);
+    if (!flush.empty())
+        FlushCache(flush);
     ReadToCache(diff, read_region);
     for (size_t i = 0; i < to_map.size(); ++i) {
         Data *d = to_map.at(i);
@@ -144,9 +145,10 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
             }
         }
     }
-    FlushCache(flush);
-    for (size_t i = 0; i < diff.size(); ++i) {
-        Data *d = diff.at(i);
+    if (!flush.empty())
+        FlushCache(flush);
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
         GeometricRegion dreg = d->region();
         data_map_[dreg] = d;
         write_back_.insert(d);

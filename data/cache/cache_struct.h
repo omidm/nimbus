@@ -162,12 +162,6 @@ class CacheStruct : public CacheObject {
         cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
                                       const std::vector<DataArray> &read_sets) const;
 
-    private:
-        /**
-         * \brief Disallow calling constructor with no arguments
-         */
-        CacheStruct() {}
-
         /**
          * \brief Flushes data from cache to data in flush_sets (immediately)
          * \param var_type is a list of type_ids corresponding to nimbus variables,
@@ -176,6 +170,12 @@ class CacheStruct : public CacheObject {
          */
         void FlushCache(const std::vector<cache::type_id_t> &var_type,
                         const std::vector<DataArray> &flush_sets);
+
+    private:
+        /**
+         * \brief Disallow calling constructor with no arguments
+         */
+        CacheStruct() {}
 
         // number of nimbus variables
         size_t num_variables_;
