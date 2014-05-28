@@ -205,6 +205,30 @@ CalculateFrameImpl(const nimbus::Job *job,
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
+
+
+// Substep for reseeding particles
+template<class TV> void WATER_DRIVER<TV>::
+WriteFrameImpl(const nimbus::Job *job,
+               const nimbus::DataArray &da,
+               const bool set_boundary_conditions,
+               const T dt) {
+  // Not sure if the Set_Number_Particles_Per_Cell function should go to
+  // initalization.
+  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
+
+  //Reseed
+  LOG::Time("Reseed");
+  example.particle_levelset_evolution.Reseed_Particles(time);
+  example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+
+  //Save State
+  example.Save_To_Nimbus(job, da, current_frame+1);
+}
+
+
+
+
 // Substep with reseeding and writing to frame.
 // Operation on time should be solved carefully. --quhang
 template<class TV> void WATER_DRIVER<TV>::
