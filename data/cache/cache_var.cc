@@ -165,6 +165,7 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
 void CacheVar::UnsetData(Data *d) {
     GeometricRegion dreg = d->region();
     if (data_map_.find(dreg) != data_map_.end()) {
+        assert(data_map_[dreg] == d);
         data_map_.erase(dreg);
     }
 }
@@ -213,6 +214,21 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
         cur_distance += dreg.dx() * dreg.dy() * dreg.dz();
     }
     return cur_distance;
+}
+
+void CacheVar::WriteImmediately(const DataArray &write_set) {
+    DataArray flush_set;
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set[i];
+        if (write_back_.find(d) != write_back_.end())
+            flush_set.push_back(d);
+    }
+    WriteFromCache(flush_set, write_region_);
+    for (size_t i = 0; i < flush_set.size(); ++i) {
+        Data *d = flush_set[i];
+        d->UnsetDirtyCacheObject(this);
+        write_back_.erase(d);
+    }
 }
 
 /**

@@ -162,17 +162,14 @@ class CacheStruct : public CacheObject {
         cache::distance_t GetDistance(const std::vector<cache::type_id_t> &var_type,
                                       const std::vector<DataArray> &read_sets) const;
 
-        void WriteImmediately(const std::vector<cache::type_id_t> &var_type,
-                              const std::vector<DataArray> &flush_sets);
-
         /**
-         * \brief Flushes data from cache to data in flush_sets (immediately)
+         * \brief Writes data from cache to data in write_sets immediately
          * \param var_type is a list of type_ids corresponding to nimbus variables,
          * as explained in the class description
-         * \param flush_sets is a list of data arrays corresponding to nimbus variables
+         * \param write_sets is a list of data arrays corresponding to nimbus variables
          */
-        void FlushCache(const std::vector<cache::type_id_t> &var_type,
-                        const std::vector<DataArray> &flush_sets);
+        void WriteImmediately(const std::vector<cache::type_id_t> &var_type,
+                              const std::vector<DataArray> &write_sets);
 
     private:
         /**
@@ -190,6 +187,15 @@ class CacheStruct : public CacheObject {
         std::vector<DataSet> write_backs_;
 
     protected:
+        /**
+         * \brief Flushes data from cache to data in flush_sets (immediately)
+         * \param var_type is a list of type_ids corresponding to nimbus variables,
+         * as explained in the class description
+         * \param flush_sets is a list of data arrays corresponding to nimbus variables
+         */
+        void FlushCache(const std::vector<cache::type_id_t> &var_type,
+                        const std::vector<DataArray> &flush_sets);
+
         /**
          * \brief Reads data from read_sets into CacheStruct instance
          * \param var_type is a list of type_ids corresponding to nimbus variables,

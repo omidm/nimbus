@@ -149,12 +149,18 @@ class CacheVar : public CacheObject {
         cache::distance_t GetDistance(const DataArray &read_set) const;
 
         /**
+         * \brief Writes data from cache to data in write_set immediately
+         * \param write_set is a data array corresponding to nimbus variables
+         */
+        void WriteImmediately(const DataArray &write_set);
+
+    private:
+        /**
          * \brief Flushes data from cache to data in flush_set (immediately)
          * \param flush_set is a data array corresponding to nimbus variables
          */
         void FlushCache(const DataArray &flush_set);
 
-    private:
         // cache-data mappings
         typedef std::map<GeometricRegion,
                          Data *> DMap;

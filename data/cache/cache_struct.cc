@@ -323,6 +323,10 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
     return cur_distance;
 }
 
+/**
+ * \detials WriteImmediately(...) checks if data passed to it is in the
+ * write_back set for the cache struct instance.
+ */
 void CacheStruct::WriteImmediately(const std::vector<cache::type_id_t> &var_type,
                                    const std::vector<DataArray> &write_sets) {
     size_t num_vars = var_type.size();
