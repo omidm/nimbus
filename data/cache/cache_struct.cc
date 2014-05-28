@@ -80,15 +80,13 @@ CacheStruct::CacheStruct(size_t num_variables, const GeometricRegion &ob_reg)
  */
 void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
                               const std::vector<DataArray> &read_sets,
-                              const GeometricRegion &read_region,
-                              const GeometricRegion &valid_region,
-                              bool invalidate_read_minus_valid) {
+                              const GeometricRegion &read_region) {
     size_t num_vars = var_type.size();
     if (read_sets.size() != num_vars) {
         dbg(DBG_ERROR, "Mismatch in number of variable types passed to UpdateCache\n");
         exit(-1);
     }
-    std::vector<DataArray> diff(num_vars), flush(num_vars), to_map(num_vars);
+    std::vector<DataArray> diff(num_vars), flush(num_vars);
     for (size_t t = 0; t < num_vars; ++t) {
         cache::type_id_t type = var_type[t];
         if (type > num_variables_) {
@@ -98,7 +96,6 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
         const DataArray &read_set_t = read_sets[t];
         DataArray &diff_t = diff[t];
         DataArray &flush_t = flush[t];
-        DataArray &to_map_t = to_map[t];
         DMap &data_map_t = data_maps_[type];
         const DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < read_set_t.size(); ++i) {
@@ -106,25 +103,15 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             DMap::iterator it = data_map_t.find(dreg);
             if (it == data_map_t.end()) {
-                // assert(write_back_t.find(d) == write_back_t.end());
                 d->SyncData();
                 diff_t.push_back(d);
-                if (!invalidate_read_minus_valid ||
-                    valid_region.Covers(&dreg)) {
-                    to_map_t.push_back(d);
-                }
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
-                    // assert(write_back_t.find(d) == write_back_t.end());
                     d->SyncData();
                     diff_t.push_back(d);
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
-                    }
-                    if (!invalidate_read_minus_valid ||
-                        valid_region.Covers(&dreg)) {
-                        to_map_t.push_back(d);
                     }
                     data_map_t.erase(it);
                     d_old->UnsetCacheObject(this);
@@ -148,10 +135,8 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
         for (size_t i = 0; i < diff_t.size(); ++i) {
             Data *d = diff_t.at(i);
             GeometricRegion dreg = d->region();
-            if (!invalidate_read_minus_valid || valid_region.Covers(&dreg)) {
-                data_map_t[dreg] = d;
-                d->SetUpCacheObject(this);
-            }
+            data_map_t[dreg] = d;
+            d->SetUpCacheObject(this);
         }
     }
 }

@@ -85,9 +85,6 @@ class CacheManager {
          * \param region is the application object region
          * \access indicates whether application object access should be
          * EXCLUSIVE or SHARED
-         * \param invalidate_read_minus_write is an optional flag, to indicate
-         * if application job will write to application object regions that
-         * are not present in write_set.
          * \return A pointer to a CacheVar instance that application can use
          */
         CacheVar *GetAppVar(const DataArray &read_set,
@@ -96,8 +93,7 @@ class CacheManager {
                             const GeometricRegion &write_region,
                             const CacheVar &prototype,
                             const GeometricRegion &region,
-                            cache::CacheAccess access,
-                            bool invalidate_read_minus_write = false);
+                            cache::CacheAccess access);
 
         /**
          * \brief Requests a CacheStruct instance of type prototype, from the
@@ -114,9 +110,6 @@ class CacheManager {
          * \param region is the application object region
          * \access indicates whether application object access should be
          * EXCLUSIVE or SHARED
-         * \param invalidate_read_minus_write is an optional flag, to indicate
-         * if application job will write to application object regions that
-         * are not present in write_set.
          * \return A pointer to a CacheVar instance that application can use
          */
         CacheStruct *GetAppStruct(const std::vector<cache::type_id_t> &var_type,
@@ -126,8 +119,7 @@ class CacheManager {
                                   const GeometricRegion &write_region,
                                   const CacheStruct &prototype,
                                   const GeometricRegion &region,
-                                  cache::CacheAccess access,
-                                  bool invalidate_read_minus_write = false);
+                                  cache::CacheAccess access);
 
     private:
         typedef std::map<cache::co_id_t,

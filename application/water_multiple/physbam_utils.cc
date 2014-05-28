@@ -95,7 +95,7 @@ void GetAppCacheObjects(
           read, array_reg,
           write, array_reg,
           kCacheFaceVel, array_reg,
-          nimbus::cache::EXCLUSIVE, false);
+          nimbus::cache::EXCLUSIVE);
     cache->fv = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fv != NULL);
   }
@@ -111,7 +111,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_3,
           write, array_reg_outer_3,
           kCacheFaceVelGhost, array_reg_outer_3,
-          nimbus::cache::EXCLUSIVE, false);
+          nimbus::cache::EXCLUSIVE);
     cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fvg != NULL);
   }
@@ -144,7 +144,7 @@ void GetAppCacheObjects(
             read3, array_reg_outer_3,
             write_empty, array_reg_outer_3,
             kCachePhi3, array_reg_outer_3,
-            nimbus::cache::EXCLUSIVE, false);
+            nimbus::cache::EXCLUSIVE);
       cache->phi3 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi3 != NULL);
     }
@@ -154,7 +154,7 @@ void GetAppCacheObjects(
             read7, array_reg_outer_7,
             write7, array_reg_outer_7,
             kCachePhi7, array_reg_outer_7,
-            nimbus::cache::EXCLUSIVE, false);
+            nimbus::cache::EXCLUSIVE);
       cache->phi7 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi7 != NULL);
     }
@@ -164,7 +164,7 @@ void GetAppCacheObjects(
             read8, array_reg_outer_8,
             write8, array_reg_outer_8,
             kCachePhi8, array_reg_outer_8,
-            nimbus::cache::EXCLUSIVE, false);
+            nimbus::cache::EXCLUSIVE);
       cache->phi8 = dynamic_cast<CacheScalarArray<T> *>(cache_var);
       assert(cache->phi8 != NULL);
     }
@@ -187,7 +187,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
           kCachePsiD, array_reg_outer_1,
-          nimbus::cache::EXCLUSIVE, false);
+          nimbus::cache::EXCLUSIVE);
     cache->psi_d = dynamic_cast<CacheScalarArray<bool> *>(cache_var);
     assert(cache->psi_d != NULL);
   }
@@ -203,7 +203,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_1,
           write, array_reg_outer_1,
           kCachePsiN, array_reg_outer_1,
-          nimbus::cache::EXCLUSIVE, false);
+          nimbus::cache::EXCLUSIVE);
     cache->psi_n = dynamic_cast<CacheFaceArray<bool> *>(cache_var);
     assert(cache->psi_n != NULL);
   }
@@ -234,8 +234,7 @@ void GetAppCacheObjects(
           read, array_reg_outer_3,
           write, array_reg_outer_3,
           kCachePLE, array_reg_outer_3,
-          nimbus::cache::EXCLUSIVE,
-          false);
+          nimbus::cache::EXCLUSIVE);
     cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_struct);
     assert(cache->ple != NULL);
   }

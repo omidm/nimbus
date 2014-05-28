@@ -72,10 +72,8 @@ CacheVar::CacheVar(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
  * read_set.
  */
 void CacheVar::UpdateCache(const DataArray &read_set,
-                           const GeometricRegion &read_region,
-                           const GeometricRegion &valid_region,
-                           bool invalidate_read_minus_valid) {
-    DataArray diff, flush, to_map;
+                           const GeometricRegion &read_region) {
+    DataArray diff, flush;
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
@@ -83,10 +81,6 @@ void CacheVar::UpdateCache(const DataArray &read_set,
         if (it == data_map_.end()) {
             d->SyncData();
             diff.push_back(d);
-            if (!invalidate_read_minus_valid ||
-                valid_region.Covers(&dreg)) {
-                to_map.push_back(d);
-            }
         } else {
             Data *d_old = it->second;
             if (d_old != d) {
@@ -94,10 +88,6 @@ void CacheVar::UpdateCache(const DataArray &read_set,
                 diff.push_back(d);
                 if (write_back_.find(d_old) != write_back_.end()) {
                     flush.push_back(d_old);
-                }
-                if (!invalidate_read_minus_valid ||
-                    valid_region.Covers(&dreg)) {
-                    to_map.push_back(d);
                 }
                 data_map_.erase(it);
                 d_old->UnsetCacheObject(this);
@@ -107,13 +97,11 @@ void CacheVar::UpdateCache(const DataArray &read_set,
     if (!flush.empty())
         FlushCache(flush);
     ReadToCache(diff, read_region);
-    for (size_t i = 0; i < to_map.size(); ++i) {
-        Data *d = to_map.at(i);
+    for (size_t i = 0; i < diff.size(); ++i) {
+        Data *d = diff.at(i);
         GeometricRegion dreg = d->region();
-        if (!invalidate_read_minus_valid || valid_region.Covers(&dreg)) {
-            data_map_[dreg] = d;
-            d->SetUpCacheObject(this);
-        }
+        data_map_[dreg] = d;
+        d->SetUpCacheObject(this);
     }
 }
 

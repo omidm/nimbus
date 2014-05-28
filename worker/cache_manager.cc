@@ -66,9 +66,6 @@ CacheManager::CacheManager() {
  * updates the instance as being used in access mode, updates the instance to
  * refelct any unread data, and sets up write set (flush data that may be
  * replaced, set dirty mappings etc.)
- * \note it is assumed that an application job will never write to
- * regions that are not in it's read + write set. If this assumption proves to
- * be false, then we should change invalidate_read_minus_write accordingly.
  */
 CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   const GeometricRegion &read_region,
@@ -76,8 +73,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   const GeometricRegion &write_region,
                                   const CacheVar &prototype,
                                   const GeometricRegion &region,
-                                  cache::CacheAccess access,
-                                  bool invalidate_read_minus_write) {
+                                  cache::CacheAccess access) {
     CacheVar *cv = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::VAR);
@@ -95,9 +91,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         }
     }
     cv->AcquireAccess(access);
-    cv->UpdateCache(read_set, read_region,
-                    write_region,
-                    invalidate_read_minus_write);
+    cv->UpdateCache(read_set, read_region);
     cv->SetUpWrite(write_set, write_region);
     return cv;
 }
@@ -109,9 +103,6 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
  * updates the instance as being used in access mode, updates the instance to
  * refelct any unread data, and sets up write set (flush data that may be
  * replaced, set dirty mappings etc.)
- * \note it is assumed that an application job will never write to
- * regions that are not in it's read + write set. If this assumption proves to
- * be false, then we should change invalidate_read_minus_write accordingly.
  */
 CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var_type,
                                         const std::vector<DataArray> &read_sets,
@@ -120,8 +111,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                                         const GeometricRegion &write_region,
                                         const CacheStruct &prototype,
                                         const GeometricRegion &region,
-                                        cache::CacheAccess access,
-                                        bool invalidate_read_minus_write) {
+                                        cache::CacheAccess access) {
     CacheStruct *cs = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::STRUCT);
@@ -139,9 +129,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         }
     }
     cs->AcquireAccess(access);
-    cs->UpdateCache(var_type, read_sets, read_region,
-                    write_region,
-                    invalidate_read_minus_write);
+    cs->UpdateCache(var_type, read_sets, read_region);
     cs->SetUpWrite(var_type, write_sets, write_region);
     return cs;
 }
