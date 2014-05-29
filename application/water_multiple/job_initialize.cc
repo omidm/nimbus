@@ -58,8 +58,6 @@ namespace application {
     void JobInitialize::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing initialize job\n");
 
-
-
         std::string par_str(params.ser_data().data_ptr_raw(),
                             params.ser_data().size());
 
@@ -98,33 +96,6 @@ namespace application {
                         read, write,
                         before, after,
                         loop_params);
-
-
-
-/*
-        InitConfig init_config;
-        init_config.init_phase = true;
-        init_config.set_boundary_condition = true;
-        T dt;
-        std::string params_str(params.ser_data().data_ptr_raw(),
-            params.ser_data().size());
-        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
-            &init_config.global_region, &init_config.local_region);
-
-        PhysBAM::WATER_EXAMPLE<TV> *example;
-        PhysBAM::WATER_DRIVER<TV> *driver;
-
-        DataConfig data_config;
-        data_config.SetAll();
-        InitializeExampleAndDriver(init_config, data_config,
-                                   this, da, example, driver);
-
-        // Free resources.
-        DestroyExampleAndDriver(example, driver);
-*/
-
-
-
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }
