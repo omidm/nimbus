@@ -774,7 +774,7 @@ template <class TS> class TranslatorPhysBAM {
                                                 reinterpret_cast<char*>(&particle_buffer),
                                                 sizeof(particle_buffer));
                                     }
-                                } // Finish looping through all particles.
+                                }  // Finish looping through all particles.
                                 particle_bucket = particle_bucket->next;
                             }
                         }
@@ -981,7 +981,7 @@ template <class TS> class TranslatorPhysBAM {
                                                 reinterpret_cast<char*>(&particle_buffer),
                                                 sizeof(particle_buffer));
                                     }
-                                } // Finish looping through all particles.
+                                }  // Finish looping through all particles.
                                 particle_bucket = particle_bucket->next;
                             }
                         }
