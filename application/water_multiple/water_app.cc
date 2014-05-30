@@ -228,6 +228,7 @@ namespace application {
         RegisterJob(RESEED_PARTICLES, new JobReseedParticles(this));
         RegisterJob(MODIFY_LEVELSET_PART_ONE, new JobModifyLevelsetPartOne(this));
         RegisterJob(MODIFY_LEVELSET_PART_TWO, new JobModifyLevelsetPartTwo(this));
+        RegisterJob(MAKE_SIGNED_DISTANCE, new JobMakeSignedDistance(this));
         RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));

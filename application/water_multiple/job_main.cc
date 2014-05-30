@@ -110,6 +110,10 @@ namespace application {
         std::vector<nimbus::job_id_t> init_job_ids;
         GetNewJobID(&init_job_ids, init_job_num);
 
+        int make_signed_distance_job_num = kAppPartNum;
+        std::vector<nimbus::job_id_t> make_signed_distance_job_ids;
+        GetNewJobID(&make_signed_distance_job_ids, make_signed_distance_job_num);
+
         int extrapolate_phi_job_num = kAppPartNum;
         std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
         GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
@@ -167,6 +171,41 @@ namespace application {
         }
 
 
+        /* 
+         * Spawning make signed distance.
+         */
+        for (int i = 0; i < make_signed_distance_job_num; ++i) {
+          read.clear();
+          LoadLogicalIdsInSet(this, &read, kRegY2W7Outer[i], APP_PHI, NULL);
+          LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST,
+              APP_FACE_VEL, NULL);
+          LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
+              APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+
+          write.clear();
+          LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
+          LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
+              APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+
+          before.clear();
+          for (int j = 0; j < init_job_num; ++j) {
+            before.insert(init_job_ids[j]);
+          }
+
+          std::string make_signed_distance_str;
+          SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W3Central[i], &make_signed_distance_str);
+          nimbus::Parameter make_signed_distance_params;
+          make_signed_distance_params.set_ser_data(SerializedData(make_signed_distance_str));
+
+          dbg(APP_LOG, "Spawning initialize\n");
+          SpawnComputeJob(MAKE_SIGNED_DISTANCE,
+              make_signed_distance_job_ids[i],
+              read, write,
+              before, after,
+              make_signed_distance_params, true);
+        }
+
+
         /*
          * Spawning extrapolate phi stage over multiple workers.
          */
@@ -180,8 +219,8 @@ namespace application {
               kRegY2W8CentralWGB[i], APP_PHI, NULL);
 
           before.clear();
-          for (int j = 0; j < init_job_num; ++j) {
-            before.insert(init_job_ids[j]);
+          for (int j = 0; j < make_signed_distance_job_num; ++j) {
+            before.insert(make_signed_distance_job_ids[j]);
           }
 
           nimbus::Parameter phi_params;

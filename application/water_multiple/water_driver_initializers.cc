@@ -222,9 +222,9 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
-    example.particle_levelset_evolution.Make_Signed_Distance();
+    // example.particle_levelset_evolution.Make_Signed_Distance();
     example.projection.p.Fill(0);
-    example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
+    // example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
     example.particle_levelset_evolution.Set_Seed(2606);
