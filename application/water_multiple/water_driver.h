@@ -124,6 +124,11 @@ public:
                                    const nimbus::GeometricRegion &local_region,
                                    T dt);
 
+    bool MakeSignedDistanceImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   const nimbus::GeometricRegion &local_region,
+                                   T dt);
+
     bool ExtrapolatePhiImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,
                             T dt);

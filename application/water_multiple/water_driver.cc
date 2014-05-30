@@ -516,6 +516,26 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
     return true;
 }
 
+
+template<class TV> bool WATER_DRIVER<TV>::
+MakeSignedDistanceImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    LOG::Time("Make Signed Distance ...\n");
+
+    int ghost_cells = 7;
+    example.particle_levelset_evolution.
+        Make_Signed_Distance_Nimbus(&example.face_velocities_ghost,
+                                     &example.phi_ghost_bandwidth_seven,
+                                     ghost_cells);
+
+    // save state
+    example.Save_To_Nimbus(job, da, current_frame+1);
+
+    return true;
+}
+
 template<class TV> bool WATER_DRIVER<TV>::
 AdjustPhiImpl(const nimbus::Job *job,
         const nimbus::DataArray &da,
