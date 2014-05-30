@@ -38,7 +38,7 @@
  */
 
 #include "application/water_multiple/app_utils.h"
-#include "application/water_multiple/job_initializei_part_one.h"
+#include "application/water_multiple/job_initialize_part_one.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"

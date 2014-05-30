@@ -45,6 +45,8 @@
 
 #define MAIN "main"
 #define INITIALIZE "initialize"
+#define INITIALIZE_PART_ONE "initialize_part_one"
+#define INITIALIZE_PART_TWO "initialize_part_two"
 #define LOOP_FRAME "loop_frame"
 #define LOOP_ITERATION "loop_iteration"
 #define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
