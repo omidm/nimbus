@@ -46,6 +46,9 @@ public:
 
     void InitializeFirst(const nimbus::Job *job,
                           const nimbus::DataArray &da);
+    void InitializeFirstDistributed(
+        const nimbus::Job *job,
+        const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da);
     void InitializeUseCache(const nimbus::Job *job,
@@ -72,6 +75,11 @@ public:
                             const nimbus::DataArray &da,
                             const bool set_boundary_conditions,
                             const T dt);
+
+    void ReseedParticlesImpl(const nimbus::Job *job,
+                        const nimbus::DataArray &da,
+                        const bool set_boundary_conditions,
+                        const T dt);
 
     void WriteFrameImpl(const nimbus::Job *job,
                         const nimbus::DataArray &da,
