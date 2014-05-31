@@ -77,6 +77,10 @@ public:
                         const nimbus::DataArray &da,
                         const bool set_boundary_conditions,
                         const T dt);
+    void WriteOutputSplitImpl(const nimbus::Job *job,
+                              const nimbus::DataArray &da,
+                              const bool set_boundary_conditions,
+                              const T dt);
 
     bool ComputeOccupiedBlocksImpl(const nimbus::Job *job,
                                    const nimbus::DataArray &da,

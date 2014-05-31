@@ -220,9 +220,22 @@ WriteFrameImpl(const nimbus::Job *job,
 
   //Reseed
   LOG::Time("Reseed");
-  example.particle_levelset_evolution.Reseed_Particles(time);
+  example.particle_levelset_evolution.Reseed_Particles(time+dt);
   example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
+  // I changed the order. --quhang
+  Write_Output_Files(++output_number);
+
+  //Save State
+  example.Save_To_Nimbus(job, da, current_frame+1);
+}
+
+template<class TV> void WATER_DRIVER<TV>::
+WriteOutputSplitImpl(const nimbus::Job *job,
+
+               const nimbus::DataArray &da,
+               const bool set_boundary_conditions,
+               const T dt) {
   // I changed the order. --quhang
   Write_Output_Files(++output_number);
 

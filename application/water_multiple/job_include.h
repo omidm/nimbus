@@ -66,6 +66,8 @@
 #include "application/water_multiple/job_step_particles.h"
 #include "application/water_multiple/job_synchronize_particles.h"
 #include "application/water_multiple/job_write_frame.h"
+#include "application/water_multiple/job_write_output.h"
+#include "application/water_multiple/job_reseed_particles.h"
 
 #include "application/water_multiple//projection/job_projection_global_initialize.h"
 #include "application/water_multiple//projection/job_projection_local_initialize.h"
