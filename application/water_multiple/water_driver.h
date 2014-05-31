@@ -158,7 +158,7 @@ public:
                              const nimbus::DataArray &da,
                              T dt);
 
-    void Write_Output_Files(const int frame);
+    void Write_Output_Files(const int frame, int rank = -1);
 
     void Write_Substep(const std::string& title,const int substep,const int level=0);
     void Run(RANGE<TV_INT>& domain,const T dt,const T time);

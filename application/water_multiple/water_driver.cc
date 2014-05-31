@@ -245,8 +245,8 @@ WriteOutputSplitImpl(const nimbus::Job *job,
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
                const T dt) {
-  // I changed the order. --quhang
-  Write_Output_Files(++output_number);
+  // TODO(quhang) get the right rank.
+  Write_Output_Files(++output_number, job->id().elem());
 
   //Save State
   example.Save_To_Nimbus(job, da, current_frame+1);
@@ -609,16 +609,22 @@ Write_Substep(const std::string& title,const int substep,const int level)
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Write_Output_Files(const int frame)
+Write_Output_Files(const int frame, int rank)
 {
-    FILE_UTILITIES::Create_Directory(example.output_directory);
-    FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
-    FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+    std::string rank_name = "";
+    if (rank != -1) {
+      std::stringstream temp_ss;
+      temp_ss << rank;
+      rank_name = temp_ss.str();
+    }
+    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name);
+    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
+    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+"/common");
+    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
     if(frame==example.first_frame) 
-        FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
-    example.Write_Output_Files(frame);
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
+        FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/first_frame",frame,"\n");
+    example.Write_Output_Files(frame, rank);
+    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/last_frame",frame,"\n");
 }
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,3> >;

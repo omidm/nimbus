@@ -202,18 +202,18 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     for (int i = 0; i < reseed_particles_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL,
                           APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_PSI_D,
                           APP_PSI_N, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                           NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL,
+      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[0], APP_FACE_VEL,
                           APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+      LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[0], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                           NULL);
@@ -229,20 +229,14 @@ void JobLoopIterationPartTwo::SpawnJobs(
           temp_params, true);
     }
     job_query.CommitStagedJobs();
+    /*
     for (int i = 0; i < write_output_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL,
                           APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_PSI_D,
                           APP_PSI_N, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-                          APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-                          APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-                          NULL);
-      write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL,
-                          APP_FACE_VEL_GHOST, APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                           NULL);
@@ -257,6 +251,27 @@ void JobLoopIterationPartTwo::SpawnJobs(
           read, write,
           temp_params, true);
     }
+    job_query.CommitStagedJobs();
+    */
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
+                        APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+                        APP_PSI_N, NULL);
+    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+                        APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
+                        APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
+                        NULL);
+
+    nimbus::Parameter temp_params;
+    std::string temp_str;
+    SerializeParameter(frame, time, dt, global_region, global_region,
+                       &temp_str);
+    temp_params.set_ser_data(SerializedData(temp_str));
+    job_query.StageJob(WRITE_OUTPUT,
+                       write_output_job_ids[0],
+                       read, write,
+                       temp_params, true);
     job_query.CommitStagedJobs();
 
     // Spawning loop frame to compute next frame.
