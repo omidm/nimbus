@@ -100,7 +100,7 @@ namespace nimbus {
       Z_COORD = 3
     };
 
-    explicit TranslatorPhysBAMOld() {}
+    explicit TranslatorPhysBAMOld() { log_ = NULL; }
     virtual ~TranslatorPhysBAMOld() {}
 
     // Data structures used to format particles in PhysBAMData.
@@ -116,6 +116,10 @@ namespace nimbus {
     struct RemovedParticleInternal : public ParticleInternal {
       scalar_t v[3];
     };
+
+    // TODO: Logging for experiments, this should be set somewhere
+    static Log *log_;
+    static void set_log(Log *log) { log_ = log; }
 
     /** Take a FaceArray described by region and read its data from the
      *  PhysicalDataInstance objects in the objects array.
@@ -1058,6 +1062,8 @@ particle_buffer.id = (*id)(i);
               overlapSize(Z_COORD) > 0);
     }
 };
+
+template class TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >;
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_OLD_H_

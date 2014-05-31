@@ -95,7 +95,7 @@ template <class TS> class TranslatorPhysBAM {
             Z_COORD = 3
         };
 
-        explicit TranslatorPhysBAM() {}
+        explicit TranslatorPhysBAM() { log_ = NULL; }
         virtual ~TranslatorPhysBAM() {}
 
         // Data structures used to format particles in PhysBAMData.
@@ -111,6 +111,10 @@ template <class TS> class TranslatorPhysBAM {
         struct RemovedParticleInternal : public ParticleInternal {
             TS v[3];
         };
+
+        // TODO: Logging for experiments, this should be set somewhere
+        static Log *log_;
+        static void set_log(Log *log) { log_ = log; }
 
         /** Take a FaceArray described by region and read its data from the
          *  PhysicalDataInstance objects in the objects array.

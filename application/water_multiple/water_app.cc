@@ -42,6 +42,7 @@
 #include "application/water_multiple/job_include.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_app.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "data/scratch_data_helper.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
@@ -49,12 +50,14 @@
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
+#include "shared/log.h"
 #include "shared/nimbus.h"
 #include "stdio.h"
 
 namespace application {
 
     WaterApp::WaterApp() {
+        translator_log = NULL;
     };
 
     /* Register data and job types and initialize constant quantities used by
@@ -256,6 +259,8 @@ namespace application {
         RegisterJob(PROJECTION_REDUCE_ALPHA,
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
+
+        nimbus::TranslatorPhysBAMOld<TV>::set_log(translator_log);
 
         dbg(APP_LOG, "Completed loading water application\n");
     }

@@ -80,9 +80,16 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
     pthread_rwlock_init(&lock_data_map_, NULL);
+    cache_log = NULL;
 }
 
 void Worker::Run() {
+#ifdef CACHE_LOG
+  std::stringstream msg;
+  msg << "~~~ Worker starts : " << cache_log->GetTime();
+  cache_log->WriteToFile(msg.str());
+#endif
+
   std::cout << "Running the Worker" << std::endl;
 
   SetupSchedulerInterface();
@@ -512,6 +519,11 @@ void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
 }
 
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
+#ifdef CACHE_LOG
+  std::stringstream msg;
+  msg << "~~~ Completed application : " << cache_log->GetTime();
+  cache_log->WriteToFile(msg.str());
+#endif
   exit(cm->exit_status().elem());
 }
 

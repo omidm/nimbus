@@ -39,9 +39,12 @@
   * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#include "application/water_multiple/water_app.h"
 #include <iostream>  // NOLINT
 #include <pthread.h>
+#include <string>
+
+#include "application/water_multiple/water_app.h"
+#include "shared/log.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
 #include "simple_worker.h"
@@ -127,11 +130,6 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-
-
-
-
-
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   application::WaterApp *app = new application::WaterApp();
@@ -139,7 +137,12 @@ int main(int argc, char *argv[]) {
   if (ip_address_given) {
     w->set_ip_address(ip_address);
   }
+
+  // TODO: Extra logging information for cache experiments, remove later on
+#ifdef CACHE_LOG
+  Log *cache_log = new Log(std::string("cache-log"));
+  w->cache_log = cache_log;
+  app->translator_log = cache_log;
+#endif
   w->Run();
 }
-
-

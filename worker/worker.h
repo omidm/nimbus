@@ -105,6 +105,8 @@ class Worker {
     client_->sendCommand(command);
   }
 
+  Log *cache_log;
+
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
