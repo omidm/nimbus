@@ -154,6 +154,9 @@ public:
     bool ExtrapolationImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt);
+    bool ReseedParticlesImpl(const nimbus::Job *job,
+                             const nimbus::DataArray &da,
+                             T dt);
 
     void Write_Output_Files(const int frame);
 

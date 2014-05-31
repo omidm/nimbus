@@ -85,7 +85,7 @@ void JobReseedParticles::Execute(nimbus::Parameter params,
 
   dbg(APP_LOG, "Job RESEED_PARTICLES starts.\n");
   // Reseed particles and write frame.
-  driver->ReseedParticlesImpl(this, da, true, dt);
+  driver->ReseedParticlesImpl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);

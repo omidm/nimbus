@@ -209,7 +209,6 @@ CalculateFrameImpl(const nimbus::Job *job,
 // Operation on time should be solved carefully. --quhang
 template<class TV> void WATER_DRIVER<TV>::
 WriteFrameImpl(const nimbus::Job *job,
-
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
                const T dt) {
@@ -220,7 +219,7 @@ WriteFrameImpl(const nimbus::Job *job,
 
   //Reseed
   LOG::Time("Reseed");
-  example.particle_levelset_evolution.Reseed_Particles(time+dt);
+  example.particle_levelset_evolution.Reseed_Particles(time);
   example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
   // I changed the order. --quhang
@@ -229,10 +228,20 @@ WriteFrameImpl(const nimbus::Job *job,
   //Save State
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
+template<class TV> bool WATER_DRIVER<TV>::
+ReseedParticlesImpl(const nimbus::Job *job,
+                    const nimbus::DataArray &da,
+                    const T dt) {
+  //Reseed
+  LOG::Time("Reseed");
+  example.particle_levelset_evolution.Reseed_Particles(time+dt);
+  example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+  example.Save_To_Nimbus(job, da, current_frame+1);
+  return true;
+}
 
 template<class TV> void WATER_DRIVER<TV>::
 WriteOutputSplitImpl(const nimbus::Job *job,
-
                const nimbus::DataArray &da,
                const bool set_boundary_conditions,
                const T dt) {
