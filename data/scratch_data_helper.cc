@@ -147,7 +147,7 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
         ids->clear();
 
     const int cl[DIMENSION]  = {cr.x(),  cr.y(),  cr.z()};
-    int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dx()};
+    int cld[DIMENSION] = {cr.dx(), cr.dy(), cr.dz()};
     int l[DIMENSION]  = {0, 0, 0};
     int ld[DIMENSION] = {0, 0, 0};
     size_t n;

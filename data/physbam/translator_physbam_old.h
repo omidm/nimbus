@@ -100,7 +100,7 @@ namespace nimbus {
       Z_COORD = 3
     };
 
-    explicit TranslatorPhysBAMOld() { log_ = NULL; }
+    explicit TranslatorPhysBAMOld() { log = NULL; }
     virtual ~TranslatorPhysBAMOld() {}
 
     // Data structures used to format particles in PhysBAMData.
@@ -117,9 +117,7 @@ namespace nimbus {
       scalar_t v[3];
     };
 
-    // TODO: Logging for experiments, this should be set somewhere
-    static Log *log_;
-    static void set_log(Log *log) { log_ = log; }
+    static Log *log;
 
     /** Take a FaceArray described by region and read its data from the
      *  PhysicalDataInstance objects in the objects array.
@@ -129,6 +127,11 @@ namespace nimbus {
         const int_dimension_t shift[3],
         const PdiVector* objects,
         typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Face Array (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       PhysBAM::ARRAY<T, FaceIndex> flag;
       flag = *fa;
       flag.Fill(0);
@@ -223,6 +226,11 @@ namespace nimbus {
           }
         }
       }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Face Array (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
     }
 
     /* Helper function to specify the element type. Implicit template type
@@ -251,6 +259,11 @@ namespace nimbus {
         const int_dimension_t shift[3],
         PdiVector* objects,
         typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Face Array (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       int_dimension_t region_size = 0;
       region_size += (region->dx() + 1) * region->dy() * region->dz();
       region_size += region->dx() * (region->dy() + 1) * region->dz();
@@ -339,6 +352,11 @@ namespace nimbus {
           }
         }
       }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Face Array (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       return true;
     }
 
@@ -385,6 +403,11 @@ namespace nimbus {
                        const int_dimension_t kScale,
                        bool positive,
                        bool merge = false) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Particles (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       if (positive) {
         dbg(DBG_TRANSLATE,
             TRANSLATE_OLD_LOG_H"Start ReadParticles for positive particles\n");
@@ -415,6 +438,11 @@ namespace nimbus {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                             x, y, z);
               // Warning: might be too strict.
+              if (log) {
+                  std::stringstream msg;
+                  msg << "### Read Particles (Old Translator) end : " << log->GetTime();
+                  log->WriteToFile(msg.str());
+              }
               return false;
             }
             if (!merge) {
@@ -429,6 +457,11 @@ namespace nimbus {
 
       if (instances == NULL) {
         dbg(DBG_WARN, "Physical data instances are empty.\n");
+        if (log) {
+            std::stringstream msg;
+            msg << "### Read Particles (Old Translator) end : " << log->GetTime();
+            log->WriteToFile(msg.str());
+        }
         return false;
       }
 
@@ -495,6 +528,11 @@ namespace nimbus {
           "In ReadParticles, go through %ld particles and read %ld particles"
           " in %0.2f seconds\n",
           counter1, counter2, timer.GetTime());
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Particles (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       return true;
     }
 
@@ -520,6 +558,11 @@ namespace nimbus {
                         ParticleContainer& particle_container,
                         const int_dimension_t kScale,
                         bool positive) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Particles (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       if (positive) {
         dbg(DBG_TRANSLATE,
             TRANSLATE_OLD_LOG_H"Start WriteParticles for positive particles\n");
@@ -555,6 +598,11 @@ namespace nimbus {
             if (!particles->Valid_Index(bucket_index)) {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                             x, y, z);
+              if (log) {
+                  std::stringstream msg;
+                  msg << "### Write Particles (Old Translator) end : " << log->GetTime();
+                  log->WriteToFile(msg.str());
+              }
               return false;
             }
             PdiVector::iterator iter = instances->begin();
@@ -641,6 +689,11 @@ particle_buffer.id = (*id)(i);
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->CommitTempBuffer();
       }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Particles (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       return true;
     }
 
@@ -661,6 +714,11 @@ particle_buffer.id = (*id)(i);
                               const int_dimension_t kScale,
                               bool positive,
                               bool merge = false) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Removed Particles (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       RemovedParticleArray* particles;
       if (positive) {
         particles = &particle_container.removed_positive_particles;
@@ -678,6 +736,11 @@ particle_buffer.id = (*id)(i);
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                             x, y, z);
               // Warning: might be too strict.
+              if (log) {
+                  std::stringstream msg;
+                  msg << "### Read Removed Particles (Old Translator) end : " << log->GetTime();
+                  log->WriteToFile(msg.str());
+              }
               return false;
             }
             if (!merge) {
@@ -690,6 +753,11 @@ particle_buffer.id = (*id)(i);
 
       if (instances == NULL) {
         dbg(DBG_WARN, "Physical data instances are empty.\n");
+        if (log) {
+            std::stringstream msg;
+            msg << "### Read Removed Particles (Old Translator) end : " << log->GetTime();
+            log->WriteToFile(msg.str());
+        }
         return false;
       }
 
@@ -749,6 +817,11 @@ particle_buffer.id = (*id)(i);
           }
         }  // End the loop for buffer.
       }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Removed Particles (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       return true;
     }
 
@@ -768,6 +841,11 @@ particle_buffer.id = (*id)(i);
                                const int_dimension_t kScale,
                                bool positive
                                ) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Removed Particles (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       PdiVector::iterator iter = instances->begin();
       for (; iter != instances->end(); ++iter) {
         const PhysicalDataInstance* instance = *iter;
@@ -790,6 +868,11 @@ particle_buffer.id = (*id)(i);
             if (!particles->Valid_Index(bucket_index)) {
               dbg(DBG_WARN, "Bucket index (%d, %d, %d) out of range.\n",
                             x, y, z);
+              if (log) {
+                  std::stringstream msg;
+                  msg << "### Write Removed Particles (Old Translator) end : " << log->GetTime();
+                  log->WriteToFile(msg.str());
+              }
               return false;
             }
             RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
@@ -853,6 +936,11 @@ particle_buffer.id = (*id)(i);
         PhysBAMData* data = static_cast<PhysBAMData*>(instance->data());
         data->CommitTempBuffer();
       }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Removed Particles (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       return true;
     }
 
@@ -864,6 +952,11 @@ particle_buffer.id = (*id)(i);
         const int_dimension_t shift[3],
         const PdiVector* instances,
         typename PhysBAM::ARRAY<T, Int3Vector>* sa) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Scalar Array (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       if (instances != NULL) {
         PdiVector::const_iterator iter = instances->begin();
         for (; iter != instances->end(); ++iter) {
@@ -898,6 +991,11 @@ particle_buffer.id = (*id)(i);
             }
           }
         }
+      }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Read Scalar Array (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
       }
       return sa;
     }
@@ -936,6 +1034,11 @@ particle_buffer.id = (*id)(i);
         const int_dimension_t shift[3],
         PdiVector* instances,
         typename PhysBAM::ARRAY<T, Int3Vector>* sa) {
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Scalar Array (Old Translator) start : " << log->GetTime();
+          log->WriteToFile(msg.str());
+      }
       if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
         dbg(DBG_WARN, "WARN: writing to a scalar array of a different size\n");
         Int3Vector cp = sa->counts;
@@ -979,6 +1082,11 @@ particle_buffer.id = (*id)(i);
             }
           }
         }
+      }
+      if (log) {
+          std::stringstream msg;
+          msg << "### Write Scalar Array (Old Translator) end : " << log->GetTime();
+          log->WriteToFile(msg.str());
       }
       return true;
     }
@@ -1064,6 +1172,8 @@ particle_buffer.id = (*id)(i);
 };
 
 template class TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >;
+template <class VECTOR_TYPE>
+Log *TranslatorPhysBAMOld<VECTOR_TYPE>::log = NULL;
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_OLD_H_

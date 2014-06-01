@@ -50,6 +50,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -95,7 +96,7 @@ template <class TS> class TranslatorPhysBAM {
             Z_COORD = 3
         };
 
-        explicit TranslatorPhysBAM() { log_ = NULL; }
+        explicit TranslatorPhysBAM() { log = NULL; }
         virtual ~TranslatorPhysBAM() {}
 
         // Data structures used to format particles in PhysBAMData.
@@ -112,9 +113,7 @@ template <class TS> class TranslatorPhysBAM {
             TS v[3];
         };
 
-        // TODO: Logging for experiments, this should be set somewhere
-        static Log *log_;
-        static void set_log(Log *log) { log_ = log; }
+        static Log *log;
 
         /** Take a FaceArray described by region and read its data from the
          *  PhysicalDataInstance objects in the objects array.
@@ -125,8 +124,19 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
-            if (read_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             PhysBAM::ARRAY<T, FaceIndex> flag;
             flag = *fa;
             flag.Fill(0);
@@ -313,6 +323,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /** Take a FaceArray described by region and write it out to the
@@ -322,8 +337,19 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Face Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Face Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -398,6 +424,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Face Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /*
@@ -411,8 +442,19 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
-            if (regions.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (regions.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
 
             ParticleArray *particles;
             if (positive) {
@@ -498,6 +540,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         static void DeleteRemovedParticles(
@@ -506,8 +553,19 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
-            if (regions.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (regions.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Delete Removed Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
 
             RemovedParticleArray *particles;
             if (positive) {
@@ -594,6 +652,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
 
@@ -614,6 +677,11 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
             ParticleArray* particles;
             if (positive) {
                 particles = &particle_container->positive_particles;
@@ -687,6 +755,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }  // End the loop for buffer.
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
 
@@ -704,8 +777,19 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
 
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
@@ -787,6 +871,11 @@ template <class TS> class TranslatorPhysBAM {
                 // commit the result
                 data->CommitTempBuffer();
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /* Reads the removed particle data from the PhysicalDataInstances
@@ -806,6 +895,11 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
             RemovedParticleArray* particles;
             if (positive) {
                 particles = &particle_container->removed_positive_particles;
@@ -834,6 +928,11 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Removed Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 dbg(DBG_WARN, "Physical data instances are empty.\n");
                 return;
             }
@@ -893,6 +992,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }  // End the loop for buffer.
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /* Writes the removed particle data from PhysBAM particle container
@@ -911,8 +1015,19 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive
                 ) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Removed Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -994,6 +1109,11 @@ template <class TS> class TranslatorPhysBAM {
                 // commit the result
                 data->CommitTempBuffer();
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /* Read scalar array from PhysicalDataInstances specified by instances,
@@ -1004,8 +1124,19 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            if (read_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Scalar Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Scalar Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             for (size_t i = 0; i < read_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
@@ -1037,6 +1168,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Scalar Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /* Write scalar array data into PhysicalDataInstances specified by instances,
@@ -1046,8 +1182,19 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Scalar Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Scalar Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             for (size_t i = 0; i < write_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(write_set[i]);
                 GeometricRegion temp = data->region();
@@ -1079,6 +1226,11 @@ template <class TS> class TranslatorPhysBAM {
                         }
                     }
                 }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Scalar Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
             }
         }
 
@@ -1138,6 +1290,7 @@ template <class TS> class TranslatorPhysBAM {
 };
 
 template class TranslatorPhysBAM<float>;
+template <class TS> Log *TranslatorPhysBAM<TS>::log = NULL;
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_

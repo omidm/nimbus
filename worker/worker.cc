@@ -40,6 +40,7 @@
 
 #include <boost/functional/hash.hpp>
 #include <sstream>
+#include <string>
 #include <ctime>
 #include <list>
 #include "worker/worker.h"
@@ -175,7 +176,25 @@ void Worker::RunJobs(size_t max_num) {
       job->data_array.push_back(data_map_[*iter]);
     }
 
+#ifdef CACHE_LOG
+    std::string jname = job->name();
+    bool print_clog = false;
+    if (jname.substr(0, 7) == "Compute")
+      print_clog = true;
+    if (print_clog) {
+      std::stringstream msg;
+      msg << "~~~ App compute job start : " << cache_log->GetTime();
+      cache_log->WriteToFile(msg.str());
+    }
+#endif
     job->Execute(job->parameters(), job->data_array);
+#ifdef CACHE_LOG
+    if (print_clog) {
+      std::stringstream msg;
+      msg << "~~~ App compute job end : " << cache_log->GetTime();
+      cache_log->WriteToFile(msg.str());
+    }
+#endif
 
     Parameter params;
     JobDoneCommand cm(job->id(), job->after_set(), params);
