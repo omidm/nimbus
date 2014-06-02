@@ -246,8 +246,11 @@ WriteOutputSplitImpl(const nimbus::Job *job,
                const bool set_boundary_conditions,
                const T dt) {
   // TODO(quhang) get the right rank.
-  Write_Output_Files(++output_number, job->id().elem());
-
+  if (application::kUseGlobalWrite) {
+    Write_Output_Files(++output_number);
+  } else {
+    Write_Output_Files(++output_number, job->id().elem());
+  }
   //Save State
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
