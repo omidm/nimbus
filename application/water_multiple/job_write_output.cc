@@ -79,7 +79,14 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
   DataConfig data_config;
-  data_config.SetAll();
+  data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::LEVELSET_READ);
+  data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::PSI_N);
+  data_config.SetFlag(DataConfig::PSI_D);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 

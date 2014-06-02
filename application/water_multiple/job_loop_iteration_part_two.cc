@@ -203,7 +203,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     for (int i = 0; i < reseed_particles_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
-                          APP_FACE_VEL_GHOST, APP_PHI, NULL);
+                          APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
                           APP_PSI_N, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
@@ -212,7 +212,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                           NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL,
-                          APP_FACE_VEL_GHOST, APP_PHI, NULL);
+                          APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
@@ -233,7 +233,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     if (kUseGlobalWrite) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
-                          APP_FACE_VEL_GHOST, APP_PHI, NULL);
+                          APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
                           APP_PSI_N, NULL);
       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
@@ -256,7 +256,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
       for (int i = 0; i < write_output_job_num; ++i) {
         read.clear();
         LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL,
-                            APP_FACE_VEL_GHOST, APP_PHI, NULL);
+                            APP_PHI, NULL);
         LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_PSI_D,
                             APP_PSI_N, NULL);
         LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_POS_PARTICLES,
