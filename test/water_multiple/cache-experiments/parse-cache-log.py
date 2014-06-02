@@ -46,6 +46,7 @@ tnew_p_end    = 0
 told_s_end    = 0
 told_f_end    = 0
 told_p_end    = 0
+copy_trans    = 0
 
 ### Open file and begin parsing ###
 print "Opening %s ..." % log_file
@@ -55,6 +56,7 @@ log = open(log_file, 'r')
 total_lines = sum(1 for line in log_temp)
 print "Parsing %d lines ..." % total_lines
 
+compute = False
 for num, line in enumerate(log):
     x =  re.findall('(\d+\.\d+$|\d+e-\d+$)', line)
     if len(x) > 0:
@@ -63,6 +65,7 @@ for num, line in enumerate(log):
             worker_start = xnum
         if "App compute job start" in line:
             compute_start = xnum
+            compute = True
         if "Read Scalar Array (New Translator) start" in line or \
             "Write Scalar Array (New Translator) start" in line:
             tnew_s_start = xnum
@@ -95,14 +98,19 @@ for num, line in enumerate(log):
         if "App compute job end" in line:
             compute_end = xnum
             compute_total += compute_end - compute_start
+            compute = False
         if "Read Scalar Array (New Translator) end" in line or \
             "Write Scalar Array (New Translator) end" in line:
             tnew_s_end = xnum
             tnew_s_total += tnew_s_end - tnew_s_start
+            if not compute:
+                copy_trans += tnew_s_end - tnew_s_start
         if "Read Face Array (New Translator) end" in line or \
             "Write Face Array (New Translator) end" in line:
             tnew_f_end = xnum
             tnew_f_total += tnew_f_end - tnew_f_start
+            if not compute:
+                copy_trans += tnew_f_end - tnew_f_start
         if "Read Particles (New Translator) end" in line or \
             "Write Particles (New Translator) end" in line or \
             "Read Removed Particles (New Translator) end" in line or \
@@ -111,14 +119,20 @@ for num, line in enumerate(log):
             "Delete Removed Particles (New Translator) end" in line:
             tnew_p_end = xnum
             tnew_p_total += tnew_p_end - tnew_p_start
+            if not compute:
+                copy_trans += tnew_p_end - tnew_p_start
         if "Read Scalar Array (Old Translator) end" in line or \
             "Write Scalar Array (Old Translator) end" in line:
             told_s_end = xnum
             told_s_total += told_s_end - told_s_start
+            if not compute:
+                copy_trans += told_s_end - told_s_start
         if "Read Face Array (Old Translator) end" in line or \
             "Write Face Array (Old Translator) end" in line:
             told_f_end = xnum
             told_f_total += told_f_end - told_f_start
+            if not compute:
+                copy_trans += told_f_end - told_f_start
         if "Read Particles (Old Translator) end" in line or \
             "Write Particles (Old Translator) end" in line or \
             "Read Removed Particles (Old Translator) end" in line or \
@@ -127,6 +141,8 @@ for num, line in enumerate(log):
             "Delete Removed Particles (Old Translator) end" in line:
             told_p_end = xnum
             told_p_total += told_p_end - told_p_start
+            if not compute:
+                copy_trans += told_p_end - told_p_start
     if num == total_lines/4:
         print "Parsed 25% ..."
     if num == total_lines/2:
@@ -145,3 +161,4 @@ data.write("Translator_New_Particles %d\n" % tnew_p_total)
 data.write("Translator_Old_Scalar %d\n" % told_s_total)
 data.write("Translator_Old_Face %d\n" % told_f_total)
 data.write("Translator_Old_Particles %d\n" % told_p_total)
+data.write("Translator_From_Copy %d\n" % copy_trans)
