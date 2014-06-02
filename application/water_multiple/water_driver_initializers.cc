@@ -227,9 +227,9 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     // example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
-    example.particle_levelset_evolution.Set_Seed(2606);
-    example.particle_levelset_evolution.Seed_Particles(time);
-    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+    // example.particle_levelset_evolution.Set_Seed(2606);
+    // example.particle_levelset_evolution.Seed_Particles(time);
+    // example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //add forces
     example.incompressible.Set_Gravity();

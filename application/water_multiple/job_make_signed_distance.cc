@@ -85,6 +85,8 @@ void JobMakeSignedDistance::Execute(nimbus::Parameter params, const nimbus::Data
     data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
     data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+    data_config.SetFlag(DataConfig::PSI_N);
+    data_config.SetFlag(DataConfig::PSI_D);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 

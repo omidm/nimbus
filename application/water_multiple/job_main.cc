@@ -110,6 +110,10 @@ namespace application {
         std::vector<nimbus::job_id_t> init_job_ids;
         GetNewJobID(&init_job_ids, init_job_num);
 
+        int reseed_particles_job_num = 1;
+        std::vector<nimbus::job_id_t> reseed_particles_job_ids;
+        GetNewJobID(&reseed_particles_job_ids, reseed_particles_job_num);
+
         int make_signed_distance_job_num = kAppPartNum;
         std::vector<nimbus::job_id_t> make_signed_distance_job_ids;
         GetNewJobID(&make_signed_distance_job_ids, make_signed_distance_job_num);
@@ -117,6 +121,10 @@ namespace application {
         int extrapolate_phi_job_num = kAppPartNum;
         std::vector<nimbus::job_id_t> extrapolate_phi_job_ids;
         GetNewJobID(&extrapolate_phi_job_ids, extrapolate_phi_job_num);
+
+        int extrapolate_phi_2_job_num = kAppPartNum;
+        std::vector<nimbus::job_id_t> extrapolate_phi_2_job_ids;
+        GetNewJobID(&extrapolate_phi_2_job_ids, extrapolate_phi_2_job_num);
 
         int extrapolate_v_job_num = kAppPartNum;
         std::vector<nimbus::job_id_t> extrapolate_v_job_ids;
@@ -149,11 +157,12 @@ namespace application {
           LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 
           write.clear();
-          LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
-          LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_POS_PARTICLES,
+          LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
+          LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
               APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
               APP_LAST_UNIQUE_PARTICLE_ID , NULL);
-          LoadLogicalIdsInSet(this, &write, kRegY2W1Central[i], APP_PRESSURE, NULL);
+          LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[i],
+              APP_PRESSURE,APP_PSI_D, APP_PSI_N,  NULL);
 
           before.clear();
 
@@ -171,6 +180,37 @@ namespace application {
         }
 
 
+        /*
+         * Spawning extrapolate phi stage over multiple workers.
+         */
+        for (int i = 0; i < extrapolate_phi_job_num; ++i) {
+          read.clear();
+          LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI,
+              APP_FACE_VEL, NULL);
+
+          write.clear();
+          LoadLogicalIdsInSet(this, &write,
+              kRegY2W8CentralWGB[i], APP_PHI, NULL);
+
+          before.clear();
+          for (int j = 0; j < init_job_num; ++j) {
+            before.insert(init_job_ids[j]);
+          }
+
+          nimbus::Parameter phi_params;
+          std::string phi_str;
+          SerializeParameter(frame, time, dt, kDefaultRegion, kRegY2W8Central[i], &phi_str);
+          phi_params.set_ser_data(SerializedData(phi_str));
+
+          dbg(APP_LOG, "Spawning Extrapolate Phi\n");
+          SpawnComputeJob(EXTRAPOLATE_PHI,
+              extrapolate_phi_job_ids[i],
+              read, write,
+              before, after,
+              phi_params, true);
+        }
+
+
         /* 
          * Spawning make signed distance.
          */
@@ -179,17 +219,15 @@ namespace application {
           LoadLogicalIdsInSet(this, &read, kRegY2W7Outer[i], APP_PHI, NULL);
           LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST,
               APP_FACE_VEL, NULL);
-          LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
-              APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+          LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 
           write.clear();
-          LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_PHI, NULL);
-          LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
-              APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES, NULL);
+          LoadLogicalIdsInSet(this, &write, kRegY2W7CentralWGB[i], APP_PHI, NULL);
+          LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[i], APP_PSI_D, APP_PSI_N,  NULL);
 
           before.clear();
-          for (int j = 0; j < init_job_num; ++j) {
-            before.insert(init_job_ids[j]);
+          for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+            before.insert(extrapolate_phi_job_ids[j]);
           }
 
           std::string make_signed_distance_str;
@@ -206,6 +244,46 @@ namespace application {
         }
 
 
+
+        /*
+         * Spawning reseeding over entire block
+         */
+        read.clear();
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
+            APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
+            APP_PSI_N, NULL);
+        LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
+            APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
+            NULL);
+
+        write.clear();
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_FACE_VEL,
+            APP_FACE_VEL_GHOST, APP_PHI, NULL);
+        LoadLogicalIdsInSet(this, &write, kRegW3Outer[0], APP_POS_PARTICLES,
+            APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
+            APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
+            NULL);
+
+        before.clear();
+        for (int j = 0; j < make_signed_distance_job_num; ++j) {
+          before.insert(make_signed_distance_job_ids[j]);
+        }
+
+        nimbus::Parameter reseed_params;
+        std::string reseed_str;
+        SerializeParameter(frame, time + dt, 0, kDefaultRegion, kDefaultRegion, &reseed_str);
+        reseed_params.set_ser_data(SerializedData(reseed_str));
+
+        SpawnComputeJob(RESEED_PARTICLES,
+            reseed_particles_job_ids[0],
+            read, write,
+            before, after,
+            reseed_params, true);
+
+
+
         /*
          * Spawning extrapolate phi stage over multiple workers.
          */
@@ -219,8 +297,8 @@ namespace application {
               kRegY2W8CentralWGB[i], APP_PHI, NULL);
 
           before.clear();
-          for (int j = 0; j < make_signed_distance_job_num; ++j) {
-            before.insert(make_signed_distance_job_ids[j]);
+          for (int j = 0; j < reseed_particles_job_num; ++j) {
+            before.insert(reseed_particles_job_ids[j]);
           }
 
           nimbus::Parameter phi_params;
@@ -230,7 +308,7 @@ namespace application {
 
           dbg(APP_LOG, "Spawning Extrapolate Phi\n");
           SpawnComputeJob(EXTRAPOLATE_PHI,
-              extrapolate_phi_job_ids[i],
+              extrapolate_phi_2_job_ids[i],
               read, write,
               before, after,
               phi_params, true);
@@ -250,7 +328,7 @@ namespace application {
               APP_FACE_VEL, NULL);
 
           before.clear();
-          for (int j = 0; j < extrapolate_phi_job_num; ++j) {
+          for (int j = 0; j < extrapolate_phi_2_job_num; ++j) {
             before.insert(extrapolate_phi_job_ids[j]);
           }
 
@@ -284,10 +362,10 @@ namespace application {
 
         write.clear();
 
-          before.clear();
-          for (int j = 0; j < extrapolate_v_job_num; ++j) {
-            before.insert(extrapolate_v_job_ids[j]);
-          }
+        before.clear();
+        for (int j = 0; j < extrapolate_v_job_num; ++j) {
+          before.insert(extrapolate_v_job_ids[j]);
+        }
 
         nimbus::Parameter write_params;
         std::string write_str;
@@ -301,8 +379,6 @@ namespace application {
               read, write,
               before, after,
               write_params, true);
-
-
 
         /*
          * Spawning loop frame job.
@@ -326,11 +402,6 @@ namespace application {
             read, write,
             before, after,
             loop_params);
-
-
-
-
-
 
         dbg(APP_LOG, "Completed executing main job\n");
     }
