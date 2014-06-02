@@ -96,7 +96,7 @@ template <class TS> class TranslatorPhysBAM {
             Z_COORD = 3
         };
 
-        explicit TranslatorPhysBAM() { log = NULL; }
+        explicit TranslatorPhysBAM() {}
         virtual ~TranslatorPhysBAM() {}
 
         // Data structures used to format particles in PhysBAMData.

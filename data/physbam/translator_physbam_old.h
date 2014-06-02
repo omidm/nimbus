@@ -100,7 +100,7 @@ namespace nimbus {
       Z_COORD = 3
     };
 
-    explicit TranslatorPhysBAMOld() { log = NULL; }
+    explicit TranslatorPhysBAMOld() {}
     virtual ~TranslatorPhysBAMOld() {}
 
     // Data structures used to format particles in PhysBAMData.
