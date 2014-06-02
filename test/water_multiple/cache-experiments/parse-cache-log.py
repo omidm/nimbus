@@ -58,7 +58,7 @@ print "Parsing %d lines ..." % total_lines
 
 compute = False
 for num, line in enumerate(log):
-    x =  re.findall('(\d+\.\d+$|\d+e-\d+$)', line)
+    x =  re.findall('(\d+\.\d+$|\d+e-\d+$|\d+$)', line)
     if len(x) > 0:
         xnum = decimal.Decimal(x[0])
         if "Worker starts" in line:
