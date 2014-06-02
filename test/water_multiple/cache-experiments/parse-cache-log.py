@@ -61,7 +61,7 @@ for num, line in enumerate(log):
         xnum = decimal.Decimal(x[0])
         if "Worker starts" in line:
             worker_start = xnum
-        if "App compute job start":
+        if "App compute job start" in line:
             compute_start = xnum
         if "Read Scalar Array (New Translator) start" in line or \
             "Write Scalar Array (New Translator) start" in line:
@@ -92,7 +92,7 @@ for num, line in enumerate(log):
         if "Completed application" in line:
             worker_end = xnum
             worker_total += worker_end - worker_start
-        if "App compute job end":
+        if "App compute job end" in line:
             compute_end = xnum
             compute_total += compute_end - compute_start
         if "Read Scalar Array (New Translator) end" in line or \
