@@ -287,7 +287,7 @@ namespace application {
         /*
          * Spawning extrapolate phi stage over multiple workers.
          */
-        for (int i = 0; i < extrapolate_phi_job_num; ++i) {
+        for (int i = 0; i < extrapolate_phi_2_job_num; ++i) {
           read.clear();
           LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i], APP_PHI,
               APP_FACE_VEL, NULL);
@@ -329,7 +329,7 @@ namespace application {
 
           before.clear();
           for (int j = 0; j < extrapolate_phi_2_job_num; ++j) {
-            before.insert(extrapolate_phi_job_ids[j]);
+            before.insert(extrapolate_phi_2_job_ids[j]);
           }
 
           nimbus::Parameter v_params;
