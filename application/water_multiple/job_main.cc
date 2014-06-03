@@ -305,7 +305,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
       nimbus::Parameter temp_params;
       std::string temp_str;
-      SerializeParameter(frame, time, dt, i, kDefaultRegion, kRegY2W3Central[i],
+      SerializeParameter(frame - 1, time, dt, i, kDefaultRegion, kRegY2W3Central[i],
                          &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       job_query.StageJob(WRITE_OUTPUT,
