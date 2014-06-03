@@ -32,8 +32,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
-    ${PROJECT_SOURCE_DIR}/job_initialize_part_one.cc
-    ${PROJECT_SOURCE_DIR}/job_initialize_part_two.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.cc
@@ -104,8 +102,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_names.h
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
-    ${PROJECT_SOURCE_DIR}/job_initialize_part_one.h
-    ${PROJECT_SOURCE_DIR}/job_initialize_part_two.h
     ${PROJECT_SOURCE_DIR}/job_loop_frame.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.h
