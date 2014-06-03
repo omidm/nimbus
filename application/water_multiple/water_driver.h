@@ -81,14 +81,10 @@ public:
                         const bool set_boundary_conditions,
                         const T dt);
 
-    void WriteFrameImpl(const nimbus::Job *job,
-                        const nimbus::DataArray &da,
-                        const bool set_boundary_conditions,
-                        const T dt);
     void WriteOutputSplitImpl(const nimbus::Job *job,
                               const nimbus::DataArray &da,
                               const bool set_boundary_conditions,
-                              const T dt);
+                              const T dt, const int rank);
 
     bool ComputeOccupiedBlocksImpl(const nimbus::Job *job,
                                    const nimbus::DataArray &da,

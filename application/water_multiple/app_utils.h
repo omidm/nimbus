@@ -140,6 +140,14 @@ namespace application {
         const int frame,
         const T time,
         const T dt,
+        const int rank,
+        const GeometricRegion& global_region,
+        const GeometricRegion& local_region,
+        std::string *result);
+    bool SerializeParameter(
+        const int frame,
+        const T time,
+        const T dt,
         const GeometricRegion& global_region,
         const GeometricRegion& local_region,
         const int iteration,
@@ -158,6 +166,14 @@ namespace application {
         int* frame,
         T* time,
         T* dt,
+        GeometricRegion* global_region,
+        GeometricRegion* local_region);
+    bool LoadParameter(
+        const std::string str,
+        int* frame,
+        T* time,
+        T* dt,
+        int* rank,
         GeometricRegion* global_region,
         GeometricRegion* local_region);
     bool LoadParameter(

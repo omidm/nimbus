@@ -68,7 +68,8 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+  int rank;
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt, &rank,
                 &init_config.global_region, &init_config.local_region);
 
   dbg(APP_LOG,
@@ -92,7 +93,7 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
 
   dbg(APP_LOG, "Job WRITE_OUTPUT starts.\n");
   // Reseed particles and write frame.
-  driver->WriteOutputSplitImpl(this, da, true, dt);
+  driver->WriteOutputSplitImpl(this, da, true, dt, rank);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);

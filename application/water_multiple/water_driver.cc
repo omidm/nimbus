@@ -205,17 +205,6 @@ CalculateFrameImpl(const nimbus::Job *job,
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
-// Substep for writing to frame.
-// Operation on time should be solved carefully. --quhang
-template<class TV> void WATER_DRIVER<TV>::
-WriteFrameImpl(const nimbus::Job *job,
-               const nimbus::DataArray &da,
-               const bool set_boundary_conditions,
-               const T dt) {
-  Write_Output_Files(++output_number);
-
-  example.Save_To_Nimbus(job, da, current_frame+1);
-}
 template<class TV> bool WATER_DRIVER<TV>::
 ReseedParticlesImpl(const nimbus::Job *job,
                     const nimbus::DataArray &da,
@@ -230,14 +219,14 @@ ReseedParticlesImpl(const nimbus::Job *job,
 
 template<class TV> void WATER_DRIVER<TV>::
 WriteOutputSplitImpl(const nimbus::Job *job,
-               const nimbus::DataArray &da,
-               const bool set_boundary_conditions,
-               const T dt) {
-  // TODO(quhang) get the right rank.
+                     const nimbus::DataArray &da,
+                     const bool set_boundary_conditions,
+                     const T dt,
+                     const int rank) {
   if (application::kUseGlobalWrite) {
     Write_Output_Files(++output_number);
   } else {
-    Write_Output_Files(++output_number, job->id().elem());
+    Write_Output_Files(++output_number, rank);
   }
   //Save State
   example.Save_To_Nimbus(job, da, current_frame+1);
