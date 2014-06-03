@@ -63,6 +63,7 @@
 #define APPLY_FORCES "apply_forces"
 #define MODIFY_LEVELSET_PART_ONE "modify_levelset_part_one"
 #define MODIFY_LEVELSET_PART_TWO "modify_levelset_part_two"
+#define MAKE_SIGNED_DISTANCE "make_signed_distance"
 #define ADJUST_PHI "adjust_phi"
 #define DELETE_PARTICLES "delete_particles"
 #define REINCORPORATE_PARTICLES "reincorporate_particles"

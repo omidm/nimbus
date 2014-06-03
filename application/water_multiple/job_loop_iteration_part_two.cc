@@ -199,7 +199,6 @@ void JobLoopIterationPartTwo::SpawnJobs(
     std::vector<nimbus::job_id_t> loop_job_id;
     GetNewJobID(&loop_job_id, 1);
 
-
     for (int i = 0; i < reseed_particles_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
