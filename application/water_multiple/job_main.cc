@@ -199,8 +199,6 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                         NULL);
     write.clear();
-    LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL,
-                        APP_PHI, NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_POS_PARTICLES,
                         APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                         APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
@@ -282,7 +280,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
     nimbus::Parameter temp_params;
     std::string temp_str;
-    SerializeParameter(frame - 1, time, dt, -1, kDefaultRegion, kDefaultRegion,
+    SerializeParameter(frame - 1, time + dt, 0, -1, kDefaultRegion, kDefaultRegion,
                        &temp_str);
     temp_params.set_ser_data(SerializedData(temp_str));
     job_query.StageJob(WRITE_OUTPUT,
@@ -305,7 +303,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
       nimbus::Parameter temp_params;
       std::string temp_str;
-      SerializeParameter(frame - 1, time, dt, i, kDefaultRegion, kRegY2W3Central[i],
+      SerializeParameter(frame - 1, time + dt, 0, i, kDefaultRegion, kRegY2W3Central[i],
                          &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       job_query.StageJob(WRITE_OUTPUT,
@@ -334,6 +332,9 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   job_query.CommitStagedJobs();
 
   dbg(APP_LOG, "Completed executing main job\n");
+
+  dbg(APP_LOG, "Print job dependency figure.\n");
+  job_query.GenerateDotFigure("job_main.dot");
 }
 
 } // namespace application
