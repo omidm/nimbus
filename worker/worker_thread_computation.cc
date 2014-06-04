@@ -79,6 +79,17 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   log_->StartTimer();
   timer_->Start(job->id().elem());
 #endif  // MUTE_LOG
+#ifdef CACHE_LOG
+  std::string jname = job->name();
+  bool print_clog = false;
+  if (jname.substr(0, 7) == "Compute")
+    print_clog = true;
+  if (print_clog) {
+    std::stringstream msg;
+    msg << "~~~ App compute job start : " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+#endif
   // ProfilerMalloc::ResetThreadStatisticsByTid(pthread_self());
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
@@ -88,6 +99,13 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   // size_t max_alloc = ProfilerMalloc::AllocMaxTid(pthread_self());
   // job->set_max_alloc(max_alloc);
 
+#ifdef CACHE_LOG
+  if (print_clog) {
+    std::stringstream msg;
+    msg << "~~~ App compute job end : " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+#endif
 #ifndef MUTE_LOG
   double run_time = timer_->Stop(job->id().elem());
   log_->StopTimer();

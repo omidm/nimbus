@@ -103,11 +103,12 @@ WorkerManager::~WorkerManager() {
 }
 
 void WorkerManager::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
+    Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
     HighResolutionTimer* timer) {
   log_ = log;
   version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
+  data_hash_log_ = data_hash_log;
+  cache_log_ = cache_log;
   timer_ = timer;
   log_ready_ = true;
 }
@@ -206,7 +207,7 @@ bool WorkerManager::LaunchThread(WorkerThread* worker_thread) {
   worker_thread_list_.push_back(worker_thread);
   assert(log_ready_);
   worker_thread->SetLoggingInterface(
-      log_, version_log_, data_hash_log_, timer_);
+      log_, version_log_, data_hash_log_, cache_log_, timer_);
   int error_code =
       pthread_create(&worker_thread->thread_id, NULL,
                      ThreadEntryPoint, worker_thread);

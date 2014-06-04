@@ -63,7 +63,7 @@ class WorkerManager {
   ~WorkerManager();
 
   void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log,
+      Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
       HighResolutionTimer* timer);
 
   // Computation job: computation-intensive job.
@@ -147,6 +147,7 @@ class WorkerManager {
   Log* log_;
   Log* version_log_;
   Log* data_hash_log_;
+  Log* cache_log_;
   HighResolutionTimer* timer_;
 };
 }  // namespace nimbus

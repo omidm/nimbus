@@ -117,7 +117,8 @@ void Worker::WorkerCoreProcessor() {
   std::cout << "Base Worker Core Processor" << std::endl;
   worker_manager_->worker_ = this;
   worker_manager_->SetLoggingInterface(&log_, &version_log_, &data_hash_log_,
-                                     &timer_);
+                                       cache_log,
+                                       &timer_);
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Launching worker threads.\n");
   worker_manager_->StartWorkerThreads();
   dbg(DBG_WORKER_FD, DBG_WORKER_FD_S"Finishes launching worker threads.\n");
@@ -148,91 +149,6 @@ void Worker::WorkerCoreProcessor() {
           receive_job_id);
       NotifyTransmissionDone(receive_job_id);
     }
-<<<<<<< HEAD
-
-    ScanBlockedJobs();
-
-    ScanPendingTransferJobs();
-
-    if (MULTITHREADED_WORKER) {
-      GetJobsToRun(&worker_manager, (size_t)(MAX_PARALLEL_JOB));
-    } else {
-      RunJobs(10);
-    }
-  }
-}
-
-void Worker::RunJobs(size_t max_num) {
-  std::list<Job*> list;
-  size_t ready_num = ready_jobs_.size();
-  for (size_t i = 0; (i < max_num) && (i < ready_num); i++) {
-    Job* job = ready_jobs_.front();
-    list.push_back(job);
-    ready_jobs_.pop_front();
-  }
-  JobList::iterator iter = list.begin();
-  for (; iter != list.end(); iter++) {
-    Job* job = *iter;
-
-    job->data_array.clear();
-    IDSet<physical_data_id_t>::IDSetIter iter;
-
-    IDSet<physical_data_id_t> read = job->read_set();
-    for (iter = read.begin(); iter != read.end(); iter++) {
-      job->data_array.push_back(data_map_[*iter]);
-    }
-
-    IDSet<physical_data_id_t> write = job->write_set();
-    for (iter = write.begin(); iter != write.end(); iter++) {
-      job->data_array.push_back(data_map_[*iter]);
-    }
-
-#ifdef CACHE_LOG
-    std::string jname = job->name();
-    bool print_clog = false;
-    if (jname.substr(0, 7) == "Compute")
-      print_clog = true;
-    if (print_clog) {
-      std::stringstream msg;
-      msg << "~~~ App compute job start : " << cache_log->GetTime();
-      cache_log->WriteToFile(msg.str());
-    }
-#endif
-    job->Execute(job->parameters(), job->data_array);
-#ifdef CACHE_LOG
-    if (print_clog) {
-      std::stringstream msg;
-      msg << "~~~ App compute job end : " << cache_log->GetTime();
-      cache_log->WriteToFile(msg.str());
-    }
-#endif
-
-    Parameter params;
-    JobDoneCommand cm(job->id(), job->after_set(), params);
-    client_->sendCommand(&cm);
-    delete job;
-  }
-}
-
-void Worker::ScanBlockedJobs() {
-  JobList::iterator iter;
-  for (iter = blocked_jobs_.begin(); iter != blocked_jobs_.end();) {
-    if ((*iter)->before_set().size() == 0) {
-      if (dynamic_cast<RemoteCopyReceiveJob*>(*iter) == NULL) { // NOLINT
-        ready_jobs_.push_back(*iter);
-      } else {
-        pending_transfer_jobs_.push_back(*iter);
-      }
-
-#ifndef MUTE_LOG
-      double wait_time =  timer_.Stop((*iter)->id().elem());
-      (*iter)->set_wait_time(wait_time);
-#endif  // MUTE_LOG
-
-      iter = blocked_jobs_.erase(iter);
-    } else {
-      ++iter;
-=======
     // Job done processing.
     worker_manager_->GetLocalJobDoneList(&local_job_done_list);
     for (JobList::iterator index = local_job_done_list.begin();
@@ -242,7 +158,6 @@ void Worker::ScanBlockedJobs() {
           DBG_WORKER_FD_S"Local job-done notification arrives(job #%d).\n",
           *index);
       NotifyLocalJobDone(*index);
->>>>>>> 116e6e91de616ad941420255e258b65a7a7aa409
     }
     local_job_done_list.clear();
   }
