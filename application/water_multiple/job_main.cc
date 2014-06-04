@@ -244,6 +244,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   /*
    * Spawning extrapolate v stage over multiple workers
    */
+  /*
   for (int i = 0; i < extrapolate_v_job_num; ++i) {
     read.clear();
     LoadLogicalIdsInSet(this, &read, kRegY2W8Outer[i],
@@ -264,6 +265,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
                        v_params, true);
   }
   job_query.CommitStagedJobs();
+  */
 
 
   if (kUseGlobalWrite) {
