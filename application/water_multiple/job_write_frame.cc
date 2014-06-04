@@ -63,6 +63,9 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
 
   InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
   T dt;
@@ -82,11 +85,14 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
   data_config.SetAll();
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
   // Reseed particles and write frame.
   driver->WriteFrameImpl(this, da, true, dt);
 
+  *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

@@ -102,6 +102,7 @@ const std::string SchedulerCommand::LDO_REMOVE_NAME = "ldoremove";
 const std::string SchedulerCommand::PARTITION_ADD_NAME = "partitionadd";
 const std::string SchedulerCommand::PARTITION_REMOVE_NAME = "partitionremove";
 const std::string SchedulerCommand::TERMINATE_NAME = "terminate";
+const std::string SchedulerCommand::PROFILE_NAME = "profile";
 
 std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
   std::string str;
@@ -159,6 +160,9 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
       break;
     case TERMINATE:
       str = TERMINATE_NAME;
+      break;
+    case PROFILE:
+      str = PROFILE_NAME;
       break;
   }
   return str;

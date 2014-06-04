@@ -68,6 +68,9 @@ void JobStepParticles::Execute(nimbus::Parameter params,
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
   T dt;
@@ -92,11 +95,17 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::SHARED_PARTICLES_FLUSH);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in step particles job.\n");
-  driver->StepParticlesImpl(this, da, dt);
+  {
+    nimbus::Timer timer(std::string("step_particle_") + id().toString());
+    driver->StepParticlesImpl(this, da, dt);
+  }
 
+  *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

@@ -202,7 +202,7 @@ CalculateFrameImpl(const nimbus::Job *job,
   // time+=dt;
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame+1);
+  // example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 // Substep with reseeding and writing to frame.
@@ -227,7 +227,7 @@ WriteFrameImpl(const nimbus::Job *job,
   Write_Output_Files(++output_number);
 
   //Save State
-  example.Save_To_Nimbus(job, da, current_frame+1);
+  // example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -336,7 +336,7 @@ UpdateGhostVelocitiesImpl (const nimbus::Job *job,
       time + dt, example.number_of_ghost_cells);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -358,7 +358,7 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
   // example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -396,7 +396,7 @@ AdvectPhiImpl(const nimbus::Job *job,
   }
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -411,7 +411,7 @@ StepParticlesImpl(const nimbus::Job *job,
       example.face_velocities_ghost, dt, time, true, true, false, false);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -428,7 +428,7 @@ AdvectRemovedParticlesImpl(const nimbus::Job *job,
       *this, &WATER_DRIVER<TV>::Run, dt, time);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -444,7 +444,7 @@ AdvectVImpl(const nimbus::Job *job,
       example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -459,7 +459,7 @@ ApplyForcesImpl(const nimbus::Job *job,
       example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -481,7 +481,7 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
         0, time+dt, 7);
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
 
     return true;
 }
@@ -502,7 +502,7 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
                                                  ghost_cells);
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
 
     return true;
 }
@@ -517,7 +517,7 @@ AdjustPhiImpl(const nimbus::Job *job,
     example.Adjust_Phi_With_Sources(time+dt);
 
     // Save State.
-    example.Save_To_Nimbus(job, da, current_frame + 1);
+    // example.Save_To_Nimbus(job, da, current_frame + 1);
 
     return true;
 }
@@ -542,7 +542,7 @@ DeleteParticlesImpl(const nimbus::Job *job,
 
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
     int lid2 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
     if (lid1 != lid2) {
       dbg(APP_LOG, "***** last unique particle id are different, %i and %i\n", lid1, lid2);
@@ -567,7 +567,7 @@ ReincorporateParticlesImpl(const nimbus::Job *job,
             Reincorporate_Removed_Particles(1, 1, 0, true);
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
 
     return true;
 }

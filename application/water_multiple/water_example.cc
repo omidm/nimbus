@@ -31,12 +31,18 @@
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
 
+// TODO(quhang) In three places where nimbus_thread_queue is introduced.
+
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+              bool use_threading,
+              int thread_quota) :
+    nimbus_thread_queue(use_threading ?
+                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -48,9 +54,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
-    incompressible(mac_grid,projection),
+    incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
@@ -71,7 +77,12 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects *cache) :
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+              application::AppCacheObjects *cache,
+              bool use_threading,
+              int thread_quota) :
+    nimbus_thread_queue(use_threading ?
+                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -83,9 +94,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
-    incompressible(mac_grid,projection),
+    incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
@@ -108,7 +119,11 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
 template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
-              PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple) :
+              PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
+              bool use_threading,
+              int thread_quota) :
+    nimbus_thread_queue(use_threading ?
+                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -120,9 +135,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*ple),
-    incompressible(mac_grid,projection),
+    incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
@@ -146,6 +161,9 @@ template<class TV> WATER_EXAMPLE<TV>::
 ~WATER_EXAMPLE()
 {
     delete &projection;
+    if (nimbus_thread_queue) {
+      delete nimbus_thread_queue;
+    }
 }
 
 // Initializes the initial levelset function.

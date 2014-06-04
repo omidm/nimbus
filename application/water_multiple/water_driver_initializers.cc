@@ -66,12 +66,12 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirst(
   {
     // policies etc
     example.collision_bodies_affecting_fluid.Initialize_Grids();
-    example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    // example.incompressible.Set_Custom_Advection(example.advection_scalar);
 
     example.particle_levelset_evolution.particle_levelset.Set_Band_Width(6);
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_CFL_Number((T).9);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+    // example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
     example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
     example.particle_levelset_evolution.Initialize_FMM_Initialization_Iterative_Solver(true);
@@ -206,10 +206,22 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
     // load
     example.Load_From_Nimbus(job, da, current_frame);
 
+    // For threading.
+    if (example.nimbus_thread_queue) {
+      ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar
+          =new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
+      example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
+      example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=example.nimbus_thread_queue;
+    } else {
+      example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+      example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    }
+
     // example specific init
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
@@ -220,7 +232,6 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
       Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
 
-    example.incompressible.Set_Custom_Advection(example.advection_scalar);
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
     LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
@@ -296,10 +307,22 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     // load
     example.Load_From_Nimbus(job, da, current_frame);
 
+    // For threading.
+    if (example.nimbus_thread_queue) {
+      ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>* threaded_advection_scalar
+          =new ADVECTION_SEMI_LAGRANGIAN_UNIFORM_BETA<GRID<TV>,T>(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(*threaded_advection_scalar);
+      example.incompressible.Set_Custom_Advection(*threaded_advection_scalar);
+      example.particle_levelset_evolution.particle_levelset.Set_Thread_Queue(example.nimbus_thread_queue);
+      example.particle_levelset_evolution.particle_levelset.levelset.thread_queue=example.nimbus_thread_queue;
+    } else {
+      example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
+      example.incompressible.Set_Custom_Advection(example.advection_scalar);
+    }
+
     // example specific init
     example.particle_levelset_evolution.Set_Time(time);
     example.particle_levelset_evolution.Set_Levelset_Callbacks(example);
-    example.particle_levelset_evolution.Levelset_Advection(1).Set_Custom_Advection(example.advection_scalar);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Custom_Boundary(*example.phi_boundary);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Collision_Body_List(example.collision_bodies_affecting_fluid);
     example.particle_levelset_evolution.particle_levelset.levelset.Set_Face_Velocities_Valid_Mask(&example.incompressible.valid_mask);
@@ -310,7 +333,6 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
       Compute_Occupied_Blocks(false, (T)2*example.mac_grid.Minimum_Edge_Length(),5);
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
 
-    example.incompressible.Set_Custom_Advection(example.advection_scalar);
     example.incompressible.Set_Custom_Boundary(*example.boundary);
     example.incompressible.projection.collidable_solver->Use_External_Level_Set(example.particle_levelset_evolution.particle_levelset.levelset);
     LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =

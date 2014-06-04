@@ -69,6 +69,9 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
 
     // get time, dt, frame from the parameters.
     InitConfig init_config;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     init_config.use_cache = true;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
@@ -90,8 +93,10 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
         data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
         InitializeExampleAndDriver(init_config, data_config, this,
                                    da, example, driver);
+        *thread_queue_hook() = example->nimbus_thread_queue;
 
         example->Save_To_Nimbus(this, da, init_config.frame + 1);
+        *thread_queue_hook() = NULL;
         DestroyExampleAndDriver(example, driver);
         return;
     }

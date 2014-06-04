@@ -69,6 +69,9 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
   // get time, dt, frame from the parameters.
   InitConfig init_config;
   init_config.use_cache = true;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -89,11 +92,17 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::PRESSURE);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect phi job.");
-  driver->AdvectPhiImpl(this, da, dt);
+  {
+    nimbus::Timer timer(std::string("advect_phi_") + id().toString());
+    driver->AdvectPhiImpl(this, da, dt);
+  }
 
+  *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

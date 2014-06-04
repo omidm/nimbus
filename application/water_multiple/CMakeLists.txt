@@ -52,6 +52,7 @@ SET(${PROJECT_NAME}_cpp
         ${PROJECT_SOURCE_DIR}/job_extrapolation.cc
         ${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
         ${PROJECT_SOURCE_DIR}/job_write_frame.cc
+        ${PROJECT_SOURCE_DIR}/nimbus_thread_queue.cc
         ${PROJECT_SOURCE_DIR}/physbam_tools.cc
         ${PROJECT_SOURCE_DIR}/physbam_utils.cc
         ${PROJECT_SOURCE_DIR}/reg_def.cc
@@ -120,6 +121,7 @@ SET(${PROJECT_NAME}_h
         ${PROJECT_SOURCE_DIR}/job_extrapolation.h
         ${PROJECT_SOURCE_DIR}/job_synchronize_particles.h
         ${PROJECT_SOURCE_DIR}/job_write_frame.h
+        ${PROJECT_SOURCE_DIR}/nimbus_thread_queue.h
         ${PROJECT_SOURCE_DIR}/options.h
         ${PROJECT_SOURCE_DIR}/parameters.h
         ${PROJECT_SOURCE_DIR}/physbam_include.h

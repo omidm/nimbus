@@ -32,33 +32,71 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
+#define NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_
 
-#include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
+#include <pthread.h>
+#include <cassert>
+#include <list>
+#include <map>
 
+#include "shared/nimbus_types.h"
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef MUTE_DATA_ACCESS_CHECK
+#define MUTE_DATA_ACCESS_CHECK
+#endif
+
+namespace nimbus {
+class Data;
+class PhysicalDataMap {
+ public:
+  enum AccessPattern {
+    READ,
+    WRITE,
+    INIT
+  };
+  explicit PhysicalDataMap();
+  virtual ~PhysicalDataMap();
+
+  Data* AcquireAccess(
+      physical_data_id_t physical_data_id,
+      job_id_t job_id,
+      AccessPattern access_pattern);
+  bool ReleaseAccess(
+      physical_data_id_t physical_data_id,
+      job_id_t job_id,
+      AccessPattern access_pattern);
+
+  bool AddMapping(
+      physical_data_id_t physical_data_id,
+      Data* data);
+  bool RemoveMapping(
+      physical_data_id_t physical_data_id);
+
+ private:
+  pthread_mutex_t lock_;
+  // job_id_t
+  struct AccessState {
+    Data* data;
+    bool initialized;
+    bool flag_write;
+    bool flag_read_and_write;
+    job_id_t write_job;
+    std::list<job_id_t> read_jobs;
+    AccessState() {
+      data = NULL;
+      initialized = false;
+      flag_write = false;
+      flag_read_and_write = false;
+    }
+  };
+  typedef std::map<physical_data_id_t, AccessState> InternalMap;
+  InternalMap internal_map_;
+};
+}  // namespace nimbus
+
+#endif  // NIMBUS_WORKER_PHYSICAL_DATA_MAP_H_

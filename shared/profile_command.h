@@ -32,33 +32,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Profile command with memory usage statistics.
+  *
+  * Author: Andrew Lim <alim16@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_PROFILE_COMMAND_H_
+#define NIMBUS_SHARED_PROFILE_COMMAND_H_
 
+#include <inttypes.h>
+#include <string>
 #include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
 
+namespace nimbus {
+class ProfileCommand : public SchedulerCommand {
+  public:
+    ProfileCommand();
+    ProfileCommand(const ID<worker_id_t>& worker_id,
+        const uint64_t total_virtual,
+        const uint64_t used_virtual,
+        const uint64_t proc_virtual,
+        const uint64_t total_physical,
+        const uint64_t used_physical,
+        const uint64_t proc_physical);
+    ~ProfileCommand();
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<worker_id_t> worker_id();
+    uint64_t total_virtual();
+    uint64_t used_virtual();
+    uint64_t proc_virtual();
+    uint64_t total_physical();
+    uint64_t used_physical();
+    uint64_t proc_physical();
+
+  private:
+    ID<worker_id_t> worker_id_;
+    uint64_t total_virtual_;
+    uint64_t used_virtual_;
+    uint64_t proc_virtual_;
+    uint64_t total_physical_;
+    uint64_t used_physical_;
+    uint64_t proc_physical_;
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_PROFILE_COMMAND_H_

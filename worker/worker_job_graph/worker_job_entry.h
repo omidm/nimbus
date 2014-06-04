@@ -32,33 +32,60 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_WORKER_WORKER_JOB_GRAPH_WORKER_JOB_ENTRY_H_
+#define NIMBUS_WORKER_WORKER_JOB_GRAPH_WORKER_JOB_ENTRY_H_
 
-#include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
+#include <limits>
+#include "shared/nimbus_types.h"
 
+namespace nimbus {
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+class Job;
+
+class WorkerJobEntry {
+ public:
+  enum State {
+    INIT,
+    CONTROL,  // For internal usage.
+    PENDING,  // Job not received yet.
+    PENDING_DATA_RECEIVED,  // Job not received yet, but data received.
+    BLOCKED,  // Blocked by other jobs/IO event.
+    READY,  // Ready to run.
+    FINISH  // Finished, but has not been deleted.
+  };
+
+  WorkerJobEntry();
+  WorkerJobEntry(const job_id_t job_id, Job* job, State state = PENDING);
+  virtual ~WorkerJobEntry() {}
+
+  job_id_t get_job_id() {
+    return job_id_;
+  }
+  Job* get_job() {
+    return job_;
+  }
+  State get_state() {
+    return state_;
+  }
+  void set_job_id(job_id_t job_id) {
+    job_id_ = job_id;
+  }
+  void set_job(Job* job) {
+    job_ = job;
+  }
+  void set_state(State state) {
+    state_ = state;
+  }
+
+ private:
+  job_id_t job_id_;
+  Job* job_;
+  State state_;
+};
+
+}  // namespace nimbus
+#endif  // NIMBUS_WORKER_WORKER_JOB_GRAPH_WORKER_JOB_ENTRY_H_

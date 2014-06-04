@@ -73,6 +73,7 @@ SchedulerClient::~SchedulerClient() {
 SchedulerCommand* SchedulerClient::receiveCommand() {
   // boost::asio::read_until(*socket, *read_buffer, ';');
   // std::streamsize size = read_buffer->in_avail();
+  pthread_mutex_lock(&send_lock_);
 
   boost::system::error_code ignored_error;
   int bytes_available = socket_->available(ignored_error);
@@ -99,8 +100,10 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
     } else {
       dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
     }
+    pthread_mutex_unlock(&send_lock_);
     return com;
   } else {
+    pthread_mutex_unlock(&send_lock_);
     return NULL;
   }
 }

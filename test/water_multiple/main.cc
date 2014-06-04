@@ -49,6 +49,7 @@
 #include "shared/nimbus_types.h"
 #include "simple_worker.h"
 #include "worker/application.h"
+#include "worker/worker_manager.h"
 
 
 void PrintUsage() {
@@ -61,6 +62,8 @@ void PrintUsage() {
   std::cout << "\t-ip [ip address]\n";
   std::cout << "\t-s [loop counter]\n";
   std::cout << "\t-pn [part num]\n";
+  std::cout << "\t-ithread [threading inside a job]\n";
+  std::cout << "\t-othread [threading across jobs]\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -115,6 +118,20 @@ int main(int argc, char *argv[]) {
     } else if (tag == "-pn") {
       std::stringstream ss(val);
       ss >> part_num;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+    } else if (tag == "-ithread") {
+      std::stringstream ss(val);
+      ss >> WorkerManager::inside_job_parallism;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+    } else if (tag == "-othread") {
+      std::stringstream ss(val);
+      ss >> WorkerManager::across_job_parallism;
       if (ss.fail()) {
         PrintUsage();
         exit(-1);

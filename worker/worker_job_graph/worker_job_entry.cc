@@ -32,33 +32,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Author: Hang Qu <quhang@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#include "worker/worker_job_graph/worker_job_entry.h"
 
-#include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
+namespace nimbus {
 
+WorkerJobEntry::WorkerJobEntry() {
+  job_id_ = 0;
+  job_ = NULL;
+  state_ = INIT;
+}
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+WorkerJobEntry::WorkerJobEntry(const job_id_t job_id, Job* job, State state) {
+  job_id_ = job_id;
+  job_ = job;
+  state_ = state;
+}
+
+}  // namespace nimbus

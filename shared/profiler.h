@@ -32,33 +32,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
+/*        
+ * Memory profiler.
+ *      
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
-#ifndef NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
-#define NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+#ifndef NIMBUS_SHARED_PROFILER_H_
+#define NIMBUS_SHARED_PROFILER_H_
 
-#include "shared/scheduler_command.h"
-#include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
-#include "shared/spawn_compute_job_command.h"
-#include "shared/spawn_copy_job_command.h"
-#include "shared/compute_job_command.h"
-#include "shared/create_data_command.h"
-#include "shared/remote_copy_send_command.h"
-#include "shared/remote_copy_receive_command.h"
-#include "shared/local_copy_command.h"
-#include "shared/job_done_command.h"
-#include "shared/define_data_command.h"
-#include "shared/define_partition_command.h"
-#include "shared/ldo_add_command.h"
-#include "shared/ldo_remove_command.h"
-#include "shared/partition_add_command.h"
-#include "shared/partition_remove_command.h"
-#include "shared/terminate_command.h"
-#include "shared/profile_command.h"
+#ifndef __MACH__
+#include <sys/sysinfo.h>
+#endif
 
+#include <shared/scheduler_client.h>
+#include <boost/asio.hpp>
+#include <inttypes.h>
+#include <string>
 
-#endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_
+namespace nimbus {
+
+class Profiler {
+ public:
+  void Run(SchedulerClient* client_, worker_id_t worker_id);
+  void Profile();
+  std::string toString();
+  std::string toStringWTags();
+
+ private:
+#ifndef __MACH__
+  struct sysinfo mem_info_;
+#endif
+  uint64_t totalVirtualMem;
+  uint64_t usedVirtualMem;
+  uint64_t procVirtualMem;
+  uint64_t totalPhysMem;
+  uint64_t usedPhysMem;
+  uint64_t procPhysMem;
+
+ private:
+  void UpdateTotalVirtualMemory();
+  void UpdateUsedVirtualMemory();
+  void UpdateProcVirtualMemory();
+  void UpdateTotalPhysicalMemory();
+  void UpdateUsedPhysicalMemory();
+  void UpdateProcPhysicalMemory();
+  uint64_t ParseLine(std::string line);
+};
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SHARED_PROFILER_H_

@@ -63,6 +63,10 @@ void JobCalculateFrame::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Executing CALCULATE_FRAME job.\n");
 
   InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
+
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -82,12 +86,15 @@ void JobCalculateFrame::Execute(nimbus::Parameter params,
   data_config.SetAll();
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Simulation starts(dt=%f).\n", dt);
 
   // Move forward time "dt" without reseeding and writing frames.
   driver->CalculateFrameImpl(this, da, true, dt);
 
+  *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

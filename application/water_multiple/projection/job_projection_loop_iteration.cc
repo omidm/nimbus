@@ -105,6 +105,7 @@ void JobProjectionLoopIteration::Execute(
   projection_driver.LoadFromNimbus(this, da);
   projection_driver.projection_data.residual =
       projection_driver.projection_data.local_residual;
+  projection_driver.projection_data.iteration = iteration;
 
   // Decides whether to spawn a new projection loop or finish it.
   if (projection_driver.projection_data.residual <=

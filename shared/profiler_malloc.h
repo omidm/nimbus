@@ -32,53 +32,75 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Utilities for timing measurement. Not thread-safe.
-  *
-  * Author: Hang Qu <quhang@stanford.edu>
-  */
+/*        
+ * Malloc profiler.
+ *      
+ * Author: Andrew Lim <alim16@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_TIMER_H_
-#define NIMBUS_SHARED_TIMER_H_
+#ifndef NIMBUS_SHARED_PROFILER_MALLOC_H_
+#define NIMBUS_SHARED_PROFILER_MALLOC_H_
 
+#include <boost/thread/recursive_mutex.hpp>
 #include <pthread.h>
-#include <sys/time.h>
-#include <string>
+#include <stdint.h>
+#include <inttypes.h>
 #include <map>
+#include <vector>
+#include <string>
 
 namespace nimbus {
 
-class Timer {
+class ProfilerMalloc {
  public:
-  // Started in constructor.
-  explicit Timer(const std::string& timer_name);
-  ~Timer();
+  static bool IsInit();
+  static bool IsMapInclude();
   static void Initialize();
-  static void Print(const std::string& comment);
-  static void Start(const std::string& timer_name);
-  static void Stop(const std::string& timer_name);
-  static void Reset(const std::string& timer_name);
+  static void IncreaseAlloc(size_t size);
+  static void DecreaseAlloc(size_t size);
+  static void InsertAllocPointer(void *ptr, size_t size);
+  static void DeleteAllocPointer(void *ptr);
+  static size_t AllocSize(void *ptr);
+  static uint64_t CurrentAlloc();
+  static size_t AllocMax();
+  static size_t AllocMaxTid(pthread_t tid);
+  static size_t AllocCurr();
+  static void Exit();
+  static void Enable();
+  static void EnableTid(pthread_t tid);
+  static void Disable();
+  static void DisableTid(pthread_t tid);
+  static bool IsEnabled();
+  static bool IsEnabledTid(pthread_t tid);
+  static void ResetThreadStatistics();
+  static void ResetThreadStatisticsByTid(pthread_t tid);
+  static void RegisterThreads(std::vector<pthread_t> tids);
 
  private:
-  struct TimerState {
-    TimerState() {
-      on = false;
-      total_time = 0;
+  struct ThreadAllocState {
+    ThreadAllocState() {
+      max_alloc = 0;
+      curr_alloc = 0;
+      on = true;
     }
-    struct timeval start_time;
+    uint64_t max_alloc;
+    uint64_t curr_alloc;
     bool on;
-    double total_time;
   };
-  std::string timer_name_;
-
- public:
-  typedef std::map<std::string, TimerState> TimerMap;
 
  private:
-  static pthread_mutex_t* lock_;
-  static TimerMap* timer_map_;
+  typedef std::map<void *, size_t> MallocMap;
+  typedef std::map<pthread_t, ThreadAllocState> ThreadMap;
+
+ private:
+  static uint64_t alloc_;
+  static MallocMap *alloc_map_;
+  static bool init_;
+  static bool map_include_;
+  static ThreadMap *thread_alloc_map_;
+  static bool enabled_;
 };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_TIMER_H_
+#endif  // NIMBUS_SHARED_PROFILER_MALLOC_H_

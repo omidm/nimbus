@@ -220,7 +220,20 @@ size_t WorkerDataExchanger::ReadData(WorkerDataExchangerConnection* connection,
 void WorkerDataExchanger::AddSerializedData(job_id_t job_id,
     SerializedData* ser_data, data_version_t version) {
   boost::mutex::scoped_lock lock(data_map_mutex_);
+  assert(data_map_.find(job_id) == data_map_.end());
   data_map_[job_id] = std::make_pair(ser_data, version);
+  receive_events.push_back(job_id);
+}
+
+bool WorkerDataExchanger::GetReceiveEvent(job_id_t* job_id) {
+  boost::mutex::scoped_lock lock(data_map_mutex_);
+  if (receive_events.empty()) {
+    return false;
+  } else {
+    *job_id = receive_events.front();
+    receive_events.pop_front();
+    return true;
+  }
 }
 
 void WorkerDataExchanger::RemoveSerializedData(job_id_t job_id) {

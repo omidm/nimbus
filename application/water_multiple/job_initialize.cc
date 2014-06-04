@@ -66,6 +66,9 @@ namespace application {
         init_config.set_boundary_condition = true;
         init_config.global_region = kDefaultRegion;
         init_config.local_region = kDefaultRegion;
+        // Threading settings.
+        init_config.use_threading = use_threading();
+        init_config.core_quota = core_quota();
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 
@@ -73,7 +76,9 @@ namespace application {
         data_config.SetAll();
         InitializeExampleAndDriver(init_config, data_config,
                                    this, da, example, driver);
+        *thread_queue_hook() = example->nimbus_thread_queue;
 
+        *thread_queue_hook() = NULL;
         // Free resources.
         DestroyExampleAndDriver(example, driver);
 

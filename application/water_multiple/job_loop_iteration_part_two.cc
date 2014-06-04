@@ -67,6 +67,9 @@ void JobLoopIterationPartTwo::Execute(
   dbg(APP_LOG, "Executing LOOP_ITERATION_PART_TWO job\n");
 
   InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -82,15 +85,15 @@ void JobLoopIterationPartTwo::Execute(
 
   // Initialize the state of example and driver.
   PhysBAM::WATER_EXAMPLE<TV>* example =
-      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
 
   // check whether the frame is done or not
   bool done = false;
   if (time + dt >= example->Time_At_Frame(frame + 1)) {
     done = true;
   }
-  
-  // done = true;
+
+  done = true;
 
   delete example;
 
@@ -235,11 +238,11 @@ void JobLoopIterationPartTwo::SpawnJobs(
                        frame_params, false, true);
     job_query.CommitStagedJobs();
 
-    if (time == 0) {
-      dbg(APP_LOG, "Print job dependency figure.\n");
-      job_query.GenerateDotFigure("loop_iteration_part_two.dot");
-    }
   }  // end loop "if (done)".
+  if (time == 0) {
+    dbg(APP_LOG, "Print job dependency figure.\n");
+    job_query.GenerateDotFigure("loop_iteration_part_two.dot");
+  }
 }
 
 

@@ -42,13 +42,32 @@
 #define NIMBUS_WORKER_WORKER_THREAD_COMPUTATION_H_
 
 #include "shared/nimbus.h"
+#include "worker/thread_queue_proto.h"
+
 namespace nimbus {
 class WorkerThreadComputation : public WorkerThread {
  public:
   explicit WorkerThreadComputation(WorkerManager* worker_manager);
   virtual ~WorkerThreadComputation();
   virtual void Run();
+  void set_core_quota(int core_quota) {
+    core_quota_ = core_quota;
+  }
+  int core_quota() {
+    return core_quota_;
+  }
+  void set_use_threading(bool use_threading) {
+    use_threading_ = use_threading;
+  }
+  bool use_threading() {
+    return use_threading_;
+  }
+  // The worker thread maintains a pointer to the thread_pool so that it can
+  // observe the running status of the job.
+  ThreadQueueProto* thread_queue;
  private:
+  int core_quota_;
+  bool use_threading_;
   void ExecuteJob(Job* job);
 };
 }  // namespace nimbus

@@ -62,7 +62,7 @@ namespace nimbus {
 class Data;
 typedef std::set<Data*> Neighbors;
 typedef std::map<logical_data_id_t, Data*> LogicalDataMap;
-typedef std::map<physical_data_id_t, Data*> PhysicalDataMap;
+// typedef std::map<physical_data_id_t, Data*> PhysicalDataMap;
 typedef std::map<std::string, Data*> DataTable;
 
 // forward declaration
