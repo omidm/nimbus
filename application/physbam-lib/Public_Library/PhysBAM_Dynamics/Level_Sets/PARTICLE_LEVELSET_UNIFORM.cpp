@@ -55,6 +55,8 @@ template<class T_GRID> PARTICLE_LEVELSET_UNIFORM<T_GRID>::
 template<class T_GRID> template<class T_ARRAYS_PARTICLES> void PARTICLE_LEVELSET_UNIFORM<T_GRID>::
 Consistency_Check(RANGE<TV_INT> domain,T_ARRAYS_PARTICLES& particles)
 {
+  // Remove consistency check for testing purposes.
+  /*
     HASHTABLE<typename T_ARRAYS_PARTICLES::ELEMENT> hash;
     for(NODE_ITERATOR iterator(levelset.grid,domain);iterator.Valid();iterator.Next()){TV_INT block=iterator.Node_Index();
         typename T_ARRAYS_PARTICLES::ELEMENT cell_particles=particles(block);
@@ -65,6 +67,7 @@ Consistency_Check(RANGE<TV_INT> domain,T_ARRAYS_PARTICLES& particles)
             for(int k=1;k<=cell_particles->array_collection->Size();k++)
                 assert(cell_particles->radius(k)>0);
             cell_particles=cell_particles->next;}}
+            */
 }
 //#####################################################################
 // Function Seed_Particles

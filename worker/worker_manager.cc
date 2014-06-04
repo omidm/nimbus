@@ -72,7 +72,6 @@ WorkerManager::WorkerManager() {
   pthread_mutex_init(&fast_job_queue_lock_, NULL);
   pthread_cond_init(&fast_job_queue_any_cond_, NULL);
 
-  /*
   if (across_job_parallism <= 0) {
     computation_thread_num = 1;
     fast_thread_num = 0;
@@ -80,9 +79,10 @@ WorkerManager::WorkerManager() {
     computation_thread_num = across_job_parallism;
     fast_thread_num = 1;
   }
-  */
+  /*
   computation_thread_num = 3;
   fast_thread_num = 0;
+  */
   idle_computation_threads_ = 0;
   dispatched_computation_job_count_ = 0;
   dispatched_fast_job_count_= 0;
@@ -300,6 +300,7 @@ bool WorkerManager::DispatchJobToComputationThread(
   return true;
 }
 
+/*
 void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_lock(&computation_job_queue_lock_);
   pthread_mutex_lock(&scheduling_critical_section_lock_);
@@ -342,7 +343,7 @@ void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
   pthread_mutex_unlock(&computation_job_queue_lock_);
 }
-/*
+*/
 void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_lock(&computation_job_queue_lock_);
   pthread_mutex_lock(&scheduling_critical_section_lock_);
@@ -381,7 +382,6 @@ void WorkerManager::ScheduleComputationJobs() {
   pthread_mutex_unlock(&scheduling_critical_section_lock_);
   pthread_mutex_unlock(&computation_job_queue_lock_);
 }
-*/
 
 int WorkerManager::ActiveComputationThreads() {
   int result = 0;
