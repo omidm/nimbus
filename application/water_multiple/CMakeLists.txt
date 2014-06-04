@@ -40,6 +40,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_main.cc
     ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.cc
     ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.cc
+    ${PROJECT_SOURCE_DIR}/job_make_signed_distance.cc
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.cc
     ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.cc
     ${PROJECT_SOURCE_DIR}/job_extrapolate_phi.cc
@@ -50,7 +51,8 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_apply_forces.cc
     ${PROJECT_SOURCE_DIR}/job_extrapolation.cc
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
-    ${PROJECT_SOURCE_DIR}/job_write_frame.cc
+    ${PROJECT_SOURCE_DIR}/job_write_output.cc
+    ${PROJECT_SOURCE_DIR}/job_reseed_particles.cc
     ${PROJECT_SOURCE_DIR}/physbam_tools.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/reg_def.cc
@@ -108,6 +110,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_main.h
     ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.h
     ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.h
+    ${PROJECT_SOURCE_DIR}/job_make_signed_distance.h
     ${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.h
     ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.h
     ${PROJECT_SOURCE_DIR}/job_extrapolate_phi.h
@@ -118,7 +121,8 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_apply_forces.h
     ${PROJECT_SOURCE_DIR}/job_extrapolation.h
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.h
-    ${PROJECT_SOURCE_DIR}/job_write_frame.h
+    ${PROJECT_SOURCE_DIR}/job_write_output.h
+    ${PROJECT_SOURCE_DIR}/job_reseed_particles.h
     ${PROJECT_SOURCE_DIR}/options.h
     ${PROJECT_SOURCE_DIR}/parameters.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h

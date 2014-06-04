@@ -431,14 +431,14 @@ template <class TS> class TranslatorPhysBAM {
                 GeometricRegion pregion = regions[r];
                 pregion.Translate(neg_shift);
 
-                for (int z = pregion.z(); z < pregion.z() + pregion.dz(); ++z) {
-                    for (int y = pregion.y(); y < pregion.y() + pregion.dy() ; ++y) {
-                        for (int x = pregion.x(); x < pregion.x() + pregion.dx(); ++x) {
+                for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y(); y <= pregion.y() + pregion.dy() ; ++y) {
+                        for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
 
-                            if (!(x == pregion.x() || x == pregion.x() + pregion.dx() - 1 ||
-                                  y == pregion.y() || y == pregion.y() + pregion.dy() - 1 ||
-                                  z == pregion.z() || z == pregion.z() + pregion.dz() - 1)) {
+                            if (!(x == pregion.x() || x == pregion.x() + pregion.dx() ||
+                                  y == pregion.y() || y == pregion.y() + pregion.dy() ||
+                                  z == pregion.z() || z == pregion.z() + pregion.dz())) {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
@@ -453,16 +453,16 @@ template <class TS> class TranslatorPhysBAM {
 
                                 while (particle_bucket) {
                                     for (int i = 1;
-                                            i < particle_bucket->array_collection->Size();
+                                            i <= particle_bucket->array_collection->Size();
                                             ++i) {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x < region.x() &&
-                                            absolute_position.x >= region.x() + region.dx() &&
-                                            absolute_position.y < region.y() &&
-                                            absolute_position.y >= region.y() + region.dy() &&
-                                            absolute_position.z < region.z() &&
+                                        if (absolute_position.x < region.x() ||
+                                            absolute_position.x >= region.x() + region.dx() ||
+                                            absolute_position.y < region.y() ||
+                                            absolute_position.y >= region.y() + region.dy() ||
+                                            absolute_position.z < region.z() ||
                                             absolute_position.z >= region.z() + region.dz()) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
@@ -526,14 +526,14 @@ template <class TS> class TranslatorPhysBAM {
                 GeometricRegion pregion = regions[r];
                 pregion.Translate(neg_shift);
 
-                for (int z = pregion.z(); z < pregion.z() + pregion.dz(); ++z) {
-                    for (int y = pregion.y(); y < pregion.y() + pregion.dy() ; ++y) {
-                        for (int x = pregion.x(); x < pregion.x() + pregion.dx(); ++x) {
+                for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y(); y <= pregion.y() + pregion.dy() ; ++y) {
+                        for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
                             TV_INT bucket_index(x, y, z);
 
-                            if (!(x == region.x() || x == region.x() + region.dx() - 1 ||
-                                  y == region.y() || y == region.y() + region.dy() - 1 ||
-                                  z == region.z() || z == region.z() + region.dz() - 1)) {
+                            if (!(x == pregion.x() || x == pregion.x() + pregion.dx() ||
+                                  y == pregion.y() || y == pregion.y() + pregion.dy() ||
+                                  z == pregion.z() || z == pregion.z() + pregion.dz())) {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
@@ -548,16 +548,16 @@ template <class TS> class TranslatorPhysBAM {
 
                                 while (particle_bucket) {
                                     for (int i = 1;
-                                            i < particle_bucket->array_collection->Size();
+                                            i <= particle_bucket->array_collection->Size();
                                             ++i) {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x < region.x() &&
-                                            absolute_position.x >= region.x() + region.dx() &&
-                                            absolute_position.y < region.y() &&
-                                            absolute_position.y >= region.y() + region.dy() &&
-                                            absolute_position.z < region.z() &&
+                                        if (absolute_position.x < region.x() ||
+                                            absolute_position.x >= region.x() + region.dx() ||
+                                            absolute_position.y < region.y() ||
+                                            absolute_position.y >= region.y() + region.dy() ||
+                                            absolute_position.z < region.z() ||
                                             absolute_position.z >= region.z() + region.dz()) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
@@ -584,6 +584,7 @@ template <class TS> class TranslatorPhysBAM {
                                                     template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
                                                 (*new_id)(index) = (*id)(i);
                                             }
+                                            particle_new_bucket->V(index) = particle_bucket->V(i);
                                         }
                                     }
                                     particle_bucket = particle_bucket->next;
@@ -657,11 +658,11 @@ template <class TS> class TranslatorPhysBAM {
                     // TODO(quhang) Needs to deal with the particles that lies exactly on
                     // the boundary.
                     if (absolute_position.x >= region.x() &&
-                            absolute_position.x < region.x() + region.dx() &&
-                            absolute_position.y >= region.y() &&
-                            absolute_position.y < region.y() + region.dy() &&
-                            absolute_position.z >= region.z() &&
-                            absolute_position.z < region.z() + region.dz()) {
+                        absolute_position.x < region.x() + region.dx() &&
+                        absolute_position.y >= region.y() &&
+                        absolute_position.y < region.y() + region.dy() &&
+                        absolute_position.z >= region.z() &&
+                        absolute_position.z < region.z() + region.dz()) {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
@@ -739,17 +740,17 @@ template <class TS> class TranslatorPhysBAM {
                             // TODO(quhang) needs to double check the margin setting.
                             const int_dimension_t kMargin = 1;
                             if (x + shift.x <
-                                    data_region.x() - kMargin ||
-                                    x + shift.x >
-                                    data_region.x() + data_region.dx() + kMargin ||
-                                    y + shift.y <
-                                    data_region.y() - kMargin ||
-                                    y + shift.y >
-                                    data_region.y() + data_region.dy() + kMargin ||
-                                    z + shift.z <
-                                    data_region.z() - kMargin ||
-                                    z + shift.z >
-                                    data_region.z() + data_region.dz() + kMargin) {
+                                data_region.x() - kMargin ||
+                                x + shift.x >
+                                data_region.x() + data_region.dx() + kMargin ||
+                                y + shift.y <
+                                data_region.y() - kMargin ||
+                                y + shift.y >
+                                data_region.y() + data_region.dy() + kMargin ||
+                                z + shift.z <
+                                data_region.z() - kMargin ||
+                                z + shift.z >
+                                data_region.z() + data_region.dz() + kMargin) {
                                 continue;
                             }
                             ParticleBucket* particle_bucket = (*particles)(bucket_index);
@@ -764,17 +765,17 @@ template <class TS> class TranslatorPhysBAM {
                                     // lies exactly on the boundary.
                                     // If it's inside the region of the physical data instance.
                                     if (absolute_position.x >=
-                                            data_region.x() &&
-                                            absolute_position.x <
-                                            (data_region.x() + data_region.dx()) &&
-                                            absolute_position.y >=
-                                            data_region.y() &&
-                                            absolute_position.y <
-                                            (data_region.y() + data_region.dy()) &&
-                                            absolute_position.z >=
-                                            data_region.z() &&
-                                            absolute_position.z <
-                                            (data_region.z() + data_region.dz())) {
+                                        data_region.x() &&
+                                        absolute_position.x <
+                                        (data_region.x() + data_region.dx()) &&
+                                        absolute_position.y >=
+                                        data_region.y() &&
+                                        absolute_position.y <
+                                        (data_region.y() + data_region.dy()) &&
+                                        absolute_position.z >=
+                                        data_region.z() &&
+                                        absolute_position.z <
+                                        (data_region.z() + data_region.dz())) {
                                         ParticleInternal particle_buffer;
                                         particle_buffer.position[0] = absolute_position.x;
                                         particle_buffer.position[1] = absolute_position.y;
@@ -871,11 +872,11 @@ template <class TS> class TranslatorPhysBAM {
                     absolute_position.y = p->position[1];
                     absolute_position.z = p->position[2];
                     if (absolute_position.x >= region.x() &&
-                            absolute_position.x < region.x() + region.dx() &&
-                            absolute_position.y >= region.y() &&
-                            absolute_position.y < region.y() + region.dy() &&
-                            absolute_position.z >= region.z() &&
-                            absolute_position.z < region.z() + region.dz()) {
+                        absolute_position.x < region.x() + region.dx() &&
+                        absolute_position.y >= region.y() &&
+                        absolute_position.y < region.y() + region.dy() &&
+                        absolute_position.z >= region.z() &&
+                        absolute_position.z < region.z() + region.dz()) {
                         TV_INT bucket_index(round(absolute_position.x - shift.x),
                                 round(absolute_position.y - shift.y),
                                 round(absolute_position.z - shift.z));
@@ -968,17 +969,17 @@ template <class TS> class TranslatorPhysBAM {
                                     GeometricRegion data_region = data->region();
                                     // If it's inside the region of the physical data instance.
                                     if (absolute_position.x >=
-                                            data_region.x() &&
-                                            absolute_position.x <
-                                            (data_region.x() + data_region.dx()) &&
-                                            absolute_position.y >=
-                                            data_region.y() &&
-                                            absolute_position.y <
-                                            (data_region.y() + data_region.dy()) &&
-                                            absolute_position.z >=
-                                            data_region.z() &&
-                                            absolute_position.z <
-                                            (data_region.z() + data_region.dz())) {
+                                        data_region.x() &&
+                                        absolute_position.x <
+                                        (data_region.x() + data_region.dx()) &&
+                                        absolute_position.y >=
+                                        data_region.y() &&
+                                        absolute_position.y <
+                                        (data_region.y() + data_region.dy()) &&
+                                        absolute_position.z >=
+                                        data_region.z() &&
+                                        absolute_position.z <
+                                        (data_region.z() + data_region.dz())) {
                                         RemovedParticleInternal particle_buffer;
                                         particle_buffer.position[0] = absolute_position.x;
                                         particle_buffer.position[1] = absolute_position.y;

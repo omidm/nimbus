@@ -33,43 +33,25 @@
  */
 
 /*
- * This file contains job WRITE_FRAME that:
- *     reseeds particle, and writes simulation variables to file for rendering.
- * The parameters of WRITE_FRAME:
- *     frame number, simulation time, dt.
- * The read set(not sure) of SUPER_3:
- *     velocity, levelset, particle, removed particle, last_unique_particle_id.
- * The write set(not sure) of SUPER_3:
- *     particles.
+ * This job performs the particle reseeding operation.
  *
- * dt is not needed for job WRITE_FRAME now, and might be removed from the
- * parameter list in the future.
- * It is still unclear whether other simulation variables or states are also
- * needed.
- * For now, all the data is transmitted to guarantee correctness.
- *
- * Reseeding operation is included in this job, because this job includes all
- * the operations that are executed once in each frame, as is reseeding
- * operation. So the job name might be a little bit misleading. Reseeding
- * operation is expected to be moved to another job in the future.
- *
- * Author: Hang Qu <quhang@stanford.edu>
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_FRAME_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_FRAME_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_RESEED_PARTICLES_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_RESEED_PARTICLES_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-    class JobWriteFrame : public nimbus::Job {
+    class JobReseedParticles : public nimbus::Job {
         public:
-            explicit JobWriteFrame(nimbus::Application *app);
+            explicit JobReseedParticles(nimbus::Application *app);
             virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
             virtual nimbus::Job* Clone();
     };
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_FRAME_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_RESEED_PARTICLES_H_

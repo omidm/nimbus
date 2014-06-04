@@ -260,7 +260,7 @@ void GetAppCacheObjects(
       cm->GetAppObject(read, write,
           array_reg_outer_3,
           application::kCachePLE,
-          nimbus::EXCLUSIVE, true, true);
+          nimbus::EXCLUSIVE, false, true);
     cache->ple = dynamic_cast<CacheParticleLevelsetEvolution<T> *>(cache_obj);
     assert(cache->ple != NULL);
 
@@ -330,7 +330,8 @@ bool InitializeExampleAndDriver(
     dbg(APP_LOG, "Before enter driver->Initialize.\n");
     // physbam initialization
     if (init_config.init_phase)
-      driver->InitializeFirst(job, da);
+      driver->InitializeFirstDistributed(job, da);
+      // driver->InitializeFirst(job, da);
     else if (init_config.use_cache && kUseCache)
       driver->InitializeUseCache(job, da);
     else

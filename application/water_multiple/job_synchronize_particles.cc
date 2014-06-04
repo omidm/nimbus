@@ -213,7 +213,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::DeleteParticles(shift, pos_reg, particle_levelset, scale, true);
     Translator::DeleteParticles(shift, neg_reg, particle_levelset, scale, false);
     Translator::DeleteRemovedParticles(shift, pos_rem_reg, particle_levelset, scale, true);
-    Translator::DeleteParticles(shift, neg_rem_reg, particle_levelset, scale, false);
+    Translator::DeleteRemovedParticles(shift, neg_rem_reg, particle_levelset, scale, false);
     Translator::ReadParticles(array_outer, shift, read_outer_p, particle_levelset, scale, true, true);
     Translator::ReadParticles(array_outer, shift, read_outer_n, particle_levelset, scale, false, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer_pr, particle_levelset, scale, true, true);

@@ -205,27 +205,29 @@ CalculateFrameImpl(const nimbus::Job *job,
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
-// Substep with reseeding and writing to frame.
-// Operation on time should be solved carefully. --quhang
-template<class TV> void WATER_DRIVER<TV>::
-WriteFrameImpl(const nimbus::Job *job,
-
-               const nimbus::DataArray &da,
-               const bool set_boundary_conditions,
-               const T dt) {
-  // Comments(quhang): Notice time has already been increased here.
-  // Not sure if the Set_Number_Particles_Per_Cell function should go to
-  // initalization.
-  // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
-
+template<class TV> bool WATER_DRIVER<TV>::
+ReseedParticlesImpl(const nimbus::Job *job,
+                    const nimbus::DataArray &da,
+                    const T dt) {
   //Reseed
   LOG::Time("Reseed");
-  example.particle_levelset_evolution.Reseed_Particles(time);
+  example.particle_levelset_evolution.Reseed_Particles(time+dt);
   example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+  example.Save_To_Nimbus(job, da, current_frame+1);
+  return true;
+}
 
-  // I changed the order. --quhang
-  Write_Output_Files(++output_number);
-
+template<class TV> void WATER_DRIVER<TV>::
+WriteOutputSplitImpl(const nimbus::Job *job,
+                     const nimbus::DataArray &da,
+                     const bool set_boundary_conditions,
+                     const T dt,
+                     const int rank) {
+  if (application::kUseGlobalWrite) {
+    Write_Output_Files(++output_number);
+  } else {
+    Write_Output_Files(++output_number, rank);
+  }
   //Save State
   example.Save_To_Nimbus(job, da, current_frame+1);
 }
@@ -507,6 +509,26 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
     return true;
 }
 
+
+template<class TV> bool WATER_DRIVER<TV>::
+MakeSignedDistanceImpl(const nimbus::Job *job,
+                          const nimbus::DataArray &da,
+                          const nimbus::GeometricRegion &local_region,
+                          T dt) {
+    LOG::Time("Make Signed Distance ...\n");
+
+    int ghost_cells = 7;
+    example.particle_levelset_evolution.
+        Make_Signed_Distance_Nimbus(&example.face_velocities_ghost,
+                                     &example.phi_ghost_bandwidth_seven,
+                                     ghost_cells);
+
+    // save state
+    example.Save_To_Nimbus(job, da, current_frame+1);
+
+    return true;
+}
+
 template<class TV> bool WATER_DRIVER<TV>::
 AdjustPhiImpl(const nimbus::Job *job,
         const nimbus::DataArray &da,
@@ -587,16 +609,22 @@ Write_Substep(const std::string& title,const int substep,const int level)
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_DRIVER<TV>::
-Write_Output_Files(const int frame)
+Write_Output_Files(const int frame, int rank)
 {
-    FILE_UTILITIES::Create_Directory(example.output_directory);
-    FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
-    FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+    std::string rank_name = "";
+    if (rank != -1) {
+      std::stringstream temp_ss;
+      temp_ss << rank;
+      rank_name = temp_ss.str();
+    }
+    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name);
+    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
+    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+"/common");
+    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
     if(frame==example.first_frame) 
-        FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
-    example.Write_Output_Files(frame);
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
+        FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/first_frame",frame,"\n");
+    example.Write_Output_Files(frame, rank);
+    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/last_frame",frame,"\n");
 }
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,3> >;

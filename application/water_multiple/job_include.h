@@ -56,6 +56,7 @@
 #include "application/water_multiple/job_main.h"
 #include "application/water_multiple/job_modify_levelset_part_one.h"
 #include "application/water_multiple/job_modify_levelset_part_two.h"
+#include "application/water_multiple/job_make_signed_distance.h"
 #include "application/water_multiple/job_names.h"
 #include "application/water_multiple/projection/job_projection_main.h"
 #include "application/water_multiple/projection/job_projection_calculate_boundary_condition_part_one.h"
@@ -65,7 +66,8 @@
 #include "application/water_multiple/job_reincorporate_removed_particles.h"
 #include "application/water_multiple/job_step_particles.h"
 #include "application/water_multiple/job_synchronize_particles.h"
-#include "application/water_multiple/job_write_frame.h"
+#include "application/water_multiple/job_write_output.h"
+#include "application/water_multiple/job_reseed_particles.h"
 
 #include "application/water_multiple//projection/job_projection_global_initialize.h"
 #include "application/water_multiple//projection/job_projection_local_initialize.h"

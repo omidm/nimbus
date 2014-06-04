@@ -49,7 +49,8 @@
 #define LOOP_ITERATION "loop_iteration"
 #define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
 #define CALCULATE_FRAME "calculate_frame"
-#define WRITE_FRAME "write_frame"
+#define WRITE_OUTPUT "write_output"
+#define RESEED_PARTICLES "reseed_particles"
 #define JOB_BARRIER "job_barrier"
 
 #define UPDATE_GHOST_VELOCITIES "update_ghost_velocities"
@@ -61,6 +62,7 @@
 #define APPLY_FORCES "apply_forces"
 #define MODIFY_LEVELSET_PART_ONE "modify_levelset_part_one"
 #define MODIFY_LEVELSET_PART_TWO "modify_levelset_part_two"
+#define MAKE_SIGNED_DISTANCE "make_signed_distance"
 #define ADJUST_PHI "adjust_phi"
 #define DELETE_PARTICLES "delete_particles"
 #define REINCORPORATE_PARTICLES "reincorporate_particles"

@@ -124,7 +124,7 @@ public:
     void Adjust_Phi_With_Sources(const T time);
     void Initialize_Phi();
 
-    void Write_Output_Files(const int frame);
+    void Write_Output_Files(const int frame, int rank = -1);
     void Read_Output_Files(const int frame);
 
     void Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, const int frame);

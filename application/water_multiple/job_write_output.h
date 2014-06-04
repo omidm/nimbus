@@ -33,49 +33,23 @@
  */
 
 /*
- * Definitions and typedef useful for application, data and jobs.
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_OUTPUT_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_OUTPUT_H_
 
-#include "application/water_multiple/physbam_include.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
-
-#define APP_LOG DBG_TEMP
-#define APP_LOG_STR "temp"
-#define TRANSLATE_STR "translate"
+#include "shared/nimbus.h"
 
 namespace application {
 
-    // simulation dimension
-    const int kDimension = 3;
-
-    // typedefs
-    typedef float T;
-    typedef float RW;
-    typedef PhysBAM::VECTOR<T,   kDimension> TV;
-    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
-    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
-
-    // application specific parameters and constants
-    const bool kUseGlobalWrite = true;
-    const bool kUseCache = false;
-    const int kThreadsNum = 1;
-    const int kScale = 40;
-    const int kAppPartNum = 2;
-    const int kGhostNum = 3;
-    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
-    const int kPressureGhostNum = 1;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-    // follow physbam convenctions here, otherwise translator becomes messy
-    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
+class JobWriteOutput : public nimbus::Job {
+ public:
+  explicit JobWriteOutput(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
+};
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_OUTPUT_H_

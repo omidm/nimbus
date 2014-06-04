@@ -46,21 +46,21 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/job_write_frame.h"
+#include "application/water_multiple/job_write_output.h"
 
 namespace application {
 
-JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
+JobWriteOutput::JobWriteOutput(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobWriteFrame::Clone() {
-  return new JobWriteFrame(application());
+nimbus::Job* JobWriteOutput::Clone() {
+  return new JobWriteOutput(application());
 }
 
-void JobWriteFrame::Execute(nimbus::Parameter params,
+void JobWriteOutput::Execute(nimbus::Parameter params,
                             const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
+  dbg(APP_LOG, "Executing WRITE_OUTPUT job.\n");
 
   InitConfig init_config;
   init_config.use_cache = true;
@@ -68,29 +68,37 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
-  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+  int rank;
+  LoadParameter(params_str, &init_config.frame, &init_config.time, &dt, &rank,
                 &init_config.global_region, &init_config.local_region);
 
   dbg(APP_LOG,
-      "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
-      "(Frame=%d, Time=%f).\n",
+      "In WRITE_OUTPUT: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "(Output=%d, Time=%f).\n",
       init_config.frame, init_config.time, dt);
 
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
   DataConfig data_config;
-  data_config.SetAll();
+  data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::LEVELSET_READ);
+  data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::PSI_N);
+  data_config.SetFlag(DataConfig::PSI_D);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
-  dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
+  dbg(APP_LOG, "Job WRITE_OUTPUT starts.\n");
   // Reseed particles and write frame.
-  driver->WriteFrameImpl(this, da, true, dt);
+  driver->WriteOutputSplitImpl(this, da, true, dt, rank);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+  dbg(APP_LOG, "Completed executing WRITE_OUTPUT job\n");
 }
 
 }  // namespace application
