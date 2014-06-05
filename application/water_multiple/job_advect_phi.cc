@@ -97,7 +97,7 @@ void JobAdvectPhi::Execute(nimbus::Parameter params,
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect phi job.");
   {
-    nimbus::Timer timer(std::string("advect_phi_") + id().toString());
+    //nimbus::Timer timer(std::string("advect_phi_") + id().toString());
     driver->AdvectPhiImpl(this, da, dt);
   }
 

@@ -100,7 +100,7 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in step particles job.\n");
   {
-    nimbus::Timer timer(std::string("step_particle_") + id().toString());
+    //nimbus::Timer timer(std::string("step_particle_") + id().toString());
     driver->StepParticlesImpl(this, da, dt);
   }
 
