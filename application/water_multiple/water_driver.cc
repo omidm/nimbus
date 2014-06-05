@@ -611,20 +611,30 @@ Write_Substep(const std::string& title,const int substep,const int level)
 template<class TV> void WATER_DRIVER<TV>::
 Write_Output_Files(const int frame, int rank)
 {
-    std::string rank_name = "";
     if (rank != -1) {
+      std::string rank_name = "";
       std::stringstream temp_ss;
-      temp_ss << rank;
+      temp_ss << "split_output/" << rank;
       rank_name = temp_ss.str();
+      FILE_UTILITIES::Create_Directory("split_output/");
+      FILE_UTILITIES::Create_Directory(rank_name);
+      FILE_UTILITIES::Create_Directory(rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
+      FILE_UTILITIES::Create_Directory(rank_name+"/common");
+      FILE_UTILITIES::Write_To_Text_File(rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+      if(frame==example.first_frame)
+        FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/first_frame",frame,"\n");
+      example.Write_Output_Files(frame, rank);
+      FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/last_frame",frame,"\n");
+    } else {
+      FILE_UTILITIES::Create_Directory(example.output_directory);
+      FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
+      FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
+      FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+      if(frame==example.first_frame)
+        FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
+      example.Write_Output_Files(frame);
+      FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
     }
-    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name);
-    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
-    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+"/common");
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
-    if(frame==example.first_frame) 
-        FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/first_frame",frame,"\n");
-    example.Write_Output_Files(frame, rank);
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/last_frame",frame,"\n");
 }
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,3> >;

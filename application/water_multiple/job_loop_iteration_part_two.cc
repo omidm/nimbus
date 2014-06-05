@@ -266,7 +266,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
         nimbus::Parameter temp_params;
         std::string temp_str;
-        SerializeParameter(frame, time, dt, i, global_region, kRegY2W3Central[i],
+        SerializeParameter(frame, time, dt, i+1, global_region, kRegY2W3Central[i],
                            &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         job_query.StageJob(WRITE_OUTPUT,
