@@ -80,7 +80,7 @@ namespace application {
       nimbus::Parameter params,
       const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing loop iteration job\n");
-    nimbus::Timer::Print("----New iteration starts----");
+    //nimbus::Timer::Print("----New iteration starts----");
 
     // Get parameters: frame, time
     InitConfig init_config;

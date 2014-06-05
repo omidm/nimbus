@@ -96,8 +96,8 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     *thread_queue_hook() = example->nimbus_thread_queue;
 
     {
-      nimbus::Timer timer(std::string("reincorporate_particle_")
-                          + id().toString());
+      //nimbus::Timer timer(std::string("reincorporate_particle_")
+      //                    + id().toString());
       driver->ReincorporateParticlesImpl(this, da, dt);
     }
 

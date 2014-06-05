@@ -63,7 +63,7 @@ namespace application {
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
     void WaterApp::Load() {
-        nimbus::Timer::Initialize();
+        //nimbus::Timer::Initialize();
 
         dbg_add_mode(APP_LOG_STR);
         dbg_add_mode(TRANSLATE_STR);
