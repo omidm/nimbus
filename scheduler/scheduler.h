@@ -152,6 +152,8 @@ class Scheduler {
 
     virtual size_t RemoveObsoleteJobEntries();
 
+    virtual void CleanLdlMap();
+
     virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
 
     virtual bool SendCreateJobToWorker(SchedulerWorker* worker,

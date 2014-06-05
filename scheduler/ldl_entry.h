@@ -32,66 +32,55 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Global declaration of Nimbus-wide types.
- * Author: Philip Levis <pal@cs.stanford.edu>
- */
+ /*
+  * Logical data lineage entry class keeps the meta data for each node on the
+  * lineage.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_SHARED_NIMBUS_TYPES_H_
-#define NIMBUS_SHARED_NIMBUS_TYPES_H_
+#ifndef NIMBUS_SCHEDULER_LDL_ENTRY_H_
+#define NIMBUS_SCHEDULER_LDL_ENTRY_H_
 
-#include <inttypes.h>
-#include <string>
-#include "shared/address_book.h"
-
-#define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
-#define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
-#define NIMBUS_EMPTY_VERSION_TABLE_ID (version_table_id_t)(0)
-
-#define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
-#define NIMBUS_INIT_DATA_VERSION (data_version_t)(1)
-#define NIMBUS_UNDEFINED_DATA_VERSION (data_version_t)(0)
-#define NIMBUS_INIT_JOB_DEPTH (job_depth_t)(0)
-#define NIMBUS_MAIN_JOB_NAME "main"
-
-#define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
+#include <boost/unordered_map.hpp>
+#include <list>
+#include <utility>
+#include "shared/nimbus_types.h"
+#include "shared/idset.h"
 
 namespace nimbus {
-  typedef uint32_t port_t;
-  typedef uint32_t worker_id_t;
-  typedef uint32_t app_id_t;
-  typedef uint64_t physical_data_id_t;
-  typedef uint64_t logical_data_id_t;
-  typedef uint64_t job_id_t;
-  typedef uint64_t command_id_t;
-  typedef uint64_t partition_id_t;
-  typedef uint64_t param_id_t;
-  typedef uint64_t data_version_t;
-  typedef uint64_t version_table_id_t;
-  typedef uint64_t job_depth_t;
 
-  typedef int32_t exit_status_t;
+  class LdlEntry {
+  public:
+    LdlEntry();
+    LdlEntry(const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth,
+        const bool& sterile);
 
-  typedef uint32_t switch_id_t;  // Used in cluster map for network switches
+    LdlEntry(const LdlEntry& other);
 
-  typedef int64_t int_dimension_t;
-  typedef double  float_dimension_t;
+    virtual ~LdlEntry();
 
-  typedef uint64_t app_data_version_t;
+    job_id_t job_id() const;
+    data_version_t version() const;
+    job_depth_t job_depth() const;
+    bool sterile() const;
 
-  enum {
-    WORKER_ID_NONE = 0,
-    WORKER_ID_SCHEDULER = 1
+    void set_job_id(const job_id_t& job_id);
+    void set_version(const data_version_t& version);
+    void set_job_depth(const job_depth_t& job_depth);
+    void set_sterile(const bool& sterile);
+
+    LdlEntry& operator= (const LdlEntry& right);
+
+  private:
+    job_id_t job_id_;
+    data_version_t version_;
+    job_depth_t job_depth_;
+    bool sterile_;
   };
-
-  enum JobType {
-    JOB_COMP,
-    JOB_COPY,
-    JOB_CREATE,
-    JOB_SCHED
-  };
-
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SHARED_NIMBUS_TYPES_H_
+#endif  // NIMBUS_SCHEDULER_LDL_ENTRY_H_
