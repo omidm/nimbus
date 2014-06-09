@@ -49,6 +49,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <utility>
 #include <algorithm>
 #include <map>
 #include <set>
@@ -59,6 +60,7 @@
 #include "scheduler/version_manager.h"
 #include "scheduler/version_operator.h"
 #include "scheduler/physical_data.h"
+#include "scheduler/ldl_map.h"
 
 namespace nimbus {
 class JobManager {
@@ -97,6 +99,8 @@ class JobManager {
 
     size_t RemoveObsoleteJobEntries();
 
+    void CleanLdlMap();
+
     void JobDone(job_id_t job_id);
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
@@ -132,11 +136,16 @@ class JobManager {
     // bool ResolveJobDataVersions(JobEntry* job);
     // size_t ResolveVersions();
 
+    LdlMap ldl_map_;
+
     JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_done_;
     std::map<job_id_t, JobEntryList> pass_version_;
     std::map<job_id_t, JobEntryList> explore_to_assign_;
+
+    IDSet<job_id_t> live_parents_;
+    bool parent_removed_;
 
     boost::mutex pass_version_mutex_;
     boost::condition_variable pass_version_put_cond_;
@@ -147,6 +156,9 @@ class JobManager {
 
     void PassDataVersionToJob(
         JobEntry *job, const JobEntryList& from_jobs);
+
+    bool LookUpVersion(JobEntry *job,
+        logical_data_id_t ldid, data_version_t *version);
 
     bool JobVersionIsComplete(JobEntry *job);
 

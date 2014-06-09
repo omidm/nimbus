@@ -17,7 +17,7 @@
 
 using namespace PhysBAM;
 
-template<class TV> void WATER_DRIVER<TV>::InitializeFirst(
+template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
     const nimbus::Job *job,
     const nimbus::DataArray &da)
 {
@@ -102,14 +102,14 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirst(
     example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(false,(T)2*example.mac_grid.Minimum_Edge_Length(),5);
     example.Initialize_Phi();
     example.Adjust_Phi_With_Sources(time);
-    example.particle_levelset_evolution.Make_Signed_Distance();
+    // example.particle_levelset_evolution.Make_Signed_Distance();
     example.projection.p.Fill(0);
-    example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
+    // example.particle_levelset_evolution.Fill_Levelset_Ghost_Cells(time);
 
     example.collision_bodies_affecting_fluid.Compute_Grid_Visibility();
-    example.particle_levelset_evolution.Set_Seed(2606);
-    example.particle_levelset_evolution.Seed_Particles(time);
-    example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
+    // example.particle_levelset_evolution.Set_Seed(2606);
+    // example.particle_levelset_evolution.Seed_Particles(time);
+    // example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
 
     //add forces
     example.incompressible.Set_Gravity();
@@ -126,13 +126,13 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirst(
     example.incompressible.Set_Variable_Viscosity(false);
     example.incompressible.projection.Set_Density(1e3);
 
-    ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
-    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
-    example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
+//    ARRAY<T,TV_INT> exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
+//    example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time,8);
+//    example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
     example.Set_Boundary_Conditions(time); // get so CFL is correct
   }
   // write, save
-  Write_Output_Files(example.first_frame);
+//  Write_Output_Files(example.first_frame);
   example.Save_To_Nimbus_No_Cache(job, da, current_frame);
 }
 

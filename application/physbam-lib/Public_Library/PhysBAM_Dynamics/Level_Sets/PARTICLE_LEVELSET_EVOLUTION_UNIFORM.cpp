@@ -211,6 +211,22 @@ Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
 {
     PHYSBAM_NOT_IMPLEMENTED();
 }
+
+
+//#####################################################################
+// The following function is added to have make signed distance operation
+// in physbam as a separate job in nimbus without any data exchange in
+// between. nimbus takes care of exchanging the ghost regions before it
+// gets call.
+//#####################################################################
+template<class T_GRID> void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<T_GRID>::
+Make_Signed_Distance_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
+                             T_ARRAYS_SCALAR* phi_ghost,
+                             const int ghost_cells) {
+    PHYSBAM_NOT_IMPLEMENTED();
+}
+
+
 //#####################################################################
 // Function Modify_Levelset_And_Particles
 //#####################################################################
@@ -363,3 +379,68 @@ Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
         particle_levelset.Adjust_Particle_Radii();
     }
 }
+
+
+//#####################################################################
+// The following function is added to have make signed distance operation
+// in physbam as a separate job in nimbus without any data exchange in
+// between. nimbus takes care of exchanging the ghost regions before it
+// gets call.
+// ONLY #3D IMPLEMENTATION.
+//#####################################################################
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Make_Signed_Distance_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
+                            T_ARRAYS_SCALAR* phi_ghost,
+                            const int ghost_cells)
+{
+  typedef float T;
+  typedef VECTOR<T, 3> TV;
+  typedef VECTOR<int, 3> TV_INT;
+  typedef GRID<VECTOR<float, 3> > T_GRID;
+  {
+    // Make_Signed_Distance()
+    if(use_fmm) {
+      {
+        // T_FAST_LEVELSET::Fast_Marching_Method()
+        T_FAST_LEVELSET* ls = &particle_levelset.levelset;
+        const int local_advection_spatial_order =
+          levelset_advection.local_advection_spatial_order;
+        T time = 0;
+        {
+          // T_FAST_LEVELSET::BASE::Fast_Marching_Method()
+          // That is, LEVELSET_3D::Fast_Marching_Method()
+          T stopping_distance = ls->half_band_width +
+            ls->grid.dX.Max() *
+            (1 + min(3, local_advection_spatial_order));
+          {
+            // LEVELSET_3D::Get_Signed_Distance_Using_FMM
+            const ARRAY<TV_INT>* seed_indices = NULL;
+            const bool add_seed_indices_for_ghost_cells = false;
+            FAST_MARCHING_METHOD_UNIFORM<T_GRID> fmm(*ls,
+                ghost_cells,
+                ls->thread_queue);
+            fmm.Fast_Marching_Method(*phi_ghost,
+                stopping_distance,
+                seed_indices,
+                add_seed_indices_for_ghost_cells);
+            ARRAY<T, TV_INT>::Get(ls->phi, *phi_ghost);
+            ls->boundary->Apply_Boundary_Condition(ls->grid, ls->phi, time);
+          }
+        }
+        // Unrequired??
+        ls->boundary->Apply_Boundary_Condition(ls->grid, ls->phi, time);
+      }
+    }
+    else if(use_reinitialization)
+      levelset_advection.Reinitialize();
+  }
+}
+
+
+
+
+
+
+
+

@@ -54,6 +54,7 @@ struct InitConfig {
   int frame;
   T time;
   bool init_phase;
+  int init_part;
   bool set_boundary_condition;
   GeometricRegion global_region;
   GeometricRegion local_region;
@@ -68,6 +69,7 @@ struct InitConfig {
     frame = 0;
     time = 0;
     init_phase = false;
+    init_part = 0;
     set_boundary_condition = true;
     use_cache = false;
     use_threading = false;

@@ -231,9 +231,11 @@ namespace application {
         RegisterJob(LOOP_ITERATION_PART_TWO, new JobLoopIterationPartTwo(this));
         RegisterJob(LOOP_FRAME, new JobLoopFrame(this));
         RegisterJob(CALCULATE_FRAME, new JobCalculateFrame(this));
-        RegisterJob(WRITE_FRAME, new JobWriteFrame(this));
+        RegisterJob(WRITE_OUTPUT, new JobWriteOutput(this));
+        RegisterJob(RESEED_PARTICLES, new JobReseedParticles(this));
         RegisterJob(MODIFY_LEVELSET_PART_ONE, new JobModifyLevelsetPartOne(this));
         RegisterJob(MODIFY_LEVELSET_PART_TWO, new JobModifyLevelsetPartTwo(this));
+        RegisterJob(MAKE_SIGNED_DISTANCE, new JobMakeSignedDistance(this));
         RegisterJob(ADJUST_PHI, new JobAdjustPhi(this));
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));

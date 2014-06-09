@@ -32,50 +32,80 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Definitions and typedef useful for application, data and jobs.
- *
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
- */
+ /*
+  * Logical data lineage entry class keeps the meta data for each node on the
+  * lineage.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
 
-#include "application/water_multiple/physbam_include.h"
-#include "shared/dbg.h"
-#include "shared/geometric_region.h"
+#include "scheduler/ldl_entry.h"
 
-#define APP_LOG DBG_TEMP
-#define APP_LOG_STR "temp"
-#define TRANSLATE_STR "translate"
+namespace nimbus {
 
-namespace application {
+LdlEntry::LdlEntry() {
+}
 
-    // simulation dimension
-    const int kDimension = 3;
+LdlEntry::LdlEntry(const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth,
+    const bool& sterile) :
+  job_id_(job_id),
+  version_(version),
+  job_depth_(job_depth),
+  sterile_(sterile) {
+}
 
-    // typedefs
-    typedef float T;
-    typedef float RW;
-    typedef PhysBAM::VECTOR<T,   kDimension> TV;
-    typedef PhysBAM::VECTOR<int, kDimension> TV_INT;
-    typedef typename PhysBAM::FACE_INDEX<TV::dimension> FaceIndex;
-    typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
+LdlEntry::LdlEntry(const LdlEntry& other) {
+  job_id_ = other.job_id_;
+  version_ = other.version_;
+  job_depth_ = other.job_depth_;
+  sterile_ = other.sterile_;
+}
 
-    // application specific parameters and constants
-    const bool kUseGlobalWrite = true;
-    const bool kUseCache = true;
-    const int kThreadsNum = 1;
-    const int kScale = 40;
-    const int kAppPartNum = 2;
-    const int kGhostNum = 3;
-    const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
-    const int kPressureGhostNum = 1;
-    const int kLastFrame = 15;
-    const std::string kOutputDir = "output";
-    // follow physbam convenctions here, otherwise translator becomes messy
-    const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);
+LdlEntry::~LdlEntry() {
+}
 
-} // namespace application
+job_id_t LdlEntry::job_id() const {
+  return job_id_;
+}
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_PARAMETERS_H_
+data_version_t LdlEntry::version() const {
+  return version_;
+}
+
+job_depth_t LdlEntry::job_depth() const {
+  return job_depth_;
+}
+
+bool LdlEntry::sterile() const {
+  return sterile_;
+}
+
+void LdlEntry::set_job_id(const job_id_t& job_id) {
+  job_id_ = job_id;
+}
+
+void LdlEntry::set_version(const data_version_t& version) {
+  version_ = version;
+}
+
+void LdlEntry::set_job_depth(const job_depth_t& job_depth) {
+  job_depth_ = job_depth;
+}
+
+void LdlEntry::set_sterile(const bool& sterile) {
+  sterile_ = sterile;
+}
+
+LdlEntry& LdlEntry::operator= (const LdlEntry& right) {
+  job_id_ = right.job_id_;
+  version_ = right.version_;
+  job_depth_ = right.job_depth_;
+  sterile_ = right.sterile_;
+  return *this;
+}
+
+
+}  // namespace nimbus
