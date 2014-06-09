@@ -124,6 +124,18 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            ReadFaceArrayInner(region, inner, shift, read_set, fa);
+        }
+
+        /** Take a FaceArray described by region and read its data from the
+         *  PhysicalDataInstance objects in the objects array.
+         */
+        template<typename T> static void ReadFaceArrayInner(
+                const GeometricRegion &region,
+                const GeometricRegion &inner,
+                const Coord &shift,
+                const DataArray &read_set,
+                typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
             if (log) {
                 std::stringstream msg;
                 msg << "### Read Face Array (New Translator) start : " << log->GetTime();
@@ -315,6 +327,188 @@ template <class TS> class TranslatorPhysBAM {
                                             } else {
                                                 assert(false);
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+        }
+
+        /** Take a FaceArray described by region and read its data from the
+         *  PhysicalDataInstance objects in the objects array.
+         */
+        static void ReadFaceArrayInner(
+                const GeometricRegion &region,
+                const GeometricRegion &inner,
+                const Coord &shift,
+                const DataArray &read_set,
+                typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
+                return;
+            }
+            PhysBAM::ARRAY<bool, FaceIndex> flag;
+            flag = *fa;
+            flag.Fill(0);
+            DataArray read_inner;
+            DataArray read_outer;
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                GeometricRegion r = read_set[i]->region();
+                if (inner.Covers(&r))
+                    read_inner.push_back(read_set[i]);
+                else
+                    read_outer.push_back(read_set[i]);
+            }
+            for (size_t i = 0; i < read_outer.size(); ++i) {
+                PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
+                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                if (HasOverlap(overlap)) {
+                    bool* buffer = reinterpret_cast<bool*>(data->buffer());
+                    Dimension3Vector src = GetOffset(data->region(), region);
+                    Dimension3Vector dest = GetOffset(region, data->region());
+                    //  x, y and z values are stored separately due to the
+                    // difference in number of x, y and z values in face arrays
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
+                        int mult_x = 1;
+                        int mult_y = data->region().dx();
+                        int mult_z = data->region().dy() * data->region().dx();
+                        int range_x = overlap(X_COORD);
+                        int range_y = overlap(Y_COORD);
+                        int range_z = overlap(Z_COORD);
+                        int src_offset = 0;
+                        switch (dim) {
+                            case X_COORD:
+                                range_x += 1;
+                                mult_y  += 1;
+                                mult_z  += data->region().dy();
+                                break;
+                            case Y_COORD:
+                                range_y += 1;
+                                mult_z  += data->region().dx();
+                                src_offset += (data->region().dx() + 1) *
+                                    (data->region().dy()) *
+                                    (data->region().dz());
+                                break;
+                            case Z_COORD:
+                                range_z += 1;
+                                src_offset += ((data->region().dx()) *
+                                        (data->region().dy() + 1) *
+                                        (data->region().dz())) +
+                                    ((data->region().dx() + 1) *
+                                     (data->region().dy()) *
+                                     (data->region().dz()));
+                                break;
+                        }
+                        for (int z = 0; z < range_z; ++z) {
+                            for (int y = 0; y < range_y; ++y) {
+                                for (int x = 0; x < range_x; ++x) {
+                                    int source_x = x + src(X_COORD);
+                                    int source_y = y + src(Y_COORD);
+                                    int source_z = z + src(Z_COORD);
+                                    int source_index = source_x * mult_x +
+                                        source_y * mult_y +
+                                        source_z * mult_z;
+                                    source_index += src_offset;
+                                    int loc_x = x + dest(X_COORD) + region.x();
+                                    int loc_y = y + dest(Y_COORD) + region.y();
+                                    int loc_z = z + dest(Z_COORD) + region.z();
+                                    int dest_x = loc_x - shift.x;
+                                    int dest_y = loc_y - shift.y;
+                                    int dest_z = loc_z - shift.z;
+                                    typename PhysBAM::VECTOR<int, 3>
+                                        destinationIndex(dest_x, dest_y, dest_z);
+                                    assert(source_index < data->size() / (int) sizeof(bool) && source_index >= 0); // NOLINT
+                                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for (size_t i = 0; i < read_inner.size(); ++i) {
+                PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
+                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                if (HasOverlap(overlap)) {
+                    bool* buffer = reinterpret_cast<bool*>(data->buffer());
+                    Dimension3Vector src = GetOffset(data->region(), region);
+                    Dimension3Vector dest = GetOffset(region, data->region());
+                    //  x, y and z values are stored separately due to the
+                    // difference in number of x, y and z values in face arrays
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
+                        int mult_x = 1;
+                        int mult_y = data->region().dx();
+                        int mult_z = data->region().dy() * data->region().dx();
+                        int range_x = overlap(X_COORD);
+                        int range_y = overlap(Y_COORD);
+                        int range_z = overlap(Z_COORD);
+                        int src_offset = 0;
+                        switch (dim) {
+                            case X_COORD:
+                                range_x += 1;
+                                mult_y  += 1;
+                                mult_z  += data->region().dy();
+                                break;
+                            case Y_COORD:
+                                range_y += 1;
+                                mult_z  += data->region().dx();
+                                src_offset += (data->region().dx() + 1) *
+                                    (data->region().dy()) *
+                                    (data->region().dz());
+                                break;
+                            case Z_COORD:
+                                range_z += 1;
+                                src_offset += ((data->region().dx()) *
+                                        (data->region().dy() + 1) *
+                                        (data->region().dz())) +
+                                    ((data->region().dx() + 1) *
+                                     (data->region().dy()) *
+                                     (data->region().dz()));
+                                break;
+                        }
+                        for (int z = 0; z < range_z; ++z) {
+                            for (int y = 0; y < range_y; ++y) {
+                                for (int x = 0; x < range_x; ++x) {
+                                    int source_x = x + src(X_COORD);
+                                    int source_y = y + src(Y_COORD);
+                                    int source_z = z + src(Z_COORD);
+                                    int source_index = source_x * mult_x +
+                                        source_y * mult_y +
+                                        source_z * mult_z;
+                                    source_index += src_offset;
+                                    int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                                    int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                                    int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
+                                    typename PhysBAM::VECTOR<int, 3>
+                                        destinationIndex(dest_x, dest_y, dest_z);
+                                    assert(source_index < data->size() / (int) sizeof(bool) && source_index >= 0); // NOLINT
+                                    if (flag(dim, destinationIndex) == 0) {
+                                        (*fa)(dim, destinationIndex) = buffer[source_index];
+                                        flag(dim, destinationIndex) = 1;
+                                    } else {
+                                        if (flag(dim, destinationIndex) == 1) {
+                                            assert((*fa)(dim, destinationIndex)
+                                                    == buffer[source_index]);
+                                            flag(dim, destinationIndex) = 2;
+                                        } else {
+                                            // TODO(quhang) needs a more elegant solution.
+                                            assert(false);
                                         }
                                     }
                                 }
