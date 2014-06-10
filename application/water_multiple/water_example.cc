@@ -787,6 +787,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_psi_n = NULL;
     }
 
+    // TODO(addcache) pressure.
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::WRITE_ACCESS)
@@ -796,6 +797,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating pressure.\n");
+    // TODO(addcache) colors.
     // filled_region_colors.
     const std::string filled_region_colors_string =
         std::string(APP_FILLED_REGION_COLORS);
@@ -808,6 +810,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating filled_region_colors.\n");
+    // TODO(addcache) divergence.
     // divergence.
     const std::string divergence_string =
         std::string(APP_DIVERGENCE);
@@ -820,6 +823,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating divergence.\n");
 
+    // TODO(addcache) the following data translation is implemented by memcpy,
+    // caching might not be needed.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -1226,6 +1231,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
     }
 
+    // TODO(addcache), pressure.
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::READ_ACCESS)
@@ -1235,6 +1241,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating pressure.\n");
+    // TODO(addcache), colors.
     // filled_region_colors.
     const std::string filled_region_colors_string =
         std::string(APP_FILLED_REGION_COLORS);
@@ -1247,6 +1254,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating filled_region_colors.\n");
+    // TODO(addcache), divergence.
     // divergence.
     const std::string divergence_string =
         std::string(APP_DIVERGENCE);
@@ -1259,6 +1267,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating divergence.\n");
 
+    // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
+    // cached.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       Data* data_temp = application::GetTheOnlyData(
