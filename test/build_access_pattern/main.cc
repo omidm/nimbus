@@ -53,17 +53,19 @@
 #include "shared/idset.h"
 #include "scheduler/job_entry.h"
 
-#define LDO_NUM_PER_JOB 125
+#define LDO_NUM 90000
 #define JOB_NUM 946
-#define SEED 123
+#define LDO_NUM_PER_JOB 463
+#define SEED 12
 
 using namespace nimbus; // NOLINT
 
 unsigned int seed = SEED;
 
 void LoadRandomSet(IDSet<logical_data_id_t>* set) {
-  int max_num = LDO_NUM_PER_JOB * JOB_NUM;
-  if (LDO_NUM_PER_JOB * JOB_NUM > RAND_MAX)
+  // int max_num = LDO_NUM_PER_JOB * JOB_NUM;
+  int max_num = LDO_NUM;
+  if (max_num > RAND_MAX)
     max_num = RAND_MAX;
   while (set->size() < LDO_NUM_PER_JOB)
     set->insert(rand_r(&seed) % max_num + 1);
@@ -106,6 +108,8 @@ int main(int argc, const char *argv[]) {
   }
   log.StopTimer();
   std::cout << "Time elapsed building the table: " << log.timer() << std::endl;
+  std::cout << "Table size: " << table.size() << std::endl;
+  std::cout << "RAND_MAX: " << RAND_MAX << std::endl;
 
 
 
