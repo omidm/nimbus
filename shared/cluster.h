@@ -40,8 +40,8 @@
   */
 
 
-#ifndef NIMBUS_SCHEDULER_CLUSTER_H_
-#define NIMBUS_SCHEDULER_CLUSTER_H_
+#ifndef NIMBUS_SHARED_CLUSTER_H_
+#define NIMBUS_SHARED_CLUSTER_H_
 
 #include <map>
 #include <set>
@@ -207,4 +207,4 @@ class ClusterMap {
 };
 
 }  // namespace nimbus
-#endif  // NIMBUS_SCHEDULER_CLUSTER_H_
+#endif  // NIMBUS_SHARED_CLUSTER_H_
