@@ -314,7 +314,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
 }
 
 void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
-  RemoteCopySendJob * job = new RemoteCopySendJob(data_exchanger_);
+  RemoteCopySendJob * job = new RemoteCopySendJob(data_exchanger_, application_);
   data_exchanger_->AddContactInfo(cm->to_worker_id().elem(),
       cm->to_ip(), cm->to_port().elem());
   job->set_name("RemoteCopySend");
@@ -335,7 +335,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
 }
 
 void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
-  Job * job = new RemoteCopyReceiveJob();
+  Job * job = new RemoteCopyReceiveJob(application_);
   job->set_name("RemoteCopyReceive");
   job->set_id(cm->job_id());
   IDSet<physical_data_id_t> write_set;
@@ -350,7 +350,7 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
 }
 
 void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
-  Job * job = new LocalCopyJob();
+  Job * job = new LocalCopyJob(application_);
   job->set_name("LocalCopy");
   job->set_id(cm->job_id());
   IDSet<physical_data_id_t> read_set;

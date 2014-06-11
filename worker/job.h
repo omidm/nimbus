@@ -202,7 +202,7 @@ class Job {
 
 class RemoteCopySendJob : public Job {
   public:
-    explicit RemoteCopySendJob(WorkerDataExchanger* de);
+    explicit RemoteCopySendJob(WorkerDataExchanger* de, Application *app);
     ~RemoteCopySendJob();
 
     virtual void Execute(Parameter params, const DataArray& da);
@@ -230,7 +230,7 @@ class RemoteCopySendJob : public Job {
 
 class RemoteCopyReceiveJob : public Job {
   public:
-    RemoteCopyReceiveJob();
+    explicit RemoteCopyReceiveJob(Application *app);
     ~RemoteCopyReceiveJob();
 
     virtual void Execute(Parameter params, const DataArray& da);
@@ -248,7 +248,7 @@ class RemoteCopyReceiveJob : public Job {
 
 class LocalCopyJob : public Job {
   public:
-    LocalCopyJob();
+    explicit LocalCopyJob(Application *app);
     ~LocalCopyJob();
 
     virtual void Execute(Parameter params, const DataArray& da);
