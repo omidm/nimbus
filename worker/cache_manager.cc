@@ -164,7 +164,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 /**
  * \details
  */
-void SyncData(Data *d) {
+void CacheManager::SyncData(Data *d) {
     CacheObject *co = d->dirty_cache_object();
     if (!co)
         return;
@@ -175,7 +175,7 @@ void SyncData(Data *d) {
 /**
  * \details
  */
-void InvalidateMappings(Data *d) {
+void CacheManager::InvalidateMappings(Data *d) {
     d->InvalidateMappings();
 }
 
