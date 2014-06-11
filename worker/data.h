@@ -53,6 +53,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "data/cache/cache_defs.h"
 #include "shared/cluster.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
@@ -106,16 +107,15 @@ class Data {
   void set_version(data_version_t version);
 
   /**
-   * \brief Writes back data from cached instance, if the data instance is
-   * dirty
+   * \brief Removes dirty object mappings
    */
-  void SyncData();
+  void ClearDirtyMappings();
 
   /**
    * \brief Removes all mappings between this data instance and all other cache
    * instances (dirty and non-dirty)
    */
-  void InvalidateCacheData();
+  void InvalidateMappings();
 
   /**
    * \brief Inserts a mapping between this data instance and cache object co
@@ -130,6 +130,12 @@ class Data {
   void UnsetCacheObject(CacheObject *co);
 
   /**
+   * \brief Accessor for dirty data
+   * \return Cache bject
+   */
+  CacheObject *dirty_cache_object();
+
+  /**
    * \brief Inserts a dirty object mapping between this data instance and cache
    * object co
    * \param co is the cache object to map to
@@ -142,6 +148,18 @@ class Data {
    * \param co is the cache object to unmap
    */
   void UnsetDirtyCacheObject(CacheObject *co);
+
+  /**
+   * \brief Accessor for cache type
+   * \return Cache variable type (used if cache object is cache struct)
+   */
+  cache::type_id_t cache_type();
+
+  /**
+   * \brief Setter for cache type
+   * \param Cache variable type (used if cache object is cache struct)
+   */
+  void set_cache_type(cache::type_id_t t);
 
  private:
   logical_data_id_t logical_id_;
@@ -161,6 +179,7 @@ class Data {
   // Set of cache objects that this data corresponds to
   std::set<CacheObject *> cache_objects_;
   CacheObject *dirty_cache_object_;
+  cache::type_id_t cache_type_;
 };
 
 typedef std::vector<Data*> DataArray;

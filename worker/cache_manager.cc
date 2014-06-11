@@ -91,8 +91,18 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         }
     }
     cv->AcquireAccess(access);
-    cv->UpdateCache(read_set, read_region);
-    cv->SetUpWrite(write_set, write_region);
+    DataArray flush, sync, diff;
+    CacheObjects sync_co;
+    cv->SetUpReadWrite(read_set, write_set,
+                       &flush, &diff, &sync, &sync_co);
+    GeometricRegion write_region_old = cv->write_region_;
+    cv->write_region_ = write_region;
+    cv->WriteFromCache(flush, write_region_old);
+    for (size_t i = 0; i < sync.size(); ++i) {
+        assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
+        sync_co[i]->PullData(sync[i]);
+    }
+    cv->ReadToCache(diff, read_region);
     return cv;
 }
 
@@ -129,9 +139,45 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         }
     }
     cs->AcquireAccess(access);
-    cs->UpdateCache(var_type, read_sets, read_region);
-    cs->SetUpWrite(var_type, write_sets, write_region);
+    size_t num_var = var_type.size();
+    std::vector<DataArray> flush_sets(num_var),
+                           sync_sets(num_var),
+                           diff_sets(num_var);
+    std::vector<CacheObjects> sync_co_sets(num_var);
+    cs->SetUpReadWrite(var_type, read_sets, write_sets,
+                       &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    GeometricRegion write_region_old = cs->write_region_;
+    cs->write_region_ = write_region;
+    cs->WriteFromCache(var_type, flush_sets, write_region_old);
+    for (size_t t = 0; t < num_var; ++t) {
+        DataArray &sync_t = sync_sets[t];
+        CacheObjects &sync_co_t = sync_co_sets[t];
+        for (size_t i = 0; i < sync_t.size(); ++i) {
+            assert(sync_co_t[i]->IsAvailable(cache::EXCLUSIVE));
+            sync_co_t[i]->PullData(sync_t[i]);
+        }
+    }
+    cs->ReadToCache(var_type, diff_sets, read_region);
     return cs;
+}
+
+/**
+ * \details
+ */
+void CacheManager::SyncData(Data *d) {
+    CacheObject *co = d->dirty_cache_object();
+    if (!co)
+        return;
+    assert(co->IsAvailable(cache::EXCLUSIVE));
+    d->ClearDirtyMappings();
+    co->PullData(d);
+}
+
+/**
+ * \details
+ */
+void CacheManager::InvalidateMappings(Data *d) {
+    d->InvalidateMappings();
 }
 
 }  // namespace nimbus

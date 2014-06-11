@@ -45,6 +45,7 @@ using namespace nimbus; // NOLINT
 
 Data::Data() {
   dirty_cache_object_ = NULL;
+  cache_type_ = 114;
 }
 
 Data* Data::Clone() {
@@ -97,18 +98,20 @@ void Data::set_version(data_version_t version) {
 }
 
 /**
- * \details
+ *
  */
-void Data::SyncData() {
-  if (dirty_cache_object_)
-    dirty_cache_object_->PullData(this);
-  assert(!dirty_cache_object_);
+void Data::ClearDirtyMappings() {
+  assert(dirty_cache_object_);
+  if (dirty_cache_object_) {
+    dirty_cache_object_->UnsetDirtyData(this);
+    dirty_cache_object_ = NULL;
+  }
 }
 
 /**
  * \details
  */
-void Data::InvalidateCacheData() {
+void Data::InvalidateMappings() {
   std::set<CacheObject *>::iterator iter = cache_objects_.begin();
   for (; iter != cache_objects_.end(); ++iter) {
     CacheObject *c = *iter;
@@ -135,6 +138,13 @@ void Data::UnsetCacheObject(CacheObject *co) {
 }
 
 /**
+ * \detials
+ */
+CacheObject *Data::dirty_cache_object() {
+  return dirty_cache_object_;
+}
+
+/**
  * \details
  */
 void Data::SetUpDirtyCacheObject(CacheObject *co) {
@@ -147,7 +157,21 @@ void Data::SetUpDirtyCacheObject(CacheObject *co) {
  */
 void Data::UnsetDirtyCacheObject(CacheObject *co) {
   if (dirty_cache_object_ != co)
-    dbg(DBG_ERROR, "Data drity co %p, passed co %p\n", dirty_cache_object_, co);
+    dbg(DBG_ERROR, "Data dirty co %p, passed co %p\n", dirty_cache_object_, co);
   assert(dirty_cache_object_ == co);
   dirty_cache_object_ = NULL;
+}
+
+/**
+ * \detials
+ */
+cache::type_id_t Data::cache_type() {
+    return cache_type_;
+}
+
+/**
+ * \details
+ */
+void Data::set_cache_type(cache::type_id_t t) {
+    cache_type_ = t;
 }
