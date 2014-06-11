@@ -163,13 +163,13 @@ void Data::UnsetDirtyCacheObject(CacheObject *co) {
 /**
  * \detials
  */
-cache::type_id_t Datacache_type() {
+cache::type_id_t Data::cache_type() {
     return cache_type_;
 }
 
 /**
  * \details
  */
-void set_cache_type(cache::type_id_t t) {
+void Data::set_cache_type(cache::type_id_t t) {
     cache_type_ = t;
 }

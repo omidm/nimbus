@@ -121,6 +121,20 @@ class CacheManager {
                                   const GeometricRegion &region,
                                   cache::CacheAccess access);
 
+        /**
+         * \brief If data is dirty, syncs with corresponding dirty cache
+         * object, and clears the dirty mapping
+         * \param Data d to sync
+         */
+        void SyncData(Data *d);
+
+        /**
+         * \brief Invalidates mapping between d and all cache objects (dirty or
+         * not dirty)
+         * \param Data d
+         */
+        void InvalidateMappings(Data *d);
+
     private:
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;

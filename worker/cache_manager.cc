@@ -159,4 +159,22 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     return cs;
 }
 
+/**
+ * \details
+ */
+void SyncData(Data *d) {
+    CacheObject *co = d->dirty_cache_object();
+    if (!co)
+        return;
+    d->ClearDirtyMappings();
+    co->PullData(d);
+}
+
+/**
+ * \details
+ */
+void InvalidateMappings(Data *d) {
+    d->InvalidateMappings();
+}
+
 }  // namespace nimbus
