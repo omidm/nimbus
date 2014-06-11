@@ -53,6 +53,11 @@ extern CacheScalarArray<T> kCachePhi7;
 extern CacheScalarArray<T> kCachePhi8;
 extern CacheScalarArray<bool> kCachePsiD;
 
+// Varibales for projection.
+extern CacheScalarArray<T> kCachePressure;
+extern CacheScalarArray<int> kCacheColors;
+extern CacheScalarArray<T> kCacheDivergence;
+
 extern CacheParticleLevelsetEvolution<float> kCachePLE;
 
 } // namespace application

@@ -95,12 +95,15 @@ public:
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
     typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
     typedef typename application::CacheScalarArray<T> TCacheScalarArray;
+    typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
     typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
     TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
+    TCacheScalarArray *cache_pressure, *cache_divergence;
+    IntCacheScalarArray *cache_colors;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
     bool create_destroy_ple;

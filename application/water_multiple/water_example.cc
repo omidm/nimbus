@@ -69,6 +69,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_phi8  = NULL;
     cache_psi_d = NULL;
     cache_ple   = NULL;
+    cache_pressure = NULL;
+    cache_colors = NULL;
+    cache_divergence = NULL;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -109,6 +112,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
+    cache_pressure = cache->pressure;
+    cache_colors = cache->color;
+    cache_divergence = cache->divergence;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -150,6 +156,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
     cache_ple   = cache->ple;
+    cache_pressure = cache->pressure;
+    cache_colors = cache->color;
+    cache_divergence = cache->divergence;
     create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -673,8 +682,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       return;
     }
 
-    nimbus::int_dimension_t array_shift[3] = {
-        local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
+    // nimbus::int_dimension_t array_shift[3] = {
+    //     local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
 
     GeometricRegion array_reg_central(local_region);
@@ -787,41 +796,30 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_psi_n = NULL;
     }
 
-    // TODO(addcache) pressure.
+    // TODO(addcache).
     // pressure.
-    const std::string pressure_string = std::string(APP_PRESSURE);
-    if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::PRESSURE)) {
-      translator.WriteScalarArrayFloat(
-          &array_reg_thin_outer, array_shift, &pdv, &projection.p);
+    if (cache_pressure) {
+      T_SCALAR_ARRAY* pressure = cache_pressure->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
+      cache_pressure->ReleaseAccess();
+      cache_pressure = NULL;
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating pressure.\n");
-    // TODO(addcache) colors.
-    // filled_region_colors.
-    const std::string filled_region_colors_string =
-        std::string(APP_FILLED_REGION_COLORS);
-    if (application::GetTranslatorData(job, filled_region_colors_string, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::REGION_COLORS)) {
-      dbg(APP_LOG, "filled_region_colors is being written to Nimbus.\n");
-      translator.WriteScalarArrayInt(
-          &array_reg_thin_outer, array_shift, &pdv,
-          &projection.laplace->filled_region_colors);
+    // colors.
+    if (cache_colors) {
+      typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
+      INT_SCALAR_ARRAY* colors = cache_colors->data();
+      INT_SCALAR_ARRAY::Exchange_Arrays(
+          *colors, projection.laplace->filled_region_colors);
+      cache_colors->ReleaseAccess();
+      cache_colors = NULL;
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating filled_region_colors.\n");
-    // TODO(addcache) divergence.
     // divergence.
-    const std::string divergence_string =
-        std::string(APP_DIVERGENCE);
-    if (application::GetTranslatorData(job, divergence_string, da, &pdv, application::WRITE_ACCESS)
-        && data_config.GetFlag(DataConfig::DIVERGENCE)) {
-      translator.WriteScalarArrayFloat(
-          &array_reg_thin_outer, array_shift, &pdv,
-          &projection.laplace->f);
+    if (cache_divergence) {
+      T_SCALAR_ARRAY* divergence = cache_divergence->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
+      cache_divergence->ReleaseAccess();
+      cache_divergence = NULL;
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating divergence.\n");
 
     // TODO(addcache) the following data translation is implemented by memcpy,
     // caching might not be needed.
@@ -1158,8 +1156,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       return;
     }
 
-    nimbus::int_dimension_t array_shift[3] = {
-        local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
+    // nimbus::int_dimension_t array_shift[3] = {
+    //    local_region.x() - 1, local_region.y() - 1, local_region.z() - 1};
     nimbus::PdiVector pdv;
 
     GeometricRegion array_reg_central(local_region);
@@ -1231,41 +1229,23 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
     }
 
-    // TODO(addcache), pressure.
     // pressure.
-    const std::string pressure_string = std::string(APP_PRESSURE);
-    if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::PRESSURE)) {
-      translator.ReadScalarArrayFloat(
-          &array_reg_thin_outer, array_shift, &pdv, &projection.p);
+    if (cache_pressure) {
+      T_SCALAR_ARRAY* pressure = cache_pressure->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating pressure.\n");
-    // TODO(addcache), colors.
-    // filled_region_colors.
-    const std::string filled_region_colors_string =
-        std::string(APP_FILLED_REGION_COLORS);
-    if (application::GetTranslatorData(job, filled_region_colors_string, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::REGION_COLORS)) {
-      dbg(APP_LOG, "filled_region_colors is being read from Nimbus.\n");
-      translator.ReadScalarArrayInt(
-          &array_reg_thin_outer, array_shift, &pdv,
-          &projection.laplace->filled_region_colors);
+    // colors.
+    if (cache_colors) {
+      typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
+      INT_SCALAR_ARRAY* colors = cache_colors->data();
+      INT_SCALAR_ARRAY::Exchange_Arrays(
+          *colors, projection.laplace->filled_region_colors);
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating filled_region_colors.\n");
-    // TODO(addcache), divergence.
     // divergence.
-    const std::string divergence_string =
-        std::string(APP_DIVERGENCE);
-    if (application::GetTranslatorData(job, divergence_string, da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::DIVERGENCE)) {
-      translator.ReadScalarArrayFloat(
-          &array_reg_thin_outer, array_shift, &pdv,
-          &projection.laplace->f);
+    if (cache_divergence) {
+      T_SCALAR_ARRAY* divergence = cache_divergence->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
     }
-    application::DestroyTranslatorObjects(&pdv);
-    dbg(APP_LOG, "Finish translating divergence.\n");
 
     // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
     // cached.

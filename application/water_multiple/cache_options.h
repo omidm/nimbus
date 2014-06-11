@@ -53,6 +53,9 @@ struct AppCacheObjects {
   CacheScalarArray<T> *phi8;
   CacheScalarArray<bool> *psi_d;
   CacheParticleLevelsetEvolution<T> *ple;
+  CacheScalarArray<T> *pressure;
+  CacheScalarArray<int> *color;
+  CacheScalarArray<T> *divergence;
 
   AppCacheObjects() {
     fv    = NULL;
@@ -63,6 +66,9 @@ struct AppCacheObjects {
     phi8  = NULL;
     psi_d = NULL;
     ple   = NULL;
+    pressure = NULL;
+    color = NULL;
+    divergence = NULL;
   }
 };
 
