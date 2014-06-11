@@ -38,7 +38,7 @@
  *   DATE: Tue Nov 12 18:45:45 2013
  *  DESCR:
  ***********************************************************************/
-#include "shared/cluster.h"
+#include "scheduler/cluster.h"
 #include "shared/dbg.h"
 
 namespace nimbus {
