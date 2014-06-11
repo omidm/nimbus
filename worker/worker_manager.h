@@ -42,6 +42,7 @@
 #define NIMBUS_WORKER_WORKER_MANAGER_H_
 
 #include <list>
+#include <string>
 #include "shared/high_resolution_timer.h"
 #include "shared/log.h"
 #include "shared/nimbus.h"
@@ -50,32 +51,34 @@ namespace nimbus {
 class SchedulerCommand;
 class WorkerThreadMonitor;
 class WorkerThread;
+class WorkerThreadComputation;
 class Worker;
 
 class WorkerManager {
   friend class WorkerThreadMonitor;
  public:
-  explicit WorkerManager(bool multi_threaded);
+  static int inside_job_parallism;
+  static int across_job_parallism;
+  explicit WorkerManager();
   ~WorkerManager();
 
   void SetLoggingInterface(
-      Log* log, Log* version_log, Log* data_hash_log,
+      Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
       HighResolutionTimer* timer);
 
   // Computation job: computation-intensive job.
-  // Finish job: the process happening at the end of a job.
   // Fast job: non-computation-intensive job.
 
   Job* NextComputationJobToRun(WorkerThread* worker_thread);
 
   bool PushJob(Job* job);
-  bool PushFinishJob(Job* job);
-  bool PullFinishJobs(WorkerThread* worker_thread,
-                      std::list<Job*>* list_buffer);
+  bool FinishJob(Job* job);
   bool PullFastJobs(WorkerThread* worker_thread,
                     std::list<Job*>* list_buffer);
 
   bool SendCommand(SchedulerCommand* command);
+
+  bool GetLocalJobDoneList(JobList* buffer);
 
   // Starts all the worker threads and the scheduling thread.
   bool StartWorkerThreads();
@@ -89,8 +92,15 @@ class WorkerManager {
   Worker* worker_;
 
  private:
+  std::string FindGroupJobName();
+  Job* FindANonThreadedJob();
+  bool IsThreadedJob(const Job& job);
+  bool DispatchJobToComputationThread(WorkerThreadComputation* worker_thread,
+                                      Job* job);
   // Thread scheduling algorithm.
   void ScheduleComputationJobs();
+
+  int ActiveComputationThreads();
 
   pthread_mutex_t scheduling_needed_lock_;
   pthread_cond_t scheduling_needed_cond_;
@@ -116,19 +126,18 @@ class WorkerManager {
 
   std::list<Job*> computation_job_to_schedule_list_;
 
-  pthread_mutex_t finish_job_queue_lock_;
-  pthread_cond_t finish_job_queue_any_cond_;
-  // Protected by finish_job_queue_lock_.
-  std::list<Job*> finish_job_list_;
+  pthread_mutex_t local_job_done_list_lock_;
+  // Protected by local_job_done_queue_lock_.
+  JobList local_job_done_list_;
 
   pthread_mutex_t fast_job_queue_lock_;
   pthread_cond_t fast_job_queue_any_cond_;
   // Protected by fast_job_queue_lock_.
   std::list<Job*> fast_job_list_;
+  int64_t fast_job_list_length_;
 
   // Measures running states of the worker.
   int64_t dispatched_computation_job_count_;
-  int64_t dispatched_finish_job_count_;
   int64_t dispatched_fast_job_count_;
   int idle_computation_threads_;
   int64_t ready_jobs_count_;
@@ -138,6 +147,7 @@ class WorkerManager {
   Log* log_;
   Log* version_log_;
   Log* data_hash_log_;
+  Log* cache_log_;
   HighResolutionTimer* timer_;
 };
 }  // namespace nimbus

@@ -257,13 +257,19 @@ bool InitializeExampleAndDriver(
       if (cache.ple)
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
-                                                 cache.ple->data());
+                                                 cache.ple->data(),
+                                                 init_config.use_threading,
+                                                 init_config.core_quota);
       else
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
-                                                 &cache);
+                                                 &cache,
+                                                 init_config.use_threading,
+                                                 init_config.core_quota);
       example->use_cache = true;
     } else {
-      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+      example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
+                                               init_config.use_threading,
+                                               init_config.core_quota);
       example->use_cache = false;
     }
     // parameters for nimbus
@@ -291,7 +297,8 @@ bool InitializeExampleAndDriver(
     dbg(APP_LOG, "Before enter driver->Initialize.\n");
     // physbam initialization
     if (init_config.init_phase)
-      driver->InitializeFirst(job, da);
+      driver->InitializeFirstDistributed(job, da);
+      // driver->InitializeFirst(job, da);
     else if (init_config.use_cache && kUseCache)
       driver->InitializeUseCache(job, da);
     else

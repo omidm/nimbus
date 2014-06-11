@@ -103,6 +103,7 @@ void Scheduler::SchedulerCoreProcessor() {
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
     RemoveObsoleteJobEntries();
+    CleanLdlMap();
     TerminationProcedure();
 
     log_.StopTimer();
@@ -153,6 +154,8 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     case SchedulerCommand::TERMINATE:
       ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
+      break;
+    case SchedulerCommand::PROFILE:
       break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
@@ -276,6 +279,10 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
   return job_manager_->RemoveObsoleteJobEntries();
 }
 
+void Scheduler::CleanLdlMap() {
+  job_manager_->CleanLdlMap();
+}
+
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
   log_allocate_.ResumeTimer();
@@ -291,7 +298,8 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   if (job->write_set_p()->contains(ldo->id())) {
     // pd_new.set_version(job->version_table_out_query(ldo->id()));
     data_version_t v_out;
-    job->vmap_write_out()->query_entry(ldo->id(), &v_out);
+    // job->vmap_write_out()->query_entry(ldo->id(), &v_out);
+    job->vmap_write()->query_entry(ldo->id(), &v_out);
     pd_new.set_version(v_out);
     pd_new.set_last_job_write(job->job_id());
     pd_new.clear_list_job_read();
@@ -306,7 +314,8 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   if (job->read_set_p()->contains(ldo->id())) {
     // assert(job->version_table_in_query(ldo->id()) == pd.version());
     data_version_t v_in;
-    job->vmap_read_in()->query_entry(ldo->id(), &v_in);
+    // job->vmap_read_in()->query_entry(ldo->id(), &v_in);
+    job->vmap_read()->query_entry(ldo->id(), &v_in);
     assert(v_in == pd.version());
     pd_new.add_to_list_job_read(job->job_id());
     // before_set.insert(pd.last_job_write());
@@ -352,7 +361,7 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
@@ -387,7 +396,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Receive part
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, (job_id_t)(0), true, true, true); // NOLINT
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
@@ -410,7 +419,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Send Part.
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -446,7 +455,7 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -508,9 +517,30 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   //       l_id, job->job_name().c_str());
   // }
 
+//  data_version_t version;
+//  if (reading) {
+//    if (!job->vmap_read_in()->query_entry(l_id, &version)) {
+//      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
+//          l_id, job->job_name().c_str());
+//      exit(-1);
+//    }
+//  }
+//
+//  // Just for checking
+//  data_version_t unused_version;
+//  if (writing) {
+//    if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
+//      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
+//          l_id, job->job_name().c_str());
+//      exit(-1);
+//    }
+//  }
+
+
+
   data_version_t version;
   if (reading) {
-    if (!job->vmap_read_in()->query_entry(l_id, &version)) {
+    if (!job->vmap_read()->query_entry(l_id, &version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
           l_id, job->job_name().c_str());
       exit(-1);
@@ -520,12 +550,14 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   // Just for checking
   data_version_t unused_version;
   if (writing) {
-    if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
+    if (!job->vmap_write()->query_entry(l_id, &unused_version)) {
       dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
           l_id, job->job_name().c_str());
       exit(-1);
     }
   }
+
+
 
   // Checking correctness of the new versioning system
   // data_version_t version_c;
@@ -625,7 +657,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
 
-  if ((instances_at_worker.size() == 0) && (version == 0)) {
+  if ((instances_at_worker.size() == 0) && (version == NIMBUS_INIT_DATA_VERSION)) {
     PhysicalData created_data;
     CreateDataAtWorker(worker, ldo, &created_data);
 
@@ -690,7 +722,7 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
-  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], (job_id_t)(0), true, true, true);
+  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
   return true;
 }
 
@@ -843,6 +875,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_.push_back(new JobDoneCommand());
   worker_command_table_.push_back(new DefinePartitionCommand());
   worker_command_table_.push_back(new TerminateCommand());
+  worker_command_table_.push_back(new ProfileCommand());
 }
 
 void Scheduler::LoadUserCommands() {

@@ -31,12 +31,18 @@
 #include "shared/nimbus.h"
 #include "worker/physical_data_instance.h"
 
+// TODO(quhang) In three places where nimbus_thread_queue is introduced.
+
 using namespace PhysBAM;
 //#####################################################################
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+              bool use_threading,
+              int thread_quota) :
+    nimbus_thread_queue(use_threading ?
+                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -48,9 +54,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
-    incompressible(mac_grid,projection),
+    incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
@@ -71,7 +77,12 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input) :
 // WATER_EXAMPLE
 //#####################################################################
 template<class TV> WATER_EXAMPLE<TV>::
-WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects *cache) :
+WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+              application::AppCacheObjects *cache,
+              bool use_threading,
+              int thread_quota) :
+    nimbus_thread_queue(use_threading ?
+                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -83,9 +94,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*new  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> >(mac_grid,number_of_ghost_cells)),
-    incompressible(mac_grid,projection),
+    incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
@@ -108,7 +119,11 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input, application::AppCacheObjects 
 template<class TV> WATER_EXAMPLE<TV>::
 WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
               application::AppCacheObjects *cache,
-              PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple) :
+              PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
+              bool use_threading,
+              int thread_quota) :
+    nimbus_thread_queue(use_threading ?
+                        new nimbus::NimbusThreadQueue(thread_quota) : NULL),
     stream_type(stream_type_input),
     initial_time(0),
     first_frame(0),
@@ -120,9 +135,9 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     number_of_ghost_cells(application::kGhostNum),
     cfl(1),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
-    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,NULL/*thread_queue*/)),
+    projection(*new PROJECTION_DYNAMICS_UNIFORM<GRID<TV> >(mac_grid,false,false,false,false,nimbus_thread_queue)),
     particle_levelset_evolution(*ple),
-    incompressible(mac_grid,projection),
+    incompressible(mac_grid,projection,nimbus_thread_queue),
     boundary(0),
     collision_bodies_affecting_fluid(mac_grid)
 {
@@ -146,6 +161,9 @@ template<class TV> WATER_EXAMPLE<TV>::
 ~WATER_EXAMPLE()
 {
     delete &projection;
+    if (nimbus_thread_queue) {
+      delete nimbus_thread_queue;
+    }
 }
 
 // Initializes the initial levelset function.
@@ -301,26 +319,62 @@ Adjust_Particle_For_Domain_Boundaries(
 // Write_Output_Files
 //#####################################################################
 template<class TV> void WATER_EXAMPLE<TV>::
-Write_Output_Files(const int frame)
+Write_Output_Files(const int frame, int rank)
 {
     if(!write_output_files) return;
-    std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/mac_velocities",face_velocities);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/common/grid",mac_grid);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/pressure",incompressible.projection.p);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_N",projection.elliptic_solver->psi_N);
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_D",projection.elliptic_solver->psi_D);
-    T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
-    FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
-    FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf("%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
-    FILE_UTILITIES::Write_To_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
+    if (rank != -1) {
+      std::string rank_name = "";
+      std::stringstream temp_ss;
+      temp_ss << "split_output/" << rank;
+      rank_name = temp_ss.str();
+      std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
+      FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/"+f+"/mac_velocities",face_velocities);
+      if (rank != -1) {
+        FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/common/global_grid",
+            GRID<TV>(kScale, kScale, kScale, 0, 1, 0, 1, 0, 1, true));
+      }
+      FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/common/grid",mac_grid);
+      FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/"+f+"/pressure",incompressible.projection.p);
+      FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/"+f+"/psi_N",projection.elliptic_solver->psi_N);
+      FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/"+f+"/psi_D",projection.elliptic_solver->psi_D);
+      T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
+      FILE_UTILITIES::Write_To_File(stream_type,rank_name+"/"+f+"/levelset",particle_levelset.levelset);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",rank_name.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",rank_name.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",rank_name.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",rank_name.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
+      FILE_UTILITIES::Write_To_Text_File(rank_name+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
 #ifndef COMPILE_WITHOUT_DOUBLE_SUPPORT
 #else
-        PHYSBAM_FATAL_ERROR("Cannot read doubles");
+      PHYSBAM_FATAL_ERROR("Cannot read doubles");
 #endif
+    } else {
+      std::string f=STRING_UTILITIES::string_sprintf("%d",frame);
+      FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/mac_velocities",face_velocities);
+      FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/common/grid",mac_grid);
+      FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/pressure",incompressible.projection.p);
+      FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_N",projection.elliptic_solver->psi_N);
+      FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/psi_D",projection.elliptic_solver->psi_D);
+      T_PARTICLE_LEVELSET& particle_levelset=particle_levelset_evolution.particle_levelset;
+      FILE_UTILITIES::Write_To_File(stream_type,output_directory+"/"+f+"/levelset",particle_levelset.levelset);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",output_directory.c_str(),frame,"positive_particles"),particle_levelset.positive_particles);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",output_directory.c_str(),frame,"negative_particles"),particle_levelset.negative_particles);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",output_directory.c_str(),frame,"removed_positive_particles"),particle_levelset.removed_positive_particles);
+      FILE_UTILITIES::Write_To_File(stream_type,STRING_UTILITIES::string_sprintf(
+              "%s/%d/%s",output_directory.c_str(),frame,"removed_negative_particles"),particle_levelset.removed_negative_particles);
+      FILE_UTILITIES::Write_To_Text_File(output_directory+"/"+f+"/last_unique_particle_id",particle_levelset.last_unique_particle_id);
+#ifndef COMPILE_WITHOUT_DOUBLE_SUPPORT
+#else
+      PHYSBAM_FATAL_ERROR("Cannot read doubles");
+#endif
+    }
 }
 //#####################################################################
 // Read_Output_Files
@@ -733,6 +787,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_psi_n = NULL;
     }
 
+    // TODO(addcache) pressure.
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::WRITE_ACCESS)
@@ -742,6 +797,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating pressure.\n");
+    // TODO(addcache) colors.
     // filled_region_colors.
     const std::string filled_region_colors_string =
         std::string(APP_FILLED_REGION_COLORS);
@@ -754,6 +810,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating filled_region_colors.\n");
+    // TODO(addcache) divergence.
     // divergence.
     const std::string divergence_string =
         std::string(APP_DIVERGENCE);
@@ -766,6 +823,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating divergence.\n");
 
+    // TODO(addcache) the following data translation is implemented by memcpy,
+    // caching might not be needed.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -1172,6 +1231,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
     }
 
+    // TODO(addcache), pressure.
     // pressure.
     const std::string pressure_string = std::string(APP_PRESSURE);
     if (application::GetTranslatorData(job, pressure_string, da, &pdv, application::READ_ACCESS)
@@ -1181,6 +1241,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating pressure.\n");
+    // TODO(addcache), colors.
     // filled_region_colors.
     const std::string filled_region_colors_string =
         std::string(APP_FILLED_REGION_COLORS);
@@ -1193,6 +1254,7 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating filled_region_colors.\n");
+    // TODO(addcache), divergence.
     // divergence.
     const std::string divergence_string =
         std::string(APP_DIVERGENCE);
@@ -1205,6 +1267,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     application::DestroyTranslatorObjects(&pdv);
     dbg(APP_LOG, "Finish translating divergence.\n");
 
+    // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
+    // cached.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       Data* data_temp = application::GetTheOnlyData(

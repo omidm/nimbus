@@ -63,6 +63,7 @@ namespace application {
     typedef typename PhysBAM::ARRAY<T, FaceIndex> FaceArray;
 
     // application specific parameters and constants
+    const bool kUseGlobalWrite = true;
     const bool kUseCache = true;
     const int kThreadsNum = 1;
     const int kScale = 40;
@@ -70,7 +71,7 @@ namespace application {
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
-    const int kLastFrame = 3;
+    const int kLastFrame = 15;
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
     const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);

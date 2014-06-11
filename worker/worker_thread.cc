@@ -53,11 +53,12 @@ WorkerThread::~WorkerThread() {
 }
 
 void WorkerThread::SetLoggingInterface(
-    Log* log, Log* version_log, Log* data_hash_log,
+    Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
     HighResolutionTimer* timer) {
   log_ = log;
   version_log_ = version_log;
-  data_hash_log_ = data_hash_log_;
+  data_hash_log_ = data_hash_log;
+  cache_log_ = cache_log;
   timer_ = timer;
 }
 

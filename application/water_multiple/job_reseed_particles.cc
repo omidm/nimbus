@@ -32,7 +32,7 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
 #include <sstream>
@@ -46,21 +46,21 @@
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
-#include "application/water_multiple/job_write_frame.h"
+#include "application/water_multiple/job_reseed_particles.h"
 
 namespace application {
 
-JobWriteFrame::JobWriteFrame(nimbus::Application *app) {
+JobReseedParticles::JobReseedParticles(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobWriteFrame::Clone() {
-  return new JobWriteFrame(application());
+nimbus::Job* JobReseedParticles::Clone() {
+  return new JobReseedParticles(application());
 }
 
-void JobWriteFrame::Execute(nimbus::Parameter params,
+void JobReseedParticles::Execute(nimbus::Parameter params,
                             const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing WRITE_FRAME job.\n");
+  dbg(APP_LOG, "Executing RESEED_PARTICLES job.\n");
 
   InitConfig init_config;
   init_config.use_cache = true;
@@ -72,25 +72,32 @@ void JobWriteFrame::Execute(nimbus::Parameter params,
                 &init_config.global_region, &init_config.local_region);
 
   dbg(APP_LOG,
-      "In WRITE_FRAME: Initialize WATER_DRIVER/WATER_EXAMPLE"
+      "In RESEED_PARTICLES: Initialize WATER_DRIVER/WATER_EXAMPLE"
       "(Frame=%d, Time=%f).\n",
       init_config.frame, init_config.time, dt);
 
   PhysBAM::WATER_EXAMPLE<TV> *example;
   PhysBAM::WATER_DRIVER<TV> *driver;
   DataConfig data_config;
-  data_config.SetAll();
+  data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::LEVELSET_READ);
+  data_config.SetFlag(DataConfig::POSITIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
+  data_config.SetFlag(DataConfig::PSI_N);
+  data_config.SetFlag(DataConfig::PSI_D);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
 
-  dbg(APP_LOG, "Job WRITE_FRAME starts.\n");
+  dbg(APP_LOG, "Job RESEED_PARTICLES starts.\n");
   // Reseed particles and write frame.
-  driver->WriteFrameImpl(this, da, true, dt);
+  driver->ReseedParticlesImpl(this, da, dt);
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing CALCULATE_FRAME job\n");
+  dbg(APP_LOG, "Completed executing RESEED_PARTICLES job\n");
 }
 
 }  // namespace application

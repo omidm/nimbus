@@ -66,6 +66,9 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     dbg(APP_LOG, "--- Executing reincorporate particles job\n");
 
     InitConfig init_config;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     init_config.use_cache = true;
     T dt;
     std::string params_str(params.ser_data().data_ptr_raw(),
@@ -90,9 +93,16 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     data_config.SetFlag(DataConfig::PRESSURE);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
-    driver->ReincorporateParticlesImpl(this, da, dt);
+    {
+      //nimbus::Timer timer(std::string("reincorporate_particle_")
+      //                    + id().toString());
+      driver->ReincorporateParticlesImpl(this, da, dt);
+    }
 
+    *thread_queue_hook() = NULL;
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
     // free resources
     DestroyExampleAndDriver(example, driver);
 

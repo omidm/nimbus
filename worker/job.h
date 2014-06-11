@@ -55,6 +55,7 @@
 #include "worker/cache_manager.h"
 #include "worker/data.h"
 #include "worker/worker_ldo_map.h"
+#include "worker/thread_queue_proto.h"
 
 namespace nimbus {
 
@@ -133,6 +134,9 @@ class Job {
     bool  sterile() const;
     double run_time() const;
     double wait_time() const;
+    size_t max_alloc() const {
+      return max_alloc_;
+    }
 
     void set_name(std::string name);
     void set_id(ID<job_id_t> id);
@@ -145,12 +149,37 @@ class Job {
     void set_sterile(bool sterile);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
+    void set_max_alloc(size_t max_alloc) {
+      max_alloc_ = max_alloc;
+    }
     // TODO(quhang) should add accesssors.
     DataArray data_array;
 
     CacheManager* GetCacheManager() const;
 
+    void set_core_quota(int core_quota) {
+      core_quota_ = core_quota;
+    }
+    int core_quota() {
+      return core_quota_;
+    }
+    void set_use_threading(bool use_threading) {
+      use_threading_ = use_threading;
+    }
+    bool use_threading() {
+      return use_threading_;
+    }
+    void set_thread_queue_hook(ThreadQueueProto** thread_queue_hook) {
+      thread_queue_hook_ = thread_queue_hook;
+    }
+    ThreadQueueProto** thread_queue_hook() {
+      return thread_queue_hook_;
+    }
+
   private:
+    int core_quota_;
+    bool use_threading_;
+    ThreadQueueProto** thread_queue_hook_;
     std::string name_;
     ID<job_id_t> id_;
     IDSet<physical_data_id_t> read_set_;
@@ -163,6 +192,7 @@ class Job {
     bool app_is_set_;
     double run_time_;
     double wait_time_;
+    size_t max_alloc_;
 
   protected:
     // TODO(omidm) should remove it later; left them now so the tests

@@ -290,6 +290,7 @@ void ProjectionDriver::LoadFromNimbus(
       application::GridToRange(init_config.global_region,
                                init_config.local_region));
 
+  // TODO(addcache) pressure.
   // TODO(quhang), critical! this is logically wrong. In LOCAL_INITIALIZE, ghost
   // regions should be passed around.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
@@ -606,6 +607,7 @@ void ProjectionDriver::SaveToNimbus(
                                        init_config.local_region.dx()+2,
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
+  // TODO(addcache) pressure.
   const std::string pressure_string = std::string(APP_PRESSURE);
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
     if (application::GetTranslatorData(job, pressure_string, da, &pdv,

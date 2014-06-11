@@ -57,4 +57,5 @@ message WaterParameter {
   optional GeometricRegion local_region = 5;
 
   optional int32 iteration = 6;
+  optional int32 rank = 7;
 }

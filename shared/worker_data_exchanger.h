@@ -47,6 +47,7 @@
 #include <boost/bind.hpp>
 #include <boost/tokenizer.hpp>
 #include <iostream>  // NOLINT
+#include <list>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -77,6 +78,8 @@ class WorkerDataExchanger {
   virtual bool ReceiveSerializedData(job_id_t job_id,
       SerializedData** ser_data, data_version_t& version);
 
+  virtual bool GetReceiveEvent(job_id_t* job_id);
+
   virtual bool SendSerializedData(job_id_t job_id, worker_id_t worker_id,
       SerializedData& ser_data, data_version_t version);
 
@@ -92,6 +95,7 @@ class WorkerDataExchanger {
   AddressBook address_book_;
   boost::mutex data_map_mutex_;
   DataMap data_map_;
+  std::list<job_id_t> receive_events;
   boost::mutex send_connection_mutex_;
   WorkerDataExchangerConnectionMap send_connections_;
   boost::mutex receive_connection_mutex_;

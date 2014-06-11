@@ -140,6 +140,16 @@ public:
     void Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
                                                   T_ARRAYS_SCALAR* phi_ghost,
                                                   const int ghost_cells);
+
+    //#####################################################################
+    // The following function is added to have make signed distance operation
+    // in physbam as a separate job in nimbus without any data exchange in
+    // between. nimbus takes care of exchanging the ghost regions before it
+    // gets call.
+    //#####################################################################
+    void Make_Signed_Distance_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
+                                                  T_ARRAYS_SCALAR* phi_ghost,
+                                                  const int ghost_cells);
 };
 
 //#####################################################################
@@ -154,5 +164,11 @@ void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
 Modify_Levelset_And_Particles_Nimbus_Two(T_FACE_ARRAYS_SCALAR* face_velocities,
                                          T_ARRAYS_SCALAR* phi_ghost,
                                          const int ghost_cells);
+
+template <>
+void PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<VECTOR<float, 3> > >::
+Make_Signed_Distance_Nimbus(T_FACE_ARRAYS_SCALAR* face_velocities,
+                            T_ARRAYS_SCALAR* phi_ghost,
+                            const int ghost_cells);
 }
 #endif

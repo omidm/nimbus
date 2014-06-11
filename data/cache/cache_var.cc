@@ -65,89 +65,6 @@ CacheVar::CacheVar(const GeometricRegion &ob_reg) : CacheObject(ob_reg) {
 }
 
 /**
- * \details UpdateCache(...) finds out what data is in read_sets and not in
- * CacheVar instance, and calls a ReadToCache(...) on the diff. Before
- * reading the diff, UpdateCache(...) flushes out data that will be replaced
- * (which is found based on geometric region of the data in cache and in
- * read_set.
- */
-void CacheVar::UpdateCache(const DataArray &read_set,
-                           const GeometricRegion &read_region) {
-    DataArray diff, flush;
-    for (size_t i = 0; i < read_set.size(); ++i) {
-        Data *d = read_set.at(i);
-        GeometricRegion dreg = d->region();
-        DMap::iterator it = data_map_.find(dreg);
-        if (it == data_map_.end()) {
-            d->SyncData();
-            diff.push_back(d);
-        } else {
-            Data *d_old = it->second;
-            if (d_old != d) {
-                d->SyncData();
-                diff.push_back(d);
-                if (write_back_.find(d_old) != write_back_.end()) {
-                    flush.push_back(d_old);
-                }
-                data_map_.erase(it);
-                d_old->UnsetCacheObject(this);
-            }
-        }
-    }
-    if (!flush.empty())
-        FlushCache(flush);
-    ReadToCache(diff, read_region);
-    for (size_t i = 0; i < diff.size(); ++i) {
-        Data *d = diff.at(i);
-        GeometricRegion dreg = d->region();
-        data_map_[dreg] = d;
-        d->SetUpCacheObject(this);
-    }
-}
-
-/**
- * \details SetUpWrite(...) sets up mapping for write data and the write
- * region for a struct instance. It also sets up the write back data for the
- * instance. Later, when the instance is released, these mappings and write
- * region are used to pull data into nimbus data instances when needed.
- */
-void CacheVar::SetUpWrite(const DataArray &write_set,
-                          const GeometricRegion &write_region) {
-    // TODO(Chinmayee): Twin data - imeplementation incomplete
-    DataArray diff, flush;
-    for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set.at(i);
-        GeometricRegion dreg = d->region();
-        DMap::iterator it = data_map_.find(dreg);
-        if (it == data_map_.end()) {
-            diff.push_back(d);
-        } else {
-            Data *d_old = it->second;
-            if (d_old != d) {
-                diff.push_back(d);
-                if (write_back_.find(d_old) != write_back_.end()) {
-                    flush.push_back(d_old);
-                }
-                data_map_.erase(it);
-                d_old->UnsetCacheObject(this);
-            }
-        }
-    }
-    if (!flush.empty())
-        FlushCache(flush);
-    for (size_t i = 0; i < write_set.size(); ++i) {
-        Data *d = write_set.at(i);
-        d->InvalidateCacheData();
-        GeometricRegion dreg = d->region();
-        data_map_[dreg] = d;
-        write_back_.insert(d);
-        d->SetUpCacheObject(this);
-        d->SetUpDirtyCacheObject(this);
-    }
-    write_region_ = write_region;
-}
-
-/**
  * \details UnsetData(...) removes data d from data_map_.
  */
 void CacheVar::UnsetData(Data *d) {
@@ -170,17 +87,11 @@ void CacheVar::UnsetDirtyData(Data *d) {
  * When data needs to be updated from outside CacheVar, use PullData.
  */
 void CacheVar::PullData(Data *d) {
-    AcquireAccess(cache::EXCLUSIVE);
-    if (write_back_.find(d) != write_back_.end()) {
-        DataArray write_set(1, d);
-        GeometricRegion dreg = d->region();
-        GeometricRegion wreg = GeometricRegion::
-            GetIntersection(write_region_, dreg);
-        WriteFromCache(write_set, wreg);
-        d->UnsetDirtyCacheObject(this);
-        write_back_.erase(d);
-    }
-    ReleaseAccess();
+    DataArray write_set(1, d);
+    GeometricRegion dreg = d->region();
+    GeometricRegion wreg = GeometricRegion::
+        GetIntersection(write_region_, dreg);
+    WriteFromCache(write_set, wreg);
 }
 
 /**
@@ -204,6 +115,9 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
     return cur_distance;
 }
 
+/**
+ * \details
+ */
 void CacheVar::WriteImmediately(const DataArray &write_set) {
     DataArray flush_set;
     for (size_t i = 0; i < write_set.size(); ++i) {
@@ -211,27 +125,88 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
         if (write_back_.find(d) != write_back_.end())
             flush_set.push_back(d);
     }
-    WriteFromCache(flush_set, write_region_);
     for (size_t i = 0; i < flush_set.size(); ++i) {
         Data *d = flush_set[i];
         d->UnsetDirtyCacheObject(this);
         write_back_.erase(d);
     }
+    WriteFromCache(flush_set, write_region_);
 }
 
 /**
- * \details FlushCache(...) flushes all data passed to it, and unsets
- * corresponding dirty object mappings. This function should be used by
- * methods of CacheVar only. It does not check if data in flush_set is in
- * the write_back_ set, making it unsafe. It also provides no locking.
+ * \details For read set, if data is not already in cache object, insert it in
+ * diff set to read, and sync it if necessary. If
+ * it replaces existing data, flush existing data if dirty. For write set, if
+ * data is not already in existing data, just create the mappings. Flush any
+ * If it replaces existing data, flush existing data if dirty. Finallt create
+ * dirty object mapping with all data in write set.
  */
-void CacheVar::FlushCache(const DataArray &flush_set) {
-    WriteFromCache(flush_set, write_region_);
-    for (size_t i = 0; i < flush_set.size(); ++i) {
-        Data *d = flush_set[i];
-        d->UnsetDirtyCacheObject(this);
-        write_back_.erase(d);
+void CacheVar::SetUpReadWrite(const DataArray &read_set,
+                              const DataArray &write_set,
+                              DataArray *flush,
+                              DataArray *diff,
+                              DataArray *sync,
+                              CacheObjects *sync_co) {
+    assert(flush != NULL);
+    assert(sync != NULL);
+    assert(diff != NULL);
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set.at(i);
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it == data_map_.end()) {
+            if (d->dirty_cache_object()) {
+                sync->push_back(d);
+                sync_co->push_back(d->dirty_cache_object());
+                d->ClearDirtyMappings();
+            }
+            diff->push_back(d);
+            data_map_[dreg] = d;
+            d->SetUpCacheObject(this);
+        } else {
+            Data *d_old = it->second;
+            if (d_old != d) {
+                if (d->dirty_cache_object()) {
+                    sync->push_back(d);
+                    sync_co->push_back(d->dirty_cache_object());
+                    d->ClearDirtyMappings();
+                }
+                if (write_back_.find(d_old) != write_back_.end()) {
+                    flush->push_back(d_old);
+                    write_back_.erase(d_old);
+                    d_old->UnsetDirtyCacheObject(this);
+                }
+                d_old->UnsetCacheObject(this);
+                diff->push_back(d);
+                data_map_[dreg] = d;
+                d->SetUpCacheObject(this);
+            }
+        }
+    }
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it == data_map_.end()) {
+            data_map_[dreg] = d;
+            d->SetUpCacheObject(this);
+        } else {
+            Data *d_old = it->second;
+            if (d_old != d) {
+                if (write_back_.find(d_old) != write_back_.end()) {
+                    flush->push_back(d_old);
+                    write_back_.erase(d_old);
+                    d_old->UnsetDirtyCacheObject(this);
+                }
+                d_old->UnsetCacheObject(this);
+                data_map_[dreg] = d;
+                d->SetUpCacheObject(this);
+            }
+        }
+        write_back_.insert(d);
+        if (d->dirty_cache_object() != this)
+            d->InvalidateMappings();
+        d->SetUpDirtyCacheObject(this);
     }
 }
-
 }  // namespace nimbus

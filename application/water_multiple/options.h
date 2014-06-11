@@ -54,10 +54,13 @@ struct InitConfig {
   int frame;
   T time;
   bool init_phase;
+  int init_part;
   bool set_boundary_condition;
   GeometricRegion global_region;
   GeometricRegion local_region;
   bool use_cache;
+  bool use_threading;
+  int core_quota;
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
@@ -66,8 +69,11 @@ struct InitConfig {
     frame = 0;
     time = 0;
     init_phase = false;
+    init_part = 0;
     set_boundary_condition = true;
     use_cache = false;
+    use_threading = false;
+    core_quota = 1;
   }
 };
 

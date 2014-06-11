@@ -103,12 +103,12 @@ void CacheStruct::UpdateCache(const std::vector<cache::type_id_t> &var_type,
             GeometricRegion dreg = d->region();
             DMap::iterator it = data_map_t.find(dreg);
             if (it == data_map_t.end()) {
-                d->SyncData();
+                // d->SyncData();
                 diff_t.push_back(d);
             } else {
                 Data *d_old = it->second;
                 if (d_old != d) {
-                    d->SyncData();
+                    // d->SyncData();
                     diff_t.push_back(d);
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
@@ -202,7 +202,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
         DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < write_set_t.size(); ++i) {
             Data *d = write_set_t.at(i);
-            d->InvalidateCacheData();
+            d->InvalidateMappings();
             GeometricRegion dreg = d->region();
             data_map_t[dreg] = d;
             write_back_t.insert(d);

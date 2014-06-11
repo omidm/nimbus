@@ -43,10 +43,18 @@
 namespace nimbus {
 
 Timer::TimerMap* Timer::timer_map_ = NULL;
+pthread_mutex_t* Timer::lock_ = NULL;
 
 void Timer::Initialize() {
   if (timer_map_ == NULL) {
     timer_map_ = new TimerMap;
+  }
+  if (lock_ == NULL) {
+    lock_ = new pthread_mutex_t();
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(lock_, &attr);
   }
 }
 
@@ -54,12 +62,15 @@ void Timer::Print(const std::string& comment) {
   assert(timer_map_ != NULL);
   std::ofstream output("timing.out", std::ofstream::app);
   output << comment << std::endl;
+  assert(lock_ != NULL);
+  pthread_mutex_lock(lock_);
   for (TimerMap::iterator iter = timer_map_->begin();
        iter != timer_map_->end();
        ++iter) {
     Reset(iter->first);
     output << iter->first << " : " << iter->second.total_time << std::endl;
   }
+  pthread_mutex_unlock(lock_);
   output.close();
 }
 
@@ -75,7 +86,10 @@ Timer::~Timer() {
 
 void Timer::Start(const std::string& timer_name) {
   assert(timer_map_ != NULL);
+  assert(lock_ != NULL);
+  pthread_mutex_lock(lock_);
   TimerState& state = (*timer_map_)[timer_name];
+  pthread_mutex_unlock(lock_);
   if (!state.on) {
     gettimeofday(&state.start_time, NULL);
     state.on = true;
@@ -86,7 +100,10 @@ void Timer::Stop(const std::string& timer_name) {
   assert(timer_map_ != NULL);
   struct timeval end_time;
   gettimeofday(&end_time, NULL);
+  assert(lock_ != NULL);
+  pthread_mutex_lock(lock_);
   TimerState& state = (*timer_map_)[timer_name];
+  pthread_mutex_unlock(lock_);
   assert(state.on);
   double temp =
       (static_cast<double>(end_time.tv_sec - state.start_time.tv_sec)) +
@@ -98,7 +115,10 @@ void Timer::Stop(const std::string& timer_name) {
 
 void Timer::Reset(const std::string& timer_name) {
   assert(timer_map_ != NULL);
+  assert(lock_ != NULL);
+  pthread_mutex_lock(lock_);
   TimerState& state = (*timer_map_)[timer_name];
+  pthread_mutex_unlock(lock_);
   if (state.on) {
     Stop(timer_name);
     Start(timer_name);

@@ -58,14 +58,64 @@ namespace application {
     void JobInitialize::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
         dbg(APP_LOG, "Executing initialize job\n");
 
-        std::string par_str(params.ser_data().data_ptr_raw(),
-                            params.ser_data().size());
+
+
+//        std::string par_str(params.ser_data().data_ptr_raw(),
+//                            params.ser_data().size());
+//
+//        InitConfig init_config;
+//        init_config.init_phase = true;
+//        init_config.set_boundary_condition = true;
+//        init_config.global_region = kDefaultRegion;
+//        init_config.local_region = kDefaultRegion;
+//        PhysBAM::WATER_EXAMPLE<TV> *example;
+//        PhysBAM::WATER_DRIVER<TV> *driver;
+//
+//        DataConfig data_config;
+//        data_config.SetAll();
+//        InitializeExampleAndDriver(init_config, data_config,
+//                                   this, da, example, driver);
+//
+//        // Free resources.
+//        DestroyExampleAndDriver(example, driver);
+//
+//        // next loop
+//        int job_num = 1;
+//        std::vector<nimbus::job_id_t> job_ids;
+//        GetNewJobID(&job_ids, job_num);
+//        nimbus::IDSet<nimbus::logical_data_id_t> read, write;
+//        nimbus::IDSet<nimbus::job_id_t> before, after;
+//        nimbus::Parameter loop_params;
+//
+//        int frame = 0;
+//        std::string loop_str;
+//        SerializeParameter(frame, init_config.global_region, &loop_str);
+//        loop_params.set_ser_data(SerializedData(loop_str));
+//
+//        dbg(APP_LOG, "Spawning loop frame job for frame %i in main\n", frame);
+//        SpawnComputeJob(LOOP_FRAME,
+//                        job_ids[0],
+//                        read, write,
+//                        before, after,
+//                        loop_params);
+
+
+
 
         InitConfig init_config;
         init_config.init_phase = true;
         init_config.set_boundary_condition = true;
         init_config.global_region = kDefaultRegion;
         init_config.local_region = kDefaultRegion;
+        // Threading settings.
+        init_config.use_threading = use_threading();
+        init_config.core_quota = core_quota();
+        T dt;
+        std::string params_str(params.ser_data().data_ptr_raw(),
+            params.ser_data().size());
+        LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
+            &init_config.global_region, &init_config.local_region);
+
         PhysBAM::WATER_EXAMPLE<TV> *example;
         PhysBAM::WATER_DRIVER<TV> *driver;
 
@@ -73,29 +123,14 @@ namespace application {
         data_config.SetAll();
         InitializeExampleAndDriver(init_config, data_config,
                                    this, da, example, driver);
+        *thread_queue_hook() = example->nimbus_thread_queue;
 
+        *thread_queue_hook() = NULL;
         // Free resources.
         DestroyExampleAndDriver(example, driver);
 
-        // next loop
-        int job_num = 1;
-        std::vector<nimbus::job_id_t> job_ids;
-        GetNewJobID(&job_ids, job_num);
-        nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-        nimbus::IDSet<nimbus::job_id_t> before, after;
-        nimbus::Parameter loop_params;
 
-        int frame = 0;
-        std::string loop_str;
-        SerializeParameter(frame, init_config.global_region, &loop_str);
-        loop_params.set_ser_data(SerializedData(loop_str));
 
-        dbg(APP_LOG, "Spawning loop frame job for frame %i in main\n", frame);
-        SpawnComputeJob(LOOP_FRAME,
-                        job_ids[0],
-                        read, write,
-                        before, after,
-                        loop_params);
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }

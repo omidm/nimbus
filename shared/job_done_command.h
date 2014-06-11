@@ -56,7 +56,8 @@ class JobDoneCommand : public SchedulerCommand {
         const IDSet<job_id_t>& after_set,
         const Parameter& params,
         double run_time,
-        double wait_time);
+        double wait_time,
+        size_t max_alloc);
     ~JobDoneCommand();
 
     virtual SchedulerCommand* Clone();
@@ -68,6 +69,7 @@ class JobDoneCommand : public SchedulerCommand {
     Parameter params();
     double run_time();
     double wait_time();
+    size_t max_alloc();
 
   private:
     ID<job_id_t> job_id_;
@@ -75,6 +77,7 @@ class JobDoneCommand : public SchedulerCommand {
     Parameter params_;
     double run_time_;
     double wait_time_;
+    size_t max_alloc_;
 };
 
 }  // namespace nimbus

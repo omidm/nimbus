@@ -211,6 +211,26 @@ boost::shared_ptr<AncestorChain> JobEntry::ancestor_chain_to_pass() {
   return ancestor_chain_to_pass_;
 }
 
+boost::shared_ptr<VersionMap> JobEntry::vmap_read() {
+  return vmap_read_;
+}
+
+boost::shared_ptr<VersionMap> JobEntry::vmap_write() {
+  return vmap_write_;
+}
+
+boost::shared_ptr<MetaBeforeSet> JobEntry::meta_before_set() {
+  return meta_before_set_;
+}
+
+boost::shared_ptr<LogicalDataLineage> JobEntry::logical_data_lineage() {
+  return logical_data_lineage_;
+}
+
+job_depth_t JobEntry::job_depth() const {
+  return job_depth_;
+}
+
 const JobEntry::VersionTable* JobEntry::version_table_in_p() {
   return &version_table_in_;
 }
@@ -345,6 +365,28 @@ void JobEntry::set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chai
 
 void JobEntry::set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass) {
   ancestor_chain_to_pass_ = ancestor_chain_to_pass;
+}
+
+void JobEntry::set_vmap_read(boost::shared_ptr<VersionMap> vmap_read) {
+  vmap_read_ = vmap_read;
+}
+
+void JobEntry::set_vmap_write(boost::shared_ptr<VersionMap> vmap_write) {
+  vmap_write_ = vmap_write;
+}
+
+void JobEntry::set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set) {
+  meta_before_set_ = meta_before_set;
+}
+
+void JobEntry::set_logical_data_lineage(
+    boost::shared_ptr<LogicalDataLineage> logical_data_lineage) {
+  logical_data_lineage_ = logical_data_lineage;
+}
+
+void JobEntry::set_job_depth(job_depth_t job_depth) {
+  job_depth_ = job_depth;
+  meta_before_set_->set_job_depth(job_depth);
 }
 
 void JobEntry::set_physical_table(PhysicalTable physical_table) {

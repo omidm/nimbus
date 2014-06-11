@@ -32,44 +32,55 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * This file contains job WRITE_FRAME that:
- *     reseeds particle, and writes simulation variables to file for rendering.
- * The parameters of WRITE_FRAME:
- *     frame number, simulation time, dt.
- * The read set(not sure) of SUPER_3:
- *     velocity, levelset, particle, removed particle, last_unique_particle_id.
- * The write set(not sure) of SUPER_3:
- *     particles.
- *
- * dt is not needed for job WRITE_FRAME now, and might be removed from the
- * parameter list in the future.
- * It is still unclear whether other simulation variables or states are also
- * needed.
- * For now, all the data is transmitted to guarantee correctness.
- *
- * Reseeding operation is included in this job, because this job includes all
- * the operations that are executed once in each frame, as is reseeding
- * operation. So the job name might be a little bit misleading. Reseeding
- * operation is expected to be moved to another job in the future.
- *
- * Author: Hang Qu <quhang@stanford.edu>
- */
+ /*
+  * Logical data lineage entry class keeps the meta data for each node on the
+  * lineage.
+  *
+  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_FRAME_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_FRAME_H_
+#ifndef NIMBUS_SCHEDULER_LDL_ENTRY_H_
+#define NIMBUS_SCHEDULER_LDL_ENTRY_H_
 
-#include "shared/nimbus.h"
+#include <boost/unordered_map.hpp>
+#include <list>
+#include <utility>
+#include "shared/nimbus_types.h"
+#include "shared/idset.h"
 
-namespace application {
+namespace nimbus {
 
-    class JobWriteFrame : public nimbus::Job {
-        public:
-            explicit JobWriteFrame(nimbus::Application *app);
-            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
-            virtual nimbus::Job* Clone();
-    };
+  class LdlEntry {
+  public:
+    LdlEntry();
+    LdlEntry(const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth,
+        const bool& sterile);
 
-} // namespace application
+    LdlEntry(const LdlEntry& other);
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_JOB_WRITE_FRAME_H_
+    virtual ~LdlEntry();
+
+    job_id_t job_id() const;
+    data_version_t version() const;
+    job_depth_t job_depth() const;
+    bool sterile() const;
+
+    void set_job_id(const job_id_t& job_id);
+    void set_version(const data_version_t& version);
+    void set_job_depth(const job_depth_t& job_depth);
+    void set_sterile(const bool& sterile);
+
+    LdlEntry& operator= (const LdlEntry& right);
+
+  private:
+    job_id_t job_id_;
+    data_version_t version_;
+    job_depth_t job_depth_;
+    bool sterile_;
+  };
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_SCHEDULER_LDL_ENTRY_H_

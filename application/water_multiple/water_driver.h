@@ -44,8 +44,9 @@ public:
     WATER_DRIVER(WATER_EXAMPLE<TV>& example);
     virtual ~WATER_DRIVER();
 
-    void InitializeFirst(const nimbus::Job *job,
-                          const nimbus::DataArray &da);
+    void InitializeFirstDistributed(
+        const nimbus::Job *job,
+        const nimbus::DataArray &da);
     void Initialize(const nimbus::Job *job,
                     const nimbus::DataArray &da);
     void InitializeUseCache(const nimbus::Job *job,
@@ -73,10 +74,15 @@ public:
                             const bool set_boundary_conditions,
                             const T dt);
 
-    void WriteFrameImpl(const nimbus::Job *job,
+    void ReseedParticlesImpl(const nimbus::Job *job,
                         const nimbus::DataArray &da,
                         const bool set_boundary_conditions,
                         const T dt);
+
+    void WriteOutputSplitImpl(const nimbus::Job *job,
+                              const nimbus::DataArray &da,
+                              const bool set_boundary_conditions,
+                              const T dt, const int rank);
 
     bool ComputeOccupiedBlocksImpl(const nimbus::Job *job,
                                    const nimbus::DataArray &da,
@@ -116,6 +122,11 @@ public:
                                    const nimbus::GeometricRegion &local_region,
                                    T dt);
 
+    bool MakeSignedDistanceImpl(const nimbus::Job *job,
+                                   const nimbus::DataArray &da,
+                                   const nimbus::GeometricRegion &local_region,
+                                   T dt);
+
     bool ExtrapolatePhiImpl(const nimbus::Job *job,
                             const nimbus::DataArray &da,
                             T dt);
@@ -150,8 +161,11 @@ public:
     bool ExtrapolationImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt);
+    bool ReseedParticlesImpl(const nimbus::Job *job,
+                             const nimbus::DataArray &da,
+                             T dt);
 
-    void Write_Output_Files(const int frame);
+    void Write_Output_Files(const int frame, int rank = -1);
 
     void Write_Substep(const std::string& title,const int substep,const int level=0);
     void Run(RANGE<TV_INT>& domain,const T dt,const T time);

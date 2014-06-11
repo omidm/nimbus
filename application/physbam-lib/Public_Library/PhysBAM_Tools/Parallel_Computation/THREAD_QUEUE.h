@@ -11,18 +11,29 @@ class THREAD_QUEUE {
     virtual void Run(const int tid) = 0;
   };
   THREAD_QUEUE(const int thread_count, const bool set_affinity=false) {
-    if (thread_count != -1) {
-      printf("ERROR: class THREAD_QUEUE should never be initialized!\n");
-      exit(-1);
-    }
+    thread_count_ = thread_count;
+    log_threads_ = 0;
+    return;
   }
   virtual ~THREAD_QUEUE() {}
 
-  virtual void Queue(TASK* task) {}
-  virtual void Wait() {}
-  virtual int Number_Of_Threads() {
-    return -1;
+  virtual void Queue(TASK* task) {
+    printf("\n!!WARNING!!! Original PhysBAM thread queue is used.\n");
+    ++log_threads_;
+    task->Run(1);
   }
+  virtual void Wait() {
+    printf("\n%d threads before sync.\n", log_threads_);
+    log_threads_ = 0;
+    printf("\n!!!WARNING!!! Original PhysBAM thread queue is used.\n");
+  }
+  virtual int Number_Of_Threads() {
+    printf("\n!!!WARNING!!! Original PhysBAM thread queue is used.\n");
+    return thread_count_;
+  }
+ private:
+  int thread_count_;
+  int log_threads_;
 };
 
 }  // namespace PhysBAM
