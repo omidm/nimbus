@@ -139,7 +139,7 @@ class CacheVar : public CacheObject {
          * read
          * \param sync is where SetUpReadWrite puts all data that needs to be
          * synced from other cache objects
-         * \param sync_co is where SetUpReadWrute puts all cache objects that
+         * \param sync_co is where SetUpReadWrite puts all cache objects that
          * need to be synced with data in sync, in the same order
          */
         void SetUpReadWrite(const DataArray &read_set,

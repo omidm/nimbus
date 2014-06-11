@@ -159,3 +159,17 @@ void Data::UnsetDirtyCacheObject(CacheObject *co) {
   assert(dirty_cache_object_ == co);
   dirty_cache_object_ = NULL;
 }
+
+/**
+ * \detials
+ */
+cache::type_id_t Datacache_type() {
+    return cache_type_;
+}
+
+/**
+ * \details
+ */
+void set_cache_type(cache::type_id_t t) {
+    cache_type_ = t;
+}

@@ -148,8 +148,8 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                               DataArray *sync,
                               CacheObjects *sync_co) {
     assert(flush != NULL);
-    assert(sync != NULL);
     assert(diff != NULL);
+    assert(sync != NULL);
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
@@ -187,10 +187,7 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
         Data *d = write_set.at(i);
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
-        if (it == data_map_.end()) {
-            data_map_[dreg] = d;
-            d->SetUpCacheObject(this);
-        } else {
+        if (it != data_map_.end()) {
             Data *d_old = it->second;
             if (d_old != d) {
                 if (write_back_.find(d_old) != write_back_.end()) {
@@ -199,14 +196,15 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                     d_old->UnsetDirtyCacheObject(this);
                 }
                 d_old->UnsetCacheObject(this);
-                data_map_[dreg] = d;
-                d->SetUpCacheObject(this);
             }
         }
-        write_back_.insert(d);
         if (d->dirty_cache_object() != this)
             d->InvalidateMappings();
+        data_map_[dreg] = d;
+        d->SetUpCacheObject(this);
+        write_back_.insert(d);
         d->SetUpDirtyCacheObject(this);
     }
 }
+
 }  // namespace nimbus

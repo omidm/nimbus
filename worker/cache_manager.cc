@@ -138,8 +138,24 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         }
     }
     cs->AcquireAccess(access);
-    cs->UpdateCache(var_type, read_sets, read_region);
-    cs->SetUpWrite(var_type, write_sets, write_region);
+    size_t num_var = var_type.size();
+    std::vector<DataArray> flush_sets(num_var),
+                           sync_sets(num_var),
+                           diff_sets(num_var);
+    std::vector<CacheObjects> sync_co_sets(num_var);
+    cs->SetUpReadWrite(var_type, read_sets, write_sets,
+                       &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    cs->WriteFromCache(var_type, flush_sets, cs->write_region_);
+    for (size_t t = 0; t < num_var; ++t) {
+        DataArray sync_t = sync_sets[t];
+        CacheObjects sync_co_t = sync_co_sets[t];
+        for (size_t i = 0; i < sync_t.size(); ++i) {
+            assert(sync_co_t[i]->IsAvailable(cache::EXCLUSIVE));
+            sync_co_t[i]->PullData(sync_t[i]);
+        }
+    }
+    cs->ReadToCache(var_type, diff_sets, read_region);
+    cs->write_region_ = write_region;
     return cs;
 }
 

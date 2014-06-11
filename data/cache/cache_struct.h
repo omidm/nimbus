@@ -68,6 +68,7 @@ class GeometricRegion;
  * (exclusive).
  */
 class CacheStruct : public CacheObject {
+    friend class CacheManager;
     public:
         /**
          * \brief Creates a CacheStruct
@@ -98,29 +99,6 @@ class CacheStruct : public CacheObject {
          * prototype passed in the request.
          */
         virtual CacheStruct *CreateNew(const GeometricRegion &struct_region) const = 0;
-
-        /**
-         * \brief Updates CacheStruct with data from read_sets - performs update
-         * only for those physical data that have changed since the CacheStruct
-         * instance was created
-         * \param var_type is a list of type_ids corresponding to nimbus variables
-         * \param read_sets is a list of data arrays corresponding to nimbus variables
-         * \param read_region is the geometric region to read
-         */
-        void UpdateCache(const std::vector<cache::type_id_t> &var_type,
-                         const std::vector<DataArray> &read_sets,
-                         const GeometricRegion &read_region);
-
-        /**
-         * \brief Sets up mappings for data in write_sets, and also sets up the
-         * write region
-         * \param var_type is a list of type_ids corresponding to nimbus variables
-         * \param write_sets is a list of data arrays corresponding to nimbus variables
-         * \param write_region is the geometric region to write
-         */
-        void SetUpWrite(const std::vector<cache::type_id_t> &var_type,
-                        const std::vector<DataArray> &write_sets,
-                        const GeometricRegion &write_region);
 
         /**
          * \brief Unsets mapping between data and CacheStruct instance
@@ -155,9 +133,10 @@ class CacheStruct : public CacheObject {
 
         /**
          * \brief Writes data from cache to data in write_sets immediately
-         * \param var_type is a list of type_ids corresponding to nimbus variables,
-         * as explained in the class description
-         * \param write_sets is a list of data arrays corresponding to nimbus variables
+         * \param var_type is a list of type_ids corresponding to nimbus
+         * variables, as explained in the class description
+         * \param write_sets is a list of data arrays corresponding to nimbus
+         * variables
          */
         void WriteImmediately(const std::vector<cache::type_id_t> &var_type,
                               const std::vector<DataArray> &write_sets);
@@ -167,6 +146,33 @@ class CacheStruct : public CacheObject {
          * \brief Disallow calling constructor with no arguments
          */
         CacheStruct() {}
+
+        /**
+         * \brief Edits all mappings between cache objects, given read and
+         * write sets
+         * \param var_type is a list of type_ids corresponding to nimbus
+         * variables, as explained in the class description
+         * \param read_sets is a list of data arrays corresponding to nimbus
+         * variables
+         * \param write_sets is a list of data arrays corresponding to nimbus
+         * variables
+         * \param flush_sets is a list of data arrays where SetUpReadWrite puts
+         * all data that needs to be flushed
+         * \param diff_sets is a list of data arrays where SetUpReadWrite puts
+         * all data that needs to be read
+         * \param sync_sets is a list of data arrays where SetUpReadWrite puts
+         * all data that needs to be synced from other cache objects
+         * \param sync_co_sets is a list of cache object vectors where
+         * SetUpReadWrite puts all cache objects that need to be synced with
+         * data in sync, in the same order
+         */
+        void SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
+                            const std::vector<DataArray> &read_sets,
+                            const std::vector<DataArray> &write_sets,
+                            std::vector<DataArray> *flush_sets,
+                            std::vector<DataArray> *diff_sets,
+                            std::vector<DataArray> *sync_sets,
+                            std::vector<CacheObjects> *sync_co_sets);
 
         // number of nimbus variables
         size_t num_variables_;
@@ -178,15 +184,6 @@ class CacheStruct : public CacheObject {
         std::vector<DataSet> write_backs_;
 
     protected:
-        /**
-         * \brief Flushes data from cache to data in flush_sets (immediately)
-         * \param var_type is a list of type_ids corresponding to nimbus variables,
-         * as explained in the class description
-         * \param flush_sets is a list of data arrays corresponding to nimbus variables
-         */
-        void FlushCache(const std::vector<cache::type_id_t> &var_type,
-                        const std::vector<DataArray> &flush_sets);
-
         /**
          * \brief Reads data from read_sets into CacheStruct instance
          * \param var_type is a list of type_ids corresponding to nimbus variables,
