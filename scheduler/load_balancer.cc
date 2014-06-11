@@ -50,11 +50,22 @@ namespace nimbus {
 LoadBalancer::LoadBalancer() {
 }
 
+LoadBalancer::LoadBalancer(ClusterMap* cluster_map)
+  : cluster_map_(cluster_map) {
+}
+
 LoadBalancer::LoadBalancer(const LoadBalancer& other) {
 }
 
 LoadBalancer::~LoadBalancer() {
 }
 
+ClusterMap* LoadBalancer::cluster_map() {
+  return cluster_map_;
+}
+
+void LoadBalancer::set_cluster_map(ClusterMap* cluster_map) {
+  cluster_map_ = cluster_map;
+}
 
 }  // namespace nimbus

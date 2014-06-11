@@ -45,13 +45,8 @@
 #ifndef NIMBUS_SCHEDULER_LOAD_BALANCER_H_
 #define NIMBUS_SCHEDULER_LOAD_BALANCER_H_
 
-#include <boost/unordered_map.hpp>
-#include <list>
-#include <utility>
 #include "shared/nimbus_types.h"
-#include "shared/idset.h"
-#include "scheduler/logical_data_lineage.h"
-#include "scheduler/meta_before_set.h"
+#include "scheduler/cluster.h"
 
 namespace nimbus {
 
@@ -59,11 +54,18 @@ namespace nimbus {
   public:
     LoadBalancer();
 
+    explicit LoadBalancer(ClusterMap* cluster_map);
+
     LoadBalancer(const LoadBalancer& other);
 
     virtual ~LoadBalancer();
 
+    ClusterMap* cluster_map();
+
+    void set_cluster_map(ClusterMap* cluster_map);
+
   private:
+    ClusterMap* cluster_map_;
   };
 
 }  // namespace nimbus
