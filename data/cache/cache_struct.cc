@@ -79,7 +79,7 @@ CacheStruct::CacheStruct(size_t num_variables, const GeometricRegion &ob_reg)
 void CacheStruct::UnsetData(Data *d) {
     GeometricRegion dreg = d->region();
     cache::type_id_t type = d->cache_type();
-    assert(type != 114);
+    assert(type != MAGIC_CACHE_TYPE);
     DMap &data_map_t = data_maps_[type];
     if (data_map_t.find(dreg) != data_map_t.end()) {
         assert(data_map_t[dreg] == d);

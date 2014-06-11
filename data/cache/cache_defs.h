@@ -45,6 +45,8 @@
 #include "shared/idset.h"
 #include "shared/nimbus_types.h"
 
+#define MAGIC_CACHE_TYPE 114
+
 namespace nimbus {
 namespace cache {
 enum CacheAccess { SHARED, EXCLUSIVE };

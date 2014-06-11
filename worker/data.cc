@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
 #include "worker/data.h"
 
@@ -45,7 +46,7 @@ using namespace nimbus; // NOLINT
 
 Data::Data() {
   dirty_cache_object_ = NULL;
-  cache_type_ = 114;
+  cache_type_ = MAGIC_CACHE_TYPE;
 }
 
 Data* Data::Clone() {
