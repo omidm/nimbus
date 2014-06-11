@@ -127,6 +127,15 @@ class CacheVar : public CacheObject {
          */
         void WriteImmediately(const DataArray &write_set);
 
+        /**
+         * \brief Edits the write set mappings (dirty mappins), flushing data
+         * if necessary
+         * \param write_set is a data array corresponding to nimbus variables
+         * \param write_region is region to write
+         */
+        void SetUpWrite(const DataArray &write_set,
+                        GeometricRegion &write_region);
+
     private:
         /**
          * \brief Edits all mappings between cache objects, given read and

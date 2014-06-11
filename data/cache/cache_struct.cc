@@ -180,11 +180,58 @@ void CacheStruct::WriteImmediately(const std::vector<cache::type_id_t> &var_type
 }
 
 /**
+ * \details If data is not already in existing data, create the mappings.
+ * If it replaces existing data, flush existing data if dirty. Create
+ * dirty object mapping with all data in write set and set write region.
+ */
+void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
+                             const std::vector<DataArray> &write_sets,
+                             GeometricRegion write_region) {
+    size_t num_vars = var_type.size();
+    assert(write_sets.size() == num_vars);
+    assert(num_vars <= num_variables_);
+    std::vector<DataArray> flush_sets;
+    for (size_t t = 0; t < num_vars; ++t) {
+        const DataArray &write_set_t = write_sets[t];
+        DataArray &flush_t = flush_sets[t];
+        cache::type_id_t type = var_type[t];
+        DMap &data_map_t = data_maps_[type];
+        DataSet write_back_t = write_backs_[type];
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t.at(i);
+            GeometricRegion dreg = d->region();
+            DMap::iterator it = data_map_t.find(dreg);
+            if (it != data_map_t.end()) {
+                Data *d_old = it->second;
+                if (d_old != d) {
+                    if (write_back_t.find(d_old) != write_back_t.end()) {
+                        flush_t.push_back(d_old);
+                        write_back_t.erase(d_old);
+                        d_old->UnsetDirtyCacheObject(this);
+                    }
+                    d_old->UnsetCacheObject(this);
+                }
+            }
+            if (d->dirty_cache_object() != this)
+                d->InvalidateMappings();
+            data_map_t[dreg] = d;
+            d->SetUpCacheObject(this);
+            write_back_t.insert(d);
+            d->SetUpDirtyCacheObject(this);
+            d->set_cache_type(t);
+        }
+    }
+    GeometricRegion write_region_old = write_region_;
+    write_region_ = write_region;
+    WriteFromCache(var_type, flush_sets, write_region_old);
+}
+
+/**
  * \details For read set, if data is not already in cache object, insert it in
  * diff set to read, and sync it if necessary. If
  * it replaces existing data, flush existing data if dirty. For write set, if
- * data is not already in existing data, just create the mappings. Flush any
- * If it replaces existing data, flush existing data if dirty. Finallt create
+ * data is not already in existing data, just create the mappings.
+ * If it replaces existing data, flush existing data if dirty. Finally create
  * dirty object mapping with all data in write set.
  */
 void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,

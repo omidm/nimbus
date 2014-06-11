@@ -141,6 +141,19 @@ class CacheStruct : public CacheObject {
         void WriteImmediately(const std::vector<cache::type_id_t> &var_type,
                               const std::vector<DataArray> &write_sets);
 
+        /**
+         * \brief Edits the write set mappings (dirty mappins), flushing data
+         * if necessary
+         * \param var_type is a list of type_ids corresponding to nimbus
+         * variables, as explained in the class description
+         * \param write_sets is a list of data arrays corresponding to nimbus
+         * variables
+         * \param write_region is region to write
+         */
+        void SetUpWrite(const std::vector<cache::type_id_t> &var_type,
+                        const std::vector<DataArray> &write_sets,
+                        GeometricRegion write_region);
+
     private:
         /**
          * \brief Disallow calling constructor with no arguments

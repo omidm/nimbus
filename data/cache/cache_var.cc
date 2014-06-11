@@ -134,11 +134,46 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
 }
 
 /**
+ * \details If data is not already in existing data, create the mappings.
+ * If it replaces existing data, flush existing data if dirty. Create
+ * dirty object mapping with all data in write set and set write region.
+ */
+void CacheVar::SetUpWrite(const DataArray &write_set,
+                          GeometricRegion &write_region) {
+    DataArray flush;
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it != data_map_.end()) {
+            Data *d_old = it->second;
+            if (d_old != d) {
+                if (write_back_.find(d_old) != write_back_.end()) {
+                    flush.push_back(d_old);
+                    write_back_.erase(d_old);
+                    d_old->UnsetDirtyCacheObject(this);
+                }
+                d_old->UnsetCacheObject(this);
+            }
+        }
+        if (d->dirty_cache_object() != this)
+            d->InvalidateMappings();
+        data_map_[dreg] = d;
+        d->SetUpCacheObject(this);
+        write_back_.insert(d);
+        d->SetUpDirtyCacheObject(this);
+    }
+    GeometricRegion write_region_old = write_region_;
+    write_region_ = write_region;
+    WriteFromCache(flush, write_region_old);
+}
+
+/**
  * \details For read set, if data is not already in cache object, insert it in
  * diff set to read, and sync it if necessary. If
  * it replaces existing data, flush existing data if dirty. For write set, if
- * data is not already in existing data, just create the mappings. Flush any
- * If it replaces existing data, flush existing data if dirty. Finallt create
+ * data is not already in existing data, just create the mappings.
+ * If it replaces existing data, flush existing data if dirty. Finally create
  * dirty object mapping with all data in write set.
  */
 void CacheVar::SetUpReadWrite(const DataArray &read_set,
