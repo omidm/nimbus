@@ -45,6 +45,7 @@ using namespace nimbus; // NOLINT
 
 Data::Data() {
   dirty_cache_object_ = NULL;
+  cache_type_ = 114;
 }
 
 Data* Data::Clone() {
@@ -100,6 +101,7 @@ void Data::set_version(data_version_t version) {
  *
  */
 void Data::ClearDirtyMappings() {
+  assert(dirty_cache_object_);
   if (dirty_cache_object_) {
     dirty_cache_object_->UnsetDirtyData(this);
     dirty_cache_object_ = NULL;
@@ -155,7 +157,7 @@ void Data::SetUpDirtyCacheObject(CacheObject *co) {
  */
 void Data::UnsetDirtyCacheObject(CacheObject *co) {
   if (dirty_cache_object_ != co)
-    dbg(DBG_ERROR, "Data drity co %p, passed co %p\n", dirty_cache_object_, co);
+    dbg(DBG_ERROR, "Data dirty co %p, passed co %p\n", dirty_cache_object_, co);
   assert(dirty_cache_object_ == co);
   dirty_cache_object_ = NULL;
 }

@@ -150,8 +150,8 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     cs->write_region_ = write_region;
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
-        DataArray sync_t = sync_sets[t];
-        CacheObjects sync_co_t = sync_co_sets[t];
+        DataArray &sync_t = sync_sets[t];
+        CacheObjects &sync_co_t = sync_co_sets[t];
         for (size_t i = 0; i < sync_t.size(); ++i) {
             assert(sync_co_t[i]->IsAvailable(cache::EXCLUSIVE));
             sync_co_t[i]->PullData(sync_t[i]);
@@ -168,6 +168,7 @@ void CacheManager::SyncData(Data *d) {
     CacheObject *co = d->dirty_cache_object();
     if (!co)
         return;
+    assert(co->IsAvailable(cache::EXCLUSIVE));
     d->ClearDirtyMappings();
     co->PullData(d);
 }

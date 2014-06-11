@@ -79,6 +79,7 @@ CacheStruct::CacheStruct(size_t num_variables, const GeometricRegion &ob_reg)
 void CacheStruct::UnsetData(Data *d) {
     GeometricRegion dreg = d->region();
     cache::type_id_t type = d->cache_type();
+    assert(type != 114);
     DMap &data_map_t = data_maps_[type];
     if (data_map_t.find(dreg) != data_map_t.end()) {
         assert(data_map_t[dreg] == d);
@@ -196,7 +197,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
         DataArray &flush_t = flush_sets[t];
         cache::type_id_t type = var_type[t];
         DMap &data_map_t = data_maps_[type];
-        DataSet write_back_t = write_backs_[type];
+        DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < write_set_t.size(); ++i) {
             Data *d = write_set_t.at(i);
             GeometricRegion dreg = d->region();
@@ -261,7 +262,7 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
         CacheObjects &sync_co_t = sync_co_sets->at(t);
         cache::type_id_t type = var_type[t];
         DMap &data_map_t = data_maps_[type];
-        DataSet write_back_t = write_backs_[type];
+        DataSet &write_back_t = write_backs_[type];
         for (size_t i = 0; i < read_set_t.size(); ++i) {
             Data *d = read_set_t.at(i);
             GeometricRegion dreg = d->region();

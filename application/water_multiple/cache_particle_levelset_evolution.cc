@@ -234,6 +234,8 @@ WriteFromCache(
         const std::vector<nimbus::DataArray> &write_sets,
         const nimbus::GeometricRegion &write_reg) const {
     // dbg(DBG_WARN, "\n--- Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
+    if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
+        return;
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     for (size_t t = 0; t < var_type.size(); ++t) {
         const nimbus::DataArray &write_set = write_sets[t];

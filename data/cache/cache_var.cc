@@ -87,6 +87,7 @@ void CacheVar::UnsetDirtyData(Data *d) {
  * When data needs to be updated from outside CacheVar, use PullData.
  */
 void CacheVar::PullData(Data *d) {
+    assert(IsAvailable(cache::EXCLUSIVE));
     DataArray write_set(1, d);
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
