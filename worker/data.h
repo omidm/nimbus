@@ -106,16 +106,15 @@ class Data {
   void set_version(data_version_t version);
 
   /**
-   * \brief Writes back data from cached instance, if the data instance is
-   * dirty
+   * \brief Removes dirty object mappings
    */
-  void SyncData();
+  void ClearDirtyMappings();
 
   /**
    * \brief Removes all mappings between this data instance and all other cache
    * instances (dirty and non-dirty)
    */
-  void InvalidateCacheData();
+  void InvalidateMappings();
 
   /**
    * \brief Inserts a mapping between this data instance and cache object co
@@ -128,6 +127,12 @@ class Data {
    * \param co is the cache object to unmap
    */
   void UnsetCacheObject(CacheObject *co);
+
+  /**
+   * \brief Accessor for dirty data
+   * \return Cache bject
+   */
+  CacheObject *dirty_cache_object();
 
   /**
    * \brief Inserts a dirty object mapping between this data instance and cache

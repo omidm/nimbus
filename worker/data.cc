@@ -97,18 +97,19 @@ void Data::set_version(data_version_t version) {
 }
 
 /**
- * \details
+ *
  */
-void Data::SyncData() {
-  if (dirty_cache_object_)
-    dirty_cache_object_->PullData(this);
-  assert(!dirty_cache_object_);
+void Data::ClearDirtyMappings() {
+  if (dirty_cache_object_) {
+    dirty_cache_object_->UnsetDirtyData(this);
+    dirty_cache_object_ = NULL;
+  }
 }
 
 /**
  * \details
  */
-void Data::InvalidateCacheData() {
+void Data::InvalidateMappings() {
   std::set<CacheObject *>::iterator iter = cache_objects_.begin();
   for (; iter != cache_objects_.end(); ++iter) {
     CacheObject *c = *iter;
@@ -132,6 +133,13 @@ void Data::SetUpCacheObject(CacheObject *co) {
  */
 void Data::UnsetCacheObject(CacheObject *co) {
   cache_objects_.erase(co);
+}
+
+/**
+ * \detials
+ */
+CacheObject *Data::dirty_cache_object() {
+  return dirty_cache_object_;
 }
 
 /**

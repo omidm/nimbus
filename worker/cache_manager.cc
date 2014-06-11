@@ -91,8 +91,17 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         }
     }
     cv->AcquireAccess(access);
-    cv->UpdateCache(read_set, read_region);
-    cv->SetUpWrite(write_set, write_region);
+    DataArray flush, sync, diff;
+    CacheObjects sync_co;
+    cv->SetUpReadWrite(read_set, write_set,
+                       &flush, &diff, &sync, &sync_co);
+    cv->WriteFromCache(flush, cv->write_region_);
+    for (size_t i = 0; i < sync.size(); ++i) {
+        assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
+        sync_co[i]->PullData(sync[i]);
+    }
+    cv->ReadToCache(diff, read_region);
+    cv->write_region_ = write_region;
     return cv;
 }
 

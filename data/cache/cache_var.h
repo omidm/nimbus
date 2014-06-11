@@ -64,6 +64,7 @@ class GeometricRegion;
  * the cache manager. A CacheVar can must be defined over a geometric region.
  */
 class CacheVar : public CacheObject {
+    friend class CacheManager;
     public:
         /**
          * \brief Creates a CacheVar
@@ -90,25 +91,6 @@ class CacheVar : public CacheObject {
          * prototype passed in the request.
          */
         virtual CacheVar *CreateNew(const GeometricRegion &struct_region) const = 0;
-
-        /**
-         * \brief Updates CacheVar with data from read_set - performs update
-         * only for those physical data that have changed since the CacheVar
-         * instance was last updated
-         * \param read_set is a data array corresponding to nimbus variables
-         * \param read_region is the geometric region to read
-         */
-        void UpdateCache(const DataArray &read_set,
-                         const GeometricRegion &read_region);
-
-        /**
-         * \brief Sets up mappings for data in write_sets, and also sets up the
-         * write region
-         * \param write_set is a data array corresponding to nimbus variables
-         * \param write_region is the geometric region to write
-         */
-        void SetUpWrite(const DataArray &write_sets,
-                        const GeometricRegion &write_region);
 
         /**
          * \brief Unsets mapping between data and CacheVar instance
@@ -147,10 +129,25 @@ class CacheVar : public CacheObject {
 
     private:
         /**
-         * \brief Flushes data from cache to data in flush_set (immediately)
-         * \param flush_set is a data array corresponding to nimbus variables
+         * \brief Edits all mappings between cache objects, given read and
+         * write set
+         * \param read_set is a data array corresponding to nimbus variables
+         * \param write_set is a data array corresponding to nimbus variables
+         * \param flush is where SetUpReadWrite puts all data that needs to be
+         * flushed
+         * \param diff is where SetUpReadWrite puts all data that needs to be
+         * read
+         * \param sync is where SetUpReadWrite puts all data that needs to be
+         * synced from other cache objects
+         * \param sync_co is where SetUpReadWrute puts all cache objects that
+         * need to be synced with data in sync, in the same order
          */
-        void FlushCache(const DataArray &flush_set);
+        void SetUpReadWrite(const DataArray &read_set,
+                            const DataArray &write_set,
+                            DataArray *flush,
+                            DataArray *diff,
+                            DataArray *sync,
+                            CacheObjects *sync_co);
 
         // cache-data mappings
         typedef std::map<GeometricRegion,
