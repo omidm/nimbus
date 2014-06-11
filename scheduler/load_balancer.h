@@ -45,13 +45,22 @@
 #ifndef NIMBUS_SCHEDULER_LOAD_BALANCER_H_
 #define NIMBUS_SCHEDULER_LOAD_BALANCER_H_
 
+#include <boost/unordered_map.hpp>
+#include <boost/thread.hpp>
+#include <map>
+#include <vector>
 #include "shared/nimbus_types.h"
-#include "scheduler/cluster.h"
+#include "scheduler/job_entry.h"
+#include "shared/cluster.h"
+#include "shared/geometric_region.h"
+#include "shared/graph.h"
 
 namespace nimbus {
 
   class LoadBalancer {
   public:
+    typedef std::map<worker_id_t, GeometricRegion> RegionMap;
+    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
     LoadBalancer();
 
     explicit LoadBalancer(ClusterMap* cluster_map);
@@ -60,12 +69,43 @@ namespace nimbus {
 
     virtual ~LoadBalancer();
 
+    void Run();
+
     ClusterMap* cluster_map();
+    GeometricRegion global_region();
 
     void set_cluster_map(ClusterMap* cluster_map);
+    void set_global_region(GeometricRegion global_region);
+
+    bool GetWorkerToAssignJob(JobEntry *job, SchedulerWorker*& worker);
+
+    void NotifyJobAssignment(const JobEntry *job, const SchedulerWorker* worker);
+
+    void NotifyJobDone(const JobEntry *job);
+
 
   private:
     ClusterMap* cluster_map_;
+
+    GeometricRegion global_region_;
+
+    Log log_;
+    Graph<JobEntry, job_id_t> job_graph_;
+    boost::mutex job_graph_mutex_;
+
+    RegionMap region_map_;
+    boost::mutex region_map_mutex_;
+
+    WorkerMap worker_map_;
+    boost::mutex worker_map_mutex_;
+
+
+    bool updated_info_;
+    boost::mutex updated_info_mutex_;
+    boost::condition_variable update_info_cond_;
+
+    void InitializeRegionMap();
+    void UpdateRegionMap();
   };
 
 }  // namespace nimbus
