@@ -694,6 +694,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_fv) {
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+        nimbus::DataArray write;
+        application::GetWriteData(*job, APP_FACE_VEL, da, &write);
+        cache_fv->WriteImmediately(write);
         cache_fv->ReleaseAccess();
         cache_fv = NULL;
     }
@@ -702,6 +705,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_fvg) {
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
+        nimbus::DataArray write;
+        application::GetWriteData(*job, APP_FACE_VEL_GHOST, da, &write);
+        cache_fvg->WriteImmediately(write);
         cache_fvg->ReleaseAccess();
         cache_fvg = NULL;
     }
@@ -709,22 +715,27 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     {
       // particle leveset quantities
       T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
+        nimbus::DataArray write;
+        application::GetWriteData(*job, APP_PHI, da, &write);
       // levelset
       if (cache_phi3) {
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+          cache_phi3->WriteImmediately(write);
           cache_phi3->ReleaseAccess();
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+          cache_phi7->WriteImmediately(write);
           cache_phi7->ReleaseAccess();
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+          cache_phi8->WriteImmediately(write);
           cache_phi8->ReleaseAccess();
           cache_phi8 = NULL;
       }
@@ -736,7 +747,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       }
       // ** there should not be any accesses to particle levelset after this **
       if (cache_ple) {
-          if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
+          // if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
               nimbus::cache::type_id_t vars[] = { application::POS,
                                                   application::NEG,
                                                   application::POS_REM,
@@ -764,8 +775,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                       }
                   }
               }
-              cache_ple->WriteImmediately(var_type, shared);
-          }
+              // cache_ple->WriteImmediately(var_type, shared);
+              cache_ple->WriteImmediately(var_type, write);
+          // }
           cache_ple->ReleaseAccess();
           cache_ple = NULL;
       }
@@ -775,6 +787,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_psi_d) {
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+        nimbus::DataArray write;
+        application::GetWriteData(*job, APP_PSI_D, da, &write);
+        cache_psi_d->WriteImmediately(write);
         cache_psi_d->ReleaseAccess();
         cache_psi_d = NULL;
     }
@@ -783,6 +798,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_psi_n) {
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        nimbus::DataArray write;
+        application::GetWriteData(*job, APP_PSI_N, da, &write);
+        cache_psi_n->WriteImmediately(write);
         cache_psi_n->ReleaseAccess();
         cache_psi_n = NULL;
     }

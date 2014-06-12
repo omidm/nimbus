@@ -130,6 +130,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
             if (array_inner.Covers(&dreg)) {
                 read_inner_t.push_back(d);
             } else{
+                assert(d->dirty_cache_object() == NULL);
                 read_outer_t.push_back(d);
                 reg_t.push_back(dreg);
             }
@@ -171,6 +172,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[POS_REM], particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[NEG_REM], particle_levelset, scale, false, true);
 
+    cache_ple->WriteImmediately(var_type, write);
     cache_ple->ReleaseAccess();
 
     dbg(APP_LOG, "Completed executing synchronize particles job\n");

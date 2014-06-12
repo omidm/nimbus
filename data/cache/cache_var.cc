@@ -153,12 +153,13 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
                     flush.push_back(d_old);
                     write_back_.erase(d_old);
                     d_old->UnsetDirtyCacheObject(this);
+                    d_old->UnsetCacheObject(this);
+                    assert(d_old->co_size() == 0);
                 }
                 d_old->UnsetCacheObject(this);
             }
         }
-        if (d->dirty_cache_object() != this)
-            d->InvalidateMappings();
+        d->InvalidateMappings();
         data_map_[dreg] = d;
         d->SetUpCacheObject(this);
         write_back_.insert(d);
@@ -195,6 +196,7 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                 sync->push_back(d);
                 sync_co->push_back(d->dirty_cache_object());
                 d->ClearDirtyMappings();
+                assert(d->co_size() == 1);
             }
             diff->push_back(d);
             data_map_[dreg] = d;
@@ -206,11 +208,14 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                     sync->push_back(d);
                     sync_co->push_back(d->dirty_cache_object());
                     d->ClearDirtyMappings();
+                    assert(d->co_size() == 1);
                 }
                 if (write_back_.find(d_old) != write_back_.end()) {
                     flush->push_back(d_old);
                     write_back_.erase(d_old);
                     d_old->UnsetDirtyCacheObject(this);
+                    d_old->UnsetCacheObject(this);
+                    assert(d_old->co_size() == 0);
                 }
                 d_old->UnsetCacheObject(this);
                 diff->push_back(d);
@@ -230,6 +235,8 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                     flush->push_back(d_old);
                     write_back_.erase(d_old);
                     d_old->UnsetDirtyCacheObject(this);
+                    d_old->UnsetCacheObject(this);
+                    assert(d_old->co_size() == 0);
                 }
                 d_old->UnsetCacheObject(this);
             }

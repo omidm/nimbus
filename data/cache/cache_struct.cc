@@ -82,10 +82,13 @@ void CacheStruct::UnsetData(Data *d) {
     assert(type != MAGIC_CACHE_TYPE);
     assert(type < num_variables_);
     DMap &data_map_t = data_maps_[type];
+    bool success = false;
     if (data_map_t.find(dreg) != data_map_t.end()) {
         assert(data_map_t[dreg] == d);
         data_map_t.erase(dreg);
+        success = true;
     }
+    assert(success);
 }
 
 /**
@@ -96,6 +99,7 @@ void CacheStruct::UnsetDirtyData(Data *d) {
     assert(type != MAGIC_CACHE_TYPE);
     assert(type < num_variables_);
     DataSet &write_back_t = write_backs_[type];
+    assert(write_back_t.find(d) != write_back_t.end());
     write_back_t.erase(d);
 }
 
@@ -212,12 +216,13 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                         flush_t.push_back(d_old);
                         write_back_t.erase(d_old);
                         d_old->UnsetDirtyCacheObject(this);
+                        d_old->UnsetCacheObject(this);
+                        assert(d_old->co_size() == 0);
                     }
                     d_old->UnsetCacheObject(this);
                 }
             }
-            if (d->dirty_cache_object() != this)
-                d->InvalidateMappings();
+            d->InvalidateMappings();
             data_map_t[dreg] = d;
             d->SetUpCacheObject(this);
             write_back_t.insert(d);
@@ -275,6 +280,7 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
                     sync_t.push_back(d);
                     sync_co_t.push_back(d->dirty_cache_object());
                     d->ClearDirtyMappings();
+                    assert(d->co_size() == 1);
                 }
                 diff_t.push_back(d);
                 data_map_t[dreg] = d;
@@ -287,11 +293,14 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
                         sync_t.push_back(d);
                         sync_co_t.push_back(d->dirty_cache_object());
                         d->ClearDirtyMappings();
+                        assert(d->co_size() == 1);
                     }
                     if (write_back_t.find(d_old) != write_back_t.end()) {
                         flush_t.push_back(d_old);
                         write_back_t.erase(d_old);
                         d_old->UnsetDirtyCacheObject(this);
+                        d_old->UnsetCacheObject(this);
+                        assert(d_old->co_size() == 0);
                     }
                     d_old->UnsetCacheObject(this);
                     diff_t.push_back(d);
@@ -312,6 +321,8 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
                         flush_t.push_back(d_old);
                         write_back_t.erase(d_old);
                         d_old->UnsetDirtyCacheObject(this);
+                        d_old->UnsetCacheObject(this);
+                        assert(d_old->co_size() == 0);
                     }
                     d_old->UnsetCacheObject(this);
                 }

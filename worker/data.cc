@@ -38,6 +38,8 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <stdio.h>
+
 #include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
 #include "worker/data.h"

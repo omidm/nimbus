@@ -161,6 +161,8 @@ class Data {
    */
   void set_cache_type(cache::type_id_t t);
 
+  size_t co_size() { return cache_objects_.size(); }
+
  private:
   logical_data_id_t logical_id_;
   physical_data_id_t physical_id_;
