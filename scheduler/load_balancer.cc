@@ -37,7 +37,7 @@
   * queries in the cluster. It tries to minimize the completion of simulation
   * by reducing the cost of communication by locality aware data placement and
   * mitigate the effect of stragglers in the system by adapting the job
-  * assignment strategies to the dunamic changes of the cloud.
+  * assignment strategies to the dynamic changes of the cloud.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */

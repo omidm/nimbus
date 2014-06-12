@@ -64,6 +64,7 @@ JobProfile::JobProfile(
 
 void JobProfile::Initialize() {
   done_ = false;
+  ready_ = false;
 }
 
 JobProfile::~JobProfile() {
@@ -105,6 +106,26 @@ bool JobProfile::done() {
   return done_;
 }
 
+bool JobProfile::ready() {
+  return ready_;
+}
+
+double JobProfile::assign_time() {
+  return assign_time_;
+}
+
+double JobProfile::ready_time() {
+  return ready_time_;
+}
+
+double JobProfile::done_time() {
+  return done_time_;
+}
+
+double JobProfile::execute_duration() {
+  return execute_duration_;
+}
+
 void JobProfile::set_job_type(JobType job_type) {
   job_type_ = job_type;
 }
@@ -131,6 +152,26 @@ void JobProfile::set_sterile(bool flag) {
 
 void JobProfile::set_done(bool flag) {
   done_ = flag;
+}
+
+void JobProfile::set_ready(bool flag) {
+  ready_ = flag;
+}
+
+void JobProfile::assign_time(double assign_time) {
+  assign_time_ = assign_time;
+}
+
+void JobProfile::ready_time(double ready_time) {
+  ready_time_ = ready_time;
+}
+
+void JobProfile::done_time(double done_time) {
+  done_time_ = done_time;
+}
+
+void JobProfile::execute_duration(double execute_duration) {
+  execute_duration_ = execute_duration;
 }
 
 

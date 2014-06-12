@@ -74,7 +74,7 @@ class JobProfile {
         const job_id_t& job_id,
         const IDSet<job_id_t>& before_set,
         const job_id_t& parent_job_id,
-        const bool& sterile);
+        const bool& sterilei);
 
     virtual ~JobProfile();
 
@@ -84,9 +84,16 @@ class JobProfile {
     IDSet<job_id_t> before_set();
     job_id_t parent_job_id();
     bool sterile();
-    bool done();
     IDSet<job_id_t>* before_set_p();
     const IDSet<job_id_t>* before_set_p() const;
+
+    bool ready();
+    bool done();
+    double assign_time();
+    double ready_time();
+    double done_time();
+    double execute_duration();
+
 
     void set_job_type(JobType job_type);
     void set_job_name(std::string job_name);
@@ -94,7 +101,13 @@ class JobProfile {
     void set_before_set(IDSet<job_id_t> before_set);
     void set_parent_job_id(job_id_t parent_job_id);
     void set_sterile(bool flag);
+
+    void set_ready(bool flag);
     void set_done(bool flag);
+    void assign_time(double assign_time);
+    void ready_time(double ready_time);
+    void done_time(double done_time);
+    void execute_duration(double execute_duration);
 
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
@@ -106,7 +119,14 @@ class JobProfile {
     IDSet<job_id_t> before_set_;
     job_id_t parent_job_id_;
     bool sterile_;
+
     bool done_;
+    bool ready_;
+    double assign_time_;
+    double ready_time_;
+    double done_time_;
+    double execute_duration_;
+
 
     void Initialize();
 };

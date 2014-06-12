@@ -37,7 +37,7 @@
   * queries in the cluster. It tries to minimize the completion of simulation
   * by reducing the cost of communication by locality aware data placement and
   * mitigate the effect of stragglers in the system by adapting the job
-  * assignment strategies to the dunamic changes of the cloud.
+  * assignment strategies to the dynamic changes of the cloud.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -51,6 +51,7 @@
 #include <vector>
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/job_profile.h"
 #include "shared/cluster.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
@@ -90,7 +91,7 @@ namespace nimbus {
     GeometricRegion global_region_;
 
     Log log_;
-    Graph<JobEntry, job_id_t> job_graph_;
+    Graph<JobProfile, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
 
     RegionMap region_map_;
