@@ -64,8 +64,33 @@ ClusterMap* LoadBalancer::cluster_map() {
   return cluster_map_;
 }
 
+GeometricRegion LoadBalancer::global_region() {
+  return global_region_;
+}
+
 void LoadBalancer::set_cluster_map(ClusterMap* cluster_map) {
   cluster_map_ = cluster_map;
+}
+
+void LoadBalancer::set_global_region(GeometricRegion global_region) {
+  global_region_ = global_region;
+}
+
+void LoadBalancer::Run() {
+  // TODO(omidm): Fill out the method.
+}
+
+
+bool LoadBalancer::GetWorkerToAssignJob(
+    JobEntry *job, SchedulerWorker*& worker) {
+  // TODO(omidm): Fill out the method.
+  return false;
+}
+
+
+void LoadBalancer::NotifyJobAssignment(
+    const JobEntry *job, const SchedulerWorker* worker) {
+  // TODO(omidm): Fill out the method.
 }
 
 }  // namespace nimbus
