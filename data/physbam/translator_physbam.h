@@ -675,6 +675,7 @@ template <class TS> class TranslatorPhysBAM {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
+                                // TODO(later): can optimize this further
                                 ParticleBucket *particle_bucket = (*particles)(bucket_index);
                                 if (!particle_bucket)
                                     continue;
@@ -786,6 +787,7 @@ template <class TS> class TranslatorPhysBAM {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
+                                // TODO(later): can optimize this further
                                 RemovedParticleBucket *particle_bucket = (*particles)(bucket_index); // NOLINT
                                 if (!particle_bucket)
                                     continue;
@@ -853,6 +855,223 @@ template <class TS> class TranslatorPhysBAM {
             }
         }
 
+        /*
+         * Interface for deleting particles - delete particles outside inner,
+         * inside outer.
+         */
+        static void DeleteParticles(
+                const Coord &shift,
+                GeometricRegion &inner,
+                GeometricRegion &outer,
+                ParticleContainer *particle_container,
+                const int_dimension_t scale,
+                bool positive) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            ParticleArray *particles;
+            if (positive) {
+                particles = &particle_container->positive_particles;
+            } else {
+                particles = &particle_container->negative_particles;
+            }
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pouter = outer;
+            pouter.Translate(neg_shift);
+            GeometricRegion pinner = inner;
+            pinner.Translate(neg_shift);
+
+            for (int z = pouter.z(); z <= pouter.z() + pouter.dz(); ++z) {
+                for (int y = pouter.y(); y <= pouter.y() + pouter.dy() ; ++y) {
+                    for (int x = pouter.x(); x <= pouter.x() + pouter.dx(); ++x) {
+                        TV_INT bucket_index(x, y, z);
+
+                        if ((x < pinner.x() || x > pinner.x() + pinner.dx() ||
+                             y < pinner.y() || y > pinner.y() + pinner.dy() ||
+                             z < pinner.z() || z > pinner.z() + pinner.dz())) {
+                            particle_container->Free_Particle_And_Clear_Pointer(
+                                    (*particles)(bucket_index));
+                        } else {
+                            // TODO(later): can optimize this further
+                            if (x == pinner.x() || x == pinner.x() + pinner.dx() ||
+                                y == pinner.y() || y == pinner.y() + pinner.dy() ||
+                                z == pinner.z() || z == pinner.z() + pinner.dz()) {
+                                ParticleBucket *particle_bucket = (*particles)(bucket_index);
+                                if (!particle_bucket)
+                                    continue;
+
+                                ParticleBucket *particle_bucket_history = particle_bucket;
+                                (*particles)(bucket_index) = NULL;
+                                bool new_particles_alloc = false;
+                                ParticleBucket *particle_new_bucket = NULL;
+
+                                while (particle_bucket) {
+                                    for (int i = 1;
+                                            i <= particle_bucket->array_collection->Size();
+                                            ++i) {
+                                        TV particle_position = particle_bucket->X(i);
+                                        TV absolute_position = particle_position *
+                                            static_cast<float>(scale) + 1.0;
+                                        if (absolute_position.x > inner.x() &&
+                                            absolute_position.x <= inner.x() + inner.dx() &&
+                                            absolute_position.y > inner.y() &&
+                                            absolute_position.y <= inner.y() + inner.dy() &&
+                                            absolute_position.z > inner.z() &&
+                                            absolute_position.z <= inner.z() + inner.dz()) {
+                                            if (!new_particles_alloc) {
+                                                new_particles_alloc = true;
+                                                (*particles)(bucket_index) =
+                                                    particle_container->
+                                                    Allocate_Particles(particle_container->
+                                                            template_particles);
+                                                particle_new_bucket = (*particles)(bucket_index);
+                                            }
+
+                                            int index = particle_container->
+                                                Add_Particle(particle_new_bucket);
+                                            particle_new_bucket->X(index) = particle_bucket->X(i);
+                                            particle_new_bucket->radius(index) =
+                                                particle_bucket->radius(i);
+                                            particle_new_bucket->quantized_collision_distance(index) = // NOLINT
+                                                particle_bucket->quantized_collision_distance(i);
+                                            if (particle_container->store_unique_particle_id) {
+                                                PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                    particle_new_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                PhysBAM::ARRAY_VIEW<int> *id =
+                                                    particle_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                (*new_id)(index) = (*id)(i);
+                                            }
+                                        }
+                                    }
+                                    particle_bucket = particle_bucket->next;
+                                }
+                                // Delete the original bucket.
+                                particle_container->
+                                    Free_Particle_And_Clear_Pointer(particle_bucket_history);
+                            }
+                        }
+                    }
+                }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+        }
+
+        /*
+         * Interface for deleting removed particles - delete particles outside inner,
+         * inside outer.
+         */
+        static void DeleteRemovedParticles(
+                const Coord &shift,
+                GeometricRegion &inner,
+                GeometricRegion &outer,
+                ParticleContainer *particle_container,
+                const int_dimension_t scale,
+                bool positive) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            RemovedParticleArray *particles;
+            if (positive) {
+                particles = &particle_container->removed_positive_particles;
+            } else {
+                particles = &particle_container->removed_negative_particles;
+            }
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pouter = outer;
+            pouter.Translate(neg_shift);
+            GeometricRegion pinner = inner;
+            pinner.Translate(neg_shift);
+
+            for (int z = pouter.z(); z <= pouter.z() + pouter.dz(); ++z) {
+                for (int y = pouter.y(); y <= pouter.y() + pouter.dy() ; ++y) {
+                    for (int x = pouter.x(); x <= pouter.x() + pouter.dx(); ++x) {
+                        TV_INT bucket_index(x, y, z);
+
+                        if ((x < pinner.x() || x > pinner.x() + pinner.dx() ||
+                             y < pinner.y() || y > pinner.y() + pinner.dy() ||
+                             z < pinner.z() || z > pinner.z() + pinner.dz())) {
+                            particle_container->Free_Particle_And_Clear_Pointer(
+                                    (*particles)(bucket_index));
+                        } else {
+                            // TODO(later): can optimize this further
+                            if (x == pinner.x() || x == pinner.x() + pinner.dx() ||
+                                y == pinner.y() || y == pinner.y() + pinner.dy() ||
+                                z == pinner.z() || z == pinner.z() + pinner.dz()) {
+                                RemovedParticleBucket *particle_bucket = (*particles)(bucket_index);
+                                if (!particle_bucket)
+                                    continue;
+
+                                RemovedParticleBucket *particle_bucket_history = particle_bucket;
+                                (*particles)(bucket_index) = NULL;
+                                bool new_particles_alloc = false;
+                                RemovedParticleBucket *particle_new_bucket = NULL;
+
+                                while (particle_bucket) {
+                                    for (int i = 1;
+                                            i <= particle_bucket->array_collection->Size();
+                                            ++i) {
+                                        TV particle_position = particle_bucket->X(i);
+                                        TV absolute_position = particle_position *
+                                            static_cast<float>(scale) + 1.0;
+                                        if (absolute_position.x > inner.x() &&
+                                            absolute_position.x <= inner.x() + inner.dx() &&
+                                            absolute_position.y > inner.y() &&
+                                            absolute_position.y <= inner.y() + inner.dy() &&
+                                            absolute_position.z > inner.z() &&
+                                            absolute_position.z <= inner.z() + inner.dz()) {
+                                            if (!new_particles_alloc) {
+                                                new_particles_alloc = true;
+                                                (*particles)(bucket_index) =
+                                                    particle_container->
+                                                    Allocate_Particles(particle_container->
+                                                            template_removed_particles);
+                                                particle_new_bucket = (*particles)(bucket_index);
+                                            }
+
+                                            int index = particle_container->
+                                                Add_Particle(particle_new_bucket);
+                                            particle_new_bucket->X(index) = particle_bucket->X(i);
+                                            particle_new_bucket->radius(index) =
+                                                particle_bucket->radius(i);
+                                            particle_new_bucket->quantized_collision_distance(index) = // NOLINT
+                                                particle_bucket->quantized_collision_distance(i);
+                                            if (particle_container->store_unique_particle_id) {
+                                                PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                    particle_new_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                PhysBAM::ARRAY_VIEW<int> *id =
+                                                    particle_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                (*new_id)(index) = (*id)(i);
+                                            }
+                                        }
+                                    }
+                                    particle_bucket = particle_bucket->next;
+                                }
+                                // Delete the original bucket.
+                                particle_container->
+                                    Free_Particle_And_Clear_Pointer(particle_bucket_history);
+                            }
+                        }
+                    }
+                }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+        }
 
         /* Reads the particle data from the PhysicalDataInstances "instances",
          * limited by the corresponding global region calculated from shifting the
