@@ -80,6 +80,7 @@ void CacheStruct::UnsetData(Data *d) {
     GeometricRegion dreg = d->region();
     cache::type_id_t type = d->cache_type();
     assert(type != MAGIC_CACHE_TYPE);
+    assert(type < num_variables_);
     DMap &data_map_t = data_maps_[type];
     if (data_map_t.find(dreg) != data_map_t.end()) {
         assert(data_map_t[dreg] == d);
@@ -92,6 +93,8 @@ void CacheStruct::UnsetData(Data *d) {
  */
 void CacheStruct::UnsetDirtyData(Data *d) {
     cache::type_id_t type = d->cache_type();
+    assert(type != MAGIC_CACHE_TYPE);
+    assert(type < num_variables_);
     DataSet &write_back_t = write_backs_[type];
     write_back_t.erase(d);
 }
@@ -313,8 +316,7 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
                     d_old->UnsetCacheObject(this);
                 }
             }
-            if (d->dirty_cache_object() != this)
-                d->InvalidateMappings();
+            d->InvalidateMappings();
             data_map_t[dreg] = d;
             d->SetUpCacheObject(this);
             write_back_t.insert(d);

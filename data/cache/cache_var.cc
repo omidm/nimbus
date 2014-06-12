@@ -234,8 +234,7 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                 d_old->UnsetCacheObject(this);
             }
         }
-        if (d->dirty_cache_object() != this)
-            d->InvalidateMappings();
+        d->InvalidateMappings();
         data_map_[dreg] = d;
         d->SetUpCacheObject(this);
         write_back_.insert(d);
