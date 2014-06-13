@@ -263,7 +263,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     if (pending_flag()) {
         return false;
     }
-    // TODO(chinmayee/quhang), some checkings are not required.
+    // TODO(chinmayee/quhang) some checkings are not required.
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         if (d->pending_flag()) {

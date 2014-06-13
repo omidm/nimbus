@@ -205,16 +205,17 @@ void CacheManager::SyncData(Data *d) {
         return;
     }
     assert(co->IsAvailable(cache::EXCLUSIVE));
-    // while (d->pending_flag() ||
-    //        (d->dirty_cache_object()
-    //         && d->dirty_cache_object()->pending_flag())) {
-    //    pthread_cond_wait(&cache_cond, &cache_lock);
-    // }
-    // co = d->dirty_cache_object();
-    // if (!co) {
-    //     pthread_mutex_unlock(&cache_lock);
-    //     return;
-    // }
+    // Adds lock. Maybe not necessary.
+    while (d->pending_flag() ||
+           (d->dirty_cache_object()
+            && d->dirty_cache_object()->pending_flag())) {
+       pthread_cond_wait(&cache_cond, &cache_lock);
+    }
+    co = d->dirty_cache_object();
+    if (!co) {
+        pthread_mutex_unlock(&cache_lock);
+        return;
+    }
     d->set_pending_flag();
     co->set_pending_flag();
     d->ClearDirtyMappings();
