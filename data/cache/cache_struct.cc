@@ -255,6 +255,8 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
     assert(flush_sets != NULL);
     assert(diff_sets != NULL);
     assert(sync_sets != NULL);
+    assert(sync_co_sets != NULL);
+    set_pending_flag();
     size_t num_vars = var_type.size();
     assert(read_sets.size() == num_vars &&
            write_sets.size() == num_vars &&
@@ -355,6 +357,9 @@ bool CacheStruct::CheckPendingFlag(
         const std::vector<cache::type_id_t> &var_type,
         const std::vector<DataArray> &read_sets,
         const std::vector<DataArray> &write_sets) {
+    if (pending_flag()) {
+        return false;
+    }
     size_t num_vars = var_type.size();
     assert(read_sets.size() == num_vars &&
            write_sets.size() == num_vars);
@@ -410,6 +415,8 @@ void CacheStruct::ReleasePendingFlag(
     assert(flush_sets != NULL);
     assert(diff_sets != NULL);
     assert(sync_sets != NULL);
+    assert(sync_co_sets != NULL);
+    unset_pending_flag();
     size_t num_vars = var_type.size();
     assert(flush_sets->size() == num_vars &&
            diff_sets->size() == num_vars &&

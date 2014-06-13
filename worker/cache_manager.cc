@@ -75,6 +75,7 @@ void CacheManager::DoSetUpWrite(CacheVar* cache_var,
     cache_var->PerformSetUpWrite(write_set, write_region, flush);
     pthread_mutex_lock(&cache_lock);
     cache_var->ReleaseWritePendingFlag(write_set, flush);
+    pthread_cond_signal(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 }
 

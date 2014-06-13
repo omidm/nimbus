@@ -136,6 +136,9 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
 
 bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
                                      GeometricRegion &write_region) {
+    if (pending_flag()) {
+        return false;
+    }
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
         if (d->pending_flag()) {
@@ -145,8 +148,12 @@ bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
         DMap::iterator it = data_map_.find(dreg);
         if (it != data_map_.end()) {
             Data *d_old = it->second;
-            if (d_old->pending_flag()) {
-                return false;
+            if (d_old != d) {
+                if (write_back_.find(d_old) != write_back_.end()) {
+                    if (d_old->pending_flag()) {
+                        return false;
+                    }
+                }
             }
         }
     }
@@ -161,6 +168,8 @@ bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
 void CacheVar::SetUpWrite(const DataArray &write_set,
                           GeometricRegion &write_region,
                           DataArray* flush) {
+    set_pending_flag();
+    assert(flush != NULL);
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
         d->set_pending_flag();
@@ -168,9 +177,9 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
         DMap::iterator it = data_map_.find(dreg);
         if (it != data_map_.end()) {
             Data *d_old = it->second;
-            d_old->set_pending_flag();
             if (d_old != d) {
                 if (write_back_.find(d_old) != write_back_.end()) {
+                    d_old->set_pending_flag();
                     flush->push_back(d_old);
                     write_back_.erase(d_old);
                     d_old->UnsetDirtyCacheObject(this);
@@ -227,6 +236,8 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
     assert(flush != NULL);
     assert(diff != NULL);
     assert(sync != NULL);
+    assert(sync_co != NULL);
+    set_pending_flag();
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
@@ -350,6 +361,8 @@ void CacheVar::ReleasePendingFlag(DataArray *flush,
     assert(flush != NULL);
     assert(diff != NULL);
     assert(sync != NULL);
+    assert(sync_co != NULL);
+    unset_pending_flag();
     for (size_t i = 0; i < flush->size(); ++i) {
         flush->at(i)->unset_pending_flag();
     }
