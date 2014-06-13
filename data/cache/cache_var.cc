@@ -136,9 +136,9 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
 
 bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
                                      GeometricRegion &write_region) {
-    if (pending_flag()) {
-        return false;
-    }
+    // if (pending_flag()) {
+    //     return false;
+    // }
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
         if (d->pending_flag()) {
@@ -168,6 +168,7 @@ bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
 void CacheVar::SetUpWrite(const DataArray &write_set,
                           GeometricRegion &write_region,
                           DataArray* flush) {
+    assert(pending_flag());
     set_pending_flag();
     assert(flush != NULL);
     for (size_t i = 0; i < write_set.size(); ++i) {
@@ -208,7 +209,7 @@ void CacheVar::PerformSetUpWrite(const DataArray &write_set,
 
 void CacheVar::ReleaseWritePendingFlag(const DataArray &write_set,
                                        const DataArray& flush) {
-    unset_pending_flag();
+    // unset_pending_flag();
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
         d->unset_pending_flag();
@@ -363,7 +364,7 @@ void CacheVar::ReleasePendingFlag(DataArray *flush,
     assert(diff != NULL);
     assert(sync != NULL);
     assert(sync_co != NULL);
-    unset_pending_flag();
+    // unset_pending_flag();
     for (size_t i = 0; i < flush->size(); ++i) {
         flush->at(i)->unset_pending_flag();
     }

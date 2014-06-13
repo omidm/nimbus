@@ -113,7 +113,7 @@ class CacheObject {
         /**
          * \brief Releases access to CacheObject instance
          */
-        void ReleaseAccess();
+        void ReleaseAccessInternal();
 
         /**
          * \brief Checks if CacheObject instance is available for use in access

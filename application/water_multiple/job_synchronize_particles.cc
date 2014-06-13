@@ -172,7 +172,7 @@ void JobSynchronizeParticles::Execute(nimbus::Parameter params, const nimbus::Da
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[POS_REM], particle_levelset, scale, true, true);
     Translator::ReadRemovedParticles(array_outer, shift, read_outer[NEG_REM], particle_levelset, scale, false, true);
 
-    cache_ple->ReleaseAccess();
+    cm->ReleaseAccess(cache_ple);
 
     dbg(APP_LOG, "Completed executing synchronize particles job\n");
 }

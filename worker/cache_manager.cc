@@ -213,16 +213,6 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
 void CacheManager::SyncData(Data *d) {
     CacheObject *co = NULL;
     pthread_mutex_lock(&cache_lock);
-    while (d->pending_flag()) {
-        pthread_cond_wait(&cache_cond, &cache_lock);
-    }
-    co = d->dirty_cache_object();
-    if (!co) {
-        pthread_mutex_unlock(&cache_lock);
-        return;
-    }
-    assert(co->IsAvailable(cache::EXCLUSIVE));
-    // Adds lock. Maybe not necessary.
     while (d->pending_flag() ||
            (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
@@ -233,6 +223,7 @@ void CacheManager::SyncData(Data *d) {
         pthread_mutex_unlock(&cache_lock);
         return;
     }
+    assert(co->IsAvailable(cache::EXCLUSIVE));
     d->set_pending_flag();
     co->set_pending_flag();
     d->ClearDirtyMappings();
@@ -258,4 +249,12 @@ void CacheManager::InvalidateMappings(Data *d) {
     pthread_mutex_unlock(&cache_lock);
 }
 
+void CacheManager::ReleaseAccess(CacheObject* cache_object) {
+    pthread_mutex_lock(&cache_lock);
+    cache_object->unset_pending_flag();
+    // TODO(quhang): use private method and mark friend class.
+    cache_object->ReleaseAccessInternal();
+    pthread_cond_broadcast(&cache_cond);
+    pthread_mutex_unlock(&cache_lock);
+}
 }  // namespace nimbus

@@ -102,7 +102,7 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  * (example, application job) must release an object when it is done reading/
  * writing.
  */
-void CacheObject::ReleaseAccess() {
+void CacheObject::ReleaseAccessInternal() {
     users_--;
     assert(users_ == 0);
 }

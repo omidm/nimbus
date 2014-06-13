@@ -142,6 +142,8 @@ class CacheManager {
                           const DataArray &write_set,
                           GeometricRegion &write_region);
 
+        void ReleaseAccess(CacheObject* cache_object);
+
     private:
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;

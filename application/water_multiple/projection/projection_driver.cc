@@ -629,14 +629,15 @@ void ProjectionDriver::SaveToNimbus(
                                        init_config.local_region.dx()+2,
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
-  // TODO(addcache) pressure.
+
+  nimbus::CacheManager *cm = job->GetCacheManager();
 
   if (application::kUseCache) {
     if (cache_pressure) {
       typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
-      cache_pressure->ReleaseAccess();
+      cm->ReleaseAccess(cache_pressure);
       cache_pressure = NULL;
     }
   } else {

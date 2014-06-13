@@ -699,12 +699,13 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                             local_region.dy()+2*application::kGhostNum,
                             local_region.dz()+2*application::kGhostNum);
 
+    nimbus::CacheManager *cm = job->GetCacheManager();
     // mac velocities
     if (cache_fv) {
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
         nimbus::DataArray write;
-        cache_fv->ReleaseAccess();
+        cm->ReleaseAccess(cache_fv);
         cache_fv = NULL;
     }
 
@@ -713,7 +714,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
         nimbus::DataArray write;
-        cache_fvg->ReleaseAccess();
+        cm->ReleaseAccess(cache_fvg);
         cache_fvg = NULL;
     }
 
@@ -726,19 +727,19 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       if (cache_phi3) {
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          cache_phi3->ReleaseAccess();
+          cm->ReleaseAccess(cache_phi3);
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-          cache_phi7->ReleaseAccess();
+          cm->ReleaseAccess(cache_phi7);
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          cache_phi8->ReleaseAccess();
+          cm->ReleaseAccess(cache_phi8);
           cache_phi8 = NULL;
       }
       // last unique particle id
@@ -779,7 +780,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
               }
               cache_ple->WriteImmediately(var_type, shared);
           }
-          cache_ple->ReleaseAccess();
+          cm->ReleaseAccess(cache_ple);
           cache_ple = NULL;
       }
     }
@@ -789,7 +790,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
         nimbus::DataArray write;
-        cache_psi_d->ReleaseAccess();
+        cm->ReleaseAccess(cache_psi_d);
         cache_psi_d = NULL;
     }
 
@@ -798,7 +799,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
         nimbus::DataArray write;
-        cache_psi_n->ReleaseAccess();
+        cm->ReleaseAccess(cache_psi_n);
         cache_psi_n = NULL;
     }
 
@@ -807,7 +808,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
-      cache_pressure->ReleaseAccess();
+      cm->ReleaseAccess(cache_pressure);
       cache_pressure = NULL;
     }
     // colors.
@@ -816,14 +817,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       INT_SCALAR_ARRAY* colors = cache_colors->data();
       INT_SCALAR_ARRAY::Exchange_Arrays(
           *colors, projection.laplace->filled_region_colors);
-      cache_colors->ReleaseAccess();
+      cm->ReleaseAccess(cache_colors);
       cache_colors = NULL;
     }
     // divergence.
     if (cache_divergence) {
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
-      cache_divergence->ReleaseAccess();
+      cm->ReleaseAccess(cache_divergence);
       cache_divergence = NULL;
     }
 

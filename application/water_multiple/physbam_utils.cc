@@ -195,6 +195,8 @@ void GetAppCacheObjects(
       assert(cache->phi3 != NULL);
     }
     if (l7r || l7w) {
+      if (cache->phi3)
+        cache->phi3->WriteImmediately(write7);
       nimbus::CacheVar *cache_var =
         cm->GetAppVar(
             read7, array_reg_outer_7,
@@ -205,6 +207,8 @@ void GetAppCacheObjects(
       assert(cache->phi7 != NULL);
     }
     if (l8r || l8w) {
+      if (cache->phi3)
+        cache->phi3->WriteImmediately(write8);
       nimbus::CacheVar *cache_var =
         cm->GetAppVar(
             read8, array_reg_outer_8,
@@ -218,14 +222,15 @@ void GetAppCacheObjects(
       cm->DoSetUpWrite(cache->phi3, write3, array_reg_outer_3);
       // cache->phi3->SetUpWrite(write3, array_reg_outer_3);
     }
-    if (!write7.empty()) {
-      cm->DoSetUpWrite(cache->phi7, write7, array_reg_outer_7);
-      // cache->phi7->SetUpWrite(write7, array_reg_outer_7);
-    }
-    if (!write8.empty()) {
-      cm->DoSetUpWrite(cache->phi8, write8, array_reg_outer_8);
-      // cache->phi8->SetUpWrite(write8, array_reg_outer_8);
-    }
+    // TODO(chinmayee): comment these later, not needed
+    //if (!write7.empty()) {
+    //  cm->DoSetUpWrite(cache->phi7, write7, array_reg_outer_7);
+    //  // cache->phi7->SetUpWrite(write7, array_reg_outer_7);
+    //}
+    //if (!write8.empty()) {
+    //  cm->DoSetUpWrite(cache->phi8, write8, array_reg_outer_8);
+    //  // cache->phi8->SetUpWrite(write8, array_reg_outer_8);
+    //}
   }
   // psi_d.
   if (data_config.GetFlag(DataConfig::PSI_D))
