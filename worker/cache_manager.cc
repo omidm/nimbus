@@ -97,20 +97,12 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                        &flush, &diff, &sync, &sync_co);
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
-    assert(flush.size() == 0);
     cv->WriteFromCache(flush, write_region_old);
     for (size_t i = 0; i < sync.size(); ++i) {
-        assert(false);
         assert(sync_co[i]->IsAvailable(cache::EXCLUSIVE));
         sync_co[i]->PullData(sync[i]);
     }
-    // if (read_set.size() > 0) {
-    //     if (read_set[0]->name() == "psi_n" || read_set[0]->name() == "phi")
-    //         cv->ReadToCache(read_set, read_region);
-    // } else {
-    //     cv->ReadToCache(diff, read_region);
-    // }
-    cv->ReadToCache(read_set, read_region);
+    cv->ReadToCache(diff, read_region);
     return cv;
 }
 
@@ -156,19 +148,16 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
-    assert(flush_sets[0].size() == 0 && flush_sets[1].size() == 0 and flush_sets[2].size() == 0 && flush_sets[3].size() == 0);
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
     for (size_t t = 0; t < num_var; ++t) {
         DataArray &sync_t = sync_sets[t];
         CacheObjects &sync_co_t = sync_co_sets[t];
         for (size_t i = 0; i < sync_t.size(); ++i) {
-            assert(false);
             assert(sync_co_t[i]->IsAvailable(cache::EXCLUSIVE));
             sync_co_t[i]->PullData(sync_t[i]);
         }
     }
-    // cs->ReadToCache(var_type, diff_sets, read_region);
-    cs->ReadToCache(var_type, read_sets, read_region);
+    cs->ReadToCache(var_type, diff_sets, read_region);
     return cs;
 }
 
@@ -176,7 +165,6 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
  * \details
  */
 void CacheManager::SyncData(Data *d) {
-    assert(false);
     CacheObject *co = d->dirty_cache_object();
     if (!co)
         return;

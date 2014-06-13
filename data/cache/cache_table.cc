@@ -148,6 +148,7 @@ int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
         return min_index;
     min_index = 0;
     cache::distance_t min_distance = cvs.at(0)->GetDistance(read_set);
+    assert(cvs.at(0)->IsAvailable(access));
     cache::distance_t dist;
     for (size_t i = 1; i < cvs.size(); ++i) {
         if (!cvs.at(i)->IsAvailable(access))

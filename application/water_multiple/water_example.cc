@@ -695,8 +695,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         T_FACE_ARRAY *fv = cache_fv->data();
         T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
         nimbus::DataArray write;
-        application::GetWriteData(*job, APP_FACE_VEL, da, &write);
-        // cache_fv->WriteImmediately(write);
         cache_fv->ReleaseAccess();
         cache_fv = NULL;
     }
@@ -706,8 +704,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         T_FACE_ARRAY *fvg = cache_fvg->data();
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
         nimbus::DataArray write;
-        application::GetWriteData(*job, APP_FACE_VEL_GHOST, da, &write);
-        // cache_fvg->WriteImmediately(write);
         cache_fvg->ReleaseAccess();
         cache_fvg = NULL;
     }
@@ -721,25 +717,18 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       if (cache_phi3) {
           T_SCALAR_ARRAY *phi3 = cache_phi3->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
-          //if (data_config.GetFlag(DataConfig::LEVELSET) ||
-          //    data_config.GetFlag(DataConfig::LEVELSET_WRITE))
-          //  // cache_phi3->WriteImmediately(write);
           cache_phi3->ReleaseAccess();
           cache_phi3 = NULL;
       }
       if (cache_phi7) {
           T_SCALAR_ARRAY *phi7 = cache_phi7->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
-          //if (data_config.GetFlag(DataConfig::LEVELSET_BW_SEVEN_WRITE))
-          //  // cache_phi7->WriteImmediately(write);
           cache_phi7->ReleaseAccess();
           cache_phi7 = NULL;
       }
       if (cache_phi8) {
           T_SCALAR_ARRAY *phi8 = cache_phi8->data();
           T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
-          //if (data_config.GetFlag(DataConfig::LEVELSET_BW_EIGHT_WRITE))
-          //  // cache_phi8->WriteImmediately(write);
           cache_phi8->ReleaseAccess();
           cache_phi8 = NULL;
       }
@@ -751,7 +740,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       }
       // ** there should not be any accesses to particle levelset after this **
       if (cache_ple) {
-          // if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
+          if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
               nimbus::cache::type_id_t vars[] = { application::POS,
                                                   application::NEG,
                                                   application::POS_REM,
@@ -779,9 +768,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
                       }
                   }
               }
-              // cache_ple->WriteImmediately(var_type, shared);
-              cache_ple->WriteImmediately(var_type, write);
-          // }
+              cache_ple->WriteImmediately(var_type, shared);
+          }
           cache_ple->ReleaseAccess();
           cache_ple = NULL;
       }
@@ -792,8 +780,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
         BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
         nimbus::DataArray write;
-        application::GetWriteData(*job, APP_PSI_D, da, &write);
-        // cache_psi_d->WriteImmediately(write);
         cache_psi_d->ReleaseAccess();
         cache_psi_d = NULL;
     }
@@ -803,8 +789,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
         BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
         nimbus::DataArray write;
-        application::GetWriteData(*job, APP_PSI_N, da, &write);
-        // cache_psi_n->WriteImmediately(write);
         cache_psi_n->ReleaseAccess();
         cache_psi_n = NULL;
     }
@@ -1213,52 +1197,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     // particle leveset quantities
     T_PARTICLE_LEVELSET& particle_levelset = particle_levelset_evolution.particle_levelset;
-
-//    if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
-//      // positive particles
-//      const std::string ppstring = std::string(APP_POS_PARTICLES);
-//      if (application::GetTranslatorData(job, ppstring, da, &pdv, application::READ_ACCESS)
-//          && data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
-//        translator.ReadParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, true);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//      dbg(APP_LOG, "Finish translating positive particles.\n");
-//
-//      // negative particles
-//      const std::string npstring = std::string(APP_NEG_PARTICLES);
-//      if (application::GetTranslatorData(job, npstring, da, &pdv, application::READ_ACCESS)
-//          && data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
-//        translator.ReadParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, false);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//      dbg(APP_LOG, "Finish translating negative particles.\n");
-//
-//      // Removed positive particles.
-//      const std::string prpstring = std::string(APP_POS_REM_PARTICLES);
-//      if (application::GetTranslatorData(job, prpstring, da, &pdv, application::READ_ACCESS)
-//          && data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
-//        translator.ReadRemovedParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, true);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//      dbg(APP_LOG, "Finish translating remove positive particles.\n");
-//
-//      // Removed negative particles.
-//      const std::string nrpstring = std::string(APP_NEG_REM_PARTICLES);
-//      if (application::GetTranslatorData(job, nrpstring, da, &pdv, application::READ_ACCESS)
-//          && data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
-//        translator.ReadRemovedParticles(
-//            &enlarge, array_shift,
-//            &pdv, particle_levelset, kScale, false);
-//      }
-//      application::DestroyTranslatorObjects(&pdv);
-//      dbg(APP_LOG, "Finish translating remove negative particles.\n");
-//    }
 
     // levelset
     if (cache_phi3)

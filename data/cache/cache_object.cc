@@ -89,6 +89,7 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
+    printf("Users %d, id %u, region %s\n", users_, id_, object_region_.toString().c_str());
     assert(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED));
     access_ = access;
     users_++;
@@ -101,6 +102,8 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  */
 void CacheObject::ReleaseAccess() {
     users_--;
+    printf("Users %d\n", users_);
+    assert(users_ == 0);
 }
 
 /**
