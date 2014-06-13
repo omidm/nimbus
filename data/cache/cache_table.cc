@@ -143,14 +143,21 @@ int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
                                     const DataArray &read_set,
                                     cache::CacheAccess access) const {
     int min_index = -1;
-    if (cvs.size() == 0 ||
-        (cvs.size() == 1 && !cvs.at(0)->IsAvailable(access)))
+    if (cvs.size() == 0)
         return min_index;
-    min_index = 0;
-    cache::distance_t min_distance = cvs.at(0)->GetDistance(read_set);
-    assert(cvs.at(0)->IsAvailable(access));
+    cache::distance_t min_distance = 1;
+    for (size_t i = 0; i < cvs.size(); ++i) {
+        if (cvs.at(i)->IsAvailable(access)) {
+            min_distance = cvs.at(i)->GetDistance(read_set);
+            min_index = i;
+            break;
+        }
+    }
+    if (min_index < 0 || min_distance == 0)
+        return min_index;
     cache::distance_t dist;
-    for (size_t i = 1; i < cvs.size(); ++i) {
+    size_t start = min_index;
+    for (size_t i = start; i < cvs.size(); ++i) {
         if (!cvs.at(i)->IsAvailable(access))
             continue;
         dist = cvs.at(i)->GetDistance(read_set);
@@ -174,13 +181,21 @@ int CacheTable::GetMinDistanceIndex(const CacheStructs &css,
                                     const std::vector<DataArray> &read_sets,
                                     cache::CacheAccess access) const {
     int min_index = -1;
-    if (css.size() == 0 ||
-        (css.size() == 1 && !css.at(0)->IsAvailable(access)))
+    if (css.size() == 0)
         return min_index;
-    min_index = 0;
-    cache::distance_t min_distance = css.at(0)->GetDistance(var_type, read_sets);
+    cache::distance_t min_distance = 1;
+    for (size_t i = 0; i < css.size(); ++i) {
+        if (css.at(i)->IsAvailable(access)) {
+            min_distance = css.at(i)->GetDistance(var_type, read_sets);
+            min_index = i;
+            break;
+        }
+    }
+    if (min_index < 0 || min_distance == 0)
+        return min_index;
     cache::distance_t dist;
-    for (size_t i = 1; i < css.size(); ++i) {
+    size_t start = min_index;
+    for (size_t i = start; i < css.size(); ++i) {
         if (!css.at(i)->IsAvailable(access))
             continue;
         dist = css.at(i)->GetDistance(var_type, read_sets);
