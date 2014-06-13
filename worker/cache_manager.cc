@@ -206,10 +206,11 @@ void CacheManager::SyncData(Data *d) {
     }
     assert(co->IsAvailable(cache::EXCLUSIVE));
     while (d->pending_flag() ||
-           ((co = d->dirty_cache_object())
+           (d->dirty_cache_object()
             && d->dirty_cache_object()->pending_flag())) {
        pthread_cond_wait(&cache_cond, &cache_lock);
     }
+    co = d->dirty_cache_object();
     if (!co) {
         pthread_mutex_unlock(&cache_lock);
         return;

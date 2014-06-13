@@ -213,6 +213,7 @@ void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                     d_old->UnsetCacheObject(this);
                 }
             }
+            // TODO(debug)
             // if (d->dirty_cache_object() != this)
             d->InvalidateMappings();
             data_map_t[dreg] = d;
@@ -313,6 +314,7 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
                     d_old->UnsetCacheObject(this);
                 }
             }
+            // TODO(debug)
             // if (d->dirty_cache_object() != this)
             d->InvalidateMappings();
             data_map_t[dreg] = d;

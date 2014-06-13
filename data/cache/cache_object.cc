@@ -92,7 +92,6 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
-// TODO(concurrency) mapping-related.
     assert(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED));
     access_ = access;
     users_++;
@@ -104,7 +103,6 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  * writing.
  */
 void CacheObject::ReleaseAccess() {
-// TODO(concurrency) mapping-related.
     users_--;
 }
 
@@ -115,7 +113,6 @@ void CacheObject::ReleaseAccess() {
  * users is zero, or the current access mode for the object is cache::SHARED.
  */
 bool CacheObject::IsAvailable(cache::CacheAccess access) const {
-// TODO(concurrency) mapping-related.
     return ((access == cache::EXCLUSIVE && users_ == 0) ||
             (access == cache::SHARED && (access_ == cache::SHARED || users_ == 0)));
 }

@@ -92,7 +92,6 @@ void CacheVar::PullData(Data *d) {
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
         GetIntersection(write_region_, dreg);
-// TODO(concurrency) cache->data.
     WriteFromCache(write_set, wreg);
 }
 
@@ -132,7 +131,6 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
         d->UnsetDirtyCacheObject(this);
         write_back_.erase(d);
     }
-// TODO(concurrency) cache->data.
     WriteFromCache(flush_set, write_region_);
 }
 
@@ -159,6 +157,7 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
                 d_old->UnsetCacheObject(this);
             }
         }
+        // TODO(debug)
         // if (d->dirty_cache_object() != this)
         d->InvalidateMappings();
         data_map_[dreg] = d;
@@ -190,12 +189,10 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
     assert(sync != NULL);
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
-        d->set_pending_flag();
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it == data_map_.end()) {
             if (d->dirty_cache_object()) {
-                d->dirty_cache_object()->set_pending_flag();
                 sync->push_back(d);
                 sync_co->push_back(d->dirty_cache_object());
                 d->ClearDirtyMappings();
@@ -238,6 +235,7 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                 d_old->UnsetCacheObject(this);
             }
         }
+        // TODO(debug)
         // if (d->dirty_cache_object() != this)
         d->InvalidateMappings();
         data_map_[dreg] = d;
