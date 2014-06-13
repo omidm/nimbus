@@ -53,19 +53,21 @@
 
 namespace nimbus {
 
+// TODO(concurrency) needs to be protected.
 cache::co_id_t CacheObject::ids_allocated_ = 0;
 
 /**
  * \details
  */
-CacheObject::CacheObject() : id_(0),
+CacheObject::CacheObject() : pending_flag_(false), id_(0),
     access_(cache::SHARED), users_(0)  {
 }
 
 /**
  * \details
  */
-CacheObject::CacheObject(const GeometricRegion &ob_reg) : id_(0),
+CacheObject::CacheObject(const GeometricRegion &ob_reg) : pending_flag_(false),
+    id_(0),
     access_(cache::SHARED), users_(0), object_region_(ob_reg) {
 }
 
@@ -79,6 +81,7 @@ CacheObject::CacheObject(const GeometricRegion &ob_reg) : id_(0),
  * instance is available.
  */
 void CacheObject::MakePrototype() {
+// TODO(concurrency) needs to be protected.
     id_ = ++ids_allocated_;
 }
 
@@ -89,7 +92,6 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
-    printf("Users %d, id %u, region %s\n", users_, id_, object_region_.toString().c_str());
     assert(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED));
     access_ = access;
     users_++;
@@ -102,7 +104,6 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  */
 void CacheObject::ReleaseAccess() {
     users_--;
-    printf("Users %d\n", users_);
     assert(users_ == 0);
 }
 

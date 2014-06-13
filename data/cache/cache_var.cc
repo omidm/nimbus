@@ -139,6 +139,7 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
  * If it replaces existing data, flush existing data if dirty. Create
  * dirty object mapping with all data in write set and set write region.
  */
+// TODO(chinmayee/quhang) add synchronization.
 void CacheVar::SetUpWrite(const DataArray &write_set,
                           GeometricRegion &write_region) {
     DataArray flush;
@@ -246,6 +247,81 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
         d->SetUpCacheObject(this);
         write_back_.insert(d);
         d->SetUpDirtyCacheObject(this);
+    }
+    for (size_t i = 0; i < flush->size(); ++i) {
+        flush->at(i)->set_pending_flag();
+    }
+    for (size_t i = 0; i < diff->size(); ++i) {
+        diff->at(i)->set_pending_flag();
+    }
+    for (size_t i = 0; i < sync->size(); ++i) {
+        sync->at(i)->set_pending_flag();
+    }
+    for (size_t i = 0; i < sync_co->size(); ++i) {
+        sync_co->at(i)->set_pending_flag();
+    }
+}
+
+bool CacheVar::CheckPendingFlag(const DataArray &read_set,
+                                const DataArray &write_set) {
+    if (pending_flag()) {
+        return false;
+    }
+    // TODO(chinmayee/quhang) some checkings are not required.
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set.at(i);
+        if (d->pending_flag()) {
+            return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it != data_map_.end()) {
+            Data *d_old = it->second;
+            if (d_old->pending_flag()) {
+                return false;
+            }
+        }
+        if (d->dirty_cache_object()) {
+            if (d->dirty_cache_object()->pending_flag()) {
+                return false;
+            }
+        }
+    }
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
+        if (d->pending_flag()) {
+            return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it != data_map_.end()) {
+            Data *d_old = it->second;
+            if (d_old->pending_flag()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void CacheVar::ReleasePendingFlag(DataArray *flush,
+                                  DataArray *diff,
+                                  DataArray *sync,
+                                  CacheObjects *sync_co) {
+    assert(flush != NULL);
+    assert(diff != NULL);
+    assert(sync != NULL);
+    for (size_t i = 0; i < flush->size(); ++i) {
+        flush->at(i)->unset_pending_flag();
+    }
+    for (size_t i = 0; i < diff->size(); ++i) {
+        diff->at(i)->unset_pending_flag();
+    }
+    for (size_t i = 0; i < sync->size(); ++i) {
+        sync->at(i)->unset_pending_flag();
+    }
+    for (size_t i = 0; i < sync_co->size(); ++i) {
+        sync_co->at(i)->unset_pending_flag();
     }
 }
 

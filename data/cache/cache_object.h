@@ -142,7 +142,18 @@ class CacheObject {
          */
         void set_object_region(const GeometricRegion &object_region);
 
+        bool pending_flag() {
+          return pending_flag_;
+        }
+        void set_pending_flag() {
+          pending_flag_ = true;
+        }
+        void unset_pending_flag() {
+          pending_flag_ = false;
+        }
+
     private:
+        bool pending_flag_;
         /**
          * \brief Setter for id_ member
          * \param id, of type cache::co_id_t

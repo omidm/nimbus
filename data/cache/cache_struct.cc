@@ -334,6 +334,104 @@ void CacheStruct::SetUpReadWrite(const std::vector<cache::type_id_t> &var_type,
             d->SetUpDirtyCacheObject(this);
             d->set_cache_type(t);
         }
+        for (size_t i = 0; i < flush_t.size(); ++i) {
+            flush_t.at(i)->set_pending_flag();
+        }
+        for (size_t i = 0; i < diff_t.size(); ++i) {
+            diff_t.at(i)->set_pending_flag();
+        }
+        for (size_t i = 0; i < sync_t.size(); ++i) {
+            sync_t.at(i)->set_pending_flag();
+        }
+        for (size_t i = 0; i < sync_co_t.size(); ++i) {
+            sync_co_t.at(i)->set_pending_flag();
+        }
     }
 }
+
+bool CacheStruct::CheckPendingFlag(
+        const std::vector<cache::type_id_t> &var_type,
+        const std::vector<DataArray> &read_sets,
+        const std::vector<DataArray> &write_sets) {
+    size_t num_vars = var_type.size();
+    assert(read_sets.size() == num_vars &&
+           write_sets.size() == num_vars);
+    assert(num_vars <= num_variables_);
+    for (size_t t = 0; t < num_vars; ++t) {
+        const DataArray &read_set_t = read_sets[t];
+        const DataArray &write_set_t = write_sets[t];
+        cache::type_id_t type = var_type[t];
+        DMap &data_map_t = data_maps_[type];
+        for (size_t i = 0; i < read_set_t.size(); ++i) {
+            Data *d = read_set_t.at(i);
+            if (d->pending_flag()) {
+                return false;
+            }
+            GeometricRegion dreg = d->region();
+            DMap::iterator it = data_map_t.find(dreg);
+            if (it != data_map_t.end()) {
+                Data *d_old = it->second;
+                if (d_old->pending_flag()) {
+                    return false;
+                }
+            }
+            if (d->dirty_cache_object()) {
+                if (d->dirty_cache_object()->pending_flag()) {
+                    return false;
+                }
+            }
+        }
+        for (size_t i = 0; i < write_set_t.size(); ++i) {
+            Data *d = write_set_t.at(i);
+            if (d->pending_flag()) {
+                return false;
+            }
+            GeometricRegion dreg = d->region();
+            DMap::iterator it = data_map_t.find(dreg);
+            if (it != data_map_t.end()) {
+                Data *d_old = it->second;
+                if (d_old->pending_flag()) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+void CacheStruct::ReleasePendingFlag(
+        const std::vector<cache::type_id_t> &var_type,
+        std::vector<DataArray> *flush_sets,
+        std::vector<DataArray> *diff_sets,
+        std::vector<DataArray> *sync_sets,
+        std::vector<CacheObjects> *sync_co_sets) {
+    assert(flush_sets != NULL);
+    assert(diff_sets != NULL);
+    assert(sync_sets != NULL);
+    size_t num_vars = var_type.size();
+    assert(flush_sets->size() == num_vars &&
+           diff_sets->size() == num_vars &&
+           sync_sets->size() == num_vars &&
+           sync_co_sets->size() == num_vars);
+    assert(num_vars <= num_variables_);
+    for (size_t t = 0; t < num_vars; ++t) {
+        DataArray &flush_t = flush_sets->at(t);
+        DataArray &diff_t = diff_sets->at(t);
+        DataArray &sync_t = sync_sets->at(t);
+        CacheObjects &sync_co_t = sync_co_sets->at(t);
+        for (size_t i = 0; i < flush_t.size(); ++i) {
+            flush_t.at(i)->unset_pending_flag();
+        }
+        for (size_t i = 0; i < diff_t.size(); ++i) {
+            diff_t.at(i)->unset_pending_flag();
+        }
+        for (size_t i = 0; i < sync_t.size(); ++i) {
+            sync_t.at(i)->unset_pending_flag();
+        }
+        for (size_t i = 0; i < sync_co_t.size(); ++i) {
+            sync_co_t.at(i)->unset_pending_flag();
+        }
+    }
+}
+
 }  // namespace nimbus
