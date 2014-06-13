@@ -139,6 +139,7 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
  * If it replaces existing data, flush existing data if dirty. Create
  * dirty object mapping with all data in write set and set write region.
  */
+// TODO(chinmayee/quhang) add synchronization.
 void CacheVar::SetUpWrite(const DataArray &write_set,
                           GeometricRegion &write_region) {
     DataArray flush;
@@ -262,6 +263,7 @@ bool CacheVar::CheckPendingFlag(const DataArray &read_set,
     if (pending_flag()) {
         return false;
     }
+    // TODO(chinmayee/quhang), some checkings are not required.
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
         if (d->pending_flag()) {
