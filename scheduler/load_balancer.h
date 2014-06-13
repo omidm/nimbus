@@ -62,12 +62,9 @@ namespace nimbus {
   public:
     typedef std::map<worker_id_t, GeometricRegion> RegionMap;
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
+
     LoadBalancer();
-
     explicit LoadBalancer(ClusterMap* cluster_map);
-
-    LoadBalancer(const LoadBalancer& other);
-
     virtual ~LoadBalancer();
 
     void Run();
@@ -86,11 +83,12 @@ namespace nimbus {
 
 
   private:
+    LoadBalancer(const LoadBalancer& other) {}
+
     ClusterMap* cluster_map_;
-
     GeometricRegion global_region_;
-
     Log log_;
+
     Graph<JobProfile, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
 

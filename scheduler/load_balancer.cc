@@ -48,13 +48,13 @@
 namespace nimbus {
 
 LoadBalancer::LoadBalancer() {
+  updated_info_ = false;
+  cluster_map_ = NULL;
 }
 
 LoadBalancer::LoadBalancer(ClusterMap* cluster_map)
   : cluster_map_(cluster_map) {
-}
-
-LoadBalancer::LoadBalancer(const LoadBalancer& other) {
+  updated_info_ = false;
 }
 
 LoadBalancer::~LoadBalancer() {
@@ -90,6 +90,10 @@ bool LoadBalancer::GetWorkerToAssignJob(
 
 void LoadBalancer::NotifyJobAssignment(
     const JobEntry *job, const SchedulerWorker* worker) {
+  // TODO(omidm): Fill out the method.
+}
+
+void LoadBalancer::NotifyJobDone(const JobEntry *job) {
   // TODO(omidm): Fill out the method.
 }
 
