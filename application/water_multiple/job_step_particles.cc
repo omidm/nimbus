@@ -47,7 +47,9 @@
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/water_sources.h"
+#include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
 #include "application/water_multiple/job_step_particles.h"
@@ -101,6 +103,19 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Execute the step in step particles job.\n");
   {
     //nimbus::Timer timer(std::string("step_particle_") + id().toString());
+    typedef typename nimbus::TranslatorPhysBAM<T> Translator;
+    GeometricRegion lr = init_config.local_region;
+    GeometricRegion gr = init_config.global_region;
+    nimbus::Coord shift(lr.x() - gr.x(), lr.y() - gr.y(), lr.z() - gr.z());
+    GeometricRegion er = lr.NewEnlarged(kGhostNum);
+    Translator::DeleteParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), true);
+    Translator::DeleteParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), false);
+    Translator::DeleteRemovedParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), true);
+    Translator::DeleteRemovedParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), false);
     driver->StepParticlesImpl(this, da, dt);
   }
 
