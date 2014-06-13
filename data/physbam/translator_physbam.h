@@ -914,12 +914,12 @@ template <class TS> class TranslatorPhysBAM {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x > inner.x() &&
-                                            absolute_position.x <= inner.x() + inner.dx() &&
-                                            absolute_position.y > inner.y() &&
-                                            absolute_position.y <= inner.y() + inner.dy() &&
-                                            absolute_position.z > inner.z() &&
-                                            absolute_position.z <= inner.z() + inner.dz()) {
+                                        if (absolute_position.x >= inner.x() &&
+                                            absolute_position.x < inner.x() + inner.dx() &&
+                                            absolute_position.y >= inner.y() &&
+                                            absolute_position.y < inner.y() + inner.dy() &&
+                                            absolute_position.z >= inner.z() &&
+                                            absolute_position.z < inner.z() + inner.dz()) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
                                                 (*particles)(bucket_index) =
@@ -1023,12 +1023,12 @@ template <class TS> class TranslatorPhysBAM {
                                         TV particle_position = particle_bucket->X(i);
                                         TV absolute_position = particle_position *
                                             static_cast<float>(scale) + 1.0;
-                                        if (absolute_position.x > inner.x() &&
-                                            absolute_position.x <= inner.x() + inner.dx() &&
-                                            absolute_position.y > inner.y() &&
-                                            absolute_position.y <= inner.y() + inner.dy() &&
-                                            absolute_position.z > inner.z() &&
-                                            absolute_position.z <= inner.z() + inner.dz()) {
+                                        if (absolute_position.x >= inner.x() &&
+                                            absolute_position.x < inner.x() + inner.dx() &&
+                                            absolute_position.y >= inner.y() &&
+                                            absolute_position.y < inner.y() + inner.dy() &&
+                                            absolute_position.z >= inner.z() &&
+                                            absolute_position.z < inner.z() + inner.dz()) {
                                             if (!new_particles_alloc) {
                                                 new_particles_alloc = true;
                                                 (*particles)(bucket_index) =
@@ -1054,6 +1054,7 @@ template <class TS> class TranslatorPhysBAM {
                                                     template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
                                                 (*new_id)(index) = (*id)(i);
                                             }
+                                            particle_new_bucket->V(index) = particle_bucket->V(i);
                                         }
                                     }
                                     particle_bucket = particle_bucket->next;
@@ -1068,7 +1069,7 @@ template <class TS> class TranslatorPhysBAM {
             }
             if (log) {
                 std::stringstream msg;
-                msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                msg << "### Delete Removed Particles (New Translator) end : " << log->GetTime();
                 log->WriteToFile(msg.str());
             }
         }
