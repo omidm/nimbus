@@ -208,6 +208,7 @@ void CacheVar::PerformSetUpWrite(const DataArray &write_set,
 
 void CacheVar::ReleaseWritePendingFlag(const DataArray &write_set,
                                        const DataArray& flush) {
+    unset_pending_flag();
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
         d->unset_pending_flag();

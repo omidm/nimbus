@@ -67,7 +67,7 @@ void CacheManager::DoSetUpWrite(CacheVar* cache_var,
                                 GeometricRegion &write_region) {
     DataArray flush;
     pthread_mutex_lock(&cache_lock);
-    while (cache_var->CheckWritePendingFlag(write_set, write_region)) {
+    while (!cache_var->CheckWritePendingFlag(write_set, write_region)) {
         pthread_cond_wait(&cache_cond, &cache_lock);
     }
     cache_var->SetUpWrite(write_set, write_region, &flush);
@@ -75,7 +75,7 @@ void CacheManager::DoSetUpWrite(CacheVar* cache_var,
     cache_var->PerformSetUpWrite(write_set, write_region, flush);
     pthread_mutex_lock(&cache_lock);
     cache_var->ReleaseWritePendingFlag(write_set, flush);
-    pthread_cond_signal(&cache_cond);
+    pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 }
 
@@ -134,7 +134,7 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     cv->ReadToCache(diff, read_region);
     pthread_mutex_lock(&cache_lock);
     cv->ReleasePendingFlag(&flush, &diff, &sync, &sync_co);
-    pthread_cond_signal(&cache_cond);
+    pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     return cv;
 }
@@ -202,7 +202,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
     pthread_mutex_lock(&cache_lock);
     cs->ReleasePendingFlag(var_type,
                            &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
-    pthread_cond_signal(&cache_cond);
+    pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
     return cs;
 }
@@ -242,7 +242,7 @@ void CacheManager::SyncData(Data *d) {
     pthread_mutex_lock(&cache_lock);
     d->unset_pending_flag();
     co->unset_pending_flag();
-    pthread_cond_signal(&cache_cond);
+    pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 }
 
