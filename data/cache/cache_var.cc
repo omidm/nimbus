@@ -92,6 +92,7 @@ void CacheVar::PullData(Data *d) {
     GeometricRegion dreg = d->region();
     GeometricRegion wreg = GeometricRegion::
         GetIntersection(write_region_, dreg);
+// TODO(concurrency) cache->data.
     WriteFromCache(write_set, wreg);
 }
 
@@ -131,6 +132,7 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
         d->UnsetDirtyCacheObject(this);
         write_back_.erase(d);
     }
+// TODO(concurrency) cache->data.
     WriteFromCache(flush_set, write_region_);
 }
 
@@ -157,8 +159,8 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
                 d_old->UnsetCacheObject(this);
             }
         }
-        if (d->dirty_cache_object() != this)
-            d->InvalidateMappings();
+        // if (d->dirty_cache_object() != this)
+        d->InvalidateMappings();
         data_map_[dreg] = d;
         d->SetUpCacheObject(this);
         write_back_.insert(d);
@@ -188,10 +190,12 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
     assert(sync != NULL);
     for (size_t i = 0; i < read_set.size(); ++i) {
         Data *d = read_set.at(i);
+        d->set_pending_flag();
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it == data_map_.end()) {
             if (d->dirty_cache_object()) {
+                d->dirty_cache_object()->set_pending_flag();
                 sync->push_back(d);
                 sync_co->push_back(d->dirty_cache_object());
                 d->ClearDirtyMappings();
@@ -234,12 +238,86 @@ void CacheVar::SetUpReadWrite(const DataArray &read_set,
                 d_old->UnsetCacheObject(this);
             }
         }
-        if (d->dirty_cache_object() != this)
-            d->InvalidateMappings();
+        // if (d->dirty_cache_object() != this)
+        d->InvalidateMappings();
         data_map_[dreg] = d;
         d->SetUpCacheObject(this);
         write_back_.insert(d);
         d->SetUpDirtyCacheObject(this);
+    }
+    for (size_t i = 0; i < flush->size(); ++i) {
+        flush->at(i)->set_pending_flag();
+    }
+    for (size_t i = 0; i < diff->size(); ++i) {
+        diff->at(i)->set_pending_flag();
+    }
+    for (size_t i = 0; i < sync->size(); ++i) {
+        sync->at(i)->set_pending_flag();
+    }
+    for (size_t i = 0; i < sync_co->size(); ++i) {
+        sync_co->at(i)->set_pending_flag();
+    }
+}
+
+bool CacheVar::CheckPendingFlag(const DataArray &read_set,
+                                const DataArray &write_set) {
+    if (pending_flag()) {
+        return false;
+    }
+    for (size_t i = 0; i < read_set.size(); ++i) {
+        Data *d = read_set.at(i);
+        if (d->pending_flag()) {
+            return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it != data_map_.end()) {
+            Data *d_old = it->second;
+            if (d_old->pending_flag()) {
+                return false;
+            }
+        }
+        if (d->dirty_cache_object()) {
+            if (d->dirty_cache_object()->pending_flag()) {
+                return false;
+            }
+        }
+    }
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
+        if (d->pending_flag()) {
+            return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it != data_map_.end()) {
+            Data *d_old = it->second;
+            if (d_old->pending_flag()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void CacheVar::ReleasePendingFlag(DataArray *flush,
+                                  DataArray *diff,
+                                  DataArray *sync,
+                                  CacheObjects *sync_co) {
+    assert(flush != NULL);
+    assert(diff != NULL);
+    assert(sync != NULL);
+    for (size_t i = 0; i < flush->size(); ++i) {
+        flush->at(i)->unset_pending_flag();
+    }
+    for (size_t i = 0; i < diff->size(); ++i) {
+        diff->at(i)->unset_pending_flag();
+    }
+    for (size_t i = 0; i < sync->size(); ++i) {
+        sync->at(i)->unset_pending_flag();
+    }
+    for (size_t i = 0; i < sync_co->size(); ++i) {
+        sync_co->at(i)->unset_pending_flag();
     }
 }
 

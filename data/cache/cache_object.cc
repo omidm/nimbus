@@ -53,19 +53,21 @@
 
 namespace nimbus {
 
+// TODO(concurrency) needs to be protected.
 cache::co_id_t CacheObject::ids_allocated_ = 0;
 
 /**
  * \details
  */
-CacheObject::CacheObject() : id_(0),
+CacheObject::CacheObject() : pending_flag_(false), id_(0),
     access_(cache::SHARED), users_(0)  {
 }
 
 /**
  * \details
  */
-CacheObject::CacheObject(const GeometricRegion &ob_reg) : id_(0),
+CacheObject::CacheObject(const GeometricRegion &ob_reg) : pending_flag_(false),
+    id_(0),
     access_(cache::SHARED), users_(0), object_region_(ob_reg) {
 }
 
@@ -79,6 +81,7 @@ CacheObject::CacheObject(const GeometricRegion &ob_reg) : id_(0),
  * instance is available.
  */
 void CacheObject::MakePrototype() {
+// TODO(concurrency) needs to be protected.
     id_ = ++ids_allocated_;
 }
 
@@ -89,6 +92,7 @@ void CacheObject::MakePrototype() {
  * one.
  */
 void CacheObject::AcquireAccess(cache::CacheAccess access) {
+// TODO(concurrency) mapping-related.
     assert(users_ == 0 || (access == cache::SHARED && access_ == cache::SHARED));
     access_ = access;
     users_++;
@@ -100,6 +104,7 @@ void CacheObject::AcquireAccess(cache::CacheAccess access) {
  * writing.
  */
 void CacheObject::ReleaseAccess() {
+// TODO(concurrency) mapping-related.
     users_--;
 }
 
@@ -110,6 +115,7 @@ void CacheObject::ReleaseAccess() {
  * users is zero, or the current access mode for the object is cache::SHARED.
  */
 bool CacheObject::IsAvailable(cache::CacheAccess access) const {
+// TODO(concurrency) mapping-related.
     return ((access == cache::EXCLUSIVE && users_ == 0) ||
             (access == cache::SHARED && (access_ == cache::SHARED || users_ == 0)));
 }

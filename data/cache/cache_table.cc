@@ -147,6 +147,7 @@ int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
         (cvs.size() == 1 && !cvs.at(0)->IsAvailable(access)))
         return min_index;
     min_index = 0;
+    // TODO(chinmayee/quhang) objects might not be available.
     cache::distance_t min_distance = cvs.at(0)->GetDistance(read_set);
     cache::distance_t dist;
     for (size_t i = 1; i < cvs.size(); ++i) {
@@ -177,6 +178,7 @@ int CacheTable::GetMinDistanceIndex(const CacheStructs &css,
         (css.size() == 1 && !css.at(0)->IsAvailable(access)))
         return min_index;
     min_index = 0;
+    // TODO(chinmayee/quhang) objects might not be available.
     cache::distance_t min_distance = css.at(0)->GetDistance(var_type, read_sets);
     cache::distance_t dist;
     for (size_t i = 1; i < css.size(); ++i) {

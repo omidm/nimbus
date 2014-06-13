@@ -39,6 +39,7 @@
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
+#include <pthread.h>
 #include <map>
 #include <vector>
 
@@ -57,6 +58,8 @@ namespace nimbus {
  */
 CacheManager::CacheManager() {
     pool_ = new Pool();
+    pthread_mutex_init(&cache_lock, NULL);
+    pthread_cond_init(&cache_cond, NULL);
 }
 
 /**
@@ -74,7 +77,9 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   const CacheVar &prototype,
                                   const GeometricRegion &region,
                                   cache::CacheAccess access) {
+    pthread_mutex_lock(&cache_lock);
     CacheVar *cv = NULL;
+    // Get a cache object form the cache table.
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::VAR);
         (*pool_)[prototype.id()] = ct;
@@ -90,11 +95,18 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
             ct->AddEntry(region, cv);
         }
     }
-    cv->AcquireAccess(access);
+    // cv->AcquireAccess(access);
     DataArray flush, sync, diff;
     CacheObjects sync_co;
+    while (!cv->CheckPendingFlag(read_set, write_set)) {
+      pthread_cond_wait(&cache_cond, &cache_lock);
+    }
+    // Move here.
+    cv->AcquireAccess(access);
     cv->SetUpReadWrite(read_set, write_set,
                        &flush, &diff, &sync, &sync_co);
+    pthread_mutex_unlock(&cache_lock);
+
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
     cv->WriteFromCache(flush, write_region_old);
@@ -103,6 +115,10 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
         sync_co[i]->PullData(sync[i]);
     }
     cv->ReadToCache(diff, read_region);
+    pthread_mutex_lock(&cache_lock);
+    cv->ReleasePendingFlag(&flush, &diff, &sync, &sync_co);
+    pthread_cond_signal(&cache_cond);
+    pthread_mutex_unlock(&cache_lock);
     return cv;
 }
 
@@ -122,6 +138,7 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
                                         const CacheStruct &prototype,
                                         const GeometricRegion &region,
                                         cache::CacheAccess access) {
+    pthread_mutex_lock(&cache_lock);
     CacheStruct *cs = NULL;
     if (pool_->find(prototype.id()) == pool_->end()) {
         CacheTable *ct = new CacheTable(cache::STRUCT);
@@ -138,14 +155,21 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
             ct->AddEntry(region, cs);
         }
     }
-    cs->AcquireAccess(access);
+    // cs->AcquireAccess(access);
     size_t num_var = var_type.size();
     std::vector<DataArray> flush_sets(num_var),
                            sync_sets(num_var),
                            diff_sets(num_var);
     std::vector<CacheObjects> sync_co_sets(num_var);
+    // Move here.
+    while (!cs->CheckPendingFlag(var_type, read_sets, write_sets)) {
+      pthread_cond_wait(&cache_cond, &cache_lock);
+    }
+    cs->AcquireAccess(access);
     cs->SetUpReadWrite(var_type, read_sets, write_sets,
                        &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    pthread_mutex_unlock(&cache_lock);
+
     GeometricRegion write_region_old = cs->write_region_;
     cs->write_region_ = write_region;
     cs->WriteFromCache(var_type, flush_sets, write_region_old);
@@ -158,6 +182,11 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
         }
     }
     cs->ReadToCache(var_type, diff_sets, read_region);
+    pthread_mutex_lock(&cache_lock);
+    cs->ReleasePendingFlag(var_type,
+                           &flush_sets, &diff_sets, &sync_sets, &sync_co_sets);
+    pthread_cond_signal(&cache_cond);
+    pthread_mutex_unlock(&cache_lock);
     return cs;
 }
 
@@ -165,19 +194,49 @@ CacheStruct *CacheManager::GetAppStruct(const std::vector<cache::type_id_t> &var
  * \details
  */
 void CacheManager::SyncData(Data *d) {
-    CacheObject *co = d->dirty_cache_object();
-    if (!co)
+    CacheObject *co = NULL;
+    pthread_mutex_lock(&cache_lock);
+    while (d->pending_flag()) {
+        pthread_cond_wait(&cache_cond, &cache_lock);
+    }
+    co = d->dirty_cache_object();
+    if (!co) {
+        pthread_mutex_unlock(&cache_lock);
         return;
+    }
     assert(co->IsAvailable(cache::EXCLUSIVE));
+    while (d->pending_flag() ||
+           ((co = d->dirty_cache_object())
+            && d->dirty_cache_object()->pending_flag())) {
+       pthread_cond_wait(&cache_cond, &cache_lock);
+    }
+    if (!co) {
+        pthread_mutex_unlock(&cache_lock);
+        return;
+    }
+    d->set_pending_flag();
+    co->set_pending_flag();
     d->ClearDirtyMappings();
+    pthread_mutex_unlock(&cache_lock);
+
     co->PullData(d);
+    pthread_mutex_lock(&cache_lock);
+    d->unset_pending_flag();
+    co->unset_pending_flag();
+    pthread_cond_signal(&cache_cond);
+    pthread_mutex_unlock(&cache_lock);
 }
 
 /**
  * \details
  */
 void CacheManager::InvalidateMappings(Data *d) {
+    pthread_mutex_lock(&cache_lock);
+    while (d->pending_flag()) {
+        pthread_cond_wait(&cache_cond, &cache_lock);
+    }
     d->InvalidateMappings();
+    pthread_mutex_unlock(&cache_lock);
 }
 
 }  // namespace nimbus

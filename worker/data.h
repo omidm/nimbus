@@ -161,7 +161,18 @@ class Data {
    */
   void set_cache_type(cache::type_id_t t);
 
+  bool pending_flag() {
+    return pending_flag_;
+  }
+  void set_pending_flag() {
+    pending_flag_ = true;
+  }
+  void unset_pending_flag() {
+    pending_flag_ = false;
+  }
+
  private:
+  bool pending_flag_;
   logical_data_id_t logical_id_;
   physical_data_id_t physical_id_;
   partition_id_t partition_id_;

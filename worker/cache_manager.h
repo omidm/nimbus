@@ -42,6 +42,7 @@
 #ifndef NIMBUS_WORKER_CACHE_MANAGER_H_
 #define NIMBUS_WORKER_CACHE_MANAGER_H_
 
+#include <pthread.h>
 #include <map>
 #include <vector>
 
@@ -66,6 +67,8 @@ class GeometricRegion;
  */
 class CacheManager {
     public:
+        pthread_mutex_t cache_lock;
+        pthread_cond_t cache_cond;
         /**
          * \brief Creates a CacheManager instance
          * \return Constructed CacheManager instance

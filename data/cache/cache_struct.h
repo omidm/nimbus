@@ -186,6 +186,14 @@ class CacheStruct : public CacheObject {
                             std::vector<DataArray> *diff_sets,
                             std::vector<DataArray> *sync_sets,
                             std::vector<CacheObjects> *sync_co_sets);
+        bool CheckPendingFlag(const std::vector<cache::type_id_t> &var_type,
+                              const std::vector<DataArray> &read_sets,
+                              const std::vector<DataArray> &write_sets);
+        void ReleasePendingFlag(const std::vector<cache::type_id_t> &var_type,
+                                std::vector<DataArray> *flush_sets,
+                                std::vector<DataArray> *diff_sets,
+                                std::vector<DataArray> *sync_sets,
+                                std::vector<CacheObjects> *sync_co_sets);
 
         // number of nimbus variables
         size_t num_variables_;

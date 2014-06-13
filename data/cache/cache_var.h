@@ -157,6 +157,12 @@ class CacheVar : public CacheObject {
                             DataArray *diff,
                             DataArray *sync,
                             CacheObjects *sync_co);
+        bool CheckPendingFlag(const DataArray &read_set,
+                              const DataArray &write_set);
+        void ReleasePendingFlag(DataArray *flush,
+                                DataArray *diff,
+                                DataArray *sync,
+                                CacheObjects *sync_co);
 
         // cache-data mappings
         typedef std::map<GeometricRegion,
