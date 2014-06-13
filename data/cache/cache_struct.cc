@@ -195,6 +195,8 @@ void CacheStruct::WriteImmediately(const std::vector<cache::type_id_t> &var_type
 void CacheStruct::SetUpWrite(const std::vector<cache::type_id_t> &var_type,
                              const std::vector<DataArray> &write_sets,
                              GeometricRegion write_region) {
+    // TODO(quhang): synchronization not implemented.
+    assert(false);
     size_t num_vars = var_type.size();
     assert(write_sets.size() == num_vars);
     assert(num_vars <= num_variables_);

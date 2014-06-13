@@ -138,6 +138,10 @@ class CacheManager {
          */
         void InvalidateMappings(Data *d);
 
+        void DoSetUpWrite(CacheVar* cache_var,
+                          const DataArray &write_set,
+                          GeometricRegion &write_region);
+
     private:
         typedef std::map<cache::co_id_t,
                          CacheTable *> Pool;

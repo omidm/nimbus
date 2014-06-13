@@ -62,6 +62,22 @@ CacheManager::CacheManager() {
     pthread_cond_init(&cache_cond, NULL);
 }
 
+void CacheManager::DoSetUpWrite(CacheVar* cache_var,
+                                const DataArray &write_set,
+                                GeometricRegion &write_region) {
+    DataArray flush;
+    pthread_mutex_lock(&cache_lock);
+    while (cache_var->CheckWritePendingFlag(write_set, write_region)) {
+        pthread_cond_wait(&cache_cond, &cache_lock);
+    }
+    cache_var->SetUpWrite(write_set, write_region, &flush);
+    pthread_mutex_unlock(&cache_lock);
+    cache_var->PerformSetUpWrite(write_set, write_region, flush);
+    pthread_mutex_lock(&cache_lock);
+    cache_var->ReleaseWritePendingFlag(write_set, flush);
+    pthread_mutex_unlock(&cache_lock);
+}
+
 /**
  * \details CacheManager checks if an instance with requested application
  * object region and prototype id is present and available for use. If not, it

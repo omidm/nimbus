@@ -134,7 +134,17 @@ class CacheVar : public CacheObject {
          * \param write_region is region to write
          */
         void SetUpWrite(const DataArray &write_set,
-                        GeometricRegion &write_region);
+                        GeometricRegion &write_region,
+                        DataArray* flush);
+
+        bool CheckWritePendingFlag(const DataArray &write_set,
+                                   GeometricRegion &write_region);
+
+        void PerformSetUpWrite(const DataArray &write_set,
+                               GeometricRegion &write_region,
+                               const DataArray& flush);
+        void ReleaseWritePendingFlag(const DataArray &write_set,
+                                     const DataArray& flush);
 
     private:
         /**

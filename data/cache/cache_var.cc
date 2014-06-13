@@ -134,6 +134,24 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
     WriteFromCache(flush_set, write_region_);
 }
 
+bool CacheVar::CheckWritePendingFlag(const DataArray &write_set,
+                                     GeometricRegion &write_region) {
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
+        if (d->pending_flag()) {
+            return false;
+        }
+        GeometricRegion dreg = d->region();
+        DMap::iterator it = data_map_.find(dreg);
+        if (it != data_map_.end()) {
+            Data *d_old = it->second;
+            if (d_old->pending_flag()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 /**
  * \details If data is not already in existing data, create the mappings.
  * If it replaces existing data, flush existing data if dirty. Create
@@ -141,17 +159,19 @@ void CacheVar::WriteImmediately(const DataArray &write_set) {
  */
 // TODO(chinmayee/quhang) add synchronization.
 void CacheVar::SetUpWrite(const DataArray &write_set,
-                          GeometricRegion &write_region) {
-    DataArray flush;
+                          GeometricRegion &write_region,
+                          DataArray* flush) {
     for (size_t i = 0; i < write_set.size(); ++i) {
         Data *d = write_set.at(i);
+        d->set_pending_flag();
         GeometricRegion dreg = d->region();
         DMap::iterator it = data_map_.find(dreg);
         if (it != data_map_.end()) {
             Data *d_old = it->second;
+            d_old->set_pending_flag();
             if (d_old != d) {
                 if (write_back_.find(d_old) != write_back_.end()) {
-                    flush.push_back(d_old);
+                    flush->push_back(d_old);
                     write_back_.erase(d_old);
                     d_old->UnsetDirtyCacheObject(this);
                     d_old->UnsetCacheObject(this);
@@ -166,10 +186,29 @@ void CacheVar::SetUpWrite(const DataArray &write_set,
         write_back_.insert(d);
         d->SetUpDirtyCacheObject(this);
     }
+}
+
+void CacheVar::PerformSetUpWrite(const DataArray &write_set,
+                                 GeometricRegion &write_region,
+                                 const DataArray& flush) {
     GeometricRegion write_region_old = write_region_;
     write_region_ = write_region;
     WriteFromCache(flush, write_region_old);
 }
+
+
+void CacheVar::ReleaseWritePendingFlag(const DataArray &write_set,
+                                       const DataArray& flush) {
+    for (size_t i = 0; i < write_set.size(); ++i) {
+        Data *d = write_set.at(i);
+        d->unset_pending_flag();
+    }
+    for (size_t i = 0; i < flush.size(); ++i) {
+        Data *d = flush.at(i);
+        d->unset_pending_flag();
+    }
+}
+
 
 /**
  * \details For read set, if data is not already in cache object, insert it in
