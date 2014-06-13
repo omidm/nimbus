@@ -66,14 +66,36 @@ typedef std::list<JobProfile*> JobProfileList;
 
 class JobProfile {
   public:
+    class BeforeSetLogEntry {
+      public:
+        BeforeSetLogEntry(
+            worker_id_t worker_id,
+            job_id_t job_id,
+            double time_removed);
+
+        virtual ~BeforeSetLogEntry();
+
+        worker_id_t worker_id();
+        job_id_t job_id();
+        double time_removed();
+
+      private:
+        worker_id_t worker_id_;
+        job_id_t job_id_;
+        double time_removed_;
+    };
+
+    typedef std::list<BeforeSetLogEntry> BeforeSetLog;
+
     JobProfile();
 
     JobProfile(
         const JobType& job_type,
         const std::string& job_name,
         const job_id_t& job_id,
-        const IDSet<job_id_t>& before_set,
+        const IDSet<job_id_t>& effective_before_set,
         const job_id_t& parent_job_id,
+        const worker_id_t& worker_id,
         const bool& sterilei);
 
     virtual ~JobProfile();
@@ -81,11 +103,12 @@ class JobProfile {
     JobType job_type();
     std::string job_name();
     job_id_t job_id();
-    IDSet<job_id_t> before_set();
+    IDSet<job_id_t> effective_before_set();
     job_id_t parent_job_id();
+    worker_id_t worker_id();
     bool sterile();
-    IDSet<job_id_t>* before_set_p();
-    const IDSet<job_id_t>* before_set_p() const;
+    IDSet<job_id_t>* effective_before_set_p();
+    const IDSet<job_id_t>* effective_before_set_p() const;
 
     bool ready();
     bool done();
@@ -98,8 +121,9 @@ class JobProfile {
     void set_job_type(JobType job_type);
     void set_job_name(std::string job_name);
     void set_job_id(job_id_t job_id);
-    void set_before_set(IDSet<job_id_t> before_set);
+    void set_effective_before_set(IDSet<job_id_t> effective_before_set);
     void set_parent_job_id(job_id_t parent_job_id);
+    void set_worker_id(worker_id_t worker_id);
     void set_sterile(bool flag);
 
     void set_ready(bool flag);
@@ -116,9 +140,12 @@ class JobProfile {
     JobType job_type_;
     std::string job_name_;
     job_id_t job_id_;
-    IDSet<job_id_t> before_set_;
+    IDSet<job_id_t> effective_before_set_;
     job_id_t parent_job_id_;
+    worker_id_t worker_id_;
     bool sterile_;
+
+    BeforeSetLog before_set_log_;
 
     bool done_;
     bool ready_;

@@ -50,14 +50,16 @@ JobProfile::JobProfile(
     const JobType& job_type,
     const std::string& job_name,
     const job_id_t& job_id,
-    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& effective_before_set,
     const job_id_t& parent_job_id,
+    const worker_id_t& worker_id,
     const bool& sterile)
   : job_type_(job_type),
   job_name_(job_name),
   job_id_(job_id),
-  before_set_(before_set),
+  effective_before_set_(effective_before_set),
   parent_job_id_(parent_job_id),
+  worker_id_(worker_id),
   sterile_(sterile) {
     Initialize();
 }
@@ -82,20 +84,24 @@ job_id_t JobProfile::job_id() {
   return job_id_;
 }
 
-IDSet<job_id_t> JobProfile::before_set() {
-  return before_set_;
+IDSet<job_id_t> JobProfile::effective_before_set() {
+  return effective_before_set_;
 }
 
-IDSet<job_id_t>* JobProfile::before_set_p() {
-  return &before_set_;
+IDSet<job_id_t>* JobProfile::effective_before_set_p() {
+  return &effective_before_set_;
 }
 
-const IDSet<job_id_t>* JobProfile::before_set_p() const {
-  return &before_set_;
+const IDSet<job_id_t>* JobProfile::effective_before_set_p() const {
+  return &effective_before_set_;
 }
 
 job_id_t JobProfile::parent_job_id() {
   return parent_job_id_;
+}
+
+worker_id_t JobProfile::worker_id() {
+  return worker_id_;
 }
 
 bool JobProfile::sterile() {
@@ -138,12 +144,16 @@ void JobProfile::set_job_id(job_id_t job_id) {
   job_id_ = job_id;
 }
 
-void JobProfile::set_before_set(IDSet<job_id_t> before_set) {
-  before_set_ = before_set;
+void JobProfile::set_effective_before_set(IDSet<job_id_t> effective_before_set) {
+  effective_before_set_ = effective_before_set;
 }
 
 void JobProfile::set_parent_job_id(job_id_t parent_job_id) {
   parent_job_id_ = parent_job_id;
+}
+
+void JobProfile::set_worker_id(worker_id_t worker_id) {
+  worker_id_ = worker_id;
 }
 
 void JobProfile::set_sterile(bool flag) {
@@ -172,6 +182,36 @@ void JobProfile::done_time(double done_time) {
 
 void JobProfile::execute_duration(double execute_duration) {
   execute_duration_ = execute_duration;
+}
+
+
+
+
+
+
+
+JobProfile::BeforeSetLogEntry::BeforeSetLogEntry(
+    worker_id_t worker_id,
+    job_id_t job_id,
+    double time_removed) :
+  worker_id_(worker_id),
+  job_id_(job_id),
+  time_removed_(time_removed) {
+}
+
+JobProfile::BeforeSetLogEntry::~BeforeSetLogEntry() {
+}
+
+worker_id_t JobProfile::BeforeSetLogEntry::worker_id() {
+  return worker_id_;
+}
+
+job_id_t JobProfile::BeforeSetLogEntry::job_id() {
+  return job_id_;
+}
+
+double JobProfile::BeforeSetLogEntry::time_removed() {
+  return time_removed_;
 }
 
 
