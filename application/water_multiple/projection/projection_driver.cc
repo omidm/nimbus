@@ -43,6 +43,7 @@
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Vectors/SPARSE_VECTOR_ND.h>
 
+#include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/physbam_utils.h"
 #include "data/scalar_data.h"
@@ -291,19 +292,40 @@ void ProjectionDriver::LoadFromNimbus(
                                init_config.local_region));
 
   // TODO(addcache) pressure.
-  // TODO(quhang), critical! this is logically wrong. In LOCAL_INITIALIZE, ghost
-  // regions should be passed around.
-  if (data_config.GetFlag(DataConfig::PRESSURE)) {
-    projection_data.pressure.Resize(grid.Domain_Indices(1));
-    if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
-                                       application::READ_ACCESS)) {
-      translator.ReadScalarArrayFloat(
-          &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
-      dbg(APP_LOG, "Finish reading PRESSURE.\n");
-    } else {
-      dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
+  nimbus::CacheManager *cm = job->GetCacheManager();
+  if (application::kUseCache) {
+    // pressure.
+    if (data_config.GetFlag(DataConfig::PRESSURE)) {
+      nimbus::DataArray read, write;
+      const std::string pressure_string = std::string(APP_PRESSURE);
+      application::GetReadData(*job, pressure_string, da, &read);
+      application::GetWriteData(*job, pressure_string, da, &write);
+      nimbus::CacheVar* cache_var =
+          cm->GetAppVar(
+              read, array_reg_thin_outer,
+              write, array_reg_thin_outer,
+              application::kCachePressure, array_reg_thin_outer,
+              nimbus::cache::EXCLUSIVE);
+      cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
+      assert(cache_pressure != NULL);
+      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
+      T_SCALAR_ARRAY* pressure = cache_pressure->data();
+      // projection_data.pressure.Resize(grid.Domain_Indices(1));
+      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
     }
-    application::DestroyTranslatorObjects(&pdv);
+  } else {
+    if (data_config.GetFlag(DataConfig::PRESSURE)) {
+      projection_data.pressure.Resize(grid.Domain_Indices(1));
+      if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
+                                         application::READ_ACCESS)) {
+        translator.ReadScalarArrayFloat(
+            &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
+        dbg(APP_LOG, "Finish reading PRESSURE.\n");
+      } else {
+        dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
+      }
+      application::DestroyTranslatorObjects(&pdv);
+    }
   }
 
   // MATRIX_A. It cannot be splitted or merged.
@@ -608,15 +630,26 @@ void ProjectionDriver::SaveToNimbus(
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
   // TODO(addcache) pressure.
-  const std::string pressure_string = std::string(APP_PRESSURE);
-  if (data_config.GetFlag(DataConfig::PRESSURE)) {
-    if (application::GetTranslatorData(job, pressure_string, da, &pdv,
-                                       application::WRITE_ACCESS)) {
-      translator.WriteScalarArrayFloat(
-          &array_reg_central, array_shift, &pdv, &projection_data.pressure);
-      dbg(APP_LOG, "Finish writing pressure.\n");
+
+  if (application::kUseCache) {
+    if (cache_pressure) {
+      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
+      T_SCALAR_ARRAY* pressure = cache_pressure->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+      cache_pressure->ReleaseAccess();
+      cache_pressure = NULL;
     }
-    application::DestroyTranslatorObjects(&pdv);
+  } else {
+    const std::string pressure_string = std::string(APP_PRESSURE);
+    if (data_config.GetFlag(DataConfig::PRESSURE)) {
+      if (application::GetTranslatorData(job, pressure_string, da, &pdv,
+                                         application::WRITE_ACCESS)) {
+        translator.WriteScalarArrayFloat(
+            &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+        dbg(APP_LOG, "Finish writing pressure.\n");
+      }
+      application::DestroyTranslatorObjects(&pdv);
+    }
   }
 
   // VECTOR_B. It cannot be splitted or merged.

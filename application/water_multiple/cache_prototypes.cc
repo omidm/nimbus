@@ -50,6 +50,11 @@ CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true);
 CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true);
 CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
 
+// Varibales for projection.
+CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
+CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
+CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
+
 CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
 
 } // namespace application

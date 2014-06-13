@@ -80,9 +80,55 @@ void GetAppCacheObjects(
   nimbus::GeometricRegion array_reg_outer_3(array_reg.NewEnlarged(kGhostNum));
   nimbus::GeometricRegion array_reg_outer_7(array_reg.NewEnlarged(7));
   nimbus::GeometricRegion array_reg_outer_8(array_reg.NewEnlarged(8));
+  nimbus::GeometricRegion array_reg_thin_outer(array_reg.NewEnlarged(1));
 
   nimbus::CacheManager *cm = job.GetCacheManager();
 
+  // pressure.
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    nimbus::DataArray read, write;
+    const std::string pressure_string = std::string(APP_PRESSURE);
+    GetReadData(job, pressure_string, da, &read);
+    GetWriteData(job, pressure_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_thin_outer,
+            write, array_reg_thin_outer,
+            kCachePressure, array_reg_thin_outer,
+            nimbus::cache::EXCLUSIVE);
+    cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
+    assert(cache->pressure != NULL);
+  }
+  // filled_region_colors.
+  if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
+    nimbus::DataArray read, write;
+    const std::string color_string = std::string(APP_FILLED_REGION_COLORS);
+    GetReadData(job, color_string, da, &read);
+    GetWriteData(job, color_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_thin_outer,
+            write, array_reg_thin_outer,
+            kCacheColors, array_reg_thin_outer,
+            nimbus::cache::EXCLUSIVE);
+    cache->color = dynamic_cast<CacheScalarArray<int>*>(cache_var);
+    assert(cache->color != NULL);
+  }
+  // divergence.
+  if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
+    nimbus::DataArray read, write;
+    const std::string divergence_string = std::string(APP_DIVERGENCE);
+    GetReadData(job, divergence_string, da, &read);
+    GetWriteData(job, divergence_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_thin_outer,
+            write, array_reg_thin_outer,
+            kCacheDivergence, array_reg_thin_outer,
+            nimbus::cache::EXCLUSIVE);
+    cache->divergence = dynamic_cast<CacheScalarArray<T>*>(cache_var);
+    assert(cache->divergence != NULL);
+  }
   // mac velocities
   if (data_config.GetFlag(DataConfig::VELOCITY))
   {
