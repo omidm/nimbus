@@ -82,11 +82,20 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
 #ifdef CACHE_LOG
   std::string jname = job->name();
   bool print_clog = false;
-  if (jname.substr(0, 7) == "Compute")
+  bool print_cclog = false;
+  if (jname.substr(0, 7) == "Compute") {
     print_clog = true;
+  } else if (jname.find("Copy") != std::string::npos) {
+    print_cclog = true;
+  }
   if (print_clog) {
     std::stringstream msg;
     msg << "~~~ App compute job start : " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+  if (print_cclog) {
+    std::stringstream msg;
+    msg << "~~~ App copy job start : " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif
@@ -103,6 +112,11 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   if (print_clog) {
     std::stringstream msg;
     msg << "~~~ App compute job end : " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+  if (print_cclog) {
+    std::stringstream msg;
+    msg << "~~~ App copy job end : " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif

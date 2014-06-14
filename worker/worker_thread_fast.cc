@@ -71,11 +71,29 @@ void WorkerThreadFast::Run() {
 }
 
 void WorkerThreadFast::ProcessJob(Job* job) {
+#ifdef CACHE_LOG
+  std::string jname = job->name();
+  bool print_clog = false;
+  if (jname.find("Copy") != std::string::npos)
+    print_clog = true;
+  if (print_clog) {
+    std::stringstream msg;
+    msg << "~~~ App copy job start : " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+#endif
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute fast job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
   job->Execute(job->parameters(), job->data_array);
   dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing fast job, "
       "name=%s, id=%lld. \n", job->name().c_str(), job->id().elem());
+#ifdef CACHE_LOG
+  if (print_clog) {
+    std::stringstream msg;
+    msg << "~~~ App copy job end : " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+#endif
 }
 
 }  // namespace nimbus
