@@ -92,6 +92,7 @@ class ProjectionDriver {
     // Conjugate matrix will be deallocate by matrix_a.
     projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<T>;
     cache_pressure = NULL;
+    cache_vector_p = NULL;
   }
 
   virtual ~ProjectionDriver() {}
@@ -140,6 +141,7 @@ class ProjectionDriver {
   SPARSE_MATRIX_PARTITION partition;
   typedef typename application::CacheScalarArray<T> TCacheScalarArray;
   TCacheScalarArray *cache_pressure;
+  TCacheScalarArray *cache_vector_p;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;

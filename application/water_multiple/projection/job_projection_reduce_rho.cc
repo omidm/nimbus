@@ -68,6 +68,7 @@ void JobProjectionReduceRho::Execute(
   dbg(APP_LOG, "Executing PROJECTION_REDUCE_RHO job.\n");
 
   InitConfig init_config;
+  init_config.use_cache = true;
   T dt;
   int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),

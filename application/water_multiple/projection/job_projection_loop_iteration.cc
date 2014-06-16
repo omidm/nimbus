@@ -73,6 +73,7 @@ void JobProjectionLoopIteration::Execute(
   nimbus::JobQuery job_query(this);
 
   InitConfig init_config;
+  init_config.use_cache = true;
   T dt;
   int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),
