@@ -69,6 +69,8 @@ nimbus::Job* JobProjectionLoopIteration::Clone() {
 void JobProjectionLoopIteration::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
   dbg(APP_LOG, "Executing PROJECTION_LOOP_ITERATION job.\n");
   nimbus::JobQuery job_query(this);
 
@@ -344,6 +346,14 @@ void JobProjectionLoopIteration::Execute(
   projection_driver.SaveToNimbus(this, da);
 
   dbg(APP_LOG, "Completed executing PROJECTION_LOOP_ITERATION job\n");
+  {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+        .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+    dbg(APP_LOG, "\nThe query time spent in job PROJECTION_LOOP_ITERATION is %f seconds.\n",
+        time);
+  }
 }
 
 }  // namespace application

@@ -51,6 +51,7 @@
 
 #define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
 
+#include <sys/time.h>
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/job_loop_iteration.h"
 #include "application/water_multiple/physbam_utils.h"
@@ -166,6 +167,9 @@ namespace application {
   void JobLoopIteration::SpawnWithBreakAllGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da,
       const GeometricRegion& global_region) {
+    struct timeval start_time;
+    gettimeofday(&start_time, NULL);
+
     nimbus::JobQuery job_query(this);
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
@@ -820,7 +824,13 @@ namespace application {
       dbg(APP_LOG, "Print job dependency figure.\n");
       job_query.GenerateDotFigure("loop_iteration.dot");
     }
+    {
+      struct timeval t;
+      gettimeofday(&t, NULL);
+      double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+          .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+      dbg(APP_LOG, "\nThe query time spent in job LOOP_ITERATION is %f seconds.\n",
+          time);
+    }
   }
-
-
 } // namespace application
