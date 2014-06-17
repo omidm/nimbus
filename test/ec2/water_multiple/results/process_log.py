@@ -32,10 +32,8 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-print(args.input_base_name)
-
 for i in range(1, args.worker_num + 1):
-  print 'Processing the file for worker ' + str(i) + '...'
+  print 'Processing the log for worker ' + str(i) + '...'
 
   log_file = args.dir + '/' + args.input_base_name + '-' + str(i)
   data_file =  args.output_base_name + '-' + str(i)

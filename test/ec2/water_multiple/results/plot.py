@@ -1,42 +1,139 @@
 #!/usr/bin/env python
 
 import decimal
-from optparse import OptionParser
+import argparse
 import os
 import os.path
 import re
-
 
 import numpy as np
 import matplotlib.pyplot as plt
 from operator import add
 
-N = 3
-t1 = (1870, 2340, 0)
-p   = (1870, 2951, 0)
-t2 = (199, 149, 0)
-c = (344, 676, 0)
-idle = (2596, 1712, 0)
+## Parse the command line arguments ##
+parser = argparse.ArgumentParser(description='Process log files.')
+parser.add_argument(
+    "-i", "--input",
+    dest="input_base_name",
+    default="data",
+    help="base input file name that follows with -<worker number>")
+parser.add_argument(
+    "-d", "--directory",
+    dest="dir",
+    default=".",
+    help="directory to find the input files")
+parser.add_argument(
+    "-wn", "--workernum",
+    dest="worker_num",
+    default=1,
+    type=int,
+    help="number of workers to process")
 
+args = parser.parse_args()
 
-t1p = map(add, t1, p)
-t1pt2 = map(add, t1p, t2)
-t1pt2c = map(add, t1pt2, c)
+N = args.worker_num
+P = 5
 
+# Fetch data from data files
+compute_bare = []
+compute_trans = []
+copy_bare = []
+copy_trans = []
+idle = []
+total = []
 
-ind = np.arange(N)    # the x locations for the groups
-width = 0.35       # the width of the bars: can also be len(x) sequence
+for i in range(1, N + 1):
+  print 'Processing the data for worker ' + str(i) + '...'
 
-p1 = plt.bar(ind, t1, width, color='r')
-p2 = plt.bar(ind, p , width, color='y', bottom=t1)
-p3 = plt.bar(ind, t2, width, color='b', bottom=t1p)
-p4 = plt.bar(ind, c , width, color='g', bottom=t1pt2)
-p5 = plt.bar(ind, idle , width, color='w', bottom=t1pt2c)
+  data_file =  args.input_base_name + '-' + str(i)
+
+  print 'Opening file ' + data_file
+  data = open(data_file, 'r')
+  
+  cmb_found = False
+  cmt_found = False
+  cob_found = False
+  cot_found = False
+  i_found   = False
+  t_found   = False
+
+  for num, line in enumerate(data):
+      x =  re.findall('(\d+\.\d+$|\d+e-\d+$|\d+$)', line)
+      if len(x) > 0:
+          xnum = decimal.Decimal(x[0])
+          if "Application" in line:
+              total.append(xnum)
+              t_found = True
+          if "Decomposed Compute Bare" in line:
+              compute_bare.append(xnum)
+              cmb_found = True
+          if "Decomposed Compute Translator" in line:
+              compute_trans.append(xnum)
+              cmt_found = True
+          if "Decomposed Copy Bare" in line:
+              copy_bare.append(xnum)
+              cob_found = True
+          if "Decomposed Copy Translator" in line:
+              copy_trans.append(xnum)
+              cot_found = True
+          if "Decomposed Idle" in line:
+              idle.append(xnum)
+              i_found = True
+
+  if (not cmb_found or \
+      not cmt_found or \
+      not cob_found or \
+      not cot_found or \
+      not i_found or \
+      not t_found):
+    print 'File ' + data_file + ' does not match the format.'
+    exit(0)
+
+# Plot the results in stack bar 
+ind = np.arange(N)
+width = 0.35
+
+Data = []
+Data.append(compute_bare)
+Data.append(compute_trans)
+Data.append(copy_bare)
+Data.append(copy_trans)
+Data.append(idle)
+
+Legends = []
+Legends.append('Compute Job')
+Legends.append('Translator for Computation')
+Legends.append('Copy Job')
+Legends.append('Translator for Copy')
+Legends.append('Idle')
+
+Colors = []
+Colors.append('r')
+Colors.append('g')
+Colors.append('b')
+Colors.append('y')
+Colors.append('w')
+
+bottom = []
+bottom.append([0] * N)
+
+Parts = []
+
+for i in range(0, P):
+  p = plt.bar(ind, Data[i], width, color=Colors[i], bottom=bottom[i])
+  bottom.append(map(add, bottom[i], Data[i]))
+  Parts.append(p[0])
 
 plt.ylabel('Time (seconds)')
 plt.title('Nimbus')
-plt.xticks(ind+width/2., ('W1', 'W4', '') )
+xticks = []
+for i in range(1, N + 1):
+  xticks.append('W' + str(i))
+plt.xticks(ind+width/2., xticks )
 plt.yticks(np.arange(0,81,10))
-plt.legend( (p1[0], p2[0], p3[0], p4[0], p5[0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
+# plt.legend( (S[0][0], S[1][0], S[2][0], S[3][0], S[4][0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
+plt.legend(Parts, Legends)
 
 plt.show()
+
+
