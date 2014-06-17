@@ -311,8 +311,8 @@ bool InitializeExampleAndDriver(
 #ifdef PHYSBAM_INIT_LOG
   {
     std::stringstream msg;
-    msg << "~~~ App InitializeExampleAndDriver start : " << init_log->GetTime();
-    init_log->WriteToFile(msg.str());
+    msg << "~~~ App InitializeExampleAndDriver start : " << init_log.GetTime();
+    init_log.WriteToFile(msg.str());
   }
 #endif
 
@@ -380,8 +380,8 @@ bool InitializeExampleAndDriver(
 #ifdef PHYSBAM_INIT_LOG
   {
     std::stringstream msg;
-    msg << "~~~ App InitializeExampleAndDriver end : " << init_log->GetTime();
-    init_log->WriteToFile(msg.str());
+    msg << "~~~ App InitializeExampleAndDriver end : " << init_log.GetTime();
+    init_log.WriteToFile(msg.str());
   }
 #endif
 
