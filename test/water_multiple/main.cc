@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
 
   // TODO: Extra logging information for cache experiments, remove later on
 #ifdef CACHE_LOG
-  Log *cache_log = new Log(std::string("cache-log"));
+  Log *cache_log = new Log(std::string("worker-log"));
   w->cache_log = cache_log;
   app->translator_log = cache_log;
 #endif

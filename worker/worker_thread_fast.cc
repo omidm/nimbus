@@ -78,7 +78,7 @@ void WorkerThreadFast::ProcessJob(Job* job) {
     print_clog = true;
   if (print_clog) {
     std::stringstream msg;
-    msg << "~~~ App copy job start : " << cache_log_->GetTime();
+    msg << "~~~ App copy job start : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif
@@ -90,7 +90,7 @@ void WorkerThreadFast::ProcessJob(Job* job) {
 #ifdef CACHE_LOG
   if (print_clog) {
     std::stringstream msg;
-    msg << "~~~ App copy job end : " << cache_log_->GetTime();
+    msg << "~~~ App copy job end : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif
