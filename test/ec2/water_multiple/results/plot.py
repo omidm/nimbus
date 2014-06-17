@@ -45,7 +45,7 @@ total = []
 for i in range(1, N + 1):
   print 'Processing the data for worker ' + str(i) + '...'
 
-  data_file =  args.input_base_name + '-' + str(i)
+  data_file =  args.dir + '/' + args.input_base_name + '-' + str(i)
 
   print 'Opening file ' + data_file
   data = open(data_file, 'r')

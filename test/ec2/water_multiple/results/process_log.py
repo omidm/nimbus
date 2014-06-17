@@ -19,6 +19,11 @@ parser.add_argument(
     default=".",
     help="directory to find the input files")
 parser.add_argument(
+    "-od", "--outdirectory",
+    dest="odir",
+    default=".",
+    help="directory to find the input files")
+parser.add_argument(
     "-wn", "--workernum",
     dest="worker_num",
     default=1,
@@ -36,7 +41,7 @@ for i in range(1, args.worker_num + 1):
   print 'Processing the log for worker ' + str(i) + '...'
 
   log_file = args.dir + '/' + args.input_base_name + '-' + str(i)
-  data_file =  args.output_base_name + '-' + str(i)
+  data_file =  args.odir + '/' + args.output_base_name + '-' + str(i)
 
   print 'Opening file ' + log_file
   log_temp = open(log_file, 'r')
