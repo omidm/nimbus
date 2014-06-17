@@ -154,8 +154,8 @@ void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z
       break;
     case 8 :
       *num_x = 2;
-      *num_y = 4;
-      *num_z = 1;
+      *num_y = 2;
+      *num_z = 2;
       break;
     default:
       dbg(DBG_ERROR, "ERROR: Do not know how to split!");
