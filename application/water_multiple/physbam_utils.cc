@@ -53,6 +53,8 @@
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
+#define PHYSBAM_INIT_LOG
+
 namespace application {
 
 Range GridToRange(
@@ -304,6 +306,17 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
+  static Log init_log(std::string("physbam-init-log"));
+
+#ifdef PHYSBAM_INIT_LOG
+  {
+    std::stringstream msg;
+    msg << "~~~ App InitializeExampleAndDriver start : " << init_log->GetTime();
+    init_log->WriteToFile(msg.str());
+  }
+#endif
+
+
   dbg(APP_LOG, "Enter initialize_example_driver.\n");
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.toString().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.toString().c_str());
@@ -363,6 +376,15 @@ bool InitializeExampleAndDriver(
   }
 
   dbg(APP_LOG, "Exit initialize_example_driver.\n");
+
+#ifdef PHYSBAM_INIT_LOG
+  {
+    std::stringstream msg;
+    msg << "~~~ App InitializeExampleAndDriver end : " << init_log->GetTime();
+    init_log->WriteToFile(msg.str());
+  }
+#endif
+
   return true;
 }
 
