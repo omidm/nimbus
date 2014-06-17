@@ -95,22 +95,22 @@ width = 0.35
 
 Data = []
 Data.append(compute_bare)
-Data.append(compute_trans)
 Data.append(copy_bare)
+Data.append(compute_trans)
 Data.append(copy_trans)
 Data.append(idle)
 
 Legends = []
-Legends.append('Compute Job')
-Legends.append('Translator for Computation')
-Legends.append('Copy Job')
+Legends.append('Compute')
+Legends.append('Copy')
+Legends.append('Translator for Compute')
 Legends.append('Translator for Copy')
 Legends.append('Idle')
 
 Colors = []
-Colors.append('r')
 Colors.append('g')
 Colors.append('b')
+Colors.append('r')
 Colors.append('y')
 Colors.append('w')
 
@@ -125,15 +125,16 @@ for i in range(0, P):
   Parts.append(p[0])
 
 plt.ylabel('Time (seconds)')
-plt.title('Nimbus')
+plt.title('PhysBAM Water Simulation Size 256 cube With 8 Nimbus Worker Nodes')
 xticks = []
 for i in range(1, N + 1):
   xticks.append('W' + str(i))
 plt.xticks(ind+width/2., xticks )
-plt.yticks(np.arange(0,81,10))
+# plt.yticks(np.arange(0, total[0] , 6))
 # plt.legend( (S[0][0], S[1][0], S[2][0], S[3][0], S[4][0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
 plt.legend(Parts, Legends)
 
+plt.savefig("test.png")
 plt.show()
 
 
