@@ -120,31 +120,31 @@ print compute_sterile_bare
 
 Legends = []
 Legends.append('Compute Sterile')
-Legends.append('Translator for Compute Sterile')
+Legends.append('Compute Sterile Translator')
 Legends.append('Copy')
-Legends.append('Translator for Copy')
+Legends.append('Copy Translator')
 Legends.append('Compute Non-Sterile')
-Legends.append('Translator for Compute Non-Sterile')
+Legends.append('Compute Non-Sterile Translator')
 Legends.append('Idle')
 
 Colors = []
-Colors.append('g')
-Colors.append('g')
-Colors.append('b')
-Colors.append('b')
-Colors.append('r')
-Colors.append('r')
+Colors.append('#0022aa')
+Colors.append('#0022aa')
+Colors.append('#1e90ff')
+Colors.append('#1e90ff')
+Colors.append('#40e0d0')
+Colors.append('#40e0d0')
 Colors.append('w')
 
 
 Hatch = []
 Hatch.append('')
-Hatch.append('/')
+Hatch.append('//')
 Hatch.append('')
-Hatch.append('/')
-Hatch.append('r')
-Hatch.append('/')
-Hatch.append('w')
+Hatch.append('//')
+Hatch.append('')
+Hatch.append('//')
+Hatch.append('')
 
 
 
