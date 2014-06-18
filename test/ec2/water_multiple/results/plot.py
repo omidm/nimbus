@@ -128,22 +128,31 @@ Legends.append('Compute Non-Sterile Translator')
 Legends.append('Idle')
 
 Colors = []
-Colors.append('#4040ff')
-Colors.append('#4040ff')
-Colors.append('#00bfff')
-Colors.append('#00bfff')
-Colors.append('#afeeee')
-Colors.append('#afeeee')
+
+Colors.append('#8dd3c7')
+Colors.append('#8dd3c7')
+Colors.append('#ffffb3')
+Colors.append('#ffffb3')
+Colors.append('#bebada')
+Colors.append('#bebada')
 Colors.append('w')
+
+# Colors.append('#4040ff')
+# Colors.append('#4040ff')
+# Colors.append('#00bfff')
+# Colors.append('#00bfff')
+# Colors.append('#afeeee')
+# Colors.append('#afeeee')
+# Colors.append('w')
 
 
 Hatch = []
 Hatch.append('')
-Hatch.append('//')
+Hatch.append('/')
 Hatch.append('')
-Hatch.append('//')
+Hatch.append('/')
 Hatch.append('')
-Hatch.append('//')
+Hatch.append('/')
 Hatch.append('')
 
 
