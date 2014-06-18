@@ -128,12 +128,12 @@ Legends.append('Compute Non-Sterile Translator')
 Legends.append('Idle')
 
 Colors = []
-Colors.append('#0022aa')
-Colors.append('#0022aa')
-Colors.append('#1e90ff')
-Colors.append('#1e90ff')
-Colors.append('#40e0d0')
-Colors.append('#40e0d0')
+Colors.append('#4040ff')
+Colors.append('#4040ff')
+Colors.append('#00bfff')
+Colors.append('#00bfff')
+Colors.append('#afeeee')
+Colors.append('#afeeee')
 Colors.append('w')
 
 
