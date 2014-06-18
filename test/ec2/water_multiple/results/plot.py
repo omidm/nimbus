@@ -32,11 +32,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 N = args.worker_num
-P = 5
+P = 7
 
 # Fetch data from data files
-compute_bare = []
-compute_trans = []
+compute_non_sterile_bare = []
+compute_non_sterile_trans = []
+compute_sterile_bare = []
+compute_sterile_trans = []
 copy_bare = []
 copy_trans = []
 idle = []
@@ -50,8 +52,10 @@ for i in range(1, N + 1):
   print 'Opening file ' + data_file
   data = open(data_file, 'r')
   
-  cmb_found = False
-  cmt_found = False
+  cnb_found = False
+  cnt_found = False
+  csb_found = False
+  cst_found = False
   cob_found = False
   cot_found = False
   i_found   = False
@@ -64,12 +68,18 @@ for i in range(1, N + 1):
           if "Application" in line:
               total.append(xnum)
               t_found = True
-          if "Decomposed Compute Bare" in line:
-              compute_bare.append(xnum)
-              cmb_found = True
-          if "Decomposed Compute Translator" in line:
-              compute_trans.append(xnum)
-              cmt_found = True
+          if "Decomposed Compute Non-Sterile Bare" in line:
+              compute_non_sterile_bare.append(xnum)
+              cnb_found = True
+          if "Decomposed Compute Non-Sterile Translator" in line:
+              compute_non_sterile_trans.append(xnum)
+              cnt_found = True
+          if "Decomposed Compute Sterile Bare" in line:
+              compute_sterile_bare.append(xnum)
+              csb_found = True
+          if "Decomposed Compute Sterile Translator" in line:
+              compute_sterile_trans.append(xnum)
+              cst_found = True
           if "Decomposed Copy Bare" in line:
               copy_bare.append(xnum)
               cob_found = True
@@ -80,39 +90,63 @@ for i in range(1, N + 1):
               idle.append(xnum)
               i_found = True
 
-  if (not cmb_found or \
-      not cmt_found or \
+  if (not cnb_found or \
+      not cnt_found or \
+      not csb_found or \
+      not cst_found or \
       not cob_found or \
       not cot_found or \
       not i_found or \
       not t_found):
     print 'File ' + data_file + ' does not match the format.'
     exit(0)
+  data.close()
 
 # Plot the results in stack bar 
 ind = np.arange(N)
 width = 0.35
 
 Data = []
-Data.append(compute_bare)
+Data.append(compute_sterile_bare)
+Data.append(compute_sterile_trans)
 Data.append(copy_bare)
-Data.append(compute_trans)
 Data.append(copy_trans)
+Data.append(compute_non_sterile_bare)
+Data.append(compute_non_sterile_trans)
 Data.append(idle)
 
+
+print compute_sterile_bare
+
 Legends = []
-Legends.append('Compute')
+Legends.append('Compute Sterile')
+Legends.append('Translator for Compute Sterile')
 Legends.append('Copy')
-Legends.append('Translator for Compute')
 Legends.append('Translator for Copy')
+Legends.append('Compute Non-Sterile')
+Legends.append('Translator for Compute Non-Sterile')
 Legends.append('Idle')
 
 Colors = []
 Colors.append('g')
+Colors.append('g')
+Colors.append('b')
 Colors.append('b')
 Colors.append('r')
-Colors.append('y')
+Colors.append('r')
 Colors.append('w')
+
+
+Hatch = []
+Hatch.append('')
+Hatch.append('/')
+Hatch.append('')
+Hatch.append('/')
+Hatch.append('r')
+Hatch.append('/')
+Hatch.append('w')
+
+
 
 bottom = []
 bottom.append([0] * N)
@@ -120,19 +154,20 @@ bottom.append([0] * N)
 Parts = []
 
 for i in range(0, P):
-  p = plt.bar(ind, Data[i], width, color=Colors[i], bottom=bottom[i])
+  p = plt.bar(ind, Data[i], width, color=Colors[i], hatch=Hatch[i], bottom=bottom[i])
+  print Data[i]
   bottom.append(map(add, bottom[i], Data[i]))
   Parts.append(p[0])
 
 plt.ylabel('Time (seconds)')
-plt.title('PhysBAM Water Simulation Size 256 cube With 8 Nimbus Worker Nodes')
+plt.title('PhysBAM Water Simulation Size 256 Cube with 8 Nimbus Worker Nodes')
 xticks = []
 for i in range(1, N + 1):
   xticks.append('W' + str(i))
 plt.xticks(ind+width/2., xticks )
 # plt.yticks(np.arange(0, total[0] , 6))
 # plt.legend( (S[0][0], S[1][0], S[2][0], S[3][0], S[4][0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
-plt.legend(Parts, Legends)
+plt.legend(reversed(Parts), reversed(Legends))
 
 plt.savefig("test.png")
 plt.show()

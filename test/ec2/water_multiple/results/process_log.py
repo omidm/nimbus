@@ -52,15 +52,22 @@ for i in range(1, args.worker_num + 1):
 
   ### Initialize data to get from parser ###
   worker_total  = 0
-  compute_total = 0
+  compute_non_sterile_total = 0
+  compute_sterile_total = 0
   copy_total    = 0
 
-  tnew_s_total_compute  = 0
-  tnew_f_total_compute  = 0
-  tnew_p_total_compute  = 0
-  told_s_total_compute  = 0
-  told_f_total_compute  = 0
-  told_p_total_compute  = 0
+  tnew_s_total_compute_non_sterile  = 0
+  tnew_f_total_compute_non_sterile  = 0
+  tnew_p_total_compute_non_sterile  = 0
+  told_s_total_compute_non_sterile  = 0
+  told_f_total_compute_non_sterile  = 0
+  told_p_total_compute_non_sterile  = 0
+  tnew_s_total_compute_sterile  = 0
+  tnew_f_total_compute_sterile  = 0
+  tnew_p_total_compute_sterile  = 0
+  told_s_total_compute_sterile  = 0
+  told_f_total_compute_sterile  = 0
+  told_p_total_compute_sterile  = 0
   tnew_s_total_copy  = 0
   tnew_f_total_copy  = 0
   tnew_p_total_copy  = 0
@@ -69,7 +76,8 @@ for i in range(1, args.worker_num + 1):
   told_p_total_copy  = 0
 
   worker_start  = 0
-  compute_start = 0
+  compute_non_sterile_start = 0
+  compute_sterile_start = 0
   copy_start    = 0
 
   tnew_s_start  = 0
@@ -80,7 +88,8 @@ for i in range(1, args.worker_num + 1):
   told_p_start  = 0
 
   worker_end    = 0
-  compute_end   = 0
+  compute_non_sterile_end   = 0
+  compute_sterile_end   = 0
   copy_end      = 0
 
   tnew_s_end    = 0
@@ -93,8 +102,9 @@ for i in range(1, args.worker_num + 1):
   unknown_trans = 0
   latest_seen   = 0 
   
-  compute = False
-  copy    = False
+  compute_non_sterile = False
+  compute_sterile = False
+  copy = False
 
   for num, line in enumerate(log):
       x =  re.findall('(\d+\.\d+$|\d+e-\d+$|\d+$)', line)
@@ -104,8 +114,12 @@ for i in range(1, args.worker_num + 1):
           if "Worker starts" in line:
               worker_start = xnum
           if "App compute job start" in line:
-              compute_start = xnum
-              compute = True
+                  if 'loop' in line:
+                      compute_non_sterile_start = xnum
+                      compute_non_sterile = True
+                  else:
+                      compute_sterile_start = xnum
+                      compute_sterile = True
           if "App copy job start" in line:
               copy_start = xnum
               copy = True
@@ -139,17 +153,24 @@ for i in range(1, args.worker_num + 1):
               worker_end = xnum
               worker_total += worker_end - worker_start
           if "App compute job end" in line:
-              compute_end = xnum
-              compute_total += compute_end - compute_start
-              compute = False
+              if 'loop' in line:
+                  compute_non_sterile_end = xnum
+                  compute_non_sterile_total += compute_non_sterile_end - compute_non_sterile_start
+                  compute_non_sterile = False
+              else:
+                  compute_sterile_end = xnum
+                  compute_sterile_total += compute_sterile_end - compute_sterile_start
+                  compute_sterile = False
           if "App copy job end" in line:
               copy_end = xnum
               copy_total += copy_end - copy_start
           if "Read Scalar Array (New Translator) end" in line or \
               "Write Scalar Array (New Translator) end" in line:
               tnew_s_end = xnum
-              if compute:
-                tnew_s_total_compute += tnew_s_end - tnew_s_start
+              if compute_non_sterile:
+                tnew_s_total_compute_non_sterile += tnew_s_end - tnew_s_start
+              elif compute_sterile:
+                tnew_s_total_compute_sterile += tnew_s_end - tnew_s_start
               elif copy:
                 tnew_s_total_copy += tnew_s_end - tnew_s_start
               else:
@@ -157,8 +178,10 @@ for i in range(1, args.worker_num + 1):
           if "Read Face Array (New Translator) end" in line or \
               "Write Face Array (New Translator) end" in line:
               tnew_f_end = xnum
-              if compute:
-                tnew_f_total_compute += tnew_f_end - tnew_f_start
+              if compute_non_sterile:
+                tnew_f_total_compute_non_sterile += tnew_f_end - tnew_f_start
+              elif compute_sterile:
+                tnew_f_total_compute_sterile += tnew_f_end - tnew_f_start
               elif copy:
                 tnew_f_total_copy += tnew_f_end - tnew_f_start
               else:
@@ -170,8 +193,10 @@ for i in range(1, args.worker_num + 1):
               "Delete Particles (New Translator) end" in line or \
               "Delete Removed Particles (New Translator) end" in line:
               tnew_p_end = xnum
-              if compute:
-                tnew_p_total_compute += tnew_p_end - tnew_p_start
+              if compute_non_sterile:
+                tnew_p_total_compute_non_sterile += tnew_p_end - tnew_p_start
+              elif compute_sterile:
+                tnew_p_total_compute_sterile += tnew_p_end - tnew_p_start
               elif copy:
                 tnew_p_total_copy += tnew_p_end - tnew_p_start
               else:
@@ -179,8 +204,10 @@ for i in range(1, args.worker_num + 1):
           if "Read Scalar Array (Old Translator) end" in line or \
               "Write Scalar Array (Old Translator) end" in line:
               told_s_end = xnum
-              if compute:
-                told_s_total_compute += told_s_end - told_s_start
+              if compute_non_sterile:
+                told_s_total_compute_non_sterile += told_s_end - told_s_start
+              elif compute_sterile:
+                told_s_total_compute_sterile += told_s_end - told_s_start
               elif copy:
                 told_s_total_copy += told_s_end - told_s_start
               else:
@@ -188,8 +215,10 @@ for i in range(1, args.worker_num + 1):
           if "Read Face Array (Old Translator) end" in line or \
               "Write Face Array (Old Translator) end" in line:
               told_f_end = xnum
-              if compute:
-                told_f_total_compute += told_f_end - told_f_start
+              if compute_non_sterile:
+                told_f_total_compute_non_sterile += told_f_end - told_f_start
+              elif compute_sterile:
+                told_f_total_compute_sterile += told_f_end - told_f_start
               elif copy:
                 told_f_total_copy += told_f_end - told_f_start
               else:
@@ -201,8 +230,10 @@ for i in range(1, args.worker_num + 1):
               "Delete Particles (Old Translator) end" in line or \
               "Delete Removed Particles (Old Translator) end" in line:
               told_p_end = xnum
-              if compute:
-                told_p_total_compute += told_p_end - told_p_start
+              if compute_non_sterile:
+                told_p_total_compute_non_sterile += told_p_end - told_p_start
+              elif compute_sterile:
+                told_p_total_compute_sterile += told_p_end - told_p_start
               elif copy:
                 told_p_total_copy += told_p_end - told_p_start
               else:
@@ -217,17 +248,23 @@ for i in range(1, args.worker_num + 1):
   if worker_total == 0:
       worker_total = latest_seen - worker_start
 
-  idle_time = worker_total - copy_total - compute_total - unknown_trans
+  idle_time = worker_total - copy_total - compute_non_sterile_total - compute_sterile_total - unknown_trans
 
-  compute_trans =  \
-                   tnew_s_total_compute + tnew_f_total_compute + tnew_p_total_compute \
-                 + told_s_total_compute + told_f_total_compute + told_p_total_compute
+  compute_non_sterile_trans =  \
+                   tnew_s_total_compute_non_sterile + tnew_f_total_compute_non_sterile + tnew_p_total_compute_non_sterile \
+                 + told_s_total_compute_non_sterile + told_f_total_compute_non_sterile + told_p_total_compute_non_sterile
+
+  compute_sterile_trans =  \
+                   tnew_s_total_compute_sterile + tnew_f_total_compute_sterile + tnew_p_total_compute_sterile \
+                 + told_s_total_compute_sterile + told_f_total_compute_sterile + told_p_total_compute_sterile
 
   copy_trans =  \
                    tnew_s_total_copy + tnew_f_total_copy + tnew_p_total_copy \
                  + told_s_total_copy + told_f_total_copy + told_p_total_copy
 
-  compute_bare = compute_total - compute_trans
+  compute_non_sterile_bare = compute_non_sterile_total - compute_non_sterile_trans
+
+  compute_sterile_bare = compute_sterile_total - compute_sterile_trans
 
   copy_bare = copy_total - copy_trans
 
@@ -237,15 +274,23 @@ for i in range(1, args.worker_num + 1):
   print "Opening %s ..." % data_file
   data = open(data_file, 'w')
   data.write("Application %2.2f\n" % worker_total)
-  data.write("Computation Total %2.2f\n" % compute_total)
+  data.write("Compute Non-Sterile Total %2.2f\n" % compute_non_sterile_total)
+  data.write("Compute Sterile Total %2.2f\n" % compute_sterile_total)
   data.write("Copy Total %2.2f\n" % copy_total)
 
-  data.write("Translator_New_Scalar From Compute %2.2f\n" % tnew_s_total_compute)
-  data.write("Translator_New_Face From Compute %2.2f\n" % tnew_f_total_compute)
-  data.write("Translator_New_Particles From Compute %2.2f\n" % tnew_p_total_compute)
-  data.write("Translator_Old_Scalar From Compute %2.2f\n" % told_s_total_compute)
-  data.write("Translator_Old_Face From Compute %2.2f\n" % told_f_total_compute)
-  data.write("Translator_Old_Particles From Compute %2.2f\n" % told_p_total_compute)
+  data.write("Translator_New_Scalar From Compute Non-Sterile %2.2f\n" % tnew_s_total_compute_non_sterile)
+  data.write("Translator_New_Face From Compute Non-Sterile %2.2f\n" % tnew_f_total_compute_non_sterile)
+  data.write("Translator_New_Particles From Compute Non-Sterile %2.2f\n" % tnew_p_total_compute_non_sterile)
+  data.write("Translator_Old_Scalar From Compute Non-Sterile %2.2f\n" % told_s_total_compute_non_sterile)
+  data.write("Translator_Old_Face From Compute Non-Sterile %2.2f\n" % told_f_total_compute_non_sterile)
+  data.write("Translator_Old_Particles From Compute Non-Sterile %2.2f\n" % told_p_total_compute_non_sterile)
+
+  data.write("Translator_New_Scalar From Compute Sterile %2.2f\n" % tnew_s_total_compute_sterile)
+  data.write("Translator_New_Face From Compute Sterile %2.2f\n" % tnew_f_total_compute_sterile)
+  data.write("Translator_New_Particles From Compute Sterile %2.2f\n" % tnew_p_total_compute_sterile)
+  data.write("Translator_Old_Scalar From Compute Sterile %2.2f\n" % told_s_total_compute_sterile)
+  data.write("Translator_Old_Face From Compute Sterile %2.2f\n" % told_f_total_compute_sterile)
+  data.write("Translator_Old_Particles From Compute Sterile %2.2f\n" % told_p_total_compute_sterile)
 
   data.write("Translator_New_Scalar From Copy %2.2f\n" % tnew_s_total_copy)
   data.write("Translator_New_Face From Copy %2.2f\n" % tnew_f_total_copy)
@@ -256,10 +301,16 @@ for i in range(1, args.worker_num + 1):
 
   data.write("Translator From Unknown Source %2.2f\n" % unknown_trans)
 
-  data.write("Decomposed Compute Bare  %2.2f\n" % compute_bare)
-  data.write("Decomposed Compute Translator %2.2f\n" % compute_trans)
+  data.write("Decomposed Compute Non-Sterile Bare  %2.2f\n" % compute_non_sterile_bare)
+  data.write("Decomposed Compute Non-Sterile Translator %2.2f\n" % compute_non_sterile_trans)
+  data.write("Decomposed Compute Sterile Bare  %2.2f\n" % compute_sterile_bare)
+  data.write("Decomposed Compute Sterile Translator %2.2f\n" % compute_sterile_trans)
   data.write("Decomposed Copy Bare  %2.2f\n" % copy_bare)
   data.write("Decomposed Copy Translator %2.2f\n" % copy_trans)
   data.write("Decomposed Idle  %2.2f\n" % idle_time)
+
+  data.close()
+  log.close()
+  log_temp.close()
 
 
