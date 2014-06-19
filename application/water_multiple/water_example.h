@@ -22,6 +22,7 @@
 #include "application/water_multiple/cache_data_include.h"
 #include "application/water_multiple/cache_face_array.h"
 #include "application/water_multiple/cache_options.h"
+#include "application/water_multiple/nimbus_thread_queue.h"
 #include "application/water_multiple/options.h"
 #include "application/water_multiple/projection/laplace_solver_wrapper.h"
 #include "data/physbam/translator_physbam_old.h"
@@ -51,6 +52,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef ARRAY<int,TV_INT> INT_SCALAR_ARRAY;
 
 public:
+    nimbus::NimbusThreadQueue* nimbus_thread_queue;
     nimbus::int_dimension_t kScale;
     GeometricRegion local_region;
     GeometricRegion relative_region;
@@ -93,22 +95,31 @@ public:
     typedef typename application::CacheFaceArray<T> TCacheFaceArray;
     typedef typename application::CacheFaceArray<bool> BoolCacheFaceArray;
     typedef typename application::CacheScalarArray<T> TCacheScalarArray;
+    typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
     typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
     TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
+    TCacheScalarArray *cache_pressure, *cache_divergence;
+    IntCacheScalarArray *cache_colors;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
     bool create_destroy_ple;
 
-    WATER_EXAMPLE(const STREAM_TYPE stream_type_input);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
-                  application::AppCacheObjects *cache);
+                  bool use_threading,
+                  int core_quota);
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
                   application::AppCacheObjects *cache,
-                  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple);
+                  bool use_threading,
+                  int core_quota);
+    WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
+                  application::AppCacheObjects *cache,
+                  PARTICLE_LEVELSET_EVOLUTION_UNIFORM<GRID<TV> > *ple,
+                  bool use_threading,
+                  int core_quota);
     virtual ~WATER_EXAMPLE();
     
     T Time_At_Frame(const int frame) const

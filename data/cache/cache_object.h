@@ -33,9 +33,8 @@
  */
 
 /*
- * Application field contains a pointer to the field in the cached object, and
- * a list of field partitions corresponding to logical data partitions for the
- * field.
+ * A CacheObject is an application object corresponding to one/ multiple nimbus
+ * variables.
  *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
@@ -48,77 +47,131 @@
 #include <string>
 #include <vector>
 
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
+#include "data/cache/cache_defs.h"
 #include "shared/nimbus_types.h"
-#include "worker/data.h"
 
 namespace nimbus {
 
-enum CacheAccess { SHARED, EXCLUSIVE };
+class Data;
+typedef std::vector<Data *> DataArray;
+typedef std::set<Data *> DataSet;
+class GeometricRegion;
 
+/**
+ * \class CacheObject
+ * \details Application object corresponding to one/ multiple nimbus variables.
+ * CacheVariable and CacheStruct, that inherit from CacheObject, provide the
+ * one variable and multiple variable implementation respectively.
+ */
 class CacheObject {
     public:
-        explicit CacheObject(std::string type,
-                             const GeometricRegion &app_object_region);
+        /**
+         * \brief Creates a CacheObject
+         * \return Constructed CacheObject instance
+         */
+        explicit CacheObject();
 
-        virtual void ReadToCache(const DataArray &read_set, const GeometricRegion &reg);
-        virtual void ReadDiffToCache(const DataArray &read_set,
-                                     const DataArray &diff,
-                                     const GeometricRegion &reg,
-                                     bool all_lids_diff);
-        void Read(const DataArray &read_set, const GeometricRegion &reg,
-                  bool read_all_or_none = false);
-        virtual void WriteFromCache(const DataArray &write_set, const GeometricRegion &reg) const;
-        void WriteImmediately(const DataArray &write_set, const GeometricRegion &reg, bool release);
-        void Write(const GeometricRegion &reg, bool release = true);
-        void FlushCache();
-        void PullIntoData(Data *d, bool lock_co);
-        void RemoveFromWriteBack(Data *d);
+        /**
+         * \brief Creates a CacheObject
+         * \param  ob_reg specifies application object region
+         * \return Constructed CacheObject instance
+         */
+        explicit CacheObject(const GeometricRegion &ob_reg);
 
-        virtual CacheObject *CreateNew(const GeometricRegion &app_object_region) const;
+        /**
+         * \brief Makes this instance a prototype. The application writer must
+         * make a prototype for every application object he/ she plans to use.
+         */
+         void MakePrototype();
 
-        std::string type() const;
-        GeometricRegion app_object_region() const;
+        /**
+         * \brief Flushes data from cache, removes corresponding dirty data
+         * mapping
+         * \param d is data to flush to
+         */
+        virtual void PullData(Data *d) = 0;
 
-        void AcquireAccess(CacheAccess access);
-        void ReleaseAccess();
+        /**
+         * \brief Unsets mapping between data and CacheObject instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetData(Data *d) = 0;
 
-        void SetUpRead(const DataArray &read_set,
-                       bool read_keep_valid);
-        void SetUpWrite(const DataArray &write_set);
-        void SetUpData(Data *d);
-        void UnsetData(Data *d);
+        /**
+         * \brief Unsets dirty data mapping between data and CacheObject
+         * instance
+         * \param d denotes the data to unmap
+         */
+        virtual void UnsetDirtyData(Data *d) = 0;
 
-        // Use with care
-        void InvalidateCacheObject(const DataArray &da);
-        void InvalidateCacheObjectComplete();
+        /**
+         * \brief Acquires access to CacheObject instance
+         * \param access can be cache::EXCLUSIVE or cache::SHARED
+         */
+        void AcquireAccess(cache::CacheAccess access);
 
-        bool IsAvailable(CacheAccess access) const;
-        distance_t GetDistance(const DataArray &data_set) const;
+        /**
+         * \brief Releases access to CacheObject instance
+         */
+        void ReleaseAccessInternal();
+
+        /**
+         * \brief Checks if CacheObject instance is available for use in access
+         * mode
+         * \param access denotes the mode (cache::EXCLUSIVE/ cache::SHARED) that application
+         * wants
+         * \return Boolean indicating if the instance is available
+         */
+        bool IsAvailable(cache::CacheAccess access) const;
+
+        /**
+         * \brief Accessor for id_ member
+         * \return Instance's prototype id, type co_id_t
+         */
+        cache::co_id_t id() const;
+
+        /**
+         * \brief Accessor for object_region_ member
+         * \return Instance's object_region_, of type GeometricRegion
+         */
+        GeometricRegion object_region() const;
+
+        /**
+         * \brief Setter for object_region_ member
+         * \param object_region is of type GeometricRegion
+         */
+        void set_object_region(const GeometricRegion &object_region);
+
+        bool pending_flag() {
+          return pending_flag_;
+        }
+        void set_pending_flag() {
+          pending_flag_ = true;
+        }
+        void unset_pending_flag() {
+          pending_flag_ = false;
+        }
 
     private:
-        void FlushCacheData(const DataArray &diff);
+        bool pending_flag_;
+        /**
+         * \brief Setter for id_ member
+         * \param id, of type cache::co_id_t
+         */
+        void set_id(cache::co_id_t id);
 
-        std::string type_;
-        GeometricRegion app_object_region_;
+        // prototype information
+        static cache::co_id_t ids_allocated_;
+        cache::co_id_t id_;
 
-        CacheAccess access_;
+        // access information
+        cache::CacheAccess access_;
         int users_;
 
+    protected:
+        // read/ write/ object region information
+        GeometricRegion object_region_;
         GeometricRegion write_region_;
-        std::set<Data *> write_back_;
-
-        /* Currently, cache object contains only physical id information.
-         * Distance (cost) information and validity checks are based on
-         * physical id only.
-         * information.*/
-        // TODO(Chinmayee): change this to region-pid map (because of
-        // scratches)
-        std::map<logical_data_id_t, physical_data_id_t> element_map_;
-        std::map<logical_data_id_t, Data*> data_map_;
-        std::set<Data *> data_;
-        PIDSet pids_;
 };  // class CacheObject
 
 typedef std::vector<CacheObject *> CacheObjects;

@@ -68,6 +68,7 @@ void JobProjectionStepFour::Execute(
   dbg(APP_LOG, "Executing PROJECTION_STEP_FOUR job.\n");
 
   InitConfig init_config;
+  init_config.use_cache = true;
   T dt;
   int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),
@@ -97,6 +98,7 @@ void JobProjectionStepFour::Execute(
   PhysBAM::ProjectionDriver projection_driver(
       pcg_temp, init_config, data_config);
   dbg(APP_LOG, "Job PROJECTION_STEP_FOUR starts (iteration=%d).\n", iteration);
+  projection_driver.projection_data.iteration = iteration;
 
   projection_driver.LoadFromNimbus(this, da);
 

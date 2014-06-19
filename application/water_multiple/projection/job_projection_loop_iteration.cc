@@ -69,10 +69,13 @@ nimbus::Job* JobProjectionLoopIteration::Clone() {
 void JobProjectionLoopIteration::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
   dbg(APP_LOG, "Executing PROJECTION_LOOP_ITERATION job.\n");
   nimbus::JobQuery job_query(this);
 
   InitConfig init_config;
+  init_config.use_cache = true;
   T dt;
   int iteration;
   std::string params_str(params.ser_data().data_ptr_raw(),
@@ -105,6 +108,7 @@ void JobProjectionLoopIteration::Execute(
   projection_driver.LoadFromNimbus(this, da);
   projection_driver.projection_data.residual =
       projection_driver.projection_data.local_residual;
+  projection_driver.projection_data.iteration = iteration;
 
   // Decides whether to spawn a new projection loop or finish it.
   if (projection_driver.projection_data.residual <=
@@ -342,6 +346,14 @@ void JobProjectionLoopIteration::Execute(
   projection_driver.SaveToNimbus(this, da);
 
   dbg(APP_LOG, "Completed executing PROJECTION_LOOP_ITERATION job\n");
+  {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+        .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+    dbg(APP_LOG, "\nThe query time spent in job PROJECTION_LOOP_ITERATION is %f seconds.\n",
+        time);
+  }
 }
 
 }  // namespace application

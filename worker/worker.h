@@ -52,6 +52,8 @@
 #include "worker/data.h"
 #include "worker/job.h"
 #include "worker/application.h"
+#include "worker/physical_data_map.h"
+#include "worker/worker_job_graph/worker_job_graph.h"
 #include "shared/nimbus_types.h"
 #include "shared/id_maker.h"
 #include "shared/scheduler_client.h"
@@ -61,8 +63,17 @@
 #include "shared/parser.h"
 #include "shared/log.h"
 #include "shared/high_resolution_timer.h"
+#include "shared/profiler.h"
 
 namespace nimbus {
+
+#ifndef DBG_WORKER_FD_S
+#define DBG_WORKER_FD_S "\n[WORKER_FD] "
+#endif  // DBG_WORKER_FD_S
+
+#ifndef DBG_WORKER_BD_S
+#define DBG_WORKER_BD_S "\n[WORKER_BD] "
+#endif  // DBG_WORKER_BD_S
 
 class Worker;
 class WorkerManager;
@@ -72,13 +83,10 @@ class Worker {
  public:
   Worker(std::string scheuler_ip, port_t scheduler_port,
       port_t listening_port_, Application* application);
+  virtual ~Worker();
 
   virtual void Run();
   virtual void WorkerCoreProcessor();
-  virtual void ScanBlockedJobs();
-  virtual void ScanPendingTransferJobs();
-
-  virtual void GetJobsToRun(WorkerManager* worker_manager, size_t max_num);
 
   // virtual void ExecuteJob(Job* job);
   virtual void ProcessSchedulerCommand(SchedulerCommand* command);
@@ -105,6 +113,8 @@ class Worker {
     client_->sendCommand(command);
   }
 
+  Log *cache_log;
+
  protected:
   SchedulerClient* client_;
   WorkerDataExchanger* data_exchanger_;
@@ -118,41 +128,42 @@ class Worker {
   port_t listening_port_;
 
  private:
+  WorkerJobGraph worker_job_graph_;
   Log log_;
   Log version_log_;
   Log data_hash_log_;
   Computer host_;
   boost::thread* client_thread_;
   boost::thread* data_exchanger_thread_;
+  boost::thread* profiler_thread_;
   // TODO(quhang) a strong assumption is made that the data map is never changed
   // during the runtime. Indeed, for now, it is only changed at the very
   // beginning of the simulation, so it keeps the same during the simulation,
   // which might break in the future.
 
-  pthread_rwlock_t lock_data_map_;
   PhysicalDataMap data_map_;
   JobList ready_jobs_;
-  JobList blocked_jobs_;
-  JobList pending_transfer_jobs_;
   Application* application_;
+  job_id_t DUMB_JOB_ID;
+  WorkerManager* worker_manager_;
   HighResolutionTimer timer_;
+  Profiler profiler_;
 
   virtual void SetupSchedulerInterface();
 
   virtual void SetupDataExchangerInterface();
 
-  virtual void AddData(Data* data);
-  virtual void DeleteData(physical_data_id_t physical_data_id);
   virtual void LoadSchedulerCommands();
 
-  void RunJobs(size_t max_num);
+  virtual void AddJobToGraph(Job* job);
+  virtual void NotifyLocalJobDone(Job* job);
+  virtual void NotifyJobDone(job_id_t job_id);
+  virtual void ClearAfterSet(WorkerJobVertex* vertex);
+  virtual void NotifyTransmissionDone(job_id_t job_id);
 
  public:
-  // TODO(quhang) figure out the right access control.
   void ResolveDataArray(Job* job);
-  // void UpdateDataVersion(Job* job);
 };
-
 }  // namespace nimbus
 
 #endif  // NIMBUS_WORKER_WORKER_H_

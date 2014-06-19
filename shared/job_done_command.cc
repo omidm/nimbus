@@ -64,9 +64,10 @@ JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
     const IDSet<job_id_t>& after_set,
     const Parameter& params,
     const double run_time,
-    const double wait_time)
+    const double wait_time,
+    const size_t max_alloc)
 : job_id_(job_id), after_set_(after_set), params_(params),
-  run_time_(run_time), wait_time_(wait_time) {
+  run_time_(run_time), wait_time_(wait_time), max_alloc_(max_alloc) {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
 }
@@ -79,7 +80,7 @@ SchedulerCommand* JobDoneCommand::Clone() {
 }
 
 bool JobDoneCommand::Parse(const std::string& params) {
-  int num = 5;
+  int num = 6;
 
   char_separator<char> separator(" \n\t\r");
   tokenizer<char_separator<char> > tokens(params, separator);
@@ -116,12 +117,14 @@ bool JobDoneCommand::Parse(const std::string& params) {
     return false;
   }
 
-  /* Error handling when reading values of timing? */
   iter++;
   run_time_ = boost::lexical_cast<double>(*iter);
 
   iter++;
   wait_time_ = boost::lexical_cast<double>(*iter);
+
+  iter++;
+  max_alloc_ = boost::lexical_cast<size_t>(*iter);
 
   return true;
 }
@@ -133,7 +136,8 @@ std::string JobDoneCommand::toString() {
   str += (after_set_.toString() + " ");
   str += (params_.toString() + " ");
   str += (boost::lexical_cast<std::string>(run_time_) + " ");
-  str += boost::lexical_cast<std::string>(wait_time_);
+  str += (boost::lexical_cast<std::string>(wait_time_) + " ");
+  str += boost::lexical_cast<std::string>(max_alloc_);
   return str;
 }
 
@@ -144,7 +148,8 @@ std::string JobDoneCommand::toStringWTags() {
   str += ("after:" + after_set_.toString() + " ");
   str += ("params:" + params_.toString() + " ");
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
-  str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_));
+  str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_) + " ");
+  str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_));
   return str;
 }
 
@@ -166,6 +171,10 @@ double JobDoneCommand::run_time() {
 
 double JobDoneCommand::wait_time() {
   return wait_time_;
+}
+
+size_t JobDoneCommand::max_alloc() {
+  return max_alloc_;
 }
 
 

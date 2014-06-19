@@ -39,26 +39,27 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
 
-#include <string>
-
 #include "application/water_multiple/cache_data_include.h"
-#include "application/water_multiple/data_names.h"
 #include "application/water_multiple/parameters.h"
-#include "shared/geometric_region.h"
 
 namespace application {
 
-const CacheFaceArray<T> kCacheFaceVel(APP_FACE_VEL, kDefaultRegion, 0);
-const CacheFaceArray<T> kCacheFaceVelGhost(APP_FACE_VEL_GHOST, kDefaultRegion, kGhostNum);
-const CacheFaceArray<bool> kCachePsiN(APP_PSI_N, kDefaultRegion, 1);
+extern CacheFaceArray<T> kCacheFaceVel;
+extern CacheFaceArray<T> kCacheFaceVelGhost;
+extern CacheFaceArray<bool> kCachePsiN;
 
-const CacheScalarArray<T> kCachePhi3(APP_PHI, kDefaultRegion, 3);
-const CacheScalarArray<T> kCachePhi7(APP_PHI, kDefaultRegion, 7);
-const CacheScalarArray<T> kCachePhi8(APP_PHI, kDefaultRegion, 8);
-const CacheScalarArray<bool> kCachePsiD(APP_PSI_D, kDefaultRegion, 1);
+extern CacheScalarArray<T> kCachePhi3;
+extern CacheScalarArray<T> kCachePhi7;
+extern CacheScalarArray<T> kCachePhi8;
+extern CacheScalarArray<bool> kCachePsiD;
 
-const CacheParticleLevelsetEvolution<float> kCachePLE(APP_PLE,
-                                                      kDefaultRegion, 3);
+// Varibales for projection.
+extern CacheScalarArray<T> kCachePressure;
+extern CacheScalarArray<T> kCacheVectorP;
+extern CacheScalarArray<int> kCacheColors;
+extern CacheScalarArray<T> kCacheDivergence;
+
+extern CacheParticleLevelsetEvolution<float> kCachePLE;
 
 } // namespace application
 

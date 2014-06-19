@@ -139,6 +139,7 @@ namespace nimbus {
     virtual bool Parse(const std::string& input);
 
     GeometricRegion& operator= (const GeometricRegion& right);
+
     inline bool operator== (const GeometricRegion& right) const {
         return (x_  == right.x()  &&
                 y_  == right.y()  &&
@@ -147,8 +148,25 @@ namespace nimbus {
                 dy_ == right.dy() &&
                 dz_ == right.dz());
     }
+
     inline bool operator!= (const GeometricRegion& right) const {
         return !(*this == right);
+    }
+
+    inline bool operator< (const GeometricRegion& right) const {
+      if (this->x() != right.x())
+          return this->x() < right.x();
+      if (this->y() != right.y())
+          return this->y() < right.y();
+      if (this->z() != right.z())
+          return this->z() < right.z();
+      if (this->dx() != right.dx())
+          return this->dx() < right.dx();
+      if (this->dy() != right.dy())
+          return this->dy() < right.dy();
+      if (this->dz() != right.dz())
+          return this->dz() < right.dz();
+      return false;
     }
 
 

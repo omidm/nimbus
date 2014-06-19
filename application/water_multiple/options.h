@@ -59,7 +59,8 @@ struct InitConfig {
   GeometricRegion global_region;
   GeometricRegion local_region;
   bool use_cache;
-  bool clear_read_shared_particles;
+  bool use_threading;
+  int core_quota;
 
   // TODO(quhang), global region and local region should be passed as parameters
   // in the future.
@@ -71,7 +72,8 @@ struct InitConfig {
     init_part = 0;
     set_boundary_condition = true;
     use_cache = false;
-    clear_read_shared_particles = false;
+    use_threading = false;
+    core_quota = 1;
   }
 };
 
@@ -93,7 +95,7 @@ struct DataConfig {
     NEGATIVE_PARTICLE,
     REMOVED_POSITIVE_PARTICLE,
     REMOVED_NEGATIVE_PARTICLE,
-    FLUSH_ALL_SHARED_PARTICLES,
+    SHARED_PARTICLES_FLUSH,
     VALID_MASK,
     DIVERGENCE,
     PSI_N,
@@ -148,7 +150,7 @@ struct DataConfig {
     UnsetFlag(LEVELSET_BW_SEVEN_WRITE);
     UnsetFlag(LEVELSET_BW_EIGHT_READ);
     UnsetFlag(LEVELSET_BW_EIGHT_WRITE);
-    UnsetFlag(FLUSH_ALL_SHARED_PARTICLES);
+    UnsetFlag(SHARED_PARTICLES_FLUSH);
   }
   void SetHelper(bool value) {
     for (int i = 0; i < NUM_VARIABLE; ++i)

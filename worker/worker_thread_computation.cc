@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <string>
 
+#include "shared/profiler_malloc.h"
 #include "worker/worker.h"
 #include "worker/worker_manager.h"
 #include "worker/worker_thread.h"
@@ -48,6 +49,9 @@ namespace nimbus {
 
 WorkerThreadComputation::WorkerThreadComputation(WorkerManager* worker_manager)
     : WorkerThread(worker_manager) {
+  use_threading_ = false;
+  core_quota_ = 1;
+  thread_queue = NULL;
 }
 
 WorkerThreadComputation::~WorkerThreadComputation() {
@@ -58,9 +62,14 @@ void WorkerThreadComputation::Run() {
   while (true) {
     job = worker_manager_->NextComputationJobToRun(this);
     assert(job != NULL);
+    job->set_use_threading(use_threading_);
+    job->set_core_quota(core_quota_);
+    thread_queue = NULL;
+    job->set_thread_queue_hook(&thread_queue);
     ExecuteJob(job);
+    assert(thread_queue == NULL);
     assert(worker_manager_ != NULL);
-    bool success_flag = worker_manager_->PushFinishJob(job);
+    bool success_flag = worker_manager_->FinishJob(job);
     assert(success_flag);
   }
 }
@@ -70,11 +79,47 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   log_->StartTimer();
   timer_->Start(job->id().elem());
 #endif  // MUTE_LOG
+#ifdef CACHE_LOG
+  std::string jname = job->name();
+  bool print_clog = false;
+  bool print_cclog = false;
+  if (jname.substr(0, 7) == "Compute") {
+    print_clog = true;
+  } else if (jname.find("Copy") != std::string::npos) {
+    print_cclog = true;
+  }
+  if (print_clog) {
+    std::stringstream msg;
+    msg << "~~~ App compute job start : " << jname << " " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+  if (print_cclog) {
+    std::stringstream msg;
+    msg << "~~~ App copy job start : " << jname << " " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+#endif
+  // ProfilerMalloc::ResetThreadStatisticsByTid(pthread_self());
   dbg(DBG_WORKER, "[WORKER_THREAD] Execute job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
   job->Execute(job->parameters(), job->data_array);
   dbg(DBG_WORKER, "[WORKER_THREAD] Finish executing job, name=%s, id=%lld. \n",
       job->name().c_str(), job->id().elem());
+  // size_t max_alloc = ProfilerMalloc::AllocMaxTid(pthread_self());
+  // job->set_max_alloc(max_alloc);
+
+#ifdef CACHE_LOG
+  if (print_clog) {
+    std::stringstream msg;
+    msg << "~~~ App compute job end : " << jname << " " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+  if (print_cclog) {
+    std::stringstream msg;
+    msg << "~~~ App copy job end : " << jname << " " << cache_log_->GetTime();
+    cache_log_->WriteToFile(msg.str());
+  }
+#endif
 #ifndef MUTE_LOG
   double run_time = timer_->Stop(job->id().elem());
   log_->StopTimer();

@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
 #include "worker/data.h"
 
@@ -45,6 +46,8 @@ using namespace nimbus; // NOLINT
 
 Data::Data() {
   dirty_cache_object_ = NULL;
+  cache_type_ = MAGIC_CACHE_TYPE;
+  pending_flag_ = false;
 }
 
 Data* Data::Clone() {
@@ -96,7 +99,21 @@ void Data::set_version(data_version_t version) {
   version_ = version;
 }
 
-void Data::InvalidateCacheObjectsDataMapping() {
+/**
+ *
+ */
+void Data::ClearDirtyMappings() {
+  assert(dirty_cache_object_);
+  if (dirty_cache_object_) {
+    dirty_cache_object_->UnsetDirtyData(this);
+    dirty_cache_object_ = NULL;
+  }
+}
+
+/**
+ * \details
+ */
+void Data::InvalidateMappings() {
   std::set<CacheObject *>::iterator iter = cache_objects_.begin();
   for (; iter != cache_objects_.end(); ++iter) {
     CacheObject *c = *iter;
@@ -104,33 +121,59 @@ void Data::InvalidateCacheObjectsDataMapping() {
   }
   cache_objects_.clear();
   if (dirty_cache_object_)
-    dirty_cache_object_->RemoveFromWriteBack(this);
+    dirty_cache_object_->UnsetDirtyData(this);
   dirty_cache_object_ = NULL;
 }
 
-void Data::SetUpCacheObjectDataMapping(CacheObject *co) {
+/**
+ * \details
+ */
+void Data::SetUpCacheObject(CacheObject *co) {
   cache_objects_.insert(co);
-  co->SetUpData(this);
 }
 
-void Data::UnsetCacheObjectDataMapping(CacheObject *co) {
+/**
+ * \details
+ */
+void Data::UnsetCacheObject(CacheObject *co) {
   cache_objects_.erase(co);
-  co->UnsetData(this);
 }
 
-void Data::UpdateData(bool lock_co) {
-  if (dirty_cache_object_)
-    dirty_cache_object_->PullIntoData(this, lock_co);
-  if (dirty_cache_object_ != NULL) {
-    dbg(DBG_ERROR, "Data is still not in sync with cache!!\n");
-    exit(-1);
-  }
+/**
+ * \detials
+ */
+CacheObject *Data::dirty_cache_object() {
+  return dirty_cache_object_;
 }
 
-void Data::set_dirty_cache_object(CacheObject *co) {
+/**
+ * \details
+ */
+void Data::SetUpDirtyCacheObject(CacheObject *co) {
+  assert(dirty_cache_object_ == NULL || dirty_cache_object_ == co);
   dirty_cache_object_ = co;
 }
 
-void Data::clear_dirty_cache_object() {
+/**
+ * \details
+ */
+void Data::UnsetDirtyCacheObject(CacheObject *co) {
+  if (dirty_cache_object_ != co)
+    dbg(DBG_ERROR, "Data dirty co %p, passed co %p\n", dirty_cache_object_, co);
+  assert(dirty_cache_object_ == co);
   dirty_cache_object_ = NULL;
+}
+
+/**
+ * \detials
+ */
+cache::type_id_t Data::cache_type() {
+    return cache_type_;
+}
+
+/**
+ * \details
+ */
+void Data::set_cache_type(cache::type_id_t t) {
+    cache_type_ = t;
 }

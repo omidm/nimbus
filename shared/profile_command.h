@@ -32,37 +32,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Helper functions for cache class objects.
- *
- * Author: Chinmayee Shah <chshah@stanford.edu>
- */
+ /*
+  * Profile command with memory usage statistics.
+  *
+  * Author: Andrew Lim <alim16@stanford.edu>
+  */
 
-#ifndef NIMBUS_DATA_CACHE_UTILS_H_
-#define NIMBUS_DATA_CACHE_UTILS_H_
+#ifndef NIMBUS_SHARED_PROFILE_COMMAND_H_
+#define NIMBUS_SHARED_PROFILE_COMMAND_H_
 
-#include "shared/geometric_region.h"
-#include "shared/idset.h"
-#include "shared/nimbus_types.h"
+#include <inttypes.h>
+#include <string>
+#include "shared/scheduler_command.h"
 
 namespace nimbus {
+class ProfileCommand : public SchedulerCommand {
+  public:
+    ProfileCommand();
+    ProfileCommand(const ID<worker_id_t>& worker_id,
+        const uint64_t total_virtual,
+        const uint64_t used_virtual,
+        const uint64_t proc_virtual,
+        const uint64_t total_physical,
+        const uint64_t used_physical,
+        const uint64_t proc_physical);
+    ~ProfileCommand();
 
-/* Types. */
-typedef uint64_t distance_t;
-typedef IDSet<physical_data_id_t> PIDSet;
-typedef IDSet<logical_data_id_t> LIDSet;
+    virtual SchedulerCommand* Clone();
+    virtual bool Parse(const std::string& param_segment);
+    virtual std::string toString();
+    virtual std::string toStringWTags();
+    ID<worker_id_t> worker_id();
+    uint64_t total_virtual();
+    uint64_t used_virtual();
+    uint64_t proc_virtual();
+    uint64_t total_physical();
+    uint64_t used_physical();
+    uint64_t proc_physical();
 
-struct CacheInstance {
-    physical_data_id_t pid;
-    data_version_t version;
+  private:
+    ID<worker_id_t> worker_id_;
+    uint64_t total_virtual_;
+    uint64_t used_virtual_;
+    uint64_t proc_virtual_;
+    uint64_t total_physical_;
+    uint64_t used_physical_;
+    uint64_t proc_physical_;
 };
-
-/* A comparator for geometric region, for using in maps. */
-typedef bool(* GRComparisonType)(const GeometricRegion&,  // NOLINT
-                                 const GeometricRegion&);
-bool GeometricRegionLess(const GeometricRegion &r1,
-                         const GeometricRegion &r2);
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_CACHE_UTILS_H_
+#endif  // NIMBUS_SHARED_PROFILE_COMMAND_H_

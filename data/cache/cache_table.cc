@@ -33,67 +33,172 @@
  */
 
 /*
+ * A CacheTable contains a map from geometric region to application cache
+ * objects.
+ *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
 #include <vector>
 
+#include "data/cache/cache_defs.h"
 #include "data/cache/cache_object.h"
+#include "data/cache/cache_struct.h"
 #include "data/cache/cache_table.h"
-#include "data/cache/utils.h"
+#include "data/cache/cache_var.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
 namespace nimbus {
 
-CacheTable::CacheTable() : table_(Table(GeometricRegionLess)) {}
-
-void CacheTable::AddEntry(const GeometricRegion &region,
-                          CacheObject *co) {
-    CacheObjects *cos = NULL;
-    if (table_.find(region) == table_.end()) {
-        cos = new CacheObjects();
-        table_[region] = cos;
+/**
+ * \details If ttype equals cache::VAR, tstruct_ is set to NULL. Similarly, is ttype
+ * equals cache::STRUCT, tvar_ is set to NULL.
+ */
+CacheTable::CacheTable(cache::CacheTType ttype) {
+    if (ttype == cache::VAR) {
+        tvar_ = new TVar();
+        tstruct_ = NULL;
     } else {
-        cos = table_[region];
+        tvar_ = NULL;
+        tstruct_ = new TStruct();
     }
-    cos->push_back(co);
 }
 
-CacheObject *CacheTable::GetClosestAvailable(const GeometricRegion &region,
-                                             const DataArray &read,
-                                             CacheAccess access) {
-    if (table_.find(region) == table_.end())
+/**
+ * \details If there is already a mapping for the given region key,
+ * AddEntry(...) appends cv to the vector of cache vars that region maps to.
+ * Otherwise AddEntry(...) creates a new mapping from region key to a vector of
+ * cache vars with one element, cv.
+ */
+void CacheTable::AddEntry(const GeometricRegion &region,
+                          CacheVar *cv) {
+    CacheVars *cvs = NULL;
+    if (tvar_->find(region) == tvar_->end()) {
+        cvs = new CacheVars();
+        (*tvar_)[region] = cvs;
+    } else {
+        cvs = tvar_->at(region);
+    }
+    cvs->push_back(cv);
+}
+
+/**
+ * \details If there is already a mapping for the given region key,
+ * AddEntry(...) appends cs to the vector of cache structs that region maps to.
+ * Otherwise AddEntry(...) creates a new mapping from region key to a vector of
+ * cache structs with one element, cs.
+ */
+void CacheTable::AddEntry(const GeometricRegion &region,
+                          CacheStruct *cs) {
+    CacheStructs *css = NULL;
+    if (tstruct_->find(region) == tstruct_->end()) {
+        css = new CacheStructs();
+        (*tstruct_)[region] = css;
+    } else {
+        css = tstruct_->at(region);
+    }
+    css->push_back(cs);
+}
+
+/**
+ * \details GetClosestAvailable(...) returns NULL if no usable cache var
+ * instance is available, for the given region and access mode. Otherwise it
+ * finds the closest cache var instance using the CacheVar cost function.
+ */
+CacheVar *CacheTable::GetClosestAvailable(const GeometricRegion &region,
+                                          const DataArray &read_set,
+                                          cache::CacheAccess access) {
+    if (tvar_->find(region) == tvar_->end())
         return NULL;
-    int min = GetMinDistanceIndex(table_[region], read, access);
+    int min = GetMinDistanceIndex(*tvar_->at(region), read_set, access);
     if (min == -1)
         return NULL;
     else
-        return table_[region]->at(min);
+        return tvar_->at(region)->at(min);
 }
 
-CacheObject *CacheTable::GetAvailable(const GeometricRegion &region,
-                                      CacheAccess access) {
-    if (table_.find(region) == table_.end())
+/**
+ * \details GetClosestAvailable(...) returns NULL if no usable cache struct
+ * instance is available, for the given region and access mode. Otherwise it
+ * finds the closest cache struct instance using the CacheStruct cost function.
+ */
+CacheStruct *CacheTable::GetClosestAvailable(const GeometricRegion &region,
+                                             const std::vector<cache::type_id_t> &var_type,
+                                             const std::vector<DataArray> &read_sets,
+                                             cache::CacheAccess access) {
+    if (tstruct_->find(region) == tstruct_->end())
         return NULL;
-    CacheObjects *objects = table_[region];
-    for (size_t i = 0; i < objects->size(); ++i) {
-        if (objects->at(i)->IsAvailable(access))
-            return objects->at(i);
-    }
-    return NULL;
+    int min = GetMinDistanceIndex(*tstruct_->at(region), var_type, read_sets, access);
+    if (min == -1)
+        return NULL;
+    else
+        return tstruct_->at(region)->at(min);
 }
 
-int CacheTable::GetMinDistanceIndex(const CacheObjects *objects,
-                                    const DataArray &read,
-                                    CacheAccess access) const {
-    distance_t min_distance = 2*read.size();
+/**
+ * \details
+ */
+int CacheTable::GetMinDistanceIndex(const CacheVars &cvs,
+                                    const DataArray &read_set,
+                                    cache::CacheAccess access) const {
     int min_index = -1;
-    distance_t dist;
-    for (size_t i = 0; i < objects->size(); ++i) {
-        if (!objects->at(i)->IsAvailable(access))
+    if (cvs.size() == 0)
+        return min_index;
+    cache::distance_t min_distance = 1;
+    for (size_t i = 0; i < cvs.size(); ++i) {
+        if (cvs.at(i)->IsAvailable(access)) {
+            min_distance = cvs.at(i)->GetDistance(read_set);
+            min_index = i;
+            break;
+        }
+    }
+    if (min_index < 0 || min_distance == 0)
+        return min_index;
+    cache::distance_t dist;
+    size_t start = min_index;
+    for (size_t i = start; i < cvs.size(); ++i) {
+        if (!cvs.at(i)->IsAvailable(access))
             continue;
-        dist = objects->at(i)->GetDistance(read);
+        dist = cvs.at(i)->GetDistance(read_set);
+        if (dist == 0) {
+            min_distance = 0;
+            min_index = i;
+            break;
+        } else if (dist < min_distance) {
+            min_distance = dist;
+            min_index = i;
+        }
+    }
+    return min_index;
+}
+
+/**
+ * \details
+ */
+int CacheTable::GetMinDistanceIndex(const CacheStructs &css,
+                                    const std::vector<cache::type_id_t> &var_type,
+                                    const std::vector<DataArray> &read_sets,
+                                    cache::CacheAccess access) const {
+    int min_index = -1;
+    if (css.size() == 0)
+        return min_index;
+    cache::distance_t min_distance = 1;
+    for (size_t i = 0; i < css.size(); ++i) {
+        if (css.at(i)->IsAvailable(access)) {
+            min_distance = css.at(i)->GetDistance(var_type, read_sets);
+            min_index = i;
+            break;
+        }
+    }
+    if (min_index < 0 || min_distance == 0)
+        return min_index;
+    cache::distance_t dist;
+    size_t start = min_index;
+    for (size_t i = start; i < css.size(); ++i) {
+        if (!css.at(i)->IsAvailable(access))
+            continue;
+        dist = css.at(i)->GetDistance(var_type, read_sets);
         if (dist == 0) {
             min_distance = 0;
             min_index = i;

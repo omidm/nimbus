@@ -50,6 +50,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -112,6 +113,8 @@ template <class TS> class TranslatorPhysBAM {
             TS v[3];
         };
 
+        static Log *log;
+
         /** Take a FaceArray described by region and read its data from the
          *  PhysicalDataInstance objects in the objects array.
          */
@@ -121,8 +124,31 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
-            if (read_set.empty())
+            ReadFaceArrayInner(region, inner, shift, read_set, fa);
+        }
+
+        /** Take a FaceArray described by region and read its data from the
+         *  PhysicalDataInstance objects in the objects array.
+         */
+        template<typename T> static void ReadFaceArrayInner(
+                const GeometricRegion &region,
+                const GeometricRegion &inner,
+                const Coord &shift,
+                const DataArray &read_set,
+                typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             PhysBAM::ARRAY<T, FaceIndex> flag;
             flag = *fa;
             flag.Fill(0);
@@ -309,6 +335,193 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+        }
+
+        /** Take a FaceArray described by region and read its data from the
+         *  PhysicalDataInstance objects in the objects array.
+         */
+        static void ReadFaceArrayInner(
+                const GeometricRegion &region,
+                const GeometricRegion &inner,
+                const Coord &shift,
+                const DataArray &read_set,
+                typename PhysBAM::ARRAY<bool, FaceIndex>* fa) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
+                return;
+            }
+            PhysBAM::ARRAY<bool, FaceIndex> flag;
+            flag = *fa;
+            flag.Fill(0);
+            DataArray read_inner;
+            DataArray read_outer;
+            for (size_t i = 0; i < read_set.size(); ++i) {
+                GeometricRegion r = read_set[i]->region();
+                if (inner.Covers(&r))
+                    read_inner.push_back(read_set[i]);
+                else
+                    read_outer.push_back(read_set[i]);
+            }
+            for (size_t i = 0; i < read_outer.size(); ++i) {
+                PhysBAMData *data = static_cast<PhysBAMData*>(read_outer[i]);
+                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                if (HasOverlap(overlap)) {
+                    bool* buffer = reinterpret_cast<bool*>(data->buffer());
+                    Dimension3Vector src = GetOffset(data->region(), region);
+                    Dimension3Vector dest = GetOffset(region, data->region());
+                    //  x, y and z values are stored separately due to the
+                    // difference in number of x, y and z values in face arrays
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
+                        int mult_x = 1;
+                        int mult_y = data->region().dx();
+                        int mult_z = data->region().dy() * data->region().dx();
+                        int range_x = overlap(X_COORD);
+                        int range_y = overlap(Y_COORD);
+                        int range_z = overlap(Z_COORD);
+                        int src_offset = 0;
+                        switch (dim) {
+                            case X_COORD:
+                                range_x += 1;
+                                mult_y  += 1;
+                                mult_z  += data->region().dy();
+                                break;
+                            case Y_COORD:
+                                range_y += 1;
+                                mult_z  += data->region().dx();
+                                src_offset += (data->region().dx() + 1) *
+                                    (data->region().dy()) *
+                                    (data->region().dz());
+                                break;
+                            case Z_COORD:
+                                range_z += 1;
+                                src_offset += ((data->region().dx()) *
+                                        (data->region().dy() + 1) *
+                                        (data->region().dz())) +
+                                    ((data->region().dx() + 1) *
+                                     (data->region().dy()) *
+                                     (data->region().dz()));
+                                break;
+                        }
+                        for (int z = 0; z < range_z; ++z) {
+                            for (int y = 0; y < range_y; ++y) {
+                                for (int x = 0; x < range_x; ++x) {
+                                    int source_x = x + src(X_COORD);
+                                    int source_y = y + src(Y_COORD);
+                                    int source_z = z + src(Z_COORD);
+                                    int source_index = source_x * mult_x +
+                                        source_y * mult_y +
+                                        source_z * mult_z;
+                                    source_index += src_offset;
+                                    int loc_x = x + dest(X_COORD) + region.x();
+                                    int loc_y = y + dest(Y_COORD) + region.y();
+                                    int loc_z = z + dest(Z_COORD) + region.z();
+                                    int dest_x = loc_x - shift.x;
+                                    int dest_y = loc_y - shift.y;
+                                    int dest_z = loc_z - shift.z;
+                                    typename PhysBAM::VECTOR<int, 3>
+                                        destinationIndex(dest_x, dest_y, dest_z);
+                                    assert(source_index < data->size() / (int) sizeof(bool) && source_index >= 0); // NOLINT
+                                    (*fa)(dim, destinationIndex) = buffer[source_index];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            for (size_t i = 0; i < read_inner.size(); ++i) {
+                PhysBAMData *data = static_cast<PhysBAMData*>(read_inner[i]);
+                Dimension3Vector overlap = GetOverlapSize(data->region(), region);
+                if (HasOverlap(overlap)) {
+                    bool* buffer = reinterpret_cast<bool*>(data->buffer());
+                    Dimension3Vector src = GetOffset(data->region(), region);
+                    Dimension3Vector dest = GetOffset(region, data->region());
+                    //  x, y and z values are stored separately due to the
+                    // difference in number of x, y and z values in face arrays
+                    for (int dim = X_COORD; dim <= Z_COORD; ++dim) {
+                        int mult_x = 1;
+                        int mult_y = data->region().dx();
+                        int mult_z = data->region().dy() * data->region().dx();
+                        int range_x = overlap(X_COORD);
+                        int range_y = overlap(Y_COORD);
+                        int range_z = overlap(Z_COORD);
+                        int src_offset = 0;
+                        switch (dim) {
+                            case X_COORD:
+                                range_x += 1;
+                                mult_y  += 1;
+                                mult_z  += data->region().dy();
+                                break;
+                            case Y_COORD:
+                                range_y += 1;
+                                mult_z  += data->region().dx();
+                                src_offset += (data->region().dx() + 1) *
+                                    (data->region().dy()) *
+                                    (data->region().dz());
+                                break;
+                            case Z_COORD:
+                                range_z += 1;
+                                src_offset += ((data->region().dx()) *
+                                        (data->region().dy() + 1) *
+                                        (data->region().dz())) +
+                                    ((data->region().dx() + 1) *
+                                     (data->region().dy()) *
+                                     (data->region().dz()));
+                                break;
+                        }
+                        for (int z = 0; z < range_z; ++z) {
+                            for (int y = 0; y < range_y; ++y) {
+                                for (int x = 0; x < range_x; ++x) {
+                                    int source_x = x + src(X_COORD);
+                                    int source_y = y + src(Y_COORD);
+                                    int source_z = z + src(Z_COORD);
+                                    int source_index = source_x * mult_x +
+                                        source_y * mult_y +
+                                        source_z * mult_z;
+                                    source_index += src_offset;
+                                    int dest_x = x + dest(X_COORD) + region.x() - shift.x;
+                                    int dest_y = y + dest(Y_COORD) + region.y() - shift.y;
+                                    int dest_z = z + dest(Z_COORD) + region.z() - shift.z;
+                                    typename PhysBAM::VECTOR<int, 3>
+                                        destinationIndex(dest_x, dest_y, dest_z);
+                                    assert(source_index < data->size() / (int) sizeof(bool) && source_index >= 0); // NOLINT
+                                    if (flag(dim, destinationIndex) == 0) {
+                                        (*fa)(dim, destinationIndex) = buffer[source_index];
+                                        flag(dim, destinationIndex) = 1;
+                                    } else {
+                                        if (flag(dim, destinationIndex) == 1) {
+                                            assert((*fa)(dim, destinationIndex)
+                                                    == buffer[source_index]);
+                                            flag(dim, destinationIndex) = 2;
+                                        } else {
+                                            // TODO(quhang) needs a more elegant solution.
+                                            assert(false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Face Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /** Take a FaceArray described by region and write it out to the
@@ -318,14 +531,18 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Face Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Face Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
-            int_dimension_t region_size = 0;
-            region_size += (region.dx() + 1) * region.dy() * region.dz();
-            region_size += region.dx() * (region.dy() + 1) * region.dz();
-            region_size += region.dx() * region.dy() * (region.dz() + 1);
-            if (region_size != fa->buffer_size) {
-                dbg(DBG_WARN, "WARN: writing a face array of size %i for a region of size %i and the two sizes should be equal. This check is wrong so you can ignore this warning. I need to determine correct check. -pal\n", fa->buffer_size, region_size);  // NOLINT
             }
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
@@ -401,6 +618,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Face Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /*
@@ -414,8 +636,19 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
-            if (regions.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (regions.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
 
             ParticleArray *particles;
             if (positive) {
@@ -442,6 +675,7 @@ template <class TS> class TranslatorPhysBAM {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
+                                // TODO(later): can optimize this further
                                 ParticleBucket *particle_bucket = (*particles)(bucket_index);
                                 if (!particle_bucket)
                                     continue;
@@ -501,6 +735,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         static void DeleteRemovedParticles(
@@ -509,8 +748,19 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t scale,
                 bool positive) {
-            if (regions.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (regions.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Delete Removed Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
 
             RemovedParticleArray *particles;
             if (positive) {
@@ -537,6 +787,7 @@ template <class TS> class TranslatorPhysBAM {
                                 particle_container->Free_Particle_And_Clear_Pointer(
                                         (*particles)(bucket_index));
                             } else {
+                                // TODO(later): can optimize this further
                                 RemovedParticleBucket *particle_bucket = (*particles)(bucket_index); // NOLINT
                                 if (!particle_bucket)
                                     continue;
@@ -597,8 +848,231 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
+        /*
+         * Interface for deleting particles - delete particles outside inner,
+         * inside outer.
+         */
+        static void DeleteParticles(
+                const Coord &shift,
+                GeometricRegion &inner,
+                GeometricRegion &outer,
+                ParticleContainer *particle_container,
+                const int_dimension_t scale,
+                bool positive) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            ParticleArray *particles;
+            if (positive) {
+                particles = &particle_container->positive_particles;
+            } else {
+                particles = &particle_container->negative_particles;
+            }
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pouter = outer;
+            pouter.Translate(neg_shift);
+            GeometricRegion pinner = inner;
+            pinner.Translate(neg_shift);
+
+            for (int z = pouter.z(); z <= pouter.z() + pouter.dz(); ++z) {
+                for (int y = pouter.y(); y <= pouter.y() + pouter.dy() ; ++y) {
+                    for (int x = pouter.x(); x <= pouter.x() + pouter.dx(); ++x) {
+                        TV_INT bucket_index(x, y, z);
+
+                        if ((x < pinner.x() || x > pinner.x() + pinner.dx() ||
+                             y < pinner.y() || y > pinner.y() + pinner.dy() ||
+                             z < pinner.z() || z > pinner.z() + pinner.dz())) {
+                            particle_container->Free_Particle_And_Clear_Pointer(
+                                    (*particles)(bucket_index));
+                        } else {
+                            // TODO(later): can optimize this further
+                            if (x == pinner.x() || x == pinner.x() + pinner.dx() ||
+                                y == pinner.y() || y == pinner.y() + pinner.dy() ||
+                                z == pinner.z() || z == pinner.z() + pinner.dz()) {
+                                ParticleBucket *particle_bucket = (*particles)(bucket_index);
+                                if (!particle_bucket)
+                                    continue;
+
+                                ParticleBucket *particle_bucket_history = particle_bucket;
+                                (*particles)(bucket_index) = NULL;
+                                bool new_particles_alloc = false;
+                                ParticleBucket *particle_new_bucket = NULL;
+
+                                while (particle_bucket) {
+                                    for (int i = 1;
+                                            i <= particle_bucket->array_collection->Size();
+                                            ++i) {
+                                        TV particle_position = particle_bucket->X(i);
+                                        TV absolute_position = particle_position *
+                                            static_cast<float>(scale) + 1.0;
+                                        if (absolute_position.x >= inner.x() &&
+                                            absolute_position.x < inner.x() + inner.dx() &&
+                                            absolute_position.y >= inner.y() &&
+                                            absolute_position.y < inner.y() + inner.dy() &&
+                                            absolute_position.z >= inner.z() &&
+                                            absolute_position.z < inner.z() + inner.dz()) {
+                                            if (!new_particles_alloc) {
+                                                new_particles_alloc = true;
+                                                (*particles)(bucket_index) =
+                                                    particle_container->
+                                                    Allocate_Particles(particle_container->
+                                                            template_particles);
+                                                particle_new_bucket = (*particles)(bucket_index);
+                                            }
+
+                                            int index = particle_container->
+                                                Add_Particle(particle_new_bucket);
+                                            particle_new_bucket->X(index) = particle_bucket->X(i);
+                                            particle_new_bucket->radius(index) =
+                                                particle_bucket->radius(i);
+                                            particle_new_bucket->quantized_collision_distance(index) = // NOLINT
+                                                particle_bucket->quantized_collision_distance(i);
+                                            if (particle_container->store_unique_particle_id) {
+                                                PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                    particle_new_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                PhysBAM::ARRAY_VIEW<int> *id =
+                                                    particle_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                (*new_id)(index) = (*id)(i);
+                                            }
+                                        }
+                                    }
+                                    particle_bucket = particle_bucket->next;
+                                }
+                                // Delete the original bucket.
+                                particle_container->
+                                    Free_Particle_And_Clear_Pointer(particle_bucket_history);
+                            }
+                        }
+                    }
+                }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+        }
+
+        /*
+         * Interface for deleting removed particles - delete particles outside inner,
+         * inside outer.
+         */
+        static void DeleteRemovedParticles(
+                const Coord &shift,
+                GeometricRegion &inner,
+                GeometricRegion &outer,
+                ParticleContainer *particle_container,
+                const int_dimension_t scale,
+                bool positive) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            RemovedParticleArray *particles;
+            if (positive) {
+                particles = &particle_container->removed_positive_particles;
+            } else {
+                particles = &particle_container->removed_negative_particles;
+            }
+            Coord neg_shift(-shift.x, -shift.y, -shift.z);
+            GeometricRegion pouter = outer;
+            pouter.Translate(neg_shift);
+            GeometricRegion pinner = inner;
+            pinner.Translate(neg_shift);
+
+            for (int z = pouter.z(); z <= pouter.z() + pouter.dz(); ++z) {
+                for (int y = pouter.y(); y <= pouter.y() + pouter.dy() ; ++y) {
+                    for (int x = pouter.x(); x <= pouter.x() + pouter.dx(); ++x) {
+                        TV_INT bucket_index(x, y, z);
+
+                        if ((x < pinner.x() || x > pinner.x() + pinner.dx() ||
+                             y < pinner.y() || y > pinner.y() + pinner.dy() ||
+                             z < pinner.z() || z > pinner.z() + pinner.dz())) {
+                            particle_container->Free_Particle_And_Clear_Pointer(
+                                    (*particles)(bucket_index));
+                        } else {
+                            // TODO(later): can optimize this further
+                            if (x == pinner.x() || x == pinner.x() + pinner.dx() ||
+                                y == pinner.y() || y == pinner.y() + pinner.dy() ||
+                                z == pinner.z() || z == pinner.z() + pinner.dz()) {
+                                RemovedParticleBucket *particle_bucket = (*particles)(bucket_index);
+                                if (!particle_bucket)
+                                    continue;
+
+                                RemovedParticleBucket *particle_bucket_history = particle_bucket;
+                                (*particles)(bucket_index) = NULL;
+                                bool new_particles_alloc = false;
+                                RemovedParticleBucket *particle_new_bucket = NULL;
+
+                                while (particle_bucket) {
+                                    for (int i = 1;
+                                            i <= particle_bucket->array_collection->Size();
+                                            ++i) {
+                                        TV particle_position = particle_bucket->X(i);
+                                        TV absolute_position = particle_position *
+                                            static_cast<float>(scale) + 1.0;
+                                        if (absolute_position.x >= inner.x() &&
+                                            absolute_position.x < inner.x() + inner.dx() &&
+                                            absolute_position.y >= inner.y() &&
+                                            absolute_position.y < inner.y() + inner.dy() &&
+                                            absolute_position.z >= inner.z() &&
+                                            absolute_position.z < inner.z() + inner.dz()) {
+                                            if (!new_particles_alloc) {
+                                                new_particles_alloc = true;
+                                                (*particles)(bucket_index) =
+                                                    particle_container->
+                                                    Allocate_Particles(particle_container->
+                                                            template_removed_particles);
+                                                particle_new_bucket = (*particles)(bucket_index);
+                                            }
+
+                                            int index = particle_container->
+                                                Add_Particle(particle_new_bucket);
+                                            particle_new_bucket->X(index) = particle_bucket->X(i);
+                                            particle_new_bucket->radius(index) =
+                                                particle_bucket->radius(i);
+                                            particle_new_bucket->quantized_collision_distance(index) = // NOLINT
+                                                particle_bucket->quantized_collision_distance(i);
+                                            if (particle_container->store_unique_particle_id) {
+                                                PhysBAM::ARRAY_VIEW<int> *new_id =
+                                                    particle_new_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                PhysBAM::ARRAY_VIEW<int> *id =
+                                                    particle_bucket->array_collection->
+                                                    template Get_Array<int>(PhysBAM::ATTRIBUTE_ID_ID); // NOLINT
+                                                (*new_id)(index) = (*id)(i);
+                                            }
+                                            particle_new_bucket->V(index) = particle_bucket->V(i);
+                                        }
+                                    }
+                                    particle_bucket = particle_bucket->next;
+                                }
+                                // Delete the original bucket.
+                                particle_container->
+                                    Free_Particle_And_Clear_Pointer(particle_bucket_history);
+                            }
+                        }
+                    }
+                }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Delete Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+        }
 
         /* Reads the particle data from the PhysicalDataInstances "instances",
          * limited by the corresponding global region calculated from shifting the
@@ -617,6 +1091,11 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
             ParticleArray* particles;
             if (positive) {
                 particles = &particle_container->positive_particles;
@@ -690,6 +1169,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }  // End the loop for buffer.
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
 
@@ -707,8 +1191,19 @@ template <class TS> class TranslatorPhysBAM {
                 ParticleContainer *particle_container,
                 const int_dimension_t kScale,
                 bool positive) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
 
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
@@ -723,41 +1218,29 @@ template <class TS> class TranslatorPhysBAM {
                 particles = &particle_container->negative_particles;
             }
 
-            Coord neg_shift(-shift.x, -shift.y, -shift.z);
-            GeometricRegion pregion = region;
-            pregion.Translate(neg_shift);
+            const Coord neg_shift(-shift.x, -shift.y, -shift.z);
 
-            // Loop through each particle bucket in the specified region.
-            for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z)
-                for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y)
-                    for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
-                        TV_INT bucket_index(x, y, z);
-                        DataArray::const_iterator iter = write_set.begin();
-                        for (; iter != write_set.end(); ++iter) {
-                            // Iterate across instances, checking each one.
-                            PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
-                            GeometricRegion data_region = data->region();
-                            // TODO(quhang) needs to double check the margin setting.
-                            const int_dimension_t kMargin = 1;
-                            if (x + shift.x <
-                                data_region.x() - kMargin ||
-                                x + shift.x >
-                                data_region.x() + data_region.dx() + kMargin ||
-                                y + shift.y <
-                                data_region.y() - kMargin ||
-                                y + shift.y >
-                                data_region.y() + data_region.dy() + kMargin ||
-                                z + shift.z <
-                                data_region.z() - kMargin ||
-                                z + shift.z >
-                                data_region.z() + data_region.dz() + kMargin) {
-                                continue;
-                            }
+            // Iterate across instances
+            iter = write_set.begin();
+            for (; iter != write_set.end(); ++iter) {
+                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                GeometricRegion data_region = data->region();
+                GeometricRegion pregion = data_region;
+                pregion.Translate(neg_shift);
+
+                // Loop through each particle bucket in the specified region.
+                for (int z = pregion.z();
+                     z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y();
+                         y <= pregion.y() + pregion.dy(); ++y) {
+                        for (int x = pregion.x();
+                             x <= pregion.x() + pregion.dx(); ++x) {
+                            TV_INT bucket_index(x, y, z);
                             ParticleBucket* particle_bucket = (*particles)(bucket_index);
-                            while (particle_bucket) {
+                            while (particle_bucket != NULL) {
                                 for (int i = 1;
-                                        i <= particle_bucket->array_collection->Size();
-                                        ++i) {
+                                     i <= particle_bucket->array_collection->Size();
+                                     ++i) {
                                     TV particle_position = particle_bucket->X(i);
                                     TV absolute_position =
                                         particle_position * (float) kScale + 1.0; // NOLINT
@@ -793,18 +1276,19 @@ template <class TS> class TranslatorPhysBAM {
                                                 reinterpret_cast<char*>(&particle_buffer),
                                                 sizeof(particle_buffer));
                                     }
-                                }
+                                }  // Finish looping through all particles.
                                 particle_bucket = particle_bucket->next;
-                            }  // Finish looping through all particles.
+                            }
                         }
                     }
-
-            // Now that we've copied particles into the temporary data buffers,
-            // commit the results.
-            iter = write_set.begin();
-            for (; iter != write_set.end(); ++iter) {
-                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                }
+                // commit the result
                 data->CommitTempBuffer();
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
             }
         }
 
@@ -825,6 +1309,11 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive,
                 bool merge = false) {
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
             RemovedParticleArray* particles;
             if (positive) {
                 particles = &particle_container->removed_positive_particles;
@@ -853,6 +1342,11 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Removed Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 dbg(DBG_WARN, "Physical data instances are empty.\n");
                 return;
             }
@@ -912,6 +1406,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }  // End the loop for buffer.
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /* Writes the removed particle data from PhysBAM particle container
@@ -930,8 +1429,19 @@ template <class TS> class TranslatorPhysBAM {
                 const int_dimension_t kScale,
                 bool positive
                 ) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Removed Particles (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Removed Particles (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             DataArray::const_iterator iter = write_set.begin();
             for (; iter != write_set.end(); ++iter) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
@@ -946,27 +1456,31 @@ template <class TS> class TranslatorPhysBAM {
             }
 
             Coord neg_shift(-shift.x, -shift.y, -shift.z);
-            GeometricRegion pregion = region;
-            pregion.Translate(neg_shift);
 
-            // Loop through each particle bucket in the specified region.
-            for (int z = pregion.z(); z <= pregion.z() + pregion.dz(); ++z)
-                for (int y = pregion.y(); y <= pregion.y() + pregion.dy(); ++y)
-                    for (int x = pregion.x(); x <= pregion.x() + pregion.dx(); ++x) {
-                        TV_INT bucket_index(x, y, z);
-                        RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
-                        while (particle_bucket) {
-                            for (int i = 1;
+            // Iterate across instances
+            iter = write_set.begin();
+            for (; iter != write_set.end(); ++iter) {
+                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                GeometricRegion data_region = data->region();
+                GeometricRegion pregion = data_region;
+                pregion.Translate(neg_shift);
+
+                // Loop through each particle bucket in the specified region.
+                for (int z = pregion.z();
+                     z <= pregion.z() + pregion.dz(); ++z) {
+                    for (int y = pregion.y();
+                         y <= pregion.y() + pregion.dy(); ++y) {
+                        for (int x = pregion.x();
+                             x <= pregion.x() + pregion.dx(); ++x) {
+                            TV_INT bucket_index(x, y, z);
+                            RemovedParticleBucket* particle_bucket = (*particles)(bucket_index);
+                            while (particle_bucket != NULL) {
+                                for (int i = 1;
                                     i <= particle_bucket->array_collection->Size();
                                     ++i) {
-                                TV particle_position = particle_bucket->X(i);
-                                TV absolute_position =
-                                    particle_position * (float) kScale + 1.0; // NOLINT
-                                DataArray::const_iterator iter = write_set.begin();
-                                // Iterate across instances, checking each one.
-                                for (; iter != write_set.end(); ++iter) {
-                                    PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
-                                    GeometricRegion data_region = data->region();
+                                    TV particle_position = particle_bucket->X(i);
+                                    TV absolute_position =
+                                        particle_position * (float) kScale + 1.0; // NOLINT
                                     // If it's inside the region of the physical data instance.
                                     if (absolute_position.x >=
                                         data_region.x() &&
@@ -1000,18 +1514,19 @@ template <class TS> class TranslatorPhysBAM {
                                                 reinterpret_cast<char*>(&particle_buffer),
                                                 sizeof(particle_buffer));
                                     }
-                                }
+                                }  // Finish looping through all particles.
+                                particle_bucket = particle_bucket->next;
                             }
-                            particle_bucket = particle_bucket->next;
                         }
                     }
-
-            // Now that we've copied particles into the temporary data buffers,
-            // commit the results.
-            iter = write_set.begin();
-            for (; iter != write_set.end(); ++iter) {
-                PhysBAMData* data = static_cast<PhysBAMData*>(*iter);
+                }
+                // commit the result
                 data->CommitTempBuffer();
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Removed Particles (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
             }
         }
 
@@ -1023,8 +1538,19 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &read_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            if (read_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Scalar Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (read_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Read Scalar Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             for (size_t i = 0; i < read_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
@@ -1056,6 +1582,11 @@ template <class TS> class TranslatorPhysBAM {
                     }
                 }
             }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Read Scalar Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
         }
 
         /* Write scalar array data into PhysicalDataInstances specified by instances,
@@ -1065,8 +1596,19 @@ template <class TS> class TranslatorPhysBAM {
                 const Coord &shift,
                 const DataArray &write_set,
                 typename PhysBAM::ARRAY<T, TV_INT>* sa) {
-            if (write_set.empty())
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Scalar Array (New Translator) start : " << log->GetTime();
+                log->WriteToFile(msg.str());
+            }
+            if (write_set.empty()) {
+                if (log) {
+                    std::stringstream msg;
+                    msg << "### Write Scalar Array (New Translator) end : " << log->GetTime();
+                    log->WriteToFile(msg.str());
+                }
                 return;
+            }
             for (size_t i = 0; i < write_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(write_set[i]);
                 GeometricRegion temp = data->region();
@@ -1098,6 +1640,11 @@ template <class TS> class TranslatorPhysBAM {
                         }
                     }
                 }
+            }
+            if (log) {
+                std::stringstream msg;
+                msg << "### Write Scalar Array (New Translator) end : " << log->GetTime();
+                log->WriteToFile(msg.str());
             }
         }
 
@@ -1157,6 +1704,7 @@ template <class TS> class TranslatorPhysBAM {
 };
 
 template class TranslatorPhysBAM<float>;
+template <class TS> Log *TranslatorPhysBAM<TS>::log = NULL;
 }  // namespace nimbus
 
 #endif  // NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_H_

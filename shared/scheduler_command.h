@@ -88,7 +88,8 @@ class SchedulerCommand {
     LDO_REMOVE,
     PARTITION_ADD,
     PARTITION_REMOVE,
-    TERMINATE
+    TERMINATE,
+    PROFILE
   };
 
   typedef std::set<Type> TypeSet;
@@ -131,6 +132,7 @@ class SchedulerCommand {
   static const std::string PARTITION_ADD_NAME;
   static const std::string PARTITION_REMOVE_NAME;
   static const std::string TERMINATE_NAME;
+  static const std::string PROFILE_NAME;
 
  private:
   static bool ParseCommandType(const std::string& input,

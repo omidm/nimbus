@@ -155,6 +155,8 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::TERMINATE:
       ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
       break;
+    case SchedulerCommand::PROFILE:
+      break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
           cm->toString().c_str());
@@ -873,6 +875,7 @@ void Scheduler::LoadWorkerCommands() {
   worker_command_table_.push_back(new JobDoneCommand());
   worker_command_table_.push_back(new DefinePartitionCommand());
   worker_command_table_.push_back(new TerminateCommand());
+  worker_command_table_.push_back(new ProfileCommand());
 }
 
 void Scheduler::LoadUserCommands() {

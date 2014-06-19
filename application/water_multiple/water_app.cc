@@ -36,27 +36,34 @@
  */
 
 #include "application/water_multiple/app_utils.h"
+#include "application/water_multiple/cache_data_include.h"
+#include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/job_include.h"
 #include "application/water_multiple/reg_def.h"
 #include "application/water_multiple/water_app.h"
+#include "data/physbam/translator_physbam.h"
+#include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "data/scratch_data_helper.h"
 #include <PhysBAM_Tools/Log/DEBUG_SUBSTEPS.h>
 #include <PhysBAM_Tools/Log/LOG.h>
 #include <PhysBAM_Tools/Read_Write/Utilities/FILE_UTILITIES.h>
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
+#include "shared/log.h"
 #include "shared/nimbus.h"
+#include "shared/timer.h"
 #include "stdio.h"
 
 namespace application {
 
-    WaterApp::WaterApp() {
-    };
+    WaterApp::WaterApp() {};
 
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
     void WaterApp::Load() {
+        //nimbus::Timer::Initialize();
 
         dbg_add_mode(APP_LOG_STR);
         dbg_add_mode(TRANSLATE_STR);
@@ -256,6 +263,8 @@ namespace application {
                     new JobProjectionReduceAlpha(this));
         RegisterJob(PROJECTION_STEP_FOUR, new JobProjectionStepFour(this));
 
+        nimbus::TranslatorPhysBAM<float>::log = translator_log;
+        nimbus::TranslatorPhysBAMOld<PhysBAM::VECTOR<float, 3> >::log = translator_log;
         dbg(APP_LOG, "Completed loading water application\n");
     }
 

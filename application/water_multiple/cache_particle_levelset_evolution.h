@@ -42,14 +42,23 @@
 #include <string>
 
 #include "application/water_multiple/physbam_include.h"
-#include "data/cache/cache_object.h"
+#include "data/cache/cache_struct.h"
 #include "data/physbam/translator_physbam.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
 namespace application {
+
+enum Particles {
+    POS,
+    NEG,
+    POS_REM,
+    NEG_REM,
+    NUM_PARTICLE_TYPES
+};
+
 template<class TS = float>
-class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
+class CacheParticleLevelsetEvolution : public nimbus::CacheStruct {
         typedef typename PhysBAM::VECTOR<TS, 3> TV;
         typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
         typedef typename PhysBAM::RANGE<TV> Range;
@@ -61,17 +70,10 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
         typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
 
     public:
-        explicit CacheParticleLevelsetEvolution(std::string type,
-                                const nimbus::GeometricRegion &global_region,
-                                const int ghost_width = 0,
-                                const nimbus::GeometricRegion &app_region = nimbus::GeometricRegion());
-        virtual void ReadDiffToCache(const nimbus::DataArray &read_set,
-                                     const nimbus::DataArray &diff,
-                                     const nimbus::GeometricRegion &reg,
-                                     bool all_lids_diff);
-        virtual void WriteFromCache(const nimbus::DataArray &write_set,
-                                    const nimbus::GeometricRegion &reg) const;
-        virtual nimbus::CacheObject *CreateNew(const nimbus::GeometricRegion &ar) const;
+        explicit CacheParticleLevelsetEvolution(
+                const nimbus::GeometricRegion &global_reg,
+                int ghost_width,
+                bool make_proto = false);
 
         PhysBAMPLE *data() {
             return data_;
@@ -80,17 +82,33 @@ class CacheParticleLevelsetEvolution : public nimbus::CacheObject {
             data_ = d;
         }
 
+    protected:
+        virtual nimbus::CacheStruct *CreateNew(
+                const nimbus::GeometricRegion &ob_reg) const;
+
+        virtual void ReadToCache(
+                const std::vector<nimbus::cache::type_id_t> &var_type,
+                const std::vector<nimbus::DataArray> &read_sets,
+                const nimbus::GeometricRegion &read_reg);
+        virtual void WriteFromCache(
+                const std::vector<nimbus::cache::type_id_t> &var_type,
+                const std::vector<nimbus::DataArray> &write_sets,
+                const nimbus::GeometricRegion &write_reg) const;
+
     private:
-        int ghost_width_;
+        explicit CacheParticleLevelsetEvolution(
+                const nimbus::GeometricRegion &global_reg,
+                const nimbus::GeometricRegion &ob_reg,
+                const int ghost_width);
+
         nimbus::GeometricRegion global_region_;
         nimbus::GeometricRegion local_region_;
         nimbus::GeometricRegion wgb_region_;
         nimbus::GeometricRegion inner_region_;
+        int ghost_width_;
         nimbus::Coord shift_;
         PhysBAMPLE *data_;
         Grid mac_grid_;
-
-        nimbus::GeometricRegion enlarge_;
         int scale_;
 }; // class CacheParticleLevelsetEvolution
 } // namespace application

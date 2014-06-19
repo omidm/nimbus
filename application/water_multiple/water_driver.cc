@@ -202,7 +202,7 @@ CalculateFrameImpl(const nimbus::Job *job,
   // time+=dt;
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame+1);
+  // example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -229,7 +229,7 @@ WriteOutputSplitImpl(const nimbus::Job *job,
     Write_Output_Files(++output_number, rank);
   }
   //Save State
-  example.Save_To_Nimbus(job, da, current_frame+1);
+  // example.Save_To_Nimbus(job, da, current_frame+1);
 }
 
 template<class TV> bool WATER_DRIVER<TV>::
@@ -338,7 +338,7 @@ UpdateGhostVelocitiesImpl (const nimbus::Job *job,
       time + dt, example.number_of_ghost_cells);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -360,7 +360,7 @@ ExtrapolatePhiImpl(const nimbus::Job *job,
   // example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -398,7 +398,7 @@ AdvectPhiImpl(const nimbus::Job *job,
   }
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -413,7 +413,7 @@ StepParticlesImpl(const nimbus::Job *job,
       example.face_velocities_ghost, dt, time, true, true, false, false);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -430,7 +430,7 @@ AdvectRemovedParticlesImpl(const nimbus::Job *job,
       *this, &WATER_DRIVER<TV>::Run, dt, time);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -446,7 +446,7 @@ AdvectVImpl(const nimbus::Job *job,
       example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -461,7 +461,7 @@ ApplyForcesImpl(const nimbus::Job *job,
       example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
 
   // Save State.
-  example.Save_To_Nimbus(job, da, current_frame + 1);
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
 
   return true;
 }
@@ -483,7 +483,7 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
         0, time+dt, 7);
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
 
     return true;
 }
@@ -504,7 +504,7 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
                                                  ghost_cells);
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
 
     return true;
 }
@@ -539,7 +539,7 @@ AdjustPhiImpl(const nimbus::Job *job,
     example.Adjust_Phi_With_Sources(time+dt);
 
     // Save State.
-    example.Save_To_Nimbus(job, da, current_frame + 1);
+    // example.Save_To_Nimbus(job, da, current_frame + 1);
 
     return true;
 }
@@ -564,7 +564,7 @@ DeleteParticlesImpl(const nimbus::Job *job,
 
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
     int lid2 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
     if (lid1 != lid2) {
       dbg(APP_LOG, "***** last unique particle id are different, %i and %i\n", lid1, lid2);
@@ -589,7 +589,7 @@ ReincorporateParticlesImpl(const nimbus::Job *job,
             Reincorporate_Removed_Particles(1, 1, 0, true);
 
     // save state
-    example.Save_To_Nimbus(job, da, current_frame+1);
+    // example.Save_To_Nimbus(job, da, current_frame+1);
 
     return true;
 }
@@ -611,20 +611,30 @@ Write_Substep(const std::string& title,const int substep,const int level)
 template<class TV> void WATER_DRIVER<TV>::
 Write_Output_Files(const int frame, int rank)
 {
-    std::string rank_name = "";
     if (rank != -1) {
+      std::string rank_name = "";
       std::stringstream temp_ss;
-      temp_ss << rank;
+      temp_ss << "split_output/" << rank;
       rank_name = temp_ss.str();
+      FILE_UTILITIES::Create_Directory("split_output/");
+      FILE_UTILITIES::Create_Directory(rank_name);
+      FILE_UTILITIES::Create_Directory(rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
+      FILE_UTILITIES::Create_Directory(rank_name+"/common");
+      FILE_UTILITIES::Write_To_Text_File(rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+      if(frame==example.first_frame)
+        FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/first_frame",frame,"\n");
+      example.Write_Output_Files(frame, rank);
+      FILE_UTILITIES::Write_To_Text_File(rank_name+"/common/last_frame",frame,"\n");
+    } else {
+      FILE_UTILITIES::Create_Directory(example.output_directory);
+      FILE_UTILITIES::Create_Directory(example.output_directory+STRING_UTILITIES::string_sprintf("/%d",frame));
+      FILE_UTILITIES::Create_Directory(example.output_directory+"/common");
+      FILE_UTILITIES::Write_To_Text_File(example.output_directory+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
+      if(frame==example.first_frame)
+        FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/first_frame",frame,"\n");
+      example.Write_Output_Files(frame);
+      FILE_UTILITIES::Write_To_Text_File(example.output_directory+"/common/last_frame",frame,"\n");
     }
-    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name);
-    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d",frame));
-    FILE_UTILITIES::Create_Directory(example.output_directory+rank_name+"/common");
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+STRING_UTILITIES::string_sprintf("/%d/frame_title",frame),example.frame_title);
-    if(frame==example.first_frame) 
-        FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/first_frame",frame,"\n");
-    example.Write_Output_Files(frame, rank);
-    FILE_UTILITIES::Write_To_Text_File(example.output_directory+rank_name+"/common/last_frame",frame,"\n");
 }
 //#####################################################################
 template class WATER_DRIVER<VECTOR<float,3> >;

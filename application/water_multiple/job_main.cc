@@ -293,11 +293,11 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
   } else {
     for (int i = 0; i < write_output_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL,
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
                           APP_PHI, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_PSI_D,
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
                           APP_PSI_N, NULL);
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_POS_PARTICLES,
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                           APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                           APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                           NULL);
@@ -305,7 +305,7 @@ void JobMain::Execute(nimbus::Parameter params, const nimbus::DataArray& da) {
 
       nimbus::Parameter temp_params;
       std::string temp_str;
-      SerializeParameter(frame - 1, time + dt, 0, i, kDefaultRegion, kRegY2W3Central[i],
+      SerializeParameter(frame - 1, time + dt, 0, i+1, kDefaultRegion, kRegY2W3Central[i],
                          &temp_str);
       temp_params.set_ser_data(SerializedData(temp_str));
       job_query.StageJob(WRITE_OUTPUT,

@@ -50,6 +50,7 @@
 #include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
+#include "shared/timer.h"
 #include "worker/physical_data_instance.h"
 
 using nimbus::Data;

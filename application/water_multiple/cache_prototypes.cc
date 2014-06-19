@@ -33,32 +33,30 @@
  */
 
 /*
- * Helper functions for cache class objects.
- *
  * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
-#include "data/cache/utils.h"
-#include "shared/geometric_region.h"
+#include "application/water_multiple/cache_prototypes.h"
+#include "application/water_multiple/parameters.h"
 
-namespace nimbus {
+namespace application {
 
-/* A comparator for geometric region, for using in maps. */
-bool GeometricRegionLess(const GeometricRegion &r1,
-                         const GeometricRegion &r2) {
-    if (r1.x() != r2.x())
-        return r1.x() < r2.x();
-    if (r1.y() != r2.y())
-        return r1.y() < r2.y();
-    if (r1.z() != r2.z())
-        return r1.z() < r2.z();
-    if (r1.dx() != r2.dx())
-        return r1.dx() < r2.dx();
-    if (r1.dy() != r2.dy())
-        return r1.dy() < r2.dy();
-    if (r1.dz() != r2.dz())
-        return r1.dz() < r2.dz();
-    return false;
-}
+CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true);
+CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true);
+CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true);
 
-}  // namespace nimbus
+CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true);
+CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true);
+CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true);
+CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
+
+// Varibales for projection.
+CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
+CacheScalarArray<T> kCacheVectorP(kDefaultRegion, 1, true);
+CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
+CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
+
+CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
+
+} // namespace application
+

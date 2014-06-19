@@ -39,6 +39,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_WATER_APP_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_WATER_APP_H_
 
+#include "shared/log.h"
 #include "shared/nimbus.h"
 
 namespace application {
@@ -46,6 +47,7 @@ namespace application {
     /* Water application lunached by a nimbus worker. */
     class WaterApp : public nimbus::Application {
         public:
+            Log *translator_log;
             WaterApp();
             virtual void Load();
     };

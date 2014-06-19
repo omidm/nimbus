@@ -68,6 +68,7 @@ void JobProjectionMain::Execute(
 
   // Get parameters: frame, time
   InitConfig init_config;
+  init_config.use_cache = true;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -85,6 +86,8 @@ void JobProjectionMain::Execute(
 void JobProjectionMain::SpawnJobs(
     int frame, T time, T dt, const nimbus::DataArray& da,
     const nimbus::GeometricRegion& global_region) {
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
   nimbus::JobQuery job_query(this);
   int projection_job_num = 5;
   std::vector<nimbus::job_id_t> projection_job_ids;
@@ -263,7 +266,14 @@ void JobProjectionMain::SpawnJobs(
     dbg(APP_LOG, "Print job dependency figure.\n");
     job_query.GenerateDotFigure("projection_main.dot");
   }
-
+  {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+        .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+    dbg(APP_LOG, "\nThe query time spent in job PROJECTION_LOOP_ITERATION_MAIN is %f seconds.\n",
+        time);
+  }
 }
 
 

@@ -47,6 +47,8 @@ using namespace nimbus; // NOLINT
 Job::Job() {
   app_is_set_ = false;
   sterile_ = true;
+  use_threading_ = false;
+  core_quota_ = 1;
 }
 
 Job::~Job() {
@@ -314,8 +316,9 @@ CacheManager* Job::GetCacheManager() const {
 }
 
 
-RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da) {
+RemoteCopySendJob::RemoteCopySendJob(WorkerDataExchanger* da, Application *app) {
   data_exchanger_ = da;
+  set_application(app);
 }
 
 RemoteCopySendJob::~RemoteCopySendJob() {
@@ -323,7 +326,8 @@ RemoteCopySendJob::~RemoteCopySendJob() {
 
 // TODO(quhang) data exchanger is thread-safe?
 void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
-  da[0]->UpdateData();
+  CacheManager *cm = GetCacheManager();
+  cm->SyncData(da[0]);
   SerializedData ser_data;
   da[0]->Serialize(&ser_data);
   data_exchanger_->SendSerializedData(receive_job_id().elem(),
@@ -332,7 +336,7 @@ void RemoteCopySendJob::Execute(Parameter params, const DataArray& da) {
 }
 
 Job* RemoteCopySendJob::Clone() {
-  return new RemoteCopySendJob(data_exchanger_);
+  return new RemoteCopySendJob(data_exchanger_, application());
 }
 
 ID<job_id_t> RemoteCopySendJob::receive_job_id() {
@@ -369,14 +373,16 @@ void RemoteCopySendJob::set_to_port(ID<port_t> port) {
 }
 
 
-RemoteCopyReceiveJob::RemoteCopyReceiveJob() {
+RemoteCopyReceiveJob::RemoteCopyReceiveJob(Application *app) {
+  set_application(app);
 }
 
 RemoteCopyReceiveJob::~RemoteCopyReceiveJob() {
 }
 
 void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
-  da[0]->InvalidateCacheObjectsDataMapping();
+  CacheManager *cm = GetCacheManager();
+  cm->InvalidateMappings(da[0]);
   Data * data_copy = NULL;
   da[0]->DeSerialize(*serialized_data_, &data_copy);
   da[0]->Copy(data_copy);
@@ -388,7 +394,7 @@ void RemoteCopyReceiveJob::Execute(Parameter params, const DataArray& da) {
 }
 
 Job* RemoteCopyReceiveJob::Clone() {
-  return new RemoteCopyReceiveJob();
+  return new RemoteCopyReceiveJob(application());
 }
 
 void RemoteCopyReceiveJob::set_serialized_data(SerializedData* ser_data) {
@@ -399,19 +405,21 @@ void RemoteCopyReceiveJob::set_data_version(data_version_t version) {
   data_version_ = version;
 }
 
-LocalCopyJob::LocalCopyJob() {
+LocalCopyJob::LocalCopyJob(Application *app) {
+  set_application(app);
 }
 
 LocalCopyJob::~LocalCopyJob() {
 }
 
 Job* LocalCopyJob::Clone() {
-  return new LocalCopyJob();
+  return new LocalCopyJob(application());
 }
 
 void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
-  da[0]->UpdateData();
-  da[1]->InvalidateCacheObjectsDataMapping();
+  CacheManager *cm = GetCacheManager();
+  cm->SyncData(da[0]);
+  cm->InvalidateMappings(da[1]);
   da[1]->Copy(da[0]);
   da[1]->set_version(da[0]->version());
 }

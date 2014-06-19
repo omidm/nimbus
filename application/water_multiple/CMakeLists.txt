@@ -25,6 +25,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_barrier.cc
     ${PROJECT_SOURCE_DIR}/cache_face_array.cc
     ${PROJECT_SOURCE_DIR}/cache_particle_levelset_evolution.cc
+    ${PROJECT_SOURCE_DIR}/cache_prototypes.cc
     ${PROJECT_SOURCE_DIR}/cache_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/data_def.cc
     ${PROJECT_SOURCE_DIR}/data_face_array.cc
@@ -53,6 +54,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
     ${PROJECT_SOURCE_DIR}/job_write_output.cc
     ${PROJECT_SOURCE_DIR}/job_reseed_particles.cc
+    ${PROJECT_SOURCE_DIR}/nimbus_thread_queue.cc
     ${PROJECT_SOURCE_DIR}/physbam_tools.cc
     ${PROJECT_SOURCE_DIR}/physbam_utils.cc
     ${PROJECT_SOURCE_DIR}/reg_def.cc
@@ -123,6 +125,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_synchronize_particles.h
     ${PROJECT_SOURCE_DIR}/job_write_output.h
     ${PROJECT_SOURCE_DIR}/job_reseed_particles.h
+    ${PROJECT_SOURCE_DIR}/nimbus_thread_queue.h
     ${PROJECT_SOURCE_DIR}/options.h
     ${PROJECT_SOURCE_DIR}/parameters.h
     ${PROJECT_SOURCE_DIR}/physbam_include.h

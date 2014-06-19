@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SHARED_TIMER_H_
 #define NIMBUS_SHARED_TIMER_H_
 
+#include <pthread.h>
 #include <sys/time.h>
 #include <string>
 #include <map>
@@ -74,6 +75,7 @@ class Timer {
   typedef std::map<std::string, TimerState> TimerMap;
 
  private:
+  static pthread_mutex_t* lock_;
   static TimerMap* timer_map_;
 };
 

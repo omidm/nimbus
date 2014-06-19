@@ -41,7 +41,7 @@
 #include "application/water_multiple/cache_scalar_array.h"
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_tools.h"
-#include "data/cache/cache_object.h"
+#include "data/cache/cache_var.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
@@ -49,19 +49,29 @@
 namespace application {
 
 template<class T, class TS> CacheScalarArray<T, TS>::
-CacheScalarArray(std::string type,
-               const nimbus::GeometricRegion &global_region,
-               const int ghost_width,
-               const nimbus::GeometricRegion &app_region)
-    : CacheObject(type, app_region),
-      ghost_width_(ghost_width),
-      global_region_(global_region),
-      local_region_(app_region.NewEnlarged(-ghost_width_)) {
-      shift_.x = local_region_.x() - global_region.x();
-      shift_.y = local_region_.y() - global_region.y();
-      shift_.z = local_region_.z() - global_region.z();
-      if (local_region_.dx() > 0 && local_region_.dy() > 0 && local_region_.dz() > 0) {
-        Range domain = RangeFromRegions<TV>(global_region, local_region_);
+CacheScalarArray(const nimbus::GeometricRegion &global_reg,
+                 const int ghost_width,
+                 bool make_proto)
+    : global_region_(global_reg),
+      ghost_width_(ghost_width) {
+    if (make_proto)
+        MakePrototype();
+}
+
+template<class T, class TS> CacheScalarArray<T, TS>::
+CacheScalarArray(const nimbus::GeometricRegion &global_reg,
+                 const nimbus::GeometricRegion &ob_reg,
+                 const int ghost_width)
+    : CacheVar(ob_reg),
+      global_region_(global_reg),
+      local_region_(ob_reg.NewEnlarged(-ghost_width)),
+      ghost_width_(ghost_width) {
+      shift_.x = local_region_.x() - global_reg.x();
+      shift_.y = local_region_.y() - global_reg.y();
+      shift_.z = local_region_.z() - global_reg.z();
+      if (local_region_.dx() > 0 && local_region_.dy() > 0 &&
+          local_region_.dz() > 0) {
+        Range domain = RangeFromRegions<TV>(global_reg, local_region_);
         TV_INT count = CountFromRegion(local_region_);
         mac_grid_.Initialize(count, domain, true);
         data_ = new PhysBAMScalarArray();
@@ -69,30 +79,37 @@ CacheScalarArray(std::string type,
       }
 }
 
+template<class T, class TS> nimbus::CacheVar *CacheScalarArray<T, TS>::
+CreateNew(const nimbus::GeometricRegion &ob_reg) const {
+    return new CacheScalarArray(global_region_,
+                                ob_reg,
+                                ghost_width_);
+}
+
 template<class T, class TS> void CacheScalarArray<T, TS>::
 ReadToCache(const nimbus::DataArray &read_set,
-            const nimbus::GeometricRegion &reg) {
+            const nimbus::GeometricRegion &read_reg) {
     //dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.toString().c_str());
-    nimbus::GeometricRegion app_reg = app_object_region();
-    nimbus::GeometricRegion read_reg = nimbus::GeometricRegion::GetIntersection(reg, app_reg);
-    Translator::template ReadScalarArray<T>(read_reg, shift_, read_set, data_);
+    nimbus::GeometricRegion ob_reg = object_region();
+    nimbus::GeometricRegion final_read_reg =
+        nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
+    assert(final_read_reg.dx() > 0 && final_read_reg.dy() > 0 && final_read_reg.dz() > 0);
+    Translator::template
+        ReadScalarArray<T>(final_read_reg, shift_, read_set, data_);
 }
 
 template<class T, class TS> void CacheScalarArray<T, TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
-               const nimbus::GeometricRegion &reg) const {
+               const nimbus::GeometricRegion &write_reg) const {
     //dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.toString().c_str());
-    nimbus::GeometricRegion app_reg = app_object_region();
-    nimbus::GeometricRegion write_reg = nimbus::GeometricRegion::GetIntersection(reg, app_reg);
-    Translator::template WriteScalarArray<T>(write_reg, shift_, write_set, data_);
-}
-
-template<class T, class TS> nimbus::CacheObject *CacheScalarArray<T, TS>::
-CreateNew(const nimbus::GeometricRegion &lr) const {
-    return new CacheScalarArray(type(),
-                              global_region_,
-                              ghost_width_,
-                              lr);
+    if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
+        return;
+    nimbus::GeometricRegion ob_reg = object_region();
+    nimbus::GeometricRegion final_write_reg =
+        nimbus::GeometricRegion::GetIntersection(write_reg, ob_reg);
+    assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
+    Translator::template
+        WriteScalarArray<T>(write_reg, shift_, write_set, data_);
 }
 
 template class CacheScalarArray<float, float>;

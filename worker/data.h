@@ -53,6 +53,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "data/cache/cache_defs.h"
 #include "shared/cluster.h"
 #include "shared/idset.h"
 #include "shared/serialized_data.h"
@@ -62,7 +63,7 @@ namespace nimbus {
 class Data;
 typedef std::set<Data*> Neighbors;
 typedef std::map<logical_data_id_t, Data*> LogicalDataMap;
-typedef std::map<physical_data_id_t, Data*> PhysicalDataMap;
+// typedef std::map<physical_data_id_t, Data*> PhysicalDataMap;
 typedef std::map<std::string, Data*> DataTable;
 
 // forward declaration
@@ -105,15 +106,75 @@ class Data {
   void set_region(const GeometricRegion& region);
   void set_version(data_version_t version);
 
-  void InvalidateCacheObjectsDataMapping();
-  void SetUpCacheObjectDataMapping(CacheObject *co);
-  void UnsetCacheObjectDataMapping(CacheObject *co);
-  void UpdateData(bool lock_co = true);
+  /**
+   * \brief Removes dirty object mappings
+   */
+  void ClearDirtyMappings();
 
-  void set_dirty_cache_object(CacheObject *co);
-  void clear_dirty_cache_object();
+  /**
+   * \brief Removes all mappings between this data instance and all other cache
+   * instances (dirty and non-dirty)
+   */
+  void InvalidateMappings();
+
+  /**
+   * \brief Inserts a mapping between this data instance and cache object co
+   * \param co is the cache object to map to
+   */
+  void SetUpCacheObject(CacheObject *co);
+
+  /**
+   * \brief Removes mapping between this data instance and cache object co
+   * \param co is the cache object to unmap
+   */
+  void UnsetCacheObject(CacheObject *co);
+
+  /**
+   * \brief Accessor for dirty data
+   * \return Cache bject
+   */
+  CacheObject *dirty_cache_object();
+
+  /**
+   * \brief Inserts a dirty object mapping between this data instance and cache
+   * object co
+   * \param co is the cache object to map to
+   */
+  void SetUpDirtyCacheObject(CacheObject *co);
+
+  /**
+   * \brief Removes dirty object mapping between this data instance and cache
+   * object co
+   * \param co is the cache object to unmap
+   */
+  void UnsetDirtyCacheObject(CacheObject *co);
+
+  /**
+   * \brief Accessor for cache type
+   * \return Cache variable type (used if cache object is cache struct)
+   */
+  cache::type_id_t cache_type();
+
+  /**
+   * \brief Setter for cache type
+   * \param Cache variable type (used if cache object is cache struct)
+   */
+  void set_cache_type(cache::type_id_t t);
+
+  size_t co_size() { return cache_objects_.size(); }
+
+  bool pending_flag() {
+    return pending_flag_;
+  }
+  void set_pending_flag() {
+    pending_flag_ = true;
+  }
+  void unset_pending_flag() {
+    pending_flag_ = false;
+  }
 
  private:
+  bool pending_flag_;
   logical_data_id_t logical_id_;
   physical_data_id_t physical_id_;
   partition_id_t partition_id_;
@@ -131,6 +192,7 @@ class Data {
   // Set of cache objects that this data corresponds to
   std::set<CacheObject *> cache_objects_;
   CacheObject *dirty_cache_object_;
+  cache::type_id_t cache_type_;
 };
 
 typedef std::vector<Data*> DataArray;

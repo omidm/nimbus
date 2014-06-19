@@ -39,13 +39,17 @@
   * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
   */
 
-#include "application/water_multiple/water_app.h"
 #include <iostream>  // NOLINT
 #include <pthread.h>
+#include <string>
+
+#include "application/water_multiple/water_app.h"
+#include "shared/log.h"
 #include "shared/nimbus.h"
 #include "shared/nimbus_types.h"
 #include "simple_worker.h"
 #include "worker/application.h"
+#include "worker/worker_manager.h"
 
 
 void PrintUsage() {
@@ -58,6 +62,8 @@ void PrintUsage() {
   std::cout << "\t-ip [ip address]\n";
   std::cout << "\t-s [loop counter]\n";
   std::cout << "\t-pn [part num]\n";
+  std::cout << "\t-ithread [threading inside a job]\n";
+  std::cout << "\t-othread [threading across jobs]\n";
 }
 
 int main(int argc, char *argv[]) {
@@ -116,6 +122,20 @@ int main(int argc, char *argv[]) {
         PrintUsage();
         exit(-1);
       }
+    } else if (tag == "-ithread") {
+      std::stringstream ss(val);
+      ss >> WorkerManager::inside_job_parallism;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+    } else if (tag == "-othread") {
+      std::stringstream ss(val);
+      ss >> WorkerManager::across_job_parallism;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
     } else {
       PrintUsage();
       exit(-1);
@@ -127,11 +147,6 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-
-
-
-
-
   nimbus_initialize();
   std::cout << "Simple Worker is up!" << std::endl;
   application::WaterApp *app = new application::WaterApp();
@@ -139,7 +154,12 @@ int main(int argc, char *argv[]) {
   if (ip_address_given) {
     w->set_ip_address(ip_address);
   }
+
+  // TODO: Extra logging information for cache experiments, remove later on
+#ifdef CACHE_LOG
+  Log *cache_log = new Log(std::string("worker-log"));
+  w->cache_log = cache_log;
+  app->translator_log = cache_log;
+#endif
   w->Run();
 }
-
-

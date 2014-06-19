@@ -67,6 +67,9 @@ void JobLoopIterationPartTwo::Execute(
   dbg(APP_LOG, "Executing LOOP_ITERATION_PART_TWO job\n");
 
   InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -82,7 +85,7 @@ void JobLoopIterationPartTwo::Execute(
 
   // Initialize the state of example and driver.
   PhysBAM::WATER_EXAMPLE<TV>* example =
-      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())));
+      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
 
   // check whether the frame is done or not
   bool done = false;
@@ -102,6 +105,9 @@ void JobLoopIterationPartTwo::Execute(
 void JobLoopIterationPartTwo::SpawnJobs(
     bool done, int frame, T time, T dt, const nimbus::DataArray& da,
     const nimbus::GeometricRegion& global_region) {
+  struct timeval start_time;
+  gettimeofday(&start_time, NULL);
+
   nimbus::JobQuery job_query(this);
 
   int job_num = 2;
@@ -254,11 +260,11 @@ void JobLoopIterationPartTwo::SpawnJobs(
     } else {
       for (int i = 0; i < write_output_job_num; ++i) {
         read.clear();
-        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_FACE_VEL,
+        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
                             APP_PHI, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[0], APP_PSI_D,
+        LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
                             APP_PSI_N, NULL);
-        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[0], APP_POS_PARTICLES,
+        LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
                             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
                             APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
                             NULL);
@@ -266,7 +272,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
         nimbus::Parameter temp_params;
         std::string temp_str;
-        SerializeParameter(frame, time, dt, i, global_region, kRegY2W3Central[i],
+        SerializeParameter(frame, time, dt, i+1, global_region, kRegY2W3Central[i],
                            &temp_str);
         temp_params.set_ser_data(SerializedData(temp_str));
         job_query.StageJob(WRITE_OUTPUT,
@@ -291,11 +297,19 @@ void JobLoopIterationPartTwo::SpawnJobs(
                        frame_params, false, true);
     job_query.CommitStagedJobs();
 
-    if (time == 0) {
-      dbg(APP_LOG, "Print job dependency figure.\n");
-      job_query.GenerateDotFigure("loop_iteration_part_two.dot");
-    }
   }  // end loop "if (done)".
+  if (time == 0) {
+    dbg(APP_LOG, "Print job dependency figure.\n");
+    job_query.GenerateDotFigure("loop_iteration_part_two.dot");
+  }
+  {
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+        .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+    dbg(APP_LOG, "\nThe query time spent in job LOOP_ITERATION_PART_TWO is %f seconds.\n",
+        time);
+  }
 }
 
 

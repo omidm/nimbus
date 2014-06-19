@@ -33,30 +33,18 @@
  */
 
  /*
-  * A worker thread that handles the remaining processing task after a job
-  * finishes its computation part. E.g., send job_done command and update
-  * version. The concurrency model is still not clear.
-  *
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_WORKER_WORKER_THREAD_FINISH_H_
-#define NIMBUS_WORKER_WORKER_THREAD_FINISH_H_
+#ifndef NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
+#define NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_
 
-#include <list>
-#include "shared/nimbus.h"
+#include "shared/nimbus_types.h"
 namespace nimbus {
-class WorkerThreadFinish : public WorkerThread {
+class ThreadQueueProto {
  public:
-  explicit WorkerThreadFinish(WorkerManager* worker_manager,
-                              PhysicalDataMap* data_map);
-  virtual ~WorkerThreadFinish();
-  virtual void Run();
- private:
-  void ProcessJob(Job* job);
-  // TODO(quhang) sychronization effort might be needed.
-  PhysicalDataMap* data_map_;
+  virtual int get_active_threads() = 0;
 };
 }  // namespace nimbus
 
-#endif  // NIMBUS_WORKER_WORKER_THREAD_FINISH_H_
+#endif  // NIMBUS_WORKER_THREAD_QUEUE_PROTO_H_

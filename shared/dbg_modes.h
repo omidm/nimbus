@@ -59,6 +59,8 @@ enum {
   DBG_DATA_OBJECTS =    DBG_MODE(7),    /* data manager/objects         */
   DBG_MEMORY =          DBG_MODE(8),    /* memory allocation            */
   DBG_TRANSLATE =       DBG_MODE(9),    /* data translation             */
+  DBG_WORKER_FD =       DBG_MODE(10),   /* worker execution(frontend)   */
+  DBG_WORKER_BD =       DBG_MODE(11),   /* worker execution(backend)    */
 /*====== For application use =========*/
   DBG_PROJ =            DBG_MODE(57),   /* Projection module  -quh      */
   DBG_USR1 =            DBG_MODE(58),   /* User component 1             */

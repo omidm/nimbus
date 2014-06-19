@@ -58,6 +58,7 @@
 #include "shared/partition_add_command.h"
 #include "shared/partition_remove_command.h"
 #include "shared/terminate_command.h"
+#include "shared/profile_command.h"
 
 
 #endif  // NIMBUS_SHARED_SCHEDULER_COMMAND_INCLUDE_H_

@@ -27,6 +27,7 @@ CPP = g++
 CFLAGS = -Wall -g -O3
 # CFLAGS += -D_NIMBUS_NO_DBG
 # CFLAGS += -D_NIMBUS_NO_LOG
+CFLAGS  += -DCACHE_LOG
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal

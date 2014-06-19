@@ -47,7 +47,9 @@
 #include "application/water_multiple/water_driver.h"
 #include "application/water_multiple/water_example.h"
 #include "application/water_multiple/water_sources.h"
+#include "data/physbam/translator_physbam.h"
 #include "shared/dbg.h"
+#include "shared/geometric_region.h"
 #include "shared/nimbus.h"
 
 #include "application/water_multiple/job_step_particles.h"
@@ -68,9 +70,11 @@ void JobStepParticles::Execute(nimbus::Parameter params,
 
   // get time, dt, frame from the parameters.
   InitConfig init_config;
+  // Threading settings.
+  init_config.use_threading = use_threading();
+  init_config.core_quota = core_quota();
   init_config.use_cache = true;
   init_config.set_boundary_condition = false;
-  init_config.clear_read_shared_particles = true;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -90,16 +94,33 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::NEGATIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE);
   data_config.SetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE);
-  // TODO(Chinmayee): remove this hack when we add object groups, so that we
-  // can change lid-pid map to region-pid map
-  data_config.SetFlag(DataConfig::FLUSH_ALL_SHARED_PARTICLES);
+  data_config.SetFlag(DataConfig::SHARED_PARTICLES_FLUSH);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
+  *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in step particles job.\n");
-  driver->StepParticlesImpl(this, da, dt);
+  {
+    //nimbus::Timer timer(std::string("step_particle_") + id().toString());
+    typedef typename nimbus::TranslatorPhysBAM<T> Translator;
+    GeometricRegion lr = init_config.local_region;
+    GeometricRegion gr = init_config.global_region;
+    nimbus::Coord shift(lr.x() - gr.x(), lr.y() - gr.y(), lr.z() - gr.z());
+    GeometricRegion er = lr.NewEnlarged(kGhostNum);
+    Translator::DeleteParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), true);
+    Translator::DeleteParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), false);
+    Translator::DeleteRemovedParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), true);
+    Translator::DeleteRemovedParticles(shift, lr, er,
+        &example->particle_levelset_evolution.particle_levelset, gr.dx(), false);
+    driver->StepParticlesImpl(this, da, dt);
+  }
 
+  *thread_queue_hook() = NULL;
+  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

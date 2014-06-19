@@ -51,6 +51,7 @@
 
 #define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
 
+#include <sys/time.h>
 #include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/job_loop_iteration.h"
 #include "application/water_multiple/physbam_utils.h"
@@ -80,9 +81,13 @@ namespace application {
       nimbus::Parameter params,
       const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing loop iteration job\n");
+    //nimbus::Timer::Print("----New iteration starts----");
 
     // Get parameters: frame, time
     InitConfig init_config;
+    // Threading settings.
+    init_config.use_threading = use_threading();
+    init_config.core_quota = core_quota();
     std::string params_str(params.ser_data().data_ptr_raw(),
         params.ser_data().size());
     LoadParameter(params_str, &init_config.frame, &init_config.time,
@@ -104,6 +109,7 @@ namespace application {
     data_config.SetAll();
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
 
     // check whether the frame is done or not
     bool done = false;
@@ -154,12 +160,16 @@ namespace application {
 
     // Free resources.
     example->Save_To_Nimbus(this, da, frame+1);
+    *thread_queue_hook() = NULL;
     DestroyExampleAndDriver(example, driver);
   }
 
   void JobLoopIteration::SpawnWithBreakAllGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da,
       const GeometricRegion& global_region) {
+    struct timeval start_time;
+    gettimeofday(&start_time, NULL);
+
     nimbus::JobQuery job_query(this);
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
@@ -814,7 +824,13 @@ namespace application {
       dbg(APP_LOG, "Print job dependency figure.\n");
       job_query.GenerateDotFigure("loop_iteration.dot");
     }
+    {
+      struct timeval t;
+      gettimeofday(&t, NULL);
+      double time  = (static_cast<double>(t.tv_sec - start_time.tv_sec)) +
+          .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
+      dbg(APP_LOG, "\nThe query time spent in job LOOP_ITERATION is %f seconds.\n",
+          time);
+    }
   }
-
-
 } // namespace application
