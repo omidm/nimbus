@@ -1184,14 +1184,16 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_fv)
     {
         T_FACE_ARRAY *fv = cache_fv->data();
-        T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
+        face_velocities = *fv;
+        // T_FACE_ARRAY::Exchange_Arrays(*fv, face_velocities);
     }
 
     // mac velocities ghost
     if (cache_fvg)
     {
         T_FACE_ARRAY *fvg = cache_fvg->data();
-        T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
+        face_velocities_ghost = *fvg;
+        // T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
     }
 
     // particle leveset quantities
@@ -1201,17 +1203,20 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_phi3)
     {
         T_SCALAR_ARRAY *phi3 = cache_phi3->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
+        particle_levelset.levelset.phi = *phi3;
+        // T_SCALAR_ARRAY::Exchange_Arrays(*phi3, particle_levelset.levelset.phi);
     }
     if (cache_phi7)
     {
         T_SCALAR_ARRAY *phi7 = cache_phi7->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
+        phi_ghost_bandwidth_seven = *phi7;
+        // T_SCALAR_ARRAY::Exchange_Arrays(*phi7, phi_ghost_bandwidth_seven);
     }
     if (cache_phi8)
     {
         T_SCALAR_ARRAY *phi8 = cache_phi8->data();
-        T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
+        phi_ghost_bandwidth_eight = *phi8;
+        // T_SCALAR_ARRAY::Exchange_Arrays(*phi8, phi_ghost_bandwidth_eight);
     }
 
     // last unique particle id
@@ -1226,32 +1231,37 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     if (cache_psi_d)
     {
         BOOL_SCALAR_ARRAY *psi_d = cache_psi_d->data();
-        BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
+        projection.laplace->psi_D = *psi_d;
+        // BOOL_SCALAR_ARRAY::Exchange_Arrays(*psi_d, projection.laplace->psi_D);
     }
 
     // psi_n.
     if (cache_psi_n)
     {
         BOOL_FACE_ARRAY *psi_n = cache_psi_n->data();
-        BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
+        projection.laplace->psi_N = *psi_n;
+        // BOOL_FACE_ARRAY::Exchange_Arrays(*psi_n, projection.laplace->psi_N);
     }
 
     // pressure.
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
+      projection.p = *pressure;
+      // T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection.p);
     }
     // colors.
     if (cache_colors) {
       typedef typename PhysBAM::ARRAY<int, TV_INT> INT_SCALAR_ARRAY;
       INT_SCALAR_ARRAY* colors = cache_colors->data();
-      INT_SCALAR_ARRAY::Exchange_Arrays(
-          *colors, projection.laplace->filled_region_colors);
+      projection.laplace->filled_region_colors = *colors;
+      // INT_SCALAR_ARRAY::Exchange_Arrays(
+      //     *colors, projection.laplace->filled_region_colors);
     }
     // divergence.
     if (cache_divergence) {
       T_SCALAR_ARRAY* divergence = cache_divergence->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
+      projection.laplace->f = *divergence;
+      // T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
     }
 
     // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
