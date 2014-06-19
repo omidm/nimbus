@@ -39,12 +39,22 @@
 #include <math.h>
 #include "./scheduler_v2.h"
 
+#define WEIGHT_NUM 8
+#define WEIGHT_X {1, 1, 1, 1, 1, 1, 1, 1}
+#define WEIGHT_Y {1, 1, 1, 1, 1, 1, 1, 1}
+#define WEIGHT_Z {1, 1, 1, 1, 1, 1, 1, 1}
+
+
 SchedulerV2::SchedulerV2(unsigned int p)
 : Scheduler(p) {
   initialized_domains_ = false;
 }
 
-void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z);
+void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z);
+
+void GenerateDomains(size_t num_x, size_t num_y, size_t num_z,
+                     GeometricRegion gbr,
+                     std::vector<GeometricRegion> *domains);
 
 bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
   size_t worker_num = server_->worker_num();
@@ -58,8 +68,12 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
     worker_num_ = worker_num;
     worker_domains_.clear();
 
-    float num_x, num_y, num_z;
+    size_t num_x, num_y, num_z;
     SplitDimensions(worker_num, &num_x, &num_y, &num_z);
+
+    GenerateDomains(num_x, num_y, num_z,
+                    global_bounding_region_,
+                    &worker_domains_);
 
     int_dimension_t dx =
       static_cast<int_dimension_t>(global_bounding_region_.dx() / num_x);
@@ -115,7 +129,76 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
 }
 
 
-void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z) {
+
+void GenerateDomains(size_t num_x, size_t num_y, size_t num_z,
+                     GeometricRegion gbr,
+                     std::vector<GeometricRegion> *domains) {
+  size_t weight_x[WEIGHT_NUM] = WEIGHT_X;
+  size_t weight_y[WEIGHT_NUM] = WEIGHT_Y;
+  size_t weight_z[WEIGHT_NUM] = WEIGHT_Z;
+
+  std::vector<int_dimension_t> width_x;
+  size_t weight_sum_x = 0;
+  for (size_t i = 0; i < num_x; ++i) {
+    weight_sum_x += weight_x[i];
+  }
+  for (size_t i = 0; i < num_x; ++i) {
+    width_x.push_back(gbr.dx() * weight_x[i] / weight_sum_x);
+  }
+  std::vector<int_dimension_t> marker_x;
+  marker_x.push_back(gbr.x());
+  for (size_t i = 0; i < num_x; ++i) {
+    marker_x.push_back(marker_x[i] + width_x[i]);
+  }
+
+
+  std::vector<int_dimension_t> width_y;
+  size_t weight_sum_y = 0;
+  for (size_t i = 0; i < num_y; ++i) {
+    weight_sum_y += weight_y[i];
+  }
+  for (size_t i = 0; i < num_y; ++i) {
+    width_y.push_back(gbr.dy() * weight_y[i] / weight_sum_y);
+  }
+  std::vector<int_dimension_t> marker_y;
+  marker_y.push_back(gbr.y());
+  for (size_t i = 0; i < num_y; ++i) {
+    marker_y.push_back(marker_y[i] + width_y[i]);
+  }
+
+  std::vector<int_dimension_t> width_z;
+  size_t weight_sum_z = 0;
+  for (size_t i = 0; i < num_z; ++i) {
+    weight_sum_z += weight_z[i];
+  }
+  for (size_t i = 0; i < num_z; ++i) {
+    width_z.push_back(gbr.dz() * weight_z[i] / weight_sum_z);
+  }
+  std::vector<int_dimension_t> marker_z;
+  marker_z.push_back(gbr.z());
+  for (size_t i = 0; i < num_z; ++i) {
+    marker_z.push_back(marker_z[i] + width_z[i]);
+  }
+
+  domains->clear();
+  for (size_t i = 0; i < num_x; ++i) {
+    for (size_t j = 0; j < num_y; ++j) {
+      for (size_t k = 0; k < num_z; ++k) {
+        domains->push_back(
+            GeometricRegion(
+              marker_x[i],
+              marker_y[j],
+              marker_z[k],
+              marker_x[i] - marker_x[i + 1],
+              marker_y[j] - marker_y[j + 1],
+              marker_z[k] - marker_z[k + 1]));
+      }
+    }
+  }
+}
+
+
+void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z) {
   switch (worker_num) {
     case 1 :
       *num_x = 1;
@@ -154,8 +237,8 @@ void SplitDimensions(size_t worker_num, float *num_x, float *num_y, float *num_z
       break;
     case 8 :
       *num_x = 2;
-      *num_y = 4;
-      *num_z = 1;
+      *num_y = 2;
+      *num_z = 2;
       break;
     default:
       dbg(DBG_ERROR, "ERROR: Do not know how to split!");
