@@ -55,6 +55,7 @@ for i in range(1, args.worker_num + 1):
   compute_non_sterile_total = 0
   compute_sterile_total = 0
   copy_total    = 0
+  projection_total = 0
 
   tnew_s_total_compute_non_sterile  = 0
   tnew_f_total_compute_non_sterile  = 0
@@ -79,6 +80,7 @@ for i in range(1, args.worker_num + 1):
   compute_non_sterile_start = 0
   compute_sterile_start = 0
   copy_start    = 0
+  projection_start = 0
 
   tnew_s_start  = 0
   tnew_f_start  = 0
@@ -91,6 +93,7 @@ for i in range(1, args.worker_num + 1):
   compute_non_sterile_end   = 0
   compute_sterile_end   = 0
   copy_end      = 0
+  projection_end = 0
 
   tnew_s_end    = 0
   tnew_f_end    = 0
@@ -100,11 +103,13 @@ for i in range(1, args.worker_num + 1):
   told_p_end    = 0
 
   unknown_trans = 0
-  latest_seen   = 0 
+  latest_seen   = 0
+  projection_trans = 0
   
   compute_non_sterile = False
   compute_sterile = False
   copy = False
+  projection = False
 
   for num, line in enumerate(log):
       x =  re.findall('(\d+\.\d+$|\d+e-\d+$|\d+$)', line)
@@ -114,12 +119,15 @@ for i in range(1, args.worker_num + 1):
           if "Worker starts" in line:
               worker_start = xnum
           if "App compute job start" in line:
-                  if 'loop' in line:
-                      compute_non_sterile_start = xnum
-                      compute_non_sterile = True
-                  else:
-                      compute_sterile_start = xnum
-                      compute_sterile = True
+              if 'loop' in line:
+                  compute_non_sterile_start = xnum
+                  compute_non_sterile = True
+              else:
+                  compute_sterile_start = xnum
+                  compute_sterile = True
+                  if 'projection' in line:
+                      projection_start = xnum
+                      projection = True
           if "App copy job start" in line:
               copy_start = xnum
               copy = True
@@ -161,6 +169,10 @@ for i in range(1, args.worker_num + 1):
                   compute_sterile_end = xnum
                   compute_sterile_total += compute_sterile_end - compute_sterile_start
                   compute_sterile = False
+                  if 'projection' in line:
+                      projection_end = xnum
+                      projection_total += projection_end - projection_start
+                      projection = False
           if "App copy job end" in line:
               copy_end = xnum
               copy_total += copy_end - copy_start
@@ -171,6 +183,8 @@ for i in range(1, args.worker_num + 1):
                 tnew_s_total_compute_non_sterile += tnew_s_end - tnew_s_start
               elif compute_sterile:
                 tnew_s_total_compute_sterile += tnew_s_end - tnew_s_start
+                if projection:
+                  projection_trans += tnew_s_end - tnew_s_start
               elif copy:
                 tnew_s_total_copy += tnew_s_end - tnew_s_start
               else:
@@ -182,6 +196,8 @@ for i in range(1, args.worker_num + 1):
                 tnew_f_total_compute_non_sterile += tnew_f_end - tnew_f_start
               elif compute_sterile:
                 tnew_f_total_compute_sterile += tnew_f_end - tnew_f_start
+                if projection:
+                  projection_trans += tnew_f_end - tnew_f_start
               elif copy:
                 tnew_f_total_copy += tnew_f_end - tnew_f_start
               else:
@@ -197,6 +213,8 @@ for i in range(1, args.worker_num + 1):
                 tnew_p_total_compute_non_sterile += tnew_p_end - tnew_p_start
               elif compute_sterile:
                 tnew_p_total_compute_sterile += tnew_p_end - tnew_p_start
+                if projection:
+                  projection_trans += tnew_p_end - tnew_p_start
               elif copy:
                 tnew_p_total_copy += tnew_p_end - tnew_p_start
               else:
@@ -208,6 +226,8 @@ for i in range(1, args.worker_num + 1):
                 told_s_total_compute_non_sterile += told_s_end - told_s_start
               elif compute_sterile:
                 told_s_total_compute_sterile += told_s_end - told_s_start
+                if projection:
+                  projection_trans += told_s_end - told_s_start
               elif copy:
                 told_s_total_copy += told_s_end - told_s_start
               else:
@@ -219,6 +239,8 @@ for i in range(1, args.worker_num + 1):
                 told_f_total_compute_non_sterile += told_f_end - told_f_start
               elif compute_sterile:
                 told_f_total_compute_sterile += told_f_end - told_f_start
+                if projection:
+                  projection_trans += told_f_end - told_f_start
               elif copy:
                 told_f_total_copy += told_f_end - told_f_start
               else:
@@ -234,6 +256,8 @@ for i in range(1, args.worker_num + 1):
                 told_p_total_compute_non_sterile += told_p_end - told_p_start
               elif compute_sterile:
                 told_p_total_compute_sterile += told_p_end - told_p_start
+                if projection:
+                  projection_trans += told_p_end - told_p_start
               elif copy:
                 told_p_total_copy += told_p_end - told_p_start
               else:
@@ -267,6 +291,8 @@ for i in range(1, args.worker_num + 1):
   compute_sterile_bare = compute_sterile_total - compute_sterile_trans
 
   copy_bare = copy_total - copy_trans
+
+  projection_bare = projection_total - projection_trans
 
   print "Parsed 100% ..."
 
@@ -308,6 +334,8 @@ for i in range(1, args.worker_num + 1):
   data.write("Decomposed Copy Bare  %2.2f\n" % copy_bare)
   data.write("Decomposed Copy Translator %2.2f\n" % copy_trans)
   data.write("Decomposed Idle  %2.2f\n" % idle_time)
+  data.write("Decomposed Projection Bare  %2.2f\n" % projection_bare)
+  data.write("Decomposed Projection Translator  %2.2f\n" % projection_trans)
 
   data.close()
   log.close()
