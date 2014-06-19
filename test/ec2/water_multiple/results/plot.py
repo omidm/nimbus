@@ -178,6 +178,8 @@ plt.xticks(ind+width/2., xticks )
 # plt.legend( (S[0][0], S[1][0], S[2][0], S[3][0], S[4][0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
 plt.legend(reversed(Parts), reversed(Legends))
 
+plt.hlines(2857, ind[0], ind[N - 1])
+
 plt.savefig("test.png")
 plt.show()
 
