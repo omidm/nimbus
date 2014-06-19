@@ -161,7 +161,7 @@ bool PhysBAMData::Serialize(SerializedData *ser_data) {
   //   dbg(DBG_ERROR, "Data %s got corrupted somewhere before serialization!!\n", name().c_str());
   //   assert(false);
   // }
-  // pd.set_hash(hash);
+  pd.set_hash(0);
   std::string ser;
   bool success = pd.SerializeToString(&ser);
   char *buf = new char[ser.length() + 1];
