@@ -9,6 +9,7 @@ import re
 import numpy as np
 import matplotlib.pyplot as plt
 from operator import add
+import operator
 
 ## Parse the command line arguments ##
 parser = argparse.ArgumentParser(description='Process log files.')
@@ -32,7 +33,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 N = args.worker_num
-P = 7
+P = 8
 
 # Fetch data from data files
 compute_non_sterile_bare = []
@@ -41,6 +42,8 @@ compute_sterile_bare = []
 compute_sterile_trans = []
 copy_bare = []
 copy_trans = []
+projection_bare = []
+projection_trans = []
 idle = []
 total = []
 
@@ -58,6 +61,8 @@ for i in range(1, N + 1):
   cst_found = False
   cob_found = False
   cot_found = False
+  prb_found = False
+  prt_found = False
   i_found   = False
   t_found   = False
 
@@ -86,6 +91,12 @@ for i in range(1, N + 1):
           if "Decomposed Copy Translator" in line:
               copy_trans.append(xnum)
               cot_found = True
+          if "Decomposed Projection Bare" in line:
+              projection_bare.append(xnum)
+              prb_found = True
+          if "Decomposed Projection Translator" in line:
+              projection_trans.append(xnum)
+              prt_found = True
           if "Decomposed Idle" in line:
               idle.append(xnum)
               i_found = True
@@ -96,6 +107,8 @@ for i in range(1, N + 1):
       not cst_found or \
       not cob_found or \
       not cot_found or \
+      not prb_found or \
+      not prt_found or \
       not i_found or \
       not t_found):
     print 'File ' + data_file + ' does not match the format.'
@@ -107,7 +120,8 @@ ind = np.arange(N)
 width = 0.35
 
 Data = []
-Data.append(compute_sterile_bare)
+Data.append(map(operator.sub, compute_sterile_bare, projection_bare))
+Data.append(projection_bare)
 Data.append(compute_sterile_trans)
 Data.append(copy_bare)
 Data.append(copy_trans)
@@ -120,6 +134,7 @@ print compute_sterile_bare
 
 Legends = []
 Legends.append('Compute Sterile')
+Legends.append('Compute Sterile Projection')
 Legends.append('Compute Sterile Translator')
 Legends.append('Copy')
 Legends.append('Copy Translator')
@@ -129,6 +144,7 @@ Legends.append('Idle')
 
 Colors = []
 
+Colors.append('#8dd3c7')
 Colors.append('#8dd3c7')
 Colors.append('#8dd3c7')
 Colors.append('#ffffb3')
@@ -148,6 +164,7 @@ Colors.append('w')
 
 Hatch = []
 Hatch.append('')
+Hatch.append('\\')
 Hatch.append('/')
 Hatch.append('')
 Hatch.append('/')
@@ -176,9 +193,20 @@ for i in range(1, N + 1):
 plt.xticks(ind+width/2., xticks )
 # plt.yticks(np.arange(0, total[0] , 6))
 # plt.legend( (S[0][0], S[1][0], S[2][0], S[3][0], S[4][0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
-plt.legend(reversed(Parts), reversed(Legends))
 
-plt.hlines(2857, ind[0], ind[N - 1])
+# annotate the graph with physbam-mpi completion time
+physbam = 2857
+hline = plt.axhline(physbam, color='#fb8072', ls='--', linewidth=4)
+# corner = (ind[N - 2] + ind[N - 3]) / 2.0
+# plt.annotate('PhysBAM-MPI\nCompletion Time',
+#                      xy=(corner, physbam * 1.6),
+#                      xytext=(corner, physbam * 1.6),
+#                      color='#fb8072')
+Parts.append(hline)
+Legends.append('PhysBAM-MPI Completion Time')
+
+
+plt.legend(reversed(Parts), reversed(Legends))
 
 plt.savefig("test.png")
 plt.show()
