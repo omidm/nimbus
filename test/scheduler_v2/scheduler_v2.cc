@@ -50,56 +50,10 @@ SchedulerV2::SchedulerV2(unsigned int p)
   initialized_domains_ = false;
 }
 
-void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z);
-
-void GenerateDomains(size_t num_x, size_t num_y, size_t num_z,
-                     GeometricRegion gbr,
-                     std::vector<GeometricRegion> *domains);
-
 bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  SchedulerV2::UpdateWorkerDomains();
+
   size_t worker_num = server_->worker_num();
-  GeometricRegion global_bounding_region =
-    data_manager_->global_bounding_region();
-
-  if ((!initialized_domains_) ||
-      (worker_num_ != worker_num) ||
-      (global_bounding_region_ != global_bounding_region)) {
-    global_bounding_region_ = global_bounding_region;
-    worker_num_ = worker_num;
-    worker_domains_.clear();
-
-    size_t num_x, num_y, num_z;
-    SplitDimensions(worker_num, &num_x, &num_y, &num_z);
-
-    GenerateDomains(num_x, num_y, num_z,
-                    global_bounding_region_,
-                    &worker_domains_);
-
-    int_dimension_t dx =
-      static_cast<int_dimension_t>(global_bounding_region_.dx() / num_x);
-    int_dimension_t dy =
-      static_cast<int_dimension_t>(global_bounding_region_.dy() / num_y);
-    int_dimension_t dz =
-      static_cast<int_dimension_t>(global_bounding_region_.dz() / num_z);
-
-    worker_domains_.clear();
-
-    for (size_t i = 0; i < num_x; ++i) {
-      for (size_t j = 0; j < num_y; ++j) {
-        for (size_t k = 0; k < num_z; ++k) {
-          worker_domains_.push_back(GeometricRegion(
-                global_bounding_region_.x() + i * dx,
-                global_bounding_region_.y() + j * dy,
-                global_bounding_region_.z() + k * dz,
-                dx,
-                dy,
-                dz));
-        }
-      }
-    }
-    initialized_domains_ = true;
-  }
-
   std::vector<int> workers_rank(worker_num, 0);
 
   IDSet<logical_data_id_t> union_set = job->union_set();
@@ -128,9 +82,71 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
   return server_->GetSchedulerWorkerById(worker, w_id);
 }
 
+void SchedulerV2::UpdateWorkerDomains() {
+  size_t worker_num = server_->worker_num();
+  GeometricRegion global_bounding_region =
+    data_manager_->global_bounding_region();
 
+  if ((!initialized_domains_) ||
+      (worker_num_ != worker_num) ||
+      (global_bounding_region_ != global_bounding_region)) {
+    global_bounding_region_ = global_bounding_region;
+    worker_num_ = worker_num;
+    worker_domains_.clear();
 
-void GenerateDomains(size_t num_x, size_t num_y, size_t num_z,
+    size_t num_x, num_y, num_z;
+    SplitDimensions(worker_num, &num_x, &num_y, &num_z);
+
+    GenerateDomains(num_x, num_y, num_z,
+                    global_bounding_region_,
+                    &worker_domains_);
+
+    initialized_domains_ = true;
+  }
+
+/*
+  if ((!initialized_domains_) ||
+      (worker_num_ != worker_num) ||
+      (global_bounding_region_ != global_bounding_region)) {
+    global_bounding_region_ = global_bounding_region;
+    worker_num_ = worker_num;
+    worker_domains_.clear();
+
+    size_t num_x, num_y, num_z;
+    SplitDimensions(worker_num, &num_x, &num_y, &num_z);
+
+    int_dimension_t dx =
+      static_cast<int_dimension_t>(global_bounding_region_.dx() / num_x);
+    int_dimension_t dy =
+      static_cast<int_dimension_t>(global_bounding_region_.dy() / num_y);
+    int_dimension_t dz =
+      static_cast<int_dimension_t>(global_bounding_region_.dz() / num_z);
+
+    worker_domains_.clear();
+
+    for (size_t i = 0; i < num_x; ++i) {
+      for (size_t j = 0; j < num_y; ++j) {
+        for (size_t k = 0; k < num_z; ++k) {
+          worker_domains_.push_back(GeometricRegion(
+                global_bounding_region_.x() + i * dx,
+                global_bounding_region_.y() + j * dy,
+                global_bounding_region_.z() + k * dz,
+                dx,
+                dy,
+                dz));
+        }
+      }
+    }
+    initialized_domains_ = true;
+  }
+
+  for (size_t i = 0; i < worker_num; ++i) {
+    std::cout << "Domain " << i << " : " << worker_domains_[i].toString() << std::endl;
+  }
+*/
+}
+
+void SchedulerV2::GenerateDomains(size_t num_x, size_t num_y, size_t num_z,
                      GeometricRegion gbr,
                      std::vector<GeometricRegion> *domains) {
   size_t weight_x[WEIGHT_NUM] = WEIGHT_X;
@@ -189,16 +205,17 @@ void GenerateDomains(size_t num_x, size_t num_y, size_t num_z,
               marker_x[i],
               marker_y[j],
               marker_z[k],
-              marker_x[i] - marker_x[i + 1],
-              marker_y[j] - marker_y[j + 1],
-              marker_z[k] - marker_z[k + 1]));
+              marker_x[i + 1] - marker_x[i],
+              marker_y[j + 1] - marker_y[j],
+              marker_z[k + 1] - marker_z[k]));
       }
     }
   }
 }
 
 
-void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z) {
+void SchedulerV2::SplitDimensions(size_t worker_num,
+    size_t *num_x, size_t *num_y, size_t *num_z) {
   switch (worker_num) {
     case 1 :
       *num_x = 1;
