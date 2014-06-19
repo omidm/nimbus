@@ -251,7 +251,7 @@ void CacheManager::InvalidateMappings(Data *d) {
 
 void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     pthread_mutex_lock(&cache_lock);
-    // cache_object->unset_pending_flag();
+    cache_object->unset_pending_flag();
     // TODO(quhang): use private method and mark friend class.
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);

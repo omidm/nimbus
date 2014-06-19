@@ -416,7 +416,7 @@ void CacheStruct::ReleasePendingFlag(
     assert(diff_sets != NULL);
     assert(sync_sets != NULL);
     assert(sync_co_sets != NULL);
-    unset_pending_flag();
+    // unset_pending_flag();
     size_t num_vars = var_type.size();
     assert(flush_sets->size() == num_vars &&
            diff_sets->size() == num_vars &&
