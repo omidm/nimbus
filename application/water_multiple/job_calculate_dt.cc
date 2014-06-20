@@ -84,6 +84,7 @@ void JobCalculateDt::Execute(
 
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
+  data_config.SetFlag(DataConfig::DT);
   data_config.SetFlag(DataConfig::LEVELSET);
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);

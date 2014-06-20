@@ -105,7 +105,7 @@ namespace application {
     init_config.set_boundary_condition = true;
     init_config.use_cache = true;
     DataConfig data_config;
-    data_config.SetAll();
+    data_config.SetFlag(DataConfig::DT);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
     *thread_queue_hook() = example->nimbus_thread_queue;
