@@ -37,6 +37,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.cc
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.cc
+    ${PROJECT_SOURCE_DIR}/job_calculate_dt.cc
     ${PROJECT_SOURCE_DIR}/job_delete_particles.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
     ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.cc
@@ -108,6 +109,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.h
     ${PROJECT_SOURCE_DIR}/job_adjust_phi.h
+    ${PROJECT_SOURCE_DIR}/job_calculate_dt.h
     ${PROJECT_SOURCE_DIR}/job_delete_particles.h
     ${PROJECT_SOURCE_DIR}/job_main.h
     ${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.h

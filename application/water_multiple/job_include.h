@@ -45,6 +45,7 @@
 #include "application/water_multiple/job_advect_removed_particles.h"
 #include "application/water_multiple/job_advect_v.h"
 #include "application/water_multiple/job_apply_forces.h"
+#include "application/water_multiple/job_calculate_dt.h"
 #include "application/water_multiple/job_calculate_frame.h"
 #include "application/water_multiple/job_delete_particles.h"
 #include "application/water_multiple/job_extrapolate_phi.h"

@@ -52,6 +52,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef ARRAY<int,TV_INT> INT_SCALAR_ARRAY;
 
 public:
+    T dt_buffer;
     nimbus::NimbusThreadQueue* nimbus_thread_queue;
     nimbus::int_dimension_t kScale;
     GeometricRegion local_region;

@@ -53,6 +53,7 @@
 #define RESEED_PARTICLES "reseed_particles"
 #define JOB_BARRIER "job_barrier"
 
+#define CALCULATE_DT "calculate_dt"
 #define UPDATE_GHOST_VELOCITIES "update_ghost_velocities"
 #define EXTRAPOLATE_PHI "extrapolate_phi"
 #define ADVECT_PHI "advect_phi"

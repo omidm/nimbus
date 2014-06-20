@@ -220,6 +220,7 @@ namespace application {
 
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
+        RegisterJob(CALCULATE_DT, new JobCalculateDt(this));
         RegisterJob(UPDATE_GHOST_VELOCITIES, new JobAdjustPhiWithObjects(this));
         RegisterJob(EXTRAPOLATE_PHI, new JobExtrapolatePhi(this));
         RegisterJob(ADVECT_PHI, new JobAdvectPhi(this));
