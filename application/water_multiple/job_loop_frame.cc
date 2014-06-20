@@ -123,7 +123,6 @@ namespace application {
           iter_params.set_ser_data(SerializedData(str));
 
           read.clear();
-          LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_FACE_VEL_GHOST, APP_PHI, NULL);
           LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
           write.clear();
 
