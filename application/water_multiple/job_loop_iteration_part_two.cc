@@ -191,10 +191,6 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     // Spawning loop iteration for next iteration.
 
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
-                        APP_FACE_VEL_GHOST, APP_PHI, NULL);
-
     for (int i = 0; i < calculate_dt_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
@@ -211,7 +207,11 @@ void JobLoopIterationPartTwo::SpawnJobs(
                          read, write,
                          dt_params, true);
     }
+    job_query.CommitStagedJobs();
 
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
+    write.clear();
     nimbus::Parameter iter_params;
     std::string iter_str;
     SerializeParameter(frame, time + dt, global_region, &iter_str);

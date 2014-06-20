@@ -111,7 +111,7 @@ namespace application {
             SerializeParameter(frame, time, 0, global_region,
                                kRegY2W3Central[i], &dt_str);
             dt_params.set_ser_data(SerializedData(dt_str));
-            SpawnComputeJob(LOOP_ITERATION,
+            SpawnComputeJob(CALCULATE_DT,
                             calculate_dt_job_ids[i],
                             read, write,
                             before, after,
