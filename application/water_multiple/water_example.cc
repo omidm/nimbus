@@ -543,6 +543,15 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
         sd->set_scalar(particle_levelset.last_unique_particle_id);
     }
 
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_DT), da, application::WRITE_ACCESS);
+    if (data_temp) {
+      nimbus::ScalarData<float>* data_real =
+          dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+      data_real->set_scalar(dt_buffer);
+      dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", APP_DT, dt_buffer);
+    }
+
     // psi_d.
     const std::string psi_d_string = std::string(APP_PSI_D);
     if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::WRITE_ACCESS)
@@ -748,6 +757,16 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
           sd->set_scalar(particle_levelset.last_unique_particle_id);
       }
+
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_DT), da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<float>* data_real =
+            dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+        data_real->set_scalar(dt_buffer);
+        dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", APP_DT, dt_buffer);
+      }
+
       // ** there should not be any accesses to particle levelset after this **
       if (cache_ple) {
           if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
@@ -1046,6 +1065,30 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     }
     dbg(APP_LOG, "Finish translating particle id.\n");
 
+    // Calculate dt.
+    if (data_config.GetFlag(DataConfig::DT)) {
+        if (application::GetTranslatorData(
+                job, std::string(APP_DT), da, &pdv,
+                application::READ_ACCESS)) {
+        dbg(APP_LOG, "Reducing DT min(");
+        // TODO(quhang) maybe not safe. To be put the MAX float value.
+        dt_buffer = 1e6;
+        nimbus::PdiVector::const_iterator iter = pdv.begin();
+        for (; iter != pdv.end(); ++iter) {
+          const nimbus::PhysicalDataInstance* instance = *iter;
+          nimbus::ScalarData<float>* data_real =
+              dynamic_cast<nimbus::ScalarData<float>*>(instance->data());
+          float value = data_real->scalar();
+          dbg(APP_LOG, "%f ", value);
+          if (value < dt_buffer) {
+            dt_buffer = value;
+          }
+        }
+        dbg(APP_LOG, ") = %f.\n", dt_buffer);
+        }
+    }
+    dbg(APP_LOG, "Finish reduce dt.\n");
+
     // psi_d.
     const std::string psi_d_string = std::string(APP_PSI_D);
     if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::READ_ACCESS)
@@ -1221,6 +1264,30 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         particle_levelset.last_unique_particle_id = sd->scalar();
     }
     dbg(APP_LOG, "Finish translating particle id.\n");
+
+    // Calculate dt.
+    if (data_config.GetFlag(DataConfig::DT)) {
+        if (application::GetTranslatorData(
+                job, std::string(APP_DT), da, &pdv,
+                application::READ_ACCESS)) {
+        dbg(APP_LOG, "Reducing DT min(");
+        // TODO(quhang) maybe not safe. To be put the MAX float value.
+        dt_buffer = 1e6;
+        nimbus::PdiVector::const_iterator iter = pdv.begin();
+        for (; iter != pdv.end(); ++iter) {
+          const nimbus::PhysicalDataInstance* instance = *iter;
+          nimbus::ScalarData<float>* data_real =
+              dynamic_cast<nimbus::ScalarData<float>*>(instance->data());
+          float value = data_real->scalar();
+          dbg(APP_LOG, "%f ", value);
+          if (value < dt_buffer) {
+            dt_buffer = value;
+          }
+        }
+        dbg(APP_LOG, ") = %f.\n", dt_buffer);
+        }
+    }
+    dbg(APP_LOG, "Finish reduce dt.\n");
 
     // psi_d.
     if (cache_psi_d)

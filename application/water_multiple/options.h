@@ -84,6 +84,7 @@ struct DataConfig {
   enum DataType{
     VELOCITY = 0,
     VELOCITY_GHOST,
+    DT,
     LEVELSET,  // Default is bandwidth 3.
     LEVELSET_READ,
     LEVELSET_WRITE,

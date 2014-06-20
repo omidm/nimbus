@@ -42,6 +42,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_
 
+#define APP_DT "dt"
 #define APP_FACE_VEL "face_vel"
 #define APP_FACE_VEL_GHOST "face_vel_ghost"
 #define APP_PHI "phi"

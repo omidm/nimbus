@@ -81,7 +81,6 @@ namespace application {
       nimbus::Parameter params,
       const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing loop iteration job\n");
-    //nimbus::Timer::Print("----New iteration starts----");
 
     // Get parameters: frame, time
     InitConfig init_config;
@@ -114,22 +113,13 @@ namespace application {
     // check whether the frame is done or not
     bool done = false;
     T target_time = example->Time_At_Frame(driver->current_frame+1);
-    T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
-    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
-    T temp_dt =
-        example->particle_levelset_evolution.cfl_number
-        * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
-            example->face_velocities);
-    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", temp_dt);
-    if (temp_dt < dt) {
-      dt = temp_dt;
-    }
+    T dt = example->dt_buffer;
     if (time + dt >= target_time) {
       dt = target_time - time;
       done = true;
     } else {
-      if (time + 2*dt >= target_time)
-        dt = .5 * (target_time-time);
+      if (time + 2 * dt >= target_time)
+        dt = .5 * (target_time - time);
     }
 
     if (done) {
@@ -139,24 +129,9 @@ namespace application {
     }
     dbg(APP_LOG, "Frame=%d, Time=%f, dt=%f\n", frame, time, dt);
 
-    // spawn the jobs to compute the frame, depending on the
-    // level of granularity we will have different sub jobs.
-    switch (GRANULARITY_STATE) {
-      /*
-      case ONE_JOB:
-        SpawnWithOneJobGranularity(done, frame, time, dt, da,
-                                   init_config.global_region);
-        break;
-        */
-      case BREAK_ALL_SUPER_JOBS:
-        SpawnWithBreakAllGranularity(done, frame, time, dt, da,
-                                     init_config.global_region);
-        break;
-      default:
-        dbg(APP_LOG, "ERROR: The granularity state is not defined.");
-        exit(-1);
-        break;
-    }
+    // done flag no more matters.
+    SpawnWithBreakAllGranularity(false, init_config.frame, init_config.time,
+                                 dt, da, init_config.global_region);
 
     // Free resources.
     example->Save_To_Nimbus(this, da, frame+1);

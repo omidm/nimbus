@@ -71,7 +71,6 @@ void JobCalculateDt::Execute(
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt_dumb,
                 &init_config.global_region, &init_config.local_region);
-  const T& time = init_config.time;
 
   // initialize configuration and state
   PhysBAM::WATER_EXAMPLE<TV> *example;
@@ -90,7 +89,6 @@ void JobCalculateDt::Execute(
                              this, da, example, driver);
   *thread_queue_hook() = example->nimbus_thread_queue;
 
-  T target_time = example->Time_At_Frame(driver->current_frame+1);
   T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
   T temp_dt =
       example->particle_levelset_evolution.cfl_number
@@ -99,12 +97,6 @@ void JobCalculateDt::Execute(
   dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", temp_dt);
   if (temp_dt < dt) {
     dt = temp_dt;
-  }
-  if (time + dt >= target_time) {
-    dt = target_time - time;
-  } else {
-    if (time + 2 * dt >= target_time)
-      dt = .5 * (target_time - time);
   }
   example->dt_buffer = dt;
 

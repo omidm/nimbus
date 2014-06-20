@@ -94,6 +94,8 @@ namespace application {
         RegisterData(APP_NEG_REM_PARTICLES, new DataParticleArray(APP_NEG_REM_PARTICLES));
         dbg(APP_LOG, "Registering %s\n", APP_LAST_UNIQUE_PARTICLE_ID);
         RegisterData(APP_LAST_UNIQUE_PARTICLE_ID, new nimbus::ScalarData<int>(APP_LAST_UNIQUE_PARTICLE_ID));
+        dbg(APP_LOG, "Registering %s\n", APP_DT);
+        RegisterData(APP_DT, new nimbus::ScalarData<float>(APP_DT));
 
         // These Nimbus data types are used in projection but not used in
         // internal projection loop. They are generally used to generate the
