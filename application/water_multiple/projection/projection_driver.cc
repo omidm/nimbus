@@ -154,6 +154,7 @@ void ProjectionDriver::GlobalInitialize() {
   }
 }
 
+// Step one starts.
 void ProjectionDriver::DoPrecondition() {
   if (projection_data.interior_n == 0) {
     return;
@@ -162,6 +163,7 @@ void ProjectionDriver::DoPrecondition() {
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Time consuming part.
   A.C->Solve_Forward_Substitution(b_interior, temp_interior, true);
   A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
 }
@@ -176,6 +178,7 @@ void ProjectionDriver::CalculateLocalRho() {
   projection_data.local_rho =
       VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior, b_interior);
 }
+// Step one finishes.
 
 void ProjectionDriver::ReduceRho() {
   projection_data.rho_last = projection_data.rho;
@@ -187,6 +190,7 @@ void ProjectionDriver::ReduceRho() {
   }
 }
 
+// Step two starts.
 void ProjectionDriver::UpdateSearchVector() {
   if (projection_data.interior_n == 0) {
     return;
@@ -202,7 +206,9 @@ void ProjectionDriver::UpdateSearchVector() {
       p_interior(i) = z_interior(i) + projection_data.beta * p_interior(i);
   }
 }
+// Step two finishes.
 
+// Step three starts.
 void ProjectionDriver::UpdateTempVector() {
   if (projection_data.interior_n == 0) {
     return;
@@ -211,6 +217,7 @@ void ProjectionDriver::UpdateTempVector() {
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& p = projection_data.p;
   // Search vector p is used here.
+  // Time consuming part.
   A.Times(p, temp);
 }
 
@@ -225,6 +232,7 @@ void ProjectionDriver::CalculateLocalAlpha() {
   projection_data.local_dot_product_for_alpha =
       VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior, temp_interior);
 }
+// Step three finishes.
 
 void ProjectionDriver::ReduceAlpha() {
   projection_data.alpha =
@@ -232,6 +240,7 @@ void ProjectionDriver::ReduceAlpha() {
            Global_Sum(projection_data.local_dot_product_for_alpha));
 }
 
+// Step four starts.
 void ProjectionDriver::UpdateOtherVectors() {
   if (projection_data.interior_n == 0) {
     return;
@@ -269,6 +278,7 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
   }
   return true;
 }
+// Step four finishes.
 
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
