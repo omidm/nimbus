@@ -52,55 +52,60 @@ VersionManager::~VersionManager() {
 }
 
 bool VersionManager::AddJobEntry(JobEntry *job) {
-/*
   if (job->sterile()) {
-    log_sterile_.ResumeTimer();
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-      data_version_t version;
-      log_lookup_.ResumeTimer();
-      lookup_count_++;
-      bool found = LookUpVersion(job, *it, &version);
-      log_lookup_.StopTimer();
-      if (found) {
-        job->vmap_read()->set_entry(*it, version);
-      }
+      index_[*it].AddJobEntry(job);
     }
-    log_sterile_.StopTimer();
   } else {
-    log_nonsterile_.ResumeTimer();
-    boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
     std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
-      data_version_t version;
-      log_lookup_.ResumeTimer();
-      lookup_count_++;
-      bool found = LookUpVersion(job, it->first, &version);
-      log_lookup_.StopTimer();
-      if (found) {
-        job->vmap_read()->set_entry(it->first, version);
-      }
+      index_[it->first].AddJobEntry(job);
     }
-    log_nonsterile_.StopTimer();
   }
-*/
 
-
-
-
-
-  return false;
+  return true;
 }
 
 size_t VersionManager::GetJobsNeedDataVersion(
     JobEntryList* list, VLD vld) {
-  return 0;
+  IndexIter iter = index_.find(vld.first);
+  if (iter == index_.end()) {
+    return 0;
+  } else {
+    return iter->second.GetJobsNeedVersion(list);
+  }
 }
 
 bool VersionManager::RemoveJobEntry(JobEntry* job) {
-  return false;
-}
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      IndexIter iter = index_.find(*it);
+      if (iter == index_.end()) {
+        dbg(DBG_ERROR, "Version manager: ldid %lu is not in the index.\n", *it);
+        exit(-1);
+        return false;
+      } else {
+        iter->second.RemoveJobEntry(job);
+      }
+    }
+  } else {
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      IndexIter iter = index_.find(it->first);
+      if (iter == index_.end()) {
+        dbg(DBG_ERROR, "Version manager: ldid %lu is not in the index.\n", *it);
+        exit(-1);
+        return false;
+      } else {
+        iter->second.RemoveJobEntry(job);
+      }
+    }
+  }
 
+  return true;
+}
 
 void VersionManager::set_ldo_map_p(
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {

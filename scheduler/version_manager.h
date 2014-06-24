@@ -64,6 +64,7 @@ class VersionManager {
   public:
     typedef std::pair<logical_data_id_t, data_version_t> VLD;
     typedef boost::unordered_map<logical_data_id_t, VersionEntry> Index;
+    typedef Index::iterator IndexIter;
 
     VersionManager();
     virtual ~VersionManager();

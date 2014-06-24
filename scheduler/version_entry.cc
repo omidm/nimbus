@@ -64,3 +64,19 @@ VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
 }
 
 
+bool VersionEntry::AddJobEntry(JobEntry *job) {
+  pending_jobs_.insert(job);
+  return true;
+}
+
+size_t VersionEntry::GetJobsNeedVersion(JobEntryList* list) {
+  // TODO(omid): Implement!
+  return 0;
+}
+
+bool VersionEntry::RemoveJobEntry(JobEntry *job) {
+  // TODO(omid): Implement!
+  return false;
+}
+
+

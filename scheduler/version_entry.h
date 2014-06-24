@@ -64,7 +64,11 @@ class VersionEntry {
 
     VersionEntry& operator= (const VersionEntry& right);
 
+    bool AddJobEntry(JobEntry *job);
 
+    bool RemoveJobEntry(JobEntry *job);
+
+    size_t GetJobsNeedVersion(JobEntryList* list);
 
   private:
     Bucket pending_jobs_;
