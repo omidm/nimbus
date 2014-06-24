@@ -91,7 +91,7 @@ size_t VersionEntry::GetJobsNeedVersion(
     if ((*iter)->vmap_read()->query_entry(ldid_, &ver)) {
       index_[ver].insert(*iter);
     } else {
-      dbg(DBG_ERROR, "ldid %lu in read set of job %lu is not versioned.",
+      dbg(DBG_ERROR, "Version Entry: ldid %lu in read set of job %lu is not versioned.\n",
           ldid_, (*iter)->job_id());
       exit(-1);
       return 0;
@@ -114,8 +114,22 @@ size_t VersionEntry::GetJobsNeedVersion(
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job) {
-  // TODO(omid): Implement!
-  return false;
+  assert(job->versioned());
+
+  BucketIter iter = pending_jobs_.find(job);
+  assert(iter == pending_jobs_.end());
+
+  data_version_t ver;
+  if (job->vmap_read()->query_entry(ldid_, &ver)) {
+    index_[ver].erase(job);
+  } else {
+    dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
+        ldid_, (*iter)->job_id());
+    exit(-1);
+    return false;
+  }
+
+  return true;
 }
 
 
