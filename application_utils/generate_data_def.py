@@ -376,7 +376,7 @@ for d in ntypes_pid:
     out_cc.write("\t%s = %i;\n" % (ids_to_use_str, ids_to_use))
     pset_str = "pset_" + d
     temp = [x for x in re.split('\[|\]', str(list(ntypes_pid[d]))) if x]
-    decl = "size_t " + pset_str + "[%i] = {%s}" %\
+    decl = "static size_t " + pset_str + "[%i] = {%s}" %\
             (ids_to_use, temp[0])
     out_cc.write("\t%s;\n" % decl)
     out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % ids_to_use_str)
