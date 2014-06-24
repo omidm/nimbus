@@ -43,8 +43,12 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 #define NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 
+#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <utility>
+#include <list>
 #include <map>
+#include <set>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
@@ -57,43 +61,24 @@ typedef std::map<logical_data_id_t, VersionEntryList*> VersionIndex;
 
 class VersionManager {
   public:
+    typedef std::pair<logical_data_id_t, data_version_t> VLD;
+    typedef boost::unordered_set<JobEntry*> Bucket;
+    typedef boost::unordered_map<data_version_t, Bucket*> BucketIndex;
+    typedef boost::unordered_map<logical_data_id_t, BucketIndex*> Index;
+
     VersionManager();
     virtual ~VersionManager();
 
-    bool AddVersionEntry(logical_data_id_t logical_id, data_version_t version,
-        JobEntry* job_entry, VersionEntry::Relation relation);
+    bool AddJobEntry(JobEntry *job);
 
-    bool AddVersionEntry(const VersionEntry& ve);
+    size_t GetJobsNeedDataVersion(
+        JobEntryList* list, VLD vld);
 
-    bool AddJobVersionTables(JobEntry* job_entry);
+    bool RemoveJobEntry(JobEntry* job);
 
-    bool AddJobVersionTableIn(JobEntry* job_entry);
-
-    bool AddJobVersionTableOut(JobEntry* job_entry);
-
-    bool RemoveVersionEntry(logical_data_id_t logical_id, data_version_t version,
-        JobEntry* job_entry, VersionEntry::Relation relation);
-
-    bool RemoveVersionEntry(const VersionEntry& ve);
-
-    bool RemoveJobVersionTables(JobEntry* job_entry);
-
-    bool RemoveJobVersionTableIn(JobEntry* job_entry);
-
-    bool RemoveJobVersionTableOut(JobEntry* job_entry);
-
-    size_t GetJobsNeedDataVersion(JobEntryList* result,
-        VersionedLogicalData vld);
-
-    size_t GetJobsOutputDataVersion(JobEntryList* result,
-        VersionedLogicalData vld);
-
-    size_t RemoveObsoleteVersionEntriesOfLdo(logical_data_id_t logical_id);
-
-    size_t RemoveAllObsoleteVersionEntries();
 
   private:
-    VersionIndex version_index_;
+    Index index_;
 };
 
 }  // namespace nimbus
