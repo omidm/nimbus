@@ -99,8 +99,14 @@ void JobProjectionStepOne::Execute(
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_STEP_ONE starts (iteration=%d).\n", iteration);
 
-  projection_driver.LoadFromNimbus(this, da);
+  Log log_timer;
 
+  log_timer.StartTimer();
+  projection_driver.LoadFromNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, loading time:%f.\n",
+      log_timer.GetTime());
+
+  log_timer.StartTimer();
   // Read MATRIX_C, VECTOR_B, VECTOR_Z.
   // Write VECTOR_Z, PROJECTION_LOCAL_RHO.
   dbg(APP_LOG, "Do precondition.\n");
@@ -111,8 +117,13 @@ void JobProjectionStepOne::Execute(
       (int) projection_driver.projection_data.b_interior.n
       );
   projection_driver.CalculateLocalRho();
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, calculation time:%f.\n",
+      log_timer.GetTime());
 
+  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, saving time:%f.\n",
+      log_timer.GetTime());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_ONE job\n");
 }

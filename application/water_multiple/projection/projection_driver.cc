@@ -69,6 +69,7 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     projection_data.p.Resize(local_n, false);
     assert(data_config.GetFlag(DataConfig::INDEX_M2C));
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+    // Translates from grid-format vector p to vector p, based on index.
     for (int i = 1; i <= local_n; ++i) {
       projection_data.p(i) =
           projection_data.grid_format_vector_p(
@@ -193,6 +194,7 @@ void ProjectionDriver::UpdateSearchVector() {
   int interior_n = partition.interior_indices.Size() + 1;
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
+  // Search vector p is updated here.
   if (projection_data.iteration == 1) {
     p_interior = z_interior;
   } else {
@@ -208,6 +210,7 @@ void ProjectionDriver::UpdateTempVector() {
   SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& p = projection_data.p;
+  // Search vector p is used here.
   A.Times(p, temp);
 }
 
@@ -218,6 +221,7 @@ void ProjectionDriver::CalculateLocalAlpha() {
   }
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Search vector p is used here.
   projection_data.local_dot_product_for_alpha =
       VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior, temp_interior);
 }
@@ -240,6 +244,8 @@ void ProjectionDriver::UpdateOtherVectors() {
     b_interior(i) -= projection_data.alpha * temp_interior(i);
   }
   for (int i = 1; i <= interior_n; i++) {
+    // Search vector p is used here.
+    // Pressure, as the result, is calculated here.
     projection_data.pressure(projection_data.matrix_index_to_cell_index(i))
         += projection_data.alpha * p_interior(i);
   }

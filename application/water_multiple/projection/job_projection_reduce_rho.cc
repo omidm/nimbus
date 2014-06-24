@@ -96,6 +96,10 @@ void JobProjectionReduceRho::Execute(
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_REDUCE_RHO starts (dt=%f).\n", dt);
 
+  Log log_timer;
+
+  log_timer.StartTimer();
+
   projection_driver.LoadFromNimbus(this, da);
 
   // Read PROJECTION_LOCAL_RHO, PROJECTION_GLOBAL_RHO.
@@ -104,6 +108,9 @@ void JobProjectionReduceRho::Execute(
   projection_driver.ReduceRho();
 
   projection_driver.SaveToNimbus(this, da);
+
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_REDUCE_RHO total time:%f.\n",
+      log_timer.GetTime());
 
   dbg(APP_LOG, "Completed executing PROJECTION_REDUCE_RHO job\n");
 }
