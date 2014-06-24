@@ -45,12 +45,51 @@
 using namespace nimbus; // NOLINT
 
 VersionManager::VersionManager() {
+  ldo_map_p_ = NULL;
 }
 
 VersionManager::~VersionManager() {
 }
 
 bool VersionManager::AddJobEntry(JobEntry *job) {
+
+/*
+  if (job->sterile()) {
+    log_sterile_.ResumeTimer();
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      data_version_t version;
+      log_lookup_.ResumeTimer();
+      lookup_count_++;
+      bool found = LookUpVersion(job, *it, &version);
+      log_lookup_.StopTimer();
+      if (found) {
+        job->vmap_read()->set_entry(*it, version);
+      }
+    }
+    log_sterile_.StopTimer();
+  } else {
+    log_nonsterile_.ResumeTimer();
+    boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      log_lookup_.ResumeTimer();
+      lookup_count_++;
+      bool found = LookUpVersion(job, it->first, &version);
+      log_lookup_.StopTimer();
+      if (found) {
+        job->vmap_read()->set_entry(it->first, version);
+      }
+    }
+    log_nonsterile_.StopTimer();
+  }
+*/
+
+
+
+
+
   return false;
 }
 
@@ -61,6 +100,12 @@ size_t VersionManager::GetJobsNeedDataVersion(
 
 bool VersionManager::RemoveJobEntry(JobEntry* job) {
   return false;
+}
+
+
+void VersionManager::set_ldo_map_p(
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
+  ldo_map_p_ = ldo_map_p;
 }
 
 

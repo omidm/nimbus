@@ -52,19 +52,19 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
-#include "scheduler/version_entry.h"
+#include "shared/logical_data_object.h"
 
 namespace nimbus {
 
+
 typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
-typedef std::map<logical_data_id_t, VersionEntryList*> VersionIndex;
 
 class VersionManager {
   public:
     typedef std::pair<logical_data_id_t, data_version_t> VLD;
     typedef boost::unordered_set<JobEntry*> Bucket;
-    typedef boost::unordered_map<data_version_t, Bucket*> BucketIndex;
-    typedef boost::unordered_map<logical_data_id_t, BucketIndex*> Index;
+    typedef boost::unordered_map<data_version_t, Bucket> BucketIndex;
+    typedef boost::unordered_map<logical_data_id_t, BucketIndex> Index;
 
     VersionManager();
     virtual ~VersionManager();
@@ -76,9 +76,11 @@ class VersionManager {
 
     bool RemoveJobEntry(JobEntry* job);
 
+    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
   private:
     Index index_;
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 };
 
 }  // namespace nimbus
