@@ -14,44 +14,32 @@ getcontext().prec = 2
 P = 4
 
 X = (128, 256, 512, 1024)
-YV = []
-YV.append((0.78, 0.71, 0.76, 0.77, 0.67))
 
-Y = (0.68, 2.02, 4.01, 6.0)
-# E = Y / 5
+VV = []
+VV.append((0.68, 0.61, 0.66, 0.67, 0.57))
+VV.append((2.02, 1.76, 2.09, 2.01, 1.96))
+VV.append((7.17, 7.16, 7.25, 8.20, 8.35))
+VV.append((9, 9, 9, 9, 9))
+V = []
+E = []
+for i in range(0, len(VV)):
+  V.append(np.mean(VV[i]))
+  E.append(np.std(VV[i]))
 
-plt.errorbar(X, Y, yerr=Y, fmt='o-')
+I = (88 - 142, 150 - 203, 211 - 262, 271 - 321, 330 - 382, 393 - 449)
 
+A = (1 * 128 / 10, 2.4 * 256 / 10, 5.1 * 512 / 10, 9 * 1024 / 10)
 
-# n_groups = len(D[0])
-# index = np.arange(n_groups)
-# y_ticks = 5
-# font = FontProperties()
-# font.set_family('serif')
-# 
-# fig, AX = plt.subplots(nrows=n_plots, sharex=True)
-# 
-# print len(AX)
-# idx = 0;
-# for idx in np.arange(len(AX)):
-# 
-#   data = np.array(map(float, D[idx]))
-#   error = np.array(map(float, E[idx]))
-# 
-#   AX[idx].errorbar(index, data, yerr=error, fmt='o')
-#   AX[idx].set_title(T[idx], fontproperties=font)
-#   # AX[idx].set_yscale('log')
-#   # AX[idx].set_ylabel('log time(ms)', fontproperties=font)
-#   AX[idx].locator_params(axis = 'y', nbins = y_ticks)
-#   AX[idx].set_ylabel('time(ms)', fontproperties=font)
-#   AX[idx].set_ylim(0, max(data + error) * 1.1)
-# 
-#   idx += 1
-# 
-# 
-# plt.xlim((-1, n_groups))
-# plt.xlabel('Partition', fontproperties=font)
-# plt.xticks(index, ('I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'), fontproperties=font)
+v = plt.errorbar(X, V, yerr=E, fmt='o-')
+a = plt.errorbar(X, A, fmt='o--')
+hline = plt.axhline(-np.mean(I), color='#fb8072', ls='--', linewidth=4)
+
+plt.legend((a, v, hline),
+    ('Assign First Stage', 'Version Job Graph', 'Iteration Duration (128 cube)'),
+    loc='lower right')
+plt.yscale('log')
+plt.xscale('log')
+plt.xlim(100, 1025)
 
 # plt.grid()
 plt.savefig("test.png")
