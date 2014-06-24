@@ -52,6 +52,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/version_entry.h"
 #include "shared/logical_data_object.h"
 
 namespace nimbus {
@@ -62,9 +63,7 @@ typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
 class VersionManager {
   public:
     typedef std::pair<logical_data_id_t, data_version_t> VLD;
-    typedef boost::unordered_set<JobEntry*> Bucket;
-    typedef boost::unordered_map<data_version_t, Bucket> BucketIndex;
-    typedef boost::unordered_map<logical_data_id_t, BucketIndex> Index;
+    typedef boost::unordered_map<logical_data_id_t, VersionEntry> Index;
 
     VersionManager();
     virtual ~VersionManager();

@@ -48,41 +48,18 @@ using namespace nimbus; // NOLINT
 VersionEntry::VersionEntry() {
 }
 
-VersionEntry::VersionEntry(logical_data_id_t logical_id, data_version_t version,
-    JobEntry* job_entry, Relation relation)
-  : logical_id_(logical_id), version_(version),
-  job_entry_(job_entry), relation_(relation) {
-}
 
-VersionEntry::VersionEntry(const VersionEntry& ve)
-  : logical_id_(ve.logical_id_), version_(ve.version_),
-  job_entry_(ve.job_entry_), relation_(ve.relation_) {
+VersionEntry::VersionEntry(const VersionEntry& other) {
+  pending_jobs_ = other.pending_jobs_;
+  index_ = other.index_;
 }
 
 VersionEntry::~VersionEntry() {
 }
 
-logical_data_id_t VersionEntry::logical_id() const {
-  return logical_id_;
-}
-
-data_version_t VersionEntry::version() const {
-  return version_;
-}
-
-JobEntry* VersionEntry::job_entry() const {
-  return job_entry_;
-}
-
-VersionEntry::Relation VersionEntry::relation() const {
-  return relation_;
-}
-
 VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
-  logical_id_ = right.logical_id_;
-  version_ = right.version_;
-  job_entry_ = right.job_entry_;
-  relation_ = right.relation_;
+  pending_jobs_ = right.pending_jobs_;
+  index_ = right.index_;
   return *this;
 }
 

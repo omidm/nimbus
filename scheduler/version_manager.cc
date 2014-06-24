@@ -52,7 +52,6 @@ VersionManager::~VersionManager() {
 }
 
 bool VersionManager::AddJobEntry(JobEntry *job) {
-
 /*
   if (job->sterile()) {
     log_sterile_.ResumeTimer();
