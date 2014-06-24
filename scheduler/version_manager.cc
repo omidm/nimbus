@@ -55,12 +55,26 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
   if (job->sterile()) {
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-      index_[*it].AddJobEntry(job);
+      IndexIter iter = index_.find(*it);
+      if (iter == index_.end()) {
+        VersionEntry ve(*it);
+        ve.AddJobEntry(job);
+        index_.insert(std::make_pair(*it, ve));
+      } else {
+        iter->second.AddJobEntry(job);
+      }
     }
   } else {
     std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
-      index_[it->first].AddJobEntry(job);
+      IndexIter iter = index_.find(it->first);
+      if (iter == index_.end()) {
+        VersionEntry ve(it->first);
+        ve.AddJobEntry(job);
+        index_.insert(std::make_pair(it->first, ve));
+      } else {
+        iter->second.AddJobEntry(job);
+      }
     }
   }
 

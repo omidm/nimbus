@@ -45,11 +45,13 @@
 
 using namespace nimbus; // NOLINT
 
-VersionEntry::VersionEntry() {
+VersionEntry::VersionEntry(logical_data_id_t ldid) {
+  ldid_ = ldid;
 }
 
 
 VersionEntry::VersionEntry(const VersionEntry& other) {
+  ldid_ = other.ldid_;
   pending_jobs_ = other.pending_jobs_;
   index_ = other.index_;
 }
@@ -58,6 +60,7 @@ VersionEntry::~VersionEntry() {
 }
 
 VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
+  ldid_ = right.ldid_;
   pending_jobs_ = right.pending_jobs_;
   index_ = right.index_;
   return *this;
@@ -70,7 +73,11 @@ bool VersionEntry::AddJobEntry(JobEntry *job) {
 }
 
 size_t VersionEntry::GetJobsNeedVersion(JobEntryList* list) {
-  // TODO(omid): Implement!
+  // TODO(omidm): for now just assume that when called all jobs are versioned.
+  BucketIter iter = pending_jobs_.begin();
+  for (; iter != pending_jobs_.end();) {
+    assert((*iter)->versioned());
+  }
   return 0;
 }
 

@@ -56,9 +56,11 @@ namespace nimbus {
 class VersionEntry {
   public:
     typedef boost::unordered_set<JobEntry*> Bucket;
+    typedef Bucket::iterator BucketIter;
     typedef boost::unordered_map<data_version_t, Bucket> Index;
+    typedef Index::iterator IndexIter;
 
-    VersionEntry();
+    explicit VersionEntry(logical_data_id_t ldid);
     VersionEntry(const VersionEntry& ve);
     virtual ~VersionEntry();
 
@@ -71,6 +73,7 @@ class VersionEntry {
     size_t GetJobsNeedVersion(JobEntryList* list);
 
   private:
+    logical_data_id_t ldid_;
     Bucket pending_jobs_;
     Index index_;
 };
