@@ -102,7 +102,7 @@ void JobProjectionStepThree::Execute(
   log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, loading time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   // Read VECTOR_P(outer region), MATRIX_A.
   // Write VECTOR_TEMP.
@@ -111,12 +111,12 @@ void JobProjectionStepThree::Execute(
   projection_driver.UpdateTempVector();
   projection_driver.CalculateLocalAlpha();
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, calculation time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, saving time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_THREE job\n");
 }
