@@ -70,7 +70,8 @@ class VersionEntry {
 
     bool RemoveJobEntry(JobEntry *job);
 
-    size_t GetJobsNeedVersion(JobEntryList* list);
+    size_t GetJobsNeedVersion(
+        JobEntryList* list, data_version_t version);
 
   private:
     logical_data_id_t ldid_;

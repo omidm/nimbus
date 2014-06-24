@@ -72,13 +72,45 @@ bool VersionEntry::AddJobEntry(JobEntry *job) {
   return true;
 }
 
-size_t VersionEntry::GetJobsNeedVersion(JobEntryList* list) {
-  // TODO(omidm): for now just assume that when called all jobs are versioned.
+size_t VersionEntry::GetJobsNeedVersion(
+    JobEntryList* list, data_version_t version) {
+  size_t count = 0;
+  list->clear();
+
+  /*
+   * TODO(omidm): for now just assume that when called all jobs are versioned.
+   *  1. Partial versioning (future jobs)
+   *  2. Versioning right before asignment.
+   * causes the following to fail.
+   */
+
   BucketIter iter = pending_jobs_.begin();
   for (; iter != pending_jobs_.end();) {
     assert((*iter)->versioned());
+    data_version_t ver;
+    if ((*iter)->vmap_read()->query_entry(ldid_, &ver)) {
+      index_[ver].insert(*iter);
+    } else {
+      dbg(DBG_ERROR, "ldid %lu in read set of job %lu is not versioned.",
+          ldid_, (*iter)->job_id());
+      exit(-1);
+      return 0;
+    }
+    pending_jobs_.erase(iter++);
   }
-  return 0;
+
+  IndexIter iiter = index_.find(version);
+  if (iiter == index_.end()) {
+    return count;
+  } else {
+    BucketIter it = iiter->second.begin();
+    for (; it != iiter->second.end(); ++it) {
+      list->push_back(*it);
+      ++count;
+    }
+  }
+
+  return count;
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job) {
