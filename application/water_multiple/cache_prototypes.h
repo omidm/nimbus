@@ -61,6 +61,8 @@ extern CacheScalarArray<T> kCacheDivergence;
 
 extern CacheParticleLevelsetEvolution<float> kCachePLE;
 
+extern CacheRawVectorNd kCacheVectorB;
+
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
