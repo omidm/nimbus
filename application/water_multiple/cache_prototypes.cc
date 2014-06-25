@@ -58,7 +58,8 @@ CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
 
 CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
 
-CacheRawVectorNd kCacheVectorB(kDefaultRegion, true);
+CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true);
+CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
 
 } // namespace application
 

@@ -36,56 +36,50 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_SPARSE_MATRIX_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_SPARSE_MATRIX_H_
+
 #include <string>
 
+#include <PhysBAM_Tools/Matrices/SPARSE_MATRIX_FLAT_NXN.h>
 #include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/physbam_tools.h"
+#include "application/water_multiple/projection/data_sparse_matrix.h"
 #include "data/cache/cache_var.h"
-#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
-#include "application/water_multiple/projection/cache_raw_vector_nd.h"
-
 namespace application {
 
-CacheRawVectorNd::CacheRawVectorNd(const nimbus::GeometricRegion &global_reg,
-                                   bool make_proto)
-    : global_region_(global_reg) {
-  if (make_proto)
-    MakePrototype();
-}
+class CacheSparseMatrix : public nimbus::CacheVar {
+ public:
+  typedef PhysBAM::SPARSE_MATRIX_FLAT_NXN<float> DATA_TYPE;
+  explicit CacheSparseMatrix(const nimbus::GeometricRegion& global_reg,
+                             bool make_proto = false);
 
-CacheRawVectorNd::CacheRawVectorNd(const nimbus::GeometricRegion &global_reg,
-                                   const nimbus::GeometricRegion &ob_reg)
-    : CacheVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
-  data_ = new RAW_VECTOR_ND;
-}
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
 
-nimbus::CacheVar* CacheRawVectorNd::CreateNew(
-    const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheRawVectorNd(global_region_, ob_reg);
-}
+ protected:
+  explicit CacheSparseMatrix(const nimbus::GeometricRegion& global_reg,
+                             const nimbus::GeometricRegion& ob_reg);
 
-void CacheRawVectorNd::ReadToCache(const nimbus::DataArray &read_set,
-                                   const nimbus::GeometricRegion &read_reg) {
-  assert(read_set.size() == 1);
-  assert(read_set[0]->region().IsEqual(&read_reg));
-  assert(object_region().IsEqual(&read_reg));
-  assert(dynamic_cast<DataRawVectorNd*>(read_set[0]));
-  dynamic_cast<DataRawVectorNd*>(read_set[0])->LoadFromNimbus(data_);
-}
+  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-void CacheRawVectorNd::WriteFromCache(
-    const nimbus::DataArray &write_set,
-    const nimbus::GeometricRegion &write_reg) const {
-  if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
-    return;
-  assert(write_set.size() == 1);
-  assert(write_set[0]->region().IsEqual(&write_reg));
-  assert(object_region().IsEqual(&write_reg));
-  assert(dynamic_cast<DataRawVectorNd*>(write_set[0]));
-  dynamic_cast<DataRawVectorNd*>(write_set[0])->SaveToNimbus(*data_);
-}
+  virtual void ReadToCache(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteFromCache(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
 
-} // namespace application
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class CacheSparseMatrix
+
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_SPARSE_MATRIX_H_

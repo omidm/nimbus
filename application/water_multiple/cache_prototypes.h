@@ -61,7 +61,8 @@ extern CacheScalarArray<T> kCacheDivergence;
 
 extern CacheParticleLevelsetEvolution<float> kCachePLE;
 
-extern CacheRawVectorNd kCacheVectorB;
+extern CacheSparseMatrix kCacheSparseMatrixA;
+extern CacheSparseMatrix kCacheSparseMatrixC;
 
 } // namespace application
 
