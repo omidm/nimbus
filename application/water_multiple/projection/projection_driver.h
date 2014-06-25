@@ -90,6 +90,7 @@ class ProjectionDriver {
     projection_data.residual = 0;
     projection_data.iteration = 0;
     projection_data.matrix_a = NULL;
+    projection_data.matrix_index_to_cell_index = NULL;
     cache_pressure = NULL;
     cache_vector_p = NULL;
     cache_matrix_a = NULL;
@@ -100,13 +101,16 @@ class ProjectionDriver {
     if (projection_data.matrix_a) {
       delete projection_data.matrix_a;
     }
+    if (projection_data.matrix_index_to_cell_index) {
+      delete projection_data.matrix_index_to_cell_index;
+    }
   }
 
   class ProjectionData {
    public:
     ARRAY<float, VECTOR<int,3> > pressure;
     ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
-    ARRAY<TV_INT> matrix_index_to_cell_index;
+    ARRAY<TV_INT>* matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T>* matrix_a;
     SPARSE_MATRIX_FLAT_NXN<T>* matrix_c;

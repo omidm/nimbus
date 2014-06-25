@@ -73,7 +73,7 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     for (int i = 1; i <= local_n; ++i) {
       projection_data.p(i) =
           projection_data.grid_format_vector_p(
-              projection_data.matrix_index_to_cell_index(i));
+              (*projection_data.matrix_index_to_cell_index)(i));
     }
   }
   if (projection_data.z_interior.Size() == 0 &&
@@ -113,7 +113,7 @@ void ProjectionDriver::LocalInitialize() {
   projection_data.vector_x.Resize(projection_data.local_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
     projection_data.vector_x(i) =
-        projection_data.pressure(projection_data.matrix_index_to_cell_index(i));
+        projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
   VECTOR_ND<T>& x = projection_data.vector_x;
   VECTOR_ND<T>& temp = projection_data.temp;
@@ -255,7 +255,7 @@ void ProjectionDriver::UpdateOtherVectors() {
   for (int i = 1; i <= interior_n; i++) {
     // Search vector p is used here.
     // Pressure, as the result, is calculated here.
-    projection_data.pressure(projection_data.matrix_index_to_cell_index(i))
+    projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i))
         += projection_data.alpha * p_interior(i);
   }
 }
@@ -314,39 +314,17 @@ void ProjectionDriver::LoadFromNimbus(
   nimbus::CacheManager *cm = job->GetCacheManager();
   Log log_timer;
   log_timer.StartTimer();
-  if (application::kUseCache) {
-    // pressure.
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      nimbus::DataArray read, write;
-      const std::string pressure_string = std::string(APP_PRESSURE);
-      application::GetReadData(*job, pressure_string, da, &read);
-      application::GetWriteData(*job, pressure_string, da, &write);
-      nimbus::CacheVar* cache_var =
-          cm->GetAppVar(
-              read, array_reg_thin_outer,
-              write, array_reg_thin_outer,
-              application::kCachePressure, array_reg_thin_outer,
-              nimbus::cache::EXCLUSIVE);
-      cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
-      assert(cache_pressure != NULL);
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      // projection_data.pressure.Resize(grid.Domain_Indices(1));
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    projection_data.pressure.Resize(grid.Domain_Indices(1));
+    if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
+                                       application::READ_ACCESS)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
+      dbg(APP_LOG, "Finish reading PRESSURE.\n");
+    } else {
+      dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
     }
-  } else {
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      projection_data.pressure.Resize(grid.Domain_Indices(1));
-      if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
-                                         application::READ_ACCESS)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
-        dbg(APP_LOG, "Finish reading PRESSURE.\n");
-      } else {
-        dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, pressure time:%f.\n",
       log_timer.timer());
@@ -359,6 +337,7 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // The memory will be allocated automatically.
+      projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
       data_real->LoadFromNimbus(projection_data.matrix_a);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     } else {
@@ -405,7 +384,8 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataRawArrayM2C* data_real =
           dynamic_cast<application::DataRawArrayM2C*>(data_temp);
       // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(&projection_data.matrix_index_to_cell_index);
+      projection_data.matrix_index_to_cell_index = new ARRAY<TV_INT>;
+      data_real->LoadFromNimbus(projection_data.matrix_index_to_cell_index);
       dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
     } else {
       dbg(APP_LOG, "INDEX_M2C flag is set but data is not local.\n");
@@ -710,25 +690,15 @@ void ProjectionDriver::SaveToNimbus(
   Log log_timer;
   log_timer.StartTimer();
 
-  if (application::kUseCache) {
-    if (cache_pressure) {
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
-      cm->ReleaseAccess(cache_pressure);
-      cache_pressure = NULL;
+  const std::string pressure_string = std::string(APP_PRESSURE);
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    if (application::GetTranslatorData(job, pressure_string, da, &pdv,
+                                       application::WRITE_ACCESS)) {
+      translator.WriteScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+      dbg(APP_LOG, "Finish writing pressure.\n");
     }
-  } else {
-    const std::string pressure_string = std::string(APP_PRESSURE);
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      if (application::GetTranslatorData(job, pressure_string, da, &pdv,
-                                         application::WRITE_ACCESS)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_central, array_shift, &pdv, &projection_data.pressure);
-        dbg(APP_LOG, "Finish writing pressure.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n",
       log_timer.timer());
@@ -816,7 +786,7 @@ void ProjectionDriver::SaveToNimbus(
       T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
       for (int i = 1; i <= projection_data.local_n; ++i) {
         projection_data.grid_format_vector_p(
-            projection_data.matrix_index_to_cell_index(i)) =
+            (*projection_data.matrix_index_to_cell_index)(i)) =
             projection_data.p(i);
       }
       T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
@@ -833,7 +803,7 @@ void ProjectionDriver::SaveToNimbus(
         assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
         for (int i = 1; i <= projection_data.local_n; ++i) {
           projection_data.grid_format_vector_p(
-              projection_data.matrix_index_to_cell_index(i)) =
+              (*projection_data.matrix_index_to_cell_index)(i)) =
               projection_data.p(i);
         }
         translator.WriteScalarArrayFloat(

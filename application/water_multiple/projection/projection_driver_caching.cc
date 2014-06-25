@@ -73,7 +73,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
     for (int i = 1; i <= local_n; ++i) {
       projection_data.p(i) =
           projection_data.grid_format_vector_p(
-              projection_data.matrix_index_to_cell_index(i));
+              (*projection_data.matrix_index_to_cell_index)(i));
     }
   }
   if (projection_data.z_interior.Size() == 0 &&
@@ -233,6 +233,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
       log_timer.timer());
   log_timer.StartTimer();
   // INDEX_M2C. It cannot be splitted or merged.
+  // TODO(addcache).
   if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
@@ -240,7 +241,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
       application::DataRawArrayM2C* data_real =
           dynamic_cast<application::DataRawArrayM2C*>(data_temp);
       // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(&projection_data.matrix_index_to_cell_index);
+      data_real->LoadFromNimbus(projection_data.matrix_index_to_cell_index);
       dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
     } else {
       dbg(APP_LOG, "INDEX_M2C flag is set but data is not local.\n");
@@ -589,7 +590,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
       T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
       for (int i = 1; i <= projection_data.local_n; ++i) {
         projection_data.grid_format_vector_p(
-            projection_data.matrix_index_to_cell_index(i)) =
+            (*projection_data.matrix_index_to_cell_index)(i)) =
             projection_data.p(i);
       }
       T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
@@ -606,7 +607,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
         assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
         for (int i = 1; i <= projection_data.local_n; ++i) {
           projection_data.grid_format_vector_p(
-              projection_data.matrix_index_to_cell_index(i)) =
+              (*projection_data.matrix_index_to_cell_index)(i)) =
               projection_data.p(i);
         }
         translator.WriteScalarArrayFloat(
