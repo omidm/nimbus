@@ -87,7 +87,7 @@ size_t VersionManager::GetJobsNeedDataVersion(
   if (iter == index_.end()) {
     return 0;
   } else {
-    return iter->second.GetJobsNeedVersion(list);
+    return iter->second.GetJobsNeedVersion(list, vld.second);
   }
 }
 

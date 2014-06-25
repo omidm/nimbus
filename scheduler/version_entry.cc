@@ -105,8 +105,10 @@ size_t VersionEntry::GetJobsNeedVersion(
   } else {
     BucketIter it = iiter->second.begin();
     for (; it != iiter->second.end(); ++it) {
-      list->push_back(*it);
-      ++count;
+      if (!(*it)->assigned()) {
+        list->push_back(*it);
+        ++count;
+      }
     }
   }
 
