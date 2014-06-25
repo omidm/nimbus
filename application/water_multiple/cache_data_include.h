@@ -43,5 +43,6 @@
 #include "application/water_multiple/cache_particle_levelset_evolution.h"
 #include "application/water_multiple/cache_scalar_array.h"
 #include "application/water_multiple/projection/cache_sparse_matrix.h"
+#include "application/water_multiple/projection/cache_array_m2c.h"
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_

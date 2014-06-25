@@ -61,5 +61,7 @@ CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
 CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true);
 CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
 
+CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true);
+
 } // namespace application
 

@@ -73,6 +73,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_colors = NULL;
     cache_divergence = NULL;
     cache_matrix_a = NULL;
+    cache_index_m2c = NULL;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -117,6 +118,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
+    cache_index_m2c = cache->index_m2c;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -162,6 +164,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
+    cache_index_m2c = cache->index_m2c;
     create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -849,8 +852,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cache_divergence = NULL;
     }
 
-    // TODO(addcache) the following data translation is implemented by memcpy,
-    // caching might not be needed.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       // TODO(quhang) swap rather than add.
@@ -858,6 +859,15 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cm->ReleaseAccess(cache_matrix_a);
       cache_matrix_a = NULL;
     }
+    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+      // TODO(quhang) swap rather than add.
+      *(cache_index_m2c->data()) =
+          laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
+      cm->ReleaseAccess(cache_index_m2c);
+      cache_index_m2c = NULL;
+    }
+    // TODO(addcache) the following data translation is implemented by memcpy,
+    // caching might not be needed.
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_VECTOR_B), da, application::WRITE_ACCESS);
@@ -877,17 +887,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         data_real->SaveToNimbus(
             laplace_solver_wrapper.cell_index_to_matrix_index);
         dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->SaveToNimbus(
-            laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
-        dbg(APP_LOG, "Finish writing INDEX_M2C.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
@@ -1325,6 +1324,13 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       // touches matrix_a is CONSTRUCT_MATRIX, which doesn't need to read.
       // laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
     }
+    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+      // TODO(quhang) index_m2c reading is not handled,
+      // because the only job that touches matrix_a is CONSTRUCT_MATRIX,
+      // which doesn't need to read.
+      // &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
+      //     *(cache_index_m2c->data());
+    }
     // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
     // cached.
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
@@ -1346,17 +1352,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         data_real->LoadFromNimbus(
             &laplace_solver_wrapper.cell_index_to_matrix_index);
         dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
-        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
