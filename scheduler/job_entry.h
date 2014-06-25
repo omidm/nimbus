@@ -107,18 +107,18 @@ class JobEntry {
     IDSet<job_id_t> after_set();
     job_id_t parent_job_id();
     Parameter params();
-    VersionTable version_table_in();
-    VersionTable version_table_out();
+    // VersionTable version_table_in();
+    // VersionTable version_table_out();
     // boost::shared_ptr<nimbus::VersionTable> vtable_in();
     // boost::shared_ptr<nimbus::VersionTable> vtable_out();
-    boost::shared_ptr<VersionMap> vmap_read_in();
-    boost::shared_ptr<VersionMap> vmap_write_out();
-    boost::shared_ptr<AncestorChain> ancestor_chain();
-    boost::shared_ptr<AncestorChain> ancestor_chain_to_pass();
+    // boost::shared_ptr<VersionMap> vmap_read_in();
+    // boost::shared_ptr<VersionMap> vmap_write_out();
+    // boost::shared_ptr<AncestorChain> ancestor_chain();
+    // boost::shared_ptr<AncestorChain> ancestor_chain_to_pass();
     boost::shared_ptr<VersionMap> vmap_read();
     boost::shared_ptr<VersionMap> vmap_write();
     boost::shared_ptr<MetaBeforeSet> meta_before_set();
-    boost::shared_ptr<LogicalDataLineage> logical_data_lineage();
+    // boost::shared_ptr<LogicalDataLineage> logical_data_lineage();
     job_depth_t job_depth() const;
     PhysicalTable physical_table();
     IDSet<job_id_t> jobs_passed_versions();
@@ -134,10 +134,10 @@ class JobEntry {
     const IDSet<logical_data_id_t>* union_set_p();
     IDSet<job_id_t>* before_set_p();
     const IDSet<job_id_t>* before_set_p() const;
-    const VersionTable* version_table_in_p();
-    const VersionTable* version_table_out_p();
-    data_version_t version_table_in_query(logical_data_id_t l_id);
-    data_version_t version_table_out_query(logical_data_id_t l_id);
+    // const VersionTable* version_table_in_p();
+    // const VersionTable* version_table_out_p();
+    // data_version_t version_table_in_query(logical_data_id_t l_id);
+    // data_version_t version_table_out_query(logical_data_id_t l_id);
 
     void set_job_type(JobType job_type);
     void set_job_name(std::string job_name);
@@ -148,18 +148,18 @@ class JobEntry {
     void set_after_set(IDSet<job_id_t> after_set);
     void set_parent_job_id(job_id_t parent_job_id);
     void set_params(Parameter params);
-    void set_version_table_in(VersionTable version_table);
-    void set_version_table_out(VersionTable version_table);
+    // void set_version_table_in(VersionTable version_table);
+    // void set_version_table_out(VersionTable version_table);
     // void set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in);
     // void set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out);
-    void set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in);
-    void set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out);
-    void set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain);
-    void set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass);
+    // void set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in);
+    // void set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out);
+    // void set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain);
+    // void set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass);
     void set_vmap_read(boost::shared_ptr<VersionMap> vmap_read);
     void set_vmap_write(boost::shared_ptr<VersionMap> vmap_write);
     void set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set);
-    void set_logical_data_lineage(boost::shared_ptr<LogicalDataLineage> logical_data_lineage);
+    // void set_logical_data_lineage(boost::shared_ptr<LogicalDataLineage> logical_data_lineage);
     void set_job_depth(job_depth_t job_depth);
     void set_physical_table(PhysicalTable physical_table);
     void set_jobs_passed_versions(IDSet<job_id_t> jobs);
@@ -170,10 +170,10 @@ class JobEntry {
     void set_assigned(bool flag);
     void set_done(bool flag);
     void set_future(bool flag);
-    void set_version_table_in_entry(logical_data_id_t l_id, data_version_t version);
-    void set_version_table_out_entry(logical_data_id_t l_id, data_version_t version);
+    // void set_version_table_in_entry(logical_data_id_t l_id, data_version_t version);
+    // void set_version_table_out_entry(logical_data_id_t l_id, data_version_t version);
     void set_physical_table_entry(logical_data_id_t l_id, physical_data_id_t p_id);
-    bool build_version_table_out_and_check();
+    // bool build_version_table_out_and_check();
 
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
@@ -189,18 +189,18 @@ class JobEntry {
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;
     Parameter params_;
-    VersionTable version_table_in_;
-    VersionTable version_table_out_;
+    // VersionTable version_table_in_;
+    // VersionTable version_table_out_;
     // boost::shared_ptr<nimbus::VersionTable> vtable_in_;
     // boost::shared_ptr<nimbus::VersionTable> vtable_out_;
-    boost::shared_ptr<VersionMap> vmap_read_in_;
-    boost::shared_ptr<VersionMap> vmap_write_out_;
-    boost::shared_ptr<AncestorChain> ancestor_chain_;
-    boost::shared_ptr<AncestorChain> ancestor_chain_to_pass_;
+    // boost::shared_ptr<VersionMap> vmap_read_in_;
+    // boost::shared_ptr<VersionMap> vmap_write_out_;
+    // boost::shared_ptr<AncestorChain> ancestor_chain_;
+    // boost::shared_ptr<AncestorChain> ancestor_chain_to_pass_;
     boost::shared_ptr<VersionMap> vmap_read_;
     boost::shared_ptr<VersionMap> vmap_write_;
     boost::shared_ptr<MetaBeforeSet> meta_before_set_;
-    boost::shared_ptr<LogicalDataLineage> logical_data_lineage_;
+    // boost::shared_ptr<LogicalDataLineage> logical_data_lineage_;
     job_depth_t job_depth_;
     PhysicalTable physical_table_;
     IDSet<job_id_t> jobs_passed_versions_;
@@ -210,13 +210,29 @@ class JobEntry {
     bool assigned_;
     bool done_;
     bool future_;
-    boost::mutex version_mutex_;
+    // boost::mutex version_mutex_;
 
 
     void Initialize();
 };
 
+
+
 typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+
+class MainJobEntry : public JobEntry {
+  public:
+    MainJobEntry(
+        const std::string& job_name,
+        const job_id_t& job_id);
+
+    ~MainJobEntry();
+
+  private:
+};
+
+
+
 
 class RemoteCopySendJobEntry : public JobEntry {
   public:
