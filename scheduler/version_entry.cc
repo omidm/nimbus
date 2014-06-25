@@ -124,9 +124,12 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   data_version_t ver;
   if (job->vmap_read()->query_entry(ldid_, &ver)) {
     index_[ver].erase(job);
+    if (index_[ver].size() == 0) {
+      index_.erase(ver);
+    }
   } else {
     dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
-        ldid_, (*iter)->job_id());
+        ldid_, job->job_id());
     exit(-1);
     return false;
   }
