@@ -311,7 +311,6 @@ void ProjectionDriver::LoadFromNimbus(
       application::GridToRange(init_config.global_region,
                                init_config.local_region));
 
-  nimbus::CacheManager *cm = job->GetCacheManager();
   Log log_timer;
   log_timer.StartTimer();
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
@@ -579,41 +578,20 @@ void ProjectionDriver::LoadFromNimbus(
       log_timer.timer());
   log_timer.StartTimer();
   // VECTOR_P. It cannot be splitted or merged.
-  if (application::kUseCache) {
-    if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-      nimbus::DataArray read, write;
-      const std::string vector_p_string = std::string(APP_VECTOR_P);
-      application::GetReadData(*job, vector_p_string, da, &read);
-      application::GetWriteData(*job, vector_p_string, da, &write);
-      nimbus::CacheVar* cache_var =
-          cm->GetAppVar(
-              read, array_reg_thin_outer,
-              write, array_reg_central,
-              application::kCacheVectorP, array_reg_thin_outer,
-              nimbus::cache::EXCLUSIVE);
-      cache_vector_p = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
-      assert(cache_vector_p != NULL);
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
-                                      projection_data.grid_format_vector_p);
+  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+    projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
+    if (application::GetTranslatorData(
+            job, std::string(APP_VECTOR_P), da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::VECTOR_P)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection_data.grid_format_vector_p);
+      dbg(APP_LOG, "Finish reading the grid-format vector_p\n");
+    } else {
+      dbg(APP_LOG, "VECTOR_P flag"
+          "is set but data is not local.\n");
     }
-  } else {
-    if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-      projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
-      if (application::GetTranslatorData(
-              job, std::string(APP_VECTOR_P), da, &pdv, application::READ_ACCESS)
-          && data_config.GetFlag(DataConfig::VECTOR_P)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_thin_outer, array_shift, &pdv,
-            &projection_data.grid_format_vector_p);
-        dbg(APP_LOG, "Finish reading the grid-format vector_p\n");
-      } else {
-        dbg(APP_LOG, "VECTOR_P flag"
-            "is set but data is not local.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_p time:%f.\n",
       log_timer.timer());
@@ -684,8 +662,6 @@ void ProjectionDriver::SaveToNimbus(
                                        init_config.local_region.dx()+2,
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
-
-  nimbus::CacheManager *cm = job->GetCacheManager();
 
   Log log_timer;
   log_timer.StartTimer();
@@ -779,39 +755,22 @@ void ProjectionDriver::SaveToNimbus(
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_z time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
-  // VECTOR_P.
-  if (application::kUseCache) {
-    if (cache_vector_p) {
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
+  // VECTOR_P. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+    if (application::GetTranslatorData(job, std::string(APP_VECTOR_P), da, &pdv,
+                                       application::WRITE_ACCESS)) {
+      assert(data_config.GetFlag(DataConfig::INDEX_M2C));
+      assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
       for (int i = 1; i <= projection_data.local_n; ++i) {
         projection_data.grid_format_vector_p(
             (*projection_data.matrix_index_to_cell_index)(i)) =
             projection_data.p(i);
       }
-      T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
-                                      projection_data.grid_format_vector_p);
-      cm->ReleaseAccess(cache_vector_p);
-      cache_vector_p = NULL;
+      translator.WriteScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv,
+          &projection_data.grid_format_vector_p);
     }
-  } else {
-    // VECTOR_P. It cannot be splitted or merged.
-    if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-      if (application::GetTranslatorData(job, std::string(APP_VECTOR_P), da, &pdv,
-                                         application::WRITE_ACCESS)) {
-        assert(data_config.GetFlag(DataConfig::INDEX_M2C));
-        assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-        for (int i = 1; i <= projection_data.local_n; ++i) {
-          projection_data.grid_format_vector_p(
-              (*projection_data.matrix_index_to_cell_index)(i)) =
-              projection_data.p(i);
-        }
-        translator.WriteScalarArrayFloat(
-            &array_reg_central, array_shift, &pdv,
-            &projection_data.grid_format_vector_p);
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_p time:%f.\n",
       log_timer.timer());

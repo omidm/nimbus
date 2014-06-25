@@ -100,6 +100,21 @@ void GetAppCacheObjects(
     cache->matrix_a = dynamic_cast<CacheSparseMatrix*>(cache_var);
     assert(cache->matrix_a != NULL);
   }
+  // index_m2c.
+  if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+    nimbus::DataArray read, write;
+    const std::string index_m2c_string = std::string(APP_INDEX_M2C);
+    GetReadData(job, index_m2c_string, da, &read);
+    GetWriteData(job, index_m2c_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg,
+            write, array_reg,
+            kCacheArrayM2C, array_reg,
+            nimbus::cache::EXCLUSIVE);
+    cache->index_m2c = dynamic_cast<CacheArrayM2C*>(cache_var);
+    assert(cache->index_m2c != NULL);
+  }
   // pressure.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
     nimbus::DataArray read, write;
