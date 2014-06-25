@@ -58,7 +58,6 @@
 #include "shared/graph.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
-#include "scheduler/version_operator.h"
 #include "scheduler/physical_data.h"
 #include "scheduler/ldl_map.h"
 
