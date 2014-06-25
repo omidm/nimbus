@@ -159,7 +159,11 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     live_parents_.insert(job_id);
   }
 
-  version_manager_.AddJobEntry(job);
+  // TODO(omidm): double check the logic for this.
+  if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
+      job->job_name() == NIMBUS_MAIN_JOB_NAME) {
+    version_manager_.AddJobEntry(job);
+  }
 
   return true;
 }
@@ -205,7 +209,11 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     live_parents_.insert(job_id);
   }
 
-  version_manager_.AddJobEntry(job);
+  // TODO(omidm): double check the logic for this.
+  if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
+      job->job_name() == NIMBUS_MAIN_JOB_NAME) {
+    version_manager_.AddJobEntry(job);
+  }
 
   return true;
 }
@@ -236,7 +244,10 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
   if (job_graph_.RemoveVertex(job->job_id())) {
-    version_manager_.RemoveJobEntry(job);
+    if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
+        job->job_name() == NIMBUS_MAIN_JOB_NAME) {
+      version_manager_.RemoveJobEntry(job);
+    }
     delete job;
     return true;
   } else {
@@ -249,7 +260,10 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
   if (GetJobEntry(job_id, job)) {
     assert(job_id == job->job_id());
     job_graph_.RemoveVertex(job_id);
-    version_manager_.RemoveJobEntry(job);
+    if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
+        job->job_name() == NIMBUS_MAIN_JOB_NAME) {
+      version_manager_.RemoveJobEntry(job);
+    }
     delete job;
     return true;
   } else {

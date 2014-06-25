@@ -92,6 +92,22 @@ size_t VersionManager::GetJobsNeedDataVersion(
 }
 
 bool VersionManager::RemoveJobEntry(JobEntry* job) {
+  assert(job->versioned());
+
+  VersionMap::ConstIter it = job->vmap_read()->content_p()->begin();
+  for (; it != job->vmap_read()->content_p()->end(); ++it) {
+    IndexIter iter = index_.find(it->first);
+    if (iter == index_.end()) {
+      dbg(DBG_ERROR, "Version manager: ldid %lu is not in the index.\n", *it);
+      exit(-1);
+      return false;
+    } else {
+      iter->second.RemoveJobEntry(job);
+    }
+  }
+
+
+/*
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
     IndexIter iter = index_.find(*it);
@@ -103,6 +119,8 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
       iter->second.RemoveJobEntry(job);
     }
   }
+*/
+
 
   return true;
 }
