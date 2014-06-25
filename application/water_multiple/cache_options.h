@@ -56,6 +56,7 @@ struct AppCacheObjects {
   CacheScalarArray<T> *pressure;
   CacheScalarArray<int> *color;
   CacheScalarArray<T> *divergence;
+  CacheSparseMatrix *matrix_a;
 
   AppCacheObjects() {
     fv    = NULL;
@@ -69,6 +70,7 @@ struct AppCacheObjects {
     pressure = NULL;
     color = NULL;
     divergence = NULL;
+    matrix_a = NULL;
   }
 };
 

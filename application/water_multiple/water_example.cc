@@ -72,6 +72,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_pressure = NULL;
     cache_colors = NULL;
     cache_divergence = NULL;
+    cache_matrix_a = NULL;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -115,6 +116,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_pressure = cache->pressure;
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
+    cache_matrix_a = cache->matrix_a;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -159,6 +161,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_pressure = cache->pressure;
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
+    cache_matrix_a = cache->matrix_a;
     create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -822,7 +825,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_psi_n = NULL;
     }
 
-    // TODO(addcache).
     // pressure.
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
@@ -851,14 +853,10 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     // caching might not be needed.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_MATRIX_A), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataSparseMatrix* data_real =
-            dynamic_cast<application::DataSparseMatrix*>(data_temp);
-        data_real->SaveToNimbus(laplace_solver_wrapper.A_array(1));
-        dbg(APP_LOG, "Finish writing MATRIX_A.\n");
-      }
+      // TODO(quhang) swap rather than add.
+      *(cache_matrix_a->data()) = laplace_solver_wrapper.A_array(1);
+      cm->ReleaseAccess(cache_matrix_a);
+      cache_matrix_a = NULL;
     }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -1321,19 +1319,13 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
     }
 
+    typedef nimbus::Data Data;
+    if (cache_matrix_a) {
+      // TODO(quhang) change to swapping.
+      laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
+    }
     // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
     // cached.
-    typedef nimbus::Data Data;
-    if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_MATRIX_A), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataSparseMatrix* data_real =
-            dynamic_cast<application::DataSparseMatrix*>(data_temp);
-        data_real->LoadFromNimbus(&laplace_solver_wrapper.A_array(1));
-        dbg(APP_LOG, "Finish reading MATRIX_A.\n");
-      }
-    }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);

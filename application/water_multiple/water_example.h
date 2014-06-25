@@ -99,6 +99,7 @@ public:
     typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
     typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
+    typedef application::CacheSparseMatrix TCacheSparseMatrix;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
@@ -107,6 +108,7 @@ public:
     IntCacheScalarArray *cache_colors;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
+    TCacheSparseMatrix *cache_matrix_a;
     bool create_destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,

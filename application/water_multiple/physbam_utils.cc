@@ -82,10 +82,24 @@ void GetAppCacheObjects(
   nimbus::GeometricRegion array_reg_outer_3(array_reg.NewEnlarged(kGhostNum));
   nimbus::GeometricRegion array_reg_outer_7(array_reg.NewEnlarged(7));
   nimbus::GeometricRegion array_reg_outer_8(array_reg.NewEnlarged(8));
-  nimbus::GeometricRegion array_reg_thin_outer(array_reg.NewEnlarged(1));
 
   nimbus::CacheManager *cm = job.GetCacheManager();
 
+  // matrix_a.
+  if (data_config.GetFlag(DataConfig::MATRIX_A)) {
+    nimbus::DataArray read, write;
+    const std::string matrix_a_string = std::string(APP_MATRIX_A);
+    GetReadData(job, matrix_a_string, da, &read);
+    GetWriteData(job, matrix_a_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg,
+            write, array_reg,
+            kCacheSparseMatrixA, array_reg,
+            nimbus::cache::EXCLUSIVE);
+    cache->matrix_a = dynamic_cast<CacheSparseMatrix*>(cache_var);
+    assert(cache->matrix_a != NULL);
+  }
   // pressure.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
     nimbus::DataArray read, write;
@@ -94,9 +108,9 @@ void GetAppCacheObjects(
     GetWriteData(job, pressure_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            kCachePressure, array_reg_thin_outer,
+            read, array_reg_outer_1,
+            write, array_reg_outer_1,
+            kCachePressure, array_reg_outer_1,
             nimbus::cache::EXCLUSIVE);
     cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->pressure != NULL);
