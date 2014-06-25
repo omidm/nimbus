@@ -120,11 +120,12 @@ class JobEntry {
     bool assigned();
     bool done();
     bool future();
+
     const IDSet<logical_data_id_t>* read_set_p();
     const IDSet<logical_data_id_t>* write_set_p();
     const IDSet<logical_data_id_t>* union_set_p();
-    IDSet<job_id_t>* before_set_p();
     const IDSet<job_id_t>* before_set_p() const;
+    IDSet<job_id_t>* before_set_p();
 
     // VersionTable version_table_in();
     // VersionTable version_table_out();
@@ -205,7 +206,6 @@ class JobEntry {
     bool done_;
     bool future_;
 
-
     // VersionTable version_table_in_;
     // VersionTable version_table_out_;
     // boost::shared_ptr<nimbus::VersionTable> vtable_in_;
@@ -216,7 +216,6 @@ class JobEntry {
     // boost::shared_ptr<AncestorChain> ancestor_chain_to_pass_;
     // boost::shared_ptr<LogicalDataLineage> logical_data_lineage_;
     // boost::mutex version_mutex_;
-
 
   private:
     void Initialize();
