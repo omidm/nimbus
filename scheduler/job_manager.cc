@@ -61,6 +61,7 @@ JobManager::JobManager() {
         boost::shared_ptr<MetaBeforeSet> (new MetaBeforeSet()));
     job->set_job_depth(NIMBUS_INIT_JOB_DEPTH);
   }
+  ldo_map_p_ = NULL;
   parent_removed_ = false;
   pass_version_in_progress_ = 0;
 }
@@ -158,6 +159,8 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     live_parents_.insert(job_id);
   }
 
+  version_manager_.AddJobEntry(job);
+
   return true;
 }
 
@@ -202,6 +205,8 @@ bool JobManager::AddJobEntry(const JobType& job_type,
     live_parents_.insert(job_id);
   }
 
+  version_manager_.AddJobEntry(job);
+
   return true;
 }
 
@@ -231,7 +236,7 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
   if (job_graph_.RemoveVertex(job->job_id())) {
-    // version_manager_.RemoveJobVersionTables(job);
+    version_manager_.RemoveJobEntry(job);
     delete job;
     return true;
   } else {
@@ -244,7 +249,7 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
   if (GetJobEntry(job_id, job)) {
     assert(job_id == job->job_id());
     job_graph_.RemoveVertex(job_id);
-    // version_manager_.RemoveJobVersionTables(job);
+    version_manager_.RemoveJobEntry(job);
     delete job;
     return true;
   } else {
@@ -262,7 +267,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   while (ResolveDataVersions() > 0) {
     continue;
   }
-  if (log_version_.timer() > 0.01) {
+  if (log_version_.timer() > 0.001) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
       " lookup: " << log_lookup_.timer() <<
@@ -347,7 +352,7 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   while (ResolveDataVersions() > 0) {
     continue;
   }
-  if (log_version_.timer() > 0.01) {
+  if (log_version_.timer() > 0.001) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
       " lookup: " << log_lookup_.timer() <<
@@ -600,7 +605,7 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
   /*
    * Version manager approach.
    */
-//  return version_manager_.GetJobsNeedDataVersion(list, vld);
+  return version_manager_.GetJobsNeedDataVersion(list, vld);
 
   /*
    * Job graph approach with old version table
@@ -679,28 +684,28 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
   /*
    * Logical data lineage approach with meta before set.
    */
-  size_t num = 0;
-  list->clear();
-  JobEntryMap::iterator iter = jobs_need_version_.begin();
-  for (; iter != jobs_need_version_.end();) {
-    JobEntry* job = iter->second;
-    assert(job->versioned() || job->partial_versioned());
-    if (job->assigned()) {
-      jobs_need_version_.erase(iter++);
-      continue;
-    }
-    data_version_t version;
-    if (job->vmap_read()->query_entry(vld.first, &version)) {
-      if ((version == vld.second)) {
-        // if it is in the vmap_read then either reading or non sterile. -omidm
-        // && ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
-        list->push_back(job);
-        ++num;
-      }
-    }
-    ++iter;
-  }
-  return num;
+//   size_t num = 0;
+//   list->clear();
+//   JobEntryMap::iterator iter = jobs_need_version_.begin();
+//   for (; iter != jobs_need_version_.end();) {
+//     JobEntry* job = iter->second;
+//     assert(job->versioned() || job->partial_versioned());
+//     if (job->assigned()) {
+//       jobs_need_version_.erase(iter++);
+//       continue;
+//     }
+//     data_version_t version;
+//     if (job->vmap_read()->query_entry(vld.first, &version)) {
+//       if ((version == vld.second)) {
+//         // if it is in the vmap_read then either reading or non sterile. -omidm
+//         // && ((job->read_set_p()->contains(vld.first)) || !(job->sterile()))) {
+//         list->push_back(job);
+//         ++num;
+//       }
+//     }
+//     ++iter;
+//   }
+//   return num;
 
 
   /*
@@ -1156,6 +1161,7 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
 void JobManager::set_ldo_map_p(
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
   ldo_map_p_ = ldo_map_p;
+  version_manager_.set_ldo_map_p(ldo_map_p);
 }
 
 

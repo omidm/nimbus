@@ -121,10 +121,7 @@ class JobManager {
 
   private:
     Graph<JobEntry, job_id_t> job_graph_;
-    // VersionManager version_manager_;
-    VersionOperator version_operator_;
-    // bool processed_new_job_done_;
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+    VersionManager version_manager_;
 
     Log log_version_;
     Log log_merge_;
@@ -133,10 +130,13 @@ class JobManager {
     Log log_nonsterile_;
     size_t lookup_count_;
 
+    // VersionOperator version_operator_;
+    // bool processed_new_job_done_;
     // bool ResolveJobDataVersions(JobEntry* job);
     // size_t ResolveVersions();
 
     LdlMap ldl_map_;
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 
     JobEntryMap jobs_need_version_;
     JobEntryMap jobs_ready_to_assign_;
