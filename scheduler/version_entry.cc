@@ -68,17 +68,12 @@ VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
 
 
 bool VersionEntry::AddJobEntry(JobEntry *job) {
-  if (ldid_ == 10000000001)
-    std::cout << "ADD+++++++++++++++++++ " << job->job_name() << std::endl;
-  assert(job->job_name() != "localcopy");
   pending_jobs_.insert(job);
   return true;
 }
 
 size_t VersionEntry::GetJobsNeedVersion(
     JobEntryList* list, data_version_t version) {
-  if (ldid_ == 10000000001)
-    std::cout << "NEED*********************\n";
   size_t count = 0;
   list->clear();
 
@@ -90,14 +85,6 @@ size_t VersionEntry::GetJobsNeedVersion(
    */
 
   BucketIter iter = pending_jobs_.begin();
-  if (ldid_ == 10000000001) {
-    for (; iter != pending_jobs_.end();) {
-      std::cout << "NAVIDDDDDDDDDDDDDDDDD: " << (*iter)->job_name() << std::endl;
-      iter++;
-    }
-  }
-
-  iter = pending_jobs_.begin();
   for (; iter != pending_jobs_.end();) {
     assert((*iter)->versioned());
     assert((*iter)->job_name() != "localcopy");
@@ -132,9 +119,6 @@ size_t VersionEntry::GetJobsNeedVersion(
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job) {
-  if (ldid_ == 10000000001)
-    std::cout << "DELET------------------ " << job->job_name() << std::endl;
-  assert(job->job_name() != "localcopy");
   assert(job->versioned());
 
   pending_jobs_.erase(job);

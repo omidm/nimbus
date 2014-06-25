@@ -106,22 +106,6 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
     }
   }
 
-
-/*
-  IDSet<logical_data_id_t>::ConstIter it;
-  for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-    IndexIter iter = index_.find(*it);
-    if (iter == index_.end()) {
-      dbg(DBG_ERROR, "Version manager: ldid %lu is not in the index.\n", *it);
-      exit(-1);
-      return false;
-    } else {
-      iter->second.RemoveJobEntry(job);
-    }
-  }
-*/
-
-
   return true;
 }
 
