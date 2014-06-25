@@ -121,6 +121,12 @@ void JobEntry::Initialize() {
   vmap_read_ = empty_vmap;
   vmap_write_ = empty_vmap;
 */
+  sterile_ = false;
+  partial_versioned_ = false;
+  versioned_ = false;
+  assigned_ = false;
+  done_ = false;
+  future_ = false;
 }
 
 JobEntry::~JobEntry() {
@@ -484,22 +490,119 @@ bool JobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
 // }
 
 
+KernelJobEntry::KernelJobEntry() {
+  job_type_ = JOB_SCHED;
+  job_name_ = NIMBUS_KERNEL_JOB_NAME;
+  job_id_ = NIMBUS_KERNEL_JOB_ID,
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
 
-MainJobEntry::MainJobEntry(
-    const std::string& job_name,
-    const job_id_t& job_id) {
-//   job_type_ = JOB_COMP;
-//   job_name_ = NIMBUS_MAIN_JOB_NAME;
-//   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
-//   sterile_ = false;
-//   versioned_ = false;,
-//   assigned_ = false;
-//   partial_versioned_ = false;
-//   done_ = false;
-//   future_ = false;
+KernelJobEntry::~KernelJobEntry() {
+}
+
+
+MainJobEntry::MainJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COMP;
+  job_name_ = NIMBUS_MAIN_JOB_NAME;
+  job_id_ = job_id,
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = false;
+  versioned_ = false;
+  assigned_ = false;
 }
 
 MainJobEntry::~MainJobEntry() {
+}
+
+
+LocalCopyJobEntry::LocalCopyJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COPY;
+  job_name_ = NIMBUS_LOCAL_COPY_JOB_NAME;
+  job_id_ = job_id,
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+LocalCopyJobEntry::~LocalCopyJobEntry() {
+}
+
+
+CreateDataJobEntry::CreateDataJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_CREATE;
+  job_name_ = NIMBUS_CREATE_DATA_JOB_NAME;
+  job_id_ = job_id,
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+CreateDataJobEntry::~CreateDataJobEntry() {
+}
+
+
+RemoteCopyReceiveJobEntry::RemoteCopyReceiveJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COPY;
+  job_name_ = NIMBUS_REMOTE_COPY_RECEIVE_JOB_NAME;
+  job_id_ = job_id,
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+RemoteCopyReceiveJobEntry::~RemoteCopyReceiveJobEntry() {
+}
+
+
+RemoteCopySendJobEntry::RemoteCopySendJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COPY;
+  job_name_ = NIMBUS_REMOTE_COPY_SEND_JOB_NAME;
+  job_id_ = job_id,
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+RemoteCopySendJobEntry::~RemoteCopySendJobEntry() {
+}
+
+ID<job_id_t> RemoteCopySendJobEntry::receive_job_id() {
+  return receive_job_id_;
+}
+
+ID<worker_id_t> RemoteCopySendJobEntry::to_worker_id() {
+  return to_worker_id_;
+}
+
+std::string RemoteCopySendJobEntry::to_ip() {
+  return to_ip_;
+}
+
+ID<port_t> RemoteCopySendJobEntry::to_port() {
+  return to_port_;
+}
+
+void RemoteCopySendJobEntry::set_receive_job_id(ID<job_id_t> receive_job_id) {
+  receive_job_id_ = receive_job_id;
+}
+
+void RemoteCopySendJobEntry::set_to_worker_id(ID<worker_id_t> worker_id) {
+  to_worker_id_ = worker_id;
+}
+
+void RemoteCopySendJobEntry::set_to_ip(std::string ip) {
+  to_ip_ = ip;
+}
+
+void RemoteCopySendJobEntry::set_to_port(ID<port_t> port) {
+  to_port_ = port;
 }
 
 
