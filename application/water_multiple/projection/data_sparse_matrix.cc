@@ -59,6 +59,7 @@ bool DataSparseMatrix::SaveToNimbus(
   header.n = matrix.n;
   header.length_offset = matrix.offsets.m;
   header.length_element = matrix.A.m;
+  header.length_diagonal = matrix.diagonal_index.m;
   ClearTempBuffer();
   AddToTempBuffer(reinterpret_cast<char*>(&header), sizeof(header));
   Buffer buffer;
@@ -66,6 +67,9 @@ bool DataSparseMatrix::SaveToNimbus(
   AddToTempBuffer(reinterpret_cast<char*>(buffer.pointer), buffer.size);
   buffer.Clean();
   SerializePhysBAMArray(matrix.A, &buffer);
+  AddToTempBuffer(reinterpret_cast<char*>(buffer.pointer), buffer.size);
+  buffer.Clean();
+  SerializePhysBAMArray(matrix.diagonal_index, &buffer);
   AddToTempBuffer(reinterpret_cast<char*>(buffer.pointer), buffer.size);
   buffer.Clean();
   CommitTempBuffer();
@@ -78,14 +82,14 @@ bool DataSparseMatrix::LoadFromNimbus(
   char* pointer = buffer();
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   matrix->n = header.n;
-  // matrix->offsets.m = header.length_offset;
-  // matrix->A.m = header.length_element;
   assert((size_t)size() == sizeof(Header)
          + header.length_offset *
            sizeof(typename PhysBAM::ARRAY<int>::ELEMENT)
          + header.length_element *
            sizeof(typename PhysBAM::ARRAY<PhysBAM::SPARSE_MATRIX_ENTRY<float> >
-                  ::ELEMENT));
+                  ::ELEMENT)
+         + header.length_diagonal *
+           sizeof(typename PhysBAM::ARRAY<int>::ELEMENT));
   pointer += sizeof(Header);
   Buffer buffer;
   buffer.pointer = reinterpret_cast<void*>(pointer);
@@ -99,11 +103,20 @@ bool DataSparseMatrix::LoadFromNimbus(
   buffer.size = header.length_element *
       sizeof(typename PhysBAM::ARRAY<PhysBAM::SPARSE_MATRIX_ENTRY<float> >
              ::ELEMENT);
+  pointer += buffer.size;
   DeserializePhysBAMArray<PhysBAM::SPARSE_MATRIX_ENTRY<float> >(
       buffer, &matrix->A);
   buffer.Reset();
 
-  matrix->Initialize_Diagonal_Index();
+  buffer.pointer = reinterpret_cast<void*>(pointer);
+  buffer.size = header.length_diagonal *
+           sizeof(typename PhysBAM::ARRAY<int>::ELEMENT);
+  pointer += buffer.size;
+  DeserializePhysBAMArray<int>(buffer, &matrix->diagonal_index);
+  buffer.Reset();
+
+  // matrix->Initialize_Diagonal_Index();
+
   return true;
 }
 

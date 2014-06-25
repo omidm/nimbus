@@ -308,6 +308,8 @@ void ProjectionDriver::LoadFromNimbus(
                                init_config.local_region));
 
   nimbus::CacheManager *cm = job->GetCacheManager();
+  Log log_timer;
+  log_timer.StartTimer();
   if (application::kUseCache) {
     // pressure.
     if (data_config.GetFlag(DataConfig::PRESSURE)) {
@@ -342,7 +344,9 @@ void ProjectionDriver::LoadFromNimbus(
       application::DestroyTranslatorObjects(&pdv);
     }
   }
-
+  dbg(APP_LOG, "[PROJECTION] LOAD, pressure time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // MATRIX_A. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_A)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -357,10 +361,16 @@ void ProjectionDriver::LoadFromNimbus(
       dbg(APP_LOG, "MATRIX_A flag is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, matrix_a time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     ReadVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_b time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -380,6 +390,9 @@ void ProjectionDriver::LoadFromNimbus(
       dbg(APP_LOG, "INDEX_C2M flag is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, index_c2m time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // INDEX_M2C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -394,6 +407,9 @@ void ProjectionDriver::LoadFromNimbus(
       dbg(APP_LOG, "INDEX_M2C flag is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, index_m2c time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // LOCAL_N.
   // Reduction on LOCAL_N is never used and thus not supported.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
@@ -547,6 +563,9 @@ void ProjectionDriver::LoadFromNimbus(
   if (data_config.GetFlag(DataConfig::PROJECTION_BETA)) {
     ReadScalarData<float>(job, da, APP_PROJECTION_BETA, projection_data.beta);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, scalar time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
     if (projection_data.matrix_a.C == NULL) {
@@ -565,10 +584,16 @@ void ProjectionDriver::LoadFromNimbus(
           "is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, matrix_c time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
     ReadVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_z time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_P. It cannot be splitted or merged.
   if (application::kUseCache) {
     if (data_config.GetFlag(DataConfig::VECTOR_P)) {
@@ -606,11 +631,19 @@ void ProjectionDriver::LoadFromNimbus(
       application::DestroyTranslatorObjects(&pdv);
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   Initialize(projection_data.local_n, projection_data.interior_n);
+  dbg(APP_LOG, "[PROJECTION] LOAD, else time:%f.\n",
+      log_timer.timer());
 }
 
 template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
@@ -666,6 +699,9 @@ void ProjectionDriver::SaveToNimbus(
 
   nimbus::CacheManager *cm = job->GetCacheManager();
 
+  Log log_timer;
+  log_timer.StartTimer();
+
   if (application::kUseCache) {
     if (cache_pressure) {
       typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
@@ -686,11 +722,16 @@ void ProjectionDriver::SaveToNimbus(
       application::DestroyTranslatorObjects(&pdv);
     }
   }
-
+  dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     WriteVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_b time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // Groud III.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
     WriteScalarData<float>(job, da, APP_PROJECTION_LOCAL_TOLERANCE,
@@ -736,6 +777,9 @@ void ProjectionDriver::SaveToNimbus(
   if (data_config.GetFlag(DataConfig::PROJECTION_BETA)) {
     WriteScalarData<float>(job, da, APP_PROJECTION_BETA, projection_data.beta);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, scalar time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -747,10 +791,16 @@ void ProjectionDriver::SaveToNimbus(
       dbg(APP_LOG, "Finish writing MATRIX_C.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, matrix_c time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
     WriteVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_z time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_P.
   if (application::kUseCache) {
     if (cache_vector_p) {
@@ -785,10 +835,15 @@ void ProjectionDriver::SaveToNimbus(
       application::DestroyTranslatorObjects(&pdv);
     }
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n",
+      log_timer.timer());
 }
 
 template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(

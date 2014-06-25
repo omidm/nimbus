@@ -100,19 +100,19 @@ void JobProjectionStepTwo::Execute(
   log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_TWO, loading time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   // Read PROJECTION_BETA, VECTOR_Z, VECTOR_P(only central region).
   // Write VECTOR_P(only central region).
   log_timer.StartTimer();
   projection_driver.UpdateSearchVector();
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_TWO, calculation time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_TWO, saving time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_TWO job\n");
 }

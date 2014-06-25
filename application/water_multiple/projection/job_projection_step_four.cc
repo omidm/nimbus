@@ -105,7 +105,7 @@ void JobProjectionStepFour::Execute(
   log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, loading time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   // Read PROJECTION_ALPHA, VECTOR_X, VECTOR_P,VECTOR_TEMP, VECTOR_B.
   // Write VECTOR_X, VECTOR_B, PROJECTION_LOCAL_RESIDUAL.
@@ -113,12 +113,12 @@ void JobProjectionStepFour::Execute(
   projection_driver.UpdateOtherVectors();
   projection_driver.CalculateLocalResidual();
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, calculation time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, saving time:%f.\n",
-      log_timer.GetTime());
+      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_FOUR job\n");
 }
