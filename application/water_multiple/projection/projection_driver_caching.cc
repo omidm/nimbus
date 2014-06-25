@@ -45,6 +45,7 @@
 #include "application/water_multiple/cache_prototypes.h"
 #include "application/water_multiple/data_include.h"
 #include "application/water_multiple/physbam_utils.h"
+#include "application/water_multiple/app_utils.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
 
@@ -171,17 +172,23 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   log_timer.StartTimer();
   // MATRIX_A. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-    Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_MATRIX_A), da, application::READ_ACCESS);
-    if (data_temp) {
-      application::DataSparseMatrix* data_real =
-          dynamic_cast<application::DataSparseMatrix*>(data_temp);
-      // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(projection_data.matrix_a);
-      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
-    } else {
-      dbg(APP_LOG, "MATRIX_A flag is set but data is not local.\n");
-    }
+    nimbus::DataArray read, write;
+    const std::string matrix_a_string = std::string(APP_MATRIX_A);
+    application::GetReadData(*job, matrix_a_string, da, &read);
+    application::GetWriteData(*job, matrix_a_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, init_config.local_region,
+            write, init_config.local_region,
+            application::kCacheSparseMatrixA, init_config.local_region,
+            nimbus::cache::EXCLUSIVE);
+    cache_matrix_a = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
+    assert(cache_matrix_a != NULL);
+    projection_data.matrix_a = cache_matrix_a->data();
+    assert(projection_data.matrix_a != NULL);
+    projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<T>;
+  } else {
+    projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, matrix_a time:%f.\n",
       log_timer.timer());
@@ -581,6 +588,14 @@ void ProjectionDriver::Cache_SaveToNimbus(
       data_real->SaveToNimbus(*projection_data.matrix_a->C);
       dbg(APP_LOG, "Finish writing MATRIX_C.\n");
     }
+  }
+  if (cache_matrix_a) {
+    cm->ReleaseAccess(cache_matrix_a);
+    cache_matrix_a = NULL;
+    projection_data.matrix_a = NULL;
+  } else {
+    delete projection_data.matrix_a;
+    projection_data.matrix_a = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, matrix_c time:%f.\n",
       log_timer.timer());

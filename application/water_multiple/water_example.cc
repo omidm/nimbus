@@ -1321,8 +1321,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
 
     typedef nimbus::Data Data;
     if (cache_matrix_a) {
-      // TODO(quhang) change to swapping.
-      laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
+      // TODO(quhang) matrix_a reading is not handled.
+      // laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
     }
     // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
     // cached.

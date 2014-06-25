@@ -89,15 +89,19 @@ class ProjectionDriver {
     projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
-    projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
+    // projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
     // Conjugate matrix will be deallocate by matrix_a.
-    projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<T>;
+    // projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<T>;
+    projection_data.matrix_a = NULL;
     cache_pressure = NULL;
     cache_vector_p = NULL;
+    cache_matrix_a = NULL;
   }
 
   virtual ~ProjectionDriver() {
-    delete projection_data.matrix_a;
+    if (projection_data.matrix_a) {
+      delete projection_data.matrix_a;
+    }
   }
 
   class ProjectionData {
@@ -145,6 +149,7 @@ class ProjectionDriver {
   typedef typename application::CacheScalarArray<T> TCacheScalarArray;
   TCacheScalarArray *cache_pressure;
   TCacheScalarArray *cache_vector_p;
+  application::CacheSparseMatrix *cache_matrix_a;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;

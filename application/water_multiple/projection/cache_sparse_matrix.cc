@@ -69,6 +69,9 @@ nimbus::CacheVar* CacheSparseMatrix::CreateNew(
 
 void CacheSparseMatrix::ReadToCache(const nimbus::DataArray &read_set,
                                    const nimbus::GeometricRegion &read_reg) {
+  if (read_set.size() == 0) {
+    return;
+  }
   assert(read_set.size() == 1);
   assert(read_set[0]->region().IsEqual(&read_reg));
   assert(object_region().IsEqual(&read_reg));
@@ -79,6 +82,9 @@ void CacheSparseMatrix::ReadToCache(const nimbus::DataArray &read_set,
 void CacheSparseMatrix::WriteFromCache(
     const nimbus::DataArray &write_set,
     const nimbus::GeometricRegion &write_reg) const {
+  if (write_set.size() == 0) {
+    return;
+  }
   if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
     return;
   assert(write_set.size() == 1);

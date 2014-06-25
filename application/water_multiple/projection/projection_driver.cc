@@ -881,4 +881,23 @@ void ProjectionDriver::WriteVectorData(
   }
 }
 
+template void ProjectionDriver::WriteScalarData<float>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const float& value);
+template void ProjectionDriver::WriteScalarData<double>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const double& value);
+template void ProjectionDriver::WriteScalarData<int>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const int& value);
+
+template void ProjectionDriver::ReadScalarData<float>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, float& value);
+template void ProjectionDriver::ReadScalarData<double>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, double& value);
+template void ProjectionDriver::ReadScalarData<int>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, int& value);
 }  // namespace PhysBAM
