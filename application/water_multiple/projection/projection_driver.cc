@@ -109,7 +109,7 @@ void ProjectionDriver::LocalInitialize() {
     projection_data.local_residual = 0;
     return;
   }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   projection_data.vector_x.Resize(projection_data.local_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
     projection_data.vector_x(i) =
@@ -159,7 +159,7 @@ void ProjectionDriver::DoPrecondition() {
   if (projection_data.interior_n == 0) {
     return;
   }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
@@ -213,7 +213,7 @@ void ProjectionDriver::UpdateTempVector() {
   if (projection_data.interior_n == 0) {
     return;
   }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& p = projection_data.p;
   // Search vector p is used here.
@@ -359,7 +359,7 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(&projection_data.matrix_a);
+      data_real->LoadFromNimbus(projection_data.matrix_a);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     } else {
       dbg(APP_LOG, "MATRIX_A flag is set but data is not local.\n");
@@ -572,8 +572,8 @@ void ProjectionDriver::LoadFromNimbus(
   log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
-    if (projection_data.matrix_a.C == NULL) {
-      projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<float>;
+    if (projection_data.matrix_a->C == NULL) {
+      projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<float>;
     }
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
@@ -581,7 +581,7 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // Memory allocation happens inside the call.
-      data_real->LoadFromNimbus(projection_data.matrix_a.C);
+      data_real->LoadFromNimbus(projection_data.matrix_a->C);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     } else {
       dbg(APP_LOG, "MATRIX_C flag"
@@ -795,7 +795,7 @@ void ProjectionDriver::SaveToNimbus(
     if (data_temp) {
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
-      data_real->SaveToNimbus(*projection_data.matrix_a.C);
+      data_real->SaveToNimbus(*projection_data.matrix_a->C);
       dbg(APP_LOG, "Finish writing MATRIX_C.\n");
     }
   }

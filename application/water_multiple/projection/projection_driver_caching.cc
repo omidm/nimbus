@@ -177,7 +177,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(&projection_data.matrix_a);
+      data_real->LoadFromNimbus(projection_data.matrix_a);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     } else {
       dbg(APP_LOG, "MATRIX_A flag is set but data is not local.\n");
@@ -390,8 +390,8 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
-    if (projection_data.matrix_a.C == NULL) {
-      projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<float>;
+    if (projection_data.matrix_a->C == NULL) {
+      projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<float>;
     }
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
@@ -399,8 +399,8 @@ void ProjectionDriver::Cache_LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // Memory allocation happens inside the call.
-      data_real->LoadFromNimbus(projection_data.matrix_a.C);
-      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+      data_real->LoadFromNimbus(projection_data.matrix_a->C);
+      dbg(APP_LOG, "Finish reading MATRIX_C.\n");
     } else {
       dbg(APP_LOG, "MATRIX_C flag"
           "is set but data is not local.\n");
@@ -578,7 +578,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
     if (data_temp) {
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
-      data_real->SaveToNimbus(*projection_data.matrix_a.C);
+      data_real->SaveToNimbus(*projection_data.matrix_a->C);
       dbg(APP_LOG, "Finish writing MATRIX_C.\n");
     }
   }

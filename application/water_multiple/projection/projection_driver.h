@@ -89,13 +89,16 @@ class ProjectionDriver {
     projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
+    projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
     // Conjugate matrix will be deallocate by matrix_a.
-    projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<T>;
+    projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<T>;
     cache_pressure = NULL;
     cache_vector_p = NULL;
   }
 
-  virtual ~ProjectionDriver() {}
+  virtual ~ProjectionDriver() {
+    delete projection_data.matrix_a;
+  }
 
   class ProjectionData {
    public:
@@ -103,7 +106,7 @@ class ProjectionDriver {
     ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
     ARRAY<TV_INT> matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
-    SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
+    SPARSE_MATRIX_FLAT_NXN<T>* matrix_a;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
     // VECTOR_ND<T> x_interior;
