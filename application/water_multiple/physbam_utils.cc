@@ -123,9 +123,9 @@ void GetAppCacheObjects(
     GetWriteData(job, color_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            kCacheColors, array_reg_thin_outer,
+            read, array_reg_outer_1,
+            write, array_reg_outer_1,
+            kCacheColors, array_reg_outer_1,
             nimbus::cache::EXCLUSIVE);
     cache->color = dynamic_cast<CacheScalarArray<int>*>(cache_var);
     assert(cache->color != NULL);
@@ -138,9 +138,9 @@ void GetAppCacheObjects(
     GetWriteData(job, divergence_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            kCacheDivergence, array_reg_thin_outer,
+            read, array_reg_outer_1,
+            write, array_reg_outer_1,
+            kCacheDivergence, array_reg_outer_1,
             nimbus::cache::EXCLUSIVE);
     cache->divergence = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->divergence != NULL);

@@ -33,7 +33,6 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
@@ -53,7 +52,7 @@
 
 namespace PhysBAM {
 
-void ProjectionDriver::Initialize(int local_n, int interior_n) {
+void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
   partition.interior_indices.min_corner = 1;
   partition.interior_indices.max_corner = interior_n;
 
@@ -103,189 +102,8 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
   }
 }
 
-// Projection is broken to "smallest" code piece to allow future changes.
-void ProjectionDriver::LocalInitialize() {
-  if (projection_data.interior_n == 0) {
-    projection_data.local_residual = 0;
-    return;
-  }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
-  projection_data.vector_x.Resize(projection_data.local_n, false);
-  for (int i = 1; i <= projection_data.local_n; ++i) {
-    projection_data.vector_x(i) =
-        projection_data.pressure(projection_data.matrix_index_to_cell_index(i));
-  }
-  VECTOR_ND<T>& x = projection_data.vector_x;
-  VECTOR_ND<T>& temp = projection_data.temp;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  A.Times(x, temp);
-  b_interior -= temp_interior;
-  projection_data.local_residual = b_interior.Max_Abs();
-  const bool recompute_preconditioner = true;
-  if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      if (A.C != NULL) {
-        delete A.C;
-      }
-      A.C = A.Create_Submatrix(partition.interior_indices);
-      A.C->In_Place_Incomplete_Cholesky_Factorization(
-          pcg.modified_incomplete_cholesky,
-          pcg.modified_incomplete_cholesky_coefficient,
-          pcg.preconditioner_zero_tolerance,
-          pcg.preconditioner_zero_replacement);
-  }
-  projection_data.temp.Resize(projection_data.local_n, false);
-  projection_data.temp.Fill(0);
-  projection_data.p.Resize(projection_data.local_n, false);
-  projection_data.p.Fill(0);
-  projection_data.z_interior.Resize(projection_data.interior_n, false);
-  projection_data.z_interior.Fill(0);
-}
-
-void ProjectionDriver::GlobalInitialize() {
-  projection_data.global_n = Global_Sum(projection_data.interior_n);
-  projection_data.global_tolerance =
-      Global_Max(projection_data.local_tolerance);
-
-  projection_data.desired_iterations = projection_data.global_n;
-  if (pcg.maximum_iterations) {
-    projection_data.desired_iterations =
-        min(projection_data.desired_iterations, pcg.maximum_iterations);
-  }
-}
-
-// Step one starts.
-void ProjectionDriver::DoPrecondition() {
-  if (projection_data.interior_n == 0) {
-    return;
-  }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
-  VECTOR_ND<T>& z_interior = projection_data.z_interior;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  // Time consuming part.
-  A.C->Solve_Forward_Substitution(b_interior, temp_interior, true);
-  A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
-}
-
-void ProjectionDriver::CalculateLocalRho() {
-  if (projection_data.interior_n == 0) {
-    projection_data.local_rho = 0;
-    return;
-  }
-  VECTOR_ND<T>& z_interior = projection_data.z_interior;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  projection_data.local_rho =
-      VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior, b_interior);
-}
-// Step one finishes.
-
-void ProjectionDriver::ReduceRho() {
-  projection_data.rho_last = projection_data.rho;
-  projection_data.rho = Global_Sum(projection_data.local_rho);
-  if (projection_data.iteration == 1) {
-    projection_data.beta = 0;
-  } else {
-    projection_data.beta = (T)(projection_data.rho / projection_data.rho_last);
-  }
-}
-
-// Step two starts.
-void ProjectionDriver::UpdateSearchVector() {
-  if (projection_data.interior_n == 0) {
-    return;
-  }
-  int interior_n = partition.interior_indices.Size() + 1;
-  VECTOR_ND<T>& z_interior = projection_data.z_interior;
-  VECTOR_ND<T>& p_interior = projection_data.p_interior;
-  // Search vector p is updated here.
-  if (projection_data.iteration == 1) {
-    p_interior = z_interior;
-  } else {
-    for (int i = 1; i <= interior_n; i++)
-      p_interior(i) = z_interior(i) + projection_data.beta * p_interior(i);
-  }
-}
-// Step two finishes.
-
-// Step three starts.
-void ProjectionDriver::UpdateTempVector() {
-  if (projection_data.interior_n == 0) {
-    return;
-  }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
-  VECTOR_ND<T>& temp = projection_data.temp;
-  VECTOR_ND<T>& p = projection_data.p;
-  // Search vector p is used here.
-  // Time consuming part.
-  A.Times(p, temp);
-}
-
-void ProjectionDriver::CalculateLocalAlpha() {
-  if (projection_data.interior_n == 0) {
-    projection_data.local_dot_product_for_alpha = 0;
-    return;
-  }
-  VECTOR_ND<T>& p_interior = projection_data.p_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  // Search vector p is used here.
-  projection_data.local_dot_product_for_alpha =
-      VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior, temp_interior);
-}
-// Step three finishes.
-
-void ProjectionDriver::ReduceAlpha() {
-  projection_data.alpha =
-      (T) (projection_data.rho /
-           Global_Sum(projection_data.local_dot_product_for_alpha));
-}
-
-// Step four starts.
-void ProjectionDriver::UpdateOtherVectors() {
-  if (projection_data.interior_n == 0) {
-    return;
-  }
-  int interior_n = partition.interior_indices.Size()+1;
-  VECTOR_ND<T>& p_interior = projection_data.p_interior;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  for (int i = 1; i <= interior_n; i++) {
-    b_interior(i) -= projection_data.alpha * temp_interior(i);
-  }
-  for (int i = 1; i <= interior_n; i++) {
-    // Search vector p is used here.
-    // Pressure, as the result, is calculated here.
-    projection_data.pressure(projection_data.matrix_index_to_cell_index(i))
-        += projection_data.alpha * p_interior(i);
-  }
-}
-
-void ProjectionDriver::CalculateLocalResidual() {
-  if (projection_data.interior_n == 0) {
-    projection_data.local_residual = 0;
-    return;
-  }
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  projection_data.local_residual = b_interior.Max_Abs();
-}
-
-bool ProjectionDriver::DecideToSpawnNextIteration() {
-  if (projection_data.residual <= projection_data.global_tolerance) {
-    return false;
-  }
-  if (projection_data.iteration == projection_data.desired_iterations) {
-    return false;
-  }
-  return true;
-}
-// Step four finishes.
-
-void ProjectionDriver::LoadFromNimbus(
+void ProjectionDriver::Cache_LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
-  if (application::kUseCache) {
-    Cache_LoadFromNimbus(job, da);
-    return;
-  }
   nimbus::int_dimension_t array_shift[3] = {
     init_config.local_region.x() - 1,
     init_config.local_region.y() - 1,
@@ -650,43 +468,8 @@ void ProjectionDriver::LoadFromNimbus(
       log_timer.timer());
 }
 
-template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
-    const nimbus::Job* job, const nimbus::DataArray& da,
-    const char* variable_name, TYPE_NAME& value) {
-  Data* data_temp = application::GetTheOnlyData(
-      job, std::string(variable_name), da, application::READ_ACCESS);
-  if (data_temp) {
-    nimbus::ScalarData<TYPE_NAME>* data_real =
-        dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
-    value = data_real->scalar();
-    dbg(APP_LOG, "[Data Loading]%s: %0.9f\n", variable_name, (float)value);
-    dbg(APP_LOG, "Finish reading %s.\n", variable_name);
-  } else {
-    dbg(APP_LOG, "Flag is set but data is not local:%s.\n", variable_name);
-  }
-}
-
-void ProjectionDriver::ReadVectorData(
-    const nimbus::Job* job, const nimbus::DataArray& da,
-    const char* variable_name, VECTOR_ND<float>& value) {
-  Data* data_temp = application::GetTheOnlyData(
-      job, std::string(variable_name), da, application::READ_ACCESS);
-  if (data_temp) {
-    application::DataRawVectorNd* data_real =
-        dynamic_cast<application::DataRawVectorNd*>(data_temp);
-    data_real->LoadFromNimbus(&value);
-    dbg(APP_LOG, "Finish reading %s.\n", variable_name);
-  } else {
-    dbg(APP_LOG, "Flag is set but data is not local:%s.\n", variable_name);
-  }
-}
-
-void ProjectionDriver::SaveToNimbus(
+void ProjectionDriver::Cache_SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
-  if (application::kUseCache) {
-    Cache_SaveToNimbus(job, da);
-    return;
-  }
   nimbus::int_dimension_t array_shift[3] = {
       init_config.local_region.x() - 1,
       init_config.local_region.y() - 1,
@@ -852,33 +635,6 @@ void ProjectionDriver::SaveToNimbus(
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n",
       log_timer.timer());
-}
-
-template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(
-    const nimbus::Job* job, const nimbus::DataArray& da,
-    const char* variable_name, const TYPE_NAME& value) {
-  Data* data_temp = application::GetTheOnlyData(
-      job, std::string(variable_name), da, application::WRITE_ACCESS);
-  if (data_temp) {
-    nimbus::ScalarData<TYPE_NAME>* data_real =
-        dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
-    data_real->set_scalar(value);
-    dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", variable_name, (float)value);
-    dbg(APP_LOG, "Finish writing %s.\n", variable_name);
-  }
-}
-
-void ProjectionDriver::WriteVectorData(
-    const nimbus::Job* job, const nimbus::DataArray& da,
-    const char* variable_name, const VECTOR_ND<float>& value) {
-  Data* data_temp = application::GetTheOnlyData(
-      job, std::string(variable_name), da, application::WRITE_ACCESS);
-  if (data_temp) {
-    application::DataRawVectorNd* data_real =
-        dynamic_cast<application::DataRawVectorNd*>(data_temp);
-    data_real->SaveToNimbus(value);
-    dbg(APP_LOG, "Finish writing %s.\n", variable_name);
-  }
 }
 
 }  // namespace PhysBAM

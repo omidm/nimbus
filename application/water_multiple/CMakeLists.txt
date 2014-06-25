@@ -76,6 +76,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.cc
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
+    ${PROJECT_SOURCE_DIR}/projection/projection_driver_caching.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_local_initialize.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_global_initialize.cc

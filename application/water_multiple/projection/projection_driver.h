@@ -151,6 +151,7 @@ class ProjectionDriver {
   }
 
   void Initialize(int local_n, int interior_n);
+  void Cache_Initialize(int local_n, int interior_n);
   void LocalInitialize();
   void GlobalInitialize();
   void InitializeResidual();
@@ -166,7 +167,9 @@ class ProjectionDriver {
   void CalculateLocalResidual();
   bool DecideToSpawnNextIteration();
   void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void Cache_LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void Cache_SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   template<typename TYPE_NAME> void ReadScalarData(
       const nimbus::Job* job, const nimbus::DataArray& da,
       const char* variable_name, TYPE_NAME& value);
