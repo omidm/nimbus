@@ -133,39 +133,24 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   nimbus::CacheManager *cm = job->GetCacheManager();
   Log log_timer;
   log_timer.StartTimer();
-  if (application::kUseCache) {
-    // pressure.
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      nimbus::DataArray read, write;
-      const std::string pressure_string = std::string(APP_PRESSURE);
-      application::GetReadData(*job, pressure_string, da, &read);
-      application::GetWriteData(*job, pressure_string, da, &write);
-      nimbus::CacheVar* cache_var =
-          cm->GetAppVar(
-              read, array_reg_thin_outer,
-              write, array_reg_thin_outer,
-              application::kCachePressure, array_reg_thin_outer,
-              nimbus::cache::EXCLUSIVE);
-      cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
-      assert(cache_pressure != NULL);
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      // projection_data.pressure.Resize(grid.Domain_Indices(1));
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
-    }
-  } else {
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      projection_data.pressure.Resize(grid.Domain_Indices(1));
-      if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
-                                         application::READ_ACCESS)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
-        dbg(APP_LOG, "Finish reading PRESSURE.\n");
-      } else {
-        dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+  // pressure.
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    nimbus::DataArray read, write;
+    const std::string pressure_string = std::string(APP_PRESSURE);
+    application::GetReadData(*job, pressure_string, da, &read);
+    application::GetWriteData(*job, pressure_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_thin_outer,
+            write, array_reg_thin_outer,
+            application::kCachePressure, array_reg_thin_outer,
+            nimbus::cache::EXCLUSIVE);
+    cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
+    assert(cache_pressure != NULL);
+    typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
+    T_SCALAR_ARRAY* pressure = cache_pressure->data();
+    // projection_data.pressure.Resize(grid.Domain_Indices(1));
+    T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, pressure time:%f.\n",
       log_timer.timer());
@@ -184,13 +169,38 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             nimbus::cache::EXCLUSIVE);
     cache_matrix_a = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
     assert(cache_matrix_a != NULL);
+    assert(projection_data.matrix_a == NULL);
     projection_data.matrix_a = cache_matrix_a->data();
     assert(projection_data.matrix_a != NULL);
-    projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<T>;
+    projection_data.matrix_a->C = NULL;
   } else {
+    assert(projection_data.matrix_a == NULL);
     projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
+    projection_data.matrix_a->C = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, matrix_a time:%f.\n",
+      log_timer.timer());
+  // MATRIX_C. It cannot be splitted or merged.
+  log_timer.StartTimer();
+  if (data_config.GetFlag(DataConfig::MATRIX_C)) {
+    assert(projection_data.matrix_a != NULL);
+    assert(projection_data.matrix_a->C == NULL);
+    nimbus::DataArray read, write;
+    const std::string matrix_c_string = std::string(APP_MATRIX_C);
+    application::GetReadData(*job, matrix_c_string, da, &read);
+    application::GetWriteData(*job, matrix_c_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, init_config.local_region,
+            write, init_config.local_region,
+            application::kCacheSparseMatrixC, init_config.local_region,
+            nimbus::cache::EXCLUSIVE);
+    cache_matrix_c = dynamic_cast<application::CacheSparseMatrix*>(cache_var);
+    assert(cache_matrix_c != NULL);
+    projection_data.matrix_a->C = cache_matrix_c->data();
+    assert(projection_data.matrix_a->C != NULL);
+  }
+  dbg(APP_LOG, "[PROJECTION] LOAD, matrix_c time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
@@ -395,27 +405,6 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, scalar time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
-  // MATRIX_C. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::MATRIX_C)) {
-    if (projection_data.matrix_a->C == NULL) {
-      projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<float>;
-    }
-    Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
-    if (data_temp) {
-      application::DataSparseMatrix* data_real =
-          dynamic_cast<application::DataSparseMatrix*>(data_temp);
-      // Memory allocation happens inside the call.
-      data_real->LoadFromNimbus(projection_data.matrix_a->C);
-      dbg(APP_LOG, "Finish reading MATRIX_C.\n");
-    } else {
-      dbg(APP_LOG, "MATRIX_C flag"
-          "is set but data is not local.\n");
-    }
-  }
-  dbg(APP_LOG, "[PROJECTION] LOAD, matrix_c time:%f.\n",
-      log_timer.timer());
-  log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
     ReadVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
@@ -498,29 +487,37 @@ void ProjectionDriver::Cache_SaveToNimbus(
   nimbus::CacheManager *cm = job->GetCacheManager();
 
   Log log_timer;
-  log_timer.StartTimer();
 
-  if (application::kUseCache) {
-    if (cache_pressure) {
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
-      cm->ReleaseAccess(cache_pressure);
-      cache_pressure = NULL;
-    }
-  } else {
-    const std::string pressure_string = std::string(APP_PRESSURE);
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      if (application::GetTranslatorData(job, pressure_string, da, &pdv,
-                                         application::WRITE_ACCESS)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_central, array_shift, &pdv, &projection_data.pressure);
-        dbg(APP_LOG, "Finish writing pressure.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+  log_timer.StartTimer();
+  if (cache_pressure) {
+    typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
+    T_SCALAR_ARRAY* pressure = cache_pressure->data();
+    T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+    cm->ReleaseAccess(cache_pressure);
+    cache_pressure = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n",
+      log_timer.timer());
+
+  log_timer.StartTimer();
+  // MATRIX_C. It cannot be splitted or merged.
+  if (cache_matrix_c) {
+    cm->ReleaseAccess(cache_matrix_c);
+    cache_matrix_c = NULL;
+    projection_data.matrix_a->C = NULL;
+  } else {
+    assert(projection_data.matrix_a->C == NULL);
+  }
+  // MATRIX_A has to be deleted after MATRIX_C.
+  if (cache_matrix_a) {
+    cm->ReleaseAccess(cache_matrix_a);
+    cache_matrix_a = NULL;
+    projection_data.matrix_a = NULL;
+  } else {
+    delete projection_data.matrix_a;
+    projection_data.matrix_a = NULL;
+  }
+  dbg(APP_LOG, "[PROJECTION] SAVE, matrix_c time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
@@ -576,28 +573,6 @@ void ProjectionDriver::Cache_SaveToNimbus(
     WriteScalarData<float>(job, da, APP_PROJECTION_BETA, projection_data.beta);
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, scalar time:%f.\n",
-      log_timer.timer());
-  log_timer.StartTimer();
-  // MATRIX_C. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::MATRIX_C)) {
-    Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_MATRIX_C), da, application::WRITE_ACCESS);
-    if (data_temp) {
-      application::DataSparseMatrix* data_real =
-          dynamic_cast<application::DataSparseMatrix*>(data_temp);
-      data_real->SaveToNimbus(*projection_data.matrix_a->C);
-      dbg(APP_LOG, "Finish writing MATRIX_C.\n");
-    }
-  }
-  if (cache_matrix_a) {
-    cm->ReleaseAccess(cache_matrix_a);
-    cache_matrix_a = NULL;
-    projection_data.matrix_a = NULL;
-  } else {
-    delete projection_data.matrix_a;
-    projection_data.matrix_a = NULL;
-  }
-  dbg(APP_LOG, "[PROJECTION] SAVE, matrix_c time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
