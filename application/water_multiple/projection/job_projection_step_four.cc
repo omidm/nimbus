@@ -121,6 +121,8 @@ void JobProjectionStepFour::Execute(
       log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_FOUR job\n");
+  dbg(APP_LOG, "[CONTROL_FLOW] Iteration = %d, Residual = %f",
+      iteration, projection_driver.projection_data.residual);
 }
 
 }  // namespace application

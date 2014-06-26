@@ -216,6 +216,12 @@ void ProjectionDriver::UpdateSearchVector() {
     for (int i = 1; i <= interior_n; i++)
       p_interior(i) = z_interior(i) + projection_data.beta * p_interior(i);
   }
+  for (int i = 1;
+       i <= projection_data.interior_n; ++i) {
+    projection_data.grid_format_vector_p(
+        (*projection_data.matrix_index_to_cell_index)(i))
+        = projection_data.p(i);
+  }
 }
 // Step two finishes.
 
@@ -231,6 +237,12 @@ void ProjectionDriver::UpdateTempVector() {
   VECTOR_ND<T>& p = projection_data.p;
   // Search vector p is used here.
   // Time consuming part.
+  for (int i = projection_data.interior_n + 1;
+       i <= projection_data.local_n; ++i) {
+    projection_data.p(i) =
+        projection_data.grid_format_vector_p(
+            (*projection_data.matrix_index_to_cell_index)(i));
+  }
   A.Times(p, temp);
 }
 
@@ -283,6 +295,7 @@ void ProjectionDriver::CalculateLocalResidual() {
 }
 
 bool ProjectionDriver::DecideToSpawnNextIteration() {
+  dbg(APP_LOG, "[CONTROL_FLOW]");
   if (projection_data.residual <= projection_data.global_tolerance) {
     return false;
   }
