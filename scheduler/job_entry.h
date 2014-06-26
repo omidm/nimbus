@@ -69,29 +69,7 @@ class JobEntry {
   public:
     typedef std::map<logical_data_id_t, physical_data_id_t> PhysicalTable;
 
-    // typedef std::map<logical_data_id_t, data_version_t> VersionTable;
-    // typedef VersionTable::iterator VTIter;
-    // typedef VersionTable::const_iterator ConstVTIter;
-
     JobEntry();
-    JobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const IDSet<logical_data_id_t>& read_set,
-        const IDSet<logical_data_id_t>& write_set,
-        const IDSet<job_id_t>& before_set,
-        const IDSet<job_id_t>& after_set,
-        const job_id_t& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
-
-    JobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const job_id_t& parent_job_id,
-        const bool& sterile,
-        const bool& versioned,
-        const bool& assigned);
 
     explicit JobEntry(const job_id_t& job_id);
 
@@ -127,20 +105,6 @@ class JobEntry {
     const IDSet<job_id_t>* before_set_p() const;
     IDSet<job_id_t>* before_set_p();
 
-    // VersionTable version_table_in();
-    // VersionTable version_table_out();
-    // boost::shared_ptr<nimbus::VersionTable> vtable_in();
-    // boost::shared_ptr<nimbus::VersionTable> vtable_out();
-    // boost::shared_ptr<VersionMap> vmap_read_in();
-    // boost::shared_ptr<VersionMap> vmap_write_out();
-    // boost::shared_ptr<AncestorChain> ancestor_chain();
-    // boost::shared_ptr<AncestorChain> ancestor_chain_to_pass();
-    // boost::shared_ptr<LogicalDataLineage> logical_data_lineage();
-    // const VersionTable* version_table_in_p();
-    // const VersionTable* version_table_out_p();
-    // data_version_t version_table_in_query(logical_data_id_t l_id);
-    // data_version_t version_table_out_query(logical_data_id_t l_id);
-
     void set_job_type(JobType job_type);
     void set_job_name(std::string job_name);
     void set_job_id(job_id_t job_id);
@@ -169,19 +133,6 @@ class JobEntry {
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
 
-    // void set_version_table_in(VersionTable version_table);
-    // void set_version_table_out(VersionTable version_table);
-    // void set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in);
-    // void set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out);
-    // void set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in);
-    // void set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out);
-    // void set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain);
-    // void set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass);
-    // void set_logical_data_lineage(boost::shared_ptr<LogicalDataLineage> logical_data_lineage);
-    // void set_version_table_in_entry(logical_data_id_t l_id, data_version_t version);
-    // void set_version_table_out_entry(logical_data_id_t l_id, data_version_t version);
-    // bool build_version_table_out_and_check();
-
   protected:
     JobType job_type_;
     std::string job_name_;
@@ -206,23 +157,11 @@ class JobEntry {
     bool done_;
     bool future_;
 
-    // VersionTable version_table_in_;
-    // VersionTable version_table_out_;
-    // boost::shared_ptr<nimbus::VersionTable> vtable_in_;
-    // boost::shared_ptr<nimbus::VersionTable> vtable_out_;
-    // boost::shared_ptr<VersionMap> vmap_read_in_;
-    // boost::shared_ptr<VersionMap> vmap_write_out_;
-    // boost::shared_ptr<AncestorChain> ancestor_chain_;
-    // boost::shared_ptr<AncestorChain> ancestor_chain_to_pass_;
-    // boost::shared_ptr<LogicalDataLineage> logical_data_lineage_;
-    // boost::mutex version_mutex_;
-
   private:
     void Initialize();
 };
 
 typedef std::map<job_id_t, JobEntry*> JobEntryTable;
-
 
 
 class ComputeJobEntry : public JobEntry {
