@@ -80,7 +80,8 @@ void JobProjectionStepThree::Execute(
   DataConfig data_config;
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
-  data_config.SetFlag(DataConfig::VECTOR_P);
+  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
   data_config.SetFlag(DataConfig::MATRIX_A);
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);

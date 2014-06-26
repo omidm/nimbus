@@ -55,7 +55,7 @@ extern CacheScalarArray<bool> kCachePsiD;
 
 // Varibales for projection.
 extern CacheScalarArray<T> kCachePressure;
-extern CacheScalarArray<T> kCacheVectorP;
+extern CacheScalarArray<T> kCacheVectorPGridFormat;
 extern CacheScalarArray<int> kCacheColors;
 extern CacheScalarArray<T> kCacheDivergence;
 

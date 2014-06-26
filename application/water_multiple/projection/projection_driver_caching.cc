@@ -65,6 +65,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.temp.Resize(local_n, false);
   }
+  /*
   if (projection_data.p.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_P)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
@@ -79,6 +80,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
               (*projection_data.matrix_index_to_cell_index)(i));
     }
   }
+  */
   if (projection_data.z_interior.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_Z)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
@@ -92,7 +94,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
         projection_data.temp,
         partition.interior_indices);
   }
-  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
     projection_data.p_interior.Set_Subvector_View(
         projection_data.p,
@@ -406,17 +408,17 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_z time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  // VECTOR_P. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+  // VECTOR_P_GRID_FORMAT.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
     nimbus::DataArray read, write;
-    const std::string vector_p_string = std::string(APP_VECTOR_P);
+    const std::string vector_p_string = std::string(APP_VECTOR_P_GRID_FORMAT);
     application::GetReadData(*job, vector_p_string, da, &read);
     application::GetWriteData(*job, vector_p_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
             read, array_reg_thin_outer,
             write, array_reg_central,
-            application::kCacheVectorP, array_reg_thin_outer,
+            application::kCacheVectorPGridFormat, array_reg_thin_outer,
             nimbus::cache::EXCLUSIVE);
     cache_vector_p = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
     assert(cache_vector_p != NULL);
@@ -425,7 +427,15 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
                                     projection_data.grid_format_vector_p);
   }
-  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p time:%f.\n", log_timer.timer());
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_grid_format time:%f.\n",
+      log_timer.timer());
+
+  log_timer.StartTimer();
+  // VECTOR_TEMP. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
+    ReadVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
+  }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_linear_format time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
@@ -553,22 +563,32 @@ void ProjectionDriver::Cache_SaveToNimbus(
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_z time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  // VECTOR_P.
+  // VECTOR_P_GRID_FORMAT.
   if (cache_vector_p) {
     typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
+    /*
     // TODO(addcache) to be replaced.
     for (int i = 1; i <= projection_data.local_n; ++i) {
       projection_data.grid_format_vector_p(
           (*projection_data.matrix_index_to_cell_index)(i)) =
           projection_data.p(i);
     }
+    */
     T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
                                     projection_data.grid_format_vector_p);
     cm->ReleaseAccess(cache_vector_p);
     cache_vector_p = NULL;
   }
-  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p time:%f.\n", log_timer.timer());
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_grid_format time:%f.\n", log_timer.timer());
+
+  log_timer.StartTimer();
+  // VECTOR_TEMP. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
+    WriteVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
+  }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_linear_format time:%f.\n",
+      log_timer.timer());
 
   log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.

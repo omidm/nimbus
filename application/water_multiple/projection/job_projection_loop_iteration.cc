@@ -247,12 +247,16 @@ void JobProjectionLoopIteration::Execute(
       LoadLogicalIdsInSet(
           this, &read, kRegW0Central[0], APP_PROJECTION_BETA, NULL);
       LoadLogicalIdsInSet(
-          this, &read, kRegY2W0Central[index], APP_VECTOR_Z, APP_VECTOR_P,
+          this, &read, kRegY2W0Central[index], APP_VECTOR_Z,
+          APP_VECTOR_P_LINEAR_FORMAT,
+          APP_VECTOR_P_GRID_FORMAT,
           APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           NULL);
       write.clear();
-      LoadLogicalIdsInSet(
-          this, &write, kRegY2W1CentralWGB[index], APP_VECTOR_P, NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+                          APP_VECTOR_P_LINEAR_FORMAT,
+                          APP_VECTOR_P_GRID_FORMAT,
+                          NULL);
       job_query.StageJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
                          read, write, default_part_params[index],
                          true);
@@ -262,14 +266,18 @@ void JobProjectionLoopIteration::Execute(
     // STEP_THREE
     for (int index = 0; index < step_three_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(
-          this, &read, kRegY2W1Outer[index], APP_VECTOR_P, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+                          APP_VECTOR_P_GRID_FORMAT,
+                          NULL);
       LoadLogicalIdsInSet(
           this, &read, kRegY2W0Central[index], APP_MATRIX_A, APP_INDEX_M2C,
-          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, NULL);
+          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+          APP_VECTOR_P_LINEAR_FORMAT,
+          NULL);
       write.clear();
       LoadLogicalIdsInSet(
-          this, &write, kRegY2W0Central[index], APP_VECTOR_TEMP,
+          this, &write, kRegY2W0Central[index],
+          APP_VECTOR_P_LINEAR_FORMAT, APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
       job_query.StageJob(PROJECTION_STEP_THREE, step_three_job_ids[index],
                          read, write, default_part_params[index],
@@ -298,7 +306,7 @@ void JobProjectionLoopIteration::Execute(
       read.clear();
       LoadLogicalIdsInSet(
           this, &read, kRegY2W0Central[index], APP_PROJECTION_LOCAL_N,
-          APP_PROJECTION_INTERIOR_N, APP_INDEX_M2C, APP_VECTOR_P,
+          APP_PROJECTION_INTERIOR_N, APP_INDEX_M2C, APP_VECTOR_P_LINEAR_FORMAT,
           APP_VECTOR_TEMP, APP_VECTOR_B, APP_PRESSURE, APP_INDEX_M2C, NULL);
       LoadLogicalIdsInSet(
           this, &read, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);

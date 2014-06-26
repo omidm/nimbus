@@ -82,7 +82,8 @@ void JobProjectionStepTwo::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_BETA);
   data_config.SetFlag(DataConfig::VECTOR_Z);
-  data_config.SetFlag(DataConfig::VECTOR_P);
+  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
   data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
