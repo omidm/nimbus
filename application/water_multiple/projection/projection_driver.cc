@@ -33,7 +33,7 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
+ * Includes all the running code in projeciton loop iteration.
  * Author: Hang Qu<quhang@stanford.edu>
  */
 

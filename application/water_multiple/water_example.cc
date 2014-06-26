@@ -854,14 +854,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
 
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-      // TODO(quhang) swap rather than add.
+      // TODO(quhang) swap rather than copy.
       assert(cache_matrix_a);
       *(cache_matrix_a->data()) = laplace_solver_wrapper.A_array(1);
       cm->ReleaseAccess(cache_matrix_a);
       cache_matrix_a = NULL;
     }
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      // TODO(quhang) swap rather than add.
+      // TODO(quhang) swap rather than copy.
       assert(cache_index_m2c);
       *(cache_index_m2c->data()) =
           laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
