@@ -78,7 +78,7 @@ class JobManager {
         const Parameter& params,
         const bool& sterile);
 
-    bool AddCopyJobEntry();
+    bool AddExplicitCopyJobEntry();
 
     bool AddKernelJobEntry();
 

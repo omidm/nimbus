@@ -70,11 +70,15 @@ void Scheduler::Run() {
   Log::log_PrintLine("Running the Scheduler");
 
   SetupWorkerInterface();
+
   // SetupUserInterface();
+
   // First data manager should be instantiated then job manager, because of
   // ldo_map pointer that job manager needs to get from data manager.
   SetupDataManager();
+
   SetupJobManager();
+
   id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
@@ -164,11 +168,15 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
-  job_manager_->AddJobEntry(JOB_COMP,
-        cm->job_name(), cm->job_id().elem(),
-        cm->read_set(), cm->write_set(),
-        cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params(),
+  job_manager_->AddComputeJobEntry(
+        cm->job_name(),
+        cm->job_id().elem(),
+        cm->read_set(),
+        cm->write_set(),
+        cm->before_set(),
+        cm->after_set(),
+        cm->parent_job_id().elem(),
+        cm->params(),
         cm->sterile());
 }
 
@@ -180,11 +188,7 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
   write_set.insert(cm->to_logical_id().elem());
 
   // TODO(omid): we need to add support for copy jobs.
-  job_manager_->AddJobEntry(JOB_COPY,
-        job_name, cm->job_id().elem(),
-        read_set, write_set,
-        cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params(), true);
+  job_manager_->AddExplicitCopyJobEntry();
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
@@ -264,8 +268,7 @@ void Scheduler::TerminationProcedure() {
 void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
-  job_manager_->AddJobEntry(JOB_COMP, NIMBUS_MAIN_JOB_NAME, j[0],
-      NIMBUS_KERNEL_JOB_ID, false, false, false);
+  job_manager_->AddMainJobEntry(j[0]);
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
@@ -361,7 +364,7 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
+  job_manager_->AddCreateDataJobEntry(j[0]);
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
@@ -396,7 +399,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Receive part
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
+  job_manager_->AddRemoteCopyReceiveJobEntry(receive_id);
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
@@ -419,7 +422,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Send Part.
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
+  job_manager_->AddRemoteCopySendJobEntry(send_id);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -455,7 +458,7 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
+  job_manager_->AddLocalCopyJobEntry(j[0]);
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
@@ -722,7 +725,7 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
-  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
+  job_manager_->AddCreateDataJobEntry(j[0]);
   return true;
 }
 
