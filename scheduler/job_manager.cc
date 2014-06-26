@@ -218,9 +218,167 @@ bool JobManager::AddJobEntry(const JobType& job_type,
   return true;
 }
 
-bool JobManager::AddFutureJobEntry(
-    const job_id_t& job_id) {
-  JobEntry* job = new JobEntry(job_id);
+
+
+
+bool JobManager::AddComputeJobEntry(
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set,
+    const IDSet<logical_data_id_t>& write_set,
+    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& after_set,
+    const job_id_t& parent_job_id,
+    const Parameter& params,
+    const bool& sterile) {
+  JobEntry* job = new ComputeJobEntry(job_name,
+                                      job_id,
+                                      read_set,
+                                      write_set,
+                                      before_set,
+                                      after_set,
+                                      parent_job_id,
+                                      params,
+                                      sterile);
+
+  if (!job_graph_.AddVertex(job_id, job)) {
+    dbg(DBG_SCHED, "Filling possible future job (id: %lu) in job manager.\n", job_id);
+    delete job;
+    GetJobEntry(job_id, job);
+    if (job->future()) {
+      job->set_job_type(JOB_COMP);
+      job->set_job_name(job_name);
+      job->set_read_set(read_set);
+      job->set_write_set(write_set);
+      job->set_before_set(before_set);
+      job->set_after_set(after_set);
+      job->set_parent_job_id(parent_job_id);
+      job->set_params(params);
+      job->set_sterile(sterile);
+      job->set_future(false);
+      dbg(DBG_SCHED, "Filled the information for future job (id: %lu).\n", job_id);
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+      exit(-1);
+      return false;
+    }
+  }
+
+  if (!AddJobEntryIncomingEdges(job)) {
+    job_graph_.RemoveVertex(job_id);
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  if (!sterile) {
+    live_parents_.insert(job_id);
+  }
+
+  version_manager_.AddJobEntry(job);
+
+  return true;
+}
+
+bool JobManager::AddCopyJobEntry() {
+  dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
+  exit(-1);
+  return false;
+}
+
+bool JobManager::AddKernelJobEntry() {
+  JobEntry* job = new KernelJobEntry();
+
+  if (!job_graph_.AddVertex(NIMBUS_KERNEL_JOB_ID, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add kernel job in job manager.\n");
+    exit(-1);
+    return false;
+  }
+
+  return true;
+}
+
+bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
+  JobEntry* job = new MainJobEntry(job_id);
+
+  if (!job_graph_.AddVertex(job_id, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  if (!AddJobEntryIncomingEdges(job)) {
+    job_graph_.RemoveVertex(job_id);
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  live_parents_.insert(job_id);
+
+  version_manager_.AddJobEntry(job);
+
+  return true;
+}
+
+bool JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
+  JobEntry* job = new CreateDataJobEntry(job_id);
+
+  if (!job_graph_.AddVertex(job_id, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  return true;
+}
+
+bool JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
+  JobEntry* job = new LocalCopyJobEntry(job_id);
+
+  if (!job_graph_.AddVertex(job_id, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  return true;
+}
+
+bool JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
+  JobEntry* job = new RemoteCopySendJobEntry(job_id);
+
+  if (!job_graph_.AddVertex(job_id, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  return true;
+}
+
+bool JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
+  JobEntry* job = new RemoteCopyReceiveJobEntry(job_id);
+
+  if (!job_graph_.AddVertex(job_id, job)) {
+    delete job;
+    dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
+    exit(-1);
+    return false;
+  }
+
+  return true;
+}
+
+bool JobManager::AddFutureJobEntry(const job_id_t& job_id) {
+  JobEntry* job = new FutureJobEntry(job_id);
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
@@ -230,6 +388,43 @@ bool JobManager::AddFutureJobEntry(
   return true;
 }
 
+bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
+  Edge<JobEntry, job_id_t> *edge;
+  JobEntry *j;
+
+  if (job_graph_.AddEdge(job->parent_job_id(), job->job_id(), &edge)) {
+    j = edge->start_vertex()->entry();
+    if (j->versioned()) {
+      pass_version_[job->job_id()].push_back(j);
+    } else {
+      dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
+          job->parent_job_id(), job->job_id());
+      return false;
+    }
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
+        job->parent_job_id(), job->job_id());
+    return false;
+  }
+
+  IDSet<job_id_t>::ConstIter it;
+  for (it = job->before_set_p()->begin(); it != job->before_set_p()->end(); ++it) {
+    if (job_graph_.AddEdge(*it, job->job_id(), &edge)) {
+      j = edge->start_vertex()->entry();
+      if (j->versioned()) {
+        pass_version_[job->job_id()].push_back(j);
+      }
+    } else {
+      dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
+      AddFutureJobEntry(*it);
+      if (!job_graph_.AddEdge(*it, job->job_id())) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
   Vertex<JobEntry, job_id_t>* vertex;
@@ -724,26 +919,25 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 
   /*
    * Obsolete slow approach
-   *
-  size_t num = 0;
-  list->clear();
-  JobGraph::Iter iter = job_graph_.Begin();
-  for (; iter != job_graph_.End(); ++iter) {
-    JobEntry* job = iter->second;
-    if (job->versioned() && !job->assigned()) {
-      JobEntry::VersionTable version_table_in = job->version_table_in();
-      if (version_table_in.count(vld.first) != 0) {
-        if ((version_table_in[vld.first] == vld.second)) {
-            // && (job->union_set().contains(vld.first))) {
-            // Since job could be productive it does not need to read or writ it.
-          list->push_back(job);
-          ++num;
-        }
-      }
-    }
-  }
-  return num;
-  */
+   */
+//   size_t num = 0;
+//   list->clear();
+//   JobGraph::Iter iter = job_graph_.Begin();
+//   for (; iter != job_graph_.End(); ++iter) {
+//     JobEntry* job = iter->second;
+//     if (job->versioned() && !job->assigned()) {
+//       JobEntry::VersionTable version_table_in = job->version_table_in();
+//       if (version_table_in.count(vld.first) != 0) {
+//         if ((version_table_in[vld.first] == vld.second)) {
+//             // && (job->union_set().contains(vld.first))) {
+//             // Since job could be productive it does not need to read or writ it.
+//           list->push_back(job);
+//           ++num;
+//         }
+//       }
+//     }
+//   }
+//   return num;
 }
 
 bool JobManager::AllJobsAreDone() {

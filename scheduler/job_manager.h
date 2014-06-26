@@ -86,7 +86,26 @@ class JobManager {
         const bool& versioned,
         const bool& assigned);
 
+    bool AddComputeJobEntry(
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const IDSet<logical_data_id_t>& read_set,
+        const IDSet<logical_data_id_t>& write_set,
+        const IDSet<job_id_t>& before_set,
+        const IDSet<job_id_t>& after_set,
+        const job_id_t& parent_job_id,
+        const Parameter& params,
+        const bool& sterile);
+    bool AddCopyJobEntry();
+    bool AddKernelJobEntry();
+    bool AddMainJobEntry(const job_id_t& job_id);
+    bool AddCreateDataJobEntry(const job_id_t& job_id);
+    bool AddLocalCopyJobEntry(const job_id_t& job_id);
+    bool AddRemoteCopySendJobEntry(const job_id_t& job_id);
+    bool AddRemoteCopyReceiveJobEntry(const job_id_t& job_id);
     bool AddFutureJobEntry(const job_id_t& job_id);
+
+    bool AddJobEntryIncomingEdges(JobEntry *job);
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
