@@ -225,6 +225,22 @@ typedef std::map<job_id_t, JobEntry*> JobEntryTable;
 
 
 
+class ComputeJobEntry : public JobEntry {
+  public:
+    ComputeJobEntry(
+        const std::string& job_name,
+        const job_id_t& job_id,
+        const IDSet<logical_data_id_t>& read_set,
+        const IDSet<logical_data_id_t>& write_set,
+        const IDSet<job_id_t>& before_set,
+        const IDSet<job_id_t>& after_set,
+        const job_id_t& parent_job_id,
+        const Parameter& params,
+        const bool& sterile);
+    ~ComputeJobEntry();
+};
+
+
 class KernelJobEntry : public JobEntry {
   public:
     KernelJobEntry();
@@ -236,6 +252,13 @@ class MainJobEntry : public JobEntry {
   public:
     explicit MainJobEntry(const job_id_t& job_id);
     ~MainJobEntry();
+};
+
+
+class FutureJobEntry : public JobEntry {
+  public:
+    explicit FutureJobEntry(const job_id_t& job_id);
+    ~FutureJobEntry();
 };
 
 

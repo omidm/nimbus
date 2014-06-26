@@ -94,7 +94,8 @@ namespace nimbus {
     JOB_COMP,
     JOB_COPY,
     JOB_CREATE,
-    JOB_SCHED
+    JOB_SCHED,
+    JOB_FUTURE
   };
 
 

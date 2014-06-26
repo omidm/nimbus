@@ -490,10 +490,40 @@ bool JobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
 // }
 
 
+
+ComputeJobEntry::ComputeJobEntry(
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set,
+    const IDSet<logical_data_id_t>& write_set,
+    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& after_set,
+    const job_id_t& parent_job_id,
+    const Parameter& params,
+    const bool& sterile) {
+    job_type_ = JOB_COMP;
+    job_name_ = job_name;
+    job_id_ = job_id;
+    read_set_ = read_set;
+    write_set_ = write_set;
+    before_set_ = before_set;
+    after_set_ = after_set;
+    parent_job_id_ = parent_job_id;
+    params_ = params;
+    sterile_ = sterile;
+
+    union_set_.insert(read_set_);
+    union_set_.insert(write_set_);
+}
+
+ComputeJobEntry::~ComputeJobEntry() {
+}
+
+
 KernelJobEntry::KernelJobEntry() {
   job_type_ = JOB_SCHED;
   job_name_ = NIMBUS_KERNEL_JOB_NAME;
-  job_id_ = NIMBUS_KERNEL_JOB_ID,
+  job_id_ = NIMBUS_KERNEL_JOB_ID;
   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
   sterile_ = true;
   versioned_ = true;
@@ -507,21 +537,28 @@ KernelJobEntry::~KernelJobEntry() {
 MainJobEntry::MainJobEntry(const job_id_t& job_id) {
   job_type_ = JOB_COMP;
   job_name_ = NIMBUS_MAIN_JOB_NAME;
-  job_id_ = job_id,
+  job_id_ = job_id;
   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
-  sterile_ = false;
-  versioned_ = false;
-  assigned_ = false;
 }
 
 MainJobEntry::~MainJobEntry() {
 }
 
 
+FutureJobEntry::FutureJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_FUTURE;
+  job_id_ = job_id;
+  future_ = true;
+}
+
+FutureJobEntry::~FutureJobEntry() {
+}
+
+
 LocalCopyJobEntry::LocalCopyJobEntry(const job_id_t& job_id) {
   job_type_ = JOB_COPY;
   job_name_ = NIMBUS_LOCAL_COPY_JOB_NAME;
-  job_id_ = job_id,
+  job_id_ = job_id;
   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
   sterile_ = true;
   versioned_ = true;
@@ -535,7 +572,7 @@ LocalCopyJobEntry::~LocalCopyJobEntry() {
 CreateDataJobEntry::CreateDataJobEntry(const job_id_t& job_id) {
   job_type_ = JOB_CREATE;
   job_name_ = NIMBUS_CREATE_DATA_JOB_NAME;
-  job_id_ = job_id,
+  job_id_ = job_id;
   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
   sterile_ = true;
   versioned_ = true;
@@ -549,7 +586,7 @@ CreateDataJobEntry::~CreateDataJobEntry() {
 RemoteCopyReceiveJobEntry::RemoteCopyReceiveJobEntry(const job_id_t& job_id) {
   job_type_ = JOB_COPY;
   job_name_ = NIMBUS_REMOTE_COPY_RECEIVE_JOB_NAME;
-  job_id_ = job_id,
+  job_id_ = job_id;
   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
   sterile_ = true;
   versioned_ = true;
@@ -563,7 +600,7 @@ RemoteCopyReceiveJobEntry::~RemoteCopyReceiveJobEntry() {
 RemoteCopySendJobEntry::RemoteCopySendJobEntry(const job_id_t& job_id) {
   job_type_ = JOB_COPY;
   job_name_ = NIMBUS_REMOTE_COPY_SEND_JOB_NAME;
-  job_id_ = job_id,
+  job_id_ = job_id;
   parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
   sterile_ = true;
   versioned_ = true;
