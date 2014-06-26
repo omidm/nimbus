@@ -67,25 +67,6 @@ class JobManager {
     explicit JobManager();
     virtual ~JobManager();
 
-    bool AddJobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const IDSet<logical_data_id_t>& read_set,
-        const IDSet<logical_data_id_t>& write_set,
-        const IDSet<job_id_t>& before_set,
-        const IDSet<job_id_t>& after_set,
-        const job_id_t& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
-
-    bool AddJobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const job_id_t& parent_job_id,
-        const bool& sterile,
-        const bool& versioned,
-        const bool& assigned);
-
     bool AddComputeJobEntry(
         const std::string& job_name,
         const job_id_t& job_id,
@@ -96,13 +77,21 @@ class JobManager {
         const job_id_t& parent_job_id,
         const Parameter& params,
         const bool& sterile);
+
     bool AddCopyJobEntry();
+
     bool AddKernelJobEntry();
+
     bool AddMainJobEntry(const job_id_t& job_id);
+
     bool AddCreateDataJobEntry(const job_id_t& job_id);
+
     bool AddLocalCopyJobEntry(const job_id_t& job_id);
+
     bool AddRemoteCopySendJobEntry(const job_id_t& job_id);
+
     bool AddRemoteCopyReceiveJobEntry(const job_id_t& job_id);
+
     bool AddFutureJobEntry(const job_id_t& job_id);
 
     bool AddJobEntryIncomingEdges(JobEntry *job);
@@ -140,6 +129,15 @@ class JobManager {
   private:
     Graph<JobEntry, job_id_t> job_graph_;
     VersionManager version_manager_;
+    LdlMap ldl_map_;
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+
+    bool parent_removed_;
+    JobEntryMap jobs_done_;
+    IDSet<job_id_t> live_parents_;
+
+    JobEntryMap jobs_need_version_;
+    std::map<job_id_t, JobEntryList> pass_version_;
 
     Log log_version_;
     Log log_merge_;
@@ -148,38 +146,29 @@ class JobManager {
     Log log_nonsterile_;
     size_t lookup_count_;
 
-    // VersionOperator version_operator_;
-    // bool processed_new_job_done_;
-    // bool ResolveJobDataVersions(JobEntry* job);
-    // size_t ResolveVersions();
 
-    LdlMap ldl_map_;
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+    size_t ResolveDataVersions();
 
-    JobEntryMap jobs_need_version_;
+    void PassDataVersionToJob(JobEntry *job,
+                              const JobEntryList& from_jobs);
+
+    bool LookUpVersion(JobEntry *job,
+                       logical_data_id_t ldid,
+                       data_version_t *version);
+
+    bool JobVersionIsComplete(JobEntry *job);
+
+
+
+
+
     JobEntryMap jobs_ready_to_assign_;
-    JobEntryMap jobs_done_;
-    std::map<job_id_t, JobEntryList> pass_version_;
     std::map<job_id_t, JobEntryList> explore_to_assign_;
-
-    IDSet<job_id_t> live_parents_;
-    bool parent_removed_;
 
     boost::mutex pass_version_mutex_;
     boost::condition_variable pass_version_put_cond_;
     boost::condition_variable pass_version_draw_cond_;
     size_t pass_version_in_progress_;
-
-    size_t ResolveDataVersions();
-
-    void PassDataVersionToJob(
-        JobEntry *job, const JobEntryList& from_jobs);
-
-    bool LookUpVersion(JobEntry *job,
-        logical_data_id_t ldid, data_version_t *version);
-
-    bool JobVersionIsComplete(JobEntry *job);
-
     void WaitToPassAllVersions();
 
     size_t ExploreToAssignJobs();
