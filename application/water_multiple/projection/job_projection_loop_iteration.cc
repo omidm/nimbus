@@ -253,7 +253,7 @@ void JobProjectionLoopIteration::Execute(
           APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                           APP_VECTOR_P_LINEAR_FORMAT,
                           APP_VECTOR_P_GRID_FORMAT,
                           NULL);

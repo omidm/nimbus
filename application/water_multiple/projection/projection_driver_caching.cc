@@ -65,6 +65,11 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.temp.Resize(local_n, false);
   }
+  if (projection_data.p.Size() == 0 &&
+      data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
+    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+    projection_data.p.Resize(local_n, false);
+  }
   /*
   if (projection_data.p.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_P)) {

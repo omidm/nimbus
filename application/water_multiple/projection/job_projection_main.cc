@@ -211,7 +211,7 @@ void JobProjectionMain::SpawnJobs(
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_INDEX_M2C,
                         APP_VECTOR_B,
-                        APP_VECTOR_P_GRID_FORMAT, APP_VECTOR_P_LINEAR_FORMAT,
+                        APP_VECTOR_P_GRID_FORMAT,
                         APP_MATRIX_A, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PRESSURE,
                         NULL);
