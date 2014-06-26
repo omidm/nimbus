@@ -582,6 +582,9 @@ void ProjectionDriver::LoadFromNimbus(
   log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
+    if (projection_data.matrix_a == NULL) {
+      projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<float>;
+    }
     if (projection_data.matrix_a->C == NULL) {
       projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<float>;
     }
@@ -592,7 +595,7 @@ void ProjectionDriver::LoadFromNimbus(
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // Memory allocation happens inside the call.
       data_real->LoadFromNimbus(projection_data.matrix_a->C);
-      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+      dbg(APP_LOG, "Finish reading MATRIX_C.\n");
     } else {
       dbg(APP_LOG, "MATRIX_C flag"
           "is set but data is not local.\n");
