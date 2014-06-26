@@ -44,7 +44,7 @@
 
 namespace nimbus {
 
-#define WORKER_BUFSIZE 409600
+#define WORKER_BUFSIZE 4096000
 
 SchedulerWorker::SchedulerWorker(worker_id_t id,
                                  SchedulerServerConnection* conn,
@@ -63,11 +63,11 @@ SchedulerWorker::~SchedulerWorker() {
   delete read_buffer_;
 }
 
-worker_id_t SchedulerWorker::worker_id() {
+worker_id_t SchedulerWorker::worker_id() const {
   return worker_id_;
 }
 
-std::string SchedulerWorker::ip() {
+std::string SchedulerWorker::ip() const {
   return ip_;
 }
 
@@ -75,7 +75,7 @@ void SchedulerWorker::set_ip(std::string ip) {
   ip_ = ip;
 }
 
-port_t SchedulerWorker::port() {
+port_t SchedulerWorker::port() const {
   return port_;
 }
 
@@ -91,11 +91,11 @@ ApplicationGroup* SchedulerWorker::application() {
   return application_;
 }
 
-bool SchedulerWorker::is_alive() {
+bool SchedulerWorker::is_alive() const {
   return is_alive_;
 }
 
-bool SchedulerWorker::handshake_done() {
+bool SchedulerWorker::handshake_done() const {
   return handshake_done_;
 }
 

@@ -57,15 +57,15 @@ class SchedulerWorker {
                   ApplicationGroup* app);
   virtual ~SchedulerWorker();
 
-  virtual worker_id_t worker_id();
-  virtual std::string ip();
+  virtual worker_id_t worker_id() const;
+  virtual std::string ip() const;
   virtual void set_ip(std::string ip);
-  virtual port_t port();
+  virtual port_t port() const;
   virtual void set_port(port_t port);
   virtual SchedulerServerConnection* connection();
   virtual ApplicationGroup* application();
-  virtual bool is_alive();
-  virtual bool handshake_done();
+  virtual bool is_alive() const;
+  virtual bool handshake_done() const;
   virtual void set_handshake_done(bool flag);
   virtual void MarkDead();
   virtual char* read_buffer();

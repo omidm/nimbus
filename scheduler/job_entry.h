@@ -75,33 +75,33 @@ class JobEntry {
 
     virtual ~JobEntry();
 
-    JobType job_type();
-    std::string job_name();
-    job_id_t job_id();
-    IDSet<logical_data_id_t> read_set();
-    IDSet<logical_data_id_t> write_set();
-    IDSet<logical_data_id_t> union_set();
-    IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
-    job_id_t parent_job_id();
-    Parameter params();
-    boost::shared_ptr<VersionMap> vmap_read();
-    boost::shared_ptr<VersionMap> vmap_write();
-    boost::shared_ptr<MetaBeforeSet> meta_before_set();
+    JobType job_type() const;
+    std::string job_name() const;
+    job_id_t job_id() const;
+    IDSet<logical_data_id_t> read_set() const;
+    IDSet<logical_data_id_t> write_set() const;
+    IDSet<logical_data_id_t> union_set() const;
+    IDSet<job_id_t> before_set() const;
+    IDSet<job_id_t> after_set() const;
+    job_id_t parent_job_id() const;
+    Parameter params() const;
+    boost::shared_ptr<VersionMap> vmap_read() const;
+    boost::shared_ptr<VersionMap> vmap_write() const;
+    boost::shared_ptr<MetaBeforeSet> meta_before_set() const;
     job_depth_t job_depth() const;
-    PhysicalTable physical_table();
-    IDSet<job_id_t> jobs_passed_versions();
-    IDSet<job_id_t> need_set();
-    bool sterile();
-    bool partial_versioned();
-    bool versioned();
-    bool assigned();
-    bool done();
-    bool future();
+    PhysicalTable physical_table() const;
+    IDSet<job_id_t> jobs_passed_versions() const;
+    IDSet<job_id_t> need_set() const;
+    bool sterile() const;
+    bool partial_versioned() const;
+    bool versioned() const;
+    bool assigned() const;
+    bool done() const;
+    bool future() const;
 
-    const IDSet<logical_data_id_t>* read_set_p();
-    const IDSet<logical_data_id_t>* write_set_p();
-    const IDSet<logical_data_id_t>* union_set_p();
+    const IDSet<logical_data_id_t>* read_set_p() const;
+    const IDSet<logical_data_id_t>* write_set_p() const;
+    const IDSet<logical_data_id_t>* union_set_p() const;
     const IDSet<job_id_t>* before_set_p() const;
     IDSet<job_id_t>* before_set_p();
 

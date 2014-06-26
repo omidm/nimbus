@@ -90,7 +90,25 @@ bool LoadBalancer::GetWorkerToAssignJob(
 
 void LoadBalancer::NotifyJobAssignment(
     const JobEntry *job, const SchedulerWorker* worker) {
-  // TODO(omidm): Fill out the method.
+  if (job->job_type() != JOB_COMP) {
+    return;
+  }
+
+  IDSet<job_id_t> effective_before_set;
+  IDSet<job_id_t>::ConstIter iter = job->before_set_p()->begin();
+  for (; iter != job->before_set_p()->end(); ++iter) {
+    // TODO(omidm): Decide on what to do.
+  }
+
+  JobProfile *jp =
+    new JobProfile(
+        job->job_type(),
+        job->job_name(),
+        job->job_id(),
+        effective_before_set,
+        job->parent_job_id(),
+        worker->worker_id(),
+        job->sterile());
 }
 
 void LoadBalancer::NotifyJobDone(const JobEntry *job) {

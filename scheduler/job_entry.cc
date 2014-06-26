@@ -70,54 +70,54 @@ void JobEntry::Initialize() {
 JobEntry::~JobEntry() {
 }
 
-JobType JobEntry::job_type() {
+JobType JobEntry::job_type() const {
   return job_type_;
 }
 
-std::string JobEntry::job_name() {
+std::string JobEntry::job_name() const {
   return job_name_;
 }
 
-job_id_t JobEntry::job_id() {
+job_id_t JobEntry::job_id() const {
   return job_id_;
 }
 
-IDSet<logical_data_id_t> JobEntry::read_set() {
+IDSet<logical_data_id_t> JobEntry::read_set() const {
   return read_set_;
 }
 
-IDSet<logical_data_id_t> JobEntry::write_set() {
+IDSet<logical_data_id_t> JobEntry::write_set() const {
   return write_set_;
 }
-IDSet<logical_data_id_t> JobEntry::union_set() {
+IDSet<logical_data_id_t> JobEntry::union_set() const {
   return union_set_;
 }
 
-IDSet<job_id_t> JobEntry::before_set() {
+IDSet<job_id_t> JobEntry::before_set() const {
   return before_set_;
 }
 
-IDSet<job_id_t> JobEntry::after_set() {
+IDSet<job_id_t> JobEntry::after_set() const {
   return after_set_;
 }
 
-job_id_t JobEntry::parent_job_id() {
+job_id_t JobEntry::parent_job_id() const {
   return parent_job_id_;
 }
 
-Parameter JobEntry::params() {
+Parameter JobEntry::params() const {
   return params_;
 }
 
-boost::shared_ptr<VersionMap> JobEntry::vmap_read() {
+boost::shared_ptr<VersionMap> JobEntry::vmap_read() const {
   return vmap_read_;
 }
 
-boost::shared_ptr<VersionMap> JobEntry::vmap_write() {
+boost::shared_ptr<VersionMap> JobEntry::vmap_write() const {
   return vmap_write_;
 }
 
-boost::shared_ptr<MetaBeforeSet> JobEntry::meta_before_set() {
+boost::shared_ptr<MetaBeforeSet> JobEntry::meta_before_set() const {
   return meta_before_set_;
 }
 
@@ -125,54 +125,54 @@ job_depth_t JobEntry::job_depth() const {
   return job_depth_;
 }
 
-JobEntry::PhysicalTable JobEntry::physical_table() {
+JobEntry::PhysicalTable JobEntry::physical_table() const {
   return physical_table_;
 }
 
-IDSet<job_id_t> JobEntry::jobs_passed_versions() {
+IDSet<job_id_t> JobEntry::jobs_passed_versions() const {
   return jobs_passed_versions_;
 }
 
-IDSet<job_id_t> JobEntry::need_set() {
+IDSet<job_id_t> JobEntry::need_set() const {
   IDSet<job_id_t> need = before_set_;
   need.insert(parent_job_id_);
   need.remove(jobs_passed_versions_);
   return need;
 }
 
-bool JobEntry::sterile() {
+bool JobEntry::sterile() const {
   return sterile_;
 }
 
-bool JobEntry::partial_versioned() {
+bool JobEntry::partial_versioned() const {
   return partial_versioned_;
 }
 
-bool JobEntry::versioned() {
+bool JobEntry::versioned() const {
   return versioned_;
 }
 
-bool JobEntry::assigned() {
+bool JobEntry::assigned() const {
   return assigned_;
 }
 
-bool JobEntry::done() {
+bool JobEntry::done() const {
   return done_;
 }
 
-bool JobEntry::future() {
+bool JobEntry::future() const {
   return future_;
 }
 
-const IDSet<logical_data_id_t>* JobEntry::read_set_p() {
+const IDSet<logical_data_id_t>* JobEntry::read_set_p() const {
   return &read_set_;
 }
 
-const IDSet<logical_data_id_t>* JobEntry::write_set_p() {
+const IDSet<logical_data_id_t>* JobEntry::write_set_p() const {
   return &write_set_;
 }
 
-const IDSet<logical_data_id_t>* JobEntry::union_set_p() {
+const IDSet<logical_data_id_t>* JobEntry::union_set_p() const {
   return &union_set_;
 }
 

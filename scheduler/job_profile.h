@@ -95,7 +95,7 @@ class JobProfile {
         const IDSet<job_id_t>& effective_before_set,
         const job_id_t& parent_job_id,
         const worker_id_t& worker_id,
-        const bool& sterilei);
+        const bool& sterile);
 
     virtual ~JobProfile();
 
@@ -131,9 +131,6 @@ class JobProfile {
     void ready_time(double ready_time);
     void done_time(double done_time);
     void execute_duration(double execute_duration);
-
-    bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
-    bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
 
   private:
     JobType job_type_;
