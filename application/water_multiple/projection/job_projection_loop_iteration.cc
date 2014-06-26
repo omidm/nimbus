@@ -110,6 +110,12 @@ void JobProjectionLoopIteration::Execute(
       projection_driver.projection_data.local_residual;
   projection_driver.projection_data.iteration = iteration;
 
+  dbg(APP_LOG, "[CONTROL FLOW] Iteration = %d, Desired iteration = %d,"
+               "Residual = %f, Global tolerance = %f\n",
+      projection_driver.projection_data.iteration,
+      projection_driver.projection_data.desired_iterations,
+      projection_driver.projection_data.residual,
+      projection_driver.projection_data.global_tolerance);
   // Decides whether to spawn a new projection loop or finish it.
   if (projection_driver.projection_data.residual <=
       projection_driver.projection_data.global_tolerance ||
