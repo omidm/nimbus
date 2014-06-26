@@ -45,6 +45,12 @@ using namespace nimbus; // NOLINT
 
 JobEntry::JobEntry() {
   Initialize();
+  sterile_ = false;
+  partial_versioned_ = false;
+  versioned_ = false;
+  assigned_ = false;
+  done_ = false;
+  future_ = false;
 }
 
 JobEntry::JobEntry(const JobType& job_type,
@@ -121,12 +127,6 @@ void JobEntry::Initialize() {
   vmap_read_ = empty_vmap;
   vmap_write_ = empty_vmap;
 */
-  sterile_ = false;
-  partial_versioned_ = false;
-  versioned_ = false;
-  assigned_ = false;
-  done_ = false;
-  future_ = false;
 }
 
 JobEntry::~JobEntry() {
