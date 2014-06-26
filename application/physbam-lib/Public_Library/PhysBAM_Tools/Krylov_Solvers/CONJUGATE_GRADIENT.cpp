@@ -40,6 +40,10 @@ Solve(const KRYLOV_SYSTEM_BASE<T>& system,KRYLOV_VECTOR_BASE<T>& x,const KRYLOV_
 #ifndef COMPILE_WITHOUT_READ_WRITE_SUPPORT
         if(print_residuals) LOG::cout << convergence_norm << std::endl;//{std::stringstream ss;ss<<convergence_norm<<std::endl;LOG::filecout(ss.str());}
 #endif
+        printf("\n[CONTROL FLOW] size=%d, residual=%f, global_tolerance=%f, "
+               "iteration=%d, desired iteration=%d\n",
+               b.Raw_Size(), convergence_norm, tolerance, iterations,
+               max_iterations);
         if(convergence_norm<=tolerance && (iterations>=min_iterations || convergence_norm<small_number)){
             if(print_diagnostics) LOG::Stat("cg iterations",iterations);if(iterations_used) *iterations_used=iterations;return true;}
         if(iterations==max_iterations) break;
@@ -57,7 +61,8 @@ Solve(const KRYLOV_SYSTEM_BASE<T>& system,KRYLOV_VECTOR_BASE<T>& x,const KRYLOV_
         T alpha=s_dot_q?rho/s_dot_q:(T)FLT_MAX;
         x.Copy(alpha,s,x);
         r.Copy(-alpha,q,r);
-        rho_old=rho;}
+        rho_old=rho;
+    }
 
 #ifndef COMPILE_WITHOUT_READ_WRITE_SUPPORT
     if(print_diagnostics) LOG::Stat("cg iterations",iterations);if(iterations_used) *iterations_used=iterations;

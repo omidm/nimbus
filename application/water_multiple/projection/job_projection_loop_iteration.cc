@@ -110,8 +110,10 @@ void JobProjectionLoopIteration::Execute(
       projection_driver.projection_data.local_residual;
   projection_driver.projection_data.iteration = iteration;
 
-  dbg(APP_LOG, "[CONTROL FLOW] Iteration = %d, Desired iteration = %d,"
-               "Residual = %f, Global tolerance = %f\n",
+  dbg(APP_LOG, "[CONTROL FLOW] size = %d, Iteration = %d, "
+      "Desired iteration = %d, "
+      "Residual = %f, Global tolerance = %f\n",
+      projection_driver.projection_data.interior_n,
       projection_driver.projection_data.iteration,
       projection_driver.projection_data.desired_iterations,
       projection_driver.projection_data.residual,
@@ -331,6 +333,7 @@ void JobProjectionLoopIteration::Execute(
     read.clear();
     LoadLogicalIdsInSet(
         this, &read, kRegW0Central[0], APP_PROJECTION_LOCAL_RESIDUAL,
+        APP_PROJECTION_INTERIOR_N,
         APP_PROJECTION_GLOBAL_TOLERANCE, APP_PROJECTION_DESIRED_ITERATIONS,
         NULL);
     write.clear();
