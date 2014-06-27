@@ -588,7 +588,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_grid_format time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  // VECTOR_TEMP. It cannot be splitted or merged.
+  // VECTOR_P_LINEAR_FORMAT. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
     WriteVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
   }

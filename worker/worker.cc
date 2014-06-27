@@ -580,6 +580,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
   assert(vertex->incoming_edges()->empty());
   ClearAfterSet(vertex);
   vertex->entry()->set_state(WorkerJobEntry::FINISH);
+  delete job;
 }
 
 void Worker::NotifyJobDone(job_id_t job_id) {
@@ -592,6 +593,7 @@ void Worker::NotifyJobDone(job_id_t job_id) {
   WorkerJobVertex* vertex = NULL;
   worker_job_graph_.GetVertex(job_id, &vertex);
   assert(vertex->incoming_edges()->empty());
+  assert(vertex->entry()->get_job() == NULL);
   if (vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
     ClearAfterSet(vertex);
   }
