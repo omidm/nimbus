@@ -131,15 +131,16 @@ void ProjectionDriver::LocalInitialize() {
   projection_data.local_residual = b_interior.Max_Abs();
   const bool recompute_preconditioner = true;
   if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      if (A.C != NULL) {
-        delete A.C;
-      }
-      A.C = A.Create_Submatrix(partition.interior_indices);
+      // TODO(quhang) use swapping rather than copying.
+      assert(A.C != NULL);
+      SPARSE_MATRIX_FLAT_NXN<T>* temp = A.Create_Submatrix(partition.interior_indices);
+      *A.C = *temp;
       A.C->In_Place_Incomplete_Cholesky_Factorization(
           pcg.modified_incomplete_cholesky,
           pcg.modified_incomplete_cholesky_coefficient,
           pcg.preconditioner_zero_tolerance,
           pcg.preconditioner_zero_replacement);
+      delete temp;
   }
   projection_data.p.Resize(projection_data.local_n, false);
   projection_data.p.Fill(0);
