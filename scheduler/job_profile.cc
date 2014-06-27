@@ -63,8 +63,9 @@ JobProfile::JobProfile(
 }
 
 void JobProfile::Initialize() {
-  done_ = false;
+  assigned_ = false;
   ready_ = false;
+  done_ = false;
 }
 
 JobProfile::~JobProfile() {
@@ -94,12 +95,16 @@ bool JobProfile::sterile() {
   return sterile_;
 }
 
-bool JobProfile::done() {
-  return done_;
+bool JobProfile::assigned() {
+  return assigned_;
 }
 
 bool JobProfile::ready() {
   return ready_;
+}
+
+bool JobProfile::done() {
+  return done_;
 }
 
 double JobProfile::assign_time() {
@@ -142,27 +147,31 @@ void JobProfile::set_sterile(bool flag) {
   sterile_ = flag;
 }
 
-void JobProfile::set_done(bool flag) {
-  done_ = flag;
+void JobProfile::set_assigned(bool flag) {
+  assigned_ = flag;
 }
 
 void JobProfile::set_ready(bool flag) {
   ready_ = flag;
 }
 
-void JobProfile::assign_time(double assign_time) {
+void JobProfile::set_done(bool flag) {
+  done_ = flag;
+}
+
+void JobProfile::set_assign_time(double assign_time) {
   assign_time_ = assign_time;
 }
 
-void JobProfile::ready_time(double ready_time) {
+void JobProfile::set_ready_time(double ready_time) {
   ready_time_ = ready_time;
 }
 
-void JobProfile::done_time(double done_time) {
+void JobProfile::set_done_time(double done_time) {
   done_time_ = done_time;
 }
 
-void JobProfile::execute_duration(double execute_duration) {
+void JobProfile::set_execute_duration(double execute_duration) {
   execute_duration_ = execute_duration;
 }
 

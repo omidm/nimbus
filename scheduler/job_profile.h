@@ -105,6 +105,7 @@ class JobProfile {
     worker_id_t worker_id();
     bool sterile();
 
+    bool assigned();
     bool ready();
     bool done();
     double assign_time();
@@ -120,12 +121,13 @@ class JobProfile {
     void set_worker_id(worker_id_t worker_id);
     void set_sterile(bool flag);
 
+    void set_assigned(bool flag);
     void set_ready(bool flag);
     void set_done(bool flag);
-    void assign_time(double assign_time);
-    void ready_time(double ready_time);
-    void done_time(double done_time);
-    void execute_duration(double execute_duration);
+    void set_assign_time(double assign_time);
+    void set_ready_time(double ready_time);
+    void set_done_time(double done_time);
+    void set_execute_duration(double execute_duration);
 
   private:
     JobType job_type_;
@@ -137,8 +139,9 @@ class JobProfile {
 
     BeforeSetLog before_set_log_;
 
-    bool done_;
+    bool assigned_;
     bool ready_;
+    bool done_;
     double assign_time_;
     double ready_time_;
     double done_time_;

@@ -50,6 +50,8 @@ namespace nimbus {
 LoadBalancer::LoadBalancer() {
   updated_info_ = false;
   cluster_map_ = NULL;
+  job_manager_ = NULL;
+  data_manager_ = NULL;
 }
 
 LoadBalancer::LoadBalancer(ClusterMap* cluster_map)
@@ -73,7 +75,7 @@ void LoadBalancer::set_job_manager(JobManager *job_manager) {
 }
 
 void LoadBalancer::set_data_manager(DataManager *data_manager) {
-  data_manger_ = data_manager;
+  data_manager_ = data_manager;
 }
 
 void LoadBalancer::Run() {
@@ -90,6 +92,8 @@ bool LoadBalancer::GetWorkerToAssignJob(
 
 void LoadBalancer::NotifyJobAssignment(
     const JobEntry *job, const SchedulerWorker* worker) {
+  double time = log_.GetTime();
+
   if (job->job_type() != JOB_COMP) {
     return;
   }
@@ -102,6 +106,25 @@ void LoadBalancer::NotifyJobAssignment(
         job->parent_job_id(),
         worker->worker_id(),
         job->sterile());
+
+  jp->set_assign_time(time);
+  jp->set_assigned(true);
+
+
+  Vertex<JobEntry, job_id_t>* vertex;
+  job_manager_->job_graph_p()->GetVertex(job->job_id(), &vertex);
+
+  typename Edge<JobEntry, job_id_t>::Iter it;
+  for (it = vertex->incoming_edges()->begin(); it != vertex->incoming_edges()->end(); ++it) {
+    if (it->second->start_vertex()->entry()->done()) {
+      // TODO(omid): Add to jp before set log.
+    }
+  }
+
+  if (vertex->incoming_edges()->size() == 0) {
+    jp->set_ready_time(time);
+    jp->set_ready(true);
+  }
 
   // TODO(omidm): Fill out the method.
   delete jp;

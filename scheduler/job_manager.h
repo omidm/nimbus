@@ -126,7 +126,7 @@ class JobManager {
 
     void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
-    const Graph<JobEntry, job_id_t> *job_graph_p();
+    Graph<JobEntry, job_id_t> *job_graph_p();
 
   private:
     Graph<JobEntry, job_id_t> job_graph_;

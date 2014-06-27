@@ -729,7 +729,7 @@ void JobManager::set_ldo_map_p(
   version_manager_.set_ldo_map_p(ldo_map_p);
 }
 
-const Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
+Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
   return &job_graph_;
 }
 
