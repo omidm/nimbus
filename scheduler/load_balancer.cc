@@ -98,7 +98,7 @@ void LoadBalancer::NotifyJobAssignment(
     return;
   }
 
-  JobProfile *jp =
+  JobProfile *job_profile =
     new JobProfile(
         job->job_type(),
         job->job_name(),
@@ -107,27 +107,37 @@ void LoadBalancer::NotifyJobAssignment(
         worker->worker_id(),
         job->sterile());
 
-  jp->set_assign_time(time);
-  jp->set_assigned(true);
+  job_profile->set_assign_time(time);
+  job_profile->set_assigned(true);
 
 
   Vertex<JobEntry, job_id_t>* vertex;
   job_manager_->job_graph_p()->GetVertex(job->job_id(), &vertex);
 
-  typename Edge<JobEntry, job_id_t>::Iter it;
-  for (it = vertex->incoming_edges()->begin(); it != vertex->incoming_edges()->end(); ++it) {
-    if (it->second->start_vertex()->entry()->done()) {
-      // TODO(omid): Add to jp before set log.
+  typename Edge<JobEntry, job_id_t>::Iter iter;
+  for (iter = vertex->incoming_edges()->begin(); iter != vertex->incoming_edges()->end(); ++iter) {
+    JobEntry *j = iter->second->start_vertex()->entry();
+    if (j->done()) {
+      JobHistory::iterator it = job_history_.find(j->job_id());
+      if (it != job_history_.end()) {
+        JobProfile *jp = it->second;
+        job_profile->add_log_entry(
+            jp->worker_id(), jp->job_id(), jp->done_time());
+      } else {
+        dbg(DBG_WARN, "WARNING: Load balancer, could not find done job in job history.");
+        exit(-1);
+      }
+    } else {
+      job_profile->waiting_set_p()->insert(j->job_id());
     }
   }
 
-  if (vertex->incoming_edges()->size() == 0) {
-    jp->set_ready_time(time);
-    jp->set_ready(true);
+  if (job_profile->waiting_set_p()->size() == 0) {
+    job_profile->set_ready_time(time);
+    job_profile->set_ready(true);
   }
 
-  // TODO(omidm): Fill out the method.
-  delete jp;
+  job_history_[job->job_id()] = job_profile;
 }
 
 void LoadBalancer::NotifyJobDone(const JobEntry *job) {

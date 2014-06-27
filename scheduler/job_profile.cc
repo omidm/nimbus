@@ -175,13 +175,23 @@ void JobProfile::set_execute_duration(double execute_duration) {
   execute_duration_ = execute_duration;
 }
 
+IDSet<job_id_t>* JobProfile::waiting_set_p() {
+  return &waiting_set_;
+}
+
+void JobProfile::add_log_entry(
+    worker_id_t worker_id,
+    job_id_t job_id,
+    double time_removed) {
+  log_.push_back(LogEntry(worker_id, job_id, time_removed));
+}
 
 
 
 
 
 
-JobProfile::BeforeSetLogEntry::BeforeSetLogEntry(
+JobProfile::LogEntry::LogEntry(
     worker_id_t worker_id,
     job_id_t job_id,
     double time_removed) :
@@ -190,18 +200,18 @@ JobProfile::BeforeSetLogEntry::BeforeSetLogEntry(
   time_removed_(time_removed) {
 }
 
-JobProfile::BeforeSetLogEntry::~BeforeSetLogEntry() {
+JobProfile::LogEntry::~LogEntry() {
 }
 
-worker_id_t JobProfile::BeforeSetLogEntry::worker_id() {
+worker_id_t JobProfile::LogEntry::worker_id() {
   return worker_id_;
 }
 
-job_id_t JobProfile::BeforeSetLogEntry::job_id() {
+job_id_t JobProfile::LogEntry::job_id() {
   return job_id_;
 }
 
-double JobProfile::BeforeSetLogEntry::time_removed() {
+double JobProfile::LogEntry::time_removed() {
   return time_removed_;
 }
 

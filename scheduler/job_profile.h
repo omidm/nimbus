@@ -65,14 +65,14 @@ typedef std::list<JobProfile*> JobProfileList;
 
 class JobProfile {
   public:
-    class BeforeSetLogEntry {
+    class LogEntry {
       public:
-        BeforeSetLogEntry(
+        LogEntry(
             worker_id_t worker_id,
             job_id_t job_id,
             double time_removed);
 
-        virtual ~BeforeSetLogEntry();
+        virtual ~LogEntry();
 
         worker_id_t worker_id();
         job_id_t job_id();
@@ -84,7 +84,7 @@ class JobProfile {
         double time_removed_;
     };
 
-    typedef std::list<BeforeSetLogEntry> BeforeSetLog;
+    typedef std::list<LogEntry> Log;
 
     JobProfile();
 
@@ -129,6 +129,13 @@ class JobProfile {
     void set_done_time(double done_time);
     void set_execute_duration(double execute_duration);
 
+    IDSet<job_id_t>* waiting_set_p();
+
+    void add_log_entry(
+        worker_id_t worker_id,
+        job_id_t job_id,
+        double time_removed);
+
   private:
     JobType job_type_;
     std::string job_name_;
@@ -136,8 +143,9 @@ class JobProfile {
     job_id_t parent_job_id_;
     worker_id_t worker_id_;
     bool sterile_;
+    IDSet<job_id_t> waiting_set_;
 
-    BeforeSetLog before_set_log_;
+    Log log_;
 
     bool assigned_;
     bool ready_;
