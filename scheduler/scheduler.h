@@ -57,6 +57,7 @@
 #include "shared/scheduler_server.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/job_manager.h"
+#include "scheduler/load_balancer.h"
 #include "scheduler/version_manager.h"
 #include "shared/id_maker.h"
 
@@ -107,6 +108,7 @@ class Scheduler {
     virtual void SetupWorkerInterface();
     virtual void SetupDataManager();
     virtual void SetupJobManager();
+    virtual void SetupLoadBalancer();
     virtual void GetUserCommand();
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
@@ -114,6 +116,7 @@ class Scheduler {
     SchedulerServer* server_;
     DataManager* data_manager_;
     JobManager* job_manager_;
+    LoadBalancer *load_balancer_;
     IDMaker id_maker_;
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;

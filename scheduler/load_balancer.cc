@@ -64,16 +64,16 @@ ClusterMap* LoadBalancer::cluster_map() {
   return cluster_map_;
 }
 
-GeometricRegion LoadBalancer::global_region() {
-  return global_region_;
-}
-
 void LoadBalancer::set_cluster_map(ClusterMap* cluster_map) {
   cluster_map_ = cluster_map;
 }
 
-void LoadBalancer::set_global_region(GeometricRegion global_region) {
-  global_region_ = global_region;
+void LoadBalancer::set_job_manager(JobManager *job_manager) {
+  job_manager_ = job_manager;
+}
+
+void LoadBalancer::set_data_manager(DataManager *data_manager) {
+  data_manger_ = data_manager;
 }
 
 void LoadBalancer::Run() {
@@ -94,25 +94,23 @@ void LoadBalancer::NotifyJobAssignment(
     return;
   }
 
-  IDSet<job_id_t> effective_before_set;
-  IDSet<job_id_t>::ConstIter iter = job->before_set_p()->begin();
-  for (; iter != job->before_set_p()->end(); ++iter) {
-    // TODO(omidm): Decide on what to do.
-  }
-
   JobProfile *jp =
     new JobProfile(
         job->job_type(),
         job->job_name(),
         job->job_id(),
-        effective_before_set,
         job->parent_job_id(),
         worker->worker_id(),
         job->sterile());
+
+  // TODO(omidm): Fill out the method.
+  delete jp;
 }
 
 void LoadBalancer::NotifyJobDone(const JobEntry *job) {
   // TODO(omidm): Fill out the method.
 }
+
+
 
 }  // namespace nimbus

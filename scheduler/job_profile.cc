@@ -50,14 +50,12 @@ JobProfile::JobProfile(
     const JobType& job_type,
     const std::string& job_name,
     const job_id_t& job_id,
-    const IDSet<job_id_t>& effective_before_set,
     const job_id_t& parent_job_id,
     const worker_id_t& worker_id,
     const bool& sterile)
   : job_type_(job_type),
   job_name_(job_name),
   job_id_(job_id),
-  effective_before_set_(effective_before_set),
   parent_job_id_(parent_job_id),
   worker_id_(worker_id),
   sterile_(sterile) {
@@ -82,18 +80,6 @@ std::string JobProfile::job_name() {
 
 job_id_t JobProfile::job_id() {
   return job_id_;
-}
-
-IDSet<job_id_t> JobProfile::effective_before_set() {
-  return effective_before_set_;
-}
-
-IDSet<job_id_t>* JobProfile::effective_before_set_p() {
-  return &effective_before_set_;
-}
-
-const IDSet<job_id_t>* JobProfile::effective_before_set_p() const {
-  return &effective_before_set_;
 }
 
 job_id_t JobProfile::parent_job_id() {
@@ -142,10 +128,6 @@ void JobProfile::set_job_name(std::string job_name) {
 
 void JobProfile::set_job_id(job_id_t job_id) {
   job_id_ = job_id;
-}
-
-void JobProfile::set_effective_before_set(IDSet<job_id_t> effective_before_set) {
-  effective_before_set_ = effective_before_set;
 }
 
 void JobProfile::set_parent_job_id(job_id_t parent_job_id) {

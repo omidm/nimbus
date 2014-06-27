@@ -52,6 +52,8 @@
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/job_profile.h"
+#include "scheduler/data_manager.h"
+#include "scheduler/job_manager.h"
 #include "shared/cluster.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
@@ -70,10 +72,10 @@ namespace nimbus {
     void Run();
 
     ClusterMap* cluster_map();
-    GeometricRegion global_region();
 
     void set_cluster_map(ClusterMap* cluster_map);
-    void set_global_region(GeometricRegion global_region);
+    void set_job_manager(JobManager *job_manager);
+    void set_data_manager(DataManager *data_manager);
 
     bool GetWorkerToAssignJob(JobEntry *job, SchedulerWorker*& worker);
 
@@ -85,12 +87,11 @@ namespace nimbus {
   private:
     LoadBalancer(const LoadBalancer& other) {}
 
+    Log log_;
     ClusterMap* cluster_map_;
     GeometricRegion global_region_;
-    Log log_;
-
-    Graph<JobProfile, job_id_t> job_graph_;
-    boost::mutex job_graph_mutex_;
+    JobManager *job_manager_;
+    DataManager *data_manger_;
 
     RegionMap region_map_;
     boost::mutex region_map_mutex_;
@@ -104,6 +105,7 @@ namespace nimbus {
     boost::condition_variable update_info_cond_;
 
     void InitializeRegionMap();
+
     void UpdateRegionMap();
   };
 

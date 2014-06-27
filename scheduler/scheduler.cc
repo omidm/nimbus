@@ -75,9 +75,12 @@ void Scheduler::Run() {
 
   // First data manager should be instantiated then job manager, because of
   // ldo_map pointer that job manager needs to get from data manager.
-  SetupDataManager();
+  // Also load balancer is set up after both of them since it needs a pointer
+  // to job manager and data manager.
 
+  SetupDataManager();
   SetupJobManager();
+  SetupLoadBalancer();
 
   id_maker_.Initialize(0);
 
@@ -868,6 +871,15 @@ void Scheduler::SetupJobManager() {
   job_manager_ = new JobManager();
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
 }
+
+void Scheduler::SetupLoadBalancer() {
+  load_balancer_ = new LoadBalancer();
+  load_balancer_->set_job_manager(job_manager_);
+  load_balancer_->set_data_manager(data_manager_);
+}
+
+
+
 
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
