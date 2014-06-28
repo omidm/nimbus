@@ -117,7 +117,10 @@ void LoadBalancer::NotifyJobAssignment(
   typename Edge<JobEntry, job_id_t>::Iter iter;
   for (iter = vertex->incoming_edges()->begin(); iter != vertex->incoming_edges()->end(); ++iter) {
     JobEntry *j = iter->second->start_vertex()->entry();
-    if (j->done()) {
+    if (!j->done()) {
+      job_profile->waiting_set_p()->insert(j->job_id());
+    } else {
+      /*
       JobHistory::iterator it = job_history_.find(j->job_id());
       if (it != job_history_.end()) {
         JobProfile *jp = it->second;
@@ -127,8 +130,7 @@ void LoadBalancer::NotifyJobAssignment(
         dbg(DBG_WARN, "WARNING: Load balancer, could not find done job in job history.");
         exit(-1);
       }
-    } else {
-      job_profile->waiting_set_p()->insert(j->job_id());
+      */
     }
   }
 
@@ -141,7 +143,38 @@ void LoadBalancer::NotifyJobAssignment(
 }
 
 void LoadBalancer::NotifyJobDone(const JobEntry *job) {
-  // TODO(omidm): Fill out the method.
+  assert(job->done());
+  done_jobs_.push_back(job->job_id());
+  double time = log_.GetTime();
+
+  JobHistory::iterator it = job_history_.find(job->job_id());
+  assert(it != job_history_.end());
+  JobProfile *job_profile = it->second;
+
+  job_profile->set_done_time(time);
+  job_profile->set_done(true);
+  job_profile->set_execute_duration(time - job_profile->ready_time());
+
+  Vertex<JobEntry, job_id_t>* vertex;
+  job_manager_->job_graph_p()->GetVertex(job->job_id(), &vertex);
+
+  typename Edge<JobEntry, job_id_t>::Iter iter;
+  for (iter = vertex->outgoing_edges()->begin(); iter != vertex->outgoing_edges()->end(); ++iter) {
+    JobEntry *j = iter->second->end_vertex()->entry();
+    it = job_history_.find(j->job_id());
+    if (it != job_history_.end()) {
+      assert(j->assigned());
+      JobProfile *jp = it->second;
+      assert(jp->assigned());
+      jp->add_log_entry(
+          job_profile->worker_id(), job->job_id(), time);
+      jp->waiting_set_p()->remove(job->job_id());
+      if (jp->waiting_set_p()->size() == 0) {
+        jp->set_ready_time(time);
+        jp->set_ready(true);
+      }
+    }
+  }
 }
 
 

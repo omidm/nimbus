@@ -48,6 +48,7 @@
 #include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
 #include <map>
+#include <list>
 #include <vector>
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
@@ -94,6 +95,7 @@ namespace nimbus {
     JobManager *job_manager_;
     DataManager *data_manager_;
     JobHistory job_history_;
+    std::list<job_id_t> done_jobs_;
 
     RegionMap region_map_;
     boost::mutex region_map_mutex_;
