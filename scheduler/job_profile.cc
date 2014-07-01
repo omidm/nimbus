@@ -190,14 +190,14 @@ void JobProfile::add_log_entry(
 
 std::string JobProfile::PrintDependencyLog() {
   std::string rval;
-  rval += "+++++++ Dpendency Log Begin +++++++\n";
+  rval += "\n+++++++ Dpendency Log Begin +++++++\n";
 
   DependencyLog::iterator iter = dependency_log_.begin();
   for (; iter != dependency_log_.end(); ++iter) {
     rval += iter->ToString();
   }
 
-  rval += "++++++++ Dpendency Log End ++++++++\n";
+  rval += "\n++++++++ Dpendency Log End ++++++++\n";
   return rval;
 }
 
@@ -212,6 +212,7 @@ std::string JobProfile::Print() {
   rval += "job_id: ";
   ss << job_id_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "job_name: ";
@@ -221,32 +222,41 @@ std::string JobProfile::Print() {
   rval += "worker_id: ";
   ss << worker_id_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "parent_job_id: ";
   ss << parent_job_id_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "assign_time: ";
   ss << assign_time_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "ready_time: ";
   ss << ready_time_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "done_time: ";
   ss << done_time_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "execute_duration: ";
   ss << execute_duration_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
+
+  rval += PrintDependencyLog();
+
 
   rval += "\n*****************************************\n";
   rval += "************ Job Profile End ************\n";
@@ -293,16 +303,18 @@ std::string JobProfile::LogEntry::ToString() {
   std::string rval;
   std::ostringstream ss;
 
-  rval += "=== Dpendency Entry Begin ===\n";
+  rval += "\n=== Dpendency Entry Begin ===\n";
 
   rval += "worker_id: ";
   ss << worker_id_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "job_id: ";
   ss << job_id_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
   rval += "job_name: ";
@@ -312,9 +324,10 @@ std::string JobProfile::LogEntry::ToString() {
   rval += "done_time: ";
   ss << done_time_;
   rval += ss.str();
+  ss.str(std::string());
   rval += "\n";
 
-  rval += "==== Dpendency Entry End ====\n";
+  rval += "\n==== Dpendency Entry End ====\n";
 
   return rval;
 }
