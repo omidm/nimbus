@@ -243,7 +243,14 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
-  job_manager_->JobDone(cm->job_id().elem());
+  job_id_t job_id = cm->job_id().elem();
+
+  job_manager_->JobDone(job_id);
+
+  JobEntry *job;
+  if (job_manager_->GetJobEntry(job_id, job)) {
+    load_balancer_->NotifyJobDone(job);
+  }
 
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
   for (; iter != server_->workers()->end(); iter++) {
@@ -797,6 +804,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
     job_manager_->UpdateJobBeforeSet(job);
     SendComputeJobToWorker(worker, job);
     job->set_assigned(true);
+
+    load_balancer_->NotifyJobAssignment(job, worker);
 
     log_assign_.StopTimer();
     return true;

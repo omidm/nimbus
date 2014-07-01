@@ -143,9 +143,14 @@ void LoadBalancer::NotifyJobAssignment(
 }
 
 void LoadBalancer::NotifyJobDone(const JobEntry *job) {
+  double time = log_.GetTime();
+
+  if (job->job_type() != JOB_COMP) {
+    return;
+  }
+
   assert(job->done());
   done_jobs_.push_back(job->job_id());
-  double time = log_.GetTime();
 
   JobHistory::iterator it = job_history_.find(job->job_id());
   assert(it != job_history_.end());
