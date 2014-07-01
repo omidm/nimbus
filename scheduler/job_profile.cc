@@ -192,10 +192,28 @@ std::string JobProfile::PrintDependencyLog() {
   std::string rval;
   rval += "\n+++++++ Dpendency Log Begin +++++++\n";
 
+  worker_id_t blamed_worker_id;
+  bool blame = false;
+
   DependencyLog::iterator iter = dependency_log_.begin();
   for (; iter != dependency_log_.end(); ++iter) {
     rval += iter->ToString();
+
+    if (iter->done_time() == ready_time_) {
+      blamed_worker_id = iter->worker_id();
+      blame = true;
+    }
   }
+
+  if (blame && (blamed_worker_id != worker_id_)) {
+    std::ostringstream ss;
+    rval += "blamed_worker_id: ";
+    ss << blamed_worker_id;
+    rval += ss.str();
+    ss.str(std::string());
+    rval += "\n";
+  }
+
 
   rval += "\n++++++++ Dpendency Log End ++++++++\n";
   return rval;
