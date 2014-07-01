@@ -183,12 +183,25 @@ void JobProfile::add_log_entry(
     worker_id_t worker_id,
     job_id_t job_id,
     std::string job_name,
-    double time_removed) {
-  log_.push_back(LogEntry(worker_id, job_id, job_name, time_removed));
+    double done_time) {
+  dependency_log_.push_back(LogEntry(worker_id, job_id, job_name, done_time));
 }
 
 
+std::string JobProfile::PrintDependencyLog() {
+  std::string rval;
+  rval += "+++++++ Dpendency Log Begin +++++++\n";
 
+  DependencyLog::iterator iter = dependency_log_.begin();
+  for (; iter != dependency_log_.end(); ++iter) {
+    rval += "=== Dpendency Entry Begin ===\n";
+    rval += iter->ToString();
+    rval += "==== Dpendency Entry End ====\n";
+  }
+
+  rval += "++++++++ Dpendency Log End ++++++++\n";
+  return rval;
+}
 
 
 
@@ -196,11 +209,11 @@ JobProfile::LogEntry::LogEntry(
     worker_id_t worker_id,
     job_id_t job_id,
     std::string job_name,
-    double time_removed) :
+    double done_time) :
   worker_id_(worker_id),
   job_id_(job_id),
   job_name_(job_name),
-  time_removed_(time_removed) {
+  done_time_(done_time) {
 }
 
 JobProfile::LogEntry::~LogEntry() {
@@ -218,8 +231,34 @@ std::string JobProfile::LogEntry::job_name() {
   return job_name_;
 }
 
-double JobProfile::LogEntry::time_removed() {
-  return time_removed_;
+double JobProfile::LogEntry::done_time() {
+  return done_time_;
+}
+
+std::string JobProfile::LogEntry::ToString() {
+  std::string rval;
+  std::ostringstream ss;
+
+  rval += "worker_id: ";
+  ss << worker_id_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "job_id: ";
+  ss << job_id_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "job_name: ";
+  rval += job_name_;
+  rval += "\n";
+
+  rval += "done_time: ";
+  ss << done_time_;
+  rval += ss.str();
+  rval += "\n";
+
+  return rval;
 }
 
 

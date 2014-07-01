@@ -71,23 +71,25 @@ class JobProfile {
             worker_id_t worker_id,
             job_id_t job_id,
             std::string job_name,
-            double time_removed);
+            double done_time);
 
         virtual ~LogEntry();
 
         worker_id_t worker_id();
         job_id_t job_id();
         std::string job_name();
-        double time_removed();
+        double done_time();
+
+        std::string ToString();
 
       private:
         worker_id_t worker_id_;
         job_id_t job_id_;
         std::string job_name_;
-        double time_removed_;
+        double done_time_;
     };
 
-    typedef std::list<LogEntry> Log;
+    typedef std::list<LogEntry> DependencyLog;
 
     JobProfile();
 
@@ -138,7 +140,9 @@ class JobProfile {
         worker_id_t worker_id,
         job_id_t job_id,
         std::string job_name,
-        double time_removed);
+        double done_time);
+
+    std::string PrintDependencyLog();
 
   private:
     JobType job_type_;
@@ -149,7 +153,7 @@ class JobProfile {
     bool sterile_;
     IDSet<job_id_t> waiting_set_;
 
-    Log log_;
+    DependencyLog dependency_log_;
 
     bool assigned_;
     bool ready_;
