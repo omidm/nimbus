@@ -70,17 +70,20 @@ class JobProfile {
         LogEntry(
             worker_id_t worker_id,
             job_id_t job_id,
+            std::string job_name,
             double time_removed);
 
         virtual ~LogEntry();
 
         worker_id_t worker_id();
         job_id_t job_id();
+        std::string job_name();
         double time_removed();
 
       private:
         worker_id_t worker_id_;
         job_id_t job_id_;
+        std::string job_name_;
         double time_removed_;
     };
 
@@ -134,6 +137,7 @@ class JobProfile {
     void add_log_entry(
         worker_id_t worker_id,
         job_id_t job_id,
+        std::string job_name,
         double time_removed);
 
   private:

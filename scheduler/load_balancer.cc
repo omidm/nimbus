@@ -172,7 +172,7 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
       JobProfile *jp = it->second;
       assert(jp->assigned());
       jp->add_log_entry(
-          job_profile->worker_id(), job->job_id(), time);
+          job_profile->worker_id(), job->job_id(), job->job_name(), time);
       jp->waiting_set_p()->remove(job->job_id());
       if (jp->waiting_set_p()->size() == 0) {
         jp->set_ready_time(time);

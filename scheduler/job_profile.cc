@@ -182,8 +182,9 @@ IDSet<job_id_t>* JobProfile::waiting_set_p() {
 void JobProfile::add_log_entry(
     worker_id_t worker_id,
     job_id_t job_id,
+    std::string job_name,
     double time_removed) {
-  log_.push_back(LogEntry(worker_id, job_id, time_removed));
+  log_.push_back(LogEntry(worker_id, job_id, job_name, time_removed));
 }
 
 
@@ -194,9 +195,11 @@ void JobProfile::add_log_entry(
 JobProfile::LogEntry::LogEntry(
     worker_id_t worker_id,
     job_id_t job_id,
+    std::string job_name,
     double time_removed) :
   worker_id_(worker_id),
   job_id_(job_id),
+  job_name_(job_name),
   time_removed_(time_removed) {
 }
 
@@ -209,6 +212,10 @@ worker_id_t JobProfile::LogEntry::worker_id() {
 
 job_id_t JobProfile::LogEntry::job_id() {
   return job_id_;
+}
+
+std::string JobProfile::LogEntry::job_name() {
+  return job_name_;
 }
 
 double JobProfile::LogEntry::time_removed() {
