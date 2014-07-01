@@ -52,6 +52,7 @@ LoadBalancer::LoadBalancer() {
   cluster_map_ = NULL;
   job_manager_ = NULL;
   data_manager_ = NULL;
+  log_.set_file_name("load_balancer_log");
 }
 
 LoadBalancer::LoadBalancer(ClusterMap* cluster_map)
@@ -180,6 +181,8 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
       }
     }
   }
+
+  log_.WriteToFile(job_profile->Print());
 }
 
 

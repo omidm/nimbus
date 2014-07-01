@@ -194,14 +194,68 @@ std::string JobProfile::PrintDependencyLog() {
 
   DependencyLog::iterator iter = dependency_log_.begin();
   for (; iter != dependency_log_.end(); ++iter) {
-    rval += "=== Dpendency Entry Begin ===\n";
     rval += iter->ToString();
-    rval += "==== Dpendency Entry End ====\n";
   }
 
   rval += "++++++++ Dpendency Log End ++++++++\n";
   return rval;
 }
+
+std::string JobProfile::Print() {
+  std::string rval;
+  std::ostringstream ss;
+
+  rval += "\n*****************************************\n";
+  rval += "*********** Job Profile Begin ***********\n";
+  rval += "*****************************************\n";
+
+  rval += "job_id: ";
+  ss << job_id_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "job_name: ";
+  rval += job_name_;
+  rval += "\n";
+
+  rval += "worker_id: ";
+  ss << worker_id_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "parent_job_id: ";
+  ss << parent_job_id_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "assign_time: ";
+  ss << assign_time_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "ready_time: ";
+  ss << ready_time_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "done_time: ";
+  ss << done_time_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "execute_duration: ";
+  ss << execute_duration_;
+  rval += ss.str();
+  rval += "\n";
+
+  rval += "\n*****************************************\n";
+  rval += "************ Job Profile End ************\n";
+  rval += "*****************************************\n";
+  return rval;
+}
+
+
+
 
 
 
@@ -239,6 +293,8 @@ std::string JobProfile::LogEntry::ToString() {
   std::string rval;
   std::ostringstream ss;
 
+  rval += "=== Dpendency Entry Begin ===\n";
+
   rval += "worker_id: ";
   ss << worker_id_;
   rval += ss.str();
@@ -257,6 +313,8 @@ std::string JobProfile::LogEntry::ToString() {
   ss << done_time_;
   rval += ss.str();
   rval += "\n";
+
+  rval += "==== Dpendency Entry End ====\n";
 
   return rval;
 }

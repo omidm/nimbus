@@ -144,6 +144,8 @@ class JobProfile {
 
     std::string PrintDependencyLog();
 
+    std::string Print();
+
   private:
     JobType job_type_;
     std::string job_name_;
