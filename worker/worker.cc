@@ -532,6 +532,10 @@ void Worker::AddJobToGraph(Job* job) {
     vertex->entry()->set_state(WorkerJobEntry::READY);
     ResolveDataArray(job);
     int success_flag = worker_manager_->PushJob(job);
+#ifndef MUTE_LOG
+    double wait_time = timer_.Stop(job->id().elem());
+    job->set_wait_time(wait_time);
+#endif  // MUTE_LOG
     vertex->entry()->set_job(NULL);
     assert(success_flag);
   }
@@ -559,6 +563,10 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
       ResolveDataArray(after_job_vertex->entry()->get_job());
       int success_flag =
           worker_manager_->PushJob(after_job_vertex->entry()->get_job());
+#ifndef MUTE_LOG
+      double wait_time = timer_.Stop(after_job_vertex->entry()->get_job()->id().elem());
+      after_job_vertex->entry()->get_job()->set_wait_time(wait_time);
+#endif  // MUTE_LOG
       after_job_vertex->entry()->set_job(NULL);
       assert(success_flag);
     }
@@ -630,6 +638,10 @@ void Worker::NotifyTransmissionDone(job_id_t job_id) {
           vertex->entry()->set_state(WorkerJobEntry::READY);
           ResolveDataArray(receive_job);
           int success_flag = worker_manager_->PushJob(receive_job);
+#ifndef MUTE_LOG
+          double wait_time = timer_.Stop(receive_job->id().elem());
+          receive_job->set_wait_time(wait_time);
+#endif  // MUTE_LOG
           vertex->entry()->set_job(NULL);
           assert(success_flag);
         }

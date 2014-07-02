@@ -49,6 +49,9 @@ Job::Job() {
   sterile_ = true;
   use_threading_ = false;
   core_quota_ = 1;
+  run_time_ = 0;
+  wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 Job::~Job() {
@@ -59,6 +62,9 @@ Job::~Job() {
 Job::Job(Application* app, JobType type) {
   application_ = app;
   type_ = type;
+  run_time_ = 0;
+  wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 Job* Job::Clone() {
