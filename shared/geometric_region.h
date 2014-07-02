@@ -122,7 +122,7 @@ namespace nimbus {
     virtual bool Intersects(GeometricRegion* region) const;
     virtual bool Adjacent(GeometricRegion* region) const;
     virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
-    virtual bool IsEqual(GeometricRegion* region) const;
+    virtual bool IsEqual(const GeometricRegion* region) const;
 
     /* Largest common rectangular region shared by 2 regions. */
     static GeometricRegion GetIntersection(const GeometricRegion &region1,

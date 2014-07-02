@@ -209,13 +209,13 @@ bool GeometricRegion::Covers(GeometricRegion *region) const {
 }
 
 /**
- * \fn bool GeometricRegion::IsEqual(GeometricRegion *region)
+ * \fn bool GeometricRegion::IsEqual(const GeometricRegion *region)
  * \brief Returns whether this region is equal to the region
           described by the argument.
  * \param region
  * \return
 */
-bool GeometricRegion::IsEqual(GeometricRegion *region) const {
+bool GeometricRegion::IsEqual(const GeometricRegion *region) const {
   return ((x() == region->x()) &&
           (y() == region->y()) &&
           (z() == region->z()) &&

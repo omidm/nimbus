@@ -89,21 +89,32 @@ class ProjectionDriver {
     projection_data.local_residual = 0;
     projection_data.residual = 0;
     projection_data.iteration = 0;
-    // Conjugate matrix will be deallocate by matrix_a.
-    projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<T>;
+    projection_data.matrix_a = NULL;
+    projection_data.matrix_index_to_cell_index = NULL;
     cache_pressure = NULL;
     cache_vector_p = NULL;
+    cache_matrix_a = NULL;
+    cache_matrix_c = NULL;
+    cache_index_m2c = NULL;
   }
 
-  virtual ~ProjectionDriver() {}
+  virtual ~ProjectionDriver() {
+    if (projection_data.matrix_a) {
+      delete projection_data.matrix_a;
+    }
+    if (projection_data.matrix_index_to_cell_index) {
+      delete projection_data.matrix_index_to_cell_index;
+    }
+  }
 
   class ProjectionData {
    public:
     ARRAY<float, VECTOR<int,3> > pressure;
     ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
-    ARRAY<TV_INT> matrix_index_to_cell_index;
+    ARRAY<TV_INT>* matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
-    SPARSE_MATRIX_FLAT_NXN<T> matrix_a;
+    SPARSE_MATRIX_FLAT_NXN<T>* matrix_a;
+    SPARSE_MATRIX_FLAT_NXN<T>* matrix_c;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
     // VECTOR_ND<T> x_interior;
@@ -142,6 +153,9 @@ class ProjectionDriver {
   typedef typename application::CacheScalarArray<T> TCacheScalarArray;
   TCacheScalarArray *cache_pressure;
   TCacheScalarArray *cache_vector_p;
+  application::CacheSparseMatrix *cache_matrix_a;
+  application::CacheSparseMatrix *cache_matrix_c;
+  application::CacheArrayM2C * cache_index_m2c;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;
@@ -151,6 +165,7 @@ class ProjectionDriver {
   }
 
   void Initialize(int local_n, int interior_n);
+  void Cache_Initialize(int local_n, int interior_n);
   void LocalInitialize();
   void GlobalInitialize();
   void InitializeResidual();
@@ -166,7 +181,9 @@ class ProjectionDriver {
   void CalculateLocalResidual();
   bool DecideToSpawnNextIteration();
   void LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void Cache_LoadFromNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   void SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
+  void Cache_SaveToNimbus(const nimbus::Job* job, const nimbus::DataArray& da);
   template<typename TYPE_NAME> void ReadScalarData(
       const nimbus::Job* job, const nimbus::DataArray& da,
       const char* variable_name, TYPE_NAME& value);

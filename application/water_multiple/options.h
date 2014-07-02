@@ -128,7 +128,8 @@ struct DataConfig {
     PROJECTION_BETA,
     MATRIX_C,
     VECTOR_Z,
-    VECTOR_P,
+    VECTOR_P_GRID_FORMAT,
+    VECTOR_P_LINEAR_FORMAT,
     VECTOR_TEMP,
     NUM_VARIABLE
   };

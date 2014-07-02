@@ -182,10 +182,12 @@ void JobLoopIterationPartTwo::SpawnJobs(
   job_query.CommitStagedJobs();
 
   if (done) {
-    dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
+    dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop done.\n");
   } else {
-    dbg(APP_LOG, "[CONTROL FLOW] Loop not done.\n");
+    dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop not done.\n");
   }
+  dbg(APP_LOG, "[CONTROL FLOW] Second part, Frame=%d, Time=%f, dt=%f\n",
+      frame, time, dt);
 
   if (!done) {
 

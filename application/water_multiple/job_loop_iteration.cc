@@ -123,11 +123,12 @@ namespace application {
     }
 
     if (done) {
-      dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
+      dbg(APP_LOG, "[CONTROL FLOW] First part, Loop done.\n");
     } else {
-      dbg(APP_LOG, "[CONTROL FLOW] Loop not done.\n");
+      dbg(APP_LOG, "[CONTROL FLOW] First part, Loop not done.\n");
     }
-    dbg(APP_LOG, "Frame=%d, Time=%f, dt=%f\n", frame, time, dt);
+    dbg(APP_LOG, "[CONTROL FLOW] First part, Frame=%d, Time=%f, dt=%f\n",
+        frame, time, dt);
 
     // done flag no more matters.
     SpawnWithBreakAllGranularity(false, init_config.frame, init_config.time,
