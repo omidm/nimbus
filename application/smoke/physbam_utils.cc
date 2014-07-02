@@ -290,6 +290,10 @@ bool InitializeExampleAndDriver(
           init_config.local_region.dz()),
         GridToRange(init_config.global_region, init_config.local_region));
     // PhysBAM::WaterSources::Add_Source(example);
+
+    TV point1=TV::All_Ones_Vector()*.2,point2=TV::All_Ones_Vector()*.3;point1(2)=0;point2(2)=.05;
+    example->source.min_corner=point1;example->source.max_corner=point2;
+
     example->data_config.Set(data_config);
   }
   {

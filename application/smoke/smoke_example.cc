@@ -18,6 +18,7 @@
 #include "data/physbam/translator_physbam_old.h"
 #include "data/scalar_data.h"
 #include "shared/nimbus.h"
+#include "shared/dbg.h"
 #include "worker/physical_data_instance.h"
 
 // TODO(quhang) In three places where nimbus_thread_queue is introduced.
@@ -42,16 +43,18 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     restart(0),
     write_debug_data(false),
     number_of_ghost_cells(application::kGhostNum),
-    cfl(1),
+    cfl(0.9),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac_grid),
     projection(mac_grid, false, false, nimbus_thread_queue),
     advection_scalar(nimbus_thread_queue),
     boundary(0)
 {
+  /*
     for (int i = 1; i <= TV::dimension; i++) {
       domain_boundary(i)(1) = true;
       domain_boundary(i)(2) = true;
     }
+  */
     pthread_mutex_init(&lock, 0);
     use_cache   = false;
     cache_fv    = NULL;
@@ -90,17 +93,20 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     restart(0),
     write_debug_data(false),
     number_of_ghost_cells(application::kGhostNum),
-    cfl(1),
+    cfl(0.9),
     mac_grid(TV_INT(),RANGE<TV>::Unit_Box(),true),//incompressible_fluid_collection(mac \grid),
     projection(mac_grid, false, false, nimbus_thread_queue),
     advection_scalar(nimbus_thread_queue),
     boundary(0)
 
 {
+  /*
     for (int i = 1; i <= TV::dimension; i++) {
       domain_boundary(i)(1) = true;
       domain_boundary(i)(2) = true;
     }
+  */
+
     pthread_mutex_init(&lock, 0);
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -158,8 +164,10 @@ CFL_Threaded(RANGE<TV_INT>& domain, ARRAY<T, FACE_INDEX<TV::dimension> >& face_v
         face_velocities(axis, mac_grid.First_Face_Index_In_Cell(axis, cell)), 
 	face_velocities(axis, mac_grid.Second_Face_Index_In_Cell(axis, cell)));
     }
+    dbg(APP_LOG, "[CONTROL FLOW] local_V_norm=%f\n", local_V_norm);
     dt_convection = max(dt_convection, local_V_norm);
   }
+  dbg(APP_LOG, "[CONTROL FLOW] dt_convection=%f\n", dt_convection);
   pthread_mutex_lock(&lock);
   dt = min(dt, (T)1.0/dt_convection);
   pthread_mutex_unlock(&lock);
@@ -193,14 +201,14 @@ Set_Boundary_Conditions(const T time) {
 	}
       }
     }
-    for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
-            iterator.Valid();
-            iterator.Next()) {
-      if(source.Lazy_Inside(iterator.Location())){
-	projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
-	if(iterator.Axis()==2)face_velocities(iterator.Full_Index())=1;
-	else face_velocities(iterator.Full_Index())=0;
-      }
+  }
+  for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
+       iterator.Valid();
+       iterator.Next()) {
+    if(source.Lazy_Inside(iterator.Location())){
+      projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
+      if(iterator.Axis()==2)face_velocities(iterator.Full_Index())=1;
+      else face_velocities(iterator.Full_Index())=0;
     }
   }
 }
@@ -275,8 +283,6 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
     GeometricRegion array_reg_central(local_region);
     GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
     GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
-    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
-    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,
@@ -311,7 +317,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 	&& data_config.GetFlag(DataConfig::DENSITY)) {
       //TODO: translator stuff ???
       translator.WriteScalarArrayFloat(
-          &array_reg_outer, array_shift, &pdv, &density);
+          &array_reg_central, array_shift, &pdv, &density);
     }
     
     //density ghost
@@ -706,7 +712,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 	&& data_config.GetFlag(DataConfig::DENSITY)) {
       //TODO: translator stuff ???
       translator.ReadScalarArrayFloat(
-          &array_reg_outer, array_shift, &pdv, &density);
+          &array_reg_central, array_shift, &pdv, &density);
 				      
     }
 
@@ -716,7 +722,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 	&& data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
       //TODO: translator stuff ???
       translator.ReadScalarArrayFloat(
-          &array_reg_outer, array_shift, &pdv, &density);
+          &array_reg_outer, array_shift, &pdv, &density_ghost);
     }
 
     // Calculate dt.

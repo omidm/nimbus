@@ -135,7 +135,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     for (int i = 0; i < calculate_dt_job_num; ++i) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
       /*
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
                           APP_PHI, NULL);

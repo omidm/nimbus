@@ -171,7 +171,8 @@ namespace application {
 	read.clear();
 	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
 	write.clear();
-	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, APP_DENSITY_GHOST, NULL);
+	// LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, APP_DENSITY_GHOST, APP_DENSITY, NULL);
+	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY_GHOST, NULL);
 
 	nimbus::Parameter scalar_params;
 	std::string scalar_str;
@@ -188,12 +189,12 @@ namespace application {
     {
       for (int i = 0; i < convect_job_num; ++i) {
 	read.clear();
-	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, NULL);
+	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_DENSITY, APP_DENSITY_GHOST, NULL);
 	LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
 	LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 	write.clear();
 	LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL);
-	
+
 	nimbus::Parameter convect_params;
 	std::string convect_str;
 	SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i],

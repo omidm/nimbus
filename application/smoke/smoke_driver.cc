@@ -177,24 +177,6 @@ ProjectionWrapupImpl(
   return true;
 }
 
-/*
-template<class TV> bool SMOKE_DRIVER<TV>::
-ProjectImpl(const nimbus::Job *job,
-	    const nimbus::DataArray &da,
-	    T dt) {
-  LOG::Time("Project");
-  example.Set_Boundary_Conditions(time+dt);
-  example.projection.p* = dt;
-  example.boundary->Apply_Boundary_Condition_Face(example.mac_grid, 
-						  example.face_velocities, time + dt);
-  example.projection.Make_Divergence_Free(example.face_velocities, dt, time);
-  example.projection.p* = (1/dt);
-  // Save State.
-  // example.Save_To_Nimubs(job, da, current_frame + 1);
-  return true;
-}
-*/
-
 //#####################################################################
 // Function Write_Substep
 //#####################################################################

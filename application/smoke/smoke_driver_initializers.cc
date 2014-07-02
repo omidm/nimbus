@@ -26,17 +26,33 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
   output_number=current_frame;
   time=example.Time_At_Frame(current_frame);
 
+  /*
   // domain boundaries
   {
-    example.boundary = &example.boundary_scalar;
+    for (int i = 1; i <= TV::dimension; i++) {
+      example.domain_boundary(i)(1) = true;
+      example.domain_boundary(i)(2) = true;
+    }
+
+    //example.boundary = &example.boundary_scalar;
+
+    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
 
     VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
     constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
     example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
     //example.Set_Boundary_Conditions(time);
   }
+  */
 
-  // allocates array for levelset/ particles/ removed particles
+  if (example.nimbus_thread_queue) {
+    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
+  } else {
+    example.boundary = &example.boundary_scalar;
+  }
+
+  example.projection.elliptic_solver->thread_queue = example.nimbus_thread_queue;
+
   // allocates array for velocity and density
   {
     InitializeProjectionHelper(
@@ -65,6 +81,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
 
   {
     // policies etc
+
     example.Initialize_Fields(); // Might need to look at PhysBAM code for this ??
 
     // setup laplace
@@ -73,12 +90,26 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
     example.projection.elliptic_solver->pcg.evolution_solver_type = krylov_solver_cg;
     example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
+    // domain boundaries
+    {
+      for (int i = 1; i <= TV::dimension; i++) {
+	example.domain_boundary(i)(1) = true;
+	example.domain_boundary(i)(2) = true;
+      }
+
+      VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
+      constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
+      example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
+      example.Set_Boundary_Conditions(time);
+    }
+
+
     LAPLACE_UNIFORM<T_GRID>* laplace_solver =
       dynamic_cast<LAPLACE_UNIFORM<T_GRID>* >(
           example.projection.elliptic_solver);
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
-    example.Set_Boundary_Conditions(time);
+    // example.Set_Boundary_Conditions(time);
   }
   // write, save
 //  Write_Output_Files(example.first_frame);
@@ -93,15 +124,32 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
 
+  /*
   // domain boundaries
   {
-    example.boundary = &example.boundary_scalar;
+    for (int i = 1; i <= TV::dimension; i++) {
+      example.domain_boundary(i)(1) = true;
+      example.domain_boundary(i)(2) = true;
+    }
+
+    // example.boundary = &example.boundary_scalar;
+    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
 
     VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
     constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
     example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
     // example.Set_Boundary_Conditions(time);
   }
+  */
+
+  if (example.nimbus_thread_queue) {
+    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
+  } else {
+    example.boundary = &example.boundary_scalar;
+  }
+
+  example.projection.elliptic_solver->thread_queue = example.nimbus_thread_queue;
+
   // allocates array for velocity and density
   {
     InitializeProjectionHelper(
@@ -130,7 +178,6 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
   {
     
     // policies etc
-    // example.Initialize_Fields(); // Might need to look at PhysBAM code for this ?? 
 
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
@@ -143,6 +190,18 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
 
     example.Initialize_Fields(); // Might need to look at PhysBAM code for this ?? 
 
+    //domain boundaries
+    {                                                                                                                      
+      for (int i = 1; i <= TV::dimension; i++) {
+	example.domain_boundary(i)(1) = true;
+	example.domain_boundary(i)(2) = true;
+      }
+
+      VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
+      constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
+      example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
+    }
+
     LAPLACE_UNIFORM<T_GRID>* laplace_solver =
       dynamic_cast<LAPLACE_UNIFORM<T_GRID>* >(
 					      example.projection.elliptic_solver);
@@ -154,13 +213,21 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
     const nimbus::Job *job,
     const nimbus::DataArray &da)
 {
+  Initialize(job, da);
+  /*
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
 
   // domain boundaries
   {
-    example.boundary = &example.boundary_scalar;
+    for (int i = 1; i <= TV::dimension; i++) {
+      example.domain_boundary(i)(1) = true;
+      example.domain_boundary(i)(2) = true;
+    }
+
+    //example.boundary = &example.boundary_scalar;
+    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
 
     VECTOR<VECTOR<bool,2>, TV::dimension> constant_extrapolation;
     constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
@@ -188,6 +255,8 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 
   {
     // policies etc
+    example.projection.elliptic_solver->thread_queue = example.nimbus_thread_queue;
+
     // example.Initialize_Fields(); // Might need to look at PhysBAM code for this ??
 
     //setup laplace
@@ -206,6 +275,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 	  example.projection.elliptic_solver);
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
   }
+  */
 }
 
 template<class TV> bool SMOKE_DRIVER<TV>::InitializeProjectionHelper(
