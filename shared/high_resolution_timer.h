@@ -70,6 +70,7 @@ class HighResolutionTimer {
 
  private:
   HighResolutionTimerMap* timer_map_;
+  pthread_mutex_t lock_;
 };
 
 }  // namespace nimbus
