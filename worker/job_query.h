@@ -39,6 +39,7 @@
 #ifndef NIMBUS_WORKER_JOB_QUERY_H_
 #define NIMBUS_WORKER_JOB_QUERY_H_
 
+#include <time.h>
 #include <list>
 #include <map>
 #include <string>
@@ -51,30 +52,6 @@ class JobQuery {
  public:
   explicit JobQuery(Job* job);
   ~JobQuery();
-  /*
-  bool SpawnComputeJob(
-      const std::string& name, const job_id_t& id,
-      const IDSet<logical_data_id_t>& read,
-      const IDSet<logical_data_id_t>& write,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      const Parameter& params,
-      const bool sterile = false) {
-    return StageJob(name, id, read, write, before, after, params, sterile,
-                    false);
-  }
-  bool SpawnLastJob(
-      const std::string& name, const job_id_t& id,
-      const IDSet<logical_data_id_t>& read,
-      const IDSet<logical_data_id_t>& write,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      const Parameter& params,
-      const bool sterile = false) {
-    return StageJob(name, id, read, write, before, after, params, sterile,
-                    true);
-  }
-  */
   bool StageJob(
       const std::string& name, const job_id_t& id,
       const IDSet<logical_data_id_t>& read,
@@ -94,8 +71,14 @@ class JobQuery {
   bool CommitStagedJobs();
   bool CommitJob(const job_id_t& id);
   void GenerateDotFigure(const std::string& file_name);
+  void PrintTimeProfile();
 
  private:
+  double query_time_;
+  double commit_time_;
+  double copy_time_;
+  double elimination_time_;
+  double spawn_time_;
   bool has_last_barrier_job_;
   job_id_t last_barrier_job_id_;
 
