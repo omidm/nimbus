@@ -26,33 +26,6 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
   output_number=current_frame;
   time=example.Time_At_Frame(current_frame);
 
-  /*
-  // domain boundaries
-  {
-    for (int i = 1; i <= TV::dimension; i++) {
-      example.domain_boundary(i)(1) = true;
-      example.domain_boundary(i)(2) = true;
-    }
-
-    //example.boundary = &example.boundary_scalar;
-
-    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
-
-    VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
-    constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
-    example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
-    //example.Set_Boundary_Conditions(time);
-  }
-  */
-
-  if (example.nimbus_thread_queue) {
-    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
-  } else {
-    example.boundary = &example.boundary_scalar;
-  }
-
-  example.projection.elliptic_solver->thread_queue = example.nimbus_thread_queue;
-
   // allocates array for velocity and density
   {
     InitializeProjectionHelper(
@@ -97,10 +70,11 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
 	example.domain_boundary(i)(2) = true;
       }
 
+      example.boundary = &example.boundary_scalar;
+
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
       example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
-      //example.Set_Boundary_Conditions(time);
     }
 
 
@@ -123,32 +97,6 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
-
-  /*
-  // domain boundaries
-  {
-    for (int i = 1; i <= TV::dimension; i++) {
-      example.domain_boundary(i)(1) = true;
-      example.domain_boundary(i)(2) = true;
-    }
-
-    // example.boundary = &example.boundary_scalar;
-    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
-
-    VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
-    constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
-    example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
-    // example.Set_Boundary_Conditions(time);
-  }
-  */
-
-  if (example.nimbus_thread_queue) {
-    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
-  } else {
-    example.boundary = &example.boundary_scalar;
-  }
-
-  example.projection.elliptic_solver->thread_queue = example.nimbus_thread_queue;
 
   // allocates array for velocity and density
   {
@@ -188,7 +136,7 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
     // load
     example.Load_From_Nimbus(job, da, current_frame);
 
-    example.Initialize_Fields(); // Might need to look at PhysBAM code for this ?? 
+    // example.Initialize_Fields(); // Might need to look at PhysBAM code for this ?? 
 
     //domain boundaries
     {                                                                                                                      
@@ -196,6 +144,8 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
 	example.domain_boundary(i)(1) = true;
 	example.domain_boundary(i)(2) = true;
       }
+
+      example.boundary = &example.boundary_scalar;
 
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
@@ -217,22 +167,6 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
 
-  // domain boundaries
-  {
-    for (int i = 1; i <= TV::dimension; i++) {
-      example.domain_boundary(i)(1) = true;
-      example.domain_boundary(i)(2) = true;
-    }
-
-    //example.boundary = &example.boundary_scalar;
-    example.boundary = new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue, example.boundary_scalar);
-
-    VECTOR<VECTOR<bool,2>, TV::dimension> constant_extrapolation;
-    constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
-    example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
-    // example.Set_Boundary_Conditions(time);
-  }
-
   {
     // Maybe ???
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
@@ -253,7 +187,6 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 
   {
     // policies etc
-    example.projection.elliptic_solver->thread_queue = example.nimbus_thread_queue;
 
     // example.Initialize_Fields(); // Might need to look at PhysBAM code for this ??
 
@@ -263,10 +196,22 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
     example.projection.elliptic_solver->pcg.evolution_solver_type = krylov_solver_cg;
     example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
+    // domain boundaries   
+    {
+      for (int i = 1; i <= TV::dimension; i++) {
+	example.domain_boundary(i)(1) = true;
+	example.domain_boundary(i)(2) = true;
+      }
+
+      example.boundary = &example.boundary_scalar;
+
+      VECTOR<VECTOR<bool,2>, TV::dimension> constant_extrapolation;
+      constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
+      example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
+    }
+
     // load
     example.Load_From_Nimbus(job, da, current_frame);
-
-    example.Initialize_Fields(); // Might need to look at PhysBAM code for this ?? 
 
     LAPLACE_UNIFORM<T_GRID>* laplace_solver = 
       dynamic_cast<LAPLACE_UNIFORM<T_GRID>* >(
