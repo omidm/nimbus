@@ -179,6 +179,7 @@ CFL_Threaded(RANGE<TV_INT>& domain, ARRAY<T, FACE_INDEX<TV::dimension> >& face_v
 // is valid. It will try to write to psi_D and psi_N of the whole region, and
 // write to pressure and velocity in the boundary region.
 // From what I read. --quhang
+/*
 template<class TV> void SMOKE_EXAMPLE<TV>::
 Set_Boundary_Conditions(const T time) {
   projection.elliptic_solver->psi_D.Fill(false);
@@ -212,6 +213,25 @@ Set_Boundary_Conditions(const T time) {
     }
   }
 }
+*/
+template<class TV> void SMOKE_EXAMPLE<TV>::
+Set_Boundary_Conditions(const T time)
+{
+  projection.elliptic_solver->psi_D.Fill(false);projection.elliptic_solver->psi_N.Fill(false);
+  for(int axis=1;axis<=TV::dimension;axis++) for(int axis_side=1;axis_side<=2;axis_side++){int side=2*(axis-1)+axis_side;
+      if(domain_boundary(axis)(axis_side)){
+	TV_INT interior_cell_offset=axis_side==1?TV_INT():-TV_INT::Axis_Vector(axis);
+	for(typename GRID<TV>::FACE_ITERATOR iterator(mac_grid,1,GRID<TV>::BOUNDARY_REGION,side);iterator.Valid();iterator.Next()){TV_INT cell=iterator.Face_Index()+interior_cell_offset;
+	  TV_INT boundary_face=axis_side==1?iterator.Face_Index()+TV_INT::Axis_Vector(axis):iterator.Face_Index()-TV_INT::Axis_Vector(axis);
+	  projection.elliptic_solver->psi_D(cell)=true;projection.p(cell)=0;}}}
+  for(typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);iterator.Valid();iterator.Next()){
+    if(source.Lazy_Inside(iterator.Location())){
+      projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
+      if(iterator.Axis()==2)face_velocities(iterator.Full_Index())=1;
+      else face_velocities(iterator.Full_Index())=0;}}
+}
+
+
 
 //#####################################################################
 // Write_Output_Files
@@ -319,6 +339,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
       translator.WriteScalarArrayFloat(
           &array_reg_central, array_shift, &pdv, &density);
     }
+    application::DestroyTranslatorObjects(&pdv);
     
     //density ghost
     const std::string dgstring = std::string(APP_DENSITY_GHOST);
@@ -328,6 +349,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
       translator.WriteScalarArrayFloat(
           &array_reg_outer, array_shift, &pdv, &density_ghost);
     }
+    application::DestroyTranslatorObjects(&pdv);
 
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_DT), da, application::WRITE_ACCESS);
@@ -484,8 +506,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     GeometricRegion array_reg_central(local_region);
     GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
     GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
-    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
-    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,
@@ -676,8 +696,6 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     GeometricRegion array_reg_central(local_region);
     GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
     GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
-    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
-    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,
@@ -715,6 +733,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
           &array_reg_central, array_shift, &pdv, &density);
 				      
     }
+    application::DestroyTranslatorObjects(&pdv);
 
     // density ghost
     const std::string dgstring = std::string(APP_DENSITY_GHOST);
@@ -724,6 +743,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
       translator.ReadScalarArrayFloat(
           &array_reg_outer, array_shift, &pdv, &density_ghost);
     }
+    application::DestroyTranslatorObjects(&pdv);
 
     // Calculate dt.
     if (data_config.GetFlag(DataConfig::DT)) {
@@ -873,8 +893,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     GeometricRegion array_reg_central(local_region);
     GeometricRegion array_reg_outer(array_reg_central.NewEnlarged(application::kGhostNum));
     GeometricRegion array_reg_thin_outer(array_reg_central.NewEnlarged(1));
-    GeometricRegion array_reg_outer_7(array_reg_central.NewEnlarged(7));
-    GeometricRegion array_reg_outer_8(array_reg_central.NewEnlarged(8));
 
     GeometricRegion enlarge(1-application::kGhostNum,
                             1-application::kGhostNum,

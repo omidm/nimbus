@@ -14,7 +14,7 @@ template<class TV> void Execute_Main_Program(STREAM_TYPE& stream_type,PARSE_ARGS
     SMOKE_EXAMPLE<TV>* example=new SMOKE_EXAMPLE<TV>(stream_type,parse_args.Get_Integer_Value("-threads"));
 
     int scale=parse_args.Get_Integer_Value("-scale");
-    RANGE<TV> range(TV(),TV::All_Ones_Vector()*0.5);range.max_corner(2)=1;TV_INT counts=TV_INT::All_Ones_Vector()*scale/2;counts(2)=scale;
+    RANGE<TV> range(TV(),TV::All_Ones_Vector());range.max_corner(2)=1;TV_INT counts=TV_INT::All_Ones_Vector()*scale;counts(2)=scale;
     example->Initialize_Grid(counts,range);
     example->restart=parse_args.Get_Integer_Value("-restart");
     example->last_frame=parse_args.Get_Integer_Value("-e");

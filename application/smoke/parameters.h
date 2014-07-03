@@ -65,8 +65,8 @@ namespace application {
     // application specific parameters and constants
     //const bool kUseGlobalWrite = false;
     const bool kUseGlobalWrite = true;
-    //const bool kUseCache = true;
-    const bool kUseCache = false;
+    const bool kUseCache = true;
+    //const bool kUseCache = false;
     const int kThreadsNum = 1;
     const int kScale = 40;
     const int kAppPartNum = 2;

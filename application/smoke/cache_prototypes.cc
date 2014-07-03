@@ -45,7 +45,8 @@ CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true);
 CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true);
 CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true);
 
-CacheScalarArray<T> kCacheDensity(kDefaultRegion, 3, true);
+//CacheScalarArray<T> kCacheDensity(kDefaultRegion, 3, true);
+CacheScalarArray<T> kCacheDensity(kDefaultRegion, 0, true);
 CacheScalarArray<T> kCacheDensityGhost(kDefaultRegion, 3, true);
 
 // CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true);

@@ -100,7 +100,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
       example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
-      example.Set_Boundary_Conditions(time);
+      //example.Set_Boundary_Conditions(time);
     }
 
 
@@ -109,7 +109,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
           example.projection.elliptic_solver);
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
-    // example.Set_Boundary_Conditions(time);
+    example.Set_Boundary_Conditions(time);
   }
   // write, save
 //  Write_Output_Files(example.first_frame);
@@ -213,8 +213,6 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
     const nimbus::Job *job,
     const nimbus::DataArray &da)
 {
-  Initialize(job, da);
-  /*
   typedef application::DataConfig DataConfig;
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
@@ -275,7 +273,6 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 	  example.projection.elliptic_solver);
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
   }
-  */
 }
 
 template<class TV> bool SMOKE_DRIVER<TV>::InitializeProjectionHelper(
