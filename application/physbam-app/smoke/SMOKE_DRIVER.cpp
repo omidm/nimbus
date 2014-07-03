@@ -67,7 +67,7 @@ Initialize()
     // setup grids and velocities
     example.projection.Initialize_Grid(example.mac_grid);
     example.face_velocities.Resize(example.mac_grid);
-    example.density.Resize(example.mac_grid.Domain_Indices(3));
+    example.density.Resize(example.mac_grid.Domain_Indices(0));
     example.Initialize_Fields();
 
     // setup laplace

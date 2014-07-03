@@ -44,7 +44,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY)) {
       LOG::Time("Density memory allocated.\n");
-      example.density.Resize(example.mac_grid.Domain_Indices(3));
+      example.density.Resize(example.mac_grid.Domain_Indices(0));
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
       LOG::Time("Ghost Density memory allocated.\n");
@@ -70,7 +70,8 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
 	example.domain_boundary(i)(2) = true;
       }
 
-      example.boundary = &example.boundary_scalar;
+      // example.boundary = &example.boundary_scalar;
+      example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
 
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
@@ -116,7 +117,7 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY)) {
       LOG::Time("Density memory allocated.\n");
-      example.density.Resize(example.mac_grid.Domain_Indices(3));
+      example.density.Resize(example.mac_grid.Domain_Indices(0));
     }
     if (example.data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
       LOG::Time("Ghost Density memory allocated.\n");
@@ -145,7 +146,8 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
 	example.domain_boundary(i)(2) = true;
       }
 
-      example.boundary = &example.boundary_scalar;
+      // example.boundary = &example.boundary_scalar;
+      example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
 
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
@@ -176,7 +178,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 
     if (example.data_config.GetFlag(DataConfig::DENSITY)) {
       LOG::Time("Density memory allocated.\n");
-      example.density.Resize(example.mac_grid.Domain_Indices(3));
+      example.density.Resize(example.mac_grid.Domain_Indices(0));
     }
 
     InitializeProjectionHelper(
@@ -196,6 +198,9 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
     example.projection.elliptic_solver->pcg.evolution_solver_type = krylov_solver_cg;
     example.projection.elliptic_solver->pcg.cg_restart_iterations = 40;
 
+    // load
+    example.Load_From_Nimbus(job, da, current_frame);
+
     // domain boundaries   
     {
       for (int i = 1; i <= TV::dimension; i++) {
@@ -203,15 +208,13 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 	example.domain_boundary(i)(2) = true;
       }
 
-      example.boundary = &example.boundary_scalar;
+      example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
+      //example.boundary = &example.boundary_scalar;
 
       VECTOR<VECTOR<bool,2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
       example.boundary->Set_Constant_Extrapolation(constant_extrapolation);
     }
-
-    // load
-    example.Load_From_Nimbus(job, da, current_frame);
 
     LAPLACE_UNIFORM<T_GRID>* laplace_solver = 
       dynamic_cast<LAPLACE_UNIFORM<T_GRID>* >(

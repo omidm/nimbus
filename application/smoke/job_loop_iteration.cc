@@ -172,7 +172,8 @@ namespace application {
 	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
 	write.clear();
 	// LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, APP_DENSITY_GHOST, APP_DENSITY, NULL);
-	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY_GHOST, NULL);
+	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY, APP_DENSITY_GHOST, NULL);
+	// LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY_GHOST, NULL);
 
 	nimbus::Parameter scalar_params;
 	std::string scalar_str;

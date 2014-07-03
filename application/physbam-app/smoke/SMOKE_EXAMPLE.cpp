@@ -49,7 +49,7 @@ CFL_Threaded(RANGE<TV_INT>& domain,ARRAY<T,FACE_INDEX<TV::dimension> >& face_vel
         TV_INT cell=iterator.Cell_Index();T local_V_norm=0;
         for(int axis=1;axis<=GRID<TV>::dimension;axis++)
             local_V_norm+=mac_grid.one_over_dX[axis]*maxabs(face_velocities(axis,mac_grid.First_Face_Index_In_Cell(axis,cell)),face_velocities(axis,mac_grid.Second_Face_Index_In_Cell(axis,cell)));
-	std::stringstream ss; ss << "local_V_norm = " << local_V_norm << std::endl; std::cout << ss.str();
+	// std::stringstream ss; ss << "local_V_norm = " << local_V_norm << std::endl; std::cout << ss.str();
         dt_convection=max(dt_convection,local_V_norm);}
     pthread_mutex_lock(&lock);
     dt=min(dt,(T)1.0/dt_convection);
