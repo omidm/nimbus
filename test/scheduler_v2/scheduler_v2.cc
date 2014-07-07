@@ -51,6 +51,9 @@ SchedulerV2::SchedulerV2(unsigned int p)
 }
 
 bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
+  Log log;
+  log.StartTimer();
+
   SchedulerV2::UpdateWorkerDomains();
 
   size_t worker_num = server_->worker_num();
@@ -78,7 +81,13 @@ bool SchedulerV2::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) 
     }
   }
 
-  std::cout << "Picked worker: " << w_id << " for job: " << job->job_name() << std::endl;
+  log.StopTimer();
+  std::cout
+    << "Picked worker: " << w_id
+    << " for job: " << job->job_name()
+    << " took: " << log.timer()
+    << " for union set size of: " << union_set.size() << std::endl;
+
   return server_->GetSchedulerWorkerById(worker, w_id);
 }
 

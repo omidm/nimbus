@@ -44,7 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10000
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 10
+#define MAX_JOB_TO_ASSIGN 1
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
@@ -114,10 +114,10 @@ void Scheduler::SchedulerCoreProcessor() {
     TerminationProcedure();
 
     log_.StopTimer();
-    if (log_.timer() > .01) {
+    if (log_.timer() >= .00001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.3lf  assign: %2.3lf table: %2.3lf allocate: %2.3lf time: %6.3lf",
+          "loop: %2.5lf  assign: %2.5lf table: %2.5lf allocate: %2.5lf time: %6.5lf",
           log_.timer(), log_assign_.timer(), log_table_.timer(),
           log_allocate_.timer(), log_.GetTime());
 
