@@ -164,7 +164,7 @@ CFL_Threaded(RANGE<TV_INT>& domain, ARRAY<T, FACE_INDEX<TV::dimension> >& face_v
         face_velocities(axis, mac_grid.First_Face_Index_In_Cell(axis, cell)), 
 	face_velocities(axis, mac_grid.Second_Face_Index_In_Cell(axis, cell)));
     }
-    dbg(APP_LOG, "[CONTROL FLOW] local_V_norm=%f\n", local_V_norm);
+    // dbg(APP_LOG, "[CONTROL FLOW] local_V_norm=%f\n", local_V_norm);
     dt_convection = max(dt_convection, local_V_norm);
   }
   dbg(APP_LOG, "[CONTROL FLOW] dt_convection=%f\n", dt_convection);

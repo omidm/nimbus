@@ -5,7 +5,7 @@
 DataFaceArray     : face_vel       : (80, 80, 80), (4, 4, 4), (3, 3, 3) : none
 DataFaceArray     : face_vel_ghost : (80, 80, 80), (4, 4, 4), (3, 3, 3) : include_boundary
 DataScalarArray   : density        : (80, 80, 80), (4, 4, 4), (3, 3, 3) : none
-DataScalarArray   : density_ghost  : (80, 80, 80), (4, 4, 4), (3, 3, 3) : include_boundary		  
+DataScalarArray   : density_ghost  : (80, 80, 80), (4, 4, 4), (3, 3, 3) : include_boundary
 
 # Group I.
 # boolean.

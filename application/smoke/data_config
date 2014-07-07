@@ -4,8 +4,8 @@
 
 DataFaceArray     : face_vel       : (40, 40, 40), (1, 2, 1), (3, 3, 3) : none
 DataFaceArray     : face_vel_ghost : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary
-DataScalarArray   : density 	   : (40, 40, 40), (1, 2, 1), (3, 3, 3) : none
-DataScalarArray	  : density_ghost  : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary
+DataScalarArray   : density        : (40, 40, 40), (1, 2, 1), (3, 3, 3) : none
+DataScalarArray   : density_ghost  : (40, 40, 40), (1, 2, 1), (3, 3, 3) : include_boundary
 ScalarData        : dt : (40, 40, 40), (1, 2, 1), (0, 0, 0) : none
 
 # Group I.
