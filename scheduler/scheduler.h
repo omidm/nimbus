@@ -124,9 +124,11 @@ class Scheduler {
     bool terminate_application_flag_;
     exit_status_t terminate_application_status_;
     Log log_;
+    Log log_loop_;
     Log log_assign_;
-    Log log_table_;
-    Log log_allocate_;
+    Log log_job_manager_;
+    Log log_data_manager_;
+    Log log_load_balancer_;
 
   private:
     virtual bool AssignJob(JobEntry* job);
