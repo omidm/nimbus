@@ -85,6 +85,7 @@ size_t VersionManager::GetJobsNeedDataVersion(
     JobEntryList* list, VLD vld) {
   IndexIter iter = index_.find(vld.first);
   if (iter == index_.end()) {
+    list->clear();
     return 0;
   } else {
     return iter->second.GetJobsNeedVersion(list, vld.second);
