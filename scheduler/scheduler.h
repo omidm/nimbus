@@ -128,6 +128,7 @@ class Scheduler {
     Log log_assign_;
     Log log_job_manager_;
     Log log_data_manager_;
+    Log log_version_manager_;
     Log log_load_balancer_;
 
   private:

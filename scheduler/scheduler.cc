@@ -104,6 +104,8 @@ void Scheduler::SchedulerCoreProcessor() {
     log_assign_.ResetTimer();
     log_job_manager_.ResetTimer();
     log_data_manager_.ResetTimer();
+    log_version_manager_.ResetTimer();
+    log_load_balancer_.ResetTimer();
 
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
@@ -116,11 +118,12 @@ void Scheduler::SchedulerCoreProcessor() {
     if (log_loop_.timer() >= .00001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.5lf  assign: %2.5lf job_manager: %2.5lf data_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
+          "loop: %2.5lf  assign: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
           log_loop_.timer(),
           log_assign_.timer(),
           log_job_manager_.timer(),
           log_data_manager_.timer(),
+          log_version_manager_.timer(),
           log_load_balancer_.timer(),
           log_loop_.GetTime());
 
@@ -387,11 +390,13 @@ size_t Scheduler::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
     log_job_manager_.ResumeTimer();
+    log_version_manager_.ResumeTimer();
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
     }
     log_job_manager_.StopTimer();
+    log_version_manager_.StopTimer();
   }
   return count;
 }
@@ -668,8 +673,10 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
   log_job_manager_.ResumeTimer();
+  log_version_manager_.ResumeTimer();
   job_manager_->GetJobsNeedDataVersion(&list, vld);
   log_job_manager_.StopTimer();
+  log_version_manager_.StopTimer();
   assert(list.size() >= 1);
   bool writing_needed_version = (list.size() > 1) && writing;
 
