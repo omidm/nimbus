@@ -107,6 +107,8 @@ namespace nimbus {
     Coord MaxCorner() const;
     Coord Delta() const;
 
+    bool NoneZeroArea() const;
+
     /* Increase the size of geometric region along each dimension and side. */
     void Enlarge(const int_dimension_t delta);
     void Enlarge(const Coord &delta);

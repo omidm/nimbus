@@ -329,6 +329,10 @@ Coord GeometricRegion::Delta() const {
   return result;
 }
 
+bool GeometricRegion::NoneZeroArea() const {
+  return (dx_ != 0) && (dy_ != 0) && (dz_ != 0);
+}
+
 void GeometricRegion::Enlarge(const int_dimension_t delta) {
   x_ -= delta;
   y_ -= delta;
