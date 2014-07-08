@@ -1,5 +1,5 @@
 
-TARGET = ldo_index
+TARGET = ldo_index small
 all: check $(TARGET)
 
 NIMBUS_ROOT = ../..
@@ -19,6 +19,9 @@ LDFLAGS += -L.
 
 ldo_index: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
 	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) main.o -o $@ $(LFLAGS)
+
+small: $(CPP_FILES) $(H_FILES) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) small.o -o $@ $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)
