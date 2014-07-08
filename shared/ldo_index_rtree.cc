@@ -171,11 +171,19 @@ int LdoIndexRtree::IntersectingObjects(const std::string& variable,
   }
 
   Rtree* rtree = index_rtree_[variable];
-  std::vector<Value> result;
-  rtree->query(boost::geometry::index::intersects(RegionToBox(*region)),
-               std::back_inserter(result));
-  Transform(result, dest);
-  return dest->size();
+  int count = 0;
+  for (Rtree::const_query_iterator iter =
+       rtree->qbegin(boost::geometry::index::intersects(RegionToBox(*region)));
+       iter != rtree->qend();
+       ++iter) {
+    LogicalDataObject* object = exists_[iter->second];
+    assert(object != NULL);
+    if (region->Intersects(object->region())) {
+      dest->push_back(object);
+      ++count;
+    }
+  }
+  return count;
 }
 
 int LdoIndexRtree::CoveredObjects(const std::string& variable,
@@ -187,11 +195,18 @@ int LdoIndexRtree::CoveredObjects(const std::string& variable,
   }
 
   Rtree* rtree = index_rtree_[variable];
-  std::vector<Value> result;
-  rtree->query(boost::geometry::index::covered_by(RegionToBox(*region)),
-               std::back_inserter(result));
-  Transform(result, dest);
-  return dest->size();
+  int count = 0;
+  for (Rtree::const_query_iterator iter =
+       rtree->qbegin(boost::geometry::index::covered_by(RegionToBox(*region)));
+       iter != rtree->qend();
+       ++iter) {
+    LogicalDataObject* object = exists_[iter->second];
+    assert(object != NULL);
+    assert(region->Covers(object->region()));
+    dest->push_back(object);
+    ++count;
+  }
+  return count;
 }
 
 int LdoIndexRtree::AdjacentObjects(const std::string& variable,
@@ -203,14 +218,18 @@ int LdoIndexRtree::AdjacentObjects(const std::string& variable,
   }
 
   Rtree* rtree = index_rtree_[variable];
-  std::vector<Value> result;
-  // TODO(quhang): not sure if the two sets have overlap.
-  rtree->query(boost::geometry::index::covered_by(RegionToBox(*region)),
-               std::back_inserter(result));
-  rtree->query(boost::geometry::index::overlaps(RegionToBox(*region)),
-               std::back_inserter(result));
-  Transform(result, dest);
-  return dest->size();
+  int count = 0;
+  for (Rtree::const_query_iterator iter =
+       rtree->qbegin(boost::geometry::index::intersects(RegionToBox(*region)));
+       iter != rtree->qend();
+       ++iter) {
+    LogicalDataObject* object = exists_[iter->second];
+    assert(object != NULL);
+    assert(region->Adjacent(object->region()));
+    dest->push_back(object);
+    ++count;
+  }
+  return count;
 }
 
 }  // namespace nimbus
