@@ -55,7 +55,7 @@
 #include "shared/nimbus_types.h"
 
 #ifndef LDO_REFER
-#define LDO_REFER
+// #define LDO_REFER
 #endif  // LDO_REFER
 
 namespace nimbus {
