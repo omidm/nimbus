@@ -51,6 +51,10 @@
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
 
+#ifndef LDO_REFER
+#define LDO_REFER
+#endif  // LDO_REFER
+
 namespace nimbus {
 
 class LdoIndexRtree : public LdoIndex {
@@ -91,9 +95,14 @@ class LdoIndexRtree : public LdoIndex {
     return true;
   }
   void Transform(const std::vector<Value>& result, CLdoVector* dest);
+  void Sort(CLdoVector* dest);
   // For existance query.
   // typedef std::map<logical_data_id_t, LogicalDataObject*> LdoIdIndex;
-  LdoIdIndex exists_;
+  LdoIdIndex exists_rtree_;
+
+#ifdef LDO_REFER
+  LdoIndex refer;
+#endif  // LDO_REFER
 };
 }  // namespace nimbus
 

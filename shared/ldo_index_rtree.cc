@@ -36,6 +36,7 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <algorithm>
 #include <vector>
 #include "shared/dbg.h"
 #include "shared/ldo_index_rtree.h"
@@ -51,7 +52,7 @@ LdoIndexRtree::~LdoIndexRtree() {
     dbg(DBG_MEMORY, "Deleting Rtree 0x%x\n", rtree);
     delete rtree;
   }
-  exists_.clear();
+  exists_rtree_.clear();
   index_rtree_.clear();
 }
 
@@ -63,6 +64,9 @@ LdoIndexRtree::Box LdoIndexRtree::RegionToBox(const GeometricRegion& region) {
 }
 
 bool LdoIndexRtree::AddObject(LogicalDataObject *object) {
+#ifdef LDO_REFER
+  refer.AddObject(new LogicalDataObject(*object));
+#endif  // LDO_REFER
   // If the object already exists, reject it. Otherwise, insert
   // it into a list, creating a list if needed.
 
@@ -72,7 +76,7 @@ bool LdoIndexRtree::AddObject(LogicalDataObject *object) {
   dbg(DBG_DATA_OBJECTS, "LdoIndexRtree: adding %llu as %s.\n",
       object->id(), object->variable().c_str());
 
-  if (exists_.find(object->id()) != exists_.end()) {
+  if (exists_rtree_.find(object->id()) != exists_rtree_.end()) {
     dbg(DBG_DATA_OBJECTS|DBG_ERROR,
         "  - FAIL LdoIndexRtree: object %llu already in index.\n", object->id());
     return false;
@@ -87,25 +91,28 @@ bool LdoIndexRtree::AddObject(LogicalDataObject *object) {
       rtree = index_rtree_[var];
     }
     rtree->insert(Value(RegionToBox(*object->region()), object->id()));
-    exists_[object->id()] = object;
+    exists_rtree_[object->id()] = object;
     return true;
   }
 }
 
 bool LdoIndexRtree::HasObject(logical_data_id_t id) {
-  return (exists_.find(id) != exists_.end());
+  return (exists_rtree_.find(id) != exists_rtree_.end());
 }
 
 bool LdoIndexRtree::RemoveObject(logical_data_id_t id) {
+#ifdef LDO_REFER
+  refer.RemoveObject(id);
+#endif  // LDO_REFER
   dbg(DBG_TEMP, "Trying to remove object %llu.\n", id);
 
   if (HasObject(id)) {
-    LogicalDataObject* obj = exists_[id];
+    LogicalDataObject* obj = exists_rtree_[id];
     assert(obj->id() == id);
     std::string variable = obj->variable();
     Rtree* rtree = index_rtree_[variable];
     rtree->remove(Value(RegionToBox(*obj->region()), id));
-    int cnt = exists_.erase(id);
+    int cnt = exists_rtree_.erase(id);
     dbg(DBG_TEMP, "Removing object %llu, removed %i elements from exists_.\n", id, cnt);
     return true;
   } else {
@@ -114,6 +121,9 @@ bool LdoIndexRtree::RemoveObject(logical_data_id_t id) {
 }
 
 bool LdoIndexRtree::RemoveObject(LogicalDataObject* object) {
+#ifdef LDO_REFER
+  refer.RemoveObject(object);
+#endif  // LDO_REFER
   return RemoveObject(object->id());
 }
 
@@ -121,15 +131,15 @@ LogicalDataObject* LdoIndexRtree::SpecificObject(logical_data_id_t id) {
   if (!HasObject(id)) {
     return NULL;
   } else {
-    return exists_[id];
+    return exists_rtree_[id];
   }
 }
 
 int LdoIndexRtree::AllObjects(CLdoVector* dest) {
   dest->clear();
   int count = 0;
-  LdoIdIndex::iterator it = exists_.begin();
-  for (; it != exists_.end(); ++it) {
+  LdoIdIndex::iterator it = exists_rtree_.begin();
+  for (; it != exists_rtree_.end(); ++it) {
     LogicalDataObject* obj = (*it).second;
     dest->push_back(obj);
     count++;
@@ -142,8 +152,19 @@ void LdoIndexRtree::Transform(const std::vector<Value>& result,
   for (std::vector<Value>::const_iterator iter = result.begin();
        iter != result.end();
        ++iter) {
-    assert(exists_.find(iter->second) != exists_.end());
-    dest->push_back(exists_[iter->second]);
+    assert(exists_rtree_.find(iter->second) != exists_rtree_.end());
+    dest->push_back(exists_rtree_[iter->second]);
+  }
+}
+
+void LdoIndexRtree::Sort(CLdoVector* dest) {
+  assert(dest != NULL);
+  for (int i = 0; i < dest->size(); ++i) {
+    for (int j = i + 1; j < dest->size(); ++j) {
+      if ((*dest)[i]->id() > (*dest)[j]->id()) {
+        std::swap((*dest)[i], (*dest)[j]);
+      }
+    }
   }
 }
 
@@ -165,6 +186,7 @@ int LdoIndexRtree::AllObjects(const std::string& variable,
 int LdoIndexRtree::IntersectingObjects(const std::string& variable,
                                        const GeometricRegion* region,
                                        CLdoVector* dest) {
+  assert(dest != NULL);
   dest->clear();
   if (index_rtree_.find(variable) == index_rtree_.end()) {  // No such variable
     return 0;
@@ -176,19 +198,25 @@ int LdoIndexRtree::IntersectingObjects(const std::string& variable,
        rtree->qbegin(boost::geometry::index::intersects(RegionToBox(*region)));
        iter != rtree->qend();
        ++iter) {
-    LogicalDataObject* object = exists_[iter->second];
+    LogicalDataObject* object = exists_rtree_[iter->second];
     assert(object != NULL);
     if (region->Intersects(object->region())) {
       dest->push_back(object);
       ++count;
     }
   }
+  Sort(dest);
+#ifdef LDO_REFER
+  CLdoVector refer_dest;
+  assert(count == refer.IntersectingObjects(variable, region, &refer_dest));
+#endif  // LDO_REFER
   return count;
 }
 
 int LdoIndexRtree::CoveredObjects(const std::string& variable,
                                   const GeometricRegion* region,
                                   CLdoVector* dest) {
+  assert(dest != NULL);
   dest->clear();
   if (index_rtree_.find(variable) == index_rtree_.end()) {  // No such variable
     return 0;
@@ -200,18 +228,24 @@ int LdoIndexRtree::CoveredObjects(const std::string& variable,
        rtree->qbegin(boost::geometry::index::covered_by(RegionToBox(*region)));
        iter != rtree->qend();
        ++iter) {
-    LogicalDataObject* object = exists_[iter->second];
+    LogicalDataObject* object = exists_rtree_[iter->second];
     assert(object != NULL);
     assert(region->Covers(object->region()));
     dest->push_back(object);
     ++count;
   }
+  Sort(dest);
+#ifdef LDO_REFER
+  CLdoVector refer_dest;
+  assert(count == refer.CoveredObjects(variable, region, &refer_dest));
+#endif  // LDO_REFER
   return count;
 }
 
 int LdoIndexRtree::AdjacentObjects(const std::string& variable,
                                    const GeometricRegion* region,
                                    CLdoVector* dest) {
+  assert(dest != NULL);
   dest->clear();
   if (index_rtree_.find(variable) == index_rtree_.end()) {  // No such variable
     return 0;
@@ -223,12 +257,17 @@ int LdoIndexRtree::AdjacentObjects(const std::string& variable,
        rtree->qbegin(boost::geometry::index::intersects(RegionToBox(*region)));
        iter != rtree->qend();
        ++iter) {
-    LogicalDataObject* object = exists_[iter->second];
+    LogicalDataObject* object = exists_rtree_[iter->second];
     assert(object != NULL);
     assert(region->Adjacent(object->region()));
     dest->push_back(object);
     ++count;
   }
+  Sort(dest);
+#ifdef LDO_REFER
+  CLdoVector refer_dest;
+  assert(count == refer.AdjacentObjects(variable, region, &refer_dest));
+#endif  // LDO_REFER
   return count;
 }
 
