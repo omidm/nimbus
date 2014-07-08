@@ -60,7 +60,7 @@ LdoIndexRtree::Box LdoIndexRtree::RegionToBox(const GeometricRegion& region) {
   return Box(Point(region.x(), region.y(), region.z()),
              Point(region.x() + region.dx(),
                    region.y() + region.dy(),
-                   region.z() + region.dx()));
+                   region.z() + region.dz()));
 }
 
 bool LdoIndexRtree::AddObject(LogicalDataObject *object) {
@@ -205,7 +205,7 @@ int LdoIndexRtree::IntersectingObjects(const std::string& variable,
       ++count;
     }
   }
-  Sort(dest);
+  // Sort(dest);
 #ifdef LDO_REFER
   CLdoVector refer_dest;
   assert(count == refer.IntersectingObjects(variable, region, &refer_dest));
@@ -234,7 +234,7 @@ int LdoIndexRtree::CoveredObjects(const std::string& variable,
     dest->push_back(object);
     ++count;
   }
-  Sort(dest);
+  // Sort(dest);
 #ifdef LDO_REFER
   CLdoVector refer_dest;
   assert(count == refer.CoveredObjects(variable, region, &refer_dest));
@@ -263,7 +263,7 @@ int LdoIndexRtree::AdjacentObjects(const std::string& variable,
     dest->push_back(object);
     ++count;
   }
-  Sort(dest);
+  // Sort(dest);
 #ifdef LDO_REFER
   CLdoVector refer_dest;
   assert(count == refer.AdjacentObjects(variable, region, &refer_dest));

@@ -34,6 +34,9 @@
 
  /*
   * An implementation of ldoindex using r-tree.
+  * If macro LDO_REFER is defined, both the list implementation and the r-tree
+  * implementation will be used and compared against each other.
+  *
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
