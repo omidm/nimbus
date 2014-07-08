@@ -57,11 +57,11 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       IndexIter iter = index_.find(*it);
       if (iter == index_.end()) {
-        VersionEntry ve(*it);
-        ve.AddJobEntry(job);
+        VersionEntry *ve = new VersionEntry(*it);
+        ve->AddJobEntry(job);
         index_.insert(std::make_pair(*it, ve));
       } else {
-        iter->second.AddJobEntry(job);
+        iter->second->AddJobEntry(job);
       }
     }
   } else {
@@ -69,11 +69,11 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       IndexIter iter = index_.find(it->first);
       if (iter == index_.end()) {
-        VersionEntry ve(it->first);
-        ve.AddJobEntry(job);
+        VersionEntry *ve = new VersionEntry(it->first);
+        ve->AddJobEntry(job);
         index_.insert(std::make_pair(it->first, ve));
       } else {
-        iter->second.AddJobEntry(job);
+        iter->second->AddJobEntry(job);
       }
     }
   }
@@ -88,7 +88,7 @@ size_t VersionManager::GetJobsNeedDataVersion(
     list->clear();
     return 0;
   } else {
-    return iter->second.GetJobsNeedVersion(list, vld.second);
+    return iter->second->GetJobsNeedVersion(list, vld.second);
   }
 }
 
@@ -103,7 +103,13 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
       exit(-1);
       return false;
     } else {
-      iter->second.RemoveJobEntry(job);
+      iter->second->RemoveJobEntry(job);
+      if (iter->second->is_empty()) {
+        delete iter->second;
+        index_.erase(iter);
+        std::cout << "version entry got empty!!\n";
+        exit(-1);
+      }
     }
   }
 

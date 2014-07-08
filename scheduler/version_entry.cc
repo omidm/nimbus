@@ -139,4 +139,7 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionEntry::is_empty() {
+  return ((index_.size() == 0) && (pending_jobs_.size() == 0));
+}
 

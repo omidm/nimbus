@@ -73,6 +73,8 @@ class VersionEntry {
     size_t GetJobsNeedVersion(
         JobEntryList* list, data_version_t version);
 
+    bool is_empty();
+
   private:
     logical_data_id_t ldid_;
     Bucket pending_jobs_;
