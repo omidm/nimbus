@@ -143,11 +143,6 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
         delete it->second;
         index_.erase(it);
       }
-    } else {
-      dbg(DBG_ERROR, "Version Entry: job %lu version was not in the index for ldid %lu.\n",
-          job->job_id(), ldid_);
-      exit(-1);
-      return false;
     }
   } else {
     dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
