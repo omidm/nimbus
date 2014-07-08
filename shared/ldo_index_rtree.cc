@@ -44,19 +44,18 @@ namespace nimbus {
 
 LdoIndexRtree::LdoIndexRtree() {}
 
-// TODO(quhang) .
 LdoIndexRtree::~LdoIndexRtree() {
   LdoVariableIndexRtree::iterator it = index_rtree_.begin();
   for (; it != index_rtree_.end(); ++it) {
     Rtree* rtree = (*it).second;
-    dbg(DBG_MEMORY, "Deleting LdoListRtree 0x%x\n", rtree);
+    dbg(DBG_MEMORY, "Deleting Rtree 0x%x\n", rtree);
     delete rtree;
   }
   exists_.clear();
   index_rtree_.clear();
 }
 
-Box LdoIndexRtree::RegionToBox(const GeometricRegion& region) {
+LdoIndexRtree::Box LdoIndexRtree::RegionToBox(const GeometricRegion& region) {
   return Box(Point(region.x(), region.y(), region.z()),
              Point(region.x() + region.dx(),
                    region.y() + region.dy(),
@@ -81,13 +80,13 @@ bool LdoIndexRtree::AddObject(LogicalDataObject *object) {
     std::string var = object->variable();
     Rtree* rtree;
     if (index_rtree_.find(var) == index_rtree_.end()) {
-      rtree = new Rtree();
+      rtree = new Rtree;
       dbg(DBG_MEMORY, "Allocating Rtree 0x%x\n", rtree);
       index_rtree_[var] = rtree;
     } else {
       rtree = index_rtree_[var];
     }
-    rtree.insert(Value(RegionToBox(object->region()), object->id()));
+    rtree->insert(Value(RegionToBox(*object->region()), object->id()));
     exists_[object->id()] = object;
     return true;
   }
@@ -105,13 +104,13 @@ bool LdoIndexRtree::RemoveObject(logical_data_id_t id) {
     assert(obj->id() == id);
     std::string variable = obj->variable();
     Rtree* rtree = index_rtree_[variable];
-    rtree->remove(RegionToBox(obj->region(), id));
-    list->erase(it);
+    rtree->remove(Value(RegionToBox(*obj->region()), id));
     int cnt = exists_.erase(id);
     dbg(DBG_TEMP, "Removing object %llu, removed %i elements from exists_.\n", id, cnt);
     return true;
+  } else {
+    return false;
   }
-  return false;
 }
 
 bool LdoIndexRtree::RemoveObject(LogicalDataObject* object) {
@@ -138,6 +137,16 @@ int LdoIndexRtree::AllObjects(CLdoVector* dest) {
   return count;
 }
 
+void LdoIndexRtree::Transform(const std::vector<Value>& result,
+                              CLdoVector* dest) {
+  for (std::vector<Value>::const_iterator iter = result.begin();
+       iter != result.end();
+       ++iter) {
+    assert(exists_.find(iter->second) != exists_.end());
+    dest->push_back(exists_[iter->second]);
+  }
+}
+
 int LdoIndexRtree::AllObjects(const std::string& variable,
                               CLdoVector* dest) {
   dest->clear();
@@ -145,56 +154,63 @@ int LdoIndexRtree::AllObjects(const std::string& variable,
     return 0;
   }
 
-  // TODO(quhang): iterate through the rtree.
-  // bool always_true(const Value& value) {
-  //   return true;
-  // }
-  // boost::geometry::index::satisfies(always_true);
   Rtree* rtree = index_rtree_[variable];
-  /*
-  LdoList::iterator iter = list->begin();
-  int count = 0;
-  for (; iter != list->end(); ++iter) {
-    LogicalDataObject* object = *iter;
-    dest->push_back(object);
-    count++;
-  }
-  return count;
-  */
-  return 0;
+  std::vector<Value> result;
+  rtree->query(boost::geometry::index::satisfies(AlwaysTrue),
+               std::back_inserter(result));
+  Transform(result, dest);
+  return dest->size();
 }
 
-// TODO(quhang) .
 int LdoIndexRtree::IntersectingObjects(const std::string& variable,
                                        const GeometricRegion* region,
                                        CLdoVector* dest) {
   dest->clear();
-  if (index_.find(variable) == index_.end()) {  // No such variable
+  if (index_rtree_.find(variable) == index_rtree_.end()) {  // No such variable
     return 0;
   }
 
   Rtree* rtree = index_rtree_[variable];
-  std::vector<Value> result_s;
+  std::vector<Value> result;
   rtree->query(boost::geometry::index::intersects(RegionToBox(*region)),
-               std::back_inserter(*dest));
-  // assert in exist_.
-  // push exist_[iter->second]
+               std::back_inserter(result));
+  Transform(result, dest);
   return dest->size();
 }
 
-// TODO(quhang) .
 int LdoIndexRtree::CoveredObjects(const std::string& variable,
                                   const GeometricRegion* region,
                                   CLdoVector* dest) {
-  return 0;
+  dest->clear();
+  if (index_rtree_.find(variable) == index_rtree_.end()) {  // No such variable
+    return 0;
+  }
+
+  Rtree* rtree = index_rtree_[variable];
+  std::vector<Value> result;
+  rtree->query(boost::geometry::index::covered_by(RegionToBox(*region)),
+               std::back_inserter(result));
+  Transform(result, dest);
+  return dest->size();
 }
 
-// TODO(quhang) .
 int LdoIndexRtree::AdjacentObjects(const std::string& variable,
                                    const GeometricRegion* region,
                                    CLdoVector* dest) {
-  return 0;
-}
+  dest->clear();
+  if (index_rtree_.find(variable) == index_rtree_.end()) {  // No such variable
+    return 0;
+  }
 
+  Rtree* rtree = index_rtree_[variable];
+  std::vector<Value> result;
+  // TODO(quhang): not sure if the two sets have overlap.
+  rtree->query(boost::geometry::index::covered_by(RegionToBox(*region)),
+               std::back_inserter(result));
+  rtree->query(boost::geometry::index::overlaps(RegionToBox(*region)),
+               std::back_inserter(result));
+  Transform(result, dest);
+  return dest->size();
+}
 
 }  // namespace nimbus

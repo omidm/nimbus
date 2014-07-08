@@ -45,6 +45,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 #include "shared/ldo_index.h"
 #include "shared/logical_data_object.h"
 #include "shared/geometric_region.h"
@@ -86,6 +87,10 @@ class LdoIndexRtree : public LdoIndex {
   typedef std::map<std::string, Rtree*> LdoVariableIndexRtree;
   LdoVariableIndexRtree index_rtree_;
   Box RegionToBox(const GeometricRegion& region);
+  static bool AlwaysTrue(Value const& v) {
+    return true;
+  }
+  void Transform(const std::vector<Value>& result, CLdoVector* dest);
   // For existance query.
   // typedef std::map<logical_data_id_t, LogicalDataObject*> LdoIdIndex;
   LdoIdIndex exists_;
