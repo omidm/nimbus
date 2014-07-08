@@ -57,7 +57,7 @@ class VersionEntry {
   public:
     typedef boost::unordered_set<JobEntry*> Bucket;
     typedef Bucket::iterator BucketIter;
-    typedef boost::unordered_map<data_version_t, Bucket> Index;
+    typedef boost::unordered_map<data_version_t, Bucket*> Index;
     typedef Index::iterator IndexIter;
 
     explicit VersionEntry(logical_data_id_t ldid);

@@ -49,7 +49,7 @@ VersionManager::VersionManager() {
 }
 
 VersionManager::~VersionManager() {
-  Index::iterator it = index_.begin();
+  IndexIter it = index_.begin();
   for (; it != index_.end(); ++it) {
     delete it->second;
   }

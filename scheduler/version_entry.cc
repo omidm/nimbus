@@ -57,6 +57,10 @@ VersionEntry::VersionEntry(const VersionEntry& other) {
 }
 
 VersionEntry::~VersionEntry() {
+  IndexIter it = index_.begin();
+  for (; it != index_.end(); ++it) {
+    delete it->second;
+  }
 }
 
 VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
@@ -90,7 +94,14 @@ size_t VersionEntry::GetJobsNeedVersion(
     assert((*iter)->job_name() != "localcopy");
     data_version_t ver;
     if ((*iter)->vmap_read()->query_entry(ldid_, &ver)) {
-      index_[ver].insert(*iter);
+      IndexIter it = index_.find(ver);
+      if (it != index_.end()) {
+        it->second->insert(*iter);
+      } else {
+        Bucket *b = new Bucket();
+        b->insert(*iter);
+        index_.insert(std::make_pair(ver, b));
+      }
     } else {
       dbg(DBG_ERROR, "Version Entry: ldid %lu in read set of job %lu is not versioned.\n",
           ldid_, (*iter)->job_id());
@@ -106,8 +117,8 @@ size_t VersionEntry::GetJobsNeedVersion(
   if (iiter == index_.end()) {
     return count;
   } else {
-    BucketIter it = iiter->second.begin();
-    for (; it != iiter->second.end(); ++it) {
+    BucketIter it = iiter->second->begin();
+    for (; it != iiter->second->end(); ++it) {
       if (!(*it)->assigned()) {
         list->push_back(*it);
         ++count;
@@ -125,9 +136,18 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
 
   data_version_t ver;
   if (job->vmap_read()->query_entry(ldid_, &ver)) {
-    index_[ver].erase(job);
-    if (index_[ver].size() == 0) {
-      index_.erase(ver);
+    IndexIter it = index_.find(ver);
+    if (it != index_.end()) {
+      it->second->erase(job);
+      if (it->second->size() == 0) {
+        delete it->second;
+        index_.erase(it);
+      }
+    } else {
+      dbg(DBG_ERROR, "Version Entry: job %lu version was not in the index for ldid %lu.\n",
+          job->job_id(), ldid_);
+      exit(-1);
+      return false;
     }
   } else {
     dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
