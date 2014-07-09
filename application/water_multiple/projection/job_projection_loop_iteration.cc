@@ -215,7 +215,6 @@ void JobProjectionLoopIteration::Execute(
     GetNewJobID(&step_four_job_ids, step_four_job_num);
 
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
-    nimbus::IDSet<nimbus::job_id_t> before, after;
 
     // STEP_ONE.
     for (int index = 0; index < step_one_job_num; ++index) {
@@ -323,8 +322,8 @@ void JobProjectionLoopIteration::Execute(
           this, &write, kRegY2W0Central[index], APP_VECTOR_B,
           APP_PROJECTION_LOCAL_RESIDUAL, APP_PRESSURE, NULL);
       job_query.StageJob(PROJECTION_STEP_FOUR, step_four_job_ids[index],
-                      read, write, before, after, default_part_params[index],
-                      true);
+                         read, write, default_part_params[index],
+                         true);
     }
     job_query.CommitStagedJobs();
 
@@ -337,11 +336,6 @@ void JobProjectionLoopIteration::Execute(
         APP_PROJECTION_GLOBAL_TOLERANCE, APP_PROJECTION_DESIRED_ITERATIONS,
         NULL);
     write.clear();
-    before.clear();
-    for (int j = 0; j < step_four_job_num ; ++j) {
-      before.insert(step_four_job_ids[j]);
-    }
-    after.clear();
     nimbus::Parameter next_iteration_params;
     std::string next_iteration_params_str;
     SerializeParameter(frame, time, dt, global_region, global_region,

@@ -46,9 +46,6 @@ namespace nimbus {
 
 JobQuery::JobQuery(Job* job) {
   job_ = job;
-  RESOLVE_WAW = true;
-  RESOLVE_WAR = false;
-  DISABLE = false;
   has_last_barrier_job_ = false;
   query_time_ = 0;
   commit_time_ = 0;
@@ -65,78 +62,35 @@ bool JobQuery::StageJob(
     const Parameter& params,
     const bool sterile,
     const bool barrier) {
-  return StageJob(name, id, read, write,
-                  IDSet<job_id_t>(), IDSet<job_id_t>(),
-                  params, sterile, barrier);
-}
-bool JobQuery::StageJob(
-    const std::string& name, const job_id_t& id,
-    const IDSet<logical_data_id_t>& read,
-    const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const Parameter& params,
-    const bool sterile,
-    const bool barrier) {
   struct timespec start_time;
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &start_time);
-  if (DISABLE) {
-    job_->SpawnComputeJob(
-        name, id, read, write, before, after, params, sterile);
-    return true;
-  }
   IDSet<job_id_t> query_results;
   for (IDSet<logical_data_id_t>::ConstIter index = read.begin();
        index != read.end(); index++) {
-    OutstandingAccessorsMap::iterator find_entry
-        = outstanding_accessors_map_.find(*index);
-    if (find_entry != outstanding_accessors_map_.end()) {
-      OutstandingAccessorsMap::mapped_type& entry = find_entry->second;
-      if (entry.has_outstanding_writer) {
+    OutstandingAccessors& entry = outstanding_accessors_map_[*index];
+    if (entry.has_outstanding_writer) {
         query_results.insert(entry.outstanding_writer);
-      }
     }
   }  // RAW
   for (IDSet<logical_data_id_t>::ConstIter index = write.begin();
        index != write.end(); index++) {
-    OutstandingAccessorsMap::iterator find_entry
-        = outstanding_accessors_map_.find(*index);
-    if (find_entry != outstanding_accessors_map_.end()) {
-      OutstandingAccessorsMap::mapped_type& entry = find_entry->second;
-      if (RESOLVE_WAW && entry.has_outstanding_writer) {
+    OutstandingAccessors& entry = outstanding_accessors_map_[*index];
+    if (entry.has_outstanding_writer) {
         query_results.insert(entry.outstanding_writer);
-      }  // WAW
-      if (RESOLVE_WAR && !entry.outstanding_reader_list.empty()) {
-        typedef std::list<job_id_t> ReaderList;
-        const ReaderList& reader_list = entry.outstanding_reader_list;
-        for (ReaderList::const_iterator read_job_index = reader_list.begin();
-             read_job_index != reader_list.end();
-             read_job_index++) {
-          query_results.insert(*read_job_index);
-        }
-      }  // WAR
     }
-  }
+  }  // WAW
   if (has_last_barrier_job_) {
     query_results.insert(last_barrier_job_id_);
   }
   if (barrier) {
-    for (OutstandingAccessorsMap::iterator index =
-         outstanding_accessors_map_.begin();
-         index != outstanding_accessors_map_.end();
+    for (std::list<ShortJobEntry>::iterator index =
+         query_results_.begin();
+         index != query_results_.end();
          index++) {
-      if (index->second.has_outstanding_writer) {
-        query_results.insert(index->second.outstanding_writer);
-      }
-      typedef std::list<job_id_t> ReaderList;
-      for (ReaderList::const_iterator read_job_index =
-           index->second.outstanding_reader_list.begin();
-           read_job_index != index->second.outstanding_reader_list.end();
-           read_job_index++) {
-        query_results.insert(*read_job_index);
-      }
+       query_results.insert(index->id);
     }
+    outstanding_accessors_map_.clear();
     has_last_barrier_job_ = true;
     last_barrier_job_id_ = id;
   }
@@ -164,9 +118,6 @@ bool JobQuery::CommitStagedJobs() {
   struct timespec start_time;
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &start_time);
-  if (DISABLE) {
-    return true;
-  }
   // Move the job from staged areas to results.
   for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
        iterator != staged_jobs_.end();
@@ -195,20 +146,14 @@ bool JobQuery::CommitStagedJobs() {
     temp.before = iterator->before;
   }
   // Cleans up outstanding accessor map.
-  // TODO(quhang) should have better cleanup function for barrier job.
   for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
        iterator != staged_jobs_.end();
        iterator++) {
-    for (IDSet<logical_data_id_t>::ConstIter index = iterator->read.begin();
-         index != iterator->read.end(); index++) {
-      outstanding_accessors_map_[*index].outstanding_reader_list.push_back(
-          iterator->id);
-    }
     for (IDSet<logical_data_id_t>::ConstIter index = iterator->write.begin();
          index != iterator->write.end(); index++) {
-      outstanding_accessors_map_[*index].has_outstanding_writer = true;
-      outstanding_accessors_map_[*index].outstanding_writer = iterator->id;
-      outstanding_accessors_map_[*index].outstanding_reader_list.clear();
+      OutstandingAccessors& entry = outstanding_accessors_map_[*index];
+      entry.has_outstanding_writer = true;
+      entry.outstanding_writer = iterator->id;
     }
   }
   staged_jobs_.clear();
@@ -219,9 +164,6 @@ bool JobQuery::CommitStagedJobs() {
 }
 
 bool JobQuery::CommitJob(const job_id_t& id) {
-  if (DISABLE) {
-    return true;
-  }
   // TODO(quhang) not implemented.
   assert(false);
   return true;
@@ -256,9 +198,6 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
 }
 
 void JobQuery::GenerateDotFigure(const std::string& file_name) {
-  if (DISABLE) {
-    return;
-  }
   std::ofstream fout(file_name.c_str(), std::ofstream::out);
   fout << "digraph Workflow {" << std::endl;
   for (std::list<ShortJobEntry>::iterator index = query_results_.begin();

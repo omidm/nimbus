@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <time.h>
 #include "worker/application.h"
 #include "worker/cache_manager.h"
 
@@ -91,9 +92,19 @@ void Application::SpawnComputeJob(const std::string& name,
     const job_id_t& parent_id,
     const Parameter& params,
     const bool& sterile) {
+  // static double construct_time = 0;
+  // struct timespec start_time;
+  // clock_gettime(CLOCK_REALTIME, &start_time);
 
   SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after,
       ID<job_id_t>(parent_id), params, sterile);
+
+  // struct timespec t;
+  // clock_gettime(CLOCK_REALTIME, &t);
+  // construct_time += difftime(t.tv_sec, start_time.tv_sec)
+  //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+  // printf("Construct command time %f\n", construct_time);
+
   client_->sendCommand(&cm);
 }
 

@@ -59,15 +59,6 @@ class JobQuery {
       const Parameter& params,
       const bool sterile,
       const bool barrier = false);
-  bool StageJob(
-      const std::string& name, const job_id_t& id,
-      const IDSet<logical_data_id_t>& read,
-      const IDSet<logical_data_id_t>& write,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      const Parameter& params,
-      const bool sterile = false,
-      const bool barrier = false);
   bool CommitStagedJobs();
   bool CommitJob(const job_id_t& id);
   void GenerateDotFigure(const std::string& file_name);
@@ -83,16 +74,12 @@ class JobQuery {
   job_id_t last_barrier_job_id_;
 
   void Eliminate(IDSet<job_id_t>* before);
-  bool RESOLVE_WAW;
-  bool RESOLVE_WAR;
-  bool DISABLE;
 
   Job* job_;
   struct OutstandingAccessors {
     OutstandingAccessors() : has_outstanding_writer(false) {}
     bool has_outstanding_writer;
     job_id_t outstanding_writer;
-    std::list<job_id_t> outstanding_reader_list;
   };
   typedef std::map<logical_data_id_t, OutstandingAccessors>
       OutstandingAccessorsMap;
