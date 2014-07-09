@@ -36,7 +36,7 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#include <set>
+#include <boost/unordered_set.hpp>
 
 #include "shared/nimbus.h"
 
@@ -170,7 +170,7 @@ bool JobQuery::CommitJob(const job_id_t& id) {
 }
 
 void JobQuery::Eliminate(IDSet<job_id_t>* before) {
-  std::set<job_id_t> temp;
+  boost::unordered_set<job_id_t> temp;
   int64_t scanned = 0;
   for (std::list<ShortJobEntry>::reverse_iterator index =
        query_results_.rbegin();
