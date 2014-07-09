@@ -304,6 +304,15 @@ bool JobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
   return true;
 }
 
+bool JobEntry::IsReadyToAssign() {
+  return (assignment_dependencies_.size() == 0);
+}
+
+void JobEntry::remove_assignment_dependency(job_id_t job_id) {
+  assignment_dependencies_.remove(job_id);
+}
+
+
 ComputeJobEntry::ComputeJobEntry(
     const std::string& job_name,
     const job_id_t& job_id,
@@ -327,6 +336,8 @@ ComputeJobEntry::ComputeJobEntry(
 
     union_set_.insert(read_set_);
     union_set_.insert(write_set_);
+
+    assignment_dependencies_ = before_set;
 }
 
 ComputeJobEntry::~ComputeJobEntry() {

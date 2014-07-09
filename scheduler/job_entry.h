@@ -133,6 +133,9 @@ class JobEntry {
     bool GetPhysicalReadSet(IDSet<physical_data_id_t>* set);
     bool GetPhysicalWriteSet(IDSet<physical_data_id_t>* set);
 
+    bool IsReadyToAssign();
+    void remove_assignment_dependency(job_id_t job_id);
+
   protected:
     JobType job_type_;
     std::string job_name_;
@@ -150,6 +153,7 @@ class JobEntry {
     job_depth_t job_depth_;
     PhysicalTable physical_table_;
     IDSet<job_id_t> jobs_passed_versions_;
+    IDSet<job_id_t> assignment_dependencies_;
     bool sterile_;
     bool partial_versioned_;
     bool versioned_;
