@@ -338,6 +338,7 @@ ComputeJobEntry::ComputeJobEntry(
     union_set_.insert(write_set_);
 
     assignment_dependencies_ = before_set;
+    assignment_dependencies_.insert(parent_job_id);
 }
 
 ComputeJobEntry::~ComputeJobEntry() {
