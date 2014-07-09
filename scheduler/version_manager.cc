@@ -112,7 +112,6 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
         delete iter->second;
         index_.erase(iter);
         std::cout << "version entry got empty!!\n";
-        exit(-1);
       }
     }
   }
