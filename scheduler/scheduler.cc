@@ -872,6 +872,21 @@ bool Scheduler::AssignJob(JobEntry* job) {
   SchedulerWorker* worker;
   GetWorkerToAssignJob(job, worker);
 
+  {
+    Log log;
+    log.StartTimer();
+    IDSet<logical_data_id_t>::ConstIter it = job->union_set_p()->begin();
+    for (; it != job->union_set_p()->end(); ++it) {
+      JobEntryList list;
+      data_version_t version;
+      job->vmap_read()->query_entry(*it, &version);
+      VersionedLogicalData vld(*it, version);
+      job_manager_->GetJobsNeedDataVersion(&list, vld);
+    }
+    log.StopTimer();
+    std::cout << "OMID: " << job->job_name() << " " << log.timer() << std::endl;
+  }
+
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
