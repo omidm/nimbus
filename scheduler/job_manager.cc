@@ -167,6 +167,8 @@ bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
 
   version_manager_.AddJobEntry(job);
 
+  jobs_ready_to_assign_[job_id] = job;
+
   return true;
 }
 
@@ -330,70 +332,89 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
       " nonsterile: " << log_nonsterile_.timer() << std::endl;
   }
 
+
   size_t num = 0;
   list->clear();
-  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
-  for (; (iter != job_graph_.end()) && (num < max_num); ++iter) {
-    Vertex<JobEntry, job_id_t>* vertex = iter->second;
-    JobEntry* job = vertex->entry();
-    if (job->versioned() && !job->assigned()) {
-      // Job is already versioned so it has the information from parent and
-      // beforeset already, they may not be in the graph at this point though. -omidm
-      JobEntry* j;
 
-      if (GetJobEntry(job->parent_job_id(), j)) {
-        if (!(j->done())) {
-          continue;
-        }
-      }
+  JobEntryMap::iterator iter = jobs_ready_to_assign_.begin();
+  for (; (iter != jobs_ready_to_assign_.end()) && (num < max_num);) {
+    JobEntry *job = iter->second;
+    assert(!job->assigned());
+    assert(job->versioned());
 
-      bool before_set_done_or_sterile = true;
+    jobs_pending_to_assign_[iter->first] = job;
+    jobs_ready_to_assign_.erase(iter++);
 
-      Edge<JobEntry, job_id_t>::Iter it;
-      typename Edge<JobEntry, job_id_t>::Map* incoming_edges = vertex->incoming_edges();
-      for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
-        j = it->second->start_vertex()->entry();
-        /* 
-         * Due to the current graph traversal we should only assign the job if
-         * before set is done otherwise by leveraging the sterile flag we could
-         * end up flooding worker with lots of jobs that depend on a job that
-         * has not been assigned yet and so it causes a lot of latency. the
-         * graph traversal right now is based on iterator of map (so job ids)
-         * we need to traverse based on graph shape. In addition to efficiency
-         * issues it could cause problem since the before set may not be
-         * assigned yet and so we may not find the data version for the job in
-         * the system. -omidm
-         */
-         // if (!(j->done())) {
-        /* 
-         * For now and sake of current water multiple since the number of jobs
-         * are not too large and we have huge number of data partitions the
-         * application would benefit if scheduler can use the sterile flag and
-         * scheduler jobs in advance. Note that since still the job ids may not
-         * be in order we have to make sure that the jobs in before set are
-         * already assigned, otherwise we may not find the data version we want
-         * for the job in the system. -omidm
-         */
-        if (!(j->done()) && !(j->sterile() && j->assigned())) {
-        /*
-         * The ultimate goal is to turn it to this after we have built the
-         * graph traversal, since the job in before set is assigned for sure
-         * before the job in after set if we travers properly. -omidm
-         */
-        // if (!(j->done()) && !(j->sterile())) {
-          before_set_done_or_sterile = false;
-          break;
-        }
-      }
-
-      if (before_set_done_or_sterile) {
-        // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
-        list->push_back(job);
-        ++num;
-      }
-    }
+    list->push_back(job);
+    ++num;
   }
+
   return num;
+
+//  size_t num = 0;
+//  list->clear();
+//  typename Vertex<JobEntry, job_id_t>::Iter iter = job_graph_.begin();
+//  for (; (iter != job_graph_.end()) && (num < max_num); ++iter) {
+//    Vertex<JobEntry, job_id_t>* vertex = iter->second;
+//    JobEntry* job = vertex->entry();
+//    if (job->versioned() && !job->assigned()) {
+//      // Job is already versioned so it has the information from parent and
+//      // beforeset already, they may not be in the graph at this point though. -omidm
+//      JobEntry* j;
+//
+//      if (GetJobEntry(job->parent_job_id(), j)) {
+//        if (!(j->done())) {
+//          continue;
+//        }
+//      }
+//
+//      bool before_set_done_or_sterile = true;
+//
+//      Edge<JobEntry, job_id_t>::Iter it;
+//      typename Edge<JobEntry, job_id_t>::Map* incoming_edges = vertex->incoming_edges();
+//      for (it = incoming_edges->begin(); it != incoming_edges->end(); ++it) {
+//        j = it->second->start_vertex()->entry();
+//        /*
+//         * Due to the current graph traversal we should only assign the job if
+//         * before set is done otherwise by leveraging the sterile flag we could
+//         * end up flooding worker with lots of jobs that depend on a job that
+//         * has not been assigned yet and so it causes a lot of latency. the
+//         * graph traversal right now is based on iterator of map (so job ids)
+//         * we need to traverse based on graph shape. In addition to efficiency
+//         * issues it could cause problem since the before set may not be
+//         * assigned yet and so we may not find the data version for the job in
+//         * the system. -omidm
+//         */
+//         // if (!(j->done())) {
+//        /*
+//         * For now and sake of current water multiple since the number of jobs
+//         * are not too large and we have huge number of data partitions the
+//         * application would benefit if scheduler can use the sterile flag and
+//         * scheduler jobs in advance. Note that since still the job ids may not
+//         * be in order we have to make sure that the jobs in before set are
+//         * already assigned, otherwise we may not find the data version we want
+//         * for the job in the system. -omidm
+//         */
+//        if (!(j->done()) && !(j->sterile() && j->assigned())) {
+//        /*
+//         * The ultimate goal is to turn it to this after we have built the
+//         * graph traversal, since the job in before set is assigned for sure
+//         * before the job in after set if we travers properly. -omidm
+//         */
+//        // if (!(j->done()) && !(j->sterile())) {
+//          before_set_done_or_sterile = false;
+//          break;
+//        }
+//      }
+//
+//      if (before_set_done_or_sterile) {
+//        // job->set_assigned(true); No, we are not sure yet thet it will be assignd!
+//        list->push_back(job);
+//        ++num;
+//      }
+//    }
+//  }
+//  return num;
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
@@ -443,12 +464,44 @@ void JobManager::CleanLdlMap() {
   }
 }
 
-void JobManager::JobDone(job_id_t job_id) {
+void JobManager::NotifyJobAssignment(JobEntry *job) {
+  job->set_assigned(true);
+  jobs_pending_to_assign_.erase(job->job_id());
+
+  if (job->sterile()) {
+    job_id_t job_id = job->job_id();
+    Vertex<JobEntry, job_id_t>* vertex;
+    job_graph_.GetVertex(job_id, &vertex);
+    typename Edge<JobEntry, job_id_t>::Iter it;
+    for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+      JobEntry *j = it->second->end_vertex()->entry();
+      j->remove_assignment_dependency(job_id);
+      if (j->IsReadyToAssign()) {
+        jobs_ready_to_assign_[j->job_id()] = j;
+      }
+    }
+  }
+}
+
+void JobManager::NotifyJobDone(job_id_t job_id) {
   JobEntry* job;
   if (GetJobEntry(job_id, job)) {
     job->set_done(true);
     jobs_done_[job_id] = job;
     jobs_need_version_.erase(job_id);
+
+    if (!job->sterile()) {
+      Vertex<JobEntry, job_id_t>* vertex;
+      job_graph_.GetVertex(job_id, &vertex);
+      typename Edge<JobEntry, job_id_t>::Iter it;
+      for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+        JobEntry *j = it->second->end_vertex()->entry();
+        j->remove_assignment_dependency(job_id);
+        if (j->IsReadyToAssign()) {
+          jobs_ready_to_assign_[j->job_id()] = j;
+        }
+      }
+    }
   } else {
     dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
@@ -733,6 +786,10 @@ Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
   return &job_graph_;
 }
 
+
+
+
+
 void JobManager::WaitToPassAllVersions() {
   // TODO(omidm): Implement!
   // boost::lock_guard<boost::mutex> l(mtx);
@@ -742,24 +799,6 @@ void JobManager::WaitToPassAllVersions() {
     pass_version_draw_cond_.wait(lock);
   }
 }
-
-size_t JobManager::ExploreToAssignJobs() {
-  // TODO(omidm): Implement!
-  return 0;
-}
-
-void JobManager::RemoveJobAssignmentDependency(
-    JobEntry *job, const JobEntryList& from_jobs) {
-  // TODO(omidm): Implement!
-}
-
-bool JobManager::JobIsReadyToAssign(JobEntry *job) {
-  // TODO(omidm): Implement!
-  return false;
-}
-
-
-
 
 
 

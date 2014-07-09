@@ -264,7 +264,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
   log_job_manager_.ResumeTimer();
-  job_manager_->JobDone(job_id);
+  job_manager_->NotifyJobDone(job_id);
   log_job_manager_.StopTimer();
 
   JobEntry *job;
@@ -900,7 +900,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
     job_manager_->UpdateJobBeforeSet(job);
     log_job_manager_.StopTimer();
     SendComputeJobToWorker(worker, job);
-    job->set_assigned(true);
+
+    job_manager_->NotifyJobAssignment(job);
 
     load_balancer_->NotifyJobAssignment(job, worker);
 

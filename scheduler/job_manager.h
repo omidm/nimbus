@@ -108,7 +108,9 @@ class JobManager {
 
     void CleanLdlMap();
 
-    void JobDone(job_id_t job_id);
+    void NotifyJobDone(job_id_t job_id);
+
+    void NotifyJobAssignment(JobEntry *job);
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
 
@@ -141,6 +143,9 @@ class JobManager {
     JobEntryMap jobs_need_version_;
     std::map<job_id_t, JobEntryList> pass_version_;
 
+    JobEntryMap jobs_ready_to_assign_;
+    JobEntryMap jobs_pending_to_assign_;
+
     Log log_version_;
     Log log_merge_;
     Log log_lookup_;
@@ -163,22 +168,11 @@ class JobManager {
 
 
 
-
-    JobEntryMap jobs_ready_to_assign_;
-    std::map<job_id_t, JobEntryList> explore_to_assign_;
-
     boost::mutex pass_version_mutex_;
     boost::condition_variable pass_version_put_cond_;
     boost::condition_variable pass_version_draw_cond_;
     size_t pass_version_in_progress_;
     void WaitToPassAllVersions();
-
-    size_t ExploreToAssignJobs();
-
-    void RemoveJobAssignmentDependency(
-        JobEntry *job, const JobEntryList& source_jobs);
-
-    bool JobIsReadyToAssign(JobEntry *job);
 };
 
 }  // namespace nimbus
