@@ -218,7 +218,9 @@ namespace application {
         RegisterJob(INITIALIZE, new JobInitialize(this));
 	
 	RegisterJob(SUBSTEP, new JobSubstep(this));
+	RegisterJob(UPDATE_GHOST_DENSITIES, new JobUpdateGhostDensities(this));
 	RegisterJob(SCALAR_ADVANCE, new JobScalarAdvance(this));
+	RegisterJob(UPDATE_GHOST_VELOCITIES, new JobUpdateGhostVelocities(this));
 	RegisterJob(CONVECT, new JobConvect(this));
 
         RegisterJob(LOOP_ITERATION, new JobLoopIteration(this));

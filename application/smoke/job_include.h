@@ -40,7 +40,9 @@
 #define NIMBUS_APPLICATION_SMOKE_JOB_INCLUDE_H_
 
 #include "application/smoke/job_scalar_advance.h"
+#include "application/smoke/job_update_ghost_densities.h"
 #include "application/smoke/job_convect.h"
+#include "application/smoke/job_update_ghost_velocities.h"
 #include "application/smoke/job_substep.h"
 #include "application/smoke/job_initialize.h"
 #include "application/smoke/job_loop_frame.h"

@@ -70,10 +70,10 @@ ScalarAdvanceImpl(const nimbus::Job *job,
 		  const nimbus::DataArray &da,
 		  const T dt) {
   LOG::Time("Scalar Advance");
-  example.Get_Scalar_Field_Sources(time);
+  //example.Get_Scalar_Field_Sources(time);
   // Array<T, TV_INT> density_ghost(example.mac_grid.Domain_Indices(3));
-  example.boundary->Fill_Ghost_Cells(example.mac_grid, example.density, example.density_ghost,
-				     dt, time, 3);
+  // example.boundary->Fill_Ghost_Cells(example.mac_grid, example.density, example.density_ghost,
+  // dt, time, 3);
   example.advection_scalar.Update_Advection_Equation_Cell(example.mac_grid, 
     example.density, example.density_ghost, example.face_velocities, *example.boundary, 
     dt, time);
@@ -88,11 +88,37 @@ ConvectImpl(const nimbus::Job *job,
 	    const T dt) {
   LOG::Time("Convect");
   // Array<T, FACE_INDEX<TV::dimension> > face_velocities_ghost(example.mac_grid, 3, false);
-  example.boundary->Fill_Ghost_Cells_Face(example.mac_grid, example.face_velocities,
-					  example.face_velocities_ghost, time, 3);
+  // example.boundary->Fill_Ghost_Cells_Face(example.mac_grid, example.face_velocities,
+  // example.face_velocities_ghost, time, 3);
   example.advection_scalar.Update_Advection_Equation_Face(example.mac_grid, 
     example.face_velocities, example.face_velocities_ghost, example.face_velocities_ghost,
     *example.boundary, dt, time);
+  // Save State.
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
+  return true;
+}
+
+template<class TV> bool SMOKE_DRIVER<TV>::
+UpdateGhostVelocitiesImpl (const nimbus::Job *job,
+			   const nimbus::DataArray &da,
+			   T dt) {
+  LOG::Time("Update Ghost Velocities");
+  example.boundary->Fill_Ghost_Cells_Face(example.mac_grid, example.face_velocities,
+                                          example.face_velocities_ghost, time, 3);
+  // Save State.
+  // example.Save_To_Nimbus(job, da, current_frame + 1);
+  return true;
+}
+
+template<class TV> bool SMOKE_DRIVER<TV>::
+UpdateGhostDensitiesImpl (const nimbus::Job *job,
+                           const nimbus::DataArray &da,
+                           T dt) {
+  LOG::Time("Update Ghost Densities");
+  example.Get_Scalar_Field_Sources(time);
+  example.boundary->Fill_Ghost_Cells(example.mac_grid, example.density, example.density_ghost,
+                                     dt, time, 3);
+
   // Save State.
   // example.Save_To_Nimbus(job, da, current_frame + 1);
   return true;

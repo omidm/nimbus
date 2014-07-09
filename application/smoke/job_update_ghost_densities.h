@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Stanford University.
+ * Copyrigh 2013 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,43 +33,26 @@
  */
 
 /*
- * This file defines the name of jobs that will be used for registration and
- * spawning the jobs.
+ * This file contains adjust phi with objects job 1 which is one of the sub
+ * jobs in the iteration of computing a simulation frame.
  *
  * Author: Omid Mashayekhi <omidm@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_JOB_NAMES_H_
-#define NIMBUS_APPLICATION_SMOKE_JOB_NAMES_H_
+#ifndef NIMBUS_APPLICATION_SMOKE_JOB_UPDATE_GHOST_DENSITIES_H_
+#define NIMBUS_APPLICATION_SMOKE_JOB_UPDATE_GHOST_DENSITIES_H_
 
+#include "shared/nimbus.h"
 
-#define MAIN "main"
-#define INITIALIZE "initialize"
-#define LOOP_FRAME "loop_frame"
-#define LOOP_ITERATION "loop_iteration"
-#define LOOP_ITERATION_PART_TWO "loop_iteration_part_two"
-#define WRITE_OUTPUT "write_output"
+namespace application {
 
-#define SUBSTEP "substep"
-#define UPDATE_GHOST_DENSITIES "update_ghost_densities"
-#define SCALAR_ADVANCE "scalar_advance"
-#define UPDATE_GHOST_VELOCITIES "update_ghost_velocities"
-#define CONVECT "convect"
+    class JobUpdateGhostDensities : public nimbus::Job {
+        public:
+            explicit JobUpdateGhostDensities(nimbus::Application *app);
+            virtual void Execute(nimbus::Parameter params, const nimbus::DataArray& da);
+            virtual nimbus::Job* Clone();
+    };
 
-#define PROJECTION_MAIN "projection_main"
-#define PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE "projection_calculate_boundary_condition_part_one"
-#define PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO "projection_calculate_boundary_condition_part_two"
-#define PROJECTION_CONSTRUCT_MATRIX "projection_construct_matrix"
-#define PROJECTION_WRAPUP "projection_wrapup"
+} // namespace application
 
-#define PROJECTION_GLOBAL_INITIALIZE "projection_global_initialize"
-#define PROJECTION_LOCAL_INITIALIZE "projection_local_initialize"
-#define PROJECTION_LOOP_ITERATION "projection_loop_iteration"
-#define PROJECTION_STEP_ONE "projection_step_one"
-#define PROJECTION_REDUCE_RHO "projection_reduce_rho"
-#define PROJECTION_STEP_TWO "projection_step_two"
-#define PROJECTION_STEP_THREE "projection_step_three"
-#define PROJECTION_REDUCE_ALPHA "projection_reduce_alpha"
-#define PROJECTION_STEP_FOUR "projection_step_four"
-
-#endif  // NIMBUS_APPLICATION_SMOKE_JOB_NAMES_H_
+#endif  // NIMBUS_APPLICATION_SMOKE_JOB_UPDATE_GHOST_DENSITIES_H_

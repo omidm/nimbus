@@ -154,9 +154,17 @@ namespace application {
     GetNewJobID(&job_ids, job_num);
     nimbus::IDSet<nimbus::logical_data_id_t> read, write;
 
+    int update_ghost_densities_job_num = kAppPartNum;
+    std::vector<nimbus::job_id_t> update_ghost_densities_job_ids;
+    GetNewJobID(&update_ghost_densities_job_ids, update_ghost_densities_job_num);
+
     int scalar_advance_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> scalar_advance_job_ids;
     GetNewJobID(&scalar_advance_job_ids, scalar_advance_job_num);
+
+    int update_ghost_velocities_job_num = kAppPartNum;
+    std::vector<nimbus::job_id_t> update_ghost_velocities_job_ids;
+    GetNewJobID(&update_ghost_velocities_job_ids, update_ghost_velocities_job_num);
 
     int convect_job_num = kAppPartNum;
     std::vector<nimbus::job_id_t> convect_job_ids;
@@ -167,13 +175,30 @@ namespace application {
     GetNewJobID(&projection_job_ids, projection_job_num);
 
     {
+      for (int i = 0; i < update_ghost_densities_job_num; ++i) {
+	read.clear();
+	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_DENSITY, NULL);
+	write.clear();
+	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY, APP_DENSITY_GHOST, NULL);
+	
+	nimbus::Parameter update_ghost_densities_params;
+	std::string update_ghost_densities_str;
+	SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &update_ghost_densities_str);
+	update_ghost_densities_params.set_ser_data(SerializedData(update_ghost_densities_str));
+	job_query.StageJob(UPDATE_GHOST_DENSITIES,
+			   update_ghost_densities_job_ids[i],
+			   read, write,
+			   update_ghost_densities_params, true);
+      }      
+      job_query.CommitStagedJobs();
+    }
+
+    {
       for (int i = 0; i < scalar_advance_job_num; ++i) {
 	read.clear();
-	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
+	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, APP_DENSITY_GHOST, NULL);
 	write.clear();
-	// LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, APP_DENSITY_GHOST, APP_DENSITY, NULL);
-	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY, APP_DENSITY_GHOST, NULL);
-	// LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY_GHOST, NULL);
+	LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DENSITY, NULL);
 
 	nimbus::Parameter scalar_params;
 	std::string scalar_str;
@@ -188,13 +213,32 @@ namespace application {
     }
 
     {
+      for (int i = 0; i < update_ghost_velocities_job_num; ++i) {
+	read.clear();
+	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
+	write.clear();
+	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_FACE_VEL_GHOST, NULL);
+	
+	nimbus::Parameter update_ghost_velocities_params;
+	std::string update_ghost_velocities_str;
+	SerializeParameter(frame, time, dt, global_region, kRegY2W3Central[i], &update_ghost_velocities_str);
+	update_ghost_velocities_params.set_ser_data(SerializedData(update_ghost_velocities_str));
+	job_query.StageJob(UPDATE_GHOST_VELOCITIES,
+			   update_ghost_velocities_job_ids[i],
+			   read, write,
+			   update_ghost_velocities_params, true);
+      }
+      job_query.CommitStagedJobs();
+    }
+
+    {
       for (int i = 0; i < convect_job_num; ++i) {
 	read.clear();
-	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, APP_DENSITY, APP_DENSITY_GHOST, NULL);
+	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL_GHOST, NULL);
 	LoadLogicalIdsInSet(this, &read, kRegY2W3Central[i], APP_FACE_VEL, NULL);
 	LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D, APP_PSI_N, NULL);
 	write.clear();
-	LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL);
+	LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_FACE_VEL, NULL);
 
 	nimbus::Parameter convect_params;
 	std::string convect_str;

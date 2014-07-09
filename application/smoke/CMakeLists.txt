@@ -45,7 +45,8 @@ SET(${PROJECT_NAME}_cpp
     #${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.cc
     #${PROJECT_SOURCE_DIR}/job_make_signed_distance.cc
     #${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.cc
-    #${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.cc
+    ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.cc
+    ${PROJECT_SOURCE_DIR}/job_update_ghost_densities.cc
     #${PROJECT_SOURCE_DIR}/job_extrapolate_phi.cc
     #${PROJECT_SOURCE_DIR}/job_advect_phi.cc
     #${PROJECT_SOURCE_DIR}/job_step_particles.cc
@@ -120,7 +121,8 @@ SET(${PROJECT_NAME}_h
     #${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.h
     #${PROJECT_SOURCE_DIR}/job_make_signed_distance.h
     #${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.h
-    #${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.h
+    ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.h
+    ${PROJECT_SOURCE_DIR}/job_update_ghost_densities.h
     #${PROJECT_SOURCE_DIR}/job_extrapolate_phi.h
     #${PROJECT_SOURCE_DIR}/job_advect_phi.h
     #${PROJECT_SOURCE_DIR}/job_step_particles.h

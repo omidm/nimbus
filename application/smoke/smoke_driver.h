@@ -64,6 +64,14 @@ public:
 		     const nimbus::DataArray &da,
 		     const T dt);
 
+    bool UpdateGhostVelocitiesImpl(const nimbus::Job *job,
+				   const nimbus::DataArray &da,
+				   T dt);
+
+    bool UpdateGhostDensitiesImpl(const nimbus::Job *job,
+				   const nimbus::DataArray &da,
+				   T dt);
+
     bool ProjectionCalculateBoundaryConditionPartOneImpl(
 							 const nimbus::Job *job,
 							 const nimbus::DataArray &da,
