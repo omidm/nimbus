@@ -323,7 +323,7 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   while (ResolveDataVersions() > 0) {
     continue;
   }
-  if (log_version_.timer() > 0.001) {
+  if (lookup_count_ > 0) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
       " lookup: " << log_lookup_.timer() <<
@@ -427,7 +427,7 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   while (ResolveDataVersions() > 0) {
     continue;
   }
-  if (log_version_.timer() > 0.001) {
+  if (lookup_count_ > 0) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
       " lookup: " << log_lookup_.timer() <<
@@ -570,12 +570,22 @@ size_t JobManager::ResolveDataVersions() {
   log_version_.ResumeTimer();
 
   size_t num = 0;
+
+  size_t passed_num = 0;
+
   std::map<job_id_t, JobEntryList> new_pass_version;
   std::map<job_id_t, JobEntryList>::iterator iter;
   for (iter = pass_version_.begin(); iter != pass_version_.end(); ++iter) {
     JobEntry *job;
     job_id_t job_id = iter->first;
     if (GetJobEntry(job_id, job)) {
+      JobEntry *parent_job;
+      GetJobEntry(job->parent_job_id(), parent_job);
+      if (!parent_job->done()) {
+        continue;
+      }
+      ++passed_num;
+
       PassDataVersionToJob(job, iter->second);
       jobs_need_version_[job_id] = job;
       if (JobVersionIsComplete(job)) {
@@ -670,8 +680,13 @@ size_t JobManager::ResolveDataVersions() {
     }
   }
 
-  pass_version_.clear();
-  pass_version_ = new_pass_version;
+
+  assert((passed_num == 0) || (passed_num == pass_version_.size()));
+  if (passed_num == pass_version_.size()) {
+    pass_version_.clear();
+    pass_version_ = new_pass_version;
+  }
+
 
   log_version_.StopTimer();
   return num;
