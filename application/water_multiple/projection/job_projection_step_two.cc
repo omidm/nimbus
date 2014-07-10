@@ -106,7 +106,10 @@ void JobProjectionStepTwo::Execute(
   // Read PROJECTION_BETA, VECTOR_Z, VECTOR_P(only central region).
   // Write VECTOR_P(only central region).
   log_timer.StartTimer();
-  projection_driver.UpdateSearchVector();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.UpdateSearchVector();
+  }
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_TWO, calculation time:%f.\n",
       log_timer.timer());
 

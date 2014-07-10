@@ -103,7 +103,10 @@ void JobProjectionLocalInitialize::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
 
-  projection_driver.LocalInitialize();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.LocalInitialize();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

@@ -98,6 +98,7 @@ void JobDeleteParticles::Execute(nimbus::Parameter params, const nimbus::DataArr
 
     {
       //nimbus::Timer timer(std::string("delete_particles_") + id().toString());
+      application::ScopeTimer scope_timer(name());
       driver->DeleteParticlesImpl(this, da, dt);
     }
 

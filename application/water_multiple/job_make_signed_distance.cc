@@ -90,7 +90,10 @@ void JobMakeSignedDistance::Execute(nimbus::Parameter params, const nimbus::Data
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
 
-    driver->MakeSignedDistanceImpl(this, da, init_config.local_region, dt);
+    {
+      application::ScopeTimer scope_timer(name());
+      driver->MakeSignedDistanceImpl(this, da, init_config.local_region, dt);
+    }
 
     // free resources
     DestroyExampleAndDriver(example, driver);

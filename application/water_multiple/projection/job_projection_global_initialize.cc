@@ -97,7 +97,10 @@ void JobProjectionGlobalInitialize::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
 
-  projection_driver.GlobalInitialize();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.GlobalInitialize();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

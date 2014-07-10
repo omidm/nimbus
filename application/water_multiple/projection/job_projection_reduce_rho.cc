@@ -105,7 +105,10 @@ void JobProjectionReduceRho::Execute(
   // Read PROJECTION_LOCAL_RHO, PROJECTION_GLOBAL_RHO.
   // Write PROJECTION_GLOBAL_RHO, PROJECTION_GLOBAL_RHO_OLD, PROJECTION_BETA.
   // TODO(quhang), seems like rho_old is not needed.
-  projection_driver.ReduceRho();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.ReduceRho();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

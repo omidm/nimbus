@@ -102,6 +102,7 @@ void JobStepParticles::Execute(nimbus::Parameter params,
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in step particles job.\n");
   {
+    application::ScopeTimer scope_timer(name());
     //nimbus::Timer timer(std::string("step_particle_") + id().toString());
     typedef typename nimbus::TranslatorPhysBAM<T> Translator;
     GeometricRegion lr = init_config.local_region;

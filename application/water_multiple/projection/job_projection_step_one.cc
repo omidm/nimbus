@@ -106,19 +106,22 @@ void JobProjectionStepOne::Execute(
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, loading time:%f.\n",
       log_timer.timer());
 
-  log_timer.StartTimer();
-  // Read MATRIX_C, VECTOR_B, VECTOR_Z.
-  // Write VECTOR_Z, PROJECTION_LOCAL_RHO.
-  dbg(APP_LOG, "Do precondition.\n");
-  projection_driver.DoPrecondition();
-  dbg(APP_LOG, "Calculate local rho precondition.\n");
-  dbg(APP_LOG, "size of vector z%d, size of vector b %d.\n",
-      (int) projection_driver.projection_data.z_interior.n,
-      (int) projection_driver.projection_data.b_interior.n
-      );
-  projection_driver.CalculateLocalRho();
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, calculation time:%f.\n",
-      log_timer.timer());
+  {
+    application::ScopeTimer scope_timer(name());
+    log_timer.StartTimer();
+    // Read MATRIX_C, VECTOR_B, VECTOR_Z.
+    // Write VECTOR_Z, PROJECTION_LOCAL_RHO.
+    dbg(APP_LOG, "Do precondition.\n");
+    projection_driver.DoPrecondition();
+    dbg(APP_LOG, "Calculate local rho precondition.\n");
+    dbg(APP_LOG, "size of vector z%d, size of vector b %d.\n",
+        (int) projection_driver.projection_data.z_interior.n,
+        (int) projection_driver.projection_data.b_interior.n
+       );
+    projection_driver.CalculateLocalRho();
+    dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, calculation time:%f.\n",
+        log_timer.timer());
+  }
 
   log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);

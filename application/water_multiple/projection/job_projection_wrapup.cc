@@ -94,7 +94,10 @@ void JobProjectionWrapup::Execute(nimbus::Parameter params,
 
   dbg(APP_LOG, "Job PROJECTION_WRAPUP starts (dt=%f).\n", dt);
 
-  driver->ProjectionWrapupImpl(this, da, dt);
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->ProjectionWrapupImpl(this, da, dt);
+  }
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.

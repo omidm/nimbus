@@ -104,7 +104,10 @@ void JobProjectionReduceAlpha::Execute(
 
   // Read PROJECTION_GLOBAL_RHO, PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
   // Write PROJECTION_ALPHA.
-  projection_driver.ReduceAlpha();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.ReduceAlpha();
+  }
 
   projection_driver.SaveToNimbus(this, da);
   dbg(APP_LOG, "[PROJECTION] PROJECTION_REDUCE_ALPHA total time:%f.\n",

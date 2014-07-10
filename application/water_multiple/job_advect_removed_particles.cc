@@ -98,7 +98,10 @@ void JobAdvectRemovedParticles::Execute(nimbus::Parameter params,
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in advect removed particles job.");
-  driver->AdvectRemovedParticlesImpl(this, da, dt);
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->AdvectRemovedParticlesImpl(this, da, dt);
+  }
 
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);

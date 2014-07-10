@@ -109,8 +109,11 @@ void JobProjectionStepThree::Execute(
   // Write VECTOR_TEMP.
   // Write PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
   log_timer.StartTimer();
-  projection_driver.UpdateTempVector();
-  projection_driver.CalculateLocalAlpha();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.UpdateTempVector();
+    projection_driver.CalculateLocalAlpha();
+  }
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, calculation time:%f.\n",
       log_timer.timer());
 

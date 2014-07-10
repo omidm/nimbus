@@ -93,7 +93,10 @@ void JobExtrapolatePhi::Execute(nimbus::Parameter params,
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in extrapolate phi job.");
-  driver->ExtrapolatePhiImpl(this, da, dt);
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->ExtrapolatePhiImpl(this, da, dt);
+  }
 
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);

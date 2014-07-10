@@ -110,8 +110,11 @@ void JobProjectionStepFour::Execute(
   // Read PROJECTION_ALPHA, VECTOR_X, VECTOR_P,VECTOR_TEMP, VECTOR_B.
   // Write VECTOR_X, VECTOR_B, PROJECTION_LOCAL_RESIDUAL.
   log_timer.StartTimer();
-  projection_driver.UpdateOtherVectors();
-  projection_driver.CalculateLocalResidual();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.UpdateOtherVectors();
+    projection_driver.CalculateLocalResidual();
+  }
   dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, calculation time:%f.\n",
       log_timer.timer());
 
