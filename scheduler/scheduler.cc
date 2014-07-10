@@ -278,7 +278,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
 
   std::string jname = job->job_name();
   if (jname == "loop_iteration") {
-    std::cout << "STAMP DONE: " << jname << " " << log_loop_.GetTime() << std::endl;
+    log_.StartTimer();
   }
 
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
@@ -911,7 +911,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
     static bool got_stamp = false;
     std::string jname = job->job_name();
     if (jname == "update_ghost_velocities" && !got_stamp) {
-      std::cout << "STAMP ASSIGNED: " << jname << " " << log_loop_.GetTime() << std::endl;
+      log_.StopTimer();
+      std::cout << "STAMP FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
       got_stamp = true;
     }
 
