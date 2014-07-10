@@ -47,6 +47,7 @@ using namespace nimbus; // NOLINT
 
 VersionEntry::VersionEntry(logical_data_id_t ldid) {
   ldid_ = ldid;
+  ldl_.set_ldid(ldid);
 }
 
 

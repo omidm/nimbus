@@ -50,6 +50,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/logical_data_lineage.h"
 
 namespace nimbus {
 
@@ -79,6 +80,7 @@ class VersionEntry {
     logical_data_id_t ldid_;
     Bucket pending_jobs_;
     Index index_;
+    LogicalDataLineage ldl_;
 };
 
 typedef std::list<VersionEntry> VersionEntryList;
