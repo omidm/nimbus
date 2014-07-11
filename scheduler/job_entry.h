@@ -136,6 +136,9 @@ class JobEntry {
     bool IsReadyToAssign();
     void remove_assignment_dependency(job_id_t job_id);
 
+    bool IsReadyForCompleteVersioning();
+    void remove_versioning_dependency(job_id_t job_id);
+
   protected:
     JobType job_type_;
     std::string job_name_;
@@ -154,6 +157,7 @@ class JobEntry {
     PhysicalTable physical_table_;
     IDSet<job_id_t> jobs_passed_versions_;
     IDSet<job_id_t> assignment_dependencies_;
+    IDSet<job_id_t> versioning_dependencies_;
     bool sterile_;
     bool partial_versioned_;
     bool versioned_;

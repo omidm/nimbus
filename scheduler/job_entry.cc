@@ -312,6 +312,15 @@ void JobEntry::remove_assignment_dependency(job_id_t job_id) {
   assignment_dependencies_.remove(job_id);
 }
 
+bool JobEntry::IsReadyForCompleteVersioning() {
+  return (versioning_dependencies_.size() == 0);
+}
+
+void JobEntry::remove_versioning_dependency(job_id_t job_id) {
+  versioning_dependencies_.remove(job_id);
+}
+
+
 
 ComputeJobEntry::ComputeJobEntry(
     const std::string& job_name,
@@ -339,6 +348,7 @@ ComputeJobEntry::ComputeJobEntry(
 
     assignment_dependencies_ = before_set;
     assignment_dependencies_.insert(parent_job_id);
+    versioning_dependencies_ = assignment_dependencies_;
 }
 
 ComputeJobEntry::~ComputeJobEntry() {
