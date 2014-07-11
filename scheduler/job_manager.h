@@ -98,6 +98,8 @@ class JobManager {
 
     void PassReadyForCompleteVersioning(JobEntry* job);
 
+    void PassMetaBeforeSetAndDepth(JobEntry* job);
+
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
     bool RemoveJobEntry(JobEntry* job);
