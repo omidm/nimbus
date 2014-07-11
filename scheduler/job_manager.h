@@ -96,6 +96,8 @@ class JobManager {
 
     bool AddJobEntryIncomingEdges(JobEntry *job);
 
+    void PassReadyForCompleteVersioning(JobEntry* job);
+
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
     bool RemoveJobEntry(JobEntry* job);

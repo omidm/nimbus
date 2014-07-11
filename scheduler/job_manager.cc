@@ -243,6 +243,7 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
     j = edge->start_vertex()->entry();
     if (j->versioned()) {
       pass_version_[job->job_id()].push_back(j);
+      job->remove_versioning_dependency(j->job_id());
     } else {
       dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
           job->parent_job_id(), job->job_id());
@@ -258,8 +259,9 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   for (it = job->before_set_p()->begin(); it != job->before_set_p()->end(); ++it) {
     if (job_graph_.AddEdge(*it, job->job_id(), &edge)) {
       j = edge->start_vertex()->entry();
-      if (j->versioned()) {
+      if (j->versioned() || j->IsReadyForCompleteVersioning()) {
         pass_version_[job->job_id()].push_back(j);
+        job->remove_versioning_dependency(j->job_id());
       }
     } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
@@ -270,7 +272,26 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
     }
   }
 
+  if (job->IsReadyForCompleteVersioning()) {
+    PassReadyForCompleteVersioning(job);
+  }
+
   return true;
+}
+
+
+void JobManager::PassReadyForCompleteVersioning(JobEntry* job) {
+  job_id_t job_id = job->job_id();
+  Vertex<JobEntry, job_id_t>* vertex;
+  job_graph_.GetVertex(job_id, &vertex);
+  typename Edge<JobEntry, job_id_t>::Iter it;
+  for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+    JobEntry *j = it->second->end_vertex()->entry();
+    j->remove_versioning_dependency(job_id);
+    if (j->IsReadyForCompleteVersioning()) {
+      PassReadyForCompleteVersioning(j);
+    }
+  }
 }
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
