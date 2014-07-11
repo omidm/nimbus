@@ -33,70 +33,30 @@
  */
 
  /*
-  * Object representation of a set of identifires.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_SHARED_IDSET_H_
-#define NIMBUS_SHARED_IDSET_H_
-
-#include <boost/tokenizer.hpp>
-#include <boost/unordered_set.hpp>
-#include <algorithm>
-#include <sstream> // NOLINT
-#include <iostream> // NOLINT
-#include <string>
-#include <list>
-#include <set>
-#include "shared/nimbus_types.h"
-
-
+#include "worker/application.h"
+#include "worker/ldo_index_cache.h"
 
 namespace nimbus {
 
-template<typename T>
-class IDSet {
- public:
-  // typedef typename std::list<T> IDSetContainer;
-  // typedef typename std::list<T>::iterator IDSetIter;
-  // typedef typename std::list<T>::const_iterator ConstIter;
-  typedef typename boost::unordered_set<T> IDSetContainer;
-  typedef typename boost::unordered_set<T>::iterator IDSetIter;
-  typedef typename boost::unordered_set<T>::const_iterator ConstIter;
-
-  IDSet();
-  explicit IDSet(const IDSetContainer& ids);
-  IDSet(const IDSet<T>& other);
-  virtual ~IDSet();
-
-  // TODO(omidm): remove this obsolete constructor.
-  // explicit IDSet(std::string s);
-
-  bool Parse(const std::string& input);
-  virtual std::string toString();
-  virtual void insert(T entry);
-  virtual void insert(const IDSet<T>& add_set);
-  virtual void remove(T entry);
-  virtual void remove(IDSetIter it);
-  virtual void remove(const IDSet<T>& remove_set);
-  virtual void clear();
-  virtual bool contains(T entry) const;
-  virtual int size() const;
-  virtual void swap(IDSet<T>& idset);
-
-  IDSetIter begin();
-  IDSetIter end();
-
-  ConstIter begin() const;
-  ConstIter end() const;
-
-  IDSet<T>& operator= (const IDSet<T>& right);
-
- private:
-  IDSetContainer identifiers_;
-};
+void LdoIndexCache::GetResult(
+    const GeometricRegion& region, IDSet<logical_data_id_t>* result) {
+  MapType::iterator iter = content_.find(region);
+  if (iter != content_.end()) {
+    result->insert(iter->second);
+    return;
+  }
+  CLdoVector temp;
+  application_->GetIntersectingLogicalObjects(
+      &temp, variable_, &region);
+  for (CLdoVector::iterator iter = temp.begin();
+       iter != temp.end();
+       ++iter) {
+    content_[region].insert((*iter)->id());
+  }
+  result->insert(content_[region]);
+}
 
 }  // namespace nimbus
-
-#endif  // NIMBUS_SHARED_IDSET_H_

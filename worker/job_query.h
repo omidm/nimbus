@@ -40,9 +40,10 @@
 #define NIMBUS_WORKER_JOB_QUERY_H_
 
 #include <time.h>
+#include <boost/unordered_map.hpp>
 #include <list>
-#include <map>
 #include <string>
+#include <vector>
 #include "shared/nimbus.h"
 #include "worker/job.h"
 
@@ -52,10 +53,11 @@ class JobQuery {
  public:
   explicit JobQuery(Job* job);
   ~JobQuery();
+  // Read and write set will be cleared, due to performance consideration.
   bool StageJob(
       const std::string& name, const job_id_t& id,
-      const IDSet<logical_data_id_t>& read,
-      const IDSet<logical_data_id_t>& write,
+      IDSet<logical_data_id_t>& read,
+      IDSet<logical_data_id_t>& write,
       const Parameter& params,
       const bool sterile,
       const bool barrier = false);
@@ -63,16 +65,25 @@ class JobQuery {
   bool CommitJob(const job_id_t& id);
   void GenerateDotFigure(const std::string& file_name);
   void PrintTimeProfile();
+  void Hint(job_id_t job_id, const GeometricRegion& region);
 
  private:
+  int64_t total_job_;
+  int64_t total_objects_;
   double query_time_;
   double commit_time_;
   double copy_time_;
   double elimination_time_;
   double spawn_time_;
+  double e1_time_;
+  double e2_time_;
+  double e3_time_;
+  double e4_time_;
   bool has_last_barrier_job_;
   job_id_t last_barrier_job_id_;
 
+  typedef boost::unordered_map<logical_data_id_t, GeometricRegion> HintMapType;
+  HintMapType hint_map_;
   void Eliminate(IDSet<job_id_t>* before);
 
   Job* job_;
@@ -81,7 +92,7 @@ class JobQuery {
     bool has_outstanding_writer;
     job_id_t outstanding_writer;
   };
-  typedef std::map<logical_data_id_t, OutstandingAccessors>
+  typedef boost::unordered_map<logical_data_id_t, OutstandingAccessors>
       OutstandingAccessorsMap;
   OutstandingAccessorsMap outstanding_accessors_map_;
 
@@ -95,12 +106,17 @@ class JobQuery {
   };
   std::list<JobEntry> staged_jobs_;
 
+  typedef int64_t GroupId;
+  GroupId group_id_counter_;
   struct ShortJobEntry {
     std::string name;
     job_id_t id;
     IDSet<job_id_t> before;
+    GroupId group_id;
   };
-  std::list<ShortJobEntry> query_results_;
+  std::vector<ShortJobEntry> query_log_;
+  typedef int64_t RankId;
+  boost::unordered_map<job_id_t, RankId> job_id_to_rank_;
 };
 
 }  // namespace nimbus

@@ -47,21 +47,30 @@ namespace nimbus {
 JobQuery::JobQuery(Job* job) {
   job_ = job;
   has_last_barrier_job_ = false;
+  group_id_counter_ = 0;
+  total_job_ = 0;
+  total_objects_ = 0;
   query_time_ = 0;
   commit_time_ = 0;
   copy_time_ = 0;
   elimination_time_ = 0;
   spawn_time_ = 0;
+  e1_time_ = 0;
+  e2_time_ = 0;
+  e3_time_ = 0;
+  e4_time_ = 0;
 }
 JobQuery::~JobQuery() {}
 
 bool JobQuery::StageJob(
     const std::string& name, const job_id_t& id,
-    const IDSet<logical_data_id_t>& read,
-    const IDSet<logical_data_id_t>& write,
+    IDSet<logical_data_id_t>& read,
+    IDSet<logical_data_id_t>& write,
     const Parameter& params,
     const bool sterile,
     const bool barrier) {
+  ++total_job_;
+  total_objects_ += read.size() + write.size();
   struct timespec start_time;
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &start_time);
@@ -75,18 +84,20 @@ bool JobQuery::StageJob(
   }  // RAW
   for (IDSet<logical_data_id_t>::ConstIter index = write.begin();
        index != write.end(); index++) {
-    OutstandingAccessors& entry = outstanding_accessors_map_[*index];
-    if (entry.has_outstanding_writer) {
+    if (!read.contains(*index)) {
+      OutstandingAccessors& entry = outstanding_accessors_map_[*index];
+      if (entry.has_outstanding_writer) {
         query_results.insert(entry.outstanding_writer);
+      }
     }
   }  // WAW
   if (has_last_barrier_job_) {
     query_results.insert(last_barrier_job_id_);
   }
   if (barrier) {
-    for (std::list<ShortJobEntry>::iterator index =
-         query_results_.begin();
-         index != query_results_.end();
+    for (std::vector<ShortJobEntry>::iterator index =
+         query_log_.begin();
+         index != query_log_.end();
          index++) {
        query_results.insert(index->id);
     }
@@ -97,15 +108,16 @@ bool JobQuery::StageJob(
   clock_gettime(CLOCK_REALTIME, &t);
   query_time_ += difftime(t.tv_sec, start_time.tv_sec)
       + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
   clock_gettime(CLOCK_REALTIME, &start_time);
   // Put the result in staged areas.
   staged_jobs_.push_back(JobEntry());
   JobEntry& job_entry = staged_jobs_.back();
   job_entry.name = name;
   job_entry.id = id;
-  job_entry.read = read;
-  job_entry.write = write;
-  job_entry.before = query_results;
+  job_entry.read.swap(read);
+  job_entry.write.swap(write);
+  job_entry.before.swap(query_results);
   job_entry.params = params;
   job_entry.sterile = sterile;
   clock_gettime(CLOCK_REALTIME, &t);
@@ -125,11 +137,13 @@ bool JobQuery::CommitStagedJobs() {
     clock_gettime(CLOCK_REALTIME, &t);
     commit_time_ += difftime(t.tv_sec, start_time.tv_sec)
         + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
     clock_gettime(CLOCK_REALTIME, &start_time);
     Eliminate(&iterator->before);
     clock_gettime(CLOCK_REALTIME, &t);
     elimination_time_ += difftime(t.tv_sec, start_time.tv_sec)
         + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
     clock_gettime(CLOCK_REALTIME, &start_time);
     job_->SpawnComputeJob(
         iterator->name, iterator->id, iterator->read, iterator->write,
@@ -138,13 +152,17 @@ bool JobQuery::CommitStagedJobs() {
     clock_gettime(CLOCK_REALTIME, &t);
     spawn_time_ += difftime(t.tv_sec, start_time.tv_sec)
         + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
     clock_gettime(CLOCK_REALTIME, &start_time);
-    query_results_.push_back(ShortJobEntry());
-    ShortJobEntry& temp = query_results_.back();
+    query_log_.push_back(ShortJobEntry());
+    ShortJobEntry& temp = query_log_.back();
     temp.name = iterator->name;
     temp.id = iterator->id;
-    temp.before = iterator->before;
+    temp.before.swap(iterator->before);
+    temp.group_id = group_id_counter_;
+    job_id_to_rank_[temp.id] = query_log_.size() - 1;
   }
+  ++group_id_counter_;
   // Cleans up outstanding accessor map.
   for (std::list<JobEntry>::iterator iterator = staged_jobs_.begin();
        iterator != staged_jobs_.end();
@@ -169,39 +187,159 @@ bool JobQuery::CommitJob(const job_id_t& id) {
   return true;
 }
 
+void JobQuery::Hint(job_id_t job_id, const GeometricRegion& region) {
+  hint_map_[job_id] = region;
+}
+
 void JobQuery::Eliminate(IDSet<job_id_t>* before) {
-  boost::unordered_set<job_id_t> temp;
-  int64_t scanned = 0;
-  for (std::list<ShortJobEntry>::reverse_iterator index =
-       query_results_.rbegin();
-       index != query_results_.rend();
-       index++) {
-    if (before->contains(index->id)) {
-      if (temp.find(index->id) != temp.end()) {
-        before->remove(index->id);
-      } else {
-        temp.insert(index->id);
-        ++scanned;
-      }
-    }
-    if (scanned == before->size()) {
+  struct timespec start_time;
+  struct timespec t;
+
+  clock_gettime(CLOCK_REALTIME, &start_time);
+  bool complete_hint = true;
+  int64_t count = 0;
+  if (before->size() <= 1) {
+    return;
+  }
+  GeometricRegion hint_region(0, 0, 0, 0, 0, 0);
+  for (IDSet<job_id_t>::IDSetIter iter = before->begin();
+       iter != before->end();
+       ++iter) {
+    HintMapType::iterator loc = hint_map_.find(*iter);
+    if (loc == hint_map_.end()) {
+      complete_hint = false;
       break;
     }
-    if (temp.find(index->id) != temp.end()) {
-      for (IDSet<job_id_t>::IDSetIter job_iter = index->before.begin();
-           job_iter != index->before.end();
-           job_iter++) {
-        temp.insert(*job_iter);
+    hint_region.Union(loc->second);
+  }
+  clock_gettime(CLOCK_REALTIME, &t);
+  e1_time_ += difftime(t.tv_sec, start_time.tv_sec)
+      + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+  clock_gettime(CLOCK_REALTIME, &start_time);
+  int64_t scanned = 0;
+  std::vector<boost::unordered_set<RankId> > group_heap;
+  boost::unordered_set<job_id_t> group_heap_buffer;
+  group_heap.resize(group_id_counter_);
+  for (IDSet<job_id_t>::IDSetIter iter = before->begin();
+       iter != before->end();
+       ++iter) {
+    RankId rank_id = job_id_to_rank_[*iter];
+    GroupId group_id = query_log_[rank_id].group_id;
+    group_heap[group_id].insert(rank_id);
+  }
+  clock_gettime(CLOCK_REALTIME, &t);
+  e2_time_ += difftime(t.tv_sec, start_time.tv_sec)
+      + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+  clock_gettime(CLOCK_REALTIME, &start_time);
+  for (GroupId index = group_id_counter_ - 1; index >= 0; --index) {
+    group_heap_buffer.clear();
+    for (boost::unordered_set<RankId>::iterator iter =
+         group_heap[index].begin();
+         iter != group_heap[index].end();
+         ++iter) {
+      if (before->contains(query_log_[*iter].id)) {
+        ++scanned;
+        if (scanned == before->size()) {
+          return;
+        }
       }
-    }  // contain statement end
+      ShortJobEntry& entry = query_log_[*iter];
+      group_heap_buffer.insert(entry.before.begin(), entry.before.end());
+    }  // Scan the before set.
+    clock_gettime(CLOCK_REALTIME, &t);
+    e3_time_ += difftime(t.tv_sec, start_time.tv_sec)
+        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+    clock_gettime(CLOCK_REALTIME, &start_time);
+    for (boost::unordered_set<job_id_t>::iterator iter =
+         group_heap_buffer.begin();
+         iter != group_heap_buffer.end();
+         ++iter) {
+      if (complete_hint &&
+          !hint_map_[*iter].Intersects(&hint_region)) {
+        continue;
+      }
+      ++count;
+      before->remove(*iter);
+      RankId temp_rank_id = job_id_to_rank_[*iter];
+      GroupId group_id = query_log_[temp_rank_id].group_id;
+      group_heap[group_id].insert(temp_rank_id);
+    }  // Add to the heap.
+    clock_gettime(CLOCK_REALTIME, &t);
+    e4_time_ += difftime(t.tv_sec, start_time.tv_sec)
+        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+    clock_gettime(CLOCK_REALTIME, &start_time);
   }
 }
+
+/*
+void JobQuery::Eliminate(IDSet<job_id_t>* before) {
+  int64_t count = 0;
+  int64_t init_count = 0;
+  bool complete_hint = true;
+  if (before->size() <= 1) {
+    return;
+  }
+  GeometricRegion hint_region(0, 0, 0, 0, 0, 0);
+  for (IDSet<job_id_t>::IDSetIter iter = before->begin();
+       iter != before->end();
+       ++iter) {
+    HintMapType::iterator loc = hint_map_.find(*iter);
+    if (loc == hint_map_.end()) {
+      complete_hint = false;
+      break;
+    }
+    hint_region.Union(loc->second);
+  }
+  int64_t scanned = 0;
+  std::vector<int64_t> heap;
+  boost::unordered_set<int64_t> exist;
+  for (IDSet<job_id_t>::IDSetIter iter = before->begin();
+       iter != before->end();
+       ++iter) {
+    heap.push_back(job_id_to_rank_[*iter]);
+    exist.insert(job_id_to_rank_[*iter]);
+  }
+  init_count = heap.size();
+  std::make_heap(heap.begin(), heap.end());  // max_heap.
+  while (scanned < before->size() && !heap.empty()) {
+    pop_heap(heap.begin(), heap.end());
+    int64_t top_element = heap.back();
+    heap.pop_back();
+    exist.erase(top_element);
+    ShortJobEntry& entry = query_log_[top_element];
+    if (before->contains(entry.id)) {
+      ++scanned;
+    }
+    for (IDSet<job_id_t>::IDSetIter job_iter = entry.before.begin();
+         job_iter != entry.before.end();
+         job_iter++) {
+      if (complete_hint && !hint_map_[*job_iter].Intersects(&hint_region)) {
+        continue;
+      }
+      before->remove(*job_iter);
+      int64_t cand_job_id = job_id_to_rank_[*job_iter];
+      if (exist.count(cand_job_id) == 0) {
+        ++count;
+        heap.push_back(cand_job_id);
+        push_heap(heap.begin(), heap.end());
+        exist.insert(cand_job_id);
+      }
+    }
+  }
+  printf("\n%d jobs scanned, %d, %s\n", count, init_count,
+         hint_region.toString().c_str());
+}
+*/
 
 void JobQuery::GenerateDotFigure(const std::string& file_name) {
   std::ofstream fout(file_name.c_str(), std::ofstream::out);
   fout << "digraph Workflow {" << std::endl;
-  for (std::list<ShortJobEntry>::iterator index = query_results_.begin();
-       index != query_results_.end();
+  for (std::vector<ShortJobEntry>::iterator index = query_log_.begin();
+       index != query_log_.end();
        index++) {
     fout << "\t" << "node" << index->id
          << " [label=\"" << index->name << "\"];"
@@ -219,8 +357,11 @@ void JobQuery::GenerateDotFigure(const std::string& file_name) {
 
 void JobQuery::PrintTimeProfile() {
   printf("\nquery time:%f\ncommit_time:%f\ncopy_time:%f\nelimination_time:%f\n"
-         "spawn_time:%f\n", query_time_, commit_time_, copy_time_,
-         elimination_time_, spawn_time_);
+         "spawn_time:%f\ne1_time:%f\ne2_time:%f\ne3_time:%f\ne4_time:%f\n",
+         query_time_, commit_time_, copy_time_, elimination_time_, spawn_time_,
+         e1_time_, e2_time_, e3_time_, e4_time_);
+  printf("\ntotal job:%lld\ntotal objects:%lld\n",
+         total_job_, total_objects_);
 }
 
 }  // namespace nimbus

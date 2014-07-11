@@ -230,6 +230,7 @@ void JobProjectionLoopIteration::Execute(
       job_query.StageJob(PROJECTION_STEP_ONE, step_one_job_ids[index],
                          read, write, default_part_params[index],
                          true);
+      job_query.Hint(step_one_job_ids[index], kRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
@@ -246,6 +247,7 @@ void JobProjectionLoopIteration::Execute(
         APP_PROJECTION_BETA, NULL);
     job_query.StageJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
                        read, write, default_params, true);
+    job_query.Hint(projection_job_ids[1], kRegW0Central[0]);
     job_query.CommitStagedJobs();
 
     // STEP_TWO
@@ -267,6 +269,7 @@ void JobProjectionLoopIteration::Execute(
       job_query.StageJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
                          read, write, default_part_params[index],
                          true);
+      job_query.Hint(step_two_job_ids[index], kRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
@@ -289,6 +292,7 @@ void JobProjectionLoopIteration::Execute(
       job_query.StageJob(PROJECTION_STEP_THREE, step_three_job_ids[index],
                          read, write, default_part_params[index],
                          true);
+      job_query.Hint(step_three_job_ids[index], kRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
@@ -305,6 +309,7 @@ void JobProjectionLoopIteration::Execute(
         this, &write, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);
     job_query.StageJob(PROJECTION_REDUCE_ALPHA, projection_job_ids[4],
                        read, write, default_params, true);
+    job_query.Hint(projection_job_ids[4], kRegW0Central[0]);
     job_query.CommitStagedJobs();
 
     // STEP_FOUR
@@ -324,6 +329,7 @@ void JobProjectionLoopIteration::Execute(
       job_query.StageJob(PROJECTION_STEP_FOUR, step_four_job_ids[index],
                          read, write, default_part_params[index],
                          true);
+      job_query.Hint(step_four_job_ids[index], kRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
 
@@ -346,6 +352,7 @@ void JobProjectionLoopIteration::Execute(
     job_query.StageJob(PROJECTION_LOOP_ITERATION, projection_job_ids[6],
                        read, write,
                        next_iteration_params, false, true);
+    job_query.Hint(projection_job_ids[6], kRegW0Central[0]);
     job_query.CommitStagedJobs();
     if (time == 0 && iteration == 1) {
       dbg(APP_LOG, "Print job dependency figure.\n");
