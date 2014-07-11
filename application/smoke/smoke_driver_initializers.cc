@@ -170,17 +170,6 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
   output_number=current_frame;
 
   {
-    // Maybe ???
-    if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      LOG::Time("Velocity memory allocated.\n");
-      example.face_velocities.Resize(example.mac_grid);
-    }
-
-    if (example.data_config.GetFlag(DataConfig::DENSITY)) {
-      LOG::Time("Density memory allocated.\n");
-      example.density.Resize(example.mac_grid.Domain_Indices(0));
-    }
-
     InitializeProjectionHelper(
         example.data_config,
 	example.mac_grid,

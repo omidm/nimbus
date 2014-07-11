@@ -66,7 +66,7 @@ namespace application {
     const bool kUseGlobalWrite = false;
     const bool kUseCache = true;
     const int kThreadsNum = 1;
-    const int kScale = 40;
+    const int kScale = 80;
     const int kAppPartNum = 2;
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
