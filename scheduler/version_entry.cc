@@ -155,6 +155,14 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionEntry::LookUpVersion(
+    JobEntry *job,
+    data_version_t *version) {
+  // TODO(omidm): IMPLEMENT.
+  return false;
+}
+
+
 bool VersionEntry::is_empty() {
   return ((index_.size() == 0) && (pending_jobs_.size() == 0));
 }

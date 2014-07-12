@@ -54,6 +54,9 @@ JobEntry::JobEntry() {
 }
 
 void JobEntry::Initialize() {
+    vmap_read_ = boost::shared_ptr<VersionMap>(new VersionMap());
+    vmap_write_ = boost::shared_ptr<VersionMap>(new VersionMap());
+    meta_before_set_ =  boost::shared_ptr<MetaBeforeSet>(new MetaBeforeSet());
 /*
   static boost::shared_ptr<VersionMap> empty_vmap =
     boost::shared_ptr<VersionMap>(new VersionMap());

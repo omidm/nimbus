@@ -240,8 +240,6 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   JobEntry *j;
 
   job_depth_t depth;
-  job->set_meta_before_set(
-      boost::shared_ptr<MetaBeforeSet>(new MetaBeforeSet()));
 
   if (job_graph_.AddEdge(job->parent_job_id(), job->job_id(), &edge)) {
     j = edge->start_vertex()->entry();
@@ -377,9 +375,9 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   log_sterile_.ResetTimer();
   log_nonsterile_.ResetTimer();
   lookup_count_ = 0;
-  while (ResolveDataVersions() > 0) {
-    continue;
-  }
+  // while (ResolveDataVersions() > 0) {
+  //   continue;
+  // }
   if (lookup_count_ > 0) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<
@@ -397,7 +395,9 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   for (; (iter != jobs_ready_to_assign_.end()) && (num < max_num);) {
     JobEntry *job = iter->second;
     assert(!job->assigned());
-    assert(job->versioned());
+    // assert(job->versioned());
+    assert(job->IsReadyForCompleteVersioning());
+    version_manager_.ResolveJobDataVersions(job);
 
     jobs_pending_to_assign_[iter->first] = job;
     jobs_ready_to_assign_.erase(iter++);
@@ -481,9 +481,9 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   log_sterile_.ResetTimer();
   log_nonsterile_.ResetTimer();
   lookup_count_ = 0;
-  while (ResolveDataVersions() > 0) {
-    continue;
-  }
+  // while (ResolveDataVersions() > 0) {
+  //   continue;
+  // }
   if (lookup_count_ > 0) {
     std::cout << "Versioning in get ready jobs: versioning: " <<
       log_version_.timer() << " merge: " << log_merge_.timer() <<

@@ -85,6 +85,51 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
+  assert(job->IsReadyForCompleteVersioning());
+
+  IDSet<logical_data_id_t>::ConstIter it;
+  for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+    data_version_t version;
+    if (LookUpVersion(job, *it, &version)) {
+      job->vmap_read()->set_entry(*it, version);
+    } else {
+      return false;
+    }
+  }
+
+  boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
+  IDSet<logical_data_id_t>::ConstIter itw;
+  for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
+    data_version_t version;
+    if (job->vmap_read()->query_entry(*itw, &version)) {
+      job->vmap_write()->set_entry(*itw, version + 1);
+    } else {
+      if (LookUpVersion(job, *itw, &version)) {
+        job->vmap_write()->set_entry(*itw, version + 1);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+bool VersionManager::LookUpVersion(
+    JobEntry *job,
+    logical_data_id_t ldid,
+    data_version_t *version) {
+  IndexIter iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    return false;
+  } else {
+    return iter->second->LookUpVersion(job, version);
+  }
+}
+
+
+
 size_t VersionManager::GetJobsNeedDataVersion(
     JobEntryList* list, VLD vld) {
   IndexIter iter = index_.find(vld.first);

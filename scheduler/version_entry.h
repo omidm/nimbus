@@ -74,6 +74,9 @@ class VersionEntry {
     size_t GetJobsNeedVersion(
         JobEntryList* list, data_version_t version);
 
+    bool LookUpVersion(JobEntry *job,
+                       data_version_t *version);
+
     bool is_empty();
 
   private:

@@ -76,6 +76,12 @@ class VersionManager {
 
     bool RemoveJobEntry(JobEntry* job);
 
+    bool ResolveJobDataVersions(JobEntry *job);
+
+    bool LookUpVersion(JobEntry *job,
+                       logical_data_id_t ldid,
+                       data_version_t *version);
+
     void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
   private:
