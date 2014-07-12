@@ -62,10 +62,10 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
       IndexIter iter = index_.find(*it);
       if (iter == index_.end()) {
         VersionEntry *ve = new VersionEntry(*it);
-        ve->AddJobEntry(job);
+        ve->AddJobEntryReader(job);
         index_.insert(std::make_pair(*it, ve));
       } else {
-        iter->second->AddJobEntry(job);
+        iter->second->AddJobEntryReader(job);
       }
     }
   } else {
@@ -74,10 +74,24 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
       IndexIter iter = index_.find(it->first);
       if (iter == index_.end()) {
         VersionEntry *ve = new VersionEntry(it->first);
-        ve->AddJobEntry(job);
+        ve->AddJobEntryReader(job);
         index_.insert(std::make_pair(it->first, ve));
       } else {
-        iter->second->AddJobEntry(job);
+        iter->second->AddJobEntryReader(job);
+      }
+    }
+  }
+
+  {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
+      IndexIter iter = index_.find(*it);
+      if (iter == index_.end()) {
+        VersionEntry *ve = new VersionEntry(*it);
+        ve->AddJobEntryWriter(job);
+        index_.insert(std::make_pair(*it, ve));
+      } else {
+        iter->second->AddJobEntryWriter(job);
       }
     }
   }

@@ -53,7 +53,8 @@ VersionEntry::VersionEntry(logical_data_id_t ldid) {
 
 VersionEntry::VersionEntry(const VersionEntry& other) {
   ldid_ = other.ldid_;
-  pending_jobs_ = other.pending_jobs_;
+  pending_reader_jobs_ = other.pending_reader_jobs_;
+  pending_writer_jobs_ = other.pending_writer_jobs_;
   index_ = other.index_;
 }
 
@@ -66,14 +67,19 @@ VersionEntry::~VersionEntry() {
 
 VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
   ldid_ = right.ldid_;
-  pending_jobs_ = right.pending_jobs_;
+  pending_reader_jobs_ = right.pending_reader_jobs_;
+  pending_writer_jobs_ = right.pending_writer_jobs_;
   index_ = right.index_;
   return *this;
 }
 
+bool VersionEntry::AddJobEntryReader(JobEntry *job) {
+  pending_reader_jobs_.insert(job);
+  return true;
+}
 
-bool VersionEntry::AddJobEntry(JobEntry *job) {
-  pending_jobs_.insert(job);
+bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
+  pending_writer_jobs_.insert(job);
   return true;
 }
 
@@ -89,8 +95,8 @@ size_t VersionEntry::GetJobsNeedVersion(
    * causes the following to fail.
    */
 
-  BucketIter iter = pending_jobs_.begin();
-  for (; iter != pending_jobs_.end();) {
+  BucketIter iter = pending_reader_jobs_.begin();
+  for (; iter != pending_reader_jobs_.end();) {
     assert((*iter)->versioned());
     assert((*iter)->job_name() != "localcopy");
     data_version_t ver;
@@ -109,10 +115,10 @@ size_t VersionEntry::GetJobsNeedVersion(
       exit(-1);
       return 0;
     }
-    pending_jobs_.erase(iter++);
+    pending_reader_jobs_.erase(iter++);
   }
 
-  assert(pending_jobs_.size() == 0);
+  assert(pending_reader_jobs_.size() == 0);
 
   IndexIter iiter = index_.find(version);
   if (iiter == index_.end()) {
@@ -133,7 +139,8 @@ size_t VersionEntry::GetJobsNeedVersion(
 bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   assert(job->versioned());
 
-  pending_jobs_.erase(job);
+  pending_reader_jobs_.erase(job);
+  pending_writer_jobs_.erase(job);
 
   data_version_t ver;
   if (job->vmap_read()->query_entry(ldid_, &ver)) {
@@ -164,6 +171,8 @@ bool VersionEntry::LookUpVersion(
 
 
 bool VersionEntry::is_empty() {
-  return ((index_.size() == 0) && (pending_jobs_.size() == 0));
+  return ((index_.size() == 0) &&
+          (pending_reader_jobs_.size() == 0) &&
+          (pending_writer_jobs_.size() == 0));
 }
 

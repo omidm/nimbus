@@ -67,7 +67,9 @@ class VersionEntry {
 
     VersionEntry& operator= (const VersionEntry& right);
 
-    bool AddJobEntry(JobEntry *job);
+    bool AddJobEntryReader(JobEntry *job);
+
+    bool AddJobEntryWriter(JobEntry *job);
 
     bool RemoveJobEntry(JobEntry *job);
 
@@ -81,7 +83,8 @@ class VersionEntry {
 
   private:
     logical_data_id_t ldid_;
-    Bucket pending_jobs_;
+    Bucket pending_reader_jobs_;
+    Bucket pending_writer_jobs_;
     Index index_;
     LogicalDataLineage ldl_;
 };
