@@ -56,6 +56,7 @@ VersionEntry::VersionEntry(const VersionEntry& other) {
   pending_reader_jobs_ = other.pending_reader_jobs_;
   pending_writer_jobs_ = other.pending_writer_jobs_;
   index_ = other.index_;
+  ldl_ = other.ldl_;
 }
 
 VersionEntry::~VersionEntry() {
@@ -70,6 +71,7 @@ VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
   pending_reader_jobs_ = right.pending_reader_jobs_;
   pending_writer_jobs_ = right.pending_writer_jobs_;
   index_ = right.index_;
+  ldl_ = right.ldl_;
   return *this;
 }
 
