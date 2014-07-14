@@ -90,16 +90,19 @@ void JobCalculateDt::Execute(
                              this, da, example, driver);
   *thread_queue_hook() = example->nimbus_thread_queue;
 
-  T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
-  T temp_dt =
-      example->particle_levelset_evolution.cfl_number
-      * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
-          example->face_velocities);
-  dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", temp_dt);
-  if (temp_dt < dt) {
-    dt = temp_dt;
+  {
+    application::ScopeTimer scope_timer(name());
+    T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
+    T temp_dt =
+        example->particle_levelset_evolution.cfl_number
+        * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
+            example->face_velocities);
+    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", temp_dt);
+    if (temp_dt < dt) {
+      dt = temp_dt;
+    }
+    example->dt_buffer = dt;
   }
-  example->dt_buffer = dt;
 
   *thread_queue_hook() = NULL;
 

@@ -335,24 +335,35 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-  static Log init_log(std::string("physbam-init-log"));
 
-#ifdef PHYSBAM_INIT_LOG
-  {
-    std::stringstream msg;
-    msg << "~~~ App InitializeExampleAndDriver start : " << init_log.GetTime();
-    init_log.WriteToFile(msg.str());
-  }
-#endif
+//   static Log init_log(std::string("physbam-init-log"));
+//
+// #ifdef PHYSBAM_INIT_LOG
+//   {
+//     std::stringstream msg;
+//     msg << "~~~ App InitializeExampleAndDriver start : " << init_log.GetTime();
+//     init_log.WriteToFile(msg.str());
+//   }
+// #endif
 
 
   dbg(APP_LOG, "Enter initialize_example_driver.\n");
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.toString().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.toString().c_str());
   {
+    double cache_lookup_time = 0;
+    double init_example_time = 0;
+    struct timespec start_time;
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &start_time);
     if (init_config.use_cache && kUseCache) {
       AppCacheObjects cache;
       GetAppCacheObjects(init_config, data_config, *job, da, &cache);
+      clock_gettime(CLOCK_REALTIME, &t);
+      cache_lookup_time += difftime(t.tv_sec, start_time.tv_sec)
+          + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+      clock_gettime(CLOCK_REALTIME, &start_time);
       if (cache.ple)
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
@@ -386,8 +397,14 @@ bool InitializeExampleAndDriver(
         GridToRange(init_config.global_region, init_config.local_region));
     PhysBAM::WaterSources::Add_Source(example);
     example->data_config.Set(data_config);
+    clock_gettime(CLOCK_REALTIME, &t);
+    init_example_time += difftime(t.tv_sec, start_time.tv_sec)
+        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+    dbg(APP_LOG, "\n[TIME] Job cache_loopup, %f seconds.\n", cache_lookup_time);
+    dbg(APP_LOG, "\n[TIME] Job init_example, %f seconds.\n", init_example_time);
   }
   {
+    application::ScopeTimer scope_timer("init_driver");
     driver= new PhysBAM::WATER_DRIVER<TV>(*example);
     // parameters
     driver->init_phase = init_config.init_phase;
@@ -406,13 +423,13 @@ bool InitializeExampleAndDriver(
 
   dbg(APP_LOG, "Exit initialize_example_driver.\n");
 
-#ifdef PHYSBAM_INIT_LOG
-  {
-    std::stringstream msg;
-    msg << "~~~ App InitializeExampleAndDriver end : " << init_log.GetTime();
-    init_log.WriteToFile(msg.str());
-  }
-#endif
+// #ifdef PHYSBAM_INIT_LOG
+//   {
+//     std::stringstream msg;
+//     msg << "~~~ App InitializeExampleAndDriver end : " << init_log.GetTime();
+//     init_log.WriteToFile(msg.str());
+//   }
+// #endif
 
   return true;
 }
@@ -420,6 +437,7 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
+  application::ScopeTimer scope_timer("delete_example_and_driver");
   if (example->create_destroy_ple)
     delete &example->particle_levelset_evolution;
   delete example;
