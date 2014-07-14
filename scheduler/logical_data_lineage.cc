@@ -128,7 +128,7 @@ bool LogicalDataLineage::AppendLdlEntry(
     const data_version_t& version,
     const job_depth_t& job_depth,
     const bool& sterile) {
-  assert(last_version_ < version);
+  assert((last_version_ + 1) == version);
   last_version_ = version;
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));

@@ -171,10 +171,54 @@ bool VersionEntry::LookUpVersion(
   return false;
 }
 
-
 bool VersionEntry::is_empty() {
   return ((index_.size() == 0) &&
           (pending_reader_jobs_.size() == 0) &&
           (pending_writer_jobs_.size() == 0));
 }
+
+
+bool CompareJobDepths(JobEntry* i, JobEntry* j) {
+  return ((i->job_depth()) < (j->job_depth()));
+}
+
+bool VersionEntry::UpdateLdl() {
+  if (pending_writer_jobs_.size() == 0) {
+    return true;
+  }
+
+  std::vector<JobEntry*> depth_sorted;
+
+  BucketIter iter = pending_writer_jobs_.begin();
+  for (; iter != pending_writer_jobs_.end();) {
+    if ((*iter)->IsReadyForCompleteVersioning()) {
+      depth_sorted.push_back(*iter);
+      pending_writer_jobs_.erase(iter++);
+    } else {
+      ++iter;
+    }
+  }
+
+  if (depth_sorted.size() == 0) {
+    return true;
+  }
+
+  std::sort(depth_sorted.begin(), depth_sorted.end(), CompareJobDepths);
+
+  data_version_t version = ldl_.last_version();
+  std::vector<JobEntry*>::iterator it = depth_sorted.begin();
+  for (; it != depth_sorted.end(); ++it) {
+    ++version;
+    if (!ldl_.AppendLdlEntry(
+          (*it)->job_id(),
+          version,
+          (*it)->job_depth(),
+          (*it)->sterile())) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 

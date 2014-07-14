@@ -46,7 +46,10 @@
 
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <set>
+#include <vector>
 #include <list>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
@@ -56,7 +59,7 @@ namespace nimbus {
 
 class VersionEntry {
   public:
-    typedef boost::unordered_set<JobEntry*> Bucket;
+    typedef std::set<JobEntry*> Bucket;
     typedef Bucket::iterator BucketIter;
     typedef boost::unordered_map<data_version_t, Bucket*> Index;
     typedef Index::iterator IndexIter;
@@ -87,6 +90,8 @@ class VersionEntry {
     Bucket pending_writer_jobs_;
     Index index_;
     LogicalDataLineage ldl_;
+
+    bool UpdateLdl();
 };
 
 typedef std::list<VersionEntry> VersionEntryList;
