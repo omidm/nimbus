@@ -167,8 +167,12 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
 bool VersionEntry::LookUpVersion(
     JobEntry *job,
     data_version_t *version) {
-  // TODO(omidm): IMPLEMENT.
-  return false;
+  if (!UpdateLdl()) {
+    dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
+  }
+
+
+  return ldl_.LookUpVersion(job->meta_before_set(), version);
 }
 
 bool VersionEntry::is_empty() {
@@ -208,7 +212,12 @@ bool VersionEntry::UpdateLdl() {
   data_version_t version = ldl_.last_version();
   std::vector<JobEntry*>::iterator it = depth_sorted.begin();
   for (; it != depth_sorted.end(); ++it) {
+    if ((*it)->read_set_p()->contains(ldid_)) {
+      (*it)->vmap_read()->set_entry(ldid_, version);
+    }
     ++version;
+    (*it)->vmap_write()->set_entry(ldid_, version);
+
     if (!ldl_.AppendLdlEntry(
           (*it)->job_id(),
           version,
