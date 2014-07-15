@@ -99,32 +99,49 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   assert(job->IsReadyForCompleteVersioning());
 
-  IDSet<logical_data_id_t>::ConstIter it;
-  for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-    data_version_t version;
-    if (job->vmap_read()->query_entry(*it, &version)) {
-      continue;
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(*it, &version)) {
+        continue;
+      }
+      if (LookUpVersion(job, *it, &version)) {
+        job->vmap_read()->set_entry(*it, version);
+      } else {
+        return false;
+      }
     }
-    if (LookUpVersion(job, *it, &version)) {
-      job->vmap_read()->set_entry(*it, version);
-    } else {
-      return false;
+  } else {
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(it->first, &version)) {
+        continue;
+      }
+      if (LookUpVersion(job, it->first, &version)) {
+        job->vmap_read()->set_entry(it->first, version);
+      } else {
+        return false;
+      }
     }
   }
 
-  IDSet<logical_data_id_t>::ConstIter itw;
-  for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
-    data_version_t version;
-    if (job->vmap_write()->query_entry(*itw, &version)) {
-      continue;
-    }
-    if (job->vmap_read()->query_entry(*itw, &version)) {
-      job->vmap_write()->set_entry(*itw, version + 1);
-    } else {
-      if (LookUpVersion(job, *itw, &version)) {
-        job->vmap_write()->set_entry(*itw, version + 1);
+  {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_write()->query_entry(*it, &version)) {
+        continue;
+      }
+      if (job->vmap_read()->query_entry(*it, &version)) {
+        job->vmap_write()->set_entry(*it, version + 1);
       } else {
-        return false;
+        if (LookUpVersion(job, *it, &version)) {
+          job->vmap_write()->set_entry(*it, version + 1);
+        } else {
+          return false;
+        }
       }
     }
   }
