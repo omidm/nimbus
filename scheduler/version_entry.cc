@@ -87,40 +87,59 @@ bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
 
 size_t VersionEntry::GetJobsNeedVersion(
     JobEntryList* list, data_version_t version) {
+  if (!UpdateLdl()) {
+    dbg(DBG_ERROR, "ERROR: Could not update the ldl for ldid %lu.\n", ldid_);
+  }
+
   size_t count = 0;
   list->clear();
 
-  /*
-   * TODO(omidm): for now just assume that when called all jobs are versioned.
-   *  1. Partial versioning (future jobs)
-   *  2. Versioning right before asignment.
-   * causes the following to fail.
-   */
-
   BucketIter iter = pending_reader_jobs_.begin();
   for (; iter != pending_reader_jobs_.end();) {
-    assert((*iter)->versioned());
-    assert((*iter)->job_name() != "localcopy");
-    data_version_t ver;
-    if ((*iter)->vmap_read()->query_entry(ldid_, &ver)) {
-      IndexIter it = index_.find(ver);
-      if (it != index_.end()) {
-        it->second->insert(*iter);
+    if ((*iter)->assigned()) {
+      pending_reader_jobs_.erase(iter++);
+      continue;
+    }
+
+    data_version_t partial_version;
+    if ((*iter)->vmap_partial()->query_entry(ldid_, &partial_version)) {
+      IndexIter it = index_.find(partial_version);
+      assert(it != index_.end());
+      it->second->erase(*iter);
+    }
+
+    data_version_t new_version;
+    if ((*iter)->vmap_read()->query_entry(ldid_, &new_version)) {
+    } else if (LookUpVersion(*iter, &new_version)) {
+      if ((*iter)->IsReadyForCompleteVersioning()) {
+        (*iter)->vmap_read()->set_entry(ldid_, new_version);
       } else {
-        Bucket *b = new Bucket();
-        b->insert(*iter);
-        index_.insert(std::make_pair(ver, b));
+        (*iter)->vmap_partial()->set_entry(ldid_, new_version);
       }
     } else {
-      dbg(DBG_ERROR, "Version Entry: ldid %lu in read set of job %lu is not versioned.\n",
+      dbg(DBG_ERROR, "ERROR: Version Entry: ldid %lu in read set of job %lu could not be not versioned.\n", // NOLINT
           ldid_, (*iter)->job_id());
       exit(-1);
-      return 0;
     }
-    pending_reader_jobs_.erase(iter++);
+
+    IndexIter it = index_.find(new_version);
+    if (it != index_.end()) {
+      it->second->insert(*iter);
+    } else {
+      Bucket *b = new Bucket();
+      b->insert(*iter);
+      index_.insert(std::make_pair(new_version, b));
+    }
+
+
+    if ((*iter)->IsReadyForCompleteVersioning()) {
+      pending_reader_jobs_.erase(iter++);
+    } else {
+      ++iter;
+    }
   }
 
-  assert(pending_reader_jobs_.size() == 0);
+
 
   IndexIter iiter = index_.find(version);
   if (iiter == index_.end()) {
@@ -170,7 +189,6 @@ bool VersionEntry::LookUpVersion(
   if (!UpdateLdl()) {
     dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
   }
-
 
   return ldl_.LookUpVersion(job->meta_before_set(), version);
 }

@@ -87,6 +87,7 @@ class JobEntry {
     Parameter params() const;
     boost::shared_ptr<VersionMap> vmap_read() const;
     boost::shared_ptr<VersionMap> vmap_write() const;
+    boost::shared_ptr<VersionMap> vmap_partial() const;
     boost::shared_ptr<MetaBeforeSet> meta_before_set() const;
     job_depth_t job_depth() const;
     PhysicalTable physical_table() const;
@@ -116,6 +117,7 @@ class JobEntry {
     void set_params(Parameter params);
     void set_vmap_read(boost::shared_ptr<VersionMap> vmap_read);
     void set_vmap_write(boost::shared_ptr<VersionMap> vmap_write);
+    void set_vmap_partial(boost::shared_ptr<VersionMap> vmap_partial);
     void set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set);
     void set_job_depth(job_depth_t job_depth);
     void set_physical_table(PhysicalTable physical_table);
@@ -152,6 +154,7 @@ class JobEntry {
     Parameter params_;
     boost::shared_ptr<VersionMap> vmap_read_;
     boost::shared_ptr<VersionMap> vmap_write_;
+    boost::shared_ptr<VersionMap> vmap_partial_;
     boost::shared_ptr<MetaBeforeSet> meta_before_set_;
     job_depth_t job_depth_;
     PhysicalTable physical_table_;
