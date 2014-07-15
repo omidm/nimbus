@@ -321,7 +321,7 @@ void JobEntry::remove_assignment_dependency(job_id_t job_id) {
 }
 
 bool JobEntry::IsReadyForCompleteVersioning() {
-  return (versioning_dependencies_.size() == 0);
+  return (versioning_dependencies_.size() == 0 && !future_);
 }
 
 void JobEntry::remove_versioning_dependency(job_id_t job_id) {
