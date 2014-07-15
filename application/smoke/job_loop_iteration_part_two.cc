@@ -93,8 +93,6 @@ void JobLoopIterationPartTwo::Execute(
     done = true;
   }
 
-  // done = true;
-
   delete example;
 
   SpawnJobs(
@@ -136,10 +134,6 @@ void JobLoopIterationPartTwo::SpawnJobs(
     for (int i = 0; i < calculate_dt_job_num; ++i) {
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
-      /*
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
-                          APP_PHI, NULL);
-      */
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);
 
@@ -173,15 +167,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
 
     if (kUseGlobalWrite) {
       read.clear();
-      //LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
-      //                    APP_PHI, NULL);
       LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL, APP_DENSITY, NULL);
       LoadLogicalIdsInSet(this, &read, kRegW1Outer[0], APP_PSI_D,
                           APP_PSI_N, NULL);
-      //LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_POS_PARTICLES,
-      //                    APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-      //                    APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-      //                    NULL);
       write.clear();
 
       nimbus::Parameter temp_params;
@@ -197,15 +185,9 @@ void JobLoopIterationPartTwo::SpawnJobs(
     } else {
       for (int i = 0; i < write_output_job_num; ++i) {
         read.clear();
-        //LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
-        //                    APP_PHI, NULL);
 	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, APP_DENSITY, NULL);
         LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[i], APP_PSI_D,
                             APP_PSI_N, NULL);
-        //LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_POS_PARTICLES,
-        //                    APP_NEG_PARTICLES, APP_POS_REM_PARTICLES,
-        //                    APP_NEG_REM_PARTICLES, APP_LAST_UNIQUE_PARTICLE_ID,
-        //                    NULL);
         write.clear();
 
         nimbus::Parameter temp_params;

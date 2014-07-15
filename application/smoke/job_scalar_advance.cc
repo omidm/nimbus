@@ -86,19 +86,14 @@ void JobScalarAdvance::Execute(nimbus::Parameter params,
   PhysBAM::SMOKE_EXAMPLE<TV> *example;
   PhysBAM::SMOKE_DRIVER<TV> *driver;
 
-
-
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
-  // data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   data_config.SetFlag(DataConfig::DENSITY);
   data_config.SetFlag(DataConfig::DENSITY_GHOST);
 
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
   *thread_queue_hook() = example->nimbus_thread_queue;
-  //InitializeExampleAndDriver(init_config, data_config,
-  //                           this, da, example, driver);
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in scalar advance job.");

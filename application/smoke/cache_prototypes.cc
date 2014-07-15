@@ -45,13 +45,9 @@ CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true);
 CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true);
 CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true);
 
-//CacheScalarArray<T> kCacheDensity(kDefaultRegion, 3, true);
 CacheScalarArray<T> kCacheDensity(kDefaultRegion, 0, true);
 CacheScalarArray<T> kCacheDensityGhost(kDefaultRegion, 3, true);
 
-// CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true);
-// CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true);
-// CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true);
 CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
 
 // Varibales for projection.
@@ -59,8 +55,6 @@ CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
 CacheScalarArray<T> kCacheVectorP(kDefaultRegion, 1, true);
 CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
 CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
-
-// CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
 
 } // namespace application
 

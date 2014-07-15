@@ -23,40 +23,20 @@ LINK_DIRECTORIES(${NIMBUS_ROOT})
 #Manually list your cpp and h files here - do NOT use GLOB/GLOB_RECURSE
 SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/app_utils.cc
-    #${PROJECT_SOURCE_DIR}/job_barrier.cc
     ${PROJECT_SOURCE_DIR}/cache_face_array.cc
-    #${PROJECT_SOURCE_DIR}/cache_particle_levelset_evolution.cc
     ${PROJECT_SOURCE_DIR}/cache_prototypes.cc
     ${PROJECT_SOURCE_DIR}/cache_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/data_def.cc
     ${PROJECT_SOURCE_DIR}/data_face_array.cc
-    #${PROJECT_SOURCE_DIR}/data_particle_array.cc
     ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
-    #${PROJECT_SOURCE_DIR}/job_calculate_frame.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.cc
     ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.cc
-    #${PROJECT_SOURCE_DIR}/job_adjust_phi.cc
-    #${PROJECT_SOURCE_DIR}/job_calculate_dt.cc
-    #${PROJECT_SOURCE_DIR}/job_delete_particles.cc
     ${PROJECT_SOURCE_DIR}/job_main.cc
-    #${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.cc
-    #${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.cc
-    #${PROJECT_SOURCE_DIR}/job_make_signed_distance.cc
-    #${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.cc
     ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.cc
     ${PROJECT_SOURCE_DIR}/job_update_ghost_densities.cc
-    #${PROJECT_SOURCE_DIR}/job_extrapolate_phi.cc
-    #${PROJECT_SOURCE_DIR}/job_advect_phi.cc
-    #${PROJECT_SOURCE_DIR}/job_step_particles.cc
-    #${PROJECT_SOURCE_DIR}/job_advect_removed_particles.cc
-    #${PROJECT_SOURCE_DIR}/job_advect_v.cc
-    #${PROJECT_SOURCE_DIR}/job_apply_forces.cc
-    #${PROJECT_SOURCE_DIR}/job_extrapolation.cc
-    #${PROJECT_SOURCE_DIR}/job_synchronize_particles.cc
     ${PROJECT_SOURCE_DIR}/job_write_output.cc
-    #${PROJECT_SOURCE_DIR}/job_reseed_particles.cc
     ${PROJECT_SOURCE_DIR}/job_substep.cc
     ${PROJECT_SOURCE_DIR}/job_scalar_advance.cc
     ${PROJECT_SOURCE_DIR}/job_convect.cc
@@ -68,7 +48,6 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/smoke_driver.cc
     ${PROJECT_SOURCE_DIR}/smoke_driver_initializers.cc
     ${PROJECT_SOURCE_DIR}/smoke_example.cc
-    #${PROJECT_SOURCE_DIR}/water_sources.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
@@ -93,46 +72,26 @@ SET(${PROJECT_NAME}_cpp
     )
 SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/app_utils.h
-    #${PROJECT_SOURCE_DIR}/job_barrier.h
     ${PROJECT_SOURCE_DIR}/cache_data_include.h
     ${PROJECT_SOURCE_DIR}/cache_face_array.h
     ${PROJECT_SOURCE_DIR}/cache_options.h
-    #${PROJECT_SOURCE_DIR}/cache_particle_levelset_evolution.cc
     ${PROJECT_SOURCE_DIR}/cache_prototypes.h
     ${PROJECT_SOURCE_DIR}/cache_scalar_array.h
     ${PROJECT_SOURCE_DIR}/data_include.h
     ${PROJECT_SOURCE_DIR}/data_names.h
     ${PROJECT_SOURCE_DIR}/data_def.h
     ${PROJECT_SOURCE_DIR}/data_face_array.h
-    #${PROJECT_SOURCE_DIR}/data_particle_array.h
     ${PROJECT_SOURCE_DIR}/data_scalar_array.h
     ${PROJECT_SOURCE_DIR}/job_include.h
     ${PROJECT_SOURCE_DIR}/job_names.h
-    #${PROJECT_SOURCE_DIR}/job_calculate_frame.h
     ${PROJECT_SOURCE_DIR}/job_initialize.h
     ${PROJECT_SOURCE_DIR}/job_loop_frame.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration.h
     ${PROJECT_SOURCE_DIR}/job_loop_iteration_part_two.h
-    #${PROJECT_SOURCE_DIR}/job_adjust_phi.h
-    #${PROJECT_SOURCE_DIR}/job_calculate_dt.h
-    #${PROJECT_SOURCE_DIR}/job_delete_particles.h
     ${PROJECT_SOURCE_DIR}/job_main.h
-    #${PROJECT_SOURCE_DIR}/job_modify_levelset_part_one.h
-    #${PROJECT_SOURCE_DIR}/job_modify_levelset_part_two.h
-    #${PROJECT_SOURCE_DIR}/job_make_signed_distance.h
-    #${PROJECT_SOURCE_DIR}/job_reincorporate_removed_particles.h
     ${PROJECT_SOURCE_DIR}/job_update_ghost_velocities.h
     ${PROJECT_SOURCE_DIR}/job_update_ghost_densities.h
-    #${PROJECT_SOURCE_DIR}/job_extrapolate_phi.h
-    #${PROJECT_SOURCE_DIR}/job_advect_phi.h
-    #${PROJECT_SOURCE_DIR}/job_step_particles.h
-    #${PROJECT_SOURCE_DIR}/job_advect_removed_particles.h
-    #${PROJECT_SOURCE_DIR}/job_advect_v.h
-    #${PROJECT_SOURCE_DIR}/job_apply_forces.h
-    #${PROJECT_SOURCE_DIR}/job_extrapolation.h
-    #${PROJECT_SOURCE_DIR}/job_synchronize_particles.h
     ${PROJECT_SOURCE_DIR}/job_write_output.h
-    #${PROJECT_SOURCE_DIR}/job_reseed_particles.h
     ${PROJECT_SOURCE_DIR}/job_substep.h
     ${PROJECT_SOURCE_DIR}/job_scalar_advance.h
     ${PROJECT_SOURCE_DIR}/job_convect.h
@@ -146,7 +105,6 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/smoke_app.h
     ${PROJECT_SOURCE_DIR}/smoke_driver.h
     ${PROJECT_SOURCE_DIR}/smoke_example.h
-    #${PROJECT_SOURCE_DIR}/water_sources.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h

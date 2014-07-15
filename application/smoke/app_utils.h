@@ -62,12 +62,6 @@ namespace application {
     typedef std::vector<Data*> DataVec;
     typedef std::vector<DataVec*> DataSetVec;
 
-    // scratch data helpers
-    // const nimbus::ScratchDataHelper kScratchPosParticles(kGhostW, APP_POS_PARTICLES);
-    // const nimbus::ScratchDataHelper kScratchNegParticles(kGhostW, APP_NEG_PARTICLES);
-    // const nimbus::ScratchDataHelper kScratchPosRemParticles(kGhostW, APP_POS_REM_PARTICLES);
-    // const nimbus::ScratchDataHelper kScratchNegRemParticles(kGhostW, APP_NEG_REM_PARTICLES);
-
     enum AccessType {READ_ACCESS, WRITE_ACCESS};
 
     // Note: some hacks that need to be cleaned soon after a meeting/

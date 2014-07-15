@@ -202,18 +202,6 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
         RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
 
-
-	/*
-        dbg(APP_LOG, "Registering scratch %s\n", APP_POS_PARTICLES);
-        kScratchPosParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_PARTICLES));
-        dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_PARTICLES);
-        kScratchNegParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_PARTICLES));
-        dbg(APP_LOG, "Registering scratch %s\n", APP_POS_REM_PARTICLES);
-        kScratchPosRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_POS_REM_PARTICLES));
-        dbg(APP_LOG, "Registering scratch %s\n", APP_NEG_REM_PARTICLES);
-        kScratchNegRemParticles.RegisterScratchNames(this, new DataParticleArray(APP_NEG_REM_PARTICLES));
-	*/
-
         RegisterJob(MAIN, new JobMain(this));
         RegisterJob(INITIALIZE, new JobInitialize(this));
 	

@@ -26,7 +26,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
   output_number=current_frame;
   time=example.Time_At_Frame(current_frame);
 
-  // allocates array for velocity and density
+  // allocates arrays for velocity and density
   {
     InitializeProjectionHelper(
        example.data_config,
@@ -53,9 +53,8 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
   }
 
   {
-    // policies etc
-
-    example.Initialize_Fields(); // Might need to look at PhysBAM code for this ??
+    // policies, etc.
+    example.Initialize_Fields();
 
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
@@ -87,7 +86,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
     example.Set_Boundary_Conditions(time);
   }
   // write, save
-//  Write_Output_Files(example.first_frame);
+  // Write_Output_Files(example.first_frame);
   example.Save_To_Nimbus_No_Cache(job, da, current_frame);
 }
 
@@ -99,7 +98,7 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
   DEBUG_SUBSTEPS::Set_Write_Substeps_Level(example.write_substeps_level);
   output_number=current_frame;
 
-  // allocates array for velocity and density
+  // allocates arrays for velocity and density
   {
     InitializeProjectionHelper(
        example.data_config,
@@ -126,8 +125,7 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
   }
   {
     
-    // policies etc
-
+    // policies, etc.
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
     example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);
@@ -136,8 +134,6 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
 
     // load
     example.Load_From_Nimbus(job, da, current_frame);
-
-    // example.Initialize_Fields(); // Might need to look at PhysBAM code for this ?? 
 
     //domain boundaries
     {                                                                                                                      
@@ -177,10 +173,7 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
   }
 
   {
-    // policies etc
-
-    // example.Initialize_Fields(); // Might need to look at PhysBAM code for this ??
-
+    // policies, etc.
     //setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
     example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);

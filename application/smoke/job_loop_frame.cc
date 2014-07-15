@@ -98,8 +98,6 @@ namespace application {
 
           for (int i = 0; i < calculate_dt_job_num; ++i) {
             read.clear();
-	    // LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
-            //                    APP_PHI, NULL);
 	    LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL, NULL);
             write.clear();
             LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);

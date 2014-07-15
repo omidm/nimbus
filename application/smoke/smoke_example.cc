@@ -49,12 +49,6 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     advection_scalar(nimbus_thread_queue),
     boundary(0)
 {
-  /*
-    for (int i = 1; i <= TV::dimension; i++) {
-      domain_boundary(i)(1) = true;
-      domain_boundary(i)(2) = true;
-    }
-  */
     pthread_mutex_init(&lock, 0);
     use_cache   = false;
     cache_fv    = NULL;
@@ -62,15 +56,10 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_psi_n = NULL;
     cache_dens = NULL;
     cache_dens_ghost = NULL;
-    // cache_phi3  = NULL;
-    // cache_phi7  = NULL;
-    // cache_phi8  = NULL;
     cache_psi_d = NULL;
-    // cache_ple   = NULL;
     cache_pressure = NULL;
     cache_colors = NULL;
     cache_divergence = NULL;
-    // create_destroy_ple = true;
 }
 
 //#####################################################################
@@ -100,13 +89,6 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     boundary(0)
 
 {
-  /*
-    for (int i = 1; i <= TV::dimension; i++) {
-      domain_boundary(i)(1) = true;
-      domain_boundary(i)(2) = true;
-    }
-  */
-
     pthread_mutex_init(&lock, 0);
     use_cache   = false;
     cache_fv    = cache->fv;
@@ -114,16 +96,12 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_psi_n = cache->psi_n;
     cache_dens = cache->dens;
     cache_dens_ghost = cache->dens_ghost;
-    // cache_phi3  = cache->phi3;
-    // cache_phi7  = cache->phi7;
-    // cache_phi8  = cache->phi8;
     cache_psi_d = cache->psi_d;
-    // cache_ple   = cache->ple;
     cache_pressure = cache->pressure;
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
-    // create_destroy_ple = true;
 }
+
 //#####################################################################
 // ~SMOKE_EXAMPLE
 //#####################################################################
@@ -164,56 +142,16 @@ CFL_Threaded(RANGE<TV_INT>& domain, ARRAY<T, FACE_INDEX<TV::dimension> >& face_v
         face_velocities(axis, mac_grid.First_Face_Index_In_Cell(axis, cell)), 
 	face_velocities(axis, mac_grid.Second_Face_Index_In_Cell(axis, cell)));
     }
-    // dbg(APP_LOG, "[CONTROL FLOW] local_V_norm=%f\n", local_V_norm);
     dt_convection = max(dt_convection, local_V_norm);
   }
-  dbg(APP_LOG, "[CONTROL FLOW] dt_convection=%f\n", dt_convection);
   pthread_mutex_lock(&lock);
   dt = min(dt, (T)1.0/dt_convection);
   pthread_mutex_unlock(&lock);
 }
 
-
-// Sets the boundary conditions before projection. It might read levelset and
-// velocity near the boundary. For velocity, it only reads to check if an index
-// is valid. It will try to write to psi_D and psi_N of the whole region, and
-// write to pressure and velocity in the boundary region.
-// From what I read. --quhang
-/*
-template<class TV> void SMOKE_EXAMPLE<TV>::
-Set_Boundary_Conditions(const T time) {
-  projection.elliptic_solver->psi_D.Fill(false);
-  projection.elliptic_solver->psi_N.Fill(false);
-  for (int axis = 1; axis <= TV::dimension; axis++) {
-    for (int axis_side = 1; axis_side <= 2; axis_side++) {
-      int side = 2 * (axis-1) + axis_side;
-      if (domain_boundary(axis)(axis_side)) {
-	TV_INT interior_cell_offset =
-	  axis_side==1 ? TV_INT() : -TV_INT::Axis_Vector(axis);
-        for (typename GRID<TV>::FACE_ITERATOR iterator(
-                mac_grid, 1, GRID<TV>::BOUNDARY_REGION, side);
-            iterator.Valid();
-            iterator.Next()) {
-          TV_INT cell = iterator.Face_Index() + interior_cell_offset;
-	  TV_INT boundary_face = axis_side == 1 ? 
-	    iterator.Face_Index()+TV_INT::Axis_Vector(axis) :
-	    iterator.Face_Index() - TV_INT::Axis_Vector(axis);
-	  projection.elliptic_solver->psi_D(cell)=true;projection.p(cell)=0;
-	}
-      }
-    }
-  }
-  for (typename GRID<TV>::FACE_ITERATOR iterator(mac_grid);
-       iterator.Valid();
-       iterator.Next()) {
-    if(source.Lazy_Inside(iterator.Location())){
-      projection.elliptic_solver->psi_N(iterator.Full_Index())=true;
-      if(iterator.Axis()==2)face_velocities(iterator.Full_Index())=1;
-      else face_velocities(iterator.Full_Index())=0;
-    }
-  }
-}
-*/
+//#####################################################################
+// Set_Boundary_Conditions
+//#####################################################################  
 template<class TV> void SMOKE_EXAMPLE<TV>::
 Set_Boundary_Conditions(const T time)
 {
@@ -239,7 +177,6 @@ Set_Boundary_Conditions(const T time)
 template<class TV> void SMOKE_EXAMPLE<TV>::
 Write_Output_Files(const int frame, int rank)
 {
-    //if(!write_output_files) return;
     if (rank != -1) {
       std::string rank_name = "";
       std::stringstream temp_ss;
@@ -329,13 +266,10 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
     }
     application::DestroyTranslatorObjects(&pdv);
 
-    //TODO: save density and density ghost
-
     // density
     const std::string dstring = std::string(APP_DENSITY);
     if (application::GetTranslatorData(job, dstring, da, &pdv, application::WRITE_ACCESS)
 	&& data_config.GetFlag(DataConfig::DENSITY)) {
-      //TODO: translator stuff ???
       translator.WriteScalarArrayFloat(
           &array_reg_central, array_shift, &pdv, &density);
     }
@@ -345,7 +279,6 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
     const std::string dgstring = std::string(APP_DENSITY_GHOST);
     if (application::GetTranslatorData(job, dgstring, da, &pdv, application::WRITE_ACCESS)
 	&& data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
-      //TODO: translator stuff ???
       translator.WriteScalarArrayFloat(
           &array_reg_outer, array_shift, &pdv, &density_ghost);
     }
@@ -532,7 +465,8 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cm->ReleaseAccess(cache_fvg);
         cache_fvg = NULL;
     }
-
+    
+    // density
     if (cache_dens) {
       T_SCALAR_ARRAY *dens = cache_dens->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*dens, density);
@@ -541,6 +475,7 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cache_dens = NULL;
     }
 
+    // density ghost
     if (cache_dens_ghost) {
       T_SCALAR_ARRAY *dens_ghost = cache_dens_ghost->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*dens_ghost, density_ghost);
@@ -550,7 +485,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
 
     {
-      // ??? what is GetTheOnlyData ???
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_DT), da, application::WRITE_ACCESS);
       if (data_temp) {
@@ -722,13 +656,10 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     }
     application::DestroyTranslatorObjects(&pdv);
 
-    // TODO: load density and density ghost
-
     // density
     const std::string dstring = std::string(APP_DENSITY);
     if (application::GetTranslatorData(job, dstring, da, &pdv, application::READ_ACCESS) 
 	&& data_config.GetFlag(DataConfig::DENSITY)) {
-      //TODO: translator stuff ???
       translator.ReadScalarArrayFloat(
           &array_reg_central, array_shift, &pdv, &density);
 				      
@@ -739,7 +670,6 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     const std::string dgstring = std::string(APP_DENSITY_GHOST);
     if (application::GetTranslatorData(job, dgstring, da, &pdv, application::READ_ACCESS) 
 	&& data_config.GetFlag(DataConfig::DENSITY_GHOST)) {
-      //TODO: translator stuff ???
       translator.ReadScalarArrayFloat(
           &array_reg_outer, array_shift, &pdv, &density_ghost);
     }
@@ -915,12 +845,14 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         T_FACE_ARRAY::Exchange_Arrays(*fvg, face_velocities_ghost);
     }
 
+    // density
     if (cache_dens)
     {
 	T_SCALAR_ARRAY *dens = cache_dens->data();
 	T_SCALAR_ARRAY::Exchange_Arrays(*dens, density);
     }
 
+    // density ghost
     if (cache_dens_ghost)
     {
 	T_SCALAR_ARRAY *dens_ghost = cache_dens_ghost->data();

@@ -50,7 +50,6 @@ public:
     T frame_rate;
     std::string frame_title;
     int write_substeps_level;
-    // bool write_output_files;
     std::string output_directory;
     int restart;
     bool write_debug_data;
@@ -83,17 +82,13 @@ public:
     typedef typename application::CacheScalarArray<T> TCacheScalarArray;
     typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
-    // typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
     TCacheScalarArray *cache_dens, *cache_dens_ghost;
-    // TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
     TCacheScalarArray *cache_pressure, *cache_divergence;
     IntCacheScalarArray *cache_colors;
     BoolCacheScalarArray *cache_psi_d;
-    // TCachePLE *cache_ple;
-    // bool create_destroy_ple;
 
     SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
                   bool use_threading,

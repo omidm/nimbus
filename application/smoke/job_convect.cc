@@ -86,10 +86,6 @@ void JobConvect::Execute(nimbus::Parameter params,
   PhysBAM::SMOKE_EXAMPLE<TV> *example;
   PhysBAM::SMOKE_DRIVER<TV> *driver;
 
-
-
-  // Convect has same call to Update_Advection_Equation_Face as 
-  // advect velocity routine in water simulation.
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
@@ -100,8 +96,6 @@ void JobConvect::Execute(nimbus::Parameter params,
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
   *thread_queue_hook() = example->nimbus_thread_queue;
-  //InitializeExampleAndDriver(init_config, data_config,
-  //                           this, da, example, driver);
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in convect job.");

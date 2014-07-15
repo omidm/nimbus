@@ -85,7 +85,7 @@ void JobSubstep::Execute(
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::DENSITY);
   data_config.SetFlag(DataConfig::DT);
-  // data_config.SetFlag(DataConfig::LEVELSET);
+
   InitializeExampleAndDriver(init_config, data_config,
                              this, da, example, driver);
   *thread_queue_hook() = example->nimbus_thread_queue;

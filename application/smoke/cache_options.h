@@ -50,11 +50,7 @@ struct AppCacheObjects {
   CacheFaceArray<bool> *psi_n;
   CacheScalarArray<T> *dens;
   CacheScalarArray<T> *dens_ghost;
-  // CacheScalarArray<T> *phi3;
-  // CacheScalarArray<T> *phi7;
-  // CacheScalarArray<T> *phi8;
   CacheScalarArray<bool> *psi_d;
-  // CacheParticleLevelsetEvolution<T> *ple;
   CacheScalarArray<T> *pressure;
   CacheScalarArray<int> *color;
   CacheScalarArray<T> *divergence;
@@ -65,11 +61,7 @@ struct AppCacheObjects {
     psi_n = NULL;
     dens = NULL;
     dens_ghost = NULL;
-    // phi3  = NULL;
-    // phi7  = NULL;
-    // phi8  = NULL;
     psi_d = NULL;
-    // ple   = NULL;
     pressure = NULL;
     color = NULL;
     divergence = NULL;

@@ -159,10 +159,7 @@ void GetAppCacheObjects(
           nimbus::cache::EXCLUSIVE);
     cache->fvg = dynamic_cast<CacheFaceArray<T> *>(cache_var);
     assert(cache->fvg != NULL);
-  }
-  
-  //TODO: density and density ghost
-
+  }  
   //density
   if (data_config.GetFlag(DataConfig::DENSITY))
   {
@@ -178,7 +175,6 @@ void GetAppCacheObjects(
     cache->dens = dynamic_cast<CacheScalarArray<T> *>(cache_var);
     assert(cache->dens != NULL);
   }
-
   //density ghost
   if (data_config.GetFlag(DataConfig::DENSITY_GHOST))
   {
@@ -194,7 +190,6 @@ void GetAppCacheObjects(
     cache->dens_ghost = dynamic_cast<CacheScalarArray<T> *>(cache_var);
     assert(cache->dens_ghost != NULL);
   }
-
   // psi_d.
   if (data_config.GetFlag(DataConfig::PSI_D))
   {
@@ -254,15 +249,6 @@ bool InitializeExampleAndDriver(
     if (init_config.use_cache && kUseCache) {
       AppCacheObjects cache;
       GetAppCacheObjects(init_config, data_config, *job, da, &cache);
-      /*
-      if (cache.ple)
-        example = new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
-                                                 &cache,
-                                                 cache.ple->data(),
-                                                 init_config.use_threading,
-                                                 init_config.core_quota);
-      else
-      */
       example = new PhysBAM::SMOKE_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
 					       &cache,
 					       init_config.use_threading,
@@ -282,15 +268,12 @@ bool InitializeExampleAndDriver(
         init_config.local_region.dy(),
         init_config.local_region.dz());
     // physbam intiialization
-    
     example->Initialize_Grid(
         TV_INT(init_config.local_region.dx(),
           init_config.local_region.dy(),
           init_config.local_region.dz()),
         GridToRange(init_config.global_region, init_config.local_region));
-
-    // PhysBAM::WaterSources::Add_Source(example);
-
+    // add source
     TV point1=TV::All_Ones_Vector()*.2,point2=TV::All_Ones_Vector()*.3;point1(2)=0;point2(2)=.05;
     example->source.min_corner=point1;example->source.max_corner=point2;
 
@@ -306,7 +289,6 @@ bool InitializeExampleAndDriver(
     // physbam initialization
     if (init_config.init_phase)
       driver->InitializeFirstDistributed(job, da);
-      // driver->InitializeFirst(job, da);
     else if (init_config.use_cache && kUseCache)
       driver->InitializeUseCache(job, da);
     else
