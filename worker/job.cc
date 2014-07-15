@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <time.h>
 #include "worker/job.h"
 #include "worker/application.h"
 #include "worker/cache_manager.h"
@@ -443,14 +444,43 @@ Job* LocalCopyJob::Clone() {
 }
 
 void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
+  struct timespec start_time;
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &start_time);
   CacheManager *cm = GetCacheManager();
   cm->SyncData(da[0]);
   cm->InvalidateMappings(da[1]);
   da[1]->Copy(da[0]);
   da[1]->set_version(da[0]->version());
+  clock_gettime(CLOCK_REALTIME, &t);
+  GeometricRegion region = da[1]->region();
+  const int_dimension_t kMargin = 10;
+  if (region.dx() < kMargin || region.dy() < kMargin || region.dz() < kMargin) {
+    copy_ghost_count_++;
+    copy_ghost_time_ += difftime(t.tv_sec, start_time.tv_sec)
+        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+  } else {
+    copy_central_count_++;
+    copy_central_time_ += difftime(t.tv_sec, start_time.tv_sec)
+        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+    // TODO(quhang): temporary use. Should use dbg instead.
+    // printf("[PROFILE] Central Copy %s, %s\n", da[1]->name().c_str(),
+    //        region.toString().c_str());
+  }
 }
 
+void LocalCopyJob::PrintTimeProfile() {
+  // TODO(quhang): temporary use. Should use dbg instead.
+  // printf("[PROFILE] copy of ghost: %lld, %f seconds.\n"
+  //        "[PROFILE] copy of central: %lld, %f seconds.\n",
+  //        copy_ghost_count_, copy_ghost_time_,
+  //        copy_central_count_, copy_central_time_);
+}
 
+double LocalCopyJob::copy_ghost_time_ = 0;
+double LocalCopyJob::copy_central_time_ = 0;
+int64_t LocalCopyJob::copy_ghost_count_ = 0;
+int64_t LocalCopyJob::copy_central_count_ = 0;
 
 CreateDataJob::CreateDataJob() {
 }
