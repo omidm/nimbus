@@ -61,9 +61,8 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       IndexIter iter = index_.find(*it);
       if (iter == index_.end()) {
-        VersionEntry *ve = new VersionEntry(*it);
-        ve->AddJobEntryReader(job);
-        index_.insert(std::make_pair(*it, ve));
+        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in read set of %lu is not defined yet.\n",
+            *it, job->job_id());
       } else {
         iter->second->AddJobEntryReader(job);
       }
@@ -73,9 +72,8 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       IndexIter iter = index_.find(it->first);
       if (iter == index_.end()) {
-        VersionEntry *ve = new VersionEntry(it->first);
-        ve->AddJobEntryReader(job);
-        index_.insert(std::make_pair(it->first, ve));
+        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in ldo_map set of %lu is not defined yet.\n",
+            *it, job->job_id());
       } else {
         iter->second->AddJobEntryReader(job);
       }
@@ -87,9 +85,8 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
     for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
       IndexIter iter = index_.find(*it);
       if (iter == index_.end()) {
-        VersionEntry *ve = new VersionEntry(*it);
-        ve->AddJobEntryWriter(job);
-        index_.insert(std::make_pair(*it, ve));
+        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in ldo_map set of %lu is not defined yet.\n",
+            *it, job->job_id());
       } else {
         iter->second->AddJobEntryWriter(job);
       }
@@ -115,7 +112,6 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
     }
   }
 
-  boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
   IDSet<logical_data_id_t>::ConstIter itw;
   for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
     data_version_t version;
@@ -182,6 +178,23 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
   }
 
   return true;
+}
+
+bool VersionManager::DefineData(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const job_depth_t& job_depth) {
+  IndexIter iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    VersionEntry *ve = new VersionEntry(ldid);
+    ve->InitializeLdl(job_id, job_depth);
+    index_.insert(std::make_pair(ldid, ve));
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+    exit(-1);
+    return false;
+  }
 }
 
 void VersionManager::set_ldo_map_p(

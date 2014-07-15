@@ -50,7 +50,6 @@ VersionEntry::VersionEntry(logical_data_id_t ldid) {
   ldl_.set_ldid(ldid);
 }
 
-
 VersionEntry::VersionEntry(const VersionEntry& other) {
   ldid_ = other.ldid_;
   pending_reader_jobs_ = other.pending_reader_jobs_;
@@ -74,6 +73,14 @@ VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
   ldl_ = right.ldl_;
   return *this;
 }
+
+void VersionEntry::InitializeLdl(
+    const job_id_t& job_id,
+    const job_depth_t& job_depth) {
+  ldl_.AppendLdlEntry(job_id, NIMBUS_INIT_DATA_VERSION, job_depth, false);
+}
+
+
 
 bool VersionEntry::AddJobEntryReader(JobEntry *job) {
   pending_reader_jobs_.insert(job);

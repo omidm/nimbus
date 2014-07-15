@@ -397,7 +397,12 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
     assert(!job->assigned());
     // assert(job->versioned());
     assert(job->IsReadyForCompleteVersioning());
-    version_manager_.ResolveJobDataVersions(job);
+    if (version_manager_.ResolveJobDataVersions(job)) {
+      job->set_versioned(true);
+    } else {
+      dbg(DBG_ERROR, "ERROR: could not version job %lu.\n", job->job_id());
+      exit(-1);
+    }
 
     jobs_pending_to_assign_[iter->first] = job;
     jobs_ready_to_assign_.erase(iter++);
@@ -570,7 +575,10 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
     if (job->sterile()) {
       dbg(DBG_ERROR, "ERROR: sterile job cannot define data.\n");
     }
-    if (!ldl_map_.DefineData(ldid, job_id, job->job_depth(), job->sterile())) {
+//    if (!ldl_map_.DefineData(ldid, job_id, job->job_depth(), job->sterile())) {
+//      dbg(DBG_ERROR, "ERROR: could not define data in ldl_map for ldid %lu.\n", ldid);
+//    }
+    if (!version_manager_.DefineData(ldid, job_id, job->job_depth())) {
       dbg(DBG_ERROR, "ERROR: could not define data in ldl_map for ldid %lu.\n", ldid);
     }
   } else {

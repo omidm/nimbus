@@ -82,6 +82,12 @@ class VersionManager {
                        logical_data_id_t ldid,
                        data_version_t *version);
 
+    bool DefineData(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const job_depth_t& job_depth);
+
+
     void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
   private:

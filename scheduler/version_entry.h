@@ -70,6 +70,10 @@ class VersionEntry {
 
     VersionEntry& operator= (const VersionEntry& right);
 
+    void InitializeLdl(
+        const job_id_t& job_id,
+        const job_depth_t& job_depth);
+
     bool AddJobEntryReader(JobEntry *job);
 
     bool AddJobEntryWriter(JobEntry *job);
