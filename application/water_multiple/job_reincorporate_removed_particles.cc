@@ -98,6 +98,7 @@ void JobReincorporateRemovedParticles::Execute(nimbus::Parameter params, const n
     {
       //nimbus::Timer timer(std::string("reincorporate_particle_")
       //                    + id().toString());
+      application::ScopeTimer scope_timer(name());
       driver->ReincorporateParticlesImpl(this, da, dt);
     }
 

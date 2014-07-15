@@ -54,6 +54,7 @@
 #include "shared/worker_data_exchanger.h"
 #include "worker/cache_manager.h"
 #include "worker/data.h"
+#include "worker/ldo_index_cache.h"
 #include "worker/worker_ldo_map.h"
 #include "worker/thread_queue_proto.h"
 
@@ -119,6 +120,9 @@ class Job {
     int GetAdjacentLogicalObjects(CLdoVector* result,
          const std::string& variable,
          const GeometricRegion* r);
+    int AddIntersectingLdoIds(const std::string& variable,
+                             const nimbus::GeometricRegion& region,
+                             IDSet<logical_data_id_t>* result);
     int GetIntersectingLogicalObjects(CLdoVector* result,
          const std::string& variable,
          const GeometricRegion* r);
@@ -177,6 +181,7 @@ class Job {
     }
 
   private:
+    std::map<std::string, LdoIndexCache> query_cache_;
     int core_quota_;
     bool use_threading_;
     ThreadQueueProto** thread_queue_hook_;

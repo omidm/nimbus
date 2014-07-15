@@ -38,6 +38,7 @@
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
+#include <boost/tokenizer.hpp>
 #include "shared/idset.h"
 
 using namespace nimbus; // NOLINT
@@ -50,7 +51,6 @@ using boost::char_separator;
 // parser, which is the case in the coming implementation. I could not include
 // these two from parser.h due to cyclic #include problem.
 
-#include <boost/tokenizer.hpp>
 using boost::tokenizer;
 using boost::char_separator;
 
@@ -220,6 +220,9 @@ int IDSet<T>::size() const {
   return identifiers_.size();
 }
 
+template<typename T> void IDSet<T>::swap(IDSet<T>& idset) {
+  identifiers_.swap(idset.identifiers_);
+}
 
 template<typename T>
 typename IDSet<T>::IDSetIter IDSet<T>::begin() {

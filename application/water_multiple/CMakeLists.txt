@@ -64,6 +64,8 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/water_driver_initializers.cc
     ${PROJECT_SOURCE_DIR}/water_example.cc
     ${PROJECT_SOURCE_DIR}/water_sources.cc
+    ${PROJECT_SOURCE_DIR}/projection/cache_array_m2c.cc
+    ${PROJECT_SOURCE_DIR}/projection/cache_sparse_matrix.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
@@ -75,6 +77,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/job_projection_wrapup.cc
     ${PROJECT_SOURCE_DIR}/projection/laplace_solver_wrapper.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_driver.cc
+    ${PROJECT_SOURCE_DIR}/projection/projection_driver_caching.cc
     ${PROJECT_SOURCE_DIR}/projection/projection_helper.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_local_initialize.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_global_initialize.cc
@@ -138,6 +141,8 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/water_driver.h
     ${PROJECT_SOURCE_DIR}/water_example.h
     ${PROJECT_SOURCE_DIR}/water_sources.h
+    ${PROJECT_SOURCE_DIR}/projection/cache_array_m2c.h
+    ${PROJECT_SOURCE_DIR}/projection/cache_sparse_matrix.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h
@@ -167,8 +172,8 @@ SET(${PROJECT_NAME}_h
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
 SET(PROTO_LIB protobuf)
 SET(NIMBUS_LIB nimbus)
-SET(BOOST_THREAD boost_thread-mt)
-SET(BOOST_SYSTEM boost_system-mt)
+SET(BOOST_THREAD boost_thread)
+SET(BOOST_SYSTEM boost_system)
 LIST(APPEND LIBRARIES_TO_LINK ${PROTO_LIB})
 LIST(APPEND LIBRARIES_TO_LINK ${NIMBUS_LIB})
 LIST(APPEND LIBRARIES_TO_LINK ${BOOST_THREAD})

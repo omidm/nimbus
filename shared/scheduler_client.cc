@@ -109,13 +109,31 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
 }
 
 void SchedulerClient::sendCommand(SchedulerCommand* command) {
+  // static double serialization_time = 0;
+  // static double buffer_time = 0;
+  // struct timespec start_time;
+  // clock_gettime(CLOCK_REALTIME, &start_time);
+
   std::string msg = command->toString() + ";";
   dbg(DBG_NET, "Client sending command %s.\n", msg.c_str());
+
+  // struct timespec t;
+  // clock_gettime(CLOCK_REALTIME, &t);
+  // serialization_time += difftime(t.tv_sec, start_time.tv_sec)
+  //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+  // printf("Serialization command time %f\n", serialization_time);
+
   boost::system::error_code ignored_error;
+  // clock_gettime(CLOCK_REALTIME, &start_time);
+
   pthread_mutex_lock(&send_lock_);
   boost::asio::write(*socket_, boost::asio::buffer(msg),
       boost::asio::transfer_all(), ignored_error);
   pthread_mutex_unlock(&send_lock_);
+  // clock_gettime(CLOCK_REALTIME, &t);
+  // buffer_time += difftime(t.tv_sec, start_time.tv_sec)
+  //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+  // printf("Buffer command time %f\n", buffer_time);
 }
 
 void SchedulerClient::createNewConnections() {

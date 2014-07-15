@@ -316,10 +316,11 @@ namespace application {
       va_start(vl, region);
       char* arg = va_arg(vl, char*);
       while (arg != NULL) {
-        job->GetIntersectingLogicalObjects(&result, arg, &region);
-        for (size_t i = 0; i < result.size(); ++i) {
-          set->insert(result[i]->id());
-        }
+        job->AddIntersectingLdoIds(arg, region, set);
+        // job->GetIntersectingLogicalObjects(&result, arg, &region);
+        // for (size_t i = 0; i < result.size(); ++i) {
+        //   set->insert(result[i]->id());
+        // }
         arg = va_arg(vl, char*);
       }
       va_end(vl);

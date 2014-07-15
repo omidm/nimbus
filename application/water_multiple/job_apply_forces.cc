@@ -97,6 +97,7 @@ void JobApplyForces::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Execute the step in apply forces job.");
   {
     //nimbus::Timer timer(std::string("apply_forces_") + id().toString());
+    application::ScopeTimer scope_timer(name());
     driver->ApplyForcesImpl(this, da, dt);
   }
 

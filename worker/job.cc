@@ -49,6 +49,9 @@ Job::Job() {
   sterile_ = true;
   use_threading_ = false;
   core_quota_ = 1;
+  run_time_ = 0;
+  wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 Job::~Job() {
@@ -59,6 +62,9 @@ Job::~Job() {
 Job::Job(Application* app, JobType type) {
   application_ = app;
   type_ = type;
+  run_time_ = 0;
+  wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 Job* Job::Clone() {
@@ -117,6 +123,7 @@ bool Job::DefineData(const std::string& name,
     const IDSet<partition_id_t>& neighbor_partition,
     const Parameter& params) {
   if (app_is_set_) {
+    query_cache_.clear();
     application_->DefineData(name, logical_data_id, partition_id,
         neighbor_partition, id_.elem(), params);
     return true;
@@ -208,6 +215,25 @@ int Job::GetAdjacentLogicalObjects(CLdoVector* result,
   } else {
       std::cout << "Error: GetAdjacentLogicalObjects, application has not been set." << std::endl;
       return -1;
+  }
+}
+
+int Job::AddIntersectingLdoIds(const std::string& variable,
+                               const nimbus::GeometricRegion& region,
+                               IDSet<logical_data_id_t>* result) {
+  if (app_is_set_) {
+    LdoIndexCache* cache = NULL;
+    if (query_cache_.find(variable) == query_cache_.end()) {
+      cache = &(query_cache_[variable]);
+      cache->Initialize(application_, variable);
+    } else {
+      cache = &(query_cache_[variable]);
+    }
+    cache->GetResult(region, result);
+    return result->size();
+  } else {
+    std::cout << "Error: GetAdjacentLogicalObjects, application has not been set." << std::endl;
+    return -1;
   }
 }
 

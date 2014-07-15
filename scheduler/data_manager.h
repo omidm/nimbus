@@ -48,7 +48,7 @@
 #include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/logical_data_object.h"
-#include "shared/ldo_index.h"
+#include "shared/ldo_index_rtree.h"
 #include "shared/scheduler_server.h"
 #include "scheduler/physical_data.h"
 #include "scheduler/physical_object_map.h"
@@ -115,7 +115,7 @@ namespace nimbus {
 
   private:
     PhysicalObjectMap physical_object_map_;
-    LdoIndex ldo_index_;
+    LdoIndexRtree ldo_index_;
     std::map<logical_data_id_t, LogicalDataObject*> ldo_map_;
     std::map<partition_id_t, GeometricRegion> partition_map_;
     partition_id_t max_defined_partition_;

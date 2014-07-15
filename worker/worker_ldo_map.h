@@ -50,7 +50,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 #include "shared/logical_data_object.h"
-#include "shared/ldo_index.h"
+#include "shared/ldo_index_rtree.h"
 #include "shared/dbg.h"
 
 namespace nimbus {
@@ -94,7 +94,7 @@ class WorkerLdoMap {
     // Protects ldo_index_.
     pthread_mutexattr_t lockattr_ldo_index_;
     pthread_mutex_t lock_ldo_index_;
-    LdoIndex ldo_index_;
+    LdoIndexRtree ldo_index_;
     // Protects partition_map_.
     pthread_mutexattr_t lockattr_partition_map_;
     pthread_mutex_t lock_partition_map_;

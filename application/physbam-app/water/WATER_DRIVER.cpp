@@ -211,6 +211,7 @@ Advance_To_Target_Time(const T target_time)
         if(example.mpi_grid) example.mpi_grid->Synchronize_Dt(dt);
         if(time+dt>=target_time){dt=target_time-time;done=true;}
         else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
+        printf("\n[CONTROL FLOW] substep=%d, dt=%f\n", substep, dt);
 
         // kinematic_update
         LOG::Time("Kinematic Evolution");
@@ -331,7 +332,9 @@ Simulate_To_Frame(const int frame,const int tid)
         if((current_frame-example.first_frame)%1==0){
             example.particle_levelset_evolution.Reseed_Particles(time);
             example.particle_levelset_evolution.Delete_Particles_Outside_Grid();}
+        LOG::Time("WriteOutputFrame");
         Write_Output_Files(++output_number);
+        LOG::Time("Control");
         current_frame++;}
 } 
 //#####################################################################
