@@ -326,6 +326,7 @@ bool JobEntry::IsReadyForCompleteVersioning() {
 
 void JobEntry::remove_versioning_dependency(job_id_t job_id) {
   versioning_dependencies_.remove(job_id);
+  meta_before_set_->InvalidateNegativeQueryCache();
 }
 
 
