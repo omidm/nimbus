@@ -86,6 +86,8 @@ class VersionEntry {
     bool LookUpVersion(JobEntry *job,
                        data_version_t *version);
 
+    bool CleanLdl(const IDSet<job_id_t>& live_parents);
+
     bool is_empty();
 
   private:

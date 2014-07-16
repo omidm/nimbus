@@ -46,6 +46,7 @@ using namespace nimbus; // NOLINT
 
 VersionManager::VersionManager() {
   ldo_map_p_ = NULL;
+  parent_removed_ = false;
 }
 
 VersionManager::~VersionManager() {
@@ -91,6 +92,10 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
         iter->second->AddJobEntryWriter(job);
       }
     }
+  }
+
+  if (!job->sterile()) {
+    live_parents_.insert(job->job_id());
   }
 
   return true;
@@ -146,6 +151,8 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
     }
   }
 
+  // TODO(omidm): insert paret ldl entry for later clean up.
+
   return true;
 }
 
@@ -194,6 +201,11 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
     }
   }
 
+  if (!(job->sterile())) {
+    live_parents_.remove(job->job_id());
+    parent_removed_ = true;
+  }
+
   return true;
 }
 
@@ -213,6 +225,25 @@ bool VersionManager::DefineData(
     return false;
   }
 }
+
+bool VersionManager::CleanUp() {
+  if (parent_removed_) {
+    Log log;
+    log.StartTimer();
+
+    IndexIter iter = index_.begin();
+    for (; iter != index_.end(); ++iter) {
+      iter->second->CleanLdl(live_parents_);
+    }
+    parent_removed_ = false;
+
+    log.StopTimer();
+    std::cout << "Version Manager Clean up: " << log.timer() << std::endl;
+  }
+
+  return true;
+}
+
 
 void VersionManager::set_ldo_map_p(
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {

@@ -140,9 +140,7 @@ class JobManager {
     LdlMap ldl_map_;
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 
-    bool parent_removed_;
     JobEntryMap jobs_done_;
-    IDSet<job_id_t> live_parents_;
 
     JobEntryMap jobs_need_version_;
     std::map<job_id_t, JobEntryList> pass_version_;

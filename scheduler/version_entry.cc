@@ -256,3 +256,8 @@ bool VersionEntry::UpdateLdl() {
 }
 
 
+bool VersionEntry::CleanLdl(const IDSet<job_id_t>& live_parents) {
+  return ldl_.CleanChain(live_parents);
+}
+
+

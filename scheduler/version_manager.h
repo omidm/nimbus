@@ -87,11 +87,14 @@ class VersionManager {
         const job_id_t& job_id,
         const job_depth_t& job_depth);
 
+    bool CleanUp();
 
     void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
   private:
     Index index_;
+    bool parent_removed_;
+    IDSet<job_id_t> live_parents_;
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 };
 
