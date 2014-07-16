@@ -45,6 +45,7 @@ using namespace nimbus; // NOLINT
 
 JobEntry::JobEntry() {
   Initialize();
+  job_depth_ = NIMBUS_INIT_JOB_DEPTH;
   sterile_ = false;
   partial_versioned_ = false;
   versioned_ = false;
@@ -216,10 +217,12 @@ void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
   write_set_ = write_set;
 }
 
-void JobEntry::set_before_set(IDSet<job_id_t> before_set) {
-  assignment_dependencies_.remove(before_set_);
-  assignment_dependencies_.insert(before_set);
-  versioning_dependencies_ = assignment_dependencies_;
+void JobEntry::set_before_set(IDSet<job_id_t> before_set, bool update_dependencies) {
+  if (update_dependencies) {
+    assignment_dependencies_.remove(before_set_);
+    assignment_dependencies_.insert(before_set);
+    versioning_dependencies_ = assignment_dependencies_;
+  }
   before_set_ = before_set;
 }
 
@@ -227,10 +230,12 @@ void JobEntry::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
 }
 
-void JobEntry::set_parent_job_id(job_id_t parent_job_id) {
-  assignment_dependencies_.remove(parent_job_id_);
-  assignment_dependencies_.insert(parent_job_id);
-  versioning_dependencies_ = assignment_dependencies_;
+void JobEntry::set_parent_job_id(job_id_t parent_job_id, bool update_dependencies) {
+  if (update_dependencies) {
+    assignment_dependencies_.remove(parent_job_id_);
+    assignment_dependencies_.insert(parent_job_id);
+    versioning_dependencies_ = assignment_dependencies_;
+  }
   parent_job_id_ = parent_job_id;
 }
 
