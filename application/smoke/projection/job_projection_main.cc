@@ -211,18 +211,18 @@ void JobProjectionMain::SpawnJobs(
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_INDEX_M2C,
                         APP_VECTOR_B,
-			APP_VECTOR_P_GRID_FORMAT,
+                        APP_VECTOR_P_GRID_FORMAT,
                         APP_MATRIX_A, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PRESSURE,
                         NULL);
     write.clear();
     LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                         APP_VECTOR_B, APP_PROJECTION_LOCAL_RESIDUAL, APP_MATRIX_C,
-                        APP_VECTOR_TEMP, APP_VECTOR_Z, 
-			APP_VECTOR_P_LINEAR_FORMAT,
-			NULL);
+                        APP_VECTOR_TEMP, APP_VECTOR_Z,
+                        APP_VECTOR_P_LINEAR_FORMAT,
+                        NULL);
     LoadLogicalIdsInSet(this, &write, kRegY2W1CentralWGB[index],
-			APP_VECTOR_P_GRID_FORMAT, NULL);
+                        APP_VECTOR_P_GRID_FORMAT, NULL);
     job_query.StageJob(PROJECTION_LOCAL_INITIALIZE,
                        local_initialize_job_ids[index],
                        read, write,

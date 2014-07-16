@@ -115,7 +115,7 @@ void JobProjectionStepOne::Execute(
     dbg(APP_LOG, "Calculate local rho precondition.\n");
     dbg(APP_LOG, "size of vector z%d, size of vector b %d.\n",
         (int) projection_driver.projection_data.z_interior.n,
-	(int) projection_driver.projection_data.b_interior.n
+        (int) projection_driver.projection_data.b_interior.n
        );
     projection_driver.CalculateLocalRho();
     dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, calculation time:%f.\n",

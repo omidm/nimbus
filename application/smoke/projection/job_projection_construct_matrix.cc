@@ -81,8 +81,6 @@ void JobProjectionConstructMatrix::Execute(
   PhysBAM::SMOKE_DRIVER<TV> *driver;
 
   DataConfig data_config;
-  data_config.SetFlag(DataConfig::VELOCITY);
-  data_config.SetFlag(DataConfig::DENSITY);
   data_config.SetFlag(DataConfig::PSI_N);
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::REGION_COLORS);

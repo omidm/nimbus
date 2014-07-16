@@ -33,13 +33,13 @@
  */
 
 /*
- * This class serves as the bridge between WATER_DRIVER and PROJECTION_DRIVER.
+ * This class serves as the bridge between SMOKE_DRIVER and PROJECTION_DRIVER.
  * It is a wrapper around LAPLACE_COLLIDABLE_UNIFORM so that it can extract
- * necessary data from WATER_DRIVER/WATER_EXAMPLE and calculates all the data
+ * necessary data from SMOKE_DRIVER/SMOKE_EXAMPLE and calculates all the data
  * needed for PROJECTION_DRIVER. After this point, PROJECTION_DRIVER gets all
- * its data to do projection and WATER_DRIVER is no more needed.
+ * its data to do projection and SMOKE_DRIVER is no more needed.
  *
- * Application first binds LAPLACE_COLLIDABLE_UNIFORM of WATER_EXAMPLE to this
+ * Application first binds LAPLACE_COLLIDABLE_UNIFORM of SMOKE_EXAMPLE to this
  * class, and then calls PrePareProjectionInput. After that, all the data needed
  * for projection is stored in this class.
  *
@@ -66,11 +66,7 @@ class LaplaceSolverWrapper {
  public:
   LaplaceSolverWrapper() {}
   void BindLaplaceAndInitialize(
-      LAPLACE_UNIFORM<GRID<TV> >* laplace_input); 
-  /*
-  void BindLaplaceAndInitialize(
-      LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace_input);
-  */
+      LAPLACE_UNIFORM<GRID<TV> >* laplace_input);
   ~LaplaceSolverWrapper() {}
 
   int local_n, interior_n;
@@ -87,7 +83,6 @@ class LaplaceSolverWrapper {
   // Input refers to A, x, b, indexing, tolerance.
   void PrepareProjectionInput();
  private:
-  // LAPLACE_COLLIDABLE_UNIFORM<GRID<TV> >* laplace;
   LAPLACE_UNIFORM<GRID<TV> >* laplace;
 };
 

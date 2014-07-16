@@ -89,8 +89,8 @@ bool DataSparseMatrix::LoadFromNimbus(
          + header.length_element *
            sizeof(typename PhysBAM::ARRAY<PhysBAM::SPARSE_MATRIX_ENTRY<float> >
                   ::ELEMENT)
-	 + header.length_diagonal *
-	   sizeof(typename PhysBAM::ARRAY<int>::ELEMENT));
+         + header.length_diagonal *
+           sizeof(typename PhysBAM::ARRAY<int>::ELEMENT));
   pointer += sizeof(Header);
   Buffer buffer;
   buffer.pointer = reinterpret_cast<void*>(pointer);
@@ -110,14 +110,14 @@ bool DataSparseMatrix::LoadFromNimbus(
   buffer.Reset();
 
   buffer.pointer = reinterpret_cast<void*>(pointer);
-  buffer.size = header.length_diagonal * 
-      sizeof(typename PhysBAM::ARRAY<int>::ELEMENT);
+  buffer.size = header.length_diagonal *
+           sizeof(typename PhysBAM::ARRAY<int>::ELEMENT);
   pointer += buffer.size;
   DeserializePhysBAMArray<int>(buffer, &matrix->diagonal_index);
   buffer.Reset();
 
   // matrix->Initialize_Diagonal_Index();
-  
+
   return true;
 }
 

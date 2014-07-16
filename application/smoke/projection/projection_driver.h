@@ -155,7 +155,7 @@ class ProjectionDriver {
   TCacheScalarArray *cache_vector_p;
   application::CacheSparseMatrix *cache_matrix_a;
   application::CacheSparseMatrix *cache_matrix_c;
-  application::CacheArrayM2C *cache_index_m2c;
+  application::CacheArrayM2C * cache_index_m2c;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;

@@ -118,7 +118,6 @@ void JobProjectionLoopIteration::Execute(
       projection_driver.projection_data.desired_iterations,
       projection_driver.projection_data.residual,
       projection_driver.projection_data.global_tolerance);
-
   // Decides whether to spawn a new projection loop or finish it.
   if (projection_driver.projection_data.residual <=
       projection_driver.projection_data.global_tolerance ||
@@ -148,7 +147,8 @@ void JobProjectionLoopIteration::Execute(
     // Projection wrapup.
     for (int index = 0; index < wrapup_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[index], APP_FACE_VEL, 
+                          NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index], APP_PSI_D, APP_PSI_N,
                           APP_PRESSURE, NULL);
       LoadLogicalIdsInSet(this, &read, kRegY2W1Central[index], APP_U_INTERFACE, NULL);
@@ -256,16 +256,16 @@ void JobProjectionLoopIteration::Execute(
       LoadLogicalIdsInSet(
           this, &read, kRegW0Central[0], APP_PROJECTION_BETA, NULL);
       LoadLogicalIdsInSet(
-          this, &read, kRegY2W0Central[index], APP_VECTOR_Z, 
-	  APP_VECTOR_P_LINEAR_FORMAT,
-	  APP_VECTOR_P_GRID_FORMAT,
+          this, &read, kRegY2W0Central[index], APP_VECTOR_Z,
+          APP_VECTOR_P_LINEAR_FORMAT,
+          APP_VECTOR_P_GRID_FORMAT,
           APP_INDEX_M2C, APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           NULL);
       write.clear();
-      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index], 
-	  APP_VECTOR_P_LINEAR_FORMAT,
-	  APP_VECTOR_P_GRID_FORMAT,
-	  NULL);
+      LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
+                          APP_VECTOR_P_LINEAR_FORMAT,
+                          APP_VECTOR_P_GRID_FORMAT,
+                          NULL);
       job_query.StageJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
                          read, write, default_part_params[index],
                          true);
@@ -276,19 +276,18 @@ void JobProjectionLoopIteration::Execute(
     // STEP_THREE
     for (int index = 0; index < step_three_job_num; ++index) {
       read.clear();
-      LoadLogicalIdsInSet(
-          this, &read, kRegY2W1Outer[index], 
-	  APP_VECTOR_P_GRID_FORMAT, 
-	  NULL);
+      LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
+                          APP_VECTOR_P_GRID_FORMAT,
+                          NULL);
       LoadLogicalIdsInSet(
           this, &read, kRegY2W0Central[index], APP_MATRIX_A, APP_INDEX_M2C,
-          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N, 
-	  APP_VECTOR_P_LINEAR_FORMAT,
-	  NULL);
+          APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
+          APP_VECTOR_P_LINEAR_FORMAT,
+          NULL);
       write.clear();
       LoadLogicalIdsInSet(
-          this, &write, kRegY2W0Central[index], 
-	  APP_VECTOR_P_LINEAR_FORMAT, APP_VECTOR_TEMP,
+          this, &write, kRegY2W0Central[index],
+          APP_VECTOR_P_LINEAR_FORMAT, APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
       job_query.StageJob(PROJECTION_STEP_THREE, step_three_job_ids[index],
                          read, write, default_part_params[index],
@@ -328,8 +327,8 @@ void JobProjectionLoopIteration::Execute(
           this, &write, kRegY2W0Central[index], APP_VECTOR_B,
           APP_PROJECTION_LOCAL_RESIDUAL, APP_PRESSURE, NULL);
       job_query.StageJob(PROJECTION_STEP_FOUR, step_four_job_ids[index],
-                      read, write, default_part_params[index],
-                      true);
+                         read, write, default_part_params[index],
+                         true);
       job_query.Hint(step_four_job_ids[index], kRegY2W0Central[index]);
     }
     job_query.CommitStagedJobs();
@@ -339,7 +338,7 @@ void JobProjectionLoopIteration::Execute(
     read.clear();
     LoadLogicalIdsInSet(
         this, &read, kRegW0Central[0], APP_PROJECTION_LOCAL_RESIDUAL,
-	APP_PROJECTION_INTERIOR_N,
+        APP_PROJECTION_INTERIOR_N,
         APP_PROJECTION_GLOBAL_TOLERANCE, APP_PROJECTION_DESIRED_ITERATIONS,
         NULL);
     write.clear();
