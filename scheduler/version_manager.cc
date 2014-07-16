@@ -94,8 +94,9 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
     }
   }
 
-  if (!job->sterile()) {
-    live_parents_.insert(job->job_id());
+  ChildCounterIter it = child_counter_.find(job->parent_job_id());
+  if (it != child_counter_.end()) {
+    ++it->second;
   }
 
   return true;
@@ -151,10 +152,62 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
     }
   }
 
-  // TODO(omidm): insert paret ldl entry for later clean up.
+  if (!job->sterile()) {
+    // Clear meta before set and update the ldl.
+
+    job->meta_before_set()->Clear();
+
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_write()->query_entry(it->first, &version)) {
+      } else if (job->vmap_read()->query_entry(it->first, &version)) {
+      } else {
+        dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for parent job %lu.\n",
+            it->first, job->job_id());
+        exit(-1);
+      }
+
+      InsertParentLdlEntry(
+          it->first, job->job_id(), version, job->job_depth());
+    }
+
+    ChildCounterIter cit = child_counter_.find(job->job_id());
+    if (cit == child_counter_.end()) {
+      live_parents_.insert(job->job_id());
+      child_counter_[job->job_id()] = (counter_t) (1);
+    } else {
+      assert(false);
+    }
+  }
+
+  ChildCounterIter it = child_counter_.find(job->parent_job_id());
+  if (it != child_counter_.end()) {
+    --it->second;
+    if (it->second == 0) {
+      live_parents_.remove(it->first);
+      child_counter_.erase(it);
+      parent_removed_ = true;
+    }
+  }
 
   return true;
 }
+
+
+bool VersionManager::InsertParentLdlEntry(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth) {
+  IndexIter iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    return false;
+  } else {
+    return iter->second->InsertParentLdlEntry(job_id, version, job_depth);
+  }
+}
+
 
 bool VersionManager::LookUpVersion(
     JobEntry *job,
@@ -202,8 +255,17 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
   }
 
   if (!(job->sterile())) {
-    live_parents_.remove(job->job_id());
-    parent_removed_ = true;
+    ChildCounterIter it = child_counter_.find(job->job_id());
+    if (it != child_counter_.end()) {
+      --it->second;
+      if (it->second == 0) {
+        live_parents_.remove(it->first);
+        child_counter_.erase(it);
+        parent_removed_ = true;
+      }
+    } else {
+      assert(false);
+    }
   }
 
   return true;

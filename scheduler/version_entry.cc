@@ -256,6 +256,15 @@ bool VersionEntry::UpdateLdl() {
 }
 
 
+
+bool VersionEntry::InsertParentLdlEntry(
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth) {
+  return ldl_.InsertParentLdlEntry(job_id, version, job_depth);
+}
+
+
 bool VersionEntry::CleanLdl(const IDSet<job_id_t>& live_parents) {
   return ldl_.CleanChain(live_parents);
 }
