@@ -87,7 +87,6 @@ void JobProjectionCalculateBoundaryConditionPartTwo::Execute(
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::DENSITY);
-  // data_config.SetFlag(DataConfig::LEVELSET);
   data_config.SetFlag(DataConfig::DIVERGENCE);
   data_config.SetFlag(DataConfig::PSI_N);
   data_config.SetFlag(DataConfig::PSI_D);
@@ -100,8 +99,10 @@ void JobProjectionCalculateBoundaryConditionPartTwo::Execute(
   dbg(APP_LOG,
       "Job PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO starts (dt=%f).\n",
       dt);
-
-  driver->ProjectionCalculateBoundaryConditionPartTwoImpl(this, da, dt);
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->ProjectionCalculateBoundaryConditionPartTwoImpl(this, da, dt);
+  }
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.

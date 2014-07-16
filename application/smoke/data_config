@@ -25,8 +25,6 @@ DataFaceArray     : u_interface          : (80, 80, 80), (4, 4, 1), (0, 0, 0) : 
 # Group II.
 DataSparseMatrix  : matrix_a             : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none
 DataRawVectorNd   : vector_b             : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none
-# not used.
-# DataRawVectorNd   : vector_x             : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 DataRawGridArray  : index_c2m            : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none
 DataRawArrayM2C   : index_m2c            : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none
 # int
@@ -61,6 +59,6 @@ ScalarData        : projection_alpha           : (80, 80, 80), (1, 1, 1), (0, 0,
 ScalarData        : projection_beta            : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
 DataSparseMatrix  : matrix_c                   : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none
 DataRawVectorNd   : vector_z                   : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none
-#DataRawVectorNd   : vector_p                   : (80, 80, 80), (1, 1, 1), (0, 0, 0) : none
-DataScalarArray   : vector_p                   : (80, 80, 80), (4, 4, 1), (1, 1, 1) : include_boundary
+DataScalarArray   : vector_p_grid_format       : (80, 80, 80), (4, 4, 1), (1, 1, 1) : include_boundary
+DataRawVectorNd   : vector_p_linear_format     : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none		  
 DataRawVectorNd   : vector_temp                : (80, 80, 80), (4, 4, 1), (0, 0, 0) : none

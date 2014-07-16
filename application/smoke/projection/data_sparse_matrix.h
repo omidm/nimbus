@@ -55,6 +55,7 @@ class DataSparseMatrix : public nimbus::PhysBAMData {
     int64_t n;
     int64_t length_offset;
     int64_t length_element;
+    int64_t length_diagonal;
   };
  public:
   explicit DataSparseMatrix(std::string name);

@@ -86,10 +86,6 @@ void JobProjectionReduceAlpha::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  //pcg_temp.Set_Maximum_Iterations(40);
-  //pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
-  //pcg_temp.cg_restart_iterations = 0;
-  //pcg_temp.Show_Results();
   pcg_temp.Set_Maximum_Iterations(1000);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
@@ -103,7 +99,10 @@ void JobProjectionReduceAlpha::Execute(
 
   // Read PROJECTION_GLOBAL_RHO, PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
   // Write PROJECTION_ALPHA.
-  projection_driver.ReduceAlpha();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.ReduceAlpha();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

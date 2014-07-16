@@ -33,53 +33,53 @@
  */
 
 /*
- * Grid array is an array indexed by 3-dimension tuples. It is internally
- * serialzed as ARRAY_VIEW in PhysBAM. Given its complexity, this class takes no
- * responsibility to manage memory for ARRAY_VIEW, which should be instead done
- * by the caller.
- *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#ifndef NIMBUS_APPLICATION_SMOKE_CACHE_ARRAY_M2C_H_
+#define NIMBUS_APPLICATION_SMOKE_CACHE_ARRAY_M2C_H_
 
-#include "application/smoke/projection/data_raw_grid_array.h"
+#include <string>
+
+#include "application/smoke/parameters.h"
+#include "application/smoke/physbam_include.h"
+#include "application/smoke/projection/data_raw_array_m2c.h"
+#include "data/cache/cache_var.h"
+#include "shared/geometric_region.h"
+#include "worker/data.h"
 
 namespace application {
 
-DataRawGridArray::DataRawGridArray(std::string name) {
-  set_name(name);
-}
+class CacheArrayM2C : public nimbus::CacheVar {
+ public:
+  typedef PhysBAM::ARRAY<application::TV_INT> DATA_TYPE;
+  explicit CacheArrayM2C(const nimbus::GeometricRegion& global_reg,
+                         bool make_proto = false);
 
-nimbus::Data* DataRawGridArray::Clone() {
-  return (new DataRawGridArray(name()));
-}
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
 
-bool DataRawGridArray::SaveToNimbus(
-    const PhysBAM::ARRAY<T, TV_INT>& array_input) {
-  Header header;
-  header.n = array_input.counts.Product();
-  ClearTempBuffer();
-  AddToTempBuffer(reinterpret_cast<char*>(&header), sizeof(header));
-  AddToTempBuffer(
-      const_cast<char*>(
-          reinterpret_cast<const char*>(array_input.array.Get_Array_Pointer())),
-      header.n * sizeof(T));
-  CommitTempBuffer();
-  return true;
-}
+ protected:
+  explicit CacheArrayM2C(const nimbus::GeometricRegion& global_reg,
+                         const nimbus::GeometricRegion& ob_reg);
 
-bool DataRawGridArray::LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array) {
-  assert(array != NULL);
-  char* pointer = buffer();
-  assert(pointer != NULL);
-  const Header &header = *(reinterpret_cast<const Header*>(pointer));
-  // Notice, Nimbus assumes the array is already initialized.
-  assert(array->counts.Product() == header.n);
-  pointer += sizeof(Header);
-  memcpy(pointer, array->array.Get_Array_Pointer(), header.n * sizeof(T));
-  return true;
-}
+  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-} // namespace application
+  virtual void ReadToCache(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteFromCache(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
+
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class CacheArrayM2C
+
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_SMOKE_CACHE_ARRAY_M2C_H_

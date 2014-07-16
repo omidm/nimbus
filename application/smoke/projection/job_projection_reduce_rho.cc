@@ -86,10 +86,6 @@ void JobProjectionReduceRho::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_BETA);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  // pcg_temp.Set_Maximum_Iterations(40);
-  // pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
-  // pcg_temp.cg_restart_iterations = 0;
-  // pcg_temp.Show_Results();
   pcg_temp.Set_Maximum_Iterations(1000);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
@@ -104,7 +100,10 @@ void JobProjectionReduceRho::Execute(
   // Read PROJECTION_LOCAL_RHO, PROJECTION_GLOBAL_RHO.
   // Write PROJECTION_GLOBAL_RHO, PROJECTION_GLOBAL_RHO_OLD, PROJECTION_BETA.
   // TODO(quhang), seems like rho_old is not needed.
-  projection_driver.ReduceRho();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.ReduceRho();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

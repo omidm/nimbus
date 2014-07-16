@@ -86,10 +86,6 @@ void JobProjectionGlobalInitialize::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_DESIRED_ITERATIONS);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  //pcg_temp.Set_Maximum_Iterations(40);
-  //pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
-  //pcg_temp.cg_restart_iterations = 0;
-  //pcg_temp.Show_Results();
   pcg_temp.Set_Maximum_Iterations(1000);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
@@ -100,7 +96,10 @@ void JobProjectionGlobalInitialize::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
 
-  projection_driver.GlobalInitialize();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.GlobalInitialize();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

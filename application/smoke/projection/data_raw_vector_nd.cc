@@ -71,6 +71,7 @@ bool DataRawVectorNd::SaveToNimbus(
 bool DataRawVectorNd::LoadFromNimbus(PhysBAM::VECTOR_ND<float>* vector) {
   assert(vector != NULL);
   char* pointer = buffer();
+  assert(pointer != NULL);
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   vector->n = header.n;
   pointer += sizeof(Header);

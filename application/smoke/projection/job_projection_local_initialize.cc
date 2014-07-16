@@ -85,16 +85,13 @@ void JobProjectionLocalInitialize::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
   data_config.SetFlag(DataConfig::MATRIX_C);
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
-  data_config.SetFlag(DataConfig::VECTOR_P);
+  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
   data_config.SetFlag(DataConfig::VECTOR_Z);
   data_config.SetFlag(DataConfig::PRESSURE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  //pcg_temp.Set_Maximum_Iterations(40);
-  //pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
-  //pcg_temp.cg_restart_iterations = 0;
-  //pcg_temp.Show_Results();
   pcg_temp.Set_Maximum_Iterations(1000);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
@@ -105,7 +102,10 @@ void JobProjectionLocalInitialize::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
 
-  projection_driver.LocalInitialize();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.LocalInitialize();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

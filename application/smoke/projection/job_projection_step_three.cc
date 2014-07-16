@@ -80,17 +80,14 @@ void JobProjectionStepThree::Execute(
   DataConfig data_config;
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
-  data_config.SetFlag(DataConfig::VECTOR_P);
+  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
   data_config.SetFlag(DataConfig::MATRIX_A);
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
   data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  //pcg_temp.Set_Maximum_Iterations(40);
-  //pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
-  //pcg_temp.cg_restart_iterations = 0;
-  //pcg_temp.Show_Results();
   pcg_temp.Set_Maximum_Iterations(1000);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
@@ -100,15 +97,29 @@ void JobProjectionStepThree::Execute(
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_STEP_THREE starts (iteration=%d).\n", iteration);
 
+  Log log_timer;
+
+  log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, loading time:%f.\n",
+      log_timer.timer());
 
   // Read VECTOR_P(outer region), MATRIX_A.
   // Write VECTOR_TEMP.
   // Write PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
-  projection_driver.UpdateTempVector();
-  projection_driver.CalculateLocalAlpha();
+  log_timer.StartTimer();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.UpdateTempVector();
+    projection_driver.CalculateLocalAlpha();
+  }
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, calculation time:%f.\n",
+      log_timer.timer());
 
+  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, saving time:%f.\n",
+      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_THREE job\n");
 }

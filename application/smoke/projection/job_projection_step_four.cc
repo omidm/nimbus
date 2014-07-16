@@ -81,7 +81,7 @@ void JobProjectionStepFour::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);
-  data_config.SetFlag(DataConfig::VECTOR_P);
+  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::VECTOR_B);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
@@ -90,10 +90,6 @@ void JobProjectionStepFour::Execute(
   data_config.SetFlag(DataConfig::PRESSURE);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  //pcg_temp.Set_Maximum_Iterations(40);
-  //pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
-  //pcg_temp.cg_restart_iterations = 0;
-  //pcg_temp.Show_Results();
   pcg_temp.Set_Maximum_Iterations(1000);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 40;
@@ -103,14 +99,28 @@ void JobProjectionStepFour::Execute(
   dbg(APP_LOG, "Job PROJECTION_STEP_FOUR starts (iteration=%d).\n", iteration);
   projection_driver.projection_data.iteration = iteration;
 
+  Log log_timer;
+
+  log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, loading time:%f.\n",
+      log_timer.timer());
 
   // Read PROJECTION_ALPHA, VECTOR_X, VECTOR_P,VECTOR_TEMP, VECTOR_B.
   // Write VECTOR_X, VECTOR_B, PROJECTION_LOCAL_RESIDUAL.
-  projection_driver.UpdateOtherVectors();
-  projection_driver.CalculateLocalResidual();
+  log_timer.StartTimer();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.UpdateOtherVectors();
+    projection_driver.CalculateLocalResidual();
+  }
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, calculation time:%f.\n",
+      log_timer.timer());
 
+  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_FOUR, saving time:%f.\n",
+      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_FOUR job\n");
 }

@@ -82,7 +82,6 @@ void JobProjectionWrapup::Execute(nimbus::Parameter params,
   DataConfig data_config;
   data_config.SetFlag(DataConfig::VELOCITY);
   data_config.SetFlag(DataConfig::DENSITY);
-  //data_config.SetFlag(DataConfig::LEVELSET);
   data_config.SetFlag(DataConfig::DIVERGENCE);
   data_config.SetFlag(DataConfig::PSI_N);
   data_config.SetFlag(DataConfig::PSI_D);
@@ -94,8 +93,10 @@ void JobProjectionWrapup::Execute(nimbus::Parameter params,
                              this, da, example, driver);
 
   dbg(APP_LOG, "Job PROJECTION_WRAPUP starts (dt=%f).\n", dt);
-
-  driver->ProjectionWrapupImpl(this, da, dt);
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->ProjectionWrapupImpl(this, da, dt);
+  }
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.
