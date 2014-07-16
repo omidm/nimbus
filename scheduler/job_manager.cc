@@ -94,9 +94,9 @@ bool JobManager::AddComputeJobEntry(
       job->set_job_name(job_name);
       job->set_read_set(read_set);
       job->set_write_set(write_set);
-      job->set_before_set(before_set);
+      job->set_before_set(before_set, true);
       job->set_after_set(after_set);
-      job->set_parent_job_id(parent_job_id);
+      job->set_parent_job_id(parent_job_id, true);
       job->set_params(params);
       job->set_sterile(sterile);
       job->set_future(false);
@@ -115,6 +115,8 @@ bool JobManager::AddComputeJobEntry(
     exit(-1);
     return false;
   }
+  ReceiveMetaBeforeSetDepthVersioningDependency(job);
+  PassMetaBeforeSetDepthVersioningDependency(job);
 
   if (!sterile) {
     live_parents_.insert(job_id);
@@ -162,6 +164,8 @@ bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
     exit(-1);
     return false;
   }
+  ReceiveMetaBeforeSetDepthVersioningDependency(job);
+  PassMetaBeforeSetDepthVersioningDependency(job);
 
   live_parents_.insert(job_id);
 
@@ -239,22 +243,9 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   Edge<JobEntry, job_id_t> *edge;
   JobEntry *j;
 
-  job_depth_t depth;
-
   if (job_graph_.AddEdge(job->parent_job_id(), job->job_id(), &edge)) {
     j = edge->start_vertex()->entry();
-    if (j->versioned()) {
-      pass_version_[job->job_id()].push_back(j);
-      job->remove_versioning_dependency(j->job_id());
-
-      job->meta_before_set()->table_p()->insert(
-          std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), j->meta_before_set())); // NOLINT
-      depth = j->job_depth();
-    } else {
-      dbg(DBG_ERROR, "ERROR: parent (id: %lu) is not versioned for job (id: %lu) in job manager.\n", // NOLINT
-          job->parent_job_id(), job->job_id());
-      return false;
-    }
+    assert(j->versioned());
   } else {
     dbg(DBG_ERROR, "ERROR: could not add edge from parent (id: %lu) for job (id: %lu) in job manager.\n", // NOLINT
         job->parent_job_id(), job->job_id());
@@ -265,18 +256,6 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
   for (it = job->before_set_p()->begin(); it != job->before_set_p()->end(); ++it) {
     if (job_graph_.AddEdge(*it, job->job_id(), &edge)) {
       j = edge->start_vertex()->entry();
-      if (j->versioned() || j->IsReadyForCompleteVersioning()) {
-        pass_version_[job->job_id()].push_back(j);
-        job->remove_versioning_dependency(j->job_id());
-      }
-
-      if (!j->future()) {
-        job->meta_before_set()->table_p()->insert(
-            std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), j->meta_before_set())); // NOLINT
-        if (depth < j->job_depth()) {
-          depth = j->job_depth();
-        }
-      }
     } else {
       dbg(DBG_SCHED, "Adding possible future job (id: %lu) in job manager.\n", *it);
       AddFutureJobEntry(*it);
@@ -286,43 +265,53 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
     }
   }
 
-  job->set_job_depth(depth + 1);
-
-  if (job->IsReadyForCompleteVersioning()) {
-    PassReadyForCompleteVersioning(job);
-  }
-
-  PassMetaBeforeSetAndDepth(job);
-
   return true;
 }
 
 
-void JobManager::PassReadyForCompleteVersioning(JobEntry* job) {
+void JobManager::ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
+  job_depth_t depth = NIMBUS_INIT_JOB_DEPTH;
   job_id_t job_id = job->job_id();
   Vertex<JobEntry, job_id_t>* vertex;
   job_graph_.GetVertex(job_id, &vertex);
   typename Edge<JobEntry, job_id_t>::Iter it;
-  for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
-    JobEntry *j = it->second->end_vertex()->entry();
-    j->remove_versioning_dependency(job_id);
+  for (it = vertex->incoming_edges()->begin(); it != vertex->incoming_edges()->end(); ++it) {
+    JobEntry *j = it->second->start_vertex()->entry();
     if (j->IsReadyForCompleteVersioning()) {
-      PassReadyForCompleteVersioning(j);
+      job->meta_before_set()->table_p()->insert(
+          std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (j->job_id(), j->meta_before_set())); // NOLINT
+
+      if (depth < j->job_depth()) {
+        depth = j->job_depth();
+      }
+
+      job->remove_versioning_dependency(j->job_id());
     }
   }
+  job->set_job_depth(depth + 1);
 }
 
-void JobManager::PassMetaBeforeSetAndDepth(JobEntry* job) {
-  job_id_t job_id = job->job_id();
-  Vertex<JobEntry, job_id_t>* vertex;
-  job_graph_.GetVertex(job_id, &vertex);
-  typename Edge<JobEntry, job_id_t>::Iter it;
-  for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
-    JobEntry *j = it->second->end_vertex()->entry();
-    j->meta_before_set()->table_p()->insert(
-        std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (job->job_id(), job->meta_before_set())); // NOLINT
-    if (j->job_depth() <= job->job_depth()) {
-      j->set_job_depth(job->job_depth() + 1);
+
+void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
+  if (job->IsReadyForCompleteVersioning()) {
+    job_id_t job_id = job->job_id();
+    Vertex<JobEntry, job_id_t>* vertex;
+    job_graph_.GetVertex(job_id, &vertex);
+    typename Edge<JobEntry, job_id_t>::Iter it;
+    for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+      JobEntry *j = it->second->end_vertex()->entry();
+
+      j->meta_before_set()->table_p()->insert(
+          std::pair<job_id_t, boost::shared_ptr<MetaBeforeSet> > (job->job_id(), job->meta_before_set())); // NOLINT
+
+      if (j->job_depth() <= job->job_depth()) {
+        j->set_job_depth(job->job_depth() + 1);
+      }
+
+      j->remove_versioning_dependency(job_id);
+      if (j->IsReadyForCompleteVersioning()) {
+        PassMetaBeforeSetDepthVersioningDependency(j);
+      }
     }
   }
 }

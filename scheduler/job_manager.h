@@ -96,9 +96,9 @@ class JobManager {
 
     bool AddJobEntryIncomingEdges(JobEntry *job);
 
-    void PassReadyForCompleteVersioning(JobEntry* job);
+    void ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job);
 
-    void PassMetaBeforeSetAndDepth(JobEntry* job);
+    void PassMetaBeforeSetDepthVersioningDependency(JobEntry* job);
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
