@@ -188,19 +188,8 @@ namespace application {
         int* iteration);
     class ScopeTimer {
      public:
-      ScopeTimer(const std::string& name) {
-        name_ = name;
-        clock_gettime(CLOCK_REALTIME, &start_time_);
-      }
-      ~ScopeTimer() {
-        struct timespec t;
-        double time_sum;
-        clock_gettime(CLOCK_REALTIME, &t);
-        time_sum = difftime(t.tv_sec, start_time_.tv_sec)
-            + .000000001
-            * (static_cast<double>(t.tv_nsec - start_time_.tv_nsec));
-        dbg(APP_LOG, "\n[TIME] Job %s, %f seconds.\n", name_.c_str(), time_sum);
-      }
+      ScopeTimer(const std::string& name);
+      ~ScopeTimer();
      private:
       std::string name_;
       struct timespec start_time_;

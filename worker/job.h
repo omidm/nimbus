@@ -261,7 +261,13 @@ class LocalCopyJob : public Job {
     virtual void Sleep() {}
     virtual void Cancel() {}
 
+    static void PrintTimeProfile();
+
   private:
+    static double copy_ghost_time_;
+    static double copy_central_time_;
+    static int64_t copy_ghost_count_;
+    static int64_t copy_central_count_;
 };
 
 class CreateDataJob : public Job {

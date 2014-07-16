@@ -338,6 +338,7 @@ template<class TV> void WATER_DRIVER<TV>::InitializeUseCache(
     LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* laplace_solver =
       dynamic_cast<LAPLACE_COLLIDABLE_UNIFORM<T_GRID>* >(
           example.projection.elliptic_solver);
+    // TODO(quhang): array initiatialization.
     example.laplace_solver_wrapper.BindLaplaceAndInitialize(laplace_solver);
 
     //add forces

@@ -46,6 +46,7 @@
 #include "data/physbam/protobuf_compiled/water_parameter.pb.h"
 #include "shared/logical_data_object.h"
 #include "shared/nimbus.h"
+#include "worker/job.h"
 #include "worker/physical_data_instance.h"
 
 namespace application {
@@ -566,6 +567,22 @@ namespace application {
       DeserializeRegionHelper(water_parameter.local_region(),
                               local_region);
       return true;
+    }
+
+    ScopeTimer::ScopeTimer(const std::string& name) {
+      name_ = name;
+      clock_gettime(CLOCK_REALTIME, &start_time_);
+    }
+
+    ScopeTimer::~ScopeTimer() {
+      struct timespec t;
+      double time_sum;
+      clock_gettime(CLOCK_REALTIME, &t);
+      time_sum = difftime(t.tv_sec, start_time_.tv_sec)
+          + .000000001
+          * (static_cast<double>(t.tv_nsec - start_time_.tv_nsec));
+      dbg(APP_LOG, "\n[TIME] Job %s, %f seconds.\n", name_.c_str(), time_sum);
+      nimbus::LocalCopyJob::PrintTimeProfile();
     }
 
 } // namespace application

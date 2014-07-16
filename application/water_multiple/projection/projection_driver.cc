@@ -314,6 +314,7 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
 
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  application::ScopeTimer scope_timer("projection_load");
   if (application::kUseCache) {
     Cache_LoadFromNimbus(job, da);
     return;
@@ -683,6 +684,7 @@ void ProjectionDriver::ReadVectorData(
 
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  application::ScopeTimer scope_timer("projection_save");
   if (application::kUseCache) {
     Cache_SaveToNimbus(job, da);
     return;
