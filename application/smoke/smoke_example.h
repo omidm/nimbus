@@ -82,6 +82,8 @@ public:
     typedef typename application::CacheScalarArray<T> TCacheScalarArray;
     typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
+    typedef application::CacheSparseMatrix TCacheSparseMatrix;
+    typedef application::CacheArrayM2C TCacheArrayM2C;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
@@ -89,6 +91,8 @@ public:
     TCacheScalarArray *cache_pressure, *cache_divergence;
     IntCacheScalarArray *cache_colors;
     BoolCacheScalarArray *cache_psi_d;
+    TCacheSparseMatrix *cache_matrix_a;
+    TCacheArrayM2C *cache_index_m2c;
 
     SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
                   bool use_threading,

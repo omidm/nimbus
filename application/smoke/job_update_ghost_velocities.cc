@@ -94,15 +94,18 @@ void JobUpdateGhostVelocities::Execute(nimbus::Parameter params,
   *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in UPDATE_GHOST_VELOCITY job.\n");
-  driver->UpdateGhostVelocitiesImpl(this, da, dt);
+  dbg(APP_LOG, "Execute the step in update ghost velocity job.\n");
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->UpdateGhostVelocitiesImpl(this, da, dt);
+  }
 
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing UPDATE_GHOST_VELOCITY job.\n");
+  dbg(APP_LOG, "Completed executing update ghost velocity job.\n");
 }
 
 }  // namespace application

@@ -94,15 +94,18 @@ void JobUpdateGhostDensities::Execute(nimbus::Parameter params,
   *thread_queue_hook() = example->nimbus_thread_queue;
 
   // Run the computation in the job.
-  dbg(APP_LOG, "Execute the step in UPDATE_GHOST_DENSITY job.\n");
-  driver->UpdateGhostDensitiesImpl(this, da, dt);
+  dbg(APP_LOG, "Execute the step in update ghost density job.\n");
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->UpdateGhostDensitiesImpl(this, da, dt);
+  }
 
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 
-  dbg(APP_LOG, "Completed executing UPDATE_GHOST_DENSITY job.\n");
+  dbg(APP_LOG, "Completed executing update ghost density job.\n");
 }
 
 }  // namespace application

@@ -90,10 +90,12 @@ void JobSubstep::Execute(
                              this, da, example, driver);
   *thread_queue_hook() = example->nimbus_thread_queue;
 
-  T dt = example->cfl * example->CFL(example->face_velocities);
-  dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
-
-  example->dt_buffer = dt;
+  {
+    application::ScopeTimer scope_timer(name());
+    T dt = example->cfl * example->CFL(example->face_velocities);
+    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
+    example->dt_buffer = dt;
+  }
 
   *thread_queue_hook() = NULL;
 

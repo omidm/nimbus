@@ -100,9 +100,10 @@ void JobConvect::Execute(nimbus::Parameter params,
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in convect job.");
   {
-    //nimbus::Timer timer(std::string("convect_") + id().toString());
+    application::ScopeTimer scope_timer(name());
     driver->ConvectImpl(this, da, dt);
   }
+
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   *thread_queue_hook() = NULL;

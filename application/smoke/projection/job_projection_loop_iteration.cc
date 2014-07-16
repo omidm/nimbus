@@ -247,7 +247,7 @@ void JobProjectionLoopIteration::Execute(
         APP_PROJECTION_BETA, NULL);
     job_query.StageJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
                        read, write, default_params, true);
-    job_query.Hint(projection_jod_ids[1], kRegW0Central[0]);
+    job_query.Hint(projection_job_ids[1], kRegW0Central[0]);
     job_query.CommitStagedJobs();
 
     // STEP_TWO

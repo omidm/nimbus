@@ -41,5 +41,7 @@
 
 #include "application/smoke/cache_face_array.h"
 #include "application/smoke/cache_scalar_array.h"
+#include "application/smoke/projection/cache_sparse_matrix.h"
+#include "application/smoke/projection/cache_array_m2c.h"
 
 #endif // NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_
