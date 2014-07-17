@@ -28,7 +28,7 @@ CFLAGS = -Wall -g -O3
 # CFLAGS += -D_NIMBUS_NO_DBG
 # CFLAGS += -D_NIMBUS_NO_LOG
 # CFLAGS += -DNDEBUG
-CFLAGS  += -DCACHE_LOG
+# CFLAGS  += -DCACHE_LOG
 
 # For reasons I do not understand need to disable two-level loading namespace
 # optimizations under Darwin -pal
@@ -39,6 +39,7 @@ endif
 # -I params for all cpp invocations
 IFLAGS   = -I/opt/local/include # Include MacPorts includes
 IFLAGS  += -I/usr/local/include # For protobufs
+IFLAGS  += -I${NIMBUS_ROOT}/leveldb/include # Include leveldb includes
 IFLAGS  += -I${NIMBUS_ROOT}
 
 # -l params for linking invocation
@@ -46,11 +47,13 @@ LFLAGS   =
 
 # -L params for linking invocation
 LDFLAGS += -L/opt/local/lib # Link with MacPorts libraries
+LDFLAGS += -L${NIMBUS_ROOT}/leveldb/ # Link with Leveldb library
 LDFLAGS += -L${NIMBUS_ROOT}/ # Link with Nimbus libraries
 
 # -rpath tells executable where to look for libraries; without it executables
 # do not find Nimbus libraries. -pal
 LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}
+LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/leveldb
 
 
 
