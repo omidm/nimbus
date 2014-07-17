@@ -31,6 +31,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/data_face_array.cc
     ${PROJECT_SOURCE_DIR}/data_particle_array.cc
     ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
+    ${PROJECT_SOURCE_DIR}/data_compressed_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
@@ -105,6 +106,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/data_face_array.h
     ${PROJECT_SOURCE_DIR}/data_particle_array.h
     ${PROJECT_SOURCE_DIR}/data_scalar_array.h
+    ${PROJECT_SOURCE_DIR}/data_compressed_scalar_array.h
     ${PROJECT_SOURCE_DIR}/job_include.h
     ${PROJECT_SOURCE_DIR}/job_names.h
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.h

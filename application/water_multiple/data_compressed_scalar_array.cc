@@ -32,17 +32,31 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Protocol buffer messages for transmitting physbam data.
-  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu> 
-  */
+/*
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
 
-package nimbus_message;
+#include "data/physbam/physbam_data.h"
+#include "shared/nimbus.h"
+#include "string.h"
+#include "application/water_multiple/data_compressed_scalar_array.h"
 
-message pd_message {
-  optional bytes buffer = 1;
-  required int64 size = 2;
-  required uint32 hash = 3;
-  optional int64 meta_data_size = 4;
-  optional int64 meta_data_hash = 5;
+namespace application {
+
+template<typename T> DataCompressedScalarArray<T>::DataCompressedScalarArray(
+    std::string name) {
+  set_name(name);
 }
+
+template<typename T> nimbus::Data* DataCompressedScalarArray<T>::Clone() {
+  return (new DataCompressedScalarArray<T>(name()));
+}
+
+template<typename T> void DataCompressedScalarArray<T>::Create() {
+  nimbus::PhysBAMData::Create();
+}
+
+template class DataCompressedScalarArray<float>;
+template class DataCompressedScalarArray<int>;
+
+} // namespace application

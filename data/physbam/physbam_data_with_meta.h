@@ -33,36 +33,36 @@
  */
 
  /*
-  * A PhysBAM physical data instance. This is simply a buffer of bytes.
-  * An application uses a TranslatorPhysBAM to read from a PhysBAMData
-  * to generate a PhysBAM object at the beginning of a job, and uses a
-  * TranslatorPhysBAM to store a PhysBAM object into a PhysBAMData at the
-  * end of a job.
+  * Extension to PhysBAMData, seperating out the meta data part and the real
+  * data part. In progress.
   *
-  * Author: Philip Levis <pal@cs.stanford.edu>
+  * Author: Hang Qu <quhang@stanford.edu>
   */
 
-#ifndef NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_H_
-#define NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_H_
+#ifndef NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_WITH_META_H_
+#define NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_WITH_META_H_
 
+#include <sstream>  // NOLINT
+#include "data/physbam/physbam_data.h"
 #include "shared/cluster.h"
 #include "shared/nimbus_types.h"
 #include "worker/data.h"
-#include <sstream>  // NOLINT
+
+#ifndef HASH_SEED
+#define HASH_SEED 12315
+#endif  // HASH_SEED
 
 namespace nimbus {
 
-class PhysBAMData: public Data {
- protected:
-  int_dimension_t size_;
-  char* buffer_;
-  std::stringstream* temp_buffer_;
+class PhysBAMDataWithMeta: public PhysBAMData {
+ private:
+  bool has_meta_data_;
+  int_dimension_t meta_data_size_;
+  int64_t meta_data_hash_;
 
  public:
-  PhysBAMData();
-  virtual ~PhysBAMData() {}
-
-  virtual uint32_t HashCode();
+  PhysBAMDataWithMeta();
+  virtual ~PhysBAMDataWithMeta() {}
 
   virtual Data* Clone();
   virtual void Create();
@@ -72,26 +72,29 @@ class PhysBAMData: public Data {
   virtual bool Serialize(SerializedData* ser_data);
   virtual bool DeSerialize(const SerializedData& ser_data, Data** result);
 
-  virtual char* buffer() const;
-  virtual void set_buffer(char* b, int_dimension_t s);
+  void ResetMetaData();
 
-  virtual int_dimension_t size() const;
-  virtual void set_size(int_dimension_t s);
+  void set_has_meta_data() { has_meta_data_ = true; }
+  void unset_has_meta_data() { has_meta_data_ = false; }
+  bool has_meta_data() const { return has_meta_data_; }
 
-  virtual void ClearTempBuffer();
-  virtual bool AddToTempBuffer(char* buffer, int len);
-  virtual int CommitTempBuffer();
+  void set_meta_data_hash(int64_t meta_data_hash) {
+    meta_data_hash_ = meta_data_hash;
+  }
+  int64_t meta_data_hash() const { return meta_data_hash_; }
 
+  void set_meta_data_size(int_dimension_t meta_data_size) {
+    meta_data_size_ = meta_data_size;
+  }
+  int_dimension_t meta_data_size() const { return meta_data_size_; }
 
-  // Not implemented, not clear what these interfaces mean. -pal
-  virtual void duplicate(Computer source, Computer destination) {}
-  virtual void migrate(Computer sourcer, Computer destination) {}
-  virtual void split(Data *, Data *) {}
-  virtual void merge(Data *, Data *) {}
-
-  uint32_t hash;
+  // virtual void ClearTempBuffer();
+  // virtual bool AddToTempBuffer(char* buffer, int len);
+  // virtual int CommitTempBuffer();
+  // Used to tell Nimbus the meta data part finishes.
+  virtual void MarkMetaDataInTempBuffer();
 };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_H_
+#endif  // NIMBUS_DATA_PHYSBAM_PHYSBAM_DATA_WITH_META_H_
