@@ -119,6 +119,7 @@ class ProjectionDriver {
     VECTOR_ND<T> vector_x;
     // VECTOR_ND<T> x_interior;
     VECTOR_ND<T> temp, temp_interior;
+    VECTOR_ND<T> vector_pressure;
     VECTOR_ND<T> p, p_interior;
     VECTOR_ND<T> z_interior;
     VECTOR_ND<T> b_interior;
@@ -168,6 +169,7 @@ class ProjectionDriver {
   void Cache_Initialize(int local_n, int interior_n);
   void LocalInitialize();
   void GlobalInitialize();
+  void TransformPressureResult();
   void InitializeResidual();
   bool SpawnFirstIteration();
   void DoPrecondition();

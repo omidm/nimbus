@@ -436,7 +436,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
       log_timer.timer());
 
   log_timer.StartTimer();
-  // VECTOR_TEMP. It cannot be splitted or merged.
+  // VECTOR_P_LINEAR_FORMAT. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
     ReadVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
   }
@@ -446,6 +446,10 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    ReadVectorData(job, da, APP_VECTOR_PRESSURE,
+                   projection_data.vector_pressure);
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n", log_timer.timer());
 
@@ -599,6 +603,10 @@ void ProjectionDriver::Cache_SaveToNimbus(
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    WriteVectorData(job, da, APP_VECTOR_PRESSURE,
+                    projection_data.vector_pressure);
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n", log_timer.timer());
 

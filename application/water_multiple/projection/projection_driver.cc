@@ -68,21 +68,6 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.p.Resize(local_n, false);
   }
-  /*
-  if (projection_data.p.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_P)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    projection_data.p.Resize(local_n, false);
-    assert(data_config.GetFlag(DataConfig::INDEX_M2C));
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    // Translates from grid-format vector p to vector p, based on index.
-    for (int i = 1; i <= local_n; ++i) {
-      projection_data.p(i) =
-          projection_data.grid_format_vector_p(
-              (*projection_data.matrix_index_to_cell_index)(i));
-    }
-  }
-  */
   if (projection_data.z_interior.Size() == 0 &&
       data_config.GetFlag(DataConfig::VECTOR_Z)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
@@ -118,8 +103,13 @@ void ProjectionDriver::LocalInitialize() {
   }
   SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   projection_data.vector_x.Resize(projection_data.local_n, false);
+  projection_data.vector_pressure.Resize(projection_data.interior_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
     projection_data.vector_x(i) =
+        projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
+  }
+  for (int i = 1; i <= projection_data.interior_n; ++i) {
+    projection_data.vector_pressure(i) =
         projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
   VECTOR_ND<T>& x = projection_data.vector_x;
@@ -168,6 +158,13 @@ void ProjectionDriver::GlobalInitialize() {
   if (pcg.maximum_iterations) {
     projection_data.desired_iterations =
         min(projection_data.desired_iterations, pcg.maximum_iterations);
+  }
+}
+
+void ProjectionDriver::TransformPressureResult() {
+  for (int i = 1; i <= projection_data.interior_n; ++i) {
+    projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i))
+        = projection_data.vector_pressure(i);
   }
 }
 
@@ -284,10 +281,7 @@ void ProjectionDriver::UpdateOtherVectors() {
     b_interior(i) -= projection_data.alpha * temp_interior(i);
   }
   for (int i = 1; i <= interior_n; i++) {
-    // Search vector p is used here.
-    // Pressure, as the result, is calculated here.
-    projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i))
-        += projection_data.alpha * p_interior(i);
+    projection_data.vector_pressure(i) += projection_data.alpha * p_interior(i);
   }
 }
 
@@ -643,6 +637,10 @@ void ProjectionDriver::LoadFromNimbus(
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    ReadVectorData(job, da, APP_VECTOR_PRESSURE,
+                   projection_data.vector_pressure);
+  }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
@@ -823,6 +821,10 @@ void ProjectionDriver::SaveToNimbus(
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    WriteVectorData(job, da, APP_VECTOR_PRESSURE,
+                    projection_data.vector_pressure);
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n",
       log_timer.timer());

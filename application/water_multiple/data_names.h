@@ -80,6 +80,7 @@
 #define APP_PROJECTION_ALPHA "projection_alpha"
 #define APP_PROJECTION_BETA "projection_beta"
 #define APP_MATRIX_C "matrix_c"
+#define APP_VECTOR_PRESSURE "vector_pressure"
 #define APP_VECTOR_Z "vector_z"
 #define APP_VECTOR_P_GRID_FORMAT "vector_p_grid_format"
 #define APP_VECTOR_P_LINEAR_FORMAT "vector_p_linear_format"

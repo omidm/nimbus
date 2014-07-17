@@ -103,6 +103,7 @@ struct DataConfig {
     PSI_D,
     REGION_COLORS,
     PRESSURE,
+    VECTOR_PRESSURE,
     PRESSURE_SAVE,
     VELOCITY_SAVE,
     U_INTERFACE,

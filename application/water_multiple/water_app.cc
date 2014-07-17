@@ -201,6 +201,10 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_MATRIX_C);
         RegisterData(APP_MATRIX_C, new DataSparseMatrix(APP_MATRIX_C));
         // VECTOR_Z.
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_PRESSURE);
+        RegisterData(APP_VECTOR_PRESSURE,
+                     new DataRawVectorNd(APP_VECTOR_PRESSURE));
+        // VECTOR_Z.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
         RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
         // VECTOR_P_GRID_FORMAT.
@@ -248,6 +252,8 @@ namespace application {
         RegisterJob(DELETE_PARTICLES, new JobDeleteParticles(this));
         RegisterJob(REINCORPORATE_PARTICLES, new JobReincorporateRemovedParticles(this));
         RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
+        RegisterJob(PROJECTION_TRANSFORM_PRESSURE,
+                    new JobProjectionTransformPressure(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                     new JobProjectionCalculateBoundaryConditionPartOne(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,
