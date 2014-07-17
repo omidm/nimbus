@@ -117,7 +117,6 @@ class ProjectionDriver {
     SPARSE_MATRIX_FLAT_NXN<T>* matrix_c;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
-    // VECTOR_ND<T> x_interior;
     VECTOR_ND<T> temp, temp_interior;
     VECTOR_ND<T> vector_pressure;
     VECTOR_ND<T> p, p_interior;

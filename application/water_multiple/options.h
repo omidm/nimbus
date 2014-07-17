@@ -110,7 +110,6 @@ struct DataConfig {
     // The following for projeciton.
     MATRIX_A,
     VECTOR_B,
-    // VECTOR_X,
     INDEX_M2C,
     INDEX_C2M,
     PROJECTION_LOCAL_N,

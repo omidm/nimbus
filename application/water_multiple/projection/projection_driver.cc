@@ -33,7 +33,10 @@
  */
 
 /*
- * Includes all the running code in projeciton loop iteration.
+ * PhysBAM projection simulation codes are here. It serves the similar
+ * functionality as WATER_DRIVER, but is seperated out with code that is not
+ * related to other parts of the simulation.
+ *
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
@@ -68,12 +71,6 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.p.Resize(local_n, false);
   }
-  if (projection_data.z_interior.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_Z)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
-    projection_data.z_interior.Resize(interior_n, false);
-  }
-
   // Sets subview if necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
@@ -102,36 +99,36 @@ void ProjectionDriver::LocalInitialize() {
     return;
   }
   SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
+  // Initializes VECTOR_X.
+  // VECTOR_X is only used in this job.
   projection_data.vector_x.Resize(projection_data.local_n, false);
-  projection_data.vector_pressure.Resize(projection_data.interior_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
     projection_data.vector_x(i) =
         projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
+  VECTOR_ND<T>& x = projection_data.vector_x;
+  VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp = projection_data.temp;
+  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Initializes vector B and local residual.
+  A.Times(x, temp);
+  b_interior -= temp_interior;
+  projection_data.local_residual = b_interior.Max_Abs();
+  // Calculate matrix C.
+  assert(A.C != NULL);
+  A.Nimbus_Create_Submatrix(partition.interior_indices, A.C);
+  A.C->In_Place_Incomplete_Cholesky_Factorization(
+      pcg.modified_incomplete_cholesky,
+      pcg.modified_incomplete_cholesky_coefficient,
+      pcg.preconditioner_zero_tolerance,
+      pcg.preconditioner_zero_replacement);
+  // Initializes vector pressure.
+  projection_data.vector_pressure.Resize(projection_data.interior_n, false);
   for (int i = 1; i <= projection_data.interior_n; ++i) {
     projection_data.vector_pressure(i) =
         projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
-  VECTOR_ND<T>& x = projection_data.vector_x;
-  VECTOR_ND<T>& temp = projection_data.temp;
-  VECTOR_ND<T>& b_interior = projection_data.b_interior;
-  VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
-  A.Times(x, temp);
-  b_interior -= temp_interior;
-  projection_data.local_residual = b_interior.Max_Abs();
-  const bool recompute_preconditioner = true;
-  if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      // TODO(quhang) use swapping rather than copying.
-      assert(A.C != NULL);
-      SPARSE_MATRIX_FLAT_NXN<T>* temp = A.Create_Submatrix(partition.interior_indices);
-      *A.C = *temp;
-      A.C->In_Place_Incomplete_Cholesky_Factorization(
-          pcg.modified_incomplete_cholesky,
-          pcg.modified_incomplete_cholesky_coefficient,
-          pcg.preconditioner_zero_tolerance,
-          pcg.preconditioner_zero_replacement);
-      delete temp;
-  }
+  // Initializes other vectors.
   projection_data.p.Resize(projection_data.local_n, false);
   projection_data.p.Fill(0);
   GRID<TV> grid;

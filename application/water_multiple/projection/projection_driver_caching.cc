@@ -70,28 +70,6 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.p.Resize(local_n, false);
   }
-  /*
-  if (projection_data.p.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_P)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    projection_data.p.Resize(local_n, false);
-    assert(data_config.GetFlag(DataConfig::INDEX_M2C));
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    // TODO(addcache): should be removed.
-    // Translates from grid-format vector p to vector p, based on index.
-    for (int i = 1; i <= local_n; ++i) {
-      projection_data.p(i) =
-          projection_data.grid_format_vector_p(
-              (*projection_data.matrix_index_to_cell_index)(i));
-    }
-  }
-  */
-  if (projection_data.z_interior.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_Z)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
-    projection_data.z_interior.Resize(interior_n, false);
-  }
-
   // Sets subview if necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));

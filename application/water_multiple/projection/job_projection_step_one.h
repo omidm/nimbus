@@ -33,6 +33,9 @@
  */
 
 /*
+ * The first step of projection iteration, which does precondition and
+ * calculates parameter rho.
+ * Notice that vector_temp is only a temporary variable and not transmitted.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
