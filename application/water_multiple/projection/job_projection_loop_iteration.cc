@@ -156,7 +156,7 @@ void JobProjectionLoopIteration::Execute(
                           APP_VECTOR_PRESSURE, APP_INDEX_M2C, NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W3Central[index],
-                          APP_VECTOR_PRESSURE, NULL);
+                          APP_PRESSURE, NULL);
       job_query.StageJob(PROJECTION_TRANSFORM_PRESSURE, trans_job_ids[index],
                          read, write, default_part_params[index],
                          true);
