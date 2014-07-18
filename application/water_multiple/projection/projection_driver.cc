@@ -117,11 +117,14 @@ void ProjectionDriver::LocalInitialize() {
   // Calculate matrix C.
   assert(A.C != NULL);
   A.Nimbus_Create_Submatrix(partition.interior_indices, A.C);
+  // SPARSE_MATRIX_FLAT_NXN<T>* temp_matrix = A.Create_Submatrix(partition.interior_indices);
+  // *A.C = *temp_matrix;
   A.C->In_Place_Incomplete_Cholesky_Factorization(
       pcg.modified_incomplete_cholesky,
       pcg.modified_incomplete_cholesky_coefficient,
       pcg.preconditioner_zero_tolerance,
       pcg.preconditioner_zero_replacement);
+  // delete temp_matrix;
   // Initializes vector pressure.
   projection_data.vector_pressure.Resize(projection_data.interior_n, false);
   for (int i = 1; i <= projection_data.interior_n; ++i) {

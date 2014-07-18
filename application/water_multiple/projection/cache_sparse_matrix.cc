@@ -52,6 +52,7 @@ namespace application {
 CacheSparseMatrix::CacheSparseMatrix(const nimbus::GeometricRegion &global_reg,
                                      bool make_proto)
     : global_region_(global_reg) {
+  data_ = NULL;
   if (make_proto)
     MakePrototype();
 }
