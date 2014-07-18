@@ -160,6 +160,13 @@ int main(int argc, char *argv[]) {
   leveldb::Status status = leveldb::DB::Open(options, "/tmp/testdb", &db);
   assert(status.ok());
 
+  std::string value;
+  db->Put(leveldb::WriteOptions(), "key-1", "value of key 1");
+  db->Get(leveldb::ReadOptions(), "key-1", &value);
+  std::cout << "******key-1: " << value << std::endl;
+
+  delete db;
+
 
   nimbus_initialize();
   std::cout << "Job spawner worker is up!" << std::endl;
