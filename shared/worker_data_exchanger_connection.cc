@@ -61,8 +61,8 @@ WorkerDataExchangerConnection::~WorkerDataExchangerConnection() {
 }
 
 void WorkerDataExchangerConnection::AllocateData(size_t size) {
-  data_ptr_ = boost::shared_ptr<char>(new char[size]);
-  data_cursor_ = get_pointer(data_ptr_);
+  data_ptr_ = boost::shared_array<char>(new char[size]);
+  data_cursor_ = data_ptr_.get();
   remaining_data_length_ = size;
 }
 
@@ -82,7 +82,7 @@ tcp::socket* WorkerDataExchangerConnection::socket() {
 }
 
 
-boost::shared_ptr<char> WorkerDataExchangerConnection::data_ptr() {
+boost::shared_array<char> WorkerDataExchangerConnection::data_ptr() {
   return data_ptr_;
 }
 

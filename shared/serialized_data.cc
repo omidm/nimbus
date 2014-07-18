@@ -47,11 +47,11 @@ SerializedData::SerializedData()
 }
 
 SerializedData::SerializedData(std::string str)
-: data_ptr_(boost::shared_ptr<char>(new char[str.size()])), size_(str.size()) {
-    memcpy(get_pointer(data_ptr_), str.c_str(), size_);
+: data_ptr_(boost::shared_array<char>(new char[str.size()])), size_(str.size()) {
+    memcpy(data_ptr_.get(), str.c_str(), size_);
 }
 
-SerializedData::SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size)
+SerializedData::SerializedData(const boost::shared_array<char>& data_ptr, const size_t& size)
 : data_ptr_(data_ptr), size_(size) {
 }
 
@@ -62,20 +62,20 @@ SerializedData::SerializedData(const SerializedData& other)
 SerializedData::~SerializedData() {
 }
 
-boost::shared_ptr<char> SerializedData::data_ptr() const {
+boost::shared_array<char> SerializedData::data_ptr() const {
   return data_ptr_;
 }
 
 char* SerializedData::data_ptr_raw() const {
-  return get_pointer(data_ptr_);
+  return data_ptr_.get();
 }
 
-void  SerializedData::set_data_ptr(boost::shared_ptr<char> ptr) {
+void  SerializedData::set_data_ptr(boost::shared_array<char> ptr) {
   data_ptr_ = ptr;
 }
 
 void  SerializedData::set_data_ptr(char* ptr) {
-  data_ptr_ = boost::shared_ptr<char> (ptr);
+  data_ptr_ = boost::shared_array<char> (ptr);
 }
 
 size_t SerializedData:: size() const {
@@ -90,8 +90,8 @@ bool SerializedData::Parse(const std::string& input) {
   std::string str = input;
   UnescapeString(&str);
   size_ = str.length();
-  data_ptr_ = boost::shared_ptr<char>(new char[size_]);
-  memcpy(get_pointer(data_ptr_), str.c_str(), size_);
+  data_ptr_ = boost::shared_array<char>(new char[size_]);
+  memcpy(data_ptr_.get(), str.c_str(), size_);
   return true;
 }
 
@@ -100,7 +100,7 @@ std::string SerializedData::toString() {
     std::string str = "empty";
     return str;
   } else {
-    std::string str(get_pointer(data_ptr_), size_);
+    std::string str(data_ptr_.get(), size_);
     EscapeString(&str);
     return str;
   }
