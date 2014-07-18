@@ -117,7 +117,7 @@ void PhysBAMData::Create() {
 */
 void PhysBAMData::Destroy() {
   if (buffer_) {
-    delete [] buffer_;
+    free(buffer_);
     buffer_ = NULL;
   }
   size_ = 0;
