@@ -84,6 +84,7 @@
 #define APP_VECTOR_Z "vector_z"
 #define APP_VECTOR_P_GRID_FORMAT "vector_p_grid_format"
 #define APP_VECTOR_P_LINEAR_FORMAT "vector_p_linear_format"
+#define APP_VECTOR_P_META_FORMAT "vector_p_meta_format"
 #define APP_VECTOR_TEMP "vector_temp"
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_NAMES_H_

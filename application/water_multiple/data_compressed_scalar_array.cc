@@ -53,7 +53,7 @@ template<typename T> nimbus::Data* DataCompressedScalarArray<T>::Clone() {
 }
 
 template<typename T> void DataCompressedScalarArray<T>::Create() {
-  nimbus::PhysBAMData::Create();
+  nimbus::PhysBAMDataWithMeta::Create();
 }
 
 template class DataCompressedScalarArray<float>;

@@ -33,19 +33,23 @@
  */
 
 /*
+ * The scalar array is stored in indexing form. It stores the indexes and the
+ * values of useful cells, rather than storing the values of all the cells with
+ * implicit indexing.
+ *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_SCALAR_ARRAY_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_SCALAR_ARRAY_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_COMPRESSED_SCALAR_ARRAY_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_COMPRESSED_SCALAR_ARRAY_H_
 
-#include "data/physbam/physbam_data.h"
+#include "data/physbam/physbam_data_with_meta.h"
 #include "shared/nimbus.h"
 
 namespace application {
 
 template<typename T> class DataCompressedScalarArray
-    : public nimbus::PhysBAMData {
+    : public nimbus::PhysBAMDataWithMeta {
  public:
   explicit DataCompressedScalarArray(std::string n);
   virtual nimbus::Data* Clone();
@@ -54,4 +58,4 @@ template<typename T> class DataCompressedScalarArray
 
 } // namespace application
 
-#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_SCALAR_ARRAY_H_
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_DATA_COMPRESSED_SCALAR_ARRAY_H_

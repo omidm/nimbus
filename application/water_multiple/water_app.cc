@@ -215,6 +215,10 @@ namespace application {
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_LINEAR_FORMAT);
         RegisterData(APP_VECTOR_P_LINEAR_FORMAT,
                      new DataRawVectorNd(APP_VECTOR_P_LINEAR_FORMAT));
+        // VECTOR_P_META_FORMAT.
+        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
+        RegisterData(APP_VECTOR_P_META_FORMAT,
+                     new DataCompressedScalarArray<float>(APP_VECTOR_P_META_FORMAT));
         // VECTOR_TEMP.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
         RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
