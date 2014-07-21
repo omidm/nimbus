@@ -120,6 +120,7 @@ class ProjectionDriver {
     VECTOR_ND<T> temp, temp_interior;
     VECTOR_ND<T> vector_pressure;
     VECTOR_ND<T> p, p_interior;
+    VECTOR_ND<T> meta_p;
     VECTOR_ND<T> z_interior;
     VECTOR_ND<T> b_interior;
 

@@ -279,10 +279,12 @@ void JobProjectionLoopIteration::Execute(
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_Z,
           APP_VECTOR_P_LINEAR_FORMAT, APP_VECTOR_P_GRID_FORMAT, APP_INDEX_M2C,
+          APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
           NULL);
       write.clear();
       LoadLogicalIdsInSet(this, &write, kRegY2W0Central[index],
                           APP_VECTOR_P_LINEAR_FORMAT, APP_VECTOR_P_GRID_FORMAT,
+                          APP_VECTOR_P_META_FORMAT,
                           NULL);
       job_query.StageJob(PROJECTION_STEP_TWO, step_two_job_ids[index],
                          read, write, default_part_params[index],
@@ -296,6 +298,7 @@ void JobProjectionLoopIteration::Execute(
       read.clear();
       LoadLogicalIdsInSet(this, &read, kRegY2W1Outer[index],
                           APP_VECTOR_P_GRID_FORMAT,
+                          APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
                           NULL);
       LoadLogicalIdsInSet(
           this, &read, kRegY2W0Central[index],
@@ -339,6 +342,7 @@ void JobProjectionLoopIteration::Execute(
           this, &read, kRegY2W0Central[index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_P_LINEAR_FORMAT, APP_VECTOR_PRESSURE,
+          APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
           APP_VECTOR_TEMP, APP_VECTOR_B, NULL);
       LoadLogicalIdsInSet(
           this, &read, kRegW0Central[0], APP_PROJECTION_ALPHA, NULL);

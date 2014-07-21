@@ -50,6 +50,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <list>
 #include <sstream>
 #include <string>
 #include <vector>
