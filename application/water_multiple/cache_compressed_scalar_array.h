@@ -49,26 +49,25 @@
 
 namespace application {
 
-/*
 template<class T>
 class CacheCompressedScalarArray : public nimbus::CacheVar {
-  typedef typename PhysBAM::VECTOR<TS, 3> TV;
+  typedef PhysBAM::VECTOR_ND<float> DataType;
+  // Cell index to matrix index.
   typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
-  typedef typename PhysBAM::RANGE<TV> Range;
-  typedef typename PhysBAM::GRID<TV> Grid;
-  typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
+  typedef PhysBAM::ARRAY<int, TV_INT> IndexType;
+  typedef typename nimbus::TranslatorPhysBAM<float> Translator;
 
  public:
   explicit CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                                       const int ghost_width,
                                       bool make_proto = false);
 
-  PhysBAMScalarArray *data() {
-    return data_;
-  }
-  void set_data(PhysBAMScalarArray *d) {
-    data_ = d;
-  }
+  DataType* data() { return data_; }
+  void set_data(DataType* d) { data_ = d; }
+  IndexType* index_data() { return index_data_; }
+  void set_index_data(IndexType* d) { index_data_ = d; }
+  nimbus::int_dimension_t data_length() { return data_length_; }
+  void set_data_length(nimbus::int_dimension_t l) { data_length_ = l;  }
 
  protected:
   explicit CacheCompressedScalarArray(
@@ -89,12 +88,12 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   nimbus::GeometricRegion local_region_;
   int ghost_width_;
   nimbus::Coord shift_;
-  PhysBAMScalarArray *data_;
-  Grid mac_grid_;
-  // should maintain a pointer to INDEX_M2C.
+  DataType* data_;
+  // Index data should be external. This object does not have ownership.
+  IndexType* index_data_;
+  nimbus::int_dimension_t data_length_;
 }; // class CacheCompressedScalarArray
 
-*/
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_COMPRESSED_SCALAR_ARRAY_H_
