@@ -100,7 +100,10 @@ void JobProjectionCalculateBoundaryConditionPartOne::Execute(
       "Job PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE starts (dt=%f).\n",
       dt);
 
-  driver->ProjectionCalculateBoundaryConditionPartOneImpl(this, da, dt);
+  {
+      application::ScopeTimer scope_timer(name());
+      driver->ProjectionCalculateBoundaryConditionPartOneImpl(this, da, dt);
+  }
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
   // Free resources.

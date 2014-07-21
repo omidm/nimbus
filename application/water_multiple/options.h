@@ -84,6 +84,7 @@ struct DataConfig {
   enum DataType{
     VELOCITY = 0,
     VELOCITY_GHOST,
+    DT,
     LEVELSET,  // Default is bandwidth 3.
     LEVELSET_READ,
     LEVELSET_WRITE,
@@ -102,13 +103,13 @@ struct DataConfig {
     PSI_D,
     REGION_COLORS,
     PRESSURE,
+    VECTOR_PRESSURE,
     PRESSURE_SAVE,
     VELOCITY_SAVE,
     U_INTERFACE,
     // The following for projeciton.
     MATRIX_A,
     VECTOR_B,
-    // VECTOR_X,
     INDEX_M2C,
     INDEX_C2M,
     PROJECTION_LOCAL_N,
@@ -127,7 +128,8 @@ struct DataConfig {
     PROJECTION_BETA,
     MATRIX_C,
     VECTOR_Z,
-    VECTOR_P,
+    VECTOR_P_GRID_FORMAT,
+    VECTOR_P_LINEAR_FORMAT,
     VECTOR_TEMP,
     NUM_VARIABLE
   };

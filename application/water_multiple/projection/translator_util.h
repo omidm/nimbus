@@ -92,9 +92,13 @@ template<class T> bool DeserializePhysBAMArray(
     const Buffer& buffer_input,
     PhysBAM::ARRAY<T>* array) {
   assert(array != NULL);
-  array->Clean_Memory();
+  // array->Clean_Memory();
+  if (array->base_pointer != NULL) {
+    delete[] array->base_pointer;
+  }
   int64_t length = buffer_input.size / sizeof(T);
   array->m = length;
+  array->buffer_size = length;
   array->base_pointer = new T[length];
   const T* pointer = reinterpret_cast<T*>(buffer_input.pointer);
   memcpy(array->base_pointer, pointer, length * sizeof(T));

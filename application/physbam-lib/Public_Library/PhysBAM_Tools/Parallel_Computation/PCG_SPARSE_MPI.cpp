@@ -189,6 +189,10 @@ Parallel_Solve(SPARSE_MATRIX_FLAT_NXN<T>& A,VECTOR_ND<T>& x,VECTOR_ND<T>& b,cons
         LOG::Time("Before sixth barrier.");
         T residual = Global_Max(temp_5);
         LOG::Time("After sixth barrier.");
+        printf("\n[CONTROL FLOW] size=%d, residual=%f, global_tolerance=%f, "
+               "iteration=%d, desired iteration=%d\n",
+               interior_n, residual, global_tolerance, iteration,
+               desired_iterations);
 
         // check for convergence
         std::stringstream ss;

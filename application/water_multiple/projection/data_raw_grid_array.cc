@@ -73,6 +73,7 @@ bool DataRawGridArray::SaveToNimbus(
 bool DataRawGridArray::LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array) {
   assert(array != NULL);
   char* pointer = buffer();
+  assert(pointer != NULL);
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   // Notice, Nimbus assumes the array is already initialized.
   assert(array->counts.Product() == header.n);

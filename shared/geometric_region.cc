@@ -209,13 +209,13 @@ bool GeometricRegion::Covers(GeometricRegion *region) const {
 }
 
 /**
- * \fn bool GeometricRegion::IsEqual(GeometricRegion *region)
+ * \fn bool GeometricRegion::IsEqual(const GeometricRegion *region)
  * \brief Returns whether this region is equal to the region
           described by the argument.
  * \param region
  * \return
 */
-bool GeometricRegion::IsEqual(GeometricRegion *region) const {
+bool GeometricRegion::IsEqual(const GeometricRegion *region) const {
   return ((x() == region->x()) &&
           (y() == region->y()) &&
           (z() == region->z()) &&
@@ -327,6 +327,46 @@ Coord GeometricRegion::MaxCorner() const {
 Coord GeometricRegion::Delta() const {
   Coord result(dx_, dy_, dz_);
   return result;
+}
+
+bool GeometricRegion::NoneZeroArea() const {
+  return (dx_ != 0) && (dy_ != 0) && (dz_ != 0);
+}
+
+void GeometricRegion::Union(const GeometricRegion& region) {
+  if (!NoneZeroArea()) {
+    x_ = region.x_;
+    y_ = region.y_;
+    z_ = region.z_;
+    dx_ = region.dx_;
+    dy_ = region.dy_;
+    dz_ = region.dz_;
+    return;
+  }
+  if (!region.NoneZeroArea()) {
+    return;
+  }
+  if (x_ > region.x_) {
+    dx_ += x_ - region.x_;
+    x_ = region.x_;
+  }
+  if (y_ > region.y_) {
+    dy_ += y_ - region.y_;
+    y_ = region.y_;
+  }
+  if (z_ > region.z_) {
+    dz_ += z_ - region.z_;
+    z_ = region.z_;
+  }
+  if (x_ + dx_ < region.x_ + region.dx_) {
+    dx_ = region.x_ + region.dx_ - x_;
+  }
+  if (y_ + dy_ < region.y_ + region.dy_) {
+    dy_ = region.y_ + region.dy_ - y_;
+  }
+  if (z_ + dz_ < region.z_ + region.dz_) {
+    dz_ = region.z_ + region.dz_ - z_;
+  }
 }
 
 void GeometricRegion::Enlarge(const int_dimension_t delta) {

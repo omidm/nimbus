@@ -33,7 +33,10 @@
  */
 
 /*
- * Helper function for projection job. Still in progress.
+ * PhysBAM projection simulation codes are here. It serves the similar
+ * functionality as WATER_DRIVER, but is seperated out with code that is not
+ * related to other parts of the simulation.
+ *
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
@@ -64,23 +67,10 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     projection_data.temp.Resize(local_n, false);
   }
   if (projection_data.p.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_P)) {
+      data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.p.Resize(local_n, false);
-    assert(data_config.GetFlag(DataConfig::INDEX_M2C));
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    for (int i = 1; i <= local_n; ++i) {
-      projection_data.p(i) =
-          projection_data.grid_format_vector_p(
-              projection_data.matrix_index_to_cell_index(i));
-    }
   }
-  if (projection_data.z_interior.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_Z)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
-    projection_data.z_interior.Resize(interior_n, false);
-  }
-
   // Sets subview if necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
@@ -88,7 +78,7 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
         projection_data.temp,
         partition.interior_indices);
   }
-  if (data_config.GetFlag(DataConfig::VECTOR_P)) {
+  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
     projection_data.p_interior.Set_Subvector_View(
         projection_data.p,
@@ -108,35 +98,53 @@ void ProjectionDriver::LocalInitialize() {
     projection_data.local_residual = 0;
     return;
   }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
+  // Initializes VECTOR_X.
+  // VECTOR_X is only used in this job.
   projection_data.vector_x.Resize(projection_data.local_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
     projection_data.vector_x(i) =
-        projection_data.pressure(projection_data.matrix_index_to_cell_index(i));
+        projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
   VECTOR_ND<T>& x = projection_data.vector_x;
-  VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Initializes vector B and local residual.
   A.Times(x, temp);
   b_interior -= temp_interior;
   projection_data.local_residual = b_interior.Max_Abs();
-  const bool recompute_preconditioner = true;
-  if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      if (A.C != NULL) {
-        delete A.C;
-      }
-      A.C = A.Create_Submatrix(partition.interior_indices);
-      A.C->In_Place_Incomplete_Cholesky_Factorization(
-          pcg.modified_incomplete_cholesky,
-          pcg.modified_incomplete_cholesky_coefficient,
-          pcg.preconditioner_zero_tolerance,
-          pcg.preconditioner_zero_replacement);
+  // Calculate matrix C.
+  assert(A.C != NULL);
+  A.Nimbus_Create_Submatrix(partition.interior_indices, A.C);
+  // SPARSE_MATRIX_FLAT_NXN<T>* temp_matrix = A.Create_Submatrix(partition.interior_indices);
+  // *A.C = *temp_matrix;
+  A.C->In_Place_Incomplete_Cholesky_Factorization(
+      pcg.modified_incomplete_cholesky,
+      pcg.modified_incomplete_cholesky_coefficient,
+      pcg.preconditioner_zero_tolerance,
+      pcg.preconditioner_zero_replacement);
+  // delete temp_matrix;
+  // Initializes vector pressure.
+  projection_data.vector_pressure.Resize(projection_data.interior_n, false);
+  for (int i = 1; i <= projection_data.interior_n; ++i) {
+    projection_data.vector_pressure(i) =
+        projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
-  projection_data.temp.Resize(projection_data.local_n, false);
-  projection_data.temp.Fill(0);
+  // Initializes other vectors.
   projection_data.p.Resize(projection_data.local_n, false);
   projection_data.p.Fill(0);
+  GRID<TV> grid;
+  grid.Initialize(
+      TV_INT(init_config.local_region.dx(),
+             init_config.local_region.dy(),
+             init_config.local_region.dz()),
+      application::GridToRange(init_config.global_region,
+                               init_config.local_region));
+  projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
+  projection_data.grid_format_vector_p.Fill(0);
+  projection_data.temp.Resize(projection_data.local_n, false);
+  projection_data.temp.Fill(0);
   projection_data.z_interior.Resize(projection_data.interior_n, false);
   projection_data.z_interior.Fill(0);
 }
@@ -153,14 +161,23 @@ void ProjectionDriver::GlobalInitialize() {
   }
 }
 
+void ProjectionDriver::TransformPressureResult() {
+  for (int i = 1; i <= projection_data.interior_n; ++i) {
+    projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i))
+        = projection_data.vector_pressure(i);
+  }
+}
+
+// Step one starts.
 void ProjectionDriver::DoPrecondition() {
   if (projection_data.interior_n == 0) {
     return;
   }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Time consuming part.
   A.C->Solve_Forward_Substitution(b_interior, temp_interior, true);
   A.C->Solve_Backward_Substitution(temp_interior, z_interior, false, true);
 }
@@ -175,6 +192,7 @@ void ProjectionDriver::CalculateLocalRho() {
   projection_data.local_rho =
       VECTOR_ND<T>::Dot_Product_Double_Precision(z_interior, b_interior);
 }
+// Step one finishes.
 
 void ProjectionDriver::ReduceRho() {
   projection_data.rho_last = projection_data.rho;
@@ -186,6 +204,7 @@ void ProjectionDriver::ReduceRho() {
   }
 }
 
+// Step two starts.
 void ProjectionDriver::UpdateSearchVector() {
   if (projection_data.interior_n == 0) {
     return;
@@ -193,21 +212,40 @@ void ProjectionDriver::UpdateSearchVector() {
   int interior_n = partition.interior_indices.Size() + 1;
   VECTOR_ND<T>& z_interior = projection_data.z_interior;
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
+  // Search vector p is updated here.
   if (projection_data.iteration == 1) {
     p_interior = z_interior;
   } else {
     for (int i = 1; i <= interior_n; i++)
       p_interior(i) = z_interior(i) + projection_data.beta * p_interior(i);
   }
+  for (int i = 1;
+       i <= projection_data.interior_n; ++i) {
+    projection_data.grid_format_vector_p(
+        (*projection_data.matrix_index_to_cell_index)(i))
+        = projection_data.p(i);
+  }
 }
+// Step two finishes.
 
+// Search-vector p is exchanged between the two steps.
+
+// Step three starts.
 void ProjectionDriver::UpdateTempVector() {
   if (projection_data.interior_n == 0) {
     return;
   }
-  SPARSE_MATRIX_FLAT_NXN<T>& A = projection_data.matrix_a;
+  SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& p = projection_data.p;
+  // Search vector p is used here.
+  // Time consuming part.
+  for (int i = projection_data.interior_n + 1;
+       i <= projection_data.local_n; ++i) {
+    projection_data.p(i) =
+        projection_data.grid_format_vector_p(
+            (*projection_data.matrix_index_to_cell_index)(i));
+  }
   A.Times(p, temp);
 }
 
@@ -218,9 +256,11 @@ void ProjectionDriver::CalculateLocalAlpha() {
   }
   VECTOR_ND<T>& p_interior = projection_data.p_interior;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Search vector p is used here.
   projection_data.local_dot_product_for_alpha =
       VECTOR_ND<T>::Dot_Product_Double_Precision(p_interior, temp_interior);
 }
+// Step three finishes.
 
 void ProjectionDriver::ReduceAlpha() {
   projection_data.alpha =
@@ -228,6 +268,7 @@ void ProjectionDriver::ReduceAlpha() {
            Global_Sum(projection_data.local_dot_product_for_alpha));
 }
 
+// Step four starts.
 void ProjectionDriver::UpdateOtherVectors() {
   if (projection_data.interior_n == 0) {
     return;
@@ -240,8 +281,7 @@ void ProjectionDriver::UpdateOtherVectors() {
     b_interior(i) -= projection_data.alpha * temp_interior(i);
   }
   for (int i = 1; i <= interior_n; i++) {
-    projection_data.pressure(projection_data.matrix_index_to_cell_index(i))
-        += projection_data.alpha * p_interior(i);
+    projection_data.vector_pressure(i) += projection_data.alpha * p_interior(i);
   }
 }
 
@@ -255,6 +295,7 @@ void ProjectionDriver::CalculateLocalResidual() {
 }
 
 bool ProjectionDriver::DecideToSpawnNextIteration() {
+  dbg(APP_LOG, "[CONTROL_FLOW]");
   if (projection_data.residual <= projection_data.global_tolerance) {
     return false;
   }
@@ -263,9 +304,15 @@ bool ProjectionDriver::DecideToSpawnNextIteration() {
   }
   return true;
 }
+// Step four finishes.
 
 void ProjectionDriver::LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  application::ScopeTimer scope_timer("projection_load");
+  if (application::kUseCache) {
+    Cache_LoadFromNimbus(job, da);
+    return;
+  }
   nimbus::int_dimension_t array_shift[3] = {
     init_config.local_region.x() - 1,
     init_config.local_region.y() - 1,
@@ -291,42 +338,23 @@ void ProjectionDriver::LoadFromNimbus(
       application::GridToRange(init_config.global_region,
                                init_config.local_region));
 
-  nimbus::CacheManager *cm = job->GetCacheManager();
-  if (application::kUseCache) {
-    // pressure.
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      nimbus::DataArray read, write;
-      const std::string pressure_string = std::string(APP_PRESSURE);
-      application::GetReadData(*job, pressure_string, da, &read);
-      application::GetWriteData(*job, pressure_string, da, &write);
-      nimbus::CacheVar* cache_var =
-          cm->GetAppVar(
-              read, array_reg_thin_outer,
-              write, array_reg_thin_outer,
-              application::kCachePressure, array_reg_thin_outer,
-              nimbus::cache::EXCLUSIVE);
-      cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
-      assert(cache_pressure != NULL);
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      // projection_data.pressure.Resize(grid.Domain_Indices(1));
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
+  Log log_timer;
+  log_timer.StartTimer();
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    projection_data.pressure.Resize(grid.Domain_Indices(1));
+    if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
+                                       application::READ_ACCESS)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
+      dbg(APP_LOG, "Finish reading PRESSURE.\n");
+    } else {
+      dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
     }
-  } else {
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      projection_data.pressure.Resize(grid.Domain_Indices(1));
-      if (application::GetTranslatorData(job, std::string(APP_PRESSURE), da, &pdv,
-                                         application::READ_ACCESS)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_thin_outer, array_shift, &pdv, &projection_data.pressure);
-        dbg(APP_LOG, "Finish reading PRESSURE.\n");
-      } else {
-        dbg(APP_LOG, "PRESSURE flag is set but data is not local.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
-
+  dbg(APP_LOG, "[PROJECTION] LOAD, pressure time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // MATRIX_A. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_A)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -335,16 +363,23 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(&projection_data.matrix_a);
+      projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<T>;
+      data_real->LoadFromNimbus(projection_data.matrix_a);
       dbg(APP_LOG, "Finish reading MATRIX_A.\n");
     } else {
       dbg(APP_LOG, "MATRIX_A flag is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, matrix_a time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     ReadVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_b time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -364,6 +399,9 @@ void ProjectionDriver::LoadFromNimbus(
       dbg(APP_LOG, "INDEX_C2M flag is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, index_c2m time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // INDEX_M2C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -372,12 +410,16 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataRawArrayM2C* data_real =
           dynamic_cast<application::DataRawArrayM2C*>(data_temp);
       // The memory will be allocated automatically.
-      data_real->LoadFromNimbus(&projection_data.matrix_index_to_cell_index);
+      projection_data.matrix_index_to_cell_index = new ARRAY<TV_INT>;
+      data_real->LoadFromNimbus(projection_data.matrix_index_to_cell_index);
       dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
     } else {
       dbg(APP_LOG, "INDEX_M2C flag is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, index_m2c time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // LOCAL_N.
   // Reduction on LOCAL_N is never used and thus not supported.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
@@ -531,10 +573,16 @@ void ProjectionDriver::LoadFromNimbus(
   if (data_config.GetFlag(DataConfig::PROJECTION_BETA)) {
     ReadScalarData<float>(job, da, APP_PROJECTION_BETA, projection_data.beta);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, scalar time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
-    if (projection_data.matrix_a.C == NULL) {
-      projection_data.matrix_a.C = new SPARSE_MATRIX_FLAT_NXN<float>;
+    if (projection_data.matrix_a == NULL) {
+      projection_data.matrix_a = new SPARSE_MATRIX_FLAT_NXN<float>;
+    }
+    if (projection_data.matrix_a->C == NULL) {
+      projection_data.matrix_a->C = new SPARSE_MATRIX_FLAT_NXN<float>;
     }
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_MATRIX_C), da, application::READ_ACCESS);
@@ -542,59 +590,63 @@ void ProjectionDriver::LoadFromNimbus(
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
       // Memory allocation happens inside the call.
-      data_real->LoadFromNimbus(projection_data.matrix_a.C);
-      dbg(APP_LOG, "Finish reading MATRIX_A.\n");
+      data_real->LoadFromNimbus(projection_data.matrix_a->C);
+      dbg(APP_LOG, "Finish reading MATRIX_C.\n");
     } else {
       dbg(APP_LOG, "MATRIX_C flag"
           "is set but data is not local.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, matrix_c time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
     ReadVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
   }
-  // VECTOR_P. It cannot be splitted or merged.
-  if (application::kUseCache) {
-    if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-      nimbus::DataArray read, write;
-      const std::string vector_p_string = std::string(APP_VECTOR_P);
-      application::GetReadData(*job, vector_p_string, da, &read);
-      application::GetWriteData(*job, vector_p_string, da, &write);
-      nimbus::CacheVar* cache_var =
-          cm->GetAppVar(
-              read, array_reg_thin_outer,
-              write, array_reg_central,
-              application::kCacheVectorP, array_reg_thin_outer,
-              nimbus::cache::EXCLUSIVE);
-      cache_vector_p = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
-      assert(cache_vector_p != NULL);
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
-                                      projection_data.grid_format_vector_p);
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_z time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
+  // VECTOR_P_GRID_FORMAT.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
+    projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
+    if (application::GetTranslatorData(
+            job, std::string(APP_VECTOR_P_GRID_FORMAT),
+            da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
+      translator.ReadScalarArrayFloat(
+          &array_reg_thin_outer, array_shift, &pdv,
+          &projection_data.grid_format_vector_p);
+      dbg(APP_LOG, "Finish reading the grid-format vector_p\n");
+    } else {
+      dbg(APP_LOG, "VECTOR_P flag is set but data is not local.\n");
     }
-  } else {
-    if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-      projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
-      if (application::GetTranslatorData(
-              job, std::string(APP_VECTOR_P), da, &pdv, application::READ_ACCESS)
-          && data_config.GetFlag(DataConfig::VECTOR_P)) {
-        translator.ReadScalarArrayFloat(
-            &array_reg_thin_outer, array_shift, &pdv,
-            &projection_data.grid_format_vector_p);
-        dbg(APP_LOG, "Finish reading the grid-format vector_p\n");
-      } else {
-        dbg(APP_LOG, "VECTOR_P flag"
-            "is set but data is not local.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_grid_format time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
+  // VECTOR_P_LINEAR_FORMAT. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
+    ReadVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
+  }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_linear_format time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    ReadVectorData(job, da, APP_VECTOR_PRESSURE,
+                   projection_data.vector_pressure);
+  }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   Initialize(projection_data.local_n, projection_data.interior_n);
+  dbg(APP_LOG, "[PROJECTION] LOAD, else time:%f.\n",
+      log_timer.timer());
 }
 
 template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
@@ -630,6 +682,11 @@ void ProjectionDriver::ReadVectorData(
 
 void ProjectionDriver::SaveToNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
+  application::ScopeTimer scope_timer("projection_save");
+  if (application::kUseCache) {
+    Cache_SaveToNimbus(job, da);
+    return;
+  }
   nimbus::int_dimension_t array_shift[3] = {
       init_config.local_region.x() - 1,
       init_config.local_region.y() - 1,
@@ -648,33 +705,29 @@ void ProjectionDriver::SaveToNimbus(
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
 
-  nimbus::CacheManager *cm = job->GetCacheManager();
+  Log log_timer;
+  log_timer.StartTimer();
 
-  if (application::kUseCache) {
-    if (cache_pressure) {
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* pressure = cache_pressure->data();
-      T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
-      cm->ReleaseAccess(cache_pressure);
-      cache_pressure = NULL;
+  const std::string pressure_string = std::string(APP_PRESSURE);
+  if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    if (application::GetTranslatorData(job, pressure_string, da, &pdv,
+                                       application::WRITE_ACCESS)) {
+      translator.WriteScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv, &projection_data.pressure);
+      dbg(APP_LOG, "Finish writing pressure.\n");
     }
-  } else {
-    const std::string pressure_string = std::string(APP_PRESSURE);
-    if (data_config.GetFlag(DataConfig::PRESSURE)) {
-      if (application::GetTranslatorData(job, pressure_string, da, &pdv,
-                                         application::WRITE_ACCESS)) {
-        translator.WriteScalarArrayFloat(
-            &array_reg_central, array_shift, &pdv, &projection_data.pressure);
-        dbg(APP_LOG, "Finish writing pressure.\n");
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
-
+  dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     WriteVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_b time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // Groud III.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
     WriteScalarData<float>(job, da, APP_PROJECTION_LOCAL_TOLERANCE,
@@ -720,6 +773,9 @@ void ProjectionDriver::SaveToNimbus(
   if (data_config.GetFlag(DataConfig::PROJECTION_BETA)) {
     WriteScalarData<float>(job, da, APP_PROJECTION_BETA, projection_data.beta);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, scalar time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // MATRIX_C. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::MATRIX_C)) {
     Data* data_temp = application::GetTheOnlyData(
@@ -727,52 +783,51 @@ void ProjectionDriver::SaveToNimbus(
     if (data_temp) {
       application::DataSparseMatrix* data_real =
           dynamic_cast<application::DataSparseMatrix*>(data_temp);
-      data_real->SaveToNimbus(*projection_data.matrix_a.C);
+      data_real->SaveToNimbus(*projection_data.matrix_a->C);
       dbg(APP_LOG, "Finish writing MATRIX_C.\n");
     }
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, matrix_c time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
     WriteVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
   }
-  // VECTOR_P.
-  if (application::kUseCache) {
-    if (cache_vector_p) {
-      typedef typename PhysBAM::ARRAY<T, TV_INT> T_SCALAR_ARRAY;
-      T_SCALAR_ARRAY* vector_p = cache_vector_p->data();
-      for (int i = 1; i <= projection_data.local_n; ++i) {
-        projection_data.grid_format_vector_p(
-            projection_data.matrix_index_to_cell_index(i)) =
-            projection_data.p(i);
-      }
-      T_SCALAR_ARRAY::Exchange_Arrays(*vector_p,
-                                      projection_data.grid_format_vector_p);
-      cm->ReleaseAccess(cache_vector_p);
-      cache_vector_p = NULL;
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_z time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
+  // VECTOR_P_GRID_FORMAT. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
+    if (application::GetTranslatorData(
+            job, std::string(APP_VECTOR_P_GRID_FORMAT), da, &pdv,
+            application::WRITE_ACCESS)) {
+      translator.WriteScalarArrayFloat(
+          &array_reg_central, array_shift, &pdv,
+          &projection_data.grid_format_vector_p);
     }
-  } else {
-    // VECTOR_P. It cannot be splitted or merged.
-    if (data_config.GetFlag(DataConfig::VECTOR_P)) {
-      if (application::GetTranslatorData(job, std::string(APP_VECTOR_P), da, &pdv,
-                                         application::WRITE_ACCESS)) {
-        assert(data_config.GetFlag(DataConfig::INDEX_M2C));
-        assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-        for (int i = 1; i <= projection_data.local_n; ++i) {
-          projection_data.grid_format_vector_p(
-              projection_data.matrix_index_to_cell_index(i)) =
-              projection_data.p(i);
-        }
-        translator.WriteScalarArrayFloat(
-            &array_reg_central, array_shift, &pdv,
-            &projection_data.grid_format_vector_p);
-      }
-      application::DestroyTranslatorObjects(&pdv);
-    }
+    application::DestroyTranslatorObjects(&pdv);
   }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_grid_format time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
+  // VECTOR_P_LINEAR_FORMAT. It cannot be splitted or merged.
+  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
+    WriteVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
+  }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_linear_format time:%f.\n",
+      log_timer.timer());
+  log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    WriteVectorData(job, da, APP_VECTOR_PRESSURE,
+                    projection_data.vector_pressure);
+  }
+  dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n",
+      log_timer.timer());
 }
 
 template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(
@@ -802,4 +857,23 @@ void ProjectionDriver::WriteVectorData(
   }
 }
 
+template void ProjectionDriver::WriteScalarData<float>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const float& value);
+template void ProjectionDriver::WriteScalarData<double>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const double& value);
+template void ProjectionDriver::WriteScalarData<int>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, const int& value);
+
+template void ProjectionDriver::ReadScalarData<float>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, float& value);
+template void ProjectionDriver::ReadScalarData<double>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, double& value);
+template void ProjectionDriver::ReadScalarData<int>(
+    const nimbus::Job* job, const nimbus::DataArray& da,
+    const char* variable_name, int& value);
 }  // namespace PhysBAM

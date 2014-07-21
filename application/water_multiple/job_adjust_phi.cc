@@ -90,7 +90,10 @@ void JobAdjustPhi::Execute(nimbus::Parameter params, const nimbus::DataArray& da
                                this, da, example, driver);
     *thread_queue_hook() = example->nimbus_thread_queue;
 
-    driver->AdjustPhiImpl(this, da, dt);
+    {
+      application::ScopeTimer scope_timer(name());
+      driver->AdjustPhiImpl(this, da, dt);
+    }
 
     *thread_queue_hook() = NULL;
 

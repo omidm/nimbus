@@ -52,6 +52,7 @@ class WATER_EXAMPLE:public LEVELSET_CALLBACKS<GRID<TV> >
     typedef ARRAY<int,TV_INT> INT_SCALAR_ARRAY;
 
 public:
+    T dt_buffer;
     nimbus::NimbusThreadQueue* nimbus_thread_queue;
     nimbus::int_dimension_t kScale;
     GeometricRegion local_region;
@@ -98,6 +99,8 @@ public:
     typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
     typedef typename application::CacheScalarArray<bool> BoolCacheScalarArray;
     typedef typename application::CacheParticleLevelsetEvolution<float> TCachePLE;
+    typedef application::CacheSparseMatrix TCacheSparseMatrix;
+    typedef application::CacheArrayM2C TCacheArrayM2C;
     TCacheFaceArray *cache_fv;
     TCacheFaceArray *cache_fvg;
     BoolCacheFaceArray *cache_psi_n;
@@ -106,6 +109,8 @@ public:
     IntCacheScalarArray *cache_colors;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
+    TCacheSparseMatrix *cache_matrix_a;
+    TCacheArrayM2C *cache_index_m2c;
     bool create_destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,

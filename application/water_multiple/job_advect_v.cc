@@ -105,6 +105,7 @@ void JobAdvectV::Execute(nimbus::Parameter params,
   dbg(APP_LOG, "Execute the step in advect v job.");
   {
     //nimbus::Timer timer(std::string("advect_v_") + id().toString());
+    application::ScopeTimer scope_timer(name());
     driver->AdvectVImpl(this, da, dt);
   }
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);

@@ -108,6 +108,9 @@ namespace nimbus {
     Coord MaxCorner() const;
     Coord Delta() const;
 
+    bool NoneZeroArea() const;
+    void Union(const GeometricRegion& region);
+
     /* Increase the size of geometric region along each dimension and side. */
     void Enlarge(const int_dimension_t delta);
     void Enlarge(const Coord &delta);
@@ -123,7 +126,7 @@ namespace nimbus {
     virtual bool Intersects(GeometricRegion* region) const;
     virtual bool Adjacent(GeometricRegion* region) const;
     virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
-    virtual bool IsEqual(GeometricRegion* region) const;
+    virtual bool IsEqual(const GeometricRegion* region) const;
 
     /* Largest common rectangular region shared by 2 regions. */
     static GeometricRegion GetIntersection(const GeometricRegion &region1,

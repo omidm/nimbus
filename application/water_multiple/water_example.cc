@@ -72,6 +72,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_pressure = NULL;
     cache_colors = NULL;
     cache_divergence = NULL;
+    cache_matrix_a = NULL;
+    cache_index_m2c = NULL;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -115,6 +117,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_pressure = cache->pressure;
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
+    cache_matrix_a = cache->matrix_a;
+    cache_index_m2c = cache->index_m2c;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -159,6 +163,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_pressure = cache->pressure;
     cache_colors = cache->color;
     cache_divergence = cache->divergence;
+    cache_matrix_a = cache->matrix_a;
+    cache_index_m2c = cache->index_m2c;
     create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -543,6 +549,15 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
         sd->set_scalar(particle_levelset.last_unique_particle_id);
     }
 
+    Data* data_temp = application::GetTheOnlyData(
+        job, std::string(APP_DT), da, application::WRITE_ACCESS);
+    if (data_temp) {
+      nimbus::ScalarData<float>* data_real =
+          dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+      data_real->set_scalar(dt_buffer);
+      dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", APP_DT, dt_buffer);
+    }
+
     // psi_d.
     const std::string psi_d_string = std::string(APP_PSI_D);
     if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::WRITE_ACCESS)
@@ -677,6 +692,7 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
 template<class TV> void WATER_EXAMPLE<TV>::
 Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    application::ScopeTimer scope_timer("saving_in");
     if (!(use_cache && application::kUseCache)) {
       Save_To_Nimbus_No_Cache(job, da, frame);
       return;
@@ -748,6 +764,16 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
           nimbus::ScalarData<int> *sd = static_cast<nimbus::ScalarData<int> * >(d);
           sd->set_scalar(particle_levelset.last_unique_particle_id);
       }
+
+      Data* data_temp = application::GetTheOnlyData(
+          job, std::string(APP_DT), da, application::WRITE_ACCESS);
+      if (data_temp) {
+        nimbus::ScalarData<float>* data_real =
+            dynamic_cast<nimbus::ScalarData<float>*>(data_temp);
+        data_real->set_scalar(dt_buffer);
+        dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", APP_DT, dt_buffer);
+      }
+
       // ** there should not be any accesses to particle levelset after this **
       if (cache_ple) {
           if (data_config.GetFlag(DataConfig::SHARED_PARTICLES_FLUSH)) {
@@ -803,7 +829,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         cache_psi_n = NULL;
     }
 
-    // TODO(addcache).
     // pressure.
     if (cache_pressure) {
       T_SCALAR_ARRAY* pressure = cache_pressure->data();
@@ -828,19 +853,27 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cache_divergence = NULL;
     }
 
-    // TODO(addcache) the following data translation is implemented by memcpy,
-    // caching might not be needed.
     typedef nimbus::Data Data;
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_MATRIX_A), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataSparseMatrix* data_real =
-            dynamic_cast<application::DataSparseMatrix*>(data_temp);
-        data_real->SaveToNimbus(laplace_solver_wrapper.A_array(1));
-        dbg(APP_LOG, "Finish writing MATRIX_A.\n");
-      }
+      // TODO(quhang) swap rather than copy.
+      assert(cache_matrix_a);
+      assert(cache_matrix_a->data() != NULL);
+      cache_matrix_a->data()->C = NULL;
+      cache_matrix_a->data()->Reset();
+      *(cache_matrix_a->data()) = laplace_solver_wrapper.A_array(1);
+      cm->ReleaseAccess(cache_matrix_a);
+      cache_matrix_a = NULL;
     }
+    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+      // TODO(quhang) swap rather than copy.
+      assert(cache_index_m2c);
+      *(cache_index_m2c->data()) =
+          laplace_solver_wrapper.matrix_index_to_cell_index_array(1);
+      cm->ReleaseAccess(cache_index_m2c);
+      cache_index_m2c = NULL;
+    }
+    // TODO(addcache) the following data translation is implemented by memcpy,
+    // caching might not be needed.
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_VECTOR_B), da, application::WRITE_ACCESS);
@@ -860,17 +893,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
         data_real->SaveToNimbus(
             laplace_solver_wrapper.cell_index_to_matrix_index);
         dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->SaveToNimbus(
-            laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
-        dbg(APP_LOG, "Finish writing INDEX_M2C.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
@@ -1046,6 +1068,30 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
     }
     dbg(APP_LOG, "Finish translating particle id.\n");
 
+    // Calculate dt.
+    if (data_config.GetFlag(DataConfig::DT)) {
+        if (application::GetTranslatorData(
+                job, std::string(APP_DT), da, &pdv,
+                application::READ_ACCESS)) {
+        dbg(APP_LOG, "Reducing DT min(");
+        // TODO(quhang) maybe not safe. To be put the MAX float value.
+        dt_buffer = 1e6;
+        nimbus::PdiVector::const_iterator iter = pdv.begin();
+        for (; iter != pdv.end(); ++iter) {
+          const nimbus::PhysicalDataInstance* instance = *iter;
+          nimbus::ScalarData<float>* data_real =
+              dynamic_cast<nimbus::ScalarData<float>*>(instance->data());
+          float value = data_real->scalar();
+          dbg(APP_LOG, "%f ", value);
+          if (value < dt_buffer) {
+            dt_buffer = value;
+          }
+        }
+        dbg(APP_LOG, ") = %f.\n", dt_buffer);
+        }
+    }
+    dbg(APP_LOG, "Finish reduce dt.\n");
+
     // psi_d.
     const std::string psi_d_string = std::string(APP_PSI_D);
     if (application::GetTranslatorData(job, psi_d_string, da, &pdv, application::READ_ACCESS)
@@ -1158,6 +1204,7 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
 template<class TV> void WATER_EXAMPLE<TV>::
 Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int frame)
 {
+    application::ScopeTimer scope_timer("loading_in");
     if (!(use_cache && application::kUseCache)) {
       Load_From_Nimbus_No_Cache(job, da, frame);
       return;
@@ -1222,6 +1269,30 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
     }
     dbg(APP_LOG, "Finish translating particle id.\n");
 
+    // Calculate dt.
+    if (data_config.GetFlag(DataConfig::DT)) {
+        if (application::GetTranslatorData(
+                job, std::string(APP_DT), da, &pdv,
+                application::READ_ACCESS)) {
+        dbg(APP_LOG, "Reducing DT min(");
+        // TODO(quhang) maybe not safe. To be put the MAX float value.
+        dt_buffer = 1e6;
+        nimbus::PdiVector::const_iterator iter = pdv.begin();
+        for (; iter != pdv.end(); ++iter) {
+          const nimbus::PhysicalDataInstance* instance = *iter;
+          nimbus::ScalarData<float>* data_real =
+              dynamic_cast<nimbus::ScalarData<float>*>(instance->data());
+          float value = data_real->scalar();
+          dbg(APP_LOG, "%f ", value);
+          if (value < dt_buffer) {
+            dt_buffer = value;
+          }
+        }
+        dbg(APP_LOG, ") = %f.\n", dt_buffer);
+        }
+    }
+    dbg(APP_LOG, "Finish reduce dt.\n");
+
     // psi_d.
     if (cache_psi_d)
     {
@@ -1254,19 +1325,21 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       T_SCALAR_ARRAY::Exchange_Arrays(*divergence, projection.laplace->f);
     }
 
+    typedef nimbus::Data Data;
+    if (cache_matrix_a) {
+      // TODO(quhang) matrix_a reading is not handled, because the only job that
+      // touches matrix_a is CONSTRUCT_MATRIX, which doesn't need to read.
+      // laplace_solver_wrapper.A_array(1) = *(cache_matrix_a->data());
+    }
+    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+      // TODO(quhang) index_m2c reading is not handled,
+      // because the only job that touches matrix_a is CONSTRUCT_MATRIX,
+      // which doesn't need to read.
+      // &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
+      //     *(cache_index_m2c->data());
+    }
     // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
     // cached.
-    typedef nimbus::Data Data;
-    if (data_config.GetFlag(DataConfig::MATRIX_A)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_MATRIX_A), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataSparseMatrix* data_real =
-            dynamic_cast<application::DataSparseMatrix*>(data_temp);
-        data_real->LoadFromNimbus(&laplace_solver_wrapper.A_array(1));
-        dbg(APP_LOG, "Finish reading MATRIX_A.\n");
-      }
-    }
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
@@ -1286,17 +1359,6 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         data_real->LoadFromNimbus(
             &laplace_solver_wrapper.cell_index_to_matrix_index);
         dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-      }
-    }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
-        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {

@@ -71,7 +71,6 @@ void JobProjectionLocalInitialize::Execute(
   InitConfig init_config;
   init_config.use_cache = true;
   T dt;
-  // TODO(quhang), process iteration number.
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
   LoadParameter(params_str, &init_config.frame, &init_config.time, &dt,
@@ -80,15 +79,20 @@ void JobProjectionLocalInitialize::Execute(
   DataConfig data_config;
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
-  data_config.SetFlag(DataConfig::VECTOR_B);
-  data_config.SetFlag(DataConfig::MATRIX_A);
-  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
-  data_config.SetFlag(DataConfig::MATRIX_C);
-  data_config.SetFlag(DataConfig::VECTOR_TEMP);
-  data_config.SetFlag(DataConfig::VECTOR_P);
-  data_config.SetFlag(DataConfig::VECTOR_Z);
+
+  data_config.SetFlag(DataConfig::VECTOR_PRESSURE);
   data_config.SetFlag(DataConfig::PRESSURE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
+
+  data_config.SetFlag(DataConfig::VECTOR_TEMP);
+  data_config.SetFlag(DataConfig::MATRIX_A);
+  data_config.SetFlag(DataConfig::VECTOR_B);
+  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
+  data_config.SetFlag(DataConfig::MATRIX_C);
+
+  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_Z);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);
@@ -102,7 +106,10 @@ void JobProjectionLocalInitialize::Execute(
 
   projection_driver.LoadFromNimbus(this, da);
 
-  projection_driver.LocalInitialize();
+  {
+    application::ScopeTimer scope_timer(name());
+    projection_driver.LocalInitialize();
+  }
 
   projection_driver.SaveToNimbus(this, da);
 

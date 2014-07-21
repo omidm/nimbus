@@ -130,6 +130,10 @@ void JobLoopIterationPartTwo::SpawnJobs(
   std::vector<nimbus::job_id_t> write_output_job_ids;
   GetNewJobID(&write_output_job_ids, write_output_job_num);
 
+  int calculate_dt_job_num = kAppPartNum;
+  std::vector<nimbus::job_id_t> calculate_dt_job_ids;
+  GetNewJobID(&calculate_dt_job_ids, calculate_dt_job_num);
+
   /*
    * Spawning extrapolate phi stage over multiple workers.
    */
@@ -178,19 +182,38 @@ void JobLoopIterationPartTwo::SpawnJobs(
   job_query.CommitStagedJobs();
 
   if (done) {
-    dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
+    dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop done.\n");
   } else {
-    dbg(APP_LOG, "[CONTROL FLOW] Loop not done.\n");
+    dbg(APP_LOG, "[CONTROL FLOW] Second part, Loop not done.\n");
   }
+  dbg(APP_LOG, "[CONTROL FLOW] Second part, Frame=%d, Time=%f, dt=%f\n",
+      frame, time, dt);
 
   if (!done) {
 
     // Spawning loop iteration for next iteration.
 
-    read.clear();
-    LoadLogicalIdsInSet(this, &read, kRegW3Outer[0], APP_FACE_VEL,
-                        APP_FACE_VEL_GHOST, APP_PHI, NULL);
+    for (int i = 0; i < calculate_dt_job_num; ++i) {
+      read.clear();
+      LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_FACE_VEL,
+                          APP_PHI, NULL);
+      write.clear();
+      LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DT, NULL);
 
+      nimbus::Parameter dt_params;
+      std::string dt_str;
+      SerializeParameter(frame, time, 0, global_region,
+                         kRegY2W3Central[i], &dt_str);
+      dt_params.set_ser_data(SerializedData(dt_str));
+      job_query.StageJob(CALCULATE_DT, calculate_dt_job_ids[i],
+                         read, write,
+                         dt_params, true);
+    }
+    job_query.CommitStagedJobs();
+
+    read.clear();
+    LoadLogicalIdsInSet(this, &read, kRegW3Central[0], APP_DT, NULL);
+    write.clear();
     nimbus::Parameter iter_params;
     std::string iter_str;
     SerializeParameter(frame, time + dt, global_region, &iter_str);

@@ -86,7 +86,6 @@ void JobProjectionStepOne::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RHO);
   // VECTOR_TEMP only used as a temp variable.
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
-  data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(40);
@@ -99,20 +98,34 @@ void JobProjectionStepOne::Execute(
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_STEP_ONE starts (iteration=%d).\n", iteration);
 
+  Log log_timer;
+
+  log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, loading time:%f.\n",
+      log_timer.timer());
 
-  // Read MATRIX_C, VECTOR_B, VECTOR_Z.
-  // Write VECTOR_Z, PROJECTION_LOCAL_RHO.
-  dbg(APP_LOG, "Do precondition.\n");
-  projection_driver.DoPrecondition();
-  dbg(APP_LOG, "Calculate local rho precondition.\n");
-  dbg(APP_LOG, "size of vector z%d, size of vector b %d.\n",
-      (int) projection_driver.projection_data.z_interior.n,
-      (int) projection_driver.projection_data.b_interior.n
-      );
-  projection_driver.CalculateLocalRho();
+  {
+    application::ScopeTimer scope_timer(name());
+    log_timer.StartTimer();
+    // Read MATRIX_C, VECTOR_B, VECTOR_Z.
+    // Write VECTOR_Z, PROJECTION_LOCAL_RHO.
+    dbg(APP_LOG, "Do precondition.\n");
+    projection_driver.DoPrecondition();
+    dbg(APP_LOG, "Calculate local rho precondition.\n");
+    dbg(APP_LOG, "size of vector z%d, size of vector b %d.\n",
+        (int) projection_driver.projection_data.z_interior.n,
+        (int) projection_driver.projection_data.b_interior.n
+       );
+    projection_driver.CalculateLocalRho();
+    dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, calculation time:%f.\n",
+        log_timer.timer());
+  }
 
+  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_ONE, saving time:%f.\n",
+      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_ONE job\n");
 }

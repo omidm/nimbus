@@ -76,6 +76,24 @@ Create_Submatrix(const INTERVAL<int>& rows)
     //std::cout<<"Offsets "<<submatrix->offsets<<std::endl;
     return submatrix;
 }
+template<class T> void SPARSE_MATRIX_FLAT_NXN<T>::
+Nimbus_Create_Submatrix(const INTERVAL<int>& rows,
+                        SPARSE_MATRIX_FLAT_NXN<T>* submatrix)
+{
+    submatrix->Reset();
+    int entries=0;for(int index=offsets(rows.min_corner);index<offsets(rows.max_corner+1);index++)if(rows.Lazy_Inside(A(index).j)) entries++;
+    // SPARSE_MATRIX_FLAT_NXN<T>* submatrix=new SPARSE_MATRIX_FLAT_NXN<T>();
+    submatrix->n=rows.Size()+1;
+    submatrix->offsets.Resize(submatrix->n+1);
+    submatrix->A.Resize(entries);
+    int next_index=1,shift=rows.min_corner-1;
+    for(int i=1;i<=submatrix->n;i++){
+        submatrix->offsets(i)=next_index;
+        for(int old_index=offsets(i+shift);old_index<offsets(i+shift+1);old_index++)if(rows.Lazy_Inside(A(old_index).j)){
+            submatrix->A(next_index).j=A(old_index).j-shift;submatrix->A(next_index).a=A(old_index).a;next_index++;}}
+    submatrix->offsets(submatrix->n+1)=next_index;
+    //std::cout<<"Offsets "<<submatrix->offsets<<std::endl;
+}
 //#####################################################################
 // Function Set_Row_Lengths
 //#####################################################################

@@ -82,10 +82,39 @@ void GetAppCacheObjects(
   nimbus::GeometricRegion array_reg_outer_3(array_reg.NewEnlarged(kGhostNum));
   nimbus::GeometricRegion array_reg_outer_7(array_reg.NewEnlarged(7));
   nimbus::GeometricRegion array_reg_outer_8(array_reg.NewEnlarged(8));
-  nimbus::GeometricRegion array_reg_thin_outer(array_reg.NewEnlarged(1));
 
   nimbus::CacheManager *cm = job.GetCacheManager();
 
+  // matrix_a.
+  if (data_config.GetFlag(DataConfig::MATRIX_A)) {
+    nimbus::DataArray read, write;
+    const std::string matrix_a_string = std::string(APP_MATRIX_A);
+    GetReadData(job, matrix_a_string, da, &read);
+    GetWriteData(job, matrix_a_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg,
+            write, array_reg,
+            kCacheSparseMatrixA, array_reg,
+            nimbus::cache::EXCLUSIVE);
+    cache->matrix_a = dynamic_cast<CacheSparseMatrix*>(cache_var);
+    assert(cache->matrix_a != NULL);
+  }
+  // index_m2c.
+  if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
+    nimbus::DataArray read, write;
+    const std::string index_m2c_string = std::string(APP_INDEX_M2C);
+    GetReadData(job, index_m2c_string, da, &read);
+    GetWriteData(job, index_m2c_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg,
+            write, array_reg,
+            kCacheArrayM2C, array_reg,
+            nimbus::cache::EXCLUSIVE);
+    cache->index_m2c = dynamic_cast<CacheArrayM2C*>(cache_var);
+    assert(cache->index_m2c != NULL);
+  }
   // pressure.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
     nimbus::DataArray read, write;
@@ -94,9 +123,9 @@ void GetAppCacheObjects(
     GetWriteData(job, pressure_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            kCachePressure, array_reg_thin_outer,
+            read, array_reg_outer_1,
+            write, array_reg_outer_1,
+            kCachePressure, array_reg_outer_1,
             nimbus::cache::EXCLUSIVE);
     cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->pressure != NULL);
@@ -109,9 +138,9 @@ void GetAppCacheObjects(
     GetWriteData(job, color_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            kCacheColors, array_reg_thin_outer,
+            read, array_reg_outer_1,
+            write, array_reg_outer_1,
+            kCacheColors, array_reg_outer_1,
             nimbus::cache::EXCLUSIVE);
     cache->color = dynamic_cast<CacheScalarArray<int>*>(cache_var);
     assert(cache->color != NULL);
@@ -124,9 +153,9 @@ void GetAppCacheObjects(
     GetWriteData(job, divergence_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            kCacheDivergence, array_reg_thin_outer,
+            read, array_reg_outer_1,
+            write, array_reg_outer_1,
+            kCacheDivergence, array_reg_outer_1,
             nimbus::cache::EXCLUSIVE);
     cache->divergence = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->divergence != NULL);
@@ -306,24 +335,35 @@ bool InitializeExampleAndDriver(
     const nimbus::DataArray& da,
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
-  static Log init_log(std::string("physbam-init-log"));
 
-#ifdef PHYSBAM_INIT_LOG
-  {
-    std::stringstream msg;
-    msg << "~~~ App InitializeExampleAndDriver start : " << init_log.GetTime();
-    init_log.WriteToFile(msg.str());
-  }
-#endif
+//   static Log init_log(std::string("physbam-init-log"));
+//
+// #ifdef PHYSBAM_INIT_LOG
+//   {
+//     std::stringstream msg;
+//     msg << "~~~ App InitializeExampleAndDriver start : " << init_log.GetTime();
+//     init_log.WriteToFile(msg.str());
+//   }
+// #endif
 
 
   dbg(APP_LOG, "Enter initialize_example_driver.\n");
   dbg(APP_LOG, "Global region: %s\n", init_config.global_region.toString().c_str());
   dbg(APP_LOG, "Local region: %s\n", init_config.local_region.toString().c_str());
   {
+    double cache_lookup_time = 0;
+    double init_example_time = 0;
+    struct timespec start_time;
+    struct timespec t;
+    clock_gettime(CLOCK_REALTIME, &start_time);
     if (init_config.use_cache && kUseCache) {
       AppCacheObjects cache;
       GetAppCacheObjects(init_config, data_config, *job, da, &cache);
+      clock_gettime(CLOCK_REALTIME, &t);
+      cache_lookup_time += difftime(t.tv_sec, start_time.tv_sec)
+          + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+      clock_gettime(CLOCK_REALTIME, &start_time);
       if (cache.ple)
         example = new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())),
                                                  &cache,
@@ -357,8 +397,14 @@ bool InitializeExampleAndDriver(
         GridToRange(init_config.global_region, init_config.local_region));
     PhysBAM::WaterSources::Add_Source(example);
     example->data_config.Set(data_config);
+    clock_gettime(CLOCK_REALTIME, &t);
+    init_example_time += difftime(t.tv_sec, start_time.tv_sec)
+        + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+    dbg(APP_LOG, "\n[TIME] Job cache_loopup, %f seconds.\n", cache_lookup_time);
+    dbg(APP_LOG, "\n[TIME] Job init_example, %f seconds.\n", init_example_time);
   }
   {
+    application::ScopeTimer scope_timer("init_driver");
     driver= new PhysBAM::WATER_DRIVER<TV>(*example);
     // parameters
     driver->init_phase = init_config.init_phase;
@@ -377,13 +423,13 @@ bool InitializeExampleAndDriver(
 
   dbg(APP_LOG, "Exit initialize_example_driver.\n");
 
-#ifdef PHYSBAM_INIT_LOG
-  {
-    std::stringstream msg;
-    msg << "~~~ App InitializeExampleAndDriver end : " << init_log.GetTime();
-    init_log.WriteToFile(msg.str());
-  }
-#endif
+// #ifdef PHYSBAM_INIT_LOG
+//   {
+//     std::stringstream msg;
+//     msg << "~~~ App InitializeExampleAndDriver end : " << init_log.GetTime();
+//     init_log.WriteToFile(msg.str());
+//   }
+// #endif
 
   return true;
 }
@@ -391,6 +437,7 @@ bool InitializeExampleAndDriver(
 void DestroyExampleAndDriver(
     PhysBAM::WATER_EXAMPLE<TV>*& example,
     PhysBAM::WATER_DRIVER<TV>*& driver) {
+  application::ScopeTimer scope_timer("delete_example_and_driver");
   if (example->create_destroy_ple)
     delete &example->particle_levelset_evolution;
   delete example;

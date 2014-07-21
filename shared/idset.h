@@ -43,6 +43,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/unordered_set.hpp>
+#include <algorithm>
 #include <sstream> // NOLINT
 #include <iostream> // NOLINT
 #include <string>
@@ -82,6 +83,7 @@ class IDSet {
   virtual void clear();
   virtual bool contains(T entry) const;
   virtual int size() const;
+  virtual void swap(IDSet<T>& idset);
 
   IDSetIter begin();
   IDSetIter end();

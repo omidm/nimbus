@@ -81,7 +81,6 @@ namespace application {
       nimbus::Parameter params,
       const nimbus::DataArray& da) {
     dbg(APP_LOG, "Executing loop iteration job\n");
-    //nimbus::Timer::Print("----New iteration starts----");
 
     // Get parameters: frame, time
     InitConfig init_config;
@@ -106,7 +105,7 @@ namespace application {
     init_config.set_boundary_condition = true;
     init_config.use_cache = true;
     DataConfig data_config;
-    data_config.SetAll();
+    data_config.SetFlag(DataConfig::DT);
     InitializeExampleAndDriver(init_config, data_config,
                                this, da, example, driver);
     *thread_queue_hook() = example->nimbus_thread_queue;
@@ -114,49 +113,26 @@ namespace application {
     // check whether the frame is done or not
     bool done = false;
     T target_time = example->Time_At_Frame(driver->current_frame+1);
-    T dt = example->cfl * example->incompressible.CFL(example->face_velocities);
-    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", dt);
-    T temp_dt =
-        example->particle_levelset_evolution.cfl_number
-        * example->particle_levelset_evolution.particle_levelset.levelset.CFL(
-            example->face_velocities);
-    dbg(APP_LOG, "[CONTROL FLOW] dt=%f\n", temp_dt);
-    if (temp_dt < dt) {
-      dt = temp_dt;
-    }
+    T dt = example->dt_buffer;
     if (time + dt >= target_time) {
       dt = target_time - time;
       done = true;
     } else {
-      if (time + 2*dt >= target_time)
-        dt = .5 * (target_time-time);
+      if (time + 2 * dt >= target_time)
+        dt = .5 * (target_time - time);
     }
 
     if (done) {
-      dbg(APP_LOG, "[CONTROL FLOW] Loop done.\n");
+      dbg(APP_LOG, "[CONTROL FLOW] First part, Loop done.\n");
     } else {
-      dbg(APP_LOG, "[CONTROL FLOW] Loop not done.\n");
+      dbg(APP_LOG, "[CONTROL FLOW] First part, Loop not done.\n");
     }
-    dbg(APP_LOG, "Frame=%d, Time=%f, dt=%f\n", frame, time, dt);
+    dbg(APP_LOG, "[CONTROL FLOW] First part, Frame=%d, Time=%f, dt=%f\n",
+        frame, time, dt);
 
-    // spawn the jobs to compute the frame, depending on the
-    // level of granularity we will have different sub jobs.
-    switch (GRANULARITY_STATE) {
-      /*
-      case ONE_JOB:
-        SpawnWithOneJobGranularity(done, frame, time, dt, da,
-                                   init_config.global_region);
-        break;
-        */
-      case BREAK_ALL_SUPER_JOBS:
-        SpawnWithBreakAllGranularity(done, frame, time, dt, da,
-                                     init_config.global_region);
-        break;
-      default:
-        dbg(APP_LOG, "ERROR: The granularity state is not defined.");
-        exit(-1);
-        break;
-    }
+    // done flag no more matters.
+    SpawnWithBreakAllGranularity(false, init_config.frame, init_config.time,
+                                 dt, da, init_config.global_region);
 
     // Free resources.
     example->Save_To_Nimbus(this, da, frame+1);
@@ -167,9 +143,6 @@ namespace application {
   void JobLoopIteration::SpawnWithBreakAllGranularity(
       bool done, int frame, T time, T dt, const nimbus::DataArray& da,
       const GeometricRegion& global_region) {
-    struct timeval start_time;
-    gettimeofday(&start_time, NULL);
-
     nimbus::JobQuery job_query(this);
     dbg(APP_LOG, "Loop frame is spawning super job 1, 2, 3 for frame %i.\n", frame);
 
@@ -249,6 +222,8 @@ namespace application {
     GetNewJobID(&reincorporate_particles_job_ids, reincorporate_particles_job_num);
     bool reincorporate_particles_single = (reincorporate_particles_job_num == 1);
 
+    struct timeval start_time;
+    gettimeofday(&start_time, NULL);
     /*
      * Spawning UPDATE_GHOST_VELOCITIES stage over two workrs
      */
@@ -266,6 +241,8 @@ namespace application {
           update_ghost_velocities_job_ids[i],
           read, write,
           s11_params, true);
+      job_query.Hint(update_ghost_velocities_job_ids[i],
+                     kRegY2W3Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -288,6 +265,8 @@ namespace application {
           first_extrapolate_phi_job_ids[i],
           read, write,
           s_extra_params, true);
+      job_query.Hint(first_extrapolate_phi_job_ids[i],
+                     kRegY2W8Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -310,6 +289,7 @@ namespace application {
           advect_phi_job_ids[i],
           read, write,
           s12_params, true);
+      job_query.Hint(advect_phi_job_ids[i], kRegY2W8Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -361,6 +341,7 @@ namespace application {
                 step_particles_job_ids[sj],
                 read, write,
                 step_particles_params, true);
+        job_query.Hint(step_particles_job_ids[sj], kRegY2W3Central[sj]);
     }
 
     job_query.CommitStagedJobs();
@@ -411,6 +392,8 @@ namespace application {
                     step_particles_sync_job_ids[i],
                     read, write,
                     sync_particles_params, true);
+            job_query.Hint(step_particles_sync_job_ids[i],
+                           kRegY2W3Central[i]);
         }
     }
 
@@ -462,6 +445,8 @@ namespace application {
             advect_removed_particles_job_ids[sj],
             read, write,
             advect_rem_particles_params, true);
+        job_query.Hint(advect_removed_particles_job_ids[sj],
+                       kRegY2W3Central[sj]);
     }
 
     job_query.CommitStagedJobs();
@@ -486,6 +471,8 @@ namespace application {
           advect_v_job_ids[i],
           read, write,
           s15_params, true);
+      job_query.Hint(advect_v_job_ids[i],
+                     kRegY2W3Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -511,6 +498,8 @@ namespace application {
                            temp_job_ids[i],
                            read, write,
                            temp_params, true);
+        job_query.Hint(temp_job_ids[i],
+                       kRegY2W3Central[i]);
       }
       job_query.CommitStagedJobs();
     }
@@ -533,6 +522,8 @@ namespace application {
           apply_forces_job_ids[i],
           read, write,
           s16_params, true);
+      job_query.Hint(apply_forces_job_ids[i],
+                     kRegY2W3Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -559,6 +550,8 @@ namespace application {
                            temp_job_ids[i],
                            read, write,
                            temp_params, true);
+        job_query.Hint(temp_job_ids[i],
+                       kRegY2W3Central[i]);
       }
       job_query.CommitStagedJobs();
     }
@@ -610,6 +603,8 @@ namespace application {
             modify_levelset_part_one_job_ids[mj],
             read, write,
             modify_levelset_params, true);
+        job_query.Hint(modify_levelset_part_one_job_ids[mj],
+                       kRegY2W3Central[mj]);
     }
 
     job_query.CommitStagedJobs();
@@ -662,6 +657,8 @@ namespace application {
             modify_levelset_part_two_job_ids[mj],
             read, write,
             modify_levelset_params, true);
+        job_query.Hint(modify_levelset_part_two_job_ids[mj],
+                       kRegY2W3Central[mj]);
     }
 
     job_query.CommitStagedJobs();
@@ -684,6 +681,8 @@ namespace application {
           adjust_phi_job_ids[i],
           read, write,
           adjust_phi_params, true);
+      job_query.Hint(adjust_phi_job_ids[i],
+                     kRegY2W3Central[i]);
     }
 
     job_query.CommitStagedJobs();
@@ -734,6 +733,8 @@ namespace application {
             delete_particles_job_ids[dj],
             read, write,
             delete_particles_params, true);
+        job_query.Hint(delete_particles_job_ids[dj],
+                       kRegY2W3Central[dj]);
     }
 
     job_query.CommitStagedJobs();
@@ -784,6 +785,8 @@ namespace application {
             reincorporate_particles_job_ids[rj],
             read, write,
             reincorporate_particles_params, true);
+        job_query.Hint(reincorporate_particles_job_ids[rj],
+                       kRegY2W3Central[rj]);
     }
 
     job_query.CommitStagedJobs();
@@ -820,10 +823,7 @@ namespace application {
                     projection_main_params,
                     false, true);
     job_query.CommitStagedJobs();
-    if (time == 0) {
-      dbg(APP_LOG, "Print job dependency figure.\n");
-      job_query.GenerateDotFigure("loop_iteration.dot");
-    }
+    job_query.PrintTimeProfile();
     {
       struct timeval t;
       gettimeofday(&t, NULL);
@@ -831,6 +831,10 @@ namespace application {
           .000001 * (static_cast<double>(t.tv_usec - start_time.tv_usec));
       dbg(APP_LOG, "\nThe query time spent in job LOOP_ITERATION is %f seconds.\n",
           time);
+    }
+    if (time == 0) {
+      dbg(APP_LOG, "Print job dependency figure.\n");
+      job_query.GenerateDotFigure("loop_iteration.dot");
     }
   }
 } // namespace application

@@ -170,9 +170,9 @@ void ScratchDataHelper::GetJobScratchData(Job *job,
                 GeometricRegion region(l[XCOORD], l[YCOORD], l[ZCOORD],
                                        ld[XCOORD], ld[YCOORD], ld[ZCOORD]);
                 job->GetCoveredLogicalObjects(&ldos, vertex_types_[n], &region);
-                dbg(DBG_WARN, "Getting data %s for region %s\n",
-                        vertex_types_[n].c_str(),
-                        region.toString().c_str());
+                // dbg(DBG_WARN, "Getting data %s for region %s\n",
+                //          vertex_types_[n].c_str(),
+                //          region.toString().c_str());
                 for (size_t s = 0; s < ldos.size(); s++)
                     ids->insert(ldos[s]->id());
                 n++;

@@ -41,6 +41,7 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_
 
+#include <time.h>
 #include <list>
 #include <stdarg.h>
 
@@ -185,6 +186,14 @@ namespace application {
         GeometricRegion* global_region,
         GeometricRegion* local_region,
         int* iteration);
+    class ScopeTimer {
+     public:
+      ScopeTimer(const std::string& name);
+      ~ScopeTimer();
+     private:
+      std::string name_;
+      struct timespec start_time_;
+    };
 } // namespace application
 
 #endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_APP_UTILS_H_

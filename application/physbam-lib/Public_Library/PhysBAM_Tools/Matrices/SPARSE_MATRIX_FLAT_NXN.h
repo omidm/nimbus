@@ -57,6 +57,8 @@ public:
     ~SPARSE_MATRIX_FLAT_NXN();
     SPARSE_MATRIX_FLAT_NXN& operator=(const SPARSE_MATRIX_FLAT_NXN& matrix);
     SPARSE_MATRIX_FLAT_NXN<T>* Create_Submatrix(const INTERVAL<int>& rows);
+    void Nimbus_Create_Submatrix(const INTERVAL<int>& rows,
+                      SPARSE_MATRIX_FLAT_NXN<T>* submatrix);
     void Set_Row_Lengths(const ARRAY<int>& lengths);
     int Find_Index(const int i,const int j) const;
     T& operator()(const int i,const int j);

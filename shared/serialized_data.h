@@ -42,7 +42,7 @@
 #define NIMBUS_SHARED_SERIALIZED_DATA_H_
 
 
-#include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 #include <list>
 #include <map>
 #include <string>
@@ -55,24 +55,24 @@ class SerializedData {
   public:
     SerializedData();
     explicit SerializedData(std::string str);
-    SerializedData(const boost::shared_ptr<char>& data_ptr, const size_t& size);
+    SerializedData(const boost::shared_array<char>& data_ptr, const size_t& size);
     SerializedData(const SerializedData& other);
     ~SerializedData();
 
     size_t size() const;
     char* data_ptr_raw() const;
-    boost::shared_ptr<char> data_ptr() const;
+    boost::shared_array<char> data_ptr() const;
 
     void set_size(size_t size);
     void set_data_ptr(char* ptr);
-    void set_data_ptr(boost::shared_ptr<char> ptr);
+    void set_data_ptr(boost::shared_array<char> ptr);
 
     bool Parse(const std::string& input);
     std::string toString();
     SerializedData& operator= (const SerializedData& right);
 
   private:
-    boost::shared_ptr<char> data_ptr_;
+    boost::shared_array<char> data_ptr_;
     size_t size_;
 };
 

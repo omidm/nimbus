@@ -53,15 +53,19 @@ namespace nimbus {
 
 HighResolutionTimer::HighResolutionTimer() {
   timer_map_ = new HighResolutionTimerMap;
+  pthread_mutex_init(&lock_, 0);
 }
 
 HighResolutionTimer::~HighResolutionTimer() {
   delete timer_map_;
+  pthread_mutex_destroy(&lock_);
 }
 
 void HighResolutionTimer::Start(job_id_t id) {
   assert(timer_map_ != NULL);
+  pthread_mutex_lock(&lock_);
   HighResolutionTimerState& state = (*timer_map_)[id];
+  pthread_mutex_unlock(&lock_);
   if (!state.on) {
 #ifdef __MACH__  // OS X does not have clock_gettime, use clock_get_time
     clock_serv_t cclock;
@@ -94,7 +98,9 @@ double HighResolutionTimer::Stop(job_id_t id) {
   clock_gettime(CLOCK_REALTIME, &end_time);
 #endif
 
+  pthread_mutex_lock(&lock_);
   HighResolutionTimerState& state = (*timer_map_)[id];
+  pthread_mutex_unlock(&lock_);
   assert(state.on);
   state.on = false;
   return Diff(&state.start_time, &end_time);
