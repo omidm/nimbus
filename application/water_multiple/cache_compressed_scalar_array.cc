@@ -33,7 +33,7 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
 #include <string>
@@ -46,6 +46,7 @@
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
+/*
 namespace application {
 
 template<class T, class TS> CacheCompressedScalarArray<T, TS>::
@@ -115,3 +116,4 @@ WriteFromCache(const nimbus::DataArray &write_set,
 template class CacheCompressedScalarArray<float>;
 
 } // namespace application
+*/

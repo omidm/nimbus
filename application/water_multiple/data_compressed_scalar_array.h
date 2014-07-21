@@ -51,7 +51,7 @@ namespace application {
 template<typename T> class DataCompressedScalarArray
     : public nimbus::PhysBAMDataWithMeta {
  public:
-  explicit DataCompressedScalarArray(std::string n);
+  explicit DataCompressedScalarArray(std::string name);
   virtual nimbus::Data* Clone();
   virtual void Create();
 };

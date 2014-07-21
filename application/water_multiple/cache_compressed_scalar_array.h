@@ -49,6 +49,7 @@
 
 namespace application {
 
+/*
 template<class T>
 class CacheCompressedScalarArray : public nimbus::CacheVar {
   typedef typename PhysBAM::VECTOR<TS, 3> TV;
@@ -93,6 +94,7 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   // should maintain a pointer to INDEX_M2C.
 }; // class CacheCompressedScalarArray
 
+*/
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_COMPRESSED_SCALAR_ARRAY_H_
