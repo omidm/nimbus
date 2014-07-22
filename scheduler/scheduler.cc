@@ -68,15 +68,17 @@ Scheduler::~Scheduler() {
 void Scheduler::Run() {
   Log::log_PrintLine("Running the Scheduler");
 
-  SetupWorkerInterface();
+
+
+  /*
+   * First data manager should be instantiated then job manager, because of
+   * ldo_map pointer that job manager needs to get from data manager.  Also
+   * load balancer is set up after both of them since it needs a pointer to job
+   * manager and data manager. It also needs a pointer to the server.
+   */
 
   // SetupUserInterface();
-
-  // First data manager should be instantiated then job manager, because of
-  // ldo_map pointer that job manager needs to get from data manager.
-  // Also load balancer is set up after both of them since it needs a pointer
-  // to job manager and data manager.
-
+  SetupWorkerInterface();
   SetupDataManager();
   SetupJobManager();
   SetupLoadBalancer();
@@ -253,6 +255,7 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
         ++registered_worker_num_;
         dbg(DBG_SCHED, "Registered new worker, id: %lu IP: %s port: %lu.\n",
             (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port());
+        load_balancer_->NotifyRegisteredWorker(*iter);
       }
       break;
     }

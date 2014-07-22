@@ -186,5 +186,16 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 }
 
 
+void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
+  worker_id_t worker_id = worker->worker_id();
+  WorkerMapIter iter = worker_map_.find(worker_id);
+  if (iter == worker_map_.end()) {
+    worker_map_[worker_id] = worker;
+  } else {
+    dbg(DBG_ERROR, "ERROR: LoadBalancer: worker with the same id %lu has already been registered.\n", // NOLINT
+        worker_id);
+  }
+}
+
 
 }  // namespace nimbus

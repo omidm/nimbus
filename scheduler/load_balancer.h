@@ -64,7 +64,9 @@ namespace nimbus {
   class LoadBalancer {
   public:
     typedef std::map<worker_id_t, GeometricRegion> RegionMap;
+    typedef RegionMap::iterator RegionMapIter;
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
+    typedef WorkerMap::iterator WorkerMapIter;
     typedef std::map<job_id_t, JobProfile*> JobHistory;
 
     LoadBalancer();
@@ -84,6 +86,8 @@ namespace nimbus {
     void NotifyJobAssignment(const JobEntry *job, const SchedulerWorker* worker);
 
     void NotifyJobDone(const JobEntry *job);
+
+    void NotifyRegisteredWorker(SchedulerWorker *worker);
 
 
   private:
