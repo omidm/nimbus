@@ -51,6 +51,7 @@
 #include "application/smoke/job_main.h"
 #include "application/smoke/job_names.h"
 #include "application/smoke/projection/job_projection_main.h"
+#include "application/smoke/projection/job_projection_transform_pressure.h"
 #include "application/smoke/projection/job_projection_calculate_boundary_condition_part_one.h"
 #include "application/smoke/projection/job_projection_calculate_boundary_condition_part_two.h"
 #include "application/smoke/projection/job_projection_construct_matrix.h"

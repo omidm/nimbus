@@ -79,6 +79,7 @@ bool DataSparseMatrix::SaveToNimbus(
 bool DataSparseMatrix::LoadFromNimbus(
     PhysBAM::SPARSE_MATRIX_FLAT_NXN<float>* matrix) {
   assert(matrix != NULL);
+  matrix->C = NULL;
   char* pointer = buffer();
   assert(pointer != NULL);
   const Header &header = *(reinterpret_cast<const Header*>(pointer));

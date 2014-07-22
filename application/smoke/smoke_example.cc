@@ -546,6 +546,9 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     if (data_config.GetFlag(DataConfig::MATRIX_A)) {
       // TODO(quhang) swap rather than copy.
       assert(cache_matrix_a);
+      assert(cache_matrix_a->data() != NULL);
+      cache_matrix_a->data()->C = NULL;
+      cache_matrix_a->data()->Reset();
       *(cache_matrix_a->data()) = laplace_solver_wrapper.A_array(1);
       cm->ReleaseAccess(cache_matrix_a);
       cache_matrix_a = NULL;

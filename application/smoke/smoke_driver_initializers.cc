@@ -69,8 +69,11 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
 	example.domain_boundary(i)(2) = true;
       }
 
-      // example.boundary = &example.boundary_scalar;
-      example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
+      if (example.nimbus_thread_queue) {
+	example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
+      } else {
+	example.boundary = &example.boundary_scalar;
+      }
 
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
@@ -142,8 +145,11 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
 	example.domain_boundary(i)(2) = true;
       }
 
-      // example.boundary = &example.boundary_scalar;
-      example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
+      if (example.nimbus_thread_queue) {
+        example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
+      } else {
+        example.boundary = &example.boundary_scalar;
+      }
 
       VECTOR<VECTOR<bool, 2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));
@@ -190,8 +196,11 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 	example.domain_boundary(i)(2) = true;
       }
 
-      example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
-      //example.boundary = &example.boundary_scalar;
+      if (example.nimbus_thread_queue) {
+        example.boundary=new BOUNDARY_THREADED<GRID<TV> >(*example.nimbus_thread_queue,example.boundary_scalar);
+      } else {
+        example.boundary = &example.boundary_scalar;
+      }
 
       VECTOR<VECTOR<bool,2>, TV::dimension> constant_extrapolation;
       constant_extrapolation.Fill(VECTOR<bool, 2>::Constant_Vector(true));

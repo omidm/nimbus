@@ -86,7 +86,6 @@ void JobProjectionStepOne::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RHO);
   // VECTOR_TEMP only used as a temp variable.
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
-  data_config.SetFlag(DataConfig::INDEX_M2C);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(1000);

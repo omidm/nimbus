@@ -192,6 +192,10 @@ namespace application {
         // MATRIX_C.
         dbg(APP_LOG, "Registering %s\n", APP_MATRIX_C);
         RegisterData(APP_MATRIX_C, new DataSparseMatrix(APP_MATRIX_C));
+	// VECTOR_PRESSURE.
+	dbg(APP_LOG, "Registering %s\n", APP_VECTOR_PRESSURE);
+	RegisterData(APP_VECTOR_PRESSURE,
+		     new DataRawVectorNd(APP_VECTOR_PRESSURE));
         // VECTOR_Z.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
         RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
@@ -203,6 +207,10 @@ namespace application {
 	dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_LINEAR_FORMAT);
 	RegisterData(APP_VECTOR_P_LINEAR_FORMAT,
 		     new DataRawVectorNd(APP_VECTOR_P_LINEAR_FORMAT));
+	// VECTOR_P_META_FORMAT.
+	dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
+	RegisterData(APP_VECTOR_P_META_FORMAT,
+		     new DataCompressedScalarArray<float>(APP_VECTOR_P_META_FORMAT));
         // VECTOR_TEMP.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_TEMP);
         RegisterData(APP_VECTOR_TEMP, new DataRawVectorNd(APP_VECTOR_TEMP));
@@ -222,6 +230,8 @@ namespace application {
         RegisterJob(WRITE_OUTPUT, new JobWriteOutput(this));
 
         RegisterJob(PROJECTION_MAIN, new JobProjectionMain(this));
+	RegisterJob(PROJECTION_TRANSFORM_PRESSURE,
+		    new JobProjectionTransformPressure(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_ONE,
                     new JobProjectionCalculateBoundaryConditionPartOne(this));
         RegisterJob(PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO,

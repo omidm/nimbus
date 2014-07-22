@@ -33,23 +33,20 @@
  */
 
 /*
- * The first step of projection iteration, which does precondition and
- * calculates parameter rho.
- * Notice that vector_temp is only a temporary variable and not transmitted.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
-#define NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
+#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_TRANSFORM_PRESSURE_H_
+#define NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_TRANSFORM_PRESSURE_H_
 
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobProjectionStepOne : public nimbus::Job {
+class JobProjectionTransformPressure : public nimbus::Job {
  public:
-  explicit JobProjectionStepOne(nimbus::Application *app);
+  explicit JobProjectionTransformPressure(nimbus::Application *app);
   virtual void Execute(nimbus::Parameter params,
                        const nimbus::DataArray& da);
   virtual nimbus::Job* Clone();
@@ -57,4 +54,4 @@ class JobProjectionStepOne : public nimbus::Job {
 
 }  // namespace application
 
-#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
+#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_TRANSFORM_PRESSURE_H_

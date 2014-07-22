@@ -33,28 +33,29 @@
  */
 
 /*
- * The first step of projection iteration, which does precondition and
- * calculates parameter rho.
- * Notice that vector_temp is only a temporary variable and not transmitted.
+ * The scalar array is stored in indexing form. It stores the indexes and the
+ * values of useful cells, rather than storing the values of all the cells with
+ * implicit indexing.
  *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
-#define NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
+#ifndef NIMBUS_APPLICATION_SMOKE_DATA_COMPRESSED_SCALAR_ARRAY_H_
+#define NIMBUS_APPLICATION_SMOKE_DATA_COMPRESSED_SCALAR_ARRAY_H_
 
+#include "data/physbam/physbam_data_with_meta.h"
 #include "shared/nimbus.h"
 
 namespace application {
 
-class JobProjectionStepOne : public nimbus::Job {
+template<typename T> class DataCompressedScalarArray
+    : public nimbus::PhysBAMDataWithMeta {
  public:
-  explicit JobProjectionStepOne(nimbus::Application *app);
-  virtual void Execute(nimbus::Parameter params,
-                       const nimbus::DataArray& da);
-  virtual nimbus::Job* Clone();
+  explicit DataCompressedScalarArray(std::string name);
+  virtual nimbus::Data* Clone();
+  virtual void Create();
 };
 
-}  // namespace application
+} // namespace application
 
-#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
+#endif  // NIMBUS_APPLICATION_SMOKE_DATA_COMPRESSED_SCALAR_ARRAY_H_

@@ -42,6 +42,7 @@
 #include "application/smoke/data_face_array.h"
 #include "application/smoke/data_names.h"
 #include "application/smoke/data_scalar_array.h"
+#include "application/smoke/data_compressed_scalar_array.h"
 #include "application/smoke/projection/data_raw_array_m2c.h"
 #include "application/smoke/projection/data_raw_grid_array.h"
 #include "application/smoke/projection/data_raw_vector_nd.h"

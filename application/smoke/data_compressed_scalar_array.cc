@@ -33,28 +33,30 @@
  */
 
 /*
- * The first step of projection iteration, which does precondition and
- * calculates parameter rho.
- * Notice that vector_temp is only a temporary variable and not transmitted.
- *
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
-#define NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
-
+#include "data/physbam/physbam_data.h"
 #include "shared/nimbus.h"
+#include "string.h"
+#include "application/smoke/data_compressed_scalar_array.h"
 
 namespace application {
 
-class JobProjectionStepOne : public nimbus::Job {
- public:
-  explicit JobProjectionStepOne(nimbus::Application *app);
-  virtual void Execute(nimbus::Parameter params,
-                       const nimbus::DataArray& da);
-  virtual nimbus::Job* Clone();
-};
+template<typename T> DataCompressedScalarArray<T>::DataCompressedScalarArray(
+    std::string name) {
+  set_name(name);
+}
 
-}  // namespace application
+template<typename T> nimbus::Data* DataCompressedScalarArray<T>::Clone() {
+  return (new DataCompressedScalarArray<T>(name()));
+}
 
-#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_ONE_H_
+template<typename T> void DataCompressedScalarArray<T>::Create() {
+  nimbus::PhysBAMDataWithMeta::Create();
+}
+
+template class DataCompressedScalarArray<float>;
+template class DataCompressedScalarArray<int>;
+
+} // namespace application

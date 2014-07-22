@@ -38,38 +38,35 @@
 #include <sstream>
 #include <string>
 
-#include <PhysBAM_Tools/Krylov_Solvers/PCG_SPARSE.h>
-
 #include "application/smoke/app_utils.h"
 #include "application/smoke/physbam_utils.h"
 #include "application/smoke/projection/projection_driver.h"
-#include "application/smoke/smoke_driver.h"
-#include "application/smoke/smoke_example.h"
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
 
 #include "data/scalar_data.h"
 #include "application/smoke/data_include.h"
-#include "application/smoke/projection/job_projection_local_initialize.h"
+
+#include "application/smoke/projection/job_projection_transform_pressure.h"
 
 namespace application {
 
-JobProjectionLocalInitialize::JobProjectionLocalInitialize(
-    nimbus::Application *app) {
+JobProjectionTransformPressure::JobProjectionTransformPressure(nimbus::Application *app) {
   set_application(app);
 };
 
-nimbus::Job* JobProjectionLocalInitialize::Clone() {
-  return new JobProjectionLocalInitialize(application());
+nimbus::Job* JobProjectionTransformPressure::Clone() {
+  return new JobProjectionTransformPressure(application());
 }
 
-void JobProjectionLocalInitialize::Execute(
+void JobProjectionTransformPressure::Execute(
     nimbus::Parameter params,
     const nimbus::DataArray& da) {
-  dbg(APP_LOG, "Executing PROJECTION_LOCAL_INITIALIZE job.\n");
+  dbg(APP_LOG, "Executing PROJECTION_TRANSFORM_PRESSURE job.\n");
 
   InitConfig init_config;
   init_config.use_cache = true;
+  init_config.set_boundary_condition = false;
   T dt;
   std::string params_str(params.ser_data().data_ptr_raw(),
                          params.ser_data().size());
@@ -79,20 +76,9 @@ void JobProjectionLocalInitialize::Execute(
   DataConfig data_config;
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
-
-  data_config.SetFlag(DataConfig::VECTOR_PRESSURE);
   data_config.SetFlag(DataConfig::PRESSURE);
+  data_config.SetFlag(DataConfig::VECTOR_PRESSURE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
-
-  data_config.SetFlag(DataConfig::VECTOR_TEMP);
-  data_config.SetFlag(DataConfig::MATRIX_A);
-  data_config.SetFlag(DataConfig::VECTOR_B);
-  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
-  data_config.SetFlag(DataConfig::MATRIX_C);
-
-  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
-  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
-  data_config.SetFlag(DataConfig::VECTOR_Z);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(1000);
@@ -101,18 +87,29 @@ void JobProjectionLocalInitialize::Execute(
 
   PhysBAM::ProjectionDriver projection_driver(
       pcg_temp, init_config, data_config);
-  dbg(APP_LOG, "Job PROJECTION_LOCAL_INITIALIZE starts (dt=%f).\n", dt);
+  dbg(APP_LOG, "Job PROJECTION_TRANSFORM_PRESSURE starts.\n");
 
+  Log log_timer;
+
+  log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, loading time:%f.\n",
+      log_timer.timer());
 
+  log_timer.StartTimer();
   {
     application::ScopeTimer scope_timer(name());
-    projection_driver.LocalInitialize();
+    projection_driver.TransformPressureResult();
   }
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, calculation time:%f.\n",
+      log_timer.timer());
 
+  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
+  dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, saving time:%f.\n",
+      log_timer.timer());
 
-  dbg(APP_LOG, "Completed executing PROJECTION_LOCAL_INITIALIZE job\n");
+  dbg(APP_LOG, "Completed executing PROJECTION_TRANSFORM_PRESSURE job\n");
 }
 
 }  // namespace application
