@@ -111,6 +111,8 @@ namespace nimbus {
 
     GeometricRegion global_bounding_region();
 
+    bool initialized_global_bounding_region();
+
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p();
 
   private:
@@ -120,6 +122,7 @@ namespace nimbus {
     std::map<partition_id_t, GeometricRegion> partition_map_;
     partition_id_t max_defined_partition_;
     GeometricRegion global_bounding_region_;
+    bool initialized_global_bounding_region_;
   };
 }  // namespace nimbus
 

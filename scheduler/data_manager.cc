@@ -52,6 +52,7 @@ namespace nimbus {
 */
 nimbus::DataManager::DataManager() {
   max_defined_partition_ = (partition_id_t)(0);
+  initialized_global_bounding_region_ = false;
 }
 
 /**
@@ -94,8 +95,14 @@ bool nimbus::DataManager::AddPartition(partition_id_t id,
   } else {
     partition_map_.insert(std::pair<partition_id_t, GeometricRegion>(id, r));
     max_defined_partition_ = std::max(id, max_defined_partition_);
-    global_bounding_region_ =
-      GeometricRegion::GetBoundingBox(global_bounding_region_, r);
+
+    if (!initialized_global_bounding_region_) {
+    global_bounding_region_ = r;
+    initialized_global_bounding_region_ = true;
+    } else {
+      global_bounding_region_ =
+        GeometricRegion::GetBoundingBox(global_bounding_region_, r);
+    }
     return true;
   }
 }
@@ -426,6 +433,9 @@ GeometricRegion DataManager::global_bounding_region() {
   return global_bounding_region_;
 }
 
+bool DataManager::initialized_global_bounding_region() {
+  return initialized_global_bounding_region_;
+}
 
 const std::map<logical_data_id_t, LogicalDataObject*>* DataManager::ldo_map_p() {
   return &ldo_map_;
