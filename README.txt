@@ -7,6 +7,25 @@ sudo apt-get install protobuf-compiler
 sudo apt-get install libboost1.48-all-dev
 
 
+----------------------------------------
+To uninstall the old boost:
+----------------------------------------
+sudo apt-get autoremove libboost1.48-dev
+
+----------------------------------------
+To install the latest version:
+----------------------------------------
+* Download the latest copy of boost
+tar --bzip2 -xf /path/to/boost_1_xx_0.tar.bz2
+sudo ./bootsrap.sh --prefix="/usr/local"
+sudo ./b2
+
+----------------------------------------
+To update the known libraries
+----------------------------------------
+sudo ldconfig
+
+
 Nimbus Installation Dependencies - MacOSX
 =========================================
 

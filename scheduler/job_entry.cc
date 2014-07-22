@@ -45,245 +45,152 @@ using namespace nimbus; // NOLINT
 
 JobEntry::JobEntry() {
   Initialize();
-}
-
-JobEntry::JobEntry(const JobType& job_type,
-    const std::string& job_name,
-    const job_id_t& job_id,
-    const IDSet<logical_data_id_t>& read_set,
-    const IDSet<logical_data_id_t>& write_set,
-    const IDSet<job_id_t>& before_set,
-    const IDSet<job_id_t>& after_set,
-    const job_id_t& parent_job_id,
-    const Parameter& params,
-    const bool& sterile)
-  : job_type_(job_type),
-  job_name_(job_name), job_id_(job_id),
-  read_set_(read_set), write_set_(write_set),
-  before_set_(before_set), after_set_(after_set),
-  parent_job_id_(parent_job_id), params_(params),
-  sterile_(sterile) {
-    Initialize();
-    union_set_.insert(read_set_);
-    union_set_.insert(write_set_);
-    partial_versioned_ = false;
-    versioned_ = false;
-    assigned_ = false;
-    done_ = false;
-    future_ = false;
-}
-
-JobEntry::JobEntry(const JobType& job_type,
-    const std::string& job_name,
-    const job_id_t& job_id,
-    const job_id_t& parent_job_id,
-    const bool& sterile,
-    const bool& versioned,
-    const bool& assigned)
-  : job_type_(job_type),
-  job_name_(job_name), job_id_(job_id),
-  parent_job_id_(parent_job_id),
-  sterile_(sterile), versioned_(versioned),
-  assigned_(assigned) {
-    Initialize();
-    partial_versioned_ = versioned;
-    done_ = false;
-    future_ = false;
-}
-
-JobEntry::JobEntry(const job_id_t& job_id)
-  : job_id_(job_id) {
-    Initialize();
-    sterile_ = false;
-    partial_versioned_ = false;
-    versioned_ = false;
-    assigned_ = false;
-    done_ = false;
-    future_ = true;
+  job_depth_ = NIMBUS_INIT_JOB_DEPTH;
+  sterile_ = false;
+  partial_versioned_ = false;
+  versioned_ = false;
+  assigned_ = false;
+  done_ = false;
+  future_ = false;
 }
 
 void JobEntry::Initialize() {
-//   static boost::shared_ptr<nimbus::VersionTable> empty_vtable =
-//     boost::shared_ptr<nimbus::VersionTable>(new
-//         nimbus::VersionTable(NIMBUS_EMPTY_VERSION_TABLE_ID));
-//   vtable_in_ = empty_vtable;
-//   vtable_out_ = empty_vtable;
+    vmap_read_ = boost::shared_ptr<VersionMap>(new VersionMap());
+    vmap_write_ = boost::shared_ptr<VersionMap>(new VersionMap());
+    vmap_partial_ = boost::shared_ptr<VersionMap>(new VersionMap());
+    meta_before_set_ =  boost::shared_ptr<MetaBeforeSet>(new MetaBeforeSet());
+/*
+  static boost::shared_ptr<VersionMap> empty_vmap =
+    boost::shared_ptr<VersionMap>(new VersionMap());
+  vmap_read_ = empty_vmap;
+  vmap_write_ = empty_vmap;
 
-  static boost::shared_ptr<AncestorChain> empty_chain =
-    boost::shared_ptr<AncestorChain>(new AncestorChain());
 
-  ancestor_chain_ = empty_chain;
-  ancestor_chain_to_pass_ = empty_chain;
+  static boost::shared_ptr<MetaBeforeSet> empty_meta_before_set =
+    boost::shared_ptr<MetaBeforeSet> (new MetaBeforeSet());
+  meta_before_set_ = empty_meta_before_set;
+*/
 }
 
 JobEntry::~JobEntry() {
 }
 
-JobType JobEntry::job_type() {
+JobType JobEntry::job_type() const {
   return job_type_;
 }
 
-std::string JobEntry::job_name() {
+std::string JobEntry::job_name() const {
   return job_name_;
 }
 
-job_id_t JobEntry::job_id() {
+job_id_t JobEntry::job_id() const {
   return job_id_;
 }
 
-IDSet<logical_data_id_t> JobEntry::read_set() {
+IDSet<logical_data_id_t> JobEntry::read_set() const {
   return read_set_;
 }
 
-IDSet<logical_data_id_t> JobEntry::write_set() {
+IDSet<logical_data_id_t> JobEntry::write_set() const {
   return write_set_;
 }
-
-const IDSet<logical_data_id_t>* JobEntry::read_set_p() {
-  return &read_set_;
-}
-
-const IDSet<logical_data_id_t>* JobEntry::write_set_p() {
-  return &write_set_;
-}
-
-const IDSet<logical_data_id_t>* JobEntry::union_set_p() {
-  return &union_set_;
-}
-
-IDSet<logical_data_id_t> JobEntry::union_set() {
+IDSet<logical_data_id_t> JobEntry::union_set() const {
   return union_set_;
 }
 
-IDSet<job_id_t> JobEntry::before_set() {
+IDSet<job_id_t> JobEntry::before_set() const {
   return before_set_;
 }
 
-IDSet<job_id_t>* JobEntry::before_set_p() {
-  return &before_set_;
-}
-
-const IDSet<job_id_t>* JobEntry::before_set_p() const {
-  return &before_set_;
-}
-
-IDSet<job_id_t> JobEntry::after_set() {
+IDSet<job_id_t> JobEntry::after_set() const {
   return after_set_;
 }
 
-job_id_t JobEntry::parent_job_id() {
+job_id_t JobEntry::parent_job_id() const {
   return parent_job_id_;
 }
 
-Parameter JobEntry::params() {
+Parameter JobEntry::params() const {
   return params_;
 }
 
-JobEntry::VersionTable JobEntry::version_table_in() {
-  return version_table_in_;
-}
-
-JobEntry::VersionTable JobEntry::version_table_out() {
-  return version_table_out_;
-}
-
-// boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_in() {
-//   return vtable_in_;
-// }
-
-// boost::shared_ptr<nimbus::VersionTable> JobEntry::vtable_out() {
-//   return vtable_out_;
-// }
-
-boost::shared_ptr<VersionMap> JobEntry::vmap_read_in() {
-  return vmap_read_in_;
-}
-
-boost::shared_ptr<VersionMap> JobEntry::vmap_write_out() {
-  return vmap_write_out_;
-}
-
-boost::shared_ptr<AncestorChain> JobEntry::ancestor_chain() {
-  return ancestor_chain_;
-}
-
-boost::shared_ptr<AncestorChain> JobEntry::ancestor_chain_to_pass() {
-  return ancestor_chain_to_pass_;
-}
-
-boost::shared_ptr<VersionMap> JobEntry::vmap_read() {
+boost::shared_ptr<VersionMap> JobEntry::vmap_read() const {
   return vmap_read_;
 }
 
-boost::shared_ptr<VersionMap> JobEntry::vmap_write() {
+boost::shared_ptr<VersionMap> JobEntry::vmap_write() const {
   return vmap_write_;
 }
 
-boost::shared_ptr<MetaBeforeSet> JobEntry::meta_before_set() {
-  return meta_before_set_;
+boost::shared_ptr<VersionMap> JobEntry::vmap_partial() const {
+  return vmap_partial_;
 }
 
-boost::shared_ptr<LogicalDataLineage> JobEntry::logical_data_lineage() {
-  return logical_data_lineage_;
+boost::shared_ptr<MetaBeforeSet> JobEntry::meta_before_set() const {
+  return meta_before_set_;
 }
 
 job_depth_t JobEntry::job_depth() const {
   return job_depth_;
 }
 
-const JobEntry::VersionTable* JobEntry::version_table_in_p() {
-  return &version_table_in_;
-}
-
-const JobEntry::VersionTable* JobEntry::version_table_out_p() {
-  return &version_table_out_;
-}
-
-data_version_t JobEntry::version_table_in_query(logical_data_id_t l_id) {
-  return version_table_in_[l_id];
-}
-
-data_version_t JobEntry::version_table_out_query(logical_data_id_t l_id) {
-  return version_table_out_[l_id];
-}
-
-JobEntry::PhysicalTable JobEntry::physical_table() {
+JobEntry::PhysicalTable JobEntry::physical_table() const {
   return physical_table_;
 }
 
-IDSet<job_id_t> JobEntry::jobs_passed_versions() {
+IDSet<job_id_t> JobEntry::jobs_passed_versions() const {
   return jobs_passed_versions_;
 }
 
-IDSet<job_id_t> JobEntry::need_set() {
+IDSet<job_id_t> JobEntry::need_set() const {
   IDSet<job_id_t> need = before_set_;
   need.insert(parent_job_id_);
   need.remove(jobs_passed_versions_);
   return need;
 }
 
-bool JobEntry::sterile() {
+bool JobEntry::sterile() const {
   return sterile_;
 }
 
-bool JobEntry::partial_versioned() {
+bool JobEntry::partial_versioned() const {
   return partial_versioned_;
 }
 
-bool JobEntry::versioned() {
+bool JobEntry::versioned() const {
   return versioned_;
 }
 
-bool JobEntry::assigned() {
+bool JobEntry::assigned() const {
   return assigned_;
 }
 
-bool JobEntry::done() {
+bool JobEntry::done() const {
   return done_;
 }
 
-bool JobEntry::future() {
+bool JobEntry::future() const {
   return future_;
+}
+
+const IDSet<logical_data_id_t>* JobEntry::read_set_p() const {
+  return &read_set_;
+}
+
+const IDSet<logical_data_id_t>* JobEntry::write_set_p() const {
+  return &write_set_;
+}
+
+const IDSet<logical_data_id_t>* JobEntry::union_set_p() const {
+  return &union_set_;
+}
+
+const IDSet<job_id_t>* JobEntry::before_set_p() const {
+  return &before_set_;
+}
+
+IDSet<job_id_t>* JobEntry::before_set_p() {
+  return &before_set_;
 }
 
 void JobEntry::set_job_type(JobType job_type) {
@@ -310,7 +217,12 @@ void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
   write_set_ = write_set;
 }
 
-void JobEntry::set_before_set(IDSet<job_id_t> before_set) {
+void JobEntry::set_before_set(IDSet<job_id_t> before_set, bool update_dependencies) {
+  if (update_dependencies) {
+    assignment_dependencies_.remove(before_set_);
+    assignment_dependencies_.insert(before_set);
+    versioning_dependencies_ = assignment_dependencies_;
+  }
   before_set_ = before_set;
 }
 
@@ -318,53 +230,17 @@ void JobEntry::set_after_set(IDSet<job_id_t> after_set) {
   after_set_ = after_set;
 }
 
-void JobEntry::set_parent_job_id(job_id_t parent_job_id) {
+void JobEntry::set_parent_job_id(job_id_t parent_job_id, bool update_dependencies) {
+  if (update_dependencies) {
+    assignment_dependencies_.remove(parent_job_id_);
+    assignment_dependencies_.insert(parent_job_id);
+    versioning_dependencies_ = assignment_dependencies_;
+  }
   parent_job_id_ = parent_job_id;
 }
 
 void JobEntry::set_params(Parameter params) {
   params_ = params;
-}
-
-void JobEntry::set_version_table_in(VersionTable version_table) {
-  version_table_in_ = version_table;
-}
-
-void JobEntry::set_version_table_in_entry(logical_data_id_t l_id, data_version_t version) {
-  version_table_in_[l_id] = version;
-}
-
-void JobEntry::set_version_table_out(VersionTable version_table) {
-  version_table_out_ = version_table;
-}
-
-void JobEntry::set_version_table_out_entry(logical_data_id_t l_id, data_version_t version) {
-  version_table_out_[l_id] = version;
-}
-
-// void JobEntry::set_vtable_in(boost::shared_ptr<nimbus::VersionTable> vtable_in) {
-//   vtable_in_ = vtable_in;
-// }
-
-// void JobEntry::set_vtable_out(boost::shared_ptr<nimbus::VersionTable> vtable_out) {
-//   vtable_out_ = vtable_out;
-// }
-
-
-void JobEntry::set_vmap_read_in(boost::shared_ptr<VersionMap> vmap_read_in) {
-  vmap_read_in_ = vmap_read_in;
-}
-
-void JobEntry::set_vmap_write_out(boost::shared_ptr<VersionMap> vmap_write_out) {
-  vmap_write_out_ = vmap_write_out;
-}
-
-void JobEntry::set_ancestor_chain(boost::shared_ptr<AncestorChain> ancestor_chain) {
-  ancestor_chain_ = ancestor_chain;
-}
-
-void JobEntry::set_ancestor_chain_to_pass(boost::shared_ptr<AncestorChain> ancestor_chain_to_pass) {
-  ancestor_chain_to_pass_ = ancestor_chain_to_pass;
 }
 
 void JobEntry::set_vmap_read(boost::shared_ptr<VersionMap> vmap_read) {
@@ -377,11 +253,6 @@ void JobEntry::set_vmap_write(boost::shared_ptr<VersionMap> vmap_write) {
 
 void JobEntry::set_meta_before_set(boost::shared_ptr<MetaBeforeSet> meta_before_set) {
   meta_before_set_ = meta_before_set;
-}
-
-void JobEntry::set_logical_data_lineage(
-    boost::shared_ptr<LogicalDataLineage> logical_data_lineage) {
-  logical_data_lineage_ = logical_data_lineage;
 }
 
 void JobEntry::set_job_depth(job_depth_t job_depth) {
@@ -403,28 +274,6 @@ void JobEntry::set_jobs_passed_versions(IDSet<job_id_t> jobs) {
 
 void JobEntry::add_job_passed_versions(job_id_t job_id) {
   jobs_passed_versions_.insert(job_id);
-}
-
-bool JobEntry::build_version_table_out_and_check() {
-  version_table_out_ = version_table_in_;
-  IDSet<logical_data_id_t>::ConstIter iter_data;
-
-  for (iter_data = read_set_.begin(); iter_data != read_set_.end(); ++iter_data) {
-    if (version_table_in_.count(*iter_data) == 0) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve read id %lu.\n", *iter_data);
-      return false;
-    }
-  }
-  for (iter_data = write_set_.begin(); iter_data != write_set_.end(); ++iter_data) {
-    if (version_table_in_.count(*iter_data) == 0) {
-      dbg(DBG_ERROR, "ERROR: parent and before set could not resolve write id %lu.\n", *iter_data);
-      return false;
-    } else {
-      ++version_table_out_[*iter_data];
-    }
-  }
-
-  return true;
 }
 
 
@@ -474,6 +323,181 @@ bool JobEntry::GetPhysicalWriteSet(IDSet<physical_data_id_t>* set) {
   return true;
 }
 
+bool JobEntry::IsReadyToAssign() {
+  return (assignment_dependencies_.size() == 0);
+}
 
+void JobEntry::remove_assignment_dependency(job_id_t job_id) {
+  assignment_dependencies_.remove(job_id);
+}
+
+bool JobEntry::IsReadyForCompleteVersioning() {
+  return (versioning_dependencies_.size() == 0 && !future_);
+}
+
+void JobEntry::remove_versioning_dependency(job_id_t job_id) {
+  versioning_dependencies_.remove(job_id);
+  meta_before_set_->InvalidateNegativeQueryCache();
+}
+
+
+
+ComputeJobEntry::ComputeJobEntry(
+    const std::string& job_name,
+    const job_id_t& job_id,
+    const IDSet<logical_data_id_t>& read_set,
+    const IDSet<logical_data_id_t>& write_set,
+    const IDSet<job_id_t>& before_set,
+    const IDSet<job_id_t>& after_set,
+    const job_id_t& parent_job_id,
+    const Parameter& params,
+    const bool& sterile) {
+    job_type_ = JOB_COMP;
+    job_name_ = job_name;
+    job_id_ = job_id;
+    read_set_ = read_set;
+    write_set_ = write_set;
+    before_set_ = before_set;
+    after_set_ = after_set;
+    parent_job_id_ = parent_job_id;
+    params_ = params;
+    sterile_ = sterile;
+
+    union_set_.insert(read_set_);
+    union_set_.insert(write_set_);
+
+    assignment_dependencies_ = before_set;
+    assignment_dependencies_.insert(parent_job_id);
+    versioning_dependencies_ = assignment_dependencies_;
+}
+
+ComputeJobEntry::~ComputeJobEntry() {
+}
+
+
+KernelJobEntry::KernelJobEntry() {
+  job_type_ = JOB_SCHED;
+  job_name_ = NIMBUS_KERNEL_JOB_NAME;
+  job_id_ = NIMBUS_KERNEL_JOB_ID;
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+
+  meta_before_set_ = boost::shared_ptr<MetaBeforeSet> (new MetaBeforeSet());
+  job_depth_ = NIMBUS_INIT_JOB_DEPTH;
+}
+
+KernelJobEntry::~KernelJobEntry() {
+}
+
+
+MainJobEntry::MainJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COMP;
+  job_name_ = NIMBUS_MAIN_JOB_NAME;
+  job_id_ = job_id;
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+}
+
+MainJobEntry::~MainJobEntry() {
+}
+
+
+FutureJobEntry::FutureJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_FUTURE;
+  job_id_ = job_id;
+  future_ = true;
+}
+
+FutureJobEntry::~FutureJobEntry() {
+}
+
+
+LocalCopyJobEntry::LocalCopyJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COPY;
+  job_name_ = NIMBUS_LOCAL_COPY_JOB_NAME;
+  job_id_ = job_id;
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+LocalCopyJobEntry::~LocalCopyJobEntry() {
+}
+
+
+CreateDataJobEntry::CreateDataJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_CREATE;
+  job_name_ = NIMBUS_CREATE_DATA_JOB_NAME;
+  job_id_ = job_id;
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+CreateDataJobEntry::~CreateDataJobEntry() {
+}
+
+
+RemoteCopyReceiveJobEntry::RemoteCopyReceiveJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COPY;
+  job_name_ = NIMBUS_REMOTE_COPY_RECEIVE_JOB_NAME;
+  job_id_ = job_id;
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+RemoteCopyReceiveJobEntry::~RemoteCopyReceiveJobEntry() {
+}
+
+
+RemoteCopySendJobEntry::RemoteCopySendJobEntry(const job_id_t& job_id) {
+  job_type_ = JOB_COPY;
+  job_name_ = NIMBUS_REMOTE_COPY_SEND_JOB_NAME;
+  job_id_ = job_id;
+  parent_job_id_ = NIMBUS_KERNEL_JOB_ID;
+  sterile_ = true;
+  versioned_ = true;
+  assigned_ = true;
+}
+
+RemoteCopySendJobEntry::~RemoteCopySendJobEntry() {
+}
+
+ID<job_id_t> RemoteCopySendJobEntry::receive_job_id() {
+  return receive_job_id_;
+}
+
+ID<worker_id_t> RemoteCopySendJobEntry::to_worker_id() {
+  return to_worker_id_;
+}
+
+std::string RemoteCopySendJobEntry::to_ip() {
+  return to_ip_;
+}
+
+ID<port_t> RemoteCopySendJobEntry::to_port() {
+  return to_port_;
+}
+
+void RemoteCopySendJobEntry::set_receive_job_id(ID<job_id_t> receive_job_id) {
+  receive_job_id_ = receive_job_id;
+}
+
+void RemoteCopySendJobEntry::set_to_worker_id(ID<worker_id_t> worker_id) {
+  to_worker_id_ = worker_id;
+}
+
+void RemoteCopySendJobEntry::set_to_ip(std::string ip) {
+  to_ip_ = ip;
+}
+
+void RemoteCopySendJobEntry::set_to_port(ID<port_t> port) {
+  to_port_ = port;
+}
 
 

@@ -15,7 +15,7 @@ OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 
 ADIR = ${NIMBUS_ROOT}/application/stencil_1d/
 
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -lstencil_1d -lprotobuf
+LFLAGS += -lnimbus -lboost_thread -lboost_system -lpthread -lstencil_1d -lprotobuf
 LDFLAGS += -L$(ADIR) -Wl,-rpath $(ADIR)
 
 # Add the dependencies here

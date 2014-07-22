@@ -268,7 +268,7 @@ bool WorkerDataExchanger::ReceiveSerializedData(job_id_t job_id,
 
 bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
       worker_id_t worker_id, SerializedData& ser_data, data_version_t version) {
-  boost::shared_ptr<char> buf = ser_data.data_ptr();
+  boost::shared_array<char> buf = ser_data.data_ptr();
   size_t size = ser_data.size();
   boost::mutex::scoped_lock lock1(send_connection_mutex_);
   boost::mutex::scoped_lock lock2(address_book_mutex_);
@@ -299,7 +299,7 @@ bool WorkerDataExchanger::SendSerializedData(job_id_t job_id,
   boost::asio::write(*(connection->socket()), boost::asio::buffer(header),
       boost::asio::transfer_all(), ignored_error);
   boost::asio::write(*(connection->socket()),
-      boost::asio::buffer(get_pointer(buf), size),
+      boost::asio::buffer(buf.get(), size),
       boost::asio::transfer_all(), ignored_error);
   return true;
 }

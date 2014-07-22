@@ -33,7 +33,10 @@
  */
 
 /*
- * Includes all the running code in projeciton loop iteration.
+ * PhysBAM projection simulation codes are here. It serves the similar
+ * functionality as WATER_DRIVER, but is seperated out with code that is not
+ * related to other parts of the simulation.
+ *
  * Author: Hang Qu<quhang@stanford.edu>
  */
 
@@ -68,27 +71,6 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.p.Resize(local_n, false);
   }
-  /*
-  if (projection_data.p.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_P)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    projection_data.p.Resize(local_n, false);
-    assert(data_config.GetFlag(DataConfig::INDEX_M2C));
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    // Translates from grid-format vector p to vector p, based on index.
-    for (int i = 1; i <= local_n; ++i) {
-      projection_data.p(i) =
-          projection_data.grid_format_vector_p(
-              (*projection_data.matrix_index_to_cell_index)(i));
-    }
-  }
-  */
-  if (projection_data.z_interior.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_Z)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
-    projection_data.z_interior.Resize(interior_n, false);
-  }
-
   // Sets subview if necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
@@ -117,31 +99,39 @@ void ProjectionDriver::LocalInitialize() {
     return;
   }
   SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
+  // Initializes VECTOR_X.
+  // VECTOR_X is only used in this job.
   projection_data.vector_x.Resize(projection_data.local_n, false);
   for (int i = 1; i <= projection_data.local_n; ++i) {
     projection_data.vector_x(i) =
         projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
   VECTOR_ND<T>& x = projection_data.vector_x;
-  VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& b_interior = projection_data.b_interior;
+  VECTOR_ND<T>& temp = projection_data.temp;
   VECTOR_ND<T>& temp_interior = projection_data.temp_interior;
+  // Initializes vector B and local residual.
   A.Times(x, temp);
   b_interior -= temp_interior;
   projection_data.local_residual = b_interior.Max_Abs();
-  const bool recompute_preconditioner = true;
-  if (pcg.incomplete_cholesky && (recompute_preconditioner || !A.C)) {
-      // TODO(quhang) use swapping rather than copying.
-      assert(A.C != NULL);
-      SPARSE_MATRIX_FLAT_NXN<T>* temp = A.Create_Submatrix(partition.interior_indices);
-      *A.C = *temp;
-      A.C->In_Place_Incomplete_Cholesky_Factorization(
-          pcg.modified_incomplete_cholesky,
-          pcg.modified_incomplete_cholesky_coefficient,
-          pcg.preconditioner_zero_tolerance,
-          pcg.preconditioner_zero_replacement);
-      delete temp;
+  // Calculate matrix C.
+  assert(A.C != NULL);
+  A.Nimbus_Create_Submatrix(partition.interior_indices, A.C);
+  // SPARSE_MATRIX_FLAT_NXN<T>* temp_matrix = A.Create_Submatrix(partition.interior_indices);
+  // *A.C = *temp_matrix;
+  A.C->In_Place_Incomplete_Cholesky_Factorization(
+      pcg.modified_incomplete_cholesky,
+      pcg.modified_incomplete_cholesky_coefficient,
+      pcg.preconditioner_zero_tolerance,
+      pcg.preconditioner_zero_replacement);
+  // delete temp_matrix;
+  // Initializes vector pressure.
+  projection_data.vector_pressure.Resize(projection_data.interior_n, false);
+  for (int i = 1; i <= projection_data.interior_n; ++i) {
+    projection_data.vector_pressure(i) =
+        projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
+  // Initializes other vectors.
   projection_data.p.Resize(projection_data.local_n, false);
   projection_data.p.Fill(0);
   GRID<TV> grid;
@@ -168,6 +158,13 @@ void ProjectionDriver::GlobalInitialize() {
   if (pcg.maximum_iterations) {
     projection_data.desired_iterations =
         min(projection_data.desired_iterations, pcg.maximum_iterations);
+  }
+}
+
+void ProjectionDriver::TransformPressureResult() {
+  for (int i = 1; i <= projection_data.interior_n; ++i) {
+    projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i))
+        = projection_data.vector_pressure(i);
   }
 }
 
@@ -284,10 +281,7 @@ void ProjectionDriver::UpdateOtherVectors() {
     b_interior(i) -= projection_data.alpha * temp_interior(i);
   }
   for (int i = 1; i <= interior_n; i++) {
-    // Search vector p is used here.
-    // Pressure, as the result, is calculated here.
-    projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i))
-        += projection_data.alpha * p_interior(i);
+    projection_data.vector_pressure(i) += projection_data.alpha * p_interior(i);
   }
 }
 
@@ -643,6 +637,10 @@ void ProjectionDriver::LoadFromNimbus(
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    ReadVectorData(job, da, APP_VECTOR_PRESSURE,
+                   projection_data.vector_pressure);
+  }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
@@ -823,6 +821,10 @@ void ProjectionDriver::SaveToNimbus(
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
+  }
+  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
+    WriteVectorData(job, da, APP_VECTOR_PRESSURE,
+                    projection_data.vector_pressure);
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n",
       log_timer.timer());

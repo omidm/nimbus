@@ -131,6 +131,8 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
     b *= (T) -1;
 
     laplace->Find_Tolerance(b);
+    A.Initialize_Diagonal_Index();
+
   } else {
     laplace->tolerance = 0;
     dbg(APP_LOG, "No water in this region!\n");

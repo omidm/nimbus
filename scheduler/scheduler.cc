@@ -44,7 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10000
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 10
+#define MAX_JOB_TO_ASSIGN 1
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
@@ -54,7 +54,6 @@ Scheduler::Scheduler(port_t p)
   job_manager_ = NULL;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   terminate_application_flag_ = false;
-  log_.InitTime();
 }
 
 Scheduler::~Scheduler() {
@@ -70,11 +69,18 @@ void Scheduler::Run() {
   Log::log_PrintLine("Running the Scheduler");
 
   SetupWorkerInterface();
+
   // SetupUserInterface();
+
   // First data manager should be instantiated then job manager, because of
   // ldo_map pointer that job manager needs to get from data manager.
+  // Also load balancer is set up after both of them since it needs a pointer
+  // to job manager and data manager.
+
   SetupDataManager();
   SetupJobManager();
+  SetupLoadBalancer();
+
   id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
@@ -94,25 +100,31 @@ void Scheduler::SchedulerCoreProcessor() {
 
   // Main Loop of the scheduler.
   while (true) {
-    log_.StartTimer();
+    log_loop_.StartTimer();
     log_assign_.ResetTimer();
-    log_table_.ResetTimer();
-    log_allocate_.ResetTimer();
+    log_job_manager_.ResetTimer();
+    log_data_manager_.ResetTimer();
+    log_version_manager_.ResetTimer();
+    log_load_balancer_.ResetTimer();
 
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands((size_t)MAX_BATCH_COMMAND_NUM);
     AssignReadyJobs();
     RemoveObsoleteJobEntries();
-    CleanLdlMap();
     TerminationProcedure();
 
-    log_.StopTimer();
-    if (log_.timer() > .01) {
+    log_loop_.StopTimer();
+    if (log_loop_.timer() >= .00001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.3lf  assign: %2.3lf table: %2.3lf allocate: %2.3lf time: %6.3lf",
-          log_.timer(), log_assign_.timer(), log_table_.timer(),
-          log_allocate_.timer(), log_.GetTime());
+          "loop: %2.5lf  assign: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
+          log_loop_.timer(),
+          log_assign_.timer(),
+          log_job_manager_.timer(),
+          log_data_manager_.timer(),
+          log_version_manager_.timer(),
+          log_load_balancer_.timer(),
+          log_loop_.GetTime());
 
       log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
@@ -164,12 +176,18 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
-  job_manager_->AddJobEntry(JOB_COMP,
-        cm->job_name(), cm->job_id().elem(),
-        cm->read_set(), cm->write_set(),
-        cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params(),
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddComputeJobEntry(
+        cm->job_name(),
+        cm->job_id().elem(),
+        cm->read_set(),
+        cm->write_set(),
+        cm->before_set(),
+        cm->after_set(),
+        cm->parent_job_id().elem(),
+        cm->params(),
         cm->sterile());
+  log_job_manager_.StopTimer();
 }
 
 void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
@@ -180,30 +198,36 @@ void Scheduler::ProcessSpawnCopyJobCommand(SpawnCopyJobCommand* cm) {
   write_set.insert(cm->to_logical_id().elem());
 
   // TODO(omid): we need to add support for copy jobs.
-  job_manager_->AddJobEntry(JOB_COPY,
-        job_name, cm->job_id().elem(),
-        read_set, write_set,
-        cm->before_set(), cm->after_set(),
-        cm->parent_job_id().elem(), cm->params(), true);
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddExplicitCopyJobEntry();
+  log_job_manager_.StopTimer();
 }
 
 void Scheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
+  log_data_manager_.ResumeTimer();
   bool success = data_manager_->AddLogicalObject(cm->logical_data_id().elem(),
                                  cm->data_name(),
                                  cm->partition_id().elem());
+  log_data_manager_.StopTimer();
 
   if (success) {
+    log_data_manager_.ResumeTimer();
     LdoAddCommand command(data_manager_->FindLogicalObject(cm->logical_data_id().elem()));
+    log_data_manager_.StopTimer();
     server_->BroadcastCommand(&command);
   }
 
+  log_job_manager_.ResumeTimer();
   job_manager_->DefineData(cm->parent_job_id().elem(),
                           cm->logical_data_id().elem());
+  log_job_manager_.StopTimer();
 }
 
 void Scheduler::ProcessDefinePartitionCommand(DefinePartitionCommand* cm) {
   GeometricRegion r = *(cm->region());
+  log_data_manager_.ResumeTimer();
   data_manager_->AddPartition(cm->partition_id().elem(), r);
+  log_data_manager_.StopTimer();
   PartitionAddCommand command(cm->partition_id(), r);
   server_->BroadcastCommand(&command);
 }
@@ -236,7 +260,25 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 }
 
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
-  job_manager_->JobDone(cm->job_id().elem());
+  job_id_t job_id = cm->job_id().elem();
+
+  log_job_manager_.ResumeTimer();
+  job_manager_->NotifyJobDone(job_id);
+  log_job_manager_.StopTimer();
+
+  JobEntry *job;
+  log_job_manager_.ResumeTimer();
+  if (job_manager_->GetJobEntry(job_id, job)) {
+    log_load_balancer_.ResumeTimer();
+    load_balancer_->NotifyJobDone(job);
+    log_load_balancer_.StopTimer();
+  }
+  log_job_manager_.StopTimer();
+
+  std::string jname = job->job_name();
+  if (jname == "loop_iteration") {
+    log_.StartTimer();
+  }
 
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
   for (; iter != server_->workers()->end(); iter++) {
@@ -264,8 +306,9 @@ void Scheduler::TerminationProcedure() {
 void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
-  job_manager_->AddJobEntry(JOB_COMP, NIMBUS_MAIN_JOB_NAME, j[0],
-      NIMBUS_KERNEL_JOB_ID, false, false, false);
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddMainJobEntry(j[0]);
+  log_job_manager_.StopTimer();
 }
 
 bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
@@ -276,16 +319,15 @@ bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
 }
 
 size_t Scheduler::RemoveObsoleteJobEntries() {
-  return job_manager_->RemoveObsoleteJobEntries();
-}
+  log_job_manager_.ResumeTimer();
+  size_t count = job_manager_->RemoveObsoleteJobEntries();
+  log_job_manager_.StopTimer();
 
-void Scheduler::CleanLdlMap() {
-  job_manager_->CleanLdlMap();
+  return count;
 }
 
 bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
     LogicalDataObject* ldo, PhysicalData pd) {
-  log_allocate_.ResumeTimer();
   assert(job->versioned());
   // IDSet<job_id_t> before_set = job->before_set();
   PhysicalData pd_new = pd;
@@ -325,10 +367,11 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   job->set_physical_table_entry(ldo->id(), pd.id());
   // job->set_before_set(before_set);
 
+  log_data_manager_.ResumeTimer();
   data_manager_->RemovePhysicalInstance(ldo, pd);
   data_manager_->AddPhysicalInstance(ldo, pd_new);
+  log_data_manager_.StopTimer();
 
-  log_allocate_.StopTimer();
   return true;
 }
 
@@ -337,17 +380,21 @@ size_t Scheduler::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
   size_t count = 0;
   dest->clear();
   PhysicalDataVector pv;
+  log_data_manager_.ResumeTimer();
   data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
+  log_data_manager_.StopTimer();
   PhysicalDataVector::iterator iter = pv.begin();
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
-    log_table_.ResumeTimer();
+    log_job_manager_.ResumeTimer();
+    log_version_manager_.ResumeTimer();
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
     }
-    log_table_.StopTimer();
+    log_job_manager_.StopTimer();
+    log_version_manager_.StopTimer();
   }
   return count;
 }
@@ -361,16 +408,22 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_CREATE, "createdata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddCreateDataJobEntry(j[0]);
+  log_job_manager_.StopTimer();
 
   // Update data table.
   IDSet<job_id_t> list_job_read;
   list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
   PhysicalData p(d[0], worker->worker_id(), NIMBUS_INIT_DATA_VERSION, list_job_read, j[0]);
+  log_data_manager_.ResumeTimer();
   data_manager_->AddPhysicalInstance(ldo, p);
+  log_data_manager_.StopTimer();
 
   // send the create command to worker.
+  log_job_manager_.ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
+  log_job_manager_.StopTimer();
   CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
       ID<logical_data_id_t>(ldo->id()),
       ID<physical_data_id_t>(d[0]), before, after);
@@ -396,21 +449,27 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Receive part
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopyreceive", receive_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddRemoteCopyReceiveJobEntry(receive_id);
+  log_job_manager_.StopTimer();
 
   // Update data table.
   PhysicalData to_data_new = *to_data;
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
+  log_data_manager_.ResumeTimer();
   data_manager_->RemovePhysicalInstance(ldo, *to_data);
   data_manager_->AddPhysicalInstance(ldo, to_data_new);
+  log_data_manager_.StopTimer();
 
   // send remote copy receive job to worker.
   before.clear();
   before.insert(to_data->list_job_read());
   before.insert(to_data->last_job_write());
+  log_job_manager_.ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
+  log_job_manager_.StopTimer();
   RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
       ID<physical_data_id_t>(to_data->id()), before, after);
   server_->SendCommand(to_worker, &cm_r);
@@ -419,18 +478,24 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   // Send Part.
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "remotecopysend", send_id, NIMBUS_KERNEL_JOB_ID, true, true, true); // NOLINT
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddRemoteCopySendJobEntry(send_id);
+  log_job_manager_.StopTimer();
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
+  log_data_manager_.ResumeTimer();
   data_manager_->RemovePhysicalInstance(ldo, *from_data);
   data_manager_->AddPhysicalInstance(ldo, from_data_new);
+  log_data_manager_.StopTimer();
 
   // send remote copy send command to worker.
   before.clear();
   before.insert(from_data->last_job_write());
+  log_job_manager_.ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
+  log_job_manager_.StopTimer();
   RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
       ID<job_id_t>(receive_id), ID<physical_data_id_t>(from_data->id()),
       ID<worker_id_t>(to_worker->worker_id()),
@@ -455,26 +520,34 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   IDSet<job_id_t> before, after;
 
   // Update the job table.
-  job_manager_->AddJobEntry(JOB_COPY, "localcopy", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddLocalCopyJobEntry(j[0]);
+  log_job_manager_.StopTimer();
 
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
+  log_data_manager_.ResumeTimer();
   data_manager_->RemovePhysicalInstance(ldo, *from_data);
   data_manager_->AddPhysicalInstance(ldo, from_data_new);
+  log_data_manager_.StopTimer();
 
   PhysicalData to_data_new = *to_data;
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
+  log_data_manager_.ResumeTimer();
   data_manager_->RemovePhysicalInstance(ldo, *to_data);
   data_manager_->AddPhysicalInstance(ldo, to_data_new);
+  log_data_manager_.StopTimer();
 
   // send local copy command to worker.
   before.insert(to_data->list_job_read());
   before.insert(to_data->last_job_write());
   before.insert(from_data->last_job_write());
+  log_job_manager_.ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
+  log_job_manager_.StopTimer();
   LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
       ID<physical_data_id_t>(from_data->id()),
       ID<physical_data_id_t>(to_data->id()), before, after);
@@ -505,8 +578,10 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   bool writing = job->write_set_p()->contains(l_id);
   assert(reading || writing);
 
+  log_data_manager_.ResumeTimer();
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
+  log_data_manager_.StopTimer();
 
 
   // data_version_t version = job->version_table_in_query(l_id);
@@ -575,9 +650,11 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     PhysicalData target_instance;
     GetFreeDataAtWorker(worker, ldo, &target_instance);
 
+    log_job_manager_.ResumeTimer();
     if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
       dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
     }
+    log_job_manager_.StopTimer();
 
     AllocateLdoInstanceToJob(job, ldo, target_instance);
     return true;
@@ -585,15 +662,19 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
   PhysicalDataVector instances_at_worker;
   PhysicalDataVector instances_in_system;
+  log_data_manager_.ResumeTimer();
   data_manager_->InstancesByWorkerAndVersion(
       ldo, worker->worker_id(), version, &instances_at_worker);
   data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
+  log_data_manager_.StopTimer();
 
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
-  log_table_.ResumeTimer();
+  log_job_manager_.ResumeTimer();
+  log_version_manager_.ResumeTimer();
   job_manager_->GetJobsNeedDataVersion(&list, vld);
-  log_table_.StopTimer();
+  log_job_manager_.StopTimer();
+  log_version_manager_.StopTimer();
   assert(list.size() >= 1);
   bool writing_needed_version = (list.size() > 1) && writing;
 
@@ -604,11 +685,13 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     bool found = false;
     PhysicalDataVector::iterator iter;
     for (iter = instances_at_worker.begin(); iter != instances_at_worker.end(); iter++) {
+      log_job_manager_.ResumeTimer();
       if (!job_manager_->CausingUnwantedSerialization(job, l_id, *iter)) {
         target_instance = *iter;
         found = true;
         break;
       }
+      log_job_manager_.StopTimer();
     }
 
     if (!found) {
@@ -625,9 +708,12 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   if ((instances_at_worker.size() == 1) && !writing_needed_version) {
     PhysicalData target_instance;
 
+    log_job_manager_.ResumeTimer();
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, instances_at_worker[0])) {
       target_instance = instances_at_worker[0];
+      log_job_manager_.StopTimer();
     } else {
+      log_job_manager_.StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (2).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
       LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
@@ -641,12 +727,15 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   if ((instances_at_worker.size() == 1) && writing_needed_version) {
     PhysicalData target_instance;
 
+    log_job_manager_.ResumeTimer();
     if (!job_manager_->CausingUnwantedSerialization(job, l_id, instances_at_worker[0])) {
+      log_job_manager_.StopTimer();
       target_instance = instances_at_worker[0];
       PhysicalData copy_data;
       GetFreeDataAtWorker(worker, ldo, &copy_data);
       LocalCopyData(worker, ldo, &target_instance, &copy_data);
     } else {
+      log_job_manager_.StopTimer();
       dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (3).\n", l_id);
       GetFreeDataAtWorker(worker, ldo, &target_instance);
       LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
@@ -722,7 +811,9 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
       ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
-  job_manager_->AddJobEntry(JOB_CREATE, "craetedata", j[0], NIMBUS_KERNEL_JOB_ID, true, true, true);
+  log_job_manager_.ResumeTimer();
+  job_manager_->AddCreateDataJobEntry(j[0]);
+  log_job_manager_.StopTimer();
   return true;
 }
 
@@ -779,6 +870,21 @@ bool Scheduler::AssignJob(JobEntry* job) {
   SchedulerWorker* worker;
   GetWorkerToAssignJob(job, worker);
 
+//   {
+//     Log log;
+//     log.StartTimer();
+//     IDSet<logical_data_id_t>::ConstIter it = job->union_set_p()->begin();
+//     for (; it != job->union_set_p()->end(); ++it) {
+//       JobEntryList list;
+//       data_version_t version;
+//       job->vmap_read()->query_entry(*it, &version);
+//       VersionedLogicalData vld(*it, version);
+//       job_manager_->GetJobsNeedDataVersion(&list, vld);
+//     }
+//     log.StopTimer();
+//     std::cout << "OMID: " << job->job_name() << " " << log.timer() << std::endl;
+//   }
+
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
@@ -788,9 +894,22 @@ bool Scheduler::AssignJob(JobEntry* job) {
     }
   }
   if (prepared_data) {
+    log_job_manager_.ResumeTimer();
     job_manager_->UpdateJobBeforeSet(job);
+    log_job_manager_.StopTimer();
     SendComputeJobToWorker(worker, job);
-    job->set_assigned(true);
+
+    job_manager_->NotifyJobAssignment(job);
+
+    static bool got_stamp = false;
+    std::string jname = job->job_name();
+    if (jname == "update_ghost_velocities" && !got_stamp) {
+      log_.StopTimer();
+      std::cout << "STAMP FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
+      got_stamp = true;
+    }
+
+    load_balancer_->NotifyJobAssignment(job, worker);
 
     log_assign_.StopTimer();
     return true;
@@ -805,7 +924,9 @@ bool Scheduler::AssignJob(JobEntry* job) {
 size_t Scheduler::AssignReadyJobs() {
   size_t count = 0;
   JobEntryList list;
+  log_job_manager_.ResumeTimer();
   job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
+  log_job_manager_.StopTimer();
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
@@ -865,6 +986,15 @@ void Scheduler::SetupJobManager() {
   job_manager_ = new JobManager();
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
 }
+
+void Scheduler::SetupLoadBalancer() {
+  load_balancer_ = new LoadBalancer();
+  load_balancer_->set_job_manager(job_manager_);
+  load_balancer_->set_data_manager(data_manager_);
+}
+
+
+
 
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT

@@ -98,6 +98,7 @@ template<class T> bool DeserializePhysBAMArray(
   }
   int64_t length = buffer_input.size / sizeof(T);
   array->m = length;
+  array->buffer_size = length;
   array->base_pointer = new T[length];
   const T* pointer = reinterpret_cast<T*>(buffer_input.pointer);
   memcpy(array->base_pointer, pointer, length * sizeof(T));

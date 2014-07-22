@@ -16,7 +16,7 @@ import ec2
 
 ec2.run_instances(
     config.EC2_LOCATION,
-    config.NIMBUS_0_1,
+    config.NIMBUS_0_2,
     config.INSTANCE_NUM,
     config.KEY_NAME,
     config.SECURITY_GROUP,

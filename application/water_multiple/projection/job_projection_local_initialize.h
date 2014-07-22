@@ -34,10 +34,10 @@
 
 /*
  * This file contains job PROJECTION_LOCAL_INITIALIZE that:
- *     initializes all the data for projection that requires no global
- *     coordination.
- * Parameter list:
- *
+ *     initializes the data structure associated with each application
+ *     partition that is used during projection. Notice that job
+ *     PROJECTION_GLOBAL_INITIALIZE initializes similar data structures that
+ *     require global coordination.
  * The read set:
  *
  * The write set:

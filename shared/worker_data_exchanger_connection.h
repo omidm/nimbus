@@ -45,7 +45,7 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 #include <map>
 #include <list>
 #include <string>
@@ -68,7 +68,7 @@ class WorkerDataExchangerConnection {
 
   tcp::socket* socket();
   job_id_t job_id();
-  boost::shared_ptr<char> data_ptr();
+  boost::shared_array<char> data_ptr();
   char* read_buffer();
   size_t existing_bytes();
   size_t read_buffer_max_length();
@@ -88,7 +88,7 @@ class WorkerDataExchangerConnection {
  private:
   tcp::socket* socket_;
   job_id_t job_id_;
-  boost::shared_ptr<char> data_ptr_;
+  boost::shared_array<char> data_ptr_;
   char* data_cursor_;
   char* read_buffer_;
   size_t existing_bytes_;

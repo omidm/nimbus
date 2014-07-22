@@ -46,13 +46,19 @@
 
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
 #define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
-#define NIMBUS_EMPTY_VERSION_TABLE_ID (version_table_id_t)(0)
 
-#define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
 #define NIMBUS_INIT_DATA_VERSION (data_version_t)(1)
 #define NIMBUS_UNDEFINED_DATA_VERSION (data_version_t)(0)
 #define NIMBUS_INIT_JOB_DEPTH (job_depth_t)(0)
+
+#define NIMBUS_KERNEL_JOB_ID (job_id_t)(0)
+
+#define NIMBUS_KERNEL_JOB_NAME "kernel"
 #define NIMBUS_MAIN_JOB_NAME "main"
+#define NIMBUS_LOCAL_COPY_JOB_NAME "localcopy"
+#define NIMBUS_REMOTE_COPY_SEND_JOB_NAME "remotecopysend"
+#define NIMBUS_REMOTE_COPY_RECEIVE_JOB_NAME "remotecopyreceive"
+#define NIMBUS_CREATE_DATA_JOB_NAME "createdata"
 
 #define NIMBUS_RECEIVER_KNOWN_IP "receiver_known_ip"
 
@@ -69,6 +75,7 @@ namespace nimbus {
   typedef uint64_t data_version_t;
   typedef uint64_t version_table_id_t;
   typedef uint64_t job_depth_t;
+  typedef uint64_t counter_t;
 
   typedef int32_t exit_status_t;
 
@@ -88,7 +95,8 @@ namespace nimbus {
     JOB_COMP,
     JOB_COPY,
     JOB_CREATE,
-    JOB_SCHED
+    JOB_SCHED,
+    JOB_FUTURE
   };
 
 

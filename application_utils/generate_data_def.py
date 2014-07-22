@@ -315,19 +315,21 @@ out_h.write("#endif // %s" % guard_str)
 
 # Code generation - .cc file
 
+pt_num_str = "pnum"
+pt_num     = len(partn_pid)
+
 out_cc.write("#include \"%s/%s\"\n\n" % (app_path, out_h_file))
 out_cc.write("#include \"shared/geometric_region.h\"\n")
 out_cc.write("#include \"shared/nimbus.h\"\n")
+out_cc.write("\n#define %s %i\n" % (pt_num_str, pt_num))
 out_cc.write("\nnamespace %s {\n\n" % namespace)
 
 out_cc.write(logical_id_vector_str + " DefineNimbusData(nimbus::Job *jb) {\n\n")
 
 # geometric regions
-pt_num_str = "pnum"
-pt_num     = len(partn_pid)
 out_cc.write("\t// Constants - geometric regions\n")
-out_cc.write("\tint %s = %i;\n" % (pt_num_str, pt_num))
-out_cc.write("\tnimbus::GeometricRegion kRegions[%s];\n" % pt_num_str)
+# out_cc.write("\tint %s = %i;\n" % (pt_num_str, pt_num))
+out_cc.write("\tstatic nimbus::GeometricRegion kRegions[%s];\n" % pt_num_str)
 for p in sorted(partn_pid.items(), key=lambda x: x[1]):
     decl = "\tkRegions[%i] = nimbus::GeometricRegion(%s);\n" % (p[1], p[0])
     out_cc.write(decl)
@@ -336,7 +338,7 @@ for p in sorted(partn_pid.items(), key=lambda x: x[1]):
 partitions_str = "partitions"
 out_cc.write("\n")
 out_cc.write("\t// Define partitions\n")
-out_cc.write("\t%s %s[%s];\n" % (partition_id_set_str, partitions_str, pt_num_str))
+out_cc.write("\tstatic %s %s[%s];\n" % (partition_id_set_str, partitions_str, pt_num_str))
 out_cc.write("\tnimbus::Parameter part_params;\n")
 out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % pt_num_str)
 out_cc.write("\t\t%s[i] = %s(i);\n" % (partitions_str, partition_id_set_str))
@@ -374,7 +376,7 @@ for d in ntypes_pid:
     out_cc.write("\t%s = %i;\n" % (ids_to_use_str, ids_to_use))
     pset_str = "pset_" + d
     temp = [x for x in re.split('\[|\]', str(list(ntypes_pid[d]))) if x]
-    decl = "size_t " + pset_str + "[%i] = {%s}" %\
+    decl = "static size_t " + pset_str + "[%i] = {%s}" %\
             (ids_to_use, temp[0])
     out_cc.write("\t%s;\n" % decl)
     out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % ids_to_use_str)

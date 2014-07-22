@@ -57,6 +57,7 @@
 #include "shared/scheduler_server.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/job_manager.h"
+#include "scheduler/load_balancer.h"
 #include "scheduler/version_manager.h"
 #include "shared/id_maker.h"
 
@@ -107,6 +108,7 @@ class Scheduler {
     virtual void SetupWorkerInterface();
     virtual void SetupDataManager();
     virtual void SetupJobManager();
+    virtual void SetupLoadBalancer();
     virtual void GetUserCommand();
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
@@ -114,6 +116,7 @@ class Scheduler {
     SchedulerServer* server_;
     DataManager* data_manager_;
     JobManager* job_manager_;
+    LoadBalancer *load_balancer_;
     IDMaker id_maker_;
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;
@@ -121,9 +124,12 @@ class Scheduler {
     bool terminate_application_flag_;
     exit_status_t terminate_application_status_;
     Log log_;
+    Log log_loop_;
     Log log_assign_;
-    Log log_table_;
-    Log log_allocate_;
+    Log log_job_manager_;
+    Log log_data_manager_;
+    Log log_version_manager_;
+    Log log_load_balancer_;
 
   private:
     virtual bool AssignJob(JobEntry* job);
@@ -151,8 +157,6 @@ class Scheduler {
         LogicalDataObject* ldo, PhysicalDataVector* dest);
 
     virtual size_t RemoveObsoleteJobEntries();
-
-    virtual void CleanLdlMap();
 
     virtual bool SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job);
 

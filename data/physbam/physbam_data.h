@@ -53,7 +53,7 @@
 namespace nimbus {
 
 class PhysBAMData: public Data {
- private:
+ protected:
   int_dimension_t size_;
   char* buffer_;
   std::stringstream* temp_buffer_;

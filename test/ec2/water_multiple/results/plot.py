@@ -195,7 +195,7 @@ plt.xticks(ind+width/2., xticks )
 # plt.legend( (S[0][0], S[1][0], S[2][0], S[3][0], S[4][0]), ('Translator Compute', 'Compute', 'Translator Copy', 'Copy', 'Idle') )
 
 # annotate the graph with physbam-mpi completion time
-physbam = 2857
+physbam = 62 + 118 + 152 + 192 + 229 + 272 + 321 + 402 + 639 + 539 + 598
 hline = plt.axhline(physbam, color='#fb8072', ls='--', linewidth=4)
 # corner = (ind[N - 2] + ind[N - 3]) / 2.0
 # plt.annotate('PhysBAM-MPI\nCompletion Time',

@@ -44,6 +44,7 @@
 #include <boost/shared_ptr.hpp>
 #include <stdio.h>
 #include <sstream> // NOLINT
+#include <iostream> // NOLINT
 #include <string>
 #include "shared/nimbus_types.h"
 #include "shared/protobuf_compiled/ldomessage.pb.h"

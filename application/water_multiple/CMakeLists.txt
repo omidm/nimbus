@@ -27,10 +27,12 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/cache_particle_levelset_evolution.cc
     ${PROJECT_SOURCE_DIR}/cache_prototypes.cc
     ${PROJECT_SOURCE_DIR}/cache_scalar_array.cc
+    ${PROJECT_SOURCE_DIR}/cache_compressed_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/data_def.cc
     ${PROJECT_SOURCE_DIR}/data_face_array.cc
     ${PROJECT_SOURCE_DIR}/data_particle_array.cc
     ${PROJECT_SOURCE_DIR}/data_scalar_array.cc
+    ${PROJECT_SOURCE_DIR}/data_compressed_scalar_array.cc
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.cc
     ${PROJECT_SOURCE_DIR}/job_initialize.cc
     ${PROJECT_SOURCE_DIR}/job_loop_frame.cc
@@ -71,6 +73,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_main.cc
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_transform_pressure.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_one.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_two.cc
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.cc
@@ -97,6 +100,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/cache_options.h
     ${PROJECT_SOURCE_DIR}/cache_particle_levelset_evolution.cc
     ${PROJECT_SOURCE_DIR}/cache_prototypes.h
+    ${PROJECT_SOURCE_DIR}/cache_compressed_scalar_array.h
     ${PROJECT_SOURCE_DIR}/cache_scalar_array.h
     ${PROJECT_SOURCE_DIR}/data_include.h
     ${PROJECT_SOURCE_DIR}/data_names.h
@@ -104,6 +108,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/data_face_array.h
     ${PROJECT_SOURCE_DIR}/data_particle_array.h
     ${PROJECT_SOURCE_DIR}/data_scalar_array.h
+    ${PROJECT_SOURCE_DIR}/data_compressed_scalar_array.h
     ${PROJECT_SOURCE_DIR}/job_include.h
     ${PROJECT_SOURCE_DIR}/job_names.h
     ${PROJECT_SOURCE_DIR}/job_calculate_frame.h
@@ -148,6 +153,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h
     ${PROJECT_SOURCE_DIR}/projection/data_sparse_matrix.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_main.h
+    ${PROJECT_SOURCE_DIR}/projection/job_projection_transform_pressure.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_one.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_calculate_boundary_condition_part_two.h
     ${PROJECT_SOURCE_DIR}/projection/job_projection_construct_matrix.h

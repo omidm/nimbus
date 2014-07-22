@@ -103,7 +103,7 @@ Data * PhysBAMData::Clone() {
 */
 void PhysBAMData::Create() {
   if (size_ && !buffer_) {
-      buffer_ = static_cast<char*>(malloc(size_));
+      buffer_ = new char[size_];
       memset(buffer_, 0, size_);
   }
   // hash = HashCode();
@@ -117,7 +117,7 @@ void PhysBAMData::Create() {
 */
 void PhysBAMData::Destroy() {
   if (buffer_) {
-    delete [] buffer_;
+    delete[] buffer_;
     buffer_ = NULL;
   }
   size_ = 0;
@@ -135,7 +135,7 @@ void PhysBAMData::Copy(Data *from) {
   Destroy();
   PhysBAMData* pfrom = static_cast<PhysBAMData*>(from);
   size_ = pfrom->size();
-  buffer_ = static_cast<char*>(malloc(size_));
+  buffer_ = new char[size_];
   memcpy(buffer_, pfrom->buffer(), size_);
   // hash = pfrom->hash;
 }
@@ -231,9 +231,9 @@ bool PhysBAMData::AddToTempBuffer(char* buffer, int len) {
 int PhysBAMData::CommitTempBuffer() {
   int len = temp_buffer_->tellp();
   if (buffer_)
-    delete buffer_;
+    delete[] buffer_;
   size_ = len;
-  buffer_ = static_cast<char*>(malloc(len));
+  buffer_ = new char[len];
   temp_buffer_->read(buffer_, len);
   if (temp_buffer_->eof()) {
     dbg(DBG_WARN, "When copying a temporary buffer into the permanent buffer in a PhysBAMData object, the read was incomplete.\n");  // NOLINT

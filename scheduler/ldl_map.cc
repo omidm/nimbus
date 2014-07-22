@@ -123,7 +123,7 @@ bool LdlMap::InsertParentLdlEntry(
   Table::iterator iter;
   iter = table_.find(ldid);
   if (iter != table_.end()) {
-    return iter->second->InsertParentLdlEntry(job_id, version, job_depth, sterile);
+    return iter->second->InsertParentLdlEntry(job_id, version, job_depth);
   } else {
     dbg(DBG_ERROR, "ERROR: ldid %lu does not exist in the ldl_map");
     exit(-1);
