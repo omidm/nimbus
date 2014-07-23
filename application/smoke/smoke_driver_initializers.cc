@@ -56,6 +56,10 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeFirstDistributed(
     // policies, etc.
     example.Initialize_Fields();
 
+    if (example.nimbus_thread_queue) {
+      example.projection.elliptic_solver->thread_queue=example.nimbus_thread_queue;
+    }
+
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
     example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);
@@ -129,6 +133,10 @@ template<class TV> void SMOKE_DRIVER<TV>::Initialize(
   {
     
     // policies, etc.
+    if (example.nimbus_thread_queue) {
+      example.projection.elliptic_solver->thread_queue=example.nimbus_thread_queue;
+    }
+
     // setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
     example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);
@@ -180,6 +188,10 @@ template<class TV> void SMOKE_DRIVER<TV>::InitializeUseCache(
 
   {
     // policies, etc.
+    if (example.nimbus_thread_queue) {
+      example.projection.elliptic_solver->thread_queue=example.nimbus_thread_queue;
+    }
+
     //setup laplace
     example.projection.elliptic_solver->Set_Relative_Tolerance(1e-9);
     example.projection.elliptic_solver->pcg.Set_Maximum_Iterations(1000);

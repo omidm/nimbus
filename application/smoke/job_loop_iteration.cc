@@ -180,8 +180,8 @@ namespace application {
 	read.clear();
 	LoadLogicalIdsInSet(this, &read, kRegY2W3Outer[i], APP_DENSITY, NULL);
 	write.clear();
-	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY, APP_DENSITY_GHOST, NULL);
-	// LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DENSITY, NULL);
+	LoadLogicalIdsInSet(this, &write, kRegY2W3CentralWGB[i], APP_DENSITY_GHOST, NULL);
+	LoadLogicalIdsInSet(this, &write, kRegY2W3Central[i], APP_DENSITY, NULL);
 	
 	nimbus::Parameter update_ghost_densities_params;
 	std::string update_ghost_densities_str;
