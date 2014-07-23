@@ -241,22 +241,28 @@ void LoadBalancer::InitializeRegionMap() {
 
   size_t num_x, num_y, num_z;
   SplitDimensions(&num_x, &num_y, &num_z);
-  GenerateRegionMap(num_x, num_y, num_z);
+
+  size_t weight_x[WEIGHT_NUM] = WEIGHT_X;
+  size_t weight_y[WEIGHT_NUM] = WEIGHT_Y;
+  size_t weight_z[WEIGHT_NUM] = WEIGHT_Z;
+  GenerateRegionMap(num_x, num_y, num_z, weight_x, weight_y, weight_z);
 }
 
 void LoadBalancer::UpdateRegionMap() {
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
 
-  if (!data_manager_->initialized_global_bounding_region()) {
-    return;
-  }
+  return;
 }
 
-void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z) {
-  size_t weight_x[WEIGHT_NUM] = WEIGHT_X;
-  size_t weight_y[WEIGHT_NUM] = WEIGHT_Y;
-  size_t weight_z[WEIGHT_NUM] = WEIGHT_Z;
+void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
+                                     size_t *weight_x, size_t *weight_y, size_t *weight_z) {
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
+  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
+
+  assert((sizeof(weight_x) / sizeof(weight_x[0])) >= num_x);
+  assert((sizeof(weight_y) / sizeof(weight_y[0])) >= num_y);
+  assert((sizeof(weight_z) / sizeof(weight_z[0])) >= num_z);
 
   std::vector<int_dimension_t> width_x;
   size_t weight_sum_x = 0;
