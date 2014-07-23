@@ -94,10 +94,13 @@ namespace nimbus {
     LoadBalancer(const LoadBalancer& other) {}
 
     Log log_;
-    ClusterMap* cluster_map_;
+    size_t worker_num_;
     GeometricRegion global_region_;
+
+    ClusterMap* cluster_map_;
     JobManager *job_manager_;
     DataManager *data_manager_;
+
     JobHistory job_history_;
     std::list<job_id_t> done_jobs_;
 
@@ -108,13 +111,19 @@ namespace nimbus {
     boost::mutex worker_map_mutex_;
 
 
-    bool updated_info_;
-    boost::mutex updated_info_mutex_;
-    boost::condition_variable update_info_cond_;
+    bool update_;
+    boost::mutex update_mutex_;
+    boost::condition_variable update_cond_;
+
+    void Initialize();
 
     void InitializeRegionMap();
 
     void UpdateRegionMap();
+
+    void SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z);
+
+    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z);
   };
 
 }  // namespace nimbus
