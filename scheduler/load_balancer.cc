@@ -226,7 +226,8 @@ void LoadBalancer::InitializeRegionMap() {
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
 
-  if (!data_manager_->initialized_global_bounding_region()) {
+  if (!data_manager_->initialized_global_bounding_region() ||
+      worker_num_ == 0) {
     return;
   }
 
@@ -300,23 +301,31 @@ void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z) {
     marker_z.push_back(marker_z[i] + width_z[i]);
   }
 
-//   domains->clear();
-//   for (size_t i = 0; i < num_x; ++i) {
-//     for (size_t j = 0; j < num_y; ++j) {
-//       for (size_t k = 0; k < num_z; ++k) {
-//         domains->push_back(
-//             GeometricRegion(
-//               marker_x[i],
-//               marker_y[j],
-//               marker_z[k],
-//               marker_x[i + 1] - marker_x[i],
-//               marker_y[j + 1] - marker_y[j],
-//               marker_z[k + 1] - marker_z[k]));
-//       }
-//     }
-//   }
-}
+  std::vector<GeometricRegion> domains;
+  for (size_t i = 0; i < num_x; ++i) {
+    for (size_t j = 0; j < num_y; ++j) {
+      for (size_t k = 0; k < num_z; ++k) {
+        domains.push_back(
+            GeometricRegion(
+              marker_x[i],
+              marker_y[j],
+              marker_z[k],
+              marker_x[i + 1] - marker_x[i],
+              marker_y[j + 1] - marker_y[j],
+              marker_z[k + 1] - marker_z[k]));
+      }
+    }
+  }
 
+  region_map_.clear();
+  size_t index = 0;
+  assert(domains.size() == worker_map_.size());
+  WorkerMapIter iter = worker_map_.begin();
+  for (; iter != worker_map_.end(); ++iter) {
+    region_map_[iter->first] = domains[index];
+    ++index;
+  }
+}
 
 void LoadBalancer::SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z) {
   switch (worker_num_) {
@@ -331,8 +340,8 @@ void LoadBalancer::SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z) 
       *num_z = 1;
       break;
     case 3 :
-      *num_x = 1;
-      *num_y = 3;
+      *num_x = 3;
+      *num_y = 1;
       *num_z = 1;
       break;
     case 4 :
@@ -341,32 +350,29 @@ void LoadBalancer::SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z) 
       *num_z = 1;
       break;
     case 5 :
-      *num_x = 1;
-      *num_y = 5;
+      *num_x = 5;
+      *num_y = 1;
       *num_z = 1;
       break;
     case 6 :
-      *num_x = 2;
-      *num_y = 3;
+      *num_x = 6;
+      *num_y = 1;
       *num_z = 1;
       break;
     case 7 :
-      *num_x = 1;
-      *num_y = 7;
+      *num_x = 7;
+      *num_y = 1;
       *num_z = 1;
       break;
     case 8 :
-      *num_x = 2;
-      *num_y = 2;
-      *num_z = 2;
+      *num_x = 8;
+      *num_y = 1;
+      *num_z = 1;
       break;
     default:
       dbg(DBG_ERROR, "ERROR: Do not know how to split!");
       exit(-1);
   }
 }
-
-
-
 
 }  // namespace nimbus
