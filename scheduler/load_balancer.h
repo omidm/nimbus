@@ -123,7 +123,8 @@ namespace nimbus {
 
     void SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z);
 
-    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z);
+    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
+                           size_t *weight_x, size_t *weight_y, size_t *weight_z);
   };
 
 }  // namespace nimbus

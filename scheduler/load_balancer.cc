@@ -96,18 +96,71 @@ void LoadBalancer::Run() {
     while (!update_) {
       update_cond_.wait(update_lock);
     }
+
     InitializeRegionMap();
+
     UpdateRegionMap();
+
     update_ = false;
+    update_cond_.notify_all();
   }
 }
 
 
 bool LoadBalancer::GetWorkerToAssignJob(
     JobEntry *job, SchedulerWorker*& worker) {
+  Log log;
+  log.StartTimer();
+
+  boost::unique_lock<boost::mutex> update_lock(update_mutex_);
+  while (update_) {
+    update_cond_.wait(update_lock);
+  }
+
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
+  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
+
   assert(worker_map_.size() > 0);
-  // TODO(omidm): Fill out the method.
-  return false;
+
+  std::vector<int> workers_rank(worker_num_, 0);
+  assert(worker_num_ == region_map_.size());
+
+  IDSet<logical_data_id_t> union_set = job->union_set();
+  IDSet<logical_data_id_t>::IDSetIter iter;
+  for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
+    const LogicalDataObject* ldo;
+    ldo = data_manager_->FindLogicalObject(*iter);
+    RegionMapIter it = region_map_.begin();
+    for (size_t i = 0; i < worker_num_; ++i) {
+      if (it->second.Intersects(ldo->region())) {
+        ++workers_rank[i];
+        ++it;
+      }
+    }
+  }
+
+  // find the worker that wins the poll.
+  RegionMapIter it = region_map_.begin();
+  worker_id_t w_id = it->first;
+  int count = workers_rank[0];
+  for (size_t i = 1; i < worker_num_; ++i) {
+    ++it;
+    if (count < workers_rank[i]) {
+      count = workers_rank[i];
+      w_id = it->first;
+    }
+  }
+
+  log.StopTimer();
+  std::cout
+    << "Picked worker: " << w_id
+    << " for job: " << job->job_name()
+    << " took: " << log.timer()
+    << " for union set size of: " << union_set.size() << std::endl;
+
+  worker = worker_map_[w_id];
+
+  return true;
 }
 
 
