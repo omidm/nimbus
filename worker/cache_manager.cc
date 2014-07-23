@@ -257,4 +257,17 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
 }
+
+void CacheManager::PrintProfile(std::stringstream* output) {
+  if (pool_ == NULL) {
+    return;
+  }
+  for (Pool::iterator iter = pool_->begin();
+       iter != pool_->end();
+       ++iter) {
+    *output << "-----------" << std::endl;
+    iter->second->PrintProfile(output);
+  }
+  *output << "-----------" << std::endl;
+}
 }  // namespace nimbus

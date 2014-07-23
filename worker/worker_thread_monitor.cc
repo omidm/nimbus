@@ -38,6 +38,7 @@
 
 #include <unistd.h>
 #include <fstream>  // NOLINT
+#include <sstream>
 #include <string>
 
 #include "worker/worker.h"
@@ -71,7 +72,19 @@ void WorkerThreadMonitor::Run() {
       << "ready_job_queue_length "
       << "fast_job_queue_length "
       << std::endl;
+  int count = 0;
   while (true) {
+    count = (count + 1) % 10000;
+    if (count == 0) {
+      CacheManager* cache_manager =
+          worker_manager_->worker_->application_->cache_manager();
+      if (cache_manager) {
+        std::stringstream s;
+        cache_manager->PrintProfile(&s);
+        // TODO(quhang): temporary usage.
+        printf("\nCache profile\n%s\n", s.str().c_str());
+      }
+    }
     usleep(10000);
 
     dispatched_computation_job_count =

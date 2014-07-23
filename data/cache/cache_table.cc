@@ -211,4 +211,23 @@ int CacheTable::GetMinDistanceIndex(const CacheStructs &css,
     return min_index;
 }
 
+void CacheTable::PrintProfile(std::stringstream* output) {
+  if (tvar_ != NULL) {
+    for (TVar::iterator iter = tvar_->begin();
+         iter != tvar_->end();
+         ++iter) {
+      *output << iter->first.toString() << " " << iter->second->size()
+          << std::endl;
+    }
+  }
+  if (tstruct_ != NULL) {
+    for (TStruct::iterator iter = tstruct_->begin();
+         iter != tstruct_->end();
+         ++iter) {
+      *output << iter->first.toString() << " " << iter->second->size()
+              << std::endl;
+    }
+  }
+}
+
 }  // namespace nimbus

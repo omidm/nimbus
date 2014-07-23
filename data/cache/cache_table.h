@@ -43,6 +43,7 @@
 #define NIMBUS_DATA_CACHE_CACHE_TABLE_H_
 
 #include <map>
+#include <sstream>
 #include <vector>
 
 #include "data/cache/cache_defs.h"
@@ -163,6 +164,7 @@ class CacheTable {
                                 const std::vector<DataArray> &read_sets,
                                 cache::CacheAccess access = cache::EXCLUSIVE) const;
 
+        void PrintProfile(std::stringstream* output);
         typedef std::map<GeometricRegion, CacheVars *> TVar;
         typedef std::map<GeometricRegion, CacheStructs *> TStruct;
         TVar *tvar_;

@@ -43,6 +43,7 @@
 #define NIMBUS_WORKER_CACHE_MANAGER_H_
 
 #include <pthread.h>
+#include <sstream>  // NOLINT
 #include <map>
 #include <vector>
 
@@ -143,6 +144,8 @@ class CacheManager {
                           GeometricRegion &write_region);
 
         void ReleaseAccess(CacheObject* cache_object);
+
+        void PrintProfile(std::stringstream* output);
 
     private:
         typedef std::map<cache::co_id_t,
