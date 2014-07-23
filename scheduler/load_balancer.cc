@@ -92,7 +92,8 @@ void LoadBalancer::set_data_manager(DataManager *data_manager) {
 
 void LoadBalancer::Run() {
   while (true) {
-    boost::unique_lock<boost::mutex> update_lock(update_mutex_);
+    boost::adopt_lock_t recursive;
+    boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
     while (!update_) {
       update_cond_.wait(update_lock);
     }
@@ -112,13 +113,14 @@ bool LoadBalancer::GetWorkerToAssignJob(
   Log log;
   log.StartTimer();
 
-  boost::unique_lock<boost::mutex> update_lock(update_mutex_);
+  boost::adopt_lock_t recursive;
+  boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
   while (update_) {
     update_cond_.wait(update_lock);
   }
 
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
   assert(worker_map_.size() > 0);
 
@@ -260,8 +262,9 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 
 
 void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
-  boost::unique_lock<boost::mutex> update_lock(update_mutex_);
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
+  boost::adopt_lock_t recursive;
+  boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
 
   worker_id_t worker_id = worker->worker_id();
   WorkerMapIter iter = worker_map_.find(worker_id);
@@ -276,8 +279,9 @@ void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
 }
 
 void LoadBalancer::InitializeRegionMap() {
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
+  boost::adopt_lock_t recursive;
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
   if (!data_manager_->initialized_global_bounding_region() ||
       worker_num_ == 0) {
@@ -302,16 +306,18 @@ void LoadBalancer::InitializeRegionMap() {
 }
 
 void LoadBalancer::UpdateRegionMap() {
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
+  boost::adopt_lock_t recursive;
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
   return;
 }
 
 void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
                                      size_t *weight_x, size_t *weight_y, size_t *weight_z) {
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_);
+  boost::adopt_lock_t recursive;
+  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
   assert((sizeof(weight_x) / sizeof(weight_x[0])) >= num_x);
   assert((sizeof(weight_y) / sizeof(weight_y[0])) >= num_y);
