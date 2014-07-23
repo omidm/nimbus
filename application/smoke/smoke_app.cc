@@ -58,7 +58,9 @@
 
 namespace application {
 
-    SmokeApp::SmokeApp() {};
+    SmokeApp::SmokeApp() {
+      translator_log = NULL;
+    }
 
     /* Register data and job types and initialize constant quantities used by
      * application jobs. */
