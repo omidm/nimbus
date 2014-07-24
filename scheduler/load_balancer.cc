@@ -98,19 +98,24 @@ void LoadBalancer::Run() {
     while (!update_) {
       update_cond_.wait(update_lock);
     }
+    update_ = false;
+    update_cond_.notify_all();
 
     boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
     boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-    InitializeRegionMap();
-
-    UpdateRegionMap();
-
-    update_ = false;
-    update_cond_.notify_all();
+    if (worker_num_ != region_map_.size() ||
+        global_region_ != data_manager_->global_bounding_region()) {
+      if (!data_manager_->initialized_global_bounding_region()) {
+        continue;
+      } else {
+        InitializeRegionMap();
+      }
+    } else {
+      UpdateRegionMap();
+    }
   }
 }
-
 
 bool LoadBalancer::GetWorkerToAssignJob(
     JobEntry *job, SchedulerWorker*& worker) {
@@ -126,7 +131,12 @@ bool LoadBalancer::GetWorkerToAssignJob(
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  InitializeRegionMap();
+  if (worker_num_ != region_map_.size() ||
+      global_region_ != data_manager_->global_bounding_region()) {
+    if (data_manager_->initialized_global_bounding_region()) {
+      InitializeRegionMap();
+    }
+  }
 
   assert(worker_map_.size() > 0);
   assert(worker_num_ > 0);
@@ -298,17 +308,7 @@ void LoadBalancer::InitializeRegionMap() {
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  if (!data_manager_->initialized_global_bounding_region()) {
-    return;
-  } else {
-    init_phase_ = false;
-  }
-
-  if (worker_num_ == region_map_.size() &&
-      global_region_ == data_manager_->global_bounding_region()) {
-    return;
-  }
-
+  assert(data_manager_->initialized_global_bounding_region());
   assert(worker_num_ > 0);
   global_region_ = data_manager_->global_bounding_region();
 
@@ -324,6 +324,8 @@ void LoadBalancer::InitializeRegionMap() {
   std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
 
   GenerateRegionMap(num_x, num_y, num_z, weight_x, weight_y, weight_z);
+
+  init_phase_ = false;
 }
 
 void LoadBalancer::UpdateRegionMap() {

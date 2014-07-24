@@ -44,21 +44,6 @@ SchedulerV3::SchedulerV3(unsigned int p)
 }
 
 bool SchedulerV3::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  Log log;
-  log.StartTimer();
-
-  bool success =  load_balancer_->GetWorkerToAssignJob(job, worker);
-
-  log.StopTimer();
-  if (success) {
-  std::cout
-    << "Picked worker: " << worker->worker_id()
-    << " for job: " << job->job_name()
-    << " took: " << log.timer()
-    << " for union set size of: " << job->union_set_p()->size()
-    << std::endl;
-  }
-
-  return success;
+  return load_balancer_->GetWorkerToAssignJob(job, worker);
 }
 
