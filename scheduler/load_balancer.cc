@@ -146,8 +146,8 @@ bool LoadBalancer::GetWorkerToAssignJob(
       for (size_t i = 0; i < worker_num_; ++i) {
         if (it->second.Intersects(ldo->region())) {
           ++workers_rank[i];
-          ++it;
         }
+        ++it;
       }
     }
 
