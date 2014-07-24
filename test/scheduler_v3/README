@@ -1,0 +1,28 @@
+------------------------------------------------------------------------------
+Author:	omidm@stanford.edy (Omid Mashayekhi)
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+Description: Scheduler Version III
+------------------------------------------------------------------------------
+This is a scheduler that in addition to basic scheduler functionalities, uses
+load balancer for job assignments to the workers. Basic functionalities
+includes deciphering the right version for a logical data objects, adding
+necessary create and copy jobs, enforcing correctness based on the program flow
+graph, basic garbage collection and physical instance reuse to avoid memory
+leaks and updating before sets to avoid race conditions.
+
+------------------------------------------------------------------------------
+Build instructions:
+------------------------------------------------------------------------------
+1. Build Nimbus: issue make in the nimbus/ folder.
+2. Build Scheduler: issue make in this folder.
+
+------------------------------------------------------------------------------
+Run/ Usage:
+------------------------------------------------------------------------------
+Run: ./scheduler -wn [numbre-of-initial-workers]
+                 -port [listening-port-for-workers-to-connect-to]
+
+* default number of workers is set in scheduler/scheduler.cc as
+* DEFAULT_MIN_WORKER_TO_JON, currently it is 2.
+
