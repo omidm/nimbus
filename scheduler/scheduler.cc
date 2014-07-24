@@ -994,6 +994,7 @@ void Scheduler::SetupLoadBalancer() {
   load_balancer_ = new LoadBalancer();
   load_balancer_->set_job_manager(job_manager_);
   load_balancer_->set_data_manager(data_manager_);
+  load_balancer_thread_ = new boost::thread(boost::bind(&LoadBalancer::Run, load_balancer_));
 }
 
 

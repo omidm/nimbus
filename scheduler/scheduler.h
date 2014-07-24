@@ -183,6 +183,7 @@ class Scheduler {
 
     boost::thread* user_interface_thread_;
     boost::thread* worker_interface_thread_;
+    boost::thread* load_balancer_thread_;
     Computer host_;
     port_t listening_port_;
     app_id_t appId_;

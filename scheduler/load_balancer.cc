@@ -65,6 +65,7 @@ void LoadBalancer::Initialize() {
   worker_num_ = 0;
   global_region_ = GeometricRegion(0, 0, 0, 0, 0, 0);
   update_ = false;
+  init_phase_ = true;
   cluster_map_ = NULL;
   job_manager_ = NULL;
   data_manager_ = NULL;
@@ -98,6 +99,9 @@ void LoadBalancer::Run() {
       update_cond_.wait(update_lock);
     }
 
+    boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+    boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+
     InitializeRegionMap();
 
     UpdateRegionMap();
@@ -122,45 +126,55 @@ bool LoadBalancer::GetWorkerToAssignJob(
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
+  InitializeRegionMap();
+
   assert(worker_map_.size() > 0);
+  assert(worker_num_ > 0);
 
-  std::vector<int> workers_rank(worker_num_, 0);
-  assert(worker_num_ == region_map_.size());
+  if (init_phase_) {
+    worker = worker_map_.begin()->second;
+  } else {
+    std::vector<int> workers_rank(worker_num_, 0);
+    assert(worker_num_ == region_map_.size());
 
-  IDSet<logical_data_id_t> union_set = job->union_set();
-  IDSet<logical_data_id_t>::IDSetIter iter;
-  for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
-    const LogicalDataObject* ldo;
-    ldo = data_manager_->FindLogicalObject(*iter);
-    RegionMapIter it = region_map_.begin();
-    for (size_t i = 0; i < worker_num_; ++i) {
-      if (it->second.Intersects(ldo->region())) {
-        ++workers_rank[i];
-        ++it;
+    IDSet<logical_data_id_t> union_set = job->union_set();
+    IDSet<logical_data_id_t>::IDSetIter iter;
+    for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
+      const LogicalDataObject* ldo;
+      ldo = data_manager_->FindLogicalObject(*iter);
+      RegionMapIter it = region_map_.begin();
+      for (size_t i = 0; i < worker_num_; ++i) {
+        if (it->second.Intersects(ldo->region())) {
+          ++workers_rank[i];
+          ++it;
+        }
       }
     }
+
+    // find the worker that wins the poll.
+    RegionMapIter it = region_map_.begin();
+    worker_id_t w_id = it->first;
+    int count = workers_rank[0];
+    for (size_t i = 1; i < worker_num_; ++i) {
+      ++it;
+      if (count < workers_rank[i]) {
+        count = workers_rank[i];
+        w_id = it->first;
+      }
+    }
+
+    worker = worker_map_[w_id];
   }
 
-  // find the worker that wins the poll.
-  RegionMapIter it = region_map_.begin();
-  worker_id_t w_id = it->first;
-  int count = workers_rank[0];
-  for (size_t i = 1; i < worker_num_; ++i) {
-    ++it;
-    if (count < workers_rank[i]) {
-      count = workers_rank[i];
-      w_id = it->first;
-    }
-  }
 
   log.StopTimer();
   std::cout
-    << "Picked worker: " << w_id
+    << "Picked worker: " << worker->worker_id()
     << " for job: " << job->job_name()
     << " took: " << log.timer()
-    << " for union set size of: " << union_set.size() << std::endl;
+    << " for union set size of: " << job->union_set_p()->size()
+    << std::endl;
 
-  worker = worker_map_[w_id];
 
   return true;
 }
@@ -270,6 +284,7 @@ void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   WorkerMapIter iter = worker_map_.find(worker_id);
   if (iter == worker_map_.end()) {
     worker_map_[worker_id] = worker;
+    worker_num_ = worker_map_.size();
     update_ = true;
     update_cond_.notify_all();
   } else {
@@ -283,25 +298,31 @@ void LoadBalancer::InitializeRegionMap() {
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  if (!data_manager_->initialized_global_bounding_region() ||
-      worker_num_ == 0) {
+  if (!data_manager_->initialized_global_bounding_region()) {
     return;
+  } else {
+    init_phase_ = false;
   }
 
-  if (worker_num_ == worker_map_.size() &&
+  if (worker_num_ == region_map_.size() &&
       global_region_ == data_manager_->global_bounding_region()) {
     return;
   }
 
-  worker_num_ = worker_map_.size();
+  assert(worker_num_ > 0);
   global_region_ = data_manager_->global_bounding_region();
 
   size_t num_x, num_y, num_z;
   SplitDimensions(&num_x, &num_y, &num_z);
 
-  size_t weight_x[WEIGHT_NUM] = WEIGHT_X;
-  size_t weight_y[WEIGHT_NUM] = WEIGHT_Y;
-  size_t weight_z[WEIGHT_NUM] = WEIGHT_Z;
+
+  static const int arr_x[] = WEIGHT_X;
+  std::vector<size_t> weight_x(arr_x, arr_x + WEIGHT_NUM);
+  static const int arr_y[] = WEIGHT_Y;
+  std::vector<size_t> weight_y(arr_y, arr_y + WEIGHT_NUM);
+  static const int arr_z[] = WEIGHT_Z;
+  std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
+
   GenerateRegionMap(num_x, num_y, num_z, weight_x, weight_y, weight_z);
 }
 
@@ -314,14 +335,16 @@ void LoadBalancer::UpdateRegionMap() {
 }
 
 void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
-                                     size_t *weight_x, size_t *weight_y, size_t *weight_z) {
+                                     std::vector<size_t> weight_x,
+                                     std::vector<size_t> weight_y,
+                                     std::vector<size_t> weight_z) {
   boost::adopt_lock_t recursive;
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  assert((sizeof(weight_x) / sizeof(weight_x[0])) >= num_x);
-  assert((sizeof(weight_y) / sizeof(weight_y[0])) >= num_y);
-  assert((sizeof(weight_z) / sizeof(weight_z[0])) >= num_z);
+  assert(weight_x.size() >= num_x);
+  assert(weight_y.size() >= num_y);
+  assert(weight_z.size() >= num_z);
 
   std::vector<int_dimension_t> width_x;
   size_t weight_sum_x = 0;

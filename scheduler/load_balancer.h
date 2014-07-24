@@ -112,6 +112,7 @@ namespace nimbus {
 
 
     bool update_;
+    bool init_phase_;
     boost::mutex update_mutex_;
     boost::condition_variable update_cond_;
 
@@ -124,7 +125,9 @@ namespace nimbus {
     void SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z);
 
     void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
-                           size_t *weight_x, size_t *weight_y, size_t *weight_z);
+                           std::vector<size_t> weight_x,
+                           std::vector<size_t> weight_y,
+                           std::vector<size_t> weight_z);
   };
 
 }  // namespace nimbus
