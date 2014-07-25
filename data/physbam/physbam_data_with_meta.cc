@@ -148,8 +148,9 @@ void PhysBAMDataWithMeta::MarkMetaDataInTempBuffer() {
   meta_data_size_ = temp_buffer_->tellp();
   has_meta_data_ = true;
   std::size_t temp = HASH_SEED;
+  const char* pointer = temp_buffer_->str().c_str();
   if (meta_data_size_ != 0) {
-    boost::hash_range(temp, buffer_, buffer_ + meta_data_size_);
+    boost::hash_range(temp, pointer, pointer + meta_data_size_);
   }
   meta_data_hash_ = static_cast<int64_t>(temp);
 }

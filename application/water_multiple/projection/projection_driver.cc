@@ -74,6 +74,10 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
         partition.interior_indices);
   }
   if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {
+    if (projection_data.meta_p.Size() == 0) {
+      assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+      projection_data.meta_p.Resize(projection_data.local_n);
+    }
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
     projection_data.p_interior.Set_Subvector_View(
         projection_data.meta_p,

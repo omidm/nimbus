@@ -66,18 +66,7 @@ bool DataRawGridArray::SaveToNimbus(
       const_cast<char*>(
           reinterpret_cast<const char*>(array_input.array.Get_Array_Pointer())),
       header.n * sizeof(T));
-  printf("save to address %lX size %d", (unsigned long)
-         array_input.array.Get_Array_Pointer(),
-         (int)(header.n * sizeof(T)));
   CommitTempBuffer();
-  // for (int i = 0; i < 41; ++i)
-  //   for (int j = 0; j < 21; ++j)
-  //     for (int k = 0; k < 41; ++k) {
-  //       if (array_input(TV_INT(i, j, k)) >= 1) {
-  //         printf("(index%d %d %d)=%d ", i, j, k,
-  //                array_input(TV_INT(i, j, k)));
-  //       }
-  //     }
   return true;
 }
 
@@ -90,17 +79,6 @@ bool DataRawGridArray::LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array) {
   assert(array->counts.Product() == header.n);
   pointer += sizeof(Header);
   memcpy(array->array.Get_Array_Pointer(), pointer, header.n * sizeof(T));
-  // printf("load to address %lX size %d",
-  //        (unsigned long)array->array.Get_Array_Pointer(),
-  //        (int)(header.n * sizeof(T)));
-  // for (int i = 0; i < 41; ++i)
-  //   for (int j = 0; j < 21; ++j)
-  //     for (int k = 0; k < 41; ++k) {
-  //       if ((*array)(TV_INT(i, j, k)) >= 1) {
-  //         printf("(index%d %d %d)=%d ", i, j, k,
-  //                (*array)(TV_INT(i, j, k)));
-  //       }
-  //     }
   return true;
 }
 
