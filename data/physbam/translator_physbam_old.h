@@ -1146,7 +1146,8 @@ particle_buffer.id = (*id)(i);
       }
       for (size_t i = 0; i < read_set.size(); ++i) {
         PhysBAMDataWithMeta* nimbus_data =
-            static_cast<PhysBAMDataWithMeta*>(read_set[i]->data());
+            dynamic_cast<PhysBAMDataWithMeta*>(read_set[i]->data());
+        assert(nimbus_data != NULL);
         GeometricRegion inter_region = GeometricRegion::GetIntersection(
             nimbus_data->region(), region);
         char* buffer = nimbus_data->buffer();
@@ -1207,7 +1208,8 @@ particle_buffer.id = (*id)(i);
       }
       for (size_t i = 0; i < write_set.size(); ++i) {
         PhysBAMDataWithMeta* nimbus_data =
-            static_cast<PhysBAMDataWithMeta*>(write_set[i]->data());
+            dynamic_cast<PhysBAMDataWithMeta*>(write_set[i]->data());
+        assert(nimbus_data != NULL);
         GeometricRegion inter_region = GeometricRegion::GetIntersection(
             nimbus_data->region(), region);
         if (!inter_region.NoneZeroArea()) {

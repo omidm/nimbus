@@ -66,11 +66,6 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.temp.Resize(local_n, false);
   }
-  if (projection_data.p.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    projection_data.p.Resize(local_n, false);
-  }
   // Sets subview if necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
@@ -78,10 +73,10 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
         projection_data.temp,
         partition.interior_indices);
   }
-  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
+  if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_INTERIOR_N));
     projection_data.p_interior.Set_Subvector_View(
-        projection_data.p,
+        projection_data.meta_p,
         partition.interior_indices);
   }
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
@@ -132,8 +127,6 @@ void ProjectionDriver::LocalInitialize() {
         projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
   // Initializes other vectors.
-  projection_data.p.Resize(projection_data.local_n, false);
-  projection_data.p.Fill(0);
   GRID<TV> grid;
   grid.Initialize(
       TV_INT(init_config.local_region.dx(),
@@ -141,8 +134,6 @@ void ProjectionDriver::LocalInitialize() {
              init_config.local_region.dz()),
       application::GridToRange(init_config.global_region,
                                init_config.local_region));
-  projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
-  projection_data.grid_format_vector_p.Fill(0);
   projection_data.temp.Resize(projection_data.local_n, false);
   projection_data.temp.Fill(0);
   projection_data.z_interior.Resize(projection_data.interior_n, false);
@@ -219,12 +210,6 @@ void ProjectionDriver::UpdateSearchVector() {
     for (int i = 1; i <= interior_n; i++)
       p_interior(i) = z_interior(i) + projection_data.beta * p_interior(i);
   }
-  for (int i = 1;
-       i <= projection_data.interior_n; ++i) {
-    projection_data.grid_format_vector_p(
-        (*projection_data.matrix_index_to_cell_index)(i))
-        = projection_data.p(i);
-  }
 }
 // Step two finishes.
 
@@ -237,15 +222,9 @@ void ProjectionDriver::UpdateTempVector() {
   }
   SPARSE_MATRIX_FLAT_NXN<T>& A = *projection_data.matrix_a;
   VECTOR_ND<T>& temp = projection_data.temp;
-  VECTOR_ND<T>& p = projection_data.p;
+  VECTOR_ND<T>& p = projection_data.meta_p;
   // Search vector p is used here.
   // Time consuming part.
-  for (int i = projection_data.interior_n + 1;
-       i <= projection_data.local_n; ++i) {
-    projection_data.p(i) =
-        projection_data.grid_format_vector_p(
-            (*projection_data.matrix_index_to_cell_index)(i));
-  }
   A.Times(p, temp);
 }
 
@@ -628,32 +607,7 @@ void ProjectionDriver::LoadFromNimbus(
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_z time:%f.\n",
       log_timer.timer());
-  log_timer.StartTimer();
-  // VECTOR_P_GRID_FORMAT.
-  if (data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
-    projection_data.grid_format_vector_p.Resize(grid.Domain_Indices(1));
-    if (application::GetTranslatorData(
-            job, std::string(APP_VECTOR_P_GRID_FORMAT),
-            da, &pdv, application::READ_ACCESS)
-        && data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
-      translator.ReadScalarArrayFloat(
-          &array_reg_thin_outer, array_shift, &pdv,
-          &projection_data.grid_format_vector_p);
-      dbg(APP_LOG, "Finish reading the grid-format vector_p\n");
-    } else {
-      dbg(APP_LOG, "VECTOR_P flag is set but data is not local.\n");
-    }
-    application::DestroyTranslatorObjects(&pdv);
-  }
-  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_grid_format time:%f.\n",
-      log_timer.timer());
-  log_timer.StartTimer();
-  // VECTOR_P_LINEAR_FORMAT. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
-    ReadVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
-  }
-  dbg(APP_LOG, "[PROJECTION] LOAD, vector_linear_format time:%f.\n",
-      log_timer.timer());
+
   log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
@@ -819,26 +773,6 @@ void ProjectionDriver::SaveToNimbus(
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_z time:%f.\n",
       log_timer.timer());
   log_timer.StartTimer();
-  // VECTOR_P_GRID_FORMAT. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_P_GRID_FORMAT)) {
-    if (application::GetTranslatorData(
-            job, std::string(APP_VECTOR_P_GRID_FORMAT), da, &pdv,
-            application::WRITE_ACCESS)) {
-      translator.WriteScalarArrayFloat(
-          &array_reg_central, array_shift, &pdv,
-          &projection_data.grid_format_vector_p);
-    }
-    application::DestroyTranslatorObjects(&pdv);
-  }
-  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_grid_format time:%f.\n",
-      log_timer.timer());
-  log_timer.StartTimer();
-  // VECTOR_P_LINEAR_FORMAT. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT)) {
-    WriteVectorData(job, da, APP_VECTOR_P_LINEAR_FORMAT, projection_data.p);
-  }
-  dbg(APP_LOG, "[PROJECTION] SAVE, vector_p_linear_format time:%f.\n",
-      log_timer.timer());
 
   log_timer.StartTimer();
   if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {

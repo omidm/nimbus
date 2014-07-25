@@ -110,7 +110,6 @@ class ProjectionDriver {
   class ProjectionData {
    public:
     ARRAY<float, VECTOR<int,3> > pressure;
-    ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
     ARRAY<TV_INT>* matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T>* matrix_a;
@@ -119,8 +118,7 @@ class ProjectionDriver {
     VECTOR_ND<T> vector_x;
     VECTOR_ND<T> temp, temp_interior;
     VECTOR_ND<T> vector_pressure;
-    VECTOR_ND<T> p, p_interior;
-    VECTOR_ND<T> meta_p;
+    VECTOR_ND<T> meta_p, p_interior;
     VECTOR_ND<T> z_interior;
     VECTOR_ND<T> b_interior;
 
