@@ -1683,7 +1683,7 @@ template <class TS> class TranslatorPhysBAM {
                 nimbus_data->region(), region);
             char* buffer = nimbus_data->buffer();
             if (buffer == NULL || nimbus_data->size() == 0) {
-              return;
+              continue;
             }
             assert(nimbus_data->has_meta_data());
             int_dimension_t elements =
@@ -1697,7 +1697,7 @@ template <class TS> class TranslatorPhysBAM {
               int_dimension_t z = *reinterpret_cast<int_dimension_t*>(buffer);
               buffer += sizeof(int_dimension_t);
               T value = *reinterpret_cast<T*>(real_data_buffer);
-              buffer += sizeof(T);
+              real_data_buffer += sizeof(T);
               if (x >= inter_region.x() &&
                   x < inter_region.x() + inter_region.dx() &&
                   y >= inter_region.y() &&

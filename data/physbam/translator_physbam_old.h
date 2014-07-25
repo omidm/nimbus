@@ -1150,9 +1150,10 @@ particle_buffer.id = (*id)(i);
         assert(nimbus_data != NULL);
         GeometricRegion inter_region = GeometricRegion::GetIntersection(
             nimbus_data->region(), region);
+        printf("{%s}", inter_region.toString().c_str());  // NOLINT
         char* buffer = nimbus_data->buffer();
         if (buffer == NULL || nimbus_data->size() == 0) {
-          return;
+          continue;
         }
         assert(nimbus_data->has_meta_data());
         int_dimension_t elements =
@@ -1166,7 +1167,8 @@ particle_buffer.id = (*id)(i);
           int_dimension_t z = *reinterpret_cast<int_dimension_t*>(buffer);
           buffer += sizeof(int_dimension_t);
           T value = *reinterpret_cast<T*>(real_data_buffer);
-          buffer += sizeof(T);
+          real_data_buffer += sizeof(T);
+          printf("Read{(%d %d %d)=%f}", (int)x, (int)y, (int)z, value);  // NOLINT
           if (x >= inter_region.x() &&
               x < inter_region.x() + inter_region.dx() &&
               y >= inter_region.y() &&
@@ -1231,6 +1233,7 @@ particle_buffer.id = (*id)(i);
                  ++z) {
               int m_index = index_data(TV_INT(
                       x - shift[0], y - shift[1], z - shift[2]));
+              printf("?(%d)", m_index);
               if (m_index >= 1) {
                 nimbus_data->AddToTempBuffer(
                     reinterpret_cast<char*>(&x),
@@ -1242,6 +1245,8 @@ particle_buffer.id = (*id)(i);
                     reinterpret_cast<char*>(&z),
                     sizeof(z));
                 buffer.push_back(data(m_index));
+                printf("{(%d %d %d)=%f}", (int)x, (int)y, (int)z,  // NOLINT
+                       data(m_index));
               }
             }
         nimbus_data->MarkMetaDataInTempBuffer();
