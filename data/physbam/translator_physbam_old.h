@@ -1146,11 +1146,14 @@ particle_buffer.id = (*id)(i);
       }
       for (size_t i = 0; i < read_set.size(); ++i) {
         PhysBAMDataWithMeta* nimbus_data =
-            dynamic_cast<PhysBAMDataWithMeta*>(read_set[i]->data());
+            dynamic_cast<PhysBAMDataWithMeta*>(read_set[i]->data());  // NOLINT
         assert(nimbus_data != NULL);
         GeometricRegion inter_region = GeometricRegion::GetIntersection(
             nimbus_data->region(), region);
         char* buffer = nimbus_data->buffer();
+        if (buffer == NULL || nimbus_data->size() == 0) {
+          return;
+        }
         assert(nimbus_data->has_meta_data());
         int_dimension_t elements =
             nimbus_data->meta_data_size() / 3 / sizeof(int_dimension_t);
@@ -1208,13 +1211,14 @@ particle_buffer.id = (*id)(i);
       }
       for (size_t i = 0; i < write_set.size(); ++i) {
         PhysBAMDataWithMeta* nimbus_data =
-            dynamic_cast<PhysBAMDataWithMeta*>(write_set[i]->data());
+            dynamic_cast<PhysBAMDataWithMeta*>(write_set[i]->data());  // NOLINT
         assert(nimbus_data != NULL);
         GeometricRegion inter_region = GeometricRegion::GetIntersection(
             nimbus_data->region(), region);
         if (!inter_region.NoneZeroArea()) {
           continue;
         }
+        nimbus_data->ClearTempBuffer();
         std::list<T> buffer;
         for (int_dimension_t x = inter_region.x();
              x < inter_region.x() + inter_region.dx();

@@ -146,10 +146,11 @@ void PhysBAMDataWithMeta::ResetMetaData() {
 
 void PhysBAMDataWithMeta::MarkMetaDataInTempBuffer() {
   meta_data_size_ = temp_buffer_->tellp();
-  assert(meta_data_size_ != 0);
   has_meta_data_ = true;
   std::size_t temp = HASH_SEED;
-  boost::hash_range(temp, buffer_, buffer_ + meta_data_size_);
+  if (meta_data_size_ != 0) {
+    boost::hash_range(temp, buffer_, buffer_ + meta_data_size_);
+  }
   meta_data_hash_ = static_cast<int64_t>(temp);
 }
 
