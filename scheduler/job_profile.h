@@ -146,6 +146,8 @@ class JobProfile {
 
     std::string Print();
 
+    bool FindBlamedWorker(worker_id_t *worker_id);
+
   private:
     JobType job_type_;
     std::string job_name_;

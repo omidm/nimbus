@@ -221,6 +221,28 @@ std::string JobProfile::PrintDependencyLog() {
   return rval;
 }
 
+bool JobProfile::FindBlamedWorker(worker_id_t *worker_id) {
+  worker_id_t blamed_worker_id;
+  bool blame = false;
+
+  DependencyLog::iterator iter = dependency_log_.begin();
+  for (; iter != dependency_log_.end(); ++iter) {
+    if (iter->done_time() == ready_time_) {
+      blamed_worker_id = iter->worker_id();
+      blame = true;
+    }
+  }
+
+  if (blame &&
+      (blamed_worker_id != worker_id_) &&
+      (dependency_log_.size() > 1)) {
+    *worker_id = blamed_worker_id;
+    return true;
+  }
+
+  return false;
+}
+
 std::string JobProfile::Print() {
   std::string rval;
   std::ostringstream ss;

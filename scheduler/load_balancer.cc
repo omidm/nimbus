@@ -66,6 +66,7 @@ void LoadBalancer::Initialize() {
   global_region_ = GeometricRegion(0, 0, 0, 0, 0, 0);
   update_ = false;
   init_phase_ = true;
+  blame_counter_ = 0;
   cluster_map_ = NULL;
   job_manager_ = NULL;
   data_manager_ = NULL;
@@ -282,6 +283,15 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
   }
 
   log_.WriteToFile(job_profile->Print());
+
+  worker_id_t blamed_worker_id;
+  if (job_profile->FindBlamedWorker(&blamed_worker_id)) {
+    ++blame_map_[blamed_worker_id];
+    blame_counter_++;
+    if (blame_counter_ > 30) {
+      update_ = true;
+    }
+  }
 }
 
 
@@ -333,7 +343,19 @@ void LoadBalancer::UpdateRegionMap() {
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  return;
+  worker_id_t worst_worker = 0;
+  size_t count = 0;
+  std::map<worker_id_t, size_t>::iterator iter = blame_map_.begin();
+  for (; iter != blame_map_.end(); ++iter) {
+    if (iter->second > count) {
+      count = iter->second;
+      worst_worker = iter->first;
+    }
+  }
+
+  std::cout << "WORST WORKER: " << worst_worker << std::endl;
+  blame_map_.clear();
+  blame_counter_ = 0;
 }
 
 void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,

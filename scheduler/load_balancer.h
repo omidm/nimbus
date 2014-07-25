@@ -116,6 +116,9 @@ namespace nimbus {
     boost::mutex update_mutex_;
     boost::condition_variable update_cond_;
 
+    std::map<worker_id_t, size_t> blame_map_;
+    size_t blame_counter_;
+
     void Initialize();
 
     void InitializeRegionMap();
