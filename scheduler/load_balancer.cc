@@ -288,8 +288,10 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
   if (job_profile->FindBlamedWorker(&blamed_worker_id)) {
     ++blame_map_[blamed_worker_id];
     blame_counter_++;
+    std::cout << "WORST blame counter: " << blame_counter_ << std::endl;
     if (blame_counter_ > 30) {
       update_ = true;
+      update_cond_.notify_all();
     }
   }
 }
