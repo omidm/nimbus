@@ -97,7 +97,9 @@ class CacheManager {
                             const GeometricRegion &write_region,
                             const CacheVar &prototype,
                             const GeometricRegion &region,
-                            cache::CacheAccess access);
+                            cache::CacheAccess access,
+                            void (*aux)(CacheVar*, void*) = NULL,
+                            void* aux_data = NULL);
 
         /**
          * \brief Requests a CacheStruct instance of type prototype, from the

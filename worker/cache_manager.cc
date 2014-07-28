@@ -93,7 +93,9 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   const GeometricRegion &write_region,
                                   const CacheVar &prototype,
                                   const GeometricRegion &region,
-                                  cache::CacheAccess access) {
+                                  cache::CacheAccess access,
+                                  void (*aux)(CacheVar*, void*),
+                                  void* aux_data) {
     pthread_mutex_lock(&cache_lock);
     CacheVar *cv = NULL;
     // Get a cache object form the cache table.
@@ -123,6 +125,9 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     cv->SetUpReadWrite(read_set, write_set,
                        &flush, &diff, &sync, &sync_co);
     pthread_mutex_unlock(&cache_lock);
+    if (aux != NULL) {
+      aux(cv, aux_data);
+    }
 
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;

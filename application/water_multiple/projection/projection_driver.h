@@ -55,6 +55,12 @@ namespace PhysBAM {
 
 class SPARSE_MATRIX_PARTITION;
 typedef GRID<application::TV> T_GRID;
+typedef typename T_GRID::VECTOR_INT TV_INT;
+
+struct MetaPAuxData {
+  ARRAY<int, TV_INT>* pointer;
+  int local_n;
+};
 
 class ProjectionDriver {
  public:
@@ -96,6 +102,7 @@ class ProjectionDriver {
     cache_matrix_a = NULL;
     cache_matrix_c = NULL;
     cache_index_m2c = NULL;
+    cache_meta_p = NULL;
   }
 
   virtual ~ProjectionDriver() {
@@ -155,6 +162,7 @@ class ProjectionDriver {
   application::CacheSparseMatrix *cache_matrix_a;
   application::CacheSparseMatrix *cache_matrix_c;
   application::CacheArrayM2C * cache_index_m2c;
+  application::CacheCompressedScalarArray<float>* cache_meta_p;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;

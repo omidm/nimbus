@@ -90,6 +90,14 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
   }
 }
 
+void set_up_meta_p(nimbus::CacheVar* cv, void* data) {
+  application::CacheCompressedScalarArray<float>* meta_p =
+      dynamic_cast<application::CacheCompressedScalarArray<float>*>(cv);
+  MetaPAuxData* meta_p_data = reinterpret_cast<MetaPAuxData*>(data);
+  meta_p->set_index_data(meta_p_data->pointer);
+  meta_p->set_data_length(meta_p_data->local_n);
+}
+
 void ProjectionDriver::Cache_LoadFromNimbus(
     const nimbus::Job* job, const nimbus::DataArray& da) {
   nimbus::PdiVector pdv;
@@ -199,6 +207,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
+  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
     ReadVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
   }
@@ -206,6 +215,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
+  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
@@ -225,6 +235,33 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     }
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, index_c2m time:%f.\n", log_timer.timer());
+
+  log_timer.StartTimer();
+  if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {
+    assert(data_config.GetFlag(DataConfig::INDEX_C2M));
+    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+           // set_index_data // set_data_length
+    nimbus::DataArray read, write;
+    const std::string meta_p_string = std::string(APP_VECTOR_P_META_FORMAT);
+    application::GetReadData(*job, meta_p_string, da, &read);
+    application::GetWriteData(*job, meta_p_string, da, &write);
+    MetaPAuxData meta_p_aux_data;
+    meta_p_aux_data.pointer = &projection_data.cell_index_to_matrix_index;
+    meta_p_aux_data.local_n = projection_data.local_n;
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_thin_outer,
+            write, array_reg_central,
+            application::kCacheMetaP, array_reg_central,
+            nimbus::cache::EXCLUSIVE,
+            set_up_meta_p,
+            &meta_p_aux_data);
+    cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
+    assert(cache_meta_p != NULL);
+    projection_data.meta_p = *cache_meta_p->data();
+  }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_meta_format time:%f.\n",
+      log_timer.timer());
 
   log_timer.StartTimer();
   // LOCAL_N.
@@ -384,6 +421,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
+  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
     ReadVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
   }
@@ -391,9 +429,14 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
+  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_pressure time:%f.\n", log_timer.timer());
+
+  log_timer.StartTimer();
+  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
     ReadVectorData(job, da, APP_VECTOR_PRESSURE,
                    projection_data.vector_pressure);
@@ -432,6 +475,14 @@ void ProjectionDriver::Cache_SaveToNimbus(
     T_SCALAR_ARRAY::Exchange_Arrays(*pressure, projection_data.pressure);
     cm->ReleaseAccess(cache_pressure);
     cache_pressure = NULL;
+  }
+  dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n", log_timer.timer());
+
+  log_timer.StartTimer();
+  if (cache_meta_p) {
+    *cache_meta_p->data() = projection_data.meta_p;
+    cm->ReleaseAccess(cache_meta_p);
+    cache_meta_p = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n", log_timer.timer());
 

@@ -52,7 +52,6 @@ CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
 
 // Varibales for projection.
 CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
-CacheScalarArray<T> kCacheVectorPGridFormat(kDefaultRegion, 1, true);
 CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
 CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
 
@@ -63,5 +62,6 @@ CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
 
 CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true);
 
+CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true);
 } // namespace application
 

@@ -55,7 +55,6 @@ extern CacheScalarArray<bool> kCachePsiD;
 
 // Varibales for projection.
 extern CacheScalarArray<T> kCachePressure;
-extern CacheScalarArray<T> kCacheVectorPGridFormat;
 extern CacheScalarArray<int> kCacheColors;
 extern CacheScalarArray<T> kCacheDivergence;
 
@@ -66,6 +65,7 @@ extern CacheSparseMatrix kCacheSparseMatrixC;
 
 extern CacheArrayM2C kCacheArrayM2C;
 
+extern CacheCompressedScalarArray<float> kCacheMetaP;
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_
