@@ -278,7 +278,6 @@ void JobProjectionLoopIteration::Execute(
           this, &read, kRegY2W0Central[index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_VECTOR_Z,
-          APP_INDEX_M2C,
           APP_VECTOR_P_META_FORMAT, APP_INDEX_C2M,
           NULL);
       write.clear();
@@ -302,7 +301,7 @@ void JobProjectionLoopIteration::Execute(
           this, &read, kRegY2W0Central[index],
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_A,
-          APP_INDEX_M2C, APP_INDEX_C2M,
+          APP_INDEX_C2M,
           NULL);
       write.clear();
       LoadLogicalIdsInSet(

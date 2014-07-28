@@ -207,8 +207,6 @@ void JobProjectionMain::SpawnJobs(
   // Local initialize.
   for (int index = 0; index < local_initialize_job_num; ++index) {
     read.clear();
-    // LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
-    //                     APP_VECTOR_P_META_FORMAT, NULL);
     LoadLogicalIdsInSet(this, &read, kRegY2W0Central[index],
                         APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
                         APP_INDEX_M2C,
