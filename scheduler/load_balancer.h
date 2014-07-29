@@ -64,7 +64,9 @@ namespace nimbus {
   class LoadBalancer {
   public:
     typedef std::map<worker_id_t, GeometricRegion> RegionMap;
+    typedef RegionMap::iterator RegionMapIter;
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
+    typedef WorkerMap::iterator WorkerMapIter;
     typedef std::map<job_id_t, JobProfile*> JobHistory;
 
     LoadBalancer();
@@ -85,15 +87,20 @@ namespace nimbus {
 
     void NotifyJobDone(const JobEntry *job);
 
+    void NotifyRegisteredWorker(SchedulerWorker *worker);
+
 
   private:
     LoadBalancer(const LoadBalancer& other) {}
 
     Log log_;
-    ClusterMap* cluster_map_;
+    size_t worker_num_;
     GeometricRegion global_region_;
+
+    ClusterMap* cluster_map_;
     JobManager *job_manager_;
     DataManager *data_manager_;
+
     JobHistory job_history_;
     std::list<job_id_t> done_jobs_;
 
@@ -104,13 +111,20 @@ namespace nimbus {
     boost::mutex worker_map_mutex_;
 
 
-    bool updated_info_;
-    boost::mutex updated_info_mutex_;
-    boost::condition_variable update_info_cond_;
+    bool update_;
+    boost::mutex update_mutex_;
+    boost::condition_variable update_cond_;
+
+    void Initialize();
 
     void InitializeRegionMap();
 
     void UpdateRegionMap();
+
+    void SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z);
+
+    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
+                           size_t *weight_x, size_t *weight_y, size_t *weight_z);
   };
 
 }  // namespace nimbus
