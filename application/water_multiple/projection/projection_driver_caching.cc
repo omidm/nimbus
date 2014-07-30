@@ -126,8 +126,8 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
             read, array_reg_thin_outer,
-            write, array_reg_thin_outer,
-            application::kCachePressure, array_reg_thin_outer,
+            write, array_reg_central,
+            application::kCachePressure, array_reg_reg_central,
             nimbus::cache::EXCLUSIVE);
     cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
     assert(cache_pressure != NULL);
@@ -434,7 +434,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
   }
-  dbg(APP_LOG, "[PROJECTION] LOAD, vector_pressure time:%f.\n", log_timer.timer());
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
   // TODO(add_cache).
@@ -442,7 +442,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     ReadVectorData(job, da, APP_VECTOR_PRESSURE,
                    projection_data.vector_pressure);
   }
-  dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n", log_timer.timer());
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_pressure time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
   Initialize(projection_data.local_n, projection_data.interior_n);

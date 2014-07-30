@@ -116,14 +116,11 @@ void ProjectionDriver::LocalInitialize() {
   // Calculate matrix C.
   assert(A.C != NULL);
   A.Nimbus_Create_Submatrix(partition.interior_indices, A.C);
-  // SPARSE_MATRIX_FLAT_NXN<T>* temp_matrix = A.Create_Submatrix(partition.interior_indices);
-  // *A.C = *temp_matrix;
   A.C->In_Place_Incomplete_Cholesky_Factorization(
       pcg.modified_incomplete_cholesky,
       pcg.modified_incomplete_cholesky_coefficient,
       pcg.preconditioner_zero_tolerance,
       pcg.preconditioner_zero_replacement);
-  // delete temp_matrix;
   // Initializes vector pressure.
   projection_data.vector_pressure.Resize(projection_data.interior_n, false);
   for (int i = 1; i <= projection_data.interior_n; ++i) {
@@ -131,13 +128,6 @@ void ProjectionDriver::LocalInitialize() {
         projection_data.pressure((*projection_data.matrix_index_to_cell_index)(i));
   }
   // Initializes other vectors.
-  GRID<TV> grid;
-  grid.Initialize(
-      TV_INT(init_config.local_region.dx(),
-             init_config.local_region.dy(),
-             init_config.local_region.dz()),
-      application::GridToRange(init_config.global_region,
-                               init_config.local_region));
   projection_data.temp.Resize(projection_data.local_n, false);
   projection_data.temp.Fill(0);
   projection_data.z_interior.Resize(projection_data.interior_n, false);
@@ -316,12 +306,11 @@ void ProjectionDriver::LoadFromNimbus(
                                        init_config.local_region.dy()+2,
                                        init_config.local_region.dz()+2);
   GRID<TV> grid;
-  grid.Initialize(
-      TV_INT(init_config.local_region.dx(),
-             init_config.local_region.dy(),
-             init_config.local_region.dz()),
-      application::GridToRange(init_config.global_region,
-                               init_config.local_region));
+  grid.Initialize(TV_INT(init_config.local_region.dx(),
+                         init_config.local_region.dy(),
+                         init_config.local_region.dz()),
+                  application::GridToRange(init_config.global_region,
+                                           init_config.local_region));
 
   Log log_timer;
 
