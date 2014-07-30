@@ -54,6 +54,9 @@ CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
 CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
 CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
 CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
+// TODO(quhang): this cache variable is questionable, because it cannot be
+// deleted if meta_p is being used.
+CacheScalarArray<int> kCacheArrayC2M(kDefaultRegion, 0, true);
 
 CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
 

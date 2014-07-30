@@ -415,9 +415,6 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     assert(cache_meta_p != NULL);
     projection_data.meta_p = *cache_meta_p->data();
     assert(projection_data.meta_p.Size() == projection_data.local_n);
-    for (int i = 1; i <= projection_data.local_n; ++i) {
-      printf("(%f)", projection_data.meta_p(i));
-    }
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_meta_format time:%f.\n",
       log_timer.timer());
@@ -487,9 +484,6 @@ void ProjectionDriver::Cache_SaveToNimbus(
     *cache_meta_p->data() = projection_data.meta_p;
     cm->ReleaseAccess(cache_meta_p);
     cache_meta_p = NULL;
-    for (int i = 1; i <= projection_data.local_n; ++i) {
-      printf("(%f)", projection_data.meta_p(i));
-    }
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n", log_timer.timer());
 

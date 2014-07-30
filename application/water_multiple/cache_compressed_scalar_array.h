@@ -65,7 +65,11 @@ class CacheCompressedScalarArray : public nimbus::CacheVar {
   DataType* data() { return data_; }
   void set_data(DataType* d) { data_ = d; }
   IndexType* index_data() { return index_data_; }
-  void set_index_data(IndexType* d) { index_data_ = d; }
+  // TODO(quhang): temporary solution, make a copy of index data.
+  void set_index_data(IndexType* d) {
+    if (index_data_) delete index_data_;
+    index_data_ = new IndexType(*d);
+  }
   nimbus::int_dimension_t data_length() { return data_length_; }
   void set_data_length(nimbus::int_dimension_t l) { data_length_ = l;  }
 
