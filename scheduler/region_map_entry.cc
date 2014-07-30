@@ -56,5 +56,16 @@ RegionMapEntry& RegionMapEntry::operator= (const RegionMapEntry& right) {
   return *this;
 }
 
+void RegionMapEntry::AddRegion(const GeometricRegion &region) {
+}
+
+void RegionMapEntry::RemoveRegion(const GeometricRegion &region) {
+}
+
+double RegionMapEntry::Intersect(const GeometricRegion &region) {
+  return 0;
+}
+
+
 
 }  // namespace nimbus

@@ -43,14 +43,18 @@
 
 #include <boost/unordered_map.hpp>
 #include <list>
+#include <set>
 #include <utility>
 #include "shared/nimbus_types.h"
-#include "shared/idset.h"
+#include "shared/geometric_region.h"
 
 namespace nimbus {
 
   class RegionMapEntry {
   public:
+    typedef std::set<GeometricRegion> RegionSet;
+    typedef RegionSet::iterator RegionSetIter;
+
     RegionMapEntry();
 
     RegionMapEntry(const RegionMapEntry& other);
@@ -59,7 +63,14 @@ namespace nimbus {
 
     RegionMapEntry& operator= (const RegionMapEntry& right);
 
+    void AddRegion(const GeometricRegion &region);
+
+    void RemoveRegion(const GeometricRegion &region);
+
+    double Intersect(const GeometricRegion &region);
+
   private:
+    RegionSet region_set_;
   };
 
 }  // namespace nimbus
