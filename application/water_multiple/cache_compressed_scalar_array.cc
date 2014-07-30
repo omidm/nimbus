@@ -55,7 +55,7 @@ CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
                            bool make_proto)
     : global_region_(global_reg),
       ghost_width_(ghost_width) {
-  data_ = NULL;
+  data_ = new DataType();
   index_data_ = NULL;
   data_length_ = -1;
   if (make_proto)
@@ -70,7 +70,7 @@ CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
       global_region_(global_reg),
       local_region_(ob_reg.NewEnlarged(-ghost_width)),
       ghost_width_(ghost_width) {
-  data_ = NULL;
+  data_ = new DataType();
   index_data_ = NULL;
   data_length_ = -1;
   shift_.x = local_region_.x() - global_reg.x();
@@ -110,7 +110,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
   // Loop through each element in write_set, look up the region using index, and
   // then write.
   Translator::template
-      WriteCompressedScalarArray<T>(write_reg, shift_, write_set, *data_,
+      WriteCompressedScalarArray<T>(final_write_reg, shift_, write_set, *data_,
                                     data_length_, *index_data_);
 }
 

@@ -1126,7 +1126,7 @@ particle_buffer.id = (*id)(i);
         PhysBAM::VECTOR_ND<T>* data,
         const int_dimension_t data_length,
         const PhysBAM::ARRAY<int, TV_INT>& index_data) {
-      if (data->Size() == 0) {
+      if (data->Size() != data_length) {
         data->Resize(data_length);
       }
       if (log) {

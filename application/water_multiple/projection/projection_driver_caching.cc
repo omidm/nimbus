@@ -73,7 +73,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
         partition.interior_indices);
   }
   if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {
-    if (projection_data.meta_p.Size() == 0) {
+    if (projection_data.meta_p.Size() != projection_data.local_n) {
       assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
       projection_data.meta_p.Resize(projection_data.local_n);
     }
@@ -237,33 +237,6 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, index_c2m time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {
-    assert(data_config.GetFlag(DataConfig::INDEX_C2M));
-    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-           // set_index_data // set_data_length
-    nimbus::DataArray read, write;
-    const std::string meta_p_string = std::string(APP_VECTOR_P_META_FORMAT);
-    application::GetReadData(*job, meta_p_string, da, &read);
-    application::GetWriteData(*job, meta_p_string, da, &write);
-    MetaPAuxData meta_p_aux_data;
-    meta_p_aux_data.pointer = &projection_data.cell_index_to_matrix_index;
-    meta_p_aux_data.local_n = projection_data.local_n;
-    nimbus::CacheVar* cache_var =
-        cm->GetAppVar(
-            read, array_reg_thin_outer,
-            write, array_reg_central,
-            application::kCacheMetaP, array_reg_central,
-            nimbus::cache::EXCLUSIVE,
-            set_up_meta_p,
-            &meta_p_aux_data);
-    cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
-    assert(cache_meta_p != NULL);
-    projection_data.meta_p = *cache_meta_p->data();
-  }
-  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_meta_format time:%f.\n",
-      log_timer.timer());
-
-  log_timer.StartTimer();
   // LOCAL_N.
   // Reduction on LOCAL_N is never used and thus not supported.
   if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N)) {
@@ -420,6 +393,37 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, scalar time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
+  if (data_config.GetFlag(DataConfig::VECTOR_P_META_FORMAT)) {
+    assert(data_config.GetFlag(DataConfig::INDEX_C2M));
+    assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+    nimbus::DataArray read, write;
+    const std::string meta_p_string = std::string(APP_VECTOR_P_META_FORMAT);
+    application::GetReadData(*job, meta_p_string, da, &read);
+    application::GetWriteData(*job, meta_p_string, da, &write);
+    MetaPAuxData meta_p_aux_data;
+    meta_p_aux_data.pointer = &projection_data.cell_index_to_matrix_index;
+    meta_p_aux_data.local_n = projection_data.local_n;
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_thin_outer,
+            write, array_reg_central,
+            application::kCacheMetaP, array_reg_central,
+            nimbus::cache::EXCLUSIVE,
+            set_up_meta_p,
+            &meta_p_aux_data);
+    cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
+    assert(cache_meta_p != NULL);
+    projection_data.meta_p = *cache_meta_p->data();
+    assert(projection_data.meta_p.Size() == projection_data.local_n);
+    for (int i = 1; i <= projection_data.local_n; ++i) {
+      printf("(%f)", projection_data.meta_p(i));
+    }
+  }
+  dbg(APP_LOG, "[PROJECTION] LOAD, vector_p_meta_format time:%f.\n",
+      log_timer.timer());
+
+
+  log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
   // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
@@ -483,6 +487,9 @@ void ProjectionDriver::Cache_SaveToNimbus(
     *cache_meta_p->data() = projection_data.meta_p;
     cm->ReleaseAccess(cache_meta_p);
     cache_meta_p = NULL;
+    for (int i = 1; i <= projection_data.local_n; ++i) {
+      printf("(%f)", projection_data.meta_p(i));
+    }
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n", log_timer.timer());
 
