@@ -127,7 +127,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
         cm->GetAppVar(
             read, array_reg_thin_outer,
             write, array_reg_central,
-            application::kCachePressure, array_reg_reg_central,
+            application::kCachePressure, array_reg_central,
             nimbus::cache::EXCLUSIVE);
     cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
     assert(cache_pressure != NULL);
