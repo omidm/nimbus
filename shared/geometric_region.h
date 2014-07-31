@@ -122,10 +122,10 @@ namespace nimbus {
     void Translate(const Coord &delta);
 
     /* Covers returns whether this region covers (encompasses) the argument. */
-    virtual bool Covers(GeometricRegion* region) const;
-    virtual bool Intersects(GeometricRegion* region) const;
-    virtual bool Adjacent(GeometricRegion* region) const;
-    virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
+    virtual bool Covers(const GeometricRegion* region) const;
+    virtual bool Intersects(const GeometricRegion* region) const;
+    virtual bool Adjacent(const GeometricRegion* region) const;
+    virtual bool AdjacentOrIntersects(const GeometricRegion* region) const;
     virtual bool IsEqual(const GeometricRegion* region) const;
 
     /* Largest common rectangular region shared by 2 regions. */

@@ -157,7 +157,7 @@ void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
  * \param region
  * \return
 */
-bool GeometricRegion::AdjacentOrIntersects(GeometricRegion *region) const {
+bool GeometricRegion::AdjacentOrIntersects(const GeometricRegion *region) const {
   return !((x() + dx() < region->x()) ||
            (x() > region->x() + region->dx()) ||
            (y() + dy() < region->y()) ||
@@ -172,7 +172,7 @@ bool GeometricRegion::AdjacentOrIntersects(GeometricRegion *region) const {
  * \param region
  * \return
 */
-bool GeometricRegion::Intersects(GeometricRegion *region) const {
+bool GeometricRegion::Intersects(const GeometricRegion *region) const {
   return !((x() + dx() <= region->x()) ||
            (x() >= region->x() + region->dx()) ||
            (y() + dy() <= region->y()) ||
@@ -187,7 +187,7 @@ bool GeometricRegion::Intersects(GeometricRegion *region) const {
  * \param region
  * \return Whether the two regions share face surfaces.
 */
-bool GeometricRegion::Adjacent(GeometricRegion *region) const {
+bool GeometricRegion::Adjacent(const GeometricRegion *region) const {
   return (AdjacentOrIntersects(region) && !Intersects(region));
 }
 
@@ -199,7 +199,7 @@ bool GeometricRegion::Adjacent(GeometricRegion *region) const {
  * \param region
  * \return
 */
-bool GeometricRegion::Covers(GeometricRegion *region) const {
+bool GeometricRegion::Covers(const GeometricRegion *region) const {
   return ((x() <= region->x()) &&
           (x() + dx() >= region->x() + region->dx()) &&
           (y() <= region->y()) &&
