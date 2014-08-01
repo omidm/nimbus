@@ -68,7 +68,7 @@ namespace nimbus {
 
     void RemoveRegion(const GeometricRegion *region);
 
-    double CommonSurface(const GeometricRegion *region);
+    int_dimension_t CommonSurface(const GeometricRegion *region);
 
     std::string Print();
 

@@ -87,8 +87,14 @@ void RegionMapEntry::RemoveRegion(const GeometricRegion *region) {
   region_list_ = result;
 }
 
-double RegionMapEntry::CommonSurface(const GeometricRegion *region) {
-  return 0;
+int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
+  int_dimension_t result = 0;
+  RegionListIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    result += GeometricRegion::GetIntersection(*iter, *region).GetSurfaceArea();
+  }
+
+  return result;
 }
 
 std::string RegionMapEntry::Print() {

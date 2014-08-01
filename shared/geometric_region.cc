@@ -333,6 +333,11 @@ bool GeometricRegion::NoneZeroArea() const {
   return (dx_ != 0) && (dy_ != 0) && (dz_ != 0);
 }
 
+int_dimension_t GeometricRegion::GetSurfaceArea() const {
+  return (dx_ * dy_ * dz_);
+}
+
+
 void GeometricRegion::Union(const GeometricRegion& region) {
   if (!NoneZeroArea()) {
     x_ = region.x_;

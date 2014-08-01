@@ -109,6 +109,8 @@ namespace nimbus {
     Coord Delta() const;
 
     bool NoneZeroArea() const;
+    int_dimension_t GetSurfaceArea() const;
+
     void Union(const GeometricRegion& region);
 
     /* Increase the size of geometric region along each dimension and side. */
