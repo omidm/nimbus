@@ -42,8 +42,8 @@
 #define NIMBUS_SCHEDULER_REGION_MAP_ENTRY_H_
 
 #include <boost/unordered_map.hpp>
-#include <list>
 #include <set>
+#include <vector>
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
@@ -71,6 +71,11 @@ namespace nimbus {
 
   private:
     RegionSet region_set_;
+
+    static void RemoveIntersect(const GeometricRegion *original,
+                                const GeometricRegion *remove,
+                                std::vector<GeometricRegion> *result,
+                                bool append = false);
   };
 
 }  // namespace nimbus

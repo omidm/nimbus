@@ -67,5 +67,125 @@ double RegionMapEntry::Intersect(const GeometricRegion &region) {
 }
 
 
+void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
+                                     const GeometricRegion *r,
+                                     std::vector<GeometricRegion> *result,
+                                     bool append) {
+  if (!append) {
+    result->clear();
+  }
+
+  if (!(o->Intersects(r))) {
+    result->push_back(*o);
+  } else {
+    if (o->x() < r->x()) {
+      GeometricRegion a(o->x(),
+                        o->y(),
+                        o->z(),
+                        r->x() - o->x(),
+                        o->dy(),
+                        o->dz());
+      result->push_back(a);
+
+      GeometricRegion n(r->x(),
+                        o->y(),
+                        o->z(),
+                        o->x() + o->dx() - r->x(),
+                        o->dy(),
+                        o->dz());
+      RemoveIntersect(&n, r, result, true);
+      return;
+    } else if ((r->x() + r->dx()) < (o->x() + o->dx())) {
+      GeometricRegion a(r->x() + r->dx(),
+                        o->y(),
+                        o->z(),
+                        o->x() + o->dx() - r->x() - r->dx(),
+                        o->dy(),
+                        o->dz());
+      result->push_back(a);
+
+      GeometricRegion n(o->x(),
+                        o->y(),
+                        o->z(),
+                        r->x() + r->dx() - o->x(),
+                        o->dy(),
+                        o->dz());
+      RemoveIntersect(&n, r, result, true);
+      return;
+    }
+
+    if (o->y() < r->y()) {
+      GeometricRegion a(o->x(),
+                        o->y(),
+                        o->z(),
+                        o->dx(),
+                        r->y() - o->y(),
+                        o->dz());
+      result->push_back(a);
+
+      GeometricRegion n(r->x(),
+                        o->y(),
+                        o->z(),
+                        o->dx(),
+                        o->y() + o->dy() - r->y(),
+                        o->dz());
+      RemoveIntersect(&n, r, result, true);
+      return;
+    } else if ((r->y() + r->dy()) < (o->y() + o->dy())) {
+      GeometricRegion a(o->x(),
+                        r->y() + r->dy(),
+                        o->z(),
+                        o->dx(),
+                        o->y() + o->dy() - r->y() - r->dy(),
+                        o->dz());
+      result->push_back(a);
+
+      GeometricRegion n(o->x(),
+                        o->y(),
+                        o->z(),
+                        o->dx(),
+                        r->y() + r->dy() - o->y(),
+                        o->dz());
+      RemoveIntersect(&n, r, result, true);
+      return;
+    }
+
+    if (o->z() < r->z()) {
+      GeometricRegion a(o->x(),
+                        o->y(),
+                        o->z(),
+                        o->dx(),
+                        o->dy(),
+                        r->z() - o->z());
+      result->push_back(a);
+
+      GeometricRegion n(r->x(),
+                        o->y(),
+                        o->z(),
+                        o->dx(),
+                        o->dy(),
+                        o->z() + o->dz() - r->z());
+      RemoveIntersect(&n, r, result, true);
+      return;
+    } else if ((r->y() + r->dy()) < (o->y() + o->dy())) {
+      GeometricRegion a(o->x(),
+                        o->y(),
+                        r->z() + r->dz(),
+                        o->dx(),
+                        o->dy(),
+                        o->z() + o->dz() - r->z() - r->dz());
+      result->push_back(a);
+
+      GeometricRegion n(o->x(),
+                        o->y(),
+                        o->z(),
+                        o->dx(),
+                        o->dy(),
+                        r->z() + r->dz() - o->z());
+      RemoveIntersect(&n, r, result, true);
+      return;
+    }
+  }
+}
 
 }  // namespace nimbus
