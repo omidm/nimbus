@@ -91,6 +91,15 @@ double RegionMapEntry::CommonSurface(const GeometricRegion *region) {
   return 0;
 }
 
+std::string RegionMapEntry::Print() {
+  std::string str;
+  RegionListIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    str += iter->toString();
+    str += "\n";
+  }
+  return str;
+}
 
 void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
                                      const GeometricRegion *r,
@@ -192,7 +201,7 @@ void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
                         o->z() + o->dz() - r->z());
       RemoveIntersect(&n, r, result, true);
       return;
-    } else if ((r->y() + r->dy()) < (o->y() + o->dy())) {
+    } else if ((r->z() + r->dz()) < (o->z() + o->dz())) {
       GeometricRegion a(o->x(),
                         o->y(),
                         r->z() + r->dz(),
