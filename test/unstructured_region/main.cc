@@ -70,12 +70,28 @@ int main(int argc, const char *argv[]) {
 
   rme.AddRegion(&r2);
   std::cout << rme.Print() << std::endl;
-/*
-  rme.AddRegion(&r1);
+
+  RegionMapEntry::RegionList result;
+  RegionMapEntry::RemoveIntersect(&r2, &r1, &result);
+  RegionMapEntry::RegionListIter iter = result.begin();
+  for (; iter != result.end(); ++iter) {
+    std::cout << iter->toString() << std::endl;
+  }
+  std::cout << std::endl;
+
+  rme.RemoveRegion(&r1);
+  std::cout << rme.Print() << std::endl;
+
+  rme.RemoveRegion(&r2);
   std::cout << rme.Print() << std::endl;
 
   rme.AddRegion(&r1);
   std::cout << rme.Print() << std::endl;
-*/
+
+  rme.RemoveRegion(&r2);
+  std::cout << rme.Print() << std::endl;
+
+  rme.AddRegion(&r2);
+  std::cout << rme.Print() << std::endl;
 }
 
