@@ -77,6 +77,14 @@ void RegionMapEntry::AddRegion(const GeometricRegion *region) {
 }
 
 void RegionMapEntry::RemoveRegion(const GeometricRegion *region) {
+  RegionList result;
+
+  RegionListIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+      RemoveIntersect(&(*iter), region, &result, true);
+  }
+
+  region_list_ = result;
 }
 
 double RegionMapEntry::CommonSurface(const GeometricRegion *region) {
