@@ -157,8 +157,8 @@ void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
                         o->dz());
       result->push_back(a);
 
-      GeometricRegion n(r->x(),
-                        o->y(),
+      GeometricRegion n(o->x(),
+                        r->y(),
                         o->z(),
                         o->dx(),
                         o->y() + o->dy() - r->y(),
@@ -193,9 +193,9 @@ void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
                         r->z() - o->z());
       result->push_back(a);
 
-      GeometricRegion n(r->x(),
+      GeometricRegion n(o->x(),
                         o->y(),
-                        o->z(),
+                        r->z(),
                         o->dx(),
                         o->dy(),
                         o->z() + o->dz() - r->z());

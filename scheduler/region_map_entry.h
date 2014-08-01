@@ -44,6 +44,7 @@
 #include <boost/unordered_map.hpp>
 #include <set>
 #include <list>
+#include <string>
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
@@ -69,13 +70,15 @@ namespace nimbus {
 
     double CommonSurface(const GeometricRegion *region);
 
-  private:
-    RegionList region_list_;
+    std::string Print();
 
     static void RemoveIntersect(const GeometricRegion *original,
                                 const GeometricRegion *remove,
                                 RegionList *result,
                                 bool append = false);
+
+  private:
+    RegionList region_list_;
   };
 
 }  // namespace nimbus
