@@ -33,14 +33,13 @@
  */
 
  /*
-  * Each element in the region map which defines an unstructured region and
-  * additional meta data for load balancing.
+  * Unstructured region which is a set of non-overlapping geometric regions.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_REGION_MAP_ENTRY_H_
-#define NIMBUS_SCHEDULER_REGION_MAP_ENTRY_H_
+#ifndef NIMBUS_SCHEDULER_UNSTRUCTURED_REGION_H_
+#define NIMBUS_SCHEDULER_UNSTRUCTURED_REGION_H_
 
 #include <boost/unordered_map.hpp>
 #include <set>
@@ -49,32 +48,39 @@
 #include <utility>
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
-#include "scheduler/unstructured_region.h"
 
 namespace nimbus {
 
-  class RegionMapEntry {
+  class UnstructuredRegion {
   public:
-    RegionMapEntry();
+    typedef std::list<GeometricRegion> RegionList;
+    typedef RegionList::iterator RegionListIter;
 
-    RegionMapEntry(const RegionMapEntry& other);
+    UnstructuredRegion();
 
-    virtual ~RegionMapEntry();
+    UnstructuredRegion(const UnstructuredRegion& other);
 
-    RegionMapEntry& operator= (const RegionMapEntry& right);
+    virtual ~UnstructuredRegion();
 
-    void Grow(const GeometricRegion *region);
+    UnstructuredRegion& operator= (const UnstructuredRegion& right);
 
-    void Shrink(const GeometricRegion *region);
+    void AddRegion(const GeometricRegion *region);
+
+    void RemoveRegion(const GeometricRegion *region);
 
     int_dimension_t CommonSurface(const GeometricRegion *region);
 
-    std::string PrintRegion();
+    std::string Print();
+
+    static void RemoveIntersect(const GeometricRegion *original,
+                                const GeometricRegion *remove,
+                                RegionList *result,
+                                bool append = false);
 
   private:
-    UnstructuredRegion region_;
+    RegionList region_list_;
   };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SCHEDULER_REGION_MAP_ENTRY_H_
+#endif  // NIMBUS_SCHEDULER_UNSTRUCTURED_REGION_H_

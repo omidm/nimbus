@@ -33,7 +33,8 @@
  */
 
  /*
-  * Each element in the region map which defines an unstructured region.
+  * Each element in the region map which defines an unstructured region and
+  * additional meta data for load balancing.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -47,185 +48,31 @@ RegionMapEntry::RegionMapEntry() {
 }
 
 RegionMapEntry::RegionMapEntry(const RegionMapEntry& other) {
+  region_ = other.region_;
 }
 
 RegionMapEntry::~RegionMapEntry() {
 }
 
 RegionMapEntry& RegionMapEntry::operator= (const RegionMapEntry& right) {
+  region_ = right.region_;
   return *this;
 }
 
-void RegionMapEntry::AddRegion(const GeometricRegion *region) {
-  RegionList regions_to_add;
-  regions_to_add.push_back(*region);
-
-  RegionListIter iter = region_list_.begin();
-  for (; iter != region_list_.end(); ++iter) {
-    RegionList result;
-    RegionListIter it = regions_to_add.begin();
-    for (; it != regions_to_add.end(); ++it) {
-      RemoveIntersect(&(*it), &(*iter), &result, true);
-    }
-    regions_to_add = result;
-  }
-
-  iter = regions_to_add.begin();
-  for (; iter != regions_to_add.end(); ++iter) {
-    region_list_.push_back(*iter);
-  }
+void RegionMapEntry::Grow(const GeometricRegion *region) {
+  region_.AddRegion(region);
 }
 
-void RegionMapEntry::RemoveRegion(const GeometricRegion *region) {
-  RegionList result;
-
-  RegionListIter iter = region_list_.begin();
-  for (; iter != region_list_.end(); ++iter) {
-      RemoveIntersect(&(*iter), region, &result, true);
-  }
-
-  region_list_ = result;
+void RegionMapEntry::Shrink(const GeometricRegion *region) {
+  region_.RemoveRegion(region);
 }
 
 int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
-  int_dimension_t result = 0;
-  RegionListIter iter = region_list_.begin();
-  for (; iter != region_list_.end(); ++iter) {
-    result += GeometricRegion::GetIntersection(*iter, *region).GetSurfaceArea();
-  }
-
-  return result;
+  return region_.CommonSurface(region);
 }
 
-std::string RegionMapEntry::Print() {
-  std::string str;
-  RegionListIter iter = region_list_.begin();
-  for (; iter != region_list_.end(); ++iter) {
-    str += iter->toString();
-    str += "\n";
-  }
-  return str;
-}
-
-void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
-                                     const GeometricRegion *r,
-                                     RegionList *result,
-                                     bool append) {
-  if (!append) {
-    result->clear();
-  }
-
-  if (!(o->Intersects(r))) {
-    result->push_back(*o);
-  } else {
-    if (o->x() < r->x()) {
-      GeometricRegion a(o->x(),
-                        o->y(),
-                        o->z(),
-                        r->x() - o->x(),
-                        o->dy(),
-                        o->dz());
-      result->push_back(a);
-
-      GeometricRegion n(r->x(),
-                        o->y(),
-                        o->z(),
-                        o->x() + o->dx() - r->x(),
-                        o->dy(),
-                        o->dz());
-      RemoveIntersect(&n, r, result, true);
-      return;
-    } else if ((r->x() + r->dx()) < (o->x() + o->dx())) {
-      GeometricRegion a(r->x() + r->dx(),
-                        o->y(),
-                        o->z(),
-                        o->x() + o->dx() - r->x() - r->dx(),
-                        o->dy(),
-                        o->dz());
-      result->push_back(a);
-
-      GeometricRegion n(o->x(),
-                        o->y(),
-                        o->z(),
-                        r->x() + r->dx() - o->x(),
-                        o->dy(),
-                        o->dz());
-      RemoveIntersect(&n, r, result, true);
-      return;
-    }
-
-    if (o->y() < r->y()) {
-      GeometricRegion a(o->x(),
-                        o->y(),
-                        o->z(),
-                        o->dx(),
-                        r->y() - o->y(),
-                        o->dz());
-      result->push_back(a);
-
-      GeometricRegion n(o->x(),
-                        r->y(),
-                        o->z(),
-                        o->dx(),
-                        o->y() + o->dy() - r->y(),
-                        o->dz());
-      RemoveIntersect(&n, r, result, true);
-      return;
-    } else if ((r->y() + r->dy()) < (o->y() + o->dy())) {
-      GeometricRegion a(o->x(),
-                        r->y() + r->dy(),
-                        o->z(),
-                        o->dx(),
-                        o->y() + o->dy() - r->y() - r->dy(),
-                        o->dz());
-      result->push_back(a);
-
-      GeometricRegion n(o->x(),
-                        o->y(),
-                        o->z(),
-                        o->dx(),
-                        r->y() + r->dy() - o->y(),
-                        o->dz());
-      RemoveIntersect(&n, r, result, true);
-      return;
-    }
-
-    if (o->z() < r->z()) {
-      GeometricRegion a(o->x(),
-                        o->y(),
-                        o->z(),
-                        o->dx(),
-                        o->dy(),
-                        r->z() - o->z());
-      result->push_back(a);
-
-      GeometricRegion n(o->x(),
-                        o->y(),
-                        r->z(),
-                        o->dx(),
-                        o->dy(),
-                        o->z() + o->dz() - r->z());
-      RemoveIntersect(&n, r, result, true);
-      return;
-    } else if ((r->z() + r->dz()) < (o->z() + o->dz())) {
-      GeometricRegion a(o->x(),
-                        o->y(),
-                        r->z() + r->dz(),
-                        o->dx(),
-                        o->dy(),
-                        o->z() + o->dz() - r->z() - r->dz());
-      result->push_back(a);
-
-      GeometricRegion n(o->x(),
-                        o->y(),
-                        o->z(),
-                        o->dx(),
-                        o->dy(),
-                        r->z() + r->dz() - o->z());
-      RemoveIntersect(&n, r, result, true);
-      return;
-    }
-  }
+std::string RegionMapEntry::PrintRegion() {
+  return region_.Print();
 }
 
 }  // namespace nimbus
