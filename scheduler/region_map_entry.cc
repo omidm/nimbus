@@ -56,20 +56,37 @@ RegionMapEntry& RegionMapEntry::operator= (const RegionMapEntry& right) {
   return *this;
 }
 
-void RegionMapEntry::AddRegion(const GeometricRegion &region) {
+void RegionMapEntry::AddRegion(const GeometricRegion *region) {
+  RegionList regions_to_add;
+  regions_to_add.push_back(*region);
+
+  RegionListIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    RegionList result;
+    RegionListIter it = regions_to_add.begin();
+    for (; it != regions_to_add.end(); ++it) {
+      RemoveIntersect(&(*it), &(*iter), &result, true);
+    }
+    regions_to_add = result;
+  }
+
+  iter = regions_to_add.begin();
+  for (; iter != regions_to_add.end(); ++iter) {
+    region_list_.push_back(*iter);
+  }
 }
 
-void RegionMapEntry::RemoveRegion(const GeometricRegion &region) {
+void RegionMapEntry::RemoveRegion(const GeometricRegion *region) {
 }
 
-double RegionMapEntry::Intersect(const GeometricRegion &region) {
+double RegionMapEntry::CommonSurface(const GeometricRegion *region) {
   return 0;
 }
 
 
 void RegionMapEntry::RemoveIntersect(const GeometricRegion *o,
                                      const GeometricRegion *r,
-                                     std::vector<GeometricRegion> *result,
+                                     RegionList *result,
                                      bool append) {
   if (!append) {
     result->clear();
