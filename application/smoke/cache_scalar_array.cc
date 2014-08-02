@@ -33,24 +33,23 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * Author: Chinmayee Shah <chshah@stanford.edu>
  */
 
 #include <string>
 
-#include "application/water_multiple/cache_scalar_array.h"
-#include "application/water_multiple/physbam_include.h"
-#include "application/water_multiple/physbam_tools.h"
+#include "application/smoke/cache_scalar_array.h"
+#include "application/smoke/physbam_include.h"
+#include "application/smoke/physbam_tools.h"
 #include "data/cache/cache_var.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
-/*
 namespace application {
 
-template<class T, class TS> CacheCompressedScalarArray<T, TS>::
-CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
+template<class T, class TS> CacheScalarArray<T, TS>::
+CacheScalarArray(const nimbus::GeometricRegion &global_reg,
                  const int ghost_width,
                  bool make_proto)
     : global_region_(global_reg),
@@ -59,8 +58,8 @@ CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
         MakePrototype();
 }
 
-template<class T, class TS> CacheCompressedScalarArray<T, TS>::
-CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
+template<class T, class TS> CacheScalarArray<T, TS>::
+CacheScalarArray(const nimbus::GeometricRegion &global_reg,
                  const nimbus::GeometricRegion &ob_reg,
                  const int ghost_width)
     : CacheVar(ob_reg),
@@ -75,19 +74,19 @@ CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
         Range domain = RangeFromRegions<TV>(global_reg, local_region_);
         TV_INT count = CountFromRegion(local_region_);
         mac_grid_.Initialize(count, domain, true);
-        data_ = new PhysBAMCompressedScalarArray();
+        data_ = new PhysBAMScalarArray();
         data_->Resize(mac_grid_.Domain_Indices(ghost_width));
       }
 }
 
-template<class T, class TS> nimbus::CacheVar *CacheCompressedScalarArray<T, TS>::
+template<class T, class TS> nimbus::CacheVar *CacheScalarArray<T, TS>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-    return new CacheCompressedScalarArray(global_region_,
+    return new CacheScalarArray(global_region_,
                                 ob_reg,
                                 ghost_width_);
 }
 
-template<class T, class TS> void CacheCompressedScalarArray<T, TS>::
+template<class T, class TS> void CacheScalarArray<T, TS>::
 ReadToCache(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &read_reg) {
     //dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.toString().c_str());
@@ -96,10 +95,10 @@ ReadToCache(const nimbus::DataArray &read_set,
         nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
     assert(final_read_reg.dx() > 0 && final_read_reg.dy() > 0 && final_read_reg.dz() > 0);
     Translator::template
-        ReadCompressedScalarArray<T>(final_read_reg, shift_, read_set, data_);
+        ReadScalarArray<T>(final_read_reg, shift_, read_set, data_);
 }
 
-template<class T, class TS> void CacheCompressedScalarArray<T, TS>::
+template<class T, class TS> void CacheScalarArray<T, TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &write_reg) const {
     //dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.toString().c_str());
@@ -110,10 +109,11 @@ WriteFromCache(const nimbus::DataArray &write_set,
         nimbus::GeometricRegion::GetIntersection(write_reg, ob_reg);
     assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
     Translator::template
-        WriteCompressedScalarArray<T>(write_reg, shift_, write_set, data_);
+        WriteScalarArray<T>(write_reg, shift_, write_set, data_);
 }
 
-template class CacheCompressedScalarArray<float>;
+template class CacheScalarArray<float, float>;
+template class CacheScalarArray<int, float>;
+template class CacheScalarArray<bool, float>;
 
 } // namespace application
-*/
