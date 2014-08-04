@@ -105,7 +105,7 @@ void LoadBalancer::Run() {
     boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
     boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-    if (worker_num_ != region_map_.size() ||
+    if (worker_num_ != region_map_.table_p()->size() ||
         global_region_ != data_manager_->global_bounding_region()) {
       if (!data_manager_->initialized_global_bounding_region()) {
         continue;
@@ -120,6 +120,8 @@ void LoadBalancer::Run() {
 
 bool LoadBalancer::GetWorkerToAssignJob(
     JobEntry *job, SchedulerWorker*& worker) {
+
+
   Log log;
   log.StartTimer();
 
@@ -132,7 +134,7 @@ bool LoadBalancer::GetWorkerToAssignJob(
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  if (worker_num_ != region_map_.size() ||
+  if (worker_num_ != region_map_.table_p()->size() ||
       global_region_ != data_manager_->global_bounding_region()) {
     if (data_manager_->initialized_global_bounding_region()) {
       InitializeRegionMap();
@@ -146,24 +148,24 @@ bool LoadBalancer::GetWorkerToAssignJob(
     worker = worker_map_.begin()->second;
   } else {
     std::vector<int> workers_rank(worker_num_, 0);
-    assert(worker_num_ == region_map_.size());
+    assert(worker_num_ == region_map_.table_p()->size());
 
     IDSet<logical_data_id_t> union_set = job->union_set();
     IDSet<logical_data_id_t>::IDSetIter iter;
     for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
       const LogicalDataObject* ldo;
       ldo = data_manager_->FindLogicalObject(*iter);
-      RegionMapIter it = region_map_.begin();
+      RegionMap::Iter it = region_map_.table_p()->begin();
       for (size_t i = 0; i < worker_num_; ++i) {
-        if (it->second.Intersects(ldo->region())) {
-          ++workers_rank[i];
-        }
+        // if (it->second.Intersects(ldo->region())) {
+        //   ++workers_rank[i];
+        // }
         ++it;
       }
     }
 
     // find the worker that wins the poll.
-    RegionMapIter it = region_map_.begin();
+    RegionMap::Iter it = region_map_.table_p()->begin();
     worker_id_t w_id = it->first;
     int count = workers_rank[0];
     for (size_t i = 1; i < worker_num_; ++i) {
@@ -188,6 +190,77 @@ bool LoadBalancer::GetWorkerToAssignJob(
 
 
   return true;
+
+
+
+//  Log log;
+//  log.StartTimer();
+//
+//  boost::adopt_lock_t recursive;
+//  boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
+//  while (update_) {
+//    update_cond_.wait(update_lock);
+//  }
+//
+//  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+//  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+//
+//  if (worker_num_ != region_map_.size() ||
+//      global_region_ != data_manager_->global_bounding_region()) {
+//    if (data_manager_->initialized_global_bounding_region()) {
+//      InitializeRegionMap();
+//    }
+//  }
+//
+//  assert(worker_map_.size() > 0);
+//  assert(worker_num_ > 0);
+//
+//  if (init_phase_) {
+//    worker = worker_map_.begin()->second;
+//  } else {
+//    std::vector<int> workers_rank(worker_num_, 0);
+//    assert(worker_num_ == region_map_.size());
+//
+//    IDSet<logical_data_id_t> union_set = job->union_set();
+//    IDSet<logical_data_id_t>::IDSetIter iter;
+//    for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
+//      const LogicalDataObject* ldo;
+//      ldo = data_manager_->FindLogicalObject(*iter);
+//      RegionMapIter it = region_map_.begin();
+//      for (size_t i = 0; i < worker_num_; ++i) {
+//        if (it->second.Intersects(ldo->region())) {
+//          ++workers_rank[i];
+//        }
+//        ++it;
+//      }
+//    }
+//
+//    // find the worker that wins the poll.
+//    RegionMapIter it = region_map_.begin();
+//    worker_id_t w_id = it->first;
+//    int count = workers_rank[0];
+//    for (size_t i = 1; i < worker_num_; ++i) {
+//      ++it;
+//      if (count < workers_rank[i]) {
+//        count = workers_rank[i];
+//        w_id = it->first;
+//      }
+//    }
+//
+//    worker = worker_map_[w_id];
+//  }
+//
+//
+//  log.StopTimer();
+//  std::cout
+//    << "Picked worker: " << worker->worker_id()
+//    << " for job: " << job->job_name()
+//    << " took: " << log.timer()
+//    << " for union set size of: " << job->union_set_p()->size()
+//    << std::endl;
+//
+//
+//  return true;
 }
 
 
@@ -289,7 +362,7 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
     ++blame_map_[blamed_worker_id];
     blame_counter_++;
     std::cout << "WORST blame counter: " << blame_counter_ << std::endl;
-    if (blame_counter_ > 30) {
+    if (blame_counter_ > 5) {
       update_ = true;
       update_cond_.notify_all();
     }
@@ -431,12 +504,12 @@ void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
     }
   }
 
-  region_map_.clear();
+  region_map_.table_p()->clear();
   size_t index = 0;
   assert(domains.size() == worker_map_.size());
   WorkerMapIter iter = worker_map_.begin();
   for (; iter != worker_map_.end(); ++iter) {
-    region_map_[iter->first] = domains[index];
+    // region_map_.table_p()->operator[](iter->first) = domains[index];
     ++index;
   }
 }

@@ -55,6 +55,7 @@
 #include "scheduler/job_profile.h"
 #include "scheduler/data_manager.h"
 #include "scheduler/job_manager.h"
+#include "scheduler/region_map.h"
 #include "shared/cluster.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
@@ -63,8 +64,6 @@ namespace nimbus {
 
   class LoadBalancer {
   public:
-    typedef std::map<worker_id_t, GeometricRegion> RegionMap;
-    typedef RegionMap::iterator RegionMapIter;
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
     typedef WorkerMap::iterator WorkerMapIter;
     typedef std::map<job_id_t, JobProfile*> JobHistory;
