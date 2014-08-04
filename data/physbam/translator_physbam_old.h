@@ -46,6 +46,7 @@
 #ifndef NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_OLD_H_
 #define NIMBUS_DATA_PHYSBAM_TRANSLATOR_PHYSBAM_OLD_H_
 
+#include <sys/syscall.h>
 #include <algorithm>
 #include <cmath>
 #include <string>
@@ -129,7 +130,8 @@ namespace nimbus {
         typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
       if (log) {
           std::stringstream msg;
-          msg << "### Read Face Array (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Face Array (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       PhysBAM::ARRAY<T, FaceIndex> flag;
@@ -228,7 +230,8 @@ namespace nimbus {
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Read Face Array (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Face Array (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
     }
@@ -261,7 +264,8 @@ namespace nimbus {
         typename PhysBAM::ARRAY<T, FaceIndex>* fa) {
       if (log) {
           std::stringstream msg;
-          msg << "### Write Face Array (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Face Array (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       int_dimension_t region_size = 0;
@@ -354,7 +358,8 @@ namespace nimbus {
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Write Face Array (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Face Array (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return true;
@@ -405,7 +410,8 @@ namespace nimbus {
                        bool merge = false) {
       if (log) {
           std::stringstream msg;
-          msg << "### Read Particles (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Particles (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       if (positive) {
@@ -440,7 +446,8 @@ namespace nimbus {
               // Warning: might be too strict.
               if (log) {
                   std::stringstream msg;
-                  msg << "### Read Particles (Old Translator) end : " << log->GetTime();
+                  pid_t tid = syscall(SYS_gettid);
+                  msg << "### TID: " << tid << "  Read Particles (Old Translator) end : " << log->GetTime(); // NOLINT
                   log->WriteToFile(msg.str());
               }
               return false;
@@ -459,7 +466,8 @@ namespace nimbus {
         dbg(DBG_WARN, "Physical data instances are empty.\n");
         if (log) {
             std::stringstream msg;
-            msg << "### Read Particles (Old Translator) end : " << log->GetTime();
+            pid_t tid = syscall(SYS_gettid);
+            msg << "### TID: " << tid << "  Read Particles (Old Translator) end : " << log->GetTime(); // NOLINT
             log->WriteToFile(msg.str());
         }
         return false;
@@ -530,7 +538,8 @@ namespace nimbus {
           counter1, counter2, timer.GetTime());
       if (log) {
           std::stringstream msg;
-          msg << "### Read Particles (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Particles (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return true;
@@ -560,7 +569,8 @@ namespace nimbus {
                         bool positive) {
       if (log) {
           std::stringstream msg;
-          msg << "### Write Particles (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Particles (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       if (positive) {
@@ -600,7 +610,8 @@ namespace nimbus {
                             x, y, z);
               if (log) {
                   std::stringstream msg;
-                  msg << "### Write Particles (Old Translator) end : " << log->GetTime();
+                  pid_t tid = syscall(SYS_gettid);
+                  msg << "### TID: " << tid << "  Write Particles (Old Translator) end : " << log->GetTime(); // NOLINT
                   log->WriteToFile(msg.str());
               }
               return false;
@@ -691,7 +702,8 @@ particle_buffer.id = (*id)(i);
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Write Particles (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Particles (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return true;
@@ -716,7 +728,8 @@ particle_buffer.id = (*id)(i);
                               bool merge = false) {
       if (log) {
           std::stringstream msg;
-          msg << "### Read Removed Particles (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Removed Particles (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       RemovedParticleArray* particles;
@@ -738,7 +751,8 @@ particle_buffer.id = (*id)(i);
               // Warning: might be too strict.
               if (log) {
                   std::stringstream msg;
-                  msg << "### Read Removed Particles (Old Translator) end : " << log->GetTime();
+                  pid_t tid = syscall(SYS_gettid);
+                  msg << "### TID: " << tid << "  Read Removed Particles (Old Translator) end : " << log->GetTime(); // NOLINT
                   log->WriteToFile(msg.str());
               }
               return false;
@@ -755,7 +769,8 @@ particle_buffer.id = (*id)(i);
         dbg(DBG_WARN, "Physical data instances are empty.\n");
         if (log) {
             std::stringstream msg;
-            msg << "### Read Removed Particles (Old Translator) end : " << log->GetTime();
+            pid_t tid = syscall(SYS_gettid);
+            msg << "### TID: " << tid << "  Read Removed Particles (Old Translator) end : " << log->GetTime(); // NOLINT
             log->WriteToFile(msg.str());
         }
         return false;
@@ -819,7 +834,8 @@ particle_buffer.id = (*id)(i);
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Read Removed Particles (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Removed Particles (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return true;
@@ -843,7 +859,8 @@ particle_buffer.id = (*id)(i);
                                ) {
       if (log) {
           std::stringstream msg;
-          msg << "### Write Removed Particles (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Removed Particles (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       PdiVector::iterator iter = instances->begin();
@@ -870,7 +887,8 @@ particle_buffer.id = (*id)(i);
                             x, y, z);
               if (log) {
                   std::stringstream msg;
-                  msg << "### Write Removed Particles (Old Translator) end : " << log->GetTime();
+                  pid_t tid = syscall(SYS_gettid);
+                  msg << "### TID: " << tid << "  Write Removed Particles (Old Translator) end : " << log->GetTime(); // NOLINT
                   log->WriteToFile(msg.str());
               }
               return false;
@@ -938,7 +956,8 @@ particle_buffer.id = (*id)(i);
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Write Removed Particles (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Removed Particles (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return true;
@@ -954,7 +973,8 @@ particle_buffer.id = (*id)(i);
         typename PhysBAM::ARRAY<T, Int3Vector>* sa) {
       if (log) {
           std::stringstream msg;
-          msg << "### Read Scalar Array (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Scalar Array (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       if (instances != NULL) {
@@ -994,7 +1014,8 @@ particle_buffer.id = (*id)(i);
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Read Scalar Array (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Read Scalar Array (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return sa;
@@ -1036,7 +1057,8 @@ particle_buffer.id = (*id)(i);
         typename PhysBAM::ARRAY<T, Int3Vector>* sa) {
       if (log) {
           std::stringstream msg;
-          msg << "### Write Scalar Array (Old Translator) start : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Scalar Array (Old Translator) start : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       if (sa->counts != Int3Vector(region->dx(), region->dy(), region->dz())) {
@@ -1085,7 +1107,8 @@ particle_buffer.id = (*id)(i);
       }
       if (log) {
           std::stringstream msg;
-          msg << "### Write Scalar Array (Old Translator) end : " << log->GetTime();
+          pid_t tid = syscall(SYS_gettid);
+          msg << "### TID: " << tid << "  Write Scalar Array (Old Translator) end : " << log->GetTime(); // NOLINT
           log->WriteToFile(msg.str());
       }
       return true;
