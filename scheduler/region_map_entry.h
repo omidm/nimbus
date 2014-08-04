@@ -55,6 +55,9 @@ namespace nimbus {
 
   class RegionMapEntry {
   public:
+    typedef std::list<GeometricRegion> RegionList;
+    typedef RegionList::iterator RegionListIter;
+
     RegionMapEntry();
 
     RegionMapEntry(const RegionMapEntry& other);
@@ -67,12 +70,19 @@ namespace nimbus {
 
     void Shrink(const GeometricRegion *region);
 
+    void AddCoveredJobRegion(const GeometricRegion *region);
+
+    void ClearCoveredJobRegions();
+
     int_dimension_t CommonSurface(const GeometricRegion *region);
 
     std::string PrintRegion();
 
   private:
     UnstructuredRegion region_;
+    RegionList covered_job_regions_;
+
+    void RemoveObsoleteCoveredJobRegions(const GeometricRegion *remove);
   };
 
 }  // namespace nimbus

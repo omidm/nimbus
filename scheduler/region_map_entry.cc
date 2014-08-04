@@ -65,6 +65,7 @@ void RegionMapEntry::Grow(const GeometricRegion *region) {
 
 void RegionMapEntry::Shrink(const GeometricRegion *region) {
   region_.RemoveRegion(region);
+  RemoveObsoleteCoveredJobRegions(region);
 }
 
 int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
@@ -74,5 +75,25 @@ int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
 std::string RegionMapEntry::PrintRegion() {
   return region_.Print();
 }
+
+void RegionMapEntry::AddCoveredJobRegion(const GeometricRegion *region) {
+  covered_job_regions_.push_back(*region);
+}
+
+void RegionMapEntry::ClearCoveredJobRegions() {
+  covered_job_regions_.clear();
+}
+
+void RegionMapEntry::RemoveObsoleteCoveredJobRegions(const GeometricRegion *remove) {
+  RegionListIter iter = covered_job_regions_.begin();
+  for (; iter != covered_job_regions_.end();) {
+    if (iter->Intersects(remove)) {
+      covered_job_regions_.erase(iter++);
+    } else {
+      ++iter;
+    }
+  }
+}
+
 
 }  // namespace nimbus
