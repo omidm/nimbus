@@ -45,18 +45,23 @@
 
 #include <string>
 #include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 class SpawnComputeJobCommand : public SchedulerCommand {
   public:
     SpawnComputeJobCommand();
     SpawnComputeJobCommand(const std::string& job_name,
-        const ID<job_id_t>& job_id,
-        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const ID<job_id_t>& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
+                           const ID<job_id_t>& job_id,
+                           const IDSet<logical_data_id_t>& read,
+                           const IDSet<logical_data_id_t>& write,
+                           const IDSet<job_id_t>& before,
+                           const IDSet<job_id_t>& after,
+                           const ID<job_id_t>& parent_job_id,
+                           const ID<job_id_t>& future_job_id,
+                           const bool& sterile,
+                           const Parameter& params);
+
     ~SpawnComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
@@ -70,6 +75,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
+    ID<job_id_t> future_job_id();
     Parameter params();
     bool sterile();
 
@@ -81,8 +87,12 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
-    Parameter params_;
+    ID<job_id_t> future_job_id_;
     bool sterile_;
+    Parameter params_;  
+
+    bool ReadFromProtobuf(const SubmitComputeJobCommand* cmd);
+    bool WriteToProtobuf(SubmitComputeJobCommand* cmd);
 };
 
 

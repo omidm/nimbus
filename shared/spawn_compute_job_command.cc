@@ -51,17 +51,25 @@ SpawnComputeJobCommand::SpawnComputeJobCommand() {
 }
 
 SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
-    const ID<job_id_t>& job_id,
-    const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const ID<job_id_t>& parent_job_id,
-    const Parameter& params,
-    const bool& sterile)
-: job_name_(job_name), job_id_(job_id),
-  read_set_(read), write_set_(write),
-  before_set_(before), after_set_(after),
-  parent_job_id_(parent_job_id),
-  params_(params), sterile_(sterile) {
+                                               const ID<job_id_t>& job_id,
+                                               const IDSet<logical_data_id_t>& read,
+                                               const IDSet<logical_data_id_t>& write,
+                                               const IDSet<job_id_t>& before,
+                                               const IDSet<job_id_t>& after,
+                                               const ID<job_id_t>& parent_job_id,
+                                               const ID<job_id_t>& future_job_id,
+                                               const bool& sterile,
+                                               const Parameter& params)
+  : job_name_(job_name),
+    job_id_(job_id),
+    read_set_(read),
+    write_set_(write),
+    before_set_(before),
+    after_set_(after),
+    parent_job_id_(parent_job_id),
+    future_job_id_(future_job_id),
+    sterile_(sterile),
+    params_(params) {
   name_ = SPAWN_COMPUTE_JOB_NAME;
   type_ = SPAWN_COMPUTE_JOB;
 }
@@ -74,102 +82,36 @@ SchedulerCommand* SpawnComputeJobCommand::Clone() {
 }
 
 
-bool SpawnComputeJobCommand::Parse(const std::string& params) {
-  int num = 9;
+bool SpawnComputeJobCommand::Parse(const std::string& data) {
+  SubmitComputeJobCommand cmd;
+  bool result = cmd.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: SpawnComputeJobCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: SpawnComputeJobCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    // Throw an error message
     return false;
-  }
-
-  iter = tokens.begin();
-  job_name_ = *iter;
-
-  iter++;
-  if (!job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!read_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid read set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!write_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid write set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!before_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid before set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!parent_job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (*iter == "sterile") {
-    sterile_ = true;
-  } else if (*iter == "not_sterile") {
-    sterile_ = false;
   } else {
-    std::cout << "ERROR: Could not detect valid is parent flag." << std::endl;
-    return false;
+    ReadFromProtobuf(&cmd);
+    return true;
   }
-
-  return true;
 }
 
 std::string SpawnComputeJobCommand::toString() {
   std::string str;
-  str += (name_ + " ");
-  str += (job_name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (read_set_.toString() + " ");
-  str += (write_set_.toString() + " ");
-  str += (before_set_.toString() + " ");
-  str += (after_set_.toString() + " ");
-  str += (parent_job_id_.toString() + " ");
-  str += (params_.toString() + " ");
-  if (sterile_) {
-    str += "sterile";
-  } else {
-    str += "not_sterile";
-  }
+  SubmitComputeJobCommand cmd;
+  WriteToProtobuf(&cmd);
+  cmd.SerializeToString(&str);
 
-  return str;
+    // Note asymmetry of parsing forces this copy.
+  // That is, toString inserts the command name,
+  // while Parse assumes the command name has been consumed.
+  // Correspondingly, the protocol buffer doesn't have
+  // the command name because its typing needs to follow
+  // the higher-level parsers expectations of ASCII, but
+  // we need to insert it in toString. Asymmetry is
+  // a bad idea!
+  std::string result = name_ + " ";
+  result += str;
+  return result;
 }
 
 std::string SpawnComputeJobCommand::toStringWTags() {
@@ -203,6 +145,10 @@ ID<job_id_t> SpawnComputeJobCommand::parent_job_id() {
   return parent_job_id_;
 }
 
+ID<job_id_t> SpawnComputeJobCommand::future_job_id() {
+  return future_job_id_;
+}
+
 IDSet<logical_data_id_t> SpawnComputeJobCommand::read_set() {
   return read_set_;
 }
@@ -214,6 +160,7 @@ IDSet<logical_data_id_t> SpawnComputeJobCommand::write_set() {
 IDSet<job_id_t> SpawnComputeJobCommand::after_set() {
   return after_set_;
 }
+
 IDSet<job_id_t> SpawnComputeJobCommand::before_set() {
   return before_set_;
 }
@@ -226,3 +173,10 @@ bool SpawnComputeJobCommand::sterile() {
   return sterile_;
 }
 
+bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobCommand* cmd) {
+  return false;
+}
+
+bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobCommand* cmd) {
+  return false;
+}
