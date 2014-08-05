@@ -44,6 +44,11 @@
 
 #include "scheduler/region_map.h"
 
+#define WEIGHT_NUM 8
+#define WEIGHT_X {1, 1, 1, 1, 1, 1, 1, 1}
+#define WEIGHT_Y {1, 1, 1, 1, 1, 1, 1, 1}
+#define WEIGHT_Z {1, 1, 1, 1, 1, 1, 1, 1}
+
 namespace nimbus {
 
 RegionMap::RegionMap() {
@@ -91,17 +96,29 @@ void RegionMap::set_table(const Table& table) {
 }
 
 
-void RegionMap::Initialize(size_t worker_num, GeometricRegion global_region) {
+void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
+                           const GeometricRegion& global_region) {
+  size_t num_x, num_y, num_z;
+  SplitDimensions(worker_ids.size(), &num_x, &num_y, &num_z);
+
+  static const int arr_x[] = WEIGHT_X;
+  std::vector<size_t> weight_x(arr_x, arr_x + WEIGHT_NUM);
+  static const int arr_y[] = WEIGHT_Y;
+  std::vector<size_t> weight_y(arr_y, arr_y + WEIGHT_NUM);
+  static const int arr_z[] = WEIGHT_Z;
+  std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
+
+  GenerateTable(num_x, num_y, num_z,
+                weight_x, weight_y, weight_z,
+                worker_ids, global_region);
 }
 
-void RegionMap::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
-                                     std::vector<size_t> weight_x,
-                                     std::vector<size_t> weight_y,
-                                     std::vector<size_t> weight_z,
-                                     GeometricRegion global_region,
-                                     std::vector<worker_id_t> worker_ids) {
-  ClearTable();
-
+void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
+                              std::vector<size_t> weight_x,
+                              std::vector<size_t> weight_y,
+                              std::vector<size_t> weight_z,
+                              const std::vector<worker_id_t>& worker_ids,
+                              const GeometricRegion& global_region) {
   assert(weight_x.size() >= num_x);
   assert(weight_y.size() >= num_y);
   assert(weight_z.size() >= num_z);

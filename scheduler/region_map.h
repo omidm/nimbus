@@ -75,7 +75,8 @@ namespace nimbus {
 
     void ClearTable();
 
-    void Initialize(size_t worker_num, GeometricRegion global_region);
+    void Initialize(const std::vector<worker_id_t>& worker_ids,
+                    const GeometricRegion& global_region);
 
     RegionMap& operator= (const RegionMap& right);
 
@@ -84,12 +85,12 @@ namespace nimbus {
 
     void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z);
 
-    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
-                           std::vector<size_t> weight_x,
-                           std::vector<size_t> weight_y,
-                           std::vector<size_t> weight_z,
-                           GeometricRegion global_region,
-                           std::vector<worker_id_t> worker_ids);
+    void GenerateTable(size_t num_x, size_t num_y, size_t num_z,
+                       std::vector<size_t> weight_x,
+                       std::vector<size_t> weight_y,
+                       std::vector<size_t> weight_z,
+                       const std::vector<worker_id_t>& worker_ids,
+                       const GeometricRegion& global_region);
   };
 
 }  // namespace nimbus
