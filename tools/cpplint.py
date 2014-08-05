@@ -876,16 +876,18 @@ def Error(filename, linenum, category, confidence, message):
     message: The error message.
   """
   if _ShouldPrintError(category, confidence, linenum):
+    if (_cpplint_state.error_count == 0):
+      sys.stderr.write('\n')  
     _cpplint_state.IncrementErrorCount(category)
     if _cpplint_state.output_format == 'vs7':
-      sys.stderr.write('%s(%s):  %s  [%s] [%d]\n' % (
-          filename, linenum, message, category, confidence))
+      sys.stderr.write('  %i. %s(%s):  %s  [%s] [%d]\n' % (
+          _cpplint_state.error_count, filename, linenum, message, category, confidence))
     elif _cpplint_state.output_format == 'eclipse':
-      sys.stderr.write('%s:%s: warning: %s  [%s] [%d]\n' % (
-          filename, linenum, message, category, confidence))
+      sys.stderr.write('  %i. %s:%s: warning: %s  [%s] [%d]\n' % (
+          _cpplint_state.error_count, filename, linenum, message, category, confidence))
     else:
-      sys.stderr.write('%s:%s:  %s  [%s] [%d]\n' % (
-          filename, linenum, message, category, confidence))
+      sys.stderr.write('  %i. %s:%s:  %s  [%s] [%d]\n' % (
+          _cpplint_state.error_count, filename, linenum, message, category, confidence))
 
 
 # Matches standard C++ escape esequences per 2.13.2.3 of the C++ standard.

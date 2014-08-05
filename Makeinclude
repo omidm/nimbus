@@ -68,6 +68,7 @@ fcheck:
 	@${NIMBUS_FILENAMES}
 
 lint:
+	@/bin/echo -n "Checking file formatting: "
 	@${NIMBUS_CCLINT} --root=src *.h *.cc
 
 check: fcheck lint
