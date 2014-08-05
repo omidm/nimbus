@@ -43,6 +43,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/unordered_set.hpp>
+#include <google/protobuf/repeated_field.h>
 #include <algorithm>
 #include <sstream> // NOLINT
 #include <iostream> // NOLINT
@@ -50,8 +51,6 @@
 #include <list>
 #include <set>
 #include "shared/nimbus_types.h"
-
-
 
 namespace nimbus {
 
@@ -92,6 +91,9 @@ class IDSet {
   ConstIter end() const;
 
   IDSet<T>& operator= (const IDSet<T>& right);
+
+  virtual void ConvertToRepeatedField(google::protobuf::RepeatedField<T>* b);
+  virtual void ConvertFromRepeatedField(const google::protobuf::RepeatedField<T>& b);
 
  private:
   IDSetContainer identifiers_;

@@ -39,6 +39,7 @@
   */
 
 #include "shared/spawn_job_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 using namespace nimbus;  // NOLINT
 using boost::tokenizer;
@@ -50,14 +51,23 @@ SpawnJobCommand::SpawnJobCommand() {
 }
 
 SpawnJobCommand::SpawnJobCommand(const std::string& job_name,
-    const IDSet<job_id_t>& job_id,
-    const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const JobType& job_type, const Parameter& params)
-: job_name_(job_name), job_id_(job_id),
-  read_set_(read), write_set_(write),
-  before_set_(before), after_set_(after),
-  job_type_(job_type), params_(params) {
+                                 const ID<job_id_t>& job_id,
+                                 const IDSet<logical_data_id_t>& read,
+                                 const IDSet<logical_data_id_t>& write,
+                                 const IDSet<job_id_t>& before,
+                                 const IDSet<job_id_t>& after,
+                                 const ID<job_id_t>& future_id,
+                                 const JobType& job_type,
+                                 const Parameter& params)
+  : job_name_(job_name),
+    job_id_(job_id),
+    read_set_(read),
+    write_set_(write),
+    before_set_(before),
+    after_set_(after),
+    future_id_(future_id),
+    job_type_(job_type),
+    params_(params) {
   name_ = SPAWN_JOB_NAME;
   type_ = SPAWN_JOB;
 }
@@ -69,94 +79,62 @@ SchedulerCommand* SpawnJobCommand::Clone() {
   return new SpawnJobCommand();
 }
 
-bool SpawnJobCommand::Parse(const std::string& params) {
-  int num = 8;
+bool SpawnJobCommand::Parse(const std::string& data) {
+  SubmitJobCommand cmd;
+  bool result = cmd.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: SpawnJobCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: SpawnJobCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    std::cout << "ERROR: Failed to parse SubmitJobCommand." << std::endl;
     return false;
   }
 
-  iter = tokens.begin();
-  job_name_ = *iter;
-
-  iter++;
-  if (job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!read_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid read set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!write_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid write set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!before_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid before set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (*iter == "COMP") {
-    job_type_ = JOB_COMP;
-  } else if (*iter == "COPY") {
-    job_type_ = JOB_COPY;
-  } else {
-    std::cout << "ERROR: Unknown job type." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
+  ReadFromMsg(&cmd);
   return true;
 }
 
 std::string SpawnJobCommand::toString() {
   std::string str;
-  str += (name_ + " ");
-  str += (job_name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (read_set_.toString() + " ");
-  str += (write_set_.toString() + " ");
-  str += (before_set_.toString() + " ");
-  str += (after_set_.toString() + " ");
-  if (job_type_ == JOB_COMP)
-    str += "COMP ";
-  else
-    str += "COPY ";
-  str += params_.toString();
+  SubmitJobCommand cmd;
+  WriteToMsg(&cmd);
+  cmd.SerializeToString(&str);
 
-  return str;
+  // Note asymmetry of parsing forces this copy.
+  // That is, toString inserts the command name,
+  // while Parse assumes the command name has been consumed.
+  // Correspondingly, the protocol buffer doesn't have
+  // the command name because its typing needs to follow
+  // the higher-level parsers expectations of ASCII, but
+  // we need to insert it in toString. Asymmetry is
+  // a bad idea!
+  std::string result = name_ + " ";
+  result += str;
+  return result;
+}
+
+void SpawnJobCommand::WriteToMsg(SubmitJobCommand* cmd) {
+  cmd->set_name(job_name());
+  cmd->set_job_id(job_id().elem());
+  read_set().ConvertToRepeatedField(cmd->mutable_read_set()->mutable_ids());
+  write_set().ConvertToRepeatedField(cmd->mutable_write_set()->mutable_ids());
+  before_set().ConvertToRepeatedField(cmd->mutable_before_set()->mutable_ids());
+  after_set().ConvertToRepeatedField(cmd->mutable_after_set()->mutable_ids());
+  cmd->set_type((uint32_t)job_type());
+  cmd->set_future_id(future_id().elem());
+  cmd->set_params(params().ser_data().toString());
+}
+
+void SpawnJobCommand::ReadFromMsg(SubmitJobCommand* cmd) {
+  job_name_ = cmd->name();
+  job_id_.set_elem(cmd->job_id());
+  read_set().ConvertFromRepeatedField(cmd->read_set().ids());
+  write_set().ConvertFromRepeatedField(cmd->write_set().ids());
+  before_set().ConvertFromRepeatedField(cmd->before_set().ids());
+  after_set().ConvertFromRepeatedField(cmd->after_set().ids());
+  job_type_ = (JobType)cmd->type();
+  future_id_.set_elem(cmd->future_id());
+  // Is this safe?
+  SerializedData d(cmd->params());
+  params_.set_ser_data(d);
 }
 
 std::string SpawnJobCommand::toStringWTags() {
@@ -184,7 +162,7 @@ JobType SpawnJobCommand::job_type() {
   return job_type_;
 }
 
-IDSet<job_id_t> SpawnJobCommand::job_id() {
+ID<job_id_t> SpawnJobCommand::job_id() {
   return job_id_;
 }
 

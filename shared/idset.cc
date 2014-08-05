@@ -250,6 +250,23 @@ IDSet<T>& IDSet<T>::operator= (const IDSet<T>& right) {
   return *this;
 }
 
+template<typename T>
+void IDSet<T>::ConvertToRepeatedField(google::protobuf::RepeatedField<T>* b) {
+  for (ConstIter i = begin(); i != end(); ++i) {
+    b->Add(*i);
+  }
+}
+
+template<typename T>
+void IDSet<T>::ConvertFromRepeatedField(const google::protobuf::RepeatedField<T>& b) {
+  clear();
+  typename google::protobuf::RepeatedField<T>::const_iterator it = b.begin();
+  while (it != b.end()) {
+    insert(*it);
+    ++it;
+  }
+}
+
 template class IDSet<uint64_t>;
 template class IDSet<uint32_t>;
 

@@ -44,16 +44,21 @@
 
 #include <string>
 #include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 class SpawnJobCommand : public SchedulerCommand {
   public:
     SpawnJobCommand();
     SpawnJobCommand(const std::string& job_name,
-        const IDSet<job_id_t>& job_id,
-        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const JobType& job_type, const Parameter& params);
+                    const ID<job_id_t>& job_id,
+                    const IDSet<logical_data_id_t>& read,
+                    const IDSet<logical_data_id_t>& write,
+                    const IDSet<job_id_t>& before,
+                    const IDSet<job_id_t>& after,
+                    const ID<job_id_t>& future_id,
+                    const JobType& job_type,
+                    const Parameter& params);
     ~SpawnJobCommand();
 
     virtual SchedulerCommand* Clone();
@@ -62,22 +67,27 @@ class SpawnJobCommand : public SchedulerCommand {
     virtual std::string toStringWTags();
     std::string job_name();
     JobType job_type();
-    IDSet<job_id_t> job_id();
+    ID<job_id_t> job_id();
     IDSet<logical_data_id_t> read_set();
     IDSet<logical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
+    ID<job_id_t> future_id();
     Parameter params();
 
   private:
     std::string job_name_;
-    IDSet<job_id_t> job_id_;
+    ID<job_id_t> job_id_;
     IDSet<logical_data_id_t> read_set_;
     IDSet<logical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
+    ID<job_id_t> future_id_;
     JobType job_type_;
     Parameter params_;
+
+    void ReadFromMsg(SubmitJobCommand* msg);
+    void WriteToMsg(SubmitJobCommand* msg);
 };
 
 }  // namespace nimbus
