@@ -54,6 +54,7 @@
 #include "shared/nimbus_types.h"
 #include "scheduler/version_map.h"
 #include "scheduler/ancestor_chain.h"
+#include "scheduler/data_manager.h"
 #include "scheduler/meta_before_set.h"
 #include "scheduler/logical_data_lineage.h"
 
@@ -141,6 +142,8 @@ class JobEntry {
     bool IsReadyForCompleteVersioning();
     void remove_versioning_dependency(job_id_t job_id);
 
+    bool GetRegion(DataManager *data_manager, GeometricRegion *region);
+
   protected:
     JobType job_type_;
     std::string job_name_;
@@ -161,12 +164,14 @@ class JobEntry {
     IDSet<job_id_t> jobs_passed_versions_;
     IDSet<job_id_t> assignment_dependencies_;
     IDSet<job_id_t> versioning_dependencies_;
+    GeometricRegion region_;
     bool sterile_;
     bool partial_versioned_;
     bool versioned_;
     bool assigned_;
     bool done_;
     bool future_;
+    bool region_valid_;
 
   private:
     void Initialize();

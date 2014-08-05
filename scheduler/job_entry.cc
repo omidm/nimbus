@@ -52,6 +52,7 @@ JobEntry::JobEntry() {
   assigned_ = false;
   done_ = false;
   future_ = false;
+  region_valid_ = false;
 }
 
 void JobEntry::Initialize() {
@@ -208,12 +209,14 @@ void JobEntry::set_job_id(job_id_t job_id) {
 void JobEntry::set_read_set(IDSet<logical_data_id_t> read_set) {
   union_set_.remove(read_set_);
   union_set_.insert(read_set);
+  region_valid_ = false;
   read_set_ = read_set;
 }
 
 void JobEntry::set_write_set(IDSet<logical_data_id_t> write_set) {
   union_set_.remove(write_set_);
   union_set_.insert(write_set);
+  region_valid_ = false;
   write_set_ = write_set;
 }
 
@@ -340,6 +343,29 @@ void JobEntry::remove_versioning_dependency(job_id_t job_id) {
   meta_before_set_->InvalidateNegativeQueryCache();
 }
 
+bool JobEntry::GetRegion(DataManager *data_manager, GeometricRegion *region) {
+  if (region_valid_) {
+    *region = region_;
+    return true;
+  } else {
+    if (union_set_.size() == 0) {
+      return false;
+    } else {
+      const LogicalDataObject* ldo;
+      IDSet<logical_data_id_t>::IDSetIter iter = union_set_.begin();
+      ldo = data_manager->FindLogicalObject(*iter);
+      region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
+      ++iter;
+      for (; iter != union_set_.end(); ++iter) {
+        ldo = data_manager->FindLogicalObject(*iter);
+        region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
+      }
+      *region = region_;
+      region_valid_ = true;
+      return true;
+    }
+  }
+}
 
 
 ComputeJobEntry::ComputeJobEntry(
