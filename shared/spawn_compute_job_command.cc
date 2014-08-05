@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Stanford University.
+ * Copyright 2014 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,14 @@
  */
 
  /*
-  * Spawn compute job command used to spawn compute jobs from worker to
-  * scheduler.
+  * This command is sent from a worker to the scheduler, specifying
+  * a computation that a worker should perform. The job lists
+  * the read and write sets of the job (the data objects it reads and
+  * writes) as logical IDs. The scheduler binds these to particular
+  * physical objects and sends a compute_job_command to a worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "shared/spawn_compute_job_command.h"
