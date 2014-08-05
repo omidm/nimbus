@@ -61,10 +61,11 @@ void ProjectionDriver::Initialize(int local_n, int interior_n) {
   partition.interior_indices.max_corner = interior_n;
 
   // Initializes the vector if it is not transmitted.
-  if (projection_data.temp.Size() == 0 &&
-      data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
+  if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
-    projection_data.temp.Resize(local_n, false);
+    if (projection_data.temp.Size() != local_n) {
+      projection_data.temp.Resize(local_n, false);
+    }
   }
   // Sets subview if necessary.
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {

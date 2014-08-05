@@ -85,6 +85,21 @@ void GetAppCacheObjects(
 
   nimbus::CacheManager *cm = job.GetCacheManager();
 
+  // vector_b.
+  if (data_config.GetFlag(DataConfig::VECTOR_B)) {
+    nimbus::DataArray read, write;
+    const std::string vector_b_string = std::string(APP_VECTOR_B);
+    GetReadData(job, vector_b_string, da, &read);
+    GetWriteData(job, vector_b_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg,
+            write, array_reg,
+            kCacheVectorB, array_reg,
+            nimbus::cache::EXCLUSIVE);
+    cache->vector_b = dynamic_cast<CacheVector*>(cache_var);
+    assert(cache->vector_b != NULL);
+  }
   // matrix_a.
   if (data_config.GetFlag(DataConfig::MATRIX_A)) {
     nimbus::DataArray read, write;

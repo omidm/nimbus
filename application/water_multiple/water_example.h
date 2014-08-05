@@ -111,6 +111,7 @@ public:
     TCachePLE *cache_ple;
     TCacheSparseMatrix *cache_matrix_a;
     TCacheArrayM2C *cache_index_m2c;
+    application::CacheVector *cache_vector_b;
     bool create_destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,

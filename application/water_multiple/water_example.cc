@@ -74,6 +74,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = NULL;
     cache_matrix_a = NULL;
     cache_index_m2c = NULL;
+    cache_vector_b = NULL;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -119,6 +120,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
     cache_index_m2c = cache->index_m2c;
+    cache_vector_b = cache->vector_b;
     create_destroy_ple = true;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -165,6 +167,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
     cache_index_m2c = cache->index_m2c;
+    cache_vector_b = cache->vector_b;
     create_destroy_ple = false;
     Initialize_Particles();
     Initialize_Read_Write_General_Structures();
@@ -872,17 +875,14 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cm->ReleaseAccess(cache_index_m2c);
       cache_index_m2c = NULL;
     }
-    // TODO(addcache) the following data translation is implemented by memcpy,
-    // caching might not be needed.
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_B), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->SaveToNimbus(laplace_solver_wrapper.b_array(1));
-        dbg(APP_LOG, "Finish writing VECTOR_B.\n");
-      }
+      assert(cache_vector_b);
+      cache_vector_b->data()->n = laplace_solver_wrapper.b_array(1).n;
+      cache_vector_b->data()->x = laplace_solver_wrapper.b_array(1).x;
+      laplace_solver_wrapper.b_array(1).n = 0;
+      laplace_solver_wrapper.b_array(1).x = NULL;
+      cm->ReleaseAccess(cache_vector_b);
+      cache_vector_b = NULL;
     }
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -1338,17 +1338,11 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       // &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
       //     *(cache_index_m2c->data());
     }
-    // TODO(addcache).
     // VECTOR_B.
-    if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->LoadFromNimbus(&laplace_solver_wrapper.b_array(1));
-        dbg(APP_LOG, "Finish reading VECTOR_B.\n");
-      }
+    if (cache_vector_b) {
+      // VECTOR_B is never read inside WATER_EXAMPLE.
+      // laplace_solver_wrapper.b_array(1).n = cache_vector_b->data()->n;
+      // laplace_solver_wrapper.b_array(1).x = cache_vector_b->data()->x;
     }
     // TODO(addcache).
     // INDEX_C2M.

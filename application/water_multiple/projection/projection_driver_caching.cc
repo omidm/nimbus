@@ -207,9 +207,21 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
-  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-    ReadVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
+    nimbus::DataArray read, write;
+    const std::string vector_string = std::string(APP_VECTOR_B);
+    application::GetReadData(*job, vector_string, da, &read);
+    application::GetWriteData(*job, vector_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_central,
+            write, array_reg_central,
+            application::kCacheVectorB, array_reg_central,
+            nimbus::cache::EXCLUSIVE);
+    cache_vector_b = dynamic_cast<application::CacheVector*>(cache_var);
+    assert(cache_vector_b != NULL);
+    projection_data.vector_b.n = cache_vector_b->data()->n;
+    projection_data.vector_b.x = cache_vector_b->data()->x;
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_b time:%f.\n", log_timer.timer());
 
@@ -442,18 +454,39 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
-  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
-    ReadVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
+    nimbus::DataArray read, write;
+    const std::string vector_string = std::string(APP_VECTOR_TEMP);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_central,
+            write, array_reg_central,
+            application::kCacheVectorTemp, array_reg_central,
+            nimbus::cache::EXCLUSIVE);
+    cache_vector_temp = dynamic_cast<application::CacheVector*>(cache_var);
+    assert(cache_vector_temp != NULL);
+    projection_data.temp.n = cache_vector_temp->data()->n;
+    projection_data.temp.x = cache_vector_temp->data()->x;
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
   // VECTOR_PRESSURE.
-  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
-    ReadVectorData(job, da, APP_VECTOR_PRESSURE,
-                   projection_data.vector_pressure);
+    nimbus::DataArray read, write;
+    const std::string vector_string = std::string(APP_VECTOR_PRESSURE);
+    application::GetReadData(*job, vector_string, da, &read);
+    application::GetWriteData(*job, vector_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_central,
+            write, array_reg_central,
+            application::kCacheVectorPressure, array_reg_central,
+            nimbus::cache::EXCLUSIVE);
+    cache_vector_pressure = dynamic_cast<application::CacheVector*>(cache_var);
+    assert(cache_vector_pressure != NULL);
+    projection_data.vector_pressure.n = cache_vector_pressure->data()->n;
+    projection_data.vector_pressure.x = cache_vector_pressure->data()->x;
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_pressure time:%f.\n", log_timer.timer());
 
@@ -523,8 +556,13 @@ void ProjectionDriver::Cache_SaveToNimbus(
 
   log_timer.StartTimer();
   // VECTOR_B. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-    WriteVectorData(job, da, APP_VECTOR_B, projection_data.vector_b);
+  if (cache_vector_b) {
+    cache_vector_b->data()->n = projection_data.vector_b.n;
+    cache_vector_b->data()->x = projection_data.vector_b.x;
+    projection_data.vector_b.n = 0;
+    projection_data.vector_b.x = NULL;
+    cm->ReleaseAccess(cache_vector_b);
+    cache_vector_b = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_b time:%f.\n", log_timer.timer());
 
@@ -589,12 +627,21 @@ void ProjectionDriver::Cache_SaveToNimbus(
 
   log_timer.StartTimer();
   // VECTOR_TEMP. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
-    WriteVectorData(job, da, APP_VECTOR_TEMP, projection_data.temp);
+  if (cache_vector_temp) {
+    cache_vector_temp->data()->n = projection_data.temp.n;
+    cache_vector_temp->data()->x = projection_data.temp.x;
+    projection_data.temp.n = 0;
+    projection_data.temp.x = NULL;
+    cm->ReleaseAccess(cache_vector_temp);
+    cache_vector_temp = NULL;
   }
-  if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
-    WriteVectorData(job, da, APP_VECTOR_PRESSURE,
-                    projection_data.vector_pressure);
+  if (cache_vector_pressure) {
+    cache_vector_pressure->data()->n = projection_data.vector_pressure.n;
+    cache_vector_pressure->data()->x = projection_data.vector_pressure.x;
+    projection_data.vector_pressure.n = 0;
+    projection_data.vector_pressure.x = NULL;
+    cm->ReleaseAccess(cache_vector_pressure);
+    cache_vector_pressure = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_temp time:%f.\n", log_timer.timer());
 
