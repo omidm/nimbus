@@ -50,11 +50,13 @@ class ComputeJobCommand : public SchedulerCommand {
   public:
     ComputeJobCommand();
     ComputeJobCommand(const std::string& job_name,
-        const ID<job_id_t>& job_id,
-        const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const Parameter& params,
-        const bool& sterile);
+                      const ID<job_id_t>& job_id,
+                      const IDSet<physical_data_id_t>& read,
+                      const IDSet<physical_data_id_t>& write,
+                      const IDSet<job_id_t>& before,
+                      const IDSet<job_id_t>& after,
+                      const Parameter& params,
+                      const bool& sterile);
     ~ComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
