@@ -81,14 +81,16 @@ class Application {
   void RegisterData(std::string name, Data* data);
 
   void SpawnComputeJob(const std::string& name,
-      const job_id_t& id,
-      const IDSet<logical_data_id_t>& read,
-      const IDSet<logical_data_id_t>& write,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      const job_id_t& parent_id,
-      const Parameter& params,
-      const bool& sterile);
+                       const job_id_t& id,
+                       const IDSet<logical_data_id_t>& read,
+                       const IDSet<logical_data_id_t>& write,
+                       const IDSet<job_id_t>& before,
+                       const IDSet<job_id_t>& after,
+                       const job_id_t& parent_id,
+                       const job_id_t& future_id,
+                       const bool& sterile,
+                       const Parameter& params);
+
 
   void SpawnCopyJob(const job_id_t& id,
       const logical_data_id_t& from_logical_id,

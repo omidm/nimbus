@@ -75,24 +75,25 @@ Job* Job::Clone() {
 }
 
 bool Job::SpawnComputeJob(const std::string& name,
-    const job_id_t& id,
-    const IDSet<logical_data_id_t>& read,
-    const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const Parameter& params,
-    const bool& sterile) {
+                          const job_id_t& id,
+                          const IDSet<logical_data_id_t>& read,
+                          const IDSet<logical_data_id_t>& write,
+                          const IDSet<job_id_t>& before,
+                          const IDSet<job_id_t>& after,
+                          const Parameter& params,
+                          const bool& sterile) {
   if (sterile_) {
     dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
     return false;
   }
   if (app_is_set_) {
+    // 0 for no future job
     application_->SpawnComputeJob(name, id, read, write, before, after,
-        id_.elem(), params, sterile);
+                                  id_.elem(), future_id_.elem(),
+                                  sterile, params);
     return true;
   } else {
-    std::cout << "ERROR: SpawnComputeJob, application has not been set." <<
-      std::endl;
+    dbg(DBG_ERROR, "ERROR: SpawnComputeJob, application has not been set.\n");
     return false;
   }
 }

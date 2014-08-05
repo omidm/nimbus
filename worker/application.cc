@@ -84,20 +84,29 @@ void Application::RegisterData(std::string name, Data* d) {
 
 // Thread-safe.
 void Application::SpawnComputeJob(const std::string& name,
-    const job_id_t& id,
-    const IDSet<logical_data_id_t>& read,
-    const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const job_id_t& parent_id,
-    const Parameter& params,
-    const bool& sterile) {
+                                  const job_id_t& id,
+                                  const IDSet<logical_data_id_t>& read,
+                                  const IDSet<logical_data_id_t>& write,
+                                  const IDSet<job_id_t>& before,
+                                  const IDSet<job_id_t>& after,
+                                  const job_id_t& parent_id,
+                                  const job_id_t& future_id,
+                                  const bool& sterile,
+                                  const Parameter& params) {
   // static double construct_time = 0;
   // struct timespec start_time;
   // clock_gettime(CLOCK_REALTIME, &start_time);
 
-  SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after,
-      ID<job_id_t>(parent_id), params, sterile);
+  SpawnComputeJobCommand cm(name,
+                            ID<job_id_t>(id),
+                            read,
+                            write,
+                            before,
+                            after,
+                            ID<job_id_t>(parent_id),
+                            ID<job_id_t>(future_id),
+                            sterile,
+                            params);
 
   // struct timespec t;
   // clock_gettime(CLOCK_REALTIME, &t);

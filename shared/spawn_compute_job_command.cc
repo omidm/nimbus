@@ -115,7 +115,7 @@ std::string SpawnComputeJobCommand::toString() {
   // a bad idea!
   std::string result = name_ + " ";
   result += str;
-  return result;
+  return str;
 }
 
 std::string SpawnComputeJobCommand::toStringWTags() {
@@ -178,9 +178,30 @@ bool SpawnComputeJobCommand::sterile() {
 }
 
 bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobCommand* cmd) {
-  return false;
+  job_name_ = cmd->name();
+  job_id_.set_elem(cmd->job_id());
+  read_set_.ConvertFromRepeatedField(cmd->read_set().ids());
+  write_set_.ConvertFromRepeatedField(cmd->write_set().ids());
+  before_set_.ConvertFromRepeatedField(cmd->before_set().ids());
+  after_set_.ConvertFromRepeatedField(cmd->after_set().ids());
+  future_job_id_.set_elem(cmd->future_id());
+  parent_job_id_.set_elem(cmd->parent_id());
+  // Is this safe?
+  SerializedData d(cmd->params());
+  params_.set_ser_data(d);
+
+  return true;
 }
 
 bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobCommand* cmd) {
-  return false;
+  cmd->set_name(job_name());
+  cmd->set_job_id(job_id().elem());
+  read_set().ConvertToRepeatedField(cmd->mutable_read_set()->mutable_ids());
+  write_set().ConvertToRepeatedField(cmd->mutable_write_set()->mutable_ids());
+  before_set().ConvertToRepeatedField(cmd->mutable_before_set()->mutable_ids());
+  after_set().ConvertToRepeatedField(cmd->mutable_after_set()->mutable_ids());
+  cmd->set_parent_id(parent_job_id().elem());
+  cmd->set_future_id(future_job_id().elem());
+  cmd->set_params(params().ser_data().toString());
+  return true;
 }

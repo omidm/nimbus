@@ -89,7 +89,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     ID<job_id_t> parent_job_id_;
     ID<job_id_t> future_job_id_;
     bool sterile_;
-    Parameter params_;  
+    Parameter params_;
 
     bool ReadFromProtobuf(const SubmitComputeJobCommand* cmd);
     bool WriteToProtobuf(SubmitComputeJobCommand* cmd);
