@@ -33,8 +33,10 @@
  */
 
  /*
-  * This class keeps the lineage information about how logical data evolves as
-  * it is written by jobs.
+  * This class holds the mapping between workers and the region they cover for
+  * computation. This region is not necessarily a box and could be an
+  * unstructured region. It also provides lookup facilities to assign jobs to
+  * workers that match the job region.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -44,16 +46,19 @@
 
 #include <boost/unordered_map.hpp>
 #include <list>
+#include <vector>
 #include <utility>
 #include "shared/nimbus_types.h"
+#include "shared/dbg.h"
+#include "shared/geometric_region.h"
+#include "scheduler/region_map_entry.h"
 
 namespace nimbus {
-
-  class RegionMapEntry;
 
   class RegionMap {
   public:
     typedef boost::unordered_map<worker_id_t, RegionMapEntry*> Table;
+    typedef Table::iterator Iter;
 
     RegionMap();
     explicit RegionMap(const Table& table);
@@ -65,13 +70,26 @@ namespace nimbus {
     Table table() const;
     const Table* table_p() const;
     Table* table_p();
-
+    size_t table_size();
     void set_table(const Table& table);
+
+    void ClearTable();
+
+    void Initialize(size_t worker_num, GeometricRegion global_region);
 
     RegionMap& operator= (const RegionMap& right);
 
   private:
     Table table_;
+
+    void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z);
+
+    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
+                           std::vector<size_t> weight_x,
+                           std::vector<size_t> weight_y,
+                           std::vector<size_t> weight_z,
+                           GeometricRegion global_region,
+                           std::vector<worker_id_t> worker_ids);
   };
 
 }  // namespace nimbus

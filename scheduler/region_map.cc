@@ -33,8 +33,10 @@
  */
 
  /*
-  * This class keeps the lineage information about how logical data evolves as
-  * it is written by jobs.
+  * This class holds the mapping between workers and the region they cover for
+  * computation. This region is not necessarily a box and could be an
+  * unstructured region. It also provides lookup facilities to assign jobs to
+  * workers that match the job region.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -56,6 +58,7 @@ RegionMap::RegionMap(const RegionMap& other) {
 }
 
 RegionMap::~RegionMap() {
+  ClearTable();
 }
 
 RegionMap::Table RegionMap::table() const {
@@ -70,9 +73,159 @@ RegionMap::Table* RegionMap::table_p() {
   return &table_;
 }
 
+size_t RegionMap::table_size() {
+  return table_.size();
+}
+
+void RegionMap::ClearTable() {
+  Iter iter = table_.begin();
+  for (; iter != table_.end(); ++iter) {
+    delete iter->second;
+  }
+
+  table_.clear();
+}
+
 void RegionMap::set_table(const Table& table) {
   table_ = table;
 }
+
+
+void RegionMap::Initialize(size_t worker_num, GeometricRegion global_region) {
+}
+
+void RegionMap::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
+                                     std::vector<size_t> weight_x,
+                                     std::vector<size_t> weight_y,
+                                     std::vector<size_t> weight_z,
+                                     GeometricRegion global_region,
+                                     std::vector<worker_id_t> worker_ids) {
+  ClearTable();
+
+  assert(weight_x.size() >= num_x);
+  assert(weight_y.size() >= num_y);
+  assert(weight_z.size() >= num_z);
+
+  std::vector<int_dimension_t> width_x;
+  size_t weight_sum_x = 0;
+  for (size_t i = 0; i < num_x; ++i) {
+    weight_sum_x += weight_x[i];
+  }
+  for (size_t i = 0; i < num_x; ++i) {
+    width_x.push_back(global_region.dx() * weight_x[i] / weight_sum_x);
+  }
+  std::vector<int_dimension_t> marker_x;
+  marker_x.push_back(global_region.x());
+  for (size_t i = 0; i < num_x; ++i) {
+    marker_x.push_back(marker_x[i] + width_x[i]);
+  }
+
+
+  std::vector<int_dimension_t> width_y;
+  size_t weight_sum_y = 0;
+  for (size_t i = 0; i < num_y; ++i) {
+    weight_sum_y += weight_y[i];
+  }
+  for (size_t i = 0; i < num_y; ++i) {
+    width_y.push_back(global_region.dy() * weight_y[i] / weight_sum_y);
+  }
+  std::vector<int_dimension_t> marker_y;
+  marker_y.push_back(global_region.y());
+  for (size_t i = 0; i < num_y; ++i) {
+    marker_y.push_back(marker_y[i] + width_y[i]);
+  }
+
+  std::vector<int_dimension_t> width_z;
+  size_t weight_sum_z = 0;
+  for (size_t i = 0; i < num_z; ++i) {
+    weight_sum_z += weight_z[i];
+  }
+  for (size_t i = 0; i < num_z; ++i) {
+    width_z.push_back(global_region.dz() * weight_z[i] / weight_sum_z);
+  }
+  std::vector<int_dimension_t> marker_z;
+  marker_z.push_back(global_region.z());
+  for (size_t i = 0; i < num_z; ++i) {
+    marker_z.push_back(marker_z[i] + width_z[i]);
+  }
+
+  std::vector<RegionMapEntry*> domains;
+  for (size_t i = 0; i < num_x; ++i) {
+    for (size_t j = 0; j < num_y; ++j) {
+      for (size_t k = 0; k < num_z; ++k) {
+        RegionMapEntry *rme = new RegionMapEntry();
+        GeometricRegion r(marker_x[i],
+                          marker_y[j],
+                          marker_z[k],
+                          marker_x[i + 1] - marker_x[i],
+                          marker_y[j + 1] - marker_y[j],
+                          marker_z[k + 1] - marker_z[k]);
+        rme->Grow(&r);
+        domains.push_back(rme);
+      }
+    }
+  }
+
+  ClearTable();
+
+  size_t index = 0;
+  assert(domains.size() == worker_ids.size());
+  std::vector<RegionMapEntry*>::iterator iter = domains.begin();
+  for (; iter != domains.end(); ++iter) {
+    table_[worker_ids[index]] = *iter;
+    ++index;
+  }
+}
+
+void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z) {
+  switch (worker_num) {
+    case 1 :
+      *num_x = 1;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 2 :
+      *num_x = 2;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 3 :
+      *num_x = 3;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 4 :
+      *num_x = 4;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 5 :
+      *num_x = 5;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 6 :
+      *num_x = 6;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 7 :
+      *num_x = 7;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    case 8 :
+      *num_x = 8;
+      *num_y = 1;
+      *num_z = 1;
+      break;
+    default:
+      dbg(DBG_ERROR, "ERROR: Do not know how to split!");
+      exit(-1);
+  }
+}
+
+
 
 RegionMap& RegionMap::operator= (
     const RegionMap& right) {
