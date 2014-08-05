@@ -33,18 +33,52 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_VECTOR_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_VECTOR_H_
 
-#include "application/water_multiple/cache_compressed_scalar_array.h"
-#include "application/water_multiple/cache_face_array.h"
-#include "application/water_multiple/cache_particle_levelset_evolution.h"
-#include "application/water_multiple/cache_scalar_array.h"
-#include "application/water_multiple/projection/cache_sparse_matrix.h"
-#include "application/water_multiple/projection/cache_array_m2c.h"
-#include "application/water_multiple/projection/cache_vector.h"
+#include <string>
 
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
+#include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_include.h"
+#include "data/cache/cache_var.h"
+#include "shared/geometric_region.h"
+#include "worker/data.h"
+
+namespace application {
+
+class CacheVector : public nimbus::CacheVar {
+ public:
+  typedef PhysBAM::VECTOR_ND<float> DATA_TYPE;
+  explicit CacheVector(const nimbus::GeometricRegion& global_reg,
+                       bool make_proto = false);
+
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
+
+ protected:
+  explicit CacheVector(const nimbus::GeometricRegion& global_reg,
+                       const nimbus::GeometricRegion& ob_reg);
+
+  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+
+  virtual void ReadToCache(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteFromCache(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
+
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class CacheVector
+
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_VECTOR_H_

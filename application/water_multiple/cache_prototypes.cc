@@ -66,5 +66,10 @@ CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
 CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true);
 
 CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true);
+
+CacheVector kCacheVectorB(kDefaultRegion, true);
+CacheVector kCacheVectorPressure(kDefaultRegion, true);
+CacheVector kCacheVectorZ(kDefaultRegion, true);
+CacheVector kCacheVectorTemp(kDefaultRegion, true);
 } // namespace application
 

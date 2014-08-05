@@ -66,6 +66,13 @@ extern CacheSparseMatrix kCacheSparseMatrixC;
 extern CacheArrayM2C kCacheArrayM2C;
 
 extern CacheCompressedScalarArray<float> kCacheMetaP;
+
+extern CacheVector kCacheVectorB;
+extern CacheVector kCacheVectorPressure;
+extern CacheVector kCacheVectorZ;
+extern CacheVector kCacheVectorTemp;
+
+
 } // namespace application
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_PROTOTYPES_H_

@@ -1338,8 +1338,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       // &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
       //     *(cache_index_m2c->data());
     }
-    // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
-    // cached.
+    // TODO(addcache).
+    // VECTOR_B.
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
@@ -1350,6 +1350,8 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
         dbg(APP_LOG, "Finish reading VECTOR_B.\n");
       }
     }
+    // TODO(addcache).
+    // INDEX_C2M.
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);

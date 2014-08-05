@@ -97,6 +97,7 @@ class ProjectionDriver {
     projection_data.iteration = 0;
     projection_data.matrix_a = NULL;
     projection_data.matrix_index_to_cell_index = NULL;
+    cache_vector_z = NULL;
     cache_pressure = NULL;
     cache_vector_p = NULL;
     cache_matrix_a = NULL;
@@ -163,6 +164,7 @@ class ProjectionDriver {
   application::CacheSparseMatrix *cache_matrix_c;
   application::CacheArrayM2C * cache_index_m2c;
   application::CacheCompressedScalarArray<float>* cache_meta_p;
+  application::CacheVector* cache_vector_z;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;

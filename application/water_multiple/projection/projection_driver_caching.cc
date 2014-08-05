@@ -127,7 +127,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
         cm->GetAppVar(
             read, array_reg_thin_outer,
             write, array_reg_central,
-            application::kCachePressure, array_reg_reg_central,
+            application::kCachePressure, array_reg_central,
             nimbus::cache::EXCLUSIVE);
     cache_pressure = dynamic_cast<application::CacheScalarArray<T>*>(cache_var);
     assert(cache_pressure != NULL);
@@ -422,9 +422,21 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // VECTOR_Z. It cannot be splitted or merged.
-  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
-    ReadVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
+    nimbus::DataArray read, write;
+    const std::string vector_string = std::string(APP_VECTOR_Z);
+    application::GetReadData(*job, vector_string, da, &read);
+    application::GetWriteData(*job, vector_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_central,
+            write, array_reg_central,
+            application::kCacheVectorZ, array_reg_central,
+            nimbus::cache::EXCLUSIVE);
+    cache_vector_z = dynamic_cast<application::CacheVector*>(cache_var);
+    assert(cache_vector_z != NULL);
+    projection_data.z_interior.n = cache_vector_z->data()->n;
+    projection_data.z_interior.x = cache_vector_z->data()->x;
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_z time:%f.\n", log_timer.timer());
 
@@ -437,6 +449,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_temp time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
+  // VECTOR_PRESSURE.
   // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::VECTOR_PRESSURE)) {
     ReadVectorData(job, da, APP_VECTOR_PRESSURE,
@@ -564,9 +577,13 @@ void ProjectionDriver::Cache_SaveToNimbus(
   dbg(APP_LOG, "[PROJECTION] SAVE, scalar time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  // VECTOR_Z. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::VECTOR_Z)) {
-    WriteVectorData(job, da, APP_VECTOR_Z, projection_data.z_interior);
+  if (cache_vector_z) {
+    cache_vector_z->data()->n = projection_data.z_interior.n;
+    cache_vector_z->data()->x = projection_data.z_interior.x;
+    projection_data.z_interior.n = 0;
+    projection_data.z_interior.x = NULL;
+    cm->ReleaseAccess(cache_vector_z);
+    cache_vector_z = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, vector_z time:%f.\n", log_timer.timer());
 
