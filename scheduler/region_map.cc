@@ -118,6 +118,21 @@ bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
   return true;
 }
 
+bool RegionMap::WorkersAreNeighbor(worker_id_t first, worker_id_t second) {
+  TableIter iter_first = table_.find(first);
+  if (iter_first == table_.end()) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: worker %lu is not defined in region map.\n", first);
+    return false;
+  }
+
+  TableIter iter_second = table_.find(second);
+  if (iter_second == table_.end()) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: worker %lu is not defined in region map.\n", second);
+    return false;
+  }
+
+  return iter_first->second->AdjacentOrIntersects(iter_second->second);
+}
 
 
 void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,

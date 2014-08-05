@@ -79,6 +79,8 @@ namespace nimbus {
     bool QueryWorkerWithMostOverlap(const GeometricRegion *region,
                                       worker_id_t *worker_id);
 
+    bool WorkersAreNeighbor(worker_id_t first, worker_id_t second);
+
     RegionMap& operator= (const RegionMap& right);
 
   private:

@@ -76,6 +76,12 @@ namespace nimbus {
 
     int_dimension_t CommonSurface(const GeometricRegion *region);
 
+    bool Adjacent(const RegionMapEntry *rme) const;
+
+    bool Intersects(const RegionMapEntry *rme) const;
+
+    bool AdjacentOrIntersects(const RegionMapEntry *rme) const;
+
     std::string PrintRegion();
 
   private:

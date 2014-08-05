@@ -95,5 +95,17 @@ void RegionMapEntry::RemoveObsoleteCoveredJobRegions(const GeometricRegion *remo
   }
 }
 
+bool RegionMapEntry::Adjacent(const RegionMapEntry *rme) const {
+  return region_.Adjacent(&rme->region_);
+}
+
+bool RegionMapEntry::Intersects(const RegionMapEntry *rme) const {
+  return region_.Intersects(&rme->region_);
+}
+
+bool RegionMapEntry::AdjacentOrIntersects(const RegionMapEntry *rme) const {
+  return region_.AdjacentOrIntersects(&rme->region_);
+}
+
 
 }  // namespace nimbus
