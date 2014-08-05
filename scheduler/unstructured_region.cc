@@ -230,4 +230,57 @@ void UnstructuredRegion::RemoveIntersect(const GeometricRegion *o,
   }
 }
 
+
+bool UnstructuredRegion::Adjacent(const UnstructuredRegion *u_region) const {
+  return (AdjacentOrIntersects(u_region) && !Intersects(u_region));
+}
+
+bool UnstructuredRegion::Intersects(const UnstructuredRegion *u_region) const {
+  RegionListConstIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    if (u_region->Intersects(&(*iter))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool UnstructuredRegion::AdjacentOrIntersects(const UnstructuredRegion *u_region) const {
+  RegionListConstIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    if (u_region->AdjacentOrIntersects(&(*iter))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool UnstructuredRegion::Adjacent(const GeometricRegion *region) const {
+  return (AdjacentOrIntersects(region) && !Intersects(region));
+}
+
+bool UnstructuredRegion::Intersects(const GeometricRegion *region) const {
+  RegionListConstIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    if (region->Intersects(&(*iter))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool UnstructuredRegion::AdjacentOrIntersects(const GeometricRegion *region) const {
+  RegionListConstIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    if (region->AdjacentOrIntersects(&(*iter))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace nimbus

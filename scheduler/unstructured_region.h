@@ -55,6 +55,7 @@ namespace nimbus {
   public:
     typedef std::list<GeometricRegion> RegionList;
     typedef RegionList::iterator RegionListIter;
+    typedef RegionList::const_iterator RegionListConstIter;
 
     UnstructuredRegion();
 
@@ -76,6 +77,18 @@ namespace nimbus {
                                 const GeometricRegion *remove,
                                 RegionList *result,
                                 bool append = false);
+
+    bool Adjacent(const UnstructuredRegion *u_region) const;
+
+    bool Intersects(const UnstructuredRegion *u_region) const;
+
+    bool AdjacentOrIntersects(const UnstructuredRegion *u_region) const;
+
+    bool Adjacent(const GeometricRegion *region) const;
+
+    bool Intersects(const GeometricRegion *region) const;
+
+    bool AdjacentOrIntersects(const GeometricRegion *region) const;
 
   private:
     RegionList region_list_;
