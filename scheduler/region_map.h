@@ -58,7 +58,7 @@ namespace nimbus {
   class RegionMap {
   public:
     typedef boost::unordered_map<worker_id_t, RegionMapEntry*> Table;
-    typedef Table::iterator Iter;
+    typedef Table::iterator TableIter;
 
     RegionMap();
     explicit RegionMap(const Table& table);
@@ -73,15 +73,18 @@ namespace nimbus {
     size_t table_size();
     void set_table(const Table& table);
 
-    void ClearTable();
-
     void Initialize(const std::vector<worker_id_t>& worker_ids,
                     const GeometricRegion& global_region);
+
+    bool QueryWorkerWithMostOverlap(const GeometricRegion *region,
+                                      worker_id_t *worker_id);
 
     RegionMap& operator= (const RegionMap& right);
 
   private:
     Table table_;
+
+    void ClearTable();
 
     void SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y, size_t *num_z);
 

@@ -83,7 +83,7 @@ size_t RegionMap::table_size() {
 }
 
 void RegionMap::ClearTable() {
-  Iter iter = table_.begin();
+  TableIter iter = table_.begin();
   for (; iter != table_.end(); ++iter) {
     delete iter->second;
   }
@@ -94,6 +94,30 @@ void RegionMap::ClearTable() {
 void RegionMap::set_table(const Table& table) {
   table_ = table;
 }
+
+
+bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
+                                             worker_id_t *worker_id) {
+  if (table_size() == 0) {
+    return false;
+  }
+
+  TableIter iter = table_.begin();
+  worker_id_t w_id = iter->first;
+  int_dimension_t common_area = iter->second->CommonSurface(region);
+  ++iter;
+  for (; iter != table_.end(); ++iter) {
+    int_dimension_t temp = iter->second->CommonSurface(region);
+    if (temp > common_area) {
+      common_area = temp;
+      w_id = iter->first;
+    }
+  }
+
+  *worker_id = w_id;
+  return true;
+}
+
 
 
 void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,

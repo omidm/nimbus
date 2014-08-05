@@ -155,7 +155,7 @@ bool LoadBalancer::GetWorkerToAssignJob(
     for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
       const LogicalDataObject* ldo;
       ldo = data_manager_->FindLogicalObject(*iter);
-      RegionMap::Iter it = region_map_.table_p()->begin();
+      RegionMap::TableIter it = region_map_.table_p()->begin();
       for (size_t i = 0; i < worker_num_; ++i) {
         // if (it->second.Intersects(ldo->region())) {
         //   ++workers_rank[i];
@@ -165,7 +165,7 @@ bool LoadBalancer::GetWorkerToAssignJob(
     }
 
     // find the worker that wins the poll.
-    RegionMap::Iter it = region_map_.table_p()->begin();
+    RegionMap::TableIter it = region_map_.table_p()->begin();
     worker_id_t w_id = it->first;
     int count = workers_rank[0];
     for (size_t i = 1; i < worker_num_; ++i) {
