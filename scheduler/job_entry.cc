@@ -354,7 +354,7 @@ bool JobEntry::GetRegion(DataManager *data_manager, GeometricRegion *region) {
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = union_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
+      region_ = *ldo->region();
       ++iter;
       for (; iter != union_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
