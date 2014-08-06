@@ -45,11 +45,6 @@
 
 #include "scheduler/load_balancer.h"
 
-#define WEIGHT_NUM 8
-#define WEIGHT_X {1, 1, 1, 1, 1, 1, 1, 1}
-#define WEIGHT_Y {1, 1, 1, 1, 1, 1, 1, 1}
-#define WEIGHT_Z {1, 1, 1, 1, 1, 1, 1, 1}
-
 namespace nimbus {
 
 LoadBalancer::LoadBalancer() {
@@ -171,75 +166,6 @@ bool LoadBalancer::GetWorkerToAssignJob(
 
 
   return true;
-
-//  Log log;
-//  log.StartTimer();
-//
-//  boost::adopt_lock_t recursive;
-//  boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
-//  while (update_) {
-//    update_cond_.wait(update_lock);
-//  }
-//
-//  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-//  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
-//
-//  if (worker_num_ != region_map_.size() ||
-//      global_region_ != data_manager_->global_bounding_region()) {
-//    if (data_manager_->initialized_global_bounding_region()) {
-//      InitializeRegionMap();
-//    }
-//  }
-//
-//  assert(worker_map_.size() > 0);
-//  assert(worker_num_ > 0);
-//
-//  if (init_phase_) {
-//    worker = worker_map_.begin()->second;
-//  } else {
-//    std::vector<int> workers_rank(worker_num_, 0);
-//    assert(worker_num_ == region_map_.size());
-//
-//    IDSet<logical_data_id_t> union_set = job->union_set();
-//    IDSet<logical_data_id_t>::IDSetIter iter;
-//    for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
-//      const LogicalDataObject* ldo;
-//      ldo = data_manager_->FindLogicalObject(*iter);
-//      RegionMapIter it = region_map_.begin();
-//      for (size_t i = 0; i < worker_num_; ++i) {
-//        if (it->second.Intersects(ldo->region())) {
-//          ++workers_rank[i];
-//        }
-//        ++it;
-//      }
-//    }
-//
-//    // find the worker that wins the poll.
-//    RegionMapIter it = region_map_.begin();
-//    worker_id_t w_id = it->first;
-//    int count = workers_rank[0];
-//    for (size_t i = 1; i < worker_num_; ++i) {
-//      ++it;
-//      if (count < workers_rank[i]) {
-//        count = workers_rank[i];
-//        w_id = it->first;
-//      }
-//    }
-//
-//    worker = worker_map_[w_id];
-//  }
-//
-//
-//  log.StopTimer();
-//  std::cout
-//    << "Picked worker: " << worker->worker_id()
-//    << " for job: " << job->job_name()
-//    << " took: " << log.timer()
-//    << " for union set size of: " << job->union_set_p()->size()
-//    << std::endl;
-//
-//
-//  return true;
 }
 
 
@@ -383,29 +309,6 @@ void LoadBalancer::InitializeRegionMap() {
   region_map_.Initialize(worker_ids, global_region_);
 
   init_phase_ = false;
-
-//  boost::adopt_lock_t recursive;
-//  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-//  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
-//
-//  assert(data_manager_->initialized_global_bounding_region());
-//  assert(worker_num_ > 0);
-//  global_region_ = data_manager_->global_bounding_region();
-//
-//  size_t num_x, num_y, num_z;
-//  SplitDimensions(&num_x, &num_y, &num_z);
-//
-//
-//  static const int arr_x[] = WEIGHT_X;
-//  std::vector<size_t> weight_x(arr_x, arr_x + WEIGHT_NUM);
-//  static const int arr_y[] = WEIGHT_Y;
-//  std::vector<size_t> weight_y(arr_y, arr_y + WEIGHT_NUM);
-//  static const int arr_z[] = WEIGHT_Z;
-//  std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
-//
-//  GenerateRegionMap(num_x, num_y, num_z, weight_x, weight_y, weight_z);
-//
-//  init_phase_ = false;
 }
 
 void LoadBalancer::UpdateRegionMap() {
@@ -426,135 +329,6 @@ void LoadBalancer::UpdateRegionMap() {
   std::cout << "WORST WORKER: " << worst_worker << std::endl;
   blame_map_.clear();
   blame_counter_ = 0;
-}
-
-void LoadBalancer::GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
-                                     std::vector<size_t> weight_x,
-                                     std::vector<size_t> weight_y,
-                                     std::vector<size_t> weight_z) {
-  boost::adopt_lock_t recursive;
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
-
-  assert(weight_x.size() >= num_x);
-  assert(weight_y.size() >= num_y);
-  assert(weight_z.size() >= num_z);
-
-  std::vector<int_dimension_t> width_x;
-  size_t weight_sum_x = 0;
-  for (size_t i = 0; i < num_x; ++i) {
-    weight_sum_x += weight_x[i];
-  }
-  for (size_t i = 0; i < num_x; ++i) {
-    width_x.push_back(global_region_.dx() * weight_x[i] / weight_sum_x);
-  }
-  std::vector<int_dimension_t> marker_x;
-  marker_x.push_back(global_region_.x());
-  for (size_t i = 0; i < num_x; ++i) {
-    marker_x.push_back(marker_x[i] + width_x[i]);
-  }
-
-
-  std::vector<int_dimension_t> width_y;
-  size_t weight_sum_y = 0;
-  for (size_t i = 0; i < num_y; ++i) {
-    weight_sum_y += weight_y[i];
-  }
-  for (size_t i = 0; i < num_y; ++i) {
-    width_y.push_back(global_region_.dy() * weight_y[i] / weight_sum_y);
-  }
-  std::vector<int_dimension_t> marker_y;
-  marker_y.push_back(global_region_.y());
-  for (size_t i = 0; i < num_y; ++i) {
-    marker_y.push_back(marker_y[i] + width_y[i]);
-  }
-
-  std::vector<int_dimension_t> width_z;
-  size_t weight_sum_z = 0;
-  for (size_t i = 0; i < num_z; ++i) {
-    weight_sum_z += weight_z[i];
-  }
-  for (size_t i = 0; i < num_z; ++i) {
-    width_z.push_back(global_region_.dz() * weight_z[i] / weight_sum_z);
-  }
-  std::vector<int_dimension_t> marker_z;
-  marker_z.push_back(global_region_.z());
-  for (size_t i = 0; i < num_z; ++i) {
-    marker_z.push_back(marker_z[i] + width_z[i]);
-  }
-
-  std::vector<GeometricRegion> domains;
-  for (size_t i = 0; i < num_x; ++i) {
-    for (size_t j = 0; j < num_y; ++j) {
-      for (size_t k = 0; k < num_z; ++k) {
-        domains.push_back(
-            GeometricRegion(
-              marker_x[i],
-              marker_y[j],
-              marker_z[k],
-              marker_x[i + 1] - marker_x[i],
-              marker_y[j + 1] - marker_y[j],
-              marker_z[k + 1] - marker_z[k]));
-      }
-    }
-  }
-
-  region_map_.table_p()->clear();
-  size_t index = 0;
-  assert(domains.size() == worker_map_.size());
-  WorkerMapIter iter = worker_map_.begin();
-  for (; iter != worker_map_.end(); ++iter) {
-    // region_map_.table_p()->operator[](iter->first) = domains[index];
-    ++index;
-  }
-}
-
-void LoadBalancer::SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z) {
-  switch (worker_num_) {
-    case 1 :
-      *num_x = 1;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 2 :
-      *num_x = 2;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 3 :
-      *num_x = 3;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 4 :
-      *num_x = 4;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 5 :
-      *num_x = 5;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 6 :
-      *num_x = 6;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 7 :
-      *num_x = 7;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    case 8 :
-      *num_x = 8;
-      *num_y = 1;
-      *num_z = 1;
-      break;
-    default:
-      dbg(DBG_ERROR, "ERROR: Do not know how to split!");
-      exit(-1);
-  }
 }
 
 }  // namespace nimbus

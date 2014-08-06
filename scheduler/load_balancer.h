@@ -123,13 +123,6 @@ namespace nimbus {
     void InitializeRegionMap();
 
     void UpdateRegionMap();
-
-    void SplitDimensions(size_t *num_x, size_t *num_y, size_t *num_z);
-
-    void GenerateRegionMap(size_t num_x, size_t num_y, size_t num_z,
-                           std::vector<size_t> weight_x,
-                           std::vector<size_t> weight_y,
-                           std::vector<size_t> weight_z);
   };
 
 }  // namespace nimbus
