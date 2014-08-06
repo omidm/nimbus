@@ -60,6 +60,7 @@ RegionMap::RegionMap(const Table& table)
 
 RegionMap::RegionMap(const RegionMap& other) {
   table_ = other.table_;
+  cache_ = other.cache_;
 }
 
 RegionMap::~RegionMap() {
@@ -89,6 +90,8 @@ void RegionMap::ClearTable() {
   }
 
   table_.clear();
+
+  InvalidateCache();
 }
 
 void RegionMap::set_table(const Table& table) {
@@ -100,6 +103,10 @@ bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
                                              worker_id_t *worker_id) {
   if (table_size() == 0) {
     return false;
+  }
+
+  if (QueryCache(region, worker_id)) {
+    return true;
   }
 
   TableIter iter = table_.begin();
@@ -114,6 +121,7 @@ bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
     }
   }
 
+  CacheQueryResult(*region, w_id);
   *worker_id = w_id;
   return true;
 }
@@ -150,6 +158,8 @@ void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
   GenerateTable(num_x, num_y, num_z,
                 weight_x, weight_y, weight_z,
                 worker_ids, global_region);
+
+  InvalidateCache();
 }
 
 
@@ -308,6 +318,7 @@ void RegionMap::SplitDimensions(size_t worker_num, size_t *num_x, size_t *num_y,
 RegionMap& RegionMap::operator= (
     const RegionMap& right) {
   table_ = right.table_;
+  cache_ = right.cache_;
   return *this;
 }
 
