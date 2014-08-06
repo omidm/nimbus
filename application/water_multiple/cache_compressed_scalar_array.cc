@@ -37,6 +37,7 @@
  */
 
 #include <string>
+#include <boost/functional/hash.hpp>
 
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_tools.h"
@@ -112,6 +113,30 @@ WriteFromCache(const nimbus::DataArray &write_set,
   Translator::template
       WriteCompressedScalarArray<T>(final_write_reg, shift_, write_set, *data_,
                                     data_length_, *index_data_);
+}
+
+template<class T> void CacheCompressedScalarArray<T>::
+set_index_data(IndexType* d) {
+  if (d->hash_code == 0) {
+    d->hash_code = CalculateHashCode(*d);
+  }
+  assert(index_data_ == NULL || index_data_->hash_code != 0);
+  if (index_data_ == NULL || index_data_->hash_code != d->hash_code) {
+    if (index_data_) {
+      delete index_data_;
+    }
+    index_data_ = new IndexType(*d);
+    index_data_->hash_code = d->hash_code;
+  }
+}
+
+template<class T> long CacheCompressedScalarArray<T>::
+CalculateHashCode(IndexType& index) {
+  size_t seed = 99;
+  boost::hash_range(seed,
+      index.array.base_pointer,
+      index.array.base_pointer + index.array.m);
+  return (long) seed;
 }
 
 template class CacheCompressedScalarArray<float>;

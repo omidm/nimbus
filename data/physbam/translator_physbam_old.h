@@ -959,6 +959,7 @@ particle_buffer.id = (*id)(i);
           log->WriteToFile(msg.str());
       }
       if (instances != NULL) {
+        sa->hash_code = 0;
         PdiVector::const_iterator iter = instances->begin();
         for (; iter != instances->end(); ++iter) {
           const PhysicalDataInstance* inst = *iter;

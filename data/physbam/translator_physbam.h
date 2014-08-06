@@ -1553,6 +1553,7 @@ template <class TS> class TranslatorPhysBAM {
                 }
                 return;
             }
+            sa->hash_code = 0;
             for (size_t i = 0; i < read_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);

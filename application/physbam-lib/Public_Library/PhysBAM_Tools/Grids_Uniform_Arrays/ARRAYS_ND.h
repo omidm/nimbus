@@ -19,6 +19,8 @@ template<class T,int d>
 class ARRAY<T,VECTOR<int,d> >:public ARRAYS_ND_BASE<VECTOR<T,d> >
 {
 public:
+    // For nimbus usage.
+    long hash_code;
     typedef VECTOR<int,d> TV_INT;
     enum WORKAROUND1 {dimension=d};
     template<class T2> struct REBIND{typedef ARRAY<T2,TV_INT> TYPE;};
@@ -169,7 +171,8 @@ public:
     static void Exchange_Arrays(ARRAY& a,ARRAY& b)
     {a.array.Exchange(b.array);
     exchange(a.domain,b.domain);exchange(a.counts,b.counts);
-    a.Calculate_Acceleration_Constants();b.Calculate_Acceleration_Constants();}
+    a.Calculate_Acceleration_Constants();b.Calculate_Acceleration_Constants();
+    long t = a.hash_code; a.hash_code = b.hash_code; b.hash_code = t;}
 
     void Shift_Domain_Indices(TV_INT& shift)
     {domain.min_corner+=shift;domain.max_corner+=shift;Calculate_Acceleration_Constants();}
