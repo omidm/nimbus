@@ -121,7 +121,8 @@ bool RegionMap::QueryWorkerWithMostOverlap(const GeometricRegion *region,
     }
   }
 
-  CacheQueryResult(*region, w_id);
+  CacheQueryResult(region, &w_id);
+  TrackRegionCoverage(region, &w_id);
   *worker_id = w_id;
   return true;
 }
@@ -179,9 +180,28 @@ void RegionMap::InvalidateCache() {
   cache_.clear();
 }
 
-void RegionMap::CacheQueryResult(const GeometricRegion &region,
-                                 const worker_id_t &worker_id) {
-  cache_[region] = worker_id;
+void RegionMap::CacheQueryResult(const GeometricRegion *region,
+                                 const worker_id_t *worker_id) {
+  cache_[*region] = *worker_id;
+}
+
+
+
+void RegionMap::TrackRegionCoverage(const GeometricRegion *region,
+                                    const worker_id_t *worker_id) {
+  TableIter iter = table_.find(*worker_id);
+  if (iter == table_.end()) {
+    dbg(DBG_WARN, "WARNING: REgionMap: worker id %lu not in the table to track region coverage.\n", *worker_id); // NOLINT
+    return;
+  }
+  iter->second->AddCoveredRegion(region);
+}
+
+void RegionMap::InvalidateRegionCoverage() {
+  TableIter iter = table_.begin();
+  for (; iter != table_.end(); ++iter) {
+    iter->second->ClearCoveredRegions();
+  }
 }
 
 void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,

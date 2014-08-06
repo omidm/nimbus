@@ -65,7 +65,7 @@ void RegionMapEntry::Grow(const GeometricRegion *region) {
 
 void RegionMapEntry::Shrink(const GeometricRegion *region) {
   region_.RemoveRegion(region);
-  RemoveObsoleteCoveredJobRegions(region);
+  RemoveObsoleteCoveredRegions(region);
 }
 
 int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
@@ -76,15 +76,15 @@ std::string RegionMapEntry::PrintRegion() {
   return region_.Print();
 }
 
-void RegionMapEntry::AddCoveredJobRegion(const GeometricRegion *region) {
+void RegionMapEntry::AddCoveredRegion(const GeometricRegion *region) {
   covered_job_regions_.push_back(*region);
 }
 
-void RegionMapEntry::ClearCoveredJobRegions() {
+void RegionMapEntry::ClearCoveredRegions() {
   covered_job_regions_.clear();
 }
 
-void RegionMapEntry::RemoveObsoleteCoveredJobRegions(const GeometricRegion *remove) {
+void RegionMapEntry::RemoveObsoleteCoveredRegions(const GeometricRegion *remove) {
   RegionListIter iter = covered_job_regions_.begin();
   for (; iter != covered_job_regions_.end();) {
     if (iter->Intersects(remove)) {

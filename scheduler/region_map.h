@@ -106,8 +106,13 @@ namespace nimbus {
 
     void InvalidateCache();
 
-    void CacheQueryResult(const GeometricRegion &region,
-                          const worker_id_t &worker_id);
+    void CacheQueryResult(const GeometricRegion *region,
+                          const worker_id_t *worker_id);
+
+    void TrackRegionCoverage(const GeometricRegion *region,
+                             const worker_id_t *worker_id);
+
+    void InvalidateRegionCoverage();
   };
 
 }  // namespace nimbus

@@ -70,9 +70,9 @@ namespace nimbus {
 
     void Shrink(const GeometricRegion *region);
 
-    void AddCoveredJobRegion(const GeometricRegion *region);
+    void AddCoveredRegion(const GeometricRegion *region);
 
-    void ClearCoveredJobRegions();
+    void ClearCoveredRegions();
 
     int_dimension_t CommonSurface(const GeometricRegion *region);
 
@@ -88,7 +88,7 @@ namespace nimbus {
     UnstructuredRegion region_;
     RegionList covered_job_regions_;
 
-    void RemoveObsoleteCoveredJobRegions(const GeometricRegion *remove);
+    void RemoveObsoleteCoveredRegions(const GeometricRegion *remove);
   };
 
 }  // namespace nimbus
