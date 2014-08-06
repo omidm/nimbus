@@ -154,14 +154,24 @@ void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
 
 
 
-bool RegionMap::QueryCache(const GeometricRegion *region, worker_id_t *w_id) {
+bool RegionMap::QueryCache(const GeometricRegion *region,
+                           worker_id_t *worker_id) {
+  CacheIter iter = cache_.find(*region);
+  if (iter != cache_.end()) {
+    *worker_id = iter->second;
+    return true;
+  }
+
   return false;
 }
 
 void RegionMap::InvalidateCache() {
+  cache_.clear();
 }
 
-void RegionMap::CacheQueryResult() {
+void RegionMap::CacheQueryResult(const GeometricRegion &region,
+                                 const worker_id_t &worker_id) {
+  cache_[region] = worker_id;
 }
 
 void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,

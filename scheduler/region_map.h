@@ -46,6 +46,7 @@
 
 #include <boost/unordered_map.hpp>
 #include <list>
+#include <map>
 #include <vector>
 #include <utility>
 #include "shared/nimbus_types.h"
@@ -59,7 +60,7 @@ namespace nimbus {
   public:
     typedef boost::unordered_map<worker_id_t, RegionMapEntry*> Table;
     typedef Table::iterator TableIter;
-    typedef boost::unordered_map<GeometricRegion, worker_id_t> Cache;
+    typedef std::map<GeometricRegion, worker_id_t> Cache;
     typedef Cache::iterator CacheIter;
 
     RegionMap();
@@ -100,11 +101,13 @@ namespace nimbus {
                        const std::vector<worker_id_t>& worker_ids,
                        const GeometricRegion& global_region);
 
-    bool QueryCache(const GeometricRegion *region, worker_id_t *w_id);
+    bool QueryCache(const GeometricRegion *region,
+                    worker_id_t *worker_id);
 
     void InvalidateCache();
 
-    void CacheQueryResult();
+    void CacheQueryResult(const GeometricRegion &region,
+                          const worker_id_t &worker_id);
   };
 
 }  // namespace nimbus
