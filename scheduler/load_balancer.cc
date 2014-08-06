@@ -105,7 +105,7 @@ void LoadBalancer::Run() {
     boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
     boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-    if (worker_num_ != region_map_.table_p()->size() ||
+    if (worker_num_ != region_map_.table_size() ||
         global_region_ != data_manager_->global_bounding_region()) {
       if (!data_manager_->initialized_global_bounding_region()) {
         continue;
@@ -134,8 +134,8 @@ bool LoadBalancer::GetWorkerToAssignJob(
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  if (worker_num_ != region_map_.table_p()->size() ||
-      global_region_ != data_manager_->global_bounding_region()) {
+  if ((worker_num_ != region_map_.table_size()) ||
+      (global_region_ != data_manager_->global_bounding_region())) {
     if (data_manager_->initialized_global_bounding_region()) {
       InitializeRegionMap();
     }
@@ -144,41 +144,22 @@ bool LoadBalancer::GetWorkerToAssignJob(
   assert(worker_map_.size() > 0);
   assert(worker_num_ > 0);
 
-  if (init_phase_) {
+  GeometricRegion region;
+  bool got_region = job->GetRegion(data_manager_, &region);
+
+  if (init_phase_ || !got_region) {
     worker = worker_map_.begin()->second;
   } else {
-    std::vector<int> workers_rank(worker_num_, 0);
-    assert(worker_num_ == region_map_.table_p()->size());
+    assert(worker_num_ == region_map_.table_size());
+    worker_id_t w_id;
 
-    IDSet<logical_data_id_t> union_set = job->union_set();
-    IDSet<logical_data_id_t>::IDSetIter iter;
-    for (iter = union_set.begin(); iter != union_set.end(); ++iter) {
-      const LogicalDataObject* ldo;
-      ldo = data_manager_->FindLogicalObject(*iter);
-      RegionMap::TableIter it = region_map_.table_p()->begin();
-      for (size_t i = 0; i < worker_num_; ++i) {
-        // if (it->second.Intersects(ldo->region())) {
-        //   ++workers_rank[i];
-        // }
-        ++it;
-      }
-    }
-
-    // find the worker that wins the poll.
-    RegionMap::TableIter it = region_map_.table_p()->begin();
-    worker_id_t w_id = it->first;
-    int count = workers_rank[0];
-    for (size_t i = 1; i < worker_num_; ++i) {
-      ++it;
-      if (count < workers_rank[i]) {
-        count = workers_rank[i];
-        w_id = it->first;
-      }
+    if (!region_map_.QueryWorkerWithMostOverlap(&region, &w_id)) {
+      dbg(DBG_ERROR, "ERROR: LoadBalancer: could not find worker for assigning job %lu.\n", job->job_id()); // NOLINT
+      return false;
     }
 
     worker = worker_map_[w_id];
   }
-
 
   log.StopTimer();
   std::cout
@@ -190,8 +171,6 @@ bool LoadBalancer::GetWorkerToAssignJob(
 
 
   return true;
-
-
 
 //  Log log;
 //  log.StartTimer();
@@ -393,24 +372,40 @@ void LoadBalancer::InitializeRegionMap() {
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
 
-  assert(data_manager_->initialized_global_bounding_region());
+  std::vector<worker_id_t> worker_ids;
+  WorkerMapIter iter = worker_map_.begin();
+  for (; iter != worker_map_.end(); ++iter) {
+    worker_ids.push_back(iter->first);
+  }
   assert(worker_num_ > 0);
   global_region_ = data_manager_->global_bounding_region();
 
-  size_t num_x, num_y, num_z;
-  SplitDimensions(&num_x, &num_y, &num_z);
-
-
-  static const int arr_x[] = WEIGHT_X;
-  std::vector<size_t> weight_x(arr_x, arr_x + WEIGHT_NUM);
-  static const int arr_y[] = WEIGHT_Y;
-  std::vector<size_t> weight_y(arr_y, arr_y + WEIGHT_NUM);
-  static const int arr_z[] = WEIGHT_Z;
-  std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
-
-  GenerateRegionMap(num_x, num_y, num_z, weight_x, weight_y, weight_z);
+  region_map_.Initialize(worker_ids, global_region_);
 
   init_phase_ = false;
+
+//  boost::adopt_lock_t recursive;
+//  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+//  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+//
+//  assert(data_manager_->initialized_global_bounding_region());
+//  assert(worker_num_ > 0);
+//  global_region_ = data_manager_->global_bounding_region();
+//
+//  size_t num_x, num_y, num_z;
+//  SplitDimensions(&num_x, &num_y, &num_z);
+//
+//
+//  static const int arr_x[] = WEIGHT_X;
+//  std::vector<size_t> weight_x(arr_x, arr_x + WEIGHT_NUM);
+//  static const int arr_y[] = WEIGHT_Y;
+//  std::vector<size_t> weight_y(arr_y, arr_y + WEIGHT_NUM);
+//  static const int arr_z[] = WEIGHT_Z;
+//  std::vector<size_t> weight_z(arr_z, arr_z + WEIGHT_NUM);
+//
+//  GenerateRegionMap(num_x, num_y, num_z, weight_x, weight_y, weight_z);
+//
+//  init_phase_ = false;
 }
 
 void LoadBalancer::UpdateRegionMap() {
