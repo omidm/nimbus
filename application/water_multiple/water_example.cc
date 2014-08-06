@@ -74,6 +74,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = NULL;
     cache_matrix_a = NULL;
     cache_index_m2c = NULL;
+    cache_index_c2m = NULL;
     cache_vector_b = NULL;
     create_destroy_ple = true;
     Initialize_Particles();
@@ -120,6 +121,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
     cache_index_m2c = cache->index_m2c;
+    cache_index_c2m = cache->index_c2m;
     cache_vector_b = cache->vector_b;
     create_destroy_ple = true;
     Initialize_Particles();
@@ -167,6 +169,7 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
     cache_index_m2c = cache->index_m2c;
+    cache_index_c2m = cache->index_c2m;
     cache_vector_b = cache->vector_b;
     create_destroy_ple = false;
     Initialize_Particles();
@@ -885,15 +888,13 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cache_vector_b = NULL;
     }
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->SaveToNimbus(
-            laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
-      }
+      assert(cache_index_c2m);
+      cm->ReleaseAccess(cache_index_c2m);
+      typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
+      T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
+          laplace_solver_wrapper.cell_index_to_matrix_index);
+      cache_index_c2m = NULL;
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -1344,18 +1345,9 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       // laplace_solver_wrapper.b_array(1).n = cache_vector_b->data()->n;
       // laplace_solver_wrapper.b_array(1).x = cache_vector_b->data()->x;
     }
-    // TODO(addcache).
     // INDEX_C2M.
-    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-      }
+    if (cache_index_c2m) {
+      // INDEX_C2M is never read inside WATER_EXAMPLE.
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(

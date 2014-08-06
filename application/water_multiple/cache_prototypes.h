@@ -57,6 +57,7 @@ extern CacheScalarArray<bool> kCachePsiD;
 extern CacheScalarArray<T> kCachePressure;
 extern CacheScalarArray<int> kCacheColors;
 extern CacheScalarArray<T> kCacheDivergence;
+extern CacheScalarArray<int> kCacheIndexC2M;
 
 extern CacheParticleLevelsetEvolution<float> kCachePLE;
 

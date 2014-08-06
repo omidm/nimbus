@@ -227,24 +227,23 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
-  // TODO(add_cache).
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-    Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
-    if (data_temp) {
-      application::DataRawGridArray* data_real =
-          dynamic_cast<application::DataRawGridArray*>(data_temp);
-      projection_data.cell_index_to_matrix_index.Resize(
-          PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
-                                 TV_INT(init_config.local_region.dx()+1,
-                                        init_config.local_region.dy()+1,
-                                        init_config.local_region.dz()+1)));
-
-      data_real->LoadFromNimbus(&projection_data.cell_index_to_matrix_index);
-      dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-    } else {
-      dbg(APP_LOG, "INDEX_C2M flag is set but data is not local.\n");
-    }
+    nimbus::DataArray read, write;
+    const std::string index_c2m_string = std::string(APP_INDEX_C2M);
+    application::GetReadData(*job, index_c2m_string, da, &read);
+    application::GetWriteData(*job, index_c2m_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg_central,
+            write, array_reg_central,
+            application::kCacheIndexC2M, array_reg_central,
+            nimbus::cache::EXCLUSIVE);
+    cache_index_c2m = dynamic_cast<application::CacheScalarArray<int>*>(cache_var);
+    assert(cache_index_c2m != NULL);
+    typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
+    T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+    T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
+        projection_data.cell_index_to_matrix_index);
   }
   dbg(APP_LOG, "[PROJECTION] LOAD, index_c2m time:%f.\n", log_timer.timer());
 
@@ -652,6 +651,15 @@ void ProjectionDriver::Cache_SaveToNimbus(
     projection_data.matrix_index_to_cell_index = NULL;
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, index_m2c time:%f.\n", log_timer.timer());
+
+  if (cache_index_c2m) {
+    cm->ReleaseAccess(cache_index_c2m);
+    typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
+    T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+    T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
+        projection_data.cell_index_to_matrix_index);
+    cache_index_c2m = NULL;
+  }
 }
 
 }  // namespace PhysBAM

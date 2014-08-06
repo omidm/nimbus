@@ -145,6 +145,21 @@ void GetAppCacheObjects(
     cache->pressure = dynamic_cast<CacheScalarArray<T>*>(cache_var);
     assert(cache->pressure != NULL);
   }
+  // index_c2m.
+  if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
+    nimbus::DataArray read, write;
+    const std::string index_c2m_string = std::string(APP_INDEX_C2M);
+    GetReadData(job, index_c2m_string, da, &read);
+    GetWriteData(job, index_c2m_string, da, &write);
+    nimbus::CacheVar* cache_var =
+        cm->GetAppVar(
+            read, array_reg,
+            write, array_reg,
+            kCacheIndexC2M, array_reg,
+            nimbus::cache::EXCLUSIVE);
+    cache->index_c2m = dynamic_cast<CacheScalarArray<int>*>(cache_var);
+    assert(cache->index_c2m != NULL);
+  }
   // filled_region_colors.
   if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
     nimbus::DataArray read, write;

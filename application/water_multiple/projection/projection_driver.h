@@ -106,6 +106,7 @@ class ProjectionDriver {
     cache_matrix_a = NULL;
     cache_matrix_c = NULL;
     cache_index_m2c = NULL;
+    cache_index_c2m = NULL;
     cache_meta_p = NULL;
   }
 
@@ -161,8 +162,10 @@ class ProjectionDriver {
 
   SPARSE_MATRIX_PARTITION partition;
   typedef typename application::CacheScalarArray<T> TCacheScalarArray;
+  typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
   TCacheScalarArray *cache_pressure;
   TCacheScalarArray *cache_vector_p;
+  IntCacheScalarArray *cache_index_c2m;
   application::CacheSparseMatrix *cache_matrix_a;
   application::CacheSparseMatrix *cache_matrix_c;
   application::CacheArrayM2C * cache_index_m2c;
