@@ -11,7 +11,7 @@ CPP_FILES = $(wildcard *.cc)
 OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 
 LFLAGS += -lnimbus -lboost_thread -lboost_system -lpthread -lprotobuf
-LDFLAGS += -L. -L/usr/lib
+LDFLAGS += -L. -L/usr/lib -L/usr/local/lib
 
 # Add the dependencies here
 %.o: %.cc

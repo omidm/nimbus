@@ -49,18 +49,6 @@ message JobIDSet {
   repeated uint64 ids = 1 [packed=true];        
 }
 
-message SubmitComputeJobPBuf {
-  optional string name            = 1;
-  optional uint64 job_id          = 2;
-  optional LogicalIDSet read_set  = 3;
-  optional LogicalIDSet write_set = 4;
-  optional JobIDSet before_set    = 5;
-  optional JobIDSet after_set     = 6;
-  optional uint64 parent_id       = 7;
-  optional uint64 future_id       = 8;
-  optional bytes params           = 9;
-}
-
 message SchedulerPBuf{
   enum Type {
      BASE             =  1;
@@ -87,6 +75,7 @@ message SchedulerPBuf{
 // Note that the field type should agree with the type
 // value, to simplify reading.
   optional SubmitComputeJobPBuf submit_compute   = 2;
+  optional SubmitCopyJobPBuf submit_copy         = 3;
   optional ExecuteComputeJobPBuf execute_compute = 7;
 }
 
@@ -101,3 +90,28 @@ message ExecuteComputeJobPBuf {
   optional uint64 future_id        = 8; 
   optional bytes params            = 9;
 }
+
+message SubmitComputeJobPBuf {
+  optional string name            = 1;
+  optional uint64 job_id          = 2;
+  optional LogicalIDSet read_set  = 3;
+  optional LogicalIDSet write_set = 4;
+  optional JobIDSet before_set    = 5;
+  optional JobIDSet after_set     = 6;
+  optional uint64 parent_id       = 7;
+  optional uint64 future_id       = 8;
+  optional bytes params           = 9;
+}
+
+message SubmitCopyJobPBuf {
+  optional string name            = 1;
+  optional uint64 job_id          = 2;
+  optional uint64 from_id         = 3;
+  optional uint64 to_id           = 4;  
+  optional JobIDSet before_set    = 5;
+  optional JobIDSet after_set     = 6;
+  optional uint64 parent_id       = 7;
+  optional uint64 future_id       = 8;
+  optional bytes params           = 9;
+}
+

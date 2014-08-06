@@ -44,21 +44,24 @@
 
 #include <string>
 #include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 class SpawnCopyJobCommand : public SchedulerCommand {
   public:
     SpawnCopyJobCommand();
     SpawnCopyJobCommand(const ID<job_id_t>& job_id,
-        const ID<logical_data_id_t>& from_logical_id,
-        const ID<logical_data_id_t>& to_logical_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const ID<job_id_t>& parent_job_id,
-        const Parameter& params);
+                        const ID<logical_data_id_t>& from_logical_id,
+                        const ID<logical_data_id_t>& to_logical_id,
+                        const IDSet<job_id_t>& before,
+                        const IDSet<job_id_t>& after,
+                        const ID<job_id_t>& parent_job_id,
+                        const Parameter& params);
     ~SpawnCopyJobCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
@@ -77,6 +80,9 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
     Parameter params_;
+
+    bool ReadFromProtobuf(const SubmitCopyJobPBuf& buf);
+    bool WriteToProtobuf(SubmitCopyJobPBuf* buf);
 };
 
 }  // namespace nimbus

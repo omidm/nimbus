@@ -79,8 +79,10 @@ int test_compute_job() {
                              params);
 
   std::string toStringResult = cmd.toString();
+  SchedulerPBuf buf;
+  buf.ParseFromString(toStringResult);
   SpawnComputeJobCommand cmd2;
-  bool result = cmd2.Parse(toStringResult);
+  bool result = cmd2.Parse(buf);
   
   if (result) {
     std::string tags = cmd2.toStringWTags();

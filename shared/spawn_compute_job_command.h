@@ -97,8 +97,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     bool sterile_;
     Parameter params_;
 
-    bool ReadFromProtobuf(const SubmitComputeJobPBuf& cmd);
-    bool WriteToProtobuf(SubmitComputeJobPBuf* cmd);
+    bool ReadFromProtobuf(const SubmitComputeJobPBuf& buf);
+    bool WriteToProtobuf(SubmitComputeJobPBuf* buf);
 };
 
 

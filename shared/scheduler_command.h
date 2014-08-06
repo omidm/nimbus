@@ -96,6 +96,16 @@ class SchedulerCommand {
   typedef std::map<uint16_t, SchedulerCommand*> PrototypeTable;
 
   virtual SchedulerCommand* Clone();
+
+  // Parsing is a bit tricky for historical reasons.
+  // The first Parse method takes a string, and it assumes
+  // that this string is only the *subtype* of command. So,
+  // if this is a SubmitCopyJobCommand, the string should be
+  // the result of SubmitCopyPBuf.ToString.
+  // THe second Parse method takes a SchedulerPBuf, and it
+  // assumes that this is a complete scheduler command, including
+  // the type information. That is, expects it to a SubmitCopyPBuf
+  // inside a SchedulerPBuf.
   virtual bool Parse(const std::string& param_segment);
   virtual bool Parse(const SchedulerPBuf& buf);
   virtual std::string toString();

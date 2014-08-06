@@ -87,14 +87,14 @@ SchedulerCommand* SpawnComputeJobCommand::Clone() {
 
 
 bool SpawnComputeJobCommand::Parse(const std::string& data) {
-  SubmitComputeJobPBuf cmd;
-  bool result = cmd.ParseFromString(data);
+  SubmitComputeJobPBuf buf;
+  bool result = buf.ParseFromString(data);
 
   if (!result) {
     // Throw an error message
     return false;
   } else {
-    ReadFromProtobuf(cmd);
+    ReadFromProtobuf(buf);
     return true;
   }
 }
@@ -116,6 +116,7 @@ std::string SpawnComputeJobCommand::toString() {
   buf.set_type(SchedulerPBuf_Type_SPAWN_COMPUTE);
   SubmitComputeJobPBuf* cmd = buf.mutable_submit_compute();
   WriteToProtobuf(cmd);
+
   buf.SerializeToString(&result);
 
   return result;
