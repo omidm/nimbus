@@ -423,18 +423,18 @@ void Worker::SetupSchedulerInterface() {
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  scheduler_command_table_.push_back(new HandshakeCommand());
-  scheduler_command_table_.push_back(new JobDoneCommand());
-  scheduler_command_table_.push_back(new ComputeJobCommand());
-  scheduler_command_table_.push_back(new CreateDataCommand);
-  scheduler_command_table_.push_back(new RemoteCopySendCommand());
-  scheduler_command_table_.push_back(new RemoteCopyReceiveCommand());
-  scheduler_command_table_.push_back(new LocalCopyCommand());
-  scheduler_command_table_.push_back(new LdoAddCommand());
-  scheduler_command_table_.push_back(new LdoRemoveCommand());
-  scheduler_command_table_.push_back(new PartitionAddCommand());
-  scheduler_command_table_.push_back(new PartitionRemoveCommand());
-  scheduler_command_table_.push_back(new TerminateCommand());
+  scheduler_command_table_.at(SchedulerCommand::HANDSHAKE) = new HandshakeCommand();
+  scheduler_command_table_.at(SchedulerCommand::JOB_DONE) = new JobDoneCommand();
+  scheduler_command_table_.at(SchedulerCommand::COMPUTE_JOB) = new ComputeJobCommand();
+  scheduler_command_table_.at(SchedulerCommand::CREATE_DATA) = new CreateDataCommand();
+  scheduler_command_table_.at(SchedulerCommand::REMOTE_COPY_SEND) = new RemoteCopySendCommand();
+  scheduler_command_table_.at(SchedulerCommand::REMOTE_COPY_RECEIVE) = new RemoteCopyReceiveCommand(); // NOLINT
+  scheduler_command_table_.at(SchedulerCommand::LOCAL_COPY) = new LocalCopyCommand();
+  scheduler_command_table_.at(SchedulerCommand::LDO_ADD) = new LdoAddCommand();
+  scheduler_command_table_.at(SchedulerCommand::LDO_REMOVE) = new LdoRemoveCommand();
+  scheduler_command_table_.at(SchedulerCommand::PARTITION_ADD) = new PartitionAddCommand();
+  scheduler_command_table_.at(SchedulerCommand::PARTITION_REMOVE) = new PartitionRemoveCommand();
+  scheduler_command_table_.at(SchedulerCommand::TERMINATE) = new TerminateCommand();
 }
 
 worker_id_t Worker::id() {

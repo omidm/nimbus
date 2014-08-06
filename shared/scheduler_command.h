@@ -61,7 +61,7 @@
 #include "shared/parameter.h"
 #include "shared/geometric_region.h"
 #include "shared/nimbus_types.h"
-
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 
@@ -93,10 +93,11 @@ class SchedulerCommand {
   };
 
   typedef std::set<Type> TypeSet;
-  typedef std::list<SchedulerCommand*> PrototypeTable;
+  typedef std::map<uint16_t, SchedulerCommand*> PrototypeTable;
 
   virtual SchedulerCommand* Clone();
   virtual bool Parse(const std::string& param_segment);
+  virtual bool Parse(const SchedulerPBuf& buf);
   virtual std::string toString();
   virtual std::string toStringWTags();
   virtual std::string name();
@@ -135,12 +136,6 @@ class SchedulerCommand {
   static const std::string PROFILE_NAME;
 
  private:
-  static bool ParseCommandType(const std::string& input,
-    SchedulerCommand::PrototypeTable* command_set,
-    SchedulerCommand*& generated_command,
-    std::string& param_segment);
-
-  // worker_id_t worker_id_;
 };
 
 

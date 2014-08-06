@@ -174,56 +174,31 @@ SchedulerCommand* SchedulerCommand::Clone() {
 }
 
 bool SchedulerCommand::Parse(const std::string& param_segment) {
-  std::cout << "WARNING: Base Scheduler Command Parsed." << std::endl;
+  dbg(DBG_ERROR, "ERROR: Base Scheduler Command Parsed.\n");
   return false;
 }
 
-bool SchedulerCommand::ParseCommandType(const std::string& input,
-    SchedulerCommand::PrototypeTable* command_table,
-    SchedulerCommand*& generated_command,
-    std::string& param_segment) {
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(input, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  if (iter == tokens.end()) {
-    std::cout << "ERROR: Command is empty." << std::endl;
-    return false;
-  }
-  std::string name = *iter;
-  bool name_is_valid = false;
-  SchedulerCommand::PrototypeTable::iterator table_iter = command_table->begin();
-  for (; table_iter != command_table->end(); ++table_iter) {
-    if (name == (*table_iter)->name()) {
-      name_is_valid = true;
-      generated_command = (*table_iter)->Clone();
-      break;
-    }
-  }
-  if (!name_is_valid) {
-    std::cout << "ERROR: Command name is unknown: " << name << std::endl;
-    return false;
-  }
-
-  // Add 1 for the space after the name.
-  param_segment = input.substr(name.length() + 1);
-  return true;
+bool SchedulerCommand::Parse(const SchedulerPBuf& param_segment) {
+  dbg(DBG_ERROR, "ERROR: Base Scheduler Command Parsed.\n");
+  return false;
 }
 
 bool SchedulerCommand::GenerateSchedulerCommandChild(const std::string& input,
-    SchedulerCommand::PrototypeTable* command_table,
-    SchedulerCommand*& generated_command) {
-  std::string param_segment;
-  if (!ParseCommandType(input, command_table, generated_command, param_segment)) {
-    std::cout << "ERROR: Could not detect valid scheduler command type." << std::endl;
+                                                     SchedulerCommand::PrototypeTable* command_table, // NOLINT
+                                                     SchedulerCommand*& generated_command) {
+  SchedulerPBuf pBuf;
+  bool result = pBuf.ParseFromString(input);
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: could not parse command.\n");
     return false;
-  } else {
-    if (!generated_command->Parse(param_segment)) {
-      std::cout << "ERROR: Could not parse valid " << generated_command->name()
-        << "command" << std::endl;
-      delete generated_command;
-      return false;
-    }
-
-    return true;
   }
+
+  SchedulerCommand* prototype = command_table->at((uint16_t)pBuf.type());
+  generated_command = prototype->Clone();
+  if (!generated_command->Parse(pBuf)) {
+    dbg(DBG_ERROR, "ERROR: Could not parse valid %s command.\n", generated_command->name().c_str());
+    delete generated_command;
+    return false;
+  }
+  return true;
 }

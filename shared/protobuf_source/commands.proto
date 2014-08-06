@@ -49,7 +49,7 @@ message JobIDSet {
   repeated uint64 ids = 1 [packed=true];        
 }
 
-message SubmitComputeJobCommand {
+message SubmitComputeJobPBuf {
   optional string name            = 1;
   optional uint64 job_id          = 2;
   optional LogicalIDSet read_set  = 3;
@@ -61,7 +61,36 @@ message SubmitComputeJobCommand {
   optional bytes params           = 9;
 }
 
-message ExecuteComputeJobCommand {
+message SchedulerPBuf{
+  enum Type {
+     BASE             =  1;
+     SPAWN_COMPUTE    =  2;
+     SPAWN_COPY       =  3;
+     DEFINE_DATA      =  4;
+     HANDSHAKE        =  5;
+     JOB_DONE         =  6;
+     EXECUTE_COMPUTE  =  7;
+     CREATE_DATA      =  8;
+     REMOTE_COPY_SEND =  9;
+     REMOTE_COPY_RECV = 10;
+     LOCAL_COPY       = 11;
+     DEFINE_PARTITION = 12;
+     LDO_ADD          = 13;
+     LDO_REMOVE       = 14;
+     PARTITION_ADD    = 15;
+     PARTITION_REMOVE = 16;
+     TERMINATE        = 17;
+     PROFILE          = 18;
+  }
+  required Type type = 1;
+
+// Note that the field type should agree with the type
+// value, to simplify reading.
+  optional SubmitComputeJobPBuf submit_compute   = 2;
+  optional ExecuteComputeJobPBuf execute_compute = 7;
+}
+
+message ExecuteComputeJobPBuf {
   optional string name             = 1;
   optional uint64 job_id           = 2;
   optional PhysicalIDSet read_set  = 3;
@@ -71,5 +100,4 @@ message ExecuteComputeJobCommand {
   optional uint64 parent_id        = 7;
   optional uint64 future_id        = 8; 
   optional bytes params            = 9;
-  
 }

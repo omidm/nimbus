@@ -87,35 +87,38 @@ SchedulerCommand* SpawnComputeJobCommand::Clone() {
 
 
 bool SpawnComputeJobCommand::Parse(const std::string& data) {
-  SubmitComputeJobCommand cmd;
+  SubmitComputeJobPBuf cmd;
   bool result = cmd.ParseFromString(data);
 
   if (!result) {
     // Throw an error message
     return false;
   } else {
-    ReadFromProtobuf(&cmd);
+    ReadFromProtobuf(cmd);
     return true;
   }
 }
 
-std::string SpawnComputeJobCommand::toString() {
-  std::string str;
-  SubmitComputeJobCommand cmd;
-  WriteToProtobuf(&cmd);
-  cmd.SerializeToString(&str);
+bool SpawnComputeJobCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_submit_compute()) {
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.submit_compute());
+  }
+}
 
-    // Note asymmetry of parsing forces this copy.
-  // That is, toString inserts the command name,
-  // while Parse assumes the command name has been consumed.
-  // Correspondingly, the protocol buffer doesn't have
-  // the command name because its typing needs to follow
-  // the higher-level parsers expectations of ASCII, but
-  // we need to insert it in toString. Asymmetry is
-  // a bad idea!
-  std::string result = name_ + " ";
-  result += str;
-  return str;
+std::string SpawnComputeJobCommand::toString() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_SPAWN_COMPUTE);
+  SubmitComputeJobPBuf* cmd = buf.mutable_submit_compute();
+  WriteToProtobuf(cmd);
+  buf.SerializeToString(&result);
+
+  return result;
 }
 
 std::string SpawnComputeJobCommand::toStringWTags() {
@@ -177,23 +180,23 @@ bool SpawnComputeJobCommand::sterile() {
   return sterile_;
 }
 
-bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobCommand* cmd) {
-  job_name_ = cmd->name();
-  job_id_.set_elem(cmd->job_id());
-  read_set_.ConvertFromRepeatedField(cmd->read_set().ids());
-  write_set_.ConvertFromRepeatedField(cmd->write_set().ids());
-  before_set_.ConvertFromRepeatedField(cmd->before_set().ids());
-  after_set_.ConvertFromRepeatedField(cmd->after_set().ids());
-  future_job_id_.set_elem(cmd->future_id());
-  parent_job_id_.set_elem(cmd->parent_id());
+bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& cmd) {
+  job_name_ = cmd.name();
+  job_id_.set_elem(cmd.job_id());
+  read_set_.ConvertFromRepeatedField(cmd.read_set().ids());
+  write_set_.ConvertFromRepeatedField(cmd.write_set().ids());
+  before_set_.ConvertFromRepeatedField(cmd.before_set().ids());
+  after_set_.ConvertFromRepeatedField(cmd.after_set().ids());
+  future_job_id_.set_elem(cmd.future_id());
+  parent_job_id_.set_elem(cmd.parent_id());
   // Is this safe?
-  SerializedData d(cmd->params());
+  SerializedData d(cmd.params());
   params_.set_ser_data(d);
 
   return true;
 }
 
-bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobCommand* cmd) {
+bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* cmd) {
   cmd->set_name(job_name());
   cmd->set_job_id(job_id().elem());
   read_set().ConvertToRepeatedField(cmd->mutable_read_set()->mutable_ids());

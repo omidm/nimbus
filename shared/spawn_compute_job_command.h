@@ -33,10 +33,15 @@
  */
 
  /*
-  * Spawn compute job command used to spawn compute jobs from worker to
-  * scheduler.
+  * A SpawnComputeJobCommand is a message sent from a worker to the
+  * scheduler to create a new computational job. The scheduler
+  * processes the command and produces an ExecuteComputeJobCommand
+  * that it sends to the selected worker. This class is primarily a
+  * way to translate between a protocol buffer for network transfer
+  * and an in-memory representation.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_SPAWN_COMPUTE_JOB_COMMAND_H_
@@ -66,6 +71,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string job_name();
@@ -91,8 +97,8 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     bool sterile_;
     Parameter params_;
 
-    bool ReadFromProtobuf(const SubmitComputeJobCommand* cmd);
-    bool WriteToProtobuf(SubmitComputeJobCommand* cmd);
+    bool ReadFromProtobuf(const SubmitComputeJobPBuf& cmd);
+    bool WriteToProtobuf(SubmitComputeJobPBuf* cmd);
 };
 
 

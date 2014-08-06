@@ -1002,14 +1002,14 @@ void Scheduler::SetupLoadBalancer() {
 
 void Scheduler::LoadWorkerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_table_.push_back(new SpawnComputeJobCommand());
-  worker_command_table_.push_back(new SpawnCopyJobCommand());
-  worker_command_table_.push_back(new DefineDataCommand());
-  worker_command_table_.push_back(new HandshakeCommand());
-  worker_command_table_.push_back(new JobDoneCommand());
-  worker_command_table_.push_back(new DefinePartitionCommand());
-  worker_command_table_.push_back(new TerminateCommand());
-  worker_command_table_.push_back(new ProfileCommand());
+  worker_command_table_.at(SchedulerCommand::SPAWN_COMPUTE_JOB) = new SpawnComputeJobCommand();
+  worker_command_table_.at(SchedulerCommand::SPAWN_COPY_JOB)    = new SpawnCopyJobCommand();
+  worker_command_table_.at(SchedulerCommand::DEFINE_DATA)       = new DefineDataCommand();
+  worker_command_table_.at(SchedulerCommand::HANDSHAKE)         = new HandshakeCommand();
+  worker_command_table_.at(SchedulerCommand::JOB_DONE)          = new JobDoneCommand();
+  worker_command_table_.at(SchedulerCommand::DEFINE_PARTITION)  = new DefinePartitionCommand();
+  worker_command_table_.at(SchedulerCommand::TERMINATE)         = new TerminateCommand();
+  worker_command_table_.at(SchedulerCommand::PROFILE)           = new ProfileCommand();
 }
 
 void Scheduler::LoadUserCommands() {
