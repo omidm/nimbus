@@ -152,6 +152,18 @@ void RegionMap::Initialize(const std::vector<worker_id_t>& worker_ids,
                 worker_ids, global_region);
 }
 
+
+
+bool RegionMap::QueryCache(const GeometricRegion *region, worker_id_t *w_id) {
+  return false;
+}
+
+void RegionMap::InvalidateCache() {
+}
+
+void RegionMap::CacheQueryResult() {
+}
+
 void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
                               std::vector<size_t> weight_x,
                               std::vector<size_t> weight_y,

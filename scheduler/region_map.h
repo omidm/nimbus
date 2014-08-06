@@ -59,6 +59,8 @@ namespace nimbus {
   public:
     typedef boost::unordered_map<worker_id_t, RegionMapEntry*> Table;
     typedef Table::iterator TableIter;
+    typedef boost::unordered_map<GeometricRegion, worker_id_t> Cache;
+    typedef Cache::iterator CacheIter;
 
     RegionMap();
     explicit RegionMap(const Table& table);
@@ -85,6 +87,7 @@ namespace nimbus {
 
   private:
     Table table_;
+    Cache cache_;
 
     void ClearTable();
 
@@ -96,6 +99,12 @@ namespace nimbus {
                        std::vector<size_t> weight_z,
                        const std::vector<worker_id_t>& worker_ids,
                        const GeometricRegion& global_region);
+
+    bool QueryCache(const GeometricRegion *region, worker_id_t *w_id);
+
+    void InvalidateCache();
+
+    void CacheQueryResult();
   };
 
 }  // namespace nimbus
