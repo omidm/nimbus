@@ -48,6 +48,9 @@ using boost::char_separator;
 JobDoneCommand::JobDoneCommand() {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
+  run_time_ = 0;
+  wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
@@ -58,6 +61,7 @@ JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
   type_ = JOB_DONE;
   run_time_ = 0;
   wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,

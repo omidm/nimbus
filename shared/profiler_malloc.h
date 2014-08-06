@@ -53,6 +53,8 @@ namespace nimbus {
 
 class ProfilerMalloc {
  public:
+  static void *p_malloc(size_t size);
+  static void p_free(void *ptr);
   static bool IsInit();
   static bool IsMapInclude();
   static void Initialize();

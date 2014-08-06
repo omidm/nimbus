@@ -70,7 +70,7 @@ namespace nimbus {
       Profile();
       ProfileCommand cm(worker_id, totalVirtualMem, usedVirtualMem,
           procVirtualMem, totalPhysMem, usedPhysMem, procPhysMem);
-      client_->sendCommand(&cm);
+      // client_->sendCommand(&cm);
       boost::this_thread::interruption_point();
       t.wait();
     }
@@ -107,8 +107,6 @@ namespace nimbus {
     str += ("total_pm: " + boost::lexical_cast<std::string>(totalPhysMem) + " ");
     str += ("used_pm: " + boost::lexical_cast<std::string>(usedPhysMem) + " ");
     str += ("proc_pm: " + boost::lexical_cast<std::string>(procPhysMem));
-    // str += (" curr_alloc: " + boost::lexical_cast<std::string>(ProfilerMalloc::AllocCurr()));
-    // str += (" max_alloc: " + boost::lexical_cast<std::string>(ProfilerMalloc::AllocMax()));
     return str;
   }
 
