@@ -77,7 +77,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
   Parameter par;
-  IDSet<param_id_t> param_idset;
 
   GetNewJobID(&job_ids, CHUNK_NUM * 3 + 1);
 
@@ -113,24 +112,21 @@ void Main::Execute(Parameter params, const DataArray& da) {
       read.clear(); read.insert(d[i * 3]);
       write.clear(); write.insert(d[i * 3]);
       before.clear();
-      param_idset.clear(); param_idset.insert(0);
-      par.set_idset(param_idset);
+      SerializeParameter(&par, 0);
       SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3],
           read, write, before, after, par, STERILE_FLAG);
 
       read.clear(); read.insert(d[i * 3 + 1]);
       write.clear(); write.insert(d[i * 3 + 1]);
       before.clear();
-      param_idset.clear(); param_idset.insert(BANDWIDTH);
-      par.set_idset(param_idset);
+      SerializeParameter(&par, BANDWIDTH);
       SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1],
           read, write, before, after, par, STERILE_FLAG);
 
       read.clear(); read.insert(d[i * 3 + 2]);
       write.clear(); write.insert(d[i * 3 + 2]);
       before.clear();
-      param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
-      par.set_idset(param_idset);
+      SerializeParameter(&par, CHUNK_SIZE - BANDWIDTH);
       SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2],
           read, write, before, after, par, STERILE_FLAG);
     }
@@ -148,9 +144,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
     }
   }
   after.clear();
-  param_idset.clear();
-  param_idset.insert(LOOP_COUNTER);
-  par.set_idset(param_idset);
+  SerializeParameter(&par, LOOP_COUNTER);
   SpawnComputeJob(LOOP_JOB_NAME, job_ids[3 * CHUNK_NUM], read, write, before, after, par);
 };
 
@@ -169,9 +163,9 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
-  IDSet<param_id_t> param_idset;
 
-  param_id_t loop_counter = *(params.idset().begin());
+  size_t loop_counter;
+  LoadParameter(&params, &loop_counter);
 
   if (loop_counter > LOOP_CONDITION) {
     /*
@@ -250,9 +244,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       }
     }
     after.clear();
-    param_idset.clear();
-    param_idset.insert(loop_counter - 1);
-    par.set_idset(param_idset);
+    SerializeParameter(&par, loop_counter - 1);
     SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
   } else {
     if (WITH_DATA) {
@@ -298,8 +290,8 @@ void Init::Execute(Parameter params, const DataArray& da) {
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
 
-  param_id_t base_val;
-  base_val = *(params.idset().begin());
+  size_t base_val;
+  LoadParameter(&params, &base_val);
   for (size_t i = 0; i < read_data.size() ; ++i) {
     write_data.push_back(base_val + i);
   }
