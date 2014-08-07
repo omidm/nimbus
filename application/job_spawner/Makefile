@@ -11,7 +11,7 @@ CFLAGS += -fPIC
 CFILES = $(wildcard *.cc)
 HFILES = $(wildcard *.h)
 OBJFILES = $(subst .cc,.o,$(CFILES))
-LFLAGS += -lboost_thread-mt -lboost_system-mt -lnimbus -lprotobuf
+LFLAGS += -lboost_thread -lboost_system -lnimbus -lprotobuf
 SHARED_FLAGS = -shared -fPIC
 
 PDIR_SOURCE = protobuf_source/

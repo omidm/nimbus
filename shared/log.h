@@ -42,6 +42,7 @@
 #ifndef NIMBUS_SHARED_LOG_H_
 #define NIMBUS_SHARED_LOG_H_
 
+#include <boost/thread.hpp>
 #include <sys/time.h>
 #include <iostream> // NOLINT
 #include <fstream> // NOLINT
@@ -128,6 +129,8 @@ class Log {
     struct timeval timer_start_time_;
     double timer_;
     bool timer_is_on_;
+
+    boost::mutex file_mutex_;
 };
 
 

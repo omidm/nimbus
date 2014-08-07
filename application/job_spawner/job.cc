@@ -42,19 +42,25 @@
 #include "./data.h"
 #include "./utils.h"
 
-#define LOOP_COUNTER 30
+
+
+#define LOOP_COUNTER static_cast<JobSpawnerApp*>(application())->counter_
 #define LOOP_CONDITION 0
-#define STAGE_NUM 10
-#define JOB_LENGTH_SEC 0
-#define PART_NUM 100
-#define CHUNK_NUM 100
-#define CHUNK_SIZE 50
-#define BANDWIDTH 10
+#define STAGE_NUM static_cast<JobSpawnerApp*>(application())->stage_num_
+#define JOB_LENGTH_USEC static_cast<JobSpawnerApp*>(application())->job_length_usec_
+#define PART_NUM static_cast<JobSpawnerApp*>(application())->part_num_
+#define CHUNK_PER_PART static_cast<JobSpawnerApp*>(application())->chunk_per_part_
+#define CHUNK_SIZE static_cast<JobSpawnerApp*>(application())->chunk_size_
+#define BANDWIDTH static_cast<JobSpawnerApp*>(application())->bandwidth_
+
+#define STENCIL_SIZE (2*BANDWIDTH)+1
+#define PART_SIZE (CHUNK_PER_PART)*CHUNK_SIZE
+#define CHUNK_NUM PART_NUM*CHUNK_PER_PART
+
+
 #define STERILE_FLAG true
 #define WITH_DATA true
 
-#define STENCIL_SIZE (2*BANDWIDTH)+1
-#define PART_SIZE (CHUNK_NUM/PART_NUM)*CHUNK_SIZE
 
 Main::Main(Application* app) {
   set_application(app);
@@ -67,6 +73,11 @@ Job * Main::Clone() {
 
 void Main::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the main job\n";
+
+  assert(CHUNK_SIZE > (2 * BANDWIDTH));
+  assert(CHUNK_NUM >= PART_NUM);
+  assert(CHUNK_NUM % PART_NUM == 0);
+
   assert(CHUNK_SIZE > (2 * BANDWIDTH));
   assert(CHUNK_NUM >= PART_NUM);
   assert(CHUNK_NUM % PART_NUM == 0);
@@ -77,7 +88,6 @@ void Main::Execute(Parameter params, const DataArray& da) {
   IDSet<job_id_t> before, after;
   IDSet<partition_id_t> neighbor_partitions;
   Parameter par;
-  IDSet<param_id_t> param_idset;
 
   GetNewJobID(&job_ids, CHUNK_NUM * 3 + 1);
 
@@ -86,7 +96,7 @@ void Main::Execute(Parameter params, const DataArray& da) {
      * Defining partition and data.
      */
     GetNewLogicalDataID(&d, CHUNK_NUM * 3);
-    for (int i = 0; i < CHUNK_NUM; ++i) {
+    for (size_t i = 0; i < CHUNK_NUM; ++i) {
       GeometricRegion r_l(i * CHUNK_SIZE, 0, 0,
           BANDWIDTH, 1, 1);
       ID<partition_id_t> p_l(i * 3);
@@ -109,28 +119,25 @@ void Main::Execute(Parameter params, const DataArray& da) {
     /*
      * Spawning init jobs
      */
-    for (int i = 0; i < CHUNK_NUM; ++i) {
+    for (size_t i = 0; i < CHUNK_NUM; ++i) {
       read.clear(); read.insert(d[i * 3]);
       write.clear(); write.insert(d[i * 3]);
       before.clear();
-      param_idset.clear(); param_idset.insert(0);
-      par.set_idset(param_idset);
+      SerializeParameter(&par, 0);
       SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3],
           read, write, before, after, par, STERILE_FLAG);
 
       read.clear(); read.insert(d[i * 3 + 1]);
       write.clear(); write.insert(d[i * 3 + 1]);
       before.clear();
-      param_idset.clear(); param_idset.insert(BANDWIDTH);
-      par.set_idset(param_idset);
+      SerializeParameter(&par, BANDWIDTH);
       SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 1],
           read, write, before, after, par, STERILE_FLAG);
 
       read.clear(); read.insert(d[i * 3 + 2]);
       write.clear(); write.insert(d[i * 3 + 2]);
       before.clear();
-      param_idset.clear(); param_idset.insert(CHUNK_SIZE - BANDWIDTH);
-      par.set_idset(param_idset);
+      SerializeParameter(&par, CHUNK_SIZE - BANDWIDTH);
       SpawnComputeJob(INIT_JOB_NAME, job_ids[i * 3 + 2],
           read, write, before, after, par, STERILE_FLAG);
     }
@@ -143,14 +150,12 @@ void Main::Execute(Parameter params, const DataArray& da) {
   write.clear();
   before.clear();
   if (WITH_DATA) {
-    for (int j = 0; j < CHUNK_NUM * 3; ++j) {
+    for (size_t j = 0; j < CHUNK_NUM * 3; ++j) {
       before.insert(job_ids[j]);
     }
   }
   after.clear();
-  param_idset.clear();
-  param_idset.insert(LOOP_COUNTER);
-  par.set_idset(param_idset);
+  SerializeParameter(&par, LOOP_COUNTER);
   SpawnComputeJob(LOOP_JOB_NAME, job_ids[3 * CHUNK_NUM], read, write, before, after, par);
 };
 
@@ -169,9 +174,9 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
   Parameter par;
-  IDSet<param_id_t> param_idset;
 
-  param_id_t loop_counter = *(params.idset().begin());
+  size_t loop_counter;
+  LoadParameter(&params, &loop_counter);
 
   if (loop_counter > LOOP_CONDITION) {
     /*
@@ -181,8 +186,8 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     GetNewJobID(&stage_job_ids, STAGE_NUM * PART_NUM);
     std::vector<job_id_t> connector_job_ids;
     GetNewJobID(&connector_job_ids, STAGE_NUM - 1);
-    for (int s = 0; s < STAGE_NUM; ++s) {
-      for (int i = 0; i < PART_NUM; ++i) {
+    for (size_t s = 0; s < STAGE_NUM; ++s) {
+      for (size_t i = 0; i < PART_NUM; ++i) {
         read.clear();
         if (WITH_DATA) {
           GeometricRegion r_r(i * PART_SIZE - BANDWIDTH, 0, 0,
@@ -207,7 +212,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
         read.clear();
         write.clear();
         before.clear();
-        for (int j = 0; j < PART_NUM; ++j) {
+        for (size_t j = 0; j < PART_NUM; ++j) {
           before.insert(stage_job_ids[s * PART_NUM + j]);
         }
         after.clear();
@@ -223,7 +228,7 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
       /*
        * Spawning the print jobs at the end of each loop
        */
-      for (int i = 0; i < PART_NUM; ++i) {
+      for (size_t i = 0; i < PART_NUM; ++i) {
         read.clear();
         GeometricRegion r(i * PART_SIZE, 0, 0, PART_SIZE, 1, 1);
         LoadLogicalIdsInSet(this, &read, r, DATA_NAME, NULL);
@@ -245,14 +250,12 @@ void ForLoop::Execute(Parameter params, const DataArray& da) {
     write.clear();
     before.clear();
     if (WITH_DATA) {
-      for (int j = 0; j < PART_NUM; ++j) {
+      for (size_t j = 0; j < PART_NUM; ++j) {
         before.insert(print_job_ids[j]);
       }
     }
     after.clear();
-    param_idset.clear();
-    param_idset.insert(loop_counter - 1);
-    par.set_idset(param_idset);
+    SerializeParameter(&par, loop_counter - 1);
     SpawnComputeJob(LOOP_JOB_NAME, forloop_job_id[0], read, write, before, after, par);
   } else {
     if (WITH_DATA) {
@@ -298,8 +301,8 @@ void Init::Execute(Parameter params, const DataArray& da) {
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
 
-  param_id_t base_val;
-  base_val = *(params.idset().begin());
+  size_t base_val;
+  LoadParameter(&params, &base_val);
   for (size_t i = 0; i < read_data.size() ; ++i) {
     write_data.push_back(base_val + i);
   }
@@ -353,7 +356,7 @@ Job * Stage::Clone() {
 void Stage::Execute(Parameter params, const DataArray& da) {
   std::cout << "Executing the stage job\n";
 
-  usleep(1000000 * JOB_LENGTH_SEC);
+  usleep(JOB_LENGTH_USEC);
 };
 
 Connector::Connector(Application* app) {

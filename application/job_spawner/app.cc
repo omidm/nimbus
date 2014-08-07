@@ -43,7 +43,20 @@
 #include "./job.h"
 #include "./data.h"
 
-JobSpawnerApp::JobSpawnerApp() {
+JobSpawnerApp::JobSpawnerApp(size_t counter,
+                             size_t part_num,
+                             size_t chunk_per_part,
+                             size_t chunk_size,
+                             size_t bandwidth,
+                             size_t stage_num,
+                             size_t job_length_usec) {
+  counter_ = counter;
+  part_num_ = part_num;
+  chunk_per_part_ = chunk_per_part;
+  chunk_size_ = chunk_size;
+  bandwidth_ = bandwidth;
+  stage_num_ = stage_num;
+  job_length_usec_ = job_length_usec;
 };
 
 JobSpawnerApp::~JobSpawnerApp() {

@@ -107,8 +107,6 @@ namespace nimbus {
     str += ("total_pm: " + boost::lexical_cast<std::string>(totalPhysMem) + " ");
     str += ("used_pm: " + boost::lexical_cast<std::string>(usedPhysMem) + " ");
     str += ("proc_pm: " + boost::lexical_cast<std::string>(procPhysMem));
-    // str += (" curr_alloc: " + boost::lexical_cast<std::string>(ProfilerMalloc::AllocCurr()));
-    // str += (" max_alloc: " + boost::lexical_cast<std::string>(ProfilerMalloc::AllocMax()));
     return str;
   }
 

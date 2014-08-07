@@ -32,70 +32,22 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Job classes for job spawner application.
+/* 
+ * Author: Andrew Lim <alim16@stanford.edu>
  *
- * Author: Omid Mashayekhi<omidm@stanford.edu>
+ * Wrappers around malloc/free routines defined in ProfilerMalloc class.
+ * Used to interpose on libc malloc/free.
  */
 
-#ifndef NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
-#define NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_
+#include "shared/profiler_malloc.h"
 
-#include <unistd.h>
-#include <iostream> // NOLINT
-#include "worker/physical_data_instance.h"
-#include "shared/nimbus.h"
-#include "./app.h"
+extern "C"
+void *malloc(size_t size) {
+  return nimbus::ProfilerMalloc::p_malloc(size);
+}
 
-#define INIT_JOB_NAME "init"
-#define PRINT_JOB_NAME "print"
-#define LOOP_JOB_NAME "for_loop"
-#define STAGE_JOB_NAME "stage"
-#define CONNECTOR_JOB_NAME "connector"
+extern "C"
+void free(void *ptr) {
+  nimbus::ProfilerMalloc::p_free(ptr);
+}
 
-using namespace nimbus; // NOLINT
-
-class Main : public Job {
-  public:
-    explicit Main(Application* app);
-    virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-class Init : public Job {
-  public:
-    Init();
-    virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-class Print : public Job {
-  public:
-    Print();
-    virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-class ForLoop : public Job {
-  public:
-    explicit ForLoop(Application* app);
-    virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-class Stage : public Job {
-  public:
-    explicit Stage(Application* app);
-    virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-class Connector : public Job {
-  public:
-    explicit Connector(Application* app);
-    virtual void Execute(Parameter params, const DataArray& da);
-    virtual Job * Clone();
-};
-
-
-#endif  // NIMBUS_APPLICATION_JOB_SPAWNER_JOB_H_

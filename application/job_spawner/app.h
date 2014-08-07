@@ -50,9 +50,23 @@ using nimbus::Application;
 
 class JobSpawnerApp : public Application {
   public:
-    JobSpawnerApp();
+    JobSpawnerApp(size_t counter,
+                  size_t part_num,
+                  size_t chunk_per_part,
+                  size_t chunk_size,
+                  size_t bandwidth,
+                  size_t stage_num,
+                  size_t job_length_usec_);
     ~JobSpawnerApp();
     virtual void Load();
+
+    size_t counter_;
+    size_t part_num_;
+    size_t chunk_per_part_;
+    size_t chunk_size_;
+    size_t bandwidth_;
+    size_t stage_num_;
+    size_t job_length_usec_;
 };
 
 
