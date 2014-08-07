@@ -39,8 +39,8 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_SCHEDULER_COMMAND_CREATE_COMMANDS_H_
-#define NIMBUS_TEST_SCHEDULER_COMMAND_CREATE_COMMANDS_H_
+#ifndef NIMBUS_TEST_MESSAGING_CREATE_COMMANDS_H_
+#define NIMBUS_TEST_MESSAGING_CREATE_COMMANDS_H_
 using namespace nimbus;  // NOLINT
 
 #include <string>
@@ -217,4 +217,4 @@ void create_commands() {
   }
 }
 
-#endif  // NIMBUS_TEST_SCHEDULER_COMMAND_CREATE_COMMANDS_H_
+#endif  // NIMBUS_TEST_MESSAGING_CREATE_COMMANDS_H_
