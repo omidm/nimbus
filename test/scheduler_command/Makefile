@@ -1,26 +1,31 @@
 # Makefile for test application
 
-TARGET = test
-all: check $(TARGET)
+SERVER = server
+CLIENT = client
+all: check $(SERVER) $(CLIENT)
 
 NIMBUS_ROOT = ../..
 include ${NIMBUS_ROOT}/Makeinclude
 
-LDIR = ../../lib/
+LDIR = ../../shared/
 IFLAGS += -I$(LDIR)
 H_FILES = $(wildcard *.h)
 CFILES = $(wildcard *.cc)
 OBJECT_FILES = $(subst .cc,.o,$(CFILES))
 
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread
+LFLAGS += -lnimbus -lboost_thread -lboost_system -lpthread
 LDFLAGS += -L.
 
 # Add the dependencies here
 %.o: %.cc
 	$(CPP) $(CFLAGS) $(IFLAGS) -c $< -o $@ 
 
-$(TARGET): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
-	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) $(OBJECT_FILES) -o $(TARGET) $(LFLAGS)
+$(SERVER): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) server.o -o $(SERVER) $(LFLAGS)
+
+
+$(CLIENT): $(CPP_FILES) $(H_FILES) $(DEPS) $(OBJECT_FILES)
+	$(CPP) $(CFLAGS) $(IFLAGS) $(LDFLAGS) $(LFLAGS) client.o -o $(CLIENT) $(LFLAGS)
 
 clean: clean-files
 	\rm -f $(TARGET)
