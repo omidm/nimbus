@@ -55,6 +55,7 @@ class LdoAddCommand : public SchedulerCommand {
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
 
@@ -63,6 +64,9 @@ class LdoAddCommand : public SchedulerCommand {
   private:
     GeometricRegion* region_;
     LogicalDataObject* object_;
+
+    bool ReadFromProtobuf(const LdoAddPBuf& buf);
+    bool WriteToProtobuf(LdoAddPBuf* buf);
 };
 
 

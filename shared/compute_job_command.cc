@@ -45,8 +45,8 @@ using boost::tokenizer;
 using boost::char_separator;
 
 ComputeJobCommand::ComputeJobCommand() {
-  name_ = COMPUTE_JOB_NAME;
-  type_ = COMPUTE_JOB;
+  name_ = EXECUTE_COMPUTE_NAME;
+  type_ = EXECUTE_COMPUTE;
 }
 
 ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
@@ -59,8 +59,8 @@ ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
     read_set_(read), write_set_(write),
     before_set_(before), after_set_(after),
     params_(params), sterile_(sterile) {
-  name_ = COMPUTE_JOB_NAME;
-  type_ = COMPUTE_JOB;
+  name_ = EXECUTE_COMPUTE_NAME;
+  type_ = EXECUTE_COMPUTE;
 }
 
 ComputeJobCommand::~ComputeJobCommand() {

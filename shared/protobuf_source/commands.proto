@@ -37,8 +37,6 @@
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-import "ldomessage.proto";
-
 message LogicalIDSet {
   repeated uint64 ids = 1 [packed=true];
 }
@@ -51,9 +49,23 @@ message PartitionIDSet {
   repeated uint64 ids = 1 [packed=true];        
 }
 
-
 message JobIDSet {
   repeated uint64 ids = 1 [packed=true];        
+}
+
+message GeometricRegionPBuf {
+  required int64 x  = 1;
+  required int64 y  = 2;
+  required int64 z  = 3;
+  required int64 dx = 4;
+  required int64 dy = 5;
+  required int64 dz = 6;
+}
+
+message LdoPBuf {
+  optional uint64 data_id = 1;
+  optional GeometricRegionPBuf region = 2;
+  optional string variable = 3;
 }
 
 message SchedulerPBuf{
@@ -92,6 +104,8 @@ message SchedulerPBuf{
   optional RemoteCopyReceivePBuf remote_receive  = 10;
   optional LocalCopyPBuf local_copy              = 11;
   optional DefinePartitionPBuf define_partition  = 12;
+  optional LdoAddPBuf ldo_add                    = 13;
+  optional LdoRemovePBuf ldo_remove              = 14;
   optional PartitionAddPBuf partition_add        = 15;
   optional PartitionRemovePBuf partition_remove  = 16;
   optional TerminatePBuf terminate               = 17;
@@ -188,12 +202,20 @@ message LocalCopyPBuf {
 
 message DefinePartitionPBuf {
   optional uint64 partition_id           = 1;
-  optional GeometricRegionMessage region = 2;
+  optional GeometricRegionPBuf region    = 2;
+}
+
+message LdoAddPBuf {
+  optional LdoPBuf ldo = 1;
+}
+
+message LdoRemovePBuf {
+  optional LdoPBuf ldo = 2;
 }
 
 message PartitionAddPBuf {
   optional uint64 partition_id           = 1;
-  optional GeometricRegionMessage region = 2;
+  optional GeometricRegionPBuf region    = 2;
 }
 
 message PartitionRemovePBuf {

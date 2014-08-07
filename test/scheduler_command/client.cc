@@ -46,18 +46,15 @@
 #include "shared/scheduler_command.h"
 #include "shared/protobuf_compiled/commands.pb.h"
 
+#include "./create_commands.h"
+
 using ::std::cout;
 using ::std::endl;
 using namespace nimbus; // NOLINT
 
 #define PORT 11714
-#define NUM_COMMANDS 2
-
 
 nimbus::SchedulerClient client("127.0.0.1", 11714);
-nimbus::SchedulerCommand::PrototypeTable prototypes;
-
-void load_command_prototypes();
 
 void* run(void* p) {
   client.Run();
@@ -67,18 +64,30 @@ void* run(void* p) {
 int main(int argc, char *argv[]) {
   dbg_init();
   load_command_prototypes();
-  nimbus::SchedulerCommand* commands[NUM_COMMANDS];
-  pthread_t thread;
+  create_commands();
+  client.set_scheduler_command_table(&prototypes);
 
   cout << "Starting client." << std::endl;
-  client.set_scheduler_command_table(&prototypes);
   client.Run();
 
   // pthread_create(&thread, NULL, run, NULL);
 
-  for (int i = 0; i < NUM_COMMANDS; i++) {
+  for (int i = 0; i < NUM_COMMANDS;) {
     nimbus::SchedulerCommand* cmd = client.ReceiveCommand();
-    cout << "Received command " << cmd->toStringWTags() << std::endl;
+    if (cmd != NULL) {
+      cout << "Received command " << i << ": " << cmd->toStringWTags() << std::endl;
+      i++;
+    } else {
+      // No commands waiting. Does the worker really go into a
+      // spin loop?
+    }
+  }
+
+  for (int i = 0; i < NUM_COMMANDS; i++) {
+    std::string val = commands[i]->toString();
+    cout << "Sending command of length " << val.length() << ": ";
+    cout << commands[i]->toStringWTags() << std::endl;
+    client.SendCommand(commands[i]);
   }
 
   while (1) {
@@ -86,19 +95,3 @@ int main(int argc, char *argv[]) {
   }
 }
 
-void load_command_prototypes() {
-  prototypes[SchedulerPBuf_Type_HANDSHAKE] = new HandshakeCommand();
-  prototypes[SchedulerPBuf_Type_JOB_DONE] = new JobDoneCommand();
-  prototypes[SchedulerPBuf_Type_EXECUTE_COMPUTE] = new ComputeJobCommand();
-  prototypes[SchedulerPBuf_Type_SPAWN_COMPUTE] = new SpawnComputeJobCommand();
-  prototypes[SchedulerPBuf_Type_SPAWN_COPY] = new SpawnCopyJobCommand();
-  prototypes[SchedulerPBuf_Type_CREATE_DATA] = new CreateDataCommand();
-  prototypes[SchedulerPBuf_Type_REMOTE_SEND] = new RemoteCopySendCommand();
-  prototypes[SchedulerPBuf_Type_REMOTE_RECEIVE] = new RemoteCopyReceiveCommand(); // NOLINT
-  prototypes[SchedulerPBuf_Type_LOCAL_COPY] = new LocalCopyCommand();
-  prototypes[SchedulerPBuf_Type_LDO_ADD] = new LdoAddCommand();
-  prototypes[SchedulerPBuf_Type_LDO_REMOVE] = new LdoRemoveCommand();
-  prototypes[SchedulerPBuf_Type_PARTITION_ADD] = new PartitionAddCommand();
-  prototypes[SchedulerPBuf_Type_PARTITION_REMOVE] = new PartitionRemoveCommand();
-  prototypes[SchedulerPBuf_Type_TERMINATE] = new TerminateCommand();
-}

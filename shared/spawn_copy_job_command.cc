@@ -45,8 +45,8 @@ using boost::tokenizer;
 using boost::char_separator;
 
 SpawnCopyJobCommand::SpawnCopyJobCommand() {
-  name_ = SPAWN_COPY_JOB_NAME;
-  type_ = SPAWN_COPY_JOB;
+  name_ = SPAWN_COPY_NAME;
+  type_ = SPAWN_COPY;
 }
 
 SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
@@ -61,8 +61,8 @@ SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
     before_set_(before),
     after_set_(after),
     parent_job_id_(parent_job_id) {
-  name_ = SPAWN_COPY_JOB_NAME;
-  type_ = SPAWN_COPY_JOB;
+  name_ = SPAWN_COPY_NAME;
+  type_ = SPAWN_COPY;
 }
 
 SpawnCopyJobCommand::~SpawnCopyJobCommand() {

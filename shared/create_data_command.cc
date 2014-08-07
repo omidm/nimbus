@@ -76,11 +76,20 @@ bool CreateDataCommand::Parse(const std::string& data) {
   bool result = buf.ParseFromString(data);
 
   if (!result) {
-    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnComputeJobCommand from string.\n");
+    dbg(DBG_ERROR, "ERROR: Failed to parse CreateDataCommand from string.\n");
     return false;
   } else {
     ReadFromProtobuf(buf);
     return true;
+  }
+}
+
+bool CreateDataCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_create_data()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse CreateDataCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.create_data());
   }
 }
 

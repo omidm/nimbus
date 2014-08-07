@@ -148,10 +148,10 @@ void Scheduler::ProcessQueuedSchedulerCommands(size_t max_num) {
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {
-    case SchedulerCommand::SPAWN_COMPUTE_JOB:
+    case SchedulerCommand::SPAWN_COMPUTE:
       ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
       break;
-    case SchedulerCommand::SPAWN_COPY_JOB:
+    case SchedulerCommand::SPAWN_COPY:
       ProcessSpawnCopyJobCommand(reinterpret_cast<SpawnCopyJobCommand*>(cm));
       break;
     case SchedulerCommand::DEFINE_DATA:
@@ -1022,15 +1022,14 @@ void Scheduler::SetupLoadBalancer() {
 
 
 void Scheduler::LoadWorkerCommands() {
-  // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_table_.at(SchedulerCommand::SPAWN_COMPUTE_JOB) = new SpawnComputeJobCommand();
-  worker_command_table_.at(SchedulerCommand::SPAWN_COPY_JOB)    = new SpawnCopyJobCommand();
-  worker_command_table_.at(SchedulerCommand::DEFINE_DATA)       = new DefineDataCommand();
-  worker_command_table_.at(SchedulerCommand::HANDSHAKE)         = new HandshakeCommand();
-  worker_command_table_.at(SchedulerCommand::JOB_DONE)          = new JobDoneCommand();
-  worker_command_table_.at(SchedulerCommand::DEFINE_PARTITION)  = new DefinePartitionCommand();
-  worker_command_table_.at(SchedulerCommand::TERMINATE)         = new TerminateCommand();
-  worker_command_table_.at(SchedulerCommand::PROFILE)           = new ProfileCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_COMPUTE]     = new SpawnComputeJobCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_COPY]        = new SpawnCopyJobCommand();
+  worker_command_table_[SchedulerCommand::DEFINE_DATA]       = new DefineDataCommand();
+  worker_command_table_[SchedulerCommand::HANDSHAKE]         = new HandshakeCommand();
+  worker_command_table_[SchedulerCommand::JOB_DONE]          = new JobDoneCommand();
+  worker_command_table_[SchedulerCommand::DEFINE_PARTITION]  = new DefinePartitionCommand();
+  worker_command_table_[SchedulerCommand::TERMINATE]         = new TerminateCommand();
+  worker_command_table_[SchedulerCommand::PROFILE]           = new ProfileCommand();
 }
 
 void Scheduler::LoadUserCommands() {

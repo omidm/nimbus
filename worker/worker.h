@@ -110,7 +110,7 @@ class Worker {
 
   // TODO(quhang) maybe not a good interface.
   void SendCommand(SchedulerCommand* command) {
-    client_->sendCommand(command);
+    client_->SendCommand(command);
   }
 
   Log *cache_log;

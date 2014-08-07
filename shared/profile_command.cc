@@ -104,7 +104,7 @@ std::string ProfileCommand::toString() {
   // First we construct a general scheduler buffer, then
   // add the spawn compute field to it, then serialize.
   SchedulerPBuf buf;
-  buf.set_type(SchedulerPBuf_Type_SPAWN_COMPUTE);
+  buf.set_type(SchedulerPBuf_Type_PROFILE);
   ProfilePBuf* cmd = buf.mutable_profile();
   WriteToProtobuf(cmd);
 

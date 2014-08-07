@@ -40,14 +40,14 @@
 #include "shared/ldo_add_command.h"
 #include "shared/escaper.h"
 
-namespace nimbus {
+using namespace nimbus; // NOLINT
 
 /**
  * \fn nimbus::LdoAddCommand::LdoAddCommand()
  * \brief Brief description.
  * \return
 */
-nimbus::LdoAddCommand::LdoAddCommand() {
+LdoAddCommand::LdoAddCommand() {
   name_ = LDO_ADD_NAME;
   type_ = LDO_ADD;
   region_ = NULL;
@@ -56,92 +56,123 @@ nimbus::LdoAddCommand::LdoAddCommand() {
 
 
 /**
- * \fn nimbus::LdoAddCommand::LdoAddCommand()
+ * \fn LdoAddCommand::LdoAddCommand()
  * \brief Brief description.
  * \return
 */
-nimbus::LdoAddCommand::LdoAddCommand(const LogicalDataObject* obj) {
+LdoAddCommand::LdoAddCommand(const LogicalDataObject* obj) {
   name_ = LDO_ADD_NAME;
   type_ = LDO_ADD;
   region_ = new GeometricRegion(*obj->region());
   object_ = new LogicalDataObject(obj->id(), obj->variable(), region_);
 }
 
-nimbus::LdoAddCommand::~LdoAddCommand() {
+LdoAddCommand::~LdoAddCommand() {
   delete object_;
 }
 
 /**
- * \fn SchedulerCommand * nimbus::LdoAddCommand::Clone()
+ * \fn SchedulerCommand * LdoAddCommand::Clone()
  * \brief Brief description.
  * \return
 */
-SchedulerCommand * nimbus::LdoAddCommand::Clone() {
+SchedulerCommand * LdoAddCommand::Clone() {
   return new LdoAddCommand();
 }
 
 
 /**
- * \fn bool nimbus::LdoAddCommand::Parse(const std::string &param_segment)
+ * \fn bool LdoAddCommand::Parse(const std::string &param_segment)
  * \brief Brief description.
  * \param param_segment
  * \return
 */
-bool nimbus::LdoAddCommand::Parse(const std::string &param_segment) {
-  std::string strCopy = param_segment;
-  object_ = new LogicalDataObject();
-  UnescapeString(&strCopy);
-  object_->Parse(strCopy);
-  return true;
+bool LdoAddCommand::Parse(const std::string &data) {
+  LdoAddPBuf buf;
+  bool result = buf.ParseFromString(data);
+
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse LdoAddCommand from string.\n");
+    return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
+  }
+}
+
+bool LdoAddCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_ldo_add()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse LdoAddCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.ldo_add());
+  }
+}
+
+/**
+ * \fn std::string LdoAddCommand::toString()
+ * \brief Brief description.
+ * \return
+*/
+std::string LdoAddCommand::toString() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_LDO_ADD);
+  LdoAddPBuf* cmd = buf.mutable_ldo_add();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
 }
 
 
 /**
- * \fn std::string nimbus::LdoAddCommand::toString()
+ * \fn std::string LdoAddCommand::toStringWTags()
  * \brief Brief description.
  * \return
 */
-std::string nimbus::LdoAddCommand::toString() {
-  std::string str;
-  std::string payload;
-
-  str += (name_ + " ");
-  object_->SerializeToString(&payload);
-  // Only escape the payload part, we need the space between name and payload.
-  EscapeString(&payload);
-  str += payload;
-
-  return str;
+std::string LdoAddCommand::toStringWTags() {
+  std::ostringstream sstream;
+  sstream << (name_ + ",");
+  sstream << "logical_id:" << object()->id() << ",";
+  sstream << "variable:" << object()->variable() << ",";
+  sstream << object()->region()->toString();
+  return sstream.str();
 }
 
 
 /**
- * \fn std::string nimbus::LdoAddCommand::toStringWTags()
+ * \fn LogicalDataObject * LdoAddCommand::object()
  * \brief Brief description.
  * \return
 */
-std::string nimbus::LdoAddCommand::toStringWTags() {
-  std::string str;
-  std::string payload;
-
-  str += (name_ + " ");
-  object_->SerializeToString(&payload);
-  // Only escape the payload part, we need the space between name and payload.
-  EscapeString(&payload);
-  str += ("object:" + payload);
-
-  return str;
-}
-
-
-/**
- * \fn LogicalDataObject * nimbus::LdoAddCommand::object()
- * \brief Brief description.
- * \return
-*/
-LogicalDataObject * nimbus::LdoAddCommand::object() {
+LogicalDataObject * LdoAddCommand::object() {
   return object_;
 }
 
 
-}  // namespace nimbus
+bool LdoAddCommand::ReadFromProtobuf(const LdoAddPBuf& buf) {
+  if (object_ != NULL) {
+    delete object_;
+    object_ = NULL;
+    region_ = NULL;
+  }
+  region_ = new GeometricRegion();
+  region_->FillInValues(&buf.ldo().region());
+  object_ = new LogicalDataObject(buf.ldo().data_id(),
+                                  buf.ldo().variable(),
+                                  region_);
+  return true;
+}
+
+bool LdoAddCommand::WriteToProtobuf(LdoAddPBuf* buf) {
+  if (object_ == NULL) {
+    return false;
+  }
+  object_->FillInMessage(buf->mutable_ldo());
+  return true;
+}

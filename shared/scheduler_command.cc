@@ -85,16 +85,15 @@ SchedulerCommand::Type SchedulerCommand::type() {
 
 
 const std::string SchedulerCommand::BASE_NAME = "nop";
-const std::string SchedulerCommand::SPAWN_JOB_NAME = "spawnjob";
-const std::string SchedulerCommand::SPAWN_COMPUTE_JOB_NAME = "spawncomputejob";
-const std::string SchedulerCommand::SPAWN_COPY_JOB_NAME = "spawncopyjob";
+const std::string SchedulerCommand::SPAWN_COMPUTE_NAME = "spawncomputejob";
+const std::string SchedulerCommand::SPAWN_COPY_NAME = "spawncopyjob";
 const std::string SchedulerCommand::DEFINE_DATA_NAME = "definedata";
 const std::string SchedulerCommand::HANDSHAKE_NAME = "handshake";
 const std::string SchedulerCommand::JOB_DONE_NAME = "jobdone";
-const std::string SchedulerCommand::COMPUTE_JOB_NAME = "computejob";
+const std::string SchedulerCommand::EXECUTE_COMPUTE_NAME = "computejob";
 const std::string SchedulerCommand::CREATE_DATA_NAME = "createdata";
-const std::string SchedulerCommand::REMOTE_COPY_SEND_NAME = "remotecopysend";
-const std::string SchedulerCommand::REMOTE_COPY_RECEIVE_NAME = "remotecopyreceive";
+const std::string SchedulerCommand::REMOTE_SEND_NAME = "remotecopysend";
+const std::string SchedulerCommand::REMOTE_RECEIVE_NAME = "remotecopyreceive";
 const std::string SchedulerCommand::LOCAL_COPY_NAME = "localcopy";
 const std::string SchedulerCommand::DEFINE_PARTITION_NAME = "definepartition";
 const std::string SchedulerCommand::LDO_ADD_NAME = "ldoadd";
@@ -110,14 +109,11 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
     case BASE:
       str = BASE_NAME;
       break;
-    case SPAWN_JOB:
-      str = SPAWN_JOB_NAME;
+    case SPAWN_COMPUTE:
+      str = SPAWN_COMPUTE_NAME;
       break;
-    case SPAWN_COMPUTE_JOB:
-      str = SPAWN_COMPUTE_JOB_NAME;
-      break;
-    case SPAWN_COPY_JOB:
-      str = SPAWN_COPY_JOB_NAME;
+    case SPAWN_COPY:
+      str = SPAWN_COPY_NAME;
       break;
     case DEFINE_DATA:
       str = DEFINE_DATA_NAME;
@@ -128,17 +124,17 @@ std::string SchedulerCommand::GetNameFromType(SchedulerCommand::Type type) {
     case JOB_DONE:
       str = JOB_DONE_NAME;
       break;
-    case COMPUTE_JOB:
-      str = COMPUTE_JOB_NAME;
+    case EXECUTE_COMPUTE:
+      str = EXECUTE_COMPUTE_NAME;
       break;
     case CREATE_DATA:
       str = CREATE_DATA_NAME;
       break;
-    case REMOTE_COPY_SEND:
-      str = REMOTE_COPY_SEND_NAME;
+    case REMOTE_SEND:
+      str = REMOTE_SEND_NAME;
       break;
-    case REMOTE_COPY_RECEIVE:
-      str = REMOTE_COPY_RECEIVE_NAME;
+    case REMOTE_RECEIVE:
+      str = REMOTE_RECEIVE_NAME;
       break;
     case LOCAL_COPY:
       str = LOCAL_COPY_NAME;
@@ -174,12 +170,13 @@ SchedulerCommand* SchedulerCommand::Clone() {
 }
 
 bool SchedulerCommand::Parse(const std::string& param_segment) {
-  dbg(DBG_ERROR, "ERROR: Base Scheduler Command Parsed.\n");
-  return false;
+  dbg(DBG_ERROR, "ERROR: Base Scheduler Command Parsed: should be parsing a subclass.\n");
+  dbg(DBG_ERROR, "       A Parse(const std::string) hasn't been redefined.\n");  return false;
 }
 
 bool SchedulerCommand::Parse(const SchedulerPBuf& param_segment) {
-  dbg(DBG_ERROR, "ERROR: Base Scheduler Command Parsed.\n");
+  dbg(DBG_ERROR, "ERROR: Base Scheduler Command Parsed: should be parsing a subclass.\n");
+  dbg(DBG_ERROR, "       A Parse(const SchedulerPBuf&) hasn't been redefined.\n");
   return false;
 }
 

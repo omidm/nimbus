@@ -94,7 +94,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
   for (uint32_t i = 0; i < maxCommands; i++) {
     SchedulerCommand* command = received_commands_.front();
     received_commands_.pop_front();
-    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->toString().c_str());
+    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->toStringWTags().c_str());
     storage->push_back(command);
   }
   return true;
@@ -114,7 +114,7 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
 
-  dbg(DBG_NET, "Sending command %s.\n", msg.c_str());
+  // dbg(DBG_NET, "Sending command %s.\n", command->toStringWTags().c_str());
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
@@ -183,13 +183,49 @@ using boost::char_separator;
 
   /** Reads commands from buffer with size bytes. Puts commands into
    * internal command list for later reads. Returns the number of
-   * bytes read. */
+   * bytes read into commands. If this is less than size, the
+   * caller must save the unread bytes. */
 int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
-  buffer[size] = '\0';
-  dbg(DBG_NET, "Read string %s from worker.\n", buffer);
+  int total_read = 0;
+  char* read_ptr = buffer;
+  size_t bytes_remaining = size;
 
-  char* start_pointer = buffer;
-  size_t string_len = 0;
+  dbg(DBG_NET, "Read %i bytes from worker.\n", size);
+  size_t header_len = sizeof(SchedulerCommand::length_field_t);
+
+  while (bytes_remaining >= header_len) {
+    // Read the header length field
+    SchedulerCommand::length_field_t len;
+    char* ptr = reinterpret_cast<char*>(&len);
+    memcpy(ptr, read_ptr, header_len);
+    len = ntohl(len);
+
+    if (bytes_remaining < len) {  // Don't have a complete command
+      return 0;
+    } else {
+      std::string input(read_ptr + header_len, len - header_len);
+      SchedulerCommand* command;
+      if (SchedulerCommand::GenerateSchedulerCommandChild(input,
+                                                          worker_command_table_,
+                                                          command)) {
+        dbg(DBG_NET, "Enqueueing command %s.\n", command->toStringWTags().c_str());
+        boost::mutex::scoped_lock lock(command_queue_mutex_);
+        received_commands_.push_back(command);
+      } else {
+        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
+        exit(-1);
+      }
+      dbg(DBG_NET, "Read %i bytes of %i available.\n", len, bytes_remaining);
+      bytes_remaining -= len;
+      total_read += len;
+      read_ptr += len;
+    }
+  }
+
+  return total_read;
+}
+
+  /* 
   for (size_t i = 0; i < size; i++) {
     if (buffer[i] == ';') {
       // There could be null character (\0) in the string before semicolon.
@@ -213,11 +249,11 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       ++string_len;
     }
   }
-  // We've read this many bytes successfully into
-  // commands
+  // We've read this many bytes successfully into commands
   return start_pointer - buffer;
 }
 
+  */
 void SchedulerServer::HandleRead(SchedulerWorker* worker,
                                  const boost::system::error_code& error,
                                  size_t bytes_transferred) {
@@ -228,12 +264,12 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
     return;
   }
 
-  dbg(DBG_NET, "Scheduler received %i bytes from worker %i.\n",
-      bytes_transferred, worker->worker_id());
   int real_length = bytes_transferred + worker->existing_bytes();
-  int len = EnqueueCommands(worker->read_buffer(),
-                           real_length);
+  int len = EnqueueCommands(worker->read_buffer(), real_length);
   int remaining = (real_length - len);
+  dbg(DBG_NET,
+      "Scheduler received %i bytes from worker %i, enqueued %i bytes as commands, %i remaining.\n",
+      bytes_transferred, worker->worker_id(), len, remaining);
 
   // This is for the case when the string buffer had an incomplete
   // command at its end. Copy the fragement of the command to the beginning

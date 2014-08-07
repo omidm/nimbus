@@ -47,8 +47,8 @@ using boost::tokenizer;
 using boost::char_separator;
 
 RemoteCopySendCommand::RemoteCopySendCommand() {
-  name_ = REMOTE_COPY_SEND_NAME;
-  type_ = REMOTE_COPY_SEND;
+  name_ = REMOTE_SEND_NAME;
+  type_ = REMOTE_SEND;
 }
 
 RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
@@ -63,8 +63,8 @@ RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
     to_worker_id_(to_worker_id),
     to_ip_(to_ip), to_port_(to_port),
     before_set_(before) {
-  name_ = REMOTE_COPY_SEND_NAME;
-  type_ = REMOTE_COPY_SEND;
+  name_ = REMOTE_SEND_NAME;
+  type_ = REMOTE_SEND;
 }
 
 RemoteCopySendCommand::~RemoteCopySendCommand() {

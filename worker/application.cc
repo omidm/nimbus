@@ -114,7 +114,7 @@ void Application::SpawnComputeJob(const std::string& name,
   //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
   // printf("Construct command time %f\n", construct_time);
 
-  client_->sendCommand(&cm);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
@@ -126,7 +126,7 @@ void Application::SpawnCopyJob(const job_id_t& id,
                                const job_id_t& parent_id) {
   SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<logical_data_id_t>(from_logical_id),
       ID<logical_data_id_t>(to_logical_id), before, after, ID<job_id_t>(parent_id));
-  client_->sendCommand(&cm);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
@@ -142,7 +142,7 @@ void Application::DefineData(const std::string& name,
   ldo_map_->AddLogicalObject(logical_data_id, name, partition_id);
   DefineDataCommand cm(name, logical_id_made, partition_id_made,
                        neighbor_partitions, parent_id_made);
-  client_->sendCommand(&cm);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
@@ -150,13 +150,13 @@ void Application::DefinePartition(const ID<partition_id_t>& partition_id,
                                   const GeometricRegion& r) {
   ldo_map_->AddPartition(partition_id.elem(), r);
   DefinePartitionCommand cm(partition_id, r);
-  client_->sendCommand(&cm);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::TerminateApplication(const exit_status_t& exit_status) {
   TerminateCommand*  cm = new TerminateCommand(ID<exit_status_t>(exit_status));
-  client_->sendCommand(cm);
+  client_->SendCommand(cm);
   delete cm;
 }
 

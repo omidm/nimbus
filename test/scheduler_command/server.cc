@@ -41,28 +41,28 @@
 
 #include <pthread.h>
 #include <iostream>  // NOLINT
-
 #include "shared/scheduler_server.h"
 #include "shared/scheduler_command.h"
+
+#include "./create_commands.h"
 
 using ::std::cout;
 using ::std::endl;
 using namespace nimbus;; // NOLINT
 #define PORT 11714
-#define NUM_COMMANDS 2
 
 nimbus::SchedulerServer server(PORT);
-nimbus::SchedulerCommand* commands[NUM_COMMANDS];
 
 void* run(void* p) {
   server.Run();
   return NULL;
 }
 
-void create_commands();
-
 int main(int argc, char *argv[]) {
+  dbg_init();
+  load_command_prototypes();
   create_commands();
+  server.set_worker_command_table(&prototypes);
 
   cout << "Starting server." << std::endl;
   pthread_t thread;
@@ -75,77 +75,24 @@ int main(int argc, char *argv[]) {
     i++;
   }
 
+  cout << "Starting command sends." << std::endl;
   for (int i = 0; i < NUM_COMMANDS; i++) {
     std::string val = commands[i]->toString();
-    cout << "Broadcasting command of length " << val.length() << ": ";
+    cout << "  " << i << " of " << NUM_COMMANDS << ": broadcasting command of length " << val.length() << ": ";  // NOLINT
     cout << commands[i]->toStringWTags() << std::endl;
     server.BroadcastCommand(commands[i]);
   }
 
+  cout << "Starting command receives." << std::endl;
   nimbus::SchedulerCommandList commandList;
-  server.ReceiveCommands(&commandList, NUM_COMMANDS);
-
-  nimbus::SchedulerCommandList::iterator it = commandList.begin();
-  while (it != commandList.end()) {
-    nimbus::SchedulerCommand* cmd = *it;
-    cout << cmd->toStringWTags() << std::endl;
-    ++it;
+  for (int i = 0; i < NUM_COMMANDS;) {
+    server.ReceiveCommands(&commandList, NUM_COMMANDS);
+    while (!commandList.empty()) {
+      nimbus::SchedulerCommand* cmd = commandList.front();
+      commandList.pop_front();
+      std::cout << "  " << i << " of " << NUM_COMMANDS << ": received " << cmd->toStringWTags() << std::endl; // NOLINT
+      ++i;
+      delete cmd;
+    }
   }
-}
-
-IDSet<logical_data_id_t> ldo_set_a;
-IDSet<logical_data_id_t> ldo_set_b;
-IDSet<job_id_t> job_set_a;
-IDSet<job_id_t> job_set_b;
-ID<logical_data_id_t> ldo_a;
-ID<logical_data_id_t> ldo_b;
-ID<job_id_t> job_id;
-ID<job_id_t> parent;
-ID<job_id_t> future;
-bool sterile;
-Parameter params;
-std::string name = "test-string";
-
-void initalize_sets() {
-  for (int i = 0; i < 125; i++) {
-    ldo_set_a.insert(10000 + i);
-  }
-  for (int i = 0; i < 119; i++) {
-    ldo_set_b.insert(11000 + i);
-  }
-  for (int i = 0; i < 21; i++) {
-    job_set_a.insert(20000 + i);
-  }
-  for (int i = 0; i < 34; i++) {
-    job_set_b.insert(21000 + i);
-  }
-
-  ldo_a.set_elem(10125);
-  ldo_b.set_elem(11119);
-  job_id.set_elem(2014);
-  parent.set_elem(1940);
-  future.set_elem(1977);
-  sterile = false;
-
-  SerializedData d("serialized data");
-  params.set_ser_data(d);
-}
-
-void create_commands() {
-  commands[0] = new SpawnComputeJobCommand((const std::string)name,
-                                           (const ID<job_id_t>)job_id,
-                                           (const IDSet<logical_data_id_t>)ldo_set_a,
-                                           (const IDSet<logical_data_id_t>)ldo_set_b,
-                                           (const IDSet<job_id_t>)job_set_a,
-                                           (const IDSet<job_id_t>)job_set_b,
-                                           (const ID<job_id_t>)parent,
-                                           (const ID<job_id_t>)future,
-                                           (const bool)sterile,
-                                           (const Parameter)params);
-  commands[1] = new SpawnCopyJobCommand((const ID<job_id_t>)job_id,
-                                        (const ID<logical_data_id_t>)ldo_a,
-                                        (const ID<logical_data_id_t>)ldo_b,
-                                        (const IDSet<job_id_t>)job_set_a,
-                                        (const IDSet<job_id_t>)job_set_b,
-                                        (const ID<job_id_t>)parent);
 }

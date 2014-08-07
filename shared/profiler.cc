@@ -70,7 +70,7 @@ namespace nimbus {
       Profile();
       ProfileCommand cm(worker_id, totalVirtualMem, usedVirtualMem,
           procVirtualMem, totalPhysMem, usedPhysMem, procPhysMem);
-      client_->sendCommand(&cm);
+      client_->SendCommand(&cm);
       boost::this_thread::interruption_point();
       t.wait();
     }

@@ -47,8 +47,8 @@ using boost::tokenizer;
 using boost::char_separator;
 
 RemoteCopyReceiveCommand::RemoteCopyReceiveCommand() {
-  name_ = REMOTE_COPY_RECEIVE_NAME;
-  type_ = REMOTE_COPY_RECEIVE;
+  name_ = REMOTE_RECEIVE_NAME;
+  type_ = REMOTE_RECEIVE;
 }
 
 RemoteCopyReceiveCommand::RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
@@ -57,8 +57,8 @@ RemoteCopyReceiveCommand::RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
 : job_id_(job_id),
   to_physical_data_id_(to_physical_data_id),
   before_set_(before) {
-  name_ = REMOTE_COPY_RECEIVE_NAME;
-  type_ = REMOTE_COPY_RECEIVE;
+  name_ = REMOTE_RECEIVE_NAME;
+  type_ = REMOTE_RECEIVE;
 }
 
 RemoteCopyReceiveCommand::~RemoteCopyReceiveCommand() {

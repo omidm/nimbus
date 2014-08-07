@@ -72,24 +72,23 @@ class SchedulerCommand {
 
   enum Type {
     BASE,
-    SPAWN_JOB,
-    SPAWN_COMPUTE_JOB,
-    SPAWN_COPY_JOB,
-    DEFINE_DATA,
-    HANDSHAKE,
-    JOB_DONE,
-    COMPUTE_JOB,
-    CREATE_DATA,
-    REMOTE_COPY_SEND,
-    REMOTE_COPY_RECEIVE,
-    LOCAL_COPY,
-    DEFINE_PARTITION,
-    LDO_ADD,
-    LDO_REMOVE,
-    PARTITION_ADD,
-    PARTITION_REMOVE,
-    TERMINATE,
-    PROFILE
+    SPAWN_COMPUTE    = SchedulerPBuf_Type_SPAWN_COMPUTE,
+    SPAWN_COPY       = SchedulerPBuf_Type_SPAWN_COPY,
+    DEFINE_DATA      = SchedulerPBuf_Type_DEFINE_DATA,
+    HANDSHAKE        = SchedulerPBuf_Type_HANDSHAKE,
+    JOB_DONE         = SchedulerPBuf_Type_JOB_DONE,
+    EXECUTE_COMPUTE  = SchedulerPBuf_Type_EXECUTE_COMPUTE,
+    CREATE_DATA      = SchedulerPBuf_Type_CREATE_DATA,
+    REMOTE_SEND      = SchedulerPBuf_Type_REMOTE_SEND,
+    REMOTE_RECEIVE   = SchedulerPBuf_Type_REMOTE_RECEIVE,
+    LOCAL_COPY       = SchedulerPBuf_Type_LOCAL_COPY,
+    DEFINE_PARTITION = SchedulerPBuf_Type_DEFINE_PARTITION,
+    LDO_ADD          = SchedulerPBuf_Type_LDO_ADD,
+    LDO_REMOVE       = SchedulerPBuf_Type_LDO_REMOVE,
+    PARTITION_ADD    = SchedulerPBuf_Type_PARTITION_ADD,
+    PARTITION_REMOVE = SchedulerPBuf_Type_PARTITION_REMOVE,
+    TERMINATE        = SchedulerPBuf_Type_TERMINATE,
+    PROFILE          = SchedulerPBuf_Type_PROFILE
   };
 
   typedef std::set<Type> TypeSet;
@@ -99,16 +98,25 @@ class SchedulerCommand {
   virtual SchedulerCommand* Clone();
 
   // Parsing is a bit tricky for historical reasons.
+  //
   // The first Parse method takes a string, and it assumes
   // that this string is only the *subtype* of command. So,
   // if this is a SubmitCopyJobCommand, the string should be
   // the result of SubmitCopyPBuf.ToString.
-  // THe second Parse method takes a SchedulerPBuf, and it
+  //
+  // The second Parse method takes a SchedulerPBuf, and it
   // assumes that this is a complete scheduler command, including
   // the type information. That is, expects it to a SubmitCopyPBuf
   // inside a SchedulerPBuf.
+  //
+  // This should be cleaned up and we should get rid of the first
+  // Parse eventuall.
   virtual bool Parse(const std::string& param_segment);
   virtual bool Parse(const SchedulerPBuf& buf);
+
+  // toString and toStringWTags are very different.
+  // toString returns an encoded series of bytes for an on-wire
+  // format. toStringWTags returns a human-readable ASCII string.
   virtual std::string toString();
   virtual std::string toStringWTags();
   virtual std::string name();
@@ -127,16 +135,15 @@ class SchedulerCommand {
   Type type_;
   std::string name_;
   static const std::string BASE_NAME;
-  static const std::string SPAWN_JOB_NAME;
-  static const std::string SPAWN_COMPUTE_JOB_NAME;
-  static const std::string SPAWN_COPY_JOB_NAME;
+  static const std::string SPAWN_COMPUTE_NAME;
+  static const std::string SPAWN_COPY_NAME;
   static const std::string DEFINE_DATA_NAME;
   static const std::string HANDSHAKE_NAME;
   static const std::string JOB_DONE_NAME;
-  static const std::string COMPUTE_JOB_NAME;
+  static const std::string EXECUTE_COMPUTE_NAME;
   static const std::string CREATE_DATA_NAME;
-  static const std::string REMOTE_COPY_SEND_NAME;
-  static const std::string REMOTE_COPY_RECEIVE_NAME;
+  static const std::string REMOTE_SEND_NAME;
+  static const std::string REMOTE_RECEIVE_NAME;
   static const std::string LOCAL_COPY_NAME;
   static const std::string DEFINE_PARTITION_NAME;
   static const std::string LDO_ADD_NAME;
@@ -152,106 +159,6 @@ class SchedulerCommand {
 
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
-
-
-/*
-
-class KillJobCommand : public SchedulerCommand {
-  public:
-    KillJobCommand();
-    KillJobCommand(job_id_t job_id, Parameter params);
-    ~KillJobCommand();
-
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    job_id_t job_id();
-    Parameter params();
-
-  private:
-    job_id_t job_id_;
-    Parameter params_;
-};
-
-class PauseJobCommand : public SchedulerCommand {
-  public:
-    PauseJobCommand();
-    PauseJobCommand(job_id_t job_id, Parameter params);
-    ~PauseJobCommand();
-
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    job_id_t job_id();
-    Parameter params();
-
-  private:
-    job_id_t job_id_;
-    Parameter params_;
-};
-
-
-
-
-
-class DataCreatedCommand : public SchedulerCommand {
-  public:
-    DataCreatedCommand();
-    DataCreatedCommand(data_id_t data_id, std::string params);
-    ~DataCreatedCommand();
-
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    data_id_t data_id();
-    std::string params();
-
-  private:
-    data_id_t data_id_;
-    std::string params_;
-};
-
-class CopyDataCommand : public SchedulerCommand {
-  public:
-    CopyDataCommand();
-    CopyDataCommand(data_id_t data_id_from, data_id_t data_id_to,
-        std::string params);
-    ~CopyDataCommand();
-
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    data_id_t data_id_from();
-    data_id_t data_id_to();
-    std::string params();
-
-  private:
-    data_id_t data_id_from_;
-    data_id_t data_id_to_;
-    std::string params_;
-};
-
-class MigrateDataCommand : public SchedulerCommand {
-  public:
-    MigrateDataCommand();
-    MigrateDataCommand(data_id_t data_id_from, data_id_t data_id_to,
-        std::string params);
-    ~MigrateDataCommand();
-
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    data_id_t data_id_from();
-    data_id_t data_id_to();
-    std::string params();
-
-  private:
-    data_id_t data_id_from_;
-    data_id_t data_id_to_;
-    // TODO(omidm): add the information of the remote worker holding the data.
-    std::string params_;
-};
-
-*/
 
 }  // namespace nimbus
 

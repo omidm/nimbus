@@ -38,7 +38,7 @@
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>
-  */
+./  */
 
 #ifndef NIMBUS_SHARED_CREATE_DATA_COMMAND_H_
 #define NIMBUS_SHARED_CREATE_DATA_COMMAND_H_
@@ -59,7 +59,8 @@ class CreateDataCommand : public SchedulerCommand {
     ~CreateDataCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();

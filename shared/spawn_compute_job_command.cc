@@ -50,8 +50,8 @@ using boost::tokenizer;
 using boost::char_separator;
 
 SpawnComputeJobCommand::SpawnComputeJobCommand() {
-  name_ = SPAWN_COMPUTE_JOB_NAME;
-  type_ = SPAWN_COMPUTE_JOB;
+  name_ = SPAWN_COMPUTE_NAME;
+  type_ = SPAWN_COMPUTE;
 }
 
 SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
@@ -74,8 +74,8 @@ SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
     future_job_id_(future_job_id),
     sterile_(sterile),
     params_(params) {
-  name_ = SPAWN_COMPUTE_JOB_NAME;
-  type_ = SPAWN_COMPUTE_JOB;
+  name_ = SPAWN_COMPUTE_NAME;
+  type_ = SPAWN_COMPUTE;
 }
 
 SpawnComputeJobCommand::~SpawnComputeJobCommand() {

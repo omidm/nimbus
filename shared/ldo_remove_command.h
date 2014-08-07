@@ -55,7 +55,8 @@ class LdoRemoveCommand : public SchedulerCommand {
     virtual ~LdoRemoveCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     virtual LogicalDataObject* object();
@@ -63,6 +64,9 @@ class LdoRemoveCommand : public SchedulerCommand {
   private:
     GeometricRegion* region_;
     LogicalDataObject* object_;
+
+    bool ReadFromProtobuf(const LdoRemovePBuf& buf);
+    bool WriteToProtobuf(LdoRemovePBuf* buf);
 };
 
 

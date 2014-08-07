@@ -105,12 +105,14 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
                                                           scheduler_command_table_,
                                                           com)) {
         dbg(DBG_NET, "Scheduler client received command %s\n",
-            com->toString().c_str());
+            com->toStringWTags().c_str());
       } else {
         com = NULL;
         dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
       }
     }
+  } else {
+    // dbg(DBG_NET, "Read buffer has %i bytes.\n", read_buffer_->size());
   }
   pthread_mutex_unlock(&send_lock_);
   return com;

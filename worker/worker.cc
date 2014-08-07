@@ -126,7 +126,7 @@ void Worker::WorkerCoreProcessor() {
   JobList local_job_done_list;
   while (true) {
     // Process command.
-    SchedulerCommand* comm = client_->receiveCommand();
+    SchedulerCommand* comm = client_->ReceiveCommand();
     int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
     while (comm != NULL) {
       dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
@@ -139,7 +139,7 @@ void Worker::WorkerCoreProcessor() {
       if (--quota == 0) {
         break;
       }
-      comm = client_->receiveCommand();
+      comm = client_->ReceiveCommand();
     }
     // Poll jobs that finish receiving.
     job_id_t receive_job_id;
@@ -205,16 +205,16 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
     case SchedulerCommand::JOB_DONE:
       ProcessJobDoneCommand(reinterpret_cast<JobDoneCommand*>(cm));
       break;
-    case SchedulerCommand::COMPUTE_JOB:
+    case SchedulerCommand::EXECUTE_COMPUTE:
       ProcessComputeJobCommand(reinterpret_cast<ComputeJobCommand*>(cm));
       break;
     case SchedulerCommand::CREATE_DATA:
       ProcessCreateDataCommand(reinterpret_cast<CreateDataCommand*>(cm));
       break;
-    case SchedulerCommand::REMOTE_COPY_SEND:
+    case SchedulerCommand::REMOTE_SEND:
       ProcessRemoteCopySendCommand(reinterpret_cast<RemoteCopySendCommand*>(cm));
       break;
-    case SchedulerCommand::REMOTE_COPY_RECEIVE:
+    case SchedulerCommand::REMOTE_RECEIVE:
       ProcessRemoteCopyReceiveCommand(reinterpret_cast<RemoteCopyReceiveCommand*>(cm));
       break;
     case SchedulerCommand::LOCAL_COPY:
@@ -250,7 +250,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
       // boost::asio::ip::host_name(), port);
       // "127.0.0.1", port);
       ip_address_, port);
-  client_->sendCommand(&new_cm);
+  client_->SendCommand(&new_cm);
 
   id_ = cm->worker_id().elem();
   id_maker_.Initialize(id_);
@@ -408,7 +408,7 @@ void Worker::SetupSchedulerInterface() {
   LoadSchedulerCommands();
   client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
   client_->set_scheduler_command_table(&scheduler_command_table_);
-  client_->run();
+  client_->Run();
   // client_thread_ = new boost::thread(
   //     boost::bind(&SchedulerClient::run, client_));
 
@@ -418,18 +418,18 @@ void Worker::SetupSchedulerInterface() {
 
 void Worker::LoadSchedulerCommands() {
   // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  scheduler_command_table_.at(SchedulerCommand::HANDSHAKE) = new HandshakeCommand();
-  scheduler_command_table_.at(SchedulerCommand::JOB_DONE) = new JobDoneCommand();
-  scheduler_command_table_.at(SchedulerCommand::COMPUTE_JOB) = new ComputeJobCommand();
-  scheduler_command_table_.at(SchedulerCommand::CREATE_DATA) = new CreateDataCommand();
-  scheduler_command_table_.at(SchedulerCommand::REMOTE_COPY_SEND) = new RemoteCopySendCommand();
-  scheduler_command_table_.at(SchedulerCommand::REMOTE_COPY_RECEIVE) = new RemoteCopyReceiveCommand(); // NOLINT
-  scheduler_command_table_.at(SchedulerCommand::LOCAL_COPY) = new LocalCopyCommand();
-  scheduler_command_table_.at(SchedulerCommand::LDO_ADD) = new LdoAddCommand();
-  scheduler_command_table_.at(SchedulerCommand::LDO_REMOVE) = new LdoRemoveCommand();
-  scheduler_command_table_.at(SchedulerCommand::PARTITION_ADD) = new PartitionAddCommand();
-  scheduler_command_table_.at(SchedulerCommand::PARTITION_REMOVE) = new PartitionRemoveCommand();
-  scheduler_command_table_.at(SchedulerCommand::TERMINATE) = new TerminateCommand();
+  scheduler_command_table_[SchedulerCommand::HANDSHAKE] = new HandshakeCommand();
+  scheduler_command_table_[SchedulerCommand::JOB_DONE] = new JobDoneCommand();
+  scheduler_command_table_[SchedulerCommand::EXECUTE_COMPUTE] = new ComputeJobCommand();
+  scheduler_command_table_[SchedulerCommand::CREATE_DATA] = new CreateDataCommand();
+  scheduler_command_table_[SchedulerCommand::REMOTE_SEND] = new RemoteCopySendCommand();
+  scheduler_command_table_[SchedulerCommand::REMOTE_RECEIVE] = new RemoteCopyReceiveCommand(); // NOLINT
+  scheduler_command_table_[SchedulerCommand::LOCAL_COPY] = new LocalCopyCommand();
+  scheduler_command_table_[SchedulerCommand::LDO_ADD] = new LdoAddCommand();
+  scheduler_command_table_[SchedulerCommand::LDO_REMOVE] = new LdoRemoveCommand();
+  scheduler_command_table_[SchedulerCommand::PARTITION_ADD] = new PartitionAddCommand();
+  scheduler_command_table_[SchedulerCommand::PARTITION_REMOVE] = new PartitionRemoveCommand();
+  scheduler_command_table_[SchedulerCommand::TERMINATE] = new TerminateCommand();
 }
 
 worker_id_t Worker::id() {
@@ -571,7 +571,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 void Worker::NotifyLocalJobDone(Job* job) {
   Parameter params;
   JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc());
-  client_->sendCommand(&cm);
+  client_->SendCommand(&cm);
   job_id_t job_id = job->id().elem();
   // Job done for unknown job is not handled.
   if (!worker_job_graph_.HasVertex(job_id)) {

@@ -47,7 +47,7 @@
 #include <iostream> // NOLINT
 #include <string>
 #include "shared/nimbus_types.h"
-#include "shared/protobuf_compiled/ldomessage.pb.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 
@@ -76,11 +76,11 @@ namespace nimbus {
 
     // Argument is a pointer to an array of 6 int_dimension_t
     explicit GeometricRegion(const int_dimension_t* values);
-    // Transform a protobuf GeometricRegionMessage into a GeometricRegion
-    explicit GeometricRegion(const GeometricRegionMessage* msg);
-    // Read in as a serialized GeometricRegionMessage from an istream
+    // Transform a protobuf GeometricRegionPBuf into a GeometricRegion
+    explicit GeometricRegion(const GeometricRegionPBuf* msg);
+    // Read in as a serialized GeometricRegionPBuf from an istream
     explicit GeometricRegion(std::istream* is);
-    // Read in as a serialized GeometricRegionMessage from a string
+    // Read in as a serialized GeometricRegionPBuf from a string
     explicit GeometricRegion(const std::string& data);
     // Geometric region from coordinates (min corner and delta)
     explicit GeometricRegion(const Coord &min, const Coord &delta);
@@ -105,8 +105,8 @@ namespace nimbus {
     int_dimension_t dz() const;
 
     virtual void FillInValues(const int_dimension_t* values);
-    virtual void FillInValues(const GeometricRegionMessage* msg);
-    virtual void FillInMessage(GeometricRegionMessage* msg);
+    virtual void FillInValues(const GeometricRegionPBuf* msg);
+    virtual void FillInMessage(GeometricRegionPBuf* msg);
 
     Coord MinCorner() const;
     Coord MaxCorner() const;
