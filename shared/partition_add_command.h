@@ -33,10 +33,15 @@
  */
 
  /*
-  * add partition command to add partition definition to the worker from
-  * scheduler.
+  * This is the scheduler-to-worker version of DefinePartition.  A
+  * scheduler sends an add partition command to the scheduler to
+  * define a geometric region that it can then refer to in data
+  * definitions.  Using partition identifiers rather than per-data
+  * geometric regions simplifies data management and prevents
+  * inconsistencies.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_PARTITION_ADD_COMMAND_H_
@@ -51,11 +56,12 @@ class PartitionAddCommand : public SchedulerCommand {
   public:
     PartitionAddCommand();
     PartitionAddCommand(const ID<partition_id_t>& partition_id,
-        const GeometricRegion& r);
+                        const GeometricRegion& r);
     ~PartitionAddCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
 
@@ -65,6 +71,9 @@ class PartitionAddCommand : public SchedulerCommand {
   private:
     ID<partition_id_t> id_;
     GeometricRegion region_;
+
+    bool ReadFromProtobuf(const PartitionAddPBuf& buf);
+    bool WriteToProtobuf(PartitionAddPBuf* buf);
 };
 
 }  // namespace nimbus

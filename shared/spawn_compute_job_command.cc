@@ -91,7 +91,7 @@ bool SpawnComputeJobCommand::Parse(const std::string& data) {
   bool result = buf.ParseFromString(data);
 
   if (!result) {
-    // Throw an error message
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnComputeJobCommand from string.\n");
     return false;
   } else {
     ReadFromProtobuf(buf);
@@ -101,6 +101,7 @@ bool SpawnComputeJobCommand::Parse(const std::string& data) {
 
 bool SpawnComputeJobCommand::Parse(const SchedulerPBuf& buf) {
   if (!buf.has_submit_compute()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnComputeJobCommand from SchedulerPBuf.\n");
     return false;
   } else {
     return ReadFromProtobuf(buf.submit_compute());
@@ -125,14 +126,14 @@ std::string SpawnComputeJobCommand::toString() {
 std::string SpawnComputeJobCommand::toStringWTags() {
   std::string str;
   str += (name_ + " ");
-  str += ("name:" + job_name_ + " ");
-  str += ("id:" + job_id_.toString() + " ");
-  str += ("read:" + read_set_.toString() + " ");
-  str += ("write:" + write_set_.toString() + " ");
-  str += ("before:" + before_set_.toString() + " ");
-  str += ("after:" + after_set_.toString() + " ");
-  str += ("parent-id:" + parent_job_id_.toString() + " ");
-  str += ("params:" + params_.toString() + " ");
+  str += ("name:" + job_name_ + ",");
+  str += ("id:" + job_id_.toString() + ",");
+  str += ("read:" + read_set_.toString() + ",");
+  str += ("write:" + write_set_.toString() + ",");
+  str += ("before:" + before_set_.toString() + ",");
+  str += ("after:" + after_set_.toString() + ",");
+  str += ("parent-id:" + parent_job_id_.toString() + ",");
+  str += ("params:" + params_.toString() + ",");
   if (sterile_) {
     str += "sterile";
   } else {
@@ -181,31 +182,31 @@ bool SpawnComputeJobCommand::sterile() {
   return sterile_;
 }
 
-bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& cmd) {
-  job_name_ = cmd.name();
-  job_id_.set_elem(cmd.job_id());
-  read_set_.ConvertFromRepeatedField(cmd.read_set().ids());
-  write_set_.ConvertFromRepeatedField(cmd.write_set().ids());
-  before_set_.ConvertFromRepeatedField(cmd.before_set().ids());
-  after_set_.ConvertFromRepeatedField(cmd.after_set().ids());
-  future_job_id_.set_elem(cmd.future_id());
-  parent_job_id_.set_elem(cmd.parent_id());
+bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
+  job_name_ = buf.name();
+  job_id_.set_elem(buf.job_id());
+  read_set_.ConvertFromRepeatedField(buf.read_set().ids());
+  write_set_.ConvertFromRepeatedField(buf.write_set().ids());
+  before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  after_set_.ConvertFromRepeatedField(buf.after_set().ids());
+  future_job_id_.set_elem(buf.future_id());
+  parent_job_id_.set_elem(buf.parent_id());
   // Is this safe?
-  SerializedData d(cmd.params());
+  SerializedData d(buf.params());
   params_.set_ser_data(d);
 
   return true;
 }
 
-bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* cmd) {
-  cmd->set_name(job_name());
-  cmd->set_job_id(job_id().elem());
-  read_set().ConvertToRepeatedField(cmd->mutable_read_set()->mutable_ids());
-  write_set().ConvertToRepeatedField(cmd->mutable_write_set()->mutable_ids());
-  before_set().ConvertToRepeatedField(cmd->mutable_before_set()->mutable_ids());
-  after_set().ConvertToRepeatedField(cmd->mutable_after_set()->mutable_ids());
-  cmd->set_parent_id(parent_job_id().elem());
-  cmd->set_future_id(future_job_id().elem());
-  cmd->set_params(params().ser_data().toString());
+bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* buf) {
+  buf->set_name(job_name());
+  buf->set_job_id(job_id().elem());
+  read_set().ConvertToRepeatedField(buf->mutable_read_set()->mutable_ids());
+  write_set().ConvertToRepeatedField(buf->mutable_write_set()->mutable_ids());
+  before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
+  buf->set_parent_id(parent_job_id().elem());
+  buf->set_future_id(future_job_id().elem());
+  buf->set_params(params().ser_data().toString());
   return true;
 }

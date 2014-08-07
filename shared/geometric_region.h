@@ -104,6 +104,10 @@ namespace nimbus {
     int_dimension_t dy() const;
     int_dimension_t dz() const;
 
+    virtual void FillInValues(const int_dimension_t* values);
+    virtual void FillInValues(const GeometricRegionMessage* msg);
+    virtual void FillInMessage(GeometricRegionMessage* msg);
+
     Coord MinCorner() const;
     Coord MaxCorner() const;
     Coord Delta() const;
@@ -138,7 +142,6 @@ namespace nimbus {
     static GeometricRegion GetBoundingBox(const GeometricRegion &region1,
                                    const GeometricRegion &region2);
 
-    virtual void FillInMessage(GeometricRegionMessage* msg);
 
     virtual std::string toString() const;
 
@@ -183,9 +186,6 @@ namespace nimbus {
     int_dimension_t dx_;
     int_dimension_t dy_;
     int_dimension_t dz_;
-
-    void fillInValues(const int_dimension_t* values);
-    void fillInValues(const GeometricRegionMessage* msg);
   };
 }  // namespace nimbus
 

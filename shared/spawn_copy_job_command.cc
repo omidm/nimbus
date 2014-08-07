@@ -54,15 +54,13 @@ SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
                                          const ID<logical_data_id_t>& to_logical_id,
                                          const IDSet<job_id_t>& before,
                                          const IDSet<job_id_t>& after,
-                                         const ID<job_id_t>& parent_job_id,
-                                         const Parameter& params)
+                                         const ID<job_id_t>& parent_job_id)
   : job_id_(job_id),
     from_logical_id_(from_logical_id),
     to_logical_id_(to_logical_id),
     before_set_(before),
     after_set_(after),
-    parent_job_id_(parent_job_id),
-    params_(params) {
+    parent_job_id_(parent_job_id) {
   name_ = SPAWN_COPY_JOB_NAME;
   type_ = SPAWN_COPY_JOB;
 }
@@ -119,7 +117,6 @@ std::string SpawnCopyJobCommand::toStringWTags() {
   str += ("before:" + before_set_.toString() + " ");
   str += ("after:" + after_set_.toString() + " ");
   str += ("parent-id:" + parent_job_id_.toString() + " ");
-  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -146,10 +143,6 @@ IDSet<job_id_t> SpawnCopyJobCommand::before_set() {
   return before_set_;
 }
 
-Parameter SpawnCopyJobCommand::params() {
-  return params_;
-}
-
 bool SpawnCopyJobCommand::ReadFromProtobuf(const SubmitCopyJobPBuf& cmd) {
   job_id_.set_elem(cmd.job_id());
   from_logical_id_.set_elem(cmd.from_id());
@@ -157,9 +150,6 @@ bool SpawnCopyJobCommand::ReadFromProtobuf(const SubmitCopyJobPBuf& cmd) {
   before_set_.ConvertFromRepeatedField(cmd.before_set().ids());
   after_set_.ConvertFromRepeatedField(cmd.after_set().ids());
   parent_job_id_.set_elem(cmd.parent_id());
-  // Is this safe?
-  SerializedData d(cmd.params());
-  params_.set_ser_data(d);
   return true;
 }
 
@@ -170,7 +160,6 @@ bool SpawnCopyJobCommand::WriteToProtobuf(SubmitCopyJobPBuf* cmd) {
   before_set().ConvertToRepeatedField(cmd->mutable_before_set()->mutable_ids());
   after_set().ConvertToRepeatedField(cmd->mutable_after_set()->mutable_ids());
   cmd->set_parent_id(parent_job_id().elem());
-  cmd->set_params(params().ser_data().toString());
   return true;
 }
 

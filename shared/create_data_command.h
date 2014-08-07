@@ -33,10 +33,11 @@
  */
 
  /*
-  * Create data command to create physical instances of logical data on the
-  * worker.
+  * The controller sends create data commands to workers to create
+  * physical data objects.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_CREATE_DATA_COMMAND_H_
@@ -51,10 +52,10 @@ class CreateDataCommand : public SchedulerCommand {
   public:
     CreateDataCommand();
     CreateDataCommand(const ID<job_id_t>& job_id,
-        const std::string& data_name,
-        const ID<logical_data_id_t>& logical_data_id,
-        const ID<physical_data_id_t>& physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+                      const std::string& data_name,
+                      const ID<logical_data_id_t>& logical_data_id,
+                      const ID<physical_data_id_t>& physical_data_id,
+                      const IDSet<job_id_t>& before);
     ~CreateDataCommand();
 
     virtual SchedulerCommand* Clone();
@@ -66,7 +67,6 @@ class CreateDataCommand : public SchedulerCommand {
     ID<logical_data_id_t> logical_data_id();
     ID<physical_data_id_t> physical_data_id();
     IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
@@ -74,7 +74,9 @@ class CreateDataCommand : public SchedulerCommand {
     ID<logical_data_id_t> logical_data_id_;
     ID<physical_data_id_t> physical_data_id_;
     IDSet<job_id_t> before_set_;
-    IDSet<job_id_t> after_set_;
+
+    bool ReadFromProtobuf(const CreateDataPBuf& buf);
+    bool WriteToProtobuf(CreateDataPBuf* buf);
 };
 
 }  // namespace nimbus

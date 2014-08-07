@@ -88,7 +88,6 @@ void SerializedData:: set_size(size_t size) {
 
 bool SerializedData::Parse(const std::string& input) {
   std::string str = input;
-  UnescapeString(&str);
   size_ = str.length();
   data_ptr_ = boost::shared_array<char>(new char[size_]);
   memcpy(data_ptr_.get(), str.c_str(), size_);
@@ -101,7 +100,6 @@ std::string SerializedData::toString() {
     return str;
   } else {
     std::string str(data_ptr_.get(), size_);
-    EscapeString(&str);
     return str;
   }
 }

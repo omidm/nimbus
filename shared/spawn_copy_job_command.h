@@ -55,8 +55,7 @@ class SpawnCopyJobCommand : public SchedulerCommand {
                         const ID<logical_data_id_t>& to_logical_id,
                         const IDSet<job_id_t>& before,
                         const IDSet<job_id_t>& after,
-                        const ID<job_id_t>& parent_job_id,
-                        const Parameter& params);
+                        const ID<job_id_t>& parent_job_id);
     ~SpawnCopyJobCommand();
 
     virtual SchedulerCommand* Clone();
@@ -70,7 +69,6 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
-    Parameter params();
 
   private:
     ID<job_id_t> job_id_;
@@ -79,7 +77,6 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
-    Parameter params_;
 
     bool ReadFromProtobuf(const SubmitCopyJobPBuf& buf);
     bool WriteToProtobuf(SubmitCopyJobPBuf* buf);

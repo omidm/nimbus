@@ -99,12 +99,10 @@ class Job {
     bool DefineData(const std::string& name,
                     const logical_data_id_t& logical_data_id,
                     const partition_id_t& partition_id,
-                    const IDSet<partition_id_t>& neighbor_partition,
-                    const Parameter& params);
+                    const IDSet<partition_id_t>& neighbor_partition);
 
     bool DefinePartition(const ID<partition_id_t>& partition_id,
-                         const GeometricRegion& r,
-                         const Parameter& params);
+                         const GeometricRegion& r);
 
     bool TerminateApplication(const exit_status_t& exit_status_id = NIMBUS_TERMINATE_SUCCESS);
 

@@ -33,10 +33,14 @@
  */
 
  /*
-  * Local copy command to issue copy command to a worker which holds both read
-  * and write physical instance of the copy job.
+  * A local copy is between two physical objects on a worker: a common
+  * use is when data for timestep t is computed with data from
+  * timestep t, or when one job needs to read data from timestep t
+  * while another writes it for timestep t+1. Copies between workers
+  * are different and called remote copies.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_LOCAL_COPY_COMMAND_H_
@@ -50,28 +54,30 @@ namespace nimbus {
 class LocalCopyCommand : public SchedulerCommand {
   public:
     LocalCopyCommand();
-    LocalCopyCommand(const ID<job_id_t>& jog_id,
-        const ID<physical_data_id_t>& from_physical_data_id,
-        const ID<physical_data_id_t>& to_physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+    LocalCopyCommand(const ID<job_id_t>& job_id,
+                     const ID<physical_data_id_t>& from_physical_data_id,
+                     const ID<physical_data_id_t>& to_physical_data_id,
+                     const IDSet<job_id_t>& before);
     ~LocalCopyCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
     ID<physical_data_id_t> from_physical_data_id();
     ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
     ID<physical_data_id_t> from_physical_data_id_;
     ID<physical_data_id_t> to_physical_data_id_;
     IDSet<job_id_t> before_set_;
-    IDSet<job_id_t> after_set_;
+
+    bool ReadFromProtobuf(const LocalCopyPBuf& buf);
+    bool WriteToProtobuf(LocalCopyPBuf* buf);
 };
 
 }  // namespace nimbus

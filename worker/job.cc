@@ -110,7 +110,7 @@ bool Job::SpawnCopyJob(const job_id_t& id,
   }
   if (app_is_set_) {
     application_->SpawnCopyJob(id, from_logical_id, to_logical_id, before,
-        after, id_.elem(), params);
+                               after, id_.elem());
     return true;
   } else {
     std::cout << "ERROR: SpawnCopyJob, application has not been set." <<
@@ -120,14 +120,13 @@ bool Job::SpawnCopyJob(const job_id_t& id,
 }
 
 bool Job::DefineData(const std::string& name,
-    const logical_data_id_t& logical_data_id,
-    const partition_id_t& partition_id,
-    const IDSet<partition_id_t>& neighbor_partition,
-    const Parameter& params) {
+                     const logical_data_id_t& logical_data_id,
+                     const partition_id_t& partition_id,
+                     const IDSet<partition_id_t>& neighbor_partition) {
   if (app_is_set_) {
     query_cache_.clear();
     application_->DefineData(name, logical_data_id, partition_id,
-        neighbor_partition, id_.elem(), params);
+                             neighbor_partition, id_.elem());
     return true;
   } else {
     std::cout << "ERROR: DefineData, application has not been set." <<
@@ -137,10 +136,9 @@ bool Job::DefineData(const std::string& name,
 }
 
 bool Job::DefinePartition(const ID<partition_id_t>& partition_id,
-    const GeometricRegion& r,
-    const Parameter& params) {
+                          const GeometricRegion& r) {
     if (app_is_set_) {
-        application_->DefinePartition(partition_id, r, params);
+        application_->DefinePartition(partition_id, r);
         return true;
     } else {
         std::cout << "ERROR: DefinePartition, application has not been set." <<

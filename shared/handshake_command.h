@@ -33,11 +33,12 @@
  */
 
  /*
-  * Handshake command used to stablish connection between scheduler and worker
-  * when worker initially joins the network. Scheduler registers the worker and
-  * assigns unique worker id to the worker.
+  * The handshake command is sent by a worker to the scheduler when
+  * it first starts. It allows the scheduler to register the worker
+  * and assign it a unique ID.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_HANDSHAKE_COMMAND_H_
@@ -52,11 +53,13 @@ class HandshakeCommand : public SchedulerCommand {
   public:
     HandshakeCommand();
     explicit HandshakeCommand(const ID<worker_id_t>& worker_id,
-        const std::string& ip, const ID<port_t>& port);
+                              const std::string& ip,
+                              const ID<port_t>& port);
     ~HandshakeCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<worker_id_t> worker_id();
@@ -67,6 +70,9 @@ class HandshakeCommand : public SchedulerCommand {
     ID<worker_id_t> worker_id_;
     std::string ip_;
     ID<port_t> port_;
+
+    bool ReadFromProtobuf(const HandshakePBuf& buf);
+    bool WriteToProtobuf(HandshakePBuf* buf);
 };
 
 

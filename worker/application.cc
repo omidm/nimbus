@@ -119,41 +119,37 @@ void Application::SpawnComputeJob(const std::string& name,
 
 // Thread-safe.
 void Application::SpawnCopyJob(const job_id_t& id,
-    const logical_data_id_t& from_logical_id,
-    const logical_data_id_t& to_logical_id,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const job_id_t& parent_id,
-    const Parameter& params) {
-
+                               const logical_data_id_t& from_logical_id,
+                               const logical_data_id_t& to_logical_id,
+                               const IDSet<job_id_t>& before,
+                               const IDSet<job_id_t>& after,
+                               const job_id_t& parent_id) {
   SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<logical_data_id_t>(from_logical_id),
-      ID<logical_data_id_t>(to_logical_id), before, after, ID<job_id_t>(parent_id), params);
+      ID<logical_data_id_t>(to_logical_id), before, after, ID<job_id_t>(parent_id));
   client_->sendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::DefineData(const std::string& name,
-    const logical_data_id_t& logical_data_id,
-    const partition_id_t& partition_id,
-    const IDSet<partition_id_t>& neighbor_partitions,
-    const job_id_t& parent_id,
-    const Parameter& params) {
+                             const logical_data_id_t& logical_data_id,
+                             const partition_id_t& partition_id,
+                             const IDSet<partition_id_t>& neighbor_partitions,
+                             const job_id_t& parent_id) {
   ID<logical_data_id_t> logical_id_made(logical_data_id);
   ID<partition_id_t> partition_id_made(partition_id);
   ID<job_id_t> parent_id_made(parent_id);
 
   ldo_map_->AddLogicalObject(logical_data_id, name, partition_id);
   DefineDataCommand cm(name, logical_id_made, partition_id_made,
-      neighbor_partitions, parent_id_made, params);
+                       neighbor_partitions, parent_id_made);
   client_->sendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::DefinePartition(const ID<partition_id_t>& partition_id,
-     const GeometricRegion& r,
-     const Parameter& params) {
+                                  const GeometricRegion& r) {
   ldo_map_->AddPartition(partition_id.elem(), r);
-  DefinePartitionCommand cm(partition_id, r, params);
+  DefinePartitionCommand cm(partition_id, r);
   client_->sendCommand(&cm);
 }
 

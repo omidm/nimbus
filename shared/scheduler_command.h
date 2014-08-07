@@ -94,6 +94,7 @@ class SchedulerCommand {
 
   typedef std::set<Type> TypeSet;
   typedef std::map<uint16_t, SchedulerCommand*> PrototypeTable;
+  typedef uint32_t length_field_t;
 
   virtual SchedulerCommand* Clone();
 

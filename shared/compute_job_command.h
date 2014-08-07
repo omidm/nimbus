@@ -33,9 +33,12 @@
  */
 
  /*
-  * Compute job command used to send compute jobs from scheduler to workers.
+  * A scheduler sends compute jobs to workers to invoke application code.
+  * They are translations of SpawnComputeJobs from workers to the scheduler,
+  * binding logical objects to physical instances.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_COMPUTE_JOB_COMMAND_H_
@@ -61,6 +64,7 @@ class ComputeJobCommand : public SchedulerCommand {
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string job_name();
@@ -81,6 +85,9 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> after_set_;
     Parameter params_;
     bool sterile_;
+
+    bool ReadFromProtobuf(const ExecuteComputeJobPBuf& buf);
+    bool WriteToProtobuf(ExecuteComputeJobPBuf* buf);
 };
 
 

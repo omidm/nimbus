@@ -106,7 +106,14 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
                                   SchedulerCommand* command) {
   boost::mutex::scoped_lock lock(send_command_mutex_);
   SchedulerServerConnection* connection = worker->connection();
-  std::string msg = command->toString() + ";";
+
+  std::string data = command->toString();
+  SchedulerCommand::length_field_t len;
+  len = htonl((uint32_t)data.length() + sizeof(len));
+  std::string msg;
+  msg.append((const char*)&len, sizeof(len));
+  msg.append(data.c_str(), data.length());
+
   dbg(DBG_NET, "Sending command %s.\n", msg.c_str());
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?

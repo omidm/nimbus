@@ -33,8 +33,11 @@
  */
 
  /*
-  * Define partition command to define a geometrical region from application
-  * point of view.
+  * A define partition command tells the scheduler about a particular
+  * geometric region. Later data objects can then refer to this geometric
+  * region. Using partition identifiers allows the scheduler to very
+  * easily determine if two defined datas cover the same region and more
+  * precisely defines the geometric boundaries the application is using.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
@@ -51,9 +54,8 @@ DefinePartitionCommand::DefinePartitionCommand() {
 }
 
 DefinePartitionCommand::DefinePartitionCommand(const ID<partition_id_t>& part,
-                                               const GeometricRegion& r,
-                                               const Parameter& params):
-  id_(part), region_(r), params_(params) {
+                                               const GeometricRegion& r)
+  :id_(part), region_(r) {
   name_ = DEFINE_PARTITION_NAME;
   type_ = DEFINE_PARTITION;
 }
@@ -64,61 +66,48 @@ SchedulerCommand* DefinePartitionCommand::Clone() {
   return new DefinePartitionCommand();
 }
 
-bool DefinePartitionCommand::Parse(const std::string& params) {
-  int num = 3;
+bool DefinePartitionCommand::Parse(const std::string& data) {
+  DefinePartitionPBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: DefinePartitionCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: DefinePartitionCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse DefinePartitionCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
+}
 
-  iter = tokens.begin();
-  if (!id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid partition id." << std::endl;
+bool DefinePartitionCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_define_partition()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse DefinePartitionCommand from SchedulerPBuf.\n");
     return false;
+  } else {
+    return ReadFromProtobuf(buf.define_partition());
   }
-
-  iter++;
-  if (!region_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid region." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
 std::string DefinePartitionCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (id_.toString() + " ");
-  str += (region_.toString() + " ");
-  str += params_.toString();
-  return str;
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_DEFINE_PARTITION);
+  DefinePartitionPBuf* cmd = buf.mutable_define_partition();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
 }
+
 std::string DefinePartitionCommand::toStringWTags() {
   std::string str;
   str += (name_ + " ");
   str += ("id:" + id_.toString() + " ");
   str += ("region:" + region_.toString() + " ");
-  str += ("params:" + params_.toString());
   return str;
 }
 
@@ -130,6 +119,14 @@ const GeometricRegion* DefinePartitionCommand::region() {
   return &region_;
 }
 
-Parameter DefinePartitionCommand::params() {
-  return params_;
+bool DefinePartitionCommand::ReadFromProtobuf(const DefinePartitionPBuf& buf) {
+  id_.set_elem(buf.partition_id());
+  region_.FillInValues(&buf.region());
+  return true;
+}
+
+bool DefinePartitionCommand::WriteToProtobuf(DefinePartitionPBuf* buf) {
+  buf->set_partition_id(id_.elem());
+  region_.FillInMessage(buf->mutable_region());
+  return true;
 }

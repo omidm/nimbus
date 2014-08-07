@@ -56,12 +56,16 @@ class TerminateCommand : public SchedulerCommand {
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<exit_status_t> exit_status();
 
   private:
     ID<exit_status_t> exit_status_;
+
+    bool ReadFromProtobuf(const TerminatePBuf& buf);
+    bool WriteToProtobuf(TerminatePBuf* buf);
 };
 
 

@@ -55,12 +55,12 @@ class DefineDataCommand : public SchedulerCommand {
                       const ID<logical_data_id_t>& logical_data_id,
                       const ID<partition_id_t>& partition_id,
                       const IDSet<partition_id_t>& neighbor_partition,
-                      const ID<job_id_t>& parent_job_id,
-                      const Parameter& params);
+                      const ID<job_id_t>& parent_job_id);
     ~DefineDataCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     std::string data_name();
@@ -68,7 +68,6 @@ class DefineDataCommand : public SchedulerCommand {
     ID<partition_id_t> partition_id();
     IDSet<partition_id_t> neighbor_partitions();
     ID<job_id_t> parent_job_id();
-    Parameter params();
 
   private:
     std::string data_name_;
@@ -76,7 +75,9 @@ class DefineDataCommand : public SchedulerCommand {
     ID<partition_id_t> partition_id_;
     IDSet<partition_id_t> neighbor_partitions_;
     ID<job_id_t> parent_job_id_;
-    Parameter params_;
+
+    bool ReadFromProtobuf(const DefineDataPBuf& buf);
+    bool WriteToProtobuf(DefineDataPBuf* buf);
 };
 
 

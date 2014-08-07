@@ -32,11 +32,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Remote copy send command to issue sender side of the copy job to the
-  * worker.
+   /*
+  * A remote copy operation between two workers has two jobs: the
+  * send and receive. This is the send half.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "shared/remote_copy_send_command.h"
@@ -51,17 +52,17 @@ RemoteCopySendCommand::RemoteCopySendCommand() {
 }
 
 RemoteCopySendCommand::RemoteCopySendCommand(const ID<job_id_t>& job_id,
-    const ID<job_id_t>& receive_job_id,
-    const ID<physical_data_id_t>& from_physical_data_id,
-    const ID<worker_id_t>& to_worker_id,
-    const std::string to_ip, const ID<port_t>& to_port,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after)
-: job_id_(job_id),
-  receive_job_id_(receive_job_id),
-  from_physical_data_id_(from_physical_data_id),
-  to_worker_id_(to_worker_id),
-  to_ip_(to_ip), to_port_(to_port),
-  before_set_(before), after_set_(after) {
+                                             const ID<job_id_t>& receive_job_id,
+                                             const ID<physical_data_id_t>& from_physical_data_id,
+                                             const ID<worker_id_t>& to_worker_id,
+                                             const std::string to_ip, const ID<port_t>& to_port,
+                                             const IDSet<job_id_t>& before)
+  : job_id_(job_id),
+    receive_job_id_(receive_job_id),
+    from_physical_data_id_(from_physical_data_id),
+    to_worker_id_(to_worker_id),
+    to_ip_(to_ip), to_port_(to_port),
+    before_set_(before) {
   name_ = REMOTE_COPY_SEND_NAME;
   type_ = REMOTE_COPY_SEND;
 }
@@ -73,99 +74,53 @@ SchedulerCommand* RemoteCopySendCommand::Clone() {
   return new RemoteCopySendCommand();
 }
 
-bool RemoteCopySendCommand::Parse(const std::string& params) {
-  int num = 8;
+bool RemoteCopySendCommand::Parse(const std::string& data) {
+  RemoteCopySendPBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: RemoteCopySendCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: RemoteCopySendCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse RemoteCopySendCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
+}
 
-  iter = tokens.begin();
-  if (!job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+bool RemoteCopySendCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_remote_send()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse RemoteCopySendCommand from SchedulerPBuf.\n");
     return false;
+  } else {
+    return ReadFromProtobuf(buf.remote_send());
   }
-
-  iter++;
-  if (!receive_job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid receive job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!from_physical_data_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid from physical data id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!to_worker_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid to worker id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  to_ip_ = *iter;
-
-  iter++;
-  if (!to_port_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid to port." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!before_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid before set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
 std::string RemoteCopySendCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (receive_job_id_.toString() + " ");
-  str += (from_physical_data_id_.toString() + " ");
-  str += (to_worker_id_.toString() + " ");
-  str += (to_ip_ + " ");
-  str += (to_port_.toString() + " ");
-  str += (before_set_.toString() + " ");
-  str += after_set_.toString();
-  return str;
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the remote copy send field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_REMOTE_SEND);
+  RemoteCopySendPBuf* cmd = buf.mutable_remote_send();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
 }
 
 std::string RemoteCopySendCommand::toStringWTags() {
   std::string str;
-  str += (name_ + " ");
-  str += ("job-id:" + job_id_.toString() + " ");
-  str += ("receive-job-id:" + receive_job_id_.toString() + " ");
-  str += ("from-physical-data-id:" + from_physical_data_id_.toString() + " ");
-  str += ("to-worker-id:" + to_worker_id_.toString() + " ");
-  str += ("to-ip:" + to_ip_ + " ");
-  str += ("to-port:" + to_port_.toString() + " ");
-  str += ("before:" + before_set_.toString() + " ");
-  str += ("after:" + after_set_.toString());
+  str += (name_ + ",");
+  str += ("job-id:" + job_id_.toString() + ",");
+  str += ("receive-job-id:" + receive_job_id_.toString() + ",");
+  str += ("from-physical-data-id:" + from_physical_data_id_.toString() + ",");
+  str += ("to-worker-id:" + to_worker_id_.toString() + ",");
+  str += ("to-ip:" + to_ip_ + ",");
+  str += ("to-port:" + to_port_.toString() + ",");
+  str += ("before:" + before_set_.toString());
   return str;
 }
 
@@ -193,13 +148,28 @@ ID<port_t> RemoteCopySendCommand::to_port() {
   return to_port_;
 }
 
-IDSet<job_id_t> RemoteCopySendCommand::after_set() {
-  return after_set_;
-}
-
 IDSet<job_id_t> RemoteCopySendCommand::before_set() {
   return before_set_;
 }
 
+bool RemoteCopySendCommand::ReadFromProtobuf(const RemoteCopySendPBuf& buf) {
+  job_id_.set_elem(buf.job_id());
+  receive_job_id_.set_elem(buf.receive_job_id());
+  from_physical_data_id_.set_elem(buf.from_physical_id());
+  to_worker_id_.set_elem(buf.to_worker_id());
+  to_ip_ = buf.to_ip();
+  to_port_.set_elem(buf.to_port());
+  before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  return true;
+}
 
-
+bool RemoteCopySendCommand::WriteToProtobuf(RemoteCopySendPBuf* buf) {
+  buf->set_job_id(job_id().elem());
+  buf->set_receive_job_id(receive_job_id().elem());
+  buf->set_from_physical_id(from_physical_data_id().elem());
+  buf->set_to_worker_id(to_worker_id().elem());
+  buf->set_to_ip(to_ip());
+  buf->set_to_port(to_port().elem());
+  before_set_.ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  return true;
+}

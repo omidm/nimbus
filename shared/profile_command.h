@@ -36,6 +36,7 @@
   * Profile command with memory usage statistics.
   *
   * Author: Andrew Lim <alim16@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_PROFILE_COMMAND_H_
@@ -50,16 +51,17 @@ class ProfileCommand : public SchedulerCommand {
   public:
     ProfileCommand();
     ProfileCommand(const ID<worker_id_t>& worker_id,
-        const uint64_t total_virtual,
-        const uint64_t used_virtual,
-        const uint64_t proc_virtual,
-        const uint64_t total_physical,
-        const uint64_t used_physical,
-        const uint64_t proc_physical);
+                   const uint64_t total_virtual,
+                   const uint64_t used_virtual,
+                   const uint64_t proc_virtual,
+                   const uint64_t total_physical,
+                   const uint64_t used_physical,
+                   const uint64_t proc_physical);
     ~ProfileCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<worker_id_t> worker_id();
@@ -78,6 +80,9 @@ class ProfileCommand : public SchedulerCommand {
     uint64_t total_physical_;
     uint64_t used_physical_;
     uint64_t proc_physical_;
+
+    virtual bool ReadFromProtobuf(const ProfilePBuf& buf);
+    virtual bool WriteToProtobuf(ProfilePBuf* buf);
 };
 
 }  // namespace nimbus

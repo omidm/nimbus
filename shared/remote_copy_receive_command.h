@@ -51,24 +51,26 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
   public:
     RemoteCopyReceiveCommand();
     RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
-        const ID<physical_data_id_t>& to_physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+                             const ID<physical_data_id_t>& to_physical_data_id,
+                             const IDSet<job_id_t>& before);
     ~RemoteCopyReceiveCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
     virtual std::string toString();
     virtual std::string toStringWTags();
     ID<job_id_t> job_id();
     ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
     ID<physical_data_id_t> to_physical_data_id_;
     IDSet<job_id_t> before_set_;
-    IDSet<job_id_t> after_set_;
+
+    bool ReadFromProtobuf(const RemoteCopyReceivePBuf& buf);
+    bool WriteToProtobuf(RemoteCopyReceivePBuf* buf);
 };
 
 }  // namespace nimbus

@@ -56,7 +56,7 @@ using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
 
 SchedulerClient::SchedulerClient(std::string scheduler_ip,
-    port_t scheduler_port)
+                                 port_t scheduler_port)
   : scheduler_ip_(scheduler_ip),
     scheduler_port_(scheduler_port) {
   read_buffer_ = new boost::asio::streambuf();
@@ -70,9 +70,10 @@ SchedulerClient::~SchedulerClient() {
   pthread_mutex_destroy(&send_lock_);
 }
 
-SchedulerCommand* SchedulerClient::receiveCommand() {
+SchedulerCommand* SchedulerClient::ReceiveCommand() {
   // boost::asio::read_until(*socket, *read_buffer, ';');
   // std::streamsize size = read_buffer->in_avail();
+  SchedulerCommand* com = NULL;
   pthread_mutex_lock(&send_lock_);
 
   boost::system::error_code ignored_error;
@@ -83,39 +84,52 @@ SchedulerCommand* SchedulerClient::receiveCommand() {
   std::size_t bytes_read = socket_->receive(bufs);
   read_buffer_->commit(bytes_read);
 
-  std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  command_num_ += countOccurence(str, ";");
-
-  if (command_num_ > 0) {
+  if (read_buffer_->size() >= sizeof(SchedulerCommand::length_field_t)) {
+    SchedulerCommand::length_field_t len;
+    char* ptr = reinterpret_cast<char*>(&len);
     std::istream input(read_buffer_);
-    std::string command;
-    std::getline(input, command, ';');
-    command_num_--;
+    int header_len = sizeof(SchedulerCommand::length_field_t);
+    input.read(ptr, header_len);
+    len = ntohl(len);
 
-    SchedulerCommand* com = NULL;
-    if (SchedulerCommand::GenerateSchedulerCommandChild(
-          command, scheduler_command_table_, com)) {
-      dbg(DBG_NET, "Scheduler client received command %s\n",
-          com->toString().c_str());
-    } else {
-      dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
+    dbg(DBG_NET, "Reading a command of length %i.\n", len);
+    // We have a complete command
+    if (read_buffer_->size() >= (len - header_len)) {
+      std::string command;
+      command.resize(len - header_len);
+      // input.seekg(header_len);
+      // Then read the actual data
+      input.read(&command[0], len - header_len);
+
+      if (SchedulerCommand::GenerateSchedulerCommandChild(command,
+                                                          scheduler_command_table_,
+                                                          com)) {
+        dbg(DBG_NET, "Scheduler client received command %s\n",
+            com->toString().c_str());
+      } else {
+        com = NULL;
+        dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
+      }
     }
-    pthread_mutex_unlock(&send_lock_);
-    return com;
-  } else {
-    pthread_mutex_unlock(&send_lock_);
-    return NULL;
   }
+  pthread_mutex_unlock(&send_lock_);
+  return com;
 }
 
-void SchedulerClient::sendCommand(SchedulerCommand* command) {
+void SchedulerClient::SendCommand(SchedulerCommand* command) {
   // static double serialization_time = 0;
   // static double buffer_time = 0;
   // struct timespec start_time;
   // clock_gettime(CLOCK_REALTIME, &start_time);
 
-  std::string msg = command->toString() + ";";
-  dbg(DBG_NET, "Client sending command %s.\n", msg.c_str());
+  std::string data = command->toString();
+  SchedulerCommand::length_field_t len;
+  len = htonl((uint32_t)data.length() + sizeof(len));
+  std::string msg;
+  msg.append((const char*)&len, sizeof(len));
+  msg.append(data.c_str(), data.length());
+
+  dbg(DBG_NET, "Client sending command of length %i: %s\n", data.length(), command->toStringWTags().c_str()); // NOLINT
 
   // struct timespec t;
   // clock_gettime(CLOCK_REALTIME, &t);
@@ -136,7 +150,7 @@ void SchedulerClient::sendCommand(SchedulerCommand* command) {
   // printf("Buffer command time %f\n", buffer_time);
 }
 
-void SchedulerClient::createNewConnections() {
+void SchedulerClient::CreateNewConnections() {
   std::cout << "Opening connections." << std::endl;
   tcp::resolver resolver(*io_service_);
   tcp::resolver::query query(scheduler_ip_,
@@ -146,8 +160,8 @@ void SchedulerClient::createNewConnections() {
   socket_->connect(*iterator, error);
 }
 
-void SchedulerClient::run() {
-  createNewConnections();
+void SchedulerClient::Run() {
+  CreateNewConnections();
   // io_service_->run();
 }
 
@@ -156,4 +170,3 @@ void
 SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt) {
   scheduler_command_table_ = cmt;
 }
-

@@ -93,23 +93,20 @@ class Application {
 
 
   void SpawnCopyJob(const job_id_t& id,
-      const logical_data_id_t& from_logical_id,
-      const logical_data_id_t& to_logical_id,
-      const IDSet<job_id_t>& before,
-      const IDSet<job_id_t>& after,
-      const job_id_t& parent_id,
-      const Parameter& params);
+                    const logical_data_id_t& from_logical_id,
+                    const logical_data_id_t& to_logical_id,
+                    const IDSet<job_id_t>& before,
+                    const IDSet<job_id_t>& after,
+                    const job_id_t& parent_id);
 
   void DefineData(const std::string& name,
-      const logical_data_id_t& logical_data_id,
-      const partition_id_t& partition_id,
-      const IDSet<partition_id_t>& neighbor_partition,
-      const job_id_t& parent_id,
-      const Parameter& params);
+                  const logical_data_id_t& logical_data_id,
+                  const partition_id_t& partition_id,
+                  const IDSet<partition_id_t>& neighbor_partition,
+                  const job_id_t& parent_id);
 
   void DefinePartition(const ID<partition_id_t>& partition_id,
-       const GeometricRegion& r,
-       const Parameter& params);
+                       const GeometricRegion& r);
 
   void TerminateApplication(const exit_status_t& exit_status_id);
 

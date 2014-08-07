@@ -63,9 +63,9 @@ class SchedulerClient {
   SchedulerClient(std::string scheduler_ip, port_t scheduler_port);
   virtual ~SchedulerClient();
 
-  virtual void run();
-  virtual SchedulerCommand* receiveCommand();
-  virtual void sendCommand(SchedulerCommand* command);
+  virtual void Run();
+  virtual SchedulerCommand* ReceiveCommand();
+  virtual void SendCommand(SchedulerCommand* command);
 
   void set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt);
 
@@ -80,7 +80,7 @@ class SchedulerClient {
 
   pthread_mutex_t send_lock_;
 
-  void createNewConnections();
+  void CreateNewConnections();
 };
 
 }  // namespace nimbus

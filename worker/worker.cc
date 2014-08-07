@@ -306,7 +306,6 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   write_set.insert(cm->physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-  job->set_after_set(cm->after_set());
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
@@ -327,7 +326,6 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
   job->set_before_set(cm->before_set());
-  job->set_after_set(cm->after_set());
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
@@ -342,7 +340,6 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-  job->set_after_set(cm->after_set());
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
@@ -360,7 +357,6 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
   job->set_before_set(cm->before_set());
-  job->set_after_set(cm->after_set());
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG
@@ -386,9 +382,8 @@ void Worker::ProcessPartitionAddCommand(PartitionAddCommand* cm) {
 }
 
 void Worker::ProcessPartitionRemoveCommand(PartitionRemoveCommand* cm) {
-    GeometricRegion r = *(cm->region());
-    if (!ldo_map_->RemovePartition(cm->id().elem()))
-        dbg(DBG_ERROR, "Worker could not remove partition %i from ldo map\n", cm->id().elem());
+  if (!ldo_map_->RemovePartition(cm->id().elem()))
+    dbg(DBG_ERROR, "Worker could not remove partition %i from ldo map\n", cm->id().elem());
 }
 
 void Worker::ProcessTerminateCommand(TerminateCommand* cm) {
@@ -575,8 +570,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
 
 void Worker::NotifyLocalJobDone(Job* job) {
   Parameter params;
-  JobDoneCommand cm(job->id(), job->after_set(), params, job->run_time(), job->wait_time(),
-                    job->max_alloc());
+  JobDoneCommand cm(job->id(), job->run_time(), job->wait_time(), job->max_alloc());
   client_->sendCommand(&cm);
   job_id_t job_id = job->id().elem();
   // Job done for unknown job is not handled.
