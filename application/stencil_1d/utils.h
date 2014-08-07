@@ -47,6 +47,7 @@
 #include <algorithm>
 #include "worker/application.h"
 #include "shared/nimbus_types.h"
+#include "shared/parameter.h"
 #include "./data.h"
 
 using namespace nimbus; // NOLINT
@@ -61,5 +62,8 @@ void LoadDataFromNimbus(Job* job,
 void SaveDataToNimbus(Job* job,
     const DataArray& da, std::vector<int>* vec);
 
+bool LoadParameter(Parameter *parameter, size_t *value);
+
+bool SerializeParameter(Parameter *parameter, size_t value);
 
 #endif  // NIMBUS_APPLICATION_STENCIL_1D_UTILS_H_
