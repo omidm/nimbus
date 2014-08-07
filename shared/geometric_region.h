@@ -133,6 +133,10 @@ namespace nimbus {
     /* Largest common rectangular region shared by 2 regions. */
     static GeometricRegion GetIntersection(const GeometricRegion &region1,
                                            const GeometricRegion &region2);
+
+    static int_dimension_t GetDistance(const GeometricRegion *region1,
+                                        const GeometricRegion *region2);
+
     /* Smallest rectangular region (bounding box) that contains the two
      * regions. */
     static GeometricRegion GetBoundingBox(const GeometricRegion &region1,

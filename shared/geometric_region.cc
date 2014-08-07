@@ -241,6 +241,20 @@ GeometricRegion GeometricRegion::GetIntersection(const GeometricRegion &region1,
   return GeometricRegionFromRange(min, max);
 }
 
+
+
+int_dimension_t GeometricRegion::GetDistance(const GeometricRegion *region1,
+                                              const GeometricRegion *region2) {
+  if (region1->AdjacentOrIntersects(region2)) {
+    return 0;
+  }
+
+  // TODO(omidm): figure out the right logic.
+}
+
+
+
+
 /**
  * \fn bool GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
  *                                          const GeometricRegion &region2).
