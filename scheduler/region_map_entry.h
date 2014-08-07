@@ -70,6 +70,9 @@ namespace nimbus {
 
     void Shrink(const GeometricRegion *region);
 
+    bool GetRegionToGiveUp(const RegionMapEntry *rme,
+                           GeometricRegion *region);
+
     void AddCoveredRegion(const GeometricRegion *region);
 
     void ClearCoveredRegions();
@@ -81,6 +84,12 @@ namespace nimbus {
     bool Intersects(const RegionMapEntry *rme) const;
 
     bool AdjacentOrIntersects(const RegionMapEntry *rme) const;
+
+    bool Adjacent(const GeometricRegion *region) const;
+
+    bool Intersects(const GeometricRegion *region) const;
+
+    bool AdjacentOrIntersects(const GeometricRegion *region) const;
 
     std::string PrintRegion();
 

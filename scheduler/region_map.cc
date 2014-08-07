@@ -204,6 +204,41 @@ void RegionMap::InvalidateRegionCoverage() {
   }
 }
 
+
+
+bool RegionMap::BalanceRegions(const worker_id_t &w_shrink,
+                               const worker_id_t &w_grow) {
+  if (!WorkersAreNeighbor(w_shrink, w_grow)) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: workers are not neighbors for balancing the regions.\n"); // NOLINT
+    return false;
+  }
+
+  TableIter iter_shrink = table_.find(w_shrink);
+  if (iter_shrink == table_.end()) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: worker %lu is not defined in region map.\n", w_shrink);
+    return false;
+  }
+
+  TableIter iter_grow = table_.find(w_grow);
+  if (iter_grow == table_.end()) {
+    dbg(DBG_ERROR, "ERROR: RegionMap: worker %lu is not defined in region map.\n", w_grow);
+    return false;
+  }
+
+  GeometricRegion region;
+  if (!iter_shrink->second->GetRegionToGiveUp(iter_grow->second, &region)) {
+    return false;
+  }
+  iter_shrink->second->Shrink(&region);
+  iter_grow->second->Grow(&region);
+
+  InvalidateCache();
+  InvalidateRegionCoverage();
+
+  return true;
+}
+
+
 void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
                               std::vector<size_t> weight_x,
                               std::vector<size_t> weight_y,

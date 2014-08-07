@@ -68,6 +68,11 @@ void RegionMapEntry::Shrink(const GeometricRegion *region) {
   RemoveObsoleteCoveredRegions(region);
 }
 
+bool GetRegionToGiveUp(const RegionMapEntry *rme,
+                       GeometricRegion *region) {
+  return false;
+}
+
 int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
   return region_.CommonSurface(region);
 }
@@ -107,5 +112,16 @@ bool RegionMapEntry::AdjacentOrIntersects(const RegionMapEntry *rme) const {
   return region_.AdjacentOrIntersects(&rme->region_);
 }
 
+bool RegionMapEntry::Adjacent(const GeometricRegion *region) const {
+  return region_.Adjacent(region);
+}
+
+bool RegionMapEntry::Intersects(const GeometricRegion *region) const {
+  return region_.Intersects(region);
+}
+
+bool RegionMapEntry::AdjacentOrIntersects(const GeometricRegion *region) const {
+  return region_.AdjacentOrIntersects(region);
+}
 
 }  // namespace nimbus
