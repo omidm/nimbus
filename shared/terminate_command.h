@@ -33,11 +33,13 @@
  */
 
  /*
-  * Terminate command used to signal the scheduler that the application is
-  * complete and there  would be no more spawned jobs.
-  * Also used by the scheduler to terminate the workers.
+  * A worker sends a terminate command to the controller that the
+  * application is complete and there will be no more jobs. The
+  * controller can send a terminate command to a worker to tell it
+  * to shut down.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_TERMINATE_COMMAND_H_

@@ -33,11 +33,12 @@
  */
 
  /*
-  * A define partition command tells the scheduler about a particular
-  * geometric region. Later data objects can then refer to this geometric
-  * region. Using partition identifiers allows the scheduler to very
-  * easily determine if two defined datas cover the same region and more
-  * precisely defines the geometric boundaries the application is using.
+  * A worker sends a define partition command to the controller to
+  * name a geometric region. Later data objects can then refer to this
+  * geometric region. Using partition identifiers allows the scheduler
+  * to very easily determine if two defined datas cover the same
+  * region and more precisely defines the geometric boundaries the
+  * application is using.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */

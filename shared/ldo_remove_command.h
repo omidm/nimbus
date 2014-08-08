@@ -33,9 +33,13 @@
  */
 
  /*
-  * Compute job command used to send compute jobs from scheduler to workers.
+  * This command removes a logical data object from the system,
+  * removing it from the logical data object index (LdoIndex).  A
+  * worker sends it to the controller, which invokes a consistency
+  * protocol to update all of the worker copies of the index.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_

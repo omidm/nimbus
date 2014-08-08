@@ -33,9 +33,13 @@
  */
 
  /*
-  * Compute job command used to send compute jobs from scheduler to workers.
+  * A worker sends this command to the controller to add a new logical
+  * data object to the system. The controller updates its logical data
+  * object index (LdoIndex) and invokes its consistency protocol to
+  * update all of the worker replicas of the index.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_LDO_ADD_COMMAND_H_

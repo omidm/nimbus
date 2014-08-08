@@ -33,8 +33,10 @@
  */
 
  /*
-  * The controller sends create data commands to workers to create
-  * physical data objects.
+  * The controller sends create data commands to workers to create new
+  * physical data objects. Workers send define data commands to tell
+  * the controller about data objects, and the controller uses create
+  * data commands to instantiate those objects on workers.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>

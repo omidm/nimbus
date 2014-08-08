@@ -33,8 +33,8 @@
  */
 
  /*
-  * This is the scheduler-to-worker version of DefinePartition.  A
-  * scheduler sends an add partition command to the scheduler to
+  * This is the controller-to-worker version of DefinePartition.  A
+  * controller sends an add partition command to the scheduler to
   * define a geometric region that it can then refer to in data
   * definitions.  Using partition identifiers rather than per-data
   * geometric regions simplifies data management and prevents

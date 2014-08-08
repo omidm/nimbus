@@ -32,11 +32,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Remote copy receive command to issue receiver side of the copy job to the
-  * worker.
+  /*
+  * A remote copy operation between two workers has two jobs: the
+  * send and receive. This is the receive half.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_REMOTE_COPY_RECEIVE_COMMAND_H_

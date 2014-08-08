@@ -34,11 +34,11 @@
 
  /*
   * A SpawnComputeJobCommand is a message sent from a worker to the
-  * scheduler to create a new computational job. The scheduler
+  * controller to create a new computational job. The controller
   * processes the command and produces an ExecuteComputeJobCommand
-  * that it sends to the selected worker. This class is primarily a
-  * way to translate between a protocol buffer for network transfer
-  * and an in-memory representation.
+  * that it sends to the selected worker. A spawn job specifies the
+  * logical objects it operates on; an execute job binds those to
+  * physical objects on a specific worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>

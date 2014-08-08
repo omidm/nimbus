@@ -33,8 +33,8 @@
  */
 
  /*
-  * The handshake command is sent by a worker to the scheduler when
-  * it first starts. It allows the scheduler to register the worker
+  * The handshake command is sent by a worker to the controller when
+  * it first starts. It allows the controller to register the worker
   * and assign it a unique ID.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>

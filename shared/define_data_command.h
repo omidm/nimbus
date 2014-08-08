@@ -33,10 +33,12 @@
  */
 
  /*
-  * Define data command to define a logical region from the application point
-  * of view.
+  * A worker sends a define data command to the controller to create a
+  * new logical data object. A logical data object has two key properties:
+  * the variable it represents and the geometric region it covers.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_

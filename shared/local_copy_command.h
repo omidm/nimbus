@@ -33,11 +33,12 @@
  */
 
  /*
-  * A local copy is between two physical objects on a worker: a common
-  * use is when data for timestep t is computed with data from
-  * timestep t, or when one job needs to read data from timestep t
-  * while another writes it for timestep t+1. Copies between workers
-  * are different and called remote copies.
+  * A command sent from the controller to a worker to copy between two
+  * physical objects on a worker. A common use is when data for
+  * timestep t is computed with data from timestep t, or when one job
+  * needs to read data from timestep t while another writes it for
+  * timestep t+1. Copies between workers are different and called
+  * remote copies.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>

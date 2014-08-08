@@ -33,9 +33,14 @@
  */
 
  /*
-  * Spawn copy job command used to send copy jobs to the scheduler from worker.
+  * Workers send spawn copy jobs to the controller to tell it to copy
+  * one logical object to another logical object. These is needed, for
+  * example, when there are explicit ghost regions, such that one job
+  * is reading state from a prior iteration while another job writes
+  * it on this iteration.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_SPAWN_COPY_JOB_COMMAND_H_

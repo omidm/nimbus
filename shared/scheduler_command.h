@@ -33,11 +33,11 @@
  */
 
  /*
-  * Object representation of a scheduler command. Used by workers to
-  * send commands to server and server to send commands down to workers. The
-  * super class SchedulerCommand is inherited by its children implemented in
-  * other files. Each child represents a specific command exchanged between
-  * scheduler and worker.
+  * Object representation of a network command between a controller
+  * and workers (either direction). The super class SchedulerCommand
+  * is inherited by its children implemented in other files. Each
+  * child represents a specific command. Commands are encoded for the
+  * network using Google Protocol Buffers.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   * Author: Omid Mashayekhi <omidm@stanford.edu>

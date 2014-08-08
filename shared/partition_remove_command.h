@@ -33,8 +33,8 @@
  */
 
  /*
-  * Command sent from scheduler to worker, to remove a partition
-  * definition. Currently not used by scheduler.
+  * Command sent from controller to worker to remove a partition
+  * definition. Currently not used by controller.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>

@@ -33,9 +33,9 @@
  */
 
  /*
-  * A scheduler sends compute jobs to workers to invoke application code.
-  * They are translations of SpawnComputeJobs from workers to the scheduler,
-  * binding logical objects to physical instances.
+  * The controller sends compute jobs to workers to invoke application
+  * code.  They are translations of SpawnComputeJobs from workers to
+  * the controller, binding logical objects to physical instances.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>

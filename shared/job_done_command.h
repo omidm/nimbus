@@ -33,11 +33,10 @@
  */
 
  /*
-  * The job done command is sent by a worker to the schedule to tell
-  * the scheduler it has completed a job (copy or compute). It is also
-  * sent to workers by the scheduler to tell those workers that a job
-  * has completed (e.g., releasing a dependency in another job's
-  * before set).
+  * A worker sends a job done command to the controller to tell it a
+  * job has completed (copy or compute). The controller forwards
+  * received job done commands to workers who are waiting on it (e.g.,
+  * releasing a dependency in another job's before set).
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Author: Philip Levis <pal@cs.stanford.edu>
