@@ -100,20 +100,20 @@ void Main::Execute(Parameter params, const DataArray& da) {
       GeometricRegion r_l(i * CHUNK_SIZE, 0, 0,
           BANDWIDTH, 1, 1);
       ID<partition_id_t> p_l(i * 3);
-      DefinePartition(p_l, r_l, par);
-      DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions, par);
+      DefinePartition(p_l, r_l);
+      DefineData(DATA_NAME, d[i * 3], p_l.elem(), neighbor_partitions);
 
       GeometricRegion r_m(i * CHUNK_SIZE + BANDWIDTH, 0, 0,
           CHUNK_SIZE - 2 * BANDWIDTH, 1, 1);
       ID<partition_id_t> p_m(i * 3 + 1);
-      DefinePartition(p_m, r_m, par);
-      DefineData(DATA_NAME, d[i * 3 + 1], p_m.elem(), neighbor_partitions, par);
+      DefinePartition(p_m, r_m);
+      DefineData(DATA_NAME, d[i * 3 + 1], p_m.elem(), neighbor_partitions);
 
       GeometricRegion r_r(i * CHUNK_SIZE + CHUNK_SIZE - BANDWIDTH, 0, 0,
           BANDWIDTH, 1, 1);
       ID<partition_id_t> p_r(i * 3 + 2);
-      DefinePartition(p_r, r_r, par);
-      DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions, par);
+      DefinePartition(p_r, r_r);
+      DefineData(DATA_NAME, d[i * 3 + 2], p_r.elem(), neighbor_partitions);
     }
 
     /*
