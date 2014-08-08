@@ -81,16 +81,24 @@ bool Job::SpawnComputeJob(const std::string& name,
                           const IDSet<job_id_t>& before,
                           const IDSet<job_id_t>& after,
                           const Parameter& params,
-                          const bool& sterile) {
+                          const bool& sterile,
+                          const job_id_t& future_job_id) {
   if (sterile_) {
     dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
     return false;
   }
   if (app_is_set_) {
     // 0 for no future job
-    application_->SpawnComputeJob(name, id, read, write, before, after,
-                                  id_.elem(), future_job_id_.elem(),
-                                  sterile, params);
+    application_->SpawnComputeJob(name,
+                                  id,
+                                  read,
+                                  write,
+                                  before,
+                                  after,
+                                  id_.elem(),
+                                  future_job_id,
+                                  sterile,
+                                  params);
     return true;
   } else {
     dbg(DBG_ERROR, "ERROR: SpawnComputeJob, application has not been set.\n");
