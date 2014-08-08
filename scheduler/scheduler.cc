@@ -186,8 +186,9 @@ void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
                                    cm->before_set(),
                                    cm->after_set(),
                                    cm->parent_job_id().elem(),
-                                   cm->params(),
-                                   cm->sterile());
+                                   cm->future_job_id().elem(),
+                                   cm->sterile(),
+                                   cm->params());
   log_job_manager_.StopTimer();
 }
 

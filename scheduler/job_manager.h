@@ -75,8 +75,9 @@ class JobManager {
         const IDSet<job_id_t>& before_set,
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
+        const job_id_t& future_job_id,
+        const bool& sterile,
+        const Parameter& params);
 
     bool AddExplicitCopyJobEntry();
 

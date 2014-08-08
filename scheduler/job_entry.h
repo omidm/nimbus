@@ -151,6 +151,7 @@ class JobEntry {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     job_id_t parent_job_id_;
+    job_id_t future_job_id_;
     Parameter params_;
     boost::shared_ptr<VersionMap> vmap_read_;
     boost::shared_ptr<VersionMap> vmap_write_;
@@ -185,8 +186,9 @@ class ComputeJobEntry : public JobEntry {
         const IDSet<job_id_t>& before_set,
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
+        const job_id_t& future_job_id,
+        const bool& sterile,
+        const Parameter& params);
     ~ComputeJobEntry();
 };
 

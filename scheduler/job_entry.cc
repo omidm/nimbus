@@ -350,8 +350,9 @@ ComputeJobEntry::ComputeJobEntry(
     const IDSet<job_id_t>& before_set,
     const IDSet<job_id_t>& after_set,
     const job_id_t& parent_job_id,
-    const Parameter& params,
-    const bool& sterile) {
+    const job_id_t& future_job_id,
+    const bool& sterile,
+    const Parameter& params) {
     job_type_ = JOB_COMP;
     job_name_ = job_name;
     job_id_ = job_id;
@@ -360,8 +361,9 @@ ComputeJobEntry::ComputeJobEntry(
     before_set_ = before_set;
     after_set_ = after_set;
     parent_job_id_ = parent_job_id;
-    params_ = params;
+    future_job_id_ = future_job_id;
     sterile_ = sterile;
+    params_ = params;
 
     union_set_.insert(read_set_);
     union_set_.insert(write_set_);

@@ -133,6 +133,7 @@ std::string SpawnComputeJobCommand::toStringWTags() {
   str += ("before:" + before_set_.toString() + ",");
   str += ("after:" + after_set_.toString() + ",");
   str += ("parent-id:" + parent_job_id_.toString() + ",");
+  str += ("future-id:" + future_job_id_.toString() + ",");
   str += ("params:" + params_.toString() + ",");
   if (sterile_) {
     str += "sterile";
@@ -189,8 +190,9 @@ bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
   write_set_.ConvertFromRepeatedField(buf.write_set().ids());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
   after_set_.ConvertFromRepeatedField(buf.after_set().ids());
-  future_job_id_.set_elem(buf.future_id());
   parent_job_id_.set_elem(buf.parent_id());
+  future_job_id_.set_elem(buf.future_id());
+  sterile_ = buf.sterile();
   // Is this safe?
   SerializedData d(buf.params());
   params_.set_ser_data(d);
@@ -207,6 +209,7 @@ bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* buf) {
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
   buf->set_parent_id(parent_job_id().elem());
   buf->set_future_id(future_job_id().elem());
+  buf->set_sterile(sterile_);
   buf->set_params(params().ser_data().toString());
   return true;
 }

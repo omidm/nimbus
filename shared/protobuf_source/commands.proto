@@ -121,7 +121,8 @@ message SubmitComputeJobPBuf {
   optional JobIDSet after_set     = 6;
   optional uint64 parent_id       = 7;
   optional uint64 future_id       = 8;
-  optional bytes params           = 9;
+  optional bool sterile           = 9;
+  optional bytes params           = 10;
 }
 
 message SubmitCopyJobPBuf {
