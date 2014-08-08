@@ -339,11 +339,10 @@ partitions_str = "partitions"
 out_cc.write("\n")
 out_cc.write("\t// Define partitions\n")
 out_cc.write("\tstatic %s %s[%s];\n" % (partition_id_set_str, partitions_str, pt_num_str))
-out_cc.write("\tnimbus::Parameter part_params;\n")
 out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % pt_num_str)
 out_cc.write("\t\t%s[i] = %s(i);\n" % (partitions_str, partition_id_set_str))
-decl = "\t\tjb->DefinePartition(%s, %s, %s);\n" %\
-        (("%s[i]" % partitions_str), "kRegions[i]", "part_params")
+decl = "\t\tjb->DefinePartition(%s, %s);\n" %\
+        (("%s[i]" % partitions_str), "kRegions[i]")
 out_cc.write(decl)
 out_cc.write("\t}\n")
 
@@ -365,8 +364,6 @@ ids_to_use     = 0
 out_cc.write("\tint %s = %i;\n" % (ids_to_use_str, ids_to_use))
 np_str = "neighbor_partitions"
 out_cc.write("\tnimbus::IDSet<nimbus::partition_id_t> %s;\n" % np_str)
-dp_str = "data_params"
-out_cc.write("\tnimbus::Parameter %s;\n" % dp_str)
 
 # define data
 for d in ntypes_pid:
@@ -380,9 +377,9 @@ for d in ntypes_pid:
             (ids_to_use, temp[0])
     out_cc.write("\t%s;\n" % decl)
     out_cc.write("\tfor (int i = 0; i < %s; i++) {\n" % ids_to_use_str)
-    out_cc.write("\t\tjb->DefineData(\"%s\", %s[%s + i], %s.elem(), %s, %s);\n" % \
+    out_cc.write("\t\tjb->DefineData(\"%s\", %s[%s + i], %s.elem(), %s);\n" % \
             (d, data_ids_str, ids_used_str, \
-            ("%s[%s[i]]" % (partitions_str, pset_str)), np_str, dp_str))
+            ("%s[%s[i]]" % (partitions_str, pset_str)), np_str))
     out_cc.write("\t}\n")
     out_cc.write("\t%s += %s;\n" % (ids_used_str, ids_to_use_str))
 
