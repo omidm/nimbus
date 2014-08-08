@@ -244,12 +244,39 @@ GeometricRegion GeometricRegion::GetIntersection(const GeometricRegion &region1,
 
 
 int_dimension_t GeometricRegion::GetDistance(const GeometricRegion *region1,
-                                              const GeometricRegion *region2) {
+                                             const GeometricRegion *region2) {
   if (region1->AdjacentOrIntersects(region2)) {
     return 0;
   }
 
-  // TODO(omidm): figure out the right logic.
+  std::vector<int_dimension_t> dist;
+
+  std::vector<int_dimension_t> distx;
+  distx.push_back(abs(region1->x() - region2->x()));
+  distx.push_back(abs(region1->x() - region2->dx()));
+  distx.push_back(abs(region1->dx() - region2->x()));
+  distx.push_back(abs(region1->dx() - region2->dx()));
+  std::sort(distx.begin(), distx.end());
+  dist.push_back(*distx.begin());
+
+  std::vector<int_dimension_t> disty;
+  disty.push_back(abs(region1->y() - region2->y()));
+  disty.push_back(abs(region1->y() - region2->dy()));
+  disty.push_back(abs(region1->dy() - region2->y()));
+  disty.push_back(abs(region1->dy() - region2->dy()));
+  std::sort(disty.begin(), disty.end());
+  dist.push_back(*disty.begin());
+
+  std::vector<int_dimension_t> distz;
+  distz.push_back(abs(region1->z() - region2->z()));
+  distz.push_back(abs(region1->z() - region2->dz()));
+  distz.push_back(abs(region1->dz() - region2->z()));
+  distz.push_back(abs(region1->dz() - region2->dz()));
+  std::sort(distz.begin(), distz.end());
+  dist.push_back(*distz.begin());
+
+  std::sort(dist.begin(), dist.end());
+  return *dist.end();
 }
 
 
@@ -456,7 +483,7 @@ void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
 std::string GeometricRegion::toString() const {
   std::string str;
   char buf[2048];
-  snprintf(buf, sizeof(buf), "bbox:%lld,%lld,%lld,%lld,%lld,%lld",
+  snprintf(buf, sizeof(buf), "bbox:%ld,%ld,%ld,%ld,%ld,%ld",
            x_, y_, z_, dx_, dy_, dz_);
   str += buf;
   return str;

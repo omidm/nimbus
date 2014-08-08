@@ -43,9 +43,12 @@
 #include <boost/tokenizer.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sstream> // NOLINT
 #include <iostream> // NOLINT
+#include <vector>
 #include <string>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/protobuf_compiled/ldomessage.pb.h"
 
