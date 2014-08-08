@@ -141,7 +141,7 @@ IDSet<job_id_t> CreateDataCommand::before_set() {
 
 bool CreateDataCommand::ReadFromProtobuf(const CreateDataPBuf& buf) {
   job_id_.set_elem(buf.job_id());
-  name_ = buf.name();
+  data_name_ = buf.name();
   logical_data_id_.set_elem(buf.logical_id());
   physical_data_id_.set_elem(buf.physical_id());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
@@ -150,7 +150,7 @@ bool CreateDataCommand::ReadFromProtobuf(const CreateDataPBuf& buf) {
 
 bool CreateDataCommand::WriteToProtobuf(CreateDataPBuf* buf) {
   buf->set_job_id(job_id().elem());
-  buf->set_name(name());
+  buf->set_name(data_name());
   buf->set_logical_id(logical_data_id().elem());
   buf->set_physical_id(physical_data_id().elem());
   before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
