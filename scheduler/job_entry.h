@@ -84,6 +84,7 @@ class JobEntry {
     IDSet<job_id_t> before_set() const;
     IDSet<job_id_t> after_set() const;
     job_id_t parent_job_id() const;
+    job_id_t future_job_id() const;
     Parameter params() const;
     boost::shared_ptr<VersionMap> vmap_read() const;
     boost::shared_ptr<VersionMap> vmap_write() const;
@@ -114,6 +115,7 @@ class JobEntry {
     void set_before_set(IDSet<job_id_t> before_set, bool update_dependencies = false);
     void set_after_set(IDSet<job_id_t> after_set);
     void set_parent_job_id(job_id_t parent_job_id, bool update_dependencies = false);
+    void set_future_job_id(job_id_t future_job_id);
     void set_params(Parameter params);
     void set_vmap_read(boost::shared_ptr<VersionMap> vmap_read);
     void set_vmap_write(boost::shared_ptr<VersionMap> vmap_write);

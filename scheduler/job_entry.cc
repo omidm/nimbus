@@ -110,6 +110,10 @@ job_id_t JobEntry::parent_job_id() const {
   return parent_job_id_;
 }
 
+job_id_t JobEntry::future_job_id() const {
+  return future_job_id_;
+}
+
 Parameter JobEntry::params() const {
   return params_;
 }
@@ -238,6 +242,11 @@ void JobEntry::set_parent_job_id(job_id_t parent_job_id, bool update_dependencie
   }
   parent_job_id_ = parent_job_id;
 }
+
+void JobEntry::set_future_job_id(job_id_t future_job_id) {
+  future_job_id_ = future_job_id;
+}
+
 
 void JobEntry::set_params(Parameter params) {
   params_ = params;

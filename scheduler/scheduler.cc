@@ -790,19 +790,21 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
 bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
-    ID<job_id_t> id(job->job_id());
+    ID<job_id_t> job_id(job->job_id());
+    ID<job_id_t> future_job_id(job->future_job_id());
     IDSet<physical_data_id_t> read_set, write_set;
     // TODO(omidm): check the return value of the following methods.
     job->GetPhysicalReadSet(&read_set);
     job->GetPhysicalWriteSet(&write_set);
     ComputeJobCommand cm(job->job_name(),
-                         id,
+                         job_id,
                          read_set,
                          write_set,
                          job->before_set(),
                          job->after_set(),
-                         job->params(),
-                         job->sterile());
+                         future_job_id,
+                         job->sterile(),
+                         job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
     return true;
