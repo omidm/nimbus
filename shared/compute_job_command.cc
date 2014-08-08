@@ -51,14 +51,22 @@ ComputeJobCommand::ComputeJobCommand() {
 
 ComputeJobCommand::ComputeJobCommand(const std::string& job_name,
                                      const ID<job_id_t>& job_id,
-                                     const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write, // NOLINT
-                                     const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-                                     const Parameter& params,
-                                     const bool& sterile)
-  : job_name_(job_name), job_id_(job_id),
-    read_set_(read), write_set_(write),
-    before_set_(before), after_set_(after),
-    params_(params), sterile_(sterile) {
+                                     const IDSet<physical_data_id_t>& read,
+                                     const IDSet<physical_data_id_t>& write, // NOLINT
+                                     const IDSet<job_id_t>& before,
+                                     const IDSet<job_id_t>& after,
+                                     const ID<job_id_t>& future_job_id,
+                                     const bool& sterile,
+                                     const Parameter& params)
+  : job_name_(job_name),
+    job_id_(job_id),
+    read_set_(read),
+    write_set_(write),
+    before_set_(before),
+    after_set_(after),
+    future_job_id_(future_job_id),
+    sterile_(sterile),
+    params_(params) {
   name_ = EXECUTE_COMPUTE_NAME;
   type_ = EXECUTE_COMPUTE;
 }
@@ -118,6 +126,7 @@ std::string ComputeJobCommand::toStringWTags() {
   str += ("write:" + write_set_.toString() + ",");
   str += ("before:" + before_set_.toString() + ",");
   str += ("after:" + after_set_.toString() + ",");
+  str += ("future-job-id:" + future_job_id_.toString() + ",");
   str += ("params:" + params_.toString() + ",");
   if (sterile_) {
     str += "sterile";
@@ -158,6 +167,10 @@ bool ComputeJobCommand::sterile() {
   return sterile_;
 }
 
+ID<job_id_t> ComputeJobCommand::future_job_id() {
+  return future_job_id_;
+}
+
 bool ComputeJobCommand::ReadFromProtobuf(const ExecuteComputeJobPBuf& buf) {
   job_name_ = buf.name();
   job_id_.set_elem(buf.job_id());
@@ -165,7 +178,8 @@ bool ComputeJobCommand::ReadFromProtobuf(const ExecuteComputeJobPBuf& buf) {
   write_set_.ConvertFromRepeatedField(buf.write_set().ids());
   before_set_.ConvertFromRepeatedField(buf.before_set().ids());
   after_set_.ConvertFromRepeatedField(buf.after_set().ids());
-  // Is this safe?
+  future_job_id_.set_elem(buf.future_job_id());
+  sterile_ = buf.sterile();
   SerializedData d(buf.params());
   params_.set_ser_data(d);
   return true;
@@ -178,6 +192,8 @@ bool ComputeJobCommand::WriteToProtobuf(ExecuteComputeJobPBuf* buf) {
   write_set().ConvertToRepeatedField(buf->mutable_write_set()->mutable_ids());
   before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
+  buf->set_future_job_id(future_job_id().elem());
+  buf->set_sterile(sterile());
   buf->set_params(params().ser_data().toString());
   return true;
 }

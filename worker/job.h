@@ -131,7 +131,7 @@ class Job {
     IDSet<physical_data_id_t> write_set() const;
     IDSet<job_id_t> before_set() const;
     IDSet<job_id_t> after_set() const;
-    ID<job_id_t> future_id() const;
+    ID<job_id_t> future_job_id() const;
 
     Parameter parameters() const;
     Application* application() const;
@@ -151,6 +151,7 @@ class Job {
     void set_parameters(Parameter parameters);
     void set_application(Application* app);
     void set_sterile(bool sterile);
+    void set_future_job_id(ID<job_id_t> future_job_id);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
     void set_max_alloc(size_t max_alloc) {
@@ -191,7 +192,7 @@ class Job {
     IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
-    ID<job_id_t> future_id_;
+    ID<job_id_t> future_job_id_;
     Parameter parameters_;
     Application* application_;
     bool sterile_;

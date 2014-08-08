@@ -58,8 +58,9 @@ class ComputeJobCommand : public SchedulerCommand {
                       const IDSet<physical_data_id_t>& write,
                       const IDSet<job_id_t>& before,
                       const IDSet<job_id_t>& after,
-                      const Parameter& params,
-                      const bool& sterile);
+                      const ID<job_id_t>& future_job_id,
+                      const bool& sterile,
+                      const Parameter& params);
     ~ComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
@@ -73,6 +74,7 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<physical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
+    ID<job_id_t> future_job_id();
     Parameter params();
     bool sterile();
 
@@ -83,8 +85,9 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
-    Parameter params_;
+    ID<job_id_t> future_job_id_;
     bool sterile_;
+    Parameter params_;
 
     bool ReadFromProtobuf(const ExecuteComputeJobPBuf& buf);
     bool WriteToProtobuf(ExecuteComputeJobPBuf* buf);

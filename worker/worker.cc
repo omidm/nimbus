@@ -278,8 +278,9 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_write_set(cm->write_set());
   job->set_before_set(cm->before_set());
   job->set_after_set(cm->after_set());
-  job->set_parameters(cm->params());
+  job->set_future_job_id(cm->future_job_id());
   job->set_sterile(cm->sterile());
+  job->set_parameters(cm->params());
 #ifndef MUTE_LOG
   timer_.Start(job->id().elem());
 #endif  // MUTE_LOG

@@ -89,7 +89,7 @@ bool Job::SpawnComputeJob(const std::string& name,
   if (app_is_set_) {
     // 0 for no future job
     application_->SpawnComputeJob(name, id, read, write, before, after,
-                                  id_.elem(), future_id_.elem(),
+                                  id_.elem(), future_job_id_.elem(),
                                   sterile, params);
     return true;
   } else {
@@ -284,6 +284,10 @@ bool Job::sterile() const {
   return sterile_;
 }
 
+ID<job_id_t> Job::future_job_id() const {
+  return future_job_id_;
+}
+
 double Job::run_time() const {
   return run_time_;
 }
@@ -327,6 +331,10 @@ void Job::set_application(Application* app) {
 
 void Job::set_sterile(bool sterile) {
   sterile_ = sterile;
+}
+
+void Job::set_future_job_id(ID<job_id_t> future_job_id) {
+  future_job_id_ = future_job_id;
 }
 
 void Job::set_run_time(double run_time) {
