@@ -47,6 +47,7 @@
 #include <list>
 #include <string>
 #include <utility>
+#include "shared/dbg.h"
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 #include "scheduler/unstructured_region.h"
@@ -99,7 +100,7 @@ namespace nimbus {
 
   private:
     UnstructuredRegion region_;
-    RegionList covered_job_regions_;
+    RegionList covered_regions_;
 
     void RemoveObsoleteCoveredRegions(const GeometricRegion *remove);
   };

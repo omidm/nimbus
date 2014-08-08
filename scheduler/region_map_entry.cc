@@ -68,9 +68,32 @@ void RegionMapEntry::Shrink(const GeometricRegion *region) {
   RemoveObsoleteCoveredRegions(region);
 }
 
-bool GetRegionToGiveUp(const RegionMapEntry *rme,
+bool RegionMapEntry::GetRegionToGiveUp(const RegionMapEntry *rme,
                        GeometricRegion *region) {
-  return false;
+  if (covered_regions_.size() == 0) {
+    dbg(DBG_ERROR, "ERROR: RegionMapEntry: cannot give up any region, coverd regions list is empty."); // NOLINT
+    return false;
+  }
+
+  RegionListIter iter = covered_regions_.begin();
+  int_dimension_t dist = rme->GetDistance(&(*iter));
+  int_dimension_t area = iter->GetSurfaceArea();
+  GeometricRegion r = *iter;
+  ++iter;
+
+  for (; iter != covered_regions_.end(); ++iter) {
+    int_dimension_t dist_temp = rme->GetDistance(&(*iter));
+    int_dimension_t area_temp = iter->GetSurfaceArea();
+    if ((dist_temp < dist) ||
+        ((dist_temp == dist) && (area_temp > area))) {
+      dist = dist_temp;
+      area = area_temp;
+      r = *iter;
+    }
+  }
+
+  *region = r;
+  return true;
 }
 
 int_dimension_t RegionMapEntry::CommonSurface(const GeometricRegion *region) {
@@ -82,18 +105,18 @@ std::string RegionMapEntry::PrintRegion() {
 }
 
 void RegionMapEntry::AddCoveredRegion(const GeometricRegion *region) {
-  covered_job_regions_.push_back(*region);
+  covered_regions_.push_back(*region);
 }
 
 void RegionMapEntry::ClearCoveredRegions() {
-  covered_job_regions_.clear();
+  covered_regions_.clear();
 }
 
 void RegionMapEntry::RemoveObsoleteCoveredRegions(const GeometricRegion *remove) {
-  RegionListIter iter = covered_job_regions_.begin();
-  for (; iter != covered_job_regions_.end();) {
+  RegionListIter iter = covered_regions_.begin();
+  for (; iter != covered_regions_.end();) {
     if (iter->Intersects(remove)) {
-      covered_job_regions_.erase(iter++);
+      covered_regions_.erase(iter++);
     } else {
       ++iter;
     }
