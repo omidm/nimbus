@@ -55,24 +55,33 @@ LDFLAGS += -L${NIMBUS_ROOT}/ # Link with Nimbus libraries
 LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}
 LDFLAGS += -Wl,-rpath ${NIMBUS_ROOT}/leveldb
 
-
-
-
-
 # Checking rules
 
 NIMBUS_CCLINT = ${NIMBUS_ROOT}/tools/cpplint.py
 NIMBUS_FILENAMES = ${NIMBUS_ROOT}/tools/cppfiles.sh
 
+CFILES = $(wildcard *.cc)
+HFILES = $(wildcard *.h)
+CHECKDIR = checkdir
+DEPNAMES = $(subst .cc,.cc.ck ,$(CFILES)) $(subst .h,.h.ck ,$(HFILES))
+DEPFILES = $(addprefix $(CHECKDIR)/,$(DEPNAMES))
+
+$(CHECKDIR)/%.ck: %
+	@/bin/echo -n "Checking code style in $^: "
+	@${NIMBUS_CCLINT} --root=src $^ 
+	@touch $@
+
 fcheck:
 	@${NIMBUS_FILENAMES}
 
-lint:
-	@/bin/echo -n "Checking file formatting: "
-	@${NIMBUS_CCLINT} --root=src *.h *.cc
+lint: $(CHECKDIR) ${DEPFILES}
+
+$(CHECKDIR): 
+	mkdir $(CHECKDIR)
 
 check: fcheck lint
 
 clean-files:
-	\rm -f *.o *~ \#*
+	\rm -f *.o *~ \#* 
+	\rm -Rf $(CHECKDIR)
 
