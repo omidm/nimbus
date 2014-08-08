@@ -95,7 +95,7 @@ class ProfilerMalloc {
   typedef std::map<pthread_t, ThreadAllocState> ThreadMap;
 
  private:
-  static uint64_t alloc_;
+  static size_t alloc_;
   static MallocMap *alloc_map_;
   static bool init_;
   static bool map_include_;

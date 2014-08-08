@@ -160,7 +160,7 @@ namespace nimbus {
 
     mib[0] = CTL_HW;
     mib[1] = HW_MEMSIZE;
-    length = sizeof(uuint64_t);
+    length = sizeof(uint64_t);
     sysctl(mib, 2, &totalPhysMem, &length, NULL, 0);
 #else
     totalPhysMem = mem_info_.totalram;
