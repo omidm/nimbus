@@ -283,4 +283,36 @@ bool UnstructuredRegion::AdjacentOrIntersects(const GeometricRegion *region) con
   return false;
 }
 
+int_dimension_t UnstructuredRegion::GetDistance(const UnstructuredRegion *u_region) const {
+  if (region_list_.size() == 0) {
+    return 0;
+  }
+
+  std::vector<int_dimension_t> dist;
+
+  RegionListConstIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    dist.push_back(u_region->GetDistance(&(*iter)));
+  }
+
+  std::sort(dist.begin(), dist.end());
+  return *dist.begin();
+}
+
+int_dimension_t UnstructuredRegion::GetDistance(const GeometricRegion *region) const {
+  if (region_list_.size() == 0) {
+    return 0;
+  }
+
+  std::vector<int_dimension_t> dist;
+
+  RegionListConstIter iter = region_list_.begin();
+  for (; iter != region_list_.end(); ++iter) {
+    dist.push_back(GeometricRegion::GetDistance(&(*iter), region));
+  }
+
+  std::sort(dist.begin(), dist.end());
+  return *dist.begin();
+}
+
 }  // namespace nimbus

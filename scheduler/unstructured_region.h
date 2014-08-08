@@ -42,10 +42,13 @@
 #define NIMBUS_SCHEDULER_UNSTRUCTURED_REGION_H_
 
 #include <boost/unordered_map.hpp>
+#include <stdlib.h>
 #include <set>
 #include <list>
+#include <vector>
 #include <string>
 #include <utility>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/geometric_region.h"
 
@@ -89,6 +92,10 @@ namespace nimbus {
     bool Intersects(const GeometricRegion *region) const;
 
     bool AdjacentOrIntersects(const GeometricRegion *region) const;
+
+    int_dimension_t GetDistance(const UnstructuredRegion *u_region) const;
+
+    int_dimension_t GetDistance(const GeometricRegion *region) const;
 
   private:
     RegionList region_list_;

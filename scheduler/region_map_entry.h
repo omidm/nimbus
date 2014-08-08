@@ -91,6 +91,10 @@ namespace nimbus {
 
     bool AdjacentOrIntersects(const GeometricRegion *region) const;
 
+    int_dimension_t GetDistance(const RegionMapEntry *rme) const;
+
+    int_dimension_t GetDistance(const GeometricRegion *region) const;
+
     std::string PrintRegion();
 
   private:

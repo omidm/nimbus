@@ -124,4 +124,12 @@ bool RegionMapEntry::AdjacentOrIntersects(const GeometricRegion *region) const {
   return region_.AdjacentOrIntersects(region);
 }
 
+int_dimension_t RegionMapEntry::GetDistance(const RegionMapEntry *rme) const {
+  return region_.GetDistance(&rme->region_);
+}
+
+int_dimension_t RegionMapEntry::GetDistance(const GeometricRegion *region) const {
+  return region_.GetDistance(region);
+}
+
 }  // namespace nimbus
