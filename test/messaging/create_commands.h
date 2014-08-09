@@ -200,8 +200,10 @@ void create_commands() {
                                           cphy_set_b,
                                           cjob_set_a,
                                           cjob_set_b,
-                                          cparams,
-                                          csterile);
+                                          cfuture,
+                                          csterile,
+                                          cparams);
+
     commands[i++] = new CreateDataCommand(cjob_id, cname, cldo_a, cphy_a, cjob_set_a);
     commands[i++] = new RemoteCopySendCommand(cjob_id, cjob_id, cphy_a, cworker,
                                               cip, cport, cjob_set_a);

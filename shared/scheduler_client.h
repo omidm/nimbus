@@ -77,6 +77,9 @@ class SchedulerClient {
   tcp::socket* socket_;
   int command_num_;
   SchedulerCommand::PrototypeTable* scheduler_command_table_;
+  char* byte_array_;
+  uint32_t existing_bytes_;
+  uint32_t existing_offset_;
 
   pthread_mutex_t send_lock_;
 

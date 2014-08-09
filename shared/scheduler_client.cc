@@ -50,10 +50,13 @@
 
 // Comment(quhang): I added the lock for sending commmand.
 #include <pthread.h>
+#include <algorithm>
 #include "shared/scheduler_client.h"
 
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
+
+#define CLIENT_BUFSIZE 4096000
 
 SchedulerClient::SchedulerClient(std::string scheduler_ip,
                                  port_t scheduler_port)
@@ -64,58 +67,82 @@ SchedulerClient::SchedulerClient(std::string scheduler_ip,
   socket_ = new tcp::socket(*io_service_);
   command_num_ = 0;
   pthread_mutex_init(&send_lock_, NULL);
+  byte_array_ = new char[CLIENT_BUFSIZE];
+  existing_bytes_ = 0;
+  existing_offset_ = 0;
 }
 
 SchedulerClient::~SchedulerClient() {
   pthread_mutex_destroy(&send_lock_);
+  delete read_buffer_;
 }
 
 SchedulerCommand* SchedulerClient::ReceiveCommand() {
-  // boost::asio::read_until(*socket, *read_buffer, ';');
-  // std::streamsize size = read_buffer->in_avail();
   SchedulerCommand* com = NULL;
   pthread_mutex_lock(&send_lock_);
 
-  boost::system::error_code ignored_error;
-  int bytes_available = socket_->available(ignored_error);
-
-  boost::asio::streambuf::mutable_buffers_type bufs =
-    read_buffer_->prepare(bytes_available);
-  std::size_t bytes_read = socket_->receive(bufs);
-  read_buffer_->commit(bytes_read);
-
-  if (read_buffer_->size() >= sizeof(SchedulerCommand::length_field_t)) {
-    SchedulerCommand::length_field_t len;
-    char* ptr = reinterpret_cast<char*>(&len);
-    std::istream input(read_buffer_);
+  if (existing_bytes_ >= sizeof(SchedulerCommand::length_field_t)) {
+    // We have at least a header field -- see if we have a whole message
     int header_len = sizeof(SchedulerCommand::length_field_t);
-    input.read(ptr, header_len);
-    len = ntohl(len);
+    char* read_ptr = &byte_array_[existing_offset_];
 
-    dbg(DBG_NET, "Reading a command of length %i.\n", len);
-    // We have a complete command
-    if (read_buffer_->size() >= (len - header_len)) {
-      std::string command;
-      command.resize(len - header_len);
-      // input.seekg(header_len);
-      // Then read the actual data
-      input.read(&command[0], len - header_len);
+    SchedulerCommand::length_field_t len;
+    char* len_ptr = reinterpret_cast<char*>(&len);
+    memcpy(len_ptr, read_ptr, header_len);
+    len = (uint32_t)ntohl(len);
 
-      if (SchedulerCommand::GenerateSchedulerCommandChild(command,
+    // We have a whole message
+    if (existing_bytes_ >= len) {
+      std::string input(read_ptr + header_len, len - header_len);
+
+      // We've read out a command worth of bytes; in the case that
+      // there are no bytes remaining, restart at beginning of buffer
+      existing_bytes_ -= len;
+      if (existing_bytes_ == 0) {
+        existing_offset_ = 0;
+      } else {
+        existing_offset_ += len;
+      }
+      if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           scheduler_command_table_,
                                                           com)) {
         dbg(DBG_NET, "Scheduler client received command %s\n",
             com->toStringWTags().c_str());
       } else {
         com = NULL;
-        dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
+        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
       }
+      pthread_mutex_unlock(&send_lock_);
+      return com;
+    } else {
+      // We don't have a whole message: move the fragment to the beginning,
+      // so that we don't run off the end of the buffer after lots of reads
+      // with incomplete commands.
+      memmove(byte_array_, byte_array_ + existing_offset_, existing_bytes_);
+      existing_offset_ = 0;
     }
-  } else {
-    // dbg(DBG_NET, "Read buffer has %i bytes.\n", read_buffer_->size());
   }
+  // If we reach here there wasn't enough data in the buffer for a message.
+  // Try reading, then try calling ourselves again. The level of recursion
+  // Is expected to be very small.
+
+  boost::system::error_code ignored_error;
+  uint32_t bytes_available = socket_->available(ignored_error);
+  bytes_available = std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_);
+  boost::asio::streambuf::mutable_buffers_type bufs =
+    read_buffer_->prepare(bytes_available);
+  std::size_t bytes_read = socket_->receive(bufs);
+  read_buffer_->commit(bytes_read);
+  std::istream input(read_buffer_);
+  input.read(byte_array_ + existing_offset_, bytes_available);
+  existing_bytes_ += bytes_available;
   pthread_mutex_unlock(&send_lock_);
-  return com;
+
+  if (bytes_available > 0) {
+    return ReceiveCommand();
+  } else {
+    return NULL;
+  }
 }
 
 void SchedulerClient::SendCommand(SchedulerCommand* command) {
@@ -126,7 +153,7 @@ void SchedulerClient::SendCommand(SchedulerCommand* command) {
 
   std::string data = command->toString();
   SchedulerCommand::length_field_t len;
-  len = htonl((uint32_t)data.length() + sizeof(len));
+  len = htonl((uint32_t)(data.length() + sizeof(len)));
   std::string msg;
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
