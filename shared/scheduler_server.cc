@@ -201,7 +201,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
     len = ntohl(len);
 
     if (bytes_remaining < len) {  // Don't have a complete command
-      return 0;
+      return total_read;
     } else {
       std::string input(read_ptr + header_len, len - header_len);
       SchedulerCommand* command;
