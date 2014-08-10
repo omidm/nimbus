@@ -91,6 +91,10 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
     memcpy(len_ptr, read_ptr, header_len);
     len = (uint32_t)ntohl(len);
 
+    if (len == 0) {
+      std::cout << "OMID\n";
+    }
+
     // We have a whole message
     if (existing_bytes_ >= len) {
       std::string input(read_ptr + header_len, len - header_len);
@@ -134,7 +138,7 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
   std::size_t bytes_read = socket_->receive(bufs);
   read_buffer_->commit(bytes_read);
   std::istream input(read_buffer_);
-  input.read(byte_array_ + existing_offset_, bytes_available);
+  input.read(byte_array_ + existing_offset_ + existing_bytes_, bytes_available);
   existing_bytes_ += bytes_available;
   pthread_mutex_unlock(&send_lock_);
 
