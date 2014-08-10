@@ -57,14 +57,14 @@ SchedulerCommand::SchedulerCommand() {
 
 SchedulerCommand::~SchedulerCommand() {}
 
-std::string SchedulerCommand::toString() {
+std::string SchedulerCommand::ToNetworkData() {
   std::string rval = name_;
   rval += " PARAMETER_SEGMENT";
   return rval;
 }
 
-std::string SchedulerCommand::toStringWTags() {
-  return toString();
+std::string SchedulerCommand::ToString() {
+  return ToNetworkData();
 }
 
 std::string SchedulerCommand::name() {

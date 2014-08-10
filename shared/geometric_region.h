@@ -143,7 +143,7 @@ namespace nimbus {
                                    const GeometricRegion &region2);
 
 
-    virtual std::string toString() const;
+    virtual std::string ToNetworkData() const;
 
     virtual bool Parse(const std::string& input);
 

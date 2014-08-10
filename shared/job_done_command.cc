@@ -103,7 +103,7 @@ bool JobDoneCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string JobDoneCommand::toString() {
+std::string JobDoneCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -118,10 +118,10 @@ std::string JobDoneCommand::toString() {
   return result;
 }
 
-std::string JobDoneCommand::toStringWTags() {
+std::string JobDoneCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + job_id_.toString() + " ");
+  str += ("id:" + job_id_.ToNetworkData() + " ");
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
   str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_) + " ");
   str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_));

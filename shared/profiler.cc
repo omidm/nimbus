@@ -88,7 +88,7 @@ namespace nimbus {
     UpdateProcPhysicalMemory();
   }
 
-  std::string Profiler::toString() {
+  std::string Profiler::ToNetworkData() {
     std::string str;
     str += (boost::lexical_cast<std::string>(totalVirtualMem) + " ");
     str += (boost::lexical_cast<std::string>(usedVirtualMem) + " ");
@@ -99,7 +99,7 @@ namespace nimbus {
     return str;
   }
 
-  std::string Profiler::toStringWTags() {
+  std::string Profiler::ToString() {
     std::string str;
     str += ("total_vm: " + boost::lexical_cast<std::string>(totalVirtualMem) + " ");
     str += ("used_vm: " + boost::lexical_cast<std::string>(usedVirtualMem) + " ");

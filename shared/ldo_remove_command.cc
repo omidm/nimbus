@@ -111,11 +111,11 @@ bool LdoRemoveCommand::Parse(const SchedulerPBuf& buf) {
 }
 
   /**
- * \fn std::string LdoRemoveCommand::toString()
+ * \fn std::string LdoRemoveCommand::ToNetworkData()
  * \brief Brief description.
  * \return
 */
-std::string LdoRemoveCommand::toString() {
+std::string LdoRemoveCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -132,16 +132,16 @@ std::string LdoRemoveCommand::toString() {
 
 
 /**
- * \fn std::string LdoRemoveCommand::toStringWTags()
+ * \fn std::string LdoRemoveCommand::ToString()
  * \brief Brief description.
  * \return
 */
-std::string LdoRemoveCommand::toStringWTags() {
+std::string LdoRemoveCommand::ToString() {
   std::ostringstream sstream;
   sstream << (name_ + ",");
   sstream << "logical_id:" << object()->id() << ",";
   sstream << "variable:" << object()->variable() << ",";
-  sstream << object()->region()->toString();
+  sstream << object()->region()->ToNetworkData();
   return sstream.str();
 }
 

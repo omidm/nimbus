@@ -73,7 +73,7 @@ class IDSet {
   // explicit IDSet(std::string s);
 
   bool Parse(const std::string& input);
-  virtual std::string toString();
+  virtual std::string ToNetworkData();
   virtual void insert(T entry);
   virtual void insert(const IDSet<T>& add_set);
   virtual void remove(T entry);

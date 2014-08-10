@@ -95,7 +95,7 @@ bool LocalCopyCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string LocalCopyCommand::toString() {
+std::string LocalCopyCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -110,13 +110,13 @@ std::string LocalCopyCommand::toString() {
   return result;
 }
 
-std::string LocalCopyCommand::toStringWTags() {
+std::string LocalCopyCommand::ToString() {
   std::string str;
   str += (name_ + ",");
-  str += ("job-id:" + job_id_.toString() + ",");
-  str += ("from-physical-data-id:" + from_physical_data_id_.toString() + ",");
-  str += ("to-physical-data-id:" + to_physical_data_id_.toString() + ",");
-  str += ("before:" + before_set_.toString());
+  str += ("job-id:" + job_id_.ToNetworkData() + ",");
+  str += ("from-physical-data-id:" + from_physical_data_id_.ToNetworkData() + ",");
+  str += ("to-physical-data-id:" + to_physical_data_id_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData());
   return str;
 }
 

@@ -75,7 +75,7 @@ bool ID<T>::Parse(const std::string& input) {
 }
 
 template<typename T>
-std::string ID<T>::toString() {
+std::string ID<T>::ToNetworkData() {
   std::ostringstream ss;
   ss << elem_;
   std::string rval;

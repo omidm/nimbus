@@ -110,11 +110,11 @@ bool LdoAddCommand::Parse(const SchedulerPBuf& buf) {
 }
 
 /**
- * \fn std::string LdoAddCommand::toString()
+ * \fn std::string LdoAddCommand::ToNetworkData()
  * \brief Brief description.
  * \return
 */
-std::string LdoAddCommand::toString() {
+std::string LdoAddCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -131,16 +131,16 @@ std::string LdoAddCommand::toString() {
 
 
 /**
- * \fn std::string LdoAddCommand::toStringWTags()
+ * \fn std::string LdoAddCommand::ToString()
  * \brief Brief description.
  * \return
 */
-std::string LdoAddCommand::toStringWTags() {
+std::string LdoAddCommand::ToString() {
   std::ostringstream sstream;
   sstream << (name_ + ",");
   sstream << "logical_id:" << object()->id() << ",";
   sstream << "variable:" << object()->variable() << ",";
-  sstream << object()->region()->toString();
+  sstream << object()->region()->ToNetworkData();
   return sstream.str();
 }
 

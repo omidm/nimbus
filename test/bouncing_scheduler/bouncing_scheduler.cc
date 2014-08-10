@@ -58,9 +58,9 @@ void BouncingScheduler::schedulerCoreProcessor() {
         iter != server->connections.end(); ++iter) {
       SchedulerServerConnection* con = iter->second;
       SchedulerCommand* comm = server->receiveCommand(con);
-      if (comm->toString() != "no-command") {
-        std::cout << "Received command: " << comm->toString() << std::endl;
-        std::cout << "Sending command: " << comm->toString() << std::endl;
+      if (comm->ToNetworkData() != "no-command") {
+        std::cout << "Received command: " << comm->ToNetworkData() << std::endl;
+        std::cout << "Sending command: " << comm->ToNetworkData() << std::endl;
         server->sendCommand(con, comm);
       }
     }

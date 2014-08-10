@@ -143,7 +143,7 @@ namespace nimbus {
           const PhysicalDataInstance* obj = *iter;
           Dimension3Vector overlap = GetOverlapSize(obj->region(), region);
           if (HasOverlap(overlap)) {
-            std::string reg_str = region->toString();
+            std::string reg_str = region->ToNetworkData();
             PhysBAMData* data = static_cast<PhysBAMData*>(obj->data());
             T* buffer = reinterpret_cast<T*>(data->buffer());
 

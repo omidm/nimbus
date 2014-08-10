@@ -66,8 +66,8 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
     virtual bool Parse(const SchedulerPBuf& buf);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
     ID<logical_data_id_t> from_logical_id();
     ID<logical_data_id_t> to_logical_id();

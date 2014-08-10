@@ -86,7 +86,7 @@ bool TerminateCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string TerminateCommand::toString() {
+std::string TerminateCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -101,10 +101,10 @@ std::string TerminateCommand::toString() {
   return result;
 }
 
-std::string TerminateCommand::toStringWTags() {
+std::string TerminateCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("exit-status:" + exit_status_.toString());
+  str += ("exit-status:" + exit_status_.ToNetworkData());
   return str;
 }
 

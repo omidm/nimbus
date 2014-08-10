@@ -88,7 +88,7 @@ bool DefinePartitionCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string DefinePartitionCommand::toString() {
+std::string DefinePartitionCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -103,11 +103,11 @@ std::string DefinePartitionCommand::toString() {
   return result;
 }
 
-std::string DefinePartitionCommand::toStringWTags() {
+std::string DefinePartitionCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + id_.toString() + " ");
-  str += ("region:" + region_.toString() + " ");
+  str += ("id:" + id_.ToNetworkData() + " ");
+  str += ("region:" + region_.ToNetworkData() + " ");
   return str;
 }
 

@@ -128,7 +128,7 @@ void Scheduler::SchedulerCoreProcessor() {
           log_load_balancer_.timer(),
           log_loop_.GetTime());
 
-      log_.WriteToOutputStream(std::string(buff), LOG_INFO);
+      // log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
 }
@@ -139,7 +139,7 @@ void Scheduler::ProcessQueuedSchedulerCommands(size_t max_num) {
     SchedulerCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); iter++) {
       SchedulerCommand* comm = *iter;
-      dbg(DBG_SCHED, "Processing command: %s.\n", comm->toStringWTags().c_str());
+      dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
       ProcessSchedulerCommand(comm);
       delete comm;
     }
@@ -173,7 +173,7 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
-          cm->toString().c_str());
+          cm->ToNetworkData().c_str());
   }
 }
 
@@ -985,7 +985,7 @@ size_t Scheduler::RegisterPendingWorkers() {
       std::string ip("you-know");
       ID<port_t> port(0);
       HandshakeCommand cm(worker_id, ip, port);
-      dbg(DBG_SCHED, "Sending command: %s.\n", cm.toStringWTags().c_str());
+      dbg(DBG_SCHED, "Sending command: %s.\n", cm.ToString().c_str());
       server_->SendCommand(*iter, &cm);
     }
   }

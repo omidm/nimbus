@@ -93,7 +93,7 @@ int main(int argc, const char *argv[]) {
     JobEntry* job = new JobEntry();
     job->set_read_set(read_set);
     jobs.push_back(job);
-    // std::cout << job->read_set().toString() << std::endl;
+    // std::cout << job->read_set().ToNetworkData() << std::endl;
   }
   log.StopTimer();
   std::cout << "Time elapsed making the read sets: " << log.timer() << std::endl;

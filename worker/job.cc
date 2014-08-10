@@ -480,7 +480,7 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
         + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
     // TODO(quhang): temporary use. Should use dbg instead.
     // printf("[PROFILE] Central Copy %s, %s\n", da[1]->name().c_str(),
-    //        region.toString().c_str());
+    //        region.ToNetworkData().c_str());
   }
 }
 

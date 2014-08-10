@@ -64,8 +64,8 @@ class RemoteCopySendCommand : public SchedulerCommand {
     virtual bool Parse(const std::string& data);
     virtual bool Parse(const SchedulerPBuf& buf);
 
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
     ID<job_id_t> receive_job_id();
     ID<physical_data_id_t> from_physical_data_id();

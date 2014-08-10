@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 //  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
 //  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
 //  SchedulerCommand cm(str);
-//  std::cout << cm.toString() << std::endl;
+//  std::cout << cm.ToNetworkData() << std::endl;
 //
 //  str = "main {0} {1,2} {4,5} ";
 //  str += " {6,7,8} {10,20,30} COMP t=20,g=6";
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 //    SpawnJobCommand sjc(job_name, job_id, read, write,
 //      before, after, job_type, params);
 //    std::cout << "Spawn Job correctly parsed as: " <<
-//      sjc.toStringWTags() << std::endl;
+//      sjc.ToString() << std::endl;
 //  }
 //
 //  while (!cond) {}
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 //  IDSet<param_id_t> idset;
 //  idset.insert(13);
 //  Parameter param(ser_data, idset);
-//  std::string param_str = param.toString();
+//  std::string param_str = param.ToNetworkData();
 //  std::cout << "param to string before: " << param_str << std::endl;
 //
 //  bool parsed = false;
@@ -92,9 +92,9 @@ int main(int argc, char *argv[]) {
 //  IDSet<param_id_t> temp_idset;
 //  parsed = ParseParameter(param_str, temp_ser_data, temp_idset);
 //  Parameter temp_param(temp_ser_data, temp_idset);
-//  std::cout << "parsed ser_data: " << temp_ser_data.toString() << std::endl;
-//  std::cout << "parsed idset: " << temp_idset.toString() << std::endl;
-//  std::cout << "param to string after: " << temp_param.toString() << std::endl;
+//  std::cout << "parsed ser_data: " << temp_ser_data.ToNetworkData() << std::endl;
+//  std::cout << "parsed idset: " << temp_idset.ToNetworkData() << std::endl;
+//  std::cout << "param to string after: " << temp_param.ToNetworkData() << std::endl;
 //  while (!parsed) {}
 
 

@@ -134,7 +134,7 @@ bool IDSet<T>::Parse(const std::string& input) {
 }
 
 template<typename T>
-std::string IDSet<T>::toString() {
+std::string IDSet<T>::ToNetworkData() {
   bool empty = true;
   std::string rval = "{";
   IDSetIter iter =  identifiers_.begin();

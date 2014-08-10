@@ -90,7 +90,7 @@ bool RemoteCopyReceiveCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string RemoteCopyReceiveCommand::toString() {
+std::string RemoteCopyReceiveCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -105,12 +105,12 @@ std::string RemoteCopyReceiveCommand::toString() {
   return result;
 }
 
-std::string RemoteCopyReceiveCommand::toStringWTags() {
+std::string RemoteCopyReceiveCommand::ToString() {
   std::string str;
   str += (name_ + ",");
-  str += ("job-id:" + job_id_.toString() + ",");
-  str += ("to-physical-data-id:" + to_physical_data_id_.toString() + ",");
-  str += ("before:" + before_set_.toString());
+  str += ("job-id:" + job_id_.ToNetworkData() + ",");
+  str += ("to-physical-data-id:" + to_physical_data_id_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData());
   return str;
 }
 

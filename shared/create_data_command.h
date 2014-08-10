@@ -63,8 +63,8 @@ class CreateDataCommand : public SchedulerCommand {
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& data);
     virtual bool Parse(const SchedulerPBuf& buf);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
     std::string data_name();
     ID<logical_data_id_t> logical_data_id();

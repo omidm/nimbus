@@ -94,7 +94,7 @@ bool SpawnCopyJobCommand::Parse(const SchedulerPBuf& buf) {
 }
 
 
-std::string SpawnCopyJobCommand::toString() {
+std::string SpawnCopyJobCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -108,15 +108,15 @@ std::string SpawnCopyJobCommand::toString() {
   return result;
 }
 
-std::string SpawnCopyJobCommand::toStringWTags() {
+std::string SpawnCopyJobCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + job_id_.toString() + " ");
-  str += ("from-logical:" + from_logical_id_.toString() + " ");
-  str += ("to-logical:" + to_logical_id_.toString() + " ");
-  str += ("before:" + before_set_.toString() + " ");
-  str += ("after:" + after_set_.toString() + " ");
-  str += ("parent-id:" + parent_job_id_.toString() + " ");
+  str += ("id:" + job_id_.ToNetworkData() + " ");
+  str += ("from-logical:" + from_logical_id_.ToNetworkData() + " ");
+  str += ("to-logical:" + to_logical_id_.ToNetworkData() + " ");
+  str += ("before:" + before_set_.ToNetworkData() + " ");
+  str += ("after:" + after_set_.ToNetworkData() + " ");
+  str += ("parent-id:" + parent_job_id_.ToNetworkData() + " ");
   return str;
 }
 

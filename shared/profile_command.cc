@@ -98,7 +98,7 @@ bool ProfileCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string ProfileCommand::toString() {
+std::string ProfileCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -113,10 +113,10 @@ std::string ProfileCommand::toString() {
   return result;
 }
 
-std::string ProfileCommand::toStringWTags() {
+std::string ProfileCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("worker_id: " + worker_id_.toString() + " ");
+  str += ("worker_id: " + worker_id_.ToNetworkData() + " ");
   str += ("total_virtual: " + boost::lexical_cast<std::string>(total_virtual_) + " ");
   str += ("used_virtual: " + boost::lexical_cast<std::string>(used_virtual_) + " ");
   str += ("proc_virtual: " + boost::lexical_cast<std::string>(proc_virtual_) + " ");

@@ -61,8 +61,8 @@ class DefinePartitionCommand : public SchedulerCommand {
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& data);
     virtual bool Parse(const SchedulerPBuf& buf);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
 
     ID<partition_id_t> partition_id();
     const GeometricRegion* region();

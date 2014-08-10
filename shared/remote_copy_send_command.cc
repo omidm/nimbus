@@ -96,7 +96,7 @@ bool RemoteCopySendCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string RemoteCopySendCommand::toString() {
+std::string RemoteCopySendCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -111,16 +111,16 @@ std::string RemoteCopySendCommand::toString() {
   return result;
 }
 
-std::string RemoteCopySendCommand::toStringWTags() {
+std::string RemoteCopySendCommand::ToString() {
   std::string str;
   str += (name_ + ",");
-  str += ("job-id:" + job_id_.toString() + ",");
-  str += ("receive-job-id:" + receive_job_id_.toString() + ",");
-  str += ("from-physical-data-id:" + from_physical_data_id_.toString() + ",");
-  str += ("to-worker-id:" + to_worker_id_.toString() + ",");
+  str += ("job-id:" + job_id_.ToNetworkData() + ",");
+  str += ("receive-job-id:" + receive_job_id_.ToNetworkData() + ",");
+  str += ("from-physical-data-id:" + from_physical_data_id_.ToNetworkData() + ",");
+  str += ("to-worker-id:" + to_worker_id_.ToNetworkData() + ",");
   str += ("to-ip:" + to_ip_ + ",");
-  str += ("to-port:" + to_port_.toString() + ",");
-  str += ("before:" + before_set_.toString());
+  str += ("to-port:" + to_port_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData());
   return str;
 }
 
