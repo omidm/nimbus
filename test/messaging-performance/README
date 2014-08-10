@@ -1,0 +1,21 @@
+This appliction tests whether clients and servers are able
+to exchange Nimbus commands properly. It tests the marshalling
+and unmarshalling of messages as well as the ability of the
+SchedulerClient and SchedulerServer classes to process and
+parse them.
+
+To test, compile the two applications my invoking make.
+Then, start a server with ./server. Next, start a client
+with ./client.
+
+In a correct run of the test, the server should exit and
+the client should remain running.
+
+The server will wait for a client to connect. It sends the 
+client 50 commands (you can configure how many in 
+create_commands.h), after which the client sends 50 commands.
+Debugging is primitive now, you just look at the text to see
+if they match. If this becomes an issue we can add actual
+automated correctness checks.
+
+- Phil, 8/7/14

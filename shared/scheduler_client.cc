@@ -82,6 +82,7 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
   pthread_mutex_lock(&send_lock_);
 
   if (existing_bytes_ >= sizeof(SchedulerCommand::length_field_t)) {
+    dbg(DBG_NET, "ReceiveCommand: have %i bytes, reading header from offset %i.\n", (int)existing_bytes_, (int)existing_offset_);  // NOLINT
     // We have at least a header field -- see if we have a whole message
     int header_len = sizeof(SchedulerCommand::length_field_t);
     char* read_ptr = &byte_array_[existing_offset_];
@@ -90,9 +91,11 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
     char* len_ptr = reinterpret_cast<char*>(&len);
     memcpy(len_ptr, read_ptr, header_len);
     len = (uint32_t)ntohl(len);
-
+    dbg(DBG_NET, "  - Message is length %i.\n", (int)len);  // NOLINT
     // We have a whole message
+
     if (existing_bytes_ >= len) {
+      dbg(DBG_NET, "  - Message has len %i, reading message.\n", (int)len);  // NOLINT
       std::string input(read_ptr + header_len, len - header_len);
 
       // We've read out a command worth of bytes; in the case that
@@ -103,6 +106,7 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
       } else {
         existing_offset_ += len;
       }
+      dbg(DBG_NET, "  - New offset: %i\n", (int)existing_offset_);  // NOLINT
       if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           scheduler_command_table_,
                                                           com)) {
@@ -114,7 +118,8 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
       }
       pthread_mutex_unlock(&send_lock_);
       return com;
-    } else {
+    } else if (existing_offset_ > 0) {
+      dbg(DBG_NET, "  - Moving end of %i bytes to beginning of array.\n", (int)existing_bytes_);  // NOLINT
       // We don't have a whole message: move the fragment to the beginning,
       // so that we don't run off the end of the buffer after lots of reads
       // with incomplete commands.
@@ -128,19 +133,23 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
 
   boost::system::error_code ignored_error;
   uint32_t bytes_available = socket_->available(ignored_error);
-  bytes_available = std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_);
-  boost::asio::streambuf::mutable_buffers_type bufs =
-    read_buffer_->prepare(bytes_available);
-  std::size_t bytes_read = socket_->receive(bufs);
-  read_buffer_->commit(bytes_read);
-  std::istream input(read_buffer_);
-  input.read(byte_array_ + existing_offset_, bytes_available);
-  existing_bytes_ += bytes_available;
-  pthread_mutex_unlock(&send_lock_);
-
   if (bytes_available > 0) {
+    dbg(DBG_NET, "ReceiveCommand: %u bytes available,", bytes_available);
+    bytes_available = std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_);
+    dbg(DBG_NET, " preparing to reading %u bytes, ", bytes_available);
+    boost::asio::streambuf::mutable_buffers_type bufs =
+      read_buffer_->prepare(bytes_available);
+    std::size_t bytes_read = socket_->receive(bufs);
+    dbg(DBG_NET, " %i bytes actually read.\n", (int)bytes_read);  // NOLINT
+    read_buffer_->commit(bytes_read);
+    std::istream input(read_buffer_);
+    input.read(byte_array_ + existing_offset_ + existing_bytes_,
+               bytes_available);
+    existing_bytes_ += bytes_available;
+    pthread_mutex_unlock(&send_lock_);
     return ReceiveCommand();
   } else {
+    pthread_mutex_unlock(&send_lock_);
     return NULL;
   }
 }
