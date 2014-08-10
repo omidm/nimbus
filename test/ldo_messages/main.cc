@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   LogicalDataObject* obj = new LogicalDataObject(4399, variable, region);
 
   LdoAddCommand* addStart = new LdoAddCommand(obj);
-  std::string strVal = addStart->toString();
+  std::string strVal = addStart->ToNetworkData();
   std::string params;
 
   SchedulerCommand* command = new SchedulerCommand();
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
   printLdo(addEnd->object());
 
   LdoRemoveCommand* removeStart = new LdoRemoveCommand(obj);
-  strVal = removeStart->toString();
+  strVal = removeStart->ToNetworkData();
 
   table->push_back(new LdoRemoveCommand());
 

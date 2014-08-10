@@ -180,8 +180,8 @@ void WaterApp::Load() {
     RegisterData("sim_data", new NonAdvData<TV, T>(kMainSize));
     /* Declare velocity types. */
     for (int i = 0; i < pieces; i++) {
-        printf("Registering data with region %s\n", kleft_regions[i].toString().c_str());
-        printf("Registering data with region %s\n", kright_regions[i].toString().c_str());
+        printf("Registering data with region %s\n", kleft_regions[i].ToNetworkData().c_str());
+        printf("Registering data with region %s\n", kright_regions[i].ToNetworkData().c_str());
         RegisterData(
                 kleft_adv_types[i],
                 new FaceArray(kleft_regions[i], 0));

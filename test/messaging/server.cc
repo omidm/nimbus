@@ -77,9 +77,9 @@ int main(int argc, char *argv[]) {
 
   cout << "Starting command sends." << std::endl;
   for (int i = 0; i < NUM_COMMANDS; i++) {
-    std::string val = commands[i]->toString();
+    std::string val = commands[i]->ToNetworkData();
     cout << "  " << i << " of " << NUM_COMMANDS << ": broadcasting command of length " << val.length() << ": ";  // NOLINT
-    cout << commands[i]->toStringWTags() << std::endl;
+    cout << commands[i]->ToString() << std::endl;
     server.BroadcastCommand(commands[i]);
   }
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
     while (!commandList.empty()) {
       nimbus::SchedulerCommand* cmd = commandList.front();
       commandList.pop_front();
-      std::cout << "  " << i << " of " << NUM_COMMANDS << ": received " << cmd->toStringWTags() << std::endl; // NOLINT
+      std::cout << "  " << i << " of " << NUM_COMMANDS << ": received " << cmd->ToString() << std::endl; // NOLINT
       ++i;
       delete cmd;
     }

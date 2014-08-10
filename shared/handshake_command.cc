@@ -90,7 +90,7 @@ bool HandshakeCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string HandshakeCommand::toString() {
+std::string HandshakeCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -105,12 +105,12 @@ std::string HandshakeCommand::toString() {
   return result;
 }
 
-std::string HandshakeCommand::toStringWTags() {
+std::string HandshakeCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("worker-id:" + worker_id_.toString() + " ");
+  str += ("worker-id:" + worker_id_.ToNetworkData() + " ");
   str += ("ip:" + ip_ + " ");
-  str += ("port:" + port_.toString());
+  str += ("port:" + port_.ToNetworkData());
   return str;
 }
 

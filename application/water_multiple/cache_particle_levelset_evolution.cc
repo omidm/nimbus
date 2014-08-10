@@ -183,7 +183,7 @@ ReadToCache(
         const std::vector<nimbus::cache::type_id_t> &var_type,
         const std::vector<nimbus::DataArray> &read_sets,
         const nimbus::GeometricRegion &read_reg) {
-    // dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.toString().c_str());
+    // dbg(DBG_WARN, "\n--- Reading %i elements into particles for region %s\n", read_set.size(), reg.ToNetworkData().c_str());
     bool merge = true;
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;
     for (size_t t = 0; t < var_type.size(); ++t) {
@@ -233,7 +233,7 @@ WriteFromCache(
         const std::vector<nimbus::cache::type_id_t> &var_type,
         const std::vector<nimbus::DataArray> &write_sets,
         const nimbus::GeometricRegion &write_reg) const {
-    // dbg(DBG_WARN, "\n--- Writing %i elements into particles for region %s\n", write_set.size(), reg.toString().c_str());
+    // dbg(DBG_WARN, "\n--- Writing %i elements into particles for region %s\n", write_set.size(), reg.ToNetworkData().c_str());
     if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
         return;
     PhysBAMParticleContainer *particle_levelset = &data_->particle_levelset;

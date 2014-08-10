@@ -156,8 +156,8 @@ namespace application {
             APP_NEG_PARTICLES, APP_POS_REM_PARTICLES, APP_NEG_REM_PARTICLES,
             APP_LAST_UNIQUE_PARTICLE_ID , NULL);
 
-        std::cout << "OMID read = " << read.toString() << std::endl; 
-        std::cout << "OMID write = " << write.toString() << std::endl;
+        std::cout << "OMID read = " << read.ToNetworkData() << std::endl; 
+        std::cout << "OMID write = " << write.ToNetworkData() << std::endl;
 
         nimbus::Parameter init_params;
         init_params.set_ser_data(SerializedData(""));

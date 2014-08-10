@@ -66,8 +66,8 @@ class ComputeJobCommand : public SchedulerCommand {
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
     virtual bool Parse(const SchedulerPBuf& buf);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     std::string job_name();
     ID<job_id_t> job_id();
     IDSet<physical_data_id_t> read_set();

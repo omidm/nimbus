@@ -62,7 +62,7 @@ class Parameter {
 
     void set_ser_data(SerializedData ser_data);
 
-    std::string toString();
+    std::string ToNetworkData();
     Parameter& operator= (const Parameter& right);
 
   private:

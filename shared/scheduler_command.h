@@ -114,11 +114,11 @@ class SchedulerCommand {
   virtual bool Parse(const std::string& param_segment);
   virtual bool Parse(const SchedulerPBuf& buf);
 
-  // toString and toStringWTags are very different.
-  // toString returns an encoded series of bytes for an on-wire
-  // format. toStringWTags returns a human-readable ASCII string.
-  virtual std::string toString();
-  virtual std::string toStringWTags();
+  // ToNetworkData and ToString are very different.
+  // ToNetworkData returns an encoded series of bytes for an on-wire
+  // format. ToString returns a human-readable ASCII string.
+  virtual std::string ToNetworkData();
+  virtual std::string ToString();
   virtual std::string name();
   virtual Type type();
 

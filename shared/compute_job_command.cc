@@ -102,7 +102,7 @@ bool ComputeJobCommand::Parse(const SchedulerPBuf& buf) {
 }
 
 
-std::string ComputeJobCommand::toString() {
+std::string ComputeJobCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -117,17 +117,17 @@ std::string ComputeJobCommand::toString() {
   return result;
 }
 
-std::string ComputeJobCommand::toStringWTags() {
+std::string ComputeJobCommand::ToString() {
   std::string str;
   str += (name_ + ",");
   str += ("name:" + job_name_ + ",");
-  str += ("id:" + job_id_.toString() + ",");
-  str += ("read:" + read_set_.toString() + ",");
-  str += ("write:" + write_set_.toString() + ",");
-  str += ("before:" + before_set_.toString() + ",");
-  str += ("after:" + after_set_.toString() + ",");
-  str += ("future-job-id:" + future_job_id_.toString() + ",");
-  str += ("params:" + params_.toString() + ",");
+  str += ("id:" + job_id_.ToNetworkData() + ",");
+  str += ("read:" + read_set_.ToNetworkData() + ",");
+  str += ("write:" + write_set_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData() + ",");
+  str += ("after:" + after_set_.ToNetworkData() + ",");
+  str += ("future-job-id:" + future_job_id_.ToNetworkData() + ",");
+  str += ("params:" + params_.ToNetworkData() + ",");
   if (sterile_) {
     str += "sterile";
   } else {
@@ -194,6 +194,6 @@ bool ComputeJobCommand::WriteToProtobuf(ExecuteComputeJobPBuf* buf) {
   after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
   buf->set_future_job_id(future_job_id().elem());
   buf->set_sterile(sterile());
-  buf->set_params(params().ser_data().toString());
+  buf->set_params(params().ser_data().ToNetworkData());
   return true;
 }

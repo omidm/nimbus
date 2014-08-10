@@ -89,7 +89,7 @@ CreateNew(const nimbus::GeometricRegion &ob_reg) const {
 template<class T, class TS> void CacheScalarArray<T, TS>::
 ReadToCache(const nimbus::DataArray &read_set,
             const nimbus::GeometricRegion &read_reg) {
-    //dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.toString().c_str());
+    //dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.ToNetworkData().c_str());
     nimbus::GeometricRegion ob_reg = object_region();
     nimbus::GeometricRegion final_read_reg =
         nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
@@ -101,7 +101,7 @@ ReadToCache(const nimbus::DataArray &read_set,
 template<class T, class TS> void CacheScalarArray<T, TS>::
 WriteFromCache(const nimbus::DataArray &write_set,
                const nimbus::GeometricRegion &write_reg) const {
-    //dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.toString().c_str());
+    //dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.ToNetworkData().c_str());
     if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
         return;
     nimbus::GeometricRegion ob_reg = object_region();

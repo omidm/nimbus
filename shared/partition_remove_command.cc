@@ -85,7 +85,7 @@ bool PartitionRemoveCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string PartitionRemoveCommand::toString() {
+std::string PartitionRemoveCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -100,10 +100,10 @@ std::string PartitionRemoveCommand::toString() {
   return result;
 }
 
-std::string PartitionRemoveCommand::toStringWTags() {
+std::string PartitionRemoveCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + id_.toString());
+  str += ("id:" + id_.ToNetworkData());
   return str;
 }
 

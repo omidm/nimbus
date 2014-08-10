@@ -99,23 +99,23 @@ int test_compute_job() {
                              (const bool)sterile,
                              (const Parameter)params);
 
-  std::string toStringResult = cmd.toString();
+  std::string ToNetworkDataResult = cmd.ToNetworkData();
   SchedulerPBuf buf;
-  buf.ParseFromString(toStringResult);
+  buf.ParseFromString(ToNetworkDataResult);
   SpawnComputeJobCommand cmd2;
   bool result = cmd2.Parse(buf);
   
   if (result) {
-    std::string tags = cmd2.toStringWTags();
+    std::string tags = cmd2.ToString();
     std::cout << "Successful parse of " << result << std::endl;
-    std::cout << "With tags: " << tags.size() << ", protobuf: " << toStringResult.size() << std::endl;
+    std::cout << "With tags: " << tags.size() << ", protobuf: " << ToNetworkDataResult.size() << std::endl;
     std::cout << "Tags: " << tags << std::endl;
     return 1;
   } else {
     std::cout << "Failed parse of buffer" << std::endl;
-    std::cout << cmd2.toStringWTags() << std::endl;
-    const unsigned char* buf = (const unsigned char*)toStringResult.c_str();
-    for (unsigned int i = 0; i < toStringResult.size(); i++) {
+    std::cout << cmd2.ToString() << std::endl;
+    const unsigned char* buf = (const unsigned char*)ToNetworkDataResult.c_str();
+    for (unsigned int i = 0; i < ToNetworkDataResult.size(); i++) {
       printf("%02x ", buf[i]);
     }
     return 0;
@@ -132,23 +132,23 @@ int test_copy_job() {
                           (const IDSet<job_id_t>)job_set_b,
                           (const ID<job_id_t>)parent);
 
-  std::string toStringResult = cmd.toString();
+  std::string ToNetworkDataResult = cmd.ToNetworkData();
   SchedulerPBuf buf;
-  buf.ParseFromString(toStringResult);
+  buf.ParseFromString(ToNetworkDataResult);
   SpawnCopyJobCommand cmd2;
   bool result = cmd2.Parse(buf);
   
   if (result) {
-    std::string tags = cmd2.toStringWTags();
+    std::string tags = cmd2.ToString();
     std::cout << "Successful parse of " << result << std::endl;
-    std::cout << "With tags: " << tags.size() << ", protobuf: " << toStringResult.size() << std::endl;
+    std::cout << "With tags: " << tags.size() << ", protobuf: " << ToNetworkDataResult.size() << std::endl;
     std::cout << "Tags: " << tags << std::endl;
     return 1;
   } else {
     std::cout << "Failed parse of buffer" << std::endl;
-    std::cout << cmd2.toStringWTags() << std::endl;
-    const unsigned char* buf = (const unsigned char*)toStringResult.c_str();
-    for (unsigned int i = 0; i < toStringResult.size(); i++) {
+    std::cout << cmd2.ToString() << std::endl;
+    const unsigned char* buf = (const unsigned char*)ToNetworkDataResult.c_str();
+    for (unsigned int i = 0; i < ToNetworkDataResult.size(); i++) {
       printf("%02x ", buf[i]);
     }
     return 0;

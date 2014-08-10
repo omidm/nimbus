@@ -350,7 +350,7 @@ bool WorkerDataExchanger::ReceiveCommands(SchedulerCommandList* storage,
   for (uint32_t i = 0; i < maxCommands; i++) {
     SchedulerCommand* command = received_commands_.front();
     received_commands_.pop_front();
-    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->toString().c_str());
+    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->ToNetworkData().c_str());
     storage->push_back(command);
   }
   return true;
@@ -361,7 +361,7 @@ bool WorkerDataExchanger::ReceiveCommands(SchedulerCommandList* storage,
 void WorkerDataExchanger::SendCommand(SchedulerWorker* worker,
                                   SchedulerCommand* command) {
   WorkerDataExchangerConnection* connection = worker->connection();
-  std::string msg = command->toString() + ";";
+  std::string msg = command->ToNetworkData() + ";";
   dbg(DBG_NET, "Sending command %s.\n", msg.c_str());
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?
@@ -396,7 +396,7 @@ int WorkerDataExchanger::EnqueueCommands(char* buffer, size_t size) {
       SchedulerCommand* command;
       if (SchedulerCommand::GenerateSchedulerCommandChild(
           input, worker_command_set_, command)) {
-        dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
+        dbg(DBG_NET, "Adding command %s to queue.\n", command->ToNetworkData().c_str());
         boost::mutex::scoped_lock lock(command_mutex_);
         received_commands_.push_back(command);
       } else {

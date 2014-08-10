@@ -93,7 +93,7 @@ bool CreateDataCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string CreateDataCommand::toString() {
+std::string CreateDataCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -108,14 +108,14 @@ std::string CreateDataCommand::toString() {
   return result;
 }
 
-std::string CreateDataCommand::toStringWTags() {
+std::string CreateDataCommand::ToString() {
   std::string str;
   str += (name_ + ",");
-  str += ("job-id:" + job_id_.toString() + ",");
+  str += ("job-id:" + job_id_.ToNetworkData() + ",");
   str += ("name:" + data_name_ + ",");
-  str += ("logical-data-id:" + logical_data_id_.toString() + ",");
-  str += ("physical-data-id:" + physical_data_id_.toString() + ",");
-  str += ("before:" + before_set_.toString());
+  str += ("logical-data-id:" + logical_data_id_.ToNetworkData() + ",");
+  str += ("physical-data-id:" + physical_data_id_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData());
   return str;
 }
 

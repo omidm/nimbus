@@ -130,7 +130,7 @@ void Worker::WorkerCoreProcessor() {
     int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
     while (comm != NULL) {
       dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
-          comm->toStringWTags().c_str());
+          comm->ToString().c_str());
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Scheduler command arrives(%s).\n",
           comm->name().c_str());
@@ -236,7 +236,7 @@ void Worker::ProcessSchedulerCommand(SchedulerCommand* cm) {
       ProcessTerminateCommand(reinterpret_cast<TerminateCommand*>(cm));
       break;
     default:
-      std::cout << "ERROR: " << cm->toString() <<
+      std::cout << "ERROR: " << cm->ToNetworkData() <<
         " have not been implemented in ProcessSchedulerCommand yet." <<
         std::endl;
   }

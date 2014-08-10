@@ -60,8 +60,8 @@ class HandshakeCommand : public SchedulerCommand {
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& data);
     virtual bool Parse(const SchedulerPBuf& buf);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<worker_id_t> worker_id();
     std::string ip();
     ID<port_t> port();

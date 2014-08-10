@@ -95,7 +95,7 @@ bool DefineDataCommand::Parse(const SchedulerPBuf& buf) {
   }
 }
 
-std::string DefineDataCommand::toString() {
+std::string DefineDataCommand::ToNetworkData() {
   std::string result;
 
   // First we construct a general scheduler buffer, then
@@ -110,14 +110,14 @@ std::string DefineDataCommand::toString() {
   return result;
 }
 
-std::string DefineDataCommand::toStringWTags() {
+std::string DefineDataCommand::ToString() {
   std::string str;
   str += (name_ + " ");
   str += ("name:" + data_name_ + " ");
-  str += ("logical-id:" + logical_data_id_.toString() + " ");
-  str += ("partition-id:" + partition_id_.toString() + " ");
-  str += ("neighbor-partitions:" + neighbor_partitions_.toString() + " ");
-  str += ("parent-id:" + parent_job_id_.toString() + " ");
+  str += ("logical-id:" + logical_data_id_.ToNetworkData() + " ");
+  str += ("partition-id:" + partition_id_.ToNetworkData() + " ");
+  str += ("neighbor-partitions:" + neighbor_partitions_.ToNetworkData() + " ");
+  str += ("parent-id:" + parent_job_id_.ToNetworkData() + " ");
   return str;
 }
 

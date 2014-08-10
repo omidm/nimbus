@@ -94,7 +94,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
   for (uint32_t i = 0; i < maxCommands; i++) {
     SchedulerCommand* command = received_commands_.front();
     received_commands_.pop_front();
-    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->toStringWTags().c_str());
+    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->ToString().c_str());
     storage->push_back(command);
   }
   return true;
@@ -107,14 +107,14 @@ void SchedulerServer::SendCommand(SchedulerWorker* worker,
   boost::mutex::scoped_lock lock(send_command_mutex_);
   SchedulerServerConnection* connection = worker->connection();
 
-  std::string data = command->toString();
+  std::string data = command->ToNetworkData();
   SchedulerCommand::length_field_t len;
   len = htonl((uint32_t)data.length() + sizeof(len));
   std::string msg;
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
 
-  // dbg(DBG_NET, "Sending command %s.\n", command->toStringWTags().c_str());
+  // dbg(DBG_NET, "Sending command %s.\n", command->ToString().c_str());
   boost::system::error_code ignored_error;
   // Why are we IGNORING ERRORS!??!?!?
   boost::asio::write(*(connection->socket()), boost::asio::buffer(msg),
@@ -208,7 +208,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       if (SchedulerCommand::GenerateSchedulerCommandChild(input,
                                                           worker_command_table_,
                                                           command)) {
-        dbg(DBG_NET, "Enqueueing command %s.\n", command->toStringWTags().c_str());
+        dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
         boost::mutex::scoped_lock lock(command_queue_mutex_);
         received_commands_.push_back(command);
       } else {
@@ -235,7 +235,7 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
       SchedulerCommand* command;
       if (SchedulerCommand::GenerateSchedulerCommandChild(
           input, worker_command_table_, command)) {
-        dbg(DBG_NET, "Adding command %s to queue.\n", command->toString().c_str());
+        dbg(DBG_NET, "Adding command %s to queue.\n", command->ToNetworkData().c_str());
         boost::mutex::scoped_lock lock(command_queue_mutex_);
         received_commands_.push_back(command);
       } else {

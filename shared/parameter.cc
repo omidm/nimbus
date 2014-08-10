@@ -71,9 +71,9 @@ void Parameter::set_ser_data(SerializedData ser_data) {
 }
 
 
-std::string Parameter::toString() {
+std::string Parameter::ToNetworkData() {
   std::string str;
-  str += ser_data_.toString();
+  str += ser_data_.ToNetworkData();
   return str;
 }
 

@@ -111,7 +111,7 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
                                                           scheduler_command_table_,
                                                           com)) {
         dbg(DBG_NET, "Scheduler client received command %s\n",
-            com->toStringWTags().c_str());
+            com->ToString().c_str());
       } else {
         com = NULL;
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
@@ -160,14 +160,14 @@ void SchedulerClient::SendCommand(SchedulerCommand* command) {
   // struct timespec start_time;
   // clock_gettime(CLOCK_REALTIME, &start_time);
 
-  std::string data = command->toString();
+  std::string data = command->ToNetworkData();
   SchedulerCommand::length_field_t len;
   len = htonl((uint32_t)(data.length() + sizeof(len)));
   std::string msg;
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
 
-  dbg(DBG_NET, "Client sending command of length %i: %s\n", data.length(), command->toStringWTags().c_str()); // NOLINT
+  dbg(DBG_NET, "Client sending command of length %i: %s\n", data.length(), command->ToString().c_str()); // NOLINT
 
   // struct timespec t;
   // clock_gettime(CLOCK_REALTIME, &t);

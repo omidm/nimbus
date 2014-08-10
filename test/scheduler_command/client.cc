@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   for (int i = 0; i < NUM_COMMANDS;) {
     nimbus::SchedulerCommand* cmd = client.ReceiveCommand();
     if (cmd != NULL) {
-      cout << "Received command " << i << ": " << cmd->toStringWTags() << std::endl;
+      cout << "Received command " << i << ": " << cmd->ToString() << std::endl;
       i++;
     } else {
       // No commands waiting. Does the worker really go into a
@@ -84,9 +84,9 @@ int main(int argc, char *argv[]) {
   }
 
   for (int i = 0; i < NUM_COMMANDS; i++) {
-    std::string val = commands[i]->toString();
+    std::string val = commands[i]->ToNetworkData();
     cout << "Sending command of length " << val.length() << ": ";
-    cout << commands[i]->toStringWTags() << std::endl;
+    cout << commands[i]->ToString() << std::endl;
     client.SendCommand(commands[i]);
   }
 

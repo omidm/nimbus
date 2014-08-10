@@ -52,7 +52,7 @@ void SimpleWorker::WorkerCoreProcessor() {
   while (true) {
     SchedulerCommand* comm = client_->receiveCommand();
     if (comm != NULL) {
-      std::cout << "Received command: " << comm->toString() << std::endl;
+      std::cout << "Received command: " << comm->ToNetworkData() << std::endl;
       ProcessSchedulerCommand(comm);
       delete comm;
     }

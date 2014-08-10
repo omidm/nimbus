@@ -94,7 +94,7 @@ bool SerializedData::Parse(const std::string& input) {
   return true;
 }
 
-std::string SerializedData::toString() {
+std::string SerializedData::ToNetworkData() {
   if (size_ == 0) {
     std::string str = "empty";
     return str;

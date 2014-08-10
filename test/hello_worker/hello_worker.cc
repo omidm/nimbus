@@ -51,11 +51,11 @@ void HelloWorker::workerCoreProcessor() {
   while (true) {
     sleep(1);
     SchedulerCommand cm("helloscheduler id:{0}");
-    std::cout << "Sending command: " << cm.toString() << std::endl;
+    std::cout << "Sending command: " << cm.ToNetworkData() << std::endl;
     client->sendCommand(&cm);
     SchedulerCommand* comm = client->receiveCommand();
-    if (comm->toString() != "no-command") {
-      std::cout << "Received command: " << comm->toString() << std::endl;
+    if (comm->ToNetworkData() != "no-command") {
+      std::cout << "Received command: " << comm->ToNetworkData() << std::endl;
     }
   }
 }
