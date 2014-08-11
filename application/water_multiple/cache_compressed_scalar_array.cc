@@ -94,6 +94,7 @@ ReadToCache(const nimbus::DataArray &read_set,
       nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
   assert(final_read_reg.dx() > 0 && final_read_reg.dy() > 0 && final_read_reg.dz() > 0);
   // Loop through each element in read set, and fetch it to the cache object.
+  assert(index_data_ != NULL);
   Translator::template
       ReadCompressedScalarArray<T>(final_read_reg, shift_, read_set, data_,
                                    data_length_, *index_data_);
@@ -110,6 +111,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
   assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
   // Loop through each element in write_set, look up the region using index, and
   // then write.
+  assert(index_data_ != NULL);
   Translator::template
       WriteCompressedScalarArray<T>(final_write_reg, shift_, write_set, *data_,
                                     data_length_, *index_data_);

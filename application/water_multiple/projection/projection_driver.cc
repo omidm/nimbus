@@ -391,6 +391,7 @@ void ProjectionDriver::LoadFromNimbus(
     Data* data_temp = application::GetTheOnlyData(
         job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
     if (data_temp) {
+      // TODO(quhang): type changed.
       application::DataRawGridArray* data_real =
           dynamic_cast<application::DataRawGridArray*>(data_temp);
       projection_data.cell_index_to_matrix_index.Resize(

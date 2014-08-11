@@ -889,11 +889,11 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
     }
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
       assert(cache_index_c2m);
-      cm->ReleaseAccess(cache_index_c2m);
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
       T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
       T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
           laplace_solver_wrapper.cell_index_to_matrix_index);
+      cm->ReleaseAccess(cache_index_c2m);
       cache_index_c2m = NULL;
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {

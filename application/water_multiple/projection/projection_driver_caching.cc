@@ -60,7 +60,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
   partition.interior_indices.max_corner = interior_n;
 
   // Initializes the vector if it is not transmitted.
-  if (projection_data.temp.Size() == 0 &&
+  if (projection_data.temp.Size() != local_n &&
       data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
     projection_data.temp.Resize(local_n, false);
@@ -418,7 +418,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
         cm->GetAppVar(
             read, array_reg_thin_outer,
             write, array_reg_central,
-            application::kCacheMetaP, array_reg_central,
+            application::kCacheMetaP, array_reg_thin_outer,
             nimbus::cache::EXCLUSIVE,
             set_up_meta_p,
             &meta_p_aux_data);
@@ -653,11 +653,11 @@ void ProjectionDriver::Cache_SaveToNimbus(
   dbg(APP_LOG, "[PROJECTION] SAVE, index_m2c time:%f.\n", log_timer.timer());
 
   if (cache_index_c2m) {
-    cm->ReleaseAccess(cache_index_c2m);
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
     T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
         projection_data.cell_index_to_matrix_index);
+    cm->ReleaseAccess(cache_index_c2m);
     cache_index_c2m = NULL;
   }
 }

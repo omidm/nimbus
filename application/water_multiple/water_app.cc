@@ -134,7 +134,7 @@ namespace application {
         // RegisterData(APP_VECTOR_X, new DataRawVectorNd(APP_VECTOR_X));
         // INDEX_C2M.
         dbg(APP_LOG, "Registering %s\n", APP_INDEX_C2M);
-        RegisterData(APP_INDEX_C2M, new DataRawGridArray(APP_INDEX_C2M));
+        RegisterData(APP_INDEX_C2M, new DataScalarArray<int>(APP_INDEX_C2M));
         // INDEX_M2C.
         dbg(APP_LOG, "Registering %s\n", APP_INDEX_M2C);
         RegisterData(APP_INDEX_M2C, new DataRawArrayM2C(APP_INDEX_M2C));

@@ -240,11 +240,13 @@ void JobProjectionLoopIteration::Execute(
       read.clear();
       LoadLogicalIdsInSet(
           this, &read, kRegY2W0Central[index],
+          APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_C, APP_VECTOR_B, APP_VECTOR_Z, NULL);
       write.clear();
       LoadLogicalIdsInSet(
           this, &write, kRegY2W0Central[index],
+          APP_VECTOR_TEMP,
           APP_VECTOR_Z, APP_PROJECTION_LOCAL_RHO, NULL);
       job_query.StageJob(PROJECTION_STEP_ONE, step_one_job_ids[index],
                          read, write, default_part_params[index],
