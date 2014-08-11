@@ -387,25 +387,21 @@ void ProjectionDriver::LoadFromNimbus(
       log_timer.timer());
   log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
-  if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-    Data* data_temp = application::GetTheOnlyData(
-        job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
-    if (data_temp) {
-      // TODO(quhang): type changed.
-      application::DataRawGridArray* data_real =
-          dynamic_cast<application::DataRawGridArray*>(data_temp);
-      projection_data.cell_index_to_matrix_index.Resize(
-          PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
-                                 TV_INT(init_config.local_region.dx()+1,
-                                        init_config.local_region.dy()+1,
-                                        init_config.local_region.dz()+1)));
-
-      data_real->LoadFromNimbus(&projection_data.cell_index_to_matrix_index);
-      dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-    } else {
-      dbg(APP_LOG, "INDEX_C2M flag is set but data is not local.\n");
-    }
+  // index_c2m.
+  const std::string index_c2m_string =
+      std::string(APP_INDEX_C2M);
+  if (application::GetTranslatorData(job, index_c2m_string, da, &pdv, application::READ_ACCESS)
+      && data_config.GetFlag(DataConfig::INDEX_C2M)) {
+    projection_data.cell_index_to_matrix_index.Resize(
+        PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
+                               TV_INT(init_config.local_region.dx()+1,
+                                      init_config.local_region.dy()+1,
+                                      init_config.local_region.dz()+1)));
+    translator.ReadScalarArrayInt(
+        &array_reg_central, array_shift, &pdv,
+        &projection_data.cell_index_to_matrix_index);
   }
+  application::DestroyTranslatorObjects(&pdv);
   dbg(APP_LOG, "[PROJECTION] LOAD, index_c2m time:%f.\n",
       log_timer.timer());
 

@@ -636,17 +636,16 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
         dbg(APP_LOG, "Finish writing VECTOR_B.\n");
       }
     }
-    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->SaveToNimbus(
-            laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
-      }
+    // index_c2m.
+    const std::string index_c2m_string =
+        std::string(APP_INDEX_C2M);
+    if (application::GetTranslatorData(job, index_c2m_string, da, &pdv, application::WRITE_ACCESS)
+        && data_config.GetFlag(DataConfig::INDEX_C2M)) {
+      translator.WriteScalarArrayInt(
+          &array_reg_central, array_shift, &pdv,
+          &laplace_solver_wrapper.cell_index_to_matrix_index);
     }
+    application::DestroyTranslatorObjects(&pdv);
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_INDEX_M2C), da, application::WRITE_ACCESS);
@@ -1165,28 +1164,18 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
         dbg(APP_LOG, "Finish reading VECTOR_B.\n");
       }
     }
-    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-      }
+    // index_c2m.
+    const std::string index_c2m_string =
+        std::string(APP_INDEX_C2M);
+    if (application::GetTranslatorData(job, index_c2m_string, da, &pdv, application::READ_ACCESS)
+        && data_config.GetFlag(DataConfig::INDEX_C2M)) {
+      translator.ReadScalarArrayInt(
+          &array_reg_central, array_shift, &pdv,
+          &laplace_solver_wrapper.cell_index_to_matrix_index);
     }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
-        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
-      }
-    }
+    application::DestroyTranslatorObjects(&pdv);
+    dbg(APP_LOG, "Finish translating index_c2m.\n");
+
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_PROJECTION_LOCAL_TOLERANCE),
