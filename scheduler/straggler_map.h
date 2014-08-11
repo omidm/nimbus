@@ -71,17 +71,21 @@ namespace nimbus {
     StragglerMap();
     virtual ~StragglerMap();
 
-    void AddRecord(worker_id_t suffered, worker_id_t blamed);
+    void AddRecord(const worker_id_t& suffered,
+                   const worker_id_t& blamed);
 
     void ClearRecords();
 
     bool GetMostImbalanceWorkers(worker_id_t *fast,
                                  worker_id_t *slow);
 
+    size_t LookUp(const worker_id_t& suffered,
+                  const worker_id_t& blamed);
+
   private:
     StragglerMap(const StragglerMap& other) {}
 
-    Table table_;
+    Map map_;
   };
 
 }  // namespace nimbus

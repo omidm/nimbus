@@ -50,17 +50,86 @@ StragglerMap::StragglerMap() {
 }
 
 StragglerMap::~StragglerMap() {
+  MapIter iter = map_.begin();
+  for (; iter != map_.end(); ++iter) {
+    delete iter->second;
+  }
 }
 
-void StragglerMap::AddRecord(worker_id_t suffered, worker_id_t blamed) {
+void StragglerMap::AddRecord(const worker_id_t& suffered,
+                             const worker_id_t& blamed) {
+  MapIter iter = map_.find(suffered);
+  if (iter == map_.end()) {
+    Table *table = new Table();
+    table->operator[](blamed) = 1;
+    map_[suffered] = table;
+  } else {
+    Table *table = iter->second;
+    TableIter it = table->find(blamed);
+    if (it == table->end()) {
+      table->operator[](blamed) = 1;
+    } else {
+      it->second++;
+    }
+  }
 }
 
 void StragglerMap::ClearRecords() {
+  MapIter iter = map_.begin();
+  for (; iter != map_.end(); ++iter) {
+    delete iter->second;
+  }
+  map_.clear();
 }
 
 bool StragglerMap::GetMostImbalanceWorkers(worker_id_t *fast,
                                            worker_id_t *slow) {
-  return false;
+  if (map_.size() == 0) {
+    dbg(DBG_ERROR, "ERROR: StragglerMap: map is emty, cannot search for most imbalanced workers.");
+    return false;
+  }
+
+  int diff;
+  worker_id_t f_id, s_id;
+  MapIter iter = map_.begin();
+  Table *table = iter->second;
+  assert(table->size());
+  TableIter it = table->begin();
+  f_id = iter->first;
+  s_id = it->first;
+  diff = it->second - LookUp(s_id, f_id);
+
+  for (; iter != map_.end(); ++iter) {
+    Table *table = iter->second;
+    assert(table->size());
+    TableIter it = table->begin();
+    int diff_temp = it->second - LookUp(it->first, iter->first);
+    if (diff_temp > diff) {
+      f_id = iter->first;
+      s_id = it->first;
+      diff = diff_temp;
+    }
+  }
+
+  *fast = f_id;
+  *slow = s_id;
+  return true;
+}
+
+size_t StragglerMap::LookUp(const worker_id_t& suffered,
+                            const worker_id_t& blamed) {
+  MapIter iter = map_.find(suffered);
+  if (iter == map_.end()) {
+    return 0;
+  } else {
+    Table *table = iter->second;
+    TableIter it = table->find(blamed);
+    if (it == table->end()) {
+      return 0;
+    } else {
+      return it->second;
+    }
+  }
 }
 
 }  // namespace nimbus
