@@ -20,9 +20,25 @@ Build instructions:
 ------------------------------------------------------------------------------
 Run/ Usage:
 ------------------------------------------------------------------------------
-Run: ./scheduler -wn [numbre-of-initial-workers]
-                 -port [listening-port-for-workers-to-connect-to]
+Run: ./scheduler
+    REQUIRED ARGUMENTS:
+      -wn [numbre-of-initial-workers]
+        number of initial workers that scheduler waits for connection before
+        assigning the main job and starting the application. (default 2)
+
+      -port [listening-port-for-workers-to-connect-to]:
+        scheduler server listening port that workers will try to connect to.
 
 * default number of workers is set in scheduler/scheduler.cc as
 * DEFAULT_MIN_WORKER_TO_JON, currently it is 2.
+
+------------------------------------------------------------------------------
+Note:
+------------------------------------------------------------------------------
+In order to simulate the load imbalance at the worker, after spawning the
+worker you could limit the cpu usage of the worker using cpulimit:
+
+cpulimit -p <PID> -l <cpu-limit-percentage>
+
+one easy way of geting PID is using top/htop. Also see cpulmit man page.
 
