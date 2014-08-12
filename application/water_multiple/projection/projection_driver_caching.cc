@@ -417,7 +417,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
             read, array_reg_thin_outer,
-            write, array_reg_central,
+            write, array_reg_thin_outer,
             application::kCacheMetaP, array_reg_thin_outer,
             nimbus::cache::EXCLUSIVE,
             set_up_meta_p,
