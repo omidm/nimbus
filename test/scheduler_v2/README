@@ -30,23 +30,19 @@ Build instructions:
 ------------------------------------------------------------------------------
 Run/ Usage:
 ------------------------------------------------------------------------------
-Run: ./scheduler [n]
+Run: ./scheduler
+    REQUIRED ARGUMENTS:
+      -wn [numbre-of-initial-workers]
+        number of initial workers that scheduler waits for connection before
+        assigning the main job and starting the application. (default 2)
 
-n: is an optional integer that sets the minimum number of workers that need to
-join the scheduler before the scheduler starts assigning the main job and
-initiates the execution of the application. If not provided or invalid, the
-default value is used.
+      -port [listening-port-for-workers-to-connect-to]:
+        scheduler server listening port that workers will try to connect to.
 
-* default value is set in scheduler/scheduler.cc as DEFAULT_MIN_WORKER_TO_JON,
-* currently it is 2.
+* default number of workers is set in scheduler/scheduler.cc as
+* DEFAULT_MIN_WORKER_TO_JON, currently it is 2.
 
 ------------------------------------------------------------------------------
 Notes:
 ------------------------------------------------------------------------------
-1. Scheduler is capable of registering new workers after the initial registration
-process and so workers can join the system later on.
-
-2. For debugging purposes, to enforce assigning jobs to a single worker, simply
-run the scheduler with n equals to 1 and only launch one worker to join the
-system.
 
