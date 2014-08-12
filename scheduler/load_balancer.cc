@@ -260,14 +260,18 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
     }
   }
 
-  log_.WriteToFile(job_profile->Print());
+  // log_.WriteToFile(job_profile->Print());
 
   worker_id_t blamed_worker_id;
   if (job_profile->FindBlamedWorker(&blamed_worker_id)) {
+    boost::adopt_lock_t recursive;
+    boost::unique_lock<boost::mutex> straggler_map_lock(straggler_map_mutex_, recursive);
+    straggler_map_.AddRecord(job->assigned_worker(), blamed_worker_id);
+
     ++blame_map_[blamed_worker_id];
     blame_counter_++;
-    std::cout << "WORST blame counter: " << blame_counter_ << std::endl;
-    if (blame_counter_ > 5) {
+    std::cout << "LOAD BALANCER: blame counter: " << blame_counter_ << std::endl;
+    if (blame_counter_ > 10) {
       update_ = true;
       update_cond_.notify_all();
     }
@@ -315,6 +319,13 @@ void LoadBalancer::UpdateRegionMap() {
   boost::adopt_lock_t recursive;
   boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
   boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+  boost::unique_lock<boost::mutex> straggler_map_lock(straggler_map_mutex_, recursive);
+
+  worker_id_t fast, slow;
+  straggler_map_.GetMostImbalanceWorkers(&fast, &slow);
+  std::cout << "LOAD BALANCER: most imbalance fast worker: " << fast
+            << "slow worker: " << slow << std::endl;
+  straggler_map_.ClearRecords();
 
   worker_id_t worst_worker = 0;
   size_t count = 0;
@@ -326,7 +337,7 @@ void LoadBalancer::UpdateRegionMap() {
     }
   }
 
-  std::cout << "WORST WORKER: " << worst_worker << std::endl;
+  std::cout << "LOAD BALANCER: worst worker: " << worst_worker << std::endl;
   blame_map_.clear();
   blame_counter_ = 0;
 }

@@ -205,9 +205,10 @@ std::string JobProfile::PrintDependencyLog() {
     }
   }
 
-  if (blame &&
-      (blamed_worker_id != worker_id_) &&
-      (dependency_log_.size() > 1)) {
+//   if (blame &&
+//       (blamed_worker_id != worker_id_) &&
+//       (dependency_log_.size() > 1)) {
+  if (blame && (dependency_log_.size() > 1)) {
     std::ostringstream ss;
     rval += "blamed_worker_id: ";
     ss << blamed_worker_id;

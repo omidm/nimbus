@@ -56,6 +56,7 @@
 #include "scheduler/data_manager.h"
 #include "scheduler/job_manager.h"
 #include "scheduler/region_map.h"
+#include "scheduler/straggler_map.h"
 #include "shared/cluster.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
@@ -109,6 +110,8 @@ namespace nimbus {
     WorkerMap worker_map_;
     boost::mutex worker_map_mutex_;
 
+    StragglerMap straggler_map_;
+    boost::mutex straggler_map_mutex_;
 
     bool update_;
     bool init_phase_;

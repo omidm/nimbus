@@ -44,6 +44,8 @@
 #include <string>
 #include "shared/address_book.h"
 
+#define NIMBUS_SCHEDULER_ID (worker_id_t)(0)
+
 #define NIMBUS_TERMINATE_SUCCESS (exit_status_t)(0)
 #define NIMBUS_TERMINATE_FAILURE (exit_status_t)(-1)
 

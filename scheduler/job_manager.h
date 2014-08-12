@@ -114,7 +114,7 @@ class JobManager {
 
     void NotifyJobDone(job_id_t job_id);
 
-    void NotifyJobAssignment(JobEntry *job);
+    void NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker);
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
 

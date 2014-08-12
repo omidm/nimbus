@@ -150,6 +150,13 @@ IDSet<job_id_t> JobEntry::need_set() const {
   return need;
 }
 
+worker_id_t JobEntry::assigned_worker() const {
+  if (!assigned_) {
+    return NIMBUS_SCHEDULER_ID;
+  }
+  return assigned_worker_;
+}
+
 bool JobEntry::sterile() const {
   return sterile_;
 }
@@ -279,6 +286,9 @@ void JobEntry::add_job_passed_versions(job_id_t job_id) {
   jobs_passed_versions_.insert(job_id);
 }
 
+void JobEntry::set_assigned_worker(worker_id_t assigned_worker) {
+  assigned_worker_ = assigned_worker;
+}
 
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;

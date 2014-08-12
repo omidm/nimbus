@@ -300,7 +300,7 @@ SchedulerServer::set_worker_command_table(SchedulerCommand::PrototypeTable* cmt)
 
 SchedulerWorker* SchedulerServer::AddWorker(SchedulerServerConnection* connection) { //NOLINT
   boost::mutex::scoped_lock lock(worker_mutex_);
-  static worker_id_t workerIdentifier = 0;
+  static worker_id_t workerIdentifier = NIMBUS_SCHEDULER_ID;
   workerIdentifier++;
   SchedulerWorker* worker = new SchedulerWorker(workerIdentifier,
                                                 connection, NULL);

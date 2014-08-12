@@ -116,7 +116,7 @@ void Scheduler::SchedulerCoreProcessor() {
     TerminationProcedure();
 
     log_loop_.StopTimer();
-    if (log_loop_.timer() >= .00001) {
+    if (log_loop_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
           "loop: %2.5lf  assign: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
@@ -902,7 +902,7 @@ bool Scheduler::AssignJob(JobEntry* job) {
     log_job_manager_.StopTimer();
     SendComputeJobToWorker(worker, job);
 
-    job_manager_->NotifyJobAssignment(job);
+    job_manager_->NotifyJobAssignment(job, worker);
 
     static bool got_stamp = false;
     std::string jname = job->job_name();

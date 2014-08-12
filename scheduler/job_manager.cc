@@ -497,8 +497,9 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   return num;
 }
 
-void JobManager::NotifyJobAssignment(JobEntry *job) {
+void JobManager::NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker) {
   job->set_assigned(true);
+  job->set_assigned_worker(worker->worker_id());
   jobs_pending_to_assign_.erase(job->job_id());
 
   if (job->sterile()) {
