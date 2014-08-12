@@ -928,12 +928,15 @@ bool Scheduler::AssignJob(JobEntry* job) {
 
     job_manager_->NotifyJobAssignment(job, worker);
 
-    static bool got_stamp = false;
+    static bool loop_begins = true;
     std::string jname = job->job_name();
-    if (jname == "update_ghost_velocities" && !got_stamp) {
-      log_.StopTimer();
-      std::cout << "STAMP FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      got_stamp = true;
+    if (jname == "update_ghost_velocities" && loop_begins) {
+      std::cout << "STAMP: FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
+      loop_begins = false;
+    }
+    if (jname == "projection_main" && !loop_begins) {
+      std::cout << "STAMP: ALL ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
+      loop_begins = true;
     }
 
     load_balancer_->NotifyJobAssignment(job, worker);
