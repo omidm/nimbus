@@ -205,9 +205,9 @@ std::string JobProfile::PrintDependencyLog() {
     }
   }
 
-//   if (blame &&
-//       (blamed_worker_id != worker_id_) &&
-//       (dependency_log_.size() > 1)) {
+  // if (blame &&
+  //     (blamed_worker_id != worker_id_) &&
+  //     (dependency_log_.size() > 1)) {
   if (blame && (dependency_log_.size() > 1)) {
     std::ostringstream ss;
     rval += "blamed_worker_id: ";
@@ -234,9 +234,10 @@ bool JobProfile::FindBlamedWorker(worker_id_t *worker_id) {
     }
   }
 
-  if (blame &&
-      (blamed_worker_id != worker_id_) &&
-      (dependency_log_.size() > 1)) {
+  // if (blame &&
+  //     (blamed_worker_id != worker_id_) &&
+  //     (dependency_log_.size() > 1)) {
+  if (blame && (dependency_log_.size() > 1)) {
     *worker_id = blamed_worker_id;
     return true;
   }
