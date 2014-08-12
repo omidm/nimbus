@@ -2,14 +2,14 @@
 Author:	omidm@stanford.edy (Omid Mashayekhi)
 ------------------------------------------------------------------------------
 
-This is a worker intended to run the job spawner application.
+This is a worker intended to run the stencil 1d application.
 
 ------------------------------------------------------------------------------
 Build instructions:
 ------------------------------------------------------------------------------
 
 1. Build Nimbus: issue make in the nimbus/ folder.
-2. Build application: issue make in application/job_spawner/.
+2. Build application: issue make in application/stencil_1d/.
 3. Build worker: issue make in this folder.
 
 Alternatively, you could skip 2 and 3, and only issue "make all" in this folder
@@ -20,7 +20,6 @@ Run/ Usage:
 
 1. Start scheduler.
 2. Start the worker in this directory.
-
 
 Run: ./worker
     REQUIRED ARGUMENTS:
@@ -43,34 +42,23 @@ Run: ./worker
       other workers to connect to this worker.
 
     -lc [loop counter]:
-      number of loops in job spawner application (default 30).
+      number of loops in job spawner application (default 150).
 
     -pn [part num]:
-      application partition number (default 100). 
+      application partition number (default 4). 
 
     -cpp [chunk per part]
       number of chunks per application partition, each chunk has three logical
       objects, one core and two side parts. By controlling this argument the size
-      of read/write could be controlled (default 1).
+      of read/write could be controlled (default 4).
 
     -cs [chunk size]
        size of the chunk (in terms of number of integers), increasing this argument would cause more memory
-       usage at worker (default 50).
+       usage at worker (default 5).
 
     -bw [bandwidth]
       length of the side parts in each chunk (in terms of number of integers),
-      controls the amount of data exchange between the workers (default 10).
-
-    -sn [stage num]
-      number of stages in each loop. Each stages ends with a bottleneck jobs
-      which is in the before set of the nest stage (default 10).
-
-    -jlu [job length usec]
-      amount of time in micro seconds that each job will sleep during the
-      execution. In this application that's all that job do, so one can
-      controll the exact length of jobs (default 0).
-
-
+      controls the amount of data exchange between the workers (default 1).
 
 ------------------------------------------------------------------------------
 Notes:
