@@ -67,7 +67,7 @@ Initialize()
     // setup grids and velocities
     example.projection.Initialize_Grid(example.mac_grid);
     example.face_velocities.Resize(example.mac_grid);
-    example.density.Resize(example.mac_grid.Domain_Indices(3));
+    example.density.Resize(example.mac_grid.Domain_Indices(0));
     example.Initialize_Fields();
 
     // setup laplace
@@ -132,8 +132,9 @@ Advance_To_Target_Time(const T target_time)
         if(example.mpi_grid) example.mpi_grid->Synchronize_Dt(dt);
         if(time+dt>=target_time){dt=target_time-time;done=true;}
         else if(time+(T)2*dt>=target_time){dt=(T).5*(target_time-time);}
-        //LOG::Time("Advance Scalar");
-        //Scalar_Advance(dt,time);
+	//std::stringstream ss; ss << "dt = " << dt << std::endl; std::cout << ss.str();
+        LOG::Time("Advance Scalar");
+        Scalar_Advance(dt,time);
         LOG::Time("Convection");
         Convect(dt,time);
         LOG::Time("Projection");

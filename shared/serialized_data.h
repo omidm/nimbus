@@ -68,7 +68,7 @@ class SerializedData {
     void set_data_ptr(boost::shared_array<char> ptr);
 
     bool Parse(const std::string& input);
-    std::string toString();
+    std::string ToNetworkData();
     SerializedData& operator= (const SerializedData& right);
 
   private:

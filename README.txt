@@ -4,8 +4,8 @@ Nimbus Installation Dependencies - Linux
 
 sudo apt-get install libprotoc-dev
 sudo apt-get install protobuf-compiler
-sudo apt-get install libboost1.48-all-dev
 
+Download and install boost >1.55 from www.boost.org.
 
 ----------------------------------------
 To uninstall the old boost:

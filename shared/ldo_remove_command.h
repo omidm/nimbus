@@ -33,9 +33,13 @@
  */
 
  /*
-  * Compute job command used to send compute jobs from scheduler to workers.
+  * This command removes a logical data object from the system,
+  * removing it from the logical data object index (LdoIndex).  A
+  * worker sends it to the controller, which invokes a consistency
+  * protocol to update all of the worker copies of the index.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_LDO_REMOVE_COMMAND_H_
@@ -55,14 +59,18 @@ class LdoRemoveCommand : public SchedulerCommand {
     virtual ~LdoRemoveCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     virtual LogicalDataObject* object();
 
   private:
     GeometricRegion* region_;
     LogicalDataObject* object_;
+
+    bool ReadFromProtobuf(const LdoRemovePBuf& buf);
+    bool WriteToProtobuf(LdoRemovePBuf* buf);
 };
 
 

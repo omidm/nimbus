@@ -33,10 +33,12 @@
  */
 
  /*
-  * Define data command to define a logical region from the application point
-  * of view.
+  * A worker sends a define data command to the controller to create a
+  * new logical data object. A logical data object has two key properties:
+  * the variable it represents and the geometric region it covers.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_DEFINE_DATA_COMMAND_H_
@@ -55,20 +57,19 @@ class DefineDataCommand : public SchedulerCommand {
                       const ID<logical_data_id_t>& logical_data_id,
                       const ID<partition_id_t>& partition_id,
                       const IDSet<partition_id_t>& neighbor_partition,
-                      const ID<job_id_t>& parent_job_id,
-                      const Parameter& params);
+                      const ID<job_id_t>& parent_job_id);
     ~DefineDataCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     std::string data_name();
     ID<logical_data_id_t> logical_data_id();
     ID<partition_id_t> partition_id();
     IDSet<partition_id_t> neighbor_partitions();
     ID<job_id_t> parent_job_id();
-    Parameter params();
 
   private:
     std::string data_name_;
@@ -76,7 +77,9 @@ class DefineDataCommand : public SchedulerCommand {
     ID<partition_id_t> partition_id_;
     IDSet<partition_id_t> neighbor_partitions_;
     ID<job_id_t> parent_job_id_;
-    Parameter params_;
+
+    bool ReadFromProtobuf(const DefineDataPBuf& buf);
+    bool WriteToProtobuf(DefineDataPBuf* buf);
 };
 
 

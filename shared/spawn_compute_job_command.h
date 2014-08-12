@@ -33,10 +33,15 @@
  */
 
  /*
-  * Spawn compute job command used to spawn compute jobs from worker to
-  * scheduler.
+  * A SpawnComputeJobCommand is a message sent from a worker to the
+  * controller to create a new computational job. The controller
+  * processes the command and produces an ExecuteComputeJobCommand
+  * that it sends to the selected worker. A spawn job specifies the
+  * logical objects it operates on; an execute job binds those to
+  * physical objects on a specific worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_SPAWN_COMPUTE_JOB_COMMAND_H_
@@ -45,24 +50,30 @@
 
 #include <string>
 #include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 class SpawnComputeJobCommand : public SchedulerCommand {
   public:
     SpawnComputeJobCommand();
     SpawnComputeJobCommand(const std::string& job_name,
-        const ID<job_id_t>& job_id,
-        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const ID<job_id_t>& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
+                           const ID<job_id_t>& job_id,
+                           const IDSet<logical_data_id_t>& read,
+                           const IDSet<logical_data_id_t>& write,
+                           const IDSet<job_id_t>& before,
+                           const IDSet<job_id_t>& after,
+                           const ID<job_id_t>& parent_job_id,
+                           const ID<job_id_t>& future_job_id,
+                           const bool& sterile,
+                           const Parameter& params);
+
     ~SpawnComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     std::string job_name();
     ID<job_id_t> job_id();
     IDSet<logical_data_id_t> read_set();
@@ -70,6 +81,7 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
+    ID<job_id_t> future_job_id();
     Parameter params();
     bool sterile();
 
@@ -81,8 +93,12 @@ class SpawnComputeJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
-    Parameter params_;
+    ID<job_id_t> future_job_id_;
     bool sterile_;
+    Parameter params_;
+
+    bool ReadFromProtobuf(const SubmitComputeJobPBuf& buf);
+    bool WriteToProtobuf(SubmitComputeJobPBuf* buf);
 };
 
 

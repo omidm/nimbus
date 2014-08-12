@@ -32,22 +32,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Protocol buffer messages for transmitting logical data objects.
-  * Author: Philip Levis <pal@cs.stanford.edu>
-  */
+/*
+ * Nimbus data type for "vector_nd", which represents a PhysBAM vector used
+ * in projection calculation.
+ * Translating functionality is implemented in the class.
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
 
-message LdoMessage {
-  required uint64 data_id = 1;
-  required GeometricRegionMessage region = 2;
-  required string variable = 3;
-}
+#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_DATA_RAW_VECTOR_ND_H_
+#define NIMBUS_APPLICATION_SMOKE_PROJECTION_DATA_RAW_VECTOR_ND_H_
 
-message GeometricRegionMessage {
-  required int64 x  = 1;
-  required int64 y  = 2;
-  required int64 z  = 3;
-  required int64 dx = 4;
-  required int64 dy = 5;
-  required int64 dz = 6;
-}
+#include <PhysBAM_Tools/Vectors/VECTOR_ND.h>
+#include "data/physbam/physbam_data.h"
+#include "shared/nimbus.h"
+
+namespace application {
+
+class DataRawVectorNd : public nimbus::PhysBAMData {
+ private:
+  struct Header {
+    int64_t n;
+  };
+ public:
+  typedef PhysBAM::VECTOR<int, 3> TV_INT;
+  explicit DataRawVectorNd(std::string name);
+  virtual nimbus::Data* Clone();
+
+  // Saves the PhysBAM data structure to this nimbus data instance.
+  bool SaveToNimbus(const PhysBAM::VECTOR_ND<float>& array_input);
+  // Loads the PhysBAM data structure from this nimbus data instance.
+  bool LoadFromNimbus(PhysBAM::VECTOR_ND<float>* array);
+};
+
+}  // namespace application
+
+#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_DATA_RAW_VECTOR_ND_H_

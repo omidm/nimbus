@@ -49,12 +49,12 @@ namespace nimbus {
 Parameter::Parameter() {
 }
 
-Parameter::Parameter(const SerializedData& ser_data, const IDSet<param_id_t>& idset)
-  : ser_data_(ser_data), idset_(idset) {
+Parameter::Parameter(const SerializedData& ser_data)
+  : ser_data_(ser_data) {
 }
 
 Parameter::Parameter(const Parameter& other)
-  : ser_data_(other.ser_data_), idset_(other.idset_) {
+  : ser_data_(other.ser_data_) {
 }
 
 
@@ -66,64 +66,19 @@ SerializedData Parameter::ser_data() {
   return ser_data_;
 }
 
-IDSet<param_id_t> Parameter::idset() {
-  return idset_;
-}
-
 void Parameter::set_ser_data(SerializedData ser_data) {
   ser_data_ = ser_data;
 }
 
 
-void Parameter::set_idset(IDSet<param_id_t> idset) {
-  idset_ = idset;
-}
-
-bool Parameter::Parse(const std::string& input) {
-  int num = 2;
-
-  char_separator<char> separator(":");
-  tokenizer<char_separator<char> > tokens(input, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: Parameter has only " << i <<
-        " fields (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: Parameter has more than "<<
-      num << " fields." << std::endl;
-    return false;
-  }
-
-  iter = tokens.begin();
-  if (!ser_data_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid serialized data." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!idset_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid idset." << std::endl;
-    return false;
-  }
-
-  return true;
-}
-
-std::string Parameter::toString() {
+std::string Parameter::ToNetworkData() {
   std::string str;
-  str += (ser_data_.toString() + ":");
-  str += idset_.toString();
+  str += ser_data_.ToNetworkData();
   return str;
 }
 
 Parameter& Parameter::operator= (const Parameter& right) {
   ser_data_ = right.ser_data_;
-  idset_ = right.idset_;
   return *this;
 }
 

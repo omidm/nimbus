@@ -1,0 +1,16 @@
+##################################################################################
+# Partition strategy name : (domain), (number of partitions), (ghost width) :    #
+# flags (none, central, inner, outer, central_w_gb, scratch)                     #
+##################################################################################
+#
+# NOTE: if ghostwidth equals 0 for any dimension, only central region defitions
+# will be generated. Definitions for inner and outer will not be generated in
+# that case.
+
+RegW3  : (80, 80, 80), (1, 1, 1), (3, 3, 3) : central, outer, inner
+RegW1  : (80, 80, 80), (1, 1, 1), (1, 1, 1) : central, outer, inner
+RegW0  : (80, 80, 80), (1, 1, 1), (0, 0, 0) : central
+
+RegY2W3 : (80, 80, 80), (4, 4, 1), (3, 3, 3) : central, outer, inner, central_w_gb
+RegY2W1 : (80, 80, 80), (4, 4, 1), (1, 1, 1) : central, outer, inner, central_w_gb
+RegY2W0 : (80, 80, 80), (4, 4, 1), (0, 0, 0) : central

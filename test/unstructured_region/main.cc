@@ -75,7 +75,7 @@ int main(int argc, const char *argv[]) {
   RegionMapEntry::RemoveIntersect(&r2, &r1, &result);
   RegionMapEntry::RegionListIter iter = result.begin();
   for (; iter != result.end(); ++iter) {
-    std::cout << iter->toString() << std::endl;
+    std::cout << iter->ToNetworkData() << std::endl;
   }
   std::cout << std::endl;
 

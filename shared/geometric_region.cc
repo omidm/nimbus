@@ -89,23 +89,23 @@ GeometricRegion::GeometricRegion(const GeometricRegion& r) {
 }
 
 GeometricRegion::GeometricRegion(const int_dimension_t* values) {
-  fillInValues(values);
+  FillInValues(values);
 }
 
-GeometricRegion::GeometricRegion(const GeometricRegionMessage* msg) {
-  fillInValues(msg);
+GeometricRegion::GeometricRegion(const GeometricRegionPBuf* msg) {
+  FillInValues(msg);
 }
 
 GeometricRegion::GeometricRegion(std::istream* is) {
-  GeometricRegionMessage msg;
+  GeometricRegionPBuf msg;
   msg.ParseFromIstream(is);
-  fillInValues(&msg);
+  FillInValues(&msg);
 }
 
 GeometricRegion::GeometricRegion(const std::string& data) {
-  GeometricRegionMessage msg;
+  GeometricRegionPBuf msg;
   msg.ParseFromString(data);
-  fillInValues(&msg);
+  FillInValues(&msg);
 }
 
 GeometricRegion::GeometricRegion(const Coord &min, const Coord &delta) {
@@ -142,7 +142,7 @@ void GeometricRegion::Rebuild(int_dimension_t x,
   dz_ = dz;
 }
 
-void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
+void GeometricRegion::FillInMessage(GeometricRegionPBuf* msg) {
   msg->set_x(x_);
   msg->set_y(y_);
   msg->set_z(z_);
@@ -458,11 +458,11 @@ void GeometricRegion::Translate(const Coord &delta) {
 }
 
 /**
- * \fn int_dimension_t GeometricRegion::fillInValues()
+ * \fn int_dimension_t GeometricRegion::FillInValues()
  * \brief Fills in six parameters from array.
  * \return
 */
-void GeometricRegion::fillInValues(const int_dimension_t* values) {
+void GeometricRegion::FillInValues(const int_dimension_t* values) {
   x_  = values[0];
   y_  = values[1];
   z_  = values[2];
@@ -471,7 +471,7 @@ void GeometricRegion::fillInValues(const int_dimension_t* values) {
   dz_ = values[5];
 }
 
-void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
+void GeometricRegion::FillInValues(const GeometricRegionPBuf* msg) {
   x_ = msg->x();
   y_ = msg->y();
   z_ = msg->z();
@@ -480,7 +480,7 @@ void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
   dz_ = msg->dz();
 }
 
-std::string GeometricRegion::toString() const {
+std::string GeometricRegion::ToNetworkData() const {
   std::string str;
   char buf[2048];
   snprintf(buf, sizeof(buf), "bbox:%ld,%ld,%ld,%ld,%ld,%ld",

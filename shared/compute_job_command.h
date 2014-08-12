@@ -33,9 +33,12 @@
  */
 
  /*
-  * Compute job command used to send compute jobs from scheduler to workers.
+  * The controller sends compute jobs to workers to invoke application
+  * code.  They are translations of SpawnComputeJobs from workers to
+  * the controller, binding logical objects to physical instances.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_COMPUTE_JOB_COMMAND_H_
@@ -50,23 +53,28 @@ class ComputeJobCommand : public SchedulerCommand {
   public:
     ComputeJobCommand();
     ComputeJobCommand(const std::string& job_name,
-        const ID<job_id_t>& job_id,
-        const IDSet<physical_data_id_t>& read, const IDSet<physical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const Parameter& params,
-        const bool& sterile);
+                      const ID<job_id_t>& job_id,
+                      const IDSet<physical_data_id_t>& read,
+                      const IDSet<physical_data_id_t>& write,
+                      const IDSet<job_id_t>& before,
+                      const IDSet<job_id_t>& after,
+                      const ID<job_id_t>& future_job_id,
+                      const bool& sterile,
+                      const Parameter& params);
     ~ComputeJobCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     std::string job_name();
     ID<job_id_t> job_id();
     IDSet<physical_data_id_t> read_set();
     IDSet<physical_data_id_t> write_set();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
+    ID<job_id_t> future_job_id();
     Parameter params();
     bool sterile();
 
@@ -77,8 +85,12 @@ class ComputeJobCommand : public SchedulerCommand {
     IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
-    Parameter params_;
+    ID<job_id_t> future_job_id_;
     bool sterile_;
+    Parameter params_;
+
+    bool ReadFromProtobuf(const ExecuteComputeJobPBuf& buf);
+    bool WriteToProtobuf(ExecuteComputeJobPBuf* buf);
 };
 
 

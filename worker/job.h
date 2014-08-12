@@ -81,30 +81,29 @@ class Job {
     virtual void Cancel() {}
 
     bool SpawnComputeJob(const std::string& name,
-        const job_id_t& id,
-        const IDSet<logical_data_id_t>& read,
-        const IDSet<logical_data_id_t>& write,
-        const IDSet<job_id_t>& before,
-        const IDSet<job_id_t>& after,
-        const Parameter& params,
-        const bool& sterile = false);
+                         const job_id_t& id,
+                         const IDSet<logical_data_id_t>& read,
+                         const IDSet<logical_data_id_t>& write,
+                         const IDSet<job_id_t>& before,
+                         const IDSet<job_id_t>& after,
+                         const Parameter& params,
+                         const bool& sterile = false,
+                         const job_id_t& future_job_id = 0);
 
     bool SpawnCopyJob(const job_id_t& id,
-        const logical_data_id_t& from_logical_id,
-        const logical_data_id_t& to_logical_id,
-        const IDSet<job_id_t>& before,
-        const IDSet<job_id_t>& after,
-        const Parameter& params);
+                      const logical_data_id_t& from_logical_id,
+                      const logical_data_id_t& to_logical_id,
+                      const IDSet<job_id_t>& before,
+                      const IDSet<job_id_t>& after,
+                      const Parameter& params);
 
     bool DefineData(const std::string& name,
-        const logical_data_id_t& logical_data_id,
-        const partition_id_t& partition_id,
-        const IDSet<partition_id_t>& neighbor_partition,
-        const Parameter& params);
+                    const logical_data_id_t& logical_data_id,
+                    const partition_id_t& partition_id,
+                    const IDSet<partition_id_t>& neighbor_partition);
 
     bool DefinePartition(const ID<partition_id_t>& partition_id,
-         const GeometricRegion& r,
-         const Parameter& params);
+                         const GeometricRegion& r);
 
     bool TerminateApplication(const exit_status_t& exit_status_id = NIMBUS_TERMINATE_SUCCESS);
 
@@ -133,6 +132,8 @@ class Job {
     IDSet<physical_data_id_t> write_set() const;
     IDSet<job_id_t> before_set() const;
     IDSet<job_id_t> after_set() const;
+    ID<job_id_t> future_job_id() const;
+
     Parameter parameters() const;
     Application* application() const;
     bool  sterile() const;
@@ -151,6 +152,7 @@ class Job {
     void set_parameters(Parameter parameters);
     void set_application(Application* app);
     void set_sterile(bool sterile);
+    void set_future_job_id(ID<job_id_t> future_job_id);
     void set_run_time(double run_time);
     void set_wait_time(double wait_time);
     void set_max_alloc(size_t max_alloc) {
@@ -191,6 +193,7 @@ class Job {
     IDSet<physical_data_id_t> write_set_;
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
+    ID<job_id_t> future_job_id_;
     Parameter parameters_;
     Application* application_;
     bool sterile_;

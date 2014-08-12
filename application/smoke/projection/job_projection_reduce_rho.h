@@ -32,54 +32,26 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Spawn job job command used to spawn jobs from worker to scheduler.
-  *
-  * Author: Omid Mashayekhi <omidm@stanford.edu>
-  */
+/*
+ *
+ * Author: Hang Qu <quhang@stanford.edu>
+ */
 
-#ifndef NIMBUS_SHARED_SPAWN_JOB_COMMAND_H_
-#define NIMBUS_SHARED_SPAWN_JOB_COMMAND_H_
+#ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_
+#define NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_
 
+#include "shared/nimbus.h"
 
-#include <string>
-#include "shared/scheduler_command.h"
+namespace application {
 
-namespace nimbus {
-class SpawnJobCommand : public SchedulerCommand {
-  public:
-    SpawnJobCommand();
-    SpawnJobCommand(const std::string& job_name,
-        const IDSet<job_id_t>& job_id,
-        const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const JobType& job_type, const Parameter& params);
-    ~SpawnJobCommand();
-
-    virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
-    std::string job_name();
-    JobType job_type();
-    IDSet<job_id_t> job_id();
-    IDSet<logical_data_id_t> read_set();
-    IDSet<logical_data_id_t> write_set();
-    IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
-    Parameter params();
-
-  private:
-    std::string job_name_;
-    IDSet<job_id_t> job_id_;
-    IDSet<logical_data_id_t> read_set_;
-    IDSet<logical_data_id_t> write_set_;
-    IDSet<job_id_t> before_set_;
-    IDSet<job_id_t> after_set_;
-    JobType job_type_;
-    Parameter params_;
+class JobProjectionReduceRho : public nimbus::Job {
+ public:
+  explicit JobProjectionReduceRho(nimbus::Application *app);
+  virtual void Execute(nimbus::Parameter params,
+                       const nimbus::DataArray& da);
+  virtual nimbus::Job* Clone();
 };
 
-}  // namespace nimbus
+}  // namespace application
 
-#endif  // NIMBUS_SHARED_SPAWN_JOB_COMMAND_H_
+#endif  // NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_REDUCE_RHO_H_

@@ -33,7 +33,8 @@
  */
 
  /*
-  * Testing the scheduler command parser.
+  * Testing command parsing and communication between a scheduler and
+  * a worker.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
@@ -41,49 +42,56 @@
 #include <pthread.h>
 #include <iostream>  // NOLINT
 
-#include "lib/scheduler_command.h"
+#include "shared/scheduler_client.h"
+#include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
+
+#include "./create_commands.h"
 
 using ::std::cout;
 using ::std::endl;
+using namespace nimbus; // NOLINT
 
-const char* commands[] = {
-      "no-op",
-      "halt 53",
-      "run job3 job0,job1,job2 job5,job6 data4,data5 data5 blah",
-      "copy   data4          host34   ",
-      "copy       data5 192.244.11.2        ",
-      "",
-      "newline\n\ntest",
-      NULL
-};
+#define PORT 11714
+
+nimbus::SchedulerClient client("127.0.0.1", 11714);
+
+void* run(void* p) {
+  client.Run();
+  return NULL;
+}
 
 int main(int argc, char *argv[]) {
-  std::cout << "Testing scheduler command class." << std::endl;
-  int i = 0;
-  while (commands[i] != NULL) {
-    cout << "Testing command \'" << commands[i] << "\'" << std::endl;
-    std::string input(commands[i]);
-    nimbus::SchedulerCommand* c = new nimbus::SchedulerCommand(commands[i]);
-    std::string output = c->toString();
+  dbg_init();
+  load_command_prototypes();
+  create_commands();
+  client.set_scheduler_command_table(&prototypes);
 
-    if (input == output) {
-      cout << "RESULT: input and output match" << std::endl;
+  cout << "Starting client." << std::endl;
+  client.Run();
+
+  // pthread_create(&thread, NULL, run, NULL);
+
+  for (int i = 0; i < NUM_COMMANDS;) {
+    nimbus::SchedulerCommand* cmd = client.ReceiveCommand();
+    if (cmd != NULL) {
+      cout << "Received command " << i << ": " << cmd->ToString() << std::endl;
+      i++;
     } else {
-      cout << "RESULT: input and output do not match" << std::endl;
-      cout << "  input:  " << input << std::endl;
-      cout << "  output: " << output << std::endl;
-      cout << "  translated to string \'" << c->toString() << '\'' << std::endl;
-      cout << "  translated to tokens ";
-      cout << c->name() << ":";
-      nimbus::CommandParameterList* params = c->parameters();
-      nimbus::CommandParameterList::const_iterator iter = params->begin();
-      for (; iter != params->end(); ++iter) {
-        nimbus::CommandParameter param = iter->second;
-        cout << param.toString() << ";";
-      }
-      cout << std::endl;
+      // No commands waiting. Does the worker really go into a
+      // spin loop?
     }
-    i++;
-    delete c;
+  }
+
+  for (int i = 0; i < NUM_COMMANDS; i++) {
+    std::string val = commands[i]->ToNetworkData();
+    cout << "Sending command of length " << val.length() << ": ";
+    cout << commands[i]->ToString() << std::endl;
+    client.SendCommand(commands[i]);
+  }
+
+  while (1) {
+    sleep(1);
   }
 }
+

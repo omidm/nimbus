@@ -45,24 +45,24 @@ using boost::tokenizer;
 using boost::char_separator;
 
 SpawnCopyJobCommand::SpawnCopyJobCommand() {
-  name_ = SPAWN_COPY_JOB_NAME;
-  type_ = SPAWN_COPY_JOB;
+  name_ = SPAWN_COPY_NAME;
+  type_ = SPAWN_COPY;
 }
 
 SpawnCopyJobCommand::SpawnCopyJobCommand(const ID<job_id_t>& job_id,
-    const ID<logical_data_id_t>& from_logical_id,
-    const ID<logical_data_id_t>& to_logical_id,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const ID<job_id_t>& parent_job_id,
-    const Parameter& params)
-: job_id_(job_id),
-  from_logical_id_(from_logical_id),
-  to_logical_id_(to_logical_id),
-  before_set_(before), after_set_(after),
-  parent_job_id_(parent_job_id),
-  params_(params) {
-  name_ = SPAWN_COPY_JOB_NAME;
-  type_ = SPAWN_COPY_JOB;
+                                         const ID<logical_data_id_t>& from_logical_id,
+                                         const ID<logical_data_id_t>& to_logical_id,
+                                         const IDSet<job_id_t>& before,
+                                         const IDSet<job_id_t>& after,
+                                         const ID<job_id_t>& parent_job_id)
+  : job_id_(job_id),
+    from_logical_id_(from_logical_id),
+    to_logical_id_(to_logical_id),
+    before_set_(before),
+    after_set_(after),
+    parent_job_id_(parent_job_id) {
+  name_ = SPAWN_COPY_NAME;
+  type_ = SPAWN_COPY;
 }
 
 SpawnCopyJobCommand::~SpawnCopyJobCommand() {
@@ -72,96 +72,51 @@ SchedulerCommand* SpawnCopyJobCommand::Clone() {
   return new SpawnCopyJobCommand();
 }
 
-bool SpawnCopyJobCommand::Parse(const std::string& params) {
-  int num = 7;
+bool SpawnCopyJobCommand::Parse(const std::string& data) {
+  SubmitCopyJobPBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: SpawnCopyJobCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: SpawnCopyJobCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    // Throw an error message
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
+}
 
-  iter = tokens.begin();
-  if (!job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id." << std::endl;
+bool SpawnCopyJobCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_submit_copy()) {
     return false;
+  } else {
+    return ReadFromProtobuf(buf.submit_copy());
   }
-
-  iter++;
-  if (!from_logical_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid from id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!to_logical_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid to id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!before_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid before set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!parent_job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
 
-std::string SpawnCopyJobCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (from_logical_id_.toString() + " ");
-  str += (to_logical_id_.toString() + " ");
-  str += (before_set_.toString() + " ");
-  str += (after_set_.toString() + " ");
-  str += (parent_job_id_.toString() + " ");
-  str += params_.toString();
+std::string SpawnCopyJobCommand::ToNetworkData() {
+  std::string result;
 
-  return str;
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_SPAWN_COPY);
+  SubmitCopyJobPBuf* cmd = buf.mutable_submit_copy();
+  WriteToProtobuf(cmd);
+  buf.SerializeToString(&result);
+
+  return result;
 }
 
-std::string SpawnCopyJobCommand::toStringWTags() {
+std::string SpawnCopyJobCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + job_id_.toString() + " ");
-  str += ("from-logical:" + from_logical_id_.toString() + " ");
-  str += ("to-logical:" + to_logical_id_.toString() + " ");
-  str += ("before:" + before_set_.toString() + " ");
-  str += ("after:" + after_set_.toString() + " ");
-  str += ("parent-id:" + parent_job_id_.toString() + " ");
-  str += ("params:" + params_.toString());
+  str += ("id:" + job_id_.ToNetworkData() + " ");
+  str += ("from-logical:" + from_logical_id_.ToNetworkData() + " ");
+  str += ("to-logical:" + to_logical_id_.ToNetworkData() + " ");
+  str += ("before:" + before_set_.ToNetworkData() + " ");
+  str += ("after:" + after_set_.ToNetworkData() + " ");
+  str += ("parent-id:" + parent_job_id_.ToNetworkData() + " ");
   return str;
 }
 
@@ -188,9 +143,24 @@ IDSet<job_id_t> SpawnCopyJobCommand::before_set() {
   return before_set_;
 }
 
-Parameter SpawnCopyJobCommand::params() {
-  return params_;
+bool SpawnCopyJobCommand::ReadFromProtobuf(const SubmitCopyJobPBuf& cmd) {
+  job_id_.set_elem(cmd.job_id());
+  from_logical_id_.set_elem(cmd.from_id());
+  to_logical_id_.set_elem(cmd.to_id());
+  before_set_.ConvertFromRepeatedField(cmd.before_set().ids());
+  after_set_.ConvertFromRepeatedField(cmd.after_set().ids());
+  parent_job_id_.set_elem(cmd.parent_id());
+  return true;
 }
 
+bool SpawnCopyJobCommand::WriteToProtobuf(SubmitCopyJobPBuf* cmd) {
+  cmd->set_job_id(job_id().elem());
+  cmd->set_from_id(from_logical_id().elem());
+  cmd->set_to_id(to_logical_id().elem());
+  before_set().ConvertToRepeatedField(cmd->mutable_before_set()->mutable_ids());
+  after_set().ConvertToRepeatedField(cmd->mutable_after_set()->mutable_ids());
+  cmd->set_parent_id(parent_job_id().elem());
+  return true;
+}
 
 

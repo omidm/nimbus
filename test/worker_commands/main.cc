@@ -67,15 +67,15 @@ class TestApplication : public Application {
 
     for (int i = 0; commands[i] != NULL; i++) {
       SchedulerCommand cm(commands[i]);
-      cout << "Sending command:  " << cm.toString() << std::endl;
+      cout << "Sending command:  " << cm.ToNetworkData() << std::endl;
       scheduler->sendCommand(&cm);
     }
 
     while (1) {
       sleep(1);
       SchedulerCommand* comm = scheduler->receiveCommand();
-      if (comm->toString() != "no-command")
-        cout << "Received command: " << comm->toString() << std::endl;
+      if (comm->ToNetworkData() != "no-command")
+        cout << "Received command: " << comm->ToNetworkData() << std::endl;
     }
   }
 };

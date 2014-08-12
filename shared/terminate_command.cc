@@ -64,46 +64,47 @@ SchedulerCommand* TerminateCommand::Clone() {
   return new TerminateCommand();
 }
 
-bool TerminateCommand::Parse(const std::string& params) {
-  int num = 1;
+bool TerminateCommand::Parse(const std::string& data) {
+  TerminatePBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: TerminateCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: TerminateCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse TerminateCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  iter = tokens.begin();
-  if (!exit_status_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid exit status." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
-std::string TerminateCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += exit_status_.toString();
-  return str;
+bool TerminateCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_terminate()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse TerminateCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.terminate());
+  }
 }
 
-std::string TerminateCommand::toStringWTags() {
+std::string TerminateCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_TERMINATE);
+  TerminatePBuf* cmd = buf.mutable_terminate();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string TerminateCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("exit-status:" + exit_status_.toString());
+  str += ("exit-status:" + exit_status_.ToNetworkData());
   return str;
 }
 
@@ -112,3 +113,12 @@ ID<exit_status_t> TerminateCommand::exit_status() {
   return exit_status_;
 }
 
+bool TerminateCommand::ReadFromProtobuf(const TerminatePBuf& buf) {
+  exit_status_.set_elem(buf.exit_status());
+  return true;
+}
+
+bool TerminateCommand::WriteToProtobuf(TerminatePBuf* buf) {
+  buf->set_exit_status(exit_status().elem());
+  return true;
+}

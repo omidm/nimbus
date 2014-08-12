@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 //  std::string str = "createjob name:main id:{0} read:{1,2} write:{1,2} ";
 //  str += " before:{} after:{1,2,3} type:operation param:t=20,g=6";
 //  SchedulerCommand cm(str);
-//  std::cout << cm.toString() << std::endl;
+//  std::cout << cm.ToNetworkData() << std::endl;
 //
 //  str = "main {0} {1,2} {4,5} ";
 //  str += " {6,7,8} {10,20,30} COMP t=20,g=6";
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 //    SpawnJobCommand sjc(job_name, job_id, read, write,
 //      before, after, job_type, params);
 //    std::cout << "Spawn Job correctly parsed as: " <<
-//      sjc.toStringWTags() << std::endl;
+//      sjc.ToString() << std::endl;
 //  }
 //
 //  while (!cond) {}

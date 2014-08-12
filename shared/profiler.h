@@ -56,8 +56,8 @@ class Profiler {
  public:
   void Run(SchedulerClient* client_, worker_id_t worker_id);
   void Profile();
-  std::string toString();
-  std::string toStringWTags();
+  std::string ToNetworkData();
+  std::string ToString();
 
  private:
 #ifndef __MACH__

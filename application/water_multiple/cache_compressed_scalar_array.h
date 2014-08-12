@@ -36,65 +36,84 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_COMPRESSED_SCALAR_ARRAY_H_
-#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_COMPRESSED_SCALAR_ARRAY_H_
-
 #include <string>
 
+#include "application/water_multiple/cache_scalar_array.h"
 #include "application/water_multiple/physbam_include.h"
+#include "application/water_multiple/physbam_tools.h"
 #include "data/cache/cache_var.h"
-#include "data/physbam/translator_physbam.h"
+#include "shared/dbg.h"
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
+/*
 namespace application {
 
-/*
-template<class T>
-class CacheCompressedScalarArray : public nimbus::CacheVar {
-  typedef typename PhysBAM::VECTOR<TS, 3> TV;
-  typedef typename PhysBAM::VECTOR<int, 3> TV_INT;
-  typedef typename PhysBAM::RANGE<TV> Range;
-  typedef typename PhysBAM::GRID<TV> Grid;
-  typedef typename nimbus::TranslatorPhysBAM<TS> Translator;
+template<class T, class TS> CacheCompressedScalarArray<T, TS>::
+CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
+                 const int ghost_width,
+                 bool make_proto)
+    : global_region_(global_reg),
+      ghost_width_(ghost_width) {
+    if (make_proto)
+        MakePrototype();
+}
 
- public:
-  explicit CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
-                                      const int ghost_width,
-                                      bool make_proto = false);
+template<class T, class TS> CacheCompressedScalarArray<T, TS>::
+CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
+                 const nimbus::GeometricRegion &ob_reg,
+                 const int ghost_width)
+    : CacheVar(ob_reg),
+      global_region_(global_reg),
+      local_region_(ob_reg.NewEnlarged(-ghost_width)),
+      ghost_width_(ghost_width) {
+      shift_.x = local_region_.x() - global_reg.x();
+      shift_.y = local_region_.y() - global_reg.y();
+      shift_.z = local_region_.z() - global_reg.z();
+      if (local_region_.dx() > 0 && local_region_.dy() > 0 &&
+          local_region_.dz() > 0) {
+        Range domain = RangeFromRegions<TV>(global_reg, local_region_);
+        TV_INT count = CountFromRegion(local_region_);
+        mac_grid_.Initialize(count, domain, true);
+        data_ = new PhysBAMCompressedScalarArray();
+        data_->Resize(mac_grid_.Domain_Indices(ghost_width));
+      }
+}
 
-  PhysBAMScalarArray *data() {
-    return data_;
-  }
-  void set_data(PhysBAMScalarArray *d) {
-    data_ = d;
-  }
+template<class T, class TS> nimbus::CacheVar *CacheCompressedScalarArray<T, TS>::
+CreateNew(const nimbus::GeometricRegion &ob_reg) const {
+    return new CacheCompressedScalarArray(global_region_,
+                                ob_reg,
+                                ghost_width_);
+}
 
- protected:
-  explicit CacheCompressedScalarArray(
-      const nimbus::GeometricRegion &global_reg,
-      const nimbus::GeometricRegion &ob_reg,
-      const int ghost_width);
+template<class T, class TS> void CacheCompressedScalarArray<T, TS>::
+ReadToCache(const nimbus::DataArray &read_set,
+            const nimbus::GeometricRegion &read_reg) {
+    //dbg(DBG_WARN, "\n--- Reading %i elements into scalar array for region %s\n", read_set.size(), reg.ToNetworkData().c_str());
+    nimbus::GeometricRegion ob_reg = object_region();
+    nimbus::GeometricRegion final_read_reg =
+        nimbus::GeometricRegion::GetIntersection(read_reg, ob_reg);
+    assert(final_read_reg.dx() > 0 && final_read_reg.dy() > 0 && final_read_reg.dz() > 0);
+    Translator::template
+        ReadCompressedScalarArray<T>(final_read_reg, shift_, read_set, data_);
+}
 
-  virtual nimbus::CacheVar *CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+template<class T, class TS> void CacheCompressedScalarArray<T, TS>::
+WriteFromCache(const nimbus::DataArray &write_set,
+               const nimbus::GeometricRegion &write_reg) const {
+    //dbg(DBG_WARN, "\n Writing %i elements into scalar array for region %s\n", write_set.size(), reg.ToNetworkData().c_str());
+    if (write_reg.dx() <= 0 || write_reg.dy() <= 0 || write_reg.dz() <= 0)
+        return;
+    nimbus::GeometricRegion ob_reg = object_region();
+    nimbus::GeometricRegion final_write_reg =
+        nimbus::GeometricRegion::GetIntersection(write_reg, ob_reg);
+    assert(final_write_reg.dx() > 0 && final_write_reg.dy() > 0 && final_write_reg.dz() > 0);
+    Translator::template
+        WriteCompressedScalarArray<T>(write_reg, shift_, write_set, data_);
+}
 
-  // The data should be DataCompressedScalarArray (corresponding nimbus type).
-  virtual void ReadToCache(const nimbus::DataArray &read_set,
-                           const nimbus::GeometricRegion &read_reg);
-  virtual void WriteFromCache(const nimbus::DataArray &write_set,
-                              const nimbus::GeometricRegion &write_reg) const;
+template class CacheCompressedScalarArray<float>;
 
- private:
-  nimbus::GeometricRegion global_region_;
-  nimbus::GeometricRegion local_region_;
-  int ghost_width_;
-  nimbus::Coord shift_;
-  PhysBAMScalarArray *data_;
-  Grid mac_grid_;
-  // should maintain a pointer to INDEX_M2C.
-}; // class CacheCompressedScalarArray
-
-*/
 } // namespace application
-
-#endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_COMPRESSED_SCALAR_ARRAY_H_
+*/

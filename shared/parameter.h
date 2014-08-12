@@ -54,18 +54,15 @@ namespace nimbus {
 class Parameter {
   public:
     Parameter();
-    Parameter(const SerializedData& ser_data, const IDSet<param_id_t>& idset);
+    explicit Parameter(const SerializedData& ser_data);
     Parameter(const Parameter& other);
     virtual ~Parameter();
 
     SerializedData ser_data();
-    IDSet<param_id_t> idset();
 
     void set_ser_data(SerializedData ser_data);
-    void set_idset(IDSet<param_id_t> idset);
 
-    bool Parse(const std::string& input);
-    std::string toString();
+    std::string ToNetworkData();
     Parameter& operator= (const Parameter& right);
 
   private:

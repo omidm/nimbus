@@ -1,0 +1,5 @@
+package parameter_msg;
+
+message ParameterMsg {
+  repeated uint64 elem = 1;
+}

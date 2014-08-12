@@ -33,9 +33,14 @@
  */
 
  /*
-  * Spawn copy job command used to send copy jobs to the scheduler from worker.
+  * Workers send spawn copy jobs to the controller to tell it to copy
+  * one logical object to another logical object. These is needed, for
+  * example, when there are explicit ghost regions, such that one job
+  * is reading state from a prior iteration while another job writes
+  * it on this iteration.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_SPAWN_COPY_JOB_COMMAND_H_
@@ -44,30 +49,31 @@
 
 #include <string>
 #include "shared/scheduler_command.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 class SpawnCopyJobCommand : public SchedulerCommand {
   public:
     SpawnCopyJobCommand();
     SpawnCopyJobCommand(const ID<job_id_t>& job_id,
-        const ID<logical_data_id_t>& from_logical_id,
-        const ID<logical_data_id_t>& to_logical_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-        const ID<job_id_t>& parent_job_id,
-        const Parameter& params);
+                        const ID<logical_data_id_t>& from_logical_id,
+                        const ID<logical_data_id_t>& to_logical_id,
+                        const IDSet<job_id_t>& before,
+                        const IDSet<job_id_t>& after,
+                        const ID<job_id_t>& parent_job_id);
     ~SpawnCopyJobCommand();
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
     ID<logical_data_id_t> from_logical_id();
     ID<logical_data_id_t> to_logical_id();
     IDSet<job_id_t> before_set();
     IDSet<job_id_t> after_set();
     ID<job_id_t> parent_job_id();
-    Parameter params();
 
   private:
     ID<job_id_t> job_id_;
@@ -76,7 +82,9 @@ class SpawnCopyJobCommand : public SchedulerCommand {
     IDSet<job_id_t> before_set_;
     IDSet<job_id_t> after_set_;
     ID<job_id_t> parent_job_id_;
-    Parameter params_;
+
+    bool ReadFromProtobuf(const SubmitCopyJobPBuf& buf);
+    bool WriteToProtobuf(SubmitCopyJobPBuf* buf);
 };
 
 }  // namespace nimbus

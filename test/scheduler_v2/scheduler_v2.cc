@@ -150,7 +150,7 @@ void SchedulerV2::UpdateWorkerDomains() {
   }
 
   for (size_t i = 0; i < worker_num; ++i) {
-    std::cout << "Domain " << i << " : " << worker_domains_[i].toString() << std::endl;
+    std::cout << "Domain " << i << " : " << worker_domains_[i].ToNetworkData() << std::endl;
   }
 */
 }

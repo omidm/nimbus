@@ -75,24 +75,33 @@ Job* Job::Clone() {
 }
 
 bool Job::SpawnComputeJob(const std::string& name,
-    const job_id_t& id,
-    const IDSet<logical_data_id_t>& read,
-    const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const Parameter& params,
-    const bool& sterile) {
+                          const job_id_t& id,
+                          const IDSet<logical_data_id_t>& read,
+                          const IDSet<logical_data_id_t>& write,
+                          const IDSet<job_id_t>& before,
+                          const IDSet<job_id_t>& after,
+                          const Parameter& params,
+                          const bool& sterile,
+                          const job_id_t& future_job_id) {
   if (sterile_) {
     dbg(DBG_ERROR, "ERROR: the job is sterile, it cannot spawn jobs.\n");
     return false;
   }
   if (app_is_set_) {
-    application_->SpawnComputeJob(name, id, read, write, before, after,
-        id_.elem(), params, sterile);
+    // 0 for no future job
+    application_->SpawnComputeJob(name,
+                                  id,
+                                  read,
+                                  write,
+                                  before,
+                                  after,
+                                  id_.elem(),
+                                  future_job_id,
+                                  sterile,
+                                  params);
     return true;
   } else {
-    std::cout << "ERROR: SpawnComputeJob, application has not been set." <<
-      std::endl;
+    dbg(DBG_ERROR, "ERROR: SpawnComputeJob, application has not been set.\n");
     return false;
   }
 }
@@ -109,7 +118,7 @@ bool Job::SpawnCopyJob(const job_id_t& id,
   }
   if (app_is_set_) {
     application_->SpawnCopyJob(id, from_logical_id, to_logical_id, before,
-        after, id_.elem(), params);
+                               after, id_.elem());
     return true;
   } else {
     std::cout << "ERROR: SpawnCopyJob, application has not been set." <<
@@ -119,14 +128,13 @@ bool Job::SpawnCopyJob(const job_id_t& id,
 }
 
 bool Job::DefineData(const std::string& name,
-    const logical_data_id_t& logical_data_id,
-    const partition_id_t& partition_id,
-    const IDSet<partition_id_t>& neighbor_partition,
-    const Parameter& params) {
+                     const logical_data_id_t& logical_data_id,
+                     const partition_id_t& partition_id,
+                     const IDSet<partition_id_t>& neighbor_partition) {
   if (app_is_set_) {
     query_cache_.clear();
     application_->DefineData(name, logical_data_id, partition_id,
-        neighbor_partition, id_.elem(), params);
+                             neighbor_partition, id_.elem());
     return true;
   } else {
     std::cout << "ERROR: DefineData, application has not been set." <<
@@ -136,10 +144,9 @@ bool Job::DefineData(const std::string& name,
 }
 
 bool Job::DefinePartition(const ID<partition_id_t>& partition_id,
-    const GeometricRegion& r,
-    const Parameter& params) {
+                          const GeometricRegion& r) {
     if (app_is_set_) {
-        application_->DefinePartition(partition_id, r, params);
+        application_->DefinePartition(partition_id, r);
         return true;
     } else {
         std::cout << "ERROR: DefinePartition, application has not been set." <<
@@ -285,6 +292,10 @@ bool Job::sterile() const {
   return sterile_;
 }
 
+ID<job_id_t> Job::future_job_id() const {
+  return future_job_id_;
+}
+
 double Job::run_time() const {
   return run_time_;
 }
@@ -328,6 +339,10 @@ void Job::set_application(Application* app) {
 
 void Job::set_sterile(bool sterile) {
   sterile_ = sterile;
+}
+
+void Job::set_future_job_id(ID<job_id_t> future_job_id) {
+  future_job_id_ = future_job_id;
 }
 
 void Job::set_run_time(double run_time) {
@@ -465,7 +480,7 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
         + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
     // TODO(quhang): temporary use. Should use dbg instead.
     // printf("[PROFILE] Central Copy %s, %s\n", da[1]->name().c_str(),
-    //        region.toString().c_str());
+    //        region.ToNetworkData().c_str());
   }
 }
 

@@ -33,10 +33,11 @@
  */
 
  /*
-  * partition partition command to remove partition definition from the worker from
-  * scheduler.
+  * Command sent from controller to worker to remove a partition
+  * definition. Currently not used by controller.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_PARTITION_REMOVE_COMMAND_H_
@@ -50,21 +51,22 @@ namespace nimbus {
 class PartitionRemoveCommand : public SchedulerCommand {
   public:
     PartitionRemoveCommand();
-    PartitionRemoveCommand(const ID<partition_id_t>& partition_id,
-        const GeometricRegion& r);
+    explicit PartitionRemoveCommand(const ID<partition_id_t>& partition_id);
     ~PartitionRemoveCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
 
     ID<partition_id_t> id();
-    const GeometricRegion* region();
 
   private:
     ID<partition_id_t> id_;
-    GeometricRegion region_;
+
+    bool ReadFromProtobuf(const PartitionRemovePBuf& buf);
+    bool WriteToProtobuf(PartitionRemovePBuf* buf);
 };
 
 }  // namespace nimbus

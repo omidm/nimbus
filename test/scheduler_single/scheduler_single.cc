@@ -67,7 +67,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
       std::string ip("you-know");
       ID<port_t> port(0);
       HandshakeCommand cm(worker_id, ip, port);
-      std::cout << "Sending command: " << cm.toStringWTags() << std::endl;
+      std::cout << "Sending command: " << cm.ToString() << std::endl;
       server_->SendCommand(*iter, &cm);
     }
 
@@ -76,7 +76,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
       SchedulerCommandList::iterator iter = storage.begin();
       for (; iter != storage.end(); iter++) {
         SchedulerCommand* comm = *iter;
-        std::cout << "Received command: " << comm->toStringWTags() << std::endl;
+        std::cout << "Received command: " << comm->ToString() << std::endl;
         ProcessSchedulerCommand(comm);
         delete comm;
       }
@@ -91,7 +91,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
   IDSet<job_id_t> before, after;
   Parameter params;
   ComputeJobCommand cm("main", id, read, write, before, after, params);
-  std::cout << "Sending command: " << cm.toStringWTags() << std::endl;
+  std::cout << "Sending command: " << cm.ToString() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), &cm);
 
   while (true) {
@@ -100,7 +100,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
       SchedulerCommandList::iterator iter = storage.begin();
       for (; iter != storage.end(); iter++) {
         SchedulerCommand* comm = *iter;
-        std::cout << "Received command: " << comm->toStringWTags() << std::endl;
+        std::cout << "Received command: " << comm->ToString() << std::endl;
         ProcessSchedulerCommand(comm);
         delete comm;
       }
@@ -133,7 +133,7 @@ void SimpleScheduler::SchedulerCoreProcessor() {
         }
       }
       if (data_created) {
-        std::cout << "Sending command: " << comm->toStringWTags() << std::endl;
+        std::cout << "Sending command: " << comm->ToString() << std::endl;
         server_->SendCommand(*(server_->workers()->begin()), comm);
         pending_compute_jobs_.erase(iter++);
         delete comm;
@@ -161,7 +161,7 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
       cm->logical_data_id(), cm->logical_data_id(), before, after);
   job_data_map_[id.elem()] = cm->logical_data_id().elem();
   create_data_[cm->logical_data_id().elem()] = false;
-  std::cout << "Sending command: " << comm->toStringWTags() << std::endl;
+  std::cout << "Sending command: " << comm->ToString() << std::endl;
   server_->SendCommand(*(server_->workers()->begin()), comm);
   delete comm;
 
@@ -173,7 +173,7 @@ void SimpleScheduler::ProcessDefineDataCommand(DefineDataCommand* cm) {
 void SimpleScheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
   for (; iter != server_->workers()->end(); iter++) {
-    std::cout << "Sending command: " << cm->toStringWTags() << std::endl;
+    std::cout << "Sending command: " << cm->ToString() << std::endl;
     server_->SendCommand(*iter, cm);
   }
   if (job_data_map_.count(cm->job_id().elem()) != 0) {

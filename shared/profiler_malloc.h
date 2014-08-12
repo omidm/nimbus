@@ -53,6 +53,8 @@ namespace nimbus {
 
 class ProfilerMalloc {
  public:
+  static void *p_malloc(size_t size);
+  static void p_free(void *ptr);
   static bool IsInit();
   static bool IsMapInclude();
   static void Initialize();
@@ -93,7 +95,7 @@ class ProfilerMalloc {
   typedef std::map<pthread_t, ThreadAllocState> ThreadMap;
 
  private:
-  static uint64_t alloc_;
+  static size_t alloc_;
   static MallocMap *alloc_map_;
   static bool init_;
   static bool map_include_;

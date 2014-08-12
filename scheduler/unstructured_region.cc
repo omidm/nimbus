@@ -103,7 +103,7 @@ std::string UnstructuredRegion::Print() {
   std::string str;
   RegionListIter iter = region_list_.begin();
   for (; iter != region_list_.end(); ++iter) {
-    str += iter->toString();
+    str += iter->ToNetworkData();
     str += "\n";
   }
   return str;

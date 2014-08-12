@@ -52,8 +52,11 @@ HandshakeCommand::HandshakeCommand() {
 }
 
 HandshakeCommand::HandshakeCommand(const ID<worker_id_t>& worker_id,
-    const std::string& ip, const ID<port_t>& port)
-: worker_id_(worker_id), ip_(ip), port_(port) {
+                                   const std::string& ip,
+                                   const ID<port_t>& port)
+: worker_id_(worker_id),
+  ip_(ip),
+  port_(port) {
   name_ = HANDSHAKE_NAME;
   type_ = HANDSHAKE;
 }
@@ -65,59 +68,49 @@ SchedulerCommand* HandshakeCommand::Clone() {
   return new HandshakeCommand();
 }
 
-bool HandshakeCommand::Parse(const std::string& params) {
-  int num = 3;
+bool HandshakeCommand::Parse(const std::string& data) {
+  HandshakePBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: HandshakeCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: HandshakeCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnComputeJobCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  iter = tokens.begin();
-  if (!worker_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid worker id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  ip_ = *iter;
-
-  iter++;
-  if (!port_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid port." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
-std::string HandshakeCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (worker_id_.toString() + " ");
-  str += (ip_ + " ");
-  str += port_.toString();
-  return str;
+bool HandshakeCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_handshake()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse HandshakeCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.handshake());
+  }
 }
 
-std::string HandshakeCommand::toStringWTags() {
+std::string HandshakeCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the handshake field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_HANDSHAKE);
+  HandshakePBuf* cmd = buf.mutable_handshake();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string HandshakeCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("worker-id:" + worker_id_.toString() + " ");
+  str += ("worker-id:" + worker_id_.ToNetworkData() + " ");
   str += ("ip:" + ip_ + " ");
-  str += ("port:" + port_.toString());
+  str += ("port:" + port_.ToNetworkData());
   return str;
 }
 
@@ -134,5 +127,16 @@ ID<port_t> HandshakeCommand::port() {
   return port_;
 }
 
+bool HandshakeCommand::ReadFromProtobuf(const HandshakePBuf& buf) {
+  worker_id_.set_elem(buf.worker_id());
+  ip_ = buf.ip();
+  port_.set_elem(buf.port());
+  return true;
+}
 
-
+bool HandshakeCommand::WriteToProtobuf(HandshakePBuf* buf) {
+  buf->set_worker_id(worker_id().elem());
+  buf->set_ip(ip());
+  buf->set_port(port().elem());
+  return true;
+}

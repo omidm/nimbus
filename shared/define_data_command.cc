@@ -33,8 +33,10 @@
  */
 
  /*
-  * Define data command to define a logical region from the application point
-  * of view.
+  * This command is sent from an application to the scheduler. It defines
+  * a new logical data object (logical data ID). The application provides
+  * the variable name (type), logical ID, its geometric region (defined
+  * as an abstract partition ID) and what partitions neighbor it.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
@@ -51,16 +53,15 @@ DefineDataCommand::DefineDataCommand() {
 }
 
 DefineDataCommand::DefineDataCommand(const std::string& data_name,
-    const ID<logical_data_id_t>& logical_data_id,
-    const ID<partition_id_t>& partition_id,
-    const IDSet<partition_id_t>& neighbor_partitions,
-    const ID<job_id_t>& parent_job_id,
-    const Parameter& params)
-: data_name_(data_name), logical_data_id_(logical_data_id),
-  partition_id_(partition_id),
-  neighbor_partitions_(neighbor_partitions),
-  parent_job_id_(parent_job_id),
-  params_(params) {
+                                     const ID<logical_data_id_t>& logical_data_id,
+                                     const ID<partition_id_t>& partition_id,
+                                     const IDSet<partition_id_t>& neighbor_partitions,
+                                     const ID<job_id_t>& parent_job_id)
+  : data_name_(data_name),
+    logical_data_id_(logical_data_id),
+    partition_id_(partition_id),
+    neighbor_partitions_(neighbor_partitions),
+    parent_job_id_(parent_job_id) {
   name_ = DEFINE_DATA_NAME;
   type_ = DEFINE_DATA;
 }
@@ -73,83 +74,50 @@ SchedulerCommand* DefineDataCommand::Clone() {
 }
 
 bool DefineDataCommand::Parse(const std::string& params) {
-  int num = 6;
+  DefineDataPBuf buf;
+  bool result = buf.ParseFromString(params);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: DefineDataCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: DefineDataCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse DefineDataCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  iter = tokens.begin();
-  data_name_ = *iter;
-
-  iter++;
-  if (!logical_data_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid logical data id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!partition_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid partiiton id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!neighbor_partitions_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid partition neighbor set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!parent_job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
-std::string DefineDataCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (data_name_ + " ");
-  str += (logical_data_id_.toString() + " ");
-  str += (partition_id_.toString() + " ");
-  str += (neighbor_partitions_.toString() + " ");
-  str += (parent_job_id_.toString() + " ");
-  str += params_.toString();
-
-  return str;
+bool DefineDataCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_define_data()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse DefineDataCommand from DefineDataPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.define_data());
+  }
 }
 
-std::string DefineDataCommand::toStringWTags() {
+std::string DefineDataCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_DEFINE_DATA);
+  DefineDataPBuf* cmd = buf.mutable_define_data();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string DefineDataCommand::ToString() {
   std::string str;
   str += (name_ + " ");
   str += ("name:" + data_name_ + " ");
-  str += ("logical-id:" + logical_data_id_.toString() + " ");
-  str += ("partition-id:" + partition_id_.toString() + " ");
-  str += ("neighbor-partitions:" + neighbor_partitions_.toString() + " ");
-  str += ("parent-id:" + parent_job_id_.toString() + " ");
-  str += ("params:" + params_.toString());
+  str += ("logical-id:" + logical_data_id_.ToNetworkData() + " ");
+  str += ("partition-id:" + partition_id_.ToNetworkData() + " ");
+  str += ("neighbor-partitions:" + neighbor_partitions_.ToNetworkData() + " ");
+  str += ("parent-id:" + parent_job_id_.ToNetworkData() + " ");
   return str;
 }
 
@@ -173,8 +141,21 @@ IDSet<partition_id_t> DefineDataCommand::neighbor_partitions() {
   return neighbor_partitions_;
 }
 
-Parameter DefineDataCommand::params() {
-  return params_;
+
+bool DefineDataCommand::ReadFromProtobuf(const DefineDataPBuf& buf) {
+  data_name_ = buf.name();
+  logical_data_id_.set_elem(buf.logical_data_id());
+  partition_id_.set_elem(buf.partition_id());
+  neighbor_partitions_.ConvertFromRepeatedField(buf.neighbor_partitions().ids());
+  parent_job_id_.set_elem(buf.parent_id());
+  return true;
 }
 
-
+bool DefineDataCommand::WriteToProtobuf(DefineDataPBuf* buf) {
+  buf->set_name(data_name());
+  buf->set_logical_data_id(logical_data_id().elem());
+  buf->set_partition_id(partition_id().elem());
+  neighbor_partitions().ConvertToRepeatedField(buf->mutable_neighbor_partitions()->mutable_ids());
+  buf->set_parent_id(parent_job_id().elem());
+  return true;
+}

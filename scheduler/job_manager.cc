@@ -72,8 +72,9 @@ bool JobManager::AddComputeJobEntry(
     const IDSet<job_id_t>& before_set,
     const IDSet<job_id_t>& after_set,
     const job_id_t& parent_job_id,
-    const Parameter& params,
-    const bool& sterile) {
+    const job_id_t& future_job_id,
+    const bool& sterile,
+    const Parameter& params) {
   JobEntry* job =
     new ComputeJobEntry(job_name,
                         job_id,
@@ -82,8 +83,9 @@ bool JobManager::AddComputeJobEntry(
                         before_set,
                         after_set,
                         parent_job_id,
-                        params,
-                        sterile);
+                        future_job_id,
+                        sterile,
+                        params);
 
   if (!job_graph_.AddVertex(job_id, job)) {
     dbg(DBG_SCHED, "Filling possible future job (id: %lu) in job manager.\n", job_id);

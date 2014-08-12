@@ -32,11 +32,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Remote copy receive command to issue receiver side of the copy job to the
-  * worker.
+  /*
+  * A remote copy operation between two workers has two jobs: the
+  * send and receive. This is the receive half.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_REMOTE_COPY_RECEIVE_COMMAND_H_
@@ -51,24 +52,26 @@ class RemoteCopyReceiveCommand : public SchedulerCommand {
   public:
     RemoteCopyReceiveCommand();
     RemoteCopyReceiveCommand(const ID<job_id_t>& job_id,
-        const ID<physical_data_id_t>& to_physical_data_id,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+                             const ID<physical_data_id_t>& to_physical_data_id,
+                             const IDSet<job_id_t>& before);
     ~RemoteCopyReceiveCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
     ID<physical_data_id_t> to_physical_data_id();
     IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
     ID<physical_data_id_t> to_physical_data_id_;
     IDSet<job_id_t> before_set_;
-    IDSet<job_id_t> after_set_;
+
+    bool ReadFromProtobuf(const RemoteCopyReceivePBuf& buf);
+    bool WriteToProtobuf(RemoteCopyReceivePBuf* buf);
 };
 
 }  // namespace nimbus

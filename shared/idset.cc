@@ -134,7 +134,7 @@ bool IDSet<T>::Parse(const std::string& input) {
 }
 
 template<typename T>
-std::string IDSet<T>::toString() {
+std::string IDSet<T>::ToNetworkData() {
   bool empty = true;
   std::string rval = "{";
   IDSetIter iter =  identifiers_.begin();
@@ -248,6 +248,23 @@ template<typename T>
 IDSet<T>& IDSet<T>::operator= (const IDSet<T>& right) {
   identifiers_ = right.identifiers_;
   return *this;
+}
+
+template<typename T>
+void IDSet<T>::ConvertToRepeatedField(google::protobuf::RepeatedField<T>* b) {
+  for (ConstIter i = begin(); i != end(); ++i) {
+    b->Add(*i);
+  }
+}
+
+template<typename T>
+void IDSet<T>::ConvertFromRepeatedField(const google::protobuf::RepeatedField<T>& b) {
+  clear();
+  typename google::protobuf::RepeatedField<T>::const_iterator it = b.begin();
+  while (it != b.end()) {
+    insert(*it);
+    ++it;
+  }
 }
 
 template class IDSet<uint64_t>;

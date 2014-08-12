@@ -128,7 +128,7 @@ void Scheduler::SchedulerCoreProcessor() {
           log_load_balancer_.timer(),
           log_loop_.GetTime());
 
-      log_.WriteToOutputStream(std::string(buff), LOG_INFO);
+      // log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
 }
@@ -139,7 +139,7 @@ void Scheduler::ProcessQueuedSchedulerCommands(size_t max_num) {
     SchedulerCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); iter++) {
       SchedulerCommand* comm = *iter;
-      dbg(DBG_SCHED, "Processing command: %s.\n", comm->toStringWTags().c_str());
+      dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
       ProcessSchedulerCommand(comm);
       delete comm;
     }
@@ -148,10 +148,10 @@ void Scheduler::ProcessQueuedSchedulerCommands(size_t max_num) {
 
 void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
   switch (cm->type()) {
-    case SchedulerCommand::SPAWN_COMPUTE_JOB:
+    case SchedulerCommand::SPAWN_COMPUTE:
       ProcessSpawnComputeJobCommand(reinterpret_cast<SpawnComputeJobCommand*>(cm));
       break;
-    case SchedulerCommand::SPAWN_COPY_JOB:
+    case SchedulerCommand::SPAWN_COPY:
       ProcessSpawnCopyJobCommand(reinterpret_cast<SpawnCopyJobCommand*>(cm));
       break;
     case SchedulerCommand::DEFINE_DATA:
@@ -173,22 +173,22 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
       break;
     default:
       dbg(DBG_ERROR, "ERROR: %s have not been implemented in ProcessSchedulerCommand yet.\n",
-          cm->toString().c_str());
+          cm->ToNetworkData().c_str());
   }
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
   log_job_manager_.ResumeTimer();
-  job_manager_->AddComputeJobEntry(
-        cm->job_name(),
-        cm->job_id().elem(),
-        cm->read_set(),
-        cm->write_set(),
-        cm->before_set(),
-        cm->after_set(),
-        cm->parent_job_id().elem(),
-        cm->params(),
-        cm->sterile());
+  job_manager_->AddComputeJobEntry(cm->job_name(),
+                                   cm->job_id().elem(),
+                                   cm->read_set(),
+                                   cm->write_set(),
+                                   cm->before_set(),
+                                   cm->after_set(),
+                                   cm->parent_job_id().elem(),
+                                   cm->future_job_id().elem(),
+                                   cm->sterile(),
+                                   cm->params());
   log_job_manager_.StopTimer();
 }
 
@@ -408,7 +408,7 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   id_maker_.GetNewJobID(&j, 1);
   std::vector<physical_data_id_t> d;
   id_maker_.GetNewPhysicalDataID(&d, 1);
-  IDSet<job_id_t> before, after;
+  IDSet<job_id_t> before;
 
   // Update the job table.
   log_job_manager_.ResumeTimer();
@@ -427,9 +427,11 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
   log_job_manager_.ResumeTimer();
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.StopTimer();
-  CreateDataCommand cm(ID<job_id_t>(j[0]), ldo->variable(),
-      ID<logical_data_id_t>(ldo->id()),
-      ID<physical_data_id_t>(d[0]), before, after);
+  CreateDataCommand cm(ID<job_id_t>(j[0]),
+                       ldo->variable(),
+                       ID<logical_data_id_t>(ldo->id()),
+                       ID<physical_data_id_t>(d[0]),
+                       before);
   server_->SendCommand(worker, &cm);
 
   *created_data = p;
@@ -447,7 +449,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   id_maker_.GetNewJobID(&j, 2);
   job_id_t receive_id = j[0];
   job_id_t send_id = j[1];
-  IDSet<job_id_t> before, after;
+  IDSet<job_id_t> before;
 
   // Receive part
 
@@ -474,7 +476,8 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.StopTimer();
   RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
-      ID<physical_data_id_t>(to_data->id()), before, after);
+                                ID<physical_data_id_t>(to_data->id()),
+                                before);
   server_->SendCommand(to_worker, &cm_r);
 
 
@@ -500,10 +503,12 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.StopTimer();
   RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
-      ID<job_id_t>(receive_id), ID<physical_data_id_t>(from_data->id()),
-      ID<worker_id_t>(to_worker->worker_id()),
-      to_worker->ip(), ID<port_t>(to_worker->port()),
-      before, after);
+                             ID<job_id_t>(receive_id),
+                             ID<physical_data_id_t>(from_data->id()),
+                             ID<worker_id_t>(to_worker->worker_id()),
+                             to_worker->ip(),
+                             ID<port_t>(to_worker->port()),
+                             before);
   server_->SendCommand(from_worker, &cm_s);
 
 
@@ -520,7 +525,7 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
 
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
-  IDSet<job_id_t> before, after;
+  IDSet<job_id_t> before;
 
   // Update the job table.
   log_job_manager_.ResumeTimer();
@@ -552,8 +557,9 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   job_manager_->UpdateBeforeSet(&before);
   log_job_manager_.StopTimer();
   LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
-      ID<physical_data_id_t>(from_data->id()),
-      ID<physical_data_id_t>(to_data->id()), before, after);
+                        ID<physical_data_id_t>(from_data->id()),
+                        ID<physical_data_id_t>(to_data->id()),
+                        before);
   server_->SendCommand(worker, &cm_c);
 
   *from_data = from_data_new;
@@ -784,13 +790,21 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
 bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
-    ID<job_id_t> id(job->job_id());
+    ID<job_id_t> job_id(job->job_id());
+    ID<job_id_t> future_job_id(job->future_job_id());
     IDSet<physical_data_id_t> read_set, write_set;
     // TODO(omidm): check the return value of the following methods.
     job->GetPhysicalReadSet(&read_set);
     job->GetPhysicalWriteSet(&write_set);
-    ComputeJobCommand cm(job->job_name(), id,
-        read_set, write_set, job->before_set(), job->after_set(), job->params(), job->sterile());
+    ComputeJobCommand cm(job->job_name(),
+                         job_id,
+                         read_set,
+                         write_set,
+                         job->before_set(),
+                         job->after_set(),
+                         future_job_id,
+                         job->sterile(),
+                         job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
     server_->SendCommand(worker, &cm);
     return true;
@@ -801,17 +815,22 @@ bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
 }
 
 bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
-    const std::string& data_name, const logical_data_id_t& logical_data_id,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    job_id_t* job_id, physical_data_id_t* physical_data_id) {
+                                      const std::string& data_name,
+                                      const logical_data_id_t& logical_data_id,
+                                      const IDSet<job_id_t>& before,
+                                      job_id_t* job_id,
+                                      physical_data_id_t* physical_data_id) {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
   std::vector<physical_data_id_t> d;
   id_maker_.GetNewPhysicalDataID(&d, 1);
   *physical_data_id = d[0];
-  CreateDataCommand cm(ID<job_id_t>(j[0]), data_name,
-      ID<logical_data_id_t>(logical_data_id), ID<physical_data_id_t>(d[0]), before, after);
+  CreateDataCommand cm(ID<job_id_t>(j[0]),
+                       data_name,
+                       ID<logical_data_id_t>(logical_data_id),
+                       ID<physical_data_id_t>(d[0]),
+                       before);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm);
   log_job_manager_.ResumeTimer();
@@ -821,30 +840,32 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
 }
 
 bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
-    const ID<physical_data_id_t>& from_physical_data_id,
-    const ID<physical_data_id_t>& to_physical_data_id,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    job_id_t* job_id) {
+                                         const ID<physical_data_id_t>& from_physical_data_id,
+                                         const ID<physical_data_id_t>& to_physical_data_id,
+                                         const IDSet<job_id_t>& before,
+                                         job_id_t* job_id) {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
   LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
-      ID<physical_data_id_t>(from_physical_data_id),
-      ID<physical_data_id_t>(to_physical_data_id), before, after);
+                        ID<physical_data_id_t>(from_physical_data_id),
+                        ID<physical_data_id_t>(to_physical_data_id),
+                        before);
   dbg(DBG_SCHED, "Sending local copy job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm_c);
   return true;
 }
 
 bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
-    const physical_data_id_t& physical_data_id,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    job_id_t* job_id) {
+                                           const physical_data_id_t& physical_data_id,
+                                           const IDSet<job_id_t>& before,
+                                           job_id_t* job_id) {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
   RemoteCopyReceiveCommand cm_r(ID<job_id_t>(j[0]),
-      ID<physical_data_id_t>(physical_data_id), before, after);
+                                ID<physical_data_id_t>(physical_data_id),
+                                before);
   dbg(DBG_SCHED, "Sending remote copy receive job %lu to worker %lu.\n", j[0], worker->worker_id());
   server_->SendCommand(worker, &cm_r);
   return true;
@@ -852,17 +873,20 @@ bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
 
 
 bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
-    const job_id_t& receive_job_id, const physical_data_id_t& physical_data_id,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    job_id_t* job_id) {
+                                        const job_id_t& receive_job_id,
+                                        const physical_data_id_t& physical_data_id,
+                                        const IDSet<job_id_t>& before,
+                                        job_id_t* job_id) {
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
   RemoteCopySendCommand cm_s(ID<job_id_t>(j[0]),
-      ID<job_id_t>(receive_job_id), ID<physical_data_id_t>(physical_data_id),
-      ID<worker_id_t>(worker->worker_id()),
-      worker->ip(), ID<port_t>(worker->port()),
-      before, after);
+                             ID<job_id_t>(receive_job_id),
+                             ID<physical_data_id_t>(physical_data_id),
+                             ID<worker_id_t>(worker->worker_id()),
+                             worker->ip(),
+                             ID<port_t>(worker->port()),
+                             before);
   server_->SendCommand(worker, &cm_s);
   return true;
 }
@@ -961,7 +985,7 @@ size_t Scheduler::RegisterPendingWorkers() {
       std::string ip("you-know");
       ID<port_t> port(0);
       HandshakeCommand cm(worker_id, ip, port);
-      dbg(DBG_SCHED, "Sending command: %s.\n", cm.toStringWTags().c_str());
+      dbg(DBG_SCHED, "Sending command: %s.\n", cm.ToString().c_str());
       server_->SendCommand(*iter, &cm);
     }
   }
@@ -1001,15 +1025,14 @@ void Scheduler::SetupLoadBalancer() {
 
 
 void Scheduler::LoadWorkerCommands() {
-  // std::stringstream cms("runjob killjob haltjob resumejob jobdone createdata copydata deletedata");   // NOLINT
-  worker_command_table_.push_back(new SpawnComputeJobCommand());
-  worker_command_table_.push_back(new SpawnCopyJobCommand());
-  worker_command_table_.push_back(new DefineDataCommand());
-  worker_command_table_.push_back(new HandshakeCommand());
-  worker_command_table_.push_back(new JobDoneCommand());
-  worker_command_table_.push_back(new DefinePartitionCommand());
-  worker_command_table_.push_back(new TerminateCommand());
-  worker_command_table_.push_back(new ProfileCommand());
+  worker_command_table_[SchedulerCommand::SPAWN_COMPUTE]     = new SpawnComputeJobCommand();
+  worker_command_table_[SchedulerCommand::SPAWN_COPY]        = new SpawnCopyJobCommand();
+  worker_command_table_[SchedulerCommand::DEFINE_DATA]       = new DefineDataCommand();
+  worker_command_table_[SchedulerCommand::HANDSHAKE]         = new HandshakeCommand();
+  worker_command_table_[SchedulerCommand::JOB_DONE]          = new JobDoneCommand();
+  worker_command_table_[SchedulerCommand::DEFINE_PARTITION]  = new DefinePartitionCommand();
+  worker_command_table_[SchedulerCommand::TERMINATE]         = new TerminateCommand();
+  worker_command_table_[SchedulerCommand::PROFILE]           = new ProfileCommand();
 }
 
 void Scheduler::LoadUserCommands() {

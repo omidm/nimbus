@@ -36,6 +36,7 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <sys/syscall.h>
 #include <string>
 
 #include "worker/worker.h"
@@ -78,7 +79,8 @@ void WorkerThreadFast::ProcessJob(Job* job) {
     print_clog = true;
   if (print_clog) {
     std::stringstream msg;
-    msg << "~~~ App copy job start : " << jname << " " << cache_log_->GetTime();
+    pid_t tid = syscall(SYS_gettid);
+    msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif
@@ -90,7 +92,8 @@ void WorkerThreadFast::ProcessJob(Job* job) {
 #ifdef CACHE_LOG
   if (print_clog) {
     std::stringstream msg;
-    msg << "~~~ App copy job end : " << jname << " " << cache_log_->GetTime();
+    pid_t tid = syscall(SYS_gettid);
+    msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif

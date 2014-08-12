@@ -33,8 +33,12 @@
  */
 
  /*
-  * Define partition command to define a geometrical region from application
-  * point of view.
+  * A worker sends a define partition command to the controller to
+  * name a geometric region. Later data objects can then refer to this
+  * geometric region. Using partition identifiers allows the scheduler
+  * to very easily determine if two defined datas cover the same
+  * region and more precisely defines the geometric boundaries the
+  * application is using.
   *
   * Author: Philip Levis <pal@cs.stanford.edu>
   */
@@ -51,23 +55,24 @@ class DefinePartitionCommand : public SchedulerCommand {
   public:
     DefinePartitionCommand();
     DefinePartitionCommand(const ID<partition_id_t>& partition_id,
-        const GeometricRegion& r,
-        const Parameter& params);
+                           const GeometricRegion& r);
     ~DefinePartitionCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
 
     ID<partition_id_t> partition_id();
     const GeometricRegion* region();
-    Parameter params();
 
   private:
     ID<partition_id_t> id_;
     GeometricRegion region_;
-    Parameter params_;
+
+    bool ReadFromProtobuf(const DefinePartitionPBuf& buf);
+    bool WriteToProtobuf(DefinePartitionPBuf* buf);
 };
 
 }  // namespace nimbus
