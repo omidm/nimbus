@@ -327,6 +327,7 @@ void LoadBalancer::UpdateRegionMap() {
             << " slow worker: " << slow << std::endl;
   straggler_map_.ClearRecords();
   region_map_.BalanceRegions(fast, slow);
+  log_.WriteToFile(region_map_.Print());
 
   worker_id_t worst_worker = 0;
   size_t count = 0;

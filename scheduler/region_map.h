@@ -49,6 +49,7 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include <string>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/geometric_region.h"
@@ -86,6 +87,8 @@ namespace nimbus {
                                       worker_id_t *worker_id);
 
     bool WorkersAreNeighbor(worker_id_t first, worker_id_t second);
+
+    std::string Print();
 
     RegionMap& operator= (const RegionMap& right);
 

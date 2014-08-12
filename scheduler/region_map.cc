@@ -239,6 +239,25 @@ bool RegionMap::BalanceRegions(const worker_id_t &w_grow,
 }
 
 
+std::string RegionMap::Print() {
+  std::string rval;
+  rval += "\n+++++++ Region Map Begin +++++++\n";
+
+  TableIter iter = table_.begin();
+  for (; iter != table_.end(); ++iter) {
+    std::ostringstream ss;
+    rval += "worker_id: ";
+    ss << iter->first;
+    rval += ss.str();
+    ss.str(std::string());
+    rval += "\n";
+    rval += iter->second->PrintRegion();
+  }
+
+  rval += "\n++++++++ Region Map End ++++++++\n";
+  return rval;
+}
+
 void RegionMap::GenerateTable(size_t num_x, size_t num_y, size_t num_z,
                               std::vector<size_t> weight_x,
                               std::vector<size_t> weight_y,

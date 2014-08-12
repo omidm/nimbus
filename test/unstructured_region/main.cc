@@ -53,6 +53,7 @@
 #include "shared/idset.h"
 #include "shared/geometric_region.h"
 #include "scheduler/region_map_entry.h"
+#include "scheduler/unstructured_region.h"
 
 using namespace nimbus; // NOLINT
 
@@ -60,38 +61,38 @@ int main(int argc, const char *argv[]) {
   nimbus_initialize();
   Log log;
 
-  RegionMapEntry rme;
+  UnstructuredRegion ur;
 
   GeometricRegion r1(0, 0, 0, 5, 5, 5);
   GeometricRegion r2(2, 2, 2, 5, 5, 5);
 
-  rme.AddRegion(&r1);
-  std::cout << rme.Print() << std::endl;
+  ur.AddRegion(&r1);
+  std::cout << ur.Print() << std::endl;
 
-  rme.AddRegion(&r2);
-  std::cout << rme.Print() << std::endl;
+  ur.AddRegion(&r2);
+  std::cout << ur.Print() << std::endl;
 
-  RegionMapEntry::RegionList result;
-  RegionMapEntry::RemoveIntersect(&r2, &r1, &result);
-  RegionMapEntry::RegionListIter iter = result.begin();
+  UnstructuredRegion::RegionList result;
+  UnstructuredRegion::RemoveIntersect(&r2, &r1, &result);
+  UnstructuredRegion::RegionListIter iter = result.begin();
   for (; iter != result.end(); ++iter) {
     std::cout << iter->ToNetworkData() << std::endl;
   }
   std::cout << std::endl;
 
-  rme.RemoveRegion(&r1);
-  std::cout << rme.Print() << std::endl;
+  ur.RemoveRegion(&r1);
+  std::cout << ur.Print() << std::endl;
 
-  rme.RemoveRegion(&r2);
-  std::cout << rme.Print() << std::endl;
+  ur.RemoveRegion(&r2);
+  std::cout << ur.Print() << std::endl;
 
-  rme.AddRegion(&r1);
-  std::cout << rme.Print() << std::endl;
+  ur.AddRegion(&r1);
+  std::cout << ur.Print() << std::endl;
 
-  rme.RemoveRegion(&r2);
-  std::cout << rme.Print() << std::endl;
+  ur.RemoveRegion(&r2);
+  std::cout << ur.Print() << std::endl;
 
-  rme.AddRegion(&r2);
-  std::cout << rme.Print() << std::endl;
+  ur.AddRegion(&r2);
+  std::cout << ur.Print() << std::endl;
 }
 
