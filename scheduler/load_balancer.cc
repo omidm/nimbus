@@ -270,8 +270,8 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 
     ++blame_map_[blamed_worker_id];
     blame_counter_++;
-    std::cout << "LOAD BALANCER: blame counter: " << blame_counter_ << std::endl;
-    if (blame_counter_ > 10) {
+    std::cout << "blame counter: " << blame_counter_ << std::endl;
+    if (blame_counter_ > 5) {
       update_ = true;
       update_cond_.notify_all();
     }
@@ -324,8 +324,9 @@ void LoadBalancer::UpdateRegionMap() {
   worker_id_t fast, slow;
   straggler_map_.GetMostImbalanceWorkers(&fast, &slow);
   std::cout << "LOAD BALANCER: most imbalance fast worker: " << fast
-            << "slow worker: " << slow << std::endl;
+            << " slow worker: " << slow << std::endl;
   straggler_map_.ClearRecords();
+  region_map_.BalanceRegions(fast, slow);
 
   worker_id_t worst_worker = 0;
   size_t count = 0;

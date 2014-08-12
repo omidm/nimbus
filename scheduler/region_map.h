@@ -79,8 +79,8 @@ namespace nimbus {
     void Initialize(const std::vector<worker_id_t>& worker_ids,
                     const GeometricRegion& global_region);
 
-    bool BalanceRegions(const worker_id_t &w_shrink,
-                        const worker_id_t &w_grow);
+    bool BalanceRegions(const worker_id_t &w_grow,
+                        const worker_id_t &w_shrink);
 
     bool QueryWorkerWithMostOverlap(const GeometricRegion *region,
                                       worker_id_t *worker_id);

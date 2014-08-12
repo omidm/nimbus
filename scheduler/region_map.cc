@@ -206,8 +206,8 @@ void RegionMap::InvalidateRegionCoverage() {
 
 
 
-bool RegionMap::BalanceRegions(const worker_id_t &w_shrink,
-                               const worker_id_t &w_grow) {
+bool RegionMap::BalanceRegions(const worker_id_t &w_grow,
+                               const worker_id_t &w_shrink) {
   if (!WorkersAreNeighbor(w_shrink, w_grow)) {
     dbg(DBG_ERROR, "ERROR: RegionMap: workers are not neighbors for balancing the regions.\n"); // NOLINT
     return false;
