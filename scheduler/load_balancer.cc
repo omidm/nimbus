@@ -45,6 +45,8 @@
 
 #include "scheduler/load_balancer.h"
 
+#define LB_UPDATE_RATE 10
+
 namespace nimbus {
 
 LoadBalancer::LoadBalancer() {
@@ -271,7 +273,7 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
     ++blame_map_[blamed_worker_id];
     blame_counter_++;
     std::cout << "blame counter: " << blame_counter_ << std::endl;
-    if (blame_counter_ > 5) {
+    if (blame_counter_ > LB_UPDATE_RATE) {
       update_ = true;
       update_cond_.notify_all();
     }
