@@ -103,11 +103,13 @@ bool StragglerMap::GetMostImbalanceWorkers(worker_id_t *fast,
     Table *table = iter->second;
     assert(table->size());
     TableIter it = table->begin();
-    int diff_temp = it->second - LookUp(it->first, iter->first);
-    if (diff_temp > diff) {
-      f_id = iter->first;
-      s_id = it->first;
-      diff = diff_temp;
+    for (; it != table->end(); ++it) {
+      int diff_temp = it->second - LookUp(it->first, iter->first);
+      if (diff_temp > diff) {
+        f_id = iter->first;
+        s_id = it->first;
+        diff = diff_temp;
+      }
     }
   }
 
