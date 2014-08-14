@@ -92,7 +92,7 @@ bs = int(args.gbrsize);
 Colors = []
 Colors.append('k')
 Colors.append('r')
-Colors.append('none')
+Colors.append('b')
 Colors.append('g')
 Colors.append('y')
 
@@ -116,9 +116,9 @@ for num, line in enumerate(log):
     worker_id = int(x[0])
 
   if "bbox:" in line:
-    x =  re.findall('(\d+\.\d+|\d+)', line)
+    x =  re.findall('(-*\d+\.\d+|-*\d+)', line)
     assert(len(x) == 6)
-    draw_solid_geometric_region(fig, int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), Colors[worker_id]);
+    draw_wireframe_geometric_region(fig, int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), Colors[worker_id]);
 
   if "Region Map End" in line:
     plt.savefig(args.ofname + "_" + str(fig_num) + ".png")
