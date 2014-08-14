@@ -45,7 +45,7 @@
 
 #include "scheduler/load_balancer.h"
 
-#define LB_UPDATE_RATE 10
+#define LB_UPDATE_RATE 50
 
 namespace nimbus {
 
@@ -271,9 +271,10 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
     straggler_map_.AddRecord(job->assigned_worker(), blamed_worker_id);
 
     ++blame_map_[blamed_worker_id];
+
     blame_counter_++;
-    std::cout << "blame counter: " << blame_counter_ << std::endl;
     if (blame_counter_ > LB_UPDATE_RATE) {
+      blame_counter_ = 0;
       update_ = true;
       update_cond_.notify_all();
     }
@@ -313,6 +314,7 @@ void LoadBalancer::InitializeRegionMap() {
   global_region_ = data_manager_->global_bounding_region();
 
   region_map_.Initialize(worker_ids, global_region_);
+  log_.WriteToFile(region_map_.Print());
 
   init_phase_ = false;
 }
@@ -324,12 +326,14 @@ void LoadBalancer::UpdateRegionMap() {
   boost::unique_lock<boost::mutex> straggler_map_lock(straggler_map_mutex_, recursive);
 
   worker_id_t fast, slow;
-  straggler_map_.GetMostImbalanceWorkers(&fast, &slow);
-  std::cout << "LOAD BALANCER: most imbalance fast worker: " << fast
-            << " slow worker: " << slow << std::endl;
-  straggler_map_.ClearRecords();
-  region_map_.BalanceRegions(fast, slow);
-  log_.WriteToFile(region_map_.Print());
+  if (straggler_map_.GetMostImbalanceWorkers(&fast, &slow)) {
+    std::cout << "LOAD BALANCER: fast worker: " << fast
+              << ", slow worker: " << slow << std::endl;
+    if (region_map_.BalanceRegions(fast, slow)) {
+      straggler_map_.ClearRecords();
+      log_.WriteToFile(region_map_.Print());
+    }
+  }
 
   worker_id_t worst_worker = 0;
   size_t count = 0;
@@ -340,10 +344,8 @@ void LoadBalancer::UpdateRegionMap() {
       worst_worker = iter->first;
     }
   }
-
   std::cout << "LOAD BALANCER: worst worker: " << worst_worker << std::endl;
   blame_map_.clear();
-  blame_counter_ = 0;
 }
 
 }  // namespace nimbus
