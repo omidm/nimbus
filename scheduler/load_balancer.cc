@@ -142,7 +142,7 @@ bool LoadBalancer::GetWorkerToAssignJob(
   assert(worker_num_ > 0);
 
   GeometricRegion region;
-  bool got_region = job->GetRegion(data_manager_, &region);
+  bool got_region = job->GetWriteSetRegion(data_manager_, &region);
 
   if (init_phase_ || !got_region) {
     worker = worker_map_.begin()->second;
