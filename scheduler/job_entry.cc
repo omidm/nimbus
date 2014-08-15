@@ -373,12 +373,12 @@ bool JobEntry::GetUnionSetRegion(DataManager *data_manager, GeometricRegion *reg
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = union_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
+      // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
       region_ = *ldo->region();
       ++iter;
       for (; iter != union_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
-        std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
+        // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
         region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
       }
       *region = region_;
@@ -400,12 +400,12 @@ bool JobEntry::GetReadSetRegion(DataManager *data_manager, GeometricRegion *regi
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = read_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
+      // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
       region_ = *ldo->region();
       ++iter;
       for (; iter != read_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
-        std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
+        // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
         region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
       }
       *region = region_;
@@ -426,12 +426,12 @@ bool JobEntry::GetWriteSetRegion(DataManager *data_manager, GeometricRegion *reg
       const LogicalDataObject* ldo;
       IDSet<logical_data_id_t>::IDSetIter iter = write_set_.begin();
       ldo = data_manager->FindLogicalObject(*iter);
-      std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
+      // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
       region_ = *ldo->region();
       ++iter;
       for (; iter != write_set_.end(); ++iter) {
         ldo = data_manager->FindLogicalObject(*iter);
-        std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
+        // std::cout << job_id_ << ldo->region()->ToNetworkData() << std::endl;
         region_ = GeometricRegion::GetBoundingBox(region_, *ldo->region());
       }
       *region = region_;

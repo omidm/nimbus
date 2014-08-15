@@ -15,7 +15,11 @@ from itertools import product, combinations
 
 
 def draw_wireframe_geometric_region(figure, x, y, z, dx, dy, dz, color):
+  if color == "none":
+    return
+
   ax = figure.gca(projection='3d')
+
   X = [x, x + dx]
   Y = [y, y + dy]
   Z = [z, z + dz]
@@ -83,22 +87,49 @@ parser.add_argument(
     dest="gbrsize",
     default=40,
     help="size of the largest dimension of global bounding region")
+parser.add_argument(
+    "--jobregion",
+    action="store_true",
+    help="plot the region set og job")
+
 
 args = parser.parse_args()
 
-
 bs = int(args.gbrsize);
-   
+
+file_name = args.idir + '/' + args.ifname
+print 'Opening the file ' + file_name
+log = open(file_name, 'r')
+
+
+if args.jobregion:
+  fig = plt.figure()
+  ax = fig.gca(projection='3d')
+  ax.set_aspect("equal")
+  
+  for num, line in enumerate(log):
+    if "bbox:" in line:
+      x =  re.findall('(-*\d+\.\d+|-*\d+)', line)
+      assert(len(x) == 6)
+      color = 'b'
+      if "agg" in line:
+        color = 'k'
+      draw_wireframe_geometric_region(fig, int(x[0]), int(x[1]), int(x[2]), int(x[3]), int(x[4]), int(x[5]), color);
+  
+  draw_wireframe_geometric_region(fig, 0, 0, 0, bs, bs, bs, "w")
+  
+  plt.savefig(args.ofname)
+  plt.show()
+  
+  sys.exit(0)
+
+
 Colors = []
 Colors.append('k')
 Colors.append('r')
 Colors.append('b')
 Colors.append('g')
 Colors.append('y')
-
-file_name = args.idir + '/' + args.ifname
-print 'Opening the file ' + file_name
-log = open(file_name, 'r')
 
 fig = []
 fig_num = 0;
@@ -125,7 +156,7 @@ for num, line in enumerate(log):
     plt.show()
     plt.close()
 
-# sys.exit(0)
+sys.exit(0)
 
 
 
