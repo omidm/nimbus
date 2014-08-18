@@ -45,7 +45,7 @@
 
 #include "scheduler/load_balancer.h"
 
-#define LB_UPDATE_RATE 50
+#define LB_UPDATE_RATE 100
 
 namespace nimbus {
 
@@ -269,6 +269,9 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
     boost::adopt_lock_t recursive;
     boost::unique_lock<boost::mutex> straggler_map_lock(straggler_map_mutex_, recursive);
     straggler_map_.AddRecord(job->assigned_worker(), blamed_worker_id);
+    std::cout << "STRAGGLER ADD RECORD: job name: " << job->job_name()
+              << " worker: " << job->assigned_worker()
+              << " blamed: " << blamed_worker_id << std::endl;
 
     ++blame_map_[blamed_worker_id];
 
