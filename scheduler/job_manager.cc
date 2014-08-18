@@ -353,6 +353,23 @@ bool JobManager::RemoveJobEntry(job_id_t job_id) {
   }
 }
 
+bool JobManager::ResolveJobDataVersions(JobEntry *job) {
+  if (!job->IsReadyForCompleteVersioning()) {
+    dbg(DBG_ERROR, "ERROR: job %lu is not reaqdy for complete versioing.\n", job->job_id());
+    exit(-1);
+    return false;
+  }
+
+  if (version_manager_.ResolveJobDataVersions(job)) {
+    job->set_versioned(true);
+    return true;
+  } else {
+    dbg(DBG_ERROR, "ERROR: could not version job %lu.\n", job->job_id());
+    exit(-1);
+    return false;
+  }
+}
+
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   log_version_.ResetTimer();
   log_merge_.ResetTimer();
@@ -380,14 +397,6 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   for (; (iter != jobs_ready_to_assign_.end()) && (num < max_num);) {
     JobEntry *job = iter->second;
     assert(!job->assigned());
-    // assert(job->versioned());
-    assert(job->IsReadyForCompleteVersioning());
-    if (version_manager_.ResolveJobDataVersions(job)) {
-      job->set_versioned(true);
-    } else {
-      dbg(DBG_ERROR, "ERROR: could not version job %lu.\n", job->job_id());
-      exit(-1);
-    }
 
     jobs_pending_to_assign_[iter->first] = job;
     jobs_ready_to_assign_.erase(iter++);

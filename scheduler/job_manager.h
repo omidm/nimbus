@@ -119,6 +119,8 @@ class JobManager {
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
 
+    bool ResolveJobDataVersions(JobEntry *job);
+
     size_t GetJobsNeedDataVersion(JobEntryList* list,
         VersionedLogicalData vld);
 

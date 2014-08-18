@@ -897,6 +897,8 @@ bool Scheduler::AssignJob(JobEntry* job) {
   SchedulerWorker* worker;
   GetWorkerToAssignJob(job, worker);
 
+  job_manager_->ResolveJobDataVersions(job);
+
 //   {
 //     Log log;
 //     log.StartTimer();
