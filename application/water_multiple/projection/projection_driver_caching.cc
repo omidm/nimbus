@@ -227,6 +227,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
+  // TODO(quhang): wrong.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
     nimbus::DataArray read, write;
     const std::string index_c2m_string = std::string(APP_INDEX_C2M);
