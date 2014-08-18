@@ -39,11 +39,20 @@
 #include <math.h>
 #include "./scheduler_v3.h"
 
+#define MAX_JOB_TO_ASSIGN 1
+
 SchedulerV3::SchedulerV3(unsigned int p)
 : Scheduler(p) {
 }
 
-bool SchedulerV3::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  return load_balancer_->GetWorkerToAssignJob(job, worker);
+size_t SchedulerV3::AssignReadyJobs() {
+  JobEntryList list;
+
+  size_t count =
+    job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
+
+  load_balancer_->AssignJobs(list);
+
+  return count;
 }
 

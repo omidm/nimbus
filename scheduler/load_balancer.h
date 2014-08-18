@@ -50,6 +50,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <string>
 #include "shared/nimbus_types.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/job_profile.h"
@@ -58,6 +59,8 @@
 #include "scheduler/region_map.h"
 #include "scheduler/straggler_map.h"
 #include "shared/cluster.h"
+#include "shared/id_maker.h"
+#include "shared/scheduler_server.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
 
@@ -77,9 +80,13 @@ namespace nimbus {
 
     ClusterMap* cluster_map();
 
+    void set_id_maker(IDMaker *id_maker);
+    void set_server(SchedulerServer* server);
     void set_cluster_map(ClusterMap* cluster_map);
     void set_job_manager(JobManager *job_manager);
     void set_data_manager(DataManager *data_manager);
+
+    void AssignJobs(const JobEntryList& list);
 
     bool GetWorkerToAssignJob(JobEntry *job, SchedulerWorker*& worker);
 
@@ -97,6 +104,8 @@ namespace nimbus {
     size_t worker_num_;
     GeometricRegion global_region_;
 
+    IDMaker *id_maker_;
+    SchedulerServer* server_;
     ClusterMap* cluster_map_;
     JobManager *job_manager_;
     DataManager *data_manager_;
@@ -113,6 +122,12 @@ namespace nimbus {
     StragglerMap straggler_map_;
     boost::mutex straggler_map_mutex_;
 
+    JobEntryList job_queue_;
+    boost::mutex job_queue_mutex_;
+    boost::condition_variable job_queue_cond_;
+
+    std::list<boost::thread*> job_assigner_threads_;
+
     bool update_;
     bool init_phase_;
     boost::mutex update_mutex_;
@@ -126,6 +141,47 @@ namespace nimbus {
     void InitializeRegionMap();
 
     void UpdateRegionMap();
+
+    void JobAssignerThread();
+
+    bool AssignJob(JobEntry* job);
+
+     bool PrepareDataForJobAtWorker(JobEntry* job,
+                                    SchedulerWorker* worker,
+                                    logical_data_id_t l_id);
+
+    bool AllocateLdoInstanceToJob(JobEntry* job,
+                                  LogicalDataObject* ldo,
+                                  PhysicalData pd);
+
+    bool CreateDataAtWorker(SchedulerWorker* worker,
+                            LogicalDataObject* ldo,
+                            PhysicalData* created_data);
+
+    bool RemoteCopyData(SchedulerWorker* from_worker,
+                        SchedulerWorker* to_worker,
+                        LogicalDataObject* ldo,
+                        PhysicalData* from_data,
+                        PhysicalData* to_data);
+
+    bool LocalCopyData(SchedulerWorker* worker,
+                       LogicalDataObject* ldo,
+                       PhysicalData* created_data,
+                       PhysicalData* to_data);
+
+    bool GetFreeDataAtWorker(SchedulerWorker* worker,
+                             LogicalDataObject* ldo,
+                             PhysicalData* free_data);
+
+    size_t GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
+                                           LogicalDataObject* ldo,
+                                           PhysicalDataVector* dest);
+
+
+
+
+    bool SendComputeJobToWorker(SchedulerWorker* worker,
+                                JobEntry* job);
   };
 
 }  // namespace nimbus

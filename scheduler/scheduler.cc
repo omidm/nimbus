@@ -77,13 +77,12 @@ void Scheduler::Run() {
    * manager and data manager. It also needs a pointer to the server.
    */
 
+  id_maker_.Initialize(0);
   // SetupUserInterface();
   SetupWorkerInterface();
   SetupDataManager();
   SetupJobManager();
   SetupLoadBalancer();
-
-  id_maker_.Initialize(0);
 
   SchedulerCoreProcessor();
 }
@@ -956,9 +955,11 @@ bool Scheduler::AssignJob(JobEntry* job) {
 size_t Scheduler::AssignReadyJobs() {
   size_t count = 0;
   JobEntryList list;
+
   log_job_manager_.ResumeTimer();
   job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
   log_job_manager_.StopTimer();
+
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {
     JobEntry* job = *iter;
@@ -966,6 +967,7 @@ size_t Scheduler::AssignReadyJobs() {
       ++count;
     }
   }
+
   return count;
 }
 
@@ -1021,6 +1023,8 @@ void Scheduler::SetupJobManager() {
 
 void Scheduler::SetupLoadBalancer() {
   load_balancer_ = new LoadBalancer();
+  load_balancer_->set_id_maker(&id_maker_);
+  load_balancer_->set_server(server_);
   load_balancer_->set_job_manager(job_manager_);
   load_balancer_->set_data_manager(data_manager_);
   load_balancer_thread_ = new boost::thread(boost::bind(&LoadBalancer::Run, load_balancer_));
