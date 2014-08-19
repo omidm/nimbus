@@ -537,7 +537,6 @@ void JobManager::NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worke
       boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
       j->remove_assignment_dependency(job_id);
       if (j->IsReadyToAssign()) {
-        boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
         jobs_ready_to_assign_[j->job_id()] = j;
       }
     }
