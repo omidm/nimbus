@@ -127,6 +127,7 @@ namespace nimbus {
     JobEntryList job_queue_;
     boost::recursive_mutex job_queue_mutex_;
     boost::condition_variable_any job_queue_cond_;
+    size_t pending_assignment_;
 
     std::list<boost::thread*> job_assigner_threads_;
 

@@ -70,6 +70,7 @@ void LoadBalancer::Initialize() {
   cluster_map_ = NULL;
   job_manager_ = NULL;
   data_manager_ = NULL;
+  pending_assignment_ = 0;
   log_.set_file_name("load_balancer_log");
 }
 
@@ -144,6 +145,7 @@ void LoadBalancer::JobAssignerThread() {
       JobEntryList::iterator iter = job_queue_.begin();
       job = *iter;
       job_queue_.erase(iter);
+      ++pending_assignment_;
     }
 
     if (!AssignJob(job)) {
@@ -151,7 +153,11 @@ void LoadBalancer::JobAssignerThread() {
       exit(-1);
     }
 
-    job_queue_cond_.notify_all();
+    {
+      boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
+      --pending_assignment_;
+      job_queue_cond_.notify_all();
+    }
   }
 }
 
@@ -161,7 +167,7 @@ void LoadBalancer::AssignJobs(const JobEntryList& list) {
   job_queue_ = list;
   job_queue_cond_.notify_all();
 
-  while (job_queue_.size() > 0) {
+  while (job_queue_.size() > 0 || pending_assignment_ > 0) {
     job_queue_cond_.wait(job_queue_lock);
   }
 }
