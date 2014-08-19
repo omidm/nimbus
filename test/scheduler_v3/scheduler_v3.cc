@@ -39,7 +39,7 @@
 #include <math.h>
 #include "./scheduler_v3.h"
 
-#define MAX_JOB_TO_ASSIGN 1
+#define MAX_JOB_TO_ASSIGN 5
 
 SchedulerV3::SchedulerV3(unsigned int p)
 : Scheduler(p) {

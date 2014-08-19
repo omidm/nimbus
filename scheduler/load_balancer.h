@@ -114,24 +114,24 @@ namespace nimbus {
     std::list<job_id_t> done_jobs_;
 
     RegionMap region_map_;
-    boost::mutex region_map_mutex_;
+    boost::recursive_mutex region_map_mutex_;
 
     WorkerMap worker_map_;
-    boost::mutex worker_map_mutex_;
+    boost::recursive_mutex worker_map_mutex_;
 
     StragglerMap straggler_map_;
-    boost::mutex straggler_map_mutex_;
+    boost::recursive_mutex straggler_map_mutex_;
 
     JobEntryList job_queue_;
-    boost::mutex job_queue_mutex_;
-    boost::condition_variable job_queue_cond_;
+    boost::recursive_mutex job_queue_mutex_;
+    boost::condition_variable_any job_queue_cond_;
 
     std::list<boost::thread*> job_assigner_threads_;
 
     bool update_;
     bool init_phase_;
-    boost::mutex update_mutex_;
-    boost::condition_variable update_cond_;
+    boost::recursive_mutex update_mutex_;
+    boost::condition_variable_any update_cond_;
 
     std::map<worker_id_t, size_t> blame_map_;
     size_t blame_counter_;

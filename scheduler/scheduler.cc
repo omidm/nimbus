@@ -44,7 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10000
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 1
+#define MAX_JOB_TO_ASSIGN 5
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {

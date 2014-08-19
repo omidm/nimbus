@@ -46,7 +46,7 @@
 #include "scheduler/load_balancer.h"
 
 #define LB_UPDATE_RATE 100
-#define JOB_ASSIGNER_THREAD_NUM 1
+#define JOB_ASSIGNER_THREAD_NUM 5
 
 namespace nimbus {
 
@@ -107,16 +107,15 @@ void LoadBalancer::Run() {
   }
 
   while (true) {
-    boost::adopt_lock_t recursive;
-    boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
+    boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
     while (!update_) {
       update_cond_.wait(update_lock);
     }
     update_ = false;
     update_cond_.notify_all();
 
-    boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-    boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+    boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
+    boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
 
     if (worker_num_ != region_map_.table_size() ||
         global_region_ != data_manager_->global_bounding_region()) {
@@ -136,7 +135,7 @@ void LoadBalancer::JobAssignerThread() {
   while (true) {
     JobEntry *job;
     {
-      boost::unique_lock<boost::mutex> job_queue_lock(job_queue_mutex_);
+      boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
 
       while (job_queue_.size() == 0) {
         job_queue_cond_.wait(job_queue_lock);
@@ -157,7 +156,7 @@ void LoadBalancer::JobAssignerThread() {
 }
 
 void LoadBalancer::AssignJobs(const JobEntryList& list) {
-  boost::unique_lock<boost::mutex> job_queue_lock(job_queue_mutex_);
+  boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
   assert(job_queue_.size() == 0);
   job_queue_ = list;
   job_queue_cond_.notify_all();
@@ -610,19 +609,16 @@ bool LoadBalancer::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job
 
 bool LoadBalancer::GetWorkerToAssignJob(
     JobEntry *job, SchedulerWorker*& worker) {
-
-
   Log log;
   log.StartTimer();
 
-  boost::adopt_lock_t recursive;
-  boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
+  boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
   while (update_) {
     update_cond_.wait(update_lock);
   }
 
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+  boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
+  boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
 
   if ((worker_num_ != region_map_.table_size()) ||
       (global_region_ != data_manager_->global_bounding_region())) {
@@ -759,8 +755,7 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 
   worker_id_t blamed_worker_id;
   if (job_profile->FindBlamedWorker(&blamed_worker_id)) {
-    boost::adopt_lock_t recursive;
-    boost::unique_lock<boost::mutex> straggler_map_lock(straggler_map_mutex_, recursive);
+    boost::unique_lock<boost::recursive_mutex> straggler_map_lock(straggler_map_mutex_);
     straggler_map_.AddRecord(job->assigned_worker(), blamed_worker_id);
     std::cout << "STRAGGLER ADD RECORD: job name: " << job->job_name()
               << " worker: " << job->assigned_worker()
@@ -779,9 +774,8 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 
 
 void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
-  boost::adopt_lock_t recursive;
-  boost::unique_lock<boost::mutex> update_lock(update_mutex_, recursive);
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
+  boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
+  boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
 
   worker_id_t worker_id = worker->worker_id();
   WorkerMapIter iter = worker_map_.find(worker_id);
@@ -797,9 +791,8 @@ void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
 }
 
 void LoadBalancer::InitializeRegionMap() {
-  boost::adopt_lock_t recursive;
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
+  boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
+  boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
 
   std::vector<worker_id_t> worker_ids;
   WorkerMapIter iter = worker_map_.begin();
@@ -816,10 +809,9 @@ void LoadBalancer::InitializeRegionMap() {
 }
 
 void LoadBalancer::UpdateRegionMap() {
-  boost::adopt_lock_t recursive;
-  boost::unique_lock<boost::mutex> worker_map_lock(worker_map_mutex_, recursive);
-  boost::unique_lock<boost::mutex> region_map_lock(region_map_mutex_, recursive);
-  boost::unique_lock<boost::mutex> straggler_map_lock(straggler_map_mutex_, recursive);
+  boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
+  boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
+  boost::unique_lock<boost::recursive_mutex> straggler_map_lock(straggler_map_mutex_);
 
   worker_id_t fast, slow;
   if (straggler_map_.GetMostImbalanceWorkers(&fast, &slow)) {
