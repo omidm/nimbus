@@ -69,6 +69,7 @@ SET(${PROJECT_NAME}_cpp
     ${PROJECT_SOURCE_DIR}/projection/cache_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/cache_sparse_matrix.cc
     ${PROJECT_SOURCE_DIR}/projection/cache_vector.cc
+    ${PROJECT_SOURCE_DIR}/projection/cache_raw_grid_array.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.cc
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.cc
@@ -150,6 +151,7 @@ SET(${PROJECT_NAME}_h
     ${PROJECT_SOURCE_DIR}/projection/cache_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/cache_sparse_matrix.h
     ${PROJECT_SOURCE_DIR}/projection/cache_vector.h
+    ${PROJECT_SOURCE_DIR}/projection/cache_raw_grid_array.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_grid_array.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_array_m2c.h
     ${PROJECT_SOURCE_DIR}/projection/data_raw_vector_nd.h

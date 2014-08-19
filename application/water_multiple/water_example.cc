@@ -888,7 +888,6 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cm->ReleaseAccess(cache_vector_b);
       cache_vector_b = NULL;
     }
-    // TODO(quhang).
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
       assert(cache_index_c2m);
       typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;

@@ -157,7 +157,7 @@ void GetAppCacheObjects(
             write, array_reg,
             kCacheIndexC2M, array_reg,
             nimbus::cache::EXCLUSIVE);
-    cache->index_c2m = dynamic_cast<CacheScalarArray<int>*>(cache_var);
+    cache->index_c2m = dynamic_cast<CacheRawGridArray*>(cache_var);
     assert(cache->index_c2m != NULL);
   }
   // filled_region_colors.

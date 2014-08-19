@@ -107,7 +107,7 @@ public:
     TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
     TCacheScalarArray *cache_pressure, *cache_divergence;
     IntCacheScalarArray *cache_colors;
-    IntCacheScalarArray *cache_index_c2m;
+    application::CacheRawGridArray *cache_index_c2m;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
     TCacheSparseMatrix *cache_matrix_a;

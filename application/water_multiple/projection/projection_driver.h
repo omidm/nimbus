@@ -165,7 +165,7 @@ class ProjectionDriver {
   typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
   TCacheScalarArray *cache_pressure;
   TCacheScalarArray *cache_vector_p;
-  IntCacheScalarArray *cache_index_c2m;
+  application::CacheRawGridArray *cache_index_c2m;
   application::CacheSparseMatrix *cache_matrix_a;
   application::CacheSparseMatrix *cache_matrix_c;
   application::CacheArrayM2C * cache_index_m2c;

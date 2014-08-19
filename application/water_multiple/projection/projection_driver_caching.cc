@@ -227,7 +227,6 @@ void ProjectionDriver::Cache_LoadFromNimbus(
 
   log_timer.StartTimer();
   // INDEX_C2M. It cannot be splitted or merged.
-  // TODO(quhang): wrong.
   if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
     nimbus::DataArray read, write;
     const std::string index_c2m_string = std::string(APP_INDEX_C2M);
@@ -239,7 +238,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             write, array_reg_central,
             application::kCacheIndexC2M, array_reg_central,
             nimbus::cache::EXCLUSIVE);
-    cache_index_c2m = dynamic_cast<application::CacheScalarArray<int>*>(cache_var);
+    cache_index_c2m = dynamic_cast<application::CacheRawGridArray*>(cache_var);
     assert(cache_index_c2m != NULL);
     typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
     T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();

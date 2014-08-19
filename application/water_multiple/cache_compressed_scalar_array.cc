@@ -39,6 +39,7 @@
 #include <string>
 #include <boost/functional/hash.hpp>
 
+#include "application/water_multiple/app_utils.h"
 #include "application/water_multiple/physbam_include.h"
 #include "application/water_multiple/physbam_tools.h"
 #include "data/cache/cache_var.h"
@@ -119,7 +120,11 @@ WriteFromCache(const nimbus::DataArray &write_set,
 
 template<class T> void CacheCompressedScalarArray<T>::
 set_index_data(IndexType* d) {
+  // delete index_data_;
+  // index_data_ = new IndexType(*d);
+  // return;
   if (d->hash_code == 0) {
+    dbg(APP_LOG, "Recalculate hash code for meta data.\n");
     d->hash_code = CalculateHashCode(*d);
   }
   assert(index_data_ == NULL || index_data_->hash_code != 0);
@@ -128,6 +133,9 @@ set_index_data(IndexType* d) {
       delete index_data_;
     }
     index_data_ = new IndexType(*d);
+    index_data_->hash_code = 0;
+    dbg(APP_LOG, "Replace meta data, hash=%d replaced by hash=%d.\n",
+        index_data_->hash_code, d->hash_code);
     index_data_->hash_code = d->hash_code;
   }
 }

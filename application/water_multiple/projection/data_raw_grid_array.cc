@@ -79,6 +79,7 @@ bool DataRawGridArray::LoadFromNimbus(PhysBAM::ARRAY<T, TV_INT>* array) {
   assert(array->counts.Product() == header.n);
   pointer += sizeof(Header);
   memcpy(array->array.Get_Array_Pointer(), pointer, header.n * sizeof(T));
+  array->hash_code = 0;
   return true;
 }
 
