@@ -46,7 +46,7 @@
 #include "scheduler/load_balancer.h"
 
 #define LB_UPDATE_RATE 100
-#define JOB_ASSIGNER_THREAD_NUM 5
+#define JOB_ASSIGNER_THREAD_NUM 2
 
 namespace nimbus {
 
@@ -167,7 +167,7 @@ void LoadBalancer::AssignJobs(const JobEntryList& list) {
   job_queue_ = list;
   job_queue_cond_.notify_all();
 
-  while (job_queue_.size() > 0 || pending_assignment_ > 0) {
+  while ((job_queue_.size() > 0) || (pending_assignment_ > 0)) {
     job_queue_cond_.wait(job_queue_lock);
   }
 }
@@ -778,6 +778,11 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
       update_ = true;
       update_cond_.notify_all();
     }
+  }
+
+  std::string jname = job->job_name();
+  if (jname == "loop_iteration") {
+    log_.StartTimer();
   }
 }
 

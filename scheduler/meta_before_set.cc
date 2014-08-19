@@ -134,6 +134,8 @@ bool MetaBeforeSet::LookUpBeforeSetChain(job_id_t job_id, job_depth_t job_depth)
     return false;
   }
 
+  boost::unique_lock<boost::mutex> lock(mutex_);
+
   if (table_.count(job_id) > 0) {
     return true;
   }
@@ -159,10 +161,12 @@ bool MetaBeforeSet::LookUpBeforeSetChain(job_id_t job_id, job_depth_t job_depth)
 }
 
 void MetaBeforeSet::InvalidateNegativeQueryCache() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   negative_query_.clear();
 }
 
 void MetaBeforeSet::Clear() {
+  boost::unique_lock<boost::mutex> lock(mutex_);
   table_.clear();
   positive_query_.clear();
   negative_query_.clear();
