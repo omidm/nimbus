@@ -150,6 +150,7 @@ class JobManager {
 
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;
+    boost::recursive_mutex job_queue_mutex_;
 
     Log log_version_;
     Log log_merge_;

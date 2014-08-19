@@ -709,6 +709,7 @@ void LoadBalancer::NotifyJobAssignment(
     job_profile->set_ready(true);
   }
 
+  boost::unique_lock<boost::recursive_mutex> lock(job_history_mutex_);
   job_history_[job->job_id()] = job_profile;
 }
 

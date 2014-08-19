@@ -509,6 +509,8 @@ size_t JobManager::RemoveObsoleteJobEntries() {
 }
 
 void JobManager::NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker) {
+  boost::unique_lock<boost::recursive_mutex> lock(job_queue_mutex_);
+
   job->set_assigned(true);
   job->set_assigned_worker(worker->worker_id());
   jobs_pending_to_assign_.erase(job->job_id());

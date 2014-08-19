@@ -111,6 +111,8 @@ namespace nimbus {
     DataManager *data_manager_;
 
     JobHistory job_history_;
+    boost::recursive_mutex job_history_mutex_;
+
     std::list<job_id_t> done_jobs_;
 
     RegionMap region_map_;
