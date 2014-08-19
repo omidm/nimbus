@@ -321,6 +321,7 @@ void JobManager::PassMetaBeforeSetDepthVersioningDependency(JobEntry* job) {
 
 bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
   Vertex<JobEntry, job_id_t>* vertex;
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   if (job_graph_.GetVertex(job_id, &vertex)) {
     job = vertex->entry();
     return true;
@@ -515,19 +516,25 @@ size_t JobManager::RemoveObsoleteJobEntries() {
 }
 
 void JobManager::NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker) {
-  boost::unique_lock<boost::recursive_mutex> lock(job_queue_mutex_);
-
   job->set_assigned(true);
   job->set_assigned_worker(worker->worker_id());
-  jobs_pending_to_assign_.erase(job->job_id());
+
+  {
+    boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
+    jobs_pending_to_assign_.erase(job->job_id());
+  }
 
   if (job->sterile()) {
     job_id_t job_id = job->job_id();
     Vertex<JobEntry, job_id_t>* vertex;
-    job_graph_.GetVertex(job_id, &vertex);
+    {
+      boost::unique_lock<boost::mutex> job_graph_lock(job_graph_mutex_);
+      job_graph_.GetVertex(job_id, &vertex);
+    }
     typename Edge<JobEntry, job_id_t>::Iter it;
     for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
       JobEntry *j = it->second->end_vertex()->entry();
+      boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
       j->remove_assignment_dependency(job_id);
       if (j->IsReadyToAssign()) {
         jobs_ready_to_assign_[j->job_id()] = j;
