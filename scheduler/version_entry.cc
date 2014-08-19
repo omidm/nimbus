@@ -94,6 +94,8 @@ bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
 
 size_t VersionEntry::GetJobsNeedVersion(
     JobEntryList* list, data_version_t version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!UpdateLdl()) {
     dbg(DBG_ERROR, "ERROR: Could not update the ldl for ldid %lu.\n", ldid_);
   }
@@ -193,6 +195,8 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
 bool VersionEntry::LookUpVersion(
     JobEntry *job,
     data_version_t *version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!UpdateLdl()) {
     dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
   }

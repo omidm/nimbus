@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_MAP_H_
 #define NIMBUS_SCHEDULER_VERSION_MAP_H_
 
+#include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <map>
@@ -75,6 +76,7 @@ class VersionMap {
 
   private:
     Map content_;
+    mutable boost::recursive_mutex mutex_;
 };
 
 

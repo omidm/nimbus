@@ -44,6 +44,7 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 #define NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 
+#include <boost/thread.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <set>
@@ -101,6 +102,7 @@ class VersionEntry {
     Bucket pending_writer_jobs_;
     Index index_;
     LogicalDataLineage ldl_;
+    boost::recursive_mutex mutex_;
 
     bool UpdateLdl();
 };
