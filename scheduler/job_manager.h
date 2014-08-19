@@ -139,6 +139,8 @@ class JobManager {
 
   private:
     Graph<JobEntry, job_id_t> job_graph_;
+    boost::mutex job_graph_mutex_;
+
     VersionManager version_manager_;
     LdlMap ldl_map_;
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;

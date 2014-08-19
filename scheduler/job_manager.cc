@@ -175,6 +175,7 @@ bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
 bool JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
   JobEntry* job = new CreateDataJobEntry(job_id);
 
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
@@ -188,6 +189,7 @@ bool JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
 bool JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
   JobEntry* job = new LocalCopyJobEntry(job_id);
 
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
@@ -201,6 +203,7 @@ bool JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
 bool JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
   JobEntry* job = new RemoteCopySendJobEntry(job_id);
 
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
@@ -214,6 +217,7 @@ bool JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
 bool JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
   JobEntry* job = new RemoteCopyReceiveJobEntry(job_id);
 
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
@@ -226,6 +230,8 @@ bool JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
 
 bool JobManager::AddFutureJobEntry(const job_id_t& job_id) {
   JobEntry* job = new FutureJobEntry(job_id);
+
+  boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
