@@ -216,6 +216,8 @@ bool LoadBalancer::PrepareDataForJobAtWorker(JobEntry* job,
   LogicalDataObject* ldo =
     const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
 
+  boost::unique_lock<boost::mutex> lock(ldo->mutex());
+
   data_version_t version;
   if (reading) {
     if (!job->vmap_read()->query_entry(l_id, &version)) {

@@ -175,4 +175,16 @@ void LogicalDataObject::FillInMessage(LdoPBuf* msg) {
   region_->FillInMessage(msg->mutable_region());
 }
 
+boost::mutex& LogicalDataObject::mutex() {
+  return mutex_;
+}
+
+void LogicalDataObject::Lock() {
+  mutex_.lock();
+}
+
+void LogicalDataObject::Unlock() {
+  mutex_.unlock();
+}
+
 }  // namespace nimbus
