@@ -301,6 +301,7 @@ void JobProjectionLoopIteration::Execute(
                           NULL);
       LoadLogicalIdsInSet(
           this, &read, kRegY2W0Central[index],
+          APP_VECTOR_TEMP,
           APP_PROJECTION_LOCAL_N, APP_PROJECTION_INTERIOR_N,
           APP_MATRIX_A,
           APP_INDEX_C2M,

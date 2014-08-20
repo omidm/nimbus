@@ -63,6 +63,7 @@ void ProjectionDriver::Cache_Initialize(int local_n, int interior_n) {
   if (projection_data.temp.Size() != local_n &&
       data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     assert(data_config.GetFlag(DataConfig::PROJECTION_LOCAL_N));
+    dbg(APP_LOG, "Warning: VECTOR_TEMP resized.\n");
     projection_data.temp.Resize(local_n, false);
   }
   // Sets subview if necessary.
@@ -456,6 +457,8 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   if (data_config.GetFlag(DataConfig::VECTOR_TEMP)) {
     nimbus::DataArray read, write;
     const std::string vector_string = std::string(APP_VECTOR_TEMP);
+    application::GetReadData(*job, vector_string, da, &read);
+    application::GetWriteData(*job, vector_string, da, &write);
     nimbus::CacheVar* cache_var =
         cm->GetAppVar(
             read, array_reg_central,
@@ -490,7 +493,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
   dbg(APP_LOG, "[PROJECTION] LOAD, vector_pressure time:%f.\n", log_timer.timer());
 
   log_timer.StartTimer();
-  Initialize(projection_data.local_n, projection_data.interior_n);
+  Cache_Initialize(projection_data.local_n, projection_data.interior_n);
   dbg(APP_LOG, "[PROJECTION] LOAD, else time:%f.\n", log_timer.timer());
 }
 
@@ -529,6 +532,7 @@ void ProjectionDriver::Cache_SaveToNimbus(
     *cache_meta_p->data() = projection_data.meta_p;
     cm->ReleaseAccess(cache_meta_p);
     cache_meta_p = NULL;
+    }
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n", log_timer.timer());
 

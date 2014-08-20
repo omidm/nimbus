@@ -114,7 +114,7 @@ WriteFromCache(const nimbus::DataArray &write_set,
   // then write.
   assert(index_data_ != NULL);
   Translator::template
-      WriteCompressedScalarArray<T>(final_write_reg, shift_, write_set, *data_,
+      WriteCompressedScalarArray<T>(write_reg, shift_, write_set, *data_,
                                     data_length_, *index_data_);
 }
 
