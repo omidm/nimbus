@@ -45,6 +45,7 @@
 
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/thread.hpp>
 #include <utility>
 #include <list>
 #include <map>
@@ -104,6 +105,7 @@ class VersionManager {
     bool parent_removed_;
     IDSet<job_id_t> live_parents_;
     ChildCounter child_counter_;
+    boost::mutex child_counter_mutex_;
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 };
 

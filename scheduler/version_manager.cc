@@ -172,6 +172,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
           it->first, job->job_id(), version, job->job_depth());
     }
 
+    boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
     ChildCounterIter cit = child_counter_.find(job->job_id());
     if (cit == child_counter_.end()) {
       live_parents_.insert(job->job_id());
@@ -181,6 +182,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
     }
   }
 
+  boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
   ChildCounterIter it = child_counter_.find(job->parent_job_id());
   if (it != child_counter_.end()) {
     --it->second;
