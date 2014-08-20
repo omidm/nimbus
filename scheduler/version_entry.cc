@@ -265,6 +265,8 @@ bool VersionEntry::InsertParentLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   return ldl_.InsertParentLdlEntry(job_id, version, job_depth);
 }
 
