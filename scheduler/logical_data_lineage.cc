@@ -133,9 +133,9 @@ bool LogicalDataLineage::AppendLdlEntry(
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
 
-  if (!sterile) {
-    parents_index_.push_back(--(chain_.end()));
-  }
+//  if (!sterile) {
+//    parents_index_.push_back(--(chain_.end()));
+//  }
 
   return true;
 }
@@ -157,19 +157,19 @@ bool LogicalDataLineage::InsertParentLdlEntry(
 
   chain_.insert(it.base(), LdlEntry(job_id, version, job_depth, false));
 
-  Index::reverse_iterator iit = parents_index_.rbegin();
-  for (; iit != parents_index_.rend(); ++iit) {
-    if ((*iit)->version() <= version) {
-      break;
-    }
-  }
-
-  parents_index_.insert(iit.base(), --it.base());
-
-  // TODO(omidm) : remove this check!
-  for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
-    assert(!(*iit)->sterile());
-  }
+//  Index::reverse_iterator iit = parents_index_.rbegin();
+//  for (; iit != parents_index_.rend(); ++iit) {
+//    if ((*iit)->version() <= version) {
+//      break;
+//    }
+//  }
+//
+//  parents_index_.insert(iit.base(), --it.base());
+//
+//  // TODO(omidm) : remove this check!
+//  for (iit = parents_index_.rbegin(); iit != parents_index_.rend(); ++iit) {
+//    assert(!(*iit)->sterile());
+//  }
 
   return true;
 }
@@ -184,18 +184,34 @@ bool LogicalDataLineage::CleanChain(
 
   IDSet<job_id_t> temp = live_parents;
 
-  Index::reverse_iterator iit = parents_index_.rbegin();
-  for (; iit != parents_index_.rend(); ++iit) {
-    temp.remove((*iit)->job_id());
-    if (temp.size() == 0) {
-      break;
+
+  Chain::reverse_iterator it = chain_.rbegin();
+  for (; it != chain_.rend(); ++it) {
+    if (!(it->sterile())) {
+      temp.remove(it->job_id());
+      if (temp.size() == 0) {
+        break;
+      }
     }
   }
 
   assert(temp.size() == 0);
 
-  parents_index_.erase(parents_index_.begin(), --(iit.base()));
-  chain_.erase(chain_.begin(), *iit);
+  chain_.erase(chain_.begin(), --(it.base()));
+
+
+//  Index::reverse_iterator iit = parents_index_.rbegin();
+//  for (; iit != parents_index_.rend(); ++iit) {
+//    temp.remove((*iit)->job_id());
+//    if (temp.size() == 0) {
+//      break;
+//    }
+//  }
+//
+//  assert(temp.size() == 0);
+//
+//  parents_index_.erase(parents_index_.begin(), --(iit.base()));
+//  chain_.erase(chain_.begin(), *iit);
 
   return true;
 }
