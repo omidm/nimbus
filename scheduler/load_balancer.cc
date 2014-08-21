@@ -784,7 +784,6 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
   std::string jname = job->job_name();
   if (jname == "loop_iteration") {
     log_.StartTimer();
-    assert(stamp_state_ == -1);
     stamp_state_ = 0;
   }
 }
