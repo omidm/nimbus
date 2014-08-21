@@ -137,6 +137,16 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
     dbg(DBG_NET, "ReceiveCommand: %u bytes available,", bytes_available);
     bytes_available =
       std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_ - existing_bytes_);
+
+    // This is the case when the buffer is full with incomplete message.
+    // Then it will run into an infinit loop.
+    if (bytes_available == 0) {
+      std::string err_msg = "ERROR: ";
+      err_msg += "scheduler client buffer is full with incomplete command. ";
+      err_msg += "You need to increase the CLIENT_BUFFSIZE in scheduler_client.cc.\n";
+      dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
+    }
+
     dbg(DBG_NET, " preparing to reading %u bytes, ", bytes_available);
     boost::asio::streambuf::mutable_buffers_type bufs =
       read_buffer_->prepare(bytes_available);
