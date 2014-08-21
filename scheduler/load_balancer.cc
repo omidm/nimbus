@@ -619,7 +619,7 @@ bool LoadBalancer::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job
 bool LoadBalancer::GetWorkerToAssignJob(
     JobEntry *job, SchedulerWorker*& worker) {
   Log log;
-  log.StartTimer();
+  log.log_StartTimer();
 
   boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
   while (update_) {
@@ -656,7 +656,7 @@ bool LoadBalancer::GetWorkerToAssignJob(
     worker = worker_map_[w_id];
   }
 
-  log.StopTimer();
+  log.log_StopTimer();
   std::cout
     << "Picked worker: " << worker->worker_id()
     << " for job: " << job->job_name()
@@ -783,7 +783,7 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 
   std::string jname = job->job_name();
   if (jname == "loop_iteration") {
-    log_.StartTimer();
+    log_.log_StartTimer();
     stamp_state_ = 0;
   }
 }

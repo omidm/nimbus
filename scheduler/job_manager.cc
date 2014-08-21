@@ -378,11 +378,11 @@ bool JobManager::ResolveJobDataVersions(JobEntry *job) {
 }
 
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
-  log_version_.ResetTimer();
-  log_merge_.ResetTimer();
-  log_lookup_.ResetTimer();
-  log_sterile_.ResetTimer();
-  log_nonsterile_.ResetTimer();
+  log_version_.log_ResetTimer();
+  log_merge_.log_ResetTimer();
+  log_lookup_.log_ResetTimer();
+  log_sterile_.log_ResetTimer();
+  log_nonsterile_.log_ResetTimer();
   lookup_count_ = 0;
   // while (ResolveDataVersions() > 0) {
   //   continue;
@@ -481,11 +481,11 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
 }
 
 size_t JobManager::RemoveObsoleteJobEntries() {
-  log_version_.ResetTimer();
-  log_merge_.ResetTimer();
-  log_lookup_.ResetTimer();
-  log_sterile_.ResetTimer();
-  log_nonsterile_.ResetTimer();
+  log_version_.log_ResetTimer();
+  log_merge_.log_ResetTimer();
+  log_lookup_.log_ResetTimer();
+  log_sterile_.log_ResetTimer();
+  log_nonsterile_.log_ResetTimer();
   lookup_count_ = 0;
   // while (ResolveDataVersions() > 0) {
   //   continue;
@@ -630,7 +630,7 @@ void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
 
 
 size_t JobManager::ResolveDataVersions() {
-  log_version_.ResumeTimer();
+  log_version_.log_ResumeTimer();
 
   size_t num = 0;
 
@@ -656,7 +656,7 @@ size_t JobManager::ResolveDataVersions() {
          * Logical data lineage approach with meta before set.
          */
         if (job->sterile()) {
-          log_sterile_.ResumeTimer();
+          log_sterile_.log_ResumeTimer();
           boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
           IDSet<logical_data_id_t>::ConstIter itw;
           for (itw = job->write_set_p()->begin(); itw != job->write_set_p()->end(); ++itw) {
@@ -666,10 +666,10 @@ size_t JobManager::ResolveDataVersions() {
                   *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
               vmap->set_entry(*itw, version + 1);
             } else {
-              log_lookup_.ResumeTimer();
+              log_lookup_.log_ResumeTimer();
               lookup_count_++;
               bool found = LookUpVersion(job, *itw, &version);
-              log_lookup_.StopTimer();
+              log_lookup_.log_StopTimer();
               if (found) {
                 ldl_map_.AppendLdlEntry(
                     *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
@@ -682,9 +682,9 @@ size_t JobManager::ResolveDataVersions() {
           }
           job->set_vmap_write(vmap);
 
-          log_sterile_.StopTimer();
+          log_sterile_.log_StopTimer();
         } else {
-          log_nonsterile_.ResumeTimer();
+          log_nonsterile_.log_ResumeTimer();
           boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
           vmap->set_content(job->vmap_read()->content());
           IDSet<logical_data_id_t>::ConstIter itw;
@@ -695,10 +695,10 @@ size_t JobManager::ResolveDataVersions() {
                   *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
               vmap->set_entry(*itw, version + 1);
             } else {
-              log_lookup_.ResumeTimer();
+              log_lookup_.log_ResumeTimer();
               lookup_count_++;
               bool found = LookUpVersion(job, *itw, &version);
-              log_lookup_.StopTimer();
+              log_lookup_.log_StopTimer();
               if (found) {
                 ldl_map_.AppendLdlEntry(
                     *itw, job->job_id(), version + 1, job->job_depth(), job->sterile());
@@ -712,7 +712,7 @@ size_t JobManager::ResolveDataVersions() {
           job->set_vmap_write(vmap);
 
           // Clear meta before set and update the ldl.
-          log_merge_.ResumeTimer();
+          log_merge_.log_ResumeTimer();
 
           job->meta_before_set()->Clear();
 
@@ -723,9 +723,9 @@ size_t JobManager::ResolveDataVersions() {
             ldl_map_.InsertParentLdlEntry(
                 it->first, job->job_id(), v_out, job->job_depth(), job->sterile());
           }
-          log_merge_.StopTimer();
+          log_merge_.log_StopTimer();
 
-          log_nonsterile_.StopTimer();
+          log_nonsterile_.log_StopTimer();
         }
 
         job->set_versioned(true);
@@ -751,7 +751,7 @@ size_t JobManager::ResolveDataVersions() {
   }
 
 
-  log_version_.StopTimer();
+  log_version_.log_StopTimer();
   return num;
 }
 
@@ -784,34 +784,34 @@ void JobManager::PassDataVersionToJob(
   job->set_job_depth(depth + 1);
 
   if (job->sterile()) {
-    log_sterile_.ResumeTimer();
+    log_sterile_.log_ResumeTimer();
     IDSet<logical_data_id_t>::ConstIter it;
     for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
       data_version_t version;
-      log_lookup_.ResumeTimer();
+      log_lookup_.log_ResumeTimer();
       lookup_count_++;
       bool found = LookUpVersion(job, *it, &version);
-      log_lookup_.StopTimer();
+      log_lookup_.log_StopTimer();
       if (found) {
         job->vmap_read()->set_entry(*it, version);
       }
     }
-    log_sterile_.StopTimer();
+    log_sterile_.log_StopTimer();
   } else {
-    log_nonsterile_.ResumeTimer();
+    log_nonsterile_.log_ResumeTimer();
     boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
     std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
-      log_lookup_.ResumeTimer();
+      log_lookup_.log_ResumeTimer();
       lookup_count_++;
       bool found = LookUpVersion(job, it->first, &version);
-      log_lookup_.StopTimer();
+      log_lookup_.log_StopTimer();
       if (found) {
         job->vmap_read()->set_entry(it->first, version);
       }
     }
-    log_nonsterile_.StopTimer();
+    log_nonsterile_.log_StopTimer();
   }
 
   job->set_partial_versioned(true);

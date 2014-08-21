@@ -46,6 +46,7 @@
 #include "worker/physical_data_instance.h"
 #include "shared/nimbus.h"
 #include "./app.h"
+#include "shared/dbg.h"
 
 #define INIT_JOB_NAME "init"
 #define PRINT_JOB_NAME "print"

@@ -59,6 +59,10 @@
 #define log_WriteBufferToFile(...) WriteBufferToFile(__VA_ARGS__)
 #define log_WriteToOutputStream(...) WriteToOutputStream(__VA_ARGS__)
 #define log_WriteBufferToOutputStream(...) WriteBufferToOutputStream(__VA_ARGS__) // NOLINT
+#define log_ResetTimer(...) ResetTimer(__VA_ARGS__)
+#define log_StartTimer(...) StartTimer(__VA_ARGS__)
+#define log_ResumeTimer(...) ResumeTimer(__VA_ARGS__)
+#define log_StopTimer(...) StopTimer(__VA_ARGS__)
 #else
 #define log_Print(...) none()
 #define log_PrintLine(...) none()
@@ -67,6 +71,10 @@
 #define log_WriteBufferToFile(...) none()
 #define log_WriteToOutputStream(...) none()
 #define log_WriteBufferToOutputStream(...) none()
+#define log_ResetTimer(...) none()
+#define log_StartTimer(...) none()
+#define log_ResumeTimer(...) none()
+#define log_StopTimer(...) none()
 #endif
 
 

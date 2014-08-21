@@ -61,6 +61,7 @@ enum {
   DBG_TRANSLATE =       DBG_MODE(9),    /* data translation             */
   DBG_WORKER_FD =       DBG_MODE(10),   /* worker execution(frontend)   */
   DBG_WORKER_BD =       DBG_MODE(11),   /* worker execution(backend)    */
+  DBG_APP       =       DBG_MODE(12),   /* worker execution(backend)    */
 /*====== For application use =========*/
   DBG_PROJ =            DBG_MODE(57),   /* Projection module  -quh      */
   DBG_USR1 =            DBG_MODE(58),   /* User component 1             */
@@ -87,6 +88,7 @@ enum {
         {"dobjects", DBG_DATA_OBJECTS | DBG_ERROR | DBG_WARN},  \
         {"memory",  DBG_MEMORY | DBG_ERROR | DBG_WARN},       \
         {"translate",  DBG_TRANSLATE | DBG_ERROR | DBG_WARN},       \
+        {"app",     DBG_APP    | DBG_ERROR | DBG_WARN}, \
 \
         {"proj",    DBG_PROJ | DBG_ERROR | DBG_WARN}, \
         {"usr1",    DBG_USR1 | DBG_ERROR | DBG_WARN}, \
