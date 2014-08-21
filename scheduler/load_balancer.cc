@@ -46,7 +46,7 @@
 #include "scheduler/load_balancer.h"
 
 #define LB_UPDATE_RATE 100
-#define JOB_ASSIGNER_THREAD_NUM 2
+#define JOB_ASSIGNER_THREAD_NUM 4
 
 namespace nimbus {
 
@@ -72,6 +72,7 @@ void LoadBalancer::Initialize() {
   data_manager_ = NULL;
   pending_assignment_ = 0;
   log_.set_file_name("load_balancer_log");
+  stamp_state_ = -1;
 }
 
 LoadBalancer::~LoadBalancer() {
@@ -193,15 +194,14 @@ bool LoadBalancer::AssignJob(JobEntry *job) {
 
     job_manager_->NotifyJobAssignment(job, worker);
 
-    static bool loop_begins = true;
     std::string jname = job->job_name();
-    if (jname == "update_ghost_velocities" && loop_begins) {
+    if (jname == "update_ghost_velocities" && (stamp_state_ == 0)) {
       std::cout << "STAMP: FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      loop_begins = false;
+      stamp_state_ = 1;
     }
-    if (jname == "projection_main" && !loop_begins) {
+    if (jname == "projection_main" && (stamp_state_ == 1)) {
       std::cout << "STAMP: ALL ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      loop_begins = true;
+      stamp_state_ = -1;
     }
 
     NotifyJobAssignment(job, worker);
@@ -783,6 +783,8 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
   std::string jname = job->job_name();
   if (jname == "loop_iteration") {
     log_.StartTimer();
+    assert(stamp_state_ == -1);
+    stamp_state_ = 0;
   }
 }
 
