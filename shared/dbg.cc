@@ -37,7 +37,6 @@
  *  DESCR: Variables and initialization of DBG routines.
  */
 
-#if !defined(_NIMBUS_NO_DBG)
 
 #include "shared/dbg.h"
 
@@ -47,7 +46,11 @@ static nimbus_dbg_mode_names dbg_nametab[] = {
 };
 
 nimbus_dbg_mode dbg_modes = 0;
+}
 
+#if !defined(_NIMBUS_NO_DBG)
+
+extern "C" {
 void dbg(nimbus_dbg_mode mode, const char *format, ...) {
   if (dbg_active(mode)) {
     va_list args;
@@ -107,7 +110,7 @@ void dbg_add_modes(const char *modes) {
   }
 }
 
-void dbg_init(void) {
+void dbg_init() {
   const char *dbg_env;
 
   dbg_modes = DBG_NONE;
@@ -121,7 +124,7 @@ void dbg_init(void) {
   dbg_add_modes(dbg_env);
 }
 
-void dbg_help(void) {
+void dbg_help() {
   int i = 0;
   printf("Known dbg modes: ");
 

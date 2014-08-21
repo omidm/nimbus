@@ -50,7 +50,6 @@
 #ifndef NIMBUS_SHARED_DBG_H_
 #define NIMBUS_SHARED_DBG_H_
 
-#if !defined(_NIMBUS_NO_DBG)
 
 #include <stdio.h>
 #include <string.h>
@@ -65,7 +64,10 @@ typedef struct dbg_mode {
   const char* d_name;
   uint64_t d_mode;
 } nimbus_dbg_mode_names;
+}
 
+#if !defined(_NIMBUS_NO_DBG)
+extern "C" {
 void dbg(nimbus_dbg_mode mode, const char *format, ...);
 bool dbg_active(nimbus_dbg_mode mode);
 void dbg_add_mode(const char *mode);

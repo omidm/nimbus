@@ -60,6 +60,7 @@
 #include "scheduler/version_manager.h"
 #include "scheduler/physical_data.h"
 #include "scheduler/ldl_map.h"
+#include "shared/log.h"
 
 namespace nimbus {
 class JobManager {
