@@ -40,7 +40,7 @@
 
 #include "shared/worker_data_exchanger_connection.h"
 
-#define WORKER_DATA_BUFSIZE 10240
+#define WORKER_DATA_BUFSIZE 4096000
 // #define WORKER_DATA_BUFSIZE 8
 
 using boost::asio::ip::tcp;
@@ -68,8 +68,8 @@ void WorkerDataExchangerConnection::AllocateData(size_t size) {
 
 void WorkerDataExchangerConnection::AppendData(char* buffer, size_t size) {
   if (size > remaining_data_length_) {
-    std::cout << "ERROR: Appending beyond the size of data, ignored." <<
-      std::endl;
+    dbg(DBG_ERROR, "ERROR: Appending beyond the size of data, ignored.\n");
+    exit(-1);
     return;
   }
   memcpy(data_cursor_, buffer, size);

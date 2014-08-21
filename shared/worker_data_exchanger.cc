@@ -159,6 +159,17 @@ void WorkerDataExchanger::HandleRead(WorkerDataExchangerConnection* connection,
       break;
   }
 
+  // This is the case when the buffer is full with incomplete message.
+  // Then it cannot make progress anymore.
+  if (remaining == connection->read_buffer_max_length()) {
+    std::string err_msg = "ERROR: ";
+    err_msg += "worker data exchanger buffer is full with incomplete data. ";
+    err_msg += "You need to increase the WORKER_DATA_BUFSIZE ";
+    err_msg += "in worker_data_exchanger_connection.cc.\n";
+    dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
+    exit(-1);
+  }
+
   char* buffer = connection->read_buffer();
   memmove(buffer, (buffer + read_len), remaining);
   connection->set_existing_bytes(remaining);

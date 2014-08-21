@@ -56,7 +56,7 @@
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
 
-#define CLIENT_BUFSIZE 4096000
+#define CLIENT_BUFSIZE 40960000
 
 SchedulerClient::SchedulerClient(std::string scheduler_ip,
                                  port_t scheduler_port)
