@@ -104,6 +104,7 @@ namespace nimbus {
     size_t worker_num_;
     GeometricRegion global_region_;
     int stamp_state_;
+    boost::mutex stamp_mutex_;
 
     IDMaker *id_maker_;
     SchedulerServer* server_;

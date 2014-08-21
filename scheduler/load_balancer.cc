@@ -194,6 +194,9 @@ bool LoadBalancer::AssignJob(JobEntry *job) {
 
     job_manager_->NotifyJobAssignment(job, worker);
 
+    NotifyJobAssignment(job, worker);
+
+    boost::unique_lock<boost::mutex> lock(stamp_mutex_);
     std::string jname = job->job_name();
     if (jname == "update_ghost_velocities" && (stamp_state_ == 0)) {
       std::cout << "STAMP: FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
@@ -203,8 +206,6 @@ bool LoadBalancer::AssignJob(JobEntry *job) {
       std::cout << "STAMP: ALL ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
       stamp_state_ = -1;
     }
-
-    NotifyJobAssignment(job, worker);
 
     return true;
   }
