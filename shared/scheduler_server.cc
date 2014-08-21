@@ -271,6 +271,17 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
       "Scheduler received %i bytes from worker %i, enqueued %i bytes as commands, %i remaining.\n",
       bytes_transferred, worker->worker_id(), len, remaining);
 
+
+  // This is the case when the buffer is full with incomplete message.
+  // Then it cannot make progress anymore.
+  if (remaining == worker->read_buffer_length()) {
+    std::string err_msg = "ERROR: ";
+    err_msg += "scheduler server buffer is full with incomplete command. ";
+    err_msg += "You need to increase the WORKER_BUFSIZE in scheduler_worker.cc.\n";
+    dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
+    exit(-1);
+  }
+
   // This is for the case when the string buffer had an incomplete
   // command at its end. Copy the fragement of the command to the beginning
   // of the buffer, mark how many bytes are valid with existing_bytes.

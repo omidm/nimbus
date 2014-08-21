@@ -145,6 +145,7 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
       err_msg += "scheduler client buffer is full with incomplete command. ";
       err_msg += "You need to increase the CLIENT_BUFFSIZE in scheduler_client.cc.\n";
       dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
+      exit(-1);
     }
 
     dbg(DBG_NET, " preparing to reading %u bytes, ", bytes_available);
