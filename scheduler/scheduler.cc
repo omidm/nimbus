@@ -44,7 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10000
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
-#define MAX_JOB_TO_ASSIGN 5
+#define MAX_JOB_TO_ASSIGN 1
 
 Scheduler::Scheduler(port_t p)
 : listening_port_(p) {
@@ -54,6 +54,7 @@ Scheduler::Scheduler(port_t p)
   job_manager_ = NULL;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   terminate_application_flag_ = false;
+  stamp_state_ = -1;
 }
 
 Scheduler::~Scheduler() {
@@ -103,6 +104,7 @@ void Scheduler::SchedulerCoreProcessor() {
   while (true) {
     log_loop_.StartTimer();
     log_assign_.ResetTimer();
+    log_server_.ResetTimer();
     log_job_manager_.ResetTimer();
     log_data_manager_.ResetTimer();
     log_version_manager_.ResetTimer();
@@ -118,16 +120,17 @@ void Scheduler::SchedulerCoreProcessor() {
     if (log_loop_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.5lf  assign: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
+          "loop: %2.5lf  assign: %2.5lf server: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
           log_loop_.timer(),
           log_assign_.timer(),
+          log_server_.timer(),
           log_job_manager_.timer(),
           log_data_manager_.timer(),
           log_version_manager_.timer(),
           log_load_balancer_.timer(),
           log_loop_.GetTime());
 
-      // log_.WriteToOutputStream(std::string(buff), LOG_INFO);
+      log_.WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
 }
@@ -254,7 +257,9 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
         ++registered_worker_num_;
         dbg(DBG_SCHED, "Registered new worker, id: %lu IP: %s port: %lu.\n",
             (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port());
+        log_load_balancer_.ResumeTimer();
         load_balancer_->NotifyRegisteredWorker(*iter);
+        log_load_balancer_.StopTimer();
       }
       break;
     }
@@ -280,6 +285,8 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   std::string jname = job->job_name();
   if (jname == "loop_iteration") {
     log_.StartTimer();
+    assert(stamp_state_ == -1);
+    stamp_state_ = 0;
   }
 
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
@@ -389,13 +396,11 @@ size_t Scheduler::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
-    log_job_manager_.ResumeTimer();
     log_version_manager_.ResumeTimer();
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
     }
-    log_job_manager_.StopTimer();
     log_version_manager_.StopTimer();
   }
   return count;
@@ -431,7 +436,9 @@ bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
                        ID<logical_data_id_t>(ldo->id()),
                        ID<physical_data_id_t>(d[0]),
                        before);
+  log_server_.ResumeTimer();
   server_->SendCommand(worker, &cm);
+  log_server_.StopTimer();
 
   *created_data = p;
 
@@ -477,7 +484,9 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
                                 ID<physical_data_id_t>(to_data->id()),
                                 before);
+  log_server_.ResumeTimer();
   server_->SendCommand(to_worker, &cm_r);
+  log_server_.StopTimer();
 
 
   // Send Part.
@@ -508,7 +517,9 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
                              to_worker->ip(),
                              ID<port_t>(to_worker->port()),
                              before);
+  log_server_.ResumeTimer();
   server_->SendCommand(from_worker, &cm_s);
+  log_server_.StopTimer();
 
 
   *from_data = from_data_new;
@@ -559,7 +570,9 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
                         ID<physical_data_id_t>(from_data->id()),
                         ID<physical_data_id_t>(to_data->id()),
                         before);
+  log_server_.ResumeTimer();
   server_->SendCommand(worker, &cm_c);
+  log_server_.StopTimer();
 
   *from_data = from_data_new;
   *to_data = to_data_new;
@@ -678,10 +691,8 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
-  log_job_manager_.ResumeTimer();
   log_version_manager_.ResumeTimer();
   job_manager_->GetJobsNeedDataVersion(&list, vld);
-  log_job_manager_.StopTimer();
   log_version_manager_.StopTimer();
   assert(list.size() >= 1);
   bool writing_needed_version = (list.size() > 1) && writing;
@@ -805,7 +816,9 @@ bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
                          job->sterile(),
                          job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
+    log_server_.ResumeTimer();
     server_->SendCommand(worker, &cm);
+    log_server_.StopTimer();
     return true;
   } else {
     dbg(DBG_ERROR, "Job with id %lu is not a compute job.\n", job->job_id());
@@ -831,7 +844,9 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
                        ID<physical_data_id_t>(d[0]),
                        before);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
+  log_server_.ResumeTimer();
   server_->SendCommand(worker, &cm);
+  log_server_.StopTimer();
   log_job_manager_.ResumeTimer();
   job_manager_->AddCreateDataJobEntry(j[0]);
   log_job_manager_.StopTimer();
@@ -851,7 +866,9 @@ bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
                         ID<physical_data_id_t>(to_physical_data_id),
                         before);
   dbg(DBG_SCHED, "Sending local copy job %lu to worker %lu.\n", j[0], worker->worker_id());
+  log_server_.ResumeTimer();
   server_->SendCommand(worker, &cm_c);
+  log_server_.StopTimer();
   return true;
 }
 
@@ -866,7 +883,9 @@ bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
                                 ID<physical_data_id_t>(physical_data_id),
                                 before);
   dbg(DBG_SCHED, "Sending remote copy receive job %lu to worker %lu.\n", j[0], worker->worker_id());
+  log_server_.ResumeTimer();
   server_->SendCommand(worker, &cm_r);
+  log_server_.StopTimer();
   return true;
 }
 
@@ -886,7 +905,9 @@ bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
                              worker->ip(),
                              ID<port_t>(worker->port()),
                              before);
+  log_server_.ResumeTimer();
   server_->SendCommand(worker, &cm_s);
+  log_server_.StopTimer();
   return true;
 }
 
@@ -894,9 +915,13 @@ bool Scheduler::AssignJob(JobEntry* job) {
   log_assign_.ResumeTimer();
 
   SchedulerWorker* worker;
+  log_load_balancer_.ResumeTimer();
   GetWorkerToAssignJob(job, worker);
+  log_load_balancer_.StopTimer();
 
+  log_version_manager_.ResumeTimer();
   job_manager_->ResolveJobDataVersions(job);
+  log_version_manager_.StopTimer();
 
 //   {
 //     Log log;
@@ -927,20 +952,23 @@ bool Scheduler::AssignJob(JobEntry* job) {
     log_job_manager_.StopTimer();
     SendComputeJobToWorker(worker, job);
 
+    log_job_manager_.ResumeTimer();
     job_manager_->NotifyJobAssignment(job, worker);
+    log_job_manager_.StopTimer();
 
-    static bool loop_begins = true;
     std::string jname = job->job_name();
-    if (jname == "update_ghost_velocities" && loop_begins) {
+    if (jname == "update_ghost_velocities" && (stamp_state_ == 0)) {
       std::cout << "STAMP: FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      loop_begins = false;
+      stamp_state_ = 1;
     }
-    if (jname == "projection_main" && !loop_begins) {
+    if (jname == "projection_main" && (stamp_state_ == 1)) {
       std::cout << "STAMP: ALL ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      loop_begins = true;
+      stamp_state_ = -1;
     }
 
+    log_load_balancer_.ResumeTimer();
     load_balancer_->NotifyJobAssignment(job, worker);
+    log_load_balancer_.StopTimer();
 
     log_assign_.StopTimer();
     return true;

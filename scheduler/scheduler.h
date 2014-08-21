@@ -126,10 +126,12 @@ class Scheduler {
     Log log_;
     Log log_loop_;
     Log log_assign_;
+    Log log_server_;
     Log log_job_manager_;
     Log log_data_manager_;
     Log log_version_manager_;
     Log log_load_balancer_;
+    int stamp_state_;
 
   private:
     virtual bool AssignJob(JobEntry* job);
