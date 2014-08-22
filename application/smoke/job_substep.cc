@@ -33,7 +33,10 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * This file contains the substep job, which computes the time step for
+ * an iteration during the computation of a simulation frame.
+ *
+ * Author: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include "application/smoke/app_utils.h"

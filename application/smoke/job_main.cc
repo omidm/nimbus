@@ -36,6 +36,7 @@
  * application. All subsequent jobs are spawned from here.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include "application/smoke/app_utils.h"

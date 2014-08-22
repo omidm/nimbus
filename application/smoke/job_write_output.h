@@ -34,6 +34,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_JOB_WRITE_OUTPUT_H_

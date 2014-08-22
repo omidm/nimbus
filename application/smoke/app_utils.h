@@ -36,6 +36,7 @@
  * Definitions and typedef useful for application, data and jobs.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_APP_UTILS_H_

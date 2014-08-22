@@ -33,7 +33,10 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * This file contains the substep job, which computes the time step for
+ * an iteration during the computation of a simulation frame.
+ * 
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_JOB_SUBSTEP_H_

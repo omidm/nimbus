@@ -32,7 +32,7 @@
  */
 
 /*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #include "application/smoke/app_utils.h"

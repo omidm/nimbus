@@ -34,6 +34,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  *
  * This file specifies the options used to specify initialization hehaviors.
  * "InitConfig" is used to specify the options of SMOKE_DRIVER/SMOKE_EXAMPLE

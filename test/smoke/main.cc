@@ -37,6 +37,7 @@
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   * Modified: Chinmayee Shah <chinmayee.shah@stanford.edu>
+  * Modified for smoke: Andrew Lim <alim16@stanford.edu> 
   */
 
 #include <iostream>  // NOLINT
