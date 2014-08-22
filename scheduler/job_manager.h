@@ -56,6 +56,7 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/graph.h"
+#include "shared/logical_data_object.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
 #include "scheduler/physical_data.h"
@@ -134,7 +135,7 @@ class JobManager {
     bool CausingUnwantedSerialization(JobEntry* job,
         const logical_data_id_t& l_id, const PhysicalData& pd);
 
-    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
+    void set_ldo_map_p(const LdoMap* ldo_map_p);
 
     Graph<JobEntry, job_id_t> *job_graph_p();
 
@@ -144,7 +145,7 @@ class JobManager {
 
     VersionManager version_manager_;
     LdlMap ldl_map_;
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+    const LdoMap* ldo_map_p_;
 
     JobEntryMap jobs_done_;
 

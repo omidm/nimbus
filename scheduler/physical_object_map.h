@@ -41,6 +41,7 @@
 #ifndef NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
 #define NIMBUS_SCHEDULER_PHYSICAL_OBJECT_MAP_H_
 
+#include <boost/unordered_map.hpp>
 #include <map>
 #include <string>
 #include <vector>
@@ -53,7 +54,7 @@
 
 namespace nimbus {
 
-  typedef std::map<logical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
+  typedef boost::unordered_map<logical_data_id_t, PhysicalDataVector*> PhysicalObjectMapType;
 
   class PhysicalObjectMap {
   public:

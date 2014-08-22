@@ -62,7 +62,7 @@ nimbus::DataManager::DataManager() {
  * \return
 */
 nimbus::DataManager::~DataManager() {
-  std::map<logical_data_id_t, LogicalDataObject*>::iterator it = ldo_map_.begin();
+  LdoMap::iterator it = ldo_map_.begin();
   for (; it != ldo_map_.end(); ++it) {
     LogicalDataObject* o = (*it).second;
     dbg(DBG_DATA_OBJECTS|DBG_MEMORY, "Invoking delete on object %llu.\n", o->id());
@@ -437,7 +437,7 @@ bool DataManager::initialized_global_bounding_region() {
   return initialized_global_bounding_region_;
 }
 
-const std::map<logical_data_id_t, LogicalDataObject*>* DataManager::ldo_map_p() {
+const LdoMap* DataManager::ldo_map_p() {
   return &ldo_map_;
 }
 

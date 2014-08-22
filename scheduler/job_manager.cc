@@ -716,7 +716,7 @@ size_t JobManager::ResolveDataVersions() {
 
           job->meta_before_set()->Clear();
 
-          std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+          LdoMap::const_iterator it;
           for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
             data_version_t v_out;
             vmap->query_entry(it->first, &v_out);
@@ -800,7 +800,7 @@ void JobManager::PassDataVersionToJob(
   } else {
     log_nonsterile_.log_ResumeTimer();
     boost::shared_ptr<VersionMap> vmap = boost::shared_ptr<VersionMap>(new VersionMap());
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
       log_lookup_.log_ResumeTimer();
@@ -854,8 +854,7 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
   return result;
 }
 
-void JobManager::set_ldo_map_p(
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
+void JobManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
   ldo_map_p_ = ldo_map_p;
   version_manager_.set_ldo_map_p(ldo_map_p);
 }

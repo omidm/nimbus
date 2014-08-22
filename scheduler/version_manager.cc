@@ -69,7 +69,7 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
       }
     }
   } else {
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       IndexIter iter = index_.find(it->first);
       if (iter == index_.end()) {
@@ -119,7 +119,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
       }
     }
   } else {
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
       if (job->vmap_read()->query_entry(it->first, &version)) {
@@ -157,7 +157,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
 
     job->meta_before_set()->Clear();
 
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
       if (job->vmap_write()->query_entry(it->first, &version)) {
@@ -309,8 +309,7 @@ bool VersionManager::CleanUp() {
 }
 
 
-void VersionManager::set_ldo_map_p(
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
+void VersionManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
   ldo_map_p_ = ldo_map_p;
 }
 

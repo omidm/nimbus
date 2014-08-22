@@ -98,7 +98,7 @@ class VersionManager {
 
     bool CleanUp();
 
-    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
+    void set_ldo_map_p(const LdoMap* ldo_map_p);
 
   private:
     Index index_;
@@ -106,7 +106,7 @@ class VersionManager {
     IDSet<job_id_t> live_parents_;
     ChildCounter child_counter_;
     boost::mutex child_counter_mutex_;
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+    const LdoMap* ldo_map_p_;
 };
 
 }  // namespace nimbus

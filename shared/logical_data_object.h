@@ -54,6 +54,7 @@
 #define NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 
 #include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
 #include <list>
 #include <set>
 #include <string>
@@ -105,6 +106,7 @@ namespace nimbus {
   typedef std::list<LogicalDataObject*> LdoList;
   typedef std::vector<LogicalDataObject*> LdoVector;
   typedef std::vector<const LogicalDataObject*> CLdoVector;
+  typedef boost::unordered_map<logical_data_id_t, LogicalDataObject*> LdoMap;
 
 }  // namespace nimbus
 

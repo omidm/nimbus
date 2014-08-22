@@ -42,6 +42,7 @@
 #ifndef NIMBUS_SCHEDULER_JOB_ENTRY_H_
 #define NIMBUS_SCHEDULER_JOB_ENTRY_H_
 
+#include <boost/unordered_map.hpp>
 #include <vector>
 #include <string>
 #include <set>
@@ -61,14 +62,14 @@
 namespace nimbus {
 
 class JobEntry;
-typedef std::map<job_id_t, JobEntry*> JobEntryMap;
-typedef std::map<job_id_t, JobEntry*> JobEntryTable;
+typedef boost::unordered_map<job_id_t, JobEntry*> JobEntryMap;
+typedef boost::unordered_map<job_id_t, JobEntry*> JobEntryTable;
 typedef std::list<JobEntry*> JobEntryList;
 typedef std::vector<Data*> DataArray;
 
 class JobEntry {
   public:
-    typedef std::map<logical_data_id_t, physical_data_id_t> PhysicalTable;
+    typedef boost::unordered_map<logical_data_id_t, physical_data_id_t> PhysicalTable;
 
     JobEntry();
 
@@ -184,8 +185,6 @@ class JobEntry {
   private:
     void Initialize();
 };
-
-typedef std::map<job_id_t, JobEntry*> JobEntryTable;
 
 
 class ComputeJobEntry : public JobEntry {
