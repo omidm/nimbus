@@ -98,8 +98,11 @@ namespace application {
     data_config.SetFlag(DataConfig::VELOCITY);
     data_config.SetFlag(DataConfig::DENSITY);
     data_config.SetFlag(DataConfig::DT);
-    InitializeExampleAndDriver(init_config, data_config,
-                               this, da, example, driver);
+    {
+      application::ScopeTimer scope_timer(name() + "-load");
+      InitializeExampleAndDriver(init_config, data_config,
+				 this, da, example, driver);
+    }
     *thread_queue_hook() = example->nimbus_thread_queue;
 
     // check whether the frame is done or not
@@ -126,7 +129,10 @@ namespace application {
                                  dt, da, init_config.global_region);
 
     // Free resources.
-    example->Save_To_Nimbus(this, da, frame+1);
+    {
+      application::ScopeTimer scope_timer(name() + "-save");
+      example->Save_To_Nimbus(this, da, frame+1);
+    }
     *thread_queue_hook() = NULL;
     DestroyExampleAndDriver(example, driver);
   }

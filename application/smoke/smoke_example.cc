@@ -112,6 +112,7 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
 template<class TV> SMOKE_EXAMPLE<TV>::
 ~SMOKE_EXAMPLE()
 {
+  pthread_mutex_destroy(&lock);
     if (nimbus_thread_queue) {
       delete nimbus_thread_queue;
     }

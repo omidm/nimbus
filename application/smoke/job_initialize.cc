@@ -77,16 +77,19 @@ namespace application {
 
         DataConfig data_config;
         data_config.SetAll();
-        InitializeExampleAndDriver(init_config, data_config,
-                                   this, da, example, driver);
+	{
+	  application::ScopeTimer scope_timer(name() + "-load");
+	  InitializeExampleAndDriver(init_config, data_config,
+				     this, da, example, driver);
+	}
         *thread_queue_hook() = example->nimbus_thread_queue;
 
         *thread_queue_hook() = NULL;
         // Free resources.
-        DestroyExampleAndDriver(example, driver);
-
-
-
+	{
+	  application::ScopeTimer scope_timer(name() + "-save");
+	  DestroyExampleAndDriver(example, driver);
+	}
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }

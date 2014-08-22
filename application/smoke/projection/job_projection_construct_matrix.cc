@@ -94,8 +94,12 @@ void JobProjectionConstructMatrix::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE);
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
+
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    InitializeExampleAndDriver(init_config, data_config,
+			       this, da, example, driver);
+  }
 
   dbg(APP_LOG, "Job PROJECTION_CONSTRUCT_MATRIX starts (dt=%f).\n", dt);
 
@@ -104,10 +108,13 @@ void JobProjectionConstructMatrix::Execute(
     application::ScopeTimer scope_timer(name());
     driver->ProjectionConstructMatrixImpl(this, da, dt);
   }
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
-  // Free resources.
-  DestroyExampleAndDriver(example, driver);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+    // Free resources.
+    DestroyExampleAndDriver(example, driver);
+  }
 
   dbg(APP_LOG, "Completed executing PROJECTION_CONSTRUCT_MATRIX job\n");
 }

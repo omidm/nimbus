@@ -87,8 +87,11 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::DENSITY);
   data_config.SetFlag(DataConfig::PSI_N);
   data_config.SetFlag(DataConfig::PSI_D);
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    InitializeExampleAndDriver(init_config, data_config,
+			       this, da, example, driver);
+  }
   *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Job WRITE_OUTPUT starts.\n");
@@ -96,7 +99,11 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
   driver->WriteOutputSplitImpl(this, da, true, dt, rank);
 
   *thread_queue_hook() = NULL;
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  }
+   
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

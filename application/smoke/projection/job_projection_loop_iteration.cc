@@ -106,7 +106,11 @@ void JobProjectionLoopIteration::Execute(
 
   dbg(APP_LOG, "Job PROJECTION_LOOP_ITERATION starts (dt=%f).\n", dt);
 
-  projection_driver.LoadFromNimbus(this, da);
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    projection_driver.LoadFromNimbus(this, da);
+  }
+
   projection_driver.projection_data.residual =
       projection_driver.projection_data.local_residual;
   projection_driver.projection_data.iteration = iteration;
@@ -382,7 +386,10 @@ void JobProjectionLoopIteration::Execute(
   }
 
   // TODO(quhang), removes the saving if possible.
-  projection_driver.SaveToNimbus(this, da);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    projection_driver.SaveToNimbus(this, da);
+  }
 
   dbg(APP_LOG, "Completed executing PROJECTION_LOOP_ITERATION job\n");
   {

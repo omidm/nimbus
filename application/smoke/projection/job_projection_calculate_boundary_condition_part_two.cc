@@ -92,8 +92,12 @@ void JobProjectionCalculateBoundaryConditionPartTwo::Execute(
   data_config.SetFlag(DataConfig::REGION_COLORS);
   data_config.SetFlag(DataConfig::PRESSURE);
   data_config.SetFlag(DataConfig::U_INTERFACE);
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
+
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    InitializeExampleAndDriver(init_config, data_config,
+			       this, da, example, driver);
+  }
 
   dbg(APP_LOG,
       "Job PROJECTION_CALCULATE_BOUNDARY_CONDITION_PART_TWO starts (dt=%f).\n",
@@ -103,10 +107,13 @@ void JobProjectionCalculateBoundaryConditionPartTwo::Execute(
     application::ScopeTimer scope_timer(name());
     driver->ProjectionCalculateBoundaryConditionPartTwoImpl(this, da, dt);
   }
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 
-  // Free resources.
-  DestroyExampleAndDriver(example, driver);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+    // Free resources.
+    DestroyExampleAndDriver(example, driver);
+  }
 
   dbg(APP_LOG,
       "Completed executing"

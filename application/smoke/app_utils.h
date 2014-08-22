@@ -45,6 +45,7 @@
 #include <time.h>
 #include <list>
 #include <stdarg.h>
+#include <pthread.h>
 
 #include "application/smoke/data_names.h"
 #include "application/smoke/parameters.h"
@@ -195,7 +196,7 @@ namespace application {
 	time_sum = difftime(t.tv_sec, start_time_.tv_sec)
 	  + .000000001
 	  * (static_cast<double>(t.tv_nsec - start_time_.tv_nsec));
-	dbg(APP_LOG, "\n[TIME] Job %s, %f seconds.\n", name_.c_str(), time_sum);
+	dbg(APP_LOG, "\n[SCOPETIMER][TIME] TID: %d, Job %s, %f seconds.\n", pthread_self(), name_.c_str(), time_sum);
       }
     private:
       std::string name_;
