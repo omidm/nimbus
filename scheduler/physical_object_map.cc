@@ -104,11 +104,12 @@ bool nimbus::PhysicalObjectMap::RemoveLogicalObject(logical_data_id_t id) {
  * \return
 */
 bool nimbus::PhysicalObjectMap::AddPhysicalInstance(LogicalDataObject* obj,
-                                          PhysicalData instance) {
-  if (data_map_.find(obj->id()) == data_map_.end()) {
+                                          const PhysicalData& instance) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(obj->id());
+  if (iter == data_map_.end()) {
     return false;
   } else {
-    PhysicalDataVector* v = data_map_[obj->id()];
+    PhysicalDataVector* v = iter->second;
     v->push_back(instance);
     return true;
   }
@@ -122,11 +123,12 @@ bool nimbus::PhysicalObjectMap::AddPhysicalInstance(LogicalDataObject* obj,
  * \return
 */
 bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
-                                             PhysicalData instance) {
-  if (data_map_.find(obj->id()) == data_map_.end()) {
+                                             const PhysicalData& instance) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(obj->id());
+  if (iter == data_map_.end()) {
     return false;
   } else {
-    PhysicalDataVector* v = data_map_[obj->id()];
+    PhysicalDataVector* v = iter->second;
     PhysicalDataVector::iterator it = v->begin();
     for (; it != v->end(); ++it) {
       PhysicalData pd = *it;
@@ -138,7 +140,6 @@ bool nimbus::PhysicalObjectMap::RemovePhysicalInstance(LogicalDataObject* obj,
   }
   return false;
 }
-
 
 /**
  * \fn const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object)
