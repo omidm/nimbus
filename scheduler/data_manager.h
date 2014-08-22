@@ -90,9 +90,12 @@ namespace nimbus {
 
     /* Managing physical instances of logical objects. */
     bool AddPhysicalInstance(LogicalDataObject* object,
-                             PhysicalData instance);
+                             const PhysicalData& instance);
     bool RemovePhysicalInstance(LogicalDataObject* object,
-                                PhysicalData instance);
+                                const PhysicalData& instance);
+    bool UpdatePhysicalInstance(LogicalDataObject* object,
+                                const PhysicalData& old_instance,
+                                const PhysicalData& new_instance);
     const PhysicalDataVector* AllInstances(LogicalDataObject* object);
     int AllInstances(LogicalDataObject* object,
                      PhysicalDataVector* dest);

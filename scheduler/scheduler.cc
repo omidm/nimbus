@@ -376,8 +376,9 @@ bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
   // job->set_before_set(before_set);
 
   log_data_manager_.log_ResumeTimer();
-  data_manager_->RemovePhysicalInstance(ldo, pd);
-  data_manager_->AddPhysicalInstance(ldo, pd_new);
+  data_manager_->UpdatePhysicalInstance(ldo, pd, pd_new);
+  // data_manager_->RemovePhysicalInstance(ldo, pd);
+  // data_manager_->AddPhysicalInstance(ldo, pd_new);
   log_data_manager_.log_StopTimer();
 
   return true;
@@ -469,8 +470,9 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
   log_data_manager_.log_ResumeTimer();
-  data_manager_->RemovePhysicalInstance(ldo, *to_data);
-  data_manager_->AddPhysicalInstance(ldo, to_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *to_data);
+  // data_manager_->AddPhysicalInstance(ldo, to_data_new);
   log_data_manager_.log_StopTimer();
 
   // send remote copy receive job to worker.
@@ -499,8 +501,9 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
   log_data_manager_.log_ResumeTimer();
-  data_manager_->RemovePhysicalInstance(ldo, *from_data);
-  data_manager_->AddPhysicalInstance(ldo, from_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *from_data);
+  // data_manager_->AddPhysicalInstance(ldo, from_data_new);
   log_data_manager_.log_StopTimer();
 
   // send remote copy send command to worker.
@@ -545,8 +548,9 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
   log_data_manager_.log_ResumeTimer();
-  data_manager_->RemovePhysicalInstance(ldo, *from_data);
-  data_manager_->AddPhysicalInstance(ldo, from_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *from_data);
+  // data_manager_->AddPhysicalInstance(ldo, from_data_new);
   log_data_manager_.log_StopTimer();
 
   PhysicalData to_data_new = *to_data;
@@ -554,8 +558,9 @@ bool Scheduler::LocalCopyData(SchedulerWorker* worker,
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
   log_data_manager_.log_ResumeTimer();
-  data_manager_->RemovePhysicalInstance(ldo, *to_data);
-  data_manager_->AddPhysicalInstance(ldo, to_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *to_data);
+  // data_manager_->AddPhysicalInstance(ldo, to_data_new);
   log_data_manager_.log_StopTimer();
 
   // send local copy command to worker.
@@ -799,6 +804,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
 bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
+    log_server_.log_ResumeTimer();
     ID<job_id_t> job_id(job->job_id());
     ID<job_id_t> future_job_id(job->future_job_id());
     IDSet<physical_data_id_t> read_set, write_set;
@@ -815,7 +821,6 @@ bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
                          job->sterile(),
                          job->params());
     dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
-    log_server_.log_ResumeTimer();
     server_->SendCommand(worker, &cm);
     log_server_.log_StopTimer();
     return true;
@@ -831,6 +836,7 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
                                       const IDSet<job_id_t>& before,
                                       job_id_t* job_id,
                                       physical_data_id_t* physical_data_id) {
+  log_server_.log_ResumeTimer();
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
@@ -843,7 +849,6 @@ bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
                        ID<physical_data_id_t>(d[0]),
                        before);
   dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
-  log_server_.log_ResumeTimer();
   server_->SendCommand(worker, &cm);
   log_server_.log_StopTimer();
   log_job_manager_.log_ResumeTimer();
@@ -857,6 +862,7 @@ bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
                                          const ID<physical_data_id_t>& to_physical_data_id,
                                          const IDSet<job_id_t>& before,
                                          job_id_t* job_id) {
+  log_server_.log_ResumeTimer();
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
@@ -865,7 +871,6 @@ bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
                         ID<physical_data_id_t>(to_physical_data_id),
                         before);
   dbg(DBG_SCHED, "Sending local copy job %lu to worker %lu.\n", j[0], worker->worker_id());
-  log_server_.log_ResumeTimer();
   server_->SendCommand(worker, &cm_c);
   log_server_.log_StopTimer();
   return true;
@@ -875,6 +880,7 @@ bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
                                            const physical_data_id_t& physical_data_id,
                                            const IDSet<job_id_t>& before,
                                            job_id_t* job_id) {
+  log_server_.log_ResumeTimer();
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
@@ -882,7 +888,6 @@ bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
                                 ID<physical_data_id_t>(physical_data_id),
                                 before);
   dbg(DBG_SCHED, "Sending remote copy receive job %lu to worker %lu.\n", j[0], worker->worker_id());
-  log_server_.log_ResumeTimer();
   server_->SendCommand(worker, &cm_r);
   log_server_.log_StopTimer();
   return true;
@@ -894,6 +899,7 @@ bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
                                         const physical_data_id_t& physical_data_id,
                                         const IDSet<job_id_t>& before,
                                         job_id_t* job_id) {
+  log_server_.log_ResumeTimer();
   std::vector<job_id_t> j;
   id_maker_.GetNewJobID(&j, 1);
   *job_id = j[0];
@@ -904,7 +910,6 @@ bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
                              worker->ip(),
                              ID<port_t>(worker->port()),
                              before);
-  log_server_.log_ResumeTimer();
   server_->SendCommand(worker, &cm_s);
   log_server_.log_StopTimer();
   return true;

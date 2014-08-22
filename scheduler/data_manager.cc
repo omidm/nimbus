@@ -323,30 +323,47 @@ int nimbus::DataManager::FindAdjacentLogicalObjects(std::string variable,
 
 /**
  * \fn bool nimbus::DataManager::AddPhysicalInstance(LogicalDataObject *object,
-                                         PhysicalData instance)
+                                         const PhysicalData& instance)
  * \brief Brief description.
  * \param object
  * \param instance
  * \return
 */
 bool nimbus::DataManager::AddPhysicalInstance(LogicalDataObject *object,
-                                              PhysicalData instance) {
+                                              const PhysicalData& instance) {
   return physical_object_map_.AddPhysicalInstance(object, instance);
 }
 
 
 /**
  * \fn bool nimbus::DataManager::RemovePhysicalInstance(LogicalDataObject *object,
-                                            PhysicalData instance)
+                                            const PhysicalData& instance)
  * \brief Brief description.
  * \param object
  * \param instance
  * \return
 */
 bool nimbus::DataManager::RemovePhysicalInstance(LogicalDataObject *object,
-                                                 PhysicalData instance) {
+                                                 const PhysicalData& instance) {
   return physical_object_map_.RemovePhysicalInstance(object, instance);
 }
+
+/**
+ * \fn bool nimbus::DataManager::UpdatePhysicalInstance(LogicalDataObject *object,
+                                            const PhysicalData& old_instance)
+                                            const PhysicalData& new_instance)
+ * \brief Brief description.
+ * \param object
+ * \param instance
+ * \return
+*/
+bool nimbus::DataManager::UpdatePhysicalInstance(LogicalDataObject *object,
+                                                 const PhysicalData& old_instance,
+                                                 const PhysicalData& new_instance) {
+  return physical_object_map_.UpdatePhysicalInstance(object, old_instance, new_instance);
+}
+
+
 
 
 /**

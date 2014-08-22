@@ -67,7 +67,9 @@ namespace nimbus {
                                      const PhysicalData& instance);
     virtual bool RemovePhysicalInstance(LogicalDataObject* object,
                                         const PhysicalData& instance);
-
+    virtual bool UpdatePhysicalInstance(LogicalDataObject* object,
+                                        const PhysicalData& old_instance,
+                                        const PhysicalData& new_instance);
 
     virtual const PhysicalDataVector* AllInstances(LogicalDataObject* object);
     virtual int AllInstances(LogicalDataObject* object,

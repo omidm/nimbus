@@ -403,8 +403,9 @@ bool LoadBalancer::AllocateLdoInstanceToJob(JobEntry* job,
   job->set_physical_table_entry(ldo->id(), pd.id());
   // job->set_before_set(before_set);
 
-  data_manager_->RemovePhysicalInstance(ldo, pd);
-  data_manager_->AddPhysicalInstance(ldo, pd_new);
+  data_manager_->UpdatePhysicalInstance(ldo, pd, pd_new);
+  // data_manager_->RemovePhysicalInstance(ldo, pd);
+  // data_manager_->AddPhysicalInstance(ldo, pd_new);
 
   return true;
 }
@@ -480,8 +481,9 @@ bool LoadBalancer::RemoteCopyData(SchedulerWorker* from_worker,
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(receive_id);
   to_data_new.clear_list_job_read();
-  data_manager_->RemovePhysicalInstance(ldo, *to_data);
-  data_manager_->AddPhysicalInstance(ldo, to_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *to_data);
+  // data_manager_->AddPhysicalInstance(ldo, to_data_new);
 
   // send remote copy receive job to worker.
   before.clear();
@@ -502,8 +504,9 @@ bool LoadBalancer::RemoteCopyData(SchedulerWorker* from_worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(send_id);
-  data_manager_->RemovePhysicalInstance(ldo, *from_data);
-  data_manager_->AddPhysicalInstance(ldo, from_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *from_data);
+  // data_manager_->AddPhysicalInstance(ldo, from_data_new);
 
   // send remote copy send command to worker.
   before.clear();
@@ -540,15 +543,17 @@ bool LoadBalancer::LocalCopyData(SchedulerWorker* worker,
   // Update data table.
   PhysicalData from_data_new = *from_data;
   from_data_new.add_to_list_job_read(j[0]);
-  data_manager_->RemovePhysicalInstance(ldo, *from_data);
-  data_manager_->AddPhysicalInstance(ldo, from_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *from_data);
+  // data_manager_->AddPhysicalInstance(ldo, from_data_new);
 
   PhysicalData to_data_new = *to_data;
   to_data_new.set_version(from_data->version());
   to_data_new.set_last_job_write(j[0]);
   to_data_new.clear_list_job_read();
-  data_manager_->RemovePhysicalInstance(ldo, *to_data);
-  data_manager_->AddPhysicalInstance(ldo, to_data_new);
+  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
+  // data_manager_->RemovePhysicalInstance(ldo, *to_data);
+  // data_manager_->AddPhysicalInstance(ldo, to_data_new);
 
   // send local copy command to worker.
   before.insert(to_data->list_job_read());
