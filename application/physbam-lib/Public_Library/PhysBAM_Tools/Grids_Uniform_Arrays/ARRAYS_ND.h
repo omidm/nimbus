@@ -37,12 +37,14 @@ public:
     ARRAY()
         :BASE()
     {
+        hash_code = 0;
         Calculate_Acceleration_Constants();
     }
 
     ARRAY(const RANGE<TV_INT>& domain_input,const bool initialize_using_default_constructor=true)
         :BASE(domain_input)
     {
+        hash_code = 0;
         assert(counts.Min()>=0);int size=counts.Product();
         {ARRAY_VIEW<T> new_array(size,new T[size]);new_array.Exchange(array);} // allocate a new array
         Calculate_Acceleration_Constants();
@@ -53,6 +55,7 @@ public:
         const bool initialize_using_default_constructor=true)
         :BASE(RANGE<TV_INT>(TV_INT(m_start_input,n_start_input,mn_start_input),TV_INT(m_end_input,n_end_input,mn_end_input)))
     {
+        hash_code = 0;
         assert(counts.Min()>=0);int size=counts.Product();
         {ARRAY_VIEW<T> new_array(size,new T[size]);new_array.Exchange(array);} // allocate a new array
         Calculate_Acceleration_Constants();
@@ -62,6 +65,7 @@ public:
     ARRAY(const int m_start_input,const int m_end_input,const int n_start_input,const int n_end_input,const bool initialize_using_default_constructor=true)
         :BASE(RANGE<TV_INT>(TV_INT(m_start_input,n_start_input),TV_INT(m_end_input,n_end_input)))
     {
+        hash_code = 0;
         assert(counts.Min()>=0);int size=counts.Product();
         {ARRAY_VIEW<T> new_array(size,new T[size]);new_array.Exchange(array);} // allocate a new array
         Calculate_Acceleration_Constants();
@@ -71,6 +75,7 @@ public:
     ARRAY(const int m_start_input,const int m_end_input,const bool initialize_using_default_constructor=true)
         :BASE(RANGE<TV_INT>(TV_INT(m_start_input),TV_INT(m_end_input)))
     {
+        hash_code = 0;
         assert(counts.Min()>=0);int size=counts.Product();
         {ARRAY_VIEW<T> new_array(size,new T[size]);new_array.Exchange(array);} // allocate a new array
         Calculate_Acceleration_Constants();
@@ -80,6 +85,7 @@ public:
     ARRAY(const ARRAY& old_array,const bool initialize_with_old_array=true)
         :BASE(old_array.domain)
     {
+        hash_code = 0;
         {int size=old_array.array.Size();ARRAY_VIEW<T> new_array(size,new T[size]);new_array.Exchange(array);} // allocate a new array        
         Calculate_Acceleration_Constants();
         if(initialize_with_old_array) array=old_array.array;

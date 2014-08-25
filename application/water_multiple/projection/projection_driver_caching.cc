@@ -532,7 +532,6 @@ void ProjectionDriver::Cache_SaveToNimbus(
     *cache_meta_p->data() = projection_data.meta_p;
     cm->ReleaseAccess(cache_meta_p);
     cache_meta_p = NULL;
-    }
   }
   dbg(APP_LOG, "[PROJECTION] SAVE, pressure time:%f.\n", log_timer.timer());
 
