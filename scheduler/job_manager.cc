@@ -836,7 +836,6 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     return result;
   }
 
-  IDSet<job_id_t> before_set = job->before_set();
   IDSet<job_id_t> list_job_read = pd.list_job_read();
   IDSet<job_id_t>::IDSetIter iter;
   for (iter = list_job_read.begin(); iter != list_job_read.end(); iter++) {
@@ -844,7 +843,7 @@ bool JobManager::CausingUnwantedSerialization(JobEntry* job,
     if (GetJobEntry(*iter, j)) {
       if ((!j->done()) &&
           (j->job_type() == JOB_COMP) &&
-          (!before_set.contains(*iter))) {
+          (!job->before_set_p()->contains(*iter))) {
         result = true;
         break;
       }

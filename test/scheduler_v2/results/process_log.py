@@ -51,7 +51,6 @@ for line in content:
   result = re.findall('.*' + args.tag + ': (\d+(?: |$)|\d+\.\d+(?: |$)|\d+e-\d+(?: |$)|\d+\.\d+e-\d+(?: |$)).*', line)
   if len(result) > 0:
     time += decimal.Decimal(result[0])
-    print result[0]
 
 f.close()
 
