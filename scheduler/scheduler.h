@@ -132,6 +132,8 @@ class Scheduler {
     Log log_version_manager_;
     Log log_load_balancer_;
     int stamp_state_;
+    int copy_count_;
+    int compute_count_;
 
   private:
     virtual bool AssignJob(JobEntry* job);

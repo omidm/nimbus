@@ -55,6 +55,8 @@ Scheduler::Scheduler(port_t p)
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   terminate_application_flag_ = false;
   stamp_state_ = -1;
+  compute_count_ = 0;
+  copy_count_ = 0;
 }
 
 Scheduler::~Scheduler() {
@@ -120,7 +122,7 @@ void Scheduler::SchedulerCoreProcessor() {
     if (log_loop_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff),
-          "loop: %2.5lf  assign: %2.5lf server: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf time: %6.5lf", // NOLINT
+          "loop: %2.5lf  assign: %2.5lf server: %2.5lf job_manager: %2.5lf data_manager: %2.5lf version_manager: %2.5lf load_balancer: %2.5lf compute_count: %d  copy_count: %d ldo_count: %d time: %6.5lf", // NOLINT
           log_loop_.timer(),
           log_assign_.timer(),
           log_server_.timer(),
@@ -128,6 +130,9 @@ void Scheduler::SchedulerCoreProcessor() {
           log_data_manager_.timer(),
           log_version_manager_.timer(),
           log_load_balancer_.timer(),
+          compute_count_,
+          copy_count_,
+          data_manager_->ldo_map_p()->size(),
           log_loop_.GetTime());
 
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
@@ -286,6 +291,8 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   if (jname == "loop_iteration") {
     log_.log_StartTimer();
     stamp_state_ = 0;
+    compute_count_ = 0;
+    copy_count_ = 0;
   }
 
   SchedulerWorkerList::iterator iter = server_->workers()->begin();
@@ -532,6 +539,7 @@ bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
 
 bool Scheduler::LocalCopyData(SchedulerWorker* worker,
     LogicalDataObject* ldo, PhysicalData* from_data, PhysicalData* to_data) {
+  copy_count_++;
   assert(worker->worker_id() == from_data->worker());
   assert(worker->worker_id() == to_data->worker());
 
@@ -804,6 +812,7 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
 
 bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
   if (job->job_type() == JOB_COMP) {
+    compute_count_++;
     log_server_.log_ResumeTimer();
     ID<job_id_t> job_id(job->job_id());
     ID<job_id_t> future_job_id(job->future_job_id());
