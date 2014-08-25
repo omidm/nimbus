@@ -131,6 +131,16 @@ IDSet<job_id_t> nimbus::PhysicalData::list_job_read() const {
   return list_job_read_;
 }
 
+
+const IDSet<job_id_t>* nimbus::PhysicalData::list_job_read_p() const {
+  return &list_job_read_;
+}
+
+IDSet<job_id_t>* nimbus::PhysicalData::list_job_read_p() {
+  return &list_job_read_;
+}
+
+
 /**
  * \fn job_id_t nimbus::PhysicalData::last_job_write()
  * \brief Brief description.

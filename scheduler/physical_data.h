@@ -66,6 +66,8 @@ namespace nimbus {
     worker_id_t worker() const;
     data_version_t version() const;
     IDSet<job_id_t> list_job_read() const;
+    const IDSet<job_id_t>* list_job_read_p() const;
+    IDSet<job_id_t>* list_job_read_p();
     job_id_t last_job_write() const;
 
     void set_id(physical_data_id_t id);
