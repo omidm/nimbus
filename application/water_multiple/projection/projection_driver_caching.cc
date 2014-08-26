@@ -320,7 +320,7 @@ void ProjectionDriver::Cache_LoadFromNimbus(
     if (application::GetTranslatorData(
             job, std::string(APP_PROJECTION_LOCAL_RESIDUAL), da, &pdv,
             application::READ_ACCESS)) {
-      dbg(APP_LOG, "Read PROJECTION_LOCAL_RESIDUAL=max(\n");
+      dbg(APP_LOG, "Read PROJECTION_LOCAL_RESIDUAL=max(");
       projection_data.local_residual = 0;
       nimbus::PdiVector::const_iterator iter = pdv.begin();
       for (; iter != pdv.end(); ++iter) {
