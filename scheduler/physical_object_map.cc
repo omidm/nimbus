@@ -237,9 +237,8 @@ int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
     int count = 0;
 
     for (; it != v->end(); ++it) {
-      PhysicalData pd = *it;
-      if (pd.worker() == worker) {
-        dest->push_back(pd);
+      if (it->worker() == worker) {
+        dest->push_back(*it);
         count++;
       }
     }
@@ -271,9 +270,8 @@ int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
     PhysicalDataVector::iterator it = v->begin();
     int count = 0;
     for (; it != v->end(); ++it) {
-      PhysicalData pd = *it;
-      if (pd.version() == version) {
-        dest->push_back(pd);
+      if (it->version() == version) {
+        dest->push_back(*it);
         count++;
       }
     }
@@ -307,9 +305,8 @@ int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *ob
     int count = 0;
 
     for (; it != v->end(); ++it) {
-      PhysicalData pd = *it;
-      if ((pd.worker() == worker) && (pd.version() == version)) {
-        dest->push_back(pd);
+      if ((it->worker() == worker) && (it->version() == version)) {
+        dest->push_back(*it);
         count++;
       }
     }
