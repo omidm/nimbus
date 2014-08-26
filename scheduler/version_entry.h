@@ -81,6 +81,8 @@ class VersionEntry {
 
     bool RemoveJobEntry(JobEntry *job);
 
+    bool RemoveJobEntry(JobEntry *job, data_version_t version);
+
     size_t GetJobsNeedVersion(
         JobEntryList* list, data_version_t version);
 

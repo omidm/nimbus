@@ -192,6 +192,24 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionEntry::RemoveJobEntry(JobEntry *job, data_version_t version) {
+  assert(job->versioned());
+
+  pending_reader_jobs_.erase(job);
+  pending_writer_jobs_.erase(job);
+
+  IndexIter it = index_.find(version);
+  if (it != index_.end()) {
+    it->second->erase(job);
+    if (it->second->size() == 0) {
+      delete it->second;
+      index_.erase(it);
+    }
+  }
+
+  return true;
+}
+
 bool VersionEntry::LookUpVersion(
     JobEntry *job,
     data_version_t *version) {

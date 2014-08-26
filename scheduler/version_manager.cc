@@ -247,7 +247,7 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
       exit(-1);
       return false;
     } else {
-      iter->second->RemoveJobEntry(job);
+      iter->second->RemoveJobEntry(job, it->second);
       if (iter->second->is_empty()) {
         delete iter->second;
         index_.erase(iter);
