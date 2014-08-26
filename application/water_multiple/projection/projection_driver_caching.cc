@@ -420,7 +420,8 @@ void ProjectionDriver::Cache_LoadFromNimbus(
             &meta_p_aux_data);
     cache_meta_p = dynamic_cast<application::CacheCompressedScalarArray<T>*>(cache_var);
     assert(cache_meta_p != NULL);
-    projection_data.meta_p = *cache_meta_p->data();
+    projection_data.meta_p.n = cache_meta_p->data()->n;
+    projection_data.meta_p.x = cache_meta_p->data()->x;
     assert(projection_data.meta_p.Size() == projection_data.local_n);
     dbg(APP_LOG, "[PROJECTION] LOAD VECTOR_P_META_FORMAT %f seconds\n",
         log_timer.timer());
@@ -524,7 +525,10 @@ void ProjectionDriver::Cache_SaveToNimbus(
 
   if (cache_meta_p) {
     log_timer.StartTimer();
-    *cache_meta_p->data() = projection_data.meta_p;
+    cache_meta_p->data()->n = projection_data.meta_p.n;
+    cache_meta_p->data()->x = projection_data.meta_p.x;
+    projection_data.meta_p.n = 0;
+    projection_data.meta_p.x = NULL;
     cm->ReleaseAccess(cache_meta_p);
     cache_meta_p = NULL;
     dbg(APP_LOG, "[PROJECTION] SAVE VECTOR_P_META_FORMAT %f seconds\n",

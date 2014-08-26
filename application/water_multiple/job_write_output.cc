@@ -96,8 +96,10 @@ void JobWriteOutput::Execute(nimbus::Parameter params,
   *thread_queue_hook() = example->nimbus_thread_queue;
 
   dbg(APP_LOG, "Job WRITE_OUTPUT starts.\n");
-  // Reseed particles and write frame.
-  driver->WriteOutputSplitImpl(this, da, true, dt, rank);
+  {
+    application::ScopeTimer scope_timer(name());
+    driver->WriteOutputSplitImpl(this, da, true, dt, rank);
+  }
 
   *thread_queue_hook() = NULL;
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
