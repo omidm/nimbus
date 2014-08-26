@@ -605,9 +605,7 @@ bool JobManager::AllJobsAreDone() {
 }
 
 void JobManager::UpdateJobBeforeSet(JobEntry* job) {
-  IDSet<job_id_t> before_set = job->before_set();
-  UpdateBeforeSet(&before_set);
-  job->set_before_set(before_set);
+  UpdateBeforeSet(job->before_set_p());
 }
 
 void JobManager::UpdateBeforeSet(IDSet<job_id_t>* before_set) {
