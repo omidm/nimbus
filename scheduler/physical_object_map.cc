@@ -179,10 +179,11 @@ bool nimbus::PhysicalObjectMap::UpdatePhysicalInstance(LogicalDataObject* obj,
  * \return
 */
 const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object) {
-  if (data_map_.find(object->id()) == data_map_.end()) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
     return NULL;
   } else {
-    PhysicalDataVector* v = data_map_[object->id()];
+    PhysicalDataVector* v = iter->second;
     return v;
   }
 }
@@ -199,10 +200,11 @@ const PhysicalDataVector * nimbus::PhysicalObjectMap::AllInstances(LogicalDataOb
 int nimbus::PhysicalObjectMap::AllInstances(LogicalDataObject *object,
                                   PhysicalDataVector *dest) {
   dest->clear();
-  if (data_map_.find(object->id()) == data_map_.end()) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = data_map_[object->id()];
+    PhysicalDataVector* v = iter->second;
     int len = v->size();
     for (int i = 0; i < len; ++i) {
       dest->push_back((*v)[i]);
@@ -226,10 +228,11 @@ int nimbus::PhysicalObjectMap::InstancesByWorker(LogicalDataObject *object,
                                    worker_id_t worker,
                                    PhysicalDataVector *dest) {
   dest->clear();
-  if (data_map_.find(object->id()) == data_map_.end()) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = data_map_[object->id()];
+    PhysicalDataVector* v = iter->second;
     PhysicalDataVector::iterator it = v->begin();
     int count = 0;
 
@@ -260,10 +263,11 @@ int nimbus::PhysicalObjectMap::InstancesByVersion(LogicalDataObject *object,
                                         data_version_t version,
                                         PhysicalDataVector *dest) {
   dest->clear();
-  if (data_map_.find(object->id()) == data_map_.end()) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = data_map_[object->id()];
+    PhysicalDataVector* v = iter->second;
     PhysicalDataVector::iterator it = v->begin();
     int count = 0;
     for (; it != v->end(); ++it) {
@@ -294,10 +298,11 @@ int nimbus::PhysicalObjectMap::InstancesByWorkerAndVersion(LogicalDataObject *ob
                                    data_version_t version,
                                    PhysicalDataVector *dest) {
   dest->clear();
-  if (data_map_.find(object->id()) == data_map_.end()) {
+  PhysicalObjectMapType::iterator iter = data_map_.find(object->id());
+  if (iter == data_map_.end()) {
     return 0;
   } else {
-    PhysicalDataVector* v = data_map_[object->id()];
+    PhysicalDataVector* v = iter->second;
     PhysicalDataVector::iterator it = v->begin();
     int count = 0;
 
