@@ -694,11 +694,9 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
   }
 
   PhysicalDataVector instances_at_worker;
-  PhysicalDataVector instances_in_system;
   log_data_manager_.log_ResumeTimer();
   data_manager_->InstancesByWorkerAndVersion(
       ldo, worker->worker_id(), version, &instances_at_worker);
-  data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
   log_data_manager_.log_StopTimer();
 
   JobEntryList list;
@@ -785,6 +783,10 @@ bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
     return true;
   }
 
+  PhysicalDataVector instances_in_system;
+  log_data_manager_.log_ResumeTimer();
+  data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
+  log_data_manager_.log_StopTimer();
 
   if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
     PhysicalData from_instance = instances_in_system[0];
