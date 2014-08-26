@@ -631,10 +631,9 @@ template<typename TYPE_NAME> void ProjectionDriver::ReadScalarData(
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     value = data_real->scalar();
-    dbg(APP_LOG, "[Data Loading]%s: %0.9f\n", variable_name, (float)value);
-    dbg(APP_LOG, "Finish reading %s.\n", variable_name);
+    dbg(APP_LOG, "Read %s=%0.9f.\n", variable_name, (float)value);
   } else {
-    dbg(APP_LOG, "Flag is set but data is not local:%s.\n", variable_name);
+    dbg(APP_LOG, "Variable %s uninitialized.\n", variable_name);
   }
 }
 
@@ -809,8 +808,7 @@ template<typename TYPE_NAME> void ProjectionDriver::WriteScalarData(
     nimbus::ScalarData<TYPE_NAME>* data_real =
         dynamic_cast<nimbus::ScalarData<TYPE_NAME>*>(data_temp);
     data_real->set_scalar(value);
-    dbg(APP_LOG, "[Data Saving]%s: %0.9f\n", variable_name, (float)value);
-    dbg(APP_LOG, "Finish writing %s.\n", variable_name);
+    dbg(APP_LOG, "Write %s=%0.9f.\n", variable_name, (float)value);
   }
 }
 

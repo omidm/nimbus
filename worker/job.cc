@@ -471,10 +471,10 @@ void LocalCopyJob::Execute(Parameter params, const DataArray& da) {
 
 void LocalCopyJob::PrintTimeProfile() {
   // TODO(quhang): temporary use. Should use dbg instead.
-  printf("[PROFILE] copy of ghost: %lld, %f seconds.\n"
-         "[PROFILE] copy of central: %lld, %f seconds.\n",
-         copy_ghost_count_, copy_ghost_time_,
-         copy_central_count_, copy_central_time_);
+  // printf("[PROFILE] copy of ghost: %lld, %f seconds.\n"
+  //        "[PROFILE] copy of central: %lld, %f seconds.\n",
+  //        copy_ghost_count_, copy_ghost_time_,
+  //        copy_central_count_, copy_central_time_);
 }
 
 double LocalCopyJob::copy_ghost_time_ = 0;

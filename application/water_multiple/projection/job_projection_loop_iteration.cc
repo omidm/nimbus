@@ -258,14 +258,12 @@ void JobProjectionLoopIteration::Execute(
     // REDUCE_RHO
     read.clear();
     LoadLogicalIdsInSet(
-        this, &read, kRegW0Central[0], APP_PROJECTION_LOCAL_N,
-        APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_RHO,
+        this, &read, kRegW0Central[0], APP_PROJECTION_LOCAL_RHO,
         APP_PROJECTION_GLOBAL_RHO, NULL);
     write.clear();
     LoadLogicalIdsInSet(
-        this, &write, kRegW0Central[0], APP_PROJECTION_LOCAL_RHO,
-        APP_PROJECTION_GLOBAL_RHO, APP_PROJECTION_GLOBAL_RHO_OLD,
-        APP_PROJECTION_BETA, NULL);
+        this, &write, kRegW0Central[0], APP_PROJECTION_GLOBAL_RHO,
+        APP_PROJECTION_GLOBAL_RHO_OLD, APP_PROJECTION_BETA, NULL);
     job_query.StageJob(PROJECTION_REDUCE_RHO, projection_job_ids[1],
                        read, write, default_params, true);
     job_query.Hint(projection_job_ids[1], kRegW0Central[0]);
@@ -321,9 +319,8 @@ void JobProjectionLoopIteration::Execute(
     // REDUCE_ALPHA
     read.clear();
     LoadLogicalIdsInSet(
-        this, &read, kRegW0Central[0], APP_PROJECTION_LOCAL_N,
-        APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA,
-        NULL);
+        this, &read, kRegW0Central[0],
+        APP_PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA, NULL);
     LoadLogicalIdsInSet(
         this, &read, kRegW0Central[0], APP_PROJECTION_GLOBAL_RHO, NULL);
     write.clear();

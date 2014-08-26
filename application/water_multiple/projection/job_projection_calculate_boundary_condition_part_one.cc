@@ -101,8 +101,8 @@ void JobProjectionCalculateBoundaryConditionPartOne::Execute(
       dt);
 
   {
-      application::ScopeTimer scope_timer(name());
-      driver->ProjectionCalculateBoundaryConditionPartOneImpl(this, da, dt);
+    application::ScopeTimer scope_timer(name());
+    driver->ProjectionCalculateBoundaryConditionPartOneImpl(this, da, dt);
   }
   example->Save_To_Nimbus(this, da, driver->current_frame + 1);
 

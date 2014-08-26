@@ -97,29 +97,18 @@ void JobProjectionStepThree::Execute(
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_STEP_THREE starts (iteration=%d).\n", iteration);
 
-  Log log_timer;
-
-  log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, loading time:%f.\n",
-      log_timer.timer());
 
-  // Read VECTOR_P(outer region), MATRIX_A.
-  // Write VECTOR_TEMP.
-  // Write PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
-  log_timer.StartTimer();
   {
     application::ScopeTimer scope_timer(name());
+    // Read VECTOR_P(outer region), MATRIX_A.
+    // Write VECTOR_TEMP.
+    // Write PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
     projection_driver.UpdateTempVector();
     projection_driver.CalculateLocalAlpha();
   }
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, calculation time:%f.\n",
-      log_timer.timer());
 
-  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_STEP_THREE, saving time:%f.\n",
-      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_STEP_THREE job\n");
 }
