@@ -109,6 +109,8 @@ class JobManager {
 
     bool RemoveJobEntry(job_id_t job_id);
 
+    size_t NumJobsReadyToAssign();
+
     size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
 
     size_t RemoveObsoleteJobEntries();

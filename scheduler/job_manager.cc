@@ -377,6 +377,10 @@ bool JobManager::ResolveJobDataVersions(JobEntry *job) {
   }
 }
 
+size_t JobManager::NumJobsReadyToAssign() {
+  return jobs_ready_to_assign_.size();
+}
+
 size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   log_version_.log_ResetTimer();
   log_merge_.log_ResetTimer();
@@ -500,6 +504,10 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   }
 
   size_t num = 0;
+
+  if (NumJobsReadyToAssign()) {
+    return num;
+  }
 
   JobEntryMap::iterator iter;
   for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
