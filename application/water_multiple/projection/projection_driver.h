@@ -64,6 +64,7 @@ struct MetaPAuxData {
 
 class ProjectionDriver {
  public:
+  bool print_debug;
   typedef typename T_GRID::VECTOR_T TV;
   typedef typename TV::SCALAR T;
   typedef typename T_GRID::VECTOR_INT TV_INT;
@@ -77,6 +78,7 @@ class ProjectionDriver {
           : pcg(pcg_input),
             init_config(init_config_input),
             data_config(data_config_input) {
+    print_debug = false;
     projection_data.local_n = 0;
     projection_data.interior_n = 0;
 
