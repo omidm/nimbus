@@ -33,13 +33,14 @@
  */
 
  /*
-  * This is static version of the load balancer used in scheduler v2.
+  * This is dynamic load balancer that has load ba;ancer and base class and
+  * overrides some of its methods.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_SCHEDULER_V2_STATIC_LOAD_BALANCER_H_
-#define NIMBUS_TEST_SCHEDULER_V2_STATIC_LOAD_BALANCER_H_
+#ifndef NIMBUS_TEST_SCHEDULER_V3_DYNAMIC_LOAD_BALANCER_H_
+#define NIMBUS_TEST_SCHEDULER_V3_DYNAMIC_LOAD_BALANCER_H_
 
 #include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
@@ -58,15 +59,16 @@
 #include "scheduler/load_balancer.h"
 #include "shared/cluster.h"
 #include "shared/id_maker.h"
+#include "shared/scheduler_server.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
 
 namespace nimbus {
 
-  class StaticLoadBalancer : public LoadBalancer {
+  class DynamicLoadBalancer : public LoadBalancer {
   public:
-    StaticLoadBalancer();
-    virtual ~StaticLoadBalancer();
+    DynamicLoadBalancer();
+    virtual ~DynamicLoadBalancer();
 
     virtual void Run();
 
@@ -78,39 +80,49 @@ namespace nimbus {
 
     virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
 
-
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-    typedef std::map<worker_id_t, GeometricRegion> WorkerDomains;
-    typedef std::map<worker_id_t, size_t> WorkerRank;
+    typedef WorkerMap::iterator WorkerMapIter;
+    typedef std::map<job_id_t, JobProfile*> JobHistory;
 
-    StaticLoadBalancer(const StaticLoadBalancer& other) {}
+    DynamicLoadBalancer(const DynamicLoadBalancer& other) {}
 
     Log log_;
     size_t worker_num_;
-    bool initialized_domains_;
-    WorkerMap worker_map_;
-    WorkerDomains worker_domains_;
-    GeometricRegion global_bounding_region_;
+    GeometricRegion global_region_;
 
     int stamp_state_;
     boost::mutex stamp_mutex_;
 
+    JobHistory job_history_;
+    boost::recursive_mutex job_history_mutex_;
+
+    std::list<job_id_t> done_jobs_;
+
+    RegionMap region_map_;
+    boost::recursive_mutex region_map_mutex_;
+
+    WorkerMap worker_map_;
+    boost::recursive_mutex worker_map_mutex_;
+
+    StragglerMap straggler_map_;
+    boost::recursive_mutex straggler_map_mutex_;
+
+    bool update_;
+    bool init_phase_;
+    boost::recursive_mutex update_mutex_;
+    boost::condition_variable_any update_cond_;
+
+    std::map<worker_id_t, size_t> blame_map_;
+    size_t blame_counter_;
+
+    void InitializeRegionMap();
+
+    void UpdateRegionMap();
+
     bool SetWorkerToAssignJob(JobEntry *job);
-
-    void UpdateWorkerDomains();
-
-    void SplitDimensions(size_t worker_num,
-                         size_t *num_x,
-                         size_t *num_y,
-                         size_t *num_z);
-
-    void GenerateDomains(size_t num_x,
-                         size_t num_y,
-                         size_t num_z,
-                         GeometricRegion gbr);
   };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_TEST_SCHEDULER_V2_STATIC_LOAD_BALANCER_H_
+#endif  // NIMBUS_TEST_SCHEDULER_V3_DYNAMIC_LOAD_BALANCER_H_

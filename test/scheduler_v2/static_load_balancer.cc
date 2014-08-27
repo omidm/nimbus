@@ -50,8 +50,10 @@
 namespace nimbus {
 
 StaticLoadBalancer::StaticLoadBalancer() {
+  worker_num_ = 0;
   stamp_state_ = -1;
   initialized_domains_ = false;
+  log_.set_file_name("load_balancer_log");
 }
 
 StaticLoadBalancer::~StaticLoadBalancer() {

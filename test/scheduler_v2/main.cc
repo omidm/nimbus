@@ -108,6 +108,7 @@ int main(int argc, char *argv[]) {
     s->set_min_worker_to_join(worker_num);
   }
 
+  // make sure that scheduler v2 has serialized job assigner.
   s->set_job_assigner_thread_num(0);
 
   s->Run();

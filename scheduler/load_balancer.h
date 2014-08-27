@@ -69,21 +69,16 @@ namespace nimbus {
 
   class LoadBalancer {
   public:
-    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-    typedef WorkerMap::iterator WorkerMapIter;
-    typedef std::map<job_id_t, JobProfile*> JobHistory;
-
     LoadBalancer();
-    explicit LoadBalancer(ClusterMap* cluster_map);
     virtual ~LoadBalancer();
 
     ClusterMap* cluster_map();
 
-    void set_cluster_map(ClusterMap* cluster_map);
-    void set_job_manager(JobManager *job_manager);
-    void set_data_manager(DataManager *data_manager);
-    void set_job_assigner(JobAssigner *job_assigner);
-    void set_max_job_to_assign(size_t num);
+    virtual void set_cluster_map(ClusterMap* cluster_map);
+    virtual void set_job_manager(JobManager *job_manager);
+    virtual void set_data_manager(DataManager *data_manager);
+    virtual void set_job_assigner(JobAssigner *job_assigner);
+    virtual void set_max_job_to_assign(size_t num);
 
     virtual void Run();
 
@@ -103,41 +98,14 @@ namespace nimbus {
     size_t max_job_to_assign_;
 
   private:
+    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
+    typedef WorkerMap::iterator WorkerMapIter;
+
     LoadBalancer(const LoadBalancer& other) {}
 
-    Log log_;
-    size_t worker_num_;
-    GeometricRegion global_region_;
-    int stamp_state_;
-    boost::mutex stamp_mutex_;
-
-    JobHistory job_history_;
-    boost::recursive_mutex job_history_mutex_;
-
-    std::list<job_id_t> done_jobs_;
-
-    RegionMap region_map_;
-    boost::recursive_mutex region_map_mutex_;
-
     WorkerMap worker_map_;
-    boost::recursive_mutex worker_map_mutex_;
-
-    StragglerMap straggler_map_;
-    boost::recursive_mutex straggler_map_mutex_;
-
-    bool update_;
-    bool init_phase_;
-    boost::recursive_mutex update_mutex_;
-    boost::condition_variable_any update_cond_;
-
-    std::map<worker_id_t, size_t> blame_map_;
-    size_t blame_counter_;
 
     void Initialize();
-
-    void InitializeRegionMap();
-
-    void UpdateRegionMap();
 
     bool SetWorkerToAssignJob(JobEntry *job);
   };

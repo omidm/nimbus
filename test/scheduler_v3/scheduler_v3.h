@@ -63,6 +63,9 @@ class SchedulerV3 : public Scheduler {
   public:
     explicit SchedulerV3(unsigned int listening_port);
 
+  protected:
+    virtual void CreateLoadBalancer();
+
   private:
 };
 
