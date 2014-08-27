@@ -44,6 +44,7 @@ namespace nimbus {
 
 #define MAX_BATCH_COMMAND_NUM 10000
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
+#define JOB_ASSIGNER_THREAD_NUM 0
 #define MAX_JOB_TO_ASSIGN 1
 
 Scheduler::Scheduler(port_t p)
@@ -71,21 +72,24 @@ Scheduler::~Scheduler() {
 void Scheduler::Run() {
   Log::log_PrintLine("Running the Scheduler");
 
-
-
   /*
-   * First data manager should be instantiated then job manager, because of
-   * ldo_map pointer that job manager needs to get from data manager.  Also
-   * load balancer is set up after both of them since it needs a pointer to job
-   * manager and data manager. It also needs a pointer to the server.
+   * First create the modules, then set them up.
    */
 
-  id_maker_.Initialize(0);
-  // SetupUserInterface();
-  SetupWorkerInterface();
+  CreateIDMaker();
+  CreateSchedulerServer();
+  CreateDataManager();
+  CreateJobManager();
+  CreateLoadBalancer();
+  CreateJobAssigner();
+
+  SetupIDMaker();
+  SetupSchedulerServer();
   SetupDataManager();
   SetupJobManager();
   SetupLoadBalancer();
+  SetupJobAssigner();
+  // SetupUserInterface();
 
   SchedulerCoreProcessor();
 }
@@ -274,13 +278,10 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->NotifyJobDone(job_id);
-  log_job_manager_.log_StopTimer();
-
   JobEntry *job;
   log_job_manager_.log_ResumeTimer();
   if (job_manager_->GetJobEntry(job_id, job)) {
+    job_manager_->NotifyJobDone(job);
     log_load_balancer_.log_ResumeTimer();
     load_balancer_->NotifyJobDone(job);
     log_load_balancer_.log_StopTimer();
@@ -320,17 +321,10 @@ void Scheduler::TerminationProcedure() {
 
 void Scheduler::AddMainJob() {
   std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
+  id_maker_->GetNewJobID(&j, 1);
   log_job_manager_.log_ResumeTimer();
   job_manager_->AddMainJobEntry(j[0]);
   log_job_manager_.log_StopTimer();
-}
-
-bool Scheduler::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  // Simply just assign the job to first worker.
-  dbg(DBG_WARN, "WARNING: Base scheduler only assigns jobs to first worker, override the GetWorkerToAssignJob to have more complicated logic.\n"); // NOLINT
-  worker =  *(server_->workers()->begin());
-  return true;
 }
 
 size_t Scheduler::RemoveObsoleteJobEntries() {
@@ -341,677 +335,8 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
   return count;
 }
 
-bool Scheduler::AllocateLdoInstanceToJob(JobEntry* job,
-    LogicalDataObject* ldo, PhysicalData pd) {
-  assert(job->versioned());
-  // IDSet<job_id_t> before_set = job->before_set();
-  PhysicalData pd_new = pd;
-
-  // data_version_t v_in, // v_out;
-  // job->vtable_in()->que// ry_entry(ldo->id(), &v_in);
-  // job->vtable_out()->qu// ery_entry(ldo->id(), &v_out);
-
-  // Because of the clear_list_job_read the order of if blocks are important.
-  if (job->write_set_p()->contains(ldo->id())) {
-    // pd_new.set_version(job->version_table_out_query(ldo->id()));
-    data_version_t v_out;
-    // job->vmap_write_out()->query_entry(ldo->id(), &v_out);
-    job->vmap_write()->query_entry(ldo->id(), &v_out);
-    pd_new.set_version(v_out);
-    pd_new.set_last_job_write(job->job_id());
-    pd_new.clear_list_job_read();
-    // before_set.insert(pd.list_job_read());
-    job->before_set_p()->insert(pd.list_job_read());
-    // become ancestor of last job write if not already ,so that read access
-    // is safe for the jobs in list job read cleared by the previous write job - omidm
-    // before_set.insert(pd.last_job_write());
-    job->before_set_p()->insert(pd.last_job_write());
-  }
-
-  if (job->read_set_p()->contains(ldo->id())) {
-    // assert(job->version_table_in_query(ldo->id()) == pd.version());
-    data_version_t v_in;
-    // job->vmap_read_in()->query_entry(ldo->id(), &v_in);
-    job->vmap_read()->query_entry(ldo->id(), &v_in);
-    assert(v_in == pd.version());
-    pd_new.add_to_list_job_read(job->job_id());
-    // before_set.insert(pd.last_job_write());
-    job->before_set_p()->insert(pd.last_job_write());
-  }
-
-  job->set_physical_table_entry(ldo->id(), pd.id());
-  // job->set_before_set(before_set);
-
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->UpdatePhysicalInstance(ldo, pd, pd_new);
-  // data_manager_->RemovePhysicalInstance(ldo, pd);
-  // data_manager_->AddPhysicalInstance(ldo, pd_new);
-  log_data_manager_.log_StopTimer();
-
-  return true;
-}
-
-size_t Scheduler::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
-    LogicalDataObject* ldo, PhysicalDataVector* dest) {
-  size_t count = 0;
-  dest->clear();
-  PhysicalDataVector pv;
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->InstancesByWorker(ldo, worker->worker_id(), &pv);
-  log_data_manager_.log_StopTimer();
-  PhysicalDataVector::iterator iter = pv.begin();
-  for (; iter != pv.end(); ++iter) {
-    JobEntryList list;
-    VersionedLogicalData vld(ldo->id(), iter->version());
-    log_version_manager_.log_ResumeTimer();
-    if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
-      dest->push_back(*iter);
-      ++count;
-    }
-    log_version_manager_.log_StopTimer();
-  }
-  return count;
-}
-
-bool Scheduler::CreateDataAtWorker(SchedulerWorker* worker,
-    LogicalDataObject* ldo, PhysicalData* created_data) {
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
-  std::vector<physical_data_id_t> d;
-  id_maker_.GetNewPhysicalDataID(&d, 1);
-  IDSet<job_id_t> before;
-
-  // Update the job table.
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->AddCreateDataJobEntry(j[0]);
-  log_job_manager_.log_StopTimer();
-
-  // Update data table.
-  IDSet<job_id_t> list_job_read;
-  list_job_read.insert(j[0]);  // if other job wants to write, waits for creation.
-  PhysicalData p(d[0], worker->worker_id(), NIMBUS_INIT_DATA_VERSION, list_job_read, j[0]);
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->AddPhysicalInstance(ldo, p);
-  log_data_manager_.log_StopTimer();
-
-  // send the create command to worker.
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
-  CreateDataCommand cm(ID<job_id_t>(j[0]),
-                       ldo->variable(),
-                       ID<logical_data_id_t>(ldo->id()),
-                       ID<physical_data_id_t>(d[0]),
-                       before);
-  log_server_.log_ResumeTimer();
-  server_->SendCommand(worker, &cm);
-  log_server_.log_StopTimer();
-
-  *created_data = p;
-
-  return true;
-}
-
-bool Scheduler::RemoteCopyData(SchedulerWorker* from_worker,
-    SchedulerWorker* to_worker, LogicalDataObject* ldo,
-    PhysicalData* from_data, PhysicalData* to_data) {
-  assert(from_worker->worker_id() == from_data->worker());
-  assert(to_worker->worker_id() == to_data->worker());
-
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 2);
-  job_id_t receive_id = j[0];
-  job_id_t send_id = j[1];
-  IDSet<job_id_t> before;
-
-  // Receive part
-
-  // Update the job table.
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->AddRemoteCopyReceiveJobEntry(receive_id);
-  log_job_manager_.log_StopTimer();
-
-  // Update data table.
-  PhysicalData to_data_new = *to_data;
-  to_data_new.set_version(from_data->version());
-  to_data_new.set_last_job_write(receive_id);
-  to_data_new.clear_list_job_read();
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
-  // data_manager_->RemovePhysicalInstance(ldo, *to_data);
-  // data_manager_->AddPhysicalInstance(ldo, to_data_new);
-  log_data_manager_.log_StopTimer();
-
-  // send remote copy receive job to worker.
-  before.clear();
-  before.insert(to_data->list_job_read());
-  before.insert(to_data->last_job_write());
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
-  RemoteCopyReceiveCommand cm_r(ID<job_id_t>(receive_id),
-                                ID<physical_data_id_t>(to_data->id()),
-                                before);
-  log_server_.log_ResumeTimer();
-  server_->SendCommand(to_worker, &cm_r);
-  log_server_.log_StopTimer();
-
-
-  // Send Part.
-
-  // Update the job table.
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->AddRemoteCopySendJobEntry(send_id);
-  log_job_manager_.log_StopTimer();
-
-  // Update data table.
-  PhysicalData from_data_new = *from_data;
-  from_data_new.add_to_list_job_read(send_id);
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
-  // data_manager_->RemovePhysicalInstance(ldo, *from_data);
-  // data_manager_->AddPhysicalInstance(ldo, from_data_new);
-  log_data_manager_.log_StopTimer();
-
-  // send remote copy send command to worker.
-  before.clear();
-  before.insert(from_data->last_job_write());
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
-  RemoteCopySendCommand cm_s(ID<job_id_t>(send_id),
-                             ID<job_id_t>(receive_id),
-                             ID<physical_data_id_t>(from_data->id()),
-                             ID<worker_id_t>(to_worker->worker_id()),
-                             to_worker->ip(),
-                             ID<port_t>(to_worker->port()),
-                             before);
-  log_server_.log_ResumeTimer();
-  server_->SendCommand(from_worker, &cm_s);
-  log_server_.log_StopTimer();
-
-
-  *from_data = from_data_new;
-  *to_data = to_data_new;
-
-  return true;
-}
-
-bool Scheduler::LocalCopyData(SchedulerWorker* worker,
-    LogicalDataObject* ldo, PhysicalData* from_data, PhysicalData* to_data) {
-  copy_count_++;
-  assert(worker->worker_id() == from_data->worker());
-  assert(worker->worker_id() == to_data->worker());
-
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
-  IDSet<job_id_t> before;
-
-  // Update the job table.
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->AddLocalCopyJobEntry(j[0]);
-  log_job_manager_.log_StopTimer();
-
-  // Update data table.
-  PhysicalData from_data_new = *from_data;
-  from_data_new.add_to_list_job_read(j[0]);
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->UpdatePhysicalInstance(ldo, *from_data, from_data_new);
-  // data_manager_->RemovePhysicalInstance(ldo, *from_data);
-  // data_manager_->AddPhysicalInstance(ldo, from_data_new);
-  log_data_manager_.log_StopTimer();
-
-  PhysicalData to_data_new = *to_data;
-  to_data_new.set_version(from_data->version());
-  to_data_new.set_last_job_write(j[0]);
-  to_data_new.clear_list_job_read();
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->UpdatePhysicalInstance(ldo, *to_data, to_data_new);
-  // data_manager_->RemovePhysicalInstance(ldo, *to_data);
-  // data_manager_->AddPhysicalInstance(ldo, to_data_new);
-  log_data_manager_.log_StopTimer();
-
-  // send local copy command to worker.
-  before.insert(to_data->list_job_read());
-  before.insert(to_data->last_job_write());
-  before.insert(from_data->last_job_write());
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->UpdateBeforeSet(&before);
-  log_job_manager_.log_StopTimer();
-  LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
-                        ID<physical_data_id_t>(from_data->id()),
-                        ID<physical_data_id_t>(to_data->id()),
-                        before);
-  log_server_.log_ResumeTimer();
-  server_->SendCommand(worker, &cm_c);
-  log_server_.log_StopTimer();
-
-  *from_data = from_data_new;
-  *to_data = to_data_new;
-
-  return true;
-}
-
-bool Scheduler::GetFreeDataAtWorker(SchedulerWorker* worker,
-    LogicalDataObject* ldo, PhysicalData* free_data) {
-  PhysicalDataVector obsolete_instances;
-  if (GetObsoleteLdoInstancesAtWorker(worker, ldo, &obsolete_instances) > 0) {
-    *free_data = obsolete_instances[0];
-    return true;
-  }
-
-  // Since there are no obsoletes, go ahead and create a new one.
-  return CreateDataAtWorker(worker, ldo, free_data);
-}
-
-
-bool Scheduler::PrepareDataForJobAtWorker(JobEntry* job,
-    SchedulerWorker* worker, logical_data_id_t l_id) {
-  bool reading = job->read_set_p()->contains(l_id);
-  bool writing = job->write_set_p()->contains(l_id);
-  assert(reading || writing);
-
-  log_data_manager_.log_ResumeTimer();
-  LogicalDataObject* ldo =
-    const_cast<LogicalDataObject*>(data_manager_->FindLogicalObject(l_id));
-  log_data_manager_.log_StopTimer();
-
-
-  // data_version_t version = job->version_table_in_query(l_id);
-
-  // data_version_t version;
-  // if (!job->vtable_in()->query_entry(l_id, &version)) {
-  //   dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the context of %s.\n",
-  //       l_id, job->job_name().c_str());
-  // }
-
-//  data_version_t version;
-//  if (reading) {
-//    if (!job->vmap_read_in()->query_entry(l_id, &version)) {
-//      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
-//          l_id, job->job_name().c_str());
-//      exit(-1);
-//    }
-//  }
-//
-//  // Just for checking
-//  data_version_t unused_version;
-//  if (writing) {
-//    if (!job->vmap_write_out()->query_entry(l_id, &unused_version)) {
-//      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
-//          l_id, job->job_name().c_str());
-//      exit(-1);
-//    }
-//  }
-
-
-
-  data_version_t version;
-  if (reading) {
-    if (!job->vmap_read()->query_entry(l_id, &version)) {
-      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the read context of %s.\n",
-          l_id, job->job_name().c_str());
-      exit(-1);
-    }
-  }
-
-  // Just for checking
-  data_version_t unused_version;
-  if (writing) {
-    if (!job->vmap_write()->query_entry(l_id, &unused_version)) {
-      dbg(DBG_ERROR, "ERROR: logical id %lu is not versioned in the write context of %s.\n",
-          l_id, job->job_name().c_str());
-      exit(-1);
-    }
-  }
-
-
-
-  // Checking correctness of the new versioning system
-  // data_version_t version_c;
-  // if (reading) {
-  //   assert(job->vmap_read_in()->query_entry(l_id, &version_c));
-  //   assert(version_c == version);
-  // }
-  // if (writing) {
-  //   assert(job->vmap_write_out()->query_entry(l_id, &version_c));
-  //   assert(version_c == (version + 1));
-  // }
-
-
-  if (!reading) {
-    PhysicalData target_instance;
-    GetFreeDataAtWorker(worker, ldo, &target_instance);
-
-    log_job_manager_.log_ResumeTimer();
-    if (job_manager_->CausingUnwantedSerialization(job, l_id, target_instance)) {
-      dbg(DBG_SCHED, "Causing unwanted serialization for data %lu.\n", l_id);
-    }
-    log_job_manager_.log_StopTimer();
-
-    AllocateLdoInstanceToJob(job, ldo, target_instance);
-    return true;
-  }
-
-  PhysicalDataVector instances_at_worker;
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->InstancesByWorkerAndVersion(
-      ldo, worker->worker_id(), version, &instances_at_worker);
-  log_data_manager_.log_StopTimer();
-
-  JobEntryList list;
-  VersionedLogicalData vld(l_id, version);
-  log_version_manager_.log_ResumeTimer();
-  job_manager_->GetJobsNeedDataVersion(&list, vld);
-  log_version_manager_.log_StopTimer();
-  assert(list.size() >= 1);
-  bool writing_needed_version = (list.size() > 1) && writing;
-
-
-  if (instances_at_worker.size() > 1) {
-    PhysicalData target_instance;
-
-    bool found = false;
-    PhysicalDataVector::iterator iter;
-    for (iter = instances_at_worker.begin(); iter != instances_at_worker.end(); iter++) {
-      log_job_manager_.log_ResumeTimer();
-      if (!job_manager_->CausingUnwantedSerialization(job, l_id, *iter)) {
-        target_instance = *iter;
-        found = true;
-        break;
-      }
-      log_job_manager_.log_StopTimer();
-    }
-
-    if (!found) {
-      dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (1).\n", l_id);
-      GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
-    }
-
-    AllocateLdoInstanceToJob(job, ldo, target_instance);
-    return true;
-  }
-
-
-  if ((instances_at_worker.size() == 1) && !writing_needed_version) {
-    PhysicalData target_instance;
-
-    log_job_manager_.log_ResumeTimer();
-    if (!job_manager_->CausingUnwantedSerialization(job, l_id, instances_at_worker[0])) {
-      target_instance = instances_at_worker[0];
-      log_job_manager_.log_StopTimer();
-    } else {
-      log_job_manager_.log_StopTimer();
-      dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (2).\n", l_id);
-      GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
-    }
-
-    AllocateLdoInstanceToJob(job, ldo, target_instance);
-    return true;
-  }
-
-
-  if ((instances_at_worker.size() == 1) && writing_needed_version) {
-    PhysicalData target_instance;
-
-    log_job_manager_.log_ResumeTimer();
-    if (!job_manager_->CausingUnwantedSerialization(job, l_id, instances_at_worker[0])) {
-      log_job_manager_.log_StopTimer();
-      target_instance = instances_at_worker[0];
-      PhysicalData copy_data;
-      GetFreeDataAtWorker(worker, ldo, &copy_data);
-      LocalCopyData(worker, ldo, &target_instance, &copy_data);
-    } else {
-      log_job_manager_.log_StopTimer();
-      dbg(DBG_SCHED, "Avoiding unwanted serialization for data %lu (3).\n", l_id);
-      GetFreeDataAtWorker(worker, ldo, &target_instance);
-      LocalCopyData(worker, ldo, &instances_at_worker[0], &target_instance);
-    }
-
-    AllocateLdoInstanceToJob(job, ldo, target_instance);
-    return true;
-  }
-
-
-  if ((instances_at_worker.size() == 0) && (version == NIMBUS_INIT_DATA_VERSION)) {
-    PhysicalData created_data;
-    CreateDataAtWorker(worker, ldo, &created_data);
-
-    AllocateLdoInstanceToJob(job, ldo, created_data);
-    return true;
-  }
-
-  PhysicalDataVector instances_in_system;
-  log_data_manager_.log_ResumeTimer();
-  data_manager_->InstancesByVersion(ldo, version, &instances_in_system);
-  log_data_manager_.log_StopTimer();
-
-  if ((instances_at_worker.size() == 0) && (instances_in_system.size() >= 1)) {
-    PhysicalData from_instance = instances_in_system[0];
-    worker_id_t sender_id = from_instance.worker();
-    SchedulerWorker* worker_sender;
-    if (!server_->GetSchedulerWorkerById(worker_sender, sender_id)) {
-      dbg(DBG_ERROR, "ERROR: could not find worker with id %lu.\n", sender_id);
-      exit(-1);
-    }
-
-    PhysicalData target_instance;
-    GetFreeDataAtWorker(worker, ldo, &target_instance);
-    RemoteCopyData(worker_sender, worker, ldo, &from_instance, &target_instance);
-
-    AllocateLdoInstanceToJob(job, ldo, target_instance);
-    return true;
-  }
-
-  dbg(DBG_ERROR, "ERROR: the version (%lu) of logical data %s (%lu) needed for job %s (%lu) does not exist.\n", // NOLINT
-      version, ldo->variable().c_str(), l_id, job->job_name().c_str(), job->job_id());
-  assert(instances_in_system.size() >= 1);
-
-  return false;
-}
-
-bool Scheduler::SendComputeJobToWorker(SchedulerWorker* worker, JobEntry* job) {
-  if (job->job_type() == JOB_COMP) {
-    compute_count_++;
-    log_server_.log_ResumeTimer();
-    ID<job_id_t> job_id(job->job_id());
-    ID<job_id_t> future_job_id(job->future_job_id());
-    IDSet<physical_data_id_t> read_set, write_set;
-    // TODO(omidm): check the return value of the following methods.
-    job->GetPhysicalReadSet(&read_set);
-    job->GetPhysicalWriteSet(&write_set);
-    ComputeJobCommand cm(job->job_name(),
-                         job_id,
-                         read_set,
-                         write_set,
-                         job->before_set(),
-                         job->after_set(),
-                         future_job_id,
-                         job->sterile(),
-                         job->params());
-    dbg(DBG_SCHED, "Sending compute job %lu to worker %lu.\n", job->job_id(), worker->worker_id());
-    server_->SendCommand(worker, &cm);
-    log_server_.log_StopTimer();
-    return true;
-  } else {
-    dbg(DBG_ERROR, "Job with id %lu is not a compute job.\n", job->job_id());
-    return false;
-  }
-}
-
-bool Scheduler::SendCreateJobToWorker(SchedulerWorker* worker,
-                                      const std::string& data_name,
-                                      const logical_data_id_t& logical_data_id,
-                                      const IDSet<job_id_t>& before,
-                                      job_id_t* job_id,
-                                      physical_data_id_t* physical_data_id) {
-  log_server_.log_ResumeTimer();
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
-  *job_id = j[0];
-  std::vector<physical_data_id_t> d;
-  id_maker_.GetNewPhysicalDataID(&d, 1);
-  *physical_data_id = d[0];
-  CreateDataCommand cm(ID<job_id_t>(j[0]),
-                       data_name,
-                       ID<logical_data_id_t>(logical_data_id),
-                       ID<physical_data_id_t>(d[0]),
-                       before);
-  dbg(DBG_SCHED, "Sending create job %lu to worker %lu.\n", j[0], worker->worker_id());
-  server_->SendCommand(worker, &cm);
-  log_server_.log_StopTimer();
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->AddCreateDataJobEntry(j[0]);
-  log_job_manager_.log_StopTimer();
-  return true;
-}
-
-bool Scheduler::SendLocalCopyJobToWorker(SchedulerWorker* worker,
-                                         const ID<physical_data_id_t>& from_physical_data_id,
-                                         const ID<physical_data_id_t>& to_physical_data_id,
-                                         const IDSet<job_id_t>& before,
-                                         job_id_t* job_id) {
-  log_server_.log_ResumeTimer();
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
-  *job_id = j[0];
-  LocalCopyCommand cm_c(ID<job_id_t>(j[0]),
-                        ID<physical_data_id_t>(from_physical_data_id),
-                        ID<physical_data_id_t>(to_physical_data_id),
-                        before);
-  dbg(DBG_SCHED, "Sending local copy job %lu to worker %lu.\n", j[0], worker->worker_id());
-  server_->SendCommand(worker, &cm_c);
-  log_server_.log_StopTimer();
-  return true;
-}
-
-bool Scheduler::SendCopyReceiveJobToWorker(SchedulerWorker* worker,
-                                           const physical_data_id_t& physical_data_id,
-                                           const IDSet<job_id_t>& before,
-                                           job_id_t* job_id) {
-  log_server_.log_ResumeTimer();
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
-  *job_id = j[0];
-  RemoteCopyReceiveCommand cm_r(ID<job_id_t>(j[0]),
-                                ID<physical_data_id_t>(physical_data_id),
-                                before);
-  dbg(DBG_SCHED, "Sending remote copy receive job %lu to worker %lu.\n", j[0], worker->worker_id());
-  server_->SendCommand(worker, &cm_r);
-  log_server_.log_StopTimer();
-  return true;
-}
-
-
-bool Scheduler::SendCopySendJobToWorker(SchedulerWorker* worker,
-                                        const job_id_t& receive_job_id,
-                                        const physical_data_id_t& physical_data_id,
-                                        const IDSet<job_id_t>& before,
-                                        job_id_t* job_id) {
-  log_server_.log_ResumeTimer();
-  std::vector<job_id_t> j;
-  id_maker_.GetNewJobID(&j, 1);
-  *job_id = j[0];
-  RemoteCopySendCommand cm_s(ID<job_id_t>(j[0]),
-                             ID<job_id_t>(receive_job_id),
-                             ID<physical_data_id_t>(physical_data_id),
-                             ID<worker_id_t>(worker->worker_id()),
-                             worker->ip(),
-                             ID<port_t>(worker->port()),
-                             before);
-  server_->SendCommand(worker, &cm_s);
-  log_server_.log_StopTimer();
-  return true;
-}
-
-bool Scheduler::AssignJob(JobEntry* job) {
-  log_assign_.log_ResumeTimer();
-
-  SchedulerWorker* worker;
-  log_load_balancer_.log_ResumeTimer();
-  GetWorkerToAssignJob(job, worker);
-  log_load_balancer_.log_StopTimer();
-
-  log_version_manager_.log_ResumeTimer();
-  job_manager_->ResolveJobDataVersions(job);
-  log_version_manager_.log_StopTimer();
-
-//   {
-//     Log log;
-//     log.log_StartTimer();
-//     IDSet<logical_data_id_t>::ConstIter it = job->union_set_p()->begin();
-//     for (; it != job->union_set_p()->end(); ++it) {
-//       JobEntryList list;
-//       data_version_t version;
-//       job->vmap_read()->query_entry(*it, &version);
-//       VersionedLogicalData vld(*it, version);
-//       job_manager_->GetJobsNeedDataVersion(&list, vld);
-//     }
-//     log.log_StopTimer();
-//     std::cout << "OMID: " << job->job_name() << " " << log.timer() << std::endl;
-//   }
-
-  bool prepared_data = true;
-  IDSet<logical_data_id_t>::ConstIter it;
-  for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
-    if (!PrepareDataForJobAtWorker(job, worker, *it)) {
-      prepared_data = false;
-      break;
-    }
-  }
-  if (prepared_data) {
-    log_job_manager_.log_ResumeTimer();
-    job_manager_->UpdateJobBeforeSet(job);
-    log_job_manager_.log_StopTimer();
-    SendComputeJobToWorker(worker, job);
-
-    log_job_manager_.log_ResumeTimer();
-    job_manager_->NotifyJobAssignment(job, worker);
-    log_job_manager_.log_StopTimer();
-
-    std::string jname = job->job_name();
-    if (jname == "update_ghost_velocities" && (stamp_state_ == 0)) {
-      std::cout << "STAMP: FIRST ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      stamp_state_ = 1;
-    }
-    if (jname == "projection_main" && (stamp_state_ == 1)) {
-      std::cout << "STAMP: ALL ASSIGNMENT LATENCY: " << log_.timer() << std::endl;
-      stamp_state_ = -1;
-    }
-
-    log_load_balancer_.log_ResumeTimer();
-    load_balancer_->NotifyJobAssignment(job, worker);
-    log_load_balancer_.log_StopTimer();
-
-    log_assign_.log_StopTimer();
-    return true;
-  } else {
-    dbg(DBG_ERROR, "ERROR: could not assign job %s (id: %lu).\n", job->job_name().c_str(), job->job_id()); // NOLINT
-    log_assign_.log_StopTimer();
-    exit(-1);
-    return false;
-  }
-}
-
 size_t Scheduler::AssignReadyJobs() {
-  size_t count = 0;
-  JobEntryList list;
-
-  log_job_manager_.log_ResumeTimer();
-  job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
-  log_job_manager_.log_StopTimer();
-
-  JobEntryList::iterator iter;
-  for (iter = list.begin(); iter != list.end(); ++iter) {
-    JobEntry* job = *iter;
-    if (AssignJob(job)) {
-      ++count;
-    }
-  }
-
-  return count;
+  return load_balancer_->AssignReadyJobs();
 }
 
 void Scheduler::RegisterInitialWorkers(size_t min_to_join) {
@@ -1042,11 +367,63 @@ size_t Scheduler::RegisterPendingWorkers() {
   return registered_num;
 }
 
-void Scheduler::SetupWorkerInterface() {
-  LoadWorkerCommands();
+void Scheduler::CreateIDMaker() {
+  id_maker_ = new IDMaker();
+}
+
+void Scheduler::CreateSchedulerServer() {
   server_ = new SchedulerServer(listening_port_);
+}
+
+void Scheduler::CreateDataManager() {
+  data_manager_ = new DataManager();
+}
+
+void Scheduler::CreateJobManager() {
+  job_manager_ = new JobManager();
+}
+
+void Scheduler::CreateLoadBalancer() {
+  load_balancer_ = new LoadBalancer();
+}
+
+void Scheduler::CreateJobAssigner() {
+  job_assigner_ = new JobAssigner();
+}
+
+void Scheduler::SetupIDMaker() {
+  id_maker_->Initialize(0);
+}
+
+void Scheduler::SetupSchedulerServer() {
+  LoadWorkerCommands();
   server_->set_worker_command_table(&worker_command_table_);
-  worker_interface_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+  scheduler_server_thread_ = new boost::thread(boost::bind(&SchedulerServer::Run, server_));
+}
+
+void Scheduler::SetupDataManager() {
+}
+
+void Scheduler::SetupJobManager() {
+  job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
+}
+
+void Scheduler::SetupLoadBalancer() {
+  load_balancer_->set_job_manager(job_manager_);
+  load_balancer_->set_data_manager(data_manager_);
+  load_balancer_->set_job_assigner(job_assigner_);
+  load_balancer_->set_max_job_to_assign(MAX_JOB_TO_ASSIGN);
+  load_balancer_thread_ = new boost::thread(boost::bind(&LoadBalancer::Run, load_balancer_));
+}
+
+void Scheduler::SetupJobAssigner() {
+  job_assigner_->set_id_maker(id_maker_);
+  job_assigner_->set_server(server_);
+  job_assigner_->set_job_manager(job_manager_);
+  job_assigner_->set_data_manager(data_manager_);
+  job_assigner_->set_load_balancer(load_balancer_);
+  job_assigner_->set_thread_num(JOB_ASSIGNER_THREAD_NUM);
+  job_assigner_->Run();
 }
 
 void Scheduler::SetupUserInterface() {
@@ -1054,27 +431,6 @@ void Scheduler::SetupUserInterface() {
   user_interface_thread_ = new boost::thread(
       boost::bind(&Scheduler::GetUserCommand, this));
 }
-
-void Scheduler::SetupDataManager() {
-  data_manager_ = new DataManager();
-}
-
-void Scheduler::SetupJobManager() {
-  job_manager_ = new JobManager();
-  job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
-}
-
-void Scheduler::SetupLoadBalancer() {
-  load_balancer_ = new LoadBalancer();
-  load_balancer_->set_id_maker(&id_maker_);
-  load_balancer_->set_server(server_);
-  load_balancer_->set_job_manager(job_manager_);
-  load_balancer_->set_data_manager(data_manager_);
-  load_balancer_thread_ = new boost::thread(boost::bind(&LoadBalancer::Run, load_balancer_));
-}
-
-
-
 
 void Scheduler::LoadWorkerCommands() {
   worker_command_table_[SchedulerCommand::SPAWN_COMPUTE]     = new SpawnComputeJobCommand();

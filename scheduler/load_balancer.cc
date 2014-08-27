@@ -46,7 +46,6 @@
 #include "scheduler/load_balancer.h"
 
 #define LB_UPDATE_RATE 100
-#define MAX_JOB_TO_ASSIGN 1
 
 namespace nimbus {
 
@@ -61,6 +60,7 @@ LoadBalancer::LoadBalancer(ClusterMap* cluster_map) {
 
 void LoadBalancer::Initialize() {
   worker_num_ = 0;
+  max_job_to_assign_ = 0;
   global_region_ = GeometricRegion(0, 0, 0, 0, 0, 0);
   update_ = false;
   init_phase_ = true;
@@ -96,6 +96,10 @@ void LoadBalancer::set_job_assigner(JobAssigner *job_assigner) {
   job_assigner_ = job_assigner;
 }
 
+void LoadBalancer::set_max_job_to_assign(size_t num) {
+  max_job_to_assign_ = num;
+}
+
 void LoadBalancer::Run() {
   while (true) {
     boost::unique_lock<boost::recursive_mutex> update_lock(update_mutex_);
@@ -123,7 +127,7 @@ void LoadBalancer::Run() {
 
 size_t LoadBalancer::AssignReadyJobs() {
   JobEntryList list;
-  job_manager_->GetJobsReadyToAssign(&list, (size_t)(MAX_JOB_TO_ASSIGN));
+  job_manager_->GetJobsReadyToAssign(&list, max_job_to_assign_);
 
   JobEntryList::iterator iter;
   for (iter = list.begin(); iter != list.end(); ++iter) {

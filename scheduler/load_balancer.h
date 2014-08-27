@@ -85,6 +85,7 @@ namespace nimbus {
     void set_job_manager(JobManager *job_manager);
     void set_data_manager(DataManager *data_manager);
     void set_job_assigner(JobAssigner *job_assigner);
+    void set_max_job_to_assign(size_t num);
 
     size_t AssignReadyJobs();
 
@@ -102,6 +103,7 @@ namespace nimbus {
 
     Log log_;
     size_t worker_num_;
+    size_t max_job_to_assign_;
     GeometricRegion global_region_;
     int stamp_state_;
     boost::mutex stamp_mutex_;
