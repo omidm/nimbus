@@ -63,8 +63,6 @@ class SchedulerV3 : public Scheduler {
   public:
     explicit SchedulerV3(unsigned int listening_port);
 
-    virtual size_t AssignReadyJobs();
-
   private:
 };
 

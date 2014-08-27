@@ -55,6 +55,7 @@ JobAssigner::JobAssigner() {
 
 void JobAssigner::Initialize() {
   thread_num_ = 0;
+  pending_assignment_ = 0;
   server_ = NULL;
   id_maker_ = NULL;
   job_manager_ = NULL;
@@ -84,6 +85,10 @@ void JobAssigner::set_data_manager(DataManager *data_manager) {
 
 void JobAssigner::set_load_balancer(LoadBalancer *load_balancer) {
   load_balancer_ = load_balancer;
+}
+
+void JobAssigner::set_thread_num(size_t thread_num) {
+  thread_num_ = thread_num;
 }
 
 void JobAssigner::Run() {
@@ -125,6 +130,9 @@ void JobAssigner::JobAssignerThread() {
 
 void JobAssigner::AssignJobs(const JobEntryList& list) {
   if (thread_num_ == 0) {
+    boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
+    assert(job_queue_.size() == 0);
+    job_queue_ = list;
     JobEntry *job;
     JobEntryList::iterator iter = job_queue_.begin();
     for (; iter != job_queue_.end();) {
@@ -165,8 +173,8 @@ bool JobAssigner::AssignJob(JobEntry *job) {
     job_manager_->UpdateJobBeforeSet(job);
     SendComputeJobToWorker(worker, job);
 
-    job_manager_->NotifyJobAssignment(job, worker);
-    load_balancer_->NotifyJobAssignment(job, worker);
+    job_manager_->NotifyJobAssignment(job);
+    load_balancer_->NotifyJobAssignment(job);
 
     return true;
   }

@@ -71,7 +71,10 @@ class Scheduler {
 
     virtual void Run();
 
-    void set_min_worker_to_join(size_t num);
+    virtual void set_max_job_to_assign(size_t num);
+    virtual void set_min_worker_to_join(size_t num);
+    virtual void set_job_assigner_thread_num(size_t num);
+    virtual void set_max_command_process_num(size_t num);
 
     /* TODO(omidm): figure out what we want for these methods. */
     virtual void LoadClusterMap(std::string) {}
@@ -82,17 +85,19 @@ class Scheduler {
   protected:
     virtual void SchedulerCoreProcessor();
 
-    virtual void RegisterInitialWorkers(size_t min_to_join);
+    virtual void RegisterInitialWorkers();
 
     virtual size_t RegisterPendingWorkers();
 
     virtual size_t AssignReadyJobs();
 
+    virtual size_t RemoveObsoleteJobEntries();
+
     virtual void AddMainJob();
 
     virtual void TerminationProcedure();
 
-    virtual void ProcessQueuedSchedulerCommands(size_t max_num);
+    virtual void ProcessQueuedSchedulerCommands();
 
     virtual void ProcessSchedulerCommand(SchedulerCommand* cm);
     virtual void ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm);
@@ -125,15 +130,28 @@ class Scheduler {
 
     IDMaker *id_maker_;
     SchedulerServer* server_;
-    DataManager* data_manager_;
     JobManager* job_manager_;
-    LoadBalancer *load_balancer_;
+    DataManager* data_manager_;
     JobAssigner *job_assigner_;
-    CmSet user_command_set_;
-    SchedulerCommand::PrototypeTable worker_command_table_;
-    size_t min_worker_to_join_;
+    LoadBalancer *load_balancer_;
+
+    boost::thread* user_interface_thread_;
+    boost::thread* scheduler_server_thread_;
+    boost::thread* load_balancer_thread_;
+
+    port_t listening_port_;
+    size_t registered_worker_num_;
     bool terminate_application_flag_;
     exit_status_t terminate_application_status_;
+
+    size_t max_job_to_assign_;
+    size_t min_worker_to_join_;
+    size_t job_assigner_thread_num_;
+    size_t max_command_process_num_;
+
+    CmSet user_command_set_;
+    SchedulerCommand::PrototypeTable worker_command_table_;
+
     Log log_;
     Log log_loop_;
     Log log_assign_;
@@ -142,21 +160,6 @@ class Scheduler {
     Log log_data_manager_;
     Log log_version_manager_;
     Log log_load_balancer_;
-    int stamp_state_;
-    int copy_count_;
-    int compute_count_;
-
-  private:
-    virtual size_t RemoveObsoleteJobEntries();
-
-    boost::thread* user_interface_thread_;
-    boost::thread* scheduler_server_thread_;
-    boost::thread* load_balancer_thread_;
-    Computer host_;
-    port_t listening_port_;
-    app_id_t appId_;
-    ClusterMap cluster_map_;
-    size_t registered_worker_num_;
 };
 
 }  // namespace nimbus
