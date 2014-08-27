@@ -64,6 +64,8 @@
 
 namespace nimbus {
 
+  class LoadBalancer;
+
   class JobAssigner {
   public:
     JobAssigner();
@@ -75,6 +77,7 @@ namespace nimbus {
     virtual void set_server(SchedulerServer* server);
     virtual void set_job_manager(JobManager *job_manager);
     virtual void set_data_manager(DataManager *data_manager);
+    virtual void set_load_balancer(LoadBalancer *load_balancer);
     virtual void set_thread_num(size_t thread_num);
 
     virtual void AssignJobs(const JobEntryList& list);
@@ -85,6 +88,7 @@ namespace nimbus {
     SchedulerServer* server_;
     JobManager *job_manager_;
     DataManager *data_manager_;
+    LoadBalancer *load_balancer_;
     size_t thread_num_;
 
     JobEntryList job_queue_;

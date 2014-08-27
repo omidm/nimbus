@@ -56,6 +56,7 @@
 #include "scheduler/version_map.h"
 #include "scheduler/ancestor_chain.h"
 #include "scheduler/data_manager.h"
+#include "scheduler/scheduler_worker.h"
 #include "scheduler/meta_before_set.h"
 #include "scheduler/logical_data_lineage.h"
 
@@ -96,7 +97,8 @@ class JobEntry {
     PhysicalTable physical_table() const;
     IDSet<job_id_t> jobs_passed_versions() const;
     IDSet<job_id_t> need_set() const;
-    worker_id_t assigned_worker() const;
+    worker_id_t assigned_worker_id() const;
+    SchedulerWorker* assigned_worker() const;
     bool sterile() const;
     bool partial_versioned() const;
     bool versioned() const;
@@ -128,7 +130,8 @@ class JobEntry {
     void set_physical_table(PhysicalTable physical_table);
     void set_jobs_passed_versions(IDSet<job_id_t> jobs);
     void add_job_passed_versions(job_id_t job_id);
-    void set_assigned_worker(worker_id_t worker_id);
+    void set_assigned_worker_id(worker_id_t assigned_worker_id);
+    void set_assigned_worker(SchedulerWorker* assigned_worker);
     void set_sterile(bool flag);
     void set_partial_versioned(bool flag);
     void set_versioned(bool flag);
@@ -173,7 +176,8 @@ class JobEntry {
     IDSet<job_id_t> assignment_dependencies_;
     IDSet<job_id_t> versioning_dependencies_;
     GeometricRegion region_;
-    worker_id_t assigned_worker_;
+    worker_id_t assigned_worker_id_;
+    SchedulerWorker *assigned_worker_;
     bool sterile_;
     bool partial_versioned_;
     bool versioned_;

@@ -117,9 +117,9 @@ class JobManager {
 
     void CleanLdlMap();
 
-    void NotifyJobDone(job_id_t job_id);
+    void NotifyJobDone(JobEntry *job);
 
-    void NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker);
+    void NotifyJobAssignment(JobEntry *job);
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
 

@@ -53,6 +53,7 @@ JobEntry::JobEntry() {
   done_ = false;
   future_ = false;
   region_valid_ = false;
+  assigned_worker_ = NULL;
 }
 
 void JobEntry::Initialize() {
@@ -154,10 +155,14 @@ IDSet<job_id_t> JobEntry::need_set() const {
   return need;
 }
 
-worker_id_t JobEntry::assigned_worker() const {
+worker_id_t JobEntry::assigned_worker_id() const {
   if (!assigned_) {
     return NIMBUS_SCHEDULER_ID;
   }
+  return assigned_worker_id_;
+}
+
+SchedulerWorker* JobEntry::assigned_worker() const {
   return assigned_worker_;
 }
 
@@ -295,9 +300,14 @@ void JobEntry::add_job_passed_versions(job_id_t job_id) {
   jobs_passed_versions_.insert(job_id);
 }
 
-void JobEntry::set_assigned_worker(worker_id_t assigned_worker) {
+void JobEntry::set_assigned_worker_id(worker_id_t assigned_worker_id) {
+  assigned_worker_id_ = assigned_worker_id;
+}
+
+void JobEntry::set_assigned_worker(SchedulerWorker *assigned_worker) {
   assigned_worker_ = assigned_worker;
 }
+
 
 void JobEntry::set_sterile(bool flag) {
   sterile_ = flag;

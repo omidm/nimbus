@@ -505,7 +505,7 @@ size_t JobManager::RemoveObsoleteJobEntries() {
 
   size_t num = 0;
 
-  if (NumJobsReadyToAssign()) {
+  if (NumJobsReadyToAssign() > 0) {
     return num;
   }
 
@@ -523,9 +523,9 @@ size_t JobManager::RemoveObsoleteJobEntries() {
   return num;
 }
 
-void JobManager::NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker) {
+void JobManager::NotifyJobAssignment(JobEntry *job) {
   job->set_assigned(true);
-  job->set_assigned_worker(worker->worker_id());
+  job->set_assigned_worker_id(job->assigned_worker()->worker_id());
 
   {
     boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
@@ -551,27 +551,23 @@ void JobManager::NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worke
   }
 }
 
-void JobManager::NotifyJobDone(job_id_t job_id) {
-  JobEntry* job;
-  if (GetJobEntry(job_id, job)) {
-    job->set_done(true);
-    jobs_done_[job_id] = job;
-    jobs_need_version_.erase(job_id);
+void JobManager::NotifyJobDone(JobEntry *job) {
+  job->set_done(true);
+  job_id_t job_id = job->job_id();
+  jobs_done_[job_id] = job;
+  jobs_need_version_.erase(job_id);
 
-    if (!job->sterile()) {
-      Vertex<JobEntry, job_id_t>* vertex;
-      job_graph_.GetVertex(job_id, &vertex);
-      typename Edge<JobEntry, job_id_t>::Iter it;
-      for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
-        JobEntry *j = it->second->end_vertex()->entry();
-        j->remove_assignment_dependency(job_id);
-        if (j->IsReadyToAssign()) {
-          jobs_ready_to_assign_[j->job_id()] = j;
-        }
+  if (!job->sterile()) {
+    Vertex<JobEntry, job_id_t>* vertex;
+    job_graph_.GetVertex(job_id, &vertex);
+    typename Edge<JobEntry, job_id_t>::Iter it;
+    for (it = vertex->outgoing_edges()->begin(); it != vertex->outgoing_edges()->end(); ++it) {
+      JobEntry *j = it->second->end_vertex()->entry();
+      j->remove_assignment_dependency(job_id);
+      if (j->IsReadyToAssign()) {
+        jobs_ready_to_assign_[j->job_id()] = j;
       }
     }
-  } else {
-    dbg(DBG_WARN, "WARNING: done job with id %lu is not in the graph.\n", job_id);
   }
 }
 

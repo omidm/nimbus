@@ -60,7 +60,7 @@ namespace nimbus {
 
 class VersionEntry {
   public:
-    typedef std::set<JobEntry*> Bucket;
+    typedef boost::unordered_set<JobEntry*> Bucket;
     typedef Bucket::iterator BucketIter;
     typedef boost::unordered_map<data_version_t, Bucket*> Index;
     typedef Index::iterator IndexIter;
