@@ -51,10 +51,6 @@
 #include <set>
 #include "shared/dbg.h"
 #include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
-#include "shared/cluster.h"
-#include "shared/geometric_region.h"
-#include "shared/parser.h"
 #include "scheduler/scheduler.h"
 
 using namespace nimbus; // NOLINT
@@ -63,21 +59,10 @@ class SchedulerV2 : public Scheduler {
   public:
     explicit SchedulerV2(unsigned int listening_port);
 
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+  protected:
+    virtual void CreateLoadBalancer();
 
   private:
-    GeometricRegion global_bounding_region_;
-    size_t worker_num_;
-    bool initialized_domains_;
-    std::vector<GeometricRegion> worker_domains_;
-
-    void UpdateWorkerDomains();
-    void SplitDimensions(size_t worker_num,
-        size_t *num_x, size_t *num_y, size_t *num_z);
-    void GenerateDomains(
-        size_t num_x, size_t num_y, size_t num_z,
-        GeometricRegion gbr,
-        std::vector<GeometricRegion> *domains);
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_V2_SCHEDULER_V2_H_

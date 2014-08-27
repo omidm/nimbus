@@ -33,17 +33,13 @@
  */
 
  /*
-  * This is the base class that serves the scheduler regarding job assignment
-  * queries in the cluster. It tries to minimize the completion of simulation
-  * by reducing the cost of communication by locality aware data placement and
-  * mitigate the effect of stragglers in the system by adapting the job
-  * assignment strategies to the dynamic changes of the cloud.
+  * This is static version of the load balancer used in scheduler v2.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_SCHEDULER_LOAD_BALANCER_H_
-#define NIMBUS_SCHEDULER_LOAD_BALANCER_H_
+#ifndef NIMBUS_TEST_SCHEDULER_V2_STATIC_LOAD_BALANCER_H_
+#define NIMBUS_TEST_SCHEDULER_V2_STATIC_LOAD_BALANCER_H_
 
 #include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
@@ -59,31 +55,22 @@
 #include "scheduler/region_map.h"
 #include "scheduler/straggler_map.h"
 #include "scheduler/job_assigner.h"
+#include "scheduler/load_balancer.h"
 #include "shared/cluster.h"
 #include "shared/id_maker.h"
-#include "shared/scheduler_server.h"
 #include "shared/geometric_region.h"
 #include "shared/graph.h"
 
 namespace nimbus {
 
-  class LoadBalancer {
+  class StaticLoadBalancer : public LoadBalancer {
   public:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-    typedef WorkerMap::iterator WorkerMapIter;
-    typedef std::map<job_id_t, JobProfile*> JobHistory;
+    typedef std::map<worker_id_t, GeometricRegion> WorkerDomains;
+    typedef std::map<worker_id_t, size_t> WorkerRank;
 
-    LoadBalancer();
-    explicit LoadBalancer(ClusterMap* cluster_map);
-    virtual ~LoadBalancer();
-
-    ClusterMap* cluster_map();
-
-    void set_cluster_map(ClusterMap* cluster_map);
-    void set_job_manager(JobManager *job_manager);
-    void set_data_manager(DataManager *data_manager);
-    void set_job_assigner(JobAssigner *job_assigner);
-    void set_max_job_to_assign(size_t num);
+    StaticLoadBalancer();
+    virtual ~StaticLoadBalancer();
 
     virtual void Run();
 
@@ -95,53 +82,35 @@ namespace nimbus {
 
     virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
 
-  protected:
-    ClusterMap* cluster_map_;
-    JobManager *job_manager_;
-    DataManager *data_manager_;
-    JobAssigner *job_assigner_;
-    size_t max_job_to_assign_;
 
   private:
-    LoadBalancer(const LoadBalancer& other) {}
+    StaticLoadBalancer(const StaticLoadBalancer& other) {}
 
     Log log_;
     size_t worker_num_;
-    GeometricRegion global_region_;
+    bool initialized_domains_;
+    WorkerMap worker_map_;
+    WorkerDomains worker_domains_;
+    GeometricRegion global_bounding_region_;
+
     int stamp_state_;
     boost::mutex stamp_mutex_;
 
-    JobHistory job_history_;
-    boost::recursive_mutex job_history_mutex_;
-
-    std::list<job_id_t> done_jobs_;
-
-    RegionMap region_map_;
-    boost::recursive_mutex region_map_mutex_;
-
-    WorkerMap worker_map_;
-    boost::recursive_mutex worker_map_mutex_;
-
-    StragglerMap straggler_map_;
-    boost::recursive_mutex straggler_map_mutex_;
-
-    bool update_;
-    bool init_phase_;
-    boost::recursive_mutex update_mutex_;
-    boost::condition_variable_any update_cond_;
-
-    std::map<worker_id_t, size_t> blame_map_;
-    size_t blame_counter_;
-
-    void Initialize();
-
-    void InitializeRegionMap();
-
-    void UpdateRegionMap();
-
     bool SetWorkerToAssignJob(JobEntry *job);
+
+    void UpdateWorkerDomains();
+
+    void SplitDimensions(size_t worker_num,
+                         size_t *num_x,
+                         size_t *num_y,
+                         size_t *num_z);
+
+    void GenerateDomains(size_t num_x,
+                         size_t num_y,
+                         size_t num_z,
+                         GeometricRegion gbr);
   };
 
 }  // namespace nimbus
 
-#endif  // NIMBUS_SCHEDULER_LOAD_BALANCER_H_
+#endif  // NIMBUS_TEST_SCHEDULER_V2_STATIC_LOAD_BALANCER_H_
