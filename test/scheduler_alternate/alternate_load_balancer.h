@@ -33,47 +33,64 @@
  */
 
  /*
-  * This scheduler is written to alternate spawned jobs randomly among
-  * registered workers of water simulation. It is guaranteed that after
-  * convergence for each frame the write frame job whose name is defined as a
-  * macro with tag WRITE_FRAME_NAME will be executed over the same worker
-  * (first registered worker).This way, all the output frames are local to one
-  * worker for sanity checks. The random seed can be changed by changing the
-  * SEED_ macro. 
+  * This is static version of the load balancer used in scheduler v2.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_SCHEDULER_ALTERNATE_SCHEDULER_ALTERNATE_H_
-#define NIMBUS_TEST_SCHEDULER_ALTERNATE_SCHEDULER_ALTERNATE_H_
+#ifndef NIMBUS_TEST_SCHEDULER_ALTERNATE_ALTERNATE_LOAD_BALANCER_H_
+#define NIMBUS_TEST_SCHEDULER_ALTERNATE_ALTERNATE_LOAD_BALANCER_H_
 
-#define DEBUG_MODE
-
+#include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
-#include <stdlib.h>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
 #include <map>
-#include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "shared/scheduler_server.h"
+#include <list>
+#include <vector>
+#include <string>
+#include "shared/nimbus_types.h"
+#include "scheduler/job_entry.h"
+#include "scheduler/job_profile.h"
+#include "scheduler/data_manager.h"
+#include "scheduler/job_manager.h"
+#include "scheduler/region_map.h"
+#include "scheduler/straggler_map.h"
+#include "scheduler/job_assigner.h"
+#include "scheduler/load_balancer.h"
 #include "shared/cluster.h"
-#include "shared/parser.h"
-#include "scheduler/scheduler.h"
+#include "shared/id_maker.h"
+#include "shared/geometric_region.h"
+#include "shared/graph.h"
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
 
-class SchedulerAlternate : public Scheduler {
+  class AlternateLoadBalancer : public LoadBalancer {
   public:
-    explicit SchedulerAlternate(unsigned int listening_port);
+    AlternateLoadBalancer();
+    virtual ~AlternateLoadBalancer();
 
-    virtual void CreateLoadBalancer();
+    virtual void Run();
+
+    virtual size_t AssignReadyJobs();
+
+    virtual void NotifyJobAssignment(const JobEntry *job);
+
+    virtual void NotifyJobDone(const JobEntry *job);
+
+    virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
+
 
   private:
-};
+    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
 
-#endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_SCHEDULER_ALTERNATE_H_
+    AlternateLoadBalancer(const AlternateLoadBalancer& other) {}
+
+    Log log_;
+    unsigned int seed_;
+    WorkerMap worker_map_;
+
+    bool SetWorkerToAssignJob(JobEntry *job);
+  };
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_ALTERNATE_LOAD_BALANCER_H_

@@ -129,7 +129,7 @@ void LoadBalancer::NotifyJobDone(const JobEntry *job) {
 void LoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   dbg(DBG_WARN, "WARNING: Base load balancer is being used!!!\n");
   worker_id_t worker_id = worker->worker_id();
-  WorkerMapIter iter = worker_map_.find(worker_id);
+  WorkerMap::iterator iter = worker_map_.find(worker_id);
   if (iter == worker_map_.end()) {
     worker_map_[worker_id] = worker;
   } else {

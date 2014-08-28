@@ -143,7 +143,7 @@ bool DynamicLoadBalancer::SetWorkerToAssignJob(JobEntry *job) {
 
   log.log_StopTimer();
   std::cout
-    << "Picked worker: " << job->assigned_worker()->worker_id()
+    << "DYNAMIC: Picked worker: " << job->assigned_worker()->worker_id()
     << " for job: " << job->job_name()
     << " took: " << log.timer()
     << " for union set size of: " << job->union_set_p()->size()
@@ -290,7 +290,7 @@ void DynamicLoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   boost::unique_lock<boost::recursive_mutex> worker_map_lock(worker_map_mutex_);
 
   worker_id_t worker_id = worker->worker_id();
-  WorkerMapIter iter = worker_map_.find(worker_id);
+  WorkerMap::iterator iter = worker_map_.find(worker_id);
   if (iter == worker_map_.end()) {
     worker_map_[worker_id] = worker;
     worker_num_ = worker_map_.size();
@@ -307,7 +307,7 @@ void DynamicLoadBalancer::InitializeRegionMap() {
   boost::unique_lock<boost::recursive_mutex> region_map_lock(region_map_mutex_);
 
   std::vector<worker_id_t> worker_ids;
-  WorkerMapIter iter = worker_map_.begin();
+  WorkerMap::iterator iter = worker_map_.begin();
   for (; iter != worker_map_.end(); ++iter) {
     worker_ids.push_back(iter->first);
   }

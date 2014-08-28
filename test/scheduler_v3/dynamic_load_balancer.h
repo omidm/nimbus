@@ -82,7 +82,6 @@ namespace nimbus {
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-    typedef WorkerMap::iterator WorkerMapIter;
     typedef std::map<job_id_t, JobProfile*> JobHistory;
 
     DynamicLoadBalancer(const DynamicLoadBalancer& other) {}

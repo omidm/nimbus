@@ -120,7 +120,7 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
 
   log_.StopTimer();
   std::cout
-    << "OMID: Picked worker: " << w_id
+    << "STATIC: Picked worker: " << w_id
     << " for job: " << job->job_name()
     << " took: " << log_.timer()
     << " for union set size of: " << job->union_set_p()->size() << std::endl;
@@ -299,7 +299,7 @@ void StaticLoadBalancer::NotifyJobDone(const JobEntry *job) {
 
 void StaticLoadBalancer::NotifyRegisteredWorker(SchedulerWorker *worker) {
   worker_id_t worker_id = worker->worker_id();
-  WorkerMapIter iter = worker_map_.find(worker_id);
+  WorkerMap::iterator iter = worker_map_.find(worker_id);
   if (iter == worker_map_.end()) {
     worker_map_[worker_id] = worker;
     worker_num_ = worker_map_.size();

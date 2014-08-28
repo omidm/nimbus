@@ -99,7 +99,6 @@ namespace nimbus {
 
   private:
     typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
-    typedef WorkerMap::iterator WorkerMapIter;
 
     LoadBalancer(const LoadBalancer& other) {}
 
