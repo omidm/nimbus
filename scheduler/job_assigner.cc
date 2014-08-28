@@ -158,7 +158,10 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
 bool JobAssigner::AssignJob(JobEntry *job) {
   SchedulerWorker* worker = job->assigned_worker();
 
+  log_.log_StartTimer();
   job_manager_->ResolveJobDataVersions(job);
+  log_.log_StopTimer();
+  std::cout << "versioning: " << log_.timer() << std::endl;
 
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;

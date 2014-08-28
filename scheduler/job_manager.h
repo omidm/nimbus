@@ -60,7 +60,6 @@
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
 #include "scheduler/physical_data.h"
-#include "scheduler/ldl_map.h"
 #include "shared/log.h"
 
 namespace nimbus {
@@ -69,17 +68,20 @@ class JobManager {
     explicit JobManager();
     virtual ~JobManager();
 
-    bool AddComputeJobEntry(
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const IDSet<logical_data_id_t>& read_set,
-        const IDSet<logical_data_id_t>& write_set,
-        const IDSet<job_id_t>& before_set,
-        const IDSet<job_id_t>& after_set,
-        const job_id_t& parent_job_id,
-        const job_id_t& future_job_id,
-        const bool& sterile,
-        const Parameter& params);
+    void set_ldo_map_p(const LdoMap* ldo_map_p);
+
+    Graph<JobEntry, job_id_t> *job_graph_p();
+
+    bool AddComputeJobEntry(const std::string& job_name,
+                            const job_id_t& job_id,
+                            const IDSet<logical_data_id_t>& read_set,
+                            const IDSet<logical_data_id_t>& write_set,
+                            const IDSet<job_id_t>& before_set,
+                            const IDSet<job_id_t>& after_set,
+                            const job_id_t& parent_job_id,
+                            const job_id_t& future_job_id,
+                            const bool& sterile,
+                            const Parameter& params);
 
     bool AddExplicitCopyJobEntry();
 
@@ -115,8 +117,6 @@ class JobManager {
 
     size_t RemoveObsoleteJobEntries();
 
-    void CleanLdlMap();
-
     void NotifyJobDone(JobEntry *job);
 
     void NotifyJobAssignment(JobEntry *job);
@@ -126,7 +126,7 @@ class JobManager {
     bool ResolveJobDataVersions(JobEntry *job);
 
     size_t GetJobsNeedDataVersion(JobEntryList* list,
-        VersionedLogicalData vld);
+                                  VersionedLogicalData vld);
 
     bool AllJobsAreDone();
 
@@ -135,56 +135,22 @@ class JobManager {
     void UpdateBeforeSet(IDSet<job_id_t>* before_set);
 
     bool CausingUnwantedSerialization(JobEntry* job,
-        const logical_data_id_t& l_id, const PhysicalData& pd);
-
-    void set_ldo_map_p(const LdoMap* ldo_map_p);
-
-    Graph<JobEntry, job_id_t> *job_graph_p();
+                                      const logical_data_id_t& l_id,
+                                      const PhysicalData& pd);
 
   private:
+    Log log_;
+
     Graph<JobEntry, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
 
-    VersionManager version_manager_;
-    LdlMap ldl_map_;
     const LdoMap* ldo_map_p_;
+    VersionManager version_manager_;
 
     JobEntryMap jobs_done_;
-
-    JobEntryMap jobs_need_version_;
-    std::map<job_id_t, JobEntryList> pass_version_;
-
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;
-
-    Log log_version_;
-    Log log_merge_;
-    Log log_lookup_;
-    Log log_sterile_;
-    Log log_nonsterile_;
-    size_t lookup_count_;
-
-
-    size_t ResolveDataVersions();
-
-    void PassDataVersionToJob(JobEntry *job,
-                              const JobEntryList& from_jobs);
-
-    bool LookUpVersion(JobEntry *job,
-                       logical_data_id_t ldid,
-                       data_version_t *version);
-
-    bool JobVersionIsComplete(JobEntry *job);
-
-
-
-
-    boost::mutex pass_version_mutex_;
-    boost::condition_variable pass_version_put_cond_;
-    boost::condition_variable pass_version_draw_cond_;
-    size_t pass_version_in_progress_;
-    void WaitToPassAllVersions();
 };
 
 }  // namespace nimbus
