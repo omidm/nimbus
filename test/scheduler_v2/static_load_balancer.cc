@@ -81,7 +81,8 @@ size_t StaticLoadBalancer::AssignReadyJobs() {
 }
 
 bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
-  log_.StartTimer();
+  Log log;
+  log.StartTimer();
 
   StaticLoadBalancer::UpdateWorkerDomains();
   assert(worker_num_ == worker_map_.size());
@@ -118,11 +119,11 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
     }
   }
 
-  log_.StopTimer();
+  log.StopTimer();
   std::cout
     << "STATIC: Picked worker: " << w_id
     << " for job: " << job->job_name()
-    << " took: " << log_.timer()
+    << " took: " << log.timer()
     << " for union set size of: " << job->union_set_p()->size() << std::endl;
 
   wmit = worker_map_.find(w_id);

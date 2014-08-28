@@ -257,7 +257,7 @@ void DynamicLoadBalancer::NotifyJobDone(const JobEntry *job) {
     }
   }
 
-  // log_.WriteToFile(job_profile->Print());
+  // log_.log_WriteToFile(job_profile->Print());
 
   worker_id_t blamed_worker_id;
   if (job_profile->FindBlamedWorker(&blamed_worker_id)) {
@@ -315,7 +315,7 @@ void DynamicLoadBalancer::InitializeRegionMap() {
   global_region_ = data_manager_->global_bounding_region();
 
   region_map_.Initialize(worker_ids, global_region_);
-  log_.WriteToFile(region_map_.Print());
+  log_.log_WriteToFile(region_map_.Print());
 
   init_phase_ = false;
 }
@@ -331,7 +331,7 @@ void DynamicLoadBalancer::UpdateRegionMap() {
               << ", slow worker: " << slow << std::endl;
     if (region_map_.BalanceRegions(fast, slow)) {
       straggler_map_.ClearRecords();
-      log_.WriteToFile(region_map_.Print());
+      log_.log_WriteToFile(region_map_.Print());
     }
   }
 
