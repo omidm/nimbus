@@ -39,6 +39,10 @@
  */
 
 #include "./utils.h"
+#include "protobuf_compiled/parameter_msg.pb.h"
+
+using parameter_msg::ParameterMsg;
+
 
 void LoadLogicalIdsInSet(Job* job,
     IDSet<logical_data_id_t>* set,
@@ -118,5 +122,23 @@ void SaveDataToNimbus(Job* job,
   assert(write_length == vec->size());
 }
 
+bool LoadParameter(Parameter *parameter, size_t *value) {
+  std::string params_str(parameter->ser_data().data_ptr_raw(),
+                         parameter->ser_data().size());
+  ParameterMsg vec_msg;
+  vec_msg.ParseFromString(params_str);
+  assert(vec_msg.elem_size() == 1);
+  *value = vec_msg.elem(0);
+  return true;
+}
+
+bool SerializeParameter(Parameter *parameter, size_t value) {
+  std::string params_str;
+  ParameterMsg vec_msg;
+  vec_msg.add_elem(value);
+  vec_msg.SerializeToString(&params_str);
+  parameter->set_ser_data(SerializedData(params_str));
+  return true;
+}
 
 

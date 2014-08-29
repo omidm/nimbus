@@ -378,8 +378,8 @@ bool InitializeExampleAndDriver(
 
 
   dbg(APP_LOG, "Enter initialize_example_driver.\n");
-  dbg(APP_LOG, "Global region: %s\n", init_config.global_region.toString().c_str());
-  dbg(APP_LOG, "Local region: %s\n", init_config.local_region.toString().c_str());
+  dbg(APP_LOG, "Global region: %s\n", init_config.global_region.ToNetworkData().c_str());
+  dbg(APP_LOG, "Local region: %s\n", init_config.local_region.ToNetworkData().c_str());
   {
     double cache_lookup_time = 0;
     double init_example_time = 0;

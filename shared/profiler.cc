@@ -70,7 +70,7 @@ namespace nimbus {
       Profile();
       ProfileCommand cm(worker_id, totalVirtualMem, usedVirtualMem,
           procVirtualMem, totalPhysMem, usedPhysMem, procPhysMem);
-      client_->sendCommand(&cm);
+      client_->SendCommand(&cm);
       boost::this_thread::interruption_point();
       t.wait();
     }
@@ -88,7 +88,7 @@ namespace nimbus {
     UpdateProcPhysicalMemory();
   }
 
-  std::string Profiler::toString() {
+  std::string Profiler::ToNetworkData() {
     std::string str;
     str += (boost::lexical_cast<std::string>(totalVirtualMem) + " ");
     str += (boost::lexical_cast<std::string>(usedVirtualMem) + " ");
@@ -99,7 +99,7 @@ namespace nimbus {
     return str;
   }
 
-  std::string Profiler::toStringWTags() {
+  std::string Profiler::ToString() {
     std::string str;
     str += ("total_vm: " + boost::lexical_cast<std::string>(totalVirtualMem) + " ");
     str += ("used_vm: " + boost::lexical_cast<std::string>(usedVirtualMem) + " ");
@@ -107,8 +107,6 @@ namespace nimbus {
     str += ("total_pm: " + boost::lexical_cast<std::string>(totalPhysMem) + " ");
     str += ("used_pm: " + boost::lexical_cast<std::string>(usedPhysMem) + " ");
     str += ("proc_pm: " + boost::lexical_cast<std::string>(procPhysMem));
-    // str += (" curr_alloc: " + boost::lexical_cast<std::string>(ProfilerMalloc::AllocCurr()));
-    // str += (" max_alloc: " + boost::lexical_cast<std::string>(ProfilerMalloc::AllocMax()));
     return str;
   }
 
@@ -162,7 +160,7 @@ namespace nimbus {
 
     mib[0] = CTL_HW;
     mib[1] = HW_MEMSIZE;
-    length = sizeof(uuint64_t);
+    length = sizeof(uint64_t);
     sysctl(mib, 2, &totalPhysMem, &length, NULL, 0);
 #else
     totalPhysMem = mem_info_.totalram;

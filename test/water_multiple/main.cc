@@ -74,6 +74,8 @@ int main(int argc, char *argv[]) {
   bool scheduler_ip_given = false;
   bool scheduler_port_given = false;
 
+  std::string log_id;
+
   // TODO(omidm): currently not used.
   size_t scale = 40;
   size_t part_num = 64;
@@ -101,6 +103,7 @@ int main(int argc, char *argv[]) {
       }
       scheduler_port_given = true;
     } else if (tag == "-port") {
+      log_id = val;
       std::stringstream ss(val);
       ss >> listening_port;
       if (ss.fail()) {
@@ -157,7 +160,10 @@ int main(int argc, char *argv[]) {
 
   // TODO: Extra logging information for cache experiments, remove later on
 #ifdef CACHE_LOG
-  Log *cache_log = new Log(std::string("worker-log"));
+  std::string log_file_name = "worker-log";
+  log_file_name += "-";
+  log_file_name += log_id;
+  Log *cache_log = new Log(std::string(log_file_name));
   w->cache_log = cache_log;
   app->translator_log = cache_log;
 #endif

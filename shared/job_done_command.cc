@@ -48,26 +48,28 @@ using boost::char_separator;
 JobDoneCommand::JobDoneCommand() {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
+  run_time_ = 0;
+  wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
-JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
-    const IDSet<job_id_t>& after_set,
-    const Parameter& params)
-: job_id_(job_id), after_set_(after_set), params_(params) {
+JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id)
+  : job_id_(job_id) {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
   run_time_ = 0;
   wait_time_ = 0;
+  max_alloc_ = 0;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
-    const IDSet<job_id_t>& after_set,
-    const Parameter& params,
-    const double run_time,
-    const double wait_time,
-    const size_t max_alloc)
-: job_id_(job_id), after_set_(after_set), params_(params),
-  run_time_(run_time), wait_time_(wait_time), max_alloc_(max_alloc) {
+                               const double run_time,
+                               const double wait_time,
+                               const size_t max_alloc)
+  : job_id_(job_id),
+    run_time_(run_time),
+    wait_time_(wait_time),
+    max_alloc_(max_alloc) {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
 }
@@ -79,74 +81,47 @@ SchedulerCommand* JobDoneCommand::Clone() {
   return new JobDoneCommand();
 }
 
-bool JobDoneCommand::Parse(const std::string& params) {
-  int num = 6;
+bool JobDoneCommand::Parse(const std::string& data) {
+  JobDonePBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: JobDoneCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: JobDone has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse JobDoneCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  iter = tokens.begin();
-  if (!job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
-  iter++;
-  run_time_ = boost::lexical_cast<double>(*iter);
-
-  iter++;
-  wait_time_ = boost::lexical_cast<double>(*iter);
-
-  iter++;
-  max_alloc_ = boost::lexical_cast<size_t>(*iter);
-
-  return true;
 }
 
-std::string JobDoneCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (after_set_.toString() + " ");
-  str += (params_.toString() + " ");
-  str += (boost::lexical_cast<std::string>(run_time_) + " ");
-  str += (boost::lexical_cast<std::string>(wait_time_) + " ");
-  str += boost::lexical_cast<std::string>(max_alloc_);
-  return str;
+bool JobDoneCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_job_done()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse JobDoneCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.job_done());
+  }
 }
 
-std::string JobDoneCommand::toStringWTags() {
+std::string JobDoneCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the job done field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_JOB_DONE);
+  JobDonePBuf* jdbuf = buf.mutable_job_done();
+  WriteToProtobuf(jdbuf);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string JobDoneCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + job_id_.toString() + " ");
-  str += ("after:" + after_set_.toString() + " ");
-  str += ("params:" + params_.toString() + " ");
+  str += ("id:" + job_id_.ToNetworkData() + " ");
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
   str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_) + " ");
   str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_));
@@ -155,14 +130,6 @@ std::string JobDoneCommand::toStringWTags() {
 
 ID<job_id_t> JobDoneCommand::job_id() {
   return job_id_;
-}
-
-IDSet<job_id_t> JobDoneCommand::after_set() {
-  return after_set_;
-}
-
-Parameter JobDoneCommand::params() {
-  return params_;
 }
 
 double JobDoneCommand::run_time() {
@@ -177,4 +144,18 @@ size_t JobDoneCommand::max_alloc() {
   return max_alloc_;
 }
 
+bool JobDoneCommand::ReadFromProtobuf(const JobDonePBuf& buf) {
+  job_id_.set_elem(buf.job_id());
+  run_time_ = buf.run_time();
+  wait_time_ = buf.wait_time();
+  max_alloc_ = buf.max_alloc();
+  return true;
+}
 
+bool JobDoneCommand::WriteToProtobuf(JobDonePBuf* buf) {
+  buf->set_job_id(job_id().elem());
+  buf->set_run_time(run_time());
+  buf->set_wait_time(wait_time());
+  buf->set_max_alloc(max_alloc());
+  return true;
+}

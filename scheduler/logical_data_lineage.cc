@@ -128,7 +128,7 @@ bool LogicalDataLineage::AppendLdlEntry(
     const data_version_t& version,
     const job_depth_t& job_depth,
     const bool& sterile) {
-  assert(last_version_ < version);
+  assert((last_version_ + 1) == version);
   last_version_ = version;
 
   chain_.push_back(LdlEntry(job_id, version, job_depth, sterile));
@@ -143,10 +143,7 @@ bool LogicalDataLineage::AppendLdlEntry(
 bool LogicalDataLineage::InsertParentLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
-    const job_depth_t& job_depth,
-    const bool& sterile) {
-  assert(!sterile);
-
+    const job_depth_t& job_depth) {
   if (version > last_version_) {
     last_version_ = version;
   }
@@ -158,7 +155,7 @@ bool LogicalDataLineage::InsertParentLdlEntry(
     }
   }
 
-  chain_.insert(it.base(), LdlEntry(job_id, version, job_depth, sterile));
+  chain_.insert(it.base(), LdlEntry(job_id, version, job_depth, false));
 
   Index::reverse_iterator iit = parents_index_.rbegin();
   for (; iit != parents_index_.rend(); ++iit) {

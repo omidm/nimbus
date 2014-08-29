@@ -1,0 +1,238 @@
+/*
+ * Copyright 2014 Stanford University.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * - Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * - Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * - Neither the name of the copyright holders nor the names of
+ *   its contributors may be used to endorse or promote products derived
+ *   from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
+ * THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+ /*
+  * Protocol buffer messages between workers and the scheduler.
+  * Author: Philip Levis <pal@cs.stanford.edu>
+  */
+
+message LogicalIDSet {
+  repeated uint64 ids = 1 [packed=true];
+}
+
+message PhysicalIDSet {
+  repeated uint64 ids = 1 [packed=true];
+}
+
+message PartitionIDSet {
+  repeated uint64 ids = 1 [packed=true];        
+}
+
+message JobIDSet {
+  repeated uint64 ids = 1 [packed=true];        
+}
+
+message GeometricRegionPBuf {
+  required int64 x  = 1;
+  required int64 y  = 2;
+  required int64 z  = 3;
+  required int64 dx = 4;
+  required int64 dy = 5;
+  required int64 dz = 6;
+}
+
+message LdoPBuf {
+  optional uint64 data_id = 1;
+  optional GeometricRegionPBuf region = 2;
+  optional string variable = 3;
+}
+
+message SchedulerPBuf{
+  enum Type {
+     BASE             =  1;
+     SPAWN_COMPUTE    =  2;
+     SPAWN_COPY       =  3;
+     DEFINE_DATA      =  4;
+     HANDSHAKE        =  5;
+     JOB_DONE         =  6;
+     EXECUTE_COMPUTE  =  7;
+     CREATE_DATA      =  8;
+     REMOTE_RECEIVE   =  9;
+     REMOTE_SEND      = 10;
+     LOCAL_COPY       = 11;
+     DEFINE_PARTITION = 12;
+     LDO_ADD          = 13;
+     LDO_REMOVE       = 14;
+     PARTITION_ADD    = 15;
+     PARTITION_REMOVE = 16;
+     TERMINATE        = 17;
+     PROFILE          = 18;
+  }
+  required Type type = 1;
+
+// Note that the field type should agree with the type
+// value, to simplify reading.
+  optional SubmitComputeJobPBuf submit_compute   =  2;
+  optional SubmitCopyJobPBuf submit_copy         =  3;
+  optional DefineDataPBuf define_data            =  4;
+  optional HandshakePBuf handshake               =  5;
+  optional JobDonePBuf job_done                  =  6;
+  optional ExecuteComputeJobPBuf execute_compute =  7;
+  optional CreateDataPBuf create_data            =  8;
+  optional RemoteCopySendPBuf remote_send        =  9;
+  optional RemoteCopyReceivePBuf remote_receive  = 10;
+  optional LocalCopyPBuf local_copy              = 11;
+  optional DefinePartitionPBuf define_partition  = 12;
+  optional LdoAddPBuf ldo_add                    = 13;
+  optional LdoRemovePBuf ldo_remove              = 14;
+  optional PartitionAddPBuf partition_add        = 15;
+  optional PartitionRemovePBuf partition_remove  = 16;
+  optional TerminatePBuf terminate               = 17;
+  optional ProfilePBuf profile                   = 18;
+}
+
+message SubmitComputeJobPBuf {
+  optional string name            = 1;
+  optional uint64 job_id          = 2;
+  optional LogicalIDSet read_set  = 3;
+  optional LogicalIDSet write_set = 4;
+  optional JobIDSet before_set    = 5;
+  optional JobIDSet after_set     = 6;
+  optional uint64 parent_id       = 7;
+  optional uint64 future_id       = 8;
+  optional bool sterile           = 9;
+  optional bytes params           = 10;
+}
+
+message SubmitCopyJobPBuf {
+  optional string name            = 1;
+  optional uint64 job_id          = 2;
+  optional uint64 from_id         = 3;
+  optional uint64 to_id           = 4;  
+  optional JobIDSet before_set    = 5;
+  optional JobIDSet after_set     = 6;
+  optional uint64 parent_id       = 7;
+  optional uint64 future_id       = 8;
+  optional bytes params           = 9;
+}
+
+message DefineDataPBuf {
+  optional string name            = 1;
+  optional uint64 logical_data_id = 2;
+  optional uint64 partition_id    = 3;
+  optional PartitionIDSet neighbor_partitions = 4;
+  optional uint64 parent_id       = 5;
+}
+
+message HandshakePBuf {
+  optional uint32 worker_id       = 1;
+  optional string ip              = 2;
+  optional uint32 port            = 3;
+}
+
+message JobDonePBuf {
+  optional uint64 job_id          = 1;
+  optional double run_time        = 2;
+  optional double wait_time       = 3;
+  optional uint64 max_alloc       = 4;
+}
+
+message ExecuteComputeJobPBuf {
+  optional string name             = 1;
+  optional uint64 job_id           = 2;
+  optional PhysicalIDSet read_set  = 3;
+  optional PhysicalIDSet write_set = 4;
+  optional JobIDSet before_set     = 5;
+  optional JobIDSet after_set      = 6;
+  optional uint64 future_job_id    = 7; 
+  optional bool sterile            = 8;
+  optional bytes params            = 9;
+}
+
+message CreateDataPBuf {
+  optional uint64 job_id          = 1;
+  optional string name            = 2;
+  optional uint64 logical_id      = 3;
+  optional uint64 physical_id     = 4;
+  optional JobIDSet before_set    = 5;
+}
+
+message RemoteCopySendPBuf {
+  optional uint64 job_id           = 1;
+  optional uint64 receive_job_id   = 2;
+  optional uint64 from_physical_id = 3;
+  optional uint64 to_worker_id     = 4;
+  optional string to_ip            = 5;
+  optional uint32 to_port          = 6;
+  optional JobIDSet before_set     = 7;
+}
+
+message RemoteCopyReceivePBuf {
+  optional uint64 job_id          = 1;
+  optional uint64 physical_id     = 2;
+  optional JobIDSet before_set    = 3;
+}
+
+message LocalCopyPBuf {
+  optional uint64 job_id           = 1;
+  optional uint64 from_physical_id = 2;
+  optional uint64 to_physical_id   = 3;
+  optional JobIDSet before_set     = 4;
+}
+
+message DefinePartitionPBuf {
+  optional uint64 partition_id           = 1;
+  optional GeometricRegionPBuf region    = 2;
+}
+
+message LdoAddPBuf {
+  optional LdoPBuf ldo = 1;
+}
+
+message LdoRemovePBuf {
+  optional LdoPBuf ldo = 2;
+}
+
+message PartitionAddPBuf {
+  optional uint64 partition_id           = 1;
+  optional GeometricRegionPBuf region    = 2;
+}
+
+message PartitionRemovePBuf {
+  optional uint64 id              = 1;
+}
+
+message TerminatePBuf {
+  optional int32 exit_status      = 1;                       
+}
+
+message ProfilePBuf {
+  optional uint64 worker_id       = 1;
+  optional uint64 total_virtual   = 2;
+  optional uint64 used_virtual    = 3;
+  optional uint64 proc_virtual    = 4;
+  optional uint64 total_physical  = 5;
+  optional uint64 used_physical   = 6;
+  optional uint64 proc_physical   = 7;
+}

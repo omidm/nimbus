@@ -1,0 +1,78 @@
+------------------------------------------------------------------------------
+Author:	omidm@stanford.edy (Omid Mashayekhi)
+------------------------------------------------------------------------------
+
+This is a worker intended to run the job spawner application.
+
+------------------------------------------------------------------------------
+Build instructions:
+------------------------------------------------------------------------------
+
+1. Build Nimbus: issue make in the nimbus/ folder.
+2. Build application: issue make in application/job_spawner/.
+3. Build worker: issue make in this folder.
+
+Alternatively, you could skip 2 and 3, and only issue "make all" in this folder
+
+------------------------------------------------------------------------------
+Run/ Usage:
+------------------------------------------------------------------------------
+
+1. Start scheduler.
+2. Start the worker in this directory.
+
+
+Run: ./worker
+    REQUIRED ARGUMENTS:
+      -sip [scheduler ip]:
+        scheduler server ip address to connect to scheduler.
+
+      -sport [scheduler port]:
+        scheduler server listening port that accepts new connections.
+
+      -port [listening port]:
+        port number for the data exchanger that will accept new connections from
+        othe workers. If running multiple workers on the same machine, this
+        port should be different for each worker.
+
+    OPTIONIAL:
+    -ip [ip address]:
+      in case scheduler cannot detect the ip address of the worker by only
+      accepting the connection from worker (worker behind NAT, etc.) then this
+      ip address will be communicated with the scheduler to be shared with
+      other workers to connect to this worker.
+
+    -lc [loop counter]:
+      number of loops in job spawner application (default 30).
+
+    -pn [part num]:
+      application partition number (default 100). 
+
+    -cpp [chunk per part]
+      number of chunks per application partition, each chunk has three logical
+      objects, one core and two side parts. By controlling this argument the size
+      of read/write could be controlled (default 1).
+
+    -cs [chunk size]
+       size of the chunk (in terms of number of integers), increasing this argument would cause more memory
+       usage at worker (default 50).
+
+    -bw [bandwidth]
+      length of the side parts in each chunk (in terms of number of integers),
+      controls the amount of data exchange between the workers (default 10).
+
+    -sn [stage num]
+      number of stages in each loop. Each stages ends with a bottleneck jobs
+      which is in the before set of the nest stage (default 10).
+
+    -jlu [job length usec]
+      amount of time in micro seconds that each job will sleep during the
+      execution. In this application that's all that job do, so one can
+      controll the exact length of jobs (default 0).
+
+
+
+------------------------------------------------------------------------------
+Notes:
+------------------------------------------------------------------------------
+

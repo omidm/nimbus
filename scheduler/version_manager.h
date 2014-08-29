@@ -43,57 +43,68 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 #define NIMBUS_SCHEDULER_VERSION_MANAGER_H_
 
+#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 #include <utility>
+#include <list>
 #include <map>
+#include <set>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/version_entry.h"
+#include "shared/logical_data_object.h"
 
 namespace nimbus {
 
+
 typedef std::pair<logical_data_id_t, data_version_t> VersionedLogicalData;
-typedef std::map<logical_data_id_t, VersionEntryList*> VersionIndex;
 
 class VersionManager {
   public:
+    typedef std::pair<logical_data_id_t, data_version_t> VLD;
+    typedef boost::unordered_map<logical_data_id_t, VersionEntry*> Index;
+    typedef Index::iterator IndexIter;
+    typedef std::map<job_id_t, counter_t> ChildCounter;
+    typedef ChildCounter::iterator ChildCounterIter;
+
     VersionManager();
     virtual ~VersionManager();
 
-    bool AddVersionEntry(logical_data_id_t logical_id, data_version_t version,
-        JobEntry* job_entry, VersionEntry::Relation relation);
+    bool AddJobEntry(JobEntry *job);
 
-    bool AddVersionEntry(const VersionEntry& ve);
+    size_t GetJobsNeedDataVersion(
+        JobEntryList* list, VLD vld);
 
-    bool AddJobVersionTables(JobEntry* job_entry);
+    bool RemoveJobEntry(JobEntry* job);
 
-    bool AddJobVersionTableIn(JobEntry* job_entry);
+    bool ResolveJobDataVersions(JobEntry *job);
 
-    bool AddJobVersionTableOut(JobEntry* job_entry);
+    bool LookUpVersion(JobEntry *job,
+                       logical_data_id_t ldid,
+                       data_version_t *version);
 
-    bool RemoveVersionEntry(logical_data_id_t logical_id, data_version_t version,
-        JobEntry* job_entry, VersionEntry::Relation relation);
+    bool DefineData(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const job_depth_t& job_depth);
 
-    bool RemoveVersionEntry(const VersionEntry& ve);
+    bool InsertParentLdlEntry(
+        const logical_data_id_t ldid,
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth);
 
-    bool RemoveJobVersionTables(JobEntry* job_entry);
+    bool CleanUp();
 
-    bool RemoveJobVersionTableIn(JobEntry* job_entry);
-
-    bool RemoveJobVersionTableOut(JobEntry* job_entry);
-
-    size_t GetJobsNeedDataVersion(JobEntryList* result,
-        VersionedLogicalData vld);
-
-    size_t GetJobsOutputDataVersion(JobEntryList* result,
-        VersionedLogicalData vld);
-
-    size_t RemoveObsoleteVersionEntriesOfLdo(logical_data_id_t logical_id);
-
-    size_t RemoveAllObsoleteVersionEntries();
+    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
   private:
-    VersionIndex version_index_;
+    Index index_;
+    bool parent_removed_;
+    IDSet<job_id_t> live_parents_;
+    ChildCounter child_counter_;
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
 };
 
 }  // namespace nimbus

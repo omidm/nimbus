@@ -159,8 +159,8 @@ void LdoIndexRtree::Transform(const std::vector<Value>& result,
 
 void LdoIndexRtree::Sort(CLdoVector* dest) {
   assert(dest != NULL);
-  for (int i = 0; i < dest->size(); ++i) {
-    for (int j = i + 1; j < dest->size(); ++j) {
+  for (uint32_t i = 0; i < dest->size(); ++i) {
+    for (uint32_t j = i + 1; j < dest->size(); ++j) {
       if ((*dest)[i]->id() > (*dest)[j]->id()) {
         std::swap((*dest)[i], (*dest)[j]);
       }

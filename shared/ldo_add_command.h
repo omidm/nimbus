@@ -33,9 +33,13 @@
  */
 
  /*
-  * Compute job command used to send compute jobs from scheduler to workers.
+  * A worker sends this command to the controller to add a new logical
+  * data object to the system. The controller updates its logical data
+  * object index (LdoIndex) and invokes its consistency protocol to
+  * update all of the worker replicas of the index.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_LDO_ADD_COMMAND_H_
@@ -55,14 +59,18 @@ class LdoAddCommand : public SchedulerCommand {
 
     virtual SchedulerCommand* Clone();
     virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
 
     virtual LogicalDataObject* object();
 
   private:
     GeometricRegion* region_;
     LogicalDataObject* object_;
+
+    bool ReadFromProtobuf(const LdoAddPBuf& buf);
+    bool WriteToProtobuf(LdoAddPBuf* buf);
 };
 
 

@@ -33,10 +33,11 @@
  */
 
  /*
-  * add partition command to add partition definition to the worker from
-  * scheduler.
+  * Command sent from scheduler to worker, to remove a partition
+  * definition. Currently not used by scheduler.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "shared/partition_remove_command.h"
@@ -50,9 +51,8 @@ PartitionRemoveCommand::PartitionRemoveCommand() {
   type_ = PARTITION_REMOVE;
 }
 
-PartitionRemoveCommand::PartitionRemoveCommand(const ID<partition_id_t>& part,
-                                               const GeometricRegion& r):
-  id_(part), region_(r) {
+PartitionRemoveCommand::PartitionRemoveCommand(const ID<partition_id_t>& part)
+  :id_(part) {
   name_ = PARTITION_REMOVE_NAME;
   type_ = PARTITION_REMOVE;
 }
@@ -63,53 +63,47 @@ SchedulerCommand* PartitionRemoveCommand::Clone() {
   return new PartitionRemoveCommand();
 }
 
-bool PartitionRemoveCommand::Parse(const std::string& params) {
-  int num = 2;
+bool PartitionRemoveCommand::Parse(const std::string& data) {
+  PartitionRemovePBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: PartitionRemoveCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: PartitionRemoveCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse PartitionRemovePBuf from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  iter = tokens.begin();
-  if (!id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid partition id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!region_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid region." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
-std::string PartitionRemoveCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (id_.toString() + " ");
-  str += region_.toString();
-  return str;
+bool PartitionRemoveCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_partition_remove()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse PartitionRemoveCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.partition_remove());
+  }
 }
-std::string PartitionRemoveCommand::toStringWTags() {
+
+std::string PartitionRemoveCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_PARTITION_REMOVE);
+  PartitionRemovePBuf* cmd = buf.mutable_partition_remove();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string PartitionRemoveCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("id:" + id_.toString() + " ");
-  str += ("region:" + region_.toString());
+  str += ("id:" + id_.ToNetworkData());
   return str;
 }
 
@@ -117,7 +111,13 @@ ID<partition_id_t> PartitionRemoveCommand::id() {
   return id_;
 }
 
-const GeometricRegion* PartitionRemoveCommand::region() {
-  return &region_;
+
+bool PartitionRemoveCommand::ReadFromProtobuf(const PartitionRemovePBuf& buf) {
+  id_.set_elem(buf.id());
+  return true;
 }
 
+bool PartitionRemoveCommand::WriteToProtobuf(PartitionRemovePBuf* buf) {
+  buf->set_id(id().elem());
+  return true;
+}

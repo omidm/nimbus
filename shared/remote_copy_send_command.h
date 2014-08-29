@@ -32,11 +32,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- /*
-  * Remote copy send command to issue sender side of the copy job to the
-  * worker.
+  /*
+  * A remote copy operation between two workers has two jobs: the
+  * send and receive. This is the send half.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_REMOTE_COPY_SEND_COMMAND_H_
@@ -51,17 +52,20 @@ class RemoteCopySendCommand : public SchedulerCommand {
   public:
     RemoteCopySendCommand();
     RemoteCopySendCommand(const ID<job_id_t>& job_id,
-        const ID<job_id_t>& receive_job_id,
-        const ID<physical_data_id_t>& from_physical_data_id,
-        const ID<worker_id_t>& to_worker_id,
-        const std::string to_ip, const ID<port_t>& to_port,
-        const IDSet<job_id_t>& before, const IDSet<job_id_t>& after);
+                          const ID<job_id_t>& receive_job_id,
+                          const ID<physical_data_id_t>& from_physical_data_id,
+                          const ID<worker_id_t>& to_worker_id,
+                          const std::string to_ip,
+                          const ID<port_t>& to_port,
+                          const IDSet<job_id_t>& before);
     ~RemoteCopySendCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
     ID<job_id_t> receive_job_id();
     ID<physical_data_id_t> from_physical_data_id();
@@ -69,7 +73,6 @@ class RemoteCopySendCommand : public SchedulerCommand {
     std::string to_ip();
     ID<port_t> to_port();
     IDSet<job_id_t> before_set();
-    IDSet<job_id_t> after_set();
 
   private:
     ID<job_id_t> job_id_;
@@ -79,7 +82,9 @@ class RemoteCopySendCommand : public SchedulerCommand {
     std::string to_ip_;
     ID<port_t> to_port_;
     IDSet<job_id_t> before_set_;
-    IDSet<job_id_t> after_set_;
+
+    bool ReadFromProtobuf(const RemoteCopySendPBuf& buf);
+    bool WriteToProtobuf(RemoteCopySendPBuf* buf);
 };
 
 

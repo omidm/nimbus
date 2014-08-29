@@ -36,6 +36,7 @@
   * Author: Hang Qu <quhang@stanford.edu>
   */
 
+#include <sys/syscall.h>
 #include <unistd.h>
 #include <string>
 
@@ -90,12 +91,14 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
   }
   if (print_clog) {
     std::stringstream msg;
-    msg << "~~~ App compute job start : " << jname << " " << cache_log_->GetTime();
+    pid_t tid = syscall(SYS_gettid);
+    msg << "~~~ TID: " << tid << " App compute job start : " << jname << " " << cache_log_->GetTime(); // NOLINT
     cache_log_->WriteToFile(msg.str());
   }
   if (print_cclog) {
     std::stringstream msg;
-    msg << "~~~ App copy job start : " << jname << " " << cache_log_->GetTime();
+    pid_t tid = syscall(SYS_gettid);
+    msg << "~~~ TID: " << tid << " App copy job start : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif
@@ -111,12 +114,14 @@ void WorkerThreadComputation::ExecuteJob(Job* job) {
 #ifdef CACHE_LOG
   if (print_clog) {
     std::stringstream msg;
-    msg << "~~~ App compute job end : " << jname << " " << cache_log_->GetTime();
+    pid_t tid = syscall(SYS_gettid);
+    msg << "~~~ TID: " << tid << " App compute job end : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
   if (print_cclog) {
     std::stringstream msg;
-    msg << "~~~ App copy job end : " << jname << " " << cache_log_->GetTime();
+    pid_t tid = syscall(SYS_gettid);
+    msg << "~~~ TID: " << tid << " App copy job end : " << jname << " " << cache_log_->GetTime();
     cache_log_->WriteToFile(msg.str());
   }
 #endif

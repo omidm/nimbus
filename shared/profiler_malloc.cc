@@ -34,6 +34,8 @@
 
 /* 
  * Author: Andrew Lim <alim16@stanford.edu>
+ * 
+ * Routines to log memory allocations on a per thread basis. 
  */
 
 #include <shared/profiler_malloc.h>
@@ -52,16 +54,21 @@ namespace nimbus {
   bool ProfilerMalloc::map_include_ = false;
   bool ProfilerMalloc::enabled_ = false;
 
+  /* Static recursive mutex initialization: 
+   *   PTHREAD_RECURSIVE_MUTEX_INITIALIZER is defined on Mac OS X 10.7 or later
+   *   PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP is defined on Linux systems only
+   */
+#ifdef __MACH__
+  static pthread_mutex_t mutex_ = PTHREAD_RECURSIVE_MUTEX_INITIALIZER;
+#else
   static pthread_mutex_t mutex_ = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+#endif
 
-  /*
-  extern "C"
-  void *malloc(size_t size) {
-    static void *(*mallocp)(size_t size);
+  void *ProfilerMalloc::p_malloc(size_t size) {
+    static void *(*mallocp)(size_t size) = NULL;
     char *error;
     void *ptr;
 
-    // get address of libc malloc.
     if (!mallocp) {
       mallocp = reinterpret_cast<void *(*)(size_t size)>(dlsym(RTLD_NEXT, "malloc"));
       if ((error = dlerror()) != NULL) {
@@ -70,12 +77,18 @@ namespace nimbus {
       }
     }
 
-    if (!ProfilerMalloc::IsEnabled() || !ProfilerMalloc::IsEnabledTid(pthread_self())) {
-      ptr = mallocp(size);
+    ptr = mallocp(size);
+
+    pthread_mutex_lock(&mutex_);
+    if (!ProfilerMalloc::IsEnabled()) {
+      pthread_mutex_unlock(&mutex_);
       return ptr;
     }
+    pthread_mutex_unlock(&mutex_);
 
-    ptr = mallocp(size);
+    if (!ProfilerMalloc::IsEnabledTid(pthread_self())) {
+      return ptr;
+    }
 
     pthread_mutex_lock(&mutex_);
     if (ProfilerMalloc::IsMapInclude()) {
@@ -89,12 +102,10 @@ namespace nimbus {
     return ptr;
   }
 
-  extern "C"
-  void free(void *ptr) {
-    static void (*freep)(void *ptr);
+  void ProfilerMalloc::p_free(void *ptr) {
+    static void (*freep)(void *ptr) = NULL;
     char *error;
 
-    // get address of libc free.
     if (!freep) {
       freep = reinterpret_cast<void (*)(void *ptr)>(dlsym(RTLD_NEXT, "free"));
       if ((error = dlerror()) != NULL) {
@@ -103,7 +114,15 @@ namespace nimbus {
       }
     }
 
-    if (!ProfilerMalloc::IsEnabled() || !ProfilerMalloc::IsEnabledTid(pthread_self())) {
+    pthread_mutex_lock(&mutex_);
+    if (!ProfilerMalloc::IsEnabled()) {
+      freep(ptr);
+      pthread_mutex_unlock(&mutex_);
+      return;
+    }
+    pthread_mutex_unlock(&mutex_);
+
+    if (!ProfilerMalloc::IsEnabledTid(pthread_self())) {
       freep(ptr);
       return;
     }
@@ -119,7 +138,6 @@ namespace nimbus {
     }
     freep(ptr);
   }
-  */
 
   bool ProfilerMalloc::IsInit() {
     return init_;
@@ -141,9 +159,6 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::IncreaseAlloc(size_t size) {
-    pthread_mutex_lock(&mutex_);
-    alloc_ += size;
-    pthread_mutex_unlock(&mutex_);
     pthread_t tid = pthread_self();
     /* Statistics are only maintained for threads that have been registered with the profiler. */
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
@@ -156,9 +171,6 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::DecreaseAlloc(size_t size) {
-    pthread_mutex_lock(&mutex_);
-    alloc_ -= size;
-    pthread_mutex_unlock(&mutex_);
     pthread_t tid = pthread_self();
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
@@ -167,6 +179,7 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::InsertAllocPointer(void *ptr, size_t size) {
+    /* Lock should be held prior to call. */
     map_include_ = false;
     if (alloc_map_ != NULL) {
       (*alloc_map_)[ptr] = size;
@@ -175,12 +188,14 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::DeleteAllocPointer(void *ptr) {
+    /* Lock should be held prior to call. */
     if (alloc_map_ != NULL && alloc_map_->find(ptr) != alloc_map_->end()) {
       alloc_map_->erase(ptr);
     }
   }
 
   size_t ProfilerMalloc::AllocSize(void *ptr) {
+    /* Lock should be held prior to call. */
     if (alloc_map_ != NULL && alloc_map_->find(ptr) != alloc_map_->end()) {
       size_t size = (*alloc_map_)[ptr];
       return size;
@@ -195,13 +210,10 @@ namespace nimbus {
   }
 
   size_t ProfilerMalloc::AllocMaxTid(pthread_t tid) {
-    pthread_mutex_lock(&mutex_);
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      pthread_mutex_unlock(&mutex_);
       return state.max_alloc;
     } else {
-      pthread_mutex_unlock(&mutex_);
       return 0;
     }
   }
@@ -236,12 +248,10 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::EnableTid(pthread_t tid) {
-    // pthread_mutex_lock(&mutex_);
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
       state.on = true;
     }
-    // pthread_mutex_unlock(&mutex_);
   }
 
   /* Only the main worker thread should call disable. */
@@ -252,12 +262,10 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::DisableTid(pthread_t tid) {
-    // pthread_mutex_lock(&mutex_);
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
       state.on = false;
     }
-    // pthread_mutex_unlock(&mutex_);
   }
 
   bool ProfilerMalloc::IsEnabled() {
@@ -274,24 +282,16 @@ namespace nimbus {
   }
 
   void ProfilerMalloc::ResetThreadStatistics() {
-    // pthread_mutex_lock(&mutex_);
     pthread_t tid = pthread_self();
-    if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
-      ThreadAllocState& state = (*thread_alloc_map_)[tid];
-      state.curr_alloc = 0;
-      state.max_alloc = 0;
-    }
-    // pthread_mutex_unlock(&mutex_);
+    ResetThreadStatisticsByTid(tid);
   }
 
   void ProfilerMalloc::ResetThreadStatisticsByTid(pthread_t tid) {
-    // pthread_mutex_lock(&mutex_);
     if (thread_alloc_map_ != NULL && thread_alloc_map_->find(tid) != thread_alloc_map_->end()) {
       ThreadAllocState& state = (*thread_alloc_map_)[tid];
       state.curr_alloc = 0;
       state.max_alloc = 0;
     }
-    // pthread_mutex_unlock(&mutex_);
   }
 
   /* Worker thread should register tids for threads in the thread pool. */

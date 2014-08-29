@@ -95,8 +95,7 @@ namespace nimbus {
     bool InsertParentLdlEntry(
         const job_id_t& job_id,
         const data_version_t& version,
-        const job_depth_t& job_depth,
-        const bool& sterile);
+        const job_depth_t& job_depth);
 
     bool CleanChain(
         const IDSet<job_id_t>& live_parents);

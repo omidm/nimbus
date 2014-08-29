@@ -50,13 +50,16 @@
 
 // Comment(quhang): I added the lock for sending commmand.
 #include <pthread.h>
+#include <algorithm>
 #include "shared/scheduler_client.h"
 
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
 
+#define CLIENT_BUFSIZE 4096000
+
 SchedulerClient::SchedulerClient(std::string scheduler_ip,
-    port_t scheduler_port)
+                                 port_t scheduler_port)
   : scheduler_ip_(scheduler_ip),
     scheduler_port_(scheduler_port) {
   read_buffer_ = new boost::asio::streambuf();
@@ -64,58 +67,107 @@ SchedulerClient::SchedulerClient(std::string scheduler_ip,
   socket_ = new tcp::socket(*io_service_);
   command_num_ = 0;
   pthread_mutex_init(&send_lock_, NULL);
+  byte_array_ = new char[CLIENT_BUFSIZE];
+  existing_bytes_ = 0;
+  existing_offset_ = 0;
 }
 
 SchedulerClient::~SchedulerClient() {
   pthread_mutex_destroy(&send_lock_);
+  delete read_buffer_;
 }
 
-SchedulerCommand* SchedulerClient::receiveCommand() {
-  // boost::asio::read_until(*socket, *read_buffer, ';');
-  // std::streamsize size = read_buffer->in_avail();
+SchedulerCommand* SchedulerClient::ReceiveCommand() {
+  SchedulerCommand* com = NULL;
   pthread_mutex_lock(&send_lock_);
 
-  boost::system::error_code ignored_error;
-  int bytes_available = socket_->available(ignored_error);
+  if (existing_bytes_ >= sizeof(SchedulerCommand::length_field_t)) {
+    dbg(DBG_NET, "ReceiveCommand: have %i bytes, reading header from offset %i.\n", (int)existing_bytes_, (int)existing_offset_);  // NOLINT
+    // We have at least a header field -- see if we have a whole message
+    int header_len = sizeof(SchedulerCommand::length_field_t);
+    char* read_ptr = &byte_array_[existing_offset_];
 
-  boost::asio::streambuf::mutable_buffers_type bufs =
-    read_buffer_->prepare(bytes_available);
-  std::size_t bytes_read = socket_->receive(bufs);
-  read_buffer_->commit(bytes_read);
+    SchedulerCommand::length_field_t len;
+    char* len_ptr = reinterpret_cast<char*>(&len);
+    memcpy(len_ptr, read_ptr, header_len);
+    len = (uint32_t)ntohl(len);
+    dbg(DBG_NET, "  - Message is length %i.\n", (int)len);  // NOLINT
+    // We have a whole message
 
-  std::string str(boost::asio::buffer_cast<char*>(bufs), bytes_read);
-  command_num_ += countOccurence(str, ";");
+    if (existing_bytes_ >= len) {
+      dbg(DBG_NET, "  - Message has len %i, reading message.\n", (int)len);  // NOLINT
+      std::string input(read_ptr + header_len, len - header_len);
 
-  if (command_num_ > 0) {
-    std::istream input(read_buffer_);
-    std::string command;
-    std::getline(input, command, ';');
-    command_num_--;
-
-    SchedulerCommand* com = NULL;
-    if (SchedulerCommand::GenerateSchedulerCommandChild(
-          command, scheduler_command_table_, com)) {
-      dbg(DBG_NET, "Scheduler client received command %s\n",
-          com->toString().c_str());
-    } else {
-      dbg(DBG_NET, "Ignored unknown command: %s.\n", command.c_str());
+      // We've read out a command worth of bytes; in the case that
+      // there are no bytes remaining, restart at beginning of buffer
+      existing_bytes_ -= len;
+      if (existing_bytes_ == 0) {
+        existing_offset_ = 0;
+      } else {
+        existing_offset_ += len;
+      }
+      dbg(DBG_NET, "  - New offset: %i\n", (int)existing_offset_);  // NOLINT
+      if (SchedulerCommand::GenerateSchedulerCommandChild(input,
+                                                          scheduler_command_table_,
+                                                          com)) {
+        dbg(DBG_NET, "Scheduler client received command %s\n",
+            com->ToString().c_str());
+      } else {
+        com = NULL;
+        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
+      }
+      pthread_mutex_unlock(&send_lock_);
+      return com;
+    } else if (existing_offset_ > 0) {
+      dbg(DBG_NET, "  - Moving end of %i bytes to beginning of array.\n", (int)existing_bytes_);  // NOLINT
+      // We don't have a whole message: move the fragment to the beginning,
+      // so that we don't run off the end of the buffer after lots of reads
+      // with incomplete commands.
+      memmove(byte_array_, byte_array_ + existing_offset_, existing_bytes_);
+      existing_offset_ = 0;
     }
+  }
+  // If we reach here there wasn't enough data in the buffer for a message.
+  // Try reading, then try calling ourselves again. The level of recursion
+  // Is expected to be very small.
+
+  boost::system::error_code ignored_error;
+  uint32_t bytes_available = socket_->available(ignored_error);
+  if (bytes_available > 0) {
+    dbg(DBG_NET, "ReceiveCommand: %u bytes available,", bytes_available);
+    bytes_available = std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_);
+    dbg(DBG_NET, " preparing to reading %u bytes, ", bytes_available);
+    boost::asio::streambuf::mutable_buffers_type bufs =
+      read_buffer_->prepare(bytes_available);
+    std::size_t bytes_read = socket_->receive(bufs);
+    dbg(DBG_NET, " %i bytes actually read.\n", (int)bytes_read);  // NOLINT
+    read_buffer_->commit(bytes_read);
+    std::istream input(read_buffer_);
+    input.read(byte_array_ + existing_offset_ + existing_bytes_,
+               bytes_available);
+    existing_bytes_ += bytes_available;
     pthread_mutex_unlock(&send_lock_);
-    return com;
+    return ReceiveCommand();
   } else {
     pthread_mutex_unlock(&send_lock_);
     return NULL;
   }
 }
 
-void SchedulerClient::sendCommand(SchedulerCommand* command) {
+void SchedulerClient::SendCommand(SchedulerCommand* command) {
   // static double serialization_time = 0;
   // static double buffer_time = 0;
   // struct timespec start_time;
   // clock_gettime(CLOCK_REALTIME, &start_time);
 
-  std::string msg = command->toString() + ";";
-  dbg(DBG_NET, "Client sending command %s.\n", msg.c_str());
+  std::string data = command->ToNetworkData();
+  SchedulerCommand::length_field_t len;
+  len = htonl((uint32_t)(data.length() + sizeof(len)));
+  std::string msg;
+  msg.append((const char*)&len, sizeof(len));
+  msg.append(data.c_str(), data.length());
+
+  dbg(DBG_NET, "Client sending command of length %i: %s\n", data.length(), command->ToString().c_str()); // NOLINT
 
   // struct timespec t;
   // clock_gettime(CLOCK_REALTIME, &t);
@@ -136,7 +188,7 @@ void SchedulerClient::sendCommand(SchedulerCommand* command) {
   // printf("Buffer command time %f\n", buffer_time);
 }
 
-void SchedulerClient::createNewConnections() {
+void SchedulerClient::CreateNewConnections() {
   std::cout << "Opening connections." << std::endl;
   tcp::resolver resolver(*io_service_);
   tcp::resolver::query query(scheduler_ip_,
@@ -146,8 +198,8 @@ void SchedulerClient::createNewConnections() {
   socket_->connect(*iterator, error);
 }
 
-void SchedulerClient::run() {
-  createNewConnections();
+void SchedulerClient::Run() {
+  CreateNewConnections();
   // io_service_->run();
 }
 
@@ -156,4 +208,3 @@ void
 SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt) {
   scheduler_command_table_ = cmt;
 }
-

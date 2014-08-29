@@ -15,7 +15,7 @@ OBJECT_FILES = $(subst .cc,.o,$(CPP_FILES))
 
 ADIR = ${NIMBUS_ROOT}/application/job_spawner/
 
-LFLAGS += -lnimbus -lboost_thread-mt -lboost_system-mt -lpthread -ljob_spawner -lprotobuf
+LFLAGS += -lnimbus -lboost_thread -lboost_system -lpthread -ljob_spawner -lprotobuf
 LDFLAGS += -L$(ADIR) -Wl,-rpath $(ADIR)
 
 # Add the dependencies here

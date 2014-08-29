@@ -43,10 +43,14 @@
 #include <boost/tokenizer.hpp>
 #include <boost/shared_ptr.hpp>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sstream> // NOLINT
+#include <iostream> // NOLINT
+#include <vector>
 #include <string>
+#include <algorithm>
 #include "shared/nimbus_types.h"
-#include "shared/protobuf_compiled/ldomessage.pb.h"
+#include "shared/protobuf_compiled/commands.pb.h"
 
 namespace nimbus {
 
@@ -75,11 +79,11 @@ namespace nimbus {
 
     // Argument is a pointer to an array of 6 int_dimension_t
     explicit GeometricRegion(const int_dimension_t* values);
-    // Transform a protobuf GeometricRegionMessage into a GeometricRegion
-    explicit GeometricRegion(const GeometricRegionMessage* msg);
-    // Read in as a serialized GeometricRegionMessage from an istream
+    // Transform a protobuf GeometricRegionPBuf into a GeometricRegion
+    explicit GeometricRegion(const GeometricRegionPBuf* msg);
+    // Read in as a serialized GeometricRegionPBuf from an istream
     explicit GeometricRegion(std::istream* is);
-    // Read in as a serialized GeometricRegionMessage from a string
+    // Read in as a serialized GeometricRegionPBuf from a string
     explicit GeometricRegion(const std::string& data);
     // Geometric region from coordinates (min corner and delta)
     explicit GeometricRegion(const Coord &min, const Coord &delta);
@@ -103,11 +107,17 @@ namespace nimbus {
     int_dimension_t dy() const;
     int_dimension_t dz() const;
 
+    virtual void FillInValues(const int_dimension_t* values);
+    virtual void FillInValues(const GeometricRegionPBuf* msg);
+    virtual void FillInMessage(GeometricRegionPBuf* msg);
+
     Coord MinCorner() const;
     Coord MaxCorner() const;
     Coord Delta() const;
 
     bool NoneZeroArea() const;
+    int_dimension_t GetSurfaceArea() const;
+
     void Union(const GeometricRegion& region);
 
     /* Increase the size of geometric region along each dimension and side. */
@@ -121,23 +131,26 @@ namespace nimbus {
     void Translate(const Coord &delta);
 
     /* Covers returns whether this region covers (encompasses) the argument. */
-    virtual bool Covers(GeometricRegion* region) const;
-    virtual bool Intersects(GeometricRegion* region) const;
-    virtual bool Adjacent(GeometricRegion* region) const;
-    virtual bool AdjacentOrIntersects(GeometricRegion* region) const;
+    virtual bool Covers(const GeometricRegion* region) const;
+    virtual bool Intersects(const GeometricRegion* region) const;
+    virtual bool Adjacent(const GeometricRegion* region) const;
+    virtual bool AdjacentOrIntersects(const GeometricRegion* region) const;
     virtual bool IsEqual(const GeometricRegion* region) const;
 
     /* Largest common rectangular region shared by 2 regions. */
     static GeometricRegion GetIntersection(const GeometricRegion &region1,
                                            const GeometricRegion &region2);
+
+    static int_dimension_t GetDistance(const GeometricRegion *region1,
+                                        const GeometricRegion *region2);
+
     /* Smallest rectangular region (bounding box) that contains the two
      * regions. */
     static GeometricRegion GetBoundingBox(const GeometricRegion &region1,
                                    const GeometricRegion &region2);
 
-    virtual void FillInMessage(GeometricRegionMessage* msg);
 
-    virtual std::string toString() const;
+    virtual std::string ToNetworkData() const;
 
     virtual bool Parse(const std::string& input);
 
@@ -180,9 +193,6 @@ namespace nimbus {
     int_dimension_t dx_;
     int_dimension_t dy_;
     int_dimension_t dz_;
-
-    void fillInValues(const int_dimension_t* values);
-    void fillInValues(const GeometricRegionMessage* msg);
   };
 }  // namespace nimbus
 

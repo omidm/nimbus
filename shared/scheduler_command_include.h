@@ -42,7 +42,6 @@
 
 #include "shared/scheduler_command.h"
 #include "shared/handshake_command.h"
-#include "shared/spawn_job_command.h"
 #include "shared/spawn_compute_job_command.h"
 #include "shared/spawn_copy_job_command.h"
 #include "shared/compute_job_command.h"

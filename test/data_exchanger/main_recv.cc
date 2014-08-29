@@ -51,7 +51,7 @@ int main() {
   while (true) {
     if (data_exchanger.ReceiveSerializedData(job_id, &ser_data)) {
       // Print the stuff in ser_data.
-      std::cout << ser_data->toString() << std::endl;
+      std::cout << ser_data->ToNetworkData() << std::endl;
       ++job_id;
     }
   }

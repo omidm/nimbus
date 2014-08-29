@@ -81,7 +81,7 @@ namespace nimbus {
     virtual GeometricRegion* region() const;
     virtual partition_id_t partition() const;
 
-    virtual void FillInMessage(LdoMessage* mg);
+    virtual void FillInMessage(LdoPBuf* mg);
 
     virtual bool Parse(std::istream* is);
     virtual bool Parse(const std::string& data);

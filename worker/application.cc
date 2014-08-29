@@ -84,20 +84,29 @@ void Application::RegisterData(std::string name, Data* d) {
 
 // Thread-safe.
 void Application::SpawnComputeJob(const std::string& name,
-    const job_id_t& id,
-    const IDSet<logical_data_id_t>& read,
-    const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const job_id_t& parent_id,
-    const Parameter& params,
-    const bool& sterile) {
+                                  const job_id_t& id,
+                                  const IDSet<logical_data_id_t>& read,
+                                  const IDSet<logical_data_id_t>& write,
+                                  const IDSet<job_id_t>& before,
+                                  const IDSet<job_id_t>& after,
+                                  const job_id_t& parent_id,
+                                  const job_id_t& future_id,
+                                  const bool& sterile,
+                                  const Parameter& params) {
   // static double construct_time = 0;
   // struct timespec start_time;
   // clock_gettime(CLOCK_REALTIME, &start_time);
 
-  SpawnComputeJobCommand cm(name, ID<job_id_t>(id), read, write, before, after,
-      ID<job_id_t>(parent_id), params, sterile);
+  SpawnComputeJobCommand cm(name,
+                            ID<job_id_t>(id),
+                            read,
+                            write,
+                            before,
+                            after,
+                            ID<job_id_t>(parent_id),
+                            ID<job_id_t>(future_id),
+                            sterile,
+                            params);
 
   // struct timespec t;
   // clock_gettime(CLOCK_REALTIME, &t);
@@ -105,53 +114,49 @@ void Application::SpawnComputeJob(const std::string& name,
   //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
   // printf("Construct command time %f\n", construct_time);
 
-  client_->sendCommand(&cm);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::SpawnCopyJob(const job_id_t& id,
-    const logical_data_id_t& from_logical_id,
-    const logical_data_id_t& to_logical_id,
-    const IDSet<job_id_t>& before,
-    const IDSet<job_id_t>& after,
-    const job_id_t& parent_id,
-    const Parameter& params) {
-
+                               const logical_data_id_t& from_logical_id,
+                               const logical_data_id_t& to_logical_id,
+                               const IDSet<job_id_t>& before,
+                               const IDSet<job_id_t>& after,
+                               const job_id_t& parent_id) {
   SpawnCopyJobCommand cm(ID<job_id_t>(id), ID<logical_data_id_t>(from_logical_id),
-      ID<logical_data_id_t>(to_logical_id), before, after, ID<job_id_t>(parent_id), params);
-  client_->sendCommand(&cm);
+      ID<logical_data_id_t>(to_logical_id), before, after, ID<job_id_t>(parent_id));
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::DefineData(const std::string& name,
-    const logical_data_id_t& logical_data_id,
-    const partition_id_t& partition_id,
-    const IDSet<partition_id_t>& neighbor_partitions,
-    const job_id_t& parent_id,
-    const Parameter& params) {
+                             const logical_data_id_t& logical_data_id,
+                             const partition_id_t& partition_id,
+                             const IDSet<partition_id_t>& neighbor_partitions,
+                             const job_id_t& parent_id) {
   ID<logical_data_id_t> logical_id_made(logical_data_id);
   ID<partition_id_t> partition_id_made(partition_id);
   ID<job_id_t> parent_id_made(parent_id);
 
   ldo_map_->AddLogicalObject(logical_data_id, name, partition_id);
   DefineDataCommand cm(name, logical_id_made, partition_id_made,
-      neighbor_partitions, parent_id_made, params);
-  client_->sendCommand(&cm);
+                       neighbor_partitions, parent_id_made);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::DefinePartition(const ID<partition_id_t>& partition_id,
-     const GeometricRegion& r,
-     const Parameter& params) {
+                                  const GeometricRegion& r) {
   ldo_map_->AddPartition(partition_id.elem(), r);
-  DefinePartitionCommand cm(partition_id, r, params);
-  client_->sendCommand(&cm);
+  DefinePartitionCommand cm(partition_id, r);
+  client_->SendCommand(&cm);
 }
 
 // Thread-safe.
 void Application::TerminateApplication(const exit_status_t& exit_status) {
   TerminateCommand*  cm = new TerminateCommand(ID<exit_status_t>(exit_status));
-  client_->sendCommand(cm);
+  client_->SendCommand(cm);
   delete cm;
 }
 

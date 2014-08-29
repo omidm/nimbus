@@ -1,5 +1,0 @@
-package vector_msg;
-
-message VectorMsg {
-  repeated int64 elem = 1;
-}

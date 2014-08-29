@@ -83,7 +83,7 @@ void VariableRegionSet::DebugPrint() {
        index != _var_region_list.end();
        index++) {
     // TODO(quhang) Use correct log functionality.
-    std::cout << index->first << ':' << index->second.toString() << std::endl;
+    std::cout << index->first << ':' << index->second.ToNetworkData() << std::endl;
   }
 }
 

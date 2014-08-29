@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Stanford University.
+ * Copyright 2014 Stanford University.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,10 +33,14 @@
  */
 
  /*
-  * Spawn compute job command used to spawn compute jobs from worker to
-  * scheduler.
+  * This command is sent from a worker to the scheduler, specifying
+  * a computation that a worker should perform. The job lists
+  * the read and write sets of the job (the data objects it reads and
+  * writes) as logical IDs. The scheduler binds these to particular
+  * physical objects and sends a compute_job_command to a worker.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "shared/spawn_compute_job_command.h"
@@ -46,24 +50,32 @@ using boost::tokenizer;
 using boost::char_separator;
 
 SpawnComputeJobCommand::SpawnComputeJobCommand() {
-  name_ = SPAWN_COMPUTE_JOB_NAME;
-  type_ = SPAWN_COMPUTE_JOB;
+  name_ = SPAWN_COMPUTE_NAME;
+  type_ = SPAWN_COMPUTE;
 }
 
 SpawnComputeJobCommand::SpawnComputeJobCommand(const std::string& job_name,
-    const ID<job_id_t>& job_id,
-    const IDSet<logical_data_id_t>& read, const IDSet<logical_data_id_t>& write,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after,
-    const ID<job_id_t>& parent_job_id,
-    const Parameter& params,
-    const bool& sterile)
-: job_name_(job_name), job_id_(job_id),
-  read_set_(read), write_set_(write),
-  before_set_(before), after_set_(after),
-  parent_job_id_(parent_job_id),
-  params_(params), sterile_(sterile) {
-  name_ = SPAWN_COMPUTE_JOB_NAME;
-  type_ = SPAWN_COMPUTE_JOB;
+                                               const ID<job_id_t>& job_id,
+                                               const IDSet<logical_data_id_t>& read,
+                                               const IDSet<logical_data_id_t>& write,
+                                               const IDSet<job_id_t>& before,
+                                               const IDSet<job_id_t>& after,
+                                               const ID<job_id_t>& parent_job_id,
+                                               const ID<job_id_t>& future_job_id,
+                                               const bool& sterile,
+                                               const Parameter& params)
+  : job_name_(job_name),
+    job_id_(job_id),
+    read_set_(read),
+    write_set_(write),
+    before_set_(before),
+    after_set_(after),
+    parent_job_id_(parent_job_id),
+    future_job_id_(future_job_id),
+    sterile_(sterile),
+    params_(params) {
+  name_ = SPAWN_COMPUTE_NAME;
+  type_ = SPAWN_COMPUTE;
 }
 
 SpawnComputeJobCommand::~SpawnComputeJobCommand() {
@@ -74,115 +86,55 @@ SchedulerCommand* SpawnComputeJobCommand::Clone() {
 }
 
 
-bool SpawnComputeJobCommand::Parse(const std::string& params) {
-  int num = 9;
+bool SpawnComputeJobCommand::Parse(const std::string& data) {
+  SubmitComputeJobPBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: SpawnComputeJobCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: SpawnComputeJobCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnComputeJobCommand from string.\n");
     return false;
-  }
-
-  iter = tokens.begin();
-  job_name_ = *iter;
-
-  iter++;
-  if (!job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!read_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid read set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!write_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid write set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!before_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid before set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!parent_job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parent job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!params_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid parameter." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (*iter == "sterile") {
-    sterile_ = true;
-  } else if (*iter == "not_sterile") {
-    sterile_ = false;
   } else {
-    std::cout << "ERROR: Could not detect valid is parent flag." << std::endl;
-    return false;
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  return true;
 }
 
-std::string SpawnComputeJobCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (job_name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (read_set_.toString() + " ");
-  str += (write_set_.toString() + " ");
-  str += (before_set_.toString() + " ");
-  str += (after_set_.toString() + " ");
-  str += (parent_job_id_.toString() + " ");
-  str += (params_.toString() + " ");
-  if (sterile_) {
-    str += "sterile";
+bool SpawnComputeJobCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_submit_compute()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse SpawnComputeJobCommand from SchedulerPBuf.\n");
+    return false;
   } else {
-    str += "not_sterile";
+    return ReadFromProtobuf(buf.submit_compute());
   }
-
-  return str;
 }
 
-std::string SpawnComputeJobCommand::toStringWTags() {
+std::string SpawnComputeJobCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_SPAWN_COMPUTE);
+  SubmitComputeJobPBuf* cmd = buf.mutable_submit_compute();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string SpawnComputeJobCommand::ToString() {
   std::string str;
   str += (name_ + " ");
-  str += ("name:" + job_name_ + " ");
-  str += ("id:" + job_id_.toString() + " ");
-  str += ("read:" + read_set_.toString() + " ");
-  str += ("write:" + write_set_.toString() + " ");
-  str += ("before:" + before_set_.toString() + " ");
-  str += ("after:" + after_set_.toString() + " ");
-  str += ("parent-id:" + parent_job_id_.toString() + " ");
-  str += ("params:" + params_.toString() + " ");
+  str += ("name:" + job_name_ + ",");
+  str += ("id:" + job_id_.ToNetworkData() + ",");
+  str += ("read:" + read_set_.ToNetworkData() + ",");
+  str += ("write:" + write_set_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData() + ",");
+  str += ("after:" + after_set_.ToNetworkData() + ",");
+  str += ("parent-id:" + parent_job_id_.ToNetworkData() + ",");
+  str += ("future-id:" + future_job_id_.ToNetworkData() + ",");
+  str += ("params:" + params_.ToNetworkData() + ",");
   if (sterile_) {
     str += "sterile";
   } else {
@@ -203,6 +155,10 @@ ID<job_id_t> SpawnComputeJobCommand::parent_job_id() {
   return parent_job_id_;
 }
 
+ID<job_id_t> SpawnComputeJobCommand::future_job_id() {
+  return future_job_id_;
+}
+
 IDSet<logical_data_id_t> SpawnComputeJobCommand::read_set() {
   return read_set_;
 }
@@ -214,6 +170,7 @@ IDSet<logical_data_id_t> SpawnComputeJobCommand::write_set() {
 IDSet<job_id_t> SpawnComputeJobCommand::after_set() {
   return after_set_;
 }
+
 IDSet<job_id_t> SpawnComputeJobCommand::before_set() {
   return before_set_;
 }
@@ -226,3 +183,33 @@ bool SpawnComputeJobCommand::sterile() {
   return sterile_;
 }
 
+bool SpawnComputeJobCommand::ReadFromProtobuf(const SubmitComputeJobPBuf& buf) {
+  job_name_ = buf.name();
+  job_id_.set_elem(buf.job_id());
+  read_set_.ConvertFromRepeatedField(buf.read_set().ids());
+  write_set_.ConvertFromRepeatedField(buf.write_set().ids());
+  before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  after_set_.ConvertFromRepeatedField(buf.after_set().ids());
+  parent_job_id_.set_elem(buf.parent_id());
+  future_job_id_.set_elem(buf.future_id());
+  sterile_ = buf.sterile();
+  // Is this safe?
+  SerializedData d(buf.params());
+  params_.set_ser_data(d);
+
+  return true;
+}
+
+bool SpawnComputeJobCommand::WriteToProtobuf(SubmitComputeJobPBuf* buf) {
+  buf->set_name(job_name());
+  buf->set_job_id(job_id().elem());
+  read_set().ConvertToRepeatedField(buf->mutable_read_set()->mutable_ids());
+  write_set().ConvertToRepeatedField(buf->mutable_write_set()->mutable_ids());
+  before_set().ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  after_set().ConvertToRepeatedField(buf->mutable_after_set()->mutable_ids());
+  buf->set_parent_id(parent_job_id().elem());
+  buf->set_future_id(future_job_id().elem());
+  buf->set_sterile(sterile_);
+  buf->set_params(params().ser_data().ToNetworkData());
+  return true;
+}

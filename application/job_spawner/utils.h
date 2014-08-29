@@ -61,5 +61,8 @@ void LoadDataFromNimbus(Job* job,
 void SaveDataToNimbus(Job* job,
     const DataArray& da, std::vector<int>* vec);
 
+bool LoadParameter(Parameter *parameter, size_t *value);
+
+bool SerializeParameter(Parameter *parameter, size_t value);
 
 #endif  // NIMBUS_APPLICATION_JOB_SPAWNER_UTILS_H_

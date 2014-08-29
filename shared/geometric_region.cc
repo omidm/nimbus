@@ -89,23 +89,23 @@ GeometricRegion::GeometricRegion(const GeometricRegion& r) {
 }
 
 GeometricRegion::GeometricRegion(const int_dimension_t* values) {
-  fillInValues(values);
+  FillInValues(values);
 }
 
-GeometricRegion::GeometricRegion(const GeometricRegionMessage* msg) {
-  fillInValues(msg);
+GeometricRegion::GeometricRegion(const GeometricRegionPBuf* msg) {
+  FillInValues(msg);
 }
 
 GeometricRegion::GeometricRegion(std::istream* is) {
-  GeometricRegionMessage msg;
+  GeometricRegionPBuf msg;
   msg.ParseFromIstream(is);
-  fillInValues(&msg);
+  FillInValues(&msg);
 }
 
 GeometricRegion::GeometricRegion(const std::string& data) {
-  GeometricRegionMessage msg;
+  GeometricRegionPBuf msg;
   msg.ParseFromString(data);
-  fillInValues(&msg);
+  FillInValues(&msg);
 }
 
 GeometricRegion::GeometricRegion(const Coord &min, const Coord &delta) {
@@ -142,7 +142,7 @@ void GeometricRegion::Rebuild(int_dimension_t x,
   dz_ = dz;
 }
 
-void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
+void GeometricRegion::FillInMessage(GeometricRegionPBuf* msg) {
   msg->set_x(x_);
   msg->set_y(y_);
   msg->set_z(z_);
@@ -157,7 +157,7 @@ void GeometricRegion::FillInMessage(GeometricRegionMessage* msg) {
  * \param region
  * \return
 */
-bool GeometricRegion::AdjacentOrIntersects(GeometricRegion *region) const {
+bool GeometricRegion::AdjacentOrIntersects(const GeometricRegion *region) const {
   return !((x() + dx() < region->x()) ||
            (x() > region->x() + region->dx()) ||
            (y() + dy() < region->y()) ||
@@ -172,7 +172,7 @@ bool GeometricRegion::AdjacentOrIntersects(GeometricRegion *region) const {
  * \param region
  * \return
 */
-bool GeometricRegion::Intersects(GeometricRegion *region) const {
+bool GeometricRegion::Intersects(const GeometricRegion *region) const {
   return !((x() + dx() <= region->x()) ||
            (x() >= region->x() + region->dx()) ||
            (y() + dy() <= region->y()) ||
@@ -187,7 +187,7 @@ bool GeometricRegion::Intersects(GeometricRegion *region) const {
  * \param region
  * \return Whether the two regions share face surfaces.
 */
-bool GeometricRegion::Adjacent(GeometricRegion *region) const {
+bool GeometricRegion::Adjacent(const GeometricRegion *region) const {
   return (AdjacentOrIntersects(region) && !Intersects(region));
 }
 
@@ -199,7 +199,7 @@ bool GeometricRegion::Adjacent(GeometricRegion *region) const {
  * \param region
  * \return
 */
-bool GeometricRegion::Covers(GeometricRegion *region) const {
+bool GeometricRegion::Covers(const GeometricRegion *region) const {
   return ((x() <= region->x()) &&
           (x() + dx() >= region->x() + region->dx()) &&
           (y() <= region->y()) &&
@@ -240,6 +240,47 @@ GeometricRegion GeometricRegion::GetIntersection(const GeometricRegion &region1,
   Coord max = ElementWiseMin(region1.MaxCorner(), region2.MaxCorner());
   return GeometricRegionFromRange(min, max);
 }
+
+
+
+int_dimension_t GeometricRegion::GetDistance(const GeometricRegion *region1,
+                                             const GeometricRegion *region2) {
+  if (region1->AdjacentOrIntersects(region2)) {
+    return 0;
+  }
+
+  std::vector<int_dimension_t> dist;
+
+  std::vector<int_dimension_t> distx;
+  distx.push_back(abs(region1->x() - region2->x()));
+  distx.push_back(abs(region1->x() - region2->x() - region2->dx()));
+  distx.push_back(abs(region1->x() + region1->dx() - region2->x()));
+  distx.push_back(abs(region1->x() + region1->dx() - region2->x() - region2->dx()));
+  std::sort(distx.begin(), distx.end());
+  dist.push_back(*distx.begin());
+
+  std::vector<int_dimension_t> disty;
+  disty.push_back(abs(region1->y() - region2->y()));
+  disty.push_back(abs(region1->y() - region2->y() - region2->dy()));
+  disty.push_back(abs(region1->y() + region1->dy() - region2->y()));
+  disty.push_back(abs(region1->y() + region1->dy() - region2->y() - region2->dy()));
+  std::sort(disty.begin(), disty.end());
+  dist.push_back(*disty.begin());
+
+  std::vector<int_dimension_t> distz;
+  distz.push_back(abs(region1->z() - region2->z()));
+  distz.push_back(abs(region1->z() - region2->z() - region2->dz()));
+  distz.push_back(abs(region1->z() + region1->dz() - region2->z()));
+  distz.push_back(abs(region1->z() + region1->dz() - region2->z() - region2->dz()));
+  std::sort(distz.begin(), distz.end());
+  dist.push_back(*distz.begin());
+
+  std::sort(dist.begin(), dist.end());
+  return *dist.rbegin();
+}
+
+
+
 
 /**
  * \fn bool GeometricRegion::GetBoundingBox(const GeometricRegion &region1,
@@ -333,6 +374,11 @@ bool GeometricRegion::NoneZeroArea() const {
   return (dx_ != 0) && (dy_ != 0) && (dz_ != 0);
 }
 
+int_dimension_t GeometricRegion::GetSurfaceArea() const {
+  return (dx_ * dy_ * dz_);
+}
+
+
 void GeometricRegion::Union(const GeometricRegion& region) {
   if (!NoneZeroArea()) {
     x_ = region.x_;
@@ -412,11 +458,11 @@ void GeometricRegion::Translate(const Coord &delta) {
 }
 
 /**
- * \fn int_dimension_t GeometricRegion::fillInValues()
+ * \fn int_dimension_t GeometricRegion::FillInValues()
  * \brief Fills in six parameters from array.
  * \return
 */
-void GeometricRegion::fillInValues(const int_dimension_t* values) {
+void GeometricRegion::FillInValues(const int_dimension_t* values) {
   x_  = values[0];
   y_  = values[1];
   z_  = values[2];
@@ -425,7 +471,7 @@ void GeometricRegion::fillInValues(const int_dimension_t* values) {
   dz_ = values[5];
 }
 
-void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
+void GeometricRegion::FillInValues(const GeometricRegionPBuf* msg) {
   x_ = msg->x();
   y_ = msg->y();
   z_ = msg->z();
@@ -434,10 +480,10 @@ void GeometricRegion::fillInValues(const GeometricRegionMessage* msg) {
   dz_ = msg->dz();
 }
 
-std::string GeometricRegion::toString() const {
+std::string GeometricRegion::ToNetworkData() const {
   std::string str;
   char buf[2048];
-  snprintf(buf, sizeof(buf), "bbox:%lld,%lld,%lld,%lld,%lld,%lld",
+  snprintf(buf, sizeof(buf), "bbox:%ld,%ld,%ld,%ld,%ld,%ld",
            x_, y_, z_, dx_, dy_, dz_);
   str += buf;
   return str;

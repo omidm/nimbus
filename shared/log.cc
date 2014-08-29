@@ -169,6 +169,7 @@ void Log::WriteToBuffer(std::string buf, LOG_TYPE type) {
 }
 
 void Log::WriteToFile(std::string buf, LOG_TYPE type) {
+  boost::unique_lock<boost::mutex> file_lock(file_mutex_);
   std::ofstream ofs;
   ofs.open(log_file_name_.c_str(), std::ofstream::app);
   ofs << GetTag(type) << buf << std::endl;

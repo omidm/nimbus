@@ -331,7 +331,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
     }
   }
   printf("\n%d jobs scanned, %d, %s\n", count, init_count,
-         hint_region.toString().c_str());
+         hint_region.ToNetworkData().c_str());
 }
 */
 

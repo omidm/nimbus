@@ -90,7 +90,7 @@ LogicalDataObject::LogicalDataObject(logical_data_id_t id,
 }
 
 bool LogicalDataObject::Parse(std::istream* is) {
-  LdoMessage msg;
+  LdoPBuf msg;
   msg.ParseFromIstream(is);
   id_ = msg.data_id();
   variable_ = msg.variable();
@@ -99,7 +99,7 @@ bool LogicalDataObject::Parse(std::istream* is) {
 }
 
 bool LogicalDataObject::Parse(const std::string& data) {
-  LdoMessage msg;
+  LdoPBuf msg;
   msg.ParseFromString(data);
   id_ = msg.data_id();
   variable_ = msg.variable();
@@ -158,18 +158,18 @@ partition_id_t LogicalDataObject::partition() const {
 
 
 bool LogicalDataObject::Serialize(std::ostream* os) {
-  LdoMessage m;
+  LdoPBuf m;
   FillInMessage(&m);
   return m.SerializeToOstream(os);
 }
 
 bool LogicalDataObject::SerializeToString(std::string* output) {
-  LdoMessage m;
+  LdoPBuf m;
   FillInMessage(&m);
   return m.SerializeToString(output);
 }
 
-void LogicalDataObject::FillInMessage(LdoMessage* msg) {
+void LogicalDataObject::FillInMessage(LdoPBuf* msg) {
   msg->set_data_id(id_);
   msg->set_variable(variable_);
   region_->FillInMessage(msg->mutable_region());

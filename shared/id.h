@@ -62,7 +62,7 @@ class ID {
   virtual ~ID();
 
   bool Parse(const std::string& input);
-  std::string toString();
+  std::string ToNetworkData();
   T elem() const;
   void set_elem(T elem);
 

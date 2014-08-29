@@ -58,7 +58,6 @@
 #include "shared/graph.h"
 #include "scheduler/job_entry.h"
 #include "scheduler/version_manager.h"
-#include "scheduler/version_operator.h"
 #include "scheduler/physical_data.h"
 #include "scheduler/ldl_map.h"
 
@@ -68,7 +67,7 @@ class JobManager {
     explicit JobManager();
     virtual ~JobManager();
 
-    bool AddJobEntry(const JobType& job_type,
+    bool AddComputeJobEntry(
         const std::string& job_name,
         const job_id_t& job_id,
         const IDSet<logical_data_id_t>& read_set,
@@ -76,18 +75,31 @@ class JobManager {
         const IDSet<job_id_t>& before_set,
         const IDSet<job_id_t>& after_set,
         const job_id_t& parent_job_id,
-        const Parameter& params,
-        const bool& sterile);
-
-    bool AddJobEntry(const JobType& job_type,
-        const std::string& job_name,
-        const job_id_t& job_id,
-        const job_id_t& parent_job_id,
+        const job_id_t& future_job_id,
         const bool& sterile,
-        const bool& versioned,
-        const bool& assigned);
+        const Parameter& params);
+
+    bool AddExplicitCopyJobEntry();
+
+    bool AddKernelJobEntry();
+
+    bool AddMainJobEntry(const job_id_t& job_id);
+
+    bool AddCreateDataJobEntry(const job_id_t& job_id);
+
+    bool AddLocalCopyJobEntry(const job_id_t& job_id);
+
+    bool AddRemoteCopySendJobEntry(const job_id_t& job_id);
+
+    bool AddRemoteCopyReceiveJobEntry(const job_id_t& job_id);
 
     bool AddFutureJobEntry(const job_id_t& job_id);
+
+    bool AddJobEntryIncomingEdges(JobEntry *job);
+
+    void ReceiveMetaBeforeSetDepthVersioningDependency(JobEntry* job);
+
+    void PassMetaBeforeSetDepthVersioningDependency(JobEntry* job);
 
     bool GetJobEntry(job_id_t job_id, JobEntry*& job);
 
@@ -101,7 +113,9 @@ class JobManager {
 
     void CleanLdlMap();
 
-    void JobDone(job_id_t job_id);
+    void NotifyJobDone(job_id_t job_id);
+
+    void NotifyJobAssignment(JobEntry *job, const SchedulerWorker* worker);
 
     void DefineData(job_id_t job_id, logical_data_id_t ldid);
 
@@ -119,12 +133,21 @@ class JobManager {
 
     void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
 
+    Graph<JobEntry, job_id_t> *job_graph_p();
+
   private:
     Graph<JobEntry, job_id_t> job_graph_;
-    // VersionManager version_manager_;
-    VersionOperator version_operator_;
-    // bool processed_new_job_done_;
+    VersionManager version_manager_;
+    LdlMap ldl_map_;
     const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+
+    JobEntryMap jobs_done_;
+
+    JobEntryMap jobs_need_version_;
+    std::map<job_id_t, JobEntryList> pass_version_;
+
+    JobEntryMap jobs_ready_to_assign_;
+    JobEntryMap jobs_pending_to_assign_;
 
     Log log_version_;
     Log log_merge_;
@@ -133,43 +156,26 @@ class JobManager {
     Log log_nonsterile_;
     size_t lookup_count_;
 
-    // bool ResolveJobDataVersions(JobEntry* job);
-    // size_t ResolveVersions();
 
-    LdlMap ldl_map_;
+    size_t ResolveDataVersions();
 
-    JobEntryMap jobs_need_version_;
-    JobEntryMap jobs_ready_to_assign_;
-    JobEntryMap jobs_done_;
-    std::map<job_id_t, JobEntryList> pass_version_;
-    std::map<job_id_t, JobEntryList> explore_to_assign_;
+    void PassDataVersionToJob(JobEntry *job,
+                              const JobEntryList& from_jobs);
 
-    IDSet<job_id_t> live_parents_;
-    bool parent_removed_;
+    bool LookUpVersion(JobEntry *job,
+                       logical_data_id_t ldid,
+                       data_version_t *version);
+
+    bool JobVersionIsComplete(JobEntry *job);
+
+
+
 
     boost::mutex pass_version_mutex_;
     boost::condition_variable pass_version_put_cond_;
     boost::condition_variable pass_version_draw_cond_;
     size_t pass_version_in_progress_;
-
-    size_t ResolveDataVersions();
-
-    void PassDataVersionToJob(
-        JobEntry *job, const JobEntryList& from_jobs);
-
-    bool LookUpVersion(JobEntry *job,
-        logical_data_id_t ldid, data_version_t *version);
-
-    bool JobVersionIsComplete(JobEntry *job);
-
     void WaitToPassAllVersions();
-
-    size_t ExploreToAssignJobs();
-
-    void RemoveJobAssignmentDependency(
-        JobEntry *job, const JobEntryList& source_jobs);
-
-    bool JobIsReadyToAssign(JobEntry *job);
 };
 
 }  // namespace nimbus

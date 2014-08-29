@@ -33,9 +33,13 @@
  */
 
  /*
-  * Job done command to signal completion of a job.
+  * A worker sends a job done command to the controller to tell it a
+  * job has completed (copy or compute). The controller forwards
+  * received job done commands to workers who are waiting on it (e.g.,
+  * releasing a dependency in another job's before set).
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_JOB_DONE_COMMAND_H_
@@ -49,35 +53,31 @@ namespace nimbus {
 class JobDoneCommand : public SchedulerCommand {
   public:
     JobDoneCommand();
+    explicit JobDoneCommand(const ID<job_id_t>& job_id);
     JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params);
-    JobDoneCommand(const ID<job_id_t>& job_id,
-        const IDSet<job_id_t>& after_set,
-        const Parameter& params,
-        double run_time,
-        double wait_time,
-        size_t max_alloc);
+                   double run_time,
+                   double wait_time,
+                   size_t max_alloc);
     ~JobDoneCommand();
 
     virtual SchedulerCommand* Clone();
-    virtual bool Parse(const std::string& param_segment);
-    virtual std::string toString();
-    virtual std::string toStringWTags();
+    virtual bool Parse(const std::string& data);
+    virtual bool Parse(const SchedulerPBuf& buf);
+    virtual std::string ToNetworkData();
+    virtual std::string ToString();
     ID<job_id_t> job_id();
-    IDSet<job_id_t> after_set();
-    Parameter params();
     double run_time();
     double wait_time();
     size_t max_alloc();
 
   private:
     ID<job_id_t> job_id_;
-    IDSet<job_id_t> after_set_;
-    Parameter params_;
     double run_time_;
     double wait_time_;
     size_t max_alloc_;
+
+    bool ReadFromProtobuf(const JobDonePBuf& buf);
+    bool WriteToProtobuf(JobDonePBuf* buf);
 };
 
 }  // namespace nimbus

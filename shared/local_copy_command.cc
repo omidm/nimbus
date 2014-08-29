@@ -33,10 +33,14 @@
  */
 
  /*
-  * Local copy command to issue copy command to a worker which holds both read
-  * and write physical instance of the copy job.
+  * A local copy is between two physical objects on a worker: a common
+  * use is when data for timestep t is computed with data from
+  * timestep t, or when one job needs to read data from timestep t
+  * while another writes it for timestep t+1. Copies between workers
+  * are different and called remote copies.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #include "shared/local_copy_command.h"
@@ -51,13 +55,13 @@ LocalCopyCommand::LocalCopyCommand() {
 }
 
 LocalCopyCommand::LocalCopyCommand(const ID<job_id_t>& job_id,
-    const ID<physical_data_id_t>& from_physical_data_id,
-    const ID<physical_data_id_t>& to_physical_data_id,
-    const IDSet<job_id_t>& before, const IDSet<job_id_t>& after)
-: job_id_(job_id),
-  from_physical_data_id_(from_physical_data_id),
-  to_physical_data_id_(to_physical_data_id),
-  before_set_(before), after_set_(after) {
+                                   const ID<physical_data_id_t>& from_physical_data_id,
+                                   const ID<physical_data_id_t>& to_physical_data_id,
+                                   const IDSet<job_id_t>& before)
+  : job_id_(job_id),
+    from_physical_data_id_(from_physical_data_id),
+    to_physical_data_id_(to_physical_data_id),
+    before_set_(before) {
   name_ = LOCAL_COPY_NAME;
   type_ = LOCAL_COPY;
 }
@@ -69,78 +73,50 @@ SchedulerCommand* LocalCopyCommand::Clone() {
   return new LocalCopyCommand();
 }
 
-bool LocalCopyCommand::Parse(const std::string& params) {
-  int num = 5;
+bool LocalCopyCommand::Parse(const std::string& data) {
+  LocalCopyPBuf buf;
+  bool result = buf.ParseFromString(data);
 
-  char_separator<char> separator(" \n\t\r");
-  tokenizer<char_separator<char> > tokens(params, separator);
-  tokenizer<char_separator<char> >::iterator iter = tokens.begin();
-  for (int i = 0; i < num; i++) {
-    if (iter == tokens.end()) {
-      std::cout << "ERROR: LocalCopyCommand has only " << i <<
-        " parameters (expected " << num << ")." << std::endl;
-      return false;
-    }
-    iter++;
-  }
-  if (iter != tokens.end()) {
-    std::cout << "ERROR: LocalCopyCommand has more than "<<
-      num << " parameters." << std::endl;
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse LocalCopyCommand from string.\n");
     return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
   }
-
-  iter = tokens.begin();
-  if (!job_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid job id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!from_physical_data_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid from data id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!to_physical_data_id_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid to data id." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!before_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid before set." << std::endl;
-    return false;
-  }
-
-  iter++;
-  if (!after_set_.Parse(*iter)) {
-    std::cout << "ERROR: Could not detect valid after set." << std::endl;
-    return false;
-  }
-
-  return true;
 }
 
-std::string LocalCopyCommand::toString() {
-  std::string str;
-  str += (name_ + " ");
-  str += (job_id_.toString() + " ");
-  str += (from_physical_data_id_.toString() + " ");
-  str += (to_physical_data_id_.toString() + " ");
-  str += (before_set_.toString() + " ");
-  str += after_set_.toString();
-  return str;
+bool LocalCopyCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_local_copy()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse LocalCopyCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.local_copy());
+  }
 }
 
-std::string LocalCopyCommand::toStringWTags() {
+std::string LocalCopyCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_LOCAL_COPY);
+  LocalCopyPBuf* cmd = buf.mutable_local_copy();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
+}
+
+std::string LocalCopyCommand::ToString() {
   std::string str;
-  str += (name_ + " ");
-  str += ("job-id:" + job_id_.toString() + " ");
-  str += ("from-physical-data-id:" + from_physical_data_id_.toString() + " ");
-  str += ("to-physical-data-id:" + to_physical_data_id_.toString() + " ");
-  str += ("before:" + before_set_.toString() + " ");
-  str += ("after:" + after_set_.toString());
+  str += (name_ + ",");
+  str += ("job-id:" + job_id_.ToNetworkData() + ",");
+  str += ("from-physical-data-id:" + from_physical_data_id_.ToNetworkData() + ",");
+  str += ("to-physical-data-id:" + to_physical_data_id_.ToNetworkData() + ",");
+  str += ("before:" + before_set_.ToNetworkData());
   return str;
 }
 
@@ -156,12 +132,22 @@ ID<physical_data_id_t> LocalCopyCommand::to_physical_data_id() {
   return to_physical_data_id_;
 }
 
-IDSet<job_id_t> LocalCopyCommand::after_set() {
-  return after_set_;
-}
-
 IDSet<job_id_t> LocalCopyCommand::before_set() {
   return before_set_;
 }
 
+bool LocalCopyCommand::ReadFromProtobuf(const LocalCopyPBuf& buf) {
+  job_id_.set_elem(buf.job_id());
+  from_physical_data_id_.set_elem(buf.from_physical_id());
+  to_physical_data_id_.set_elem(buf.to_physical_id());
+  before_set_.ConvertFromRepeatedField(buf.before_set().ids());
+  return true;
+}
 
+bool LocalCopyCommand::WriteToProtobuf(LocalCopyPBuf* buf) {
+  buf->set_job_id(job_id().elem());
+  buf->set_from_physical_id(from_physical_data_id().elem());
+  buf->set_to_physical_id(to_physical_data_id().elem());
+  before_set_.ConvertToRepeatedField(buf->mutable_before_set()->mutable_ids());
+  return true;
+}

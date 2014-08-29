@@ -48,25 +48,70 @@
 #include "shared/scheduler_command.h"
 #include "shared/parser.h"
 
+
+void PrintUsage() {
+  std::cout << "ERROR: wrong arguments\n";
+  std::cout << "Usage:\n";
+  std::cout << "./scheduler\n";
+  std::cout << "REQUIRED ARGUMENTS:\n";
+  std::cout << "\t-port [listening port]\n";
+  std::cout << "OPTIONIAL:\n";
+  std::cout << "\t-wn [initial worker num, DEFAULT: 2]\n";
+}
+
+
+
+
 int main(int argc, char *argv[]) {
+  port_t listening_port;
+  size_t worker_num;
+  bool listening_port_given = false;
+  bool worker_num_given = false;
+
+  if (((argc - 1) % 2 != 0) || (argc < 3)) {
+    PrintUsage();
+    exit(-1);
+  }
+
+  for (int i = 1; i < argc; i = i + 2) {
+    std::string tag = argv[i];
+    std::string val = argv[i+1];
+    if (tag == "-port") {
+      std::stringstream ss(val);
+      ss >> listening_port;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      listening_port_given = true;
+    } else if (tag == "-wn") {
+      std::stringstream ss(val);
+      ss >> worker_num;
+      if (ss.fail()) {
+        PrintUsage();
+        exit(-1);
+      }
+      worker_num_given = true;
+    } else {
+      PrintUsage();
+      exit(-1);
+    }
+  }
+
+  if (!listening_port_given) {
+    PrintUsage();
+    exit(-1);
+  }
+
   nimbus::nimbus_initialize();
 
-  SchedulerAlternate * s = new SchedulerAlternate(NIMBUS_SCHEDULER_PORT);
+  SchedulerAlternate * s = new SchedulerAlternate(listening_port);
 
-  if (argc < 2) {
-      dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
+  if (worker_num_given) {
+    s->set_min_worker_to_join(worker_num);
+    dbg(DBG_SCHED, "Set min initial number of workers to %d.\n", worker_num);
   } else {
-    std::string str(argv[1]);
-    std::cout << str << std::endl;
-    std::stringstream ss(str);
-    size_t num;
-    ss >> num;
-    if (ss.fail()) {
-      dbg(DBG_SCHED, "Invalid input for min initial number of workers, using default.\n");
-    } else {
-       s->set_min_worker_to_join(num);
-      dbg(DBG_SCHED, "Set min initial number of workers to %d.\n", num);
-    }
+    dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
   }
 
   s->Run();

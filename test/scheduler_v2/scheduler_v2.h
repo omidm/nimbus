@@ -70,6 +70,14 @@ class SchedulerV2 : public Scheduler {
     size_t worker_num_;
     bool initialized_domains_;
     std::vector<GeometricRegion> worker_domains_;
+
+    void UpdateWorkerDomains();
+    void SplitDimensions(size_t worker_num,
+        size_t *num_x, size_t *num_y, size_t *num_z);
+    void GenerateDomains(
+        size_t num_x, size_t num_y, size_t num_z,
+        GeometricRegion gbr,
+        std::vector<GeometricRegion> *domains);
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_V2_SCHEDULER_V2_H_

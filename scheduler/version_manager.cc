@@ -45,219 +45,271 @@
 using namespace nimbus; // NOLINT
 
 VersionManager::VersionManager() {
+  ldo_map_p_ = NULL;
+  parent_removed_ = false;
 }
 
 VersionManager::~VersionManager() {
-  VersionIndex::iterator iter = version_index_.begin();
-  for (; iter != version_index_.end(); ++iter) {
-    VersionEntryList* list = (*iter).second;
-    delete list;
+  IndexIter it = index_.begin();
+  for (; it != index_.end(); ++it) {
+    delete it->second;
   }
 }
 
-bool VersionManager::AddVersionEntry(
-    logical_data_id_t logical_id, data_version_t version,
-    JobEntry* job_entry, VersionEntry::Relation relation) {
-  VersionEntryList* list;
-  if (version_index_.find(logical_id) == version_index_.end()) {
-    list = new VersionEntryList();
-    version_index_[logical_id] = list;
-  } else {
-    list = version_index_[logical_id];
-  }
-  VersionEntry ve(logical_id, version, job_entry, relation);
-  list->push_back(ve);
-  return true;
-}
-
-bool VersionManager::AddVersionEntry(const VersionEntry& ve) {
-  logical_data_id_t logical_id = ve.logical_id();
-  VersionEntryList* list;
-  if (version_index_.find(logical_id) == version_index_.end()) {
-    list = new VersionEntryList();
-    version_index_[logical_id] = list;
-  } else {
-    list = version_index_[logical_id];
-  }
-  list->push_back(ve);
-  return true;
-}
-
-bool VersionManager::AddJobVersionTables(JobEntry* job_entry) {
-  bool in = AddJobVersionTableIn(job_entry);
-  bool out = AddJobVersionTableOut(job_entry);
-  return (in && out);
-}
-
-bool VersionManager::AddJobVersionTableIn(JobEntry* job_entry) {
-  JobEntry::ConstVTIter iter;
-  const JobEntry::VersionTable  *vt_in = job_entry->version_table_in_p();
-  for (iter = vt_in->begin(); iter != vt_in->end(); ++iter) {
-    AddVersionEntry(iter->first, iter->second, job_entry, VersionEntry::IN);
-  }
-  return true;
-}
-
-bool VersionManager::AddJobVersionTableOut(JobEntry* job_entry) {
-  JobEntry::ConstVTIter iter;
-  const JobEntry::VersionTable  *vt_out = job_entry->version_table_out_p();
-  for (iter = vt_out->begin(); iter != vt_out->end(); ++iter) {
-    AddVersionEntry(iter->first, iter->second, job_entry, VersionEntry::OUT);
-  }
-  return true;
-}
-
-bool VersionManager::RemoveVersionEntry(
-    logical_data_id_t logical_id, data_version_t version,
-    JobEntry* job_entry, VersionEntry::Relation relation) {
-  if (version_index_.find(logical_id) == version_index_.end()) {
-    dbg(DBG_ERROR,"ERROR: the logical id %lu is not in the version index.\n", logical_id); // NOLINT 
-    return false;
-  } else {
-    VersionEntryList* list = version_index_[logical_id];
-    VersionEntryList::iterator iter = list->begin();
-    for (; iter != list->end(); ++iter) {
-      if ((iter->version() == version) &&
-          (iter->job_entry() == job_entry) &&
-          (iter->relation() == relation)) {
-        list->erase(iter);
-        return true;
+bool VersionManager::AddJobEntry(JobEntry *job) {
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      IndexIter iter = index_.find(*it);
+      if (iter == index_.end()) {
+        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in read set of %lu is not defined yet.\n",
+            *it, job->job_id());
+      } else {
+        iter->second->AddJobEntryReader(job);
       }
     }
-    dbg(DBG_ERROR,"ERROR: could not match any entry in version index.\n"); // NOLINT
-    return false;
-  }
-}
-
-bool VersionManager::RemoveVersionEntry(const VersionEntry& ve) {
-  logical_data_id_t logical_id = ve.logical_id();
-  if (version_index_.find(logical_id) == version_index_.end()) {
-    dbg(DBG_ERROR,"ERROR: the logical id %lu is not in the version index.\n", logical_id); // NOLINT 
-    return false;
   } else {
-    VersionEntryList* list = version_index_[logical_id];
-    VersionEntryList::iterator iter = list->begin();
-    for (; iter != list->end(); ++iter) {
-      if ((iter->version() == ve.version()) &&
-          (iter->job_entry() == ve.job_entry()) &&
-          (iter->relation() == ve.relation())) {
-        list->erase(iter);
-        return true;
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      IndexIter iter = index_.find(it->first);
+      if (iter == index_.end()) {
+        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in ldo_map set of %lu is not defined yet.\n",
+            *it, job->job_id());
+      } else {
+        iter->second->AddJobEntryReader(job);
       }
     }
-    dbg(DBG_ERROR,"ERROR: could not match any entry in version index.\n"); // NOLINT
+  }
+
+  {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
+      IndexIter iter = index_.find(*it);
+      if (iter == index_.end()) {
+        dbg(DBG_ERROR, "ERROR: ldid %lu appeared in ldo_map set of %lu is not defined yet.\n",
+            *it, job->job_id());
+      } else {
+        iter->second->AddJobEntryWriter(job);
+      }
+    }
+  }
+
+  ChildCounterIter it = child_counter_.find(job->parent_job_id());
+  if (it != child_counter_.end()) {
+    ++it->second;
+  }
+
+  return true;
+}
+
+bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
+  assert(job->IsReadyForCompleteVersioning());
+
+  if (job->sterile()) {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(*it, &version)) {
+        continue;
+      }
+      if (LookUpVersion(job, *it, &version)) {
+        job->vmap_read()->set_entry(*it, version);
+      } else {
+        return false;
+      }
+    }
+  } else {
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_read()->query_entry(it->first, &version)) {
+        continue;
+      }
+      if (LookUpVersion(job, it->first, &version)) {
+        job->vmap_read()->set_entry(it->first, version);
+      } else {
+        return false;
+      }
+    }
+  }
+
+  {
+    IDSet<logical_data_id_t>::ConstIter it;
+    for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_write()->query_entry(*it, &version)) {
+        continue;
+      }
+      if (job->vmap_read()->query_entry(*it, &version)) {
+        job->vmap_write()->set_entry(*it, version + 1);
+      } else {
+        if (LookUpVersion(job, *it, &version)) {
+          job->vmap_write()->set_entry(*it, version + 1);
+        } else {
+          return false;
+        }
+      }
+    }
+  }
+
+  if (!job->sterile()) {
+    // Clear meta before set and update the ldl.
+
+    job->meta_before_set()->Clear();
+
+    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+      data_version_t version;
+      if (job->vmap_write()->query_entry(it->first, &version)) {
+      } else if (job->vmap_read()->query_entry(it->first, &version)) {
+      } else {
+        dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for parent job %lu.\n",
+            it->first, job->job_id());
+        exit(-1);
+      }
+
+      InsertParentLdlEntry(
+          it->first, job->job_id(), version, job->job_depth());
+    }
+
+    ChildCounterIter cit = child_counter_.find(job->job_id());
+    if (cit == child_counter_.end()) {
+      live_parents_.insert(job->job_id());
+      child_counter_[job->job_id()] = (counter_t) (1);
+    } else {
+      assert(false);
+    }
+  }
+
+  ChildCounterIter it = child_counter_.find(job->parent_job_id());
+  if (it != child_counter_.end()) {
+    --it->second;
+    if (it->second == 0) {
+      live_parents_.remove(it->first);
+      child_counter_.erase(it);
+      parent_removed_ = true;
+    }
+  }
+
+  return true;
+}
+
+
+bool VersionManager::InsertParentLdlEntry(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const data_version_t& version,
+    const job_depth_t& job_depth) {
+  IndexIter iter = index_.find(ldid);
+  if (iter == index_.end()) {
     return false;
+  } else {
+    return iter->second->InsertParentLdlEntry(job_id, version, job_depth);
   }
 }
 
-bool VersionManager::RemoveJobVersionTables(JobEntry* job_entry) {
-  bool in = RemoveJobVersionTableIn(job_entry);
-  bool out = RemoveJobVersionTableOut(job_entry);
-  return (in && out);
+
+bool VersionManager::LookUpVersion(
+    JobEntry *job,
+    logical_data_id_t ldid,
+    data_version_t *version) {
+  IndexIter iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    return false;
+  } else {
+    return iter->second->LookUpVersion(job, version);
+  }
 }
 
-bool VersionManager::RemoveJobVersionTableIn(JobEntry* job_entry) {
-  JobEntry::ConstVTIter iter;
-  const JobEntry::VersionTable  *vt_in = job_entry->version_table_in_p();
-  for (iter = vt_in->begin(); iter != vt_in->end(); ++iter) {
-    RemoveVersionEntry(iter->first, iter->second, job_entry, VersionEntry::IN);
-  }
-  return true;
-}
 
-bool VersionManager::RemoveJobVersionTableOut(JobEntry* job_entry) {
-  JobEntry::ConstVTIter iter;
-  const JobEntry::VersionTable  *vt_out = job_entry->version_table_out_p();
-  for (iter = vt_out->begin(); iter != vt_out->end(); ++iter) {
-    RemoveVersionEntry(iter->first, iter->second, job_entry, VersionEntry::OUT);
-  }
-  return true;
-}
 
 size_t VersionManager::GetJobsNeedDataVersion(
-    JobEntryList* result, VersionedLogicalData vld) {
-  size_t num = 0;
-  result->clear();
-  if (version_index_.find(vld.first) == version_index_.end()) {
-    return num;
+    JobEntryList* list, VLD vld) {
+  IndexIter iter = index_.find(vld.first);
+  if (iter == index_.end()) {
+    list->clear();
+    return 0;
   } else {
-    VersionEntryList* list = version_index_[vld.first];
-    VersionEntryList::iterator iter = list->begin();
-    for (; iter != list->end(); ++iter) {
-      JobEntry* j = iter->job_entry();
-      if ((iter->version() == vld.second) &&
-          (iter->relation() == VersionEntry::IN) &&
-          !(j->assigned()) &&
-          ((j->read_set_p()->contains(vld.first)) || !(j->sterile()))) {
-        result->push_back(iter->job_entry());
-        ++num;
+    return iter->second->GetJobsNeedVersion(list, vld.second);
+  }
+}
+
+bool VersionManager::RemoveJobEntry(JobEntry* job) {
+  assert(job->versioned());
+
+  VersionMap::ConstIter it = job->vmap_read()->content_p()->begin();
+  for (; it != job->vmap_read()->content_p()->end(); ++it) {
+    IndexIter iter = index_.find(it->first);
+    if (iter == index_.end()) {
+      dbg(DBG_ERROR, "Version manager: ldid %lu is not in the index.\n", *it);
+      exit(-1);
+      return false;
+    } else {
+      iter->second->RemoveJobEntry(job);
+      if (iter->second->is_empty()) {
+        delete iter->second;
+        index_.erase(iter);
+        std::cout << "version entry got empty!!\n";
       }
     }
   }
 
-  return num;
+  if (!(job->sterile())) {
+    ChildCounterIter it = child_counter_.find(job->job_id());
+    if (it != child_counter_.end()) {
+      --it->second;
+      if (it->second == 0) {
+        live_parents_.remove(it->first);
+        child_counter_.erase(it);
+        parent_removed_ = true;
+      }
+    } else {
+      assert(false);
+    }
+  }
+
+  return true;
 }
 
-size_t VersionManager::GetJobsOutputDataVersion(
-    JobEntryList* result, VersionedLogicalData vld) {
-  size_t num = 0;
-  result->clear();
-  if (version_index_.find(vld.first) == version_index_.end()) {
-    return num;
+bool VersionManager::DefineData(
+    const logical_data_id_t ldid,
+    const job_id_t& job_id,
+    const job_depth_t& job_depth) {
+  IndexIter iter = index_.find(ldid);
+  if (iter == index_.end()) {
+    VersionEntry *ve = new VersionEntry(ldid);
+    ve->InitializeLdl(job_id, job_depth);
+    index_.insert(std::make_pair(ldid, ve));
+    return true;
   } else {
-    VersionEntryList* list = version_index_[vld.first];
-    VersionEntryList::iterator iter = list->begin();
-    for (; iter != list->end(); ++iter) {
-      if ((iter->version() == vld.second) &&
-          (iter->relation() == VersionEntry::OUT)) {
-        result->push_back(iter->job_entry());
-        ++num;
-      }
-    }
+    dbg(DBG_ERROR, "ERROR: defining logical data id %lu, which already exist.\n", ldid);
+    exit(-1);
+    return false;
   }
-
-  return num;
 }
 
-size_t VersionManager::RemoveObsoleteVersionEntriesOfLdo(
-    logical_data_id_t logical_id) {
-  size_t num = 0;
-  if (version_index_.find(logical_id) == version_index_.end()) {
-    return num;
-  } else {
-    VersionEntryList* list = version_index_[logical_id];
-    VersionEntryList::iterator iter = list->begin();
-    for (; iter != list->end();) {
-      // TODO(omidm): figure out when it is obsolete.
-      if (false) {
-        list->erase(iter++);
-        ++num;
-      } else {
-        ++iter;
-      }
+bool VersionManager::CleanUp() {
+  if (parent_removed_) {
+    Log log;
+    log.StartTimer();
+
+    IndexIter iter = index_.begin();
+    for (; iter != index_.end(); ++iter) {
+      iter->second->CleanLdl(live_parents_);
     }
+    parent_removed_ = false;
+
+    log.StopTimer();
+    std::cout << "Version Manager Clean up: " << log.timer() << std::endl;
   }
-  return num;
+
+  return true;
 }
 
-size_t VersionManager::RemoveAllObsoleteVersionEntries() {
-  VersionIndex::iterator it = version_index_.begin();
-  size_t num = 0;
-  for (; it != version_index_.end(); ++it) {
-    VersionEntryList* list = (*it).second;
-    VersionEntryList::iterator iter = list->begin();
-    for (; iter != list->end();) {
-      // TODO(omidm): figure out when it is obsolete.
-      if (false) {
-        list->erase(iter++);
-        ++num;
-      } else {
-        ++iter;
-      }
-    }
-  }
-  return num;
-}
 
+void VersionManager::set_ldo_map_p(
+    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
+  ldo_map_p_ = ldo_map_p;
+}
 
 

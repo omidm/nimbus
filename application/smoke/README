@@ -1,0 +1,90 @@
+------------------------------------------------------------------------------
+Author:	Andrew Lim <alim16@stanford.edu>
+------------------------------------------------------------------------------
+
+
+-------------------
+Build Instructions:
+-------------------
+
+To build the distributed PhysBAM fluid simulation application library for
+Nimbus:
+
+1) Build code in physbam-lib. 
+     - Follow the instructions in applications/physbam-lib/README.
+
+2) Generate definitions as follows.
+     - ../../application_utils/generate_data_def.py
+     - ../../application_utils/generate_reg_def.py
+   (Add executable permission to the script or run it with python.)
+
+3) Make the Build/Release directory within this folder.
+     - mkdir -p Build/Release
+
+4) From the Release directory, generate the Makefile with ccmake. This
+   requires CMake version >= 2.8.7.
+     - cd Build/Release
+     - ccmake ../.. 
+
+5) Build the smoke test application with the generated Makefile.
+     - make
+
+Note: Can alternatively build a debug version by replacing Release with Debug
+(Build/Debug).
+
+Note: On Mac, you should have g++-4.5 in /usr/local/bin for this make setup to
+work.
+
+Troubleshooting:
+
+Step 4: The ccmake prompt should have 3 simple options. 
+
+** File names are relative to the current directory, physbam-lib/Public_Library
+or nimbus.
+
+
+------
+Notes:
+------
+
+In order to chage scale/ number of frames/ simulation parameters, change the
+constants in parameters.h and rebuild the code. Will add support for command
+line arguments later.
+
+
+----------------------
+Application Structure:
+----------------------
+
+* smoke_example and smoke_driver:
+This structure is borrowed from PhysBAM. smoke_example contains simulation data
+such as face_velocities and density, and methods to operate on these
+data. smoke_driver contains code to initialize the simulation (by calling
+methods that initialize simulation policies and data from smoke_example), and
+advance the simulation frame by frame, substep by substep.
+
+* smoke_app:
+Nimbus types (job and data types) are registered here.
+
+* jobs:
+- job_main serves as entry point for the application. All simulation state, that
+are nimbus data objects, are defined here. This job spawns initialization job.
+- job_initialize initializes simulation data for frame zero and spwans
+  job_loop_frame.
+- job_loop_frame corresponds to the outer for loop that computes each required
+  number of frames. A job_loop_frame spawns job_loop_iteration.
+- job_loop_iteration computes dt (substep size). It then spawns the iteration 
+  sub jobs that advance the simulation. Finally, if there are more substeps left
+  for the frame computation to complete (i.e. target time not yet reached),
+  job_loop_iteration spawns another job_loop_iteration. Otherwise it spawns a
+  job_write_frame and then spawns job_loop_frame for the next frame.
+- job_write_frame writes all simulation data to files which can be read using
+  physbam open-gl programs.
+
+* nimbus-physbam data translation:
+- Translator functions to translate between nimbus data  for physbam
+  (PhysBAMData) and the correspondong PhysBAM data structures are defined in
+  nimbus/data/physbam/translator_physbam.h.
+- Save_To_Nimbus and Load_To_Nimbus are passed all data objects from the job.
+  These functions scan through the data array, and call translator functions
+  (write/ read) for the corresponding data types.

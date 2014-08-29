@@ -44,36 +44,65 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 #define NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 
+#include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
+#include <set>
+#include <vector>
 #include <list>
+#include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/logical_data_lineage.h"
 
 namespace nimbus {
 
 class VersionEntry {
   public:
-    enum Relation {IN, OUT};
+    typedef std::set<JobEntry*> Bucket;
+    typedef Bucket::iterator BucketIter;
+    typedef boost::unordered_map<data_version_t, Bucket*> Index;
+    typedef Index::iterator IndexIter;
 
-    VersionEntry();
-    VersionEntry(logical_data_id_t logical_id, data_version_t version,
-    JobEntry* job_entry, Relation relation);
+    explicit VersionEntry(logical_data_id_t ldid);
     VersionEntry(const VersionEntry& ve);
-
     virtual ~VersionEntry();
-
-    logical_data_id_t logical_id() const;
-    data_version_t version() const;
-    JobEntry* job_entry() const;
-    Relation relation() const;
 
     VersionEntry& operator= (const VersionEntry& right);
 
+    void InitializeLdl(
+        const job_id_t& job_id,
+        const job_depth_t& job_depth);
+
+    bool AddJobEntryReader(JobEntry *job);
+
+    bool AddJobEntryWriter(JobEntry *job);
+
+    bool RemoveJobEntry(JobEntry *job);
+
+    size_t GetJobsNeedVersion(
+        JobEntryList* list, data_version_t version);
+
+    bool LookUpVersion(JobEntry *job,
+                       data_version_t *version);
+
+    bool CleanLdl(const IDSet<job_id_t>& live_parents);
+
+    bool InsertParentLdlEntry(
+        const job_id_t& job_id,
+        const data_version_t& version,
+        const job_depth_t& job_depth);
+
+    bool is_empty();
+
   private:
-    logical_data_id_t logical_id_;
-    data_version_t version_;
-    JobEntry* job_entry_;
-    Relation relation_;
+    logical_data_id_t ldid_;
+    Bucket pending_reader_jobs_;
+    Bucket pending_writer_jobs_;
+    Index index_;
+    LogicalDataLineage ldl_;
+
+    bool UpdateLdl();
 };
 
 typedef std::list<VersionEntry> VersionEntryList;

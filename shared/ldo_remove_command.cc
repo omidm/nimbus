@@ -40,14 +40,14 @@
 #include "shared/ldo_remove_command.h"
 #include "shared/escaper.h"
 
-namespace nimbus {
+using namespace nimbus; // NOLINT
 
 /**
- * \fn nimbus::LdoRemoveCommand::LdoRemoveCommand()
+ * \fn LdoRemoveCommand::LdoRemoveCommand()
  * \brief Brief description.
  * \return
 */
-  nimbus::LdoRemoveCommand::LdoRemoveCommand() {
+LdoRemoveCommand::LdoRemoveCommand() {
   name_ = LDO_REMOVE_NAME;
   type_ = LDO_REMOVE;
   region_ = NULL;
@@ -56,88 +56,123 @@ namespace nimbus {
 
 
 /**
- * \fn nimbus::LdoRemoveCommand::LdoRemoveCommand()
+ * \fn LdoRemoveCommand::LdoRemoveCommand()
  * \brief Brief description.
  * \return
 */
-nimbus::LdoRemoveCommand::LdoRemoveCommand(LogicalDataObject* obj) {
+LdoRemoveCommand::LdoRemoveCommand(LogicalDataObject* obj) {
   name_ = LDO_REMOVE_NAME;
   type_ = LDO_REMOVE;
   region_ = new GeometricRegion(*obj->region());
   object_ = new LogicalDataObject(obj->id(), obj->variable(), region_);
 }
 
-nimbus::LdoRemoveCommand::~LdoRemoveCommand() {
+LdoRemoveCommand::~LdoRemoveCommand() {
   delete object_;
 }
 
 /**
- * \fn SchedulerCommand * nimbus::LdoRemoveCommand::Clone()
+ * \fn SchedulerCommand * LdoRemoveCommand::Clone()
  * \brief Brief description.
  * \return
 */
-SchedulerCommand * nimbus::LdoRemoveCommand::Clone() {
+SchedulerCommand * LdoRemoveCommand::Clone() {
   return new LdoRemoveCommand();
 }
 
 
 /**
- * \fn bool nimbus::LdoRemoveCommand::Parse(const std::string &param_segment)
+ * \fn bool LdoRemoveCommand::Parse(const std::string &param_segment)
  * \brief Brief description.
  * \param param_segment
  * \return
 */
-bool nimbus::LdoRemoveCommand::Parse(const std::string &param_segment) {
-  std::string strCopy = param_segment;
-  object_ = new LogicalDataObject();
-  UnescapeString(&strCopy);
-  object_->Parse(strCopy);
-  return true;
+bool LdoRemoveCommand::Parse(const std::string &data) {
+  LdoRemovePBuf buf;
+  bool result = buf.ParseFromString(data);
+
+  if (!result) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse LdoRemoveCommand from string.\n");
+    return false;
+  } else {
+    ReadFromProtobuf(buf);
+    return true;
+  }
+}
+
+
+bool LdoRemoveCommand::Parse(const SchedulerPBuf& buf) {
+  if (!buf.has_ldo_remove()) {
+    dbg(DBG_ERROR, "ERROR: Failed to parse LdoRemoveCommand from SchedulerPBuf.\n");
+    return false;
+  } else {
+    return ReadFromProtobuf(buf.ldo_remove());
+  }
+}
+
+  /**
+ * \fn std::string LdoRemoveCommand::ToNetworkData()
+ * \brief Brief description.
+ * \return
+*/
+std::string LdoRemoveCommand::ToNetworkData() {
+  std::string result;
+
+  // First we construct a general scheduler buffer, then
+  // add the spawn compute field to it, then serialize.
+  SchedulerPBuf buf;
+  buf.set_type(SchedulerPBuf_Type_LDO_REMOVE);
+  LdoRemovePBuf* cmd = buf.mutable_ldo_remove();
+  WriteToProtobuf(cmd);
+
+  buf.SerializeToString(&result);
+
+  return result;
 }
 
 
 /**
- * \fn std::string nimbus::LdoRemoveCommand::toString()
+ * \fn std::string LdoRemoveCommand::ToString()
  * \brief Brief description.
  * \return
 */
-std::string nimbus::LdoRemoveCommand::toString() {
-  std::string str;
-  std::string payload;
-  str += (name_ + " ");
-  object_->SerializeToString(&payload);
-  // Only escape the payload part, we need the space between name and payload.
-  EscapeString(&payload);
-  str += payload;
-  return str;
+std::string LdoRemoveCommand::ToString() {
+  std::ostringstream sstream;
+  sstream << (name_ + ",");
+  sstream << "logical_id:" << object()->id() << ",";
+  sstream << "variable:" << object()->variable() << ",";
+  sstream << object()->region()->ToNetworkData();
+  return sstream.str();
 }
 
 
 /**
- * \fn std::string nimbus::LdoRemoveCommand::toStringWTags()
+ * \fn LogicalDataObject * LdoRemoveCommand::object()
  * \brief Brief description.
  * \return
 */
-std::string nimbus::LdoRemoveCommand::toStringWTags() {
-  std::string str;
-  std::string payload;
-  str += (name_ + " ");
-  object_->SerializeToString(&payload);
-  // Only escape the payload part, we need the space between name and payload.
-  EscapeString(&payload);
-  str += ("object:" + payload);
-  return str;
-}
-
-
-/**
- * \fn LogicalDataObject * nimbus::LdoRemoveCommand::object()
- * \brief Brief description.
- * \return
-*/
-LogicalDataObject * nimbus::LdoRemoveCommand::object() {
+LogicalDataObject * LdoRemoveCommand::object() {
   return object_;
 }
 
+bool LdoRemoveCommand::ReadFromProtobuf(const LdoRemovePBuf& buf) {
+  if (object_ != NULL) {
+    delete object_;
+    object_ = NULL;
+    region_ = NULL;
+  }
+  region_ = new GeometricRegion();
+  region_->FillInValues(&buf.ldo().region());
+  object_ = new LogicalDataObject(buf.ldo().data_id(),
+                                  buf.ldo().variable(),
+                                  region_);
+  return true;
+}
 
-}  // namespace nimbus
+bool LdoRemoveCommand::WriteToProtobuf(LdoRemovePBuf* buf) {
+  if (object_ == NULL) {
+    return false;
+  }
+  object_->FillInMessage(buf->mutable_ldo());
+  return true;
+}

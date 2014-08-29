@@ -1,0 +1,127 @@
+Questions
+
+- breakdown of projection job into various subjobs
+  - mapping of projection in water_multiple to projection in WATER_DRIVER's
+    AdvanceToTargetTime function
+    
+  - Need to break up projection job at every point of data exchange 
+    (i.e. MPI calls)    
+
+- split of loop iteration job into two parts
+- regions_config
+- data_config
+- job_main initialization phase
+  - job will set VELOCITY, etc. flags which lets initialization routine 
+    know what memory must be allocated 
+
+- necessary jobs for smoke
+  - scalar_advance
+  - convect
+  - project
+
+- extrapolate phi
+- make signed distance
+- extrapolate phi
+- extapolate v
+
+-cache for smoke vs. water
+  - ple for water vs. smoke?
+
+Files
+  - utils
+  - smoke_driver_initializers
+  - options
+  - physbam_include
+
+Projection job order
+  - Calculate boundary condition part one
+  - Calculate boundary condition part two
+  - Construct matrix
+  - Local initialize
+  - Global initialize
+  - Loop iteration
+
+What does calculate boundary condition part two correspond to in PhysBAM water simulation
+
+What does FillUniformRegionColor do, what is this analogous to in PhysBAM water simulation?	 
+
+~/Documents/cloud/src/nimbus/application/physbam-lib/Public_Library/PhysBAM_Geometry/Grids_Uniform_PDE_Linear
+
+
+Register density data types in smoke_app.cc and then add definition to data_config file, run python script to generate data_def file, data_config definition can be same as phi from water since value is stored at center, but ghost width might be different (see PhysBAM code, number of ghost cells for density is 3)
+
+region_colors -> flood-fill algorithm, can decouple separate regions of water that are not contiguous for more efficient calculation of projection
+
+
+Data to initialize for jobs
+     Scalar advance
+     	    velocity
+	    density
+	    density_ghost
+
+Data types
+     face velocities
+     density
+     pressure
+     psi_N - indicates whether a cell contains water, only 
+     	     need to calculate projection on cells with water	
+     psi_D - indicates whether a face is at the interface
+     	     between water and air cells
+
+
+template<class T_GRID> void PROJECTION_UNIFORM<T_GRID>::
+Make_Divergence_Free(T_FACE_ARRAYS_SCALAR& face_velocities,const T dt,const T time)
+{
+    // find f - divergence of the velocity
+    Compute_Divergence(T_FACE_LOOKUP(face_velocities),elliptic_solver);
+
+    // find the pressure
+    elliptic_solver->Find_Solution_Regions(); // flood fill
+    elliptic_solver->Compute_beta_And_Add_Jumps_To_b(dt,time); // only does something for poisson solver
+    if(elliptic_solver->solve_neumann_regions) Enforce_Velocity_Compatibility(face_velocities); // make all the right hand sides compatible
+    elliptic_solver->Solve(time,true); // solve all regions
+
+    Apply_Pressure(face_velocities,dt,time);
+}
+
+
+Data transfer within smoke projection
+
+     Find_Solution_Regions, Enforce_Velocity_Compatibility 
+     within Make_Divergence_Free call from SMOKE_DRIVER
+
+Driver Impl from water that translate to smoke projection routine
+       ProjectionCalculateBoundaryConditionPartOneImpl - Set 
+       						       boundary condition
+       ProjectionCalculateBoundaryConditionPartTwoImpl - rescales pressure,
+       						       					      
+       ProjectionWrapupImpl - scale pressure portion
+       
+
+
+Projection job breakdown
+  CalculateBoundaryConditions
+  RescalePressure
+  ApplyBoundaryConditionFace ??
+  MakeDivergenceFree ??
+  UnscalePressure
+
+
+
+WATER_DRIVER - advect v
+
+example.advection_scalar.Update_Advection_Equation_Face(example.mac_grid\
+,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.bo\
+undary,dt,time);
+
+advection_scalar -> ADVECTION_SEMI_LAGRANGIAN_UNIFORM
+		 PhysBAM_Tools/Grids_Uniform_Advection/ADVECTION_SEMI_LAGRANGIAN_UNIFORM.h
+
+mac_grid -> Grid<TV>
+
+face_velocities -> Array
+
+face_velocities_ghost ->
+
+boundary -> BOUNDARY_UNIFORM<GRID<TV>, T>
+	 PhysBAM_Tools/Grids_Uniform_Boundaries/BOUNDARY_UNIFORM.h

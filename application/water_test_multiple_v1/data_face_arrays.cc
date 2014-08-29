@@ -81,7 +81,7 @@ namespace water_app_data {
 
     template <class TV> ::nimbus::Data* FaceArray<TV>::
         Clone() {
-            std::cout << "Cloning facearray with region "<<region()->toString()<<std::endl;
+            std::cout << "Cloning facearray with region "<<region()->ToNetworkData()<<std::endl;
             return (new FaceArray<TV>(*region(), left_or_right));
         }
 
