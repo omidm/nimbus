@@ -53,7 +53,7 @@ Vec::~Vec() {
 };
 
 Data * Vec::Clone() {
-  std::cout << "Cloning Vec data!\n";
+  //  std::cout << "Cloning Vec data!\n";
   return new Vec();
 };
 

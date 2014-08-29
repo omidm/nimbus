@@ -94,6 +94,8 @@ bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
 
 size_t VersionEntry::GetJobsNeedVersion(
     JobEntryList* list, data_version_t version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!UpdateLdl()) {
     dbg(DBG_ERROR, "ERROR: Could not update the ldl for ldid %lu.\n", ldid_);
   }
@@ -190,9 +192,29 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   return true;
 }
 
+bool VersionEntry::RemoveJobEntry(JobEntry *job, data_version_t version) {
+  assert(job->versioned());
+
+  pending_reader_jobs_.erase(job);
+  pending_writer_jobs_.erase(job);
+
+  IndexIter it = index_.find(version);
+  if (it != index_.end()) {
+    it->second->erase(job);
+    if (it->second->size() == 0) {
+      delete it->second;
+      index_.erase(it);
+    }
+  }
+
+  return true;
+}
+
 bool VersionEntry::LookUpVersion(
     JobEntry *job,
     data_version_t *version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   if (!UpdateLdl()) {
     dbg(DBG_ERROR, "Could not update the ldl for ldid %lu.\n", ldid_);
   }
@@ -261,6 +283,8 @@ bool VersionEntry::InsertParentLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+
   return ldl_.InsertParentLdlEntry(job_id, version, job_depth);
 }
 

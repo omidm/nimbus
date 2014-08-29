@@ -43,6 +43,7 @@
 #ifndef NIMBUS_SHARED_VERTEX_H_
 #define NIMBUS_SHARED_VERTEX_H_
 
+#include <boost/unordered_map.hpp>
 #include <sstream> // NOLINT
 #include <iostream> // NOLINT
 #include <string>
@@ -67,9 +68,9 @@ class Vertex {
   friend class Graph<T, key_t>;
 
   public:
-    typedef typename std::map<key_t, Vertex<T, key_t>*> Map;
-    typedef typename std::map<key_t, Vertex<T, key_t>*>::iterator Iter;
-    typedef typename std::map<key_t, Vertex<T, key_t>*>::const_iterator ConstIter;
+    typedef typename boost::unordered_map<key_t, Vertex<T, key_t>*> Map;
+    typedef typename boost::unordered_map<key_t, Vertex<T, key_t>*>::iterator Iter;
+    typedef typename boost::unordered_map<key_t, Vertex<T, key_t>*>::const_iterator ConstIter;
 
     explicit Vertex(key_t id, T* entry);
     Vertex(const Vertex<T, key_t>& other);

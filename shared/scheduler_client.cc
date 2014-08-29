@@ -56,7 +56,7 @@
 using boost::asio::ip::tcp;
 using namespace nimbus; // NOLINT
 
-#define CLIENT_BUFSIZE 4096000
+#define CLIENT_BUFSIZE 40960000
 
 SchedulerClient::SchedulerClient(std::string scheduler_ip,
                                  port_t scheduler_port)
@@ -135,7 +135,19 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
   uint32_t bytes_available = socket_->available(ignored_error);
   if (bytes_available > 0) {
     dbg(DBG_NET, "ReceiveCommand: %u bytes available,", bytes_available);
-    bytes_available = std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_);
+    bytes_available =
+      std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_ - existing_bytes_);
+
+    // This is the case when the buffer is full with incomplete message.
+    // Then it will run into an infinit loop.
+    if (bytes_available == 0) {
+      std::string err_msg = "ERROR: ";
+      err_msg += "scheduler client buffer is full with incomplete command. ";
+      err_msg += "You need to increase the CLIENT_BUFFSIZE in scheduler_client.cc.\n";
+      dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
+      exit(-1);
+    }
+
     dbg(DBG_NET, " preparing to reading %u bytes, ", bytes_available);
     boost::asio::streambuf::mutable_buffers_type bufs =
       read_buffer_->prepare(bytes_available);
@@ -143,9 +155,10 @@ SchedulerCommand* SchedulerClient::ReceiveCommand() {
     dbg(DBG_NET, " %i bytes actually read.\n", (int)bytes_read);  // NOLINT
     read_buffer_->commit(bytes_read);
     std::istream input(read_buffer_);
+    assert(bytes_read <= bytes_available);
     input.read(byte_array_ + existing_offset_ + existing_bytes_,
-               bytes_available);
-    existing_bytes_ += bytes_available;
+               bytes_read);
+    existing_bytes_ += bytes_read;
     pthread_mutex_unlock(&send_lock_);
     return ReceiveCommand();
   } else {

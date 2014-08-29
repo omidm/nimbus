@@ -38,12 +38,15 @@
 
 #include <math.h>
 #include "./scheduler_v3.h"
+#include "./dynamic_load_balancer.h"
+
+#define MAX_JOB_TO_ASSIGN 1
 
 SchedulerV3::SchedulerV3(unsigned int p)
 : Scheduler(p) {
 }
 
-bool SchedulerV3::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  return load_balancer_->GetWorkerToAssignJob(job, worker);
+void SchedulerV3::CreateLoadBalancer() {
+  load_balancer_ = new DynamicLoadBalancer();
 }
 

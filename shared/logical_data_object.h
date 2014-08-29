@@ -53,6 +53,8 @@
 #ifndef NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 #define NIMBUS_SHARED_LOGICAL_DATA_OBJECT_H_
 
+#include <boost/thread.hpp>
+#include <boost/unordered_map.hpp>
 #include <list>
 #include <set>
 #include <string>
@@ -80,6 +82,7 @@ namespace nimbus {
     virtual std::string variable() const;
     virtual GeometricRegion* region() const;
     virtual partition_id_t partition() const;
+    virtual boost::mutex& mutex();
 
     virtual void FillInMessage(LdoPBuf* mg);
 
@@ -88,17 +91,22 @@ namespace nimbus {
     virtual bool Serialize(std::ostream* os);
     virtual bool SerializeToString(std::string* output);
 
+    void Lock();
+    void Unlock();
+
   private:
     logical_data_id_t id_;
     GeometricRegion* region_;
     std::string variable_;
     partition_id_t partition_;
+    boost::mutex mutex_;
   };
 
   typedef std::set<LogicalDataObject*> LdoSet;
   typedef std::list<LogicalDataObject*> LdoList;
   typedef std::vector<LogicalDataObject*> LdoVector;
   typedef std::vector<const LogicalDataObject*> CLdoVector;
+  typedef boost::unordered_map<logical_data_id_t, LogicalDataObject*> LdoMap;
 
 }  // namespace nimbus
 

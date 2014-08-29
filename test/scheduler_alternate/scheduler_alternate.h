@@ -71,10 +71,9 @@ class SchedulerAlternate : public Scheduler {
   public:
     explicit SchedulerAlternate(unsigned int listening_port);
 
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+    virtual void CreateLoadBalancer();
 
   private:
-    unsigned int seed_;
 };
 
 #endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_SCHEDULER_ALTERNATE_H_

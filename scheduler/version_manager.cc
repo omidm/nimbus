@@ -69,7 +69,7 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
       }
     }
   } else {
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       IndexIter iter = index_.find(it->first);
       if (iter == index_.end()) {
@@ -119,7 +119,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
       }
     }
   } else {
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
       if (job->vmap_read()->query_entry(it->first, &version)) {
@@ -157,7 +157,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
 
     job->meta_before_set()->Clear();
 
-    std::map<logical_data_id_t, LogicalDataObject*>::const_iterator it;
+    LdoMap::const_iterator it;
     for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
       data_version_t version;
       if (job->vmap_write()->query_entry(it->first, &version)) {
@@ -172,6 +172,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
           it->first, job->job_id(), version, job->job_depth());
     }
 
+    boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
     ChildCounterIter cit = child_counter_.find(job->job_id());
     if (cit == child_counter_.end()) {
       live_parents_.insert(job->job_id());
@@ -181,6 +182,7 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
     }
   }
 
+  boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
   ChildCounterIter it = child_counter_.find(job->parent_job_id());
   if (it != child_counter_.end()) {
     --it->second;
@@ -245,7 +247,7 @@ bool VersionManager::RemoveJobEntry(JobEntry* job) {
       exit(-1);
       return false;
     } else {
-      iter->second->RemoveJobEntry(job);
+      iter->second->RemoveJobEntry(job, it->second);
       if (iter->second->is_empty()) {
         delete iter->second;
         index_.erase(iter);
@@ -307,8 +309,7 @@ bool VersionManager::CleanUp() {
 }
 
 
-void VersionManager::set_ldo_map_p(
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p) {
+void VersionManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
   ldo_map_p_ = ldo_map_p;
 }
 

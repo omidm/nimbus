@@ -63,7 +63,8 @@ class SchedulerV3 : public Scheduler {
   public:
     explicit SchedulerV3(unsigned int listening_port);
 
-    virtual bool GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker);
+  protected:
+    virtual void CreateLoadBalancer();
 
   private:
 };

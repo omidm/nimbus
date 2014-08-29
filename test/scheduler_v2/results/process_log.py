@@ -5,7 +5,7 @@ import argparse
 import os
 import re
 import numpy
-from decimal import *
+import decimal
 
 
 ## Parse the command line arguments ##
@@ -30,6 +30,12 @@ parser.add_argument(
     dest="ofname",
     default="data",
     help="output file name")
+parser.add_argument(
+    "-t", "--tag",
+    dest="tag",
+    default="assign",
+    help="tag to sum up the time for")
+
 
 args = parser.parse_args()
 
@@ -39,15 +45,15 @@ print 'Opening the file ' + file_name
 f = open(file_name, 'r')
 content = f.readlines()
 
-versioning_time = 0;
+time = 0;
 
 for line in content:
-  result = re.findall('.*versioning: (\d+\.\d+).*', line)
+  result = re.findall('.*' + args.tag + ': (\d+(?: |$)|\d+\.\d+(?: |$)|\d+e-\d+(?: |$)|\d+\.\d+e-\d+(?: |$)).*', line)
   if len(result) > 0:
-    versioning_time += float(result[0])
+    time += decimal.Decimal(result[0])
 
 f.close()
 
-print "Total versioning time: " + str(versioning_time)
+print "Total " + args.tag + " time: " + str(time)
 
 

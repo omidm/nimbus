@@ -33,36 +33,64 @@
  */
 
  /*
+  * This is static version of the load balancer used in scheduler v2.
+  *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
   */
 
-#ifndef NIMBUS_TEST_SCHEDULER_V2_SCHEDULER_V2_H_
-#define NIMBUS_TEST_SCHEDULER_V2_SCHEDULER_V2_H_
+#ifndef NIMBUS_TEST_SCHEDULER_ALTERNATE_ALTERNATE_LOAD_BALANCER_H_
+#define NIMBUS_TEST_SCHEDULER_ALTERNATE_ALTERNATE_LOAD_BALANCER_H_
 
-#define DEBUG_MODE
-
+#include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
-#include <iostream> // NOLINT
-#include <fstream> // NOLINT
-#include <sstream>
-#include <string>
-#include <vector>
 #include <map>
-#include <set>
-#include "shared/dbg.h"
-#include "shared/nimbus.h"
-#include "scheduler/scheduler.h"
+#include <list>
+#include <vector>
+#include <string>
+#include "shared/nimbus_types.h"
+#include "scheduler/job_entry.h"
+#include "scheduler/job_profile.h"
+#include "scheduler/data_manager.h"
+#include "scheduler/job_manager.h"
+#include "scheduler/region_map.h"
+#include "scheduler/straggler_map.h"
+#include "scheduler/job_assigner.h"
+#include "scheduler/load_balancer.h"
+#include "shared/cluster.h"
+#include "shared/id_maker.h"
+#include "shared/geometric_region.h"
+#include "shared/graph.h"
 
-using namespace nimbus; // NOLINT
+namespace nimbus {
 
-class SchedulerV2 : public Scheduler {
+  class AlternateLoadBalancer : public LoadBalancer {
   public:
-    explicit SchedulerV2(unsigned int listening_port);
+    AlternateLoadBalancer();
+    virtual ~AlternateLoadBalancer();
 
-  protected:
-    virtual void CreateLoadBalancer();
+    virtual void Run();
+
+    virtual size_t AssignReadyJobs();
+
+    virtual void NotifyJobAssignment(const JobEntry *job);
+
+    virtual void NotifyJobDone(const JobEntry *job);
+
+    virtual void NotifyRegisteredWorker(SchedulerWorker *worker);
+
 
   private:
-};
+    typedef std::map<worker_id_t, SchedulerWorker*> WorkerMap;
 
-#endif  // NIMBUS_TEST_SCHEDULER_V2_SCHEDULER_V2_H_
+    AlternateLoadBalancer(const AlternateLoadBalancer& other) {}
+
+    Log log_;
+    unsigned int seed_;
+    WorkerMap worker_map_;
+
+    bool SetWorkerToAssignJob(JobEntry *job);
+  };
+
+}  // namespace nimbus
+
+#endif  // NIMBUS_TEST_SCHEDULER_ALTERNATE_ALTERNATE_LOAD_BALANCER_H_

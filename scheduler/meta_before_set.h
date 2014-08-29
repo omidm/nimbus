@@ -42,6 +42,7 @@
 #ifndef NIMBUS_SCHEDULER_META_BEFORE_SET_H_
 #define NIMBUS_SCHEDULER_META_BEFORE_SET_H_
 
+#include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
@@ -95,6 +96,7 @@ namespace nimbus {
     Cache negative_query_;
     bool is_root_;
     job_depth_t job_depth_;
+    boost::mutex mutex_;
   };
 
 }  // namespace nimbus

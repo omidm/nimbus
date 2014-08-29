@@ -43,6 +43,7 @@
 #ifndef NIMBUS_SHARED_EDGE_H_
 #define NIMBUS_SHARED_EDGE_H_
 
+#include <boost/unordered_map.hpp>
 #include <sstream> // NOLINT
 #include <iostream> // NOLINT
 #include <string>
@@ -61,9 +62,9 @@ class Vertex;
 template<typename T, typename key_t>
 class Edge {
   public:
-    typedef typename std::map<key_t, Edge<T, key_t>*> Map;
-    typedef typename std::map<key_t, Edge<T, key_t>*>::iterator Iter;
-    typedef typename std::map<key_t, Edge<T, key_t>*>::const_iterator ConstIter;
+    typedef typename boost::unordered_map<key_t, Edge<T, key_t>*> Map;
+    typedef typename boost::unordered_map<key_t, Edge<T, key_t>*>::iterator Iter;
+    typedef typename boost::unordered_map<key_t, Edge<T, key_t>*>::const_iterator ConstIter;
 
     Edge(Vertex<T, key_t>* start_vertex, Vertex<T, key_t>* end_vertex);
     Edge(const Edge<T, key_t>& other);

@@ -44,6 +44,7 @@
 #ifndef NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 #define NIMBUS_SCHEDULER_VERSION_ENTRY_H_
 
+#include <boost/thread.hpp>
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
 #include <set>
@@ -59,7 +60,7 @@ namespace nimbus {
 
 class VersionEntry {
   public:
-    typedef std::set<JobEntry*> Bucket;
+    typedef boost::unordered_set<JobEntry*> Bucket;
     typedef Bucket::iterator BucketIter;
     typedef boost::unordered_map<data_version_t, Bucket*> Index;
     typedef Index::iterator IndexIter;
@@ -79,6 +80,8 @@ class VersionEntry {
     bool AddJobEntryWriter(JobEntry *job);
 
     bool RemoveJobEntry(JobEntry *job);
+
+    bool RemoveJobEntry(JobEntry *job, data_version_t version);
 
     size_t GetJobsNeedVersion(
         JobEntryList* list, data_version_t version);
@@ -101,6 +104,7 @@ class VersionEntry {
     Bucket pending_writer_jobs_;
     Index index_;
     LogicalDataLineage ldl_;
+    boost::recursive_mutex mutex_;
 
     bool UpdateLdl();
 };

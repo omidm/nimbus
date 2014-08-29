@@ -52,7 +52,6 @@
 #include "shared/parameter.h"
 #include "shared/nimbus_types.h"
 #include "scheduler/version_map.h"
-#include "scheduler/ancestor_chain.h"
 #include "scheduler/meta_before_set.h"
 #include "scheduler/logical_data_lineage.h"
 

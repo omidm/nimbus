@@ -109,10 +109,10 @@ int main(int argc, char *argv[]) {
 
   if (worker_num_given) {
     s->set_min_worker_to_join(worker_num);
-    dbg(DBG_SCHED, "Set min initial number of workers to %d.\n", worker_num);
-  } else {
-    dbg(DBG_SCHED, "Nothig provided for min initial number of workers, using default.\n");
   }
+
+  // make sure the job asigner is serialized for scheduler alternate.
+  s->set_job_assigner_thread_num(0);
 
   s->Run();
 }

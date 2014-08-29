@@ -45,6 +45,7 @@
 
 #include <boost/unordered_set.hpp>
 #include <boost/unordered_map.hpp>
+#include <boost/thread.hpp>
 #include <utility>
 #include <list>
 #include <map>
@@ -97,14 +98,15 @@ class VersionManager {
 
     bool CleanUp();
 
-    void set_ldo_map_p(const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p);
+    void set_ldo_map_p(const LdoMap* ldo_map_p);
 
   private:
     Index index_;
     bool parent_removed_;
     IDSet<job_id_t> live_parents_;
     ChildCounter child_counter_;
-    const std::map<logical_data_id_t, LogicalDataObject*>* ldo_map_p_;
+    boost::mutex child_counter_mutex_;
+    const LdoMap* ldo_map_p_;
 };
 
 }  // namespace nimbus

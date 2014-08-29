@@ -67,12 +67,12 @@ Main::Main(Application* app) {
 };
 
 Job * Main::Clone() {
-  std::cout << "Cloning main job!\n";
+  dbg(DBG_APP, "Cloning main job!\n");
   return new Main(application());
 };
 
 void Main::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the main job\n";
+  dbg(DBG_APP, "Executing the main job\n");
 
   assert(CHUNK_SIZE > (2 * BANDWIDTH));
   assert(CHUNK_NUM >= PART_NUM);
@@ -164,12 +164,12 @@ ForLoop::ForLoop(Application* app) {
 };
 
 Job * ForLoop::Clone() {
-  std::cout << "Cloning forLoop job!\n";
+  dbg(DBG_APP, "Cloning forLoop job!\n");
   return new ForLoop(application());
 };
 
 void ForLoop::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the forLoop job\n";
+  dbg(DBG_APP, "Executing the forLoop job\n");
 
   IDSet<logical_data_id_t> read, write;
   IDSet<job_id_t> before, after;
@@ -283,20 +283,20 @@ Init::Init() {
 };
 
 Job * Init::Clone() {
-  std::cout << "Cloning init job!\n";
+  dbg(DBG_APP, "Cloning init job!\n");
   return new Init();
 };
 
 void Init::Execute(Parameter params, const DataArray& da) {
 /*
-  std::cout << "Executing the init job\n";
+  // std::cout << "Executing the init job\n";
   uint32_t base_val;
   base_val = *(params.idset().begin());
   Vec *d = reinterpret_cast<Vec*>(da[0]);
   for (int i = 0; i < d->size() ; i++)
     d->arr()[i] = base_val + i;
 */
-  std::cout << "Executing the init job\n";
+  dbg(DBG_APP, "Executing the init job\n");
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
@@ -315,31 +315,31 @@ Print::Print() {
 };
 
 Job * Print::Clone() {
-  std::cout << "Cloning print job!\n";
+  dbg(DBG_APP, "Cloning print job!\n");
   return new Print();
 };
 
 void Print::Execute(Parameter params, const DataArray& da) {
 /*
-  std::cout << "Executing the print job\n";
-  std::cout << "OUTPUT: ";
+  // std::cout << "Executing the print job\n";
+  // std::cout << "OUTPUT: ";
   for (size_t i = 0; i < da.size(); ++i) {
     Vec *d = reinterpret_cast<Vec*>(da[i]);
     for (int j = 0; j < d->size(); ++j)
-      std::cout << d->arr()[j] << ", ";
+      // std::cout << d->arr()[j] << ", ";
   }
-  std::cout << std::endl;
+  // std::cout << std::endl;
 */
-  std::cout << "Executing the print job\n";
+  dbg(DBG_APP, "Executing the print job\n");
   std::vector<int> read_data;
   std::vector<int> write_data;
   LoadDataFromNimbus(this, da, &read_data);
 
-  std::cout << "OUTPUT: ";
+  dbg(DBG_APP, "OUTPUT: ");
   for (size_t i = 0; i < read_data.size(); ++i) {
-      std::cout << read_data[i] << ", ";
+    dbg(DBG_APP, "%d, ", read_data[i]);
   }
-  std::cout << std::endl;
+  dbg(DBG_APP, "\n");
 
   SaveDataToNimbus(this, da, &write_data);
 };
@@ -349,12 +349,12 @@ Stage::Stage(Application* app) {
 };
 
 Job * Stage::Clone() {
-  std::cout << "Cloning stage job!\n";
+  dbg(DBG_APP, "Cloning stage job!\n");
   return new Stage(application());
 };
 
 void Stage::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the stage job\n";
+  dbg(DBG_APP, "Executing the stage job\n");
 
   usleep(JOB_LENGTH_USEC);
 };
@@ -364,12 +364,12 @@ Connector::Connector(Application* app) {
 };
 
 Job * Connector::Clone() {
-  std::cout << "Cloning connector job!\n";
+  dbg(DBG_APP, "Cloning connector job!\n");
   return new Connector(application());
 };
 
 void Connector::Execute(Parameter params, const DataArray& da) {
-  std::cout << "Executing the connector job\n";
+  dbg(DBG_APP, "Executing the connector job\n");
   // This job is empty and is meant to just form the job graph.
 };
 

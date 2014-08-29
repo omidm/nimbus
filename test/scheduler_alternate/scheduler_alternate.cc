@@ -45,30 +45,13 @@
   */
 
 #include "./scheduler_alternate.h"
-
-#define SEED_ 123
-#define WRITE_FRAME_NAME "write_frame"
+#include "./alternate_load_balancer.h"
 
 SchedulerAlternate::SchedulerAlternate(unsigned int p)
 : Scheduler(p) {
-  seed_ = SEED_;
 }
 
-bool SchedulerAlternate::GetWorkerToAssignJob(JobEntry* job, SchedulerWorker*& worker) {
-  size_t worker_num = server_->worker_num();
-
-  if (worker_num < 1) {
-    dbg(DBG_SCHED, "ERROR: there is no worker in scheduler worker list for job assignment");
-    return false;
-  }
-
-  worker_id_t w_id;
-  if ((job->job_name() == WRITE_FRAME_NAME) ||
-      (!job->sterile())) {
-    w_id = 1;
-  } else {
-    w_id  = (rand_r(&seed_) % worker_num) + 1;
-  }
-
-  return server_->GetSchedulerWorkerById(worker, w_id);
+void SchedulerAlternate::CreateLoadBalancer() {
+  load_balancer_ = new AlternateLoadBalancer();
 }
+

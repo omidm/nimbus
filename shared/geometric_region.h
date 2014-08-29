@@ -42,6 +42,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/unordered_map.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream> // NOLINT
@@ -194,6 +195,9 @@ namespace nimbus {
     int_dimension_t dy_;
     int_dimension_t dz_;
   };
+
+  typedef boost::unordered_map<partition_id_t, GeometricRegion> PartitionMap;
+
 }  // namespace nimbus
 
 #endif  // NIMBUS_SHARED_GEOMETRIC_REGION_H_
