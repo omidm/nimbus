@@ -158,10 +158,10 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
 bool JobAssigner::AssignJob(JobEntry *job) {
   SchedulerWorker* worker = job->assigned_worker();
 
-  log_.log_StartTimer();
+  // log_.log_StartTimer();
   job_manager_->ResolveJobDataVersions(job);
-  log_.log_StopTimer();
-  std::cout << "versioning: " << log_.timer() << std::endl;
+  // log_.log_StopTimer();
+  // std::cout << "versioning: " << log_.timer() << std::endl;
 
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;
@@ -235,7 +235,10 @@ bool JobAssigner::PrepareDataForJobAtWorker(JobEntry* job,
 
   JobEntryList list;
   VersionedLogicalData vld(l_id, version);
+  // log_.log_StartTimer();
   job_manager_->GetJobsNeedDataVersion(&list, vld);
+  // log_.log_StopTimer();
+  // std::cout << "versioning: " << log_.timer() << std::endl;
   assert(list.size() >= 1);
   bool writing_needed_version = (list.size() > 1) && writing;
 
@@ -377,10 +380,13 @@ size_t JobAssigner::GetObsoleteLdoInstancesAtWorker(SchedulerWorker* worker,
   for (; iter != pv.end(); ++iter) {
     JobEntryList list;
     VersionedLogicalData vld(ldo->id(), iter->version());
+    // log_.log_StartTimer();
     if (job_manager_->GetJobsNeedDataVersion(&list, vld) == 0) {
       dest->push_back(*iter);
       ++count;
     }
+    // log_.log_StopTimer();
+    // std::cout << "versioning: " << log_.timer() << std::endl;
   }
   return count;
 }

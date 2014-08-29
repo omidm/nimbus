@@ -41,7 +41,7 @@
 
 #include "./alternate_load_balancer.h"
 
-#define SEED_ 12
+#define SEED_ 123
 #define WRITE_FRAME_NAME "write_frame"
 
 namespace nimbus {
