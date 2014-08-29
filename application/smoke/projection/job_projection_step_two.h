@@ -33,8 +33,8 @@
  */
 
 /*
- *
  * Author: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_PROJECTION_JOB_PROJECTION_STEP_TWO_H_

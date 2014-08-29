@@ -36,6 +36,7 @@
  * Definitions and typedef useful for application, data and jobs.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_APP_UTILS_H_
@@ -44,6 +45,7 @@
 #include <time.h>
 #include <list>
 #include <stdarg.h>
+#include <pthread.h>
 
 #include "application/smoke/data_names.h"
 #include "application/smoke/parameters.h"
@@ -194,7 +196,7 @@ namespace application {
 	time_sum = difftime(t.tv_sec, start_time_.tv_sec)
 	  + .000000001
 	  * (static_cast<double>(t.tv_nsec - start_time_.tv_nsec));
-	dbg(APP_LOG, "\n[TIME] Job %s, %f seconds.\n", name_.c_str(), time_sum);
+	dbg(APP_LOG, "\n[SCOPETIMER][TIME] TID: %d, Job %s, %f seconds.\n", pthread_self(), name_.c_str(), time_sum);
       }
     private:
       std::string name_;

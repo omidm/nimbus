@@ -33,6 +33,7 @@
 
 /*
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include "application/smoke/app_utils.h"
@@ -76,16 +77,19 @@ namespace application {
 
         DataConfig data_config;
         data_config.SetAll();
-        InitializeExampleAndDriver(init_config, data_config,
-                                   this, da, example, driver);
+	{
+	  application::ScopeTimer scope_timer(name() + "-load");
+	  InitializeExampleAndDriver(init_config, data_config,
+				     this, da, example, driver);
+	}
         *thread_queue_hook() = example->nimbus_thread_queue;
 
         *thread_queue_hook() = NULL;
         // Free resources.
-        DestroyExampleAndDriver(example, driver);
-
-
-
+	{
+	  application::ScopeTimer scope_timer(name() + "-save");
+	  DestroyExampleAndDriver(example, driver);
+	}
 
         dbg(APP_LOG, "Completed executing initialize job\n");
     }

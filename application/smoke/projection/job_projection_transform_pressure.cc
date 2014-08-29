@@ -33,6 +33,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include <sstream>
@@ -92,7 +93,10 @@ void JobProjectionTransformPressure::Execute(
   Log log_timer;
 
   log_timer.StartTimer();
-  projection_driver.LoadFromNimbus(this, da);
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    projection_driver.LoadFromNimbus(this, da);
+  }
   dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, loading time:%f.\n",
       log_timer.timer());
 
@@ -105,7 +109,10 @@ void JobProjectionTransformPressure::Execute(
       log_timer.timer());
 
   log_timer.StartTimer();
-  projection_driver.SaveToNimbus(this, da);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    projection_driver.SaveToNimbus(this, da);
+  }
   dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, saving time:%f.\n",
       log_timer.timer());
 

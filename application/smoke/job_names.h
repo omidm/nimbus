@@ -37,6 +37,7 @@
  * spawning the jobs.
  *
  * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_JOB_NAMES_H_

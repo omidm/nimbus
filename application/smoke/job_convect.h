@@ -33,10 +33,10 @@
  */
 
 /*
- * This file contains advect v job which is one of the sub
+ * This file contains the convect job, which is one of the sub
  * jobs in the iteration of computing a simulation frame.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_JOB_CONVECT_H_

@@ -33,10 +33,10 @@
  */
 
 /*
- * This file contains convect job which is one of the sub
+ * This file contains the convect job, which is one of the sub
  * jobs in the iteration of computing a simulation frame.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #include <sstream>
@@ -93,9 +93,12 @@ void JobConvect::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::PSI_D);
   data_config.SetFlag(DataConfig::PSI_N);
 
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
-  *thread_queue_hook() = example->nimbus_thread_queue;
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    InitializeExampleAndDriver(init_config, data_config,
+			       this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
+  }
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in convect job.");
@@ -103,13 +106,15 @@ void JobConvect::Execute(nimbus::Parameter params,
     application::ScopeTimer scope_timer(name());
     driver->ConvectImpl(this, da, dt);
   }
-
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
-
+  
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  }
   *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);
-
+  
   dbg(APP_LOG, "Completed executing convect.\n");
 }
 

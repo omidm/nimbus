@@ -34,6 +34,11 @@
 
 /*
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu>
+ *
+ * Note: The messages for smoke parameters are the same as that for water.
+ * As a result, the water_parameter protobuf has been reused for the smoke
+ * application.
  */
 
 #include <limits>

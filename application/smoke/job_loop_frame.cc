@@ -38,6 +38,7 @@
  * frame has compututed or not, if so it terminates the application.
  *
  * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 

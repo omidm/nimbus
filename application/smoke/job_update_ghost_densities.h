@@ -33,10 +33,10 @@
  */
 
 /*
- * This file contains adjust phi with objects job 1 which is one of the sub
+ * This file contains the update ghost densities job, which is one of the sub
  * jobs in the iteration of computing a simulation frame.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_JOB_UPDATE_GHOST_DENSITIES_H_

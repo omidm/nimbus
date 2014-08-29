@@ -33,7 +33,7 @@
  */
 
 /*
- * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_SMOKE_APP_H_

@@ -34,6 +34,7 @@
 
 /*
  * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include "application/smoke/cache_prototypes.h"

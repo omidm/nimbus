@@ -34,6 +34,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 

@@ -33,10 +33,10 @@
  */
 
 /*
- * This file contains adjust phi with objects job 1 which is one of the sub
+ * This file contains the update ghost velocities job, which is one of the sub
  * jobs in the iteration of computing a simulation frame.
  *
- * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Author: Andrew Lim <alim16@stanford.edu>
  */
 
 #include <sstream>
@@ -89,9 +89,12 @@ void JobUpdateGhostVelocities::Execute(nimbus::Parameter params,
   data_config.SetFlag(DataConfig::VELOCITY_GHOST);
   data_config.SetFlag(DataConfig::DENSITY);
   dbg(APP_LOG, "Begin initialization.\n");
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
-  *thread_queue_hook() = example->nimbus_thread_queue;
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    InitializeExampleAndDriver(init_config, data_config,
+			       this, da, example, driver);
+    *thread_queue_hook() = example->nimbus_thread_queue;
+  }
 
   // Run the computation in the job.
   dbg(APP_LOG, "Execute the step in update ghost velocity job.\n");
@@ -100,8 +103,12 @@ void JobUpdateGhostVelocities::Execute(nimbus::Parameter params,
     driver->UpdateGhostVelocitiesImpl(this, da, dt);
   }
 
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  }
+  
   *thread_queue_hook() = NULL;
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   // Free resources.
   DestroyExampleAndDriver(example, driver);
 

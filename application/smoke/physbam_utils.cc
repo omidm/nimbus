@@ -34,6 +34,7 @@
 
 /*
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include <string>

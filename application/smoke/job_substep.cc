@@ -33,7 +33,10 @@
  */
 
 /*
- * Author: Hang Qu <quhang@stanford.edu>
+ * This file contains the substep job, which computes the time step for
+ * an iteration during the computation of a simulation frame.
+ *
+ * Author: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include "application/smoke/app_utils.h"
@@ -86,8 +89,11 @@ void JobSubstep::Execute(
   data_config.SetFlag(DataConfig::DENSITY);
   data_config.SetFlag(DataConfig::DT);
 
-  InitializeExampleAndDriver(init_config, data_config,
-                             this, da, example, driver);
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    InitializeExampleAndDriver(init_config, data_config,
+			       this, da, example, driver);
+  }
   *thread_queue_hook() = example->nimbus_thread_queue;
 
   {
@@ -98,8 +104,10 @@ void JobSubstep::Execute(
   }
 
   *thread_queue_hook() = NULL;
-
-  example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    example->Save_To_Nimbus(this, da, driver->current_frame + 1);
+  }
 
   // Free resources.
   DestroyExampleAndDriver(example, driver);

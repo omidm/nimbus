@@ -36,20 +36,11 @@
  * This file contains a loop iteration job that spawns the sub step jobs to
  * calculate the current frame. It keeps spawning the iteration in a loop as
  * long as frame computation in not complete. When the frame is done it will
- * spawn the loop frame job for the next frame. The granularity of the sub step
- * jobs could be controlled by changing the changing the GRANULARITY_STATE
- * macro in this file as follows:
- * ONE_JOB:              calculate the frame iteration in one job (like water coarse).
- * SUPER_JOBS:           break the frame iteration in to three super jobs.
- * BREAK_SUPER_JOB_1:    further break super job 1 in to its components.
- * BREAK_SUPER_JOB_2:    further break super job 2 in to its components.
- * BREAK_SUPER_JOB_3:    further break super job 3 in to its components.
- * BREAK_ALL_SUPER_JOBS: break all three super jobs in to their components.
+ * spawn the loop frame job for the next frame. 
  *
  * Author: Omid Mashayekhi <omidm@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
-
-#define GRANULARITY_STATE BREAK_ALL_SUPER_JOBS
 
 #include <sys/time.h>
 #include "application/smoke/app_utils.h"
@@ -107,8 +98,11 @@ namespace application {
     data_config.SetFlag(DataConfig::VELOCITY);
     data_config.SetFlag(DataConfig::DENSITY);
     data_config.SetFlag(DataConfig::DT);
-    InitializeExampleAndDriver(init_config, data_config,
-                               this, da, example, driver);
+    {
+      application::ScopeTimer scope_timer(name() + "-load");
+      InitializeExampleAndDriver(init_config, data_config,
+				 this, da, example, driver);
+    }
     *thread_queue_hook() = example->nimbus_thread_queue;
 
     // check whether the frame is done or not
@@ -135,7 +129,10 @@ namespace application {
                                  dt, da, init_config.global_region);
 
     // Free resources.
-    example->Save_To_Nimbus(this, da, frame+1);
+    {
+      application::ScopeTimer scope_timer(name() + "-save");
+      example->Save_To_Nimbus(this, da, frame+1);
+    }
     *thread_queue_hook() = NULL;
     DestroyExampleAndDriver(example, driver);
   }

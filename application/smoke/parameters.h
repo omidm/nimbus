@@ -36,6 +36,7 @@
  * Definitions and typedef useful for application, data and jobs.
  *
  * Author: Chinmayee Shah <chinmayee.shah@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_PARAMETERS_H_
@@ -71,7 +72,7 @@ namespace application {
     const int kGhostNum = 3;
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
-    const int kLastFrame = 1;
+    const int kLastFrame = 20;
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
     const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);

@@ -41,6 +41,7 @@
  * while utilities that only depend on Nimbus should go to app_util.h.
  *
  * Modifier: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu>  
  */
 
 #ifndef NIMBUS_APPLICATION_SMOKE_PHYSBAM_UTILS_H_

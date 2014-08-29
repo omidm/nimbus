@@ -33,6 +33,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
  */
 
 #include <sstream>
@@ -94,14 +95,20 @@ void JobProjectionGlobalInitialize::Execute(
       pcg_temp, init_config, data_config);
   dbg(APP_LOG, "Job PROJECTION_GLOBA_INITIALIZE starts (dt=%f).\n", dt);
 
-  projection_driver.LoadFromNimbus(this, da);
+  {
+    application::ScopeTimer scope_timer(name() + "-load");
+    projection_driver.LoadFromNimbus(this, da);
+  }
 
   {
     application::ScopeTimer scope_timer(name());
     projection_driver.GlobalInitialize();
   }
 
-  projection_driver.SaveToNimbus(this, da);
+  {
+    application::ScopeTimer scope_timer(name() + "-save");
+    projection_driver.SaveToNimbus(this, da);
+  }
 
   dbg(APP_LOG, "Completed executing PROJECTION_GLOBA_INITIALIZE job\n");
 }
