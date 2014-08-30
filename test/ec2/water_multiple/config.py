@@ -14,42 +14,39 @@
 # PLACEMENT_GROUP = None
 # INSTANCE_NUM = 3
 
+# EC2 configurations
 # US West (Oregon) Region
-EC2_LOCATION = 'us-west-2'
-UBUNTU_AMI = 'ami-fa9cf1ca'
-NIMBUS_AMI = 'ami-5a45306a'
-NIMBUS_DEVEL_AMI = 'ami-cef386fe'
-NIMBUS_0_1 = 'ami-cfe895ff'
-NIMBUS_0_2 = 'ami-fd2d52cd'
-KEY_NAME = 'omidm-sing-key-pair-us-west-2'
-SECURITY_GROUP = 'nimbus_sg_uswest2'
-# INSTANCE_TYPE = 't1.micro'
-# PLACEMENT_GROUP = None
-INSTANCE_TYPE = 'c3.2xlarge'
-PLACEMENT_GROUP = 'nimbus-cluster'
-INSTANCE_NUM = 9
+EC2_LOCATION     = 'us-west-2'
+UBUNTU_AMI       = 'ami-fa9cf1ca'
+NIMBUS_0_3_AMI   = 'ami-69ee9559'
+KEY_NAME         = 'omidm-sing-key-pair-us-west-2'
+SECURITY_GROUP   = 'nimbus_sg_uswest2'
+INSTANCE_TYPE    = 'c3.2xlarge' # 't1.micro'
+PLACEMENT_GROUP  = 'nimbus-cluster' # None
+PRIVATE_KEY      = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
 
-PRIVATE_KEY = '/home/omidm/.ssh/' + KEY_NAME + '.pem'
-
-SOURCE_NIMBUS_ROOT = '/home/omidm/cloud/src/nimbus/'
-REL_APPLICATION_PATH = 'application/water_multiple/Build/Debug/'
-REL_SCHEDULER_PATH = 'test/scheduler_v2/'
-REL_WORKER_PATH = 'test/water_multiple/'
-
-NIMBUS_LIB = 'libnimbus.so'
-APPLICATION_LIB = 'libwater_app-debug-debug.so'
-SCHEDULER_BINARY = 'scheduler'
-WORKER_BINARY = 'worker'
-
-EC2_FOLDER_NAME = 'nimbus/'
-
-FIRST_PORT = 5900
-LOG_FILE_NAME = 'ec2_log.txt'
-OUTPUT_PATH = 'output/'
+# Experiment configurations
+WORKER_NUM           = 100
+SCHEDULER_NUM        = 1
+ASSIGNER_THREAD_NUM  = 4
+BATCH_ASSIGN_NUM     = 200
+OTHREAD_NUM          = 4
+INSTANCE_NUM         = WORKER_NUM + SCHEDULER_NUM
+FIRST_PORT           = 5800
+LOG_FILE_NAME        = 'ec2_log.txt'
+WORKER_LOG_FILE_NAME = 'worker-log-'
+OUTPUT_PATH          = 'output/'
 
 
+# Build and Run configuration
+SOURCE_NIMBUS_ROOT   = '~/cloud/src/nimbus/'
+EC2_NIMBUS_ROOT      = '~/cloud/src/nimbus/'
+REL_APPLICATION_PATH = 'application/water_multiple/Build/Release/'
+REL_SCHEDULER_PATH   = 'test/scheduler_v2/'
+REL_WORKER_PATH      = 'test/water_multiple/'
 
-REL_PHYSBAM_PATH = '/application/physbam-lib/External_Libraries/lib/'
-REL_PHYSBAM_PATH2 = '/application/physbam-lib/External_Libraries/src/zlib-build/'
-PHYSBAM_LIB = '*'
+NIMBUS_LIB           = 'libnimbus.so'
+APPLICATION_LIB      = 'libwater_app.so'
+SCHEDULER_BINARY     = 'scheduler'
+WORKER_BINARY        = 'worker'
 
