@@ -99,7 +99,7 @@ def run_scheduler(scheduler_ip, worker_num):
   scheduler_command += ' -wn ' + str(worker_num)
   scheduler_command += ' -tn ' + str(config.ASSIGNER_THREAD_NUM)
   scheduler_command += ' -an ' + str(config.BATCH_ASSIGN_NUM)
-  scheduler_command += ' > ' + config.LOG_FILE_NAME
+  scheduler_command += ' &> ' + config.LOG_FILE_NAME
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',
@@ -119,7 +119,7 @@ def run_worker(scheduler_ip, worker_ip, num):
   worker_command += ' -sport ' + str(config.FIRST_PORT)
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
   worker_command += ' -othread ' + str(config.OTHREAD_NUM)
-  worker_command += ' > ' + str(num) + '_' + config.LOG_FILE_NAME
+  worker_command += ' &> ' + str(num) + '_' + config.LOG_FILE_NAME
 
   subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
       '-o', 'UserKnownHostsFile=/dev/null',

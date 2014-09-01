@@ -88,34 +88,40 @@ bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
   assert(worker_num_ == worker_map_.size());
   assert(worker_num_ == worker_domains_.size());
 
-  // initilaize worker ranks.
-  WorkerRank worker_rank;
-  WorkerMap::iterator wmit = worker_map_.begin();
-  for (; wmit != worker_map_.end(); ++wmit) {
-    worker_rank[wmit->first] = 0;
-  }
+  worker_id_t w_id;
+  WorkerMap::iterator wmit;
+  if (!job->sterile()) {
+    w_id = worker_map_.begin()->first;
+  } else {
+    // initilaize worker ranks.
+    WorkerRank worker_rank;
+    wmit = worker_map_.begin();
+    for (; wmit != worker_map_.end(); ++wmit) {
+      worker_rank[wmit->first] = 0;
+    }
 
-  IDSet<logical_data_id_t>::IDSetIter iter;
-  for (iter = job->union_set_p()->begin(); iter != job->union_set_p()->end(); ++iter) {
-    const LogicalDataObject* ldo;
-    ldo = data_manager_->FindLogicalObject(*iter);
-    WorkerDomains::iterator wdit = worker_domains_.begin();
-    for (; wdit != worker_domains_.end(); ++wdit) {
-      if (worker_domains_[wdit->first].Intersects(ldo->region())) {
-        ++worker_rank[wdit->first];
+    IDSet<logical_data_id_t>::IDSetIter iter;
+    for (iter = job->union_set_p()->begin(); iter != job->union_set_p()->end(); ++iter) {
+      const LogicalDataObject* ldo;
+      ldo = data_manager_->FindLogicalObject(*iter);
+      WorkerDomains::iterator wdit = worker_domains_.begin();
+      for (; wdit != worker_domains_.end(); ++wdit) {
+        if (worker_domains_[wdit->first].Intersects(ldo->region())) {
+          ++worker_rank[wdit->first];
+        }
       }
     }
-  }
 
-  // find the worker that wins the poll.
-  WorkerRank::iterator writ = worker_rank.begin();
-  assert(writ != worker_rank.end());
-  worker_id_t w_id = writ->first;
-  size_t count = worker_rank[writ->first];
-  for (; writ != worker_rank.end(); ++writ) {
-    if (count < worker_rank[writ->first]) {
-      count = worker_rank[writ->first];
-      w_id = writ->first;
+    // find the worker that wins the poll.
+    WorkerRank::iterator writ = worker_rank.begin();
+    assert(writ != worker_rank.end());
+    w_id = writ->first;
+    size_t count = worker_rank[writ->first];
+    for (; writ != worker_rank.end(); ++writ) {
+      if (count < worker_rank[writ->first]) {
+        count = worker_rank[writ->first];
+        w_id = writ->first;
+      }
     }
   }
 
