@@ -583,6 +583,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
   assert(vertex->incoming_edges()->empty());
   ClearAfterSet(vertex);
   vertex->entry()->set_state(WorkerJobEntry::FINISH);
+  vertex->entry()->set_job(NULL);
   delete job;
 }
 

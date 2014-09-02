@@ -78,8 +78,10 @@ namespace nimbus {
 class Worker;
 class WorkerManager;
 typedef std::map<int, Worker*> WorkerMap;
+class WorkerThreadMonitor;
 
 class Worker {
+  friend class WorkerThreadMonitor;
  public:
   Worker(std::string scheuler_ip, port_t scheduler_port,
       port_t listening_port_, Application* application);

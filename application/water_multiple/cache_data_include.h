@@ -39,10 +39,13 @@
 #ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
 #define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_
 
+#include "application/water_multiple/cache_compressed_scalar_array.h"
 #include "application/water_multiple/cache_face_array.h"
 #include "application/water_multiple/cache_particle_levelset_evolution.h"
 #include "application/water_multiple/cache_scalar_array.h"
 #include "application/water_multiple/projection/cache_sparse_matrix.h"
 #include "application/water_multiple/projection/cache_array_m2c.h"
+#include "application/water_multiple/projection/cache_vector.h"
+#include "application/water_multiple/projection/cache_raw_grid_array.h"
 
 #endif // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_DATA_INCLUDE_H_

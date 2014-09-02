@@ -51,12 +51,14 @@
 #include <sys/syscall.h>
 #include <algorithm>
 #include <cmath>
+#include <list>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "data/physbam/physbam_include.h"
 #include "data/physbam/physbam_data.h"
+#include "data/physbam/physbam_data_with_meta.h"
 
 #include "shared/log.h"
 #include "shared/nimbus_types.h"
@@ -1584,6 +1586,7 @@ template <class TS> class TranslatorPhysBAM {
                 }
                 return;
             }
+            sa->hash_code = 0;
             for (size_t i = 0; i < read_set.size(); ++i) {
                 PhysBAMData* data = static_cast<PhysBAMData*>(read_set[i]);
                 Dimension3Vector overlap = GetOverlapSize(data->region(), region);
@@ -1683,6 +1686,150 @@ template <class TS> class TranslatorPhysBAM {
                 msg << "### TID: " << tid << "  Write Scalar Array (New Translator) end : " << log->GetTime(); // NOLINT
                 log->WriteToFile(msg.str());
             }
+        }
+
+        template<typename T> static void ReadCompressedScalarArray(
+                const GeometricRegion &region,
+                const Coord &shift,
+                const DataArray &read_set,
+                PhysBAM::VECTOR_ND<T>* data,
+                const int_dimension_t data_length,
+                const PhysBAM::ARRAY<int, TV_INT>& index_data) {
+          if (data->Size() != data_length) {
+            data->Resize(data_length);
+          }
+          if (log) {
+            std::stringstream msg;
+            msg << "### Read Compressed Scalar Array (New Translator) start : "
+                << log->GetTime();
+            log->WriteToFile(msg.str());
+          }
+          if (read_set.empty()) {
+            if (log) {
+              std::stringstream msg;
+              msg << "### Read Compressed Scalar Array (New Translator) end : "
+                  << log->GetTime();
+              log->WriteToFile(msg.str());
+            }
+            return;
+          }
+          for (size_t i = 0; i < read_set.size(); ++i) {
+            PhysBAMDataWithMeta* nimbus_data =
+                dynamic_cast<PhysBAMDataWithMeta*>(read_set[i]);  // NOLINT
+            assert(nimbus_data != NULL);
+            GeometricRegion inter_region = GeometricRegion::GetIntersection(
+                nimbus_data->region(), region);
+            char* buffer = nimbus_data->buffer();
+            if (buffer == NULL || nimbus_data->size() == 0) {
+              continue;
+            }
+            assert(nimbus_data->has_meta_data());
+            int_dimension_t elements =
+                nimbus_data->meta_data_size() / 3 / sizeof(int_dimension_t);
+            char* real_data_buffer = buffer + nimbus_data->meta_data_size();
+            for (int_dimension_t rank = 0; rank < elements; ++rank) {
+              int_dimension_t x = *reinterpret_cast<int_dimension_t*>(buffer);
+              buffer += sizeof(int_dimension_t);
+              int_dimension_t y = *reinterpret_cast<int_dimension_t*>(buffer);
+              buffer += sizeof(int_dimension_t);
+              int_dimension_t z = *reinterpret_cast<int_dimension_t*>(buffer);
+              buffer += sizeof(int_dimension_t);
+              T value = *reinterpret_cast<T*>(real_data_buffer);
+              real_data_buffer += sizeof(T);
+              if (x >= inter_region.x() &&
+                  x < inter_region.x() + inter_region.dx() &&
+                  y >= inter_region.y() &&
+                  y < inter_region.y() + inter_region.dy() &&
+                  z >= inter_region.z() &&
+                  z < inter_region.z() + inter_region.dz()) {
+                int m_index = index_data(x - shift.x, y - shift.y, z - shift.z);
+                assert(m_index >= 1);
+                (*data)(m_index) = value;
+              }
+            }
+          }
+          if (log) {
+            std::stringstream msg;
+            msg << "### Read Compressed Scalar Array (New Translator) end : "
+                << log->GetTime();
+            log->WriteToFile(msg.str());
+          }
+        }
+
+        template<typename T> static void WriteCompressedScalarArray(
+                const GeometricRegion &region,
+                const Coord &shift,
+                const DataArray &write_set,
+                const PhysBAM::VECTOR_ND<T>& data,
+                const int_dimension_t data_length,
+                const PhysBAM::ARRAY<int, TV_INT>& index_data) {
+          if (log) {
+            std::stringstream msg;
+            msg << "### Write Compressed Scalar Array (New Translator) start : "
+                << log->GetTime();
+            log->WriteToFile(msg.str());
+          }
+          if (write_set.empty()) {
+            if (log) {
+              std::stringstream msg;
+              msg << "### Write Compressed Scalar Array (New Translator) end : "
+                  << log->GetTime();
+              log->WriteToFile(msg.str());
+            }
+            return;
+          }
+          for (size_t i = 0; i < write_set.size(); ++i) {
+            PhysBAMDataWithMeta* nimbus_data =
+                static_cast<PhysBAMDataWithMeta*>(write_set[i]);
+            GeometricRegion inter_region = GeometricRegion::GetIntersection(
+                nimbus_data->region(), region);
+            if (!inter_region.NoneZeroArea()) {
+              continue;
+            }
+            nimbus_data->ClearTempBuffer();
+            std::list<T> buffer;
+            for (int_dimension_t x = inter_region.x();
+                 x < inter_region.x() + inter_region.dx();
+                 ++x)
+              for (int_dimension_t y = inter_region.y();
+                   y < inter_region.y() + inter_region.dy();
+                   ++y)
+                for (int_dimension_t z = inter_region.z();
+                     z < inter_region.z() + inter_region.dz();
+                     ++z) {
+                  int m_index = index_data(TV_INT(
+                          x - shift.x, y - shift.y, z - shift.z));
+                  if (m_index >= 1) {
+                    nimbus_data->AddToTempBuffer(
+                        reinterpret_cast<char*>(&x),
+                        sizeof(x));
+                    nimbus_data->AddToTempBuffer(
+                        reinterpret_cast<char*>(&y),
+                        sizeof(y));
+                    nimbus_data->AddToTempBuffer(
+                        reinterpret_cast<char*>(&z),
+                        sizeof(z));
+                    buffer.push_back(data(m_index));
+                  }
+                }
+            nimbus_data->MarkMetaDataInTempBuffer();
+            if (!buffer.empty()) {
+              for (typename std::list<T>::iterator iter = buffer.begin();
+                   iter != buffer.end();
+                   ++iter) {
+                T value = *iter;
+                nimbus_data->AddToTempBuffer(
+                    reinterpret_cast<char*>(&value), sizeof(value));
+              }
+            }
+            nimbus_data->CommitTempBuffer();
+          }
+          if (log) {
+            std::stringstream msg;
+            msg << "### Write Compressed Scalar Array (New Translator) end : "
+                << log->GetTime();
+            log->WriteToFile(msg.str());
+          }
         }
 
     private:

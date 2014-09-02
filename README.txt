@@ -1,9 +1,18 @@
 
 Nimbus Installation Dependencies - Linux
 =========================================
+*** Protocol Buffers: 
 
 sudo apt-get install libprotoc-dev
 sudo apt-get install protobuf-compiler
+
+Note: you may need to increase the following default values for message size:
+kDefaultTotalBytesLimit
+kDefaultTotalBytesWarningThreshold
+both in /usr/include/google/protobuf/io/coded_stream.h
+
+
+*** Boost:
 
 Download and install boost >1.55 from www.boost.org.
 

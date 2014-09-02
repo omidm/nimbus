@@ -79,10 +79,6 @@ WorkerManager::WorkerManager() {
     computation_thread_num = across_job_parallism;
     fast_thread_num = 1;
   }
-  /*
-  computation_thread_num = 3;
-  fast_thread_num = 0;
-  */
   idle_computation_threads_ = 0;
   dispatched_computation_job_count_ = 0;
   dispatched_fast_job_count_= 0;

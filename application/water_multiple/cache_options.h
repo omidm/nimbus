@@ -58,6 +58,8 @@ struct AppCacheObjects {
   CacheScalarArray<T> *divergence;
   CacheSparseMatrix *matrix_a;
   CacheArrayM2C * index_m2c;
+  CacheRawGridArray *index_c2m;
+  CacheVector* vector_b;
 
   AppCacheObjects() {
     fv    = NULL;
@@ -73,6 +75,8 @@ struct AppCacheObjects {
     divergence = NULL;
     matrix_a = NULL;
     index_m2c = NULL;
+    index_c2m = NULL;
+    vector_b = NULL;
   }
 };
 

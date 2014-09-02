@@ -72,6 +72,7 @@ bool DataRawArrayM2C::LoadFromNimbus(PhysBAM::ARRAY<TV_INT>* array) {
   assert(pointer != NULL);
   const Header &header = *(reinterpret_cast<const Header*>(pointer));
   array->m = header.n;
+  array->buffer_size = array->m;
   pointer += sizeof(Header);
   Buffer buffer;
   buffer.pointer = reinterpret_cast<void*>(pointer);

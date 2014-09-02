@@ -93,7 +93,9 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
                                   const GeometricRegion &write_region,
                                   const CacheVar &prototype,
                                   const GeometricRegion &region,
-                                  cache::CacheAccess access) {
+                                  cache::CacheAccess access,
+                                  void (*aux)(CacheVar*, void*),
+                                  void* aux_data) {
     pthread_mutex_lock(&cache_lock);
     CacheVar *cv = NULL;
     // Get a cache object form the cache table.
@@ -123,6 +125,9 @@ CacheVar *CacheManager::GetAppVar(const DataArray &read_set,
     cv->SetUpReadWrite(read_set, write_set,
                        &flush, &diff, &sync, &sync_co);
     pthread_mutex_unlock(&cache_lock);
+    if (aux != NULL) {
+      aux(cv, aux_data);
+    }
 
     GeometricRegion write_region_old = cv->write_region_;
     cv->write_region_ = write_region;
@@ -256,5 +261,18 @@ void CacheManager::ReleaseAccess(CacheObject* cache_object) {
     cache_object->ReleaseAccessInternal();
     pthread_cond_broadcast(&cache_cond);
     pthread_mutex_unlock(&cache_lock);
+}
+
+void CacheManager::PrintProfile(std::stringstream* output) {
+  if (pool_ == NULL) {
+    return;
+  }
+  for (Pool::iterator iter = pool_->begin();
+       iter != pool_->end();
+       ++iter) {
+    *output << "-----------" << std::endl;
+    iter->second->PrintProfile(output);
+  }
+  *output << "-----------" << std::endl;
 }
 }  // namespace nimbus

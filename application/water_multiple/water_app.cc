@@ -207,14 +207,6 @@ namespace application {
         // VECTOR_Z.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_Z);
         RegisterData(APP_VECTOR_Z, new DataRawVectorNd(APP_VECTOR_Z));
-        // VECTOR_P_GRID_FORMAT.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_GRID_FORMAT);
-        RegisterData(APP_VECTOR_P_GRID_FORMAT,
-                     new DataScalarArray<float>(APP_VECTOR_P_GRID_FORMAT));
-        // VECTOR_P_LINEAR_FORMAT.
-        dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_LINEAR_FORMAT);
-        RegisterData(APP_VECTOR_P_LINEAR_FORMAT,
-                     new DataRawVectorNd(APP_VECTOR_P_LINEAR_FORMAT));
         // VECTOR_P_META_FORMAT.
         dbg(APP_LOG, "Registering %s\n", APP_VECTOR_P_META_FORMAT);
         RegisterData(APP_VECTOR_P_META_FORMAT,
