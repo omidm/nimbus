@@ -126,7 +126,25 @@ def run_worker(scheduler_ip, worker_ip, num):
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + worker_ip, worker_command])
 
-  print '** Worker ' + str(num) + ' Launched: ' + scheduler_ip
+  print '** Worker ' + str(num) + ' Launched: ' + worker_ip
+
+
+def  test_workers(worker_ips):
+  worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
+  worker_command += 'pwd;'
+
+  num = 0;
+  for ip in worker_ips:
+    num += 1;
+    subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip, worker_command])
+
+    print '** Worker ' + str(num) + ' Tested: ' + ip
+
+
+
 
 
 def collect_output_data(scheduler_ip, worker_ips):
@@ -148,14 +166,16 @@ def collect_output_data(scheduler_ip, worker_ips):
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + str(num) + '_' + config.LOG_FILE_NAME,
+        # config.REL_WORKER_PATH + str(num) + '_' + config.LOG_FILE_NAME,
+        config.REL_WORKER_PATH  + '*_' + config.LOG_FILE_NAME,
         config.OUTPUT_PATH])
 
     subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
         '-o', 'UserKnownHostsFile=/dev/null',
         '-o', 'StrictHostKeyChecking=no',
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
-        config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + str(config.FIRST_PORT + num),
+        # config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + str(config.FIRST_PORT + num),
+        config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + '*',
         config.OUTPUT_PATH])
 
 

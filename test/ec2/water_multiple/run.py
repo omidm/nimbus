@@ -28,7 +28,7 @@ import ec2
 
 ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-scheduler_ip = "54.212.182.103"
+scheduler_ip = "54.190.63.140"
 worker_ips = list(ip_addresses)
 worker_ips.remove(scheduler_ip)
 # scheduler_ip = ip_addresses[0]
@@ -38,6 +38,8 @@ worker_ips.remove(scheduler_ip)
 print "scheduler IP: " + scheduler_ip
 print "Worker IPs: "
 print worker_ips
+
+# utils.test_workers(worker_ips)
  
 # utils.build_binaries(scheduler_ip);
 # utils.distribute_binaries(scheduler_ip, worker_ips);
