@@ -107,10 +107,12 @@ public:
     TCacheScalarArray *cache_phi3, *cache_phi7, *cache_phi8;
     TCacheScalarArray *cache_pressure, *cache_divergence;
     IntCacheScalarArray *cache_colors;
+    application::CacheRawGridArray *cache_index_c2m;
     BoolCacheScalarArray *cache_psi_d;
     TCachePLE *cache_ple;
     TCacheSparseMatrix *cache_matrix_a;
     TCacheArrayM2C *cache_index_m2c;
+    application::CacheVector *cache_vector_b;
     bool create_destroy_ple;
 
     WATER_EXAMPLE(const STREAM_TYPE stream_type_input,

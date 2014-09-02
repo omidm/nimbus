@@ -78,9 +78,6 @@ void JobProjectionReduceAlpha::Execute(
                 &iteration);
 
   DataConfig data_config;
-  // TODO(quhang), remove.
-  data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
-  data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_GLOBAL_RHO);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA);
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);
@@ -96,10 +93,6 @@ void JobProjectionReduceAlpha::Execute(
   projection_driver.projection_data.iteration = iteration;
   dbg(APP_LOG, "Job PROJECTION_REDUCE_ALPHA starts (dt=%f).\n", dt);
 
-  Log log_timer;
-
-  log_timer.StartTimer();
-
   projection_driver.LoadFromNimbus(this, da);
 
   // Read PROJECTION_GLOBAL_RHO, PROJECTION_LOCAL_DOT_PRODUCT_FOR_ALPHA.
@@ -110,8 +103,6 @@ void JobProjectionReduceAlpha::Execute(
   }
 
   projection_driver.SaveToNimbus(this, da);
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_REDUCE_ALPHA total time:%f.\n",
-      log_timer.GetTime());
 
   dbg(APP_LOG, "Completed executing PROJECTION_REDUCE_ALPHA job\n");
 }

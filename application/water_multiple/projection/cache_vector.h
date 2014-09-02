@@ -33,43 +33,52 @@
  */
 
 /*
- * Author: Chinmayee Shah <chshah@stanford.edu>
+ * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/water_multiple/cache_prototypes.h"
+#ifndef NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_VECTOR_H_
+#define NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_VECTOR_H_
+
+#include <string>
+
 #include "application/water_multiple/parameters.h"
+#include "application/water_multiple/physbam_include.h"
+#include "data/cache/cache_var.h"
+#include "shared/geometric_region.h"
+#include "worker/data.h"
 
 namespace application {
 
-CacheFaceArray<T> kCacheFaceVel(kDefaultRegion, 0, true);
-CacheFaceArray<T> kCacheFaceVelGhost(kDefaultRegion, 3, true);
-CacheFaceArray<bool> kCachePsiN(kDefaultRegion, 1, true);
+class CacheVector : public nimbus::CacheVar {
+ public:
+  typedef PhysBAM::VECTOR_ND<float> DATA_TYPE;
+  explicit CacheVector(const nimbus::GeometricRegion& global_reg,
+                       bool make_proto = false);
 
-CacheScalarArray<T> kCachePhi3(kDefaultRegion, 3, true);
-CacheScalarArray<T> kCachePhi7(kDefaultRegion, 7, true);
-CacheScalarArray<T> kCachePhi8(kDefaultRegion, 8, true);
-CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
 
-// Varibales for projection.
-CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
-CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
-CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
-// TODO(quhang): this cache variable is questionable, because it cannot be
-// deleted if meta_p is being used.
-CacheRawGridArray kCacheIndexC2M(kDefaultRegion, true);
+ protected:
+  explicit CacheVector(const nimbus::GeometricRegion& global_reg,
+                       const nimbus::GeometricRegion& ob_reg);
 
-CacheParticleLevelsetEvolution<float> kCachePLE(kDefaultRegion, 3, true);
+  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
 
-CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true);
-CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
+  virtual void ReadToCache(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteFromCache(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
 
-CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true);
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class CacheVector
 
-CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true);
+}  // namespace application
 
-CacheVector kCacheVectorB(kDefaultRegion, true);
-CacheVector kCacheVectorPressure(kDefaultRegion, true);
-CacheVector kCacheVectorZ(kDefaultRegion, true);
-CacheVector kCacheVectorTemp(kDefaultRegion, true);
-} // namespace application
-
+#endif  // NIMBUS_APPLICATION_WATER_MULTIPLE_CACHE_VECTOR_H_

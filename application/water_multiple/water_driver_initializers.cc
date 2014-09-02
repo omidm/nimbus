@@ -369,6 +369,7 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
   typedef application::DataConfig DataConfig;
   // T_FACE_ARRAYS_BOOL.
   if (data_config.GetFlag(DataConfig::VALID_MASK)) {
+    // TODO(quhang): removes resizing.
     incompressible->valid_mask.Resize(
         grid_input.Domain_Indices(3), true, true, true);
   }
@@ -389,24 +390,29 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
     laplace->grid = grid_input;
     laplace->second_order_cut_cell_method = true;
     if (data_config.GetFlag(DataConfig::U_INTERFACE)) {
+      // TODO(quhang): removes resizing.
       laplace->u_interface.Resize(grid_input);
     } else {
       laplace->u_interface.Clean_Memory();
     }
     // T_ARRAYS_SCALAR.
     if (data_config.GetFlag(DataConfig::DIVERGENCE)) {
+      // TODO(quhang): removes resizing.
       laplace->f.Resize(grid_input.Domain_Indices(1));
     }
     // T_FACE_ARRAYS_BOOL.
     if (data_config.GetFlag(DataConfig::PSI_N)) {
+      // TODO(quhang): removes resizing.
       laplace->psi_N.Resize(grid_input, 1);
     }
     // T_ARRAYS_BOOL.
     if (data_config.GetFlag(DataConfig::PSI_D)) {
+      // TODO(quhang): removes resizing.
       laplace->psi_D.Resize(grid_input.Domain_Indices(1));
     }
     // T_ARRAYS_INT.
     if (data_config.GetFlag(DataConfig::REGION_COLORS)) {
+      // TODO(quhang): removes resizing.
       laplace->filled_region_colors.Resize(
           grid_input.Domain_Indices(1));
     }
@@ -420,14 +426,17 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeIncompressibleProjectionHelp
   projection->divergence.Clean_Memory();
   // T_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::PRESSURE)) {
+    // TODO(quhang): removes resizing.
     projection->p.Resize(grid_input.Domain_Indices(1));
   }
   // T_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::PRESSURE_SAVE)) {
+    // TODO(quhang): removes resizing.
     projection->p_save_for_projection.Resize(grid_input.Domain_Indices(1));
   }
   // T_FACE_ARRAYS_SCALAR.
   if (data_config.GetFlag(DataConfig::VELOCITY_SAVE)) {
+    // TODO(quhang): removes resizing.
     projection->face_velocities_save_for_projection.Resize(grid_input);
   }
   // dsd is not considered.
@@ -519,17 +528,20 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     if (data_config.GetFlag(DataConfig::LEVELSET)
         || data_config.GetFlag(DataConfig::LEVELSET_READ)
         || data_config.GetFlag(DataConfig::LEVELSET_WRITE)) {
+      // TODO(quhang): removes resizing.
       particle_levelset_evolution->phi.Resize(
           grid_input.Domain_Indices(particle_levelset->number_of_ghost_cells));
     }
     // Resizes particles.
     particle_levelset_evolution->particle_levelset.Set_Band_Width(6);
     if (data_config.GetFlag(DataConfig::POSITIVE_PARTICLE)) {
+      // TODO(quhang): removes resizing.
       particle_levelset->positive_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
     }
     if (data_config.GetFlag(DataConfig::NEGATIVE_PARTICLE)) {
+      // TODO(quhang): removes resizing.
       particle_levelset->negative_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
@@ -538,11 +550,13 @@ template<class TV> bool WATER_DRIVER<TV>::InitializeParticleLevelsetEvolutionHel
     particle_levelset->use_removed_negative_particles=true;
     // Resizes removed particles.
     if (data_config.GetFlag(DataConfig::REMOVED_POSITIVE_PARTICLE)) {
+      // TODO(quhang): removes resizing.
       particle_levelset->removed_positive_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));
     }
     if (data_config.GetFlag(DataConfig::REMOVED_NEGATIVE_PARTICLE)) {
+      // TODO(quhang): removes resizing.
       particle_levelset->removed_negative_particles.Resize(
           particle_levelset->levelset.grid.Block_Indices(
             particle_levelset->number_of_ghost_cells));

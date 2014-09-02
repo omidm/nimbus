@@ -90,25 +90,14 @@ void JobProjectionTransformPressure::Execute(
       pcg_temp, init_config, data_config);
   dbg(APP_LOG, "Job PROJECTION_TRANSFORM_PRESSURE starts.\n");
 
-  Log log_timer;
-
-  log_timer.StartTimer();
   projection_driver.LoadFromNimbus(this, da);
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, loading time:%f.\n",
-      log_timer.timer());
 
-  log_timer.StartTimer();
   {
     application::ScopeTimer scope_timer(name());
     projection_driver.TransformPressureResult();
   }
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, calculation time:%f.\n",
-      log_timer.timer());
 
-  log_timer.StartTimer();
   projection_driver.SaveToNimbus(this, da);
-  dbg(APP_LOG, "[PROJECTION] PROJECTION_TRANSFORM_PRESSURE, saving time:%f.\n",
-      log_timer.timer());
 
   dbg(APP_LOG, "Completed executing PROJECTION_TRANSFORM_PRESSURE job\n");
 }

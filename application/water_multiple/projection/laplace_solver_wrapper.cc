@@ -54,6 +54,7 @@ void LaplaceSolverWrapper::BindLaplaceAndInitialize(
   const int number_of_regions = 1;
   matrix_index_to_cell_index_array.Resize(number_of_regions);
   cell_index_to_matrix_index.Resize(laplace->grid.Domain_Indices(1));
+  cell_index_to_matrix_index.hash_code = 0;
   A_array.Resize(number_of_regions);
   b_array.Resize(number_of_regions);
 }
@@ -90,8 +91,8 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
   matrix_index_to_cell_index_array(color).Resize(
       filled_region_cell_count(color));
 
-  int temp1 = filled_region_cell_count(-1);
-  int temp2 = filled_region_cell_count(1);
+  // int temp1 = filled_region_cell_count(-1);
+  // int temp2 = filled_region_cell_count(1);
 
   // Reusing this array in order to make the indirection arrays.
   filled_region_cell_count.Fill(0);
@@ -112,9 +113,6 @@ void LaplaceSolverWrapper::PrepareProjectionInput() {
 
   RANGE<TV_INT> domain = laplace->grid.Domain_Indices(1);
 
-  dbg(APP_LOG, "[DEBUG] local_n = %d, interior_n = %d,"
-     " color#(-1) = %d, color#(1) = %d.\n",
-     local_n, interior_n, temp1, temp2);
   if (interior_n != 0) {
     // Construct both A and b.
     laplace->Find_A(

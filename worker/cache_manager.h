@@ -43,6 +43,7 @@
 #define NIMBUS_WORKER_CACHE_MANAGER_H_
 
 #include <pthread.h>
+#include <sstream>  // NOLINT
 #include <map>
 #include <vector>
 
@@ -96,7 +97,9 @@ class CacheManager {
                             const GeometricRegion &write_region,
                             const CacheVar &prototype,
                             const GeometricRegion &region,
-                            cache::CacheAccess access);
+                            cache::CacheAccess access,
+                            void (*aux)(CacheVar*, void*) = NULL,
+                            void* aux_data = NULL);
 
         /**
          * \brief Requests a CacheStruct instance of type prototype, from the
@@ -143,6 +146,8 @@ class CacheManager {
                           GeometricRegion &write_region);
 
         void ReleaseAccess(CacheObject* cache_object);
+
+        void PrintProfile(std::stringstream* output);
 
     private:
         typedef std::map<cache::co_id_t,
