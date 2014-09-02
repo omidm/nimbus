@@ -133,7 +133,8 @@ void Scheduler::SchedulerCoreProcessor() {
     log_loop_.log_StopTimer();
     if (log_loop_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
-      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf.\n", log_loop_.timer());
+      snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf time: %2.2lf.",
+          log_loop_.timer(), log_.GetTime());
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
@@ -247,8 +248,15 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
         (*iter)->set_port(cm->port().elem());
         (*iter)->set_handshake_done(true);
         ++registered_worker_num_;
-        dbg(DBG_SCHED, "Registered new worker, id: %lu IP: %s port: %lu.\n",
+
+        char buff[LOG_MAX_BUFF_SIZE];
+        snprintf(buff, sizeof(buff), "Registered new worker, id: %u IP: %s port: %u time: %2.2lf.", // NOLINT
+            (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port(), log_.GetTime());
+        log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
+
+        dbg(DBG_SCHED, "Registered new worker, id: %u IP: %s port: %u.\n",
             (*iter)->worker_id(), (*iter)->ip().c_str(), (*iter)->port());
+
         load_balancer_->NotifyRegisteredWorker(*iter);
       }
       break;

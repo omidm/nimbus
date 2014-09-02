@@ -100,19 +100,18 @@ namespace application {
         frame, time);
 
     // Initialize the state of example and driver.
-    PhysBAM::WATER_EXAMPLE<TV>* example;
-    PhysBAM::WATER_DRIVER<TV>* driver;
-    init_config.set_boundary_condition = true;
-    init_config.use_cache = true;
+    PhysBAM::WATER_EXAMPLE<TV>* example =
+      new PhysBAM::WATER_EXAMPLE<TV>(PhysBAM::STREAM_TYPE((RW())), false, 1);
     DataConfig data_config;
     data_config.SetFlag(DataConfig::DT);
-    InitializeExampleAndDriver(init_config, data_config,
-                               this, da, example, driver);
+    example->data_config.Set(data_config);
+    example->Load_From_Nimbus(this, da, frame);
+
     *thread_queue_hook() = example->nimbus_thread_queue;
 
     // check whether the frame is done or not
     bool done = false;
-    T target_time = example->Time_At_Frame(driver->current_frame+1);
+    T target_time = example->Time_At_Frame(frame + 1);
     T dt = example->dt_buffer;
     if (time + dt >= target_time) {
       dt = target_time - time;
@@ -137,7 +136,6 @@ namespace application {
     // Free resources.
     example->Save_To_Nimbus(this, da, frame+1);
     *thread_queue_hook() = NULL;
-    DestroyExampleAndDriver(example, driver);
   }
 
   void JobLoopIteration::SpawnWithBreakAllGranularity(
