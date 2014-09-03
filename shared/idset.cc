@@ -134,6 +134,25 @@ bool IDSet<T>::Parse(const std::string& input) {
 }
 
 template<typename T>
+std::string IDSet<T>::ToString() {
+  bool empty = true;
+  std::string rval = "{";
+  IDSetIter iter =  identifiers_.begin();
+  for (; iter !=  identifiers_.end(); ++iter) {
+    empty = false;
+    std::ostringstream ss;
+    ss << *iter;
+    rval += ss.str();
+    rval += ",";
+  }
+  if (empty)
+    rval += "}";
+  else
+    rval[rval.length() - 1] = '}';
+  return rval;
+}
+
+template<typename T>
 std::string IDSet<T>::ToNetworkData() {
   bool empty = true;
   std::string rval = "{";
