@@ -41,6 +41,7 @@
 #ifndef NIMBUS_WORKER_WORKER_MANAGER_H_
 #define NIMBUS_WORKER_WORKER_MANAGER_H_
 
+#include <cstdio>
 #include <list>
 #include <string>
 #include "shared/high_resolution_timer.h"
@@ -143,6 +144,8 @@ class WorkerManager {
   int64_t ready_jobs_count_;
 
   // Logging data structures.
+  void PrintTimeStamp(const char* format, ...);
+  FILE* event_log;
   bool log_ready_;
   Log* log_;
   Log* version_log_;

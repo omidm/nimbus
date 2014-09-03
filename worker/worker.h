@@ -46,6 +46,7 @@
 #endif  // MUTE_LOG
 
 #include <boost/thread.hpp>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <map>
@@ -130,6 +131,7 @@ class Worker {
   port_t listening_port_;
 
  private:
+  FILE* event_log;
   WorkerJobGraph worker_job_graph_;
   Log log_;
   Log version_log_;
@@ -162,6 +164,8 @@ class Worker {
   virtual void NotifyJobDone(job_id_t job_id);
   virtual void ClearAfterSet(WorkerJobVertex* vertex);
   virtual void NotifyTransmissionDone(job_id_t job_id);
+
+  void PrintTimeStamp(const char* format, ...);
 
  public:
   void ResolveDataArray(Job* job);

@@ -57,6 +57,7 @@ int WorkerManager::inside_job_parallism = 0;
 int WorkerManager::across_job_parallism = 0;
 
 WorkerManager::WorkerManager() {
+  event_log = fopen("event_be.txt", "w");
   pthread_mutex_init(&scheduling_needed_lock_, NULL);
   pthread_cond_init(&scheduling_needed_cond_, NULL);
   scheduling_needed_ = false;
@@ -98,6 +99,17 @@ WorkerManager::~WorkerManager() {
   pthread_cond_destroy(&fast_job_queue_any_cond_);
 }
 
+void WorkerManager::PrintTimeStamp(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(event_log, "%f ", time_sum);
+  vfprintf(event_log, format, args);
+  va_end(args);
+}
+
 void WorkerManager::SetLoggingInterface(
     Log* log, Log* version_log, Log* data_hash_log, Log* cache_log,
     HighResolutionTimer* timer) {
@@ -132,6 +144,10 @@ bool WorkerManager::PushJob(Job* job) {
 
 bool WorkerManager::FinishJob(Job* job) {
   pthread_mutex_lock(&local_job_done_list_lock_);
+  // TODO(print_log): a job is done.
+  PrintTimeStamp("f %s %d\n",
+                 job->name().c_str(),
+                 job->id().elem());
   local_job_done_list_.push_back(job);
   pthread_mutex_unlock(&local_job_done_list_lock_);
   return true;
@@ -360,6 +376,10 @@ void WorkerManager::ScheduleComputationJobs() {
       worker_thread->next_job_to_run =
           computation_job_list_.front();
       computation_job_list_.pop_front();
+      PrintTimeStamp("r %s %d\n",
+                     worker_thread->next_job_to_run->name().c_str(),
+                     worker_thread->next_job_to_run->id().elem());
+      // TODO(print_log): a job can run now.
       dbg(DBG_WORKER_BD, DBG_WORKER_BD_S"Job(name %s, #%d) dispatched.\n",
           worker_thread->next_job_to_run->name().c_str(),
           worker_thread->next_job_to_run->id().elem());
