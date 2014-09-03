@@ -144,7 +144,7 @@ class WorkerManager {
   int64_t ready_jobs_count_;
 
   // Logging data structures.
-  void PrintTimeStamp(const char* format, ...);
+  void PrintTimeStamp(const char* event, const char* s, const uint64_t d);
   FILE* event_log;
   bool log_ready_;
   Log* log_;
