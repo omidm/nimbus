@@ -82,9 +82,9 @@ CacheCompressedScalarArray(const nimbus::GeometricRegion &global_reg,
 
 template<class T> nimbus::CacheVar *CacheCompressedScalarArray<T>::
 CreateNew(const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheCompressedScalarArray(global_region_,
-                                        ob_reg,
-                                        ghost_width_);
+  return new CacheCompressedScalarArray<T>(global_region_,
+                                           ob_reg,
+                                           ghost_width_);
 }
 
 template<class T> void CacheCompressedScalarArray<T>::
