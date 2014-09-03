@@ -139,6 +139,8 @@ class Log {
     bool timer_is_on_;
 
     boost::mutex file_mutex_;
+    boost::mutex stream_mutex_;
+    boost::mutex buffer_mutex_;
 };
 
 
