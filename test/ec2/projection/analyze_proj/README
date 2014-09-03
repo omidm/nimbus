@@ -1,0 +1,4 @@
+scale 200 worker 8 nimbus:
+91 iterations, 5 frames
+
+physbam 89 iterations
