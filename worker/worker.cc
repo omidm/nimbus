@@ -39,6 +39,7 @@
   */
 
 #include <boost/functional/hash.hpp>
+#include <cstdio>
 #include <sstream>
 #include <string>
 #include <ctime>
@@ -77,6 +78,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   scheduler_port_(scheduler_port),
   listening_port_(listening_port),
   application_(a) {
+    event_log = fopen("event_fe.txt", "w");
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
@@ -92,6 +94,17 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
 Worker::~Worker() {
   worker_job_graph_.RemoveVertex(DUMB_JOB_ID);
   delete worker_manager_;
+}
+
+void Worker::PrintTimeStamp(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(event_log, "%f ", time_sum);
+  vfprintf(event_log, format, args);
+  va_end(args);
 }
 
 void Worker::Run() {
@@ -274,6 +287,8 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   Job* job = application_->CloneJob(cm->job_name());
   job->set_name("Compute:" + cm->job_name());
   job->set_id(cm->job_id());
+  // TODO(print_log): Receive a compute job.
+  PrintTimeStamp("recv_job %s %d\n", job->name().c_str(), job->id().elem());
   job->set_read_set(cm->read_set());
   job->set_write_set(cm->write_set());
   job->set_before_set(cm->before_set());
@@ -527,6 +542,14 @@ void Worker::AddJobToGraph(Job* job) {
   if (vertex->incoming_edges()->empty()) {
     vertex->entry()->set_state(WorkerJobEntry::READY);
     ResolveDataArray(job);
+    // TODO(print_log): dispatch a job, newly received with empty before set.
+    if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
+          dynamic_cast<LocalCopyJob*>(job) || // NOLINT
+          dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
+          dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
+      PrintTimeStamp("dispatch_job(new) %s %d\n",
+                     job->name().c_str(), job->id().elem());
+    }
     int success_flag = worker_manager_->PushJob(job);
 #ifndef MUTE_LOG
     double wait_time = timer_.Stop(job->id().elem());
@@ -557,6 +580,19 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
       after_job_vertex->entry()->set_state(WorkerJobEntry::READY);
       assert(after_job_vertex->entry()->get_job() != NULL);
       ResolveDataArray(after_job_vertex->entry()->get_job());
+      // TODO(print_log): dispatch a job, because a
+      // local_job_done/remote_job_done.
+      Job* job = after_job_vertex->entry()->get_job();
+      if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
+          dynamic_cast<LocalCopyJob*>(job) || // NOLINT
+          dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
+          dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
+        // Is compute job.
+          PrintTimeStamp("dispatch_job(job_done) %s %d %d\n",
+                         after_job_vertex->entry()->get_job()->name().c_str(),
+                         after_job_vertex->entry()->get_job()->id().elem(),
+                         vertex->entry()->get_job_id());
+      }
       int success_flag =
           worker_manager_->PushJob(after_job_vertex->entry()->get_job());
 #ifndef MUTE_LOG
