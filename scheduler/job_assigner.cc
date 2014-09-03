@@ -173,6 +173,11 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   }
 
   if (prepared_data) {
+    char buff[LOG_MAX_BUFF_SIZE];
+    snprintf(buff, sizeof(buff), "id: %lu bs: %s.",
+        job->job_id(), job->before_set_p()->ToString().c_str());
+    log_.log_WriteToFile(std::string(buff), LOG_INFO);
+
     job_manager_->UpdateJobBeforeSet(job);
     SendComputeJobToWorker(worker, job);
 
