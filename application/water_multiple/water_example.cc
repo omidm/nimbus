@@ -77,8 +77,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_index_c2m = NULL;
     cache_vector_b = NULL;
     create_destroy_ple = true;
-    Initialize_Particles();
-    Initialize_Read_Write_General_Structures();
+    // Initialize_Particles();
+    // Initialize_Read_Write_General_Structures();
 }
 //#####################################################################
 // WATER_EXAMPLE
@@ -124,8 +124,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_index_c2m = cache->index_c2m;
     cache_vector_b = cache->vector_b;
     create_destroy_ple = true;
-    Initialize_Particles();
-    Initialize_Read_Write_General_Structures();
+    // Initialize_Particles();
+    // Initialize_Read_Write_General_Structures();
 }
 //#####################################################################
 // WATER_EXAMPLE
@@ -172,8 +172,8 @@ WATER_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_index_c2m = cache->index_c2m;
     cache_vector_b = cache->vector_b;
     create_destroy_ple = false;
-    Initialize_Particles();
-    Initialize_Read_Write_General_Structures();
+    // Initialize_Particles();
+    // Initialize_Read_Write_General_Structures();
 }
 //#####################################################################
 // ~WATER_EXAMPLE

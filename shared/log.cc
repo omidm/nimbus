@@ -165,6 +165,7 @@ void Log::ClearLogFile() {
 }
 
 void Log::WriteToBuffer(std::string buf, LOG_TYPE type) {
+  boost::unique_lock<boost::mutex> buffer_lock(buffer_mutex_);
   buffer_ << GetTag(type) << buf << std::endl;
 }
 
@@ -177,10 +178,13 @@ void Log::WriteToFile(std::string buf, LOG_TYPE type) {
 }
 
 void Log::WriteToOutputStream(std::string buf, LOG_TYPE type) {
+  boost::unique_lock<boost::mutex> stream_lock(stream_mutex_);
   *output_stream_ << GetTag(type) << buf << std::endl;
 }
 
 void Log::WriteBufferToFile() {
+  boost::unique_lock<boost::mutex> buffer_lock(buffer_mutex_);
+  boost::unique_lock<boost::mutex> file_lock(file_mutex_);
   std::ofstream ofs;
   ofs.open(log_file_name_.c_str(), std::ofstream::app);
   ofs << buffer_.str();
@@ -189,6 +193,8 @@ void Log::WriteBufferToFile() {
 
 
 void Log::WriteBufferToOutputStream() {
+  boost::unique_lock<boost::mutex> buffer_lock(buffer_mutex_);
+  boost::unique_lock<boost::mutex> stream_lock(stream_mutex_);
   *output_stream_ << buffer_.str();
 }
 

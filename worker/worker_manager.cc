@@ -99,15 +99,12 @@ WorkerManager::~WorkerManager() {
   pthread_cond_destroy(&fast_job_queue_any_cond_);
 }
 
-void WorkerManager::PrintTimeStamp(const char* format, ...) {
-  va_list args;
-  va_start(args, format);
+void WorkerManager::PrintTimeStamp(
+    const char* event, const char* s, const uint64_t d) {
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(event_log, "%f ", time_sum);
-  vfprintf(event_log, format, args);
-  va_end(args);
+  fprintf(event_log, "%f %s %s %d\n", time_sum, event, s, d);
 }
 
 void WorkerManager::SetLoggingInterface(
@@ -145,7 +142,7 @@ bool WorkerManager::PushJob(Job* job) {
 bool WorkerManager::FinishJob(Job* job) {
   pthread_mutex_lock(&local_job_done_list_lock_);
   // TODO(print_log): a job is done.
-  PrintTimeStamp("f %s %d\n",
+  PrintTimeStamp("f",
                  job->name().c_str(),
                  job->id().elem());
   local_job_done_list_.push_back(job);
@@ -376,7 +373,7 @@ void WorkerManager::ScheduleComputationJobs() {
       worker_thread->next_job_to_run =
           computation_job_list_.front();
       computation_job_list_.pop_front();
-      PrintTimeStamp("r %s %d\n",
+      PrintTimeStamp("r",
                      worker_thread->next_job_to_run->name().c_str(),
                      worker_thread->next_job_to_run->id().elem());
       // TODO(print_log): a job can run now.
