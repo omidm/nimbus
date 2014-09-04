@@ -2,37 +2,45 @@
 Nimbus Installation Dependencies - Linux
 =========================================
 *** Protocol Buffers: 
+Download and install protocol buffer 2.6.0 from
+    code.google.com/p/protobuf/
 
-sudo apt-get install libprotoc-dev
-sudo apt-get install protobuf-compiler
-
-Note: you may need to increase the following default values for message size:
-kDefaultTotalBytesLimit
-kDefaultTotalBytesWarningThreshold
-both in /usr/include/google/protobuf/io/coded_stream.h
-
+Note:
+you may need to increase the following default values for message size:
+    kDefaultTotalBytesLimit
+    kDefaultTotalBytesWarningThreshold
+both in ./src/google/protobuf/io/coded_stream.h before building the source.
 
 *** Boost:
+Download and install boost >1.55 from
+    www.boost.org.
 
-Download and install boost >1.55 from www.boost.org.
+Note:
+use bootstrap with prefix option as follows:
+    sudo ./bootsrap.sh --prefix="/usr/local"
 
-----------------------------------------
-To uninstall the old boost:
-----------------------------------------
-sudo apt-get autoremove libboost1.48-dev
 
-----------------------------------------
-To install the latest version:
-----------------------------------------
-* Download the latest copy of boost
-tar --bzip2 -xf /path/to/boost_1_xx_0.tar.bz2
-sudo ./bootsrap.sh --prefix="/usr/local"
-sudo ./b2
-
-----------------------------------------
-To update the known libraries
-----------------------------------------
+--------------------------------------------------
+To update the known libraries to system
+--------------------------------------------------
 sudo ldconfig
+
+
+--------------------------------------------------
+To install libraries and files using apt-get
+--------------------------------------------------
+sudo apt-get install libprotoc-dev
+sudo apt-get install protobuf-compiler
+sudo apt-get install libboost1.48-all-dev
+
+--------------------------------------------------
+To uninstall the old files and libraries:
+--------------------------------------------------
+sudo apt-get remove --auto-remove libprotoc-dev
+sudo apt-get remove --auto-remove protobuf-compiler
+sudo apt-get remove --auto-remove libboost1.48-dev
+
+
 
 
 Nimbus Installation Dependencies - MacOSX
