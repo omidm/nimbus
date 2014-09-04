@@ -128,6 +128,38 @@ def run_worker(scheduler_ip, worker_ip, num):
 
   print '** Worker ' + str(num) + ' Launched: ' + worker_ip
 
+def terminate_experiment(scheduler_ip, worker_ips):
+
+  worker_num = len(worker_ips)
+
+  terminate_scheduler(scheduler_ip);
+
+  num = 0;
+  for ip in worker_ips:
+    num += 1
+    terminate_worker(ip, num);
+
+
+def terminate_scheduler(scheduler_ip):
+  scheduler_command =  'killall -v scheduler;'
+
+  subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip, scheduler_command])
+
+  print '** Scheduler Terminated: ' + scheduler_ip
+
+
+def terminate_worker(worker_ip, num):
+  worker_command =  'killall -v worker;'
+
+  subprocess.Popen(['ssh', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + worker_ip, worker_command])
+
+  print '** Worker ' + str(num) + ' Terminated: ' + worker_ip
 
 def  test_workers(worker_ips):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
@@ -159,6 +191,13 @@ def collect_output_data(scheduler_ip, worker_ips):
       config.REL_SCHEDULER_PATH + config.LOG_FILE_NAME,
       config.OUTPUT_PATH])
 
+  subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_SCHEDULER_PATH + 'job_assigner_log',
+      config.OUTPUT_PATH])
+
   num = 0
   for ip in worker_ips:
     num += 1
@@ -177,6 +216,20 @@ def collect_output_data(scheduler_ip, worker_ips):
         # config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + str(config.FIRST_PORT + num),
         config.REL_WORKER_PATH + config.WORKER_LOG_FILE_NAME + '*',
         config.OUTPUT_PATH])
+
+    subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'event_fe.txt',
+        config.OUTPUT_PATH + str(num) + '_event_fe.txt'])
+
+    subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'event_be.txt',
+        config.OUTPUT_PATH + str(num) + '_event_be.txt'])
 
 
 # ssh -i omidm-sing-key-pair-us-west-2.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@<ip>
