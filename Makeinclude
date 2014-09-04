@@ -39,7 +39,7 @@ endif
 
 # -I params for all cpp invocations
 IFLAGS   = -I/opt/local/include # Include MacPorts includes
-IFLAGS  += -I/usr/local/include # For protobufs
+IFLAGS  += -I/usr/local/include # Include protocol buffer headers
 IFLAGS  += -I${NIMBUS_ROOT}/leveldb/include # Include leveldb includes
 IFLAGS  += -I${NIMBUS_ROOT}
 
@@ -48,6 +48,7 @@ LFLAGS   =
 
 # -L params for linking invocation
 LDFLAGS += -L/opt/local/lib # Link with MacPorts libraries
+LDFLAGS += -L/usr/local/lib # Link with protocol buffer libraries
 LDFLAGS += -L${NIMBUS_ROOT}/leveldb/ # Link with Leveldb library
 LDFLAGS += -L${NIMBUS_ROOT}/ # Link with Nimbus libraries
 
