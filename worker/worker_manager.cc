@@ -104,7 +104,7 @@ void WorkerManager::PrintTimeStamp(
   struct timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
-  fprintf(event_log, "%f %s %s %d\n", time_sum, event, s, d);
+  fprintf(event_log, "%f %s %s %lu\n", time_sum, event, s, d);
 }
 
 void WorkerManager::SetLoggingInterface(

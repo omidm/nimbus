@@ -288,7 +288,7 @@ void Worker::ProcessComputeJobCommand(ComputeJobCommand* cm) {
   job->set_name("Compute:" + cm->job_name());
   job->set_id(cm->job_id());
   // TODO(print_log): Receive a compute job.
-  PrintTimeStamp("recv_job %s %d\n", job->name().c_str(), job->id().elem());
+  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_read_set(cm->read_set());
   job->set_write_set(cm->write_set());
   job->set_before_set(cm->before_set());
@@ -547,7 +547,7 @@ void Worker::AddJobToGraph(Job* job) {
           dynamic_cast<LocalCopyJob*>(job) || // NOLINT
           dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
           dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
-      PrintTimeStamp("dispatch_job(new) %s %d\n",
+      PrintTimeStamp("dispatch_job(new) %s %lu\n",
                      job->name().c_str(), job->id().elem());
     }
     int success_flag = worker_manager_->PushJob(job);
