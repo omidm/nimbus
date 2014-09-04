@@ -53,14 +53,22 @@ CacheScalarArray<bool> kCachePsiD(kDefaultRegion, 1, true);
 
 // Varibales for projection.
 CacheScalarArray<T> kCachePressure(kDefaultRegion, 1, true);
-CacheScalarArray<T> kCacheVectorPGridFormat(kDefaultRegion, 1, true);
 CacheScalarArray<int> kCacheColors(kDefaultRegion, 1, true);
 CacheScalarArray<T> kCacheDivergence(kDefaultRegion, 1, true);
+// TODO(quhang): this cache variable is questionable, because it cannot be
+// deleted if meta_p is being used.
+CacheRawGridArray kCacheIndexC2M(kDefaultRegion, true);
 
 CacheSparseMatrix kCacheSparseMatrixA(kDefaultRegion, true);
 CacheSparseMatrix kCacheSparseMatrixC(kDefaultRegion, true);
 
 CacheArrayM2C kCacheArrayM2C(kDefaultRegion, true);
 
+CacheCompressedScalarArray<float> kCacheMetaP(kDefaultRegion, 1, true);
+
+CacheVector kCacheVectorB(kDefaultRegion, true);
+CacheVector kCacheVectorPressure(kDefaultRegion, true);
+CacheVector kCacheVectorZ(kDefaultRegion, true);
+CacheVector kCacheVectorTemp(kDefaultRegion, true);
 } // namespace application
 

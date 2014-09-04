@@ -82,8 +82,10 @@ void JobProjectionLocalInitialize::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
 
   data_config.SetFlag(DataConfig::VECTOR_PRESSURE);
+  data_config.SetFlag(DataConfig::VECTOR_P_META_FORMAT);
   data_config.SetFlag(DataConfig::PRESSURE);
   data_config.SetFlag(DataConfig::INDEX_M2C);
+  data_config.SetFlag(DataConfig::INDEX_C2M);
 
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::MATRIX_A);
@@ -91,8 +93,6 @@ void JobProjectionLocalInitialize::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);
   data_config.SetFlag(DataConfig::MATRIX_C);
 
-  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
-  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
   data_config.SetFlag(DataConfig::VECTOR_Z);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;

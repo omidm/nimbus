@@ -55,6 +55,12 @@ namespace PhysBAM {
 
 class SPARSE_MATRIX_PARTITION;
 typedef GRID<application::TV> T_GRID;
+typedef typename T_GRID::VECTOR_INT TV_INT;
+
+struct MetaPAuxData {
+  ARRAY<int, TV_INT>* pointer;
+  int local_n;
+};
 
 class ProjectionDriver {
  public:
@@ -91,11 +97,17 @@ class ProjectionDriver {
     projection_data.iteration = 0;
     projection_data.matrix_a = NULL;
     projection_data.matrix_index_to_cell_index = NULL;
+    cache_vector_z = NULL;
+    cache_vector_b = NULL;
+    cache_vector_pressure = NULL;
+    cache_vector_temp = NULL;
     cache_pressure = NULL;
     cache_vector_p = NULL;
     cache_matrix_a = NULL;
     cache_matrix_c = NULL;
     cache_index_m2c = NULL;
+    cache_index_c2m = NULL;
+    cache_meta_p = NULL;
   }
 
   virtual ~ProjectionDriver() {
@@ -110,17 +122,15 @@ class ProjectionDriver {
   class ProjectionData {
    public:
     ARRAY<float, VECTOR<int,3> > pressure;
-    ARRAY<float, VECTOR<int,3> > grid_format_vector_p;
     ARRAY<TV_INT>* matrix_index_to_cell_index;
     ARRAY<int, TV_INT> cell_index_to_matrix_index;
     SPARSE_MATRIX_FLAT_NXN<T>* matrix_a;
     SPARSE_MATRIX_FLAT_NXN<T>* matrix_c;
     VECTOR_ND<T> vector_b;
     VECTOR_ND<T> vector_x;
-    // VECTOR_ND<T> x_interior;
     VECTOR_ND<T> temp, temp_interior;
     VECTOR_ND<T> vector_pressure;
-    VECTOR_ND<T> p, p_interior;
+    VECTOR_ND<T> meta_p, p_interior;
     VECTOR_ND<T> z_interior;
     VECTOR_ND<T> b_interior;
 
@@ -152,11 +162,18 @@ class ProjectionDriver {
 
   SPARSE_MATRIX_PARTITION partition;
   typedef typename application::CacheScalarArray<T> TCacheScalarArray;
+  typedef typename application::CacheScalarArray<int> IntCacheScalarArray;
   TCacheScalarArray *cache_pressure;
   TCacheScalarArray *cache_vector_p;
+  application::CacheRawGridArray *cache_index_c2m;
   application::CacheSparseMatrix *cache_matrix_a;
   application::CacheSparseMatrix *cache_matrix_c;
   application::CacheArrayM2C * cache_index_m2c;
+  application::CacheCompressedScalarArray<float>* cache_meta_p;
+  application::CacheVector* cache_vector_z;
+  application::CacheVector* cache_vector_b;
+  application::CacheVector* cache_vector_pressure;
+  application::CacheVector* cache_vector_temp;
 
   template<class TYPE> TYPE Global_Sum(const TYPE& input) {
     return input;

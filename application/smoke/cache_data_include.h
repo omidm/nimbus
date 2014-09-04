@@ -40,9 +40,12 @@
 #ifndef NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_
 #define NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_
 
+#include "application/smoke/cache_compressed_scalar_array.h"
 #include "application/smoke/cache_face_array.h"
 #include "application/smoke/cache_scalar_array.h"
 #include "application/smoke/projection/cache_sparse_matrix.h"
 #include "application/smoke/projection/cache_array_m2c.h"
+#include "application/smoke/projection/cache_vector.h"
+#include "application/smoke/projection/cache_raw_grid_array.h"
 
 #endif // NIMBUS_APPLICATION_SMOKE_CACHE_DATA_INCLUDE_H_

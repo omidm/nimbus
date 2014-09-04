@@ -45,41 +45,47 @@
 #include "shared/geometric_region.h"
 #include "worker/data.h"
 
-#include "application/smoke/projection/cache_array_m2c.h"
+#include "application/smoke/projection/data_raw_grid_array.h"
+#include "application/smoke/projection/cache_raw_grid_array.h"
 
 namespace application {
 
-CacheArrayM2C::CacheArrayM2C(const nimbus::GeometricRegion &global_reg,
-                             bool make_proto)
+CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
+                         bool make_proto)
     : global_region_(global_reg) {
   if (make_proto)
     MakePrototype();
 }
 
-CacheArrayM2C::CacheArrayM2C(const nimbus::GeometricRegion &global_reg,
-                             const nimbus::GeometricRegion &ob_reg)
+CacheRawGridArray::CacheRawGridArray(const nimbus::GeometricRegion &global_reg,
+                         const nimbus::GeometricRegion &ob_reg)
     : CacheVar(ob_reg), global_region_(global_reg), local_region_(ob_reg) {
   data_ = new DATA_TYPE;
+  data_->Resize(
+      PhysBAM::RANGE<TV_INT>(TV_INT(0, 0, 0),
+                             TV_INT(local_region_.dx()+1,
+                                    local_region_.dy()+1,
+                                    local_region_.dz()+1)));
 }
 
-nimbus::CacheVar* CacheArrayM2C::CreateNew(
+nimbus::CacheVar* CacheRawGridArray::CreateNew(
     const nimbus::GeometricRegion &ob_reg) const {
-  return new CacheArrayM2C(global_region_, ob_reg);
+  return new CacheRawGridArray(global_region_, ob_reg);
 }
 
-void CacheArrayM2C::ReadToCache(const nimbus::DataArray &read_set,
-                                const nimbus::GeometricRegion &read_reg) {
+void CacheRawGridArray::ReadToCache(const nimbus::DataArray &read_set,
+                              const nimbus::GeometricRegion &read_reg) {
   if (read_set.size() == 0) {
     return;
   }
   assert(read_set.size() == 1);
   assert(read_set[0]->region().IsEqual(&read_reg));
   assert(object_region().IsEqual(&read_reg));
-  assert(dynamic_cast<DataRawArrayM2C*>(read_set[0]));
-  dynamic_cast<DataRawArrayM2C*>(read_set[0])->LoadFromNimbus(data_);
+  assert(dynamic_cast<DataRawGridArray*>(read_set[0]));
+  dynamic_cast<DataRawGridArray*>(read_set[0])->LoadFromNimbus(data_);
 }
 
-void CacheArrayM2C::WriteFromCache(
+void CacheRawGridArray::WriteFromCache(
     const nimbus::DataArray &write_set,
     const nimbus::GeometricRegion &write_reg) const {
   if (write_set.size() == 0) {
@@ -90,8 +96,8 @@ void CacheArrayM2C::WriteFromCache(
   assert(write_set.size() == 1);
   assert(write_set[0]->region().IsEqual(&write_reg));
   assert(object_region().IsEqual(&write_reg));
-  assert(dynamic_cast<DataRawArrayM2C*>(write_set[0]));
-  dynamic_cast<DataRawArrayM2C*>(write_set[0])->SaveToNimbus(*data_);
+  assert(dynamic_cast<DataRawGridArray*>(write_set[0]));
+  dynamic_cast<DataRawGridArray*>(write_set[0])->SaveToNimbus(*data_);
 }
 
 } // namespace application
