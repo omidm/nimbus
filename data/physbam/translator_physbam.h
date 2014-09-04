@@ -1780,7 +1780,8 @@ template <class TS> class TranslatorPhysBAM {
           }
           for (size_t i = 0; i < write_set.size(); ++i) {
             PhysBAMDataWithMeta* nimbus_data =
-                static_cast<PhysBAMDataWithMeta*>(write_set[i]);
+                dynamic_cast<PhysBAMDataWithMeta*>(write_set[i]);  // NOLINT
+            assert(nimbus_data != NULL);
             GeometricRegion inter_region = GeometricRegion::GetIntersection(
                 nimbus_data->region(), region);
             if (!inter_region.NoneZeroArea()) {

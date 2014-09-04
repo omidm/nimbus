@@ -233,6 +233,10 @@ int PhysBAMData::CommitTempBuffer() {
   if (buffer_)
     delete[] buffer_;
   size_ = len;
+  if (len == 0) {
+    buffer_ = NULL;
+    return len;
+  }
   buffer_ = new char[len];
   temp_buffer_->read(buffer_, len);
   if (temp_buffer_->eof()) {

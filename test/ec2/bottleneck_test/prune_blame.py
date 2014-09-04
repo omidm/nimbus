@@ -46,6 +46,7 @@ step_2_file = sys.argv[3]
 before_set_file = sys.argv[4]
 out_file = sys.argv[5]
 for i in range(1, n+1):
+	print i
 	f = open(backend_file % i, 'r')
 	for line in f.readlines():
 		timestamp, event, job_name, job_id = break_line(line)
@@ -53,12 +54,17 @@ for i in range(1, n+1):
 			finish_time[job_id] = (timestamp, i, job_name)
 	f.close()
 
+temp_g = open(before_set_file, 'r')
+known_jobs = {extract(line) for line in temp_g.readlines()}
 for rank in range(1, n+1):
+	print rank
 	f = open(step_2_file % rank, 'r')
 	g = open(before_set_file, 'r')
 	out = open(out_file % rank, 'w')
 	for line in f.readlines():
 		event, job_id, job_name, start_ts, resource_constraint_ts, blocking_job_id = break_blame_line(line)
+		if not (job_id in known_jobs):
+			continue
 		temp = g.readline()
 		while temp and extract(temp) != job_id:
 			temp = g.readline()
