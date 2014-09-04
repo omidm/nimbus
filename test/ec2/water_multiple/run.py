@@ -28,7 +28,7 @@ import ec2
 
 ip_addresses = ec2.get_ip_addresses(config.EC2_LOCATION);
 
-scheduler_ip = "x.x.x.x"
+scheduler_ip = "54.184.223.142"
 worker_ips = list(ip_addresses)
 worker_ips.remove(scheduler_ip)
 # scheduler_ip = ip_addresses[0]
@@ -45,7 +45,7 @@ print worker_ips
 # utils.distribute_binaries(scheduler_ip, worker_ips);
  
 # utils.run_experiment(scheduler_ip, worker_ips)
-# utils.collect_output_data(scheduler_ip, worker_ips)
+utils.collect_output_data(scheduler_ip, worker_ips)
 # utils.terminate_experiment(scheduler_ip, worker_ips)
  
 # ec2.terminate_instances(config.EC2_LOCATION);

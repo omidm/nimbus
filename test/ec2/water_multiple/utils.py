@@ -94,6 +94,7 @@ def run_scheduler(scheduler_ip, worker_num):
 
   scheduler_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_SCHEDULER_PATH + ';'
   scheduler_command += 'export DBG=error;'
+  scheduler_command += 'ulimit -c unlimited;'
   scheduler_command += './scheduler'
   scheduler_command += ' -port ' + str(config.FIRST_PORT)
   scheduler_command += ' -wn ' + str(worker_num)
@@ -112,6 +113,7 @@ def run_scheduler(scheduler_ip, worker_num):
 def run_worker(scheduler_ip, worker_ip, num):
   worker_command =  'cd ' + config.EC2_NIMBUS_ROOT + config.REL_WORKER_PATH + ';'
   worker_command += 'export DBG=error;'
+  worker_command += 'ulimit -c unlimited;'
   worker_command += './worker'
   worker_command += ' -port ' + str(config.FIRST_PORT + num)
   worker_command += ' -ip ' + worker_ip
@@ -198,6 +200,13 @@ def collect_output_data(scheduler_ip, worker_ips):
       config.REL_SCHEDULER_PATH + 'job_assigner_log',
       config.OUTPUT_PATH])
 
+  subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_SCHEDULER_PATH + 'core',
+      config.OUTPUT_PATH])
+
   num = 0
   for ip in worker_ips:
     num += 1
@@ -230,6 +239,13 @@ def collect_output_data(scheduler_ip, worker_ips):
         'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
         config.REL_WORKER_PATH + 'event_be.txt',
         config.OUTPUT_PATH + str(num) + '_event_be.txt'])
+
+    subprocess.call(['scp', '-r', '-i', config.PRIVATE_KEY,
+        '-o', 'UserKnownHostsFile=/dev/null',
+        '-o', 'StrictHostKeyChecking=no',
+        'ubuntu@' + ip + ':' + config.EC2_NIMBUS_ROOT +
+        config.REL_WORKER_PATH + 'core',
+        config.OUTPUT_PATH + str(num) + '_core'])
 
 
 # ssh -i omidm-sing-key-pair-us-west-2.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@<ip>
