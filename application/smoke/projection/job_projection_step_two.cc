@@ -33,7 +33,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
- * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu>
  */
 
 #include <sstream>
@@ -83,9 +83,8 @@ void JobProjectionStepTwo::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_BETA);
   data_config.SetFlag(DataConfig::VECTOR_Z);
-  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
-  data_config.SetFlag(DataConfig::VECTOR_P_GRID_FORMAT);
-  data_config.SetFlag(DataConfig::INDEX_M2C);
+  data_config.SetFlag(DataConfig::VECTOR_P_META_FORMAT);
+  data_config.SetFlag(DataConfig::INDEX_C2M);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
   pcg_temp.Set_Maximum_Iterations(1000);

@@ -111,6 +111,7 @@ void JobConvect::Execute(nimbus::Parameter params,
     application::ScopeTimer scope_timer(name() + "-save");
     example->Save_To_Nimbus(this, da, driver->current_frame + 1);
   }
+
   *thread_queue_hook() = NULL;
   // Free resources.
   DestroyExampleAndDriver(example, driver);

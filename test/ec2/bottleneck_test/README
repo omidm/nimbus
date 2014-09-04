@@ -1,0 +1,64 @@
+The measurments aim to report two kinds of delays on the worker side caused by
+scheduler processing or load imbalance.
+
+(1) Scheduler Processing Delay.
+The worker might not fully utilize all its cores because a job is not sent to
+the worker in time. The job might be able to run earlier if its before set is
+satisfied and there is enough computation resource before the job is received.
+But the scheduler is not processing jobs fast enough, so the worker has to wait
+for the job to be received. The computation resource is wasted because the job
+could be run earlier, but is delayed because of scheduler processing.
+
+From the worker side, when the worker receives a job from the scheduler and can
+immediately run it since its before set is already satisfied and there are idle
+cores, it indicates that the job is delayed by scheduler processing.
+
+(2) Load Imbalance Delay.
+The worker might not fully utilize all its cores because a job is waiting for
+other workers to finish their jobs. It happens when a job is blocked on the
+worker side because it is waiting for jobs which are in its before set and
+assigned to other workers. At the same time, if there is enough computation
+resource for the blocked job to run, and the jobs which are in its before set
+and assigned to the same worker are all finished, it indicates that those workers
+delays the job. It is quite probable that those workers are overloaded and can
+not finish their jobs timely. That is to say, there is load imbalance across
+workers, and thus the job is delayed.
+
+
+
+Several definitions:
+
+(1) t_receive of a job: 
+The time when a worker receives the job from the scheduler.
+
+(2) t_depend of a job:
+The time when all the jobs in its before set are finished. This is the earliest
+time the job could run because of job dependency.
+
+(3) t_localdepend of a job:
+The time when all the jobs that are assigned to the same worker as the job and
+in its before set are finished. This is the earliest time the job could be run
+because of local job dependency.
+
+(4) t_resource of a job:
+The latest switching time when the worker switches from fully utilizing all the
+computation resource to having enough computation resource for the job to run
+before the job is actually run.
+This is the earliest time the job could run because of resource constraint.
+
+
+
+Quantify the delays:
+
+Assuming the delaying factor was removed, the time length the delayed job could be
+run ahead is defined as the delay.
+
+The scheduler processing delay is defined as the time length the delayed job could
+be run ahead if the job was received at its earliest possible time.
+
+max(t_receive - max(t_depend, t_resource), 0)
+
+The load imbalance delay is defined as the time length the delayed job could be run
+ahead if the jobs on other workers were not blocking the job.
+
+max(t_depend - max(t_localdepend, t_resource), 0)

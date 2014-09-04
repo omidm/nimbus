@@ -588,7 +588,7 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
           dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
           dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
         // Is compute job.
-          PrintTimeStamp("dispatch_job(job_done) %s %d %d\n",
+          PrintTimeStamp("dispatch_job(job_done) %s %lu %lu\n",
                          after_job_vertex->entry()->get_job()->name().c_str(),
                          after_job_vertex->entry()->get_job()->id().elem(),
                          vertex->entry()->get_job_id());

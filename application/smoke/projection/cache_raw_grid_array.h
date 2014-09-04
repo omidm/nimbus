@@ -36,50 +36,49 @@
  * Author: Hang Qu <quhang@stanford.edu>
  */
 
-#include "application/smoke/projection/translator_util.h"
-#include "data/physbam/physbam_data.h"
-#include "shared/nimbus.h"
+#ifndef NIMBUS_APPLICATION_SMOKE_CACHE_RAW_GRID_ARRAY_H_
+#define NIMBUS_APPLICATION_SMOKE_CACHE_RAW_GRID_ARRAY_H_
 
-#include "application/smoke/projection/data_raw_array_m2c.h"
+#include <string>
+
+#include "application/smoke/parameters.h"
+#include "application/smoke/physbam_include.h"
+#include "data/cache/cache_var.h"
+#include "shared/geometric_region.h"
+#include "worker/data.h"
 
 namespace application {
 
-DataRawArrayM2C::DataRawArrayM2C(std::string name) {
-  set_name(name);
-}
+class CacheRawGridArray : public nimbus::CacheVar {
+ public:
+  typedef PhysBAM::ARRAY<int, TV_INT> DATA_TYPE;
+  explicit CacheRawGridArray(const nimbus::GeometricRegion& global_reg,
+                             bool make_proto = false);
 
-nimbus::Data* DataRawArrayM2C::Clone() {
-  return (new DataRawArrayM2C(name()));
-}
+  DATA_TYPE* data() {
+    return data_;
+  }
+  void set_data(DATA_TYPE* d) {
+    data_ = d;
+  }
 
-bool DataRawArrayM2C::SaveToNimbus(const PhysBAM::ARRAY<TV_INT>& array_input) {
-  Header header;
-  header.n = PhysBAM::Value(array_input.m);
-  ClearTempBuffer();
-  AddToTempBuffer(reinterpret_cast<char*>(&header), sizeof(header));
-  Buffer buffer;
-  SerializePhysBAMArray(array_input, &buffer);
-  AddToTempBuffer(reinterpret_cast<char*>(buffer.pointer), buffer.size);
-  assert(buffer.size == header.n * sizeof(TV_INT));
-  buffer.Clean();
-  CommitTempBuffer();
-  return true;
-}
+ protected:
+  explicit CacheRawGridArray(const nimbus::GeometricRegion& global_reg,
+                       const nimbus::GeometricRegion& ob_reg);
 
-bool DataRawArrayM2C::LoadFromNimbus(PhysBAM::ARRAY<TV_INT>* array) {
-  assert(array != NULL);
-  char* pointer = buffer();
-  assert(pointer != NULL);
-  const Header &header = *(reinterpret_cast<const Header*>(pointer));
-  array->m = header.n;
-  array->buffer_size = array->m;
-  pointer += sizeof(Header);
-  Buffer buffer;
-  buffer.pointer = reinterpret_cast<void*>(pointer);
-  buffer.size = header.n * sizeof(TV_INT);
-  DeserializePhysBAMArray(buffer, array);
-  buffer.Reset();
-  return true;
-}
+  virtual nimbus::CacheVar* CreateNew(const nimbus::GeometricRegion &ob_reg) const;
+
+  virtual void ReadToCache(const nimbus::DataArray& read_set,
+                           const nimbus::GeometricRegion& read_reg);
+  virtual void WriteFromCache(const nimbus::DataArray& write_set,
+                              const nimbus::GeometricRegion& write_reg) const;
+
+ private:
+  nimbus::GeometricRegion global_region_;
+  nimbus::GeometricRegion local_region_;
+  DATA_TYPE* data_;
+};  // class CacheRawGridArray
 
 }  // namespace application
+
+#endif  // NIMBUS_APPLICATION_SMOKE_CACHE_RAW_GRID_ARRAY_H_

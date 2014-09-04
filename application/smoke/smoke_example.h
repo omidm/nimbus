@@ -90,9 +90,11 @@ public:
     TCacheScalarArray *cache_dens, *cache_dens_ghost;
     TCacheScalarArray *cache_pressure, *cache_divergence;
     IntCacheScalarArray *cache_colors;
+    application::CacheRawGridArray *cache_index_c2m;
     BoolCacheScalarArray *cache_psi_d;
     TCacheSparseMatrix *cache_matrix_a;
     TCacheArrayM2C *cache_index_m2c;
+    application::CacheVector *cache_vector_b;
 
     SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
                   bool use_threading,

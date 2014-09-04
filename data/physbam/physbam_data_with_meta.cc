@@ -66,7 +66,8 @@ void PhysBAMDataWithMeta::Destroy() {
 
 void PhysBAMDataWithMeta::Copy(Data *from) {
   PhysBAMData::Copy(from);
-  PhysBAMDataWithMeta* pfrom = static_cast<PhysBAMDataWithMeta*>(from);
+  PhysBAMDataWithMeta* pfrom = dynamic_cast<PhysBAMDataWithMeta*>(from);  // NOLINT
+  assert(pfrom != NULL);
   has_meta_data_ = pfrom->has_meta_data();
   meta_data_size_ = pfrom->meta_data_size();
   meta_data_hash_ = pfrom->meta_data_hash();
@@ -148,10 +149,13 @@ void PhysBAMDataWithMeta::MarkMetaDataInTempBuffer() {
   meta_data_size_ = temp_buffer_->tellp();
   has_meta_data_ = true;
   std::size_t temp = HASH_SEED;
-  const char* pointer = temp_buffer_->str().c_str();
+  /*
+  const std::string& temp_str = temp_buffer_->str();
+  const char* pointer = temp_str.c_str();
   if (meta_data_size_ != 0) {
     boost::hash_range(temp, pointer, pointer + meta_data_size_);
   }
+  */
   meta_data_hash_ = static_cast<int64_t>(temp);
 }
 

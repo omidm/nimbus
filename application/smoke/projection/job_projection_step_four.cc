@@ -33,7 +33,7 @@
 
 /*
  * Author: Hang Qu <quhang@stanford.edu>
- * Modifier for smoke: Andrew Lim <alim16@stanford.edu> 
+ * Modifier for smoke: Andrew Lim <alim16@stanford.edu>
  */
 
 #include <sstream>
@@ -82,7 +82,8 @@ void JobProjectionStepFour::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_N);
   data_config.SetFlag(DataConfig::PROJECTION_INTERIOR_N);
   data_config.SetFlag(DataConfig::PROJECTION_ALPHA);
-  data_config.SetFlag(DataConfig::VECTOR_P_LINEAR_FORMAT);
+  data_config.SetFlag(DataConfig::VECTOR_P_META_FORMAT);
+  data_config.SetFlag(DataConfig::INDEX_C2M);
   data_config.SetFlag(DataConfig::VECTOR_TEMP);
   data_config.SetFlag(DataConfig::VECTOR_B);
   data_config.SetFlag(DataConfig::PROJECTION_LOCAL_RESIDUAL);

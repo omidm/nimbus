@@ -62,6 +62,8 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = NULL;
     cache_matrix_a = NULL;
     cache_index_m2c = NULL;
+    cache_index_c2m = NULL;
+    cache_vector_b = NULL;
 }
 
 //#####################################################################
@@ -104,6 +106,8 @@ SMOKE_EXAMPLE(const STREAM_TYPE stream_type_input,
     cache_divergence = cache->divergence;
     cache_matrix_a = cache->matrix_a;
     cache_index_m2c = cache->index_m2c;
+    cache_index_c2m = cache->index_c2m;
+    cache_vector_b = cache->vector_b;
 }
 
 //#####################################################################
@@ -370,15 +374,16 @@ Save_To_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, con
         dbg(APP_LOG, "Finish writing VECTOR_B.\n");
       }
     }
+    // index_c2m.
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
       Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS);
+	  job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS);
       if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->SaveToNimbus(
-            laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
+	application::DataRawGridArray* data_real =
+	  dynamic_cast<application::DataRawGridArray*>(data_temp);
+	data_real->SaveToNimbus(
+	    laplace_solver_wrapper.cell_index_to_matrix_index);
+	dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
       }
     }
     if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
@@ -562,28 +567,23 @@ Save_To_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int fr
       cm->ReleaseAccess(cache_index_m2c);
       cache_index_m2c = NULL;
     }
-    // TODO(addcache) the following data translation is implemented by memcpy,
-    // caching might not be needed.
     if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_B), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->SaveToNimbus(laplace_solver_wrapper.b_array(1));
-        dbg(APP_LOG, "Finish writing VECTOR_B.\n");
-      }
+      assert(cache_vector_b);
+      cache_vector_b->data()->n = laplace_solver_wrapper.b_array(1).n;
+      cache_vector_b->data()->x = laplace_solver_wrapper.b_array(1).x;
+      laplace_solver_wrapper.b_array(1).n = 0;
+      laplace_solver_wrapper.b_array(1).x = NULL;
+      cm->ReleaseAccess(cache_vector_b);
+      cache_vector_b = NULL;
     }
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::WRITE_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->SaveToNimbus(
-            laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish writing INDEX_C2M.\n");
-      }
+      assert(cache_index_c2m);
+      typedef typename PhysBAM::ARRAY<int, TV_INT> T_SCALAR_ARRAY;
+      T_SCALAR_ARRAY* index_c2m = cache_index_c2m->data();
+      T_SCALAR_ARRAY::Exchange_Arrays(*index_c2m,
+          laplace_solver_wrapper.cell_index_to_matrix_index);
+      cm->ReleaseAccess(cache_index_c2m);
+      cache_index_c2m = NULL;
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
@@ -773,28 +773,20 @@ Load_From_Nimbus_No_Cache(const nimbus::Job *job, const nimbus::DataArray &da, c
         dbg(APP_LOG, "Finish reading VECTOR_B.\n");
       }
     }
+    // index_c2m.
     if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
       Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
+	  job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
       if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
+	application::DataRawGridArray* data_real =
+	  dynamic_cast<application::DataRawGridArray*>(data_temp);
         data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
+	    &laplace_solver_wrapper.cell_index_to_matrix_index);
+	dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
       }
     }
-    if (data_config.GetFlag(DataConfig::INDEX_M2C)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_M2C), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawArrayM2C* data_real =
-            dynamic_cast<application::DataRawArrayM2C*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.matrix_index_to_cell_index_array(1));
-        dbg(APP_LOG, "Finish reading INDEX_M2C.\n");
-      }
-    }
+
+
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
           job, std::string(APP_PROJECTION_LOCAL_TOLERANCE),
@@ -931,28 +923,15 @@ Load_From_Nimbus(const nimbus::Job *job, const nimbus::DataArray &da, const int 
       // &laplace_solver_wrapper.matrix_index_to_cell_index_array(1) =
       //     *(cache_index_m2c->data());
     }
-    // TODO(addcache), the following data uses memcpy, maybe doesn't need to be
-    // cached.
-    if (data_config.GetFlag(DataConfig::VECTOR_B)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_VECTOR_B), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawVectorNd* data_real =
-            dynamic_cast<application::DataRawVectorNd*>(data_temp);
-        data_real->LoadFromNimbus(&laplace_solver_wrapper.b_array(1));
-        dbg(APP_LOG, "Finish reading VECTOR_B.\n");
-      }
+    // VECTOR_B.
+    if (cache_vector_b) {
+      // VECTOR_B is never read inside SMOKE_EXAMPLE.
+      // laplace_solver_wrapper.b_array(1).n = cache_vector_b->data()->n;
+      // laplace_solver_wrapper.b_array(1).x = cache_vector_b->data()->x;
     }
-    if (data_config.GetFlag(DataConfig::INDEX_C2M)) {
-      Data* data_temp = application::GetTheOnlyData(
-          job, std::string(APP_INDEX_C2M), da, application::READ_ACCESS);
-      if (data_temp) {
-        application::DataRawGridArray* data_real =
-            dynamic_cast<application::DataRawGridArray*>(data_temp);
-        data_real->LoadFromNimbus(
-            &laplace_solver_wrapper.cell_index_to_matrix_index);
-        dbg(APP_LOG, "Finish reading INDEX_C2M.\n");
-      }
+    // INDEX_C2M.
+    if (cache_index_c2m) {
+      //INDEX_C2M is never read inside SMOKE_EXAMPLE.
     }
     if (data_config.GetFlag(DataConfig::PROJECTION_LOCAL_TOLERANCE)) {
       Data* data_temp = application::GetTheOnlyData(
