@@ -263,6 +263,10 @@ bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
 
   IDSet<job_id_t>::ConstIter it;
   for (it = job->before_set_p()->begin(); it != job->before_set_p()->end(); ++it) {
+    if (*it == job->parent_job_id()) {
+      continue;
+    }
+
     if (job_graph_.AddEdge(*it, job->job_id(), &edge)) {
       j = edge->start_vertex()->entry();
     } else {

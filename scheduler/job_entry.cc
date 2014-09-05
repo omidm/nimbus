@@ -484,9 +484,11 @@ ComputeJobEntry::ComputeJobEntry(
     union_set_.insert(read_set_);
     union_set_.insert(write_set_);
 
-    assignment_dependencies_ = before_set;
-    assignment_dependencies_.insert(parent_job_id);
-    versioning_dependencies_ = assignment_dependencies_;
+    // parent should be explicitally in before set - omidm
+    before_set_.insert(parent_job_id);
+
+    assignment_dependencies_ = before_set_;
+    versioning_dependencies_ = before_set_;
 }
 
 ComputeJobEntry::~ComputeJobEntry() {
