@@ -84,7 +84,7 @@ void JobProjectionReduceRho::Execute(
   data_config.SetFlag(DataConfig::PROJECTION_BETA);
 
   PhysBAM::PCG_SPARSE<float> pcg_temp;
-  pcg_temp.Set_Maximum_Iterations(40);
+  pcg_temp.Set_Maximum_Iterations(application::kMaxIterations);
   pcg_temp.evolution_solver_type = PhysBAM::krylov_solver_cg;
   pcg_temp.cg_restart_iterations = 0;
   pcg_temp.Show_Results();
