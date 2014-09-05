@@ -152,6 +152,7 @@ class JobManager {
     VersionManager version_manager_;
 
     AfterMap after_map_;
+    boost::mutex after_map_mutex_;
 
     JobEntryMap jobs_done_;
     JobEntryMap jobs_ready_to_assign_;

@@ -432,7 +432,10 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   job->set_assigned(true);
   job->set_assigned_worker_id(job->assigned_worker()->worker_id());
 
-  after_map_.AddEntries(job);
+  {
+    boost::unique_lock<boost::mutex> job_graph_lock(job_graph_mutex_);
+    after_map_.AddEntries(job);
+  }
 
   if (job->job_type() != JOB_COMP) {
     return;
