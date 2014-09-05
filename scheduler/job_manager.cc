@@ -46,7 +46,7 @@ using namespace nimbus; // NOLINT
 
 JobManager::JobManager() {
   // Add the KERNEL job.
-  if (!AddKernelJobEntry()) {
+  if (AddKernelJobEntry() == NULL) {
     dbg(DBG_ERROR, "ERROR: could not add scheduler kernel job in job manager constructor.\n");
     exit(-1);
   }
@@ -71,16 +71,16 @@ Graph<JobEntry, job_id_t>* JobManager::job_graph_p() {
   return &job_graph_;
 }
 
-bool JobManager::AddComputeJobEntry(const std::string& job_name,
-                                    const job_id_t& job_id,
-                                    const IDSet<logical_data_id_t>& read_set,
-                                    const IDSet<logical_data_id_t>& write_set,
-                                    const IDSet<job_id_t>& before_set,
-                                    const IDSet<job_id_t>& after_set,
-                                    const job_id_t& parent_job_id,
-                                    const job_id_t& future_job_id,
-                                    const bool& sterile,
-                                    const Parameter& params) {
+JobEntry* JobManager::AddComputeJobEntry(const std::string& job_name,
+                                         const job_id_t& job_id,
+                                         const IDSet<logical_data_id_t>& read_set,
+                                         const IDSet<logical_data_id_t>& write_set,
+                                         const IDSet<job_id_t>& before_set,
+                                         const IDSet<job_id_t>& after_set,
+                                         const job_id_t& parent_job_id,
+                                         const job_id_t& future_job_id,
+                                         const bool& sterile,
+                                         const Parameter& params) {
   JobEntry* job =
     new ComputeJobEntry(job_name,
                         job_id,
@@ -112,7 +112,7 @@ bool JobManager::AddComputeJobEntry(const std::string& job_name,
     } else {
       dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
       exit(-1);
-      return false;
+      return NULL;
     }
   }
 
@@ -121,44 +121,44 @@ bool JobManager::AddComputeJobEntry(const std::string& job_name,
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
   ReceiveMetaBeforeSetDepthVersioningDependency(job);
   PassMetaBeforeSetDepthVersioningDependency(job);
 
   version_manager_.AddJobEntry(job);
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddExplicitCopyJobEntry() {
+JobEntry* JobManager::AddExplicitCopyJobEntry() {
   dbg(DBG_ERROR, "ERROR: explicit copy jobs from application are not supported yet!.\n");
   exit(-1);
-  return false;
+  return NULL;
 }
 
-bool JobManager::AddKernelJobEntry() {
+JobEntry* JobManager::AddKernelJobEntry() {
   JobEntry* job = new KernelJobEntry();
 
   if (!job_graph_.AddVertex(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add kernel job in job manager.\n");
     exit(-1);
-    return false;
+    return NULL;
   }
   job->set_done(true);
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
+JobEntry* JobManager::AddMainJobEntry(const job_id_t& job_id) {
   JobEntry* job = new MainJobEntry(job_id);
 
   if (!job_graph_.AddVertex(job_id, job)) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
 
   if (!AddJobEntryIncomingEdges(job)) {
@@ -166,7 +166,7 @@ bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
   ReceiveMetaBeforeSetDepthVersioningDependency(job);
   PassMetaBeforeSetDepthVersioningDependency(job);
@@ -175,10 +175,10 @@ bool JobManager::AddMainJobEntry(const job_id_t& job_id) {
 
   jobs_ready_to_assign_[job_id] = job;
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
+JobEntry* JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
   JobEntry* job = new CreateDataJobEntry(job_id);
 
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
@@ -186,13 +186,13 @@ bool JobManager::AddCreateDataJobEntry(const job_id_t& job_id) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
+JobEntry* JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
   JobEntry* job = new LocalCopyJobEntry(job_id);
 
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
@@ -200,13 +200,13 @@ bool JobManager::AddLocalCopyJobEntry(const job_id_t& job_id) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
+JobEntry* JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
   JobEntry* job = new RemoteCopySendJobEntry(job_id);
 
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
@@ -214,13 +214,13 @@ bool JobManager::AddRemoteCopySendJobEntry(const job_id_t& job_id) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
+JobEntry* JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
   JobEntry* job = new RemoteCopyReceiveJobEntry(job_id);
 
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
@@ -228,13 +228,13 @@ bool JobManager::AddRemoteCopyReceiveJobEntry(const job_id_t& job_id) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
 
-  return true;
+  return job;
 }
 
-bool JobManager::AddFutureJobEntry(const job_id_t& job_id) {
+JobEntry* JobManager::AddFutureJobEntry(const job_id_t& job_id) {
   JobEntry* job = new FutureJobEntry(job_id);
 
   boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
@@ -242,9 +242,10 @@ bool JobManager::AddFutureJobEntry(const job_id_t& job_id) {
     delete job;
     dbg(DBG_ERROR, "ERROR: could not add job (id: %lu) in job manager as future job.\n", job_id);
     exit(-1);
-    return false;
+    return NULL;
   }
-  return true;
+
+  return job;
 }
 
 bool JobManager::AddJobEntryIncomingEdges(JobEntry *job) {
@@ -431,6 +432,12 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   job->set_assigned(true);
   job->set_assigned_worker_id(job->assigned_worker()->worker_id());
 
+  after_map_.AddEntries(job);
+
+  if (job->job_type() != JOB_COMP) {
+    return;
+  }
+
   {
     boost::unique_lock<boost::recursive_mutex> job_queue_lock(job_queue_mutex_);
     jobs_pending_to_assign_.erase(job->job_id());
@@ -459,6 +466,8 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   job->set_done(true);
   job_id_t job_id = job->job_id();
   jobs_done_[job_id] = job;
+
+  after_map_.RemoveJobRecords(job_id);
 
   if (!job->sterile()) {
     Vertex<JobEntry, job_id_t>* vertex;
@@ -492,6 +501,11 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     VersionedLogicalData vld) {
   return version_manager_.GetJobsNeedDataVersion(list, vld);
+}
+
+bool JobManager::GetWorkersWaitingOnJob(job_id_t job_id,
+                                        std::list<SchedulerWorker*> *list) {
+  return after_map_.GetWorkersWaitingOnJob(job_id, list);
 }
 
 bool JobManager::AllJobsAreDone() {

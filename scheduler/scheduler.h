@@ -49,6 +49,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <list>
 #include <algorithm>
 #include "shared/nimbus_types.h"
 #include "shared/log.h"

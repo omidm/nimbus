@@ -76,8 +76,8 @@ class AfterMap {
 
     bool AddEntry(job_id_t job_id, SchedulerWorker* worker);
 
-    bool GetWorkersWaitingOn(job_id_t job_id,
-                             std::list<SchedulerWorker*> *list);
+    bool GetWorkersWaitingOnJob(job_id_t job_id,
+                                std::list<SchedulerWorker*> *list);
 
     bool RemoveJobRecords(job_id_t job_id);
 
