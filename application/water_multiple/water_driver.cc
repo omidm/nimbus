@@ -111,24 +111,24 @@ CalculateFrameImpl(const nimbus::Job *job,
                    const nimbus::DataArray &da,
                    const bool set_boundary_conditions,
                    const T dt) {
-  // LOG::Time("Calculate Dt");
+  // NOT THREAD SAFE!!! LOG::Time("Calculate Dt");
   // example.particle_levelset_evolution.Set_Number_Particles_Per_Cell(16);
   // T dt=example.cfl*example.incompressible.CFL(example.face_velocities);dt=min(dt,example.particle_levelset_evolution.CFL(false,false));
   // if(time+dt>=target_time){dt=target_time-time;done=true;}
   // else if(time+2*dt>=target_time){dt=.5*(target_time-time);}
 
-  //LOG::Time("Compute Occupied Blocks");
+  // NOT THREAD SAFE!!! LOG::Time("Compute Occupied Blocks");
   // T maximum_fluid_speed=example.face_velocities.Maxabs().Max();
   // T max_particle_collision_distance=example.particle_levelset_evolution.particle_levelset.max_collision_distance_factor*example.mac_grid.dX.Max();
   // example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
   //example.collision_bodies_affecting_fluid.Compute_Occupied_Blocks(true,dt*maximum_fluid_speed+2*max_particle_collision_distance+(T).5*example.mac_grid.dX.Max(),10);
 
-  LOG::Time("Adjust Phi With Objects");
+  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi With Objects");
   T_FACE_ARRAYS_SCALAR face_velocities_ghost;face_velocities_ghost.Resize(example.incompressible.grid,example.number_of_ghost_cells,false);
   example.incompressible.boundary->Fill_Ghost_Cells_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,time+dt,example.number_of_ghost_cells);
 
   //Advect Phi 3.6% (Parallelized)
-  LOG::Time("Advect Phi");
+  // NOT THREAD SAFE!!! LOG::Time("Advect Phi");
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
   example.particle_levelset_evolution.levelset_advection.Euler_Step(
@@ -141,40 +141,40 @@ CalculateFrameImpl(const nimbus::Job *job,
   example.phi_boundary_water.Use_Extrapolation_Mode(true);
 
   //Advect Particles 12.1% (Parallelized)
-  LOG::Time("Step Particles");
+  // NOT THREAD SAFE!!! LOG::Time("Step Particles");
   example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(face_velocities_ghost,dt,time,true,true,false,false);
 
   //Advect removed particles (Parallelized)
-  LOG::Time("Advect Removed Particles");
+  // NOT THREAD SAFE!!! LOG::Time("Advect Removed Particles");
   RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());domain.max_corner+=TV_INT::All_Ones_Vector();
   DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(*this,&WATER_DRIVER<TV>::Run,dt,time);
 
   //Advect Velocities 26% (Parallelized)
-  LOG::Time("Advect V");
+  // NOT THREAD SAFE!!! LOG::Time("Advect V");
   example.incompressible.advection->Update_Advection_Equation_Face(example.mac_grid,example.face_velocities,face_velocities_ghost,face_velocities_ghost,*example.incompressible.boundary,dt,time);
 
   //Add Forces 0%
-  LOG::Time("Forces");
+  // NOT THREAD SAFE!!! LOG::Time("Forces");
   example.incompressible.Advance_One_Time_Step_Forces(example.face_velocities,dt,time,true,0,example.number_of_ghost_cells);
 
   //Modify Levelset with Particles 15% (Parallelizedish)
-  LOG::Time("Modify Levelset");
+  // NOT THREAD SAFE!!! LOG::Time("Modify Levelset");
   example.particle_levelset_evolution.particle_levelset.Exchange_Overlap_Particles();
   example.particle_levelset_evolution.Modify_Levelset_And_Particles(&face_velocities_ghost);
 
   //Adjust Phi 0%
-  LOG::Time("Adjust Phi");
+  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi");
   example.Adjust_Phi_With_Sources(time+dt);
 
   //Delete Particles 12.5 (Parallelized)
-  LOG::Time("Delete Particles");
+  // NOT THREAD SAFE!!! LOG::Time("Delete Particles");
   example.particle_levelset_evolution.Delete_Particles_Outside_Grid();                                                            //0.1%
   example.particle_levelset_evolution.particle_levelset.Delete_Particles_In_Local_Maximum_Phi_Cells(1);                           //4.9%
   example.particle_levelset_evolution.particle_levelset.Delete_Particles_Far_From_Interface(); // uses visibility                 //7.6%
   example.particle_levelset_evolution.particle_levelset.Identify_And_Remove_Escaped_Particles(face_velocities_ghost,1.5,time+dt); //2.4%
 
   //Reincorporate Particles 0% (Parallelized)
-  LOG::Time("Reincorporate Particles");
+  // NOT THREAD SAFE!!! LOG::Time("Reincorporate Particles");
   if(example.particle_levelset_evolution.particle_levelset.use_removed_positive_particles || example.particle_levelset_evolution.particle_levelset.use_removed_negative_particles)
     example.particle_levelset_evolution.particle_levelset.Reincorporate_Removed_Particles(1,1,0,true);
 
@@ -193,7 +193,7 @@ CalculateFrameImpl(const nimbus::Job *job,
   delete scope;
 
   //Extrapolate Velocity 7%
-  LOG::Time("Extrapolate Velocity");
+  // NOT THREAD SAFE!!! LOG::Time("Extrapolate Velocity");
   T_ARRAYS_SCALAR exchanged_phi_ghost(example.mac_grid.Domain_Indices(8));
   example.particle_levelset_evolution.particle_levelset.levelset.boundary->Fill_Ghost_Cells(example.mac_grid,example.particle_levelset_evolution.phi,exchanged_phi_ghost,0,time+dt,8);
   example.incompressible.Extrapolate_Velocity_Across_Interface(example.face_velocities,exchanged_phi_ghost,false,3,0,TV());
@@ -210,7 +210,7 @@ ReseedParticlesImpl(const nimbus::Job *job,
                     const nimbus::DataArray &da,
                     const T dt) {
   //Reseed
-  LOG::Time("Reseed");
+  // NOT THREAD SAFE!!! LOG::Time("Reseed");
   example.particle_levelset_evolution.Reseed_Particles(time+dt);
   example.particle_levelset_evolution.Delete_Particles_Outside_Grid();
   example.Save_To_Nimbus(job, da, current_frame+1);
@@ -332,7 +332,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 UpdateGhostVelocitiesImpl (const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           T dt) {
-  LOG::Time("Adjust Phi With Objects");
+  // NOT THREAD SAFE!!! LOG::Time("Adjust Phi With Objects");
   example.incompressible.boundary->Fill_Ghost_Cells_Face(
       example.mac_grid, example.face_velocities, example.face_velocities_ghost,
       time + dt, example.number_of_ghost_cells);
@@ -370,7 +370,7 @@ AdvectPhiImpl(const nimbus::Job *job,
               const nimbus::DataArray &da,
               T dt) {
   //Advect Phi 3.6% (Parallelized)
-  LOG::Time("Advect Phi");
+  // NOT THREAD SAFE!!! LOG::Time("Advect Phi");
   example.phi_boundary_water.Use_Extrapolation_Mode(false);
   assert(example.particle_levelset_evolution.runge_kutta_order_levelset == 1);
   // I wrote and tested the following code, which broke levelset advection
@@ -408,7 +408,7 @@ StepParticlesImpl(const nimbus::Job *job,
                   const nimbus::DataArray &da,
                   T dt) {
   //Advect Particles 12.1% (Parallelized)
-  LOG::Time("Step Particles");
+  // NOT THREAD SAFE!!! LOG::Time("Step Particles");
   example.particle_levelset_evolution.particle_levelset.Euler_Step_Particles(
       example.face_velocities_ghost, dt, time, true, true, false, false);
 
@@ -423,7 +423,7 @@ AdvectRemovedParticlesImpl(const nimbus::Job *job,
                            const nimbus::DataArray &da,
                            T dt) {
   //Advect removed particles (Parallelized)
-  LOG::Time("Advect Removed Particles");
+  // NOT THREAD SAFE!!! LOG::Time("Advect Removed Particles");
   RANGE<TV_INT> domain(example.mac_grid.Domain_Indices());
   domain.max_corner += TV_INT::All_Ones_Vector();
   DOMAIN_ITERATOR_THREADED_ALPHA<WATER_DRIVER<TV>,TV>(domain,0).template Run<T,T>(
@@ -440,7 +440,7 @@ AdvectVImpl(const nimbus::Job *job,
             const nimbus::DataArray &da,
             T dt) {
   //Advect Velocities 26% (Parallelized)
-  LOG::Time("Advect V");
+  // NOT THREAD SAFE!!! LOG::Time("Advect V");
   example.incompressible.advection->Update_Advection_Equation_Face(
       example.mac_grid, example.face_velocities, example.face_velocities_ghost,
       example.face_velocities_ghost, *example.incompressible.boundary, dt, time);
@@ -456,7 +456,7 @@ ApplyForcesImpl(const nimbus::Job *job,
            const nimbus::DataArray &da,
            T dt) {
   //Add Forces 0%
-  LOG::Time("Forces");
+  // NOT THREAD SAFE!!! LOG::Time("Forces");
   example.incompressible.Advance_One_Time_Step_Forces(
       example.face_velocities, example.face_velocities_ghost, dt, time, true, 0, example.number_of_ghost_cells);
 
@@ -471,7 +471,7 @@ ModifyLevelSetPartOneImpl(const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           const nimbus::GeometricRegion &local_region,
                           T dt) {
-    LOG::Time("Modify Levelset Part one ...\n");
+    // NOT THREAD SAFE!!! LOG::Time("Modify Levelset Part one ...\n");
 
     example.particle_levelset_evolution.
         Modify_Levelset_And_Particles_Nimbus_One(&example.
@@ -493,7 +493,7 @@ ModifyLevelSetPartTwoImpl(const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           const nimbus::GeometricRegion &local_region,
                           T dt) {
-    LOG::Time("Modify Levelset Part two ...\n");
+    // NOT THREAD SAFE!!! LOG::Time("Modify Levelset Part two ...\n");
 
     // TODO: this involves redundant copy operation. can get rid of some/ all
     // of this after merging with Hang's updates.
@@ -515,7 +515,7 @@ MakeSignedDistanceImpl(const nimbus::Job *job,
                           const nimbus::DataArray &da,
                           const nimbus::GeometricRegion &local_region,
                           T dt) {
-    LOG::Time("Make Signed Distance ...\n");
+    // NOT THREAD SAFE!!! LOG::Time("Make Signed Distance ...\n");
 
     int ghost_cells = 7;
     example.particle_levelset_evolution.
@@ -533,7 +533,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 AdjustPhiImpl(const nimbus::Job *job,
         const nimbus::DataArray &da,
         T dt) {
-    LOG::Time("Adjust Phi ...\n");
+    // NOT THREAD SAFE!!! LOG::Time("Adjust Phi ...\n");
 
     // adjust phi with sources
     example.Adjust_Phi_With_Sources(time+dt);
@@ -548,7 +548,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 DeleteParticlesImpl(const nimbus::Job *job,
                     const nimbus::DataArray &da,
                     T dt) {
-    LOG::Time("Delete Particles ...\n");
+    // NOT THREAD SAFE!!! LOG::Time("Delete Particles ...\n");
 
     // delete particles
     int lid1 = example.particle_levelset_evolution.particle_levelset.last_unique_particle_id;
@@ -578,7 +578,7 @@ template<class TV> bool WATER_DRIVER<TV>::
 ReincorporateParticlesImpl(const nimbus::Job *job,
                            const nimbus::DataArray &da,
                            T dt) {
-    LOG::Time("Reincorporate Removed Particles ...\n");
+    // NOT THREAD SAFE!!! LOG::Time("Reincorporate Removed Particles ...\n");
 
     // reincorporate removed particles
     if (example.particle_levelset_evolution.particle_levelset.
@@ -602,7 +602,8 @@ Write_Substep(const std::string& title,const int substep,const int level)
 {
     if(level<=example.write_substeps_level){
         example.frame_title=title;
-        std::stringstream ss;ss<<"Writing substep ["<<example.frame_title<<"]: output_number="<<output_number+1<<", time="<<time<<", frame="<<current_frame<<", substep="<<substep<<std::endl;LOG::filecout(ss.str());
+        std::stringstream ss;ss<<"Writing substep ["<<example.frame_title<<"]: output_number="<<output_number+1<<", time="<<time<<", frame="<<current_frame<<", substep="<<substep<<std::endl;
+        LOG::filecout(ss.str());
         Write_Output_Files(++output_number);example.frame_title="";}
 }
 //#####################################################################
