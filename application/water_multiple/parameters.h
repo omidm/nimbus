@@ -72,6 +72,7 @@ namespace application {
     const int kGhostW[3] = {kGhostNum, kGhostNum, kGhostNum};
     const int kPressureGhostNum = 1;
     const int kLastFrame = 10;
+    const int kMaxIterations = 40;
     const std::string kOutputDir = "output";
     // follow physbam convenctions here, otherwise translator becomes messy
     const nimbus::GeometricRegion kDefaultRegion(1, 1, 1, kScale, kScale, kScale);

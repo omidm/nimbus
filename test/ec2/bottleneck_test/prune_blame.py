@@ -69,19 +69,48 @@ for rank in range(1, n+1):
 		while temp and extract(temp) != job_id:
 			temp = g.readline()
 		before_set = extract_set(temp)
-		if event != "blame_scheduler":
-			assert blocking_job_id in before_set
-		before_set.discard(blocking_job_id)
-		if before_set:
-			dependency_constraint_ts = max([finish_time[i][0] for i in before_set])
+		# examine whether before_set is all in the finish time log.
+		if blocking_job_id != 0:
+			assert blocking_job_id in finish_time
+			is_remote = (finish_time[blocking_job_id][1] != rank)
+			is_remote_io = (finish_time[blocking_job_id][2] == "RemoteCopyReceive")
 		else:
-			dependency_constraint_ts = 0
+			is_remote = False
+			is_remote_io = False
 		if event == "blame_scheduler":
+			dependency_constraint_ts = -1
+			for i in before_set:
+				assert i in finish_time
+				if finish_time[i][2][:8] == "Compute:":
+					dependency_constraint_ts = max(dependency_constraint_ts, finish_time[i][0])
+			if dependency_constraint_ts == -1:
+				print job_name
+				continue
 			out.write("blame_scheduler (%d %s) %f\n" % (job_id, job_name, start_ts - max(resource_constraint_ts, dependency_constraint_ts)))
-		else:
-			out.write("blame_load_balance (%d %s) %f (%d %s %s)\n" %
+		elif is_remote or is_remote_io:
+			before_set.remove(blocking_job_id)
+			dependency_constraint_ts = -1
+			for i in before_set:
+				assert i in finish_time
+				if finish_time[i][2][:8] == "Compute:" and finish_time[i][1] == rank:
+					dependency_constraint_ts = max(dependency_constraint_ts, finish_time[i][0])
+			assert dependency_constraint_ts != -1
+			out.write("blame_load_balance (%d %s) %f (%d %s %d)\n" %
 				(job_id, job_name, start_ts - max(resource_constraint_ts, dependency_constraint_ts),
-				blocking_job_id, finish_time[blocking_job_id][2], "local" if (finish_time[blocking_job_id][1] == rank and finish_time[blocking_job_id][2] != "RemoteCopyReceive") else "remote"))
+				blocking_job_id, finish_time[blocking_job_id][2], finish_time[blocking_job_id][1]))
+		else:
+			before_set.remove(blocking_job_id)
+			dependency_constraint_ts = -1
+			for i in before_set:
+				assert i in finish_time
+				if finish_time[i][2][:8] == "Compute:":
+					dependency_constraint_ts = max(dependency_constraint_ts, finish_time[i][0])
+			if dependency_constraint_ts == -1:
+				print job_name
+				continue
+			out.write("blame_worker (%d %s) %f (%d %s)\n" %
+				(job_id, job_name, start_ts - max(resource_constraint_ts, dependency_constraint_ts),
+				blocking_job_id, finish_time[blocking_job_id][2]))
 	f.close()
 	g.close()
 	out.close()

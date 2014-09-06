@@ -249,6 +249,7 @@ void JobProjectionMain::SpawnJobs(
   // Projection loop.
   read.clear();
   LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                      APP_PROJECTION_INTERIOR_N,
                       APP_PROJECTION_LOCAL_RESIDUAL,
                       APP_PROJECTION_GLOBAL_TOLERANCE,
                       APP_PROJECTION_DESIRED_ITERATIONS,
