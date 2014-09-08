@@ -375,6 +375,7 @@ void JobProjectionLoopIteration::Execute(
                        next_iteration_params, false, true);
     job_query.Hint(projection_job_ids[6], kRegW0Central[0]);
     job_query.CommitStagedJobs();
+    job_query.PrintTimeProfile();
     if (time == 0 && iteration == 1) {
       dbg(APP_LOG, "Print job dependency figure.\n");
       job_query.GenerateDotFigure("projection_iteration_first.dot");
