@@ -34,6 +34,7 @@ OTHREAD_NUM          = 4
 INSTANCE_NUM         = WORKER_NUM + SCHEDULER_NUM
 FIRST_PORT           = 5800
 LOG_FILE_NAME        = 'ec2_log.txt'
+SCHED_LOG_FILE_NAME  = 'job_assigner_log'
 WORKER_LOG_FILE_NAME = 'worker-log-'
 OUTPUT_PATH          = 'output/'
 

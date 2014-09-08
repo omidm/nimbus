@@ -54,11 +54,11 @@ template<class TV> void WATER_DRIVER<TV>::InitializeFirstDistributed(
         &example.incompressible,
         &example.projection);
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      LOG::Time("Velocity memory allocated.\n");
+      // NOT THREAD SAFE!!! LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
     }
     if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      LOG::Time("Ghost Velocity memory allocated.\n");
+      // NOT THREAD SAFE!!! LOG::Time("Ghost Velocity memory allocated.\n");
       example.face_velocities_ghost.Resize(example.incompressible.grid,
           example.number_of_ghost_cells, false);
     }
@@ -186,11 +186,11 @@ template<class TV> void WATER_DRIVER<TV>::Initialize(
         &example.projection);
     example.collision_bodies_affecting_fluid.Initialize_Grids();
     if (example.data_config.GetFlag(DataConfig::VELOCITY)) {
-      LOG::Time("Velocity memory allocated.\n");
+      // NOT THREAD SAFE!!! LOG::Time("Velocity memory allocated.\n");
       example.face_velocities.Resize(example.mac_grid);
     }
     if (example.data_config.GetFlag(DataConfig::VELOCITY_GHOST)) {
-      LOG::Time("Ghost Velocity memory allocated.\n");
+      // NOT THREAD SAFE!!! LOG::Time("Ghost Velocity memory allocated.\n");
       example.face_velocities_ghost.Resize(example.incompressible.grid,
           example.number_of_ghost_cells, false);
     }
