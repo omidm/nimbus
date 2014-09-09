@@ -281,6 +281,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   std::list<SchedulerWorker*> waiting_list;
   job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
+  cm->set_final(true);
   std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
   for (; iter != waiting_list.end(); ++iter) {
     server_->SendCommand(*iter, cm);
