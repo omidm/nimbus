@@ -143,7 +143,7 @@ cache::distance_t CacheStruct::GetDistance(const std::vector<cache::type_id_t> &
             Data *d = read_sets[t].at(i);
             GeometricRegion dreg = d->region();
             DMap::const_iterator it = data_map_t.find(dreg);
-            if (it->second == d)
+            if (it != data_map_t.end() && it->second == d)
                 continue;
             cur_distance += dreg.dx() * dreg.dy() * dreg.dz();
         }
