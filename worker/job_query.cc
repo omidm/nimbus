@@ -207,7 +207,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
   struct timespec t;
 
   clock_gettime(CLOCK_REALTIME, &start_time);
-  bool complete_hint = true;
+  bool complete_hint = false;
   int64_t count = 0;
   if (before->size() <= 1) {
     return;
@@ -224,6 +224,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
     if (has_whole_region_ && whole_region_.IsEqual(&loc->second)) {
       continue;
     }
+    complete_hint = true;
     hint_region.Union(loc->second);
   }
   clock_gettime(CLOCK_REALTIME, &t);
@@ -293,7 +294,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
 void JobQuery::Eliminate(IDSet<job_id_t>* before) {
   int64_t count = 0;
   int64_t init_count = 0;
-  bool complete_hint = false;
+  bool complete_hint = true;
   if (before->size() <= 1) {
     return;
   }
@@ -306,7 +307,6 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
       complete_hint = false;
       break;
     }
-    complete_hint = true;
     hint_region.Union(loc->second);
   }
   int64_t scanned = 0;

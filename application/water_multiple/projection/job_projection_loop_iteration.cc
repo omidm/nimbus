@@ -192,7 +192,7 @@ void JobProjectionLoopIteration::Execute(
         SerializedData(loop_iteration_part_two_str));
     job_query.StageJob(LOOP_ITERATION_PART_TWO, projection_job_ids[1],
                        read, write, loop_iteration_part_two_params, false, true);
-    job_query.Hint(projection_job_ids[1], kRegY2W3Central[index], true);
+    job_query.Hint(projection_job_ids[1], kRegY2W3Central[0], true);
     job_query.CommitStagedJobs();
     if (time == 0) {
       dbg(APP_LOG, "Print job dependency figure.\n");
