@@ -197,7 +197,21 @@ def collect_output_data(scheduler_ip, worker_ips):
       '-o', 'UserKnownHostsFile=/dev/null',
       '-o', 'StrictHostKeyChecking=no',
       'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
-      config.REL_SCHEDULER_PATH + config.SCHED_LOG_FILE_NAME,
+      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_1,
+      config.OUTPUT_PATH])
+
+  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_2,
+      config.OUTPUT_PATH])
+
+  subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
+      '-o', 'UserKnownHostsFile=/dev/null',
+      '-o', 'StrictHostKeyChecking=no',
+      'ubuntu@' + scheduler_ip + ':' + config.EC2_NIMBUS_ROOT +
+      config.REL_SCHEDULER_PATH + config.SCHED_LOG_NAME_3,
       config.OUTPUT_PATH])
 
   subprocess.Popen(['scp', '-r', '-i', config.PRIVATE_KEY,
