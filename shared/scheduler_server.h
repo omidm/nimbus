@@ -81,6 +81,12 @@ class SchedulerServer {
   virtual bool ReceiveCommands(SchedulerCommandListSP* storage,
                                size_t maxCommands);
 
+  /** Pull incoming job done commands from the received job done queue.  Puts
+   * at most maxCommands into storage, returning true if it placed one or more.
+   * Returns false if no commands were placed in storage. */
+  virtual bool ReceiveJobDoneCommands(SchedulerCommandListSP* storage,
+                                      size_t maxCommands);
+
   /** Send command to destinationWorker. Returns immediately and
    *   processes the send asynchronously.*/
 

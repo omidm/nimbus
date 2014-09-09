@@ -83,6 +83,7 @@ bool SchedulerServer::Initialize() {
 
 bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
                                       size_t maxCommands) {
+  storage->clear();
   boost::mutex::scoped_lock lock(command_queue_mutex_);
   uint32_t pending = received_commands_.size();
   if (pending == 0) {
@@ -90,7 +91,6 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
   } else if (pending < maxCommands) {
     maxCommands = pending;
   }
-  storage->clear();
   for (uint32_t i = 0; i < maxCommands; i++) {
     boost::shared_ptr<SchedulerCommand> command = received_commands_.front();
     received_commands_.pop_front();
@@ -100,6 +100,25 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
   return true;
 }
 
+
+bool SchedulerServer::ReceiveJobDoneCommands(SchedulerCommandListSP* storage,
+                                             size_t maxCommands) {
+  storage->clear();
+  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  uint32_t pending = received_job_done_commands_.size();
+  if (pending == 0) {
+    return false;
+  } else if (pending < maxCommands) {
+    maxCommands = pending;
+  }
+  for (uint32_t i = 0; i < maxCommands; i++) {
+    boost::shared_ptr<SchedulerCommand> command = received_job_done_commands_.front();
+    received_job_done_commands_.pop_front();
+    dbg(DBG_NET, "Copying job done command %s to user buffer.\n", command->ToString().c_str());
+    storage->push_back(command);
+  }
+  return true;
+}
 
 
 void SchedulerServer::SendCommand(SchedulerWorker* worker,
