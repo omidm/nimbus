@@ -47,6 +47,7 @@
 #define NIMBUS_SHARED_SCHEDULER_COMMAND_H_
 
 
+#include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
 #include <sstream> // NOLINT
 #include <string>
@@ -159,6 +160,7 @@ class SchedulerCommand {
 
 typedef std::vector<SchedulerCommand*> SchedulerCommandVector;
 typedef std::list<SchedulerCommand*> SchedulerCommandList;
+typedef std::list<boost::shared_ptr<SchedulerCommand> > SchedulerCommandListSP;
 
 }  // namespace nimbus
 

@@ -143,14 +143,18 @@ void Scheduler::SchedulerCoreProcessor() {
 }
 
 void Scheduler::ProcessQueuedSchedulerCommands() {
-  SchedulerCommandList storage;
+  SchedulerCommandListSP storage;
   if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
-    SchedulerCommandList::iterator iter = storage.begin();
+    SchedulerCommandListSP::iterator iter = storage.begin();
     for (; iter != storage.end(); iter++) {
-      SchedulerCommand* comm = *iter;
+      SchedulerCommand* comm = (*iter).get();
       dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
       ProcessSchedulerCommand(comm);
-      delete comm;
+      /*
+       * Scheduler commands are wrapped as shared pointers,
+       * so do not neeed explicit delete.
+       */
+      // delete comm;
     }
   }
 }

@@ -81,7 +81,7 @@ bool SchedulerServer::Initialize() {
   return true;
 }
 
-bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
+bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
                                       size_t maxCommands) {
   boost::mutex::scoped_lock lock(command_queue_mutex_);
   uint32_t pending = received_commands_.size();
@@ -92,7 +92,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
   }
   storage->clear();
   for (uint32_t i = 0; i < maxCommands; i++) {
-    SchedulerCommand* command = received_commands_.front();
+    boost::shared_ptr<SchedulerCommand> command = received_commands_.front();
     received_commands_.pop_front();
     dbg(DBG_NET, "Copying command %s to user buffer.\n", command->ToString().c_str());
     storage->push_back(command);
@@ -185,8 +185,8 @@ using boost::char_separator;
    * internal command list for later reads. Returns the number of
    * bytes read into commands. If this is less than size, the
    * caller must save the unread bytes. */
-int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
-  int total_read = 0;
+size_t SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
+  size_t total_read = 0;
   char* read_ptr = buffer;
   size_t bytes_remaining = size;
 
@@ -210,7 +210,11 @@ int SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
                                                           command)) {
         dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
         boost::mutex::scoped_lock lock(command_queue_mutex_);
-        received_commands_.push_back(command);
+        boost::shared_ptr<SchedulerCommand> command_sp(command);
+        received_commands_.push_back(command_sp);
+        if (command->type() == SchedulerCommand::JOB_DONE) {
+          received_job_done_commands_.push_back(command_sp);
+        }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
         exit(-1);
@@ -264,9 +268,10 @@ void SchedulerServer::HandleRead(SchedulerWorker* worker,
     return;
   }
 
-  int real_length = bytes_transferred + worker->existing_bytes();
-  int len = EnqueueCommands(worker->read_buffer(), real_length);
-  int remaining = (real_length - len);
+  size_t real_length = bytes_transferred + worker->existing_bytes();
+  size_t len = EnqueueCommands(worker->read_buffer(), real_length);
+  assert(real_length >= len);
+  size_t remaining = (real_length - len);
   dbg(DBG_NET,
       "Scheduler received %i bytes from worker %i, enqueued %i bytes as commands, %i remaining.\n",
       bytes_transferred, worker->worker_id(), len, remaining);
