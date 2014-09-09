@@ -1,5 +1,6 @@
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UNIFORM_GRID.h>
 #include <PhysBAM_Tools/Parallel_Computation/MPI_WORLD.h>
+#include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
 #include <PhysBAM_Tools/Parallel_Computation/THREAD_QUEUE.h>
 #include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
 #include <PhysBAM_Geometry/Basic_Geometry/CYLINDER.h>
@@ -7,6 +8,9 @@
 #include <PhysBAM_Geometry/Solids_Geometry/RIGID_GEOMETRY.h>
 #include "WATER_DRIVER.h"
 #include "WATER_EXAMPLE.h"
+#include <cstdio>
+#include <ctime>
+#include <time.h>
 
 using namespace PhysBAM;
 
@@ -108,6 +112,11 @@ int main(int argc,char *argv[])
     //ppd(1)=4;
 
     if(mpi_world.initialized){
+        char buffer[100];
+        int n = sprintf(buffer, "mpi%d.log", mpi_world.rank+1);
+        buffer[n] = '\0';
+        PhysBAM::MPI_UTILITIES::SetLogFile(fopen(buffer, "w"));
+        PhysBAM::MPI_UTILITIES::PrintTimeStamp("RESTART");
         // Custom Partition
         // example->mpi_grid=new MPI_UNIFORM_GRID<GRID<TV> >(example->mac_grid,3,false,ppd);
         // Original Partition

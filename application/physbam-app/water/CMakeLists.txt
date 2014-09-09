@@ -21,6 +21,8 @@ SET(${PROJECT_NAME}_h
 #library automatically includes the lower-level ones
 SET(LIBRARIES_TO_LINK PhysBAM_Rendering-OpenGL)
         
+LIST(APPEND LIBRARIES_TO_LINK /usr/lib/x86_64-linux-gnu/librt.so)
+
 #you can force cache variables to be on or off here
 #SET(PHYSBAM_USE_CUDA ON CACHE BOOL ON FORCE)
         

@@ -278,6 +278,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 // Processes jobdone command. Moves a job from blocked queue to ready queue if
 // its before set is satisfied.
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
+  PrintTimeStamp("job_done %lu\n", cm->job_id().elem());
   NotifyJobDone(cm->job_id().elem());
 }
 

@@ -22,6 +22,8 @@
 #include <PhysBAM_Tools/Vectors/VECTOR_FORWARD.h>
 #include <PhysBAM_Tools/Grids_Uniform/FACE_INDEX.h>
 #include <mpi.h>
+#include <cstdio>
+#include <ctime>
 namespace PhysBAM{
 
 class SPARSE_MATRIX_PARTITION;
@@ -34,6 +36,9 @@ class RLE_RUN_3D;
 
 namespace MPI_UTILITIES{
 
+// For nimbus usage.
+void SetLogFile(FILE* in);
+void PrintTimeStamp(const char* comment);
 //#####################################################################
 // Datatype conversion
 //#####################################################################
@@ -232,12 +237,20 @@ template<class T1,class T2,class T3,class T4,class T5,class T6> inline void Unpa
 // Function Wait_All
 //#####################################################################
 inline void Wait_All(ARRAY<MPI::Request>& requests)
-{if(requests.m) MPI::Request::Waitall(requests.m,&requests(1));requests.Clean_Memory();}
+{
+  PrintTimeStamp("BLOCK");
+  if(requests.m) MPI::Request::Waitall(requests.m,&requests(1));requests.Clean_Memory();
+  PrintTimeStamp("RESTART");
+}
 //#####################################################################
 // Function Wait_Any
 //#####################################################################
 inline bool Wait_Any(ARRAY<MPI::Request>& requests,MPI::Status& status)
-{if(!requests.m) return false;int index=MPI::Request::Waitany(requests.m,&requests(1),status);requests.Remove_Index_Lazy(index+1);return true;}
+{
+  PrintTimeStamp("BLOCK");
+  if(!requests.m) return false;int index=MPI::Request::Waitany(requests.m,&requests(1),status);requests.Remove_Index_Lazy(index+1);
+  PrintTimeStamp("RESTART");
+  return true;}
 //#####################################################################
 // Function Free_Elements_And_Clean_Memory
 //#####################################################################
@@ -252,11 +265,19 @@ template<class T,class ID> inline void Free_Elements_And_Clean_Memory(ARRAY<T,ID
 // Function Reduce
 //#####################################################################
 template<class T> inline void Reduce(const T& input,T& output,const MPI::Op& op,const MPI::Intracomm& comm)
-{MPI::Datatype type=MPI_UTILITIES::Datatype<T>();assert(type==MPI::INT || type==MPI::FLOAT || type==MPI::DOUBLE);
-comm.Allreduce(&input,&output,1,type,op);}
+{
+  PrintTimeStamp("BLOCK");
+  MPI::Datatype type=MPI_UTILITIES::Datatype<T>();assert(type==MPI::INT || type==MPI::FLOAT || type==MPI::DOUBLE);
+  comm.Allreduce(&input,&output,1,type,op);
+  PrintTimeStamp("RESTART");
+}
 template<class T> inline void Reduce(const ARRAY<T>& input,ARRAY<T>& output,const MPI::Op& op,const MPI::Intracomm& comm)
-{MPI::Datatype type=MPI_UTILITIES::Datatype<T>();assert(type==MPI::INT || type==MPI::FLOAT || type==MPI::DOUBLE);assert(input.m==output.m);
-comm.Allreduce(input.Get_Array_Pointer(),output.Get_Array_Pointer(),output.m,type,op);}
+{
+  PrintTimeStamp("BLOCK");
+  MPI::Datatype type=MPI_UTILITIES::Datatype<T>();assert(type==MPI::INT || type==MPI::FLOAT || type==MPI::DOUBLE);assert(input.m==output.m);
+  comm.Allreduce(input.Get_Array_Pointer(),output.Get_Array_Pointer(),output.m,type,op);
+  PrintTimeStamp("RESTART");
+}
 //#####################################################################
 
 }

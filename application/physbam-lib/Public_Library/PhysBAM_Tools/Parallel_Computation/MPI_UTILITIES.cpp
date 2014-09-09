@@ -15,8 +15,24 @@
 #include <PhysBAM_Tools/Parallel_Computation/MPI_UTILITIES.h>
 #include <PhysBAM_Tools/Parallel_Computation/SPARSE_MATRIX_PARTITION.h>
 #include <PhysBAM_Tools/Parsing/PARSE_ARGS.h>
+#include <time.h>
 namespace PhysBAM{
 namespace MPI_UTILITIES{
+
+// For nimbus usage.
+FILE* log_file = NULL;
+void SetLogFile(FILE* in) {
+  log_file = in;
+}
+void PrintTimeStamp(const char* comment) {
+  if (!log_file) {
+    return;
+  }
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(log_file, "%f %s\n", time_sum, comment);
+}
 //#####################################################################
 // Function RLE_Run_Datatype
 //#####################################################################
