@@ -109,8 +109,10 @@ cache::distance_t CacheVar::GetDistance(const DataArray &read_set) const {
         Data *d = read_set.at(i);
         GeometricRegion dreg = d->region();
         DMap::const_iterator it = data_map_.find(dreg);
-        if (it != data_map_.end() && it->second == d)
+        if (it != data_map_.end()) {
+          if (it->second == d)
             continue;
+        }
         cur_distance += dreg.dx() * dreg.dy() * dreg.dz();
     }
     return cur_distance;
