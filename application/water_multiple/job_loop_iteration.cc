@@ -820,6 +820,7 @@ namespace application {
                     read, write,
                     projection_main_params,
                     false, true);
+    job_query.Hint(job_ids[10], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
     job_query.PrintTimeProfile();
     {

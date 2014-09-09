@@ -59,6 +59,7 @@ JobQuery::JobQuery(Job* job) {
   e2_time_ = 0;
   e3_time_ = 0;
   e4_time_ = 0;
+  has_whole_region_ = false;
 }
 JobQuery::~JobQuery() {}
 
@@ -187,8 +188,18 @@ bool JobQuery::CommitJob(const job_id_t& id) {
   return true;
 }
 
-void JobQuery::Hint(job_id_t job_id, const GeometricRegion& region) {
+void JobQuery::Hint(job_id_t job_id, const GeometricRegion& region,
+                    bool bottleneck) {
   hint_map_[job_id] = region;
+  if (!bottleneck) {
+    return;
+  }
+  if (has_whole_region_) {
+    assert(region == whole_region_);
+  } else {
+    has_whole_region_ = true;
+    whole_region_ = region;
+  }
 }
 
 void JobQuery::Eliminate(IDSet<job_id_t>* before) {
@@ -209,6 +220,9 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
     if (loc == hint_map_.end()) {
       complete_hint = false;
       break;
+    }
+    if (has_whole_region_ && whole_region_.IsEqual(&loc->second)) {
+      continue;
     }
     hint_region.Union(loc->second);
   }
@@ -279,7 +293,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
 void JobQuery::Eliminate(IDSet<job_id_t>* before) {
   int64_t count = 0;
   int64_t init_count = 0;
-  bool complete_hint = true;
+  bool complete_hint = false;
   if (before->size() <= 1) {
     return;
   }
@@ -292,6 +306,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
       complete_hint = false;
       break;
     }
+    complete_hint = true;
     hint_region.Union(loc->second);
   }
   int64_t scanned = 0;

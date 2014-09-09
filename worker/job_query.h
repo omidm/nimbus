@@ -65,9 +65,12 @@ class JobQuery {
   bool CommitJob(const job_id_t& id);
   void GenerateDotFigure(const std::string& file_name);
   void PrintTimeProfile();
-  void Hint(job_id_t job_id, const GeometricRegion& region);
+  void Hint(job_id_t job_id, const GeometricRegion& region,
+            bool bottleneck = false);
 
  private:
+  bool has_whole_region_;
+  GeometricRegion whole_region_;
   int64_t total_job_;
   int64_t total_objects_;
   double query_time_;
