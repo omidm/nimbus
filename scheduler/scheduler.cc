@@ -61,6 +61,8 @@ Scheduler::Scheduler(port_t port) {
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
+  log_.set_file_name("log_scheduler");
+  log_receive_stamp_.set_file_name("log_receive_stamp");
 }
 
 Scheduler::~Scheduler() {
@@ -122,7 +124,7 @@ void Scheduler::SchedulerCoreProcessor() {
 
   // Main Loop of the scheduler.
   while (true) {
-    log_loop_.log_StartTimer();
+    log_.log_StartTimer();
 
     RegisterPendingWorkers();
     ProcessQueuedSchedulerCommands();
@@ -130,11 +132,11 @@ void Scheduler::SchedulerCoreProcessor() {
     RemoveObsoleteJobEntries();
     TerminationProcedure();
 
-    log_loop_.log_StopTimer();
-    if (log_loop_.timer() >= .001) {
+    log_.log_StopTimer();
+    if (log_.timer() >= .001) {
       char buff[LOG_MAX_BUFF_SIZE];
       snprintf(buff, sizeof(buff), "scheduler loop: %2.5lf time: %2.2lf.",
-          log_loop_.timer(), log_.GetTime());
+          log_.timer(), log_.GetTime());
       log_.log_WriteToOutputStream(std::string(buff), LOG_INFO);
     }
   }
@@ -185,6 +187,11 @@ void Scheduler::ProcessSchedulerCommand(SchedulerCommand* cm) {
 }
 
 void Scheduler::ProcessSpawnComputeJobCommand(SpawnComputeJobCommand* cm) {
+  char buff[LOG_MAX_BUFF_SIZE];
+  snprintf(buff, sizeof(buff), "%10.9f id: %lu n: %s.",
+      Log::GetRawTime(), cm->job_id().elem(), cm->job_name().c_str());
+  log_receive_stamp_.log_WriteToFile(std::string(buff), LOG_INFO);
+
   job_manager_->AddComputeJobEntry(cm->job_name(),
                                    cm->job_id().elem(),
                                    cm->read_set(),

@@ -292,7 +292,7 @@ bool VersionManager::DefineData(
 
 bool VersionManager::CleanUp() {
   if (parent_removed_) {
-    Log log;
+    Log log(Log::NO_FILE);
     log.StartTimer();
 
     IndexIter iter = index_.begin();

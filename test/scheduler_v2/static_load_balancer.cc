@@ -53,7 +53,7 @@ StaticLoadBalancer::StaticLoadBalancer() {
   worker_num_ = 0;
   stamp_state_ = -1;
   initialized_domains_ = false;
-  log_.set_file_name("load_balancer_log");
+  log_.set_file_name("log_load_balancer");
 }
 
 StaticLoadBalancer::~StaticLoadBalancer() {
@@ -81,7 +81,7 @@ size_t StaticLoadBalancer::AssignReadyJobs() {
 }
 
 bool StaticLoadBalancer::SetWorkerToAssignJob(JobEntry* job) {
-  Log log;
+  Log log(Log::NO_FILE);
   log.StartTimer();
 
   StaticLoadBalancer::UpdateWorkerDomains();

@@ -52,6 +52,7 @@ JobManager::JobManager() {
   }
 
   ldo_map_p_ = NULL;
+  log_.set_file_name("log_job_manager");
 }
 
 JobManager::~JobManager() {

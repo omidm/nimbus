@@ -84,6 +84,8 @@ namespace nimbus {
 
   protected:
     Log log_;
+    Log log_before_set_;
+    Log log_assign_stamp_;
     IDMaker *id_maker_;
     SchedulerServer* server_;
     JobManager *job_manager_;
@@ -140,6 +142,8 @@ namespace nimbus {
 
     virtual bool SendComputeJobToWorker(SchedulerWorker* worker,
                                         JobEntry* job);
+
+    virtual void PrintLog(JobEntry *job);
 
   private:
     JobAssigner(const JobAssigner& other) {}

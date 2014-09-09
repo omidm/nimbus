@@ -154,13 +154,7 @@ class Scheduler {
     SchedulerCommand::PrototypeTable worker_command_table_;
 
     Log log_;
-    Log log_loop_;
-    Log log_assign_;
-    Log log_server_;
-    Log log_job_manager_;
-    Log log_data_manager_;
-    Log log_version_manager_;
-    Log log_load_balancer_;
+    Log log_receive_stamp_;
 };
 
 }  // namespace nimbus
