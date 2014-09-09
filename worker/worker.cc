@@ -156,23 +156,32 @@ void Worker::WorkerCoreProcessor() {
     }
     // Poll jobs that finish receiving.
     job_id_t receive_job_id;
+    quota = 10;
     while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
           receive_job_id);
       NotifyTransmissionDone(receive_job_id);
+      if (--quota <= 0) {
+        break;
+      }
     }
     // Job done processing.
-    worker_manager_->GetLocalJobDoneList(&local_job_done_list);
-    for (JobList::iterator index = local_job_done_list.begin();
-         index != local_job_done_list.end();
-         ++index) {
-      dbg(DBG_WORKER_FD,
-          DBG_WORKER_FD_S"Local job-done notification arrives(job #%d).\n",
-          *index);
-      NotifyLocalJobDone(*index);
+    if (local_job_done_list.empty()) {
+      worker_manager_->GetLocalJobDoneList(&local_job_done_list);
     }
-    local_job_done_list.clear();
+    quota = 10;
+    while (!local_job_done_list.empty()) {
+      Job* job = local_job_done_list.front();
+      local_job_done_list.pop_front();
+      NotifyLocalJobDone(job);
+      if (local_job_done_list.empty()) {
+        worker_manager_->GetLocalJobDoneList(&local_job_done_list);
+      }
+      if (--quota <= 0) {
+        break;
+      }
+    }
   }
 }
 
