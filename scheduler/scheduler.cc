@@ -267,15 +267,18 @@ void Scheduler::ProcessHandshakeCommand(HandshakeCommand* cm) {
 void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
+  std::list<SchedulerWorker*> waiting_list;
+  job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+
+  std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+  for (; iter != waiting_list.end(); ++iter) {
+    server_->SendCommand(*iter, cm);
+  }
+
   JobEntry *job;
   if (job_manager_->GetJobEntry(job_id, job)) {
     job_manager_->NotifyJobDone(job);
     load_balancer_->NotifyJobDone(job);
-  }
-
-  SchedulerWorkerList::iterator iter = server_->workers()->begin();
-  for (; iter != server_->workers()->end(); iter++) {
-    server_->SendCommand(*iter, cm);
   }
 }
 

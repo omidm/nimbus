@@ -56,8 +56,9 @@
 #include "shared/nimbus_types.h"
 #include "shared/dbg.h"
 #include "shared/graph.h"
-#include "shared/logical_data_object.h"
 #include "scheduler/job_entry.h"
+#include "scheduler/after_map.h"
+#include "shared/logical_data_object.h"
 #include "scheduler/version_manager.h"
 #include "scheduler/physical_data.h"
 #include "shared/log.h"
@@ -72,32 +73,32 @@ class JobManager {
 
     Graph<JobEntry, job_id_t> *job_graph_p();
 
-    bool AddComputeJobEntry(const std::string& job_name,
-                            const job_id_t& job_id,
-                            const IDSet<logical_data_id_t>& read_set,
-                            const IDSet<logical_data_id_t>& write_set,
-                            const IDSet<job_id_t>& before_set,
-                            const IDSet<job_id_t>& after_set,
-                            const job_id_t& parent_job_id,
-                            const job_id_t& future_job_id,
-                            const bool& sterile,
-                            const Parameter& params);
+    JobEntry* AddComputeJobEntry(const std::string& job_name,
+                                 const job_id_t& job_id,
+                                 const IDSet<logical_data_id_t>& read_set,
+                                 const IDSet<logical_data_id_t>& write_set,
+                                 const IDSet<job_id_t>& before_set,
+                                 const IDSet<job_id_t>& after_set,
+                                 const job_id_t& parent_job_id,
+                                 const job_id_t& future_job_id,
+                                 const bool& sterile,
+                                 const Parameter& params);
 
-    bool AddExplicitCopyJobEntry();
+    JobEntry* AddExplicitCopyJobEntry();
 
-    bool AddKernelJobEntry();
+    JobEntry* AddKernelJobEntry();
 
-    bool AddMainJobEntry(const job_id_t& job_id);
+    JobEntry* AddMainJobEntry(const job_id_t& job_id);
 
-    bool AddCreateDataJobEntry(const job_id_t& job_id);
+    JobEntry* AddCreateDataJobEntry(const job_id_t& job_id);
 
-    bool AddLocalCopyJobEntry(const job_id_t& job_id);
+    JobEntry* AddLocalCopyJobEntry(const job_id_t& job_id);
 
-    bool AddRemoteCopySendJobEntry(const job_id_t& job_id);
+    JobEntry* AddRemoteCopySendJobEntry(const job_id_t& job_id);
 
-    bool AddRemoteCopyReceiveJobEntry(const job_id_t& job_id);
+    JobEntry* AddRemoteCopyReceiveJobEntry(const job_id_t& job_id);
 
-    bool AddFutureJobEntry(const job_id_t& job_id);
+    JobEntry* AddFutureJobEntry(const job_id_t& job_id);
 
     bool AddJobEntryIncomingEdges(JobEntry *job);
 
@@ -128,6 +129,9 @@ class JobManager {
     size_t GetJobsNeedDataVersion(JobEntryList* list,
                                   VersionedLogicalData vld);
 
+    bool GetWorkersWaitingOnJob(job_id_t job_id,
+                                std::list<SchedulerWorker*> *list);
+
     bool AllJobsAreDone();
 
     void UpdateJobBeforeSet(JobEntry* job);
@@ -146,6 +150,9 @@ class JobManager {
 
     const LdoMap* ldo_map_p_;
     VersionManager version_manager_;
+
+    AfterMap after_map_;
+    boost::mutex after_map_mutex_;
 
     JobEntryMap jobs_done_;
     JobEntryMap jobs_ready_to_assign_;

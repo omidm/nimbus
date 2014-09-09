@@ -98,8 +98,8 @@ bool AfterMap::AddEntry(job_id_t job_id, SchedulerWorker* worker) {
   return true;
 }
 
-bool AfterMap::GetWorkersWaitingOn(job_id_t job_id,
-                                   std::list<SchedulerWorker*> *list) {
+bool AfterMap::GetWorkersWaitingOnJob(job_id_t job_id,
+                                      std::list<SchedulerWorker*> *list) {
   list->clear();
 
   Iter iter = content_.find(job_id);
