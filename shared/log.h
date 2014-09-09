@@ -92,12 +92,16 @@ std::string GetTag(LOG_TYPE type);
 
 class Log {
   public:
+    enum Type {
+      NO_FILE = 0
+    };
+
     Log();
+    explicit Log(Type);
     explicit Log(std::ostream* os);
     explicit Log(std::string fname);
     Log(std::ostream* os, std::string fname);
     ~Log();
-
 
     void set_output_stream(std::ostream* os);
     void set_file_name(std::string fname);
@@ -126,6 +130,8 @@ class Log {
 
     static void PrintLine(std::string msg, LOG_TYPE type = LOG_NONE);
     static void Print(std::string msg, LOG_TYPE type = LOG_NONE);
+
+    static double GetRawTime();
 
     static void none() {}
 

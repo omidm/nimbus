@@ -49,6 +49,11 @@ Log::Log()
     ResetTimer();
 }
 
+Log::Log(Type NO_FILE) {
+    InitTime();
+    ResetTimer();
+}
+
 Log::Log(std::ostream* os)
 : output_stream_(os),
   log_file_name_("log.txt") {
@@ -206,6 +211,12 @@ void Log::Print(std::string msg, LOG_TYPE type) {
   std::cout << GetTag(type) << msg;
 }
 
+double Log::GetRawTime() {
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  return time_sum;
+}
 
 std::string GetTag(LOG_TYPE type) {
   switch (type) {
