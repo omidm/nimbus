@@ -161,6 +161,7 @@ void Worker::WorkerCoreProcessor() {
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
           receive_job_id);
+      PrintTimeStamp("io_done %lu\n", receive_job_id);
       NotifyTransmissionDone(receive_job_id);
       if (--quota <= 0) {
         break;
@@ -174,6 +175,7 @@ void Worker::WorkerCoreProcessor() {
     while (!local_job_done_list.empty()) {
       Job* job = local_job_done_list.front();
       local_job_done_list.pop_front();
+      PrintTimeStamp("local_done %lu\n", job->id().elem());
       NotifyLocalJobDone(job);
       if (local_job_done_list.empty()) {
         worker_manager_->GetLocalJobDoneList(&local_job_done_list);
@@ -287,7 +289,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 // Processes jobdone command. Moves a job from blocked queue to ready queue if
 // its before set is satisfied.
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
-  PrintTimeStamp("job_done %lu\n", cm->job_id().elem());
+  PrintTimeStamp("recv_job %s %lu\n", "JOB_DONE", cm->job_id().elem());
   NotifyJobDone(cm->job_id().elem());
 }
 
@@ -328,6 +330,7 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   Job * job = new CreateDataJob();
   job->set_name("CreateData:" + cm->data_name());
   job->set_id(cm->job_id());
+  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->physical_data_id().elem());
   job->set_write_set(write_set);
@@ -344,6 +347,7 @@ void Worker::ProcessRemoteCopySendCommand(RemoteCopySendCommand* cm) {
       cm->to_ip(), cm->to_port().elem());
   job->set_name("RemoteCopySend");
   job->set_id(cm->job_id());
+  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   job->set_receive_job_id(cm->receive_job_id());
   job->set_to_worker_id(cm->to_worker_id());
   job->set_to_ip(cm->to_ip());
@@ -362,6 +366,7 @@ void Worker::ProcessRemoteCopyReceiveCommand(RemoteCopyReceiveCommand* cm) {
   Job * job = new RemoteCopyReceiveJob(application_);
   job->set_name("RemoteCopyReceive");
   job->set_id(cm->job_id());
+  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   IDSet<physical_data_id_t> write_set;
   write_set.insert(cm->to_physical_data_id().elem());
   job->set_write_set(write_set);
@@ -376,6 +381,7 @@ void Worker::ProcessLocalCopyCommand(LocalCopyCommand* cm) {
   Job * job = new LocalCopyJob(application_);
   job->set_name("LocalCopy");
   job->set_id(cm->job_id());
+  PrintTimeStamp("recv_job %s %lu\n", job->name().c_str(), job->id().elem());
   IDSet<physical_data_id_t> read_set;
   read_set.insert(cm->from_physical_data_id().elem());
   job->set_read_set(read_set);
@@ -553,13 +559,13 @@ void Worker::AddJobToGraph(Job* job) {
     vertex->entry()->set_state(WorkerJobEntry::READY);
     ResolveDataArray(job);
     // TODO(print_log): dispatch a job, newly received with empty before set.
-    if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
-          dynamic_cast<LocalCopyJob*>(job) || // NOLINT
-          dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
-          dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
-      PrintTimeStamp("dispatch_job(new) %s %lu\n",
-                     job->name().c_str(), job->id().elem());
-    }
+    // if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
+    //       dynamic_cast<LocalCopyJob*>(job) || // NOLINT
+    //       dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
+    //       dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
+     PrintTimeStamp("dispatch_job(new) %s %lu\n",
+                    job->name().c_str(), job->id().elem());
+    // }
     int success_flag = worker_manager_->PushJob(job);
 #ifndef MUTE_LOG
     double wait_time = timer_.Stop(job->id().elem());
@@ -593,16 +599,16 @@ void Worker::ClearAfterSet(WorkerJobVertex* vertex) {
       // TODO(print_log): dispatch a job, because a
       // local_job_done/remote_job_done.
       Job* job = after_job_vertex->entry()->get_job();
-      if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
-          dynamic_cast<LocalCopyJob*>(job) || // NOLINT
-          dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
-          dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
-        // Is compute job.
-          PrintTimeStamp("dispatch_job(job_done) %s %lu %lu\n",
-                         after_job_vertex->entry()->get_job()->name().c_str(),
-                         after_job_vertex->entry()->get_job()->id().elem(),
-                         vertex->entry()->get_job_id());
-      }
+      // if (!(dynamic_cast<CreateDataJob*>(job) || // NOLINT
+      //     dynamic_cast<LocalCopyJob*>(job) || // NOLINT
+      //     dynamic_cast<RemoteCopySendJob*>(job) || // NOLINT
+      //     dynamic_cast<RemoteCopyReceiveJob*>(job))) { // NOLINT
+      //   // Is compute job.
+      PrintTimeStamp("dispatch_job(job_done) %s %lu %lu\n",
+                     job->name().c_str(),
+                     job->id().elem(),
+                     vertex->entry()->get_job_id());
+      // }
       int success_flag =
           worker_manager_->PushJob(after_job_vertex->entry()->get_job());
 #ifndef MUTE_LOG
