@@ -78,13 +78,13 @@ class SchedulerServer {
   /** Pull incoming commands from the received queue. Puts at most
    *  maxCommands into storage, returning true if it placed one or more.
    *  Returns false if no commands were placed in storage. */
-  virtual bool ReceiveCommands(SchedulerCommandListSP* storage,
+  virtual bool ReceiveCommands(SchedulerCommandList* storage,
                                size_t maxCommands);
 
   /** Pull incoming job done commands from the received job done queue.  Puts
    * at most maxCommands into storage, returning true if it placed one or more.
    * Returns false if no commands were placed in storage. */
-  virtual bool ReceiveJobDoneCommands(SchedulerCommandListSP* storage,
+  virtual bool ReceiveJobDoneCommands(JobDoneCommandList* storage,
                                       size_t maxCommands);
 
   /** Send command to destinationWorker. Returns immediately and
@@ -122,9 +122,10 @@ class SchedulerServer {
  private:
   port_t listening_port_;
   boost::mutex command_queue_mutex_;
+  boost::mutex job_done_command_queue_mutex_;
   boost::mutex send_command_mutex_;
-  SchedulerCommandListSP received_commands_;
-  SchedulerCommandListSP received_job_done_commands_;
+  SchedulerCommandList received_commands_;
+  JobDoneCommandList received_job_done_commands_;
   boost::mutex worker_mutex_;
   SchedulerWorkerList workers_;
   SchedulerCommand::PrototypeTable* worker_command_table_;

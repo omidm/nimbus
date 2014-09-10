@@ -81,7 +81,7 @@ bool SchedulerServer::Initialize() {
   return true;
 }
 
-bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
+bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
                                       size_t maxCommands) {
   storage->clear();
   boost::mutex::scoped_lock lock(command_queue_mutex_);
@@ -92,7 +92,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
     maxCommands = pending;
   }
   for (uint32_t i = 0; i < maxCommands; i++) {
-    boost::shared_ptr<SchedulerCommand> command = received_commands_.front();
+    SchedulerCommand* command = received_commands_.front();
     received_commands_.pop_front();
     dbg(DBG_NET, "Copying command %s to user buffer.\n", command->ToString().c_str());
     storage->push_back(command);
@@ -101,10 +101,10 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandListSP* storage,
 }
 
 
-bool SchedulerServer::ReceiveJobDoneCommands(SchedulerCommandListSP* storage,
+bool SchedulerServer::ReceiveJobDoneCommands(JobDoneCommandList* storage,
                                              size_t maxCommands) {
   storage->clear();
-  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  boost::mutex::scoped_lock lock(job_done_command_queue_mutex_);
   uint32_t pending = received_job_done_commands_.size();
   if (pending == 0) {
     return false;
@@ -112,7 +112,7 @@ bool SchedulerServer::ReceiveJobDoneCommands(SchedulerCommandListSP* storage,
     maxCommands = pending;
   }
   for (uint32_t i = 0; i < maxCommands; i++) {
-    boost::shared_ptr<SchedulerCommand> command = received_job_done_commands_.front();
+    JobDoneCommand* command = received_job_done_commands_.front();
     received_job_done_commands_.pop_front();
     dbg(DBG_NET, "Copying job done command %s to user buffer.\n", command->ToString().c_str());
     storage->push_back(command);
@@ -228,11 +228,21 @@ size_t SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
                                                           worker_command_table_,
                                                           command)) {
         dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
-        boost::mutex::scoped_lock lock(command_queue_mutex_);
-        boost::shared_ptr<SchedulerCommand> command_sp(command);
-        received_commands_.push_back(command_sp);
+
+        {
+          boost::mutex::scoped_lock lock(command_queue_mutex_);
+          received_commands_.push_back(command);
+        }
+
         if (command->type() == SchedulerCommand::JOB_DONE) {
-          received_job_done_commands_.push_back(command_sp);
+          JobDoneCommand *comm = reinterpret_cast<JobDoneCommand*>(command);
+          JobDoneCommand* dup_comm = new JobDoneCommand(comm->job_id(),
+                                                        comm->run_time(),
+                                                        comm->wait_time(),
+                                                        comm->max_alloc(),
+                                                        comm->final());
+          boost::mutex::scoped_lock lock(job_done_command_queue_mutex_);
+          received_job_done_commands_.push_back(dup_comm);
         }
       } else {
         dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());

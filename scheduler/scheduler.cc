@@ -144,18 +144,14 @@ void Scheduler::SchedulerCoreProcessor() {
 }
 
 void Scheduler::ProcessQueuedSchedulerCommands() {
-  SchedulerCommandListSP storage;
+  SchedulerCommandList storage;
   if (server_->ReceiveCommands(&storage, max_command_process_num_)) {
-    SchedulerCommandListSP::iterator iter = storage.begin();
+    SchedulerCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); iter++) {
-      SchedulerCommand* comm = (*iter).get();
+      SchedulerCommand* comm = *iter;
       dbg(DBG_SCHED, "Processing command: %s.\n", comm->ToString().c_str());
       ProcessSchedulerCommand(comm);
-      /*
-       * Scheduler commands are wrapped as shared pointers,
-       * so do not neeed explicit delete.
-       */
-      // delete comm;
+      delete comm;
     }
   }
 }
@@ -451,15 +447,15 @@ void Scheduler::LoadUserCommands() {
 
 void Scheduler::JobDoneBouncerThread() {
   while (true) {
-    SchedulerCommandListSP storage;
+    JobDoneCommandList storage;
     while (!server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_)) {
       // wait; lkjs;
       continue;
     }
 
-    SchedulerCommandListSP::iterator iter = storage.begin();
+    JobDoneCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); ++iter) {
-      JobDoneCommand* comm = reinterpret_cast<JobDoneCommand*>((*iter).get());
+      JobDoneCommand* comm = *iter;
       dbg(DBG_SCHED, "Bouncing job done command: %s.\n", comm->ToString().c_str());
       job_id_t job_id = comm->job_id().elem();
 
@@ -471,6 +467,7 @@ void Scheduler::JobDoneBouncerThread() {
       for (; iter != waiting_list.end(); ++iter) {
         server_->SendCommand(*iter, comm);
       }
+      delete comm;
     }
   }
 }

@@ -46,6 +46,7 @@
 #define NIMBUS_SHARED_JOB_DONE_COMMAND_H_
 
 
+#include <list>
 #include <string>
 #include "shared/scheduler_command.h"
 
@@ -84,6 +85,8 @@ class JobDoneCommand : public SchedulerCommand {
     bool ReadFromProtobuf(const JobDonePBuf& buf);
     bool WriteToProtobuf(JobDonePBuf* buf);
 };
+
+typedef std::list<JobDoneCommand*> JobDoneCommandList;
 
 }  // namespace nimbus
 
