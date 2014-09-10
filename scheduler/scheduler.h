@@ -122,9 +122,12 @@ class Scheduler {
     virtual void SetupJobManager();
     virtual void SetupLoadBalancer();
     virtual void SetupJobAssigner();
+
+    virtual void SetupJobDoneBouncer();
     virtual void SetupUserInterface();
 
-    virtual void GetUserCommand();
+    virtual void JobDoneBouncerThread();
+    virtual void GetUserCommandThread();
 
     virtual void LoadUserCommands();
     virtual void LoadWorkerCommands();
@@ -137,6 +140,7 @@ class Scheduler {
     LoadBalancer *load_balancer_;
 
     boost::thread* user_interface_thread_;
+    boost::thread* job_done_bouncer_thread_;
     boost::thread* scheduler_server_thread_;
     boost::thread* load_balancer_thread_;
 
@@ -149,6 +153,7 @@ class Scheduler {
     size_t min_worker_to_join_;
     size_t job_assigner_thread_num_;
     size_t max_command_process_num_;
+    size_t max_job_done_command_process_num_;
 
     CmSet user_command_set_;
     SchedulerCommand::PrototypeTable worker_command_table_;

@@ -94,6 +94,7 @@ void Scheduler::Run() {
   SetupJobManager();
   SetupLoadBalancer();
   SetupJobAssigner();
+  SetupJobDoneBouncer();
   // SetupUserInterface();
 
   SchedulerCoreProcessor();
@@ -414,10 +415,15 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->Run();
 }
 
+void Scheduler::SetupJobDoneBouncer() {
+  job_done_bouncer_thread_ = new boost::thread(
+      boost::bind(&Scheduler::JobDoneBouncerThread, this));
+}
+
 void Scheduler::SetupUserInterface() {
   LoadUserCommands();
   user_interface_thread_ = new boost::thread(
-      boost::bind(&Scheduler::GetUserCommand, this));
+      boost::bind(&Scheduler::GetUserCommandThread, this));
 }
 
 void Scheduler::LoadWorkerCommands() {
@@ -443,7 +449,33 @@ void Scheduler::LoadUserCommands() {
   }
 }
 
-void Scheduler::GetUserCommand() {
+void Scheduler::JobDoneBouncerThread() {
+  while (true) {
+    SchedulerCommandListSP storage;
+    while (!server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_)) {
+      // wait; lkjs;
+      continue;
+    }
+
+    SchedulerCommandListSP::iterator iter = storage.begin();
+    for (; iter != storage.end(); ++iter) {
+      JobDoneCommand* comm = reinterpret_cast<JobDoneCommand*>((*iter).get());
+      dbg(DBG_SCHED, "Bouncing job done command: %s.\n", comm->ToString().c_str());
+      job_id_t job_id = comm->job_id().elem();
+
+      std::list<SchedulerWorker*> waiting_list;
+      job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+
+      comm->set_final(false);
+      std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+      for (; iter != waiting_list.end(); ++iter) {
+        server_->SendCommand(*iter, comm);
+      }
+    }
+  }
+}
+
+void Scheduler::GetUserCommandThread() {
   while (true) {
     std::cout << "command: " << std::endl;
     std::string token("runapp");
