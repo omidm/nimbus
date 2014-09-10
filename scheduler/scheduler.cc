@@ -449,7 +449,7 @@ void Scheduler::JobDoneBouncerThread() {
   while (true) {
     JobDoneCommandList storage;
     while (!server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_)) {
-      //TODO(omid): remove the busy loop!
+      // TODO(omid): remove the busy loop!
       continue;
     }
 
