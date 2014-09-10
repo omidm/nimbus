@@ -209,6 +209,24 @@ void JobProjectionMain::SpawnJobs(
   }
   job_query.CommitStagedJobs();
 
+  // Global initialize.
+  read.clear();
+  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
+                      APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_TOLERANCE,
+                      NULL);
+  write.clear();
+  LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
+                      APP_PROJECTION_GLOBAL_N,
+                      APP_PROJECTION_GLOBAL_TOLERANCE,
+                      APP_PROJECTION_DESIRED_ITERATIONS, NULL);
+  job_query.StageJob(PROJECTION_GLOBAL_INITIALIZE,
+                     projection_job_ids[3],
+                     read, write,
+                     default_params, true);
+  // Global initialize is a job that serves as a bottleneck.
+  job_query.Hint(projection_job_ids[3], kRegW3Central[0], true);
+  job_query.CommitStagedJobs();
+
   // Local initialize.
   for (int index = 0; index < local_initialize_job_num; ++index) {
     read.clear();
@@ -234,23 +252,6 @@ void JobProjectionMain::SpawnJobs(
                        default_part_params[index], true);
     job_query.Hint(local_initialize_job_ids[index], kRegY2W3Central[index]);
   }
-  job_query.CommitStagedJobs();
-
-  // Global initialize.
-  read.clear();
-  LoadLogicalIdsInSet(this, &read, kRegW0Central[0],
-                      APP_PROJECTION_INTERIOR_N, APP_PROJECTION_LOCAL_TOLERANCE,
-                      NULL);
-  write.clear();
-  LoadLogicalIdsInSet(this, &write, kRegW0Central[0],
-                      APP_PROJECTION_GLOBAL_N,
-                      APP_PROJECTION_GLOBAL_TOLERANCE,
-                      APP_PROJECTION_DESIRED_ITERATIONS, NULL);
-  job_query.StageJob(PROJECTION_GLOBAL_INITIALIZE,
-                     projection_job_ids[3],
-                     read, write,
-                     default_params, true);
-  job_query.Hint(projection_job_ids[3], kRegW3Central[0], true);
   job_query.CommitStagedJobs();
 
   // Projection loop.

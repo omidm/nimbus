@@ -59,7 +59,6 @@ JobQuery::JobQuery(Job* job) {
   e2_time_ = 0;
   e3_time_ = 0;
   e4_time_ = 0;
-  has_whole_region_ = false;
 }
 JobQuery::~JobQuery() {}
 
@@ -191,14 +190,8 @@ bool JobQuery::CommitJob(const job_id_t& id) {
 void JobQuery::Hint(job_id_t job_id, const GeometricRegion& region,
                     bool bottleneck) {
   hint_map_[job_id] = region;
-  if (!bottleneck) {
-    return;
-  }
-  if (has_whole_region_) {
-    assert(region == whole_region_);
-  } else {
-    has_whole_region_ = true;
-    whole_region_ = region;
+  if (bottleneck) {
+    hint_bottleneck_.insert(job_id);
   }
 }
 
@@ -221,7 +214,7 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
       complete_hint = false;
       break;
     }
-    if (has_whole_region_ && whole_region_.IsEqual(&loc->second)) {
+    if (hint_bottleneck_.find(*iter) != hint_bottleneck_.end()) {
       continue;
     }
     complete_hint = true;
@@ -254,6 +247,28 @@ void JobQuery::Eliminate(IDSet<job_id_t>* before) {
          group_heap[index].begin();
          iter != group_heap[index].end();
          ++iter) {
+      if (hint_bottleneck_.find(query_log_[*iter].id)
+          != hint_bottleneck_.end()) {
+        // Clean and finish.
+        assert(group_heap[index].size() == 1);
+        IDSet<job_id_t> temp_idset;
+        for (IDSet<job_id_t>::IDSetIter iter_j = before->begin();
+             iter_j != before->end();
+             ++iter_j) {
+          RankId temp_rank_id = job_id_to_rank_[*iter_j];
+          GroupId group_id = query_log_[temp_rank_id].group_id;
+          if (group_id >= index) {
+            temp_idset.insert(*iter_j);
+          }
+        }
+        before->swap(temp_idset);
+        clock_gettime(CLOCK_REALTIME, &t);
+        e3_time_ += difftime(t.tv_sec, start_time.tv_sec)
+            + .000000001
+            * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
+
+        return;
+      }
       if (before->contains(query_log_[*iter].id)) {
         ++scanned;
         if (scanned == before->size()) {

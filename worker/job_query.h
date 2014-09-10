@@ -69,8 +69,6 @@ class JobQuery {
             bool bottleneck = false);
 
  private:
-  bool has_whole_region_;
-  GeometricRegion whole_region_;
   int64_t total_job_;
   int64_t total_objects_;
   double query_time_;
@@ -87,6 +85,7 @@ class JobQuery {
 
   typedef boost::unordered_map<logical_data_id_t, GeometricRegion> HintMapType;
   HintMapType hint_map_;
+  boost::unordered_set<job_id_t> hint_bottleneck_;
   void Eliminate(IDSet<job_id_t>* before);
 
   Job* job_;
