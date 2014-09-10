@@ -150,6 +150,8 @@ void JobProjectionMain::SpawnJobs(
                        calculate_boundary_condition_part_one_job_ids[index],
                        read, write,
                        default_part_params[index], true);
+    job_query.Hint(calculate_boundary_condition_part_one_job_ids[index],
+                   kRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
@@ -174,6 +176,8 @@ void JobProjectionMain::SpawnJobs(
                        calculate_boundary_condition_part_two_job_ids[index],
                        read, write,
                        default_part_params[index], true);
+    job_query.Hint(calculate_boundary_condition_part_two_job_ids[index],
+                   kRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
@@ -201,6 +205,7 @@ void JobProjectionMain::SpawnJobs(
                        construct_matrix_job_ids[index],
                        read, write,
                        default_part_params[index], true);
+    job_query.Hint(construct_matrix_job_ids[index], kRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
@@ -227,6 +232,7 @@ void JobProjectionMain::SpawnJobs(
                        local_initialize_job_ids[index],
                        read, write,
                        default_part_params[index], true);
+    job_query.Hint(local_initialize_job_ids[index], kRegY2W3Central[index]);
   }
   job_query.CommitStagedJobs();
 
@@ -244,6 +250,7 @@ void JobProjectionMain::SpawnJobs(
                      projection_job_ids[3],
                      read, write,
                      default_params, true);
+  job_query.Hint(projection_job_ids[3], kRegW3Central[0], true);
   job_query.CommitStagedJobs();
 
   // Projection loop.
@@ -266,7 +273,9 @@ void JobProjectionMain::SpawnJobs(
                      projection_job_ids[4],
                      read, write,
                      projection_loop_iteration_params, false, true);
+  job_query.Hint(projection_job_ids[4], kRegW3Central[0], true);
   job_query.CommitStagedJobs();
+  job_query.PrintTimeProfile();
 
   if (time == 0) {
     dbg(APP_LOG, "Print job dependency figure.\n");

@@ -154,6 +154,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     job_query.StageJob(EXTRAPOLATE_PHI, extrapolate_phi_job_ids[i],
                        read, write,
                        s_extra_params, true);
+    job_query.Hint(extrapolate_phi_job_ids[i], kRegY2W3Central[i]);
   }
 
   job_query.CommitStagedJobs();
@@ -177,6 +178,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     job_query.StageJob(EXTRAPOLATION, extrapolation_job_ids[i],
                        read, write,
                        extrapolation_params, true);
+    job_query.Hint(extrapolation_job_ids[i], kRegY2W3Central[i]);
   }
 
   job_query.CommitStagedJobs();
@@ -208,6 +210,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
       job_query.StageJob(CALCULATE_DT, calculate_dt_job_ids[i],
                          read, write,
                          dt_params, true);
+      job_query.Hint(calculate_dt_job_ids[i], kRegY2W3Central[i]);
     }
     job_query.CommitStagedJobs();
 
@@ -221,6 +224,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
     job_query.StageJob(LOOP_ITERATION, job_ids[1],
                        read, write,
                        iter_params, false, true);
+    job_query.Hint(job_ids[1], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
 
   } else {
@@ -255,6 +259,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
           reseed_particles_job_ids[i],
           read, write,
           temp_params, true);
+      job_query.Hint(reseed_particles_job_ids[i], kRegY2W3Central[i]);
     }
     job_query.CommitStagedJobs();
 
@@ -279,6 +284,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                          write_output_job_ids[0],
                          read, write,
                          temp_params, true);
+      job_query.Hint(write_output_job_ids[0], kRegW3Central[0], true);
       job_query.CommitStagedJobs();
     } else {
       for (int i = 0; i < write_output_job_num; ++i) {
@@ -302,6 +308,7 @@ void JobLoopIterationPartTwo::SpawnJobs(
                            write_output_job_ids[i],
                            read, write,
                            temp_params, true);
+        job_query.Hint(write_output_job_ids[i], kRegY2W3Central[i]);
       }
       job_query.CommitStagedJobs();
     }
@@ -318,9 +325,11 @@ void JobLoopIterationPartTwo::SpawnJobs(
     job_query.StageJob(LOOP_FRAME, loop_job_id[0],
                        read, write,
                        frame_params, false, true);
+    job_query.Hint(loop_job_id[0], kRegW3Central[0], true);
     job_query.CommitStagedJobs();
 
   }  // end loop "if (done)".
+  job_query.PrintTimeProfile();
   if (time == 0) {
     dbg(APP_LOG, "Print job dependency figure.\n");
     job_query.GenerateDotFigure("loop_iteration_part_two.dot");
