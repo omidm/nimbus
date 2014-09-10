@@ -76,6 +76,7 @@ class Scheduler {
     virtual void set_min_worker_to_join(size_t num);
     virtual void set_job_assigner_thread_num(size_t num);
     virtual void set_max_command_process_num(size_t num);
+    virtual void set_max_job_done_command_process_num(size_t num);
 
     /* TODO(omidm): figure out what we want for these methods. */
     virtual void LoadClusterMap(std::string) {}

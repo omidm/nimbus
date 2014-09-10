@@ -46,6 +46,7 @@ namespace nimbus {
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
 #define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
+#define DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM 200
 
 Scheduler::Scheduler(port_t port) {
   server_ = NULL;
@@ -61,6 +62,7 @@ Scheduler::Scheduler(port_t port) {
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
+  max_job_done_command_process_num_ = DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM;
   log_.set_file_name("log_scheduler");
   log_receive_stamp_.set_file_name("log_receive_stamp");
 }
@@ -114,6 +116,10 @@ void Scheduler::set_job_assigner_thread_num(size_t num) {
 
 void Scheduler::set_max_command_process_num(size_t num) {
   max_command_process_num_ = num;
+}
+
+void Scheduler::set_max_job_done_command_process_num(size_t num) {
+  max_job_done_command_process_num_ = num;
 }
 
 void Scheduler::SchedulerCoreProcessor() {
