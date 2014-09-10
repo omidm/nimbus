@@ -438,7 +438,7 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   job->set_assigned_worker_id(job->assigned_worker()->worker_id());
 
   {
-    boost::unique_lock<boost::mutex> job_graph_lock(job_graph_mutex_);
+    boost::unique_lock<boost::mutex> after_map_lock(after_map_mutex_);
     after_map_.AddEntries(job);
   }
 
@@ -475,7 +475,10 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   job_id_t job_id = job->job_id();
   jobs_done_[job_id] = job;
 
-  after_map_.RemoveJobRecords(job_id);
+  {
+    boost::unique_lock<boost::mutex> after_map_lock(after_map_mutex_);
+    after_map_.RemoveJobRecords(job_id);
+  }
 
   if (!job->sterile()) {
     Vertex<JobEntry, job_id_t>* vertex;
@@ -513,7 +516,12 @@ size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
 
 bool JobManager::GetWorkersWaitingOnJob(job_id_t job_id,
                                         std::list<SchedulerWorker*> *list) {
-  return after_map_.GetWorkersWaitingOnJob(job_id, list);
+  bool success = false;
+  {
+    boost::unique_lock<boost::mutex> after_map_lock(after_map_mutex_);
+    success = after_map_.GetWorkersWaitingOnJob(job_id, list);
+  }
+  return success;
 }
 
 bool JobManager::AllJobsAreDone() {

@@ -46,6 +46,7 @@
 #define NIMBUS_SHARED_JOB_DONE_COMMAND_H_
 
 
+#include <list>
 #include <string>
 #include "shared/scheduler_command.h"
 
@@ -55,9 +56,10 @@ class JobDoneCommand : public SchedulerCommand {
     JobDoneCommand();
     explicit JobDoneCommand(const ID<job_id_t>& job_id);
     JobDoneCommand(const ID<job_id_t>& job_id,
-                   double run_time,
-                   double wait_time,
-                   size_t max_alloc);
+                   const double run_time,
+                   const double wait_time,
+                   const size_t max_alloc,
+                   const bool final);
     ~JobDoneCommand();
 
     virtual SchedulerCommand* Clone();
@@ -69,16 +71,22 @@ class JobDoneCommand : public SchedulerCommand {
     double run_time();
     double wait_time();
     size_t max_alloc();
+    bool final();
+
+    void set_final(bool flag);
 
   private:
     ID<job_id_t> job_id_;
     double run_time_;
     double wait_time_;
     size_t max_alloc_;
+    bool final_;
 
     bool ReadFromProtobuf(const JobDonePBuf& buf);
     bool WriteToProtobuf(JobDonePBuf* buf);
 };
+
+typedef std::list<JobDoneCommand*> JobDoneCommandList;
 
 }  // namespace nimbus
 

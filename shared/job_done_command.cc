@@ -51,6 +51,7 @@ JobDoneCommand::JobDoneCommand() {
   run_time_ = 0;
   wait_time_ = 0;
   max_alloc_ = 0;
+  final_ = false;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id)
@@ -60,16 +61,19 @@ JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id)
   run_time_ = 0;
   wait_time_ = 0;
   max_alloc_ = 0;
+  final_ = false;
 }
 
 JobDoneCommand::JobDoneCommand(const ID<job_id_t>& job_id,
                                const double run_time,
                                const double wait_time,
-                               const size_t max_alloc)
+                               const size_t max_alloc,
+                               const bool final)
   : job_id_(job_id),
     run_time_(run_time),
     wait_time_(wait_time),
-    max_alloc_(max_alloc) {
+    max_alloc_(max_alloc),
+    final_(final) {
   name_ = JOB_DONE_NAME;
   type_ = JOB_DONE;
 }
@@ -124,7 +128,8 @@ std::string JobDoneCommand::ToString() {
   str += ("id:" + job_id_.ToNetworkData() + " ");
   str += ("run_time: " + boost::lexical_cast<std::string>(run_time_) + " ");
   str += ("wait_time: " + boost::lexical_cast<std::string>(wait_time_) + " ");
-  str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_));
+  str += ("max_alloc: " + boost::lexical_cast<std::string>(max_alloc_) + " ");
+  str += ("final: " + std::string(final_ ? "true" : "false"));
   return str;
 }
 
@@ -144,11 +149,20 @@ size_t JobDoneCommand::max_alloc() {
   return max_alloc_;
 }
 
+bool JobDoneCommand::final() {
+  return final_;
+}
+
+void JobDoneCommand::set_final(bool flag) {
+  final_ = flag;
+}
+
 bool JobDoneCommand::ReadFromProtobuf(const JobDonePBuf& buf) {
   job_id_.set_elem(buf.job_id());
   run_time_ = buf.run_time();
   wait_time_ = buf.wait_time();
   max_alloc_ = buf.max_alloc();
+  final_ = buf.final();
   return true;
 }
 
@@ -157,5 +171,6 @@ bool JobDoneCommand::WriteToProtobuf(JobDonePBuf* buf) {
   buf->set_run_time(run_time());
   buf->set_wait_time(wait_time());
   buf->set_max_alloc(max_alloc());
+  buf->set_final(final());
   return true;
 }

@@ -81,6 +81,12 @@ class SchedulerServer {
   virtual bool ReceiveCommands(SchedulerCommandList* storage,
                                size_t maxCommands);
 
+  /** Pull incoming job done commands from the received job done queue.  Puts
+   * at most maxCommands into storage, returning true if it placed one or more.
+   * Returns false if no commands were placed in storage. */
+  virtual bool ReceiveJobDoneCommands(JobDoneCommandList* storage,
+                                      size_t maxCommands);
+
   /** Send command to destinationWorker. Returns immediately and
    *   processes the send asynchronously.*/
 
@@ -118,6 +124,7 @@ class SchedulerServer {
   boost::mutex command_queue_mutex_;
   boost::mutex send_command_mutex_;
   SchedulerCommandList received_commands_;
+  JobDoneCommandList received_job_done_commands_;
   boost::mutex worker_mutex_;
   SchedulerWorkerList workers_;
   SchedulerCommand::PrototypeTable* worker_command_table_;
@@ -150,7 +157,7 @@ class SchedulerServer {
       Return value is how many bytes were read/parsed, this can
       be less than size (for example, if the buffer end has an
       incomplete command. */
-  virtual int EnqueueCommands(char* buffer, size_t size);
+  virtual size_t EnqueueCommands(char* buffer, size_t size);
 
   /* Add a worker to the worker list. */
   virtual SchedulerWorker* AddWorker(SchedulerServerConnection* connection);

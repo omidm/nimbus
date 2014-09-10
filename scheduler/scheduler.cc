@@ -46,6 +46,7 @@ namespace nimbus {
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
 #define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
+#define DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM 200
 
 Scheduler::Scheduler(port_t port) {
   server_ = NULL;
@@ -61,6 +62,7 @@ Scheduler::Scheduler(port_t port) {
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
+  max_job_done_command_process_num_ = DEFAULT_MAX_JOB_DONE_COMMAND_PROCESS_NUM;
   log_.set_file_name("log_scheduler");
   log_receive_stamp_.set_file_name("log_receive_stamp");
 }
@@ -94,6 +96,7 @@ void Scheduler::Run() {
   SetupJobManager();
   SetupLoadBalancer();
   SetupJobAssigner();
+  SetupJobDoneBouncer();
   // SetupUserInterface();
 
   SchedulerCoreProcessor();
@@ -113,6 +116,10 @@ void Scheduler::set_job_assigner_thread_num(size_t num) {
 
 void Scheduler::set_max_command_process_num(size_t num) {
   max_command_process_num_ = num;
+}
+
+void Scheduler::set_max_job_done_command_process_num(size_t num) {
+  max_job_done_command_process_num_ = num;
 }
 
 void Scheduler::SchedulerCoreProcessor() {
@@ -277,6 +284,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   std::list<SchedulerWorker*> waiting_list;
   job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
+  cm->set_final(true);
   std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
   for (; iter != waiting_list.end(); ++iter) {
     server_->SendCommand(*iter, cm);
@@ -409,10 +417,15 @@ void Scheduler::SetupJobAssigner() {
   job_assigner_->Run();
 }
 
+void Scheduler::SetupJobDoneBouncer() {
+  job_done_bouncer_thread_ = new boost::thread(
+      boost::bind(&Scheduler::JobDoneBouncerThread, this));
+}
+
 void Scheduler::SetupUserInterface() {
   LoadUserCommands();
   user_interface_thread_ = new boost::thread(
-      boost::bind(&Scheduler::GetUserCommand, this));
+      boost::bind(&Scheduler::GetUserCommandThread, this));
 }
 
 void Scheduler::LoadWorkerCommands() {
@@ -438,7 +451,34 @@ void Scheduler::LoadUserCommands() {
   }
 }
 
-void Scheduler::GetUserCommand() {
+void Scheduler::JobDoneBouncerThread() {
+  while (true) {
+    JobDoneCommandList storage;
+    while (!server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_)) {
+      // TODO(omid): remove the busy loop!
+      continue;
+    }
+
+    JobDoneCommandList::iterator iter = storage.begin();
+    for (; iter != storage.end(); ++iter) {
+      JobDoneCommand* comm = *iter;
+      dbg(DBG_SCHED, "Bouncing job done command: %s.\n", comm->ToString().c_str());
+      job_id_t job_id = comm->job_id().elem();
+
+      std::list<SchedulerWorker*> waiting_list;
+      job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+
+      comm->set_final(false);
+      std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
+      for (; iter != waiting_list.end(); ++iter) {
+        server_->SendCommand(*iter, comm);
+      }
+      delete comm;
+    }
+  }
+}
+
+void Scheduler::GetUserCommandThread() {
   while (true) {
     std::cout << "command: " << std::endl;
     std::string token("runapp");
