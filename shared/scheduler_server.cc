@@ -104,7 +104,7 @@ bool SchedulerServer::ReceiveCommands(SchedulerCommandList* storage,
 bool SchedulerServer::ReceiveJobDoneCommands(JobDoneCommandList* storage,
                                              size_t maxCommands) {
   storage->clear();
-  boost::mutex::scoped_lock lock(job_done_command_queue_mutex_);
+  boost::mutex::scoped_lock lock(command_queue_mutex_);
   uint32_t pending = received_job_done_commands_.size();
   if (pending == 0) {
     return false;
@@ -229,11 +229,8 @@ size_t SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
                                                           command)) {
         dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
 
-        {
-          boost::mutex::scoped_lock lock(command_queue_mutex_);
-          received_commands_.push_back(command);
-        }
-
+        boost::mutex::scoped_lock lock(command_queue_mutex_);
+        received_commands_.push_back(command);
         if (command->type() == SchedulerCommand::JOB_DONE) {
           JobDoneCommand *comm = reinterpret_cast<JobDoneCommand*>(command);
           JobDoneCommand* dup_comm = new JobDoneCommand(comm->job_id(),
@@ -241,7 +238,6 @@ size_t SchedulerServer::EnqueueCommands(char* buffer, size_t size) {
                                                         comm->wait_time(),
                                                         comm->max_alloc(),
                                                         comm->final());
-          boost::mutex::scoped_lock lock(job_done_command_queue_mutex_);
           received_job_done_commands_.push_back(dup_comm);
         }
       } else {
