@@ -741,7 +741,7 @@ void Worker::AddFinishHintSet(const job_id_t job_id) {
     hint_set_.erase(hint_queue_.front());
     hint_queue_.pop_front();
     hint_set_.insert(job_id);
-    hint_queue.push_back(job_id);
+    hint_queue_.push_back(job_id);
   }
 }
 
