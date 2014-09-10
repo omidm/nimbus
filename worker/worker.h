@@ -46,7 +46,9 @@
 #endif  // MUTE_LOG
 
 #include <boost/thread.hpp>
+#include <boost/unordered_set.hpp>
 #include <cstdio>
+#include <list>
 #include <string>
 #include <vector>
 #include <map>
@@ -83,6 +85,7 @@ class WorkerThreadMonitor;
 
 class Worker {
   friend class WorkerThreadMonitor;
+
  public:
   Worker(std::string scheuler_ip, port_t scheduler_port,
       port_t listening_port_, Application* application);
@@ -131,6 +134,11 @@ class Worker {
   port_t listening_port_;
 
  private:
+  static const int64_t max_hint_size_ = 10000;
+  boost::unordered_set<job_id_t> hint_set_;
+  std::list<job_id_t> hint_queue_;
+  void AddFinishHintSet(const job_id_t job_id);
+  bool InFinishHintSet(const job_id_t job_id);
   FILE* event_log;
   WorkerJobGraph worker_job_graph_;
   Log log_;
@@ -161,7 +169,7 @@ class Worker {
 
   virtual void AddJobToGraph(Job* job);
   virtual void NotifyLocalJobDone(Job* job);
-  virtual void NotifyJobDone(job_id_t job_id);
+  virtual void NotifyJobDone(job_id_t job_id, bool final);
   virtual void ClearAfterSet(WorkerJobVertex* vertex);
   virtual void NotifyTransmissionDone(job_id_t job_id);
 

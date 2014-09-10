@@ -290,7 +290,7 @@ void Worker::ProcessHandshakeCommand(HandshakeCommand* cm) {
 // its before set is satisfied.
 void Worker::ProcessJobDoneCommand(JobDoneCommand* cm) {
   PrintTimeStamp("recv_job %s %lu\n", "JOB_DONE", cm->job_id().elem());
-  NotifyJobDone(cm->job_id().elem());
+  NotifyJobDone(cm->job_id().elem(), cm->final());
 }
 
 // Processes computejob command. Generates the corresponding job and pushes it
@@ -537,6 +537,9 @@ void Worker::AddJobToGraph(Job* job) {
        iter != before_set.end();
        ++iter) {
     job_id_t before_job_id = *iter;
+    if (InFinishHintSet(before_job_id)) {
+      continue;
+    }
     WorkerJobVertex* before_job_vertex = NULL;
     if (worker_job_graph_.HasVertex(before_job_id)) {
       // The job is already known.
@@ -628,6 +631,9 @@ void Worker::NotifyLocalJobDone(Job* job) {
   job_id_t job_id = job->id().elem();
   // Job done for unknown job is not handled.
   if (!worker_job_graph_.HasVertex(job_id)) {
+    // The job must be in the local job graph, the final scheduler job done will
+    // come later and clean the job.
+    assert(false);
     return;
   }
   WorkerJobVertex* vertex = NULL;
@@ -639,21 +645,34 @@ void Worker::NotifyLocalJobDone(Job* job) {
   delete job;
 }
 
-void Worker::NotifyJobDone(job_id_t job_id) {
+void Worker::NotifyJobDone(job_id_t job_id, bool final) {
   dbg(DBG_WORKER_FD,
       DBG_WORKER_FD_S"Job(#%d) is removed in the local job graph.\n", job_id);
-  // Job done for unknown job is not handled.
-  if (!worker_job_graph_.HasVertex(job_id)) {
-    return;
+  if (final) {
+    // Job done for unknown job is not handled.
+    if (!worker_job_graph_.HasVertex(job_id)) {
+      return;
+    }
+    WorkerJobVertex* vertex = NULL;
+    worker_job_graph_.GetVertex(job_id, &vertex);
+    assert(vertex->incoming_edges()->empty());
+    assert(vertex->entry()->get_job() == NULL);
+    if (vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
+      ClearAfterSet(vertex);
+    }
+    worker_job_graph_.RemoveVertex(job_id);
+  } else {
+    if (worker_job_graph_.HasVertex(job_id)) {
+      WorkerJobVertex* vertex = NULL;
+      worker_job_graph_.GetVertex(job_id, &vertex);
+      assert(vertex->incoming_edges()->empty());
+      assert(vertex->entry()->get_job() == NULL);
+      vertex->entry()->set_state(WorkerJobEntry::FINISH);
+      ClearAfterSet(vertex);
+    } else {
+      AddFinishHintSet(job_id);
+    }
   }
-  WorkerJobVertex* vertex = NULL;
-  worker_job_graph_.GetVertex(job_id, &vertex);
-  assert(vertex->incoming_edges()->empty());
-  assert(vertex->entry()->get_job() == NULL);
-  if (vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
-    ClearAfterSet(vertex);
-  }
-  worker_job_graph_.RemoveVertex(job_id);
 }
 
 void Worker::NotifyTransmissionDone(job_id_t job_id) {
@@ -708,6 +727,24 @@ void Worker::NotifyTransmissionDone(job_id_t job_id) {
     vertex->entry()->set_job(NULL);
     vertex->entry()->set_state(WorkerJobEntry::PENDING_DATA_RECEIVED);
   }
+}
+
+
+void Worker::AddFinishHintSet(const job_id_t job_id) {
+  if (hint_set_.find(job_id) != hint_set_.end()) {
+    return;
+  }
+  if (hint_set_.size() < max_hint_size_) {
+    hint_set_.insert(job_id);
+    hint_queue_.push_back(job_id);
+  } else {
+    hint_set_.erase(hint_queue_.front());
+    hint_queue_.pop_front();
+  }
+}
+
+bool Worker::InFinishHintSet(const job_id_t job_id) {
+  return hint_set_.find(job_id) != hint_set_.end();
 }
 
 }  // namespace nimbus
