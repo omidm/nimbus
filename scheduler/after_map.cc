@@ -115,7 +115,12 @@ bool AfterMap::GetWorkersWaitingOnJob(job_id_t job_id,
 }
 
 bool AfterMap::RemoveJobRecords(job_id_t job_id) {
-  content_.erase(job_id);
+  Iter iter = content_.find(job_id);
+  if (iter != content_.end()) {
+    delete iter->second;
+    content_.erase(iter);
+  }
+
   return true;
 }
 
