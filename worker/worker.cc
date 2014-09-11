@@ -92,6 +92,9 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
 }
 
 Worker::~Worker() {
+  WorkerJobVertex* vertex = NULL;
+  worker_job_graph_.GetVertex(DUMB_JOB_ID, &vertex);
+  delete vertex->entry();
   worker_job_graph_.RemoveVertex(DUMB_JOB_ID);
   delete worker_manager_;
 }
@@ -639,6 +642,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
   worker_job_graph_.GetVertex(job_id, &vertex);
   assert(vertex->incoming_edges()->empty());
   ClearAfterSet(vertex);
+  delete vertex->entry();
   worker_job_graph_.RemoveVertex(job_id);
   AddFinishHintSet(job_id);
   // vertex->entry()->set_state(WorkerJobEntry::FINISH);
@@ -661,6 +665,7 @@ void Worker::NotifyJobDone(job_id_t job_id, bool final) {
     if (vertex->entry()->get_state() != WorkerJobEntry::FINISH) {
       ClearAfterSet(vertex);
     }
+    delete vertex->entry();
     worker_job_graph_.RemoveVertex(job_id);
   } else {
     if (worker_job_graph_.HasVertex(job_id)) {
