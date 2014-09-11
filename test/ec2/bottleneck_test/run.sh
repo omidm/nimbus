@@ -1,25 +1,21 @@
 N=100
 core_num=4
-wd=./working_dir_scale_X
-# merge/sort worker raw output. 
+WD=./result
+#START_TIME=1410387200
+START_TIME=0
+END_TIME=0
+# Output the blocking timestamp of each job.
+./output_blocking_timestamp.py $N ${WD}/{}_event_be.txt ${WD}/log_before_set ${WD}/blocking_time.txt
 for i in `seq 1 $N`
 do
-  echo $i
-  cat ${wd}/${i}_event_be.txt ${wd}/${i}_event_fe.txt > ${wd}/temp
-  ./sort_base_on_first_number.py ${wd}/temp ${wd}/${i}.raw
+  echo merging $i
+  cat ${WD}/${i}_event_be.txt ${WD}/${i}_event_fe.txt > ${WD}/temp
+  ./sort_base_on_first_number.py ${WD}/temp ${WD}/${i}.raw
 done
-# merge/sort scheduler raw output.
-./sort_base_on_first_number.py ${wd}/job_assigner_log ${wd}/before_set.raw
-
+./output_state_change.py $N ${WD}/{}.raw ${WD}/{}.state ${WD}/blocking_time.txt
 for i in `seq 1 $N`
 do
-  echo $i
-  ./output_blame.py $core_num ${wd}/${i}.raw ${wd}/${i}.step_1
+  ./sort_base_on_first_number.py ${WD}/${i}.state ${WD}/${i}.sort_state
 done
-
-for i in `seq 1 $N`
-do
-  echo $i
-  ./sort_base_on_first_number.py ${wd}/${i}.step_1 ${wd}/${i}.step_2
-done
-./prune_blame.py ${N} ${wd}/%d_event_be.txt ${wd}/%d.step_2 ${wd}/before_set.raw ${wd}/%d.out
+./prepare_final.py ${N} ${WD}/{}.sort_state ${WD}/{}.prep_data
+./make_all_figure.py ${core_num} ${N} ${WD}/{}.prep_data $START_TIME $END_TIME

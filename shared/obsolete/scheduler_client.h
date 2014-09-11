@@ -31,11 +31,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
  /*
   * Client (worker) side interface of the Nimbus scheduler protocol. 
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
-  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
 #ifndef NIMBUS_SHARED_SCHEDULER_CLIENT_H_
@@ -43,46 +43,29 @@
 
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
-#include <string>
+#include <boost/bind.hpp>
 #include <map>
-#include "shared/nimbus_types.h"
+#include <string>
+#include <sstream>
+#include <iostream>  // NOLINT
+#include "shared/dbg.h"
+#include "shared/parser.h"
 #include "shared/scheduler_command_include.h"
 
 namespace nimbus {
 
+class Worker;
 typedef uint32_t ConnectionId;
-
 using boost::asio::ip::tcp;
 
-/** Networking services for a Nimbus scheduler to talk to workers.
- *  All receive and send calls are non-blocking. Currently
- *  maintains a list of workers asynchronously: future versions
- *  will provide callbacks to notify scheduler of updates to the
- *  worker list.
- */
 class SchedulerClient {
  public:
   SchedulerClient(std::string scheduler_ip, port_t scheduler_port);
   virtual ~SchedulerClient();
 
-  /** Start the client, does not return. A running client starts a connection
-   * to server, spools received messages into its message queue, and services
-   * send requests. */
   virtual void Run();
-
-  /** Pull incoming commands from the received queue. Puts at most
-   *  maxCommands into storage, returning true if it placed one or more.
-   *  Returns false if no commands were placed in storage. */
-  virtual bool ReceiveCommands(SchedulerCommandList* storage,
-                               size_t maxCommands);
-
-  /** Send command to server. Returns immediately and processes the send
-   * asynchronously.*/
+  virtual SchedulerCommand* ReceiveCommand();
   virtual void SendCommand(SchedulerCommand* command);
-
-  /** Send commands to server. Returns immediately and processes the send
-   * asynchronously. */
-  virtual void SendCommands(SchedulerCommandList* commands);
 
   void set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt);
 
@@ -90,36 +73,17 @@ class SchedulerClient {
   std::string scheduler_ip_;
   port_t scheduler_port_;
   boost::asio::io_service* io_service_;
+  boost::asio::streambuf* read_buffer_;
   tcp::socket* socket_;
+  int command_num_;
   SchedulerCommand::PrototypeTable* scheduler_command_table_;
-  char* read_buffer_;
-  uint32_t max_read_buffer_length_;
+  char* byte_array_;
   uint32_t existing_bytes_;
-  SchedulerCommandList received_commands_;
-  boost::mutex command_queue_mutex_;
-  boost::mutex send_command_mutex_;
+  uint32_t existing_offset_;
 
+  pthread_mutex_t send_lock_;
 
-  /** Create client socket, set up networking and state. */
-  virtual bool Initialize();
-
-  /** Create new connection to the server. */
   void CreateNewConnections();
-
-  /** Asynchronous callback to read data. */
-  virtual void HandleRead(const boost::system::error_code& error,
-                          size_t bytes_transferred);
-
-  /** Asynchronous calback for writing data. */
-  virtual void HandleWrite(const boost::system::error_code& error,
-                           size_t bytes_transferred);
-
-  /** Call to take a buffer from the network of size, parse them
-      into commands and put them on the pending command queue.
-      Return value is how many bytes were read/parsed, this can
-      be less than size (for example, if the buffer end has an
-      incomplete command. */
-  virtual size_t EnqueueCommands(char* buffer, size_t size);
 };
 
 }  // namespace nimbus
