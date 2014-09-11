@@ -46,160 +46,201 @@
   * messages to receive through non-blocking read calls.
   *
   * Author: Omid Mashayekhi <omidm@stanford.edu>
+  * Author: Philip Levis <pal@cs.stanford.edu>
   */
 
-// Comment(quhang): I added the lock for sending commmand.
-#include <pthread.h>
-#include <algorithm>
+
+#include <boost/tokenizer.hpp>
+#include <string>
+#include <sstream>
+#include <iostream>  // NOLINT
+#include "shared/dbg.h"
 #include "shared/scheduler_client.h"
 
-using boost::asio::ip::tcp;
-using namespace nimbus; // NOLINT
 
-#define CLIENT_BUFSIZE 40960000
+using boost::asio::ip::tcp;
+
+#define SCHEDULER_CLIENT_BUFSIZE 40960000
+
+namespace nimbus {
+
 
 SchedulerClient::SchedulerClient(std::string scheduler_ip,
                                  port_t scheduler_port)
   : scheduler_ip_(scheduler_ip),
     scheduler_port_(scheduler_port) {
-  read_buffer_ = new boost::asio::streambuf();
-  io_service_ = new boost::asio::io_service();
-  socket_ = new tcp::socket(*io_service_);
-  command_num_ = 0;
-  pthread_mutex_init(&send_lock_, NULL);
-  byte_array_ = new char[CLIENT_BUFSIZE];
-  existing_bytes_ = 0;
-  existing_offset_ = 0;
 }
 
 SchedulerClient::~SchedulerClient() {
-  pthread_mutex_destroy(&send_lock_);
+  delete socket_;
   delete read_buffer_;
+  delete io_service_;
 }
 
-SchedulerCommand* SchedulerClient::ReceiveCommand() {
-  SchedulerCommand* com = NULL;
-  pthread_mutex_lock(&send_lock_);
+bool SchedulerClient::Initialize() {
+  io_service_ = new boost::asio::io_service();
+  socket_ = new tcp::socket(*io_service_);
+  read_buffer_ = new char[SCHEDULER_CLIENT_BUFSIZE];;
+  max_read_buffer_length_ = SCHEDULER_CLIENT_BUFSIZE;
+  existing_bytes_ = 0;
+  return true;
+}
 
-  if (existing_bytes_ >= sizeof(SchedulerCommand::length_field_t)) {
-    dbg(DBG_NET, "ReceiveCommand: have %i bytes, reading header from offset %i.\n", (int)existing_bytes_, (int)existing_offset_);  // NOLINT
-    // We have at least a header field -- see if we have a whole message
-    int header_len = sizeof(SchedulerCommand::length_field_t);
-    char* read_ptr = &byte_array_[existing_offset_];
-
-    SchedulerCommand::length_field_t len;
-    char* len_ptr = reinterpret_cast<char*>(&len);
-    memcpy(len_ptr, read_ptr, header_len);
-    len = (uint32_t)ntohl(len);
-    dbg(DBG_NET, "  - Message is length %i.\n", (int)len);  // NOLINT
-    // We have a whole message
-
-    if (existing_bytes_ >= len) {
-      dbg(DBG_NET, "  - Message has len %i, reading message.\n", (int)len);  // NOLINT
-      std::string input(read_ptr + header_len, len - header_len);
-
-      // We've read out a command worth of bytes; in the case that
-      // there are no bytes remaining, restart at beginning of buffer
-      existing_bytes_ -= len;
-      if (existing_bytes_ == 0) {
-        existing_offset_ = 0;
-      } else {
-        existing_offset_ += len;
-      }
-      dbg(DBG_NET, "  - New offset: %i\n", (int)existing_offset_);  // NOLINT
-      if (SchedulerCommand::GenerateSchedulerCommandChild(input,
-                                                          scheduler_command_table_,
-                                                          com)) {
-        dbg(DBG_NET, "Scheduler client received command %s\n",
-            com->ToString().c_str());
-      } else {
-        com = NULL;
-        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
-      }
-      pthread_mutex_unlock(&send_lock_);
-      return com;
-    } else if (existing_offset_ > 0) {
-      dbg(DBG_NET, "  - Moving end of %i bytes to beginning of array.\n", (int)existing_bytes_);  // NOLINT
-      // We don't have a whole message: move the fragment to the beginning,
-      // so that we don't run off the end of the buffer after lots of reads
-      // with incomplete commands.
-      memmove(byte_array_, byte_array_ + existing_offset_, existing_bytes_);
-      existing_offset_ = 0;
-    }
+bool SchedulerClient::ReceiveCommands(SchedulerCommandList* storage,
+                                      size_t maxCommands) {
+  storage->clear();
+  boost::mutex::scoped_lock lock(command_queue_mutex_);
+  uint32_t pending = received_commands_.size();
+  if (pending == 0) {
+    return false;
+  } else if (pending < maxCommands) {
+    maxCommands = pending;
   }
-  // If we reach here there wasn't enough data in the buffer for a message.
-  // Try reading, then try calling ourselves again. The level of recursion
-  // Is expected to be very small.
-
-  boost::system::error_code ignored_error;
-  uint32_t bytes_available = socket_->available(ignored_error);
-  if (bytes_available > 0) {
-    dbg(DBG_NET, "ReceiveCommand: %u bytes available,", bytes_available);
-    bytes_available =
-      std::min(bytes_available, CLIENT_BUFSIZE - existing_offset_ - existing_bytes_);
-
-    // This is the case when the buffer is full with incomplete message.
-    // Then it will run into an infinit loop.
-    if (bytes_available == 0) {
-      std::string err_msg = "ERROR: ";
-      err_msg += "scheduler client buffer is full with incomplete command. ";
-      err_msg += "You need to increase the CLIENT_BUFFSIZE in scheduler_client.cc.\n";
-      dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
-      exit(-1);
-    }
-
-    dbg(DBG_NET, " preparing to reading %u bytes, ", bytes_available);
-    boost::asio::streambuf::mutable_buffers_type bufs =
-      read_buffer_->prepare(bytes_available);
-    std::size_t bytes_read = socket_->receive(bufs);
-    dbg(DBG_NET, " %i bytes actually read.\n", (int)bytes_read);  // NOLINT
-    read_buffer_->commit(bytes_read);
-    std::istream input(read_buffer_);
-    assert(bytes_read <= bytes_available);
-    input.read(byte_array_ + existing_offset_ + existing_bytes_,
-               bytes_read);
-    existing_bytes_ += bytes_read;
-    pthread_mutex_unlock(&send_lock_);
-    return ReceiveCommand();
-  } else {
-    pthread_mutex_unlock(&send_lock_);
-    return NULL;
+  for (uint32_t i = 0; i < maxCommands; i++) {
+    SchedulerCommand* command = received_commands_.front();
+    received_commands_.pop_front();
+    dbg(DBG_NET, "Copying command %s to user buffer.\n", command->ToString().c_str());
+    storage->push_back(command);
   }
+  return true;
 }
 
 void SchedulerClient::SendCommand(SchedulerCommand* command) {
-  // static double serialization_time = 0;
-  // static double buffer_time = 0;
-  // struct timespec start_time;
-  // clock_gettime(CLOCK_REALTIME, &start_time);
+  boost::mutex::scoped_lock lock(send_command_mutex_);
 
   std::string data = command->ToNetworkData();
   SchedulerCommand::length_field_t len;
-  len = htonl((uint32_t)(data.length() + sizeof(len)));
+  len = htonl((uint32_t)data.length() + sizeof(len));
   std::string msg;
   msg.append((const char*)&len, sizeof(len));
   msg.append(data.c_str(), data.length());
 
-  dbg(DBG_NET, "Client sending command of length %i: %s\n", data.length(), command->ToString().c_str()); // NOLINT
-
-  // struct timespec t;
-  // clock_gettime(CLOCK_REALTIME, &t);
-  // serialization_time += difftime(t.tv_sec, start_time.tv_sec)
-  //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
-  // printf("Serialization command time %f\n", serialization_time);
-
+  // dbg(DBG_NET, "Sending command %s.\n", command->ToString().c_str());
   boost::system::error_code ignored_error;
-  // clock_gettime(CLOCK_REALTIME, &start_time);
-
-  pthread_mutex_lock(&send_lock_);
+  // Why are we IGNORING ERRORS!??!?!?
   boost::asio::write(*socket_, boost::asio::buffer(msg),
-      boost::asio::transfer_all(), ignored_error);
-  pthread_mutex_unlock(&send_lock_);
-  // clock_gettime(CLOCK_REALTIME, &t);
-  // buffer_time += difftime(t.tv_sec, start_time.tv_sec)
-  //     + .000000001 * (static_cast<double>(t.tv_nsec - start_time.tv_nsec));
-  // printf("Buffer command time %f\n", buffer_time);
+                     boost::asio::transfer_all(), ignored_error);
 }
+
+void SchedulerClient::SendCommands(SchedulerCommandList* commands) {
+  SchedulerCommandList::iterator iter = commands->begin();
+  for (; iter != commands->end(); ++iter) {
+    SchedulerCommand* command = *iter;
+    SendCommand(command);
+  }
+}
+
+using boost::tokenizer;
+using boost::char_separator;
+
+  /** Reads commands from buffer with size bytes. Puts commands into
+   * internal command list for later reads. Returns the number of
+   * bytes read into commands. If this is less than size, the
+   * caller must save the unread bytes. */
+size_t SchedulerClient::EnqueueCommands(char* buffer, size_t size) {
+  size_t total_read = 0;
+  char* read_ptr = buffer;
+  size_t bytes_remaining = size;
+
+  dbg(DBG_NET, "Read %i bytes from worker.\n", size);
+  size_t header_len = sizeof(SchedulerCommand::length_field_t);
+
+  while (bytes_remaining >= header_len) {
+    // Read the header length field
+    SchedulerCommand::length_field_t len;
+    char* ptr = reinterpret_cast<char*>(&len);
+    memcpy(ptr, read_ptr, header_len);
+    len = ntohl(len);
+
+    if (bytes_remaining < len) {  // Don't have a complete command
+      return total_read;
+    } else {
+      std::string input(read_ptr + header_len, len - header_len);
+      SchedulerCommand* command;
+      if (SchedulerCommand::GenerateSchedulerCommandChild(input,
+                                                          scheduler_command_table_,
+                                                          command)) {
+        dbg(DBG_NET, "Enqueueing command %s.\n", command->ToString().c_str());
+
+        boost::mutex::scoped_lock lock(command_queue_mutex_);
+        received_commands_.push_back(command);
+      } else {
+        dbg(DBG_NET, "Ignored unknown command: %s.\n", input.c_str());
+        exit(-1);
+      }
+      dbg(DBG_NET, "Read %i bytes of %i available.\n", len, bytes_remaining);
+      bytes_remaining -= len;
+      total_read += len;
+      read_ptr += len;
+    }
+  }
+
+  return total_read;
+}
+
+void SchedulerClient::HandleRead(const boost::system::error_code& error,
+                                 size_t bytes_transferred) {
+  if (error) {
+    dbg(DBG_NET|DBG_ERROR,
+        "Error %s receiving %i bytes from scheduler.\n",
+        error.message().c_str(), bytes_transferred);
+    return;
+  }
+
+  size_t real_length = bytes_transferred + existing_bytes_;
+  size_t len = EnqueueCommands(read_buffer_, real_length);
+  assert(real_length >= len);
+  size_t remaining = (real_length - len);
+  dbg(DBG_NET,
+      "Worker received %i bytes from scheduler, enqueued %i bytes as commands, %i remaining.\n",
+      bytes_transferred, len, remaining);
+
+
+  // This is the case when the buffer is full with incomplete message.
+  // Then it cannot make progress anymore.
+  if (remaining == max_read_buffer_length_) {
+    std::string err_msg = "ERROR: ";
+    err_msg += "scheduler client buffer is full with incomplete command. ";
+    err_msg += "You need to increase the SCHEDULER_CLIENT_BUFSIZE in scheduler_client.cc.\n";
+    dbg(DBG_ERROR, "%s\n.", err_msg.c_str());
+    exit(-1);
+  }
+
+  // This is for the case when the string buffer had an incomplete
+  // command at its end. Copy the fragement of the command to the beginning
+  // of the buffer, mark how many bytes are valid with existing_bytes.
+  if (remaining > 0) {
+    char* buffer = read_buffer_;
+    memmove(buffer, (buffer + len), remaining);
+    char* read_start_ptr = buffer + remaining;
+    int read_buffer_length = max_read_buffer_length_ - remaining;
+
+    existing_bytes_ = remaining;
+    boost::asio::async_read(*socket_,
+                            boost::asio::buffer(read_start_ptr,
+                                                read_buffer_length),
+                            boost::asio::transfer_at_least(1),
+                            boost::bind(&SchedulerClient::HandleRead,
+                                        this,
+                                        boost::asio::placeholders::error,
+                                        boost::asio::placeholders::bytes_transferred));
+  } else {
+    existing_bytes_ = 0;
+    boost::asio::async_read(*socket_,
+                            boost::asio::buffer(read_buffer_,
+                                                max_read_buffer_length_),
+                            boost::asio::transfer_at_least(1),
+                            boost::bind(&SchedulerClient::HandleRead,
+                                        this,
+                                        boost::asio::placeholders::error,
+                                        boost::asio::placeholders::bytes_transferred));
+  }
+}
+
+
+void SchedulerClient::HandleWrite(const boost::system::error_code& error,
+                                  size_t bytes_transferred) {}
+
 
 void SchedulerClient::CreateNewConnections() {
   std::cout << "Opening connections." << std::endl;
@@ -209,15 +250,27 @@ void SchedulerClient::CreateNewConnections() {
   tcp::resolver::iterator iterator = resolver.resolve(query);
   boost::system::error_code error = boost::asio::error::host_not_found;
   socket_->connect(*iterator, error);
+  boost::asio::async_read(*socket_,
+                          boost::asio::buffer(read_buffer_,
+                                              max_read_buffer_length_),
+                          boost::asio::transfer_at_least(1),
+                          boost::bind(&SchedulerClient::HandleRead,
+                                      this,
+                                      boost::asio::placeholders::error,
+                                      boost::asio::placeholders::bytes_transferred));
 }
+
 
 void SchedulerClient::Run() {
+  dbg(DBG_NET, "Running the scheduler client.\n");
+  Initialize();
   CreateNewConnections();
-  // io_service_->run();
+  io_service_->run();
 }
-
 
 void
 SchedulerClient::set_scheduler_command_table(SchedulerCommand::PrototypeTable* cmt) {
   scheduler_command_table_ = cmt;
 }
+
+}  // namespace nimbus

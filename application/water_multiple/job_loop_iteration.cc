@@ -136,6 +136,7 @@ namespace application {
     // Free resources.
     example->Save_To_Nimbus(this, da, frame+1);
     *thread_queue_hook() = NULL;
+    delete example;
   }
 
   void JobLoopIteration::SpawnWithBreakAllGranularity(
