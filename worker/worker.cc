@@ -139,9 +139,11 @@ void Worker::WorkerCoreProcessor() {
   JobList local_job_done_list;
   while (true) {
     // Process command.
-    SchedulerCommand* comm = client_->ReceiveCommand();
-    int quota = SCHEDULER_COMMAND_GROUP_QUOTA;
-    while (comm != NULL) {
+    SchedulerCommandList storage;
+    client_->ReceiveCommands(&storage, SCHEDULER_COMMAND_GROUP_QUOTA);
+    SchedulerCommandList::iterator iter = storage.begin();
+    for (; iter != storage.end(); ++iter) {
+      SchedulerCommand *comm = *iter;
       dbg(DBG_WORKER, "Receives command from scheduler: %s\n",
           comm->ToString().c_str());
       dbg(DBG_WORKER_FD,
@@ -149,14 +151,10 @@ void Worker::WorkerCoreProcessor() {
           comm->name().c_str());
       ProcessSchedulerCommand(comm);
       delete comm;
-      if (--quota == 0) {
-        break;
-      }
-      comm = client_->ReceiveCommand();
     }
     // Poll jobs that finish receiving.
     job_id_t receive_job_id;
-    quota = 10;
+    int quota = 10;
     while (data_exchanger_->GetReceiveEvent(&receive_job_id)) {
       dbg(DBG_WORKER_FD,
           DBG_WORKER_FD_S"Receive-job transmission is done(job #%d)\n",
@@ -440,9 +438,9 @@ void Worker::SetupSchedulerInterface() {
   LoadSchedulerCommands();
   client_ = new SchedulerClient(scheduler_ip_, scheduler_port_);
   client_->set_scheduler_command_table(&scheduler_command_table_);
-  client_->Run();
-  // client_thread_ = new boost::thread(
-  //     boost::bind(&SchedulerClient::run, client_));
+  // client_->Run();
+  client_thread_ = new boost::thread(
+      boost::bind(&SchedulerClient::Run, client_));
 
   // profiler_thread_ = new boost::thread(
   //     boost::bind(&Profiler::Run, &profiler_, client_, id_));
