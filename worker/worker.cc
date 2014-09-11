@@ -631,8 +631,7 @@ void Worker::NotifyLocalJobDone(Job* job) {
   job_id_t job_id = job->id().elem();
   // Job done for unknown job is not handled.
   if (!worker_job_graph_.HasVertex(job_id)) {
-    // The job must be in the local job graph, the final scheduler job done will
-    // come later and clean the job.
+    // The job must be in the local job graph.
     assert(false);
     return;
   }
@@ -640,8 +639,10 @@ void Worker::NotifyLocalJobDone(Job* job) {
   worker_job_graph_.GetVertex(job_id, &vertex);
   assert(vertex->incoming_edges()->empty());
   ClearAfterSet(vertex);
-  vertex->entry()->set_state(WorkerJobEntry::FINISH);
-  vertex->entry()->set_job(NULL);
+  worker_job_graph_.RemoveVertex(job_id);
+  AddFinishHintSet(job_id);
+  // vertex->entry()->set_state(WorkerJobEntry::FINISH);
+  // vertex->entry()->set_job(NULL);
   delete job;
 }
 
