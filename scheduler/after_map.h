@@ -87,6 +87,7 @@ class AfterMap {
 
   private:
     Map content_;
+    mutable boost::recursive_mutex mutex_;
 };
 
 

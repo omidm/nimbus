@@ -61,18 +61,22 @@ AfterMap::~AfterMap() {
 }
 
 AfterMap::Map AfterMap::content() const {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return content_;
 }
 
 const AfterMap::Map* AfterMap::content_p() const {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return &content_;
 }
 
 void AfterMap::set_content(const AfterMap::Map& content) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   content_= content;
 }
 
 bool AfterMap::AddEntries(JobEntry* job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(job->assigned());
   SchedulerWorker *worker = job->assigned_worker();
   assert(worker);
@@ -86,6 +90,7 @@ bool AfterMap::AddEntries(JobEntry* job) {
 }
 
 bool AfterMap::AddEntry(job_id_t job_id, SchedulerWorker* worker) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   Iter iter = content_.find(job_id);
   if (iter == content_.end()) {
     Pool *pool = new Pool();
@@ -100,6 +105,7 @@ bool AfterMap::AddEntry(job_id_t job_id, SchedulerWorker* worker) {
 
 bool AfterMap::GetWorkersWaitingOnJob(job_id_t job_id,
                                       std::list<SchedulerWorker*> *list) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   list->clear();
 
   Iter iter = content_.find(job_id);
@@ -115,6 +121,7 @@ bool AfterMap::GetWorkersWaitingOnJob(job_id_t job_id,
 }
 
 bool AfterMap::RemoveJobRecords(job_id_t job_id) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   Iter iter = content_.find(job_id);
   if (iter != content_.end()) {
     delete iter->second;
@@ -125,6 +132,7 @@ bool AfterMap::RemoveJobRecords(job_id_t job_id) {
 }
 
 bool AfterMap::RemoveWorkerRecords(SchedulerWorker *worker) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   Iter iter = content_.begin();
   for (; iter != content_.end();) {
     iter->second->erase(worker);
@@ -140,6 +148,7 @@ bool AfterMap::RemoveWorkerRecords(SchedulerWorker *worker) {
 }
 
 AfterMap& AfterMap::operator=(const AfterMap& right) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   content_ = right.content_;
   return (*this);
 }
