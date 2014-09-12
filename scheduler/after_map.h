@@ -59,35 +59,55 @@ namespace nimbus {
 
 class AfterMap {
   public:
+    typedef boost::unordered_set<job_id_t> JobDonePool;
     typedef boost::unordered_set<SchedulerWorker*> Pool;
     typedef boost::unordered_map<job_id_t, Pool*> Map;
     typedef Map::iterator Iter;
     typedef Map::const_iterator ConstIter;
 
     AfterMap();
-    AfterMap(const AfterMap& other);
     virtual ~AfterMap();
 
-    Map content() const;
-    const Map* content_p() const;
-    void set_content(const Map& content);
+    const Map* map() const;
+    const Map* late_map() const;
 
     bool AddEntries(JobEntry* job);
 
-    bool AddEntry(job_id_t job_id, SchedulerWorker* worker);
+    bool AddEntry(job_id_t job_id, SchedulerWorker *worker);
 
     bool GetWorkersWaitingOnJob(job_id_t job_id,
                                 std::list<SchedulerWorker*> *list);
+
+    bool NotifyJobDone(job_id_t job_id);
+
+    bool PullLateMap(Map*& late_map);
 
     bool RemoveJobRecords(job_id_t job_id);
 
     bool RemoveWorkerRecords(SchedulerWorker *worker);
 
-    AfterMap& operator=(const AfterMap& right);
+    bool JobIsDone(job_id_t job_id);
+
+    static void DestroyMap(Map *map);
+
 
   private:
-    Map content_;
+    Map *map_;
+    Map *late_map_;
+    JobDonePool job_done_pool_;
     mutable boost::recursive_mutex mutex_;
+
+    static void AddEntryToMap(Map *map, job_id_t job_id, SchedulerWorker *worker);
+
+    static void RemoveJobRecordFromMap(Map *map, job_id_t job_id);
+
+    static void RemoveWorkerRecordFromMap(Map *map, SchedulerWorker *worker);
+
+    static bool EntryIsInMap(Map *map, job_id_t job_id, SchedulerWorker *worker);
+
+    AfterMap(const AfterMap& other) {}
+
+    AfterMap& operator=(const AfterMap& right) {return (*this);}
 };
 
 

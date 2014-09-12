@@ -52,6 +52,7 @@ JobManager::JobManager() {
   }
 
   ldo_map_p_ = NULL;
+  after_map_ = NULL;
   log_.set_file_name("log_job_manager");
 }
 
@@ -61,6 +62,10 @@ JobManager::~JobManager() {
   if (JobManager::GetJobEntry(NIMBUS_KERNEL_JOB_ID, job)) {
     delete job;
   }
+}
+
+void JobManager::set_after_map(AfterMap* after_map) {
+  after_map_ = after_map;
 }
 
 void JobManager::set_ldo_map_p(const LdoMap* ldo_map_p) {
@@ -438,7 +443,7 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
   job->set_assigned_worker_id(job->assigned_worker()->worker_id());
 
   // AfterMap has internal locking.
-  after_map_.AddEntries(job);
+  after_map_->AddEntries(job);
 
   if (job->job_type() != JOB_COMP) {
     return;
@@ -473,9 +478,6 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   job_id_t job_id = job->job_id();
   jobs_done_[job_id] = job;
 
-  // AfterMap has internal locking.
-  after_map_.RemoveJobRecords(job_id);
-
   if (!job->sterile()) {
     Vertex<JobEntry, job_id_t>* vertex;
     job_graph_.GetVertex(job_id, &vertex);
@@ -508,12 +510,6 @@ void JobManager::DefineData(job_id_t job_id, logical_data_id_t ldid) {
 size_t JobManager::GetJobsNeedDataVersion(JobEntryList* list,
     VersionedLogicalData vld) {
   return version_manager_.GetJobsNeedDataVersion(list, vld);
-}
-
-bool JobManager::GetWorkersWaitingOnJob(job_id_t job_id,
-                                        std::list<SchedulerWorker*> *list) {
-  // AfterMap has internal locking.
-  return after_map_.GetWorkersWaitingOnJob(job_id, list);
 }
 
 bool JobManager::AllJobsAreDone() {

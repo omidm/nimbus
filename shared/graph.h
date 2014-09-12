@@ -74,6 +74,8 @@ class Graph {
 
     virtual bool HasVertex(key_t key);
 
+    virtual bool HasVertex(key_t key, typename Vertex<T, key_t>::Iter *iter);
+
     virtual bool GetVertex(key_t key, Vertex<T, key_t>** vertex);
 
     virtual bool RemoveVertex(key_t key);
@@ -169,26 +171,36 @@ bool Graph<T, key_t>::HasVertex(key_t key) {
   return (vertices_.find(key) != vertices_.end());
 }
 
+
+template<typename T, typename key_t>
+bool Graph<T, key_t>::HasVertex(key_t key, typename Vertex<T, key_t>::Iter *iter) {
+  *iter =  vertices_.find(key);
+  return ((*iter) != vertices_.end());
+}
+
+
 template<typename T, typename key_t>
 bool Graph<T, key_t>::GetVertex(key_t key, Vertex<T, key_t>** vertex) {
-  if (!HasVertex(key)) {
+  typename Vertex<T, key_t>::Iter iter;
+  if (!HasVertex(key, &iter)) {
     *vertex = NULL;
     return false;
   }
 
-  *vertex = vertices_[key];
+  *vertex = iter->second;
   return true;
 }
 
 template<typename T, typename key_t>
 bool Graph<T, key_t>::RemoveVertex(key_t key) {
-  if (!HasVertex(key)) {
+  typename Vertex<T, key_t>::Iter iter;
+  if (!HasVertex(key, &iter)) {
     dbg(DBG_WARN, "WARNING: vertex with id %lu does not exist.\n", key);
     dbg(DBG_WARN, "WARNING: Nothing removed from graph.\n");
     return false;
   }
 
-  Vertex<T, key_t>* vertex = vertices_[key];
+  Vertex<T, key_t>* vertex = iter->second;
 
   // first remove all the edges
   typename Edge<T, key_t>::Iter it;
@@ -206,7 +218,7 @@ bool Graph<T, key_t>::RemoveVertex(key_t key) {
     RemoveEdge(temp_it->second->start_vertex(), temp_it->second->end_vertex());
   }
 
-  vertices_.erase(key);
+  vertices_.erase(iter);
   delete vertex;
   return true;
 }
@@ -226,16 +238,18 @@ bool Graph<T, key_t>::AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {
 
 template<typename T, typename key_t>
 bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key) {
-  if (!HasVertex(start_key)) {
+  typename Vertex<T, key_t>::Iter start_iter;
+  if (!HasVertex(start_key, &start_iter)) {
     dbg(DBG_ERROR, "ERROR: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
-  if (!HasVertex(end_key)) {
+  typename Vertex<T, key_t>::Iter end_iter;
+  if (!HasVertex(end_key, &end_iter)) {
     dbg(DBG_ERROR, "ERROR: end vertex with id %lu does not exist.\n", end_key);
     return false;
   }
-  Vertex<T, key_t>* start = vertices_[start_key];
-  Vertex<T, key_t>* end = vertices_[end_key];
+  Vertex<T, key_t>* start = start_iter->second;
+  Vertex<T, key_t>* end = end_iter->second;
 
   if (start->HasOutgoingEdgeTo(end)) {
     dbg(DBG_WARN, "WARNING: edge from %lu to %lu already exist.\n", start->id(), end->id());
@@ -266,16 +280,18 @@ bool Graph<T, key_t>::AddEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end,
 
 template<typename T, typename key_t>
 bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key, Edge<T, key_t>** edge) {
-  if (!HasVertex(start_key)) {
+  typename Vertex<T, key_t>::Iter start_iter;
+  if (!HasVertex(start_key, &start_iter)) {
     dbg(DBG_ERROR, "ERROR: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
-  if (!HasVertex(end_key)) {
+  typename Vertex<T, key_t>::Iter end_iter;
+  if (!HasVertex(end_key, &end_iter)) {
     dbg(DBG_ERROR, "ERROR: end vertex with id %lu does not exist.\n", end_key);
     return false;
   }
-  Vertex<T, key_t>* start = vertices_[start_key];
-  Vertex<T, key_t>* end = vertices_[end_key];
+  Vertex<T, key_t>* start = start_iter->second;
+  Vertex<T, key_t>* end = end_iter->second;
 
   if (start->HasOutgoingEdgeTo(end)) {
     dbg(DBG_WARN, "WARNING: edge from %lu to %lu already exist.\n", start->id(), end->id());
@@ -291,13 +307,13 @@ bool Graph<T, key_t>::AddEdge(key_t start_key, key_t end_key, Edge<T, key_t>** e
 
 template<typename T, typename key_t>
 bool Graph<T, key_t>::RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end) {
-  if (!start->HasOutgoingEdgeTo(end)) {
+  typename Edge<T, key_t>::Iter iter;
+  if (!start->HasOutgoingEdgeTo(end, &iter)) {
     dbg(DBG_WARN, "WARNING: edge from %lu to %lu does not exist.\n", start->id(), end->id());
     return true;
   }
 
-  Edge<T, key_t>* to_delete_edge =
-    start->outgoing_edges()->operator[](end->id());
+  Edge<T, key_t>* to_delete_edge = iter->second;
   start->RemoveOutgoingEdge(to_delete_edge);
   end->RemoveIncomingEdge(to_delete_edge);
   delete to_delete_edge;
@@ -306,36 +322,31 @@ bool Graph<T, key_t>::RemoveEdge(Vertex<T, key_t>* start, Vertex<T, key_t>* end)
 
 template<typename T, typename key_t>
 bool Graph<T, key_t>::RemoveEdge(key_t start_key, key_t end_key) {
-  if (!HasVertex(start_key)) {
+  typename Vertex<T, key_t>::Iter start_iter;
+  if (!HasVertex(start_key, &start_iter)) {
     dbg(DBG_ERROR, "ERROR: start vertex with id %lu does not exist.\n", start_key);
     return false;
   }
-  if (!HasVertex(end_key)) {
+  typename Vertex<T, key_t>::Iter end_iter;
+  if (!HasVertex(end_key, &end_iter)) {
     dbg(DBG_ERROR, "ERROR: end vertex with id %lu does not exist.\n", end_key);
     return false;
   }
-  Vertex<T, key_t>* start = vertices_[start_key];
-  Vertex<T, key_t>* end = vertices_[end_key];
+  Vertex<T, key_t>* start = start_iter->second;
+  Vertex<T, key_t>* end = end_iter->second;
 
-  if (!start->HasOutgoingEdgeTo(end)) {
+  typename Edge<T, key_t>::Iter iter;
+  if (!start->HasOutgoingEdgeTo(end, &iter)) {
     dbg(DBG_WARN, "WARNING: edge from %lu to %lu does not exist.\n", start->id(), end->id());
     return true;
   }
 
-  Edge<T, key_t>* to_delete_edge =
-    start->outgoing_edges()->operator[](end->id());
+  Edge<T, key_t>* to_delete_edge = iter->second;
   start->RemoveOutgoingEdge(to_delete_edge);
   end->RemoveIncomingEdge(to_delete_edge);
   delete to_delete_edge;
   return true;
 }
-
-
-
-
-
-
-
 
 }  // namespace nimbus
 

@@ -69,6 +69,7 @@ class JobManager {
     explicit JobManager();
     virtual ~JobManager();
 
+    void set_after_map(AfterMap* after_map);
     void set_ldo_map_p(const LdoMap* ldo_map_p);
 
     Graph<JobEntry, job_id_t> *job_graph_p();
@@ -129,9 +130,6 @@ class JobManager {
     size_t GetJobsNeedDataVersion(JobEntryList* list,
                                   VersionedLogicalData vld);
 
-    bool GetWorkersWaitingOnJob(job_id_t job_id,
-                                std::list<SchedulerWorker*> *list);
-
     bool AllJobsAreDone();
 
     void UpdateJobBeforeSet(JobEntry* job);
@@ -148,10 +146,10 @@ class JobManager {
     Graph<JobEntry, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
 
-    const LdoMap* ldo_map_p_;
-    VersionManager version_manager_;
+    AfterMap *after_map_;
 
-    AfterMap after_map_;
+    const LdoMap *ldo_map_p_;
+    VersionManager version_manager_;
 
     JobEntryMap jobs_done_;
     JobEntryMap jobs_ready_to_assign_;

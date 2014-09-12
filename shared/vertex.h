@@ -90,11 +90,23 @@ class Vertex {
 
     virtual bool HasOutgoingEdge(Edge<T, key_t>* e);
 
+    virtual bool HasOutgoingEdge(Edge<T, key_t>* e,
+                                 typename Edge<T, key_t>::Iter *iter);
+
     virtual bool HasIncomingEdge(Edge<T, key_t>* e);
+
+    virtual bool HasIncomingEdge(Edge<T, key_t>* e,
+                                 typename Edge<T, key_t>::Iter *iter);
 
     virtual bool HasOutgoingEdgeTo(Vertex<T, key_t>* end);
 
+    virtual bool HasOutgoingEdgeTo(Vertex<T, key_t>* end,
+                                   typename Edge<T, key_t>::Iter *iter);
+
     virtual bool HasIncomingEdgeFrom(Vertex<T, key_t>* start);
+
+    virtual bool HasIncomingEdgeFrom(Vertex<T, key_t>* start,
+                                     typename Edge<T, key_t>::Iter *iter);
 
     virtual void RemoveOutgoingEdge(Edge<T, key_t>* e);
 
@@ -168,10 +180,16 @@ void Vertex<T, key_t>::AddIncomingEdge(Edge<T, key_t>* e) {
   incoming_edges_[e->start_vertex()->id()] = e;
 }
 
-
 template<typename T, typename key_t>
 bool Vertex<T, key_t>::HasOutgoingEdge(Edge<T, key_t>* e) {
   return (outgoing_edges_.find(e->end_vertex()->id()) != outgoing_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasOutgoingEdge(Edge<T, key_t>* e,
+                                       typename Edge<T, key_t>::Iter *iter) {
+  *iter = outgoing_edges_.find(e->end_vertex()->id());
+  return ((*iter) != outgoing_edges_.end());
 }
 
 template<typename T, typename key_t>
@@ -180,13 +198,34 @@ bool Vertex<T, key_t>::HasIncomingEdge(Edge<T, key_t>* e) {
 }
 
 template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasIncomingEdge(Edge<T, key_t>* e,
+                                       typename Edge<T, key_t>::Iter *iter) {
+  *iter = incoming_edges_.find(e->start_vertex()->id());
+  return ((*iter) != incoming_edges_.end());
+}
+
+template<typename T, typename key_t>
 bool Vertex<T, key_t>::HasOutgoingEdgeTo(Vertex<T, key_t>* end) {
   return (outgoing_edges_.find(end->id()) != outgoing_edges_.end());
 }
 
 template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasOutgoingEdgeTo(Vertex<T, key_t>* end,
+                                         typename Edge<T, key_t>::Iter *iter) {
+  *iter = outgoing_edges_.find(end->id());
+  return ((*iter) != outgoing_edges_.end());
+}
+
+template<typename T, typename key_t>
 bool Vertex<T, key_t>::HasIncomingEdgeFrom(Vertex<T, key_t>* start) {
   return (incoming_edges_.find(start->id()) != incoming_edges_.end());
+}
+
+template<typename T, typename key_t>
+bool Vertex<T, key_t>::HasIncomingEdgeFrom(Vertex<T, key_t>* start,
+                                           typename Edge<T, key_t>::Iter *iter) {
+  *iter = incoming_edges_.find(start->id());
+  return ((*iter) != incoming_edges_.end());
 }
 
 template<typename T, typename key_t>
@@ -198,9 +237,6 @@ template<typename T, typename key_t>
 void Vertex<T, key_t>::RemoveIncomingEdge(Edge<T, key_t>* e) {
   incoming_edges_.erase(e->start_vertex()->id());
 }
-
-
-
 
 }  // namespace nimbus
 

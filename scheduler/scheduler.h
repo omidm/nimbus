@@ -111,6 +111,7 @@ class Scheduler {
     virtual void ProcessTerminateCommand(TerminateCommand* cm);
 
     virtual void CreateIDMaker();
+    virtual void CreateAfterMap();
     virtual void CreateSchedulerServer();
     virtual void CreateDataManager();
     virtual void CreateJobManager();
@@ -134,6 +135,7 @@ class Scheduler {
     virtual void LoadWorkerCommands();
 
     IDMaker *id_maker_;
+    AfterMap *after_map_;
     SchedulerServer* server_;
     JobManager* job_manager_;
     DataManager* data_manager_;
