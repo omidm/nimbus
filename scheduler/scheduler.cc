@@ -471,6 +471,8 @@ void Scheduler::JobDoneBouncerThread() {
       dbg(DBG_SCHED, "Bouncing job done command: %s.\n", comm->ToString().c_str());
       job_id_t job_id = comm->job_id().elem();
 
+      after_map_->NotifyJobDone(job_id);
+
       std::list<SchedulerWorker*> waiting_list;
       after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
