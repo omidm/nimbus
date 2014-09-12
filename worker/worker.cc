@@ -79,6 +79,7 @@ Worker::Worker(std::string scheduler_ip, port_t scheduler_port,
   listening_port_(listening_port),
   application_(a) {
     event_log = fopen("event_fe.txt", "w");
+    alloc_log = fopen("data_objects.txt", "w");
     log_.InitTime();
     id_ = -1;
     ip_address_ = NIMBUS_RECEIVER_KNOWN_IP;
@@ -327,6 +328,10 @@ void Worker::ProcessCreateDataCommand(CreateDataCommand* cm) {
   data->set_region(*(ldo->region()));
 
   data_map_.AddMapping(data->physical_id(), data);
+  struct timespec t;
+  clock_gettime(CLOCK_REALTIME, &t);
+  double time_sum = t.tv_sec + .000000001 * static_cast<double>(t.tv_nsec);
+  fprintf(alloc_log, "%f : %lu\n", time_sum, sizeof(*data));
 
   Job * job = new CreateDataJob();
   job->set_name("CreateData:" + cm->data_name());

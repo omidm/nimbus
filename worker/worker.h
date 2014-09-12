@@ -140,6 +140,7 @@ class Worker {
   void AddFinishHintSet(const job_id_t job_id);
   bool InFinishHintSet(const job_id_t job_id);
   FILE* event_log;
+  FILE* alloc_log;
   WorkerJobGraph worker_job_graph_;
   Log log_;
   Log version_log_;
