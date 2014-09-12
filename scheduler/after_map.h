@@ -97,13 +97,13 @@ class AfterMap {
     JobDonePool job_done_pool_;
     mutable boost::recursive_mutex mutex_;
 
-    void AddEntryToMap(Map *map, job_id_t job_id, SchedulerWorker *worker);
+    static void AddEntryToMap(Map *map, job_id_t job_id, SchedulerWorker *worker);
 
-    void RemoveJobRecordFromMap(Map *map, job_id_t job_id);
+    static void RemoveJobRecordFromMap(Map *map, job_id_t job_id);
 
-    void RemoveWorkerRecordFromMap(Map *map, SchedulerWorker *worker);
+    static void RemoveWorkerRecordFromMap(Map *map, SchedulerWorker *worker);
 
-    bool EntryIsInMap(Map *map, job_id_t job_id, SchedulerWorker *worker);
+    static bool EntryIsInMap(Map *map, job_id_t job_id, SchedulerWorker *worker);
 
     AfterMap(const AfterMap& other) {}
 

@@ -82,11 +82,11 @@ bool AfterMap::AddEntries(JobEntry* job) {
 
 void AfterMap::AddEntryToMap(Map *map, job_id_t job_id, SchedulerWorker *worker) {
   // Already Lock is aciquired.
-  Iter iter = map_->find(job_id);
-  if (iter == map_->end()) {
+  Iter iter = map->find(job_id);
+  if (iter == map->end()) {
     Pool *pool = new Pool();
     pool->insert(worker);
-    map_->operator[](job_id) = pool;
+    map->operator[](job_id) = pool;
   } else {
     iter->second->insert(worker);
   }
@@ -94,8 +94,8 @@ void AfterMap::AddEntryToMap(Map *map, job_id_t job_id, SchedulerWorker *worker)
 
 bool AfterMap::EntryIsInMap(Map *map, job_id_t job_id, SchedulerWorker *worker) {
   // Already Lock is aciquired.
-  Iter iter = map_->find(job_id);
-  if (iter == map_->end()) {
+  Iter iter = map->find(job_id);
+  if (iter == map->end()) {
     return false;
   } else {
     Pool *pool = iter->second;
@@ -164,10 +164,10 @@ void AfterMap::DestroyMap(Map *map) {
 
 void AfterMap::RemoveJobRecordFromMap(Map *map, job_id_t job_id) {
   // Already Lock is aciquired.
-  Iter iter = map_->find(job_id);
-  if (iter != map_->end()) {
+  Iter iter = map->find(job_id);
+  if (iter != map->end()) {
     delete iter->second;
-    map_->erase(iter);
+    map->erase(iter);
   }
 }
 
@@ -182,12 +182,12 @@ bool AfterMap::RemoveJobRecords(job_id_t job_id) {
 
 void AfterMap::RemoveWorkerRecordFromMap(Map *map, SchedulerWorker *worker) {
   // Already Lock is aciquired.
-  Iter iter = map_->begin();
-  for (; iter != map_->end();) {
+  Iter iter = map->begin();
+  for (; iter != map->end();) {
     iter->second->erase(worker);
     if (iter->second->size() == 0) {
       delete iter->second;
-      map_->erase(iter++);
+      map->erase(iter++);
     } else {
       ++iter;
     }
