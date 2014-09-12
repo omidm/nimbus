@@ -144,9 +144,13 @@ bool AfterMap::NotifyJobDone(job_id_t job_id) {
 
 bool AfterMap::PullLateMap(Map*& late_map) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  late_map = late_map_;
-  late_map_ = new Map();
-  return true;
+  if (late_map_->size() == 0) {
+    return false;
+  } else {
+    late_map = late_map_;
+    late_map_ = new Map();
+    return true;
+  }
 }
 
 void AfterMap::DestroyMap(Map *map) {

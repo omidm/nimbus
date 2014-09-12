@@ -88,7 +88,7 @@ class AfterMap {
 
     bool JobIsDone(job_id_t job_id);
 
-    void DestroyMap(Map *map);
+    static void DestroyMap(Map *map);
 
 
   private:

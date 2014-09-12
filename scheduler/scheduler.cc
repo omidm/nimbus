@@ -84,6 +84,7 @@ void Scheduler::Run() {
    */
 
   CreateIDMaker();
+  CreateAfterMap();
   CreateSchedulerServer();
   CreateDataManager();
   CreateJobManager();
@@ -282,7 +283,7 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
   job_id_t job_id = cm->job_id().elem();
 
   std::list<SchedulerWorker*> waiting_list;
-  job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+  after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
   cm->set_final(true);
   std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
@@ -362,6 +363,10 @@ void Scheduler::CreateIDMaker() {
   id_maker_ = new IDMaker();
 }
 
+void Scheduler::CreateAfterMap() {
+  after_map_ = new AfterMap();
+}
+
 void Scheduler::CreateSchedulerServer() {
   server_ = new SchedulerServer(listening_port_);
 }
@@ -396,6 +401,7 @@ void Scheduler::SetupDataManager() {
 }
 
 void Scheduler::SetupJobManager() {
+  job_manager_->set_after_map(after_map_);
   job_manager_->set_ldo_map_p(data_manager_->ldo_map_p());
 }
 
@@ -453,11 +459,11 @@ void Scheduler::LoadUserCommands() {
 
 void Scheduler::JobDoneBouncerThread() {
   while (true) {
+    // TODO(omid): remove the busy loop!
+
+    // Deal with new job dones.
     JobDoneCommandList storage;
-    while (!server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_)) {
-      // TODO(omid): remove the busy loop!
-      continue;
-    }
+    server_->ReceiveJobDoneCommands(&storage, max_job_done_command_process_num_);
 
     JobDoneCommandList::iterator iter = storage.begin();
     for (; iter != storage.end(); ++iter) {
@@ -466,7 +472,7 @@ void Scheduler::JobDoneBouncerThread() {
       job_id_t job_id = comm->job_id().elem();
 
       std::list<SchedulerWorker*> waiting_list;
-      job_manager_->GetWorkersWaitingOnJob(job_id, &waiting_list);
+      after_map_->GetWorkersWaitingOnJob(job_id, &waiting_list);
 
       comm->set_final(false);
       std::list<SchedulerWorker*>::iterator iter = waiting_list.begin();
@@ -474,6 +480,25 @@ void Scheduler::JobDoneBouncerThread() {
         server_->SendCommand(*iter, comm);
       }
       delete comm;
+    }
+
+    // Deal with missed job dones.
+    AfterMap::Map *late_map;
+    if (after_map_->PullLateMap(late_map)) {
+      AfterMap::Iter iter = late_map->begin();
+      for (; iter != late_map->end(); ++iter) {
+        ID<job_id_t> job_id(iter->first);
+        JobDoneCommand comm(job_id);
+        comm.set_final(false);
+
+        AfterMap::Pool *pool = iter->second;
+        AfterMap::Pool::iterator it = pool->begin();
+        for (; it != pool->end(); ++it) {
+          // server_->SendCommand(*it, &comm);
+        }
+      }
+
+      AfterMap::DestroyMap(late_map);
     }
   }
 }
