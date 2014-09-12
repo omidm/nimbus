@@ -478,9 +478,6 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   job_id_t job_id = job->job_id();
   jobs_done_[job_id] = job;
 
-  // AfterMap has internal locking.
-  after_map_->RemoveJobRecords(job_id);
-
   if (!job->sterile()) {
     Vertex<JobEntry, job_id_t>* vertex;
     job_graph_.GetVertex(job_id, &vertex);

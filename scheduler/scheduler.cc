@@ -291,6 +291,9 @@ void Scheduler::ProcessJobDoneCommand(JobDoneCommand* cm) {
     server_->SendCommand(*iter, cm);
   }
 
+  // AfterMap has internal locking.
+  after_map_->RemoveJobRecords(job_id);
+
   JobEntry *job;
   if (job_manager_->GetJobEntry(job_id, job)) {
     job_manager_->NotifyJobDone(job);
