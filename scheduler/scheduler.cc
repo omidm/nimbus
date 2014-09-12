@@ -496,7 +496,7 @@ void Scheduler::JobDoneBouncerThread() {
         AfterMap::Pool *pool = iter->second;
         AfterMap::Pool::iterator it = pool->begin();
         for (; it != pool->end(); ++it) {
-          // server_->SendCommand(*it, &comm);
+          server_->SendCommand(*it, &comm);
         }
       }
 
