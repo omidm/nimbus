@@ -47,36 +47,27 @@
 using namespace nimbus; // NOLINT
 
 AfterMap::AfterMap() {
-}
-
-AfterMap::AfterMap(const AfterMap& other) {
-  content_ = other.content_;
+  map_ = new Map();
+  late_map_ = new Map();
 }
 
 AfterMap::~AfterMap() {
-  Iter iter = content_.begin();
-  for (; iter != content_.end(); ++iter) {
-    delete iter->second;
-  }
+  DestroyMap(map_);
+  DestroyMap(late_map_);
 }
 
-AfterMap::Map AfterMap::content() const {
+const AfterMap::Map* AfterMap::map() const {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  return content_;
+  return map_;
 }
 
-const AfterMap::Map* AfterMap::content_p() const {
+const AfterMap::Map* AfterMap::late_map() const {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  return &content_;
-}
-
-void AfterMap::set_content(const AfterMap::Map& content) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  content_= content;
+  return late_map_;
 }
 
 bool AfterMap::AddEntries(JobEntry* job) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  // Lock will be aciquired.
   assert(job->assigned());
   SchedulerWorker *worker = job->assigned_worker();
   assert(worker);
@@ -89,15 +80,39 @@ bool AfterMap::AddEntries(JobEntry* job) {
   return true;
 }
 
-bool AfterMap::AddEntry(job_id_t job_id, SchedulerWorker* worker) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  Iter iter = content_.find(job_id);
-  if (iter == content_.end()) {
+void AfterMap::AddEntryToMap(Map *map, job_id_t job_id, SchedulerWorker *worker) {
+  // Already Lock is aciquired.
+  Iter iter = map_->find(job_id);
+  if (iter == map_->end()) {
     Pool *pool = new Pool();
     pool->insert(worker);
-    content_[job_id] = pool;
+    map_->operator[](job_id) = pool;
   } else {
     iter->second->insert(worker);
+  }
+}
+
+bool AfterMap::EntryIsInMap(Map *map, job_id_t job_id, SchedulerWorker *worker) {
+  // Already Lock is aciquired.
+  Iter iter = map_->find(job_id);
+  if (iter == map_->end()) {
+    return false;
+  } else {
+    Pool *pool = iter->second;
+    return (pool->find(worker) != pool->end());
+  }
+}
+
+
+bool AfterMap::AddEntry(job_id_t job_id, SchedulerWorker* worker) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  if (!JobIsDone(job_id)) {
+    AddEntryToMap(map_, job_id, worker);
+  } else {
+    if (!EntryIsInMap(map_, job_id, worker)) {
+      AddEntryToMap(map_, job_id, worker);
+      AddEntryToMap(late_map_, job_id, worker);
+    }
   }
 
   return true;
@@ -108,8 +123,8 @@ bool AfterMap::GetWorkersWaitingOnJob(job_id_t job_id,
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   list->clear();
 
-  Iter iter = content_.find(job_id);
-  if (iter != content_.end()) {
+  Iter iter = map_->find(job_id);
+  if (iter != map_->end()) {
     Pool *pool = iter->second;
     Pool::iterator it = pool->begin();
     for (; it != pool->end(); ++it) {
@@ -120,37 +135,72 @@ bool AfterMap::GetWorkersWaitingOnJob(job_id_t job_id,
   return true;
 }
 
+
+bool AfterMap::NotifyJobDone(job_id_t job_id) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  job_done_pool_.insert(job_id);
+  return true;
+}
+
+bool AfterMap::PullLateMap(Map*& late_map) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  late_map = late_map_;
+  late_map_ = new Map();
+  return true;
+}
+
+void AfterMap::DestroyMap(Map *map) {
+  Iter iter = map->begin();
+  for (; iter != map->end(); ++iter) {
+    delete iter->second;
+  }
+  delete map;
+}
+
+
+void AfterMap::RemoveJobRecordFromMap(Map *map, job_id_t job_id) {
+  // Already Lock is aciquired.
+  Iter iter = map_->find(job_id);
+  if (iter != map_->end()) {
+    delete iter->second;
+    map_->erase(iter);
+  }
+}
+
 bool AfterMap::RemoveJobRecords(job_id_t job_id) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  Iter iter = content_.find(job_id);
-  if (iter != content_.end()) {
-    delete iter->second;
-    content_.erase(iter);
-  }
+  RemoveJobRecordFromMap(map_, job_id);
+  RemoveJobRecordFromMap(late_map_, job_id);
+  job_done_pool_.erase(job_id);
 
   return true;
 }
 
-bool AfterMap::RemoveWorkerRecords(SchedulerWorker *worker) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  Iter iter = content_.begin();
-  for (; iter != content_.end();) {
+void AfterMap::RemoveWorkerRecordFromMap(Map *map, SchedulerWorker *worker) {
+  // Already Lock is aciquired.
+  Iter iter = map_->begin();
+  for (; iter != map_->end();) {
     iter->second->erase(worker);
     if (iter->second->size() == 0) {
       delete iter->second;
-      content_.erase(iter++);
+      map_->erase(iter++);
     } else {
       ++iter;
     }
   }
+}
+
+bool AfterMap::RemoveWorkerRecords(SchedulerWorker *worker) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  RemoveWorkerRecordFromMap(map_, worker);
+  RemoveWorkerRecordFromMap(late_map_, worker);
 
   return true;
 }
 
-AfterMap& AfterMap::operator=(const AfterMap& right) {
-  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-  content_ = right.content_;
-  return (*this);
-}
 
+bool AfterMap::JobIsDone(job_id_t job_id) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
+  return  (job_done_pool_.find(job_id) != job_done_pool_.end());
+}
 
