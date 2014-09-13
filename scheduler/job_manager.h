@@ -142,6 +142,10 @@ class JobManager {
 
   private:
     Log log_;
+    Log l1;
+    Log l2;
+    Log l3;
+    Log l4;
 
     Graph<JobEntry, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
