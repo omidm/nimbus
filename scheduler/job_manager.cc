@@ -440,17 +440,17 @@ size_t JobManager::RemoveObsoleteJobEntries() {
 
   JobEntryMap::iterator iter;
   for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
-    assert(iter->second->done());
-    RemoveJobEntry(iter->second);
-    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
-    ++num;
-    jobs_done_.erase(iter++);
-
     if (iter->second->job_type() == JOB_COMP) {
       ++compute_count;
     } else {
       ++other_count;
     }
+
+    assert(iter->second->done());
+    RemoveJobEntry(iter->second);
+    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
+    ++num;
+    jobs_done_.erase(iter++);
   }
 
   l1.StopTimer();
