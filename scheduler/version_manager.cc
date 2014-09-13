@@ -105,92 +105,104 @@ bool VersionManager::AddJobEntry(JobEntry *job) {
 bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   assert(job->IsReadyForCompleteVersioning());
 
-  if (job->sterile()) {
-    IDSet<logical_data_id_t>::ConstIter it;
-    for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
-      data_version_t version;
-      if (job->vmap_read()->query_entry(*it, &version)) {
-        continue;
-      }
-      if (LookUpVersion(job, *it, &version)) {
-        job->vmap_read()->set_entry(*it, version);
-      } else {
-        return false;
-      }
+  IDSet<logical_data_id_t>::ConstIter it;
+  for (it = job->read_set_p()->begin(); it != job->read_set_p()->end(); ++it) {
+    data_version_t version;
+    if (job->vmap_read()->query_entry(*it, &version)) {
+      continue;
     }
-  } else {
-    LdoMap::const_iterator it;
-    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
-      data_version_t version;
-      if (job->vmap_read()->query_entry(it->first, &version)) {
-        continue;
-      }
-      if (LookUpVersion(job, it->first, &version)) {
-        job->vmap_read()->set_entry(it->first, version);
-      } else {
-        return false;
-      }
+    if (LookUpVersion(job, *it, &version)) {
+      job->vmap_read()->set_entry(*it, version);
+    } else {
+      return false;
     }
   }
 
-  {
-    IDSet<logical_data_id_t>::ConstIter it;
-    for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
-      data_version_t version;
-      if (job->vmap_write()->query_entry(*it, &version)) {
-        continue;
-      }
-      if (job->vmap_read()->query_entry(*it, &version)) {
+  for (it = job->write_set_p()->begin(); it != job->write_set_p()->end(); ++it) {
+    data_version_t version;
+    if (job->vmap_write()->query_entry(*it, &version)) {
+      continue;
+    }
+    if (job->vmap_read()->query_entry(*it, &version)) {
+      job->vmap_write()->set_entry(*it, version + 1);
+    } else {
+      if (LookUpVersion(job, *it, &version)) {
         job->vmap_write()->set_entry(*it, version + 1);
       } else {
-        if (LookUpVersion(job, *it, &version)) {
-          job->vmap_write()->set_entry(*it, version + 1);
-        } else {
-          return false;
-        }
+        return false;
       }
     }
   }
 
+  log_.log_StartTimer();
   if (!job->sterile()) {
-    // Clear meta before set and update the ldl.
+    CreateCollapsePoint(job);
+  }
+  log_.log_StopTimer();
+  std::cout << "collapsing: " << log_.timer() << " n: " << job->job_name() << std::endl;
 
-    job->meta_before_set()->Clear();
-
-    LdoMap::const_iterator it;
-    for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
-      data_version_t version;
-      if (job->vmap_write()->query_entry(it->first, &version)) {
-      } else if (job->vmap_read()->query_entry(it->first, &version)) {
-      } else {
-        dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for parent job %lu.\n",
-            it->first, job->job_id());
-        exit(-1);
-      }
-
-      InsertParentLdlEntry(
-          it->first, job->job_id(), version, job->job_depth());
+  boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
+  ChildCounterIter cit = child_counter_.find(job->parent_job_id());
+  if (cit != child_counter_.end()) {
+    --cit->second;
+    if (cit->second == 0) {
+      live_parents_.remove(cit->first);
+      child_counter_.erase(cit);
+      parent_removed_ = true;
     }
+  }
 
-    boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
-    ChildCounterIter cit = child_counter_.find(job->job_id());
-    if (cit == child_counter_.end()) {
-      live_parents_.insert(job->job_id());
-      child_counter_[job->job_id()] = (counter_t) (1);
+  return true;
+}
+
+bool VersionManager::ResolveEntireContextForJob(JobEntry *job) {
+  LdoMap::const_iterator it;
+  for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+    data_version_t version;
+    if (job->vmap_read()->query_entry(it->first, &version)) {
+      continue;
+    }
+    if (LookUpVersion(job, it->first, &version)) {
+      job->vmap_read()->set_entry(it->first, version);
     } else {
-      assert(false);
+      return false;
     }
+  }
+  return true;
+}
+
+bool VersionManager::CreateCollapsePoint(JobEntry *job) {
+  assert(!job->sterile());
+
+  // Resolve entire ldo_map for job.
+  ResolveEntireContextForJob(job);
+
+  // Clear meta before set.
+  job->meta_before_set()->Clear();
+
+  // Add the checkpoint to each ldl.
+  LdoMap::const_iterator it;
+  for (it = ldo_map_p_->begin(); it != ldo_map_p_->end(); ++it) {
+    data_version_t version;
+    if (job->vmap_write()->query_entry(it->first, &version)) {
+    } else if (job->vmap_read()->query_entry(it->first, &version)) {
+    } else {
+      dbg(DBG_ERROR, "ERROR: Version Manager: ldid %lu is not versioned for parent job %lu.\n",
+          it->first, job->job_id());
+      exit(-1);
+    }
+
+    InsertParentLdlEntry(
+        it->first, job->job_id(), version, job->job_depth());
   }
 
   boost::unique_lock<boost::mutex> lock(child_counter_mutex_);
-  ChildCounterIter it = child_counter_.find(job->parent_job_id());
-  if (it != child_counter_.end()) {
-    --it->second;
-    if (it->second == 0) {
-      live_parents_.remove(it->first);
-      child_counter_.erase(it);
-      parent_removed_ = true;
-    }
+  ChildCounterIter cit = child_counter_.find(job->job_id());
+  if (cit == child_counter_.end()) {
+    live_parents_.insert(job->job_id());
+    child_counter_[job->job_id()] = (counter_t) (1);
+  } else {
+    assert(false);
   }
 
   return true;

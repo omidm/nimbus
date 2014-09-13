@@ -81,6 +81,10 @@ class VersionManager {
 
     bool ResolveJobDataVersions(JobEntry *job);
 
+    bool ResolveEntireContextForJob(JobEntry *job);
+
+    bool CreateCollapsePoint(JobEntry *job);
+
     bool LookUpVersion(JobEntry *job,
                        logical_data_id_t ldid,
                        data_version_t *version);
@@ -101,6 +105,7 @@ class VersionManager {
     void set_ldo_map_p(const LdoMap* ldo_map_p);
 
   private:
+    Log log_;
     Index index_;
     bool parent_removed_;
     IDSet<job_id_t> live_parents_;
