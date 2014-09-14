@@ -42,7 +42,7 @@
 
 #include "scheduler/version_manager.h"
 
-#define DEFAULT_COLLAPSE_RATE 1;
+#define DEFAULT_COLLAPSE_RATE 20;
 
 using namespace nimbus; // NOLINT
 
@@ -136,15 +136,13 @@ bool VersionManager::ResolveJobDataVersions(JobEntry *job) {
   DetectVersionedJob(job);
 
   static size_t rate = DEFAULT_COLLAPSE_RATE;
-  log_.log_StartTimer();
+
   if (!job->sterile()) {
     if (--rate == 0) {
       GetSnapShot();
-      rate = 2;
+      rate = DEFAULT_COLLAPSE_RATE;
     }
   }
-  log_.log_StopTimer();
-  std::cout << "collapsing: " << log_.timer() << " n: " << job->job_name() << std::endl;
 
   return true;
 }

@@ -160,12 +160,11 @@ void JobAssigner::AssignJobs(const JobEntryList& list) {
 bool JobAssigner::AssignJob(JobEntry *job) {
   SchedulerWorker* worker = job->assigned_worker();
 
-  log_.log_StartTimer();
+  // log_.log_StartTimer();
   job_manager_->ResolveJobDataVersions(job);
-  log_.log_StopTimer();
-  std::cout << "versioning: " << log_.timer() << " n: " << job->job_name() << std::endl;
+  // log_.log_StopTimer();
+  // std::cout << "versioning: " << log_.timer() << " n: " << job->job_name() << std::endl;
 
-  log_.log_StartTimer();
   bool prepared_data = true;
   IDSet<logical_data_id_t>::ConstIter it;
   for (it = job->union_set_p()->begin(); it != job->union_set_p()->end(); ++it) {
@@ -176,9 +175,6 @@ bool JobAssigner::AssignJob(JobEntry *job) {
   }
 
   if (prepared_data) {
-    log_.log_StopTimer();
-    std::cout << "binding: " << log_.timer() << " n: " << job->job_name() << std::endl;
-
     PrintLog(job);
 
     job_manager_->UpdateJobBeforeSet(job);

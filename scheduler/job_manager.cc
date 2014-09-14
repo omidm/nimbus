@@ -349,21 +349,14 @@ bool JobManager::GetJobEntry(job_id_t job_id, JobEntry*& job) {
 }
 
 bool JobManager::RemoveJobEntry(JobEntry* job) {
-  l1.ResumeTimer();
   if (job_graph_.RemoveVertex(job->job_id())) {
-    l1.StopTimer();
-    l2.ResumeTimer();
     if (job->parent_job_id() != NIMBUS_KERNEL_JOB_ID ||
         job->job_name() == NIMBUS_MAIN_JOB_NAME) {
       version_manager_.RemoveJobEntry(job);
     }
-    l2.StopTimer();
-    l3.ResumeTimer();
     delete job;
-    l3.StopTimer();
     return true;
   } else {
-    l1.StopTimer();
     return false;
   }
 }
@@ -431,41 +424,13 @@ size_t JobManager::RemoveObsoleteJobEntries() {
     return num;
   }
 
-  l1.StartTimer();
-  l2.StartTimer();
-  l3.StartTimer();
-  l4.StartTimer();
-  size_t other_count = 0;
-  size_t compute_count = 0;
-
   JobEntryMap::iterator iter;
   for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
-    if (iter->second->job_type() == JOB_COMP) {
-      ++compute_count;
-    } else {
-      ++other_count;
-    }
-
     assert(iter->second->done());
     RemoveJobEntry(iter->second);
     dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
     ++num;
     jobs_done_.erase(iter++);
-  }
-
-  l1.StopTimer();
-  l2.StopTimer();
-  l3.StopTimer();
-  l4.StopTimer();
-
-  if (l4.timer() > 0.1) {
-    std::cout << "REMOVE total : " <<  l4.timer()
-              << " job graph: " << l1.timer()
-              << " version manager: " << l2.timer()
-              << " delete job: " << l3.timer()
-              << " compute: " << compute_count
-              << " other: " << other_count
-              << std::endl;
   }
 
   version_manager_.CleanUp();
