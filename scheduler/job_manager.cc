@@ -511,6 +511,11 @@ void JobManager::NotifyJobAssignment(JobEntry *job) {
 void JobManager::NotifyJobDone(JobEntry *job) {
   job->set_done(true);
   job_id_t job_id = job->job_id();
+
+  // Initialy let the version manager know that the job is done.
+  version_manager_.NotifyJobDone(job);
+
+  // Put the job un the list for removal.
   jobs_done_[job_id] = job;
 
   if (!job->sterile()) {

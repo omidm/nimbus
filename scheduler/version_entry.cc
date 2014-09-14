@@ -172,21 +172,37 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
   pending_reader_jobs_.erase(job);
   pending_writer_jobs_.erase(job);
 
-  data_version_t ver;
-  if (job->vmap_read()->query_entry(ldid_, &ver)) {
-    IndexIter it = index_.find(ver);
-    if (it != index_.end()) {
-      it->second->erase(job);
-      if (it->second->size() == 0) {
-        delete it->second;
-        index_.erase(it);
+  {
+    data_version_t ver;
+    if (job->vmap_read()->query_entry(ldid_, &ver)) {
+      IndexIter it = index_.find(ver);
+      if (it != index_.end()) {
+        it->second->erase(job);
+        if (it->second->size() == 0) {
+          delete it->second;
+          index_.erase(it);
+        }
+      }
+    } else {
+      dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
+          ldid_, job->job_id());
+      exit(-1);
+      return false;
+    }
+  }
+
+  if (!job->sterile()) {
+    data_version_t ver;
+    if (job->vmap_partial()->query_entry(ldid_, &ver)) {
+      IndexIter it = index_.find(ver);
+      if (it != index_.end()) {
+        it->second->erase(job);
+        if (it->second->size() == 0) {
+          delete it->second;
+          index_.erase(it);
+        }
       }
     }
-  } else {
-    dbg(DBG_ERROR, "Version Entry: ldid %lu is not versioned for job %lu.\n",
-        ldid_, job->job_id());
-    exit(-1);
-    return false;
   }
 
   return true;
@@ -279,18 +295,18 @@ bool VersionEntry::UpdateLdl() {
 
 
 
-bool VersionEntry::InsertParentLdlEntry(
+bool VersionEntry::InsertCheckPointLdlEntry(
     const job_id_t& job_id,
     const data_version_t& version,
     const job_depth_t& job_depth) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
 
-  return ldl_.InsertParentLdlEntry(job_id, version, job_depth);
+  return ldl_.InsertCheckpointLdlEntry(job_id, version, job_depth);
 }
 
 
-bool VersionEntry::CleanLdl(const IDSet<job_id_t>& live_parents) {
-  return ldl_.CleanChain(live_parents);
+bool VersionEntry::CleanLdl(const IDSet<job_id_t>& snap_shot) {
+  return ldl_.CleanChain(snap_shot);
 }
 
 
