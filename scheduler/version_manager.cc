@@ -199,9 +199,11 @@ bool VersionManager::CreateCheckPoint(JobEntry *job) {
 
 bool VersionManager::DetectNewJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
-  ChildCounter::iterator it = child_counter_.find(job->parent_job_id());
-  assert(it != child_counter_.end());
-  ++it->second;
+  if (job->job_name() != NIMBUS_MAIN_JOB_NAME) {
+    ChildCounter::iterator it = child_counter_.find(job->parent_job_id());
+    assert(it != child_counter_.end());
+    ++it->second;
+  }
 
   if (!job->sterile()) {
     assert(child_counter_.find(job->job_id()) == child_counter_.end());
@@ -214,11 +216,13 @@ bool VersionManager::DetectNewJob(JobEntry *job) {
 
 bool VersionManager::DetectVersionedJob(JobEntry *job) {
   boost::unique_lock<boost::recursive_mutex> lock(snap_shot_mutex_);
-  ChildCounter::iterator it = child_counter_.find(job->parent_job_id());
-  assert(it != child_counter_.end());
-  --it->second;
-  if (it->second == 0) {
-    child_counter_.erase(it);
+  if (job->job_name() != NIMBUS_MAIN_JOB_NAME) {
+    ChildCounter::iterator it = child_counter_.find(job->parent_job_id());
+    assert(it != child_counter_.end());
+    --it->second;
+    if (it->second == 0) {
+      child_counter_.erase(it);
+    }
   }
   return true;
 }
