@@ -77,17 +77,20 @@ VersionEntry& VersionEntry::operator= (const VersionEntry& right) {
 void VersionEntry::InitializeLdl(
     const job_id_t& job_id,
     const job_depth_t& job_depth) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   ldl_.AppendLdlEntry(job_id, NIMBUS_INIT_DATA_VERSION, job_depth, false);
 }
 
 
 
 bool VersionEntry::AddJobEntryReader(JobEntry *job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   pending_reader_jobs_.insert(job);
   return true;
 }
 
 bool VersionEntry::AddJobEntryWriter(JobEntry *job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   pending_writer_jobs_.insert(job);
   return true;
 }
@@ -168,6 +171,7 @@ size_t VersionEntry::GetJobsNeedVersion(
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(job->versioned());
 
   pending_reader_jobs_.erase(job);
@@ -205,6 +209,7 @@ bool VersionEntry::RemoveJobEntry(JobEntry *job) {
 }
 
 bool VersionEntry::RemoveJobEntry(JobEntry *job, data_version_t version) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   assert(job->versioned());
 
   pending_reader_jobs_.erase(job);
@@ -235,6 +240,7 @@ bool VersionEntry::LookUpVersion(
 }
 
 bool VersionEntry::is_empty() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return ((index_.size() == 0) &&
           (pending_reader_jobs_.size() == 0) &&
           (pending_writer_jobs_.size() == 0));
@@ -246,6 +252,7 @@ bool CompareJobDepths(JobEntry* i, JobEntry* j) {
 }
 
 bool VersionEntry::UpdateLdl() {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   if (pending_writer_jobs_.size() == 0) {
     return true;
   }
@@ -296,12 +303,12 @@ bool VersionEntry::InsertCheckPointLdlEntry(
     const data_version_t& version,
     const job_depth_t& job_depth) {
   boost::unique_lock<boost::recursive_mutex> lock(mutex_);
-
   return ldl_.InsertCheckpointLdlEntry(job_id, version, job_depth);
 }
 
 
 bool VersionEntry::CleanLdl(const IDSet<job_id_t>& snap_shot) {
+  boost::unique_lock<boost::recursive_mutex> lock(mutex_);
   return ldl_.CleanChain(snap_shot);
 }
 
