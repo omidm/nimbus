@@ -58,6 +58,7 @@ Scheduler::Scheduler(port_t port) {
   listening_port_ = port;
   registered_worker_num_ = 0;
   terminate_application_flag_ = false;
+  cleaner_thread_active_ = false;
   max_job_to_assign_ = DEFAULT_MAX_JOB_TO_ASSIGN;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
@@ -98,6 +99,7 @@ void Scheduler::Run() {
   SetupLoadBalancer();
   SetupJobAssigner();
   SetupJobDoneBouncer();
+  // SetupCleaner();
   // SetupUserInterface();
 
   SchedulerCoreProcessor();
@@ -325,8 +327,11 @@ void Scheduler::AddMainJob() {
 }
 
 size_t Scheduler::RemoveObsoleteJobEntries() {
-  size_t count = job_manager_->RemoveObsoleteJobEntries();
+  if (cleaner_thread_active_) {
+    return 0;
+  }
 
+  size_t count = job_manager_->RemoveObsoleteJobEntries();
   return count;
 }
 
@@ -431,6 +436,12 @@ void Scheduler::SetupJobDoneBouncer() {
       boost::bind(&Scheduler::JobDoneBouncerThread, this));
 }
 
+void Scheduler::SetupCleaner() {
+  cleaner_thread_active_ = true;
+  cleaner_thread_ = new boost::thread(
+      boost::bind(&Scheduler::CleanerThread, this));
+}
+
 void Scheduler::SetupUserInterface() {
   LoadUserCommands();
   user_interface_thread_ = new boost::thread(
@@ -457,6 +468,14 @@ void Scheduler::LoadUserCommands() {
       break;
     }
     user_command_set_.insert(word);
+  }
+}
+
+void Scheduler::CleanerThread() {
+  while (true) {
+    // TODO(omid): remove the busy loop!
+
+    size_t count = job_manager_->RemoveObsoleteJobEntries();
   }
 }
 
