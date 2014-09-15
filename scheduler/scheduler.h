@@ -73,6 +73,7 @@ class Scheduler {
     virtual void Run();
 
     virtual void set_max_job_to_assign(size_t num);
+    virtual void set_max_job_to_remove(size_t num);
     virtual void set_min_worker_to_join(size_t num);
     virtual void set_job_assigner_thread_num(size_t num);
     virtual void set_max_command_process_num(size_t num);
@@ -156,6 +157,7 @@ class Scheduler {
     exit_status_t terminate_application_status_;
 
     size_t max_job_to_assign_;
+    size_t max_job_to_remove_;
     size_t min_worker_to_join_;
     size_t job_assigner_thread_num_;
     size_t max_command_process_num_;

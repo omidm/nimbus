@@ -43,6 +43,7 @@
 namespace nimbus {
 
 #define DEFAULT_MAX_JOB_TO_ASSIGN 1
+#define DEFAULT_MAX_JOB_TO_REMOVE 1
 #define DEFAULT_MIN_WORKER_TO_JOIN 2
 #define DEFAULT_JOB_ASSIGNER_THREAD_NUM 0
 #define DEFAULT_MAX_COMMAND_PROCESS_NUM 10000
@@ -60,6 +61,7 @@ Scheduler::Scheduler(port_t port) {
   terminate_application_flag_ = false;
   cleaner_thread_active_ = false;
   max_job_to_assign_ = DEFAULT_MAX_JOB_TO_ASSIGN;
+  max_job_to_remove_ = DEFAULT_MAX_JOB_TO_REMOVE;
   min_worker_to_join_ = DEFAULT_MIN_WORKER_TO_JOIN;
   job_assigner_thread_num_ = DEFAULT_JOB_ASSIGNER_THREAD_NUM;
   max_command_process_num_ = DEFAULT_MAX_COMMAND_PROCESS_NUM;
@@ -103,6 +105,10 @@ void Scheduler::Run() {
   // SetupUserInterface();
 
   SchedulerCoreProcessor();
+}
+
+void Scheduler::set_max_job_to_remove(size_t num) {
+  max_job_to_remove_ = num;
 }
 
 void Scheduler::set_max_job_to_assign(size_t num) {
@@ -331,8 +337,7 @@ size_t Scheduler::RemoveObsoleteJobEntries() {
     return 0;
   }
 
-  size_t count = job_manager_->RemoveObsoleteJobEntries();
-  return count;
+  return job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
 }
 
 size_t Scheduler::AssignReadyJobs() {
@@ -475,7 +480,7 @@ void Scheduler::CleanerThread() {
   while (true) {
     // TODO(omid): remove the busy loop!
 
-    size_t count = job_manager_->RemoveObsoleteJobEntries();
+    size_t count = job_manager_->RemoveObsoleteJobEntries(max_job_to_remove_);
   }
 }
 

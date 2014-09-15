@@ -117,7 +117,7 @@ class JobManager {
 
     size_t GetJobsReadyToAssign(JobEntryList* list, size_t max_num);
 
-    size_t RemoveObsoleteJobEntries();
+    size_t RemoveObsoleteJobEntries(size_t max_to_remove);
 
     void NotifyJobDone(JobEntry *job);
 
@@ -142,16 +142,16 @@ class JobManager {
 
   private:
     Log log_;
+    AfterMap *after_map_;
+    const LdoMap *ldo_map_p_;
+    VersionManager version_manager_;
 
     Graph<JobEntry, job_id_t> job_graph_;
     boost::mutex job_graph_mutex_;
 
-    AfterMap *after_map_;
+    JobEntryList jobs_done_;
+    boost::mutex jobs_done_mutex_;
 
-    const LdoMap *ldo_map_p_;
-    VersionManager version_manager_;
-
-    JobEntryMap jobs_done_;
     JobEntryMap jobs_ready_to_assign_;
     JobEntryMap jobs_pending_to_assign_;
     boost::recursive_mutex job_queue_mutex_;

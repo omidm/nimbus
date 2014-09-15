@@ -417,20 +417,24 @@ size_t JobManager::GetJobsReadyToAssign(JobEntryList* list, size_t max_num) {
   return num;
 }
 
-size_t JobManager::RemoveObsoleteJobEntries() {
+size_t JobManager::RemoveObsoleteJobEntries(size_t max_to_remove) {
   size_t num = 0;
 
-  if (NumJobsReadyToAssign() > 0) {
-    return num;
+  JobEntryList jobs_to_remove;
+  {
+    boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+    for (size_t i = 0; (i < max_to_remove) && (i < jobs_done_.size()); ++i) {
+      jobs_to_remove.push_back(jobs_done_.front());
+      jobs_done_.pop_front();
+    }
   }
 
-  JobEntryMap::iterator iter;
-  for (iter = jobs_done_.begin(); iter != jobs_done_.end();) {
-    assert(iter->second->done());
-    RemoveJobEntry(iter->second);
-    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", iter->first);
+  JobEntryList::iterator iter = jobs_to_remove.begin();
+  for (; iter != jobs_to_remove.end(); ++iter) {
+    assert((*iter)->done());
+    RemoveJobEntry(*iter);
+    dbg(DBG_SCHED, "removed job with id %lu from job manager.\n", (*iter)->job_id());
     ++num;
-    jobs_done_.erase(iter++);
   }
 
   version_manager_.CleanUp();
@@ -480,8 +484,11 @@ void JobManager::NotifyJobDone(JobEntry *job) {
   // Initialy let the version manager know that the job is done.
   version_manager_.NotifyJobDone(job);
 
-  // Put the job un the list for removal.
-  jobs_done_[job_id] = job;
+  // Put the job in the list for removal.
+  {
+    boost::unique_lock<boost::mutex> lock(job_graph_mutex_);
+    jobs_done_.push_back(job);
+  }
 
   if (!job->sterile()) {
     Vertex<JobEntry, job_id_t>* vertex;
